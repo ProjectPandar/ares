@@ -3,6 +3,8 @@ mod dispatch;
 mod restate;
 mod retract;
 mod route;
+#[cfg(test)]
+mod tests;
 
 use super::PathProperties;
 use crate::project_slice::gcode_emit::motion::{

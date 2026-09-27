@@ -6,7 +6,7 @@ use super::super::helpers::{
     absolute, acceleration, first_float, machine_acceleration_limit, rounded_acceleration,
 };
 use super::context::Prelude;
-use super::{crossing, region, retraction, scarf};
+use super::{crossing, scarf};
 use crate::{Nullable, options::InternalBridgeFanSpeed};
 
 pub(super) fn assemble(
@@ -339,6 +339,16 @@ pub(super) fn assemble(
                 .map_or(0.0, |value| value.0),
         ),
         reduce_infill_retraction: full.process.print.reduce_infill_retraction.0,
+        bottom_surface_pattern_hilbert: region
+            .map_or(full.process.region.bottom_surface_pattern, |region| {
+                region.bottom_surface_pattern
+            })
+            == crate::ProcessInfillPattern::HilbertCurve,
+        top_surface_pattern_hilbert: region
+            .map_or(full.process.region.top_surface_pattern, |region| {
+                region.top_surface_pattern
+            })
+            == crate::ProcessInfillPattern::HilbertCurve,
         has_sparse_infill: region.map_or(
             full.process.region.sparse_infill_density.0 > 0.0,
             |region| region.sparse_infill_density.0 > 0.0,

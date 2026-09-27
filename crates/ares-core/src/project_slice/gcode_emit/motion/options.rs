@@ -132,6 +132,11 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) retraction_minimum_travel: f64,
     pub(in crate::project_slice::gcode_emit) reduce_infill_retraction: bool,
     pub(in crate::project_slice::gcode_emit) has_sparse_infill: bool,
+    /// `GCode::_retract` suppresses the writer retract when the bottom
+    /// (first layer) or top (TopSolidInfill destination) pattern is
+    /// HilbertCurve (`GCode.cpp:7667-7672`).
+    pub(in crate::project_slice::gcode_emit) bottom_surface_pattern_hilbert: bool,
+    pub(in crate::project_slice::gcode_emit) top_surface_pattern_hilbert: bool,
     pub(in crate::project_slice::gcode_emit) retract_before_wipe: f64,
     pub(in crate::project_slice::gcode_emit) role_based_wipe_speed: bool,
     pub(in crate::project_slice::gcode_emit) wipe_speed: f64,

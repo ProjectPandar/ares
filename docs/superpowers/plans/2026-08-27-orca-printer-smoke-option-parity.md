@@ -10123,6 +10123,12 @@ All current byte-exact parity artifacts pass, meaning the exercised
 fixtures do not hit the containment exemption; the port boundary is
 `SupportLayer::support_islands` → `EmitState`/geometry plumbing. Until
 then `restart_extra` may be over-written (and a spurious retract emitted)
-for a fully-contained support travel. Also unreachable: the Hilbert-curve
-retraction suppression (`GCode.cpp:7659-7672`) — `hilbertcurve` is
-rejected at option parse time.
+for a fully-contained support travel. The Hilbert-curve retraction
+suppression (`GCode.cpp:7667-7672`) IS reachable via the 3MF
+`ProcessInfillPattern` path (option `hilbertcurve` is rejected only in
+the CLI/legacy parse); implemented at
+`motion/path/start_travel/retract.rs` via `bottom_surface_pattern_hilbert`
+/ `top_surface_pattern_hilbert` EmitOptions flags. Residual nuance: with
+wipe enabled upstream still runs the `retract(true, beforeWipe)` call
+under Hilbert suppression — our suppression skips the whole retract
+branch, diverging only in the rare hilbert+wipe-path combination.

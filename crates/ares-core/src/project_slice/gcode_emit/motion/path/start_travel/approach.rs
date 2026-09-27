@@ -106,6 +106,7 @@ pub(super) fn emit_needs_travel(
             retract,
             routed_length,
             skip_retraction,
+            feature,
             &mut |state| {
                 route = plan_route(state, &geometry_ref, feature, first_x, first_y);
             },

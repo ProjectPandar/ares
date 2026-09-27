@@ -238,7 +238,6 @@ pub(super) fn append(
             },
             boundary_layer_index,
             object_layer_over_raft,
-            previous_layer_z,
             layer_z,
             layer_height,
             &mut second_layer_done,

@@ -67,7 +67,6 @@ pub(super) fn append<'a>(
     }: Boundary<'a>,
     layer_index: usize,
     object_layer_over_raft: bool,
-    previous_layer_z: f64,
     layer_z: f64,
     layer_height: f64,
     second_layer_done: &mut bool,
@@ -77,31 +76,6 @@ pub(super) fn append<'a>(
     let tags = state.tags;
     output.extend_from_slice(tags.layer_change().as_bytes());
     output.push(b'\n');
-    // `will_move_z` must be evaluated against the writer Z the previous
-    // layer actually left behind — a role-change hook can assign
-    // `position[2]` (`GCode.cpp:3901-3907`), and upstream reads the live
-    // `m_pos.z` at `change_layer` (`GCode.cpp:5693`,
-    // `GCodeWriter.cpp:916-929`). Capture before the nominal override.
-    // `GCodeWriter::will_move_z` (`GCodeWriter.cpp:916-929`): while
-    // lifted, a target inside [nominal, pos] does not move; otherwise the
-    // plain |pos - z| < EPSILON suppression applies.
-    let will_move_z = state.writer_z.is_none_or(|writer_z| {
-        let target = f64::from(layer_z) + state.options.z_offset;
-        if state.lifted_amount > 0.0 {
-            let nominal = writer_z - state.lifted_amount;
-            !(target >= nominal && target <= writer_z)
-        } else {
-            // Upstream suppresses only diff STRICTLY below EPSILON
-            // (`GCodeWriter.cpp:927-930`), so equality still moves.
-            (target - writer_z).abs() >= 1.0e-4
-        }
-    });
-    // Upstream's writer z at the layer-change retract is still the
-    // previous layer's z (`change_layer` does not move z); the
-    // start-gcode z remains authoritative for the first layer.
-    if layer_index > 0 {
-        state.writer_z = Some(f64::from(previous_layer_z) + state.options.z_offset);
-    }
     // `GCode.cpp:4629-4630`: `m_last_layer_z = float(print_z)` and
     // `m_max_layer_z = max(...)` update BEFORE the
     // before-layer-change/timelapse templates render (`GCode.cpp:4636`).
@@ -151,6 +125,22 @@ pub(super) fn append<'a>(
             context: layer_change_template,
         },
     )?;
+    // `GCodeWriter::will_move_z` (`GCodeWriter.cpp:916-929`) reads the
+    // LIVE writer Z — a before-layer template `position[2]` assignment
+    // (`GCode.cpp:3901-3903`) or a previous role hook must participate,
+    // so evaluate after the template and before any nominal override
+    // semantics. While lifted, a target inside [nominal, pos] does not
+    // move; otherwise upstream suppresses only diff STRICTLY below
+    // EPSILON (`GCodeWriter.cpp:927-930`), so equality still moves.
+    let will_move_z = state.writer_z.is_none_or(|writer_z| {
+        let target = f64::from(layer_z) + state.options.z_offset;
+        if state.lifted_amount > 0.0 {
+            let nominal = writer_z - state.lifted_amount;
+            !(target >= nominal && target <= writer_z)
+        } else {
+            (target - writer_z).abs() >= 1.0e-4
+        }
+    });
     // Upstream's `change_layer` retract (`retract_when_changing_layer`)
     // also DEFERS the hop (`maybe_zlift`, `GCodeWriter.cpp:626-648`):
     // `m_to_lift` survives into the new layer's first travel, which
