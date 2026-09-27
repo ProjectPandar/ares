@@ -54,6 +54,15 @@ pub(super) fn emit_approach_move(
         target_z,
         route_len,
     } = ctx;
+    // The first DETOUR waypoint's destination z is the nominal layer z
+    // (`m_nominal_z`, `GCode.cpp:7489-7492`) — the scarf `z` ratio only
+    // reaches the route's final leg (`waypoints`). `target_z` already
+    // resolves to the scarf start on the direct path (`start_travel.rs`).
+    let leg_z = if route_len > 1 {
+        state.layer_z
+    } else {
+        slope_start_z.unwrap_or(target_z)
+    };
     let mut travel_set_layer_z = false;
     let mut eager_lifted_travel = false;
     let mut unclear_position_travel = false;
@@ -124,7 +133,7 @@ pub(super) fn emit_approach_move(
             state,
             travel_x,
             travel_y,
-            target_z,
+            leg_z,
             state.travel_feedrate,
             first_travel_comment,
         );
@@ -154,11 +163,7 @@ pub(super) fn emit_approach_move(
             // destination: the NOMINAL layer z on a detour first leg,
             // the scarf slope start on the direct leg
             // (`GCode.cpp:7481-7498`).
-            if route_len > 1 {
-                state.layer_z
-            } else {
-                slope_start_z.unwrap_or(target_z)
-            },
+            if route_len > 1 { state.layer_z } else { leg_z },
         );
     } else if layer_change_travel {
         // The sloped split only applies when a lift actually exists
@@ -179,10 +184,10 @@ pub(super) fn emit_approach_move(
             );
             let z_feedrate = travel::lift_z_feedrate(state);
             output.extend_from_slice(
-                format!("G1 Z{} F{}\n", format_z(target_z), format_axis(z_feedrate)).as_bytes(),
+                format!("G1 Z{} F{}\n", format_z(leg_z), format_axis(z_feedrate)).as_bytes(),
             );
             state.current_feedrate = z_feedrate;
-            state.record_z(target_z);
+            state.record_z(leg_z);
         } else {
             // `travel_to_xyz`'s force-z/`will_move_z` else-branch emits
             // the combined move at `config.travel_speed` UNCONDITIONALLY
@@ -193,7 +198,7 @@ pub(super) fn emit_approach_move(
                 state,
                 travel_x,
                 travel_y,
-                target_z,
+                leg_z,
                 state.options.travel_feedrate,
                 first_travel_comment,
             );
@@ -216,14 +221,14 @@ pub(super) fn emit_approach_move(
             first_travel_comment,
         );
         state.record_z(z);
-        travel_set_layer_z = z == target_z;
-    } else if let Some(z) = slope_start_z {
+        travel_set_layer_z = z == leg_z;
+    } else if slope_start_z.is_some() {
         travel_emit::xyz_with_comment(
             output,
             state,
             travel_x,
             travel_y,
-            z,
+            leg_z,
             state.travel_feedrate,
             first_travel_comment,
         );
@@ -262,13 +267,13 @@ pub(super) fn emit_approach_move(
             output.extend_from_slice(
                 format!(
                     "G1 Z{} F{}{first_travel_comment}\n",
-                    format_z(target_z),
+                    format_z(leg_z),
                     format_axis(z_feedrate)
                 )
                 .as_bytes(),
             );
             state.current_feedrate = z_feedrate;
-            state.record_z(target_z);
+            state.record_z(leg_z);
             unclear_position_travel = true;
         }
     }

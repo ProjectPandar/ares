@@ -1,7 +1,7 @@
 //! First-travel approach emission — the `needs_travel` branch of
 //! `start_travel::emit` (`GCode.cpp:6378-7501`, `GCodeWriter.cpp:685-806`).
 
-use super::super::{PathProperties, retraction, travel_emit};
+use super::super::PathProperties;
 mod move_emit;
 mod waypoints;
 
@@ -10,9 +10,7 @@ use super::retract;
 use super::route::{plan_route, polyline_length};
 use crate::project_slice::gcode_emit::motion::features::{feature_description, is_bridge_feature};
 use crate::project_slice::gcode_emit::motion::{
-    EmitState, LayerGeometry, append_object_start, arc, begin_path_travel,
-    format::{axis as format_axis, z as format_z},
-    travel,
+    EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, travel,
 };
 
 pub(super) struct Approach<'a> {

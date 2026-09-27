@@ -1,7 +1,7 @@
 //! `append_machine_envelope` — `print_machine_envelope` (`GCode.cpp:2629-2658`),
 //! the Marlin-family M201/203/204/205 limit block after the first M73 line.
 
-use super::{first, footprint, value};
+use super::first;
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 pub(super) fn append_machine_envelope(

@@ -1,7 +1,8 @@
 use super::super::{LiftMode, MotionOptions};
+use super::wipe_path::wipe_moves;
 use super::{
     EmitState, emit_pending_lift, flush_pending_retract_lift, inside_internal_surfaces,
-    lift_is_allowed_at, retract_and_lift, retract_for_print_end, wipe_moves,
+    lift_is_allowed_at, retract_and_lift, retract_for_print_end,
 };
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
