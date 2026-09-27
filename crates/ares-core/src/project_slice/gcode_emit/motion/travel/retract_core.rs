@@ -67,7 +67,12 @@ pub(super) fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
     state.restart_extra = state.options.retract_restart_extra;
     // Counters advance on every call; the `G10`/`G22` line emits only
     // when `!is_zero(dE)` (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
+    // `Extruder::retract` ALSO decrements the E counter by the fake
+    // amount (`Extruder.cpp:75-84` — `m_E` moves even without an E
+    // word), so the unretract bookkeeping balances and `reset_e`'s
+    // counter gate sees the dip.
     let remaining = (1.0 - state.retracted_amount).max(0.0);
+    let _ = extrusion::coordinate(state, -remaining);
     if remaining >= 1e-6 {
         output.extend_from_slice(
             if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
@@ -77,9 +82,8 @@ pub(super) fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
             },
         );
     }
-    // `Extruder::retract` ADDS the fake remaining amount — a
-    // template-reported value above 1.0 is preserved
-    // (`Extruder.cpp:75-84` accumulates, never assigns).
-    state.retracted_amount += remaining.max(0.0);
+    // `coordinate` already accumulated the fake amount into
+    // `retracted_amount` (`Extruder.cpp:75-84` semantics); a
+    // template-reported value above 1.0 is preserved.
     state.retracted = true;
 }

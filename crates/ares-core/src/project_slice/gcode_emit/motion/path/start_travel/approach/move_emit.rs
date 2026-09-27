@@ -233,6 +233,28 @@ pub(super) fn emit_approach_move(
         // `libslic3r.h:52`).
         if (leg_z - live_z).abs() < 1e-4 {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
+        } else if !state.positioned {
+            // Unclear position: upstream's `travel_to_xyz` splits into
+            // XY (with the travel comment) then a separate `_travel_to_z`
+            // re-statement (`GCodeWriter.cpp:792-798, 753-764`).
+            travel_emit::xy_with_comment(
+                output,
+                travel_x,
+                travel_y,
+                state.travel_feedrate,
+                first_travel_comment,
+            );
+            let z_feedrate = travel::lift_z_feedrate(state);
+            output.extend_from_slice(
+                format!(
+                    "G1 Z{} F{}{first_travel_comment}\n",
+                    format_z(leg_z),
+                    format_axis(z_feedrate)
+                )
+                .as_bytes(),
+            );
+            state.current_feedrate = z_feedrate;
+            state.record_z(leg_z);
         } else {
             travel_emit::xyz_with_comment(
                 output,
