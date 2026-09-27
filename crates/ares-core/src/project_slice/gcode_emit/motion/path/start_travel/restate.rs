@@ -166,5 +166,11 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         state.lifted = false;
         state.lifted_amount = 0.0;
         state.template_lifted = false;
+        // `unlift()` also clears the deferred-lift slot
+        // (`GCodeWriter.cpp:1084-1092` `m_to_lift = 0`) — a pending hop
+        // must not survive into a later unrelated travel when the
+        // approach path itself was skipped by a template position
+        // write-back.
+        state.pending_lift = None;
     }
 }

@@ -5,8 +5,10 @@ use crate::{
 
 use super::{footprint, template, value};
 
+mod envelope;
 mod exhaust_fan;
 mod first_filaments;
+mod start_config;
 mod temperature;
 
 /// The first-line M73 placeholder consumed by the G-code processor
@@ -33,7 +35,7 @@ pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassi
         .emit_machine_limits_to_gcode
         .0
     {
-        append_machine_envelope(output, traversal);
+        envelope::append_machine_envelope(output, traversal);
     }
     // Disable fan for printers with an auxiliary fan
     // (`GCode.cpp:2822-2826`: set_fan(0) + set_additional_fan(0)).
@@ -56,100 +58,6 @@ pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassi
         output.extend_from_slice(
             format!("M106 S0{fan_comment}\nM106 P2 S0{aux_comment}\n").as_bytes(),
         );
-    }
-}
-
-fn append_machine_envelope(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
-    let machine = &traversal.resolved.views.full.printer.machine;
-    let flavor = traversal.resolved.views.full.printer.gcode.gcode_flavor;
-    let rrf = flavor == crate::GCodeFlavor::RepRapFirmware;
-    let factor: f64 = if rrf { 60.0 } else { 1.0 };
-    // Upstream converts the envelope integers with `int(value + 0.5)`
-    // (`GCode.cpp:3945-3980`).
-    let half_up = |value: f64| (value + 0.5).floor() as i64;
-    output.extend_from_slice(
-        format!(
-            "M201 X{} Y{} Z{} E{}\n",
-            half_up(first(&machine.machine_max_acceleration_x)),
-            half_up(first(&machine.machine_max_acceleration_y)),
-            half_up(first(&machine.machine_max_acceleration_z)),
-            half_up(first(&machine.machine_max_acceleration_e)),
-        )
-        .as_bytes(),
-    );
-    output.extend_from_slice(
-        format!(
-            "M203 X{} Y{} Z{} E{}\n",
-            half_up(first(&machine.machine_max_speed_x) * factor),
-            half_up(first(&machine.machine_max_speed_y) * factor),
-            half_up(first(&machine.machine_max_speed_z) * factor),
-            half_up(first(&machine.machine_max_speed_e) * factor),
-        )
-        .as_bytes(),
-    );
-    // Legacy Marlin exports travel acceleration equal to printing
-    // acceleration; other flavors use the travel value.
-    let travel_acceleration = if flavor == crate::GCodeFlavor::MarlinLegacy {
-        first(&machine.machine_max_acceleration_extruding)
-    } else {
-        first(&machine.machine_max_acceleration_travel)
-    };
-    if rrf {
-        output.extend_from_slice(
-            format!(
-                "M204 P{} T{} ; sets acceleration (P, T), mm/sec^2\n",
-                half_up(first(&machine.machine_max_acceleration_extruding)),
-                half_up(travel_acceleration),
-            )
-            .as_bytes(),
-        );
-    } else if flavor == crate::GCodeFlavor::MarlinFirmware {
-        output.extend_from_slice(
-            format!(
-                "M204 P{} R{} T{} ; sets acceleration (P, T) and retract acceleration (R), mm/sec^2\n",
-                half_up(first(&machine.machine_max_acceleration_extruding)),
-                half_up(first(&machine.machine_max_acceleration_retracting)),
-                half_up(travel_acceleration),
-            )
-            .as_bytes(),
-        );
-    } else {
-        output.extend_from_slice(
-            format!(
-                "M204 P{} R{} T{}\n",
-                half_up(first(&machine.machine_max_acceleration_extruding)),
-                half_up(first(&machine.machine_max_acceleration_retracting)),
-                half_up(travel_acceleration),
-            )
-            .as_bytes(),
-        );
-    }
-    if rrf {
-        output.extend_from_slice(
-            format!(
-                "M566 X{:.2} Y{:.2} Z{:.2} E{:.2} ; sets the jerk limits, mm/min\n",
-                first(&machine.machine_max_jerk_x) * factor,
-                first(&machine.machine_max_jerk_y) * factor,
-                first(&machine.machine_max_jerk_z) * factor,
-                first(&machine.machine_max_jerk_e) * factor,
-            )
-            .as_bytes(),
-        );
-    } else {
-        output.extend_from_slice(
-            format!(
-                "M205 X{:.2} Y{:.2} Z{:.2} E{:.2} ; sets the jerk limits, mm/sec\n",
-                first(&machine.machine_max_jerk_x),
-                first(&machine.machine_max_jerk_y),
-                first(&machine.machine_max_jerk_z),
-                first(&machine.machine_max_jerk_e),
-            )
-            .as_bytes(),
-        );
-    }
-    let junction_deviation = first(&machine.machine_max_junction_deviation);
-    if flavor == crate::GCodeFlavor::MarlinFirmware && junction_deviation > 0.0 {
-        output.extend_from_slice(format!("M205 J{junction_deviation:.3}\n").as_bytes());
     }
 }
 
@@ -251,7 +159,7 @@ pub(super) fn append_start(
     let (rendered, position, retract_state, failure, e_position) = if template.is_empty() {
         (String::new(), None, None, None, None)
     } else {
-        let mut config = self_start_config(traversal, metadata, first_layer_bounds)?;
+        let mut config = start_config::self_start_config(traversal, metadata, first_layer_bounds)?;
         let rendered = template::render(template, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
         })?;
@@ -369,92 +277,6 @@ pub(super) fn append_completion_controls(
     temperature::append_chamber_shutdown(output, traversal);
     exhaust_fan::append_print_end(output, traversal);
 }
-
-fn self_start_config(
-    traversal: &PreparedPostClassicTraversal,
-    metadata: GenerationMetadata,
-    first_layer_bounds: Option<footprint::FirstLayerBounds>,
-) -> Result<super::value::Config, SliceError> {
-    let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
-    config.insert("next_extruder", value::Value::number(0.0));
-    config.insert("next_hotend", value::Value::number(-1.0));
-    config.insert("initial_no_support_extruder", value::Value::number(0.0));
-    config.insert("initial_no_support_hotend", value::Value::number(-1.0));
-    config.insert(
-        "overall_chamber_temperature",
-        value::Value::number(f64::from(temperature::overall_chamber_temperature(
-            traversal,
-        ))),
-    );
-    config.insert(
-        "hold_chamber_temp_for_flat_print",
-        value::Value::option_bool(false),
-    );
-    let max_z = traversal
-        .objects
-        .first()
-        .into_iter()
-        .flat_map(|object| object.records.iter())
-        .filter_map(|record| record.as_ref())
-        .map(|record| record.layer_height)
-        .sum::<f64>();
-    config.insert("max_print_z", value::Value::number(max_z));
-    config.insert("max_layer_z", value::Value::number(max_z));
-    config.insert(
-        "total_layer_count",
-        value::Value::number(
-            traversal
-                .objects
-                .first()
-                .map_or(0, |object| object.records.len()) as f64,
-        ),
-    );
-    config.insert("layer_num", value::Value::number(0.0));
-    if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds {
-        config.insert(
-            "first_layer_print_min",
-            value::Value::List(vec![
-                value::Value::number(min_x),
-                value::Value::number(min_y),
-            ]),
-        );
-        config.insert(
-            "first_layer_print_size",
-            value::Value::List(vec![
-                value::Value::number(size_x),
-                value::Value::number(size_y),
-            ]),
-        );
-    }
-    // Upstream seeds the writer output vectors (`e_retracted`,
-    // `e_restart_extra`, `e_position`) with `MAXIMUM_EXTRUDER_NUMBER`
-    // (64) zeros BEFORE rendering (`GCode.cpp:1632-1642`), so
-    // `{e_retracted[0]=1}` assigns in place rather than resizing; the
-    // `e_position` output exists only for absolute extrusion.
-    for key in ["e_retracted", "e_restart_extra", "e_position"] {
-        if key == "e_position"
-            && traversal
-                .resolved
-                .views
-                .runtime_gcode
-                .use_relative_e_distances
-                .0
-        {
-            continue;
-        }
-        config.insert(key, value::Value::List(vec![value::Value::number(0.0); 64]));
-    }
-    let (first_filaments, first_non_support_filaments) = first_filaments::resolve(traversal);
-    config.insert("first_tools", first_filaments.clone());
-    config.insert("first_filaments", first_filaments);
-    config.insert(
-        "first_non_support_tools",
-        first_non_support_filaments.clone(),
-    );
-    config.insert("first_non_support_filaments", first_non_support_filaments);
-    Ok(config)
-}
-
 /// `GCodeWriter::preamble` (`GCodeWriter.cpp:82-104`): absolute XYZ
 /// coordinates, millimeters, and the extruder distance mode for the
 /// flavors that support it. Compatible printers emit it after machine start;
