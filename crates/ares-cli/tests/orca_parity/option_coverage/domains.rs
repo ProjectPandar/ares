@@ -326,11 +326,6 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         "filament_diameter" => &[("probe-min", "1.0"), ("probe-max", "3.0")],
         "pressure_advance" => &[("probe-min", "0.01"), ("probe-max", "0.2")],
         "adaptive_pressure_advance_bridges" => &[("probe-min", "0.5"), ("probe-max", "2.0")],
-        // Absolute widths below ~0.2mm trip upstream's "Too small line
-        // width" validation; probe a legal absolute + a percent value.
-        "skeleton_infill_line_width" | "skin_infill_line_width" => {
-            &[("probe-min", "0.3"), ("probe-percent", "150%")]
-        }
         _ => return None,
     };
     Some(probes)

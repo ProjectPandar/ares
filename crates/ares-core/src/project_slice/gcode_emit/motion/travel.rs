@@ -304,10 +304,12 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
             output.extend_from_slice(line.as_bytes());
             state.x = point.x;
             state.y = point.y;
-            // `scaled<coord_t>` truncates toward zero (`Point.hpp:665-668`).
+            // Recover the scaled-int position the mm value came from
+            // (upstream wipe moves hold ints; mm→int round-trips are
+            // exact under round-to-nearest).
             state.last_scaled_position = Some((
-                ((point.x - state.offset.0) / state.scale_factor) as i64,
-                ((point.y - state.offset.1) / state.scale_factor) as i64,
+                ((point.x - state.offset.0) / state.scale_factor).round() as i64,
+                ((point.y - state.offset.1) / state.scale_factor).round() as i64,
             ));
             state.wipe_start = Some(point);
         }

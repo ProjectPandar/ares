@@ -11,7 +11,19 @@ fn option_domain_plan_is_complete_and_source_cited() {
             || plan.source.starts_with("src/libslic3r/PrintConfig.hpp:")
     }));
     assert!(plans.iter().all(|plan| !plan.cases.is_empty()));
-    assert!(plans.iter().all(|plan| plan.omission.is_none()));
+    // Omissions are only allowed for authored numeric probe domains —
+    // interior samples of a schema range whose bounds upstream
+    // slice-time validation rejects (`domains.rs` authored block).
+    assert!(
+        plans.iter().all(|plan| {
+            plan.omission.is_none() || plan.omission.is_some_and(|note| note.contains("authored"))
+        }),
+        "unexpected omission: {:?}",
+        plans
+            .iter()
+            .filter_map(|plan| plan.omission.map(|note| (plan.key.as_str(), note)))
+            .collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -227,10 +239,18 @@ fn provably_legal_domains_cover_enumerable_and_bounded_options() {
         legal >= 519,
         "provably_legal regressed: {legal}; baseline-only: {baseline:?}"
     );
-    // Every unbounded remainder is a type that cannot express min/max.
+    // Every unbounded remainder is a type that cannot express min/max,
+    // or a key with authored interior probes (schema bound rejected by
+    // upstream slice-time validation — e.g. `skeleton_infill_line_width`
+    // min trips "Too small line width", `PrintConfig.cpp:4064-4082`).
     for key in &baseline {
+        let authored = plans
+            .iter()
+            .find(|plan| &plan.key == key)
+            .and_then(|plan| plan.omission)
+            .is_some_and(|note| note.contains("authored"));
         assert!(
-            !key.ends_with("_line_width"),
+            authored || !key.ends_with("_line_width"),
             "width option {key} must be provably legal via width_domain"
         );
     }

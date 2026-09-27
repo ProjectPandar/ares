@@ -35,13 +35,14 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
     // `Wipe::path`), converted with the local scale only so the int
     // round-trip is exact.
     points.push(scaled_position(start, state));
-    // Upstream `this->path.points` are scaled ints produced by
-    // `scaled<coord_t>`/`new_scale` — TRUNCATING casts
-    // (`Point.hpp:665-668`, `:204`), not round-to-nearest.
+    // Upstream `Wipe::path.points` are already scaled ints (the path
+    // lives in scaled space); our mm round-trip must recover exactly
+    // those ints — round-to-nearest, since `int * 1e-6 / 1e-6` can land
+    // one ulp below the integer.
     points.extend(state.wipe_path.iter().skip(1).map(|&point| {
         (
-            (point.x / state.scale_factor) as i64,
-            (point.y / state.scale_factor) as i64,
+            (point.x / state.scale_factor).round() as i64,
+            (point.y / state.scale_factor).round() as i64,
         )
     }));
     let total_length = points
@@ -120,10 +121,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(
     point: arc::Point,
     state: &EmitState,
 ) -> (i64, i64) {
-    // `scaled<coord_t>` truncates (`Point.hpp:665-668`).
+    // mm→scaled recovery of an upstream-scaled-int position —
+    // round-to-nearest (see `wipe_path` points above).
     (
-        ((point.x - state.offset.0) / state.scale_factor) as i64,
-        ((point.y - state.offset.1) / state.scale_factor) as i64,
+        ((point.x - state.offset.0) / state.scale_factor).round() as i64,
+        ((point.y - state.offset.1) / state.scale_factor).round() as i64,
     )
 }
 
