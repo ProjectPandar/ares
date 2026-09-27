@@ -238,9 +238,6 @@ pub(crate) fn machine_start_gcode(
     )
 }
 
-fn ensure_trailing_newline(mut text: String) -> String {
-    if !text.ends_with('\n') {
-        text.push('\n');
-    }
-    text
+fn ensure_trailing_newline(text: String) -> String {
+    crate::gcode_format::ensure_trailing_newline(text)
 }

@@ -27,7 +27,11 @@ pub(crate) fn format_decimal(value: f64) -> String {
     text
 }
 
-pub(crate) fn ensure_trailing_newline(mut text: String) -> String {
+pub(crate) fn ensure_trailing_newline(text: String) -> String {
+    // PlaceholderParser's skipper consumes leading whitespace before the
+    // first grammar token (`PlaceholderParser.cpp` phrase_parse with
+    // `client::skipper`) — applied here to mirror `process()`.
+    let mut text = text.trim_start().to_owned();
     if !text.ends_with('\n') {
         text.push('\n');
     }

@@ -154,9 +154,6 @@ fn replace_placeholder(template: &str, key: &str, value: &str) -> String {
         .replace(&format!("[{key}]"), value)
 }
 
-fn ensure_trailing_newline(mut gcode: String) -> String {
-    if !gcode.ends_with('\n') {
-        gcode.push('\n');
-    }
-    gcode
+fn ensure_trailing_newline(gcode: String) -> String {
+    crate::gcode_format::ensure_trailing_newline(gcode)
 }
