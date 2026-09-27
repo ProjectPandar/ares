@@ -258,22 +258,20 @@ pub(super) fn emit_needs_travel(
             first_travel_comment,
         );
         travel_set_layer_z = true;
-    } else if first_position
-        && (state.retracted || first_travel_lift.is_some())
-        && state.options.z_hop > 0.0
-        && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
-        && (first_travel_lift.is_some() || travel::lift_is_allowed_at(state, state.layer_z))
-    {
+    } else if first_position && (first_travel_lift.is_some() || state.pending_lift.is_some()) {
         // `m_to_lift` consumption is independent of the retracted flag
-        // (`GCodeWriter.cpp:694-710`) — a Hilbert-suppressed retraction
-        // still emits its deferred hop.
+        // (`GCodeWriter.cpp:694-710`) — a deferred hop (scheduled by a
+        // qualifying retraction, including a Hilbert-suppressed one or
+        // the retract path's own deferral) always emits on the first
+        // travel. No scheduled lift → no hop (`GCode.cpp:7530-7533`).
+        let lift = first_travel_lift.or_else(|| state.pending_lift.take());
         dispatch::emit_retracted_first_travel(
             output,
             state,
             travel_x,
             travel_y,
             first_travel_comment,
-            first_travel_lift,
+            lift,
             never_positioned,
         );
     } else if layer_change_travel {

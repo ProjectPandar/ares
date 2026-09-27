@@ -71,19 +71,10 @@ pub(super) fn append_print_preamble(
         // whitespace-only default sentinel to no output and no newline.
         .filter(|source| !source.trim().is_empty())
     {
-        // `start_position` carries the machine-start template's position
-        // assignment — apply it to the writer BEFORE seeding so the
-        // template sees upstream's post-assignment `m_pos`
-        // (`GCode.cpp:3900-3903` applies assignments for every process
-        // call, including machine-start).
-        if let Some(value::Value::List(position)) = start_position
-            && let [x, y, z] = position.as_slice()
-            && let (Some(x), Some(y), Some(z)) = (x.as_number(), y.as_number(), z.as_number())
-        {
-            state.x = x;
-            state.y = y;
-            state.writer_z = Some(z);
-        }
+        // Machine-start's `position` assignment was already written back
+        // into writer state by the caller (`gcode_emit.rs`), so the
+        // refresh below seeds upstream's post-assignment `m_pos`.
+        let _ = start_position;
         let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
         super::motion::refresh_writer_state(&mut config, state);
         let name = "filament_start_gcode";

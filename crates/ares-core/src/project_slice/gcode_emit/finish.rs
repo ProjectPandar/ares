@@ -74,31 +74,30 @@ pub(super) fn append(
     }
     output.extend_from_slice(custom.as_bytes());
     if let Some(filament_end) = gcode.filament_end_gcode.0.first() {
-        append_template(output, filament_end, &mut config, "filament-end")?;
-        // Writer write-back (`GCode.cpp:3898-3915`) — assignments carry
-        // into the following machine-end template's seeded state.
-        apply_or_report(output, state, "filament_end_gcode", &config);
+        append_template(
+            output,
+            state,
+            filament_end,
+            &mut config,
+            "filament-end",
+            "filament_end_gcode",
+        )?;
+        // The machine-end template reseeds from the post-assignment
+        // writer state (`GCode.cpp:3896` refresh per process call).
         super::motion::refresh_writer_state(&mut config, state);
     }
     append_template(
         output,
+        state,
         &gcode.machine_end_gcode.0,
         &mut config,
         "machine-end",
+        "machine_end_gcode",
     )?;
-    apply_or_report(output, state, "machine_end_gcode", &config);
     Ok(())
 }
 
-fn apply_or_report(
-    output: &mut Vec<u8>,
-    state: &mut super::motion::EmitState,
-    name: &str,
-    config: &value::Config,
-) {
-    if super::motion::apply_writer_state(name, config, state) {
-        return;
-    }
+fn failure_block(output: &mut Vec<u8>, state: &mut super::motion::EmitState, name: &str) {
     let error = state
         .failed_templates
         .last()
@@ -315,16 +314,32 @@ fn join_sparse(values: &[Option<String>]) -> Option<String> {
 
 fn append_template(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     source: &str,
     config: &mut value::Config,
     name: &str,
+    template_name: &str,
 ) -> Result<(), SliceError> {
     if source.is_empty() {
         return Ok(());
     }
-    let rendered = template::render(source, config).map_err(|error| {
-        SliceError::InvalidInput(format!("invalid project {name} G-code template: {error}"))
-    })?;
+    // Render or write-back failure emits only the inline report — the
+    // rendered text is discarded (`GCode.cpp:3920-3933`).
+    let rendered = match template::render(source, config) {
+        Ok(rendered) => Some(rendered),
+        Err(error) => {
+            state.record_template_failure(template_name, &error.to_string());
+            failure_block(output, state, template_name);
+            None
+        }
+    };
+    let Some(rendered) = rendered else {
+        return Ok(());
+    };
+    if !super::motion::apply_writer_state(template_name, config, state) {
+        failure_block(output, state, template_name);
+        return Ok(());
+    }
     let rendered = if name == "filament-end" {
         rendered.trim_start_matches([' ', '\t'])
     } else {

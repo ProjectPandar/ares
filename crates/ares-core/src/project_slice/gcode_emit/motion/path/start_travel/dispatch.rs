@@ -70,23 +70,16 @@ pub(super) fn emit_retracted_first_travel(
             );
             state.record_z(state.layer_z + state.options.z_hop);
         } else {
-            // Clear position: upstream `travel_to_xyz` NormalLift
-            // emits the plain lift (`slop_move`) then ONE
-            // combined `G1 X{} Y{} Z{}` move (`xy_z_move`,
-            // `GCodeWriter.cpp:748-768`); the redundant F drops
-            // in the cooling rewrite like any unchanged feedrate
-            // word.
-            travel_emit::xyz_with_comment(
-                output,
-                state,
-                travel_x,
-                travel_y,
-                state.layer_z + state.options.z_hop,
-                state.travel_feedrate,
-                first_travel_comment,
-            );
-            state.current_feedrate = state.travel_feedrate;
+            // Clear position with a pending lift: upstream emits the
+            // lift, then `travel_to_xy`-style XY WITHOUT a Z or F word
+            // (the covered Z does not move, `GCodeWriter.cpp:769-780`;
+            // the feedrate is already the lift's), then the bare
+            // `_travel_to_z` re-statement of the raised z.
+            travel_emit::xy_without_feed(output, travel_x, travel_y);
             state.record_z(state.layer_z + state.options.z_hop);
+            output.extend_from_slice(
+                format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop),).as_bytes(),
+            );
         }
     } else {
         travel_emit::xy_with_comment(

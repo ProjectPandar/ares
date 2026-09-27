@@ -149,12 +149,12 @@ fn append(
     let rendered = match template::render(source, &mut config) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
-            state.record_template_failure("time_lapse_gcode", &error.to_string());
+            state.record_template_failure("timelapse_gcode", &error.to_string());
             None
         }
     };
     let last_z = rendered.as_deref().and_then(last_motion_z);
-    let name = "time_lapse_gcode";
+    let name = "timelapse_gcode";
     if rendered.is_none() || !super::motion::apply_writer_state(name, &config, state) {
         let error = state
             .failed_templates

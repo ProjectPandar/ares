@@ -148,10 +148,24 @@ pub(super) fn emit(
             };
         }
     }
-    // `GCode::preamble` performs a *silent* `travel_to_z(z_offset)`
-    // (`GCode.cpp:5676-5679` — the returned G-code is discarded, only
-    // `m_pos(2)` updates) so the writer's initial Z domain is offset.
-    state.writer_z = Some(state.options.z_offset);
+    // A `position` assignment in the machine-start template writes back
+    // into the writer state — including the generator cursor — for every
+    // template call (`GCode.cpp:3900-3907`, `Point.hpp:665` truncates).
+    // It is overwritten again by the silent `travel_to_z(z_offset)` in
+    // `preamble` (`GCode.cpp:5676-5679`, applied inside
+    // `preamble::emit`).
+    if let Some(value::Value::List(position)) = &start_position
+        && let [x, y, z] = position.as_slice()
+        && let (Some(x), Some(y), Some(z)) = (x.as_number(), y.as_number(), z.as_number())
+    {
+        state.x = x;
+        state.y = y;
+        state.writer_z = Some(z);
+        state.last_scaled_position = Some((
+            ((x - state.origin.0 + state.extruder_offset.0) / state.scale_factor) as i64,
+            ((y - state.origin.1 + state.extruder_offset.1) / state.scale_factor) as i64,
+        ));
+    }
     let fan_layers_start = output.len();
     let (max_layer_z, mut fan_mover_handle) = layers::append(
         prepared,

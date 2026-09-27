@@ -249,6 +249,20 @@ pub(super) fn append_start(
         // GCodeWriter position, but never parses G0/G1 text back into it.
         // `GCode.cpp:3905-3918` additionally feeds assigned `e_retracted` /
         // `e_restart_extra` back into the extruder (`set_retracted`).
+        // Output vector validation (`validate_output_vector_variables`,
+        // `GCode.cpp:1702-1713`) — `position` must stay size 3 and the E
+        // vectors size 64; a violation replaces the template output with
+        // the inline failure report (`GCode.cpp:3920-3933`).
+        let vector_size_ok = |key: &str, expected: usize| -> bool {
+            match config.get(key) {
+                Some(value::Value::List(list)) => list.len() == expected,
+                _ => true,
+            }
+        };
+        let valid = vector_size_ok("position", 3)
+            && ["e_retracted", "e_restart_extra", "e_position"]
+                .iter()
+                .all(|key| vector_size_ok(key, 64));
         let number_at = |key: &str| -> Option<f64> {
             config
                 .get(key)
@@ -256,10 +270,26 @@ pub(super) fn append_start(
                 .and_then(|value| value.as_number())
         };
         let retracted = number_at("e_retracted");
+        // `Extruder::set_retracted` throws below -EPSILON
+        // (`Extruder.cpp:108-122`) — same inline-failure path.
+        let invalid_retract = retracted.is_some_and(|value| value < -1e-4)
+            || number_at("e_restart_extra").is_some_and(|value| value < -1e-4);
         let retract_state = retracted.map(|retracted| StartRetractState {
             retracted,
             restart_extra: number_at("e_restart_extra").unwrap_or(0.0),
         });
+        let rendered = if valid && !invalid_retract {
+            rendered
+        } else {
+            let error = if !valid {
+                "output variable must not be resized by the script."
+            } else {
+                "Custom G-code reports negative z_retracted or z_restart_extra."
+            };
+            format!(
+                "\n!!!!! Failed to process the custom G-code template machine_start_gcode\n{error}!!!!! End of an error report for the custom G-code template machine_start_gcode\n\n"
+            )
+        };
         (rendered, config.get("position").cloned(), retract_state)
     };
     let bed_cache = temperature::append_startup(output, traversal, &rendered);

@@ -22,9 +22,15 @@ pub(super) fn decide(
     // TopSolidInfill under a Hilbert top pattern
     // (`GCode.cpp:7667-7672`). No `Extruder::retract` call means no
     // `m_restart_extra` assignment.
-    let hilbert_suppressed = (state.layer_index == 0
+    let hilbert_suppressed = ((state.layer_index == 0
         && state.options.bottom_surface_pattern_hilbert)
-        || (destination_feature == "Top surface" && state.options.top_surface_pattern_hilbert);
+        || (destination_feature == "Top surface" && state.options.top_surface_pattern_hilbert))
+        // With a stored wipe path, upstream still runs
+        // `retract(true, beforeWipe)` + the wipe — which assigns
+        // `m_restart_extra` and retracts — before the suppressed second
+        // call (`GCode.cpp:7659-7672`). Only a wipe-less travel actually
+        // suppresses.
+        && state.wipe_path.is_empty();
     // `needs_retraction` (`GCode.cpp:7528-7647`) does not check the
     // retracted flag — a long non-exempt travel invokes `retract()` even
     // when already retracted, and `Extruder::retract` assigns
