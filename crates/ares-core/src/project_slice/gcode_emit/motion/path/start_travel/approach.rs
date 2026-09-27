@@ -256,12 +256,15 @@ pub(super) fn emit_needs_travel(
             first_travel_comment,
         );
         travel_set_layer_z = true;
-    } else if state.retracted
-        && first_position
+    } else if first_position
+        && (state.retracted || first_travel_lift.is_some())
         && state.options.z_hop > 0.0
         && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
         && (first_travel_lift.is_some() || travel::lift_is_allowed_at(state, state.layer_z))
     {
+        // `m_to_lift` consumption is independent of the retracted flag
+        // (`GCodeWriter.cpp:694-710`) — a Hilbert-suppressed retraction
+        // still emits its deferred hop.
         dispatch::emit_retracted_first_travel(
             output,
             state,

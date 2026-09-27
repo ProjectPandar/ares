@@ -49,6 +49,7 @@ fn max_additional_fan(traversal: &PreparedPostClassicTraversal) -> f64 {
 }
 pub(super) fn append_print_preamble(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     start_position: Option<&value::Value>,
@@ -71,6 +72,7 @@ pub(super) fn append_print_preamble(
         .filter(|source| !source.trim().is_empty())
     {
         let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+        super::motion::refresh_writer_state(&mut config, state);
         if let Some(position) = start_position {
             config.insert("position", position.clone());
         }
@@ -82,6 +84,20 @@ pub(super) fn append_print_preamble(
         output.extend_from_slice(rendered.as_bytes());
         if !rendered.ends_with('\n') {
             output.push(b'\n');
+        }
+        if !super::motion::apply_writer_state("filament_start_gcode", &config, state) {
+            let name = "filament_start_gcode";
+            let error = state
+                .failed_templates
+                .last()
+                .map(|(_, error)| error.clone())
+                .unwrap_or_default();
+            output.extend_from_slice(
+                format!(
+                    "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+                )
+                .as_bytes(),
+            );
         }
     }
     if is_bbl {

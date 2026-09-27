@@ -53,6 +53,7 @@ pub(super) fn emit(
     if !source.is_empty() {
         let mut config =
             placeholders::base_config(traversal, context.metadata, context.first_layer_bounds)?;
+        motion::refresh_writer_state(&mut config, state);
         config.insert(
             "layer_num",
             value::Value::number(context.layer.index as f64),
@@ -67,6 +68,21 @@ pub(super) fn emit(
         })?;
         rendered.push('\n');
         output.extend_from_slice(rendered.as_bytes());
+        // Writer write-back (`GCode.cpp:3898-3915`).
+        if !motion::apply_writer_state("wrapping_detection_gcode", &config, state) {
+            let name = "wrapping_detection_gcode";
+            let error = state
+                .failed_templates
+                .last()
+                .map(|(_, error)| error.clone())
+                .unwrap_or_default();
+            output.extend_from_slice(
+                format!(
+                    "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+                )
+                .as_bytes(),
+            );
+        }
     }
     // `set_current_position_clear(false)` (`GCode.cpp:5227`) runs even for
     // an empty template; `get_last_z_from_gcode` then adopts the

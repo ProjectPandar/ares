@@ -46,6 +46,9 @@ fn hilbert_suppression_still_emits_reset_e_in_absolute_mode() {
     // `m_writer.retract()` is gated.
     let mut state = state();
     state.options.use_relative_e_distances = false;
+    // `reset_e` emits only when the E counter is nonzero
+    // (`GCodeWriter.cpp:486-489`).
+    state.e_position = 0.4;
     let mut output = Vec::new();
     decide(
         &mut output,

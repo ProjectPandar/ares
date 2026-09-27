@@ -10,6 +10,7 @@ mod tests;
 
 pub(super) fn append(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     max_layer_z: f64,
     metadata: GenerationMetadata,
@@ -18,6 +19,9 @@ pub(super) fn append(
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
     let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+    // `ppi.update_from_gcodewriter(m_writer)` refreshes `position` and the
+    // E counters before each template (`GCode.cpp:3896`).
+    super::motion::refresh_writer_state(&mut config, state);
     // The `position` placeholder carries the writer's position at print
     // end (`GCode.cpp:3470-3493` end g-code — the parser's live position,
     // e.g. SPARKX's `G2 Z{position[2]+3}` spiral lift resolves against the
@@ -71,6 +75,10 @@ pub(super) fn append(
     output.extend_from_slice(custom.as_bytes());
     if let Some(filament_end) = gcode.filament_end_gcode.0.first() {
         append_template(output, filament_end, &mut config, "filament-end")?;
+        // Writer write-back (`GCode.cpp:3898-3915`) — assignments carry
+        // into the following machine-end template's seeded state.
+        apply_or_report(output, state, "filament_end_gcode", &config);
+        super::motion::refresh_writer_state(&mut config, state);
     }
     append_template(
         output,
@@ -78,7 +86,30 @@ pub(super) fn append(
         &mut config,
         "machine-end",
     )?;
+    apply_or_report(output, state, "machine_end_gcode", &config);
     Ok(())
+}
+
+fn apply_or_report(
+    output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
+    name: &str,
+    config: &value::Config,
+) {
+    if super::motion::apply_writer_state(name, config, state) {
+        return;
+    }
+    let error = state
+        .failed_templates
+        .last()
+        .map(|(_, error)| error.clone())
+        .unwrap_or_default();
+    output.extend_from_slice(
+        format!(
+            "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+        )
+        .as_bytes(),
+    );
 }
 
 pub(super) fn append_compatible_stats(

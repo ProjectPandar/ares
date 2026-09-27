@@ -181,7 +181,7 @@ pub(super) fn append<'a>(
     if timelapse_at_layer_change {
         // Non-BBL layer-start render (`GCode.cpp:4667`): no position-clear,
         // no Z adoption — those belong to the lambda inserts only.
-        timelapse::append_untracked(output, timelapse_context)?;
+        timelapse::append_untracked(output, state, timelapse_context)?;
     }
     // Spiral filter targets live in the writer (offset) Z domain
     // (`GCode.cpp:5692` emits the `print_z + z_offset` move, then
@@ -195,20 +195,6 @@ pub(super) fn append<'a>(
     // the silent `m_pos.z() = z` both leave the writer at the new layer z —
     // but that z change happens AFTER the deferred-lift gate reads the
     // previous writer z, so `advance_for_layer` below owns the record.
-    layer_gcode::append_layer_change(
-        output,
-        state,
-        layer_gcode::LayerTemplateContext {
-            traversal,
-            // Post-`change_layer` `{layer_num}` = `m_layer_index` = the
-            // new PHYSICAL layer index (`GCode.cpp:4669`, :5689).
-            layer_index,
-            layer_z: f64::from(layer_z),
-            max_layer_z: f64::from(state.max_layer_z),
-            totals: state.extrusion_totals(),
-            context: layer_change_template,
-        },
-    )?;
     // A deferred previous-layer retraction lifts above the new layer's
     // print Z (`GCodeWriter::travel_to_z` during layer transition).
     // The lift gate evaluates at the writer's z before the layer move
@@ -224,6 +210,25 @@ pub(super) fn append<'a>(
         layer_retract_pending,
     );
     motion::flush_pending_retract_lift(output, state, previous_state_layer_z, will_move_z);
+    // Upstream renders the layer-change template AFTER `change_layer`
+    // finalized writer state (`process_layer` at `GCode.cpp:4667-4685`,
+    // after `change_layer` returns at `:5712`), so `{position[2]}` reads
+    // the new layer's Z and assignments are not overwritten by the
+    // transition bookkeeping.
+    layer_gcode::append_layer_change(
+        output,
+        state,
+        layer_gcode::LayerTemplateContext {
+            traversal,
+            // Post-`change_layer` `{layer_num}` = `m_layer_index` = the
+            // new PHYSICAL layer index (`GCode.cpp:4669`, :5689).
+            layer_index,
+            layer_z: f64::from(layer_z),
+            max_layer_z: f64::from(state.max_layer_z),
+            totals: state.extrusion_totals(),
+            context: layer_change_template,
+        },
+    )?;
     // The BBL first-layer-inspection scan (`GCode.cpp:4780-4790`) opens
     // between the layer-change gcode and the acceleration reset, so it
     // precedes `begin_layer`'s M204.

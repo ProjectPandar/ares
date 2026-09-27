@@ -41,15 +41,34 @@ pub(super) fn decide(
         if hilbert_suppressed {
             // `GCode.cpp:7667-7672` suppresses ONLY `m_writer.retract()`;
             // `reset_e` (`GCode.cpp:7674`) and the lazy lift still run.
-            if !state.options.use_relative_e_distances {
-                output.extend_from_slice(b"G92 E0\n");
+            // `reset_e` emits nothing for a zero E counter (force=false)
+            // or Mach3/MakerWare/Sailfish flavors
+            // (`GCodeWriter.cpp:480-499`).
+            if !state.options.use_relative_e_distances
+                && !matches!(
+                    state.options.gcode_flavor,
+                    crate::GCodeFlavor::Mach3
+                        | crate::GCodeFlavor::MakerWare
+                        | crate::GCodeFlavor::Sailfish
+                )
+                && state.e_position.abs() >= 1e-6
+            {
+                let comment = state
+                    .options
+                    .gcode_comments
+                    .then_some(" ; reset extrusion distance")
+                    .unwrap_or("");
+                output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
                 state.e_position = 0.0;
             }
+            // `needs_lift` (`GCode.cpp:7678-7681`): configured length OR
+            // firmware retraction allows the deferred hop; upstream
+            // `lazy_lift` reads the CURRENT writer Z.
             if state.options.z_hop > 0.0
-                && state.options.retraction_length > 0.0
+                && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
                 && state.lifted_amount == 0.0
                 && state.pending_lift.is_none()
-                && travel::lift_is_allowed_at(state, state.layer_z)
+                && travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z))
             {
                 state.pending_lift = Some(travel::lift_mode_for(state, false));
             }
@@ -65,14 +84,27 @@ pub(super) fn decide(
     } else if upstream_would_retract {
         if !hilbert_suppressed {
             state.restart_extra = state.options.retract_restart_extra;
-        } else if !state.options.use_relative_e_distances {
-            output.extend_from_slice(b"G92 E0\n");
+        } else if !state.options.use_relative_e_distances
+            && !matches!(
+                state.options.gcode_flavor,
+                crate::GCodeFlavor::Mach3
+                    | crate::GCodeFlavor::MakerWare
+                    | crate::GCodeFlavor::Sailfish
+            )
+            && state.e_position.abs() >= 1e-6
+        {
+            let comment = state
+                .options
+                .gcode_comments
+                .then_some(" ; reset extrusion distance")
+                .unwrap_or("");
+            output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
             state.e_position = 0.0;
         }
         if defer_lift_for_retracted_travel
             && state.options.z_hop > 0.0
-            && state.options.retraction_length > 0.0
-            && travel::lift_is_allowed_at(state, state.layer_z)
+            && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
+            && travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z))
         {
             state.pending_lift = Some(travel::lift_mode_for(state, false));
         }

@@ -198,13 +198,15 @@ pub(super) fn emit(
     // end G-code (`GCode.cpp` final object teardown).
     motion::retract_for_print_end(&mut output, &mut state);
     motion::append_exclude_end(&mut output, &mut state);
+    let end_position = (state.x, state.y, state.layer_z);
     finish::append(
         &mut output,
+        &mut state,
         traversal,
         max_layer_z,
         metadata,
         first_layer_bounds,
-        (state.x, state.y, state.layer_z),
+        end_position,
     )?;
     machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");

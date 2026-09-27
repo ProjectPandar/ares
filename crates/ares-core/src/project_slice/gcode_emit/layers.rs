@@ -322,9 +322,15 @@ pub(super) fn append(
                 // does not leak into the next.
                 // Upstream `_retract` reads `config()` — the current
                 // PrintObject's config; refresh the flags per object.
-                let region = traversal.resolved.objects[source_object_index]
-                    .layer_candidates
-                    .first()
+                // `resolved.objects` is compacted when objects lack
+                // printable instances — match by source index
+                // (`traversal.rs:27-31`), not by position.
+                let region = traversal
+                    .resolved
+                    .objects
+                    .iter()
+                    .find(|object| object.source_object_index == source_object_index)
+                    .and_then(|object| object.layer_candidates.first())
                     .and_then(|layer| layer.model_parts.first())
                     .map(|part| &part.region);
                 if let Some(region) = region {

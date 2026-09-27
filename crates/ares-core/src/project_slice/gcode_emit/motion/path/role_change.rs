@@ -72,7 +72,10 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
         Value::List(vec![
             Value::number(state.x),
             Value::number(state.y),
-            Value::number(state.writer_z.unwrap_or(state.source_layer_z)),
+            // `ppi.position` seeds from `m_writer.m_pos` verbatim —
+            // before the first emitted Z the writer sits at 0, not the
+            // model's layer z (`GCode.cpp:1663-1670`).
+            Value::number(state.writer_z.unwrap_or(0.0)),
         ]),
     );
     config.insert("zhop", Value::number(state.lifted_amount));
@@ -145,12 +148,12 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
         && let [x, y, z] = position.as_slice()
         && let (Some(x), Some(y), Some(z)) = (numeric(x), numeric(y), numeric(z))
     {
-        // `ppi.position != pos` is an exact component compare — any
-        // assigned difference writes back (`GCode.cpp:3901-3907`).
-        if x != state.x || y != state.y {
-            // `set_position` + `set_last_pos(gcode_to_point)`;
-            // `gcode_to_point` is `(p - m_origin) + extruder_offset` then
-            // `scale_` TRUNCATES the new coordinate (`Point.hpp:665`).
+        // `ppi.position != pos` is an exact 3-component compare — ANY
+        // difference (including Z-only) triggers `set_position` +
+        // `set_last_pos(gcode_to_point)` (`GCode.cpp:3901-3907`), and
+        // `gcode_to_point` TRUNCATES the new coordinate
+        // (`Point.hpp:665`).
+        if x != state.x || y != state.y || state.writer_z != Some(z) {
             state.x = x;
             state.y = y;
             state.last_scaled_position = Some((

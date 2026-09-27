@@ -17,6 +17,7 @@ pub(super) fn emit(
 ) -> Result<(), SliceError> {
     layer_gcode::append_print_preamble(
         output,
+        state,
         traversal,
         metadata,
         start_position,

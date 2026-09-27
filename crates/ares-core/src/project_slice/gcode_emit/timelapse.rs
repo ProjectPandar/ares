@@ -31,10 +31,12 @@ pub(super) struct Context<'a> {
 /// render).
 pub(super) fn append_untracked(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
     append(
         output,
+        state,
         context.traversal,
         context.layer,
         context.metadata,
@@ -53,6 +55,7 @@ pub(super) fn append_and_track(
 ) -> Result<(), SliceError> {
     if let Some(last_z) = append(
         output,
+        state,
         context.traversal,
         context.layer,
         context.metadata,
@@ -96,6 +99,7 @@ pub(super) fn append_traditional(
 
 fn append(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     layer: TimelapseLayer,
     metadata: GenerationMetadata,
@@ -108,6 +112,9 @@ fn append(
     }
 
     let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+    // `ppi.update_from_gcodewriter(m_writer)` refreshes writer state
+    // before each template (`GCode.cpp:3896`).
+    super::motion::refresh_writer_state(&mut config, state);
     config.insert("layer_num", value::Value::number(layer.index as f64));
     config.insert("layer_z", value::Value::number(layer.z));
     config.insert("max_layer_z", value::Value::number(layer.max_z));
@@ -145,6 +152,23 @@ fn append(
     let last_z = last_motion_z(&rendered);
     output.extend_from_slice(rendered.as_bytes());
     output.push(b'\n');
+    // Writer write-back (`GCode.cpp:3898-3915`): `e_retracted`/
+    // `e_restart_extra`/`position` assignments take effect for the
+    // subsequent unretract/Z tracking (`timelapse {e_retracted[0]=..}`).
+    if !super::motion::apply_writer_state("time_lapse_gcode", &config, state) {
+        let name = "time_lapse_gcode";
+        let error = state
+            .failed_templates
+            .last()
+            .map(|(_, error)| error.clone())
+            .unwrap_or_default();
+        output.extend_from_slice(
+            format!(
+                "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+            )
+            .as_bytes(),
+        );
+    }
     // Outer `Some` = the template rendered and emitted (position now
     // unclear); inner `Some` = the rendered g-code ended on a Z motion.
     Ok(Some(last_z))
