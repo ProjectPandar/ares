@@ -134,7 +134,22 @@ pub(super) fn decide(
     } else if upstream_would_retract {
         if !hilbert_suppressed {
             state.restart_extra = state.options.retract_restart_extra;
-        } else if !state.options.use_relative_e_distances
+            // A fully-retracted nozzle still runs upstream's wipe +
+            // `reset_e` side effects (`GCode.cpp:7659-7674`) — the
+            // `retract()` E move is a no-op, not the sequence.
+            if state.retracted
+                && !state.wipe_path.is_empty()
+                && state.options.wipe
+                && state.options.wipe_distance > 1e-4
+            {
+                let head_before = (state.x, state.y);
+                travel::wipe_only_retract(output, state);
+                if (state.x, state.y) != head_before {
+                    replan(state);
+                }
+            }
+        }
+        if !state.options.use_relative_e_distances
             && !matches!(
                 state.options.gcode_flavor,
                 crate::GCodeFlavor::Mach3

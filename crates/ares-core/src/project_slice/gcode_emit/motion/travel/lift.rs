@@ -196,7 +196,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
         state.record_z(raised_z);
     }
     state.lifted = true;
-    state.lifted_amount = state.options.z_hop;
+    state.lifted_amount = raised_z - state.layer_z;
     emitted
 }
 
@@ -252,7 +252,7 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
     }
     state.record_z(raised_z);
     state.lifted = true;
-    state.lifted_amount = state.options.z_hop;
+    state.lifted_amount = raised_z - state.layer_z;
     // `GCodeWriter::eager_lift` zeroes `m_to_lift` (`GCodeWriter.cpp:679`):
     // a hop deferred by an earlier retract is realized by this eager lift,
     // so the following travel sees the nozzle already lifted and emits a
@@ -273,9 +273,9 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
         format!("G1 Z{} F{}\n", format_z(raised), format_axis(feedrate)).as_bytes(),
     );
     state.current_feedrate = feedrate;
-    state.record_z(state.layer_z + state.options.z_hop);
+    state.record_z(raised);
     state.lifted = true;
-    state.lifted_amount = state.options.z_hop;
+    state.lifted_amount = raised - state.layer_z;
 }
 
 fn append_spiral(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: f64, j: f64) {

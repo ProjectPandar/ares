@@ -67,6 +67,7 @@ fn deferred_bottom_only_lift_uses_the_target_layer_index() {
         pending_layer_retract: true,
         options: MotionOptions {
             z_hop: 0.4,
+            retraction_length: 1.0,
             retract_lift_enforce: crate::RetractLiftEnforce::BottomOnly,
             ..MotionOptions::default()
         },

@@ -128,8 +128,11 @@ pub(super) fn emit(
         state.record_template_failure("machine_start_gcode", &error);
     }
     // `e_position[0]` write-back — absolute-E counters feed the
-    // filament-start `{e_position}` placeholder (`GCode.cpp:3908-3911`).
-    if let Some(e_position) = start_outcome.e_position {
+    // filament-start `{e_position}` placeholder (`GCode.cpp:3908-3911`;
+    // sub-EPSILON assignments are ignored via `is_approx`).
+    if let Some(e_position) = start_outcome.e_position
+        && (e_position - state.e_position).abs() >= 1e-4
+    {
         state.e_position = e_position;
     }
     // The machine-start template's `e_retracted[0]` assignment seeds the

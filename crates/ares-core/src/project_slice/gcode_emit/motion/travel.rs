@@ -19,6 +19,18 @@ pub(super) use lift::{
 pub(in crate::project_slice::gcode_emit::motion) use wipe_path::scaled_position;
 use wipe_path::{WipePath, wipe_moves};
 
+/// Firmware retraction substitutes a fixed `1.0` retract length
+/// (`GCodeWriter.cpp:1027-1037` `_retract` firmware branch) — the
+/// configured `retraction_length` is irrelevant to the
+/// already-retracted top-up decision.
+pub(in crate::project_slice::gcode_emit) fn effective_retraction_length(state: &EmitState) -> f64 {
+    if state.options.use_firmware_retraction {
+        1.0
+    } else {
+        state.options.retraction_length
+    }
+}
+
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
     if state.spiral_vase {
@@ -37,7 +49,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     // (`GCode.cpp:7672`), so `m_restart_extra` is (re)assigned even on a
     // no-op retract (`Extruder.cpp:77`).
     state.restart_extra = state.options.retract_restart_extra;
-    if !state.retracted {
+    if state.retracted_amount < effective_retraction_length(state) {
         retract_and_wipe_with(output, state, false);
         state.retracted = true;
     }
@@ -52,12 +64,11 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
 /// happens after the final layer flushes).
 pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     state.restart_extra = state.options.retract_restart_extra;
-    if state.retracted {
-        return;
+    if state.retracted_amount < effective_retraction_length(state) {
+        retract_and_wipe(output, state);
+        lift::append_eager(output, state);
+        state.retracted = true;
     }
-    retract_and_wipe(output, state);
-    lift::append_eager(output, state);
-    state.retracted = true;
 }
 
 /// `retract(false, false, auto_lift_type, true)` for the wrapping-detection
@@ -69,7 +80,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
 /// (`needs_lift && can_lift` → `eager_lift`, `GCode.cpp:7693-7696`).
 pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) {
     state.restart_extra = state.options.retract_restart_extra;
-    if !state.retracted {
+    if state.retracted_amount < effective_retraction_length(state) {
         retract_and_wipe(output, state);
         state.retracted = true;
     }
@@ -102,7 +113,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     }
     if state.pending_layer_retract
         && will_move_z
-        && state.retracted_amount < state.options.retraction_length
+        && state.retracted_amount < effective_retraction_length(state)
     {
         retract_and_wipe(output, state);
         state.retracted = true;
@@ -121,7 +132,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     }
     if state.pending_layer_retract
         && will_move_z
-        && state.retracted_amount < state.options.retraction_length
+        && state.retracted_amount < effective_retraction_length(state)
     {
         lift::schedule_at(state, true, writer_z);
         state.retracted = true;
@@ -160,7 +171,7 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
         state.restart_extra = state.options.retract_restart_extra;
     }
     if (force || state.pending_layer_retract)
-        && state.retracted_amount < state.options.retraction_length
+        && state.retracted_amount < effective_retraction_length(state)
     {
         if force {
             // The BBL layer-start `retract()` finds no stored wipe path
@@ -182,6 +193,16 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
 }
 
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
+    retract_and_wipe_with(output, state, true);
+}
+
+/// The already-retracted qualifying travel: `retract()` still runs the
+/// wipe + `reset_e` side effects (`GCode.cpp:7659-7674`) even though its
+/// E delta is zero.
+pub(in crate::project_slice::gcode_emit) fn wipe_only_retract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
     retract_and_wipe_with(output, state, true);
 }
 
@@ -270,24 +291,28 @@ fn retract_and_wipe_impl(
     if state.options.use_firmware_retraction {
         firmware_retract(output, state);
         state.retracted = true;
-    } else if before > f64::EPSILON {
+    } else if before > 0.0 {
         // `extrusion::coordinate` accumulates `retracted_amount`
-        // (`Extruder.cpp:77-84` semantics live in the shared counter).
+        // (`Extruder.cpp:77-84` semantics live in the shared counter);
+        // `_retract` emits only when `!is_zero(dE)` (`GCodeWriter.cpp:
+        // 1035`, `libslic3r.h:294` — 1e-6).
         let retract = extrusion::coordinate(state, -before);
         let comment = state
             .options
             .gcode_comments
             .then_some(" ; retract")
             .unwrap_or("");
-        output.extend_from_slice(
-            format!(
-                "G1 E{} F{}{comment}\n",
-                format_extrusion(retract),
-                format_axis(state.options.retraction_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = state.options.retraction_feedrate;
+        if before > 1e-6 {
+            output.extend_from_slice(
+                format!(
+                    "G1 E{} F{}{comment}\n",
+                    format_extrusion(retract),
+                    format_axis(state.options.retraction_feedrate)
+                )
+                .as_bytes(),
+            );
+            state.current_feedrate = state.options.retraction_feedrate;
+        }
     }
     if !segments.is_empty() {
         let wipe_start = if state.tags.is_bbl() {
@@ -369,6 +394,35 @@ fn retract_and_wipe_impl(
         // `Wipe::wipe` resets the stored path so a subsequent retract
         // does not re-wipe the same path (`GCode.cpp:497`).
         state.wipe_path.clear();
+        // Upstream always calls the final `retract()` after the wipe —
+        // it tops the extruder off to the full length whenever the
+        // wipe carried less than the remaining distance
+        // (`GCode.cpp:7664-7670`, `Extruder.cpp:75-84`). For the
+        // suppressed tail the final call is skipped entirely.
+        if !suppressed_tail && !state.options.use_firmware_retraction {
+            let topup = (state.options.retraction_length - state.retracted_amount).max(0.0);
+            // `Extruder::retract` always accumulates `m_retracted`;
+            // `_retract` emits only when `!is_zero(dE)` — `1e-6`, not
+            // machine eps (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
+            // `coordinate` applies the counter update for both cases.
+            let retract = extrusion::coordinate(state, -topup);
+            if topup > 1e-6 {
+                let comment = state
+                    .options
+                    .gcode_comments
+                    .then_some(" ; retract")
+                    .unwrap_or("");
+                output.extend_from_slice(
+                    format!(
+                        "G1 E{} F{}{comment}\n",
+                        format_extrusion(retract),
+                        format_axis(state.options.retraction_feedrate)
+                    )
+                    .as_bytes(),
+                );
+                state.current_feedrate = state.options.retraction_feedrate;
+            }
+        }
     }
     if !state.options.use_relative_e_distances && state.e_position.abs() > f64::EPSILON {
         output.extend_from_slice(b"G92 E0\n");

@@ -10134,4 +10134,9 @@ the CLI/legacy parse); implemented at
 suppression skips only the final full `retract()`, keeping the scaled
 `retract_before_wipe * retract_restart_extra` restart value
 (`GCodeWriter.cpp:1004-1011`); implemented via
-`retract_and_wipe_suppressed_tail`.
+`retract_and_wipe_suppressed_tail`. Deferred residual: the flags refresh
+per object switch from the first model part's region — upstream
+`config()` is the CURRENTLY-EMITTING region (`GCode.cpp:6136,6163`), so
+a multi-part object mixing Hilbert and non-Hilbert top/bottom patterns
+still shares the first part's flags (per-entity region tracking is not
+plumbed through the flattened emit traversal).

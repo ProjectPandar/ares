@@ -99,7 +99,7 @@ pub(super) fn emit_needs_travel(
     // `Extruder::retract` emits `max(0, length - m_retracted)`
     // (`Extruder.cpp:75-84`) — a template-assigned PARTIAL retract tops
     // up rather than skipping.
-    let retract = state.retracted_amount < state.options.retraction_length
+    let retract = state.retracted_amount < travel::effective_retraction_length(state)
         && routed_length >= state.options.retraction_minimum_travel
         && !skip_retraction;
     {
@@ -231,27 +231,33 @@ pub(super) fn emit_needs_travel(
         eager_lifted_travel = true;
         if !lifted_for_travel {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
-        } else if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
-            travel_emit::xyz_with_comment(
-                output,
-                state,
-                travel_x,
-                travel_y,
-                state.layer_z + state.options.z_hop,
-                state.travel_feedrate,
-                first_travel_comment,
-            );
         } else {
-            output.extend_from_slice(
-                format!(
-                    "G1 X{} Y{} Z{}{first_travel_comment}\n",
-                    format_axis(travel_x),
-                    format_axis(travel_y),
-                    format_z(state.layer_z + state.options.z_hop)
-                )
-                .as_bytes(),
-            );
-            state.record_z(state.layer_z + state.options.z_hop);
+            // The lifted nozzle travels at its CURRENT (already raised)
+            // Z — upstream keeps `dest_point(2) = m_pos(2)` once lifted
+            // (`GCodeWriter.cpp:701-709`).
+            let raised = state.writer_z.unwrap_or(state.layer_z);
+            if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
+                travel_emit::xyz_with_comment(
+                    output,
+                    state,
+                    travel_x,
+                    travel_y,
+                    raised,
+                    state.travel_feedrate,
+                    first_travel_comment,
+                );
+            } else {
+                output.extend_from_slice(
+                    format!(
+                        "G1 X{} Y{} Z{}{first_travel_comment}\n",
+                        format_axis(travel_x),
+                        format_axis(travel_y),
+                        format_z(raised)
+                    )
+                    .as_bytes(),
+                );
+                state.record_z(raised);
+            }
         }
     } else if layer_change_travel && state.retracted {
         // With a hop actually deferred, the earlier `state.lifted`

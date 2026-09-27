@@ -120,5 +120,5 @@ pub(super) fn emit_retracted_first_travel(
         state.record_z(raised_z);
     }
     state.lifted = true;
-    state.lifted_amount = state.options.z_hop;
+    state.lifted_amount = raised_z - state.layer_z;
 }
