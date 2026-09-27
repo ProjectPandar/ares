@@ -91,7 +91,9 @@ pub(super) fn append<'a>(
             let nominal = writer_z - state.lifted_amount;
             !(target >= nominal && target <= writer_z)
         } else {
-            (target - writer_z).abs() > 1.0e-4
+            // Upstream suppresses only diff STRICTLY below EPSILON
+            // (`GCodeWriter.cpp:927-930`), so equality still moves.
+            (target - writer_z).abs() >= 1.0e-4
         }
     });
     // Upstream's writer z at the layer-change retract is still the

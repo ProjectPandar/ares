@@ -255,9 +255,12 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
                         .last()
                         .map(|(_, error)| error.clone())
                         .unwrap_or_default();
+                    // `GCode.cpp:3929-3932` verbatim: `err.what()` is
+                    // concatenated with NO separating newline, and the
+                    // caller's role-gcode loop adds a trailing `\n`.
                     output.extend_from_slice(
                         format!(
-                            "\n!!!!! Failed to process the custom G-code template {name}\n{error}\n!!!!! End of an error report for the custom G-code template {name}\n\n"
+                            "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
                         )
                         .as_bytes(),
                     );
@@ -272,7 +275,7 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
                 state.record_template_failure(name, &error.to_string());
                 output.extend_from_slice(
                     format!(
-                        "\n!!!!! Failed to process the custom G-code template {name}\n{error}\n!!!!! End of an error report for the custom G-code template {name}\n\n"
+                        "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
                     )
                     .as_bytes(),
                 );
