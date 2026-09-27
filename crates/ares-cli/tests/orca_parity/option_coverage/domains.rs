@@ -237,6 +237,9 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
     ];
     const POLYGON: &[(&str, &str)] = &[("probe-rect", "10x10,20x10,20x20,10x20")];
     const POINT: &[(&str, &str)] = &[("probe", "5x5")];
+    // Free-form metadata/note strings — content never alters toolpaths;
+    // a distinct probe exercises profile round-trip equality.
+    const NOTE: &[(&str, &str)] = &[("probe", "ares-parity-probe")];
     let probes = match key {
         // G-code template strings (`*_gcode`) — free-form by schema.
         "before_layer_change_gcode"
@@ -246,16 +249,29 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         | "change_filament_gcode"
         | "change_extrusion_role_gcode"
         | "process_change_extrusion_role_gcode"
+        | "filament_change_extrusion_role_gcode"
         | "template_custom_gcode"
         | "wrapping_detection_gcode"
         | "file_start_gcode" => TEMPLATE,
         // `time_lapse_gcode` needs the same probe but is wrapped in
         // `;TIMELAPSE` handling — still free-form.
         "time_lapse_gcode" => TEMPLATE,
+        // Free-form note/colour/profile metadata strings.
+        "filament_notes" | "printer_notes" | "model_notes" | "filament_colour"
+        | "default_filament_colour" | "extruder_colour" | "filament_multi_colour"
+        | "filament_colour_type" | "default_bed_type" | "default_print_profile"
+        | "default_filament_profile" | "bed_custom_texture" | "bed_custom_model" => NOTE,
         // Polygon point lists (`XxY` pairs) — a legal small rectangle.
         // `wrapping_exclude_area` rejected by the oracle (orca rejects the
         // rect probe upstream), so it keeps its unexercised baseline.
         "bed_exclude_area" | "head_wrap_detect_zone" | "start_end_points" => POLYGON,
+        // `extruder_offset`: one offset per extruder — a shifted probe
+        // stays legal for a single-extruder profile.
+        "extruder_offset" => &[("probe-zero", "0x0"), ("probe-shift", "1x0.5")],
+        // `extra_solid_infills` accepts `N`, `N#K`, or `1,7,9` layer
+        // patterns (`PrintConfig.cpp:2987-2991`); `2` (every 2nd layer
+        // solid) is a legal probe that changes toolpaths on both sides.
+        "extra_solid_infills" => &[("probe-2", "2")],
         // Single `XxY` points.
         "bed_mesh_min" | "bed_mesh_max" | "bed_mesh_probe_distance" | "best_object_pos" => POINT,
         _ => return None,
