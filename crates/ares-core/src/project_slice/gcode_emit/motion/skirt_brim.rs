@@ -138,7 +138,7 @@ pub(in crate::project_slice) fn emit_skirt_loop(
         {
             // Wipe points are already LOCAL mm (`path.rs` stores
             // `unscale`-ed ints) — recover ints with the bare scale.
-            let mut scaled = state
+            let scaled = state
                 .wipe_path
                 .iter()
                 .map(|point| {

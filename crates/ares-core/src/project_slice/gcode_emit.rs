@@ -1,7 +1,5 @@
-use crate::geometry::ExPolygon;
 use crate::project_slice::{
-    extruders,
-    island_print_order::{self, PreparedPostIslandPrintOrder},
+    extruders, island_print_order::PreparedPostIslandPrintOrder,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
@@ -16,7 +14,6 @@ mod file_start;
 mod finish;
 pub(super) mod footprint;
 mod header;
-pub(crate) use header::resolved_width;
 mod layer_gcode;
 mod layers;
 mod lexer;

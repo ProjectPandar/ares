@@ -82,8 +82,17 @@ pub(super) fn append<'a>(
     // `position[2]` (`GCode.cpp:3901-3907`), and upstream reads the live
     // `m_pos.z` at `change_layer` (`GCode.cpp:5693`,
     // `GCodeWriter.cpp:916-929`). Capture before the nominal override.
+    // `GCodeWriter::will_move_z` (`GCodeWriter.cpp:916-929`): while
+    // lifted, a target inside [nominal, pos] does not move; otherwise the
+    // plain |pos - z| < EPSILON suppression applies.
     let will_move_z = state.writer_z.is_none_or(|writer_z| {
-        (f64::from(layer_z) + state.options.z_offset - writer_z).abs() > 1.0e-4
+        let target = f64::from(layer_z) + state.options.z_offset;
+        if state.lifted_amount > 0.0 {
+            let nominal = writer_z - state.lifted_amount;
+            !(target >= nominal && target <= writer_z)
+        } else {
+            (target - writer_z).abs() > 1.0e-4
+        }
     });
     // Upstream's writer z at the layer-change retract is still the
     // previous layer's z (`change_layer` does not move z); the
@@ -146,7 +155,10 @@ pub(super) fn append<'a>(
     // raises to layer+hop and descends at the target. Capture the
     // flag BEFORE the wipe flush consumes it; defer only here (the
     // c7ea935f lesson: no already-retracted mid-print deferrals).
+    // The deferred lift exists only when the change-layer retract ran —
+    // same `will_move_z` gate (`GCode.cpp:5693`).
     let layer_retract_pending = state.pending_layer_retract
+        && will_move_z
         && state.options.z_hop > 0.0
         && state.options.retraction_length > 0.0
         && !state.lifted
@@ -155,7 +167,7 @@ pub(super) fn append<'a>(
     // on non-BBL paths a pending retract whose target Z equals the
     // (possibly template-assigned) writer Z performs no retract at all,
     // so its `restart_extra` assignment must not run either.
-    motion::flush_pending_retract_wipe(output, state, !state.tags.is_bbl() || will_move_z);
+    motion::flush_pending_retract_wipe(output, state, will_move_z);
     // Pending object-end labels flush after the layer-change
     // retract/wipe, before the layer-change gcode
     // (`GCode.cpp:5699` `change_layer`).
@@ -217,12 +229,7 @@ pub(super) fn append<'a>(
         object_layer_over_raft,
         layer_retract_pending,
     );
-    motion::flush_pending_retract_lift(
-        output,
-        state,
-        previous_state_layer_z,
-        !state.tags.is_bbl() || will_move_z,
-    );
+    motion::flush_pending_retract_lift(output, state, previous_state_layer_z, will_move_z);
     // The BBL first-layer-inspection scan (`GCode.cpp:4780-4790`) opens
     // between the layer-change gcode and the acceleration reset, so it
     // precedes `begin_layer`'s M204.

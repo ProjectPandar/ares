@@ -16,16 +16,18 @@ pub(super) fn decide(
     skip_retraction: bool,
     replan: &mut dyn FnMut(&mut EmitState),
 ) {
-    // Upstream `retract()` also runs for a long travel with the
-    // extruder already retracted — dE is a no-op but `maybe_zlift`
-    // defers, gated on m_lifted == 0 && m_to_lift == 0
-    // (GCodeWriter.cpp:637). The lifted_amount model mirrors
-    // m_lifted's distance semantics.
-    let defer_lift_for_retracted_travel = state.retracted
+    // `needs_retraction` (`GCode.cpp:7528-7647`) does not check the
+    // retracted flag — a long non-exempt travel invokes `retract()` even
+    // when already retracted, and `Extruder::retract` assigns
+    // `m_restart_extra` unconditionally (`Extruder.cpp:77`).
+    let upstream_would_retract =
+        routed_length >= state.options.retraction_minimum_travel && !skip_retraction;
+    // Lift eligibility is a separate, narrower condition
+    // (`GCodeWriter.cpp:637` gates on m_lifted == 0 && m_to_lift == 0).
+    let defer_lift_for_retracted_travel = upstream_would_retract
+        && state.retracted
         && state.lifted_amount == 0.0
-        && state.pending_lift.is_none()
-        && routed_length >= state.options.retraction_minimum_travel
-        && !skip_retraction;
+        && state.pending_lift.is_none();
     if retract {
         let head_before = (state.x, state.y);
         travel::retract_and_lift(output, state);
@@ -34,12 +36,10 @@ pub(super) fn decide(
             // (`GCode.cpp:7436-7443`).
             replan(state);
         }
-    } else if defer_lift_for_retracted_travel {
-        // The upstream `retract()` call still assigns `m_restart_extra`
-        // even though `Extruder::retract` emits nothing when already
-        // fully retracted (`Extruder.cpp:77`).
+    } else if upstream_would_retract {
         state.restart_extra = state.options.retract_restart_extra;
-        if state.options.z_hop > 0.0
+        if defer_lift_for_retracted_travel
+            && state.options.z_hop > 0.0
             && state.options.retraction_length > 0.0
             && travel::lift_is_allowed_at(state, state.layer_z)
         {
