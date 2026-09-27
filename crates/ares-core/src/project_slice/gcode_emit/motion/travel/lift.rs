@@ -222,6 +222,11 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
     }
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
+    // `GCodeWriter::eager_lift` zeroes `m_to_lift` (`GCodeWriter.cpp:679`):
+    // a hop deferred by an earlier retract is realized by this eager lift,
+    // so the following travel sees the nozzle already lifted and emits a
+    // pure XY move (`will_move_z` false → `travel_to_xy`).
+    state.pending_lift = None;
 }
 
 pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {

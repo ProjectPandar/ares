@@ -122,6 +122,37 @@ fn append(
     // physical extruder weighs one layer-count, so the tie-to-highest rule
     // decides. The placeholder id is then
     // `physical_extruder_map.get_at(most_used)` (`GCode.cpp:5162`).
+    let most_used = insert_physical_extruder_ids(&mut config, traversal);
+    let position = safe_position(traversal, most_used);
+    config.insert(
+        "has_timelapse_safe_pos",
+        value::Value::option_bool(position.is_some()),
+    );
+    let (x, y) = position.unwrap_or_default();
+    config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
+    config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
+
+    let rendered = template::render(source, &mut config).map_err(|error| {
+        SliceError::InvalidInput(format!(
+            "invalid project timelapse G-code template: {error}"
+        ))
+    })?;
+    let last_z = last_motion_z(&rendered);
+    output.extend_from_slice(rendered.as_bytes());
+    output.push(b'\n');
+    // Outer `Some` = the template rendered and emitted (position now
+    // unclear); inner `Some` = the rendered g-code ended on a Z motion.
+    Ok(Some(last_z))
+}
+
+/// `GCode.cpp:5162-5163`: inserts `most_used_physical_extruder_id` and
+/// `curr_physical_extruder_id`, returning the most-used extruder index
+/// (used by the caller to resolve the timelapse snapshot position).
+pub(super) fn insert_physical_extruder_ids(
+    config: &mut value::Config,
+    traversal: &PreparedPostClassicTraversal,
+) -> Option<usize> {
+    let runtime = &traversal.resolved.views.runtime_gcode;
     let full = &traversal.resolved.views.full;
     let map = &full.project.gcode.filament_map.0;
     let most_used = map
@@ -152,29 +183,10 @@ fn append(
         "curr_physical_extruder_id",
         value::Value::number(physical_extruder as f64),
     );
-    let position = safe_position(traversal, most_used);
-    config.insert(
-        "has_timelapse_safe_pos",
-        value::Value::option_bool(position.is_some()),
-    );
-    let (x, y) = position.unwrap_or_default();
-    config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
-    config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
-
-    let rendered = template::render(source, &mut config).map_err(|error| {
-        SliceError::InvalidInput(format!(
-            "invalid project timelapse G-code template: {error}"
-        ))
-    })?;
-    let last_z = last_motion_z(&rendered);
-    output.extend_from_slice(rendered.as_bytes());
-    output.push(b'\n');
-    // Outer `Some` = the template rendered and emitted (position now
-    // unclear); inner `Some` = the rendered g-code ended on a Z motion.
-    Ok(Some(last_z))
+    most_used
 }
 
-fn last_motion_z(gcode: &str) -> Option<f64> {
+pub(super) fn last_motion_z(gcode: &str) -> Option<f64> {
     gcode.lines().rev().find_map(|line| {
         let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
         matches!(

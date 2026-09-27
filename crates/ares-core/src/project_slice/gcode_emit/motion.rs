@@ -55,6 +55,14 @@ pub(super) fn prepare_traditional_timelapse(output: &mut Vec<u8>, state: &mut Em
     travel::retract_for_timelapse(output, state);
 }
 
+/// The wrapping-detection per-layer retract (`GCode.cpp:5282/5303`,
+/// `retract(false, false, auto_lift_type, true)`): retract + wipe + eager
+/// lift. Unlike the timelapse retract it has no already-retracted early
+/// out — upstream's `retract()` always re-applies the full retract length.
+pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) {
+    travel::retract_for_wrapping(output, state);
+}
+
 pub(super) fn defer_layer_retraction(state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
         state.pending_layer_retract = true;

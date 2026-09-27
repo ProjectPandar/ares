@@ -16,6 +16,7 @@ mod raft_schedule;
 mod schedule;
 mod skirt_emit;
 mod timelapse;
+mod wrapping;
 
 use entry_builder::EntryBuilder;
 use schedule::Schedule;
@@ -74,7 +75,6 @@ pub(super) fn append(
         layer_gcode::LayerChangeTemplate::new(traversal, metadata, first_layer_bounds);
     let runtime_gcode = &traversal.resolved.views.runtime_gcode;
     let timelapse_gate = timelapse::gate(traversal, state);
-    let traditional_timelapse = timelapse_gate.traditional_timelapse;
     let traditional_interlude = timelapse_gate.traditional_interlude;
     let mut second_layer_done = false;
     // Avoid-crossing boundaries are built per slice_z across every object
@@ -285,6 +285,12 @@ pub(super) fn append(
             &chunk_slices,
             chunk_perimeter_spacing,
         );
+        // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
+        // template insert fire once per layer inside the per-extruder loop
+        // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
+        // toolchange and every instance block (object skirt group, brim,
+        // `; printing object` marker, content).
+        wrapping::emit(output, state, &timelapse_context)?;
         for (entry_position, &(object_index, layer_index)) in entries.iter().enumerate() {
             let is_group_end = entry_position + 1 == entries.len();
             let raft_index = raft_schedule::classify(layer_index).ok().flatten();

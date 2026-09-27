@@ -53,6 +53,21 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
     state.retracted = true;
 }
 
+/// `retract(false, false, auto_lift_type, true)` for the wrapping-detection
+/// insert (`GCode.cpp:5282/5303`): upstream `retract()` re-emits the wipe
+/// only while a wipe path is stored and `Extruder::retract` adds just the
+/// missing length (`std::max(0., length - m_retracted)`,
+/// `Extruder.cpp:77-84`) — when the layer-change retract already consumed
+/// both, only the eager lift is emitted. The lift itself always runs
+/// (`needs_lift && can_lift` → `eager_lift`, `GCode.cpp:7693-7696`).
+pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) {
+    if !state.retracted {
+        retract_and_wipe(output, state);
+        state.retracted = true;
+    }
+    lift::append_eager(output, state);
+}
+
 /// Non-BBL printers defer the layer-change retraction to after the next
 /// layer marker block (`GCode.cpp` change_layer: the wipe lands between
 /// the rendered `before_layer_change_gcode` and the cooling fan marker,
