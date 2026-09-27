@@ -7,6 +7,10 @@ use crate::{
     },
 };
 
+#[expect(
+    clippy::approx_constant,
+    reason = "OrcaSlicer uses the literal 1.4142 seam-depth coefficient"
+)]
 pub(in crate::project_slice) fn place_nearest_penalized(
     loop_: &mut ExtrusionLoop,
     cursor: Point3,

@@ -172,8 +172,7 @@ pub(super) fn emit_needs_travel(
         if !skip_retraction
             && state.pending_lift.is_none()
             && state.options.z_hop > 0.0
-            && (state.options.retraction_length > 0.0
-                || state.options.use_firmware_retraction)
+            && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
             && !state.spiral_vase
             && travel::lift_is_allowed_at(state, state.layer_z)
             && !state.lifted
@@ -259,8 +258,7 @@ pub(super) fn emit_needs_travel(
     } else if state.retracted
         && first_position
         && state.options.z_hop > 0.0
-        && (state.options.retraction_length > 0.0
-            || state.options.use_firmware_retraction)
+        && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
         && (first_travel_lift.is_some() || travel::lift_is_allowed_at(state, state.layer_z))
     {
         dispatch::emit_retracted_first_travel(

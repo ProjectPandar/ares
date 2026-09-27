@@ -274,13 +274,7 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     state.lifted_amount = state.options.z_hop;
 }
 
-fn append_spiral(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-    raised_z: f64,
-    i: f64,
-    j: f64,
-) {
+fn append_spiral(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: f64, j: f64) {
     // `GCodeWriter.cpp:861`: the linearized spiral interpolates Z from
     // `z_start = m_pos(2)` — the CURRENT writer z (a stacked eager lift
     // continues upward), not the nominal layer z.

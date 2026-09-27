@@ -10,7 +10,7 @@ async fn wrapping_max_layer_z_is_current_layer_raw_float_z() {
     let mut settings: serde_json::Value =
         serde_json::from_str(&archive.entry_text(SETTINGS)).unwrap();
     settings["enable_wrapping_detection"] = serde_json::json!("1");
-    settings["wrapping_exclude_area"] = serde_json::json!(["0x0","10x0","10x10","0x10"]);
+    settings["wrapping_exclude_area"] = serde_json::json!(["0x0", "10x0", "10x10", "0x10"]);
     settings["wrapping_detection_gcode"] =
         serde_json::json!(";WRAP {layer_num} {layer_z} {max_layer_z}");
     archive.insert_text(SETTINGS, &serde_json::to_string(&settings).unwrap());
@@ -42,9 +42,8 @@ async fn wrapping_max_layer_z_excludes_z_offset() {
         serde_json::from_str(&archive.entry_text(SETTINGS)).unwrap();
     settings["enable_wrapping_detection"] = serde_json::json!("1");
     settings["z_offset"] = serde_json::json!("0.5");
-    settings["wrapping_exclude_area"] = serde_json::json!(["0x0","10x0","10x10","0x10"]);
-    settings["wrapping_detection_gcode"] =
-        serde_json::json!(";WRAP {layer_num} {max_layer_z}");
+    settings["wrapping_exclude_area"] = serde_json::json!(["0x0", "10x0", "10x10", "0x10"]);
+    settings["wrapping_detection_gcode"] = serde_json::json!(";WRAP {layer_num} {max_layer_z}");
     archive.insert_text(SETTINGS, &serde_json::to_string(&settings).unwrap());
 
     let output = crate::slice_project(
