@@ -1,6 +1,6 @@
 mod alignment;
 mod fitting;
-mod kdtree;
+pub(in crate::project_slice) mod kdtree;
 mod mesh;
 mod runtime;
 mod sampling;
@@ -201,6 +201,7 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
             .iter()
             .map(|candidate| candidate.local_ccw_angle)
             .collect(),
+        kdtree: std::cell::OnceCell::new(),
     }
 }
 

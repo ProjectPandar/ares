@@ -211,12 +211,20 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
         state.options.wipe_speed
     }
     .max(10.0);
-    // `GCode.cpp:350`: the during-wipe cap uses the effective
-    // `retraction_speed` mm/s (filament override applied, NOT the
-    // integer-rounded retract-speed word), times the clipped wipe path
-    // length in mm, over the resolved wipe speed in mm/s.
-    let during = (state.options.retraction_during_wipe_speed * retraction_distance / wipe_speed)
-        .min(remaining);
+    // `GCode.cpp:350-358`: the during-wipe amount is
+    // `retraction_speed * unscale_(wipe_path_length) / wipe_speed` (the
+    // effective, unrounded mm/s). Upstream caps at `remaining` only when
+    // `during - remaining > EPSILON`; within the EPSILON window the
+    // larger `during` value is emitted as-is.
+    let during_max = state.options.retraction_during_wipe_speed * retraction_distance / wipe_speed;
+    let during = if during_max - remaining > f64::EPSILON {
+        remaining
+    } else {
+        during_max
+    };
+    // `before` = `retraction_before_wipe + (remaining - during)` =
+    // `retraction_length - during` (`GCode.cpp:358` adds the leftover
+    // difference into the pre-wipe amount).
     let before = state.options.retraction_length - during;
     if state.options.use_firmware_retraction {
         firmware_retract(output, state);
@@ -296,9 +304,10 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
             output.extend_from_slice(line.as_bytes());
             state.x = point.x;
             state.y = point.y;
+            // `scaled<coord_t>` truncates toward zero (`Point.hpp:665-668`).
             state.last_scaled_position = Some((
-                ((point.x - state.offset.0) / state.scale_factor).round() as i64,
-                ((point.y - state.offset.1) / state.scale_factor).round() as i64,
+                ((point.x - state.offset.0) / state.scale_factor) as i64,
+                ((point.y - state.offset.1) / state.scale_factor) as i64,
             ));
             state.wipe_start = Some(point);
         }

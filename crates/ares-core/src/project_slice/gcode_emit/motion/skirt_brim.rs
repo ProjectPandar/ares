@@ -23,9 +23,10 @@ pub(in crate::project_slice) fn emit_brim_loop(
     // (`GCode::generate_skirt` `set_origin(unscale(Point(0,0)))`).
     let points = points.collect::<Vec<_>>();
     if points.len() >= 2 {
+        // `scaled<coord_t>` truncates (`Point.hpp:665-668`).
         let offset = (
-            (state.offset.0 / geometry.scale.factor()).round() as i64,
-            (state.offset.1 / geometry.scale.factor()).round() as i64,
+            (state.offset.0 / geometry.scale.factor()) as i64,
+            (state.offset.1 / geometry.scale.factor()) as i64,
         );
         let cursor = local_cursor(state, geometry);
         let plate_target = Point::new(cursor.x() + offset.0, cursor.y() + offset.1);
@@ -140,8 +141,8 @@ pub(in crate::project_slice) fn emit_skirt_loop(
                 .wipe_path
                 .iter()
                 .map(|point| {
-                    let x = ((point.x - state.offset.0) / state.scale_factor).round() as i64;
-                    let y = ((point.y - state.offset.1) / state.scale_factor).round() as i64;
+                    let x = ((point.x - state.offset.0) / state.scale_factor) as i64;
+                    let y = ((point.y - state.offset.1) / state.scale_factor) as i64;
                     (x, y)
                 })
                 .collect::<Vec<_>>();

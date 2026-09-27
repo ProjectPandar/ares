@@ -10,7 +10,7 @@
 const NPOS: usize = usize::MAX;
 const DIMS: usize = 3;
 
-pub(super) struct KdTree {
+pub(in crate::project_slice) struct KdTree {
     /// Heap-indexed node → candidate index (`NPOS` for empty slots).
     nodes: Vec<usize>,
 }
@@ -18,7 +18,10 @@ pub(super) struct KdTree {
 impl KdTree {
     /// `KDTreeIndirect::build` (`KDTreeIndirect.hpp:40-56`): allocate a full
     /// binary tree and partition `0..n` recursively.
-    pub(super) fn build(n: usize, coordinate: impl Fn(usize, usize) -> f32) -> Self {
+    pub(in crate::project_slice) fn build(
+        n: usize,
+        coordinate: impl Fn(usize, usize) -> f32,
+    ) -> Self {
         if n == 0 {
             return Self { nodes: Vec::new() };
         }
@@ -64,11 +67,14 @@ impl KdTree {
                 coordinate,
             );
         }
+        // Upstream recurses the right subtree from `center + 1`
+        // (`KDTreeIndirect.hpp:107`); `center` would re-insert the
+        // median and could loop on duplicates.
         self.build_recursive(
             input,
             node * 2 + 2,
             next_dimension,
-            center,
+            center + 1,
             right,
             coordinate,
         );
@@ -78,7 +84,7 @@ impl KdTree {
     /// visit nodes in tree order, inserting each visited candidate by
     /// `lower_bound` on distance — an equal-distance result ROTATES the
     /// previous equal result out, so the LAST visited equal candidate wins.
-    pub(super) fn find_closest(
+    pub(in crate::project_slice) fn find_closest(
         &self,
         point: [f32; 3],
         coordinate: &dyn Fn(usize, usize) -> f32,

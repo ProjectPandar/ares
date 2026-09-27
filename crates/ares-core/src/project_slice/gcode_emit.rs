@@ -212,6 +212,14 @@ pub(super) fn emit(
         output.extend(processed);
         output.extend(tail);
     }
+    // Upstream throws after emit when any custom template failed
+    // (`GCode.cpp:3637-3645` — `failed_templates` collected via
+    // `placeholder_parser_process` `GCode.cpp:3920-3933`).
+    if let Some((name, error)) = state.failed_templates.first() {
+        return Err(SliceError::InvalidInput(format!(
+            "failed to process the custom G-code template {name}: {error}"
+        )));
+    }
     Ok(processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,

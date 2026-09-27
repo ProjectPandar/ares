@@ -114,9 +114,10 @@ fn parse_int_list(value: &str) -> Option<Vec<i32>> {
         return Some(Vec::new());
     }
     // Upstream parses plate lists with `get_vector_from_string`
-    // (whitespace-separated, `bbs_3mf.cpp:4453`); commas are tolerated.
+    // (stringstream `>>` — all ASCII whitespace incl. embedded `&#10;`
+    // newlines, `bbs_3mf.cpp:4359-4366`); commas are tolerated.
     trimmed
-        .split([',', ' ', '\t'])
+        .split(|c: char| c == ',' || c.is_ascii_whitespace())
         .filter(|entry| !entry.trim().is_empty())
         .map(|entry| entry.trim().parse::<i32>().ok())
         .collect()

@@ -35,16 +35,21 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
     // `Wipe::path`), converted with the local scale only so the int
     // round-trip is exact.
     points.push(scaled_position(start, state));
+    // Upstream `this->path.points` are scaled ints produced by
+    // `scaled<coord_t>`/`new_scale` — TRUNCATING casts
+    // (`Point.hpp:665-668`, `:204`), not round-to-nearest.
     points.extend(state.wipe_path.iter().skip(1).map(|&point| {
         (
-            (point.x / state.scale_factor).round() as i64,
-            (point.y / state.scale_factor).round() as i64,
+            (point.x / state.scale_factor) as i64,
+            (point.y / state.scale_factor) as i64,
         )
     }));
     let total_length = points
         .windows(2)
         .map(|segment| scaled_distance(segment[0], segment[1]))
         .sum::<f64>();
+    // `scale_(x)` is plain division (`libslic3r.h:93`); assigned to
+    // `double wipe_dist` upstream so no int truncation applies.
     let configured_distance = state.options.wipe_distance / state.scale_factor;
     let retraction_distance = total_length.min(configured_distance) * state.scale_factor;
     let mut clip = total_length - configured_distance;
@@ -115,9 +120,10 @@ pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(
     point: arc::Point,
     state: &EmitState,
 ) -> (i64, i64) {
+    // `scaled<coord_t>` truncates (`Point.hpp:665-668`).
     (
-        ((point.x - state.offset.0) / state.scale_factor).round() as i64,
-        ((point.y - state.offset.1) / state.scale_factor).round() as i64,
+        ((point.x - state.offset.0) / state.scale_factor) as i64,
+        ((point.y - state.offset.1) / state.scale_factor) as i64,
     )
 }
 

@@ -129,6 +129,22 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// Curled-perimeter tracker feeding the overhang estimator's
     /// artificial distance (`SupportSpotsGenerator.cpp:141-196`).
     pub(in crate::project_slice::gcode_emit) curl: super::overhang::CurlTracker,
+    /// `ppi.failed_templates` (`GCode.cpp:3920-3933`): first failure per
+    /// template name; export aborts after emit (`GCode.cpp:3637-3645`).
+    pub(in crate::project_slice::gcode_emit) failed_templates: Vec<(String, String)>,
+}
+
+impl EmitState {
+    pub(in crate::project_slice::gcode_emit) fn record_template_failure(
+        &mut self,
+        name: &str,
+        error: &str,
+    ) {
+        if !self.failed_templates.iter().any(|(key, _)| key == name) {
+            self.failed_templates
+                .push((name.to_owned(), error.to_owned()));
+        }
+    }
 }
 
 #[derive(Clone, Copy)]

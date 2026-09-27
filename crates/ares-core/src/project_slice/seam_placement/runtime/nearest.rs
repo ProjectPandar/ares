@@ -54,7 +54,11 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             let p = layer.positions[index];
             [p.0, p.1, p.2][dim]
         };
-        let tree = kdtree::KdTree::build(layer.positions.len(), coordinate);
+        // Upstream builds the tree once per layer (`SeamPlacer.cpp:
+        // 1021-1036`); cache it on the layer's seam data.
+        let tree = layer
+            .kdtree
+            .get_or_init(|| kdtree::KdTree::build(layer.positions.len(), coordinate));
         // `to_3d(unscaled_p, unscaled_z)` (`SeamPlacer.cpp:1537`): the
         // query z is the same constant `slice_z` every candidate carries.
         let query_z = layer.positions.first().map(|p| p.2).unwrap_or(0.0);

@@ -68,6 +68,11 @@ pub(in crate::project_slice) struct NearestSeamLayer {
     pub(in crate::project_slice) perimeter_of_candidate: Vec<usize>,
     /// Per-candidate local ccw angle in radians (`SeamCandidate::local_ccw_angle`).
     pub(in crate::project_slice) ccw_angles: Vec<f32>,
+    /// The layer's candidate KD tree — built once and reused across
+    /// perimeter loops like upstream `SeamPlacer` (`SeamPlacer.cpp:
+    /// 1021-1036` builds one tree per layer).
+    pub(in crate::project_slice) kdtree:
+        std::cell::OnceCell<crate::project_slice::seam_placement::kdtree::KdTree>,
 }
 
 pub(in crate::project_slice) fn prepare(

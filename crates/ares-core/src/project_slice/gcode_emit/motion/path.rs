@@ -164,6 +164,11 @@ pub(super) fn emit(
             geometry,
         },
     );
+    // Acceleration/jerk emit BEFORE the custom role-change hooks
+    // (`GCode.cpp:6460-6464` before `:6745-6770`) so a hook can
+    // override them.
+    let jerk = properties.jerk(&state.options, state.layer_index);
+    set_accel_and_jerk(output, state, acceleration, jerk, false);
     // `_extrude`'s custom role-change gcode fires AFTER the approach
     // travel/unretract, before the marker block (`GCode.cpp:6745-6770`);
     // context = extrusion_role/last_extrusion_role names +
@@ -181,8 +186,6 @@ pub(super) fn emit(
     if role_changed {
         state.last_extrusion_role = Some(role);
     }
-    let jerk = properties.jerk(&state.options, state.layer_index);
-    set_accel_and_jerk(output, state, acceleration, jerk, false);
     state.extrusion_feedrate = processed
         .as_ref()
         .map_or(original_speed, |points| points[0].speed)

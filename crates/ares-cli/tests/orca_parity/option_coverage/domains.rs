@@ -58,16 +58,25 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let mut width_domain = None;
     let mut provably_legal = false;
     let (values, omission) = if let Some(authored) = authored_probes(&key) {
-        // Per-key legal domains: keys whose schema bounds are stricter
-        // than upstream slice-time validation, or whose free-form
-        // `coString`/`coPoint(s)` content needs a concrete probe.
-        provably_legal = true;
+        // Per-key legal domains: free-form `coString`/`coPoint(s)`
+        // probes cover an unbounded schema domain completely; NUMERIC
+        // authored probes only sample the legal interior (the schema
+        // min/max that upstream slice-time validation clamps are
+        // intentionally not probed), so they stay INCOMPLETE — the
+        // domain is exercised but the boundary claim isn't proven.
+        let unbounded_schema = matches!(
+            option_type.as_str(),
+            "coString" | "coStrings" | "coPoint" | "coPoints"
+        );
+        provably_legal = unbounded_schema;
         (
             authored
                 .iter()
                 .map(|&(label, value)| case(label, value, entry))
                 .collect(),
-            None,
+            (!unbounded_schema).then_some(
+                "authored probes sample the legal interior; schema bounds rejected by upstream validation",
+            ),
         )
     } else if is_width_option(&key) {
         let raw = raw_numeric_bounds(&block).expect("width schema must have explicit raw bounds");
