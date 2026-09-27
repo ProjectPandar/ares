@@ -187,7 +187,8 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         // oracle (`master_extruder_id`,
                         // `filament_self_index`, `physical_extruder_map`)
                         // — they stay INCOMPLETE by design.
-                        let cases = if matches!(option_type.as_str(), "coInt" | "coInts") {
+                        let unbounded_int = matches!(option_type.as_str(), "coInt" | "coInts");
+                        let cases = if unbounded_int {
                             vec![baseline_case()]
                         } else if option_type == "coFloatOrPercent" {
                             // Both percent and absolute-literal branches.
@@ -206,8 +207,13 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         // Seeded probes are the strongest coverage an
                         // unbounded domain admits (coInt(s) stay
                         // unprovable — baseline only).
-                        provably_legal = !matches!(option_type.as_str(), "coInt" | "coInts");
-                        (cases, None)
+                        provably_legal = !unbounded_int;
+                        (
+                            cases,
+                            unbounded_int.then_some(
+                                "unbounded coInt(s) — value-space unprovable, baseline only",
+                            ),
+                        )
                     }
                 }
             }
@@ -216,8 +222,11 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         // `coPoint(s)` unbounded options (bed polygons, exclude areas)
         // reject/crash on generic probes (`printable_area` degenerate
         // polygon); baseline default remains until per-key legal domains
-        // are authored.
-        (vec![baseline_case()], None)
+        // are authored. The omission reason feeds the sweep gate.
+        (
+            vec![baseline_case()],
+            Some("unbounded domain (string/point/blob) — baseline only"),
+        )
     };
     Some(OptionPlan {
         key,

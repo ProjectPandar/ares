@@ -32,9 +32,14 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // forced `travel_to_z(m_nominal_z)` — which also clears the
     // outstanding lift (`m_lifted = 0`, `GCodeWriter.cpp:824`).
     let current_z = state.writer_z.unwrap_or(state.layer_z);
+    // The reset also clears `m_lifted`; when a retraction is still pending
+    // the lifted descend below lands at the same Z with the upstream
+    // marker — suppress the double reset only for that combined case. A
+    // lift WITHOUT retraction (timelapse `G1 Z`) has no later descend, so
+    // the reset must run to restore `m_nominal_z` (`GCode.cpp:6396-6400`).
+    let suppressed = state.retracted && (state.lifted || state.template_lifted);
     if slope_start_z.is_none()
-        && !state.lifted
-        && !state.template_lifted
+        && !suppressed
         && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
     {
         let z_feedrate = travel::lift_z_feedrate(state);

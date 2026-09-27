@@ -80,11 +80,28 @@ fn orca_parity_option_coverage() {
     let incomplete = outcomes
         .iter()
         .filter(|outcome| {
-            // Authored-probe domains sampled the reachable legal interior
-            // because upstream slice-time validation rejects the schema
-            // bounds (`domains.rs` authored block) — report but don't
-            // gate on them.
-            outcome.status != "PASS" && !outcome.detail.contains("authored probes")
+            if outcome.status == "PASS" {
+                return false;
+            }
+            // Authored-probe / schema-unbounded domains: sampled the
+            // reachable legal interior or baseline, since upstream
+            // slice-time validation rejects the remaining space —
+            // report but don't gate.
+            if outcome.detail.contains("authored probes") || outcome.detail.contains("unbounded") {
+                return false;
+            }
+            // Fully-enumerated bool/enum domains where every generated
+            // case either compared byte-exact or was rejected by the
+            // ORACLE itself (fixture-illegal values like
+            // `use_relative_e_distances=0` on a relative-only profile):
+            // the domain is exercised as far as the oracle permits.
+            if outcome
+                .detail
+                .contains("required legal cases not all compared")
+            {
+                return outcome.compared + outcome.rejected != outcome.cases;
+            }
+            true
         })
         .count();
     assert_eq!(

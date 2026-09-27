@@ -31,6 +31,10 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     output: &mut Vec<u8>,
     state: &mut EmitState,
 ) {
+    // Upstream `m_writer.retract()` runs regardless of the retracted flag
+    // (`GCode.cpp:7672`), so `m_restart_extra` is (re)assigned even on a
+    // no-op retract (`Extruder.cpp:77`).
+    state.restart_extra = state.options.retract_restart_extra;
     if !state.retracted {
         retract_and_wipe_with(output, state, false);
         state.retracted = true;
@@ -45,6 +49,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
 /// marker — no later cooling pass runs to clean it (print-end retraction
 /// happens after the final layer flushes).
 pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
+    state.restart_extra = state.options.retract_restart_extra;
     if state.retracted {
         return;
     }
@@ -61,6 +66,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
 /// both, only the eager lift is emitted. The lift itself always runs
 /// (`needs_lift && can_lift` → `eager_lift`, `GCode.cpp:7693-7696`).
 pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) {
+    state.restart_extra = state.options.retract_restart_extra;
     if !state.retracted {
         retract_and_wipe(output, state);
         state.retracted = true;
@@ -84,6 +90,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     state: &mut EmitState,
 ) {
     if state.pending_layer_retract && !state.retracted {
+        state.restart_extra = state.options.retract_restart_extra;
         retract_and_wipe(output, state);
     }
 }
@@ -94,6 +101,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     writer_z: f64,
 ) {
     if state.pending_layer_retract && !state.retracted {
+        state.restart_extra = state.options.retract_restart_extra;
         lift::schedule_at(state, true, writer_z);
         state.retracted = true;
     }
@@ -124,6 +132,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager_forced(
 
 fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState, force: bool) {
     if (force || state.pending_layer_retract) && !state.retracted {
+        state.restart_extra = state.options.retract_restart_extra;
         if force {
             // The BBL layer-start `retract()` finds no stored wipe path
             // there (`GCode.cpp:5205-5210`); the plain retraction emits

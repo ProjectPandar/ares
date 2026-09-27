@@ -97,6 +97,9 @@ pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitStat
 /// GCodeWriter `retract()` formatting (`GCodeWriter.cpp`).
 pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) {
     let length = state.options.retraction_length;
+    // `Extruder::retract` assigns `m_restart_extra` on EVERY call — even a
+    // length-0 / already-retracted no-op (`Extruder.cpp:77`).
+    state.restart_extra = state.options.retract_restart_extra;
     if length <= 0.0 {
         return;
     }

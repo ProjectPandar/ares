@@ -7,6 +7,9 @@ use super::format;
 use super::state::EmitState;
 
 pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState) {
+    // `this->retract()` (`GCode.cpp:4784`) assigns `m_restart_extra` even
+    // when the extruder is already retracted (`Extruder.cpp:77`).
+    state.restart_extra = state.options.retract_restart_extra;
     if !state.retracted {
         let length = state.options.retraction_length;
         let remaining = (length - state.retracted_amount).max(0.0);

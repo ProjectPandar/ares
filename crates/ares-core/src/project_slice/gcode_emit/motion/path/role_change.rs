@@ -101,6 +101,7 @@ fn refresh_writer_state(
 /// `validate_output_vector_variables` (`GCode.cpp:1702-1713`): a mutable
 /// output vector assigned to the wrong size aborts the export.
 fn validate_vector_size(
+    name: &str,
     config: &crate::project_slice::gcode_emit::value::Config,
     key: &str,
     expected: usize,
@@ -111,8 +112,8 @@ fn validate_vector_size(
     };
     if list.len() != expected {
         state.record_template_failure(
-            "role-change output vector",
-            &format!("{key} has {} elements, expected {expected}", list.len()),
+            name,
+            &format!("\"{key}\" output variable must not be resized by the script."),
         );
         return false;
     }
@@ -122,60 +123,90 @@ fn validate_vector_size(
 /// Writer write-back (`GCode.cpp:3903-3915`): assigned `position` and
 /// E counters propagate back into the writer so subsequent output uses
 /// the overridden values.
+/// Returns false when a write-back raised a template error — the caller
+/// emits the upstream inline failure block and skips the remaining
+/// templates (`GCode.cpp:3920-3933`).
 fn apply_writer_state(
+    name: &str,
     config: &crate::project_slice::gcode_emit::value::Config,
     state: &mut EmitState,
-) {
-    // Vector-size validation first (`GCode.cpp:3898`
-    // `validate_output_vector_variables`).
-    let valid = ["e_retracted", "e_restart_extra", "e_position"]
-        .iter()
-        .all(|key| validate_vector_size(config, key, MAXIMUM_EXTRUDER_NUMBER, state))
-        && validate_vector_size(config, "extruded_volume", 1, state)
-        && validate_vector_size(config, "extruded_weight", 1, state);
+) -> bool {
+    // Vector-size validation first (`GCode.cpp:3898` calls
+    // `validate_output_vector_variables`, `GCode.cpp:1702-1713`): only
+    // `position` (exactly 3) and the 64-wide E vectors are checked.
+    let valid = validate_vector_size(name, config, "position", 3, state)
+        && ["e_retracted", "e_restart_extra", "e_position"]
+            .iter()
+            .all(|key| validate_vector_size(name, config, key, MAXIMUM_EXTRUDER_NUMBER, state));
     if !valid {
-        return;
+        return false;
     }
-    if let Some(Value::List(position)) = config.get("position") {
-        if let [x, y, z] = position.as_slice()
-            && let (Some(x), Some(y), Some(z)) = (numeric(x), numeric(y), numeric(z))
-        {
-            if (x - state.x).abs() > f64::EPSILON || (y - state.y).abs() > f64::EPSILON {
-                // `m_writer.set_position` + `set_last_pos(gcode_to_point)`
-                // (`GCode.cpp:3904-3907`); `gcode_to_point` evaluation
-                // order `(p - m_origin) + extruder_offset`.
-                state.x = x;
-                state.y = y;
-                state.last_scaled_position = Some((
-                    ((x - state.origin.0 + state.extruder_offset.0) / state.scale_factor).round()
-                        as i64,
-                    ((y - state.origin.1 + state.extruder_offset.1) / state.scale_factor).round()
-                        as i64,
-                ));
-            }
-            state.writer_z = Some(z);
+    if let Some(Value::List(position)) = config.get("position")
+        && let [x, y, z] = position.as_slice()
+        && let (Some(x), Some(y), Some(z)) = (numeric(x), numeric(y), numeric(z))
+    {
+        // `ppi.position != pos` is an exact component compare — any
+        // assigned difference writes back (`GCode.cpp:3901-3907`).
+        if x != state.x || y != state.y {
+            // `set_position` + `set_last_pos(gcode_to_point)`;
+            // `gcode_to_point` is `(p - m_origin) + extruder_offset` then
+            // `scale_` TRUNCATES the new coordinate (`Point.hpp:665`).
+            state.x = x;
+            state.y = y;
+            state.last_scaled_position = Some((
+                ((x - state.origin.0 + state.extruder_offset.0) / state.scale_factor) as i64,
+                ((y - state.origin.1 + state.extruder_offset.1) / state.scale_factor) as i64,
+            ));
         }
+        state.writer_z = Some(z);
     }
     if !state.options.use_relative_e_distances
         && let Some(Value::List(list)) = config.get("e_position")
         && let Some(position) = list.first().and_then(numeric)
+        && !is_approx(position, state.e_position)
     {
         state.e_position = position;
     }
-    // `e.set_retracted(retracted, restart_extra)` (`GCode.cpp:3912-3914`,
-    // `Extruder.cpp:108-122`).
-    if let Some(Value::List(list)) = config.get("e_retracted")
-        && let Some(retracted) = list.first().and_then(numeric)
-        && (retracted - state.retracted_amount).abs() > f64::EPSILON
+    // `e.set_retracted(retracted, restart_extra)` runs when EITHER output
+    // differs (`is_approx` = 1e-4, `GCode.cpp:3912-3914`); set_retracted
+    // then validates/clamps as a PAIR (`Extruder.cpp:108-122`): negative
+    // values fail the template; retracted <= EPSILON clears BOTH.
+    let new_retracted = config
+        .get("e_retracted")
+        .and_then(|value| value.index(0))
+        .and_then(|value| value.as_number());
+    let new_extra = config
+        .get("e_restart_extra")
+        .and_then(|value| value.index(0))
+        .and_then(|value| value.as_number());
+    if let (Some(retracted), Some(extra)) = (new_retracted, new_extra)
+        && (!is_approx(retracted, state.retracted_amount) || !is_approx(extra, state.restart_extra))
     {
-        state.retracted_amount = retracted;
-        state.retracted = retracted > 0.0;
+        if retracted < -1e-4 {
+            state.record_template_failure(name, "Custom G-code reports negative z_retracted.");
+            return false;
+        }
+        if extra < -1e-4 {
+            state.record_template_failure(name, "Custom G-code reports negative z_restart_extra.");
+            return false;
+        }
+        if retracted > 1e-4 {
+            state.retracted = true;
+            state.retracted_amount = retracted;
+            state.restart_extra = if extra < 1e-4 { 0.0 } else { extra };
+        } else {
+            state.retracted = false;
+            state.retracted_amount = 0.0;
+            state.restart_extra = 0.0;
+        }
     }
-    if let Some(Value::List(list)) = config.get("e_restart_extra")
-        && let Some(extra) = list.first().and_then(numeric)
-    {
-        state.restart_extra = extra;
-    }
+    true
+}
+
+/// `is_approx` (`libslic3r.h:307-309`): `fabs(a - b) < EPSILON` with
+/// upstream EPSILON = 1e-4 (`libslic3r.h:52`).
+fn is_approx(a: f64, b: f64) -> bool {
+    (a - b).abs() < 1e-4
 }
 
 pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
@@ -218,7 +249,20 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
         refresh_writer_state(&mut config, state);
         match template::render(&template_source, &mut config) {
             Ok(rendered) => {
-                apply_writer_state(&config, state);
+                if !apply_writer_state(name, &config, state) {
+                    let error = state
+                        .failed_templates
+                        .last()
+                        .map(|(_, error)| error.clone())
+                        .unwrap_or_default();
+                    output.extend_from_slice(
+                        format!(
+                            "\n!!!!! Failed to process the custom G-code template {name}\n{error}\n!!!!! End of an error report for the custom G-code template {name}\n\n"
+                        )
+                        .as_bytes(),
+                    );
+                    break;
+                }
                 output.extend_from_slice(rendered.as_bytes());
                 output.push(b'\n');
             }

@@ -136,17 +136,16 @@ pub(in crate::project_slice) fn emit_skirt_loop(
             .append(true)
             .open(path)
         {
+            // Wipe points are already LOCAL mm (`path.rs` stores
+            // `unscale`-ed ints) — recover ints with the bare scale.
             let mut scaled = state
                 .wipe_path
                 .iter()
                 .map(|point| {
-                    let x = ((point.x - state.origin.0 + state.extruder_offset.0)
-                        / state.scale_factor)
-                        .round() as i64;
-                    let y = ((point.y - state.origin.1 + state.extruder_offset.1)
-                        / state.scale_factor)
-                        .round() as i64;
-                    (x, y)
+                    (
+                        (point.x / state.scale_factor).round() as i64,
+                        (point.y / state.scale_factor).round() as i64,
+                    )
                 })
                 .collect::<Vec<_>>();
             // the wipe stores the path in reverse emission order; dump in

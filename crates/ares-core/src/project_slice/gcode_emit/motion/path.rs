@@ -78,17 +78,27 @@ pub(super) fn emit(
         .into_iter()
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
         .collect::<Vec<_>>();
-    // Upstream stores the wipe path from the RAW `path.polyline.points`
-    // (`m_wipe.path = path.polyline.to_polyline()`, `GCode.cpp:6111`) — the
-    // extrusion path's scaled ints BEFORE `clip_fitting_end` projects the
-    // last point onto a fitted arc. Snapshot the unmodified mm points for the
-    // wipe path so `Wipe::wipe`'s segment lengths match `path.polyline`, not
-    // the post-arc-fit tail.
-    let wipe_points_source = local_points.clone();
+    // Upstream `clip_fitting_end` mutates `polyline.points.back()` to the
+    // projected arc endpoint (`Polyline.cpp:714-718`) BEFORE
+    // `extrude_path` stores `m_wipe.path = path.polyline.to_polyline()`
+    // (`GCode.cpp:6111`) and `set_last_pos(path.last_point())`
+    // (`GCode.cpp:7259`) — so the wipe path and last_pos both see the
+    // projected endpoint, not the pre-clip tail.
     let mut fitting = properties.fitting.to_vec();
+    let mut last_scaled = last_scaled;
     if properties.end_clip > 0.0 {
+        let pre_projected = local_points.last().copied();
         arc::clip_fitting_end(&mut local_points, &mut fitting, geometry.scale);
+        if let Some(&projected) = local_points.last()
+            && Some(projected) != pre_projected
+        {
+            last_scaled = (
+                (projected.0 / geometry.scale.factor()).round() as i64,
+                (projected.1 / geometry.scale.factor()).round() as i64,
+            );
+        }
     }
+    let wipe_points_source = local_points.clone();
     let (acceleration, configured_speed) = properties.kinematics(
         &state.options,
         state.layer_index,

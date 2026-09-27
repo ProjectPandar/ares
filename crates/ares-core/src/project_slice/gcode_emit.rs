@@ -124,8 +124,20 @@ pub(super) fn emit(
     // the layer-change retract and the first unretract restores exactly the
     // assigned amount.
     if let Some(retract) = &start_retract {
-        state.retracted = retract.retracted > 0.0;
-        state.retracted_amount = retract.retracted;
+        // `Extruder::set_retracted` (`Extruder.cpp:108-122`): a retracted
+        // > EPSILON assignment takes both fields; otherwise both clear.
+        // `Extruder::set_retracted` thresholds are upstream EPSILON
+        // (`libslic3r.h:52`).
+        const EPSILON: f64 = 1e-4;
+        if retract.retracted > EPSILON {
+            state.retracted = true;
+            state.retracted_amount = retract.retracted;
+            state.restart_extra = if retract.restart_extra < EPSILON {
+                0.0
+            } else {
+                retract.restart_extra
+            };
+        }
     }
     // `GCode::preamble` performs a *silent* `travel_to_z(z_offset)`
     // (`GCode.cpp:5676-5679` — the returned G-code is discarded, only
