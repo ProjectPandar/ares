@@ -82,12 +82,12 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         state.current_feedrate = z_feedrate;
         state.record_z(state.layer_z);
     }
-    // Upstream's `unretract` path runs whenever the extruder has
-    // something to restore — `m_retracted + m_restart_extra`
-    // (`GCode.cpp:6407`, `Extruder.cpp:92-104`): a zero-length
-    // retraction with a positive `retract_restart_extra` still
-    // extrudes the extra on the first extrusion.
-    if state.retracted || state.restart_extra != 0.0 {
+    // Upstream calls `unretract()` unconditionally before every
+    // extrusion (`GCode.cpp:6407-6408`), and `unretract` runs `unlift()`
+    // independently of the E restoration (`GCode.hpp:255`,
+    // `GCodeWriter.cpp:1084-1092`) — a template that cleared
+    // `e_retracted` after the lift was scheduled must still descend.
+    {
         if state.lifted && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
             let z_feedrate = travel::lift_z_feedrate(state);

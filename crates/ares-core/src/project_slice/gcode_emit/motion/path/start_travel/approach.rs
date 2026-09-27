@@ -201,10 +201,15 @@ pub(super) fn emit_needs_travel(
                 y: travel_y,
             },
             // The upstream lift target compares against the travel's
-            // ACTUAL destination z — the scarf seam's slope start, not
-            // the nominal layer z (`GCodeWriter.cpp:701-709`,
-            // `GCode.cpp:7481-7482`).
-            slope_start_z.unwrap_or(target_z),
+            // destination z for THIS leg (`GCodeWriter.cpp:701-709`):
+            // `travel_to_xyz` lifts to the NOMINAL z on the first
+            // detour waypoint and applies the scarf z only on the
+            // route's final leg (`GCode.cpp:7488-7498`).
+            if route.len() > 1 {
+                target_z
+            } else {
+                slope_start_z.unwrap_or(target_z)
+            },
             state,
         );
         None
@@ -302,6 +307,10 @@ pub(super) fn emit_needs_travel(
             // (`GCode.cpp:3139-3140`), so track `state.positioned`, not
             // `never_positioned`.
             !state.positioned,
+            // The upstream lift compares against the actual travel
+            // destination — a scarf seam's slope start z
+            // (`GCode.cpp:7481-7482`).
+            slope_start_z.unwrap_or(target_z),
         );
     } else if layer_change_travel {
         // The sloped split only applies when a lift actually exists
@@ -418,23 +427,40 @@ pub(super) fn emit_needs_travel(
     state.x = travel_x;
     state.y = travel_y;
     let route_comment = first_travel_comment.to_string();
-    for point in &route[1..] {
+    for (index, point) in route[1..].iter().enumerate() {
         // Upstream emits every route waypoint through
         // `GCodeWriter::travel_to_xy` (`GCode.cpp:7501`) WITH the F
         // word; the cooling buffer then strips the feedrate (unchanged)
         // or DROPS zero-length same-text waypoints
         // (`CoolingBuffer.cpp:911-913`). Emitting without F here
         // bypasses that drop and keeps near-duplicate waypoints the
-        // oracle never ships.
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} F{}{route_comment}\n",
-                format_axis(point.x),
-                format_axis(point.y),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
+        // oracle never ships. The FINAL waypoint carries the scarf
+        // destination z (`GCode.cpp:7493-7497`: `travel_to_xyz` with
+        // `z` when a z ratio applies).
+        let last = index + 1 == route.len() - 1;
+        if last && slope_start_z.is_some() {
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{} Z{} F{}{route_comment}\n",
+                    format_axis(point.x),
+                    format_axis(point.y),
+                    format_z(slope_start_z.unwrap()),
+                    format_axis(state.travel_feedrate)
+                )
+                .as_bytes(),
+            );
+            state.record_z(slope_start_z.unwrap());
+        } else {
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{} F{}{route_comment}\n",
+                    format_axis(point.x),
+                    format_axis(point.y),
+                    format_axis(state.travel_feedrate)
+                )
+                .as_bytes(),
+            );
+        }
         state.x = point.x;
         state.y = point.y;
     }

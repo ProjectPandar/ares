@@ -149,10 +149,6 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         )
         .as_bytes(),
     );
-    if !state.options.use_relative_e_distances {
-        output.extend_from_slice(b"G92 E0\n");
-        state.e_position = 0.0;
-    }
     state.current_feedrate = state.options.retraction_feedrate;
     state.retracted = true;
     // The layer-start retract defers the z-hop like upstream `retract()`
@@ -160,7 +156,9 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     // current writer z, `GCodeWriter.cpp:626-648`).
     travel::defer_layer_change_lift(state);
     // `retract()` returns `gcode + reset_e()` — the reset is emitted
-    // unconditionally on every call (`GCodeWriter.cpp`, `GCode.cpp:7674`).
+    // unconditionally on every call (`GCode.cpp:7674`) and carries the
+    // ` ; reset extrusion distance` comment + flavor exclusions
+    // (`GCodeWriter.cpp:480-499`).
     travel::reset_e(output, state);
 }
 

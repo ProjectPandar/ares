@@ -20,16 +20,18 @@ pub(super) fn emit_retracted_first_travel(
     first_travel_comment: &str,
     first_travel_lift: Option<LiftMode>,
     never_positioned: bool,
+    dest_z: f64,
 ) {
     // The lift target is `m_pos.z() + m_to_lift` (`GCodeWriter.cpp:
     // 701-709`) — the LIVE writer z (template `position[2]` write-back
     // can move it off the nominal layer z), but only while it exceeds
-    // the destination z; below it the travel lands at `layer_z`.
+    // the ACTUAL destination z (`point(2)` — a scarf seam's slope start,
+    // not necessarily the nominal layer z, `GCode.cpp:7481-7482`).
     let live_z = state.writer_z.unwrap_or(state.layer_z);
-    let raised_z = if live_z + state.options.z_hop > state.layer_z {
+    let raised_z = if live_z + state.options.z_hop > dest_z {
         live_z + state.options.z_hop
     } else {
-        state.layer_z
+        dest_z
     };
     let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
     // `travel_to_xyz` NormalLift emits the lift via
@@ -114,7 +116,7 @@ pub(super) fn emit_retracted_first_travel(
         state.record_z(raised_z);
     }
     // The lift exists only when the raised destination exceeds the
-    // layer z (`GCodeWriter.cpp:705-710`).
-    state.lifted = raised_z > state.layer_z;
-    state.lifted_amount = (raised_z - state.layer_z).max(0.0);
+    // travel's destination z (`GCodeWriter.cpp:705-710`).
+    state.lifted = raised_z > dest_z;
+    state.lifted_amount = (raised_z - dest_z).max(0.0);
 }
