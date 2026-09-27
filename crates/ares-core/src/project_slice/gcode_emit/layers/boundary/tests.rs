@@ -28,7 +28,7 @@ fn top_and_bottom_state() -> EmitState {
 fn zero_to_one_transition_advances_index_before_deferring() {
     let mut state = top_and_bottom_state();
 
-    advance_for_layer(&mut state, 0.4, 0.4, 1, true);
+    advance_for_layer(&mut state, 0.4, 0.4, 1, false, true);
 
     assert_eq!(state.layer_index, 1);
     assert_eq!(state.pending_lift, None);
@@ -39,7 +39,7 @@ fn zero_to_one_transition_advances_index_before_deferring() {
 fn first_layer_transition_still_defers_the_hop() {
     let mut state = top_and_bottom_state();
 
-    advance_for_layer(&mut state, 0.2, 0.2, 0, true);
+    advance_for_layer(&mut state, 0.2, 0.2, 0, false, true);
 
     assert_eq!(state.layer_index, 0);
     assert!(state.pending_lift.is_some());

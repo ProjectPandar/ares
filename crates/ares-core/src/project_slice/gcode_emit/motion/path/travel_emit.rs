@@ -23,6 +23,7 @@ pub(super) fn xy_without_feed(output: &mut Vec<u8>, x: f64, y: f64) {
 
 pub(super) fn xyz_with_comment(
     output: &mut Vec<u8>,
+    state: &mut super::super::EmitState,
     x: f64,
     y: f64,
     z: f64,
@@ -39,4 +40,5 @@ pub(super) fn xyz_with_comment(
         )
         .as_bytes(),
     );
+    state.record_z(z);
 }

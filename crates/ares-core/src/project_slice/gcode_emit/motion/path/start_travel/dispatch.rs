@@ -41,6 +41,7 @@ pub(super) fn emit_retracted_first_travel(
             .as_bytes(),
         );
         state.current_feedrate = feedrate;
+        state.record_z(state.layer_z + state.options.z_hop);
         if never_positioned {
             // Genuinely unclear position (the start gcode's first
             // travel): upstream's unclear-position branch emits XY
@@ -67,6 +68,7 @@ pub(super) fn emit_retracted_first_travel(
                 )
                 .as_bytes(),
             );
+            state.record_z(state.layer_z + state.options.z_hop);
         } else {
             // Clear position: upstream `travel_to_xyz` NormalLift
             // emits the plain lift (`slop_move`) then ONE
@@ -76,6 +78,7 @@ pub(super) fn emit_retracted_first_travel(
             // word.
             travel_emit::xyz_with_comment(
                 output,
+                state,
                 travel_x,
                 travel_y,
                 state.layer_z + state.options.z_hop,
@@ -83,6 +86,7 @@ pub(super) fn emit_retracted_first_travel(
                 first_travel_comment,
             );
             state.current_feedrate = state.travel_feedrate;
+            state.record_z(state.layer_z + state.options.z_hop);
         }
     } else {
         travel_emit::xy_with_comment(
@@ -100,6 +104,7 @@ pub(super) fn emit_retracted_first_travel(
             )
             .as_bytes(),
         );
+        state.record_z(state.layer_z + state.options.z_hop);
     }
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;

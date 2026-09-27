@@ -25,6 +25,7 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     precise_layer_z: f64,
     layer_z: f64,
     layer_index: usize,
+    object_layer_over_raft: bool,
     layer_retract_pending: bool,
 ) {
     // `GCode.cpp:5692`: `z = print_z + m_config.z_offset` — the writer's
@@ -32,6 +33,12 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     state.layer_z = f64::from(layer_z) + state.options.z_offset;
     state.source_layer_z = precise_layer_z;
     state.layer_index = layer_index;
+    state.object_layer_over_raft = object_layer_over_raft;
+    // `change_layer` ends with `m_writer.get_position().z() = z`
+    // (`GCode.cpp:5712`) — a silent writer-z update without emitting a
+    // move, so post-change-layer `m_pos.z()` reads the NEW layer z for
+    // `lazy_lift`/`eager_lift` gating (`GCodeWriter.cpp:659-662`).
+    state.record_z(state.layer_z);
     if layer_retract_pending {
         motion::defer_layer_change_lift(state);
     }
@@ -57,6 +64,7 @@ pub(super) fn append<'a>(
         first_layer_bounds,
     }: Boundary<'a>,
     layer_index: usize,
+    object_layer_over_raft: bool,
     previous_layer_z: f64,
     layer_z: f64,
     layer_height: f64,
@@ -82,9 +90,13 @@ pub(super) fn append<'a>(
     let timelapse_context = timelapse::Context {
         traversal,
         layer: timelapse::TimelapseLayer {
+            // `{layer_num}`/`{layer_z}` placeholders and the wrapping
+            // insert (`GCode.cpp:783`, :5302) scope the PHYSICAL index and
+            // the running max writer z — `m_layer_index` after
+            // `change_layer` and `m_max_layer_z` over the offset domain.
             index: layer_index,
             z: f64::from(layer_z),
-            max_z: f64::from(layer_z),
+            max_z: f64::from(layer_z) + state.options.z_offset,
         },
         metadata,
         first_layer_bounds,
@@ -101,8 +113,11 @@ pub(super) fn append<'a>(
         output,
         layer_gcode::LayerTemplateContext {
             traversal,
+            // `{layer_num}` = `m_layer_index + 1` pre-increment = the new
+            // PHYSICAL layer index (`GCode.cpp:4636`, :5689).
             layer_index,
             layer_z: f64::from(layer_z),
+            max_layer_z: f64::from(layer_z) + state.options.z_offset,
             totals: state.extrusion_totals(),
             context: layer_change_template,
         },
@@ -152,12 +167,18 @@ pub(super) fn append<'a>(
         layer_index,
         f64::from(layer_z) + state.options.z_offset,
     );
+    // `change_layer`'s explicit `travel_to_z` (`GCode.cpp:5702-5704`) and
+    // the silent `m_pos.z() = z` both leave the writer at the new layer z.
+    state.record_z(f64::from(layer_z) + state.options.z_offset);
     layer_gcode::append_layer_change(
         output,
         layer_gcode::LayerTemplateContext {
             traversal,
+            // Post-`change_layer` `{layer_num}` = `m_layer_index` = the
+            // new PHYSICAL layer index (`GCode.cpp:4669`, :5689).
             layer_index,
             layer_z: f64::from(layer_z),
+            max_layer_z: f64::from(layer_z) + state.options.z_offset,
             totals: state.extrusion_totals(),
             context: layer_change_template,
         },
@@ -173,6 +194,7 @@ pub(super) fn append<'a>(
         f64::from(layer_z),
         layer_z,
         layer_index,
+        object_layer_over_raft,
         layer_retract_pending,
     );
     motion::flush_pending_retract_lift(output, state, previous_state_layer_z);

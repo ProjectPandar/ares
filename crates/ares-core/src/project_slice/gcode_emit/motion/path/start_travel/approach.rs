@@ -196,6 +196,7 @@ pub(super) fn emit_needs_travel(
     {
         travel_emit::xyz_with_comment(
             output,
+            state,
             travel_x,
             travel_y,
             state.layer_z,
@@ -216,6 +217,7 @@ pub(super) fn emit_needs_travel(
         } else if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
             travel_emit::xyz_with_comment(
                 output,
+                state,
                 travel_x,
                 travel_y,
                 state.layer_z + state.options.z_hop,
@@ -232,6 +234,7 @@ pub(super) fn emit_needs_travel(
                 )
                 .as_bytes(),
             );
+            state.record_z(state.layer_z + state.options.z_hop);
         }
     } else if layer_change_travel && state.retracted {
         // With a hop actually deferred, the earlier `state.lifted`
@@ -241,6 +244,7 @@ pub(super) fn emit_needs_travel(
         // (`GCode.cpp:7479-7482`) forces the plain combined xyz move.
         travel_emit::xyz_with_comment(
             output,
+            state,
             travel_x,
             travel_y,
             target_z,
@@ -284,6 +288,7 @@ pub(super) fn emit_needs_travel(
                 format!("G1 Z{} F{}\n", format_z(target_z), format_axis(z_feedrate)).as_bytes(),
             );
             state.current_feedrate = z_feedrate;
+            state.record_z(target_z);
         } else {
             // `travel_to_xyz`'s force-z/`will_move_z` else-branch emits
             // the combined move at `config.travel_speed` UNCONDITIONALLY
@@ -291,6 +296,7 @@ pub(super) fn emit_needs_travel(
             // does not apply to a layer-change approach that carries Z.
             travel_emit::xyz_with_comment(
                 output,
+                state,
                 travel_x,
                 travel_y,
                 target_z,
@@ -302,6 +308,7 @@ pub(super) fn emit_needs_travel(
     } else if let Some(z) = slope_start_z {
         travel_emit::xyz_with_comment(
             output,
+            state,
             travel_x,
             travel_y,
             z,
@@ -349,6 +356,7 @@ pub(super) fn emit_needs_travel(
                 .as_bytes(),
             );
             state.current_feedrate = z_feedrate;
+            state.record_z(target_z);
             unclear_position_travel = true;
         }
     }

@@ -56,7 +56,7 @@ fn top_only_lift_requires_a_top_or_ironing_feature() {
     };
 
     assert!(!lift_is_allowed_at(&state, state.layer_z));
-    state.last_feature = Some("Top surface");
+    state.last_notgapfill_feature = Some("Top surface");
     assert!(lift_is_allowed_at(&state, state.layer_z));
 }
 
@@ -117,7 +117,7 @@ fn layer_change_top_and_bottom_enforce_uses_the_new_layer_index() {
     assert_eq!(state.pending_lift, Some(LiftMode::Spiral));
 
     state.layer_index = 7;
-    state.last_feature = Some("Top surface");
+    state.last_notgapfill_feature = Some("Top surface");
     state.pending_lift = None;
     super::defer_layer_change_lift(&mut state);
     assert_eq!(state.pending_lift, Some(LiftMode::Spiral));

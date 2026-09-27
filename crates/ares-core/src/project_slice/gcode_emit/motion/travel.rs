@@ -357,7 +357,8 @@ pub(in crate::project_slice::gcode_emit) fn defer_layer_change_lift(state: &mut 
     // Upstream `change_layer` retracts while the writer still sits at the
     // previous layer's z (`GCode.cpp:5693-5706` before the z move), so the
     // `retract_lift_above/below` gate evaluates at that z, not the new
-    // layer's (`GCodeWriter.cpp:633-639`).
+    // layer's (`GCodeWriter.cpp:633-639`). `schedule_at` itself applies
+    // the parent's `needs_lift` guard (`GCode.cpp:7678`).
     let writer_z = state.writer_z.map_or(state.layer_z, f64::from);
     lift::schedule_at(state, true, writer_z);
 }

@@ -249,9 +249,32 @@ pub(super) fn append(
                         })
                         .unwrap_or(0.0)
                 };
-                (previous, first_layer)
+                // `layer->id()` counts PHYSICAL layers — upstream's raft
+                // layers occupy ids `0..raft_count` inside the object's
+                // layer vector, so the first object layer is id
+                // `raft_count` (`GCode.cpp:5339-5344` keys
+                // `object_layer_over_raft` on `layer->id() ==
+                // raft_layers`). `m_layer_index` (`GCode.cpp:5689`) counts
+                // the same physical index.
+                let raft_count = raft
+                    .as_ref()
+                    .and_then(|raft| raft.counts.get(first_object))
+                    .copied()
+                    .unwrap_or(0);
+                (previous, first_layer + raft_count)
             }
         };
+
+        // `m_object_layer_over_raft` (`GCode.cpp:5339-5344`): the first
+        // object layer over a raft — `layer->id() == raft_layers()`.
+        let object_layer_over_raft = leading_raft.is_none()
+            && first_layer == 0
+            && raft
+                .as_ref()
+                .and_then(|raft| raft.counts.get(first_object))
+                .copied()
+                .unwrap_or(0)
+                > 0;
         let layer_z = group_z;
         // The HEIGHT header keeps the f32-difference quirk (upstream
         // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
@@ -274,6 +297,7 @@ pub(super) fn append(
                 first_layer_bounds,
             },
             boundary_layer_index,
+            object_layer_over_raft,
             previous_layer_z,
             layer_z,
             layer_height,

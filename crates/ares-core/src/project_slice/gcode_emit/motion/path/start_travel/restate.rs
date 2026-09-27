@@ -42,6 +42,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
             .as_bytes(),
         );
         state.current_feedrate = z_feedrate;
+        state.record_z(state.layer_z);
     }
     if state.retracted {
         if first_position
@@ -59,6 +60,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
                 .as_bytes(),
             );
             state.current_feedrate = z_feedrate;
+            state.record_z(state.layer_z + state.options.z_hop);
             state.lifted = true;
             state.lifted_amount = state.options.z_hop;
         }
@@ -87,6 +89,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
                 .as_bytes(),
             );
             state.current_feedrate = z_feedrate;
+            state.record_z(z);
             state.scarf_z = slope_start_z;
         }
         // `Extruder::unretract()` restores the TRACKED `m_retracted` plus

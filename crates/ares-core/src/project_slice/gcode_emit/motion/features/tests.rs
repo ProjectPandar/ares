@@ -23,12 +23,15 @@ fn first_layer_uses_wall_and_infill_speed_classes() {
     };
 
     assert_eq!(
-        properties("Outer wall", true).speed(&options, 0, 10.0),
+        properties("Outer wall", true).speed(&options, 0, false, 10.0),
         30.0
     );
-    assert_eq!(properties("Brim", false).speed(&options, 0, 10.0), 60.0);
     assert_eq!(
-        properties("Sparse infill", false).speed(&options, 0, 10.0),
+        properties("Brim", false).speed(&options, 0, false, 10.0),
+        60.0
+    );
+    assert_eq!(
+        properties("Sparse infill", false).speed(&options, 0, false, 10.0),
         60.0
     );
 }

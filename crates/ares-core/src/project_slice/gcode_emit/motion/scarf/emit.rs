@@ -82,6 +82,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
         state.x = end.x;
         state.y = end.y;
         state.scarf_z = Some(z);
+        // The ramp's `Z` word is a real emitted Z — the writer's
+        // `m_pos.z()` tracks it (`GCode.cpp:5712` semantics).
+        if !z_word.is_empty() {
+            state.record_z(z);
+        }
         state.wipe_start = Some(end);
     }
 }

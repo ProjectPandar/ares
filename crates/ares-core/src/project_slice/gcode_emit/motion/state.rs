@@ -27,7 +27,18 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) options: MotionOptions,
     pub(in crate::project_slice::gcode_emit) small_area_flow:
         crate::extrusions::SmallAreaInfillFlowCompensation,
+    /// Physical layer index — upstream's `layer->id()`/`m_layer_index`
+    /// (`GCode.cpp:5689`, `GCode.hpp:671-676`): raft layers occupy ids
+    /// `0..raft_count`, so the first object layer after a raft has id
+    /// `raft_count`, not 0. First-layer speed/accel/jerk gates read this
+    /// via `on_first_layer` (`id()==0 && bottom_z≈0`) and the over-raft
+    /// flag below.
     pub(in crate::project_slice::gcode_emit) layer_index: usize,
+    /// `m_object_layer_over_raft` (`GCode.cpp:5339-5344`): the first
+    /// object layer printed over a raft interface — applies
+    /// `initial_layer_speed`/`initial_layer_infill_speed` to non-bottom
+    /// roles (`GCode.cpp:6564-6570`).
+    pub(in crate::project_slice::gcode_emit) object_layer_over_raft: bool,
     pub(in crate::project_slice::gcode_emit) spiral_vase: bool,
     pub(in crate::project_slice::gcode_emit) spiral_vase_layer: bool,
     pub(in crate::project_slice::gcode_emit) positioned: bool,
@@ -39,6 +50,10 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// the first generated path (start G-code supplies the initial writer XY).
     pub(in crate::project_slice::gcode_emit) last_scaled_position: Option<(i64, i64)>,
     pub(in crate::project_slice::gcode_emit) last_feature: Option<&'static str>,
+    /// `m_last_notgapfill_extrusion_role` (`GCode.cpp:7255-7257`): the last
+    /// emitted feature that is not gap fill — the `retract_lift_enforce`
+    /// top-surface check (`GCode.cpp:7682`) reads this, not `last_feature`.
+    pub(in crate::project_slice::gcode_emit) last_notgapfill_feature: Option<&'static str>,
     /// `;_EXTRUSION_ROLE:n` emission gate (`m_enable_extrusion_role_markers`,
     /// `GCode.cpp:2544` — on when the PressureEqualizer is in the pipeline).
     pub(in crate::project_slice::gcode_emit) extrusion_role_markers: bool,
@@ -224,6 +239,16 @@ impl EmitState {
             density: 1.24,
             used_filament,
         }
+    }
+
+    /// Track an emitted Z coordinate: `writer_z` mirrors
+    /// `GCodeWriter::m_pos(2)` (`GCodeWriter.cpp`) — every emitted move
+    /// carrying a Z word (lifts, descends, scarf/spiral Z-in-extrusion,
+    /// combined `G1 X..Y..Z..` travels) advances it. The eager-lift gate and
+    /// target (`GCodeWriter.cpp:659-676`) and the layer-change
+    /// `will_move_z` check (`GCode.cpp:4417`) both read this current Z.
+    pub(in crate::project_slice::gcode_emit) fn record_z(&mut self, z: f64) {
+        self.writer_z = Some(z);
     }
 }
 

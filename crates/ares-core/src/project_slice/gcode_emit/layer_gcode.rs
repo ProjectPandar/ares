@@ -162,6 +162,10 @@ pub(super) struct LayerTemplateContext<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) layer_index: usize,
     pub(super) layer_z: f64,
+    /// `m_max_layer_z` (`GCode.cpp:4638`): running max of the OFFSET
+    /// writer z (`print_z + z_offset`) — layers ascend, so this equals
+    /// the current layer's offset z.
+    pub(super) max_layer_z: f64,
     pub(super) totals: ExtrusionTotals,
     pub(super) context: &'a LayerChangeTemplate,
 }
@@ -176,6 +180,7 @@ pub(super) fn append_before_layer_change_gcode(
         traversal,
         layer_index,
         layer_z,
+        max_layer_z,
         totals,
         context,
     } = template_context;
@@ -206,7 +211,7 @@ pub(super) fn append_before_layer_change_gcode(
         "extruded_weight_total",
         value::Value::number(volume * totals.density * 0.001),
     );
-    config.insert("max_layer_z", value::Value::number(layer_z));
+    config.insert("max_layer_z", value::Value::number(max_layer_z));
     let rendered = template::render(template, &mut config).map_err(|error| {
         SliceError::InvalidInput(format!(
             "invalid project before-layer-change G-code template: {error}"
@@ -225,6 +230,7 @@ pub(super) fn append_layer_change(
         traversal,
         layer_index,
         layer_z,
+        max_layer_z,
         totals,
         context,
     } = template_context;

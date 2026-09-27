@@ -78,6 +78,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         );
         travel_set_layer_z = true;
         state.current_feedrate = z_feedrate;
+        state.record_z(target_z);
     }
     if let Some(z) = slope_start_z {
         state.scarf_z = Some(z);

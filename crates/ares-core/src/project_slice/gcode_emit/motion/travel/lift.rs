@@ -19,8 +19,9 @@ pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f
     // `GCode.cpp:7678-7681` — `needs_lift` requires a non-zero retraction
     // length (or firmware retraction / toolchange): with retraction
     // disabled (nil length, e.g. Wanhao), `maybe_zlift` never runs and
-    // no hop is ever deferred.
-    if state.options.retraction_length <= 0.0 && !layer_change {
+    // no hop is ever deferred — including the layer-change retract, which
+    // is not a toolchange upstream.
+    if state.options.retraction_length <= 0.0 && !state.options.use_firmware_retraction {
         return;
     }
     if state.options.z_hop <= 0.0 || !is_allowed_at(state, writer_z) {
@@ -68,8 +69,15 @@ pub(in crate::project_slice::gcode_emit::motion) fn is_allowed_at(
     if !height_is_allowed_at(state, writer_z) {
         return false;
     }
+    // `GCode.cpp:7691-7694`: the bottom-surface test reads
+    // `m_layer_index == 0` — the physical counter (raft layers included).
     let bottom = state.layer_index == 0;
-    let top = matches!(state.last_feature, Some("Top surface" | "Ironing"));
+    // `m_last_notgapfill_extrusion_role == erTopSolidInfill || erIroning`
+    // (`GCode.cpp:7682`) — the non-gapfill feature tracker.
+    let top = matches!(
+        state.last_notgapfill_feature,
+        Some("Top surface" | "Ironing")
+    );
     match state.options.retract_lift_enforce {
         RetractLiftEnforce::AllSurfaces => true,
         RetractLiftEnforce::TopOnly => top,
@@ -177,16 +185,27 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
             }
         }
     };
+    if emitted {
+        // The emitted lift move carries a real Z — `m_pos.z()` advances
+        // (`GCodeWriter::travel_to_z` sets `m_pos` on every emit).
+        state.record_z(raised_z);
+    }
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
     emitted
 }
 
 pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
-    if state.options.z_hop <= 0.0 || !height_is_allowed(state) {
+    // Upstream `eager_lift` (`GCodeWriter.cpp:652-681`) gates and targets
+    // the CURRENT writer position `m_pos.z()` — a second eager lift stacks
+    // on the already-raised z, not the nominal layer z (`0.6` then `1.0`,
+    // not `0.6` twice). `writer_z` carries the last emitted Z; before any
+    // Z move it falls back to the layer z (the writer position).
+    let current_z = state.writer_z.map_or(state.layer_z, f64::from);
+    if state.options.z_hop <= 0.0 || !height_is_allowed_at(state, current_z) {
         return;
     }
-    let raised_z = state.layer_z + state.options.z_hop;
+    let raised_z = current_z + state.options.z_hop;
     // `GCodeWriter::eager_lift`: the spiral form requires a known-clear
     // position; an unknown position (right after the start g-code) falls
     // back to the normal Z-only lift. `process_layer` maps Auto, Spiral AND
@@ -220,6 +239,7 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
         );
         state.current_feedrate = feedrate;
     }
+    state.record_z(raised_z);
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
     // `GCodeWriter::eager_lift` zeroes `m_to_lift` (`GCodeWriter.cpp:679`):
@@ -243,11 +263,12 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
         .as_bytes(),
     );
     state.current_feedrate = feedrate;
+    state.record_z(state.layer_z + state.options.z_hop);
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
 }
 
-fn append_spiral(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64, j: f64) {
+fn append_spiral(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: f64, j: f64) {
     // `_spiral_travel_to_z` (`GCodeWriter.cpp:881`): under
     // `gcode_comments` the comment is a standalone `;spiral lift Z` line
     // before the feedrate set (arc-fitting uses ` ; XY plane for arc`).
@@ -267,6 +288,7 @@ fn append_spiral(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64,
             )
             .as_bytes(),
         );
+        state.record_z(raised_z);
         return;
     }
 
@@ -308,4 +330,5 @@ fn append_spiral(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64,
         )
         .as_bytes(),
     );
+    state.record_z(raised_z);
 }

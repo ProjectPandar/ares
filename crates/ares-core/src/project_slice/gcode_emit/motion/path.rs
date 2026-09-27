@@ -93,8 +93,12 @@ pub(super) fn emit(
     if properties.end_clip > 0.0 {
         arc::clip_fitting_end(&mut local_points, &mut fitting, geometry.scale);
     }
-    let (acceleration, configured_speed) =
-        properties.kinematics(&state.options, state.layer_index, source_length);
+    let (acceleration, configured_speed) = properties.kinematics(
+        &state.options,
+        state.layer_index,
+        state.object_layer_over_raft,
+        source_length,
+    );
     // `_mm3_per_mm` carries the effective flow (`GCode.cpp:6469-6471`:
     // geometric mm3_per_mm scaled by print and filament flow ratios, with
     // role ratios pre-baked into `PathProperties::mm3_per_mm`), and the cap
@@ -170,6 +174,12 @@ pub(super) fn emit(
         .as_ref()
         .map_or(original_speed, |points| points[0].speed)
         * 60.0;
+    // `GCode.cpp:7255-7257`: the lift-eligibility role snapshot excludes
+    // gap fill — tracked separately from the `;TYPE:` feature tracker and
+    // updated for EVERY emitted extrusion path, not only feature changes.
+    if properties.feature != "Gap infill" {
+        state.last_notgapfill_feature = Some(properties.feature);
+    }
     if state.last_feature != Some(properties.feature) {
         let feature = state.tags.feature(properties.feature) + "\n";
         output.extend_from_slice(feature.as_bytes());
