@@ -11,12 +11,16 @@ fn option_domain_plan_is_complete_and_source_cited() {
             || plan.source.starts_with("src/libslic3r/PrintConfig.hpp:")
     }));
     assert!(plans.iter().all(|plan| !plan.cases.is_empty()));
-    // Omissions are only allowed for authored numeric probe domains —
-    // interior samples of a schema range whose bounds upstream
-    // slice-time validation rejects (`domains.rs` authored block).
+    // Omissions are allowed for authored numeric probe domains (interior
+    // samples of a schema range whose bounds upstream slice-time
+    // validation rejects) and for schema-unbounded string/int/point
+    // domains where only the baseline value is sliceable.
     assert!(
         plans.iter().all(|plan| {
-            plan.omission.is_none() || plan.omission.is_some_and(|note| note.contains("authored"))
+            plan.omission.is_none()
+                || plan
+                    .omission
+                    .is_some_and(|note| note.contains("authored") || note.contains("unbounded"))
         }),
         "unexpected omission: {:?}",
         plans
