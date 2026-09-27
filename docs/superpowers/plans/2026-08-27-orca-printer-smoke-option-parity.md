@@ -10111,3 +10111,18 @@ rounding lands one unit off. All emitted XY coordinates are byte-identical
 (1 int < half a display micrometre); only the wipe segment length differs
 enough to flip the rounded `E` word at 12 sites. Tracked; needs an
 upstream-annotated integer dump to bisect the exact vertex origin.
+
+### Deferred upstream port — support-island travel exemption
+
+`GCode::needs_retraction` (`GCode.cpp:7618-7632`) returns false when a
+support-role travel is fully contained in `support_layer->support_islands`
+(or tree `base_areas`). Ares does not thread support-island polygons into
+the emit layer yet, so travels between/inside support islands currently
+always evaluate `retract` on length + internal-region containment alone.
+All current byte-exact parity artifacts pass, meaning the exercised
+fixtures do not hit the containment exemption; the port boundary is
+`SupportLayer::support_islands` → `EmitState`/geometry plumbing. Until
+then `restart_extra` may be over-written (and a spurious retract emitted)
+for a fully-contained support travel. Also unreachable: the Hilbert-curve
+retraction suppression (`GCode.cpp:7659-7672`) — `hilbertcurve` is
+rejected at option parse time.
