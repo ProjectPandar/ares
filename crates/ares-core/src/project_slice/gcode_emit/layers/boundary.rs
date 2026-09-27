@@ -171,11 +171,12 @@ pub(super) fn append<'a>(
     // the compatible-flavor `change_layer` variant additionally
     // requires `will_move_z` — the nozzle must actually change Z
     // from wherever the start g-code left it (`GCode.cpp:5693`).
-    // BBL layer starts retract whenever the flag is set.
-    if layer_index == 0
-        && state.options.retract_when_changing_layer
-        && (state.tags.is_bbl() || will_move_z)
-    {
+    // The `will_move_z` gate applies for every printer family
+    // (`GCode.cpp:5693`) — a before-layer `position[2]` assignment that
+    // already matches the target Z suppresses this retract upstream.
+    // BBL's unconditional layer-start retract is the later forced
+    // eager flush (`GCode.cpp:5205-5210`).
+    if layer_index == 0 && state.options.retract_when_changing_layer && will_move_z {
         motion::retract_before_layer(output, state);
     }
     // Spiral filter targets live in the writer (offset) Z domain

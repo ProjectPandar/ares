@@ -261,16 +261,16 @@ pub(super) fn append_start(
         // `GCode.cpp:1702-1713`) — `position` must stay size 3 and the E
         // vectors size 64; a violation replaces the template output with
         // the inline failure report (`GCode.cpp:3920-3933`).
-        let vector_size_ok = |key: &str, expected: usize| -> bool {
-            match config.get(key) {
-                Some(value::Value::List(list)) => list.len() == expected,
-                _ => true,
-            }
-        };
-        let valid = vector_size_ok("position", 3)
-            && ["e_retracted", "e_restart_extra", "e_position"]
-                .iter()
-                .all(|key| vector_size_ok(key, 64));
+        let resized_key = ["position", "e_retracted", "e_restart_extra", "e_position"]
+            .iter()
+            .find(|key| match config.get(*key) {
+                Some(value::Value::List(list)) => {
+                    list.len() != if **key == "position" { 3 } else { 64 }
+                }
+                _ => false,
+            })
+            .map(|key| (*key).to_string());
+        let valid = resized_key.is_none();
         let number_at = |key: &str| -> Option<f64> {
             config
                 .get(key)
@@ -286,24 +286,38 @@ pub(super) fn append_start(
             retracted,
             restart_extra: number_at("e_restart_extra").unwrap_or(0.0),
         });
+        // Distinct upstream diagnostics (`GCode.cpp:1702-1713`,
+        // `Extruder.cpp:108-122`).
         let failure = if !valid {
-            Some("output variable must not be resized by the script.".to_string())
+            Some(format!(
+                "\"{}\" output variable must not be resized by the script.",
+                resized_key.as_deref().unwrap_or("position")
+            ))
+        } else if retracted.is_some_and(|value| value < -1e-4) {
+            Some("Custom G-code reports negative z_retracted.".to_string())
         } else if invalid_retract {
-            Some("Custom G-code reports negative z_retracted or z_restart_extra.".to_string())
+            Some("Custom G-code reports negative z_restart_extra.".to_string())
         } else {
             None
         };
-        // A failed write-back (`GCode.cpp:3920-3933`) replaces the rendered
-        // output with the inline report and never reaches `apply`.
-        let (rendered, position, retract_state) = match &failure {
-            Some(error) => (
+        // Write-back order upstream (`GCode.cpp:3898-3914`): vector-size
+        // validation FIRST (a resize failure never reaches `position`
+        // apply), then `set_position`, THEN `set_retracted` may throw —
+        // so a negative-retract failure still keeps the assigned
+        // position while the output becomes the inline report.
+        let (rendered, position, retract_state) = match (&failure, valid) {
+            (Some(error), _) => (
                 format!(
                     "\n!!!!! Failed to process the custom G-code template machine_start_gcode\n{error}!!!!! End of an error report for the custom G-code template machine_start_gcode\n\n\n"
                 ),
-                None,
+                if valid {
+                    config.get("position").cloned()
+                } else {
+                    None
+                },
                 None,
             ),
-            None => (rendered, config.get("position").cloned(), retract_state),
+            (None, _) => (rendered, config.get("position").cloned(), retract_state),
         };
         (rendered, position, retract_state, failure)
     };

@@ -10128,7 +10128,10 @@ suppression (`GCode.cpp:7667-7672`) IS reachable via the 3MF
 `ProcessInfillPattern` path (option `hilbertcurve` is rejected only in
 the CLI/legacy parse); implemented at
 `motion/path/start_travel/retract.rs` via `bottom_surface_pattern_hilbert`
-/ `top_surface_pattern_hilbert` EmitOptions flags. Residual nuance: with
-wipe enabled upstream still runs the `retract(true, beforeWipe)` call
-under Hilbert suppression — our suppression skips the whole retract
-branch, diverging only in the rare hilbert+wipe-path combination.
+/ `top_surface_pattern_hilbert` EmitOptions flags. With an eligible wipe
+(`wipe` enabled + stored path + non-zero wipe distance,
+`GCode.cpp:7659-7663`) the before-wipe retract and wipe still run —
+suppression skips only the final full `retract()`, keeping the scaled
+`retract_before_wipe * retract_restart_extra` restart value
+(`GCodeWriter.cpp:1004-1011`); implemented via
+`retract_and_wipe_suppressed_tail`.

@@ -177,7 +177,13 @@ pub(super) fn emit_needs_travel(
             && state.options.z_hop > 0.0
             && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
             && !state.spiral_vase
-            && travel::lift_is_allowed_at(state, state.layer_z)
+            // `lazy_lift` gates on the LIVE writer Z (`GCodeWriter.cpp:
+            // 633-639`) — a template `position[2]` assignment moves the
+            // eligibility origin off the nominal layer z.
+            && travel::lift_is_allowed_at(
+                state,
+                state.writer_z.unwrap_or(state.layer_z),
+            )
             && !state.lifted
         {
             state.pending_lift = Some(travel::lift_mode_for(state, false));

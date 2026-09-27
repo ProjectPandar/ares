@@ -7,7 +7,13 @@ use super::super::{
 mod tests;
 
 pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
-    schedule_at(state, layer_change, state.layer_z);
+    // `lazy_lift` reads the live `m_pos(2)` (`GCodeWriter.cpp:633-639`)
+    // — template `position[2]` assignments move the eligibility origin.
+    schedule_at(
+        state,
+        layer_change,
+        state.writer_z.map(f64::from).unwrap_or(state.layer_z),
+    );
 }
 
 /// Upstream `lazy_lift` gates the hop on the writer's *current* z

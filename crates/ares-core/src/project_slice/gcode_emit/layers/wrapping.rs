@@ -83,13 +83,9 @@ pub(super) fn emit(
                 }
             }
             Err(error) => {
-                state.record_template_failure("wrapping_detection_gcode", &error.to_string());
                 let name = "wrapping_detection_gcode";
-                let error = state
-                    .failed_templates
-                    .last()
-                    .map(|(_, error)| error.clone())
-                    .unwrap_or_default();
+                let error = error.to_string();
+                state.record_template_failure(name, &error);
                 output.extend_from_slice(
                     format!(
                         "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"

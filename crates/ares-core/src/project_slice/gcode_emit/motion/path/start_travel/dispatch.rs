@@ -73,38 +73,29 @@ pub(super) fn emit_retracted_first_travel(
             // Clear position with a pending lift: upstream emits the
             // lift, then `travel_to_xy`-style XY WITHOUT a Z word (the
             // covered Z does not move, `GCodeWriter.cpp:769-780`), then
-            // the `_travel_to_z` re-statement of the raised z. Feedrate
-            // words appear only when they actually change — redundant F
-            // words are dropped by the cooling rewrite.
-            if (state.current_feedrate - state.travel_feedrate).abs() < 1e-9 {
-                travel_emit::xy_without_feed(output, travel_x, travel_y);
-            } else {
-                travel_emit::xy_with_comment(
-                    output,
-                    travel_x,
-                    travel_y,
-                    state.travel_feedrate,
-                    first_travel_comment,
-                );
-                state.current_feedrate = state.travel_feedrate;
-            }
+            // the `_travel_to_z` re-statement of the raised z. Both
+            // legs carry their feedrate + comment like the unclear
+            // branch — CoolingBuffer drops redundant F words and
+            // deletes zero-length moves (`CoolingBuffer.cpp:901-920`).
+            travel_emit::xy_with_comment(
+                output,
+                travel_x,
+                travel_y,
+                state.travel_feedrate,
+                first_travel_comment,
+            );
+            state.current_feedrate = state.travel_feedrate;
             state.record_z(state.layer_z + state.options.z_hop);
             let z_feedrate = travel::lift_z_feedrate(state);
-            if (state.current_feedrate - z_feedrate).abs() < 1e-9 {
-                output.extend_from_slice(
-                    format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
-                );
-            } else {
-                output.extend_from_slice(
-                    format!(
-                        "G1 Z{} F{}\n",
-                        format_z(state.layer_z + state.options.z_hop),
-                        format_axis(z_feedrate)
-                    )
-                    .as_bytes(),
-                );
-                state.current_feedrate = z_feedrate;
-            }
+            output.extend_from_slice(
+                format!(
+                    "G1 Z{} F{}{first_travel_comment}\n",
+                    format_z(state.layer_z + state.options.z_hop),
+                    format_axis(z_feedrate)
+                )
+                .as_bytes(),
+            );
+            state.current_feedrate = z_feedrate;
         }
     } else {
         travel_emit::xy_with_comment(

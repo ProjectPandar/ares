@@ -231,12 +231,26 @@ fn retract_and_wipe_impl(
     };
     // `before` = `retraction_before_wipe + (remaining - during)` =
     // `retraction_length - during` (`GCode.cpp:358` adds the leftover
-    // difference into the pre-wipe amount).
-    let before = state.options.retraction_length - during;
+    // difference into the pre-wipe amount). Without an eligible wipe
+    // path upstream never calls `retract(true, beforeWipe)` — the single
+    // `retract()` emits only the REMAINING distance
+    // (`Extruder.cpp:75-84`), so a partially-retracted nozzle (e.g. a
+    // template `e_retracted` assignment) tops up rather than restarting
+    // the full length.
+    let before = if segments.is_empty() {
+        (state.options.retraction_length - state.retracted_amount).max(0.0)
+    } else {
+        // The before-wipe call emits `max(0, before - m_retracted)`
+        // (`Extruder.cpp:77-84`); the post-wipe `retract()` tops the
+        // remainder off to the full length.
+        (state.options.retraction_length - during - state.retracted_amount).max(0.0)
+    };
     if state.options.use_firmware_retraction {
         firmware_retract(output, state);
         state.retracted = true;
     } else if before > f64::EPSILON {
+        // `extrusion::coordinate` accumulates `retracted_amount`
+        // (`Extruder.cpp:77-84` semantics live in the shared counter).
         let retract = extrusion::coordinate(state, -before);
         let comment = state
             .options
