@@ -58,9 +58,12 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         );
         state.current_feedrate = z_feedrate;
         state.record_z(state.layer_z);
-        // `travel_to_z` cancels `m_lifted` (`GCodeWriter.cpp:824`).
+        // `travel_to_z` cancels `m_lifted` (`GCodeWriter.cpp:824`) — a
+        // template-assigned lift is equally cleared since the writer Z is
+        // authoritative again.
         state.lifted = false;
         state.lifted_amount = 0.0;
+        state.template_lifted = false;
     }
     let needs_z_restate = never_positioned && (eager_lifted_travel || unclear_position_travel);
     if needs_z_restate && !travel_set_layer_z {

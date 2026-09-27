@@ -89,8 +89,12 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     output: &mut Vec<u8>,
     state: &mut EmitState,
 ) {
-    if state.pending_layer_retract && !state.retracted {
+    // Upstream `retract()` assigns `m_restart_extra` even when the extruder
+    // is already retracted (`Extruder.cpp:77`).
+    if state.pending_layer_retract {
         state.restart_extra = state.options.retract_restart_extra;
+    }
+    if state.pending_layer_retract && !state.retracted {
         retract_and_wipe(output, state);
     }
 }
@@ -100,8 +104,10 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     state: &mut EmitState,
     writer_z: f64,
 ) {
-    if state.pending_layer_retract && !state.retracted {
+    if state.pending_layer_retract {
         state.restart_extra = state.options.retract_restart_extra;
+    }
+    if state.pending_layer_retract && !state.retracted {
         lift::schedule_at(state, true, writer_z);
         state.retracted = true;
     }
@@ -131,8 +137,10 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager_forced(
 }
 
 fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState, force: bool) {
-    if (force || state.pending_layer_retract) && !state.retracted {
+    if force || state.pending_layer_retract {
         state.restart_extra = state.options.retract_restart_extra;
+    }
+    if (force || state.pending_layer_retract) && !state.retracted {
         if force {
             // The BBL layer-start `retract()` finds no stored wipe path
             // there (`GCode.cpp:5205-5210`); the plain retraction emits

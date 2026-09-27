@@ -124,12 +124,22 @@ pub(super) fn emit(
     // the layer-change retract and the first unretract restores exactly the
     // assigned amount.
     if let Some(retract) = &start_retract {
-        // `Extruder::set_retracted` (`Extruder.cpp:108-122`): a retracted
-        // > EPSILON assignment takes both fields; otherwise both clear.
-        // `Extruder::set_retracted` thresholds are upstream EPSILON
-        // (`libslic3r.h:52`).
+        // `Extruder::set_retracted` (`Extruder.cpp:108-122`): values below
+        // `-EPSILON` throw (upstream aborts the export after writing the
+        // inline failure block — `GCode.cpp:3920-3933`); a retracted
+        // > EPSILON assignment takes both fields, otherwise both clear.
         const EPSILON: f64 = 1e-4;
-        if retract.retracted > EPSILON {
+        if retract.retracted < -EPSILON {
+            state.record_template_failure(
+                "machine_start_gcode",
+                "Custom G-code reports negative z_retracted.",
+            );
+        } else if retract.restart_extra < -EPSILON {
+            state.record_template_failure(
+                "machine_start_gcode",
+                "Custom G-code reports negative z_restart_extra.",
+            );
+        } else if retract.retracted > EPSILON {
             state.retracted = true;
             state.retracted_amount = retract.retracted;
             state.restart_extra = if retract.restart_extra < EPSILON {

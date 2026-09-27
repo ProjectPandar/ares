@@ -34,11 +34,16 @@ pub(super) fn decide(
             // (`GCode.cpp:7436-7443`).
             replan(state);
         }
-    } else if defer_lift_for_retracted_travel
-        && state.options.z_hop > 0.0
-        && state.options.retraction_length > 0.0
-        && travel::lift_is_allowed_at(state, state.layer_z)
-    {
-        state.pending_lift = Some(travel::lift_mode_for(state, false));
+    } else if defer_lift_for_retracted_travel {
+        // The upstream `retract()` call still assigns `m_restart_extra`
+        // even though `Extruder::retract` emits nothing when already
+        // fully retracted (`Extruder.cpp:77`).
+        state.restart_extra = state.options.retract_restart_extra;
+        if state.options.z_hop > 0.0
+            && state.options.retraction_length > 0.0
+            && travel::lift_is_allowed_at(state, state.layer_z)
+        {
+            state.pending_lift = Some(travel::lift_mode_for(state, false));
+        }
     }
 }

@@ -148,9 +148,8 @@ pub(in crate::project_slice) fn emit_skirt_loop(
                     )
                 })
                 .collect::<Vec<_>>();
-            // the wipe stores the path in reverse emission order; dump in
-            // forward path order like upstream's `this->path.points`
-            scaled.reverse();
+            // `state.wipe_path` was already reversed into forward order
+            // above (`:131`) — dump as-is like upstream `path.points`.
             for (x, y) in scaled {
                 let _ = writeln!(file, "FL ({x},{y})");
             }

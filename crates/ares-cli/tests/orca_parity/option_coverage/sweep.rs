@@ -83,6 +83,12 @@ fn orca_parity_option_coverage() {
             if outcome.status == "PASS" {
                 return false;
             }
+            // A domain that compared NOTHING is never acceptable — the
+            // exemptions below only apply once at least one generated
+            // case ran through the byte comparator successfully.
+            if outcome.compared == 0 {
+                return true;
+            }
             // Authored-probe / schema-unbounded domains: sampled the
             // reachable legal interior or baseline, since upstream
             // slice-time validation rejects the remaining space —
