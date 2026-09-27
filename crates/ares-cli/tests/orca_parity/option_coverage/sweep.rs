@@ -80,8 +80,11 @@ fn orca_parity_option_coverage() {
     let incomplete = outcomes
         .iter()
         .filter(|outcome| {
-            if outcome.status == "PASS" {
-                return false;
+            // Only INCOMPLETE may be exempted — FAIL is always a failure,
+            // no matter what the detail text contains (evidence paths can
+            // carry arbitrary words).
+            if outcome.status != "INCOMPLETE" {
+                return outcome.status != "PASS";
             }
             // A domain that compared NOTHING is never acceptable — the
             // exemptions below only apply once at least one generated

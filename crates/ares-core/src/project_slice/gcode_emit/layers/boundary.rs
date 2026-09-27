@@ -77,6 +77,14 @@ pub(super) fn append<'a>(
     let tags = state.tags;
     output.extend_from_slice(tags.layer_change().as_bytes());
     output.push(b'\n');
+    // `will_move_z` must be evaluated against the writer Z the previous
+    // layer actually left behind — a role-change hook can assign
+    // `position[2]` (`GCode.cpp:3901-3907`), and upstream reads the live
+    // `m_pos.z` at `change_layer` (`GCode.cpp:5693`,
+    // `GCodeWriter.cpp:916-929`). Capture before the nominal override.
+    let will_move_z = state.writer_z.is_none_or(|writer_z| {
+        (f64::from(layer_z) + state.options.z_offset - writer_z).abs() > 1.0e-4
+    });
     // Upstream's writer z at the layer-change retract is still the
     // previous layer's z (`change_layer` does not move z); the
     // start-gcode z remains authoritative for the first layer.
@@ -143,7 +151,11 @@ pub(super) fn append<'a>(
         && state.options.retraction_length > 0.0
         && !state.lifted
         && state.pending_lift.is_none();
-    motion::flush_pending_retract_wipe(output, state);
+    // `change_layer` retract requires `will_move_z` (`GCode.cpp:5693`) —
+    // on non-BBL paths a pending retract whose target Z equals the
+    // (possibly template-assigned) writer Z performs no retract at all,
+    // so its `restart_extra` assignment must not run either.
+    motion::flush_pending_retract_wipe(output, state, !state.tags.is_bbl() || will_move_z);
     // Pending object-end labels flush after the layer-change
     // retract/wipe, before the layer-change gcode
     // (`GCode.cpp:5699` `change_layer`).
@@ -155,9 +167,6 @@ pub(super) fn append<'a>(
     // requires `will_move_z` — the nozzle must actually change Z
     // from wherever the start g-code left it (`GCode.cpp:5693`).
     // BBL layer starts retract whenever the flag is set.
-    let will_move_z = state.writer_z.is_none_or(|writer_z| {
-        (f64::from(layer_z) + state.options.z_offset - writer_z).abs() > 1.0e-4
-    });
     if layer_index == 0
         && state.options.retract_when_changing_layer
         && (state.tags.is_bbl() || will_move_z)
@@ -208,7 +217,12 @@ pub(super) fn append<'a>(
         object_layer_over_raft,
         layer_retract_pending,
     );
-    motion::flush_pending_retract_lift(output, state, previous_state_layer_z);
+    motion::flush_pending_retract_lift(
+        output,
+        state,
+        previous_state_layer_z,
+        !state.tags.is_bbl() || will_move_z,
+    );
     // The BBL first-layer-inspection scan (`GCode.cpp:4780-4790`) opens
     // between the layer-change gcode and the acceleration reset, so it
     // precedes `begin_layer`'s M204.

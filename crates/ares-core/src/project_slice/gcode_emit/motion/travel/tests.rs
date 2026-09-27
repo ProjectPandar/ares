@@ -74,7 +74,7 @@ fn deferred_bottom_only_lift_uses_the_target_layer_index() {
     };
 
     let writer_z = state.layer_z;
-    flush_pending_retract_lift(&mut Vec::new(), &mut state, writer_z);
+    flush_pending_retract_lift(&mut Vec::new(), &mut state, writer_z, true);
 
     assert_eq!(state.pending_lift, None);
     assert!(state.retracted);

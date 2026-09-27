@@ -87,16 +87,20 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
 /// layer marker block (`GCode.cpp` change_layer: the wipe lands between
 /// the rendered `before_layer_change_gcode` and the cooling fan marker,
 /// the lift after it).
+/// `will_move_z` mirrors the upstream `change_layer` retract gate
+/// (`GCode.cpp:5693`): when false the upstream retract call never runs,
+/// so neither the E move nor the `m_restart_extra` assignment happens.
 pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     output: &mut Vec<u8>,
     state: &mut EmitState,
+    will_move_z: bool,
 ) {
     // Upstream `retract()` assigns `m_restart_extra` even when the extruder
     // is already retracted (`Extruder.cpp:77`).
-    if state.pending_layer_retract {
+    if state.pending_layer_retract && will_move_z {
         state.restart_extra = state.options.retract_restart_extra;
     }
-    if state.pending_layer_retract && !state.retracted {
+    if state.pending_layer_retract && will_move_z && !state.retracted {
         retract_and_wipe(output, state);
     }
 }
@@ -105,11 +109,13 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     _output: &mut Vec<u8>,
     state: &mut EmitState,
     writer_z: f64,
+    will_move_z: bool,
 ) {
-    if state.pending_layer_retract {
+    // Same `change_layer` gate as the wipe flush (`GCode.cpp:5693`).
+    if state.pending_layer_retract && will_move_z {
         state.restart_extra = state.options.retract_restart_extra;
     }
-    if state.pending_layer_retract && !state.retracted {
+    if state.pending_layer_retract && will_move_z && !state.retracted {
         lift::schedule_at(state, true, writer_z);
         state.retracted = true;
     }
