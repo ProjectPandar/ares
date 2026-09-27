@@ -7,39 +7,41 @@ use super::format;
 use super::state::EmitState;
 
 pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState) {
-    // `this->retract()` (`GCode.cpp:4784`) assigns `m_restart_extra` even
-    // when the extruder is already retracted (`Extruder.cpp:77`) and tops
-    // up only the REMAINING length — a template `e_retracted` write-back
-    // (`e_retracted[0]=0.25` under length 1) retracts another 0.75.
-    state.restart_extra = state.options.retract_restart_extra;
-    let remaining = (state.options.retraction_length - state.retracted_amount).max(0.0);
-    // `coordinate` accumulates `m_retracted` unconditionally; `_retract`
-    // emits only when `!is_zero(dE)` (`GCodeWriter.cpp:1035`,
-    // `libslic3r.h:294` — 1e-6), so a sub-threshold top-up is silent.
-    let retract = extrusion::coordinate(state, -remaining);
-    if remaining > 0.0 {
-        state.retracted = true;
+    // `this->retract()` (`GCode.cpp:4784`) is the full
+    // `GCode::retract(false, false)` — wipe path, top-up, `reset_e`,
+    // then `lazy_lift(NormalLift, spiral_vase)` (`GCode.cpp:7659-7704`,
+    // `GCode.hpp:254`): the DEFAULT lift type is NormalLift — never the
+    // configured z_hop type — and spiral vase lifts emit EAGERLY.
+    super::travel::wipe_only_retract(output, state);
+    if state.spiral_vase {
+        if state.options.z_hop > 0.0
+            && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
+            && super::travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z))
+        {
+            let feedrate = super::travel::lift_z_feedrate(state);
+            let raised = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
+            let comment = state
+                .options
+                .gcode_comments
+                .then_some(" ; lift Z")
+                .unwrap_or("");
+            output.extend_from_slice(
+                format!(
+                    "G1 Z{} F{}{comment}\n",
+                    format::z(raised),
+                    format::axis(feedrate)
+                )
+                .as_bytes(),
+            );
+            state.current_feedrate = feedrate;
+            state.record_z(raised);
+            state.lifted = true;
+            state.lifted_amount = state.options.z_hop;
+        }
+    } else {
+        super::travel::schedule_normal(state);
     }
-    if remaining >= 1e-6 {
-        let comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; retract")
-            .unwrap_or("");
-        output.extend_from_slice(
-            format!(
-                "G1 E{} F{}{comment}\n",
-                format::extrusion(retract),
-                format::axis(state.options.retraction_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = state.options.retraction_feedrate;
-    }
-    // `retract()` returns `gcode + reset_e()` — the reset runs on every
-    // call (`GCode.cpp:7674`), carrying the upstream comment + flavor
-    // exclusions (`GCodeWriter.cpp:480-499`).
-    super::travel::reset_e(output, state);
+    state.retracted = true;
     output.extend_from_slice(b"M976 S1 P1 ; scan model before printing 2nd layer\nM400 P100\n");
     // `unretract()` (`GCode.cpp:4789`) is `unlift() + E restore`
     // (`GCode.hpp:255`): the descent emits FIRST — `G1 Z… F…` plus

@@ -39,6 +39,24 @@ pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f
     state.pending_lift = Some(mode_for(state, layer_change));
 }
 
+/// `lazy_lift(NormalLift)` — the fixed lift type used by scan/
+/// timelapse/wrapping retract calls (`GCode.hpp:254` default
+/// `LiftType::NormalLift`; `auto_lift_type` is NormalLift outside
+/// spiral vase).
+pub(in crate::project_slice::gcode_emit::motion) fn schedule_normal(state: &mut EmitState) {
+    if state.options.retraction_length <= 0.0 && !state.options.use_firmware_retraction {
+        return;
+    }
+    let writer_z = state.writer_z.unwrap_or(state.layer_z);
+    if state.options.z_hop <= 0.0 || !is_allowed_at(state, writer_z) {
+        return;
+    }
+    if state.lifted || state.pending_lift.is_some() {
+        return;
+    }
+    state.pending_lift = Some(LiftMode::Normal);
+}
+
 /// The `LiftMode` a retract at this state schedules; shared with the
 /// first-travel emission, which may run after a retraction that fired
 /// before any lift could be scheduled.
