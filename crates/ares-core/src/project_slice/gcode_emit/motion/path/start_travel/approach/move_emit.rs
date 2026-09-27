@@ -67,7 +67,7 @@ pub(super) fn emit_approach_move(
     let mut eager_lifted_travel = false;
     let mut unclear_position_travel = false;
     if state.spiral_vase
-        && state.lifted
+        && state.lifted_amount > 0.0
         && !first_position
         && (layer_change_travel
             || (state.layer_z + state.options.z_hop) - state.options.z_hop > state.layer_z)
@@ -82,13 +82,13 @@ pub(super) fn emit_approach_move(
             first_travel_comment,
         );
         travel_set_layer_z = true;
-    } else if state.template_lifted && state.lifted && !first_position {
+    } else if state.template_lifted && state.lifted_amount > 0.0 && !first_position {
         // Pure XY while still lifted: upstream's no-Z-change branch calls
         // `travel_to_xy(to_2d(point))` WITHOUT the comment
         // (`GCodeWriter.cpp:771-780`).
         travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         state.template_lifted = false;
-    } else if state.lifted {
+    } else if state.lifted_amount > 0.0 {
         eager_lifted_travel = true;
         if !lifted_for_travel {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
@@ -123,7 +123,7 @@ pub(super) fn emit_approach_move(
             }
         }
     } else if layer_change_travel && state.retracted {
-        // With a hop actually deferred, the earlier `state.lifted`
+        // With a hop actually deferred, the earlier `state.lifted_amount > 0.0`
         // branch emitted the ramp and the combined layer+hop travel;
         // with no hop in play (the enforce gate blocked the
         // change-layer hop), `m_need_change_layer_lift_z`
@@ -170,7 +170,7 @@ pub(super) fn emit_approach_move(
         // (`GCodeWriter.cpp:725-757`: slope/spiral moves come from the
         // `m_to_lift` block; with no lift the plain combined XYZ path
         // emits the destination directly).
-        let has_lift = state.lifted || state.pending_lift.is_some();
+        let has_lift = state.lifted_amount > 0.0 || state.pending_lift.is_some();
         if has_lift
             && state.options.z_hop > 0.0
             && retraction::uses_sloped_lift(state.options.z_hop_type)

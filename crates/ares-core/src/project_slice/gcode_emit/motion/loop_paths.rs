@@ -192,7 +192,7 @@ fn append_wipe_before_external(
         || (state.retracted
             && state.options.z_hop > 0.0
             && state.options.retraction_length > 0.0
-            && !state.lifted
+            && state.lifted_amount <= 0.0
             && super::travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)));
     if lift_here {
         // Same destination clamp as the deferred lift

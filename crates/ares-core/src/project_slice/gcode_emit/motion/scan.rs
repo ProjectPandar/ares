@@ -14,7 +14,12 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
     // configured z_hop type — and spiral vase lifts emit EAGERLY.
     super::travel::wipe_only_retract(output, state);
     if state.spiral_vase {
-        if state.options.z_hop > 0.0
+        // `lazy_lift` guards `m_lifted == 0 && m_to_lift == 0` for BOTH
+        // variants (`GCodeWriter.cpp:637`) — an already-lifted nozzle
+        // does not rise again.
+        if state.lifted_amount <= 0.0
+            && state.pending_lift.is_none()
+            && state.options.z_hop > 0.0
             && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
             && super::travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z))
         {
@@ -113,6 +118,10 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
                     b"G11 ; unretract\n"
                 },
             );
+            // `reset_e()` follows the firmware marker only
+            // (`GCodeWriter.cpp:1064-1077`); the ordinary E path keeps
+            // the absolute counter.
+            super::travel::reset_e(output, state);
         } else {
             output.extend_from_slice(
                 format!(
@@ -124,7 +133,6 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
             );
             state.current_feedrate = state.options.deretraction_feedrate;
         }
-        super::travel::reset_e(output, state);
     }
     state.retracted = false;
 }

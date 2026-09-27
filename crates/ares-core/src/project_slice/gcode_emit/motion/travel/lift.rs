@@ -234,10 +234,10 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     // (`GCodeWriter.cpp:705-710`) — a short slope travel keeps the
     // raised destination + lifted state even without a preliminary
     // move; the caller's final XYZ then carries `raised_z`.
-    if raised_z > dest_z {
-        state.lifted = true;
-        state.lifted_amount = raised_z - dest_z;
-    }
+    // `m_lifted` is numeric — a clamped-to-destination raise clears a
+    // stale flag AND the amount (`GCodeWriter.cpp:707-710`).
+    state.lifted = raised_z > dest_z;
+    state.lifted_amount = (raised_z - dest_z).max(0.0);
     Some(raised_z)
 }
 

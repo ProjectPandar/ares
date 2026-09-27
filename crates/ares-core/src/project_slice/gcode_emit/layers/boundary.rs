@@ -154,7 +154,7 @@ pub(super) fn append<'a>(
         && will_move_z
         && state.options.z_hop > 0.0
         && state.options.retraction_length > 0.0
-        && !state.lifted
+        && state.lifted_amount <= 0.0
         && state.pending_lift.is_none();
     // `change_layer` retract requires `will_move_z` (`GCode.cpp:5693`) —
     // on non-BBL paths a pending retract whose target Z equals the

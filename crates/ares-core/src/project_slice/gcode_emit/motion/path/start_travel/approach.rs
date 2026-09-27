@@ -189,7 +189,7 @@ pub(super) fn emit_needs_travel(
                 state,
                 state.writer_z.unwrap_or(state.layer_z),
             )
-            && !state.lifted
+            && state.lifted_amount <= 0.0
         {
             state.pending_lift = Some(travel::lift_mode_for(state, false));
         }

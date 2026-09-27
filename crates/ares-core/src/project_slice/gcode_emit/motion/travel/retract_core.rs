@@ -77,6 +77,9 @@ pub(super) fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
             },
         );
     }
-    state.retracted_amount = 1.0;
+    // `Extruder::retract` ADDS the fake remaining amount — a
+    // template-reported value above 1.0 is preserved
+    // (`Extruder.cpp:75-84` accumulates, never assigns).
+    state.retracted_amount += remaining.max(0.0);
     state.retracted = true;
 }

@@ -35,7 +35,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // marker — suppress the double reset only for that combined case. A
     // lift WITHOUT retraction (timelapse `G1 Z`) has no later descend, so
     // the reset must run to restore `m_nominal_z` (`GCode.cpp:6396-6400`).
-    let suppressed = state.retracted && (state.lifted || state.template_lifted);
+    let suppressed = state.retracted && (state.lifted_amount > 0.0 || state.template_lifted);
     if slope_start_z.is_none()
         && !suppressed
         && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
@@ -88,7 +88,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // `GCodeWriter.cpp:1084-1092`) — a template that cleared
     // `e_retracted` after the lift was scheduled must still descend.
     {
-        if state.lifted && !travel_set_layer_z {
+        if state.lifted_amount > 0.0 && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
             let z_feedrate = travel::lift_z_feedrate(state);
             // `_extrude` re-states Z: on the print's first extrusion

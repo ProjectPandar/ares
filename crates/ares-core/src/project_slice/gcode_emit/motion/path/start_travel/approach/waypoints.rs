@@ -27,8 +27,18 @@ pub(super) fn emit_detour_waypoints(
             // it collapses to the commentless XY branch
             // (`GCodeWriter.cpp:927`, `libslic3r.h:52`) and keeps the
             // writer z + lift state untouched.
+            // Upstream `will_move_z` (`GCodeWriter.cpp:916-928`): a
+            // lifted nozzle treats a z inside [pos-lifted, pos] as
+            // no-move; only WITHOUT positive lift does the bare
+            // `abs(delta) < EPSILON` shortcut apply.
             let live_z = state.writer_z.unwrap_or(state.layer_z);
-            if (z - live_z).abs() < 1e-4 {
+            let nominal_z = live_z - state.lifted_amount;
+            let no_z_move = if state.lifted_amount > 0.0 {
+                z >= nominal_z && z <= live_z
+            } else {
+                (z - live_z).abs() < 1e-4
+            };
+            if no_z_move {
                 output.extend_from_slice(
                     format!(
                         "G1 X{} Y{} F{}\n",
