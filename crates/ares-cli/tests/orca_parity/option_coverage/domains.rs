@@ -231,10 +231,16 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
 fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]> {
     // Free-form g-code templates: any text is legal input; a non-empty
     // template with a placeholder exercises the placeholder engine.
+    // `{layer_num}` is only defined once layer context exists
+    // (`GCode.cpp:4669` sets it per layer); printer-scoped templates
+    // rendered outside layer context (`file_start_gcode`, pauses,
+    // custom/object transitions) throw on unknown variables
+    // (`PlaceholderParser.cpp:997-1000`), so they get a literal probe.
     const TEMPLATE: &[(&str, &str)] = &[
         ("probe-empty", ""),
         ("probe-text", ";ARES_PROBE {layer_num}"),
     ];
+    const TEMPLATE_LITERAL: &[(&str, &str)] = &[("probe-empty", ""), ("probe-text", ";ARES_PROBE")];
     const POLYGON: &[(&str, &str)] = &[("probe-rect", "10x10,20x10,20x20,10x20")];
     const POINT: &[(&str, &str)] = &[("probe", "5x5")];
     // Free-form metadata/note strings — content never alters toolpaths;
@@ -242,9 +248,10 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
     const NOTE: &[(&str, &str)] = &[("probe", "ares-parity-probe")];
     let probes = match key {
         // G-code template strings (`*_gcode`) — free-form by schema.
-        "before_layer_change_gcode"
-        | "layer_change_gcode"
-        | "machine_pause_gcode"
+        // Layer-context templates — `{layer_num}` is defined here.
+        "before_layer_change_gcode" | "layer_change_gcode" => TEMPLATE,
+        // Contexts without layer variables get a literal probe only.
+        "machine_pause_gcode"
         | "printing_by_object_gcode"
         | "change_filament_gcode"
         | "change_extrusion_role_gcode"
@@ -252,15 +259,24 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         | "filament_change_extrusion_role_gcode"
         | "template_custom_gcode"
         | "wrapping_detection_gcode"
-        | "file_start_gcode" => TEMPLATE,
+        | "file_start_gcode" => TEMPLATE_LITERAL,
         // `time_lapse_gcode` needs the same probe but is wrapped in
         // `;TIMELAPSE` handling — still free-form.
-        "time_lapse_gcode" => TEMPLATE,
+        "time_lapse_gcode" => TEMPLATE_LITERAL,
         // Free-form note/colour/profile metadata strings.
-        "filament_notes" | "printer_notes" | "model_notes" | "filament_colour"
-        | "default_filament_colour" | "extruder_colour" | "filament_multi_colour"
-        | "filament_colour_type" | "default_bed_type" | "default_print_profile"
-        | "default_filament_profile" | "bed_custom_texture" | "bed_custom_model" => NOTE,
+        "filament_notes"
+        | "printer_notes"
+        | "model_notes"
+        | "filament_colour"
+        | "default_filament_colour"
+        | "extruder_colour"
+        | "filament_multi_colour"
+        | "filament_colour_type"
+        | "default_bed_type"
+        | "default_print_profile"
+        | "default_filament_profile"
+        | "bed_custom_texture"
+        | "bed_custom_model" => NOTE,
         // Polygon point lists (`XxY` pairs) — a legal small rectangle.
         // `wrapping_exclude_area` rejected by the oracle (orca rejects the
         // rect probe upstream), so it keeps its unexercised baseline.
@@ -273,7 +289,9 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         // solid) is a legal probe that changes toolpaths on both sides.
         "extra_solid_infills" => &[("probe-2", "2")],
         // Single `XxY` points.
-        "bed_mesh_min" | "bed_mesh_max" | "bed_mesh_probe_distance" | "best_object_pos" => POINT,
+        "bed_mesh_min" | "bed_mesh_max" | "bed_mesh_probe_distance" => POINT,
+        // `best_object_pos` is normalized `[0,1]` (`PrintConfig.cpp:3818-3822`).
+        "best_object_pos" => &[("probe", "0.25x0.75")],
         _ => return None,
     };
     Some(probes)

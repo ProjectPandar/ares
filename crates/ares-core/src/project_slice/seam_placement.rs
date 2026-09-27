@@ -1,5 +1,6 @@
 mod alignment;
 mod fitting;
+mod kdtree;
 mod mesh;
 mod runtime;
 mod sampling;
@@ -171,7 +172,13 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
             .candidates
             .points
             .iter()
-            .map(|candidate| (candidate.position.x, candidate.position.y))
+            .map(|candidate| {
+                (
+                    candidate.position.x,
+                    candidate.position.y,
+                    candidate.position.z,
+                )
+            })
             .collect(),
         scores,
         overhangs: plan.overhangs.clone(),

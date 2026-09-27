@@ -1,4 +1,7 @@
-use super::super::split::{self, split_at, squared_distance};
+use super::super::{
+    kdtree,
+    split::{self, split_at, squared_distance},
+};
 use crate::{
     geometry::CoordinateScale,
     project_slice::perimeters::classic::{
@@ -42,26 +45,28 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             y: first.y,
         };
         let mut perimeter = usize::MAX;
+        // Upstream queries a `KDTreeIndirect<3, float>` built over the
+        // layer's candidate `Vec3f` positions (`SeamPlacer.cpp:1033-1036`,
+        // `:1536`); equal-distance ties resolve to the last VISITED node,
+        // so the balanced-build/visit order is part of the observable
+        // result — port it verbatim.
+        let coordinate = |index: usize, dim: usize| -> f32 {
+            let p = layer.positions[index];
+            [p.0, p.1, p.2][dim]
+        };
+        let tree = kdtree::KdTree::build(layer.positions.len(), coordinate);
+        // `to_3d(unscaled_p, unscaled_z)` (`SeamPlacer.cpp:1537`): the
+        // query z is the same constant `slice_z` every candidate carries.
+        let query_z = layer.positions.first().map(|p| p.2).unwrap_or(0.0);
         for _ in 0..points_count {
-            let query = (
+            let query = [
                 scale.unscale(current.x) as f32,
                 scale.unscale(current.y) as f32,
-            );
-            let mut closest = usize::MAX;
-            let mut closest_distance = f32::INFINITY;
-            for (index, &(x, y)) in layer.positions.iter().enumerate() {
-                let distance = (x - query.0).mul_add(x - query.0, (y - query.1) * (y - query.1));
-                // Upstream's KD tree returns the LAST equal-distance
-                // candidate (each equal candidate replaces the result;
-                // `KDTreeIndirect.hpp:229-238`), so keep ties going.
-                if distance <= closest_distance {
-                    closest_distance = distance;
-                    closest = index;
-                }
-            }
-            if closest == usize::MAX {
+                query_z,
+            ];
+            let Some(closest) = tree.find_closest(query, &coordinate) else {
                 return;
-            }
+            };
             let candidate_perimeter = layer.perimeter_of_candidate[closest];
             if perimeter == candidate_perimeter {
                 break;
@@ -87,7 +92,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         {
             let _ = writeln!(f, "RANGE {start}..{end} cur {},{}", cursor.0, cursor.1);
             for index in start..end {
-                let (x, y) = layer.positions[index];
+                let (x, y, _) = layer.positions[index];
                 let _ = writeln!(
                     f,
                     "ACAND {index} {x:.6},{y:.6} oh={:.4} sc={:.4} emb={:.3} ang={:.4}",
@@ -114,8 +119,8 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         if layer.embedded[b] < -0.5 && layer.embedded[a] > -0.5 {
             return false;
         }
-        let (ax, ay) = layer.positions[a];
-        let (bx, by) = layer.positions[b];
+        let (ax, ay, _) = layer.positions[a];
+        let (bx, by, _) = layer.positions[b];
         let dist_a = ((ax - cursor.0) * (ax - cursor.0) + (ay - cursor.1) * (ay - cursor.1)).sqrt();
         let dist_b = ((bx - cursor.0) * (bx - cursor.0) + (by - cursor.1) * (by - cursor.1)).sqrt();
         let distance_penalty_a =
@@ -132,7 +137,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             best = index;
         }
     }
-    let (seam_x, seam_y) = layer.positions[best];
+    let (seam_x, seam_y, _) = layer.positions[best];
     let (Some(seam_x), Some(seam_y)) = (
         scale.checked_scale(seam_x as f64),
         scale.checked_scale(seam_y as f64),
@@ -245,18 +250,10 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         split_at(loop_, target, scale);
         return;
     }
-    let seam = loop_
-        .paths
-        .iter()
-        .flat_map(|path| &path.polyline.points)
-        .min_by(|left, right| {
-            squared_distance((left.x, left.y), seam_query)
-                .total_cmp(&squared_distance((right.x, right.y), seam_query))
-        })
-        .map(|point| (point.x, point.y));
-    if let Some(seam) = seam {
-        split_at(loop_, seam, scale);
-    }
+    // Non-`erPerimeter` loops (external/overhang): upstream passes the
+    // scaled seam candidate straight into `split_at_vertex` with its
+    // 1.5µm snap (`SeamPlacer.cpp:1620-1627`) — no vertex search.
+    split_at(loop_, seam_query, scale);
 }
 
 /// Walk `distance_mm` forward along the loop from `from`, wrapping around.
@@ -271,23 +268,27 @@ fn walk_along(
 ) -> (i64, i64) {
     let mut remaining = distance_mm;
     let mut current = *from;
-    let factor = scale.factor() as f32;
-    let mut foot = (current.x as f32 * factor, current.y as f32 * factor);
+    // Upstream `unscale(...)` is `coord_t → Vec2d` (f64 multiply by
+    // SCALING_FACTOR), then `cast<float>()` narrows — NOT an f32 multiply
+    // (`SeamPlacer.cpp:1606-1607`).
+    let unscale_f32 = |coordinate: i64| -> f32 { scale.unscale(coordinate) as f32 };
+    let mut foot = (unscale_f32(current.x), unscale_f32(current.y));
     while remaining > 0.0 {
         let next = split::next_loop_point(loop_, &current);
-        let target = (next.x as f32 * factor, next.y as f32 * factor);
+        let target = (unscale_f32(next.x), unscale_f32(next.y));
         let distance = ((target.0 - foot.0).powi(2) + (target.1 - foot.1).powi(2)).sqrt();
         let mut landed = next;
         if distance > remaining {
-            // `a + (b - a) * depth / dist` then `Point::new_scale` (trunc).
+            // `a + (b - a) * depth / dist` on `Vec2f`, then
+            // `Point::new_scale` truncates (`SeamPlacer.cpp:1611-1614`).
             let x = foot.0 + (target.0 - foot.0) * remaining / distance;
             let y = foot.1 + (target.1 - foot.1) * remaining / distance;
-            landed.x = (f64::from(x) / f64::from(scale.factor())) as i64;
-            landed.y = (f64::from(y) / f64::from(scale.factor())) as i64;
+            landed.x = (f64::from(x) / scale.factor()) as i64;
+            landed.y = (f64::from(y) / scale.factor()) as i64;
         }
         remaining -= distance;
         current = landed;
-        foot = (current.x as f32 * factor, current.y as f32 * factor);
+        foot = (unscale_f32(current.x), unscale_f32(current.y));
     }
     (current.x, current.y)
 }

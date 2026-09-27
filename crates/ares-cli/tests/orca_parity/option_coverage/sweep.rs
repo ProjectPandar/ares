@@ -95,10 +95,22 @@ pub(super) fn oracle_nondeterministic(key: &str, label: &str) -> bool {
     // Coherent-noise fuzzy modes sample point offsets with a thread-local
     // `std::mt19937` seeded by `random_device` (`FuzzySkin.cpp:24-30`):
     // two identical-manifest oracle runs diverge by ~13k lines
-    // (`/tmp/orc1/plate_1.gcode` vs `/tmp/orc2/plate_1.gcode`). `ripple`
-    // has no random component and stays byte-comparable.
-    matches!((key, label), ("sparse_infill_pattern", "lightning"))
-        || (key.starts_with("fuzzy_skin") && label != "none" && label != "ripple")
+    // (`/tmp/orc1/plate_1.gcode` vs `/tmp/orc2/plate_1.gcode`). The sweep
+    // baseline pins `fuzzy_skin_noise_type = ripple` (deterministic sine
+    // offsets, no `random_value`), so only the coherent-noise labels and
+    // the domains that force `noise_type = perlin` are excused.
+    matches!(
+        (key, label),
+        ("sparse_infill_pattern", "lightning")
+            | ("fuzzy_skin_noise_type", "billow")
+            | ("fuzzy_skin_noise_type", "classic")
+            | ("fuzzy_skin_noise_type", "perlin")
+            | ("fuzzy_skin_noise_type", "voronoi")
+            | ("fuzzy_skin_noise_type", "ridgedmulti")
+    ) || matches!(
+        key,
+        "fuzzy_skin_octaves" | "fuzzy_skin_persistence" | "fuzzy_skin_scale"
+    )
 }
 
 fn execute_plan(

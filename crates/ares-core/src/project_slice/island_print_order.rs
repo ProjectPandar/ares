@@ -47,8 +47,12 @@ pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
 /// loop-to-perimeter match, then gaussian distance penalty minimization
 /// per `pick_nearest_seam_point_index`).
 pub(in crate::project_slice) struct NearestSeamLayer {
-    /// Unscaled candidate positions (mm).
-    pub(in crate::project_slice) positions: Vec<(f32, f32)>,
+    /// Unscaled candidate positions `(x, y, z)` — upstream `SeamCandidate::
+    /// position` is a `Vec3f` whose z is the layer `slice_z`
+    /// (`SeamPlacer.cpp:1025,1509`); the KD tree partitions on all three
+    /// axes (`KDTreeIndirect<3>`), so z must be stored even though it is
+    /// constant within a layer.
+    pub(in crate::project_slice) positions: Vec<(f32, f32, f32)>,
     /// Penalty score per candidate: `visibility +
     /// ANGLE_IMPORTANCE_NEAREST * angle_penalty` (`SeamPlacer.cpp:788-791`).
     pub(in crate::project_slice) scores: Vec<f32>,
