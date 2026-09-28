@@ -110,3 +110,23 @@ pub(super) fn append_layer_end_timelapse(
     }
     timelapse::append_and_track(output, state, context)
 }
+
+/// `GCodeWriter`/`GCodeProcessor` float formatting for emitted motion and
+/// time values: up to 5 significant decimals, trailing zeros trimmed.
+pub(in crate::project_slice) fn format_processor_float(value: f64) -> String {
+    if value == 0.0 {
+        return "0".to_owned();
+    }
+    let magnitude = value.abs().log10().floor() as i32;
+    let precision = (5 - magnitude).max(0) as usize;
+    let mut formatted = format!("{value:.precision$}");
+    if formatted.contains('.') {
+        while formatted.ends_with('0') {
+            formatted.pop();
+        }
+        if formatted.ends_with('.') {
+            formatted.pop();
+        }
+    }
+    formatted
+}

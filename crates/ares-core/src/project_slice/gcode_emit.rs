@@ -387,20 +387,4 @@ pub(super) fn emit(
     ))
 }
 
-pub(super) fn format_processor_float(value: f64) -> String {
-    if value == 0.0 {
-        return "0".to_owned();
-    }
-    let magnitude = value.abs().log10().floor() as i32;
-    let precision = (5 - magnitude).max(0) as usize;
-    let mut formatted = format!("{value:.precision$}");
-    if formatted.contains('.') {
-        while formatted.ends_with('0') {
-            formatted.pop();
-        }
-        if formatted.ends_with('.') {
-            formatted.pop();
-        }
-    }
-    formatted
-}
+pub(in crate::project_slice) use emit_helpers::format_processor_float;
