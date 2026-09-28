@@ -387,3 +387,26 @@ inspect `buffer.push`/`rollback_last_line` in emitter.rs vs upstream
 `push_to_output`/`output_buffer_prev_length` bookkeeping (the
 `is_just_line_with_extrude_set_speed_tag` rollback may fold a prior
 bare-SET_SPEED differently, producing merged blocks).
+
+## 2026-09-29 (session end state — cooling cluster)
+
+Confirmed so far:
+1. ares's path emit = upstream's `extrude_path` markers (one block per path).
+2. Both equalizers mark ~70% of a constant-rate skirt run modified
+   (upstream verbatim standalone: 19/28) → both emit per-segment
+   `;_EXTRUDE_END + G1 Fxx;_EXTRUDE_SET_SPEED` pairs.
+3. The cooling `line.length` for each equalizer F-line = previous line's
+   E delta (relative-E `current_pos[3]=0` reset before diff) — ares's
+   CL dump matches this mechanic.
+4. orca's sorted adjustable dump shows SOME long merged blocks (74mm
+   @70mm/s, 23mm) that ares produces as per-segment splits — the
+   remaining unexplained piece. If orca's equalizer output were truly
+   per-segment there too, orca's merge couldn't span `;_EXTRUDE_END`;
+   therefore orca's equalizer left those paths un-split (rates exactly
+   equal?) while ares's rates carry noise from ITS emitted text.
+
+Candidate probe: compute per-segment `A*F*|de|/len` on orca's actual
+emitted WALL text (not skirt) — if rates are exactly equal there but
+noisy in ares's equivalent output, the divergence is in emitted
+number formatting (E digits / XYZ digits), i.e. `GCodeFormatter`
+precision parity, not the equalizer.
