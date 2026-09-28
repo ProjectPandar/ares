@@ -30,6 +30,27 @@ pub(super) fn emit(
             state.layer_index,
         )
     {
+        if let Ok(path) = std::env::var("ARES_DUMP_SCARF") {
+            use std::io::Write;
+            if let Ok(mut f) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+                && let Some(first) = scarf
+                    .paths
+                    .first()
+                    .and_then(|p| p.path.polyline.points.first())
+            {
+                let s = geometry.scale.factor();
+                let _ = writeln!(
+                    f,
+                    "SCARF layer={} start={:.6},{:.6}",
+                    state.layer_index,
+                    first.x as f64 * s,
+                    first.y as f64 * s
+                );
+            }
+        }
         for path in &scarf.paths {
             super::materialized::emit(
                 output,

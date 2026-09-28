@@ -165,3 +165,23 @@ Remaining divergence clusters (post-c82f20eb sweep):
   the emitting path remains unexplained — possibly
   `estimate_extrusion_quality` processed points carrying z, or a
   profile-specific `travel_slope` interplay.
+
+Update (post-`c82f20eb` instrumented-upstream verification): the
+upstream build tree at
+`ares-parity/2026-09-07-coordinator/wave9-upstream-boundary` has been
+re-realized (`nix copy` restored GC'd deps; `CPLUS_INCLUDE_PATH`/`LIBRARY_PATH`
+recreate the erased nix env) and now carries two env-gated dumps:
+`ORCA_DUMP_SEAMPT` (SeamPlacer.cpp:1624 — chosen `seam_point`/`pos`/
+`seam_index` per layer+role) and `ORCA_DUMP_SCARF` (GCode.cpp —
+`ExtrusionLoopSloped` clipped `starts.front().first_point`). Verified
+against Sermoon V1 (the delta=0.05mm X case): ares `SPT`/`SCARF` dumps
+(`ARES_DUMP_SEAMPT`, `ARES_DUMP_SCARF`) match upstream byte-for-byte at
+every layer — the seam placement, fitted position, scarf clip_front
+(`2*seam_gap` external / `0.4*slope_len` perimeter), and emitted
+first-scarf-vertex are all identical. The observed `G1 X91.599 Y91.599`
+vs `X91.649 Y91.649` difference is NOT the loop start — it is an
+avoid-crossing-perimeters detour waypoint (`approach/waypoints.rs`,
+`GCode.cpp:7488-7501`), i.e., a routing/offset-grid discrepancy inside
+`AvoidCrossingPerimeters` (0.05mm on a corner waypoint), not seam
+placement. The M73/`F` rows on Sermoon therefore likely share the same
+upstream non-seam root — the detour waypoint or the wipe feedrate.
