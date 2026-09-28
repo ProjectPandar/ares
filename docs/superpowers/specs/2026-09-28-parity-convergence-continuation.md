@@ -457,3 +457,33 @@ re-run the whole option sweep to measure the byte-identical fraction
 rather than chasing individual CL boundaries; then attack the remaining
 clusters (seam per-object visibility, M73 elapsed attribution,
 1µ-vertex rounding) which are independent of the equalizer.
+
+## 2026-09-29 (seam per-object visibility + trafo_centered)
+
+FIXED (5be2a0f2): `TriangleMesh::from_project` built a single shared
+visibility mesh from `objects()[0]` using `instance_transform
+.without_xy_translation()` — missing the `-center_offset` pretranslate
+that upstream's `trafo_centered()` applies. Upstream computes
+`compute_global_occlusion` per PrintObject (`SeamPlacer.cpp:1441`),
+each in its own centered frame. Ares now builds one
+`GlobalVisibility` per object index, only for objects with a placement.
+
+Also verified: upstream `PrintObject::trafo()` has XY translation
+already zeroed (`PrintApply.cpp` moves it into `shift`), so
+`trafo_centered() = trafo_without_xy * translate(-center_offset)` —
+exactly what `raw_intersections.rs` does for slicing. `raw_center`
+mirrors `PrintObject.cpp:97-110` (bbox center, `rotation_diff_z`).
+
+Residual (38 diffs, 3 identical cube cases, `aligned_back`): layer-0
+external-loop candidates have **identical scores** for all 4 corners
+(vis=1.91588) — `best_candidate` first-equal-wins picks ares's
+`polyline[0]` (NE) while upstream's `collect_points` `polyline[0]` is
+SE. Ties are broken by loop vertex order, which comes from polygon
+materialization — a one-vertex rotation of the loop start. The seam
+anchor then propagates to inner loops via `place_seam` projection.
+This is an ordering artifact, not a score difference: the 4 corners
+are symmetric under the visibility model, and the ±0.01 f32 noise in
+the visibility weights decides which corner is "first" — upstream's
+ordering has SE first in `collect_points` order. Verified: candidates
+n=5 match upstream (only original vertices + closure, plus enforcer
+oversampling which is inactive here).
