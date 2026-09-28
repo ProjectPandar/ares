@@ -69,7 +69,13 @@ pub(super) fn emit_approach_move(
     // Actual-Z-move branch: `else { m_lifted = 0; }`
     // (`GCodeWriter.cpp:783-785`) — when the destination sits OUTSIDE
     // the lifted dead-band the travel cancels the lift entirely.
-    if state.lifted_amount > 0.0 && travel_will_move_z(state, leg_z) {
+    // A consumed pending lift (`m_to_lift` branch, `GCodeWriter.cpp:
+    // 692-768`) must NOT consult `will_move_z` again: upstream emits the
+    // combined `xy_z_move` at the RAISED `dest_point(2)` unconditionally
+    // and keeps `m_lifted` for the later descend — checking `leg_z`
+    // against the dead-band here would cancel the lift and merge the
+    // descent into the travel (Artillery M1 Pro `G1 X..Y..Z.16`).
+    if pending_target.is_none() && state.lifted_amount > 0.0 && travel_will_move_z(state, leg_z) {
         state.lifted = false;
         state.lifted_amount = 0.0;
     }
@@ -99,7 +105,8 @@ pub(super) fn emit_approach_move(
         // (`GCodeWriter.cpp:771-780`).
         travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         state.template_lifted = false;
-    } else if state.lifted_amount > 0.0 && !travel_will_move_z(state, leg_z) {
+    } else if state.lifted_amount > 0.0 && (lifted_for_travel || !travel_will_move_z(state, leg_z))
+    {
         eager_lifted_travel = true;
         if !lifted_for_travel {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
