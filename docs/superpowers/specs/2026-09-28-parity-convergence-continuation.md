@@ -220,3 +220,29 @@ upstream non-seam root — the detour waypoint or the wipe feedrate.
 - `ORCA_DUMP_M73` in `export_line_M73` (counter/elapsed/machine.time/pct).
 - `ORCA_DUMP_G1` G1PROC deltas + BLOCKPUSH (id/dist/type/feed).
 - `ORCA_DUMP_TIMES` extended with `type` column.
+
+## 2026-09-28 (later) — trailing-block drop committed (fdfcecad)
+
+- `RollingPlanner::finish` now shares `flush`'s `blocks.size() < 2` guard —
+  upstream `calculate_time` drops a lone trailing block (verified:
+  `CALCTIME nblocks=1 final=1` early-return on orca's end-gcode `G1 E-1`
+  after the `T0` tool-change flush). Fixed the M73-boundary class
+  (EXO42/EXO65/SH65, PhoenixProV1 headers, +~30 header-only cases).
+- `planned_times` test hook force-drains the queue so trapezoid math stays
+  inspectable; stale synthetic tests updated to add a second block.
+
+### Remaining clusters after fdfcecad
+1. **Seam corner choice** (stlBdK/sgjBnj/6kZFjT 29 lines, hECm1F/bg6wKq/
+   H39DKQ 38 lines): `seam_position = aligned_back`, cube layer Z.56 — orca
+   picks the back-RIGHT corner (max X, max Y), ares the back-LEFT (min X,
+   max Y). Same winding (CCW), same loop — pure tie-break between the two
+   back corners. Instrument with ORCA_DUMP_SEAMPT to compare per-candidate
+   scores on that layer.
+2. **M73 line-position shifts** (AHc4Fg/dy3GaF/WrJI9Y 116 lines): identical
+   M73 content emitted a few lines early/late — elapsed-per-line still off
+   somewhere (not total-only).
+3. **Feedrate slowdown** (XMiGaO/tfOPCW 46 lines: `F3000` vs `F2400`,
+   `F3283` vs `F3566`; f4k9FN/kr9jQL/LIVPLC 275): cooling-buffer slowdown —
+   ORCA_DUMP_COOL vs ARES_DUMP_SLOWDOWN shows the CoolingLine streams
+   segment differently (orca i=1 len=23.29 vs ares 39.16) before the
+   slowdown math.

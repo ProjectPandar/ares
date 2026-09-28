@@ -40,10 +40,13 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
         let triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
         let triangle = mesh.triangles[triangle_index];
         let square_u = u.sqrt();
+        // `sample_its_uniform_parallel` (TriangleSetSampling.cpp:67) mixes
+        // f32 vertices with f64 weights — each product is computed in
+        // double and rounds to f32 only on assignment.
         positions.push(
-            triangle.vertices[0] * (1.0 - square_u) as f32
-                + triangle.vertices[1] * (square_u * (1.0 - v)) as f32
-                + triangle.vertices[2] * (v * square_u) as f32,
+            weighted(triangle.vertices[0], 1.0 - square_u)
+                + weighted(triangle.vertices[1], square_u * (1.0 - v))
+                + weighted(triangle.vertices[2], v * square_u),
         );
         normals.push(triangle.normal());
     }
@@ -52,6 +55,14 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
         positions,
         normals,
     }
+}
+
+fn weighted(vertex: Vec3, weight: f64) -> Vec3 {
+    Vec3::new(
+        (f64::from(vertex.x) * weight) as f32,
+        (f64::from(vertex.y) * weight) as f32,
+        (f64::from(vertex.z) * weight) as f32,
+    )
 }
 
 struct Mt19937_64 {
