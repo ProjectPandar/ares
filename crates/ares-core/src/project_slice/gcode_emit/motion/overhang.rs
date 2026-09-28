@@ -147,6 +147,7 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
                         (next.x, next.y),
                         request.properties.width,
                         request.properties.height,
+                        request.geometry.scale,
                     )
                 });
                 eprintln!(
@@ -176,6 +177,7 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
                 (next.x, next.y),
                 request.properties.width,
                 request.properties.height,
+                request.geometry.scale,
             );
             speed = speed.min(speed_for_distance(artificial, &sections, original_speed));
         }

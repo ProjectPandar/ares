@@ -146,10 +146,10 @@ impl BoundaryContext<'_> {
         let candidate = interpolate(current, next, factor);
         let raw_distance = self.signed_distance((candidate.x, candidate.y));
         let candidate = ExtendedPoint {
-            distance: raw_distance + self.offset,
+            distance: (raw_distance + f64::from(self.offset)) as f32,
             ..candidate
         };
-        if raw_distance.abs() > minimum_slowdown_distance
+        if raw_distance.abs() > f64::from(minimum_slowdown_distance)
             && distance(current, candidate) > self.minimum_spacing
             && distance(candidate, next) > self.minimum_spacing
         {
@@ -158,15 +158,19 @@ impl BoundaryContext<'_> {
     }
 
     fn extended(&self, point: (f64, f64)) -> ExtendedPoint {
+        // `ExtendedPoint.distance` is `float`, but the boundary offset
+        // add happens in the f64 distance domain before narrowing
+        // (`next_point.distance = distance + boundary_offset`,
+        // `ExtrusionProcessor.hpp:100-101`).
         let raw_distance = self.signed_distance(point);
         ExtendedPoint {
             x: point.0,
             y: point.1,
-            distance: raw_distance + self.offset,
+            distance: (raw_distance + f64::from(self.offset)) as f32,
         }
     }
 
-    fn signed_distance(&self, point: (f64, f64)) -> f32 {
+    fn signed_distance(&self, point: (f64, f64)) -> f64 {
         // `distance_from_lines_extra<true>` over `LinesDistancer<Linef3>`
         // (`ExtrusionProcessor.hpp:92-101,366`): the previous-layer
         // boundary lines are unscaled f64 — the distance is measured in
@@ -174,13 +178,11 @@ impl BoundaryContext<'_> {
         // (negative inside).
         let nearest = self
             .tree
-            .nearest_mm([point.0, point.1])
+            .nearest_mm([point.0, point.1], self.scale.factor())
             .expect("a nonempty boundary has a nearest line");
-        let scaled = Point::new(
-            scale_trunc(point.0, self.scale),
-            scale_trunc(point.1, self.scale),
-        );
-        (self.tree.outside(scaled) as f64 * nearest.squared_distance.sqrt()) as f32
+        self.tree
+            .outside_mm([point.0, point.1], self.scale.factor()) as f64
+            * nearest.squared_distance.sqrt()
     }
 
     fn scaled(&self, point: ExtendedPoint) -> Point {

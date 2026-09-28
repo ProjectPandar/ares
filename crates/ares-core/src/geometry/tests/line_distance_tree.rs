@@ -2,7 +2,7 @@ mod intersections;
 mod outside;
 
 use crate::geometry::{
-    CoordinateScale, Line, LineDistanceTree, NearestLine, Point,
+    Line, LineDistanceTree, NearestLine, Point,
     line_distance_tree::{NodeSnapshotForTest, NodeStateForTest},
 };
 
@@ -44,10 +44,28 @@ fn task22o50_empty_and_single_line_freeze_layout_and_projection_branches() {
 fn task22o50_fractional_query_uses_source_linef3_precision() {
     let lines = [line(0, 0, 10, 0)];
     let actual = LineDistanceTree::new(&lines)
-        .nearest_mm([0.00000425, 0.00000225])
+        .nearest_mm(
+            [0.00000425, 0.00000225],
+            crate::geometry::CoordinateScale::Normal.factor(),
+        )
         .unwrap();
 
     assert_eq!(actual.squared_distance, 0.00000225_f64.powi(2));
+}
+
+#[test]
+fn nearest_mm_honors_the_tree_coordinate_scale() {
+    // A tree storing 1e-5-scaled coordinates (LargeBed) must unscale
+    // with the same factor — `coord * 1e-6` would report distances 10x
+    // too small.
+    let lines = [line(1_000_000, 0, 1_000_000, 10_000_000)];
+    let actual = LineDistanceTree::new(&lines)
+        .nearest_mm(
+            [10.2, 5.0],
+            crate::geometry::CoordinateScale::LargeBed.factor(),
+        )
+        .unwrap();
+    assert!((actual.squared_distance.sqrt() - 0.2).abs() < 1e-9);
 }
 
 #[test]

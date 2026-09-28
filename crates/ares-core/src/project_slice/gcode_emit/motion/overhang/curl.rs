@@ -22,14 +22,15 @@ use geometry::{curvatures, estimate_curled_up_height, point_segment_distance, si
 
 const CURLING_TOLERANCE_LIMIT: f32 = 0.1;
 
-/// One curled segment above the tolerance, in millimetres
-/// (`SupportSpotsGenerator.cpp:192`).
+/// One curled segment above the tolerance, stored in scaled-int
+/// coordinates (`Point::new_scale` — `ExtrusionProcessor.hpp:381`-
+/// `416` compares against the scaled `CurledLine` endpoints).
 #[derive(Clone, Copy, Debug)]
 pub(super) struct CurledLine {
-    x0: f64,
-    y0: f64,
-    x1: f64,
-    y1: f64,
+    x0: i64,
+    y0: i64,
+    x1: i64,
+    y1: i64,
     curled_height: f32,
 }
 
@@ -110,11 +111,14 @@ impl CurlTracker {
                     1.0
                 }
             });
-            // `estimate_curled_up_height` takes `float distance` —
-            // the f64 signed distance is narrowed to f32 at the call
-            // boundary (`SupportSpotsGenerator.cpp:181-183`).
+            // Upstream `ExtrusionLine` queries are float-precision —
+            // `middle_distance` is already narrowed to float by the
+            // distancer, and the boundary `sign` check happens in f64
+            // on the `lslices` Linef boundary. The combined distance is
+            // narrowed to float at the `estimate_curled_up_height` call
+            // (`SupportSpotsGenerator.cpp:181-183`).
             let curled = estimate_curled_up_height(
-                (distance * sign) as f32,
+                (f64::from(distance) * sign) as f32,
                 0.5 * (curvature[previous] + curvature[index]),
                 height,
                 width,
@@ -129,10 +133,10 @@ impl CurlTracker {
             });
             if curled > CURLING_TOLERANCE_LIMIT {
                 self.current_curled.push(CurledLine {
-                    x0: a.0,
-                    y0: a.1,
-                    x1: b.0,
-                    y1: b.1,
+                    x0: super::scale_trunc(a.0, scale),
+                    y0: super::scale_trunc(a.1, scale),
+                    x1: super::scale_trunc(b.0, scale),
+                    y1: super::scale_trunc(b.1, scale),
                     curled_height: curled,
                 });
             }
@@ -142,8 +146,8 @@ impl CurlTracker {
     /// Unsigned distance to the nearest previous-layer external line and
     /// that line's chained curl height
     /// (`prev_layer_lines.distance_from_lines_extra<false>`).
-    fn nearest_previous(&self, point: (f64, f64)) -> (f64, f32) {
-        let mut best = (f64::MAX, 0.0_f32);
+    fn nearest_previous(&self, point: (f64, f64)) -> (f32, f32) {
+        let mut best = (f32::MAX, 0.0_f32);
         for line in &self.previous {
             let distance = point_segment_distance(point, (line.x0, line.y0), (line.x1, line.y1));
             if distance < best.0 {

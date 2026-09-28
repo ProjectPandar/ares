@@ -100,17 +100,19 @@ fn split_at_nearest_projects_rotates_and_closes() {
         Point::new(100, 100),
         Point::new(0, 100),
     ];
-    // Nearest point to (105, 95) is the projection onto the right edge.
+    // Nearest point to (105, 95) is the projection onto the right
+    // edge, but the target is within `scaled_epsilon` (1000 scaled
+    // units) of the top-right vertex, so upstream snaps the seam to
+    // that vertex (`ExtrusionEntity.cpp:269-278`).
     let split = split_at_nearest(&points, Point::new(105, 95));
     assert_eq!(
         split,
         vec![
-            Point::new(100, 95),
             Point::new(100, 100),
             Point::new(0, 100),
             Point::new(0, 0),
             Point::new(100, 0),
-            Point::new(100, 95),
+            Point::new(100, 100),
         ]
     );
     // A target past an endpoint clamps to that endpoint and rotates there

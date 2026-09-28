@@ -61,8 +61,12 @@ impl<'a> LineDistanceTree<'a> {
     /// Nearest line measured in unscaled millimetres
     /// (`LinesDistancer<Linef>` semantics — f64 endpoints at `coord *
     /// 1e-6`, f64 segment distance). `point` is unscaled millimetres.
-    pub(crate) fn nearest_mm(&self, point: [f64; 2]) -> Option<query::mm::NearestMm> {
-        query::mm::nearest_mm(self.lines, &self.nodes, point)
+    pub(crate) fn nearest_mm(
+        &self,
+        point: [f64; 2],
+        scale_factor: f64,
+    ) -> Option<query::mm::NearestMm> {
+        query::mm::nearest_mm(self.lines, &self.nodes, point, scale_factor)
     }
 
     pub(crate) fn intersections_sorted(&self, line: Line) -> Vec<(Point, usize)> {
@@ -71,6 +75,12 @@ impl<'a> LineDistanceTree<'a> {
 
     pub(crate) fn outside(&self, point: Point) -> i32 {
         outside::classify(self.lines, &self.nodes, point)
+    }
+
+    /// Inside/outside classification at the unscaled f64 point
+    /// (`point_outside_closed_contours` on the double-precision query).
+    pub(crate) fn outside_mm(&self, point: [f64; 2], scale_factor: f64) -> i32 {
+        outside::classify_mm(self.lines, &self.nodes, point, scale_factor)
     }
 }
 

@@ -31,13 +31,20 @@ fn artificial_distance_uses_the_coincident_curled_line() {
     // A curled line coincident with the slowed segment passes the
     // projected-length box check and yields width·(h/(height·10)).
     let curled = [CurledLine {
-        x0: 0.0,
-        y0: 0.0,
-        x1: 9.55,
-        y1: 0.0,
+        x0: 0,
+        y0: 0,
+        x1: 9_550_000,
+        y1: 0,
         curled_height: 0.2225,
     }];
-    let distance = artificial_distance(&curled, (0.0, 0.0), (9.55, 0.0), 0.45, 0.2);
+    let distance = artificial_distance(
+        &curled,
+        (0.0, 0.0),
+        (9.55, 0.0),
+        0.45,
+        0.2,
+        crate::geometry::CoordinateScale::Normal,
+    );
     assert!(
         (distance - 0.45 * 0.2225 / 2.0).abs() < 1e-4,
         "got {distance}"
@@ -49,13 +56,20 @@ fn artificial_distance_rejects_perpendicular_influence() {
     // A curled line crossing the segment perpendicular spans ~0 of the
     // direction, so the 40% projected-length gate rejects it.
     let curled = [CurledLine {
-        x0: 5.0,
-        y0: -1.0,
-        x1: 5.0,
-        y1: 1.0,
+        x0: 5_000_000,
+        y0: -1_000_000,
+        x1: 5_000_000,
+        y1: 1_000_000,
         curled_height: 0.2225,
     }];
-    let distance = artificial_distance(&curled, (0.0, 0.0), (9.55, 0.0), 0.45, 0.2);
+    let distance = artificial_distance(
+        &curled,
+        (0.0, 0.0),
+        (9.55, 0.0),
+        0.45,
+        0.2,
+        crate::geometry::CoordinateScale::Normal,
+    );
     assert_eq!(distance, 0.0);
 }
 

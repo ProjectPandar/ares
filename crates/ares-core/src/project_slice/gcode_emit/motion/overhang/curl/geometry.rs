@@ -3,8 +3,9 @@
 //! the windowed curvature, and the artificial distance with its
 //! projected-length influence box.
 
+use super::super::sections::scale_trunc;
 use super::CurledLine;
-use crate::geometry::{CoordinateScale, LineDistanceTree, Point};
+use crate::geometry::{CoordinateScale, LineDistanceTree};
 
 const MALFORMATION_DISTANCE_FACTORS: (f32, f32) = (0.2, 1.1);
 const MAX_CURLED_HEIGHT_FACTOR: f32 = 10.0;
@@ -53,31 +54,68 @@ pub(crate) fn artificial_distance(
     next: (f64, f64),
     width: f32,
     height: f32,
+    scale: CoordinateScale,
 ) -> f32 {
     let dist_limit = 10.0 * f64::from(width);
     let middle = ((current.0 + next.0) * 0.5, (current.1 + next.1) * 0.5);
+    // Upstream quantizes the query midpoint and the radius into the
+    // scaled coordinate domain (`Point::new_scale(middle)`,
+    // `scale_(dist_limit)`, `ExtrusionProcessor.hpp:381-382`).
+    let scaled_middle = (scale_trunc(middle.0, scale), scale_trunc(middle.1, scale));
+    let scaled_radius = scale_trunc(dist_limit, scale);
     let length = (next.0 - current.0).hypot(next.1 - current.1);
+    // `all_lines_in_radius` filters on squared segment distance in the
+    // scaled-int domain (`AABBTreeLines.hpp:222-236`).
     let in_range: Vec<&CurledLine> = curled
         .iter()
         .filter(|line| {
-            point_segment_distance(middle, (line.x0, line.y0), (line.x1, line.y1)) < dist_limit
+            segment_distance_scaled(scaled_middle, (line.x0, line.y0), (line.x1, line.y1))
+                <= scaled_radius as f64 * scaled_radius as f64
         })
         .collect();
     if in_range.is_empty() {
         return 0.0;
     }
-    if length > 2.0 && projected_length_sum(&in_range, current, next, dist_limit) < 0.4 * length {
+    if length > 2.0
+        && projected_length_sum(&in_range, current, next, dist_limit, scale) < 0.4 * length
+    {
         return 0.0;
     }
     in_range
         .iter()
         .map(|line| {
+            // `float distance_from_curled = unscaled(distance_to(...))`:
+            // int-domain distance, unscaled, stored float.
             let distance_from_curled =
-                point_segment_distance(middle, (line.x0, line.y0), (line.x1, line.y1));
-            let ratio = (1.0 - distance_from_curled / dist_limit) as f32;
-            width * ratio * ratio * (line.curled_height / (height * 10.0))
+                (segment_distance_scaled(scaled_middle, (line.x0, line.y0), (line.x1, line.y1))
+                    .sqrt()
+                    * scale.factor()) as f32;
+            // `path.width * (1 - d/limit)^2 * (h/(height*10))` —
+            // `d/dist_limit` promotes to double, so the product is f64
+            // before the float store (`ExtrusionProcessor.hpp:416-419`).
+            (f64::from(width)
+                * (1.0 - f64::from(distance_from_curled) / dist_limit)
+                * (1.0 - f64::from(distance_from_curled) / dist_limit)
+                * f64::from(line.curled_height / (height * 10.0))) as f32
         })
         .fold(0.0_f32, f32::max)
+}
+
+/// `line_alg::distance_to` squared: closest point of the segment to
+/// `point`, all in scaled-int coordinates, returning the squared
+/// distance in scaled units.
+fn segment_distance_scaled(point: (i64, i64), a: (i64, i64), b: (i64, i64)) -> f64 {
+    let dx = (b.0 - a.0) as f64;
+    let dy = (b.1 - a.1) as f64;
+    let length_squared = dx * dx + dy * dy;
+    let (px, py) = (point.0 as f64, point.1 as f64);
+    if length_squared <= 0.0 {
+        return (px - a.0 as f64).powi(2) + (py - a.1 as f64).powi(2);
+    }
+    let t = (((px - a.0 as f64) * dx + (py - a.1 as f64) * dy) / length_squared).clamp(0.0, 1.0);
+    let dx = px - (a.0 as f64 + t * dx);
+    let dy = py - (a.1 as f64 + t * dy);
+    dx * dx + dy * dy
 }
 
 /// Sum of the curled lines' extents projected onto the segment direction
@@ -88,6 +126,7 @@ fn projected_length_sum(
     current: (f64, f64),
     next: (f64, f64),
     dist_limit: f64,
+    scale: CoordinateScale,
 ) -> f64 {
     let dx = next.0 - current.0;
     let dy = next.1 - current.1;
@@ -97,13 +136,15 @@ fn projected_length_sum(
     }
     let dir = (dx / length, dy / length);
     let right = (-dir.1, dir.0);
+    let factor = scale.factor();
     let mut sum = 0.0;
     for line in lines {
         // Clip the curled segment to the local-frame box
-        // u ∈ [0, length], v ∈ [-dist_limit, dist_limit].
-        let to_local = |point: (f64, f64)| {
-            let rx = point.0 - current.0;
-            let ry = point.1 - current.1;
+        // u ∈ [0, length], v ∈ [-dist_limit, dist_limit]. The curled
+        // endpoints are scaled ints; unscale back to mm first.
+        let to_local = |point: (i64, i64)| {
+            let rx = point.0 as f64 * factor - current.0;
+            let ry = point.1 as f64 * factor - current.1;
             (rx * dir.0 + ry * dir.1, rx * right.0 + ry * right.1)
         };
         let (u0, v0) = to_local((line.x0, line.y0));
@@ -279,18 +320,21 @@ fn next_index(index: usize, count: usize, looped: bool) -> usize {
     }
 }
 
-/// `distance_to` on the previous-layer extrusion lines
-/// (`ExtrusionProcessor.hpp`/AABBTreeLines over `Vec2f` endpoints):
-/// f64 projection distance, clamped to the segment.
-pub(super) fn point_segment_distance(point: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
-    let dx = b.0 - a.0;
-    let dy = b.1 - a.1;
+/// `distance_from_lines_extra` on `LinesDistancer<ExtrusionLine>` —
+/// `ExtrusionLine::Scalar` is `float`, so the projection and squared
+/// distance are computed in f32 (`SupportSpotsGenerator.cpp:69-87`).
+pub(super) fn point_segment_distance(point: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f32 {
+    let point = [point.0 as f32, point.1 as f32];
+    let a = [a.0 as f32, a.1 as f32];
+    let b = [b.0 as f32, b.1 as f32];
+    let dx = b[0] - a[0];
+    let dy = b[1] - a[1];
     let length_squared = dx * dx + dy * dy;
     if length_squared <= 0.0 {
-        return (point.0 - a.0).hypot(point.1 - a.1);
+        return (point[0] - a[0]).hypot(point[1] - a[1]);
     }
-    let t = (((point.0 - a.0) * dx + (point.1 - a.1) * dy) / length_squared).clamp(0.0, 1.0);
-    (point.0 - (a.0 + t * dx)).hypot(point.1 - (a.1 + t * dy))
+    let t = (((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / length_squared).clamp(0.0, 1.0);
+    (point[0] - (a[0] + t * dx)).hypot(point[1] - (a[1] + t * dy))
 }
 
 pub(super) fn signed_distance(
@@ -304,11 +348,7 @@ pub(super) fn signed_distance(
     // boundary check upstream (`0.5f * flow_width` cast to double)
     // decides sign on sub-ULP values for axis-aligned walls.
     let nearest = tree
-        .nearest_mm([point.0, point.1])
+        .nearest_mm([point.0, point.1], scale.factor())
         .expect("a nonempty boundary has a nearest line");
-    let scaled = Point::new(
-        (point.0 / scale.factor()) as i64,
-        (point.1 / scale.factor()) as i64,
-    );
-    tree.outside(scaled) as f64 * nearest.squared_distance.sqrt()
+    tree.outside_mm([point.0, point.1], scale.factor()) as f64 * nearest.squared_distance.sqrt()
 }

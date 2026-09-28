@@ -97,7 +97,14 @@ pub(in crate::project_slice::gcode_emit) fn split_at_nearest_for_brim(
     let mut best_distance = f64::MAX;
     let mut seam = points[0];
     let mut seam_index = 0usize;
-    for (index, pair) in points.windows(2).enumerate() {
+    // Upstream loop polylines repeat the first vertex at the end
+    // (`ExtrusionPath` closed polylines), so `foot_pt` also projects onto
+    // the closing edge; mirror that by wrapping.
+    // Closed loops store `points.len()` edges — the wrap edge is index
+    // `points.len() - 1` (last vertex to first vertex).
+    let edge_count = points.len() - usize::from(points.first() == points.last());
+    let edges = (0..edge_count).map(|index| [points[index], points[(index + 1) % points.len()]]);
+    for (index, pair) in edges.enumerate() {
         let foot = projection_onto(pair[0], pair[1], target);
         let dx = (foot.x() - target.x()) as f64;
         let dy = (foot.y() - target.y()) as f64;
@@ -108,17 +115,36 @@ pub(in crate::project_slice::gcode_emit) fn split_at_nearest_for_brim(
             seam_index = index;
         }
     }
+    // `ExtrusionLoop::split_at` snaps the foot to the nearer segment
+    // endpoint when the TARGET is within `scaled_epsilon` (= scale_(0.001)
+    // µm-units) of it (`ExtrusionEntity.cpp:265-280`).
+    let a = points[seam_index];
+    let b = points[(seam_index + 1) % points.len()];
+    let d2_a = (a.x() - target.x()).pow(2) + (a.y() - target.y()).pow(2);
+    let d2_b = (b.x() - target.x()).pow(2) + (b.y() - target.y()).pow(2);
+    let threshold2 = 1000_i64 * 1000_i64;
+    if d2_a < d2_b {
+        if d2_a < threshold2 {
+            seam = a;
+        }
+    } else if d2_b < threshold2 {
+        seam = b;
+    }
     let mut output = Vec::with_capacity(points.len() + 1);
-    if seam == points[seam_index + 1] {
-        output.extend_from_slice(&points[seam_index + 1..]);
-        output.extend_from_slice(&points[..=seam_index]);
-        output.push(seam);
+    // The rotation starts at `seam_index + 1` unless the seam landed on
+    // (or snapped to) the edge's own endpoints — then it starts there.
+    let start = if seam == a {
+        seam_index
     } else {
-        output.push(seam);
-        output.extend_from_slice(&points[seam_index + 1..]);
-        output.extend_from_slice(&points[..=seam_index]);
+        (seam_index + 1) % points.len()
+    };
+    if seam != points[start] {
         output.push(seam);
     }
+    for step in 0..points.len() {
+        output.push(points[(start + step) % points.len()]);
+    }
+    output.push(seam);
     output
 }
 
