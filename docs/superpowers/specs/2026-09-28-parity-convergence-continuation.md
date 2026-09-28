@@ -369,3 +369,21 @@ Next test: extract orca's emitted gcode for a wall path and compute
 upstream `rate` values by hand — if orca's per-segment rates are exactly
 equal (constant de/len despite rounding), the divergence is in the
 EXTRUSION EMISSION (E precision/rounding), not the equalizer.
+
+## 2026-09-29 (de/len noise confirmed in orca's own output)
+
+Orca's emitted gcode has the same de/len noise (0.6785–0.6788) that
+marks ares's equalizer lines — so upstream's equalizer sees identical
+inputs and (verified standalone) marks ~70% modified → upstream emits
+per-segment `_EXTRUDE_END;G1 Fxx;_EXTRUDE_SET_SPEED` pairs as well.
+Yet orca's sorted CL dump shows ~74mm merged blocks, which cannot form
+through `;_EXTRUDE_END` boundaries under upstream's own merge rules.
+
+The contradiction implies upstream's equalizer output for these paths is
+NOT per-segment — the only remaining possibility is that upstream's
+`output_buffer` deduplication collapses consecutive same-feedrate
+`END+SET_SPEED` sequences differently than ares's `OutputBuffer` —
+inspect `buffer.push`/`rollback_last_line` in emitter.rs vs upstream
+`push_to_output`/`output_buffer_prev_length` bookkeeping (the
+`is_just_line_with_extrude_set_speed_tag` rollback may fold a prior
+bare-SET_SPEED differently, producing merged blocks).
