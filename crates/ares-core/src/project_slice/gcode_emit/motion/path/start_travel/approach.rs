@@ -66,12 +66,19 @@ pub(super) fn emit_needs_travel(
         })
         .unwrap_or_default();
     let first_travel_comment = first_travel_comment.as_str();
+    // Upstream's `travel` polyline anchors at `m_last_pos` — the last
+    // EXTRUDED point (`GCode.cpp:7356`), not the head position left by a
+    // clipped loop-tail / wipe move. `local_cursor` returns exactly that
+    // scaled-int anchor (`motion::local_cursor`), so the retraction length
+    // and internal-region checks measure from the pre-clip position.
+    let cursor = crate::project_slice::gcode_emit::motion::local_cursor(state, geometry);
+    let travel_origin = arc::Point {
+        x: cursor.x() as f64 * geometry.scale.factor() + state.offset.0,
+        y: cursor.y() as f64 * geometry.scale.factor() + state.offset.1,
+    };
     let inside_internal_surface = travel::inside_internal_surfaces(
         geometry.internal_surfaces,
-        arc::Point {
-            x: state.x,
-            y: state.y,
-        },
+        travel_origin,
         arc::Point {
             x: first_x,
             y: first_y,
@@ -92,7 +99,7 @@ pub(super) fn emit_needs_travel(
     // decide; a wiping retract moves the head and the route is planned
     // again from the new position (`GCode.cpp:7436-7443`).
     let mut route = plan_route(state, &geometry, properties.feature, first_x, first_y);
-    let routed_length = polyline_length(state.x, state.y, &route);
+    let routed_length = polyline_length(travel_origin.x, travel_origin.y, &route);
     // Upstream calls `retract()` on every qualifying travel
     // (`needs_retraction` has no retracted check, `GCode.cpp:7528-7647`);
     // `Extruder::retract` emits `max(0, length - m_retracted)`
