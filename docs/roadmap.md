@@ -8028,3 +8028,31 @@ checkpoint exports, and passes the same semantic comparison. Workspace
 nextest passes 6,695 tests with two ignored provenance-only tests; workspace
 Clippy with warnings denied and rustfmt both pass. Independent whole-change
 review remains before completion.
+### 2026-09-28 Parity convergence continuation
+
+`docs/superpowers/specs/2026-09-28-parity-convergence-continuation.md` continues
+the strict ordered-byte convergence wave on the same OrcaSlicer v2.4.2 baseline.
+
+Completed in this wave so far:
+
+- `time_in_minutes` (`GCodeProcessor.cpp:1013-1016`) now rounds `(t + 0.5f) /
+  60.0f` in f32 end-to-end; the previous port narrowed the input but kept the
+  +0.5 offset and division in f64, off-by-one-ing M73 `R` at minute
+  boundaries.
+- Option coverage re-ran under the live oracle: 608/650 bounded domains
+  exercised, 1592 generated cases, 1589 strictly compared, 3 oracle-rejected.
+  ~40 previously baseline-only domains now carry authored legal probes
+  (g-code templates, metadata strings, printable/extruder areas, rotation
+  templates, thumbnails, temperature/height probes, empty-string
+  feature-off probes). Residual INCOMPLETE rows are authored-interior
+  samples whose schema bounds upstream slice-time validation rejects, plus
+  id-valued/oracle-rejected keys documented in the summary.
+- `raft/fills.rs` (435→369 LOC) probe tests split to `fills/tests.rs`;
+  `format_processor_float` moved to `emit_helpers.rs` (`gcode_emit.rs`
+  402→390 LOC). No `include!`/`include_bytes!` anywhere.
+
+Outstanding residuals (tracked in the spec): 15 printer-smoke DIVERGENT
+rows cluster into M73 minute-boundary/cache-mapping, last-digit f32
+coordinate rounding, and travel-point ordering classes; 18 ORCA_ERROR rows
+are upstream-binary failures and 10 VENDOR_INCOMPLETE rows lack a vendor
+default process — reported, not Ares failures.
