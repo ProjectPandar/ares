@@ -349,3 +349,23 @@ Unresolved: identical source-level logic → different `modified` marks.
 Needs an upstream-line-level dump (impossible — instrumented build dead)
 or a targeted unit test replicating the limiter on a constant-rate run
 to find where `rate_succ` semantics diverge.
+
+## 2026-09-29 (equalizer verdict)
+
+Compiled upstream `adjust_volumetric_rate` verbatim standalone
+(/tmp/equalizer_test.cc) and fed it ares's dumped skirt rates: upstream's
+algorithm marks 19/28 modified — identical to ares. The equalizer
+segmentation is NOT the divergence; both sides split these lines.
+
+Revised interpretation of orca's sorted adjustable CL dump: the long
+blocks (74.4mm @70mm/s etc.) are whole multi-segment paths that were NOT
+split — i.e., upstream marks them unmodified. If both limiters behave
+identically, upstream's `rate` inputs for those paths must be EQUAL (no
+noise), implying upstream's emitted E values hold a longer constant
+mm3/mm ratio — or upstream's E rounding for those paths yields constant
+de/len. Ares's rates carry ~2e-4 relative noise.
+
+Next test: extract orca's emitted gcode for a wall path and compute
+upstream `rate` values by hand — if orca's per-segment rates are exactly
+equal (constant de/len despite rounding), the divergence is in the
+EXTRUSION EMISSION (E precision/rounding), not the equalizer.
