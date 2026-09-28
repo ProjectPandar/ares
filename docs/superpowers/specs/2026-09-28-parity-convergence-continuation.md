@@ -134,3 +134,34 @@ evaluation (`spline::CubicSpline::fit/value` vs
 `unsupported_dist` inputs. Resolving the 0.05mm fitted-position
 difference should collapse both the M73 value cluster and the
 "seam-point" rows simultaneously.
+
+Update `c82f20eb`: `layer_mid_zs` was wrong — upstream stores candidate
+z and projects seam-string search onto `layer->slice_z` (layer bottom,
+`SeamPlacer.cpp:1025,1206`), not the mid-layer extrusion height.
+`seam_placement/runtime.rs::layer_slice_zs` now returns slice_z. Did
+NOT fix Sermoon (the 0.05mm fitted-position delta persists — uniform z
+shift is invisible to the fit), so the residual is upstream of the
+spline: candidate `unsupported_dist`/overhang/`embedded_distance`
+inputs or string membership. New sweep after the fix: 954/1001 PASS,
+20 DIVERGENT, 17 ORCA_ERROR, 10 VENDOR_INCOMPLETE.
+
+Remaining divergence clusters (post-c82f20eb sweep):
+- M73 placement/value: emission position or R-minute differs — driven
+  by per-block time drift. Kobra3 0.2, Sermoon V1, ER20 0.5, Ginger
+  1.2, Peacock V2, SK1, TinyBotV1 (all), PhoenixProV1 (all), Volumic
+  EXO42/EXO65/SH65, raft_layers-max option domain. All share the
+  same root: cumulative time differs by ~0.3-0.4s, tipping
+  `time_in_minutes` boundaries.
+- Speed deltas feeding the above: wipe feedrate (`role_based_wipe_speed`
+  uses last `set_speed` = last per-segment variable speed; ares 108 vs
+  orca 113.65 on Sermoon), infill F2253 vs F2274, wall
+  cruise 37.55 vs 37.9 — consistent with `estimate_extrusion_quality`
+  overlap-band endpoints or `_mm3_per_mm` ratio application differing
+  in a corner.
+- Sub-micron skirt/perimeter coordinate rounding (RH3D 0.001mm on a
+  rounded skirt arc vertex, Sovol, Rolohaun, Kobra3 E-word).
+- Ginger G1 inner-wall `Z<z>` on every extrusion: upstream emits Z on
+  `path.z_contoured`/`sloped` paths only; Ginger's zaa/scarf are off, so
+  the emitting path remains unexplained — possibly
+  `estimate_extrusion_quality` processed points carrying z, or a
+  profile-specific `travel_slope` interplay.
