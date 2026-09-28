@@ -278,3 +278,50 @@ Both sides have identical final gcode; the divergence is inside the
 Next step: dump the marker stream on both sides (orca emit points at
 GCode.cpp `set_extrusion_speed`/`;_EXTRUDE_SET_SPEED`; ares
 motion/extrusion.rs `speed()`) and compare where SET_SPEED blocks start.
+
+## 2026-09-29 — cooling stream forensics (no instrumented rebuild possible)
+
+Nix GC deleted the instrumented-build toolchain (cmake, boost dev headers,
+pch deps); the `build-nix` tree can no longer compile. Official AppImage
+remains the only oracle. Forensics switched to ares-side dumps
+(`ARES_DUMP_RAW`/`ARES_DUMP_CLINES`/`ARES_DUMP_CLALL`) vs the last saved
+ORCA_DUMP_COOL stream.
+
+Findings on case-LIVPLC layer 0 (`;TYPE:Skirt` region):
+- Both sides mark `G1 E55` prime as a non-adjustable len=55 E-only line
+  and the phantom `dif[3]=55` lands on the following `G1 F3000;_EXTRUDE_SET_SPEED`
+  head — ares CLALL confirms len=55 there (upstream `use_relative_e`
+  reset makes new_pos[3]-0=55). This part matches.
+- Difference is the skirt PATH segmentation: orca's first CL block is
+  74.43mm = 55 (phantom E) + ~19.4mm of skirt before `;_EXTRUDE_END`,
+  while ares closes the block after ~3.19mm. Ares emits an
+  `;_EXTRUDE_END` every ~1-2 skirt segments; upstream keeps ~19mm in
+  one block. The marker stream granularity is path-boundary-driven, so
+  ares's emitted extrude-path boundaries differ upstream of the buffer —
+  the skirt loop (or the pressure-equalizer rewrite) is producing more,
+  shorter `extrude_path` calls than upstream.
+- The t/tmax delta (~0.023s) then shifts every slowed feedrate in the
+  file (F841 vs F843 = 275 diff lines — the whole 275-class).
+
+Next step: trace why ares's skirt block is ~3.19mm vs orca's ~19.4mm —
+either the skirt polyline is longer/segmented differently (offset/simplify
+output), or the equalizer splits where upstream doesn't. Dump the ares
+skirt loop points and compare vertex spacing vs orca's implied
+19.4mm/3.2mm cadence.
+
+M73 cluster (AHc4Fg/dy3GaF/WrJI9Y): M73 content identical; ares emits
+each M73 a few lines LATE — `g1_times_cache` per-line accumulation drifts
+positive vs `ExportLines::update`. Likely the same phantom-E (E-only
+moves measured as len=|dE| at the COLD path feedrate) or Z-hop length
+attribution difference, accumulated in the elapsed cache.
+
+Equalizer hypothesis (2026-09-29): `max_volumetric_extrusion_rate_slope=100`
+enables `PressureEqualizerPass` on layer 0. Ares's stream shows
+END+SET_SPEED per ~1-2 skirt segments → ares's equalizer marks skirt
+lines `modified` (rate limiting engaged) where upstream's doesn't
+(constant-rate skirt passes through raw, keeping one block per
+`extrude_path`). Root cause is inside `limiter.rs` rate tracking
+(`feedrate_per_role` / `flow_not_adjustable` / `adjustable_flow` flag),
+not the cooling buffer. Instrumented upstream build is dead (nix GC), so
+the residual fix has to be guided by upstream source reading +
+ares-side dumps.
