@@ -51,11 +51,15 @@ pub(super) fn placement_modes(
 /// height. Used both for the candidate z stored in `positions` and for the
 /// `projected_position.z` during seam-string search.
 pub(super) fn layer_slice_zs(records: &[Option<ClassicTraversalRecord>]) -> Vec<f32> {
+    // Upstream anchors seam candidates at `Layer::slice_z` = the layer
+    // MIDPOINT `0.5*(lo+hi)` (`PrintObjectSlice.cpp:44`), not the layer
+    // bottom: the visibility query radius is small, so the 0.5*h offset
+    // changes the neighbor set and corner ranking.
     records
         .iter()
         .scan(0.0_f64, |print_z, record| {
             let height = record.as_ref().map_or(0.0, |record| record.layer_height);
-            let slice_z = *print_z;
+            let slice_z = *print_z + 0.5 * height;
             *print_z += height;
             Some(slice_z as f32)
         })

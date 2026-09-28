@@ -24,7 +24,7 @@ impl GlobalVisibility {
         let samples = sample_uniform(&mesh, sample_count);
         let tree = TriangleBvh::new(&mesh);
         let directions = hemisphere_directions();
-        let values = samples
+        let values: Vec<f32> = samples
             .positions
             .iter()
             .zip(&samples.normals)

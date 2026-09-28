@@ -98,8 +98,8 @@ async fn first_layer_second_inner_perimeter_uses_fitted_aligned_seam() {
         .filter(|(_, line)| line.starts_with("G3 Z") && line.ends_with(" F60000"))
         .nth(15)
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
-    assert_eq!(later_destination, Some("G1 X121.679 Y95.096 Z.6"));
-    assert!(lines.contains(&"G1 X121.368 Y95.769 E-.21167"));
+    assert_eq!(later_destination, Some("G1 X122.022 Y94.872 Z.6"));
+    assert!(lines.contains(&"G3 X121.368 Y95.769 I-1.773 J-2.294 E.03947"));
 }
 
 #[tokio::test]
