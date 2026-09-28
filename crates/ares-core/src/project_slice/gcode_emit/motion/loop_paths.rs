@@ -1,3 +1,5 @@
+mod inward;
+use inward::{append_inward_move, ccw_angle, loop_is_counter_clockwise, path_length};
 #[cfg(test)]
 mod tests;
 
@@ -122,15 +124,16 @@ fn append_wipe_before_external(
     }
     let current = first.polyline.points[0];
     let previous = first.polyline.points[1];
-    // `GCode.cpp:5833-5840`: the reference "next" vertex is the LAST
-    // point of the last path — the loop's un-clipped end — falling back
-    // to the second-to-last point only when seam_gap clipping made the
-    // last point coincide with the start ("can happen if seam_gap is
-    // null"). It is NOT the clipped end; using `clipped_loop_end` here
-    // shifted the rotation arm by the seam_gap distance and moved the
-    // de-retraction point off upstream's location (KP3S outer-wall seam
-    // hop `G1 X94.35 Y94.204`).
-    let mut next = *last.polyline.points.last().unwrap();
+    // `GCode.cpp:5833-5840`: upstream's `paths` passed to this code are
+    // already seam-gap clipped (`loop.clip_end(clip_length, &paths)`,
+    // `GCode.cpp:5800-5804`), so `paths.back().points.back()` is the
+    // CLIPPED end — Ares stores the loop unclipped (the clip is applied
+    // per path at emit time), so reproduce the same point by walking
+    // `seam_gap` back from the raw end (`clipped_loop_end`). When the
+    // result coincides with the start — an unclipped loop whose last
+    // point equals the first — upstream falls back to the
+    // second-to-last vertex.
+    let mut next = clipped_loop_end(paths, state.options.seam_gap, geometry);
     if next.x == current.x && next.y == current.y && last.polyline.points.len() >= 2 {
         next = last.polyline.points[last.polyline.points.len() - 2];
     }
@@ -280,115 +283,6 @@ fn clipped_loop_end(
         }
     }
     paths[0].polyline.points[0]
-}
-
-fn append_inward_move(
-    output: &mut Vec<u8>,
-    paths: &[ExtrusionPath],
-    loop_role: ExtrusionLoopRole,
-    geometry: LayerGeometry<'_>,
-    state: &mut EmitState,
-) {
-    let Some(first) = paths.first() else {
-        return;
-    };
-    let last = paths.last().unwrap();
-    if !state.options.wipe_on_loops
-        || last.role != ExtrusionRole::ExternalPerimeter
-        || state.options.wall_loops <= 1
-        || first.polyline.points.len() < 2
-        || last.polyline.points.len() < 3
-    {
-        return;
-    }
-
-    let point = inward_point(
-        first.polyline.points[0],
-        first.polyline.points[1],
-        last.polyline.points[last.polyline.points.len() - 3],
-        (
-            loop_role == ExtrusionLoopRole::Hole,
-            loop_is_counter_clockwise(paths),
-        ),
-        state.options.nozzle_diameter / geometry.scale.factor(),
-    );
-    let x = geometry.scale.unscale(point.x()) + state.origin.0 - state.extruder_offset.0;
-    let y = geometry.scale.unscale(point.y()) + state.origin.1 - state.extruder_offset.1;
-    output.extend_from_slice(format!("G1 X{} Y{}\n", format_axis(x), format_axis(y)).as_bytes());
-    state.x = x;
-    state.y = y;
-    // `GCode::extrude_loop` (GCode.cpp:6032) moves only the writer here;
-    // m_last_pos remains the clipped extrusion endpoint for subsequent chaining.
-}
-
-fn inward_point(
-    center: Point3,
-    mut first: Point3,
-    mut second: Point3,
-    orientation: (bool, bool),
-    nozzle: f64,
-) -> crate::geometry::Point {
-    let (is_hole, counter_clockwise) = orientation;
-    if is_hole == counter_clockwise {
-        std::mem::swap(&mut first, &mut second);
-    }
-    let mut angle = ccw_angle(center, first, second) / 3.0;
-    if is_hole == counter_clockwise {
-        angle = -angle;
-    }
-    let dx = (first.x - center.x) as f64;
-    let dy = (first.y - center.y) as f64;
-    let length_squared = dx * dx + dy * dy;
-    let factor = if nozzle * nozzle < length_squared {
-        0.2 * nozzle / length_squared.sqrt()
-    } else {
-        0.2
-    };
-    let x = center.x as f64 + dx * factor;
-    let y = center.y as f64 + dy * factor;
-    let (sine, cosine) = angle.sin_cos();
-    let rotated_x = center.x as f64 + cosine * (x - center.x as f64) - sine * (y - center.y as f64);
-    let rotated_y = center.y as f64 + sine * (x - center.x as f64) + cosine * (y - center.y as f64);
-    crate::geometry::Point::new(
-        (rotated_x + 0.5).floor() as i64,
-        (rotated_y + 0.5).floor() as i64,
-    )
-}
-
-fn loop_is_counter_clockwise(paths: &[ExtrusionPath]) -> bool {
-    let points = paths
-        .iter()
-        .flat_map(|path| path.polyline.points.iter())
-        .collect::<Vec<_>>();
-    points
-        .iter()
-        .zip(points.iter().cycle().skip(1))
-        .map(|(left, right)| left.x as i128 * right.y as i128 - right.x as i128 * left.y as i128)
-        .sum::<i128>()
-        > 0
-}
-
-fn ccw_angle(center: Point3, first: Point3, second: Point3) -> f64 {
-    let angle = ((first.x - center.x) as f64).atan2((first.y - center.y) as f64)
-        - ((second.x - center.x) as f64).atan2((second.y - center.y) as f64);
-    if angle <= 0.0 {
-        angle + std::f64::consts::TAU
-    } else {
-        angle
-    }
-}
-
-fn path_length(path: &ExtrusionPath, geometry: LayerGeometry<'_>) -> f64 {
-    path.polyline
-        .points
-        .windows(2)
-        .map(|segment| {
-            geometry
-                .scale
-                .unscale(segment[1].x - segment[0].x)
-                .hypot(geometry.scale.unscale(segment[1].y - segment[0].y))
-        })
-        .sum()
 }
 
 /// Distance from a scaled point to a scaled segment

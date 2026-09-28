@@ -185,7 +185,11 @@ fn m73_progress_profile_report() {
                         } else {
                             let lo = f64::from(left.p) * orca.total / 100.0;
                             let hi = f64::from(left.p + 1) * orca.total / 100.0;
-                            let r_cap = orca.total - f64::from(left.r) * 60.0;
+                            // Upstream emits R = int((remaining + 0.5f)/60.0f)
+                            // (`GCodeProcessor.cpp:1020`), so R holds while
+                            // remaining >= r*60 - 0.5, i.e. elapsed <=
+                            // total - r*60 + 0.5.
+                            let r_cap = orca.total - f64::from(left.r) * 60.0 + 0.5;
                             if !(elapsed >= lo - 0.01 && elapsed < hi && elapsed <= r_cap) {
                                 out_of_window += 1;
                                 eprintln!(

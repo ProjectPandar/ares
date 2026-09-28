@@ -55,16 +55,48 @@ pub(crate) fn verify_value(
     let actual = effective
         .get(key)
         .ok_or_else(|| mismatch(format!("missing {key}")))?;
-    let matches = match (actual, requested) {
-        (Value::String(actual), Value::String(requested)) => actual == requested,
-        (actual, requested) => actual == requested,
-    };
-    if !matches {
+    if !value_equivalent(actual, requested) {
         return Err(mismatch(format!(
             "{key}: requested {requested}, effective {actual}"
         )));
     }
     Ok(serde_json::json!({"key": key, "requested": requested, "effective": actual}))
+}
+
+/// Upstream `ConfigBase::serialize` re-encodes values: integral floats
+/// lose their decimal tail (`"2.0"` → `"2"`, `Config.hpp:777-781`) and
+/// vectors keep per-element semantics. Compare against the canonical
+/// form so a requested `"2.0"` matches an effective `"2"` without
+/// weakening string-sensitive comparisons (percent tags, units).
+fn value_equivalent(actual: &Value, requested: &Value) -> bool {
+    match (actual, requested) {
+        (Value::String(actual), Value::String(requested)) => {
+            canonical_number_text(actual) == canonical_number_text(requested)
+        }
+        (Value::Array(actual), Value::Array(requested)) => {
+            actual.len() == requested.len()
+                && actual
+                    .iter()
+                    .zip(requested.iter())
+                    .all(|(actual, requested)| value_equivalent(actual, requested))
+        }
+        (actual, requested) => actual == requested,
+    }
+}
+
+/// Normalize a numeric literal the way upstream serialization does:
+/// `"2.0"` → `"2"`. Non-numeric strings (`"150%"`, `"0.4mm"`) compare
+/// byte-for-byte.
+fn canonical_number_text(text: &str) -> String {
+    if text.parse::<f64>().is_err() {
+        return text.to_owned();
+    }
+    let trimmed = text.trim_end_matches('0').trim_end_matches('.');
+    if trimmed.is_empty() {
+        "0".to_owned()
+    } else {
+        trimmed.to_owned()
+    }
 }
 
 pub(crate) fn verify(

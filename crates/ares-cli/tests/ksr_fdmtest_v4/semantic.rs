@@ -12,6 +12,9 @@ mod tests;
 #[path = "semantic/travel.rs"]
 mod travel;
 
+#[path = "semantic/controls.rs"]
+mod controls;
+use controls::{canonicalize_controls, compare_control_events};
 use depositions::{compare_deposition, compare_deposition_cross_target};
 use parser::SemanticGcode;
 
@@ -67,12 +70,20 @@ fn compare_impl(
     compare_filament_lengths(&expected, &actual)?;
     exact_lines("preamble", &expected.preamble, &actual.preamble)?;
     exact_lines("postamble", &expected.postamble, &actual.postamble)?;
-    // `M73` progress lines are collected into the model (parser keeps
-    // them so a wholesale loss is visible to diagnostics), but the
-    // estimated-time cadence still carries the ±1-minute/one-extra-line
-    // residual tracked by the printer sweep's M73 cluster — asserting
-    // them here would turn the golden red for a KNOWN divergence rather
-    // than new information. The config block compares exactly.
+    // `M73` progress lines are collected into the model and compared
+    // in COUNT only — a wholesale loss or insertion is a real failure,
+    // while the estimated-time cadence still carries the ±1-minute /
+    // ±1-line residual tracked by the printer sweep's M73 cluster
+    // (asserting full equality would turn the golden red for a KNOWN
+    // divergence rather than new information). A count drift of ±1 is
+    // the documented residual bound; anything larger fails.
+    if usize::abs_diff(expected.progress.len(), actual.progress.len()) > 1 {
+        return Err(format!(
+            "progress line count diverged: expected {} actual {}",
+            expected.progress.len(),
+            actual.progress.len()
+        ));
+    }
     exact_lines("config_block", &expected.config_block, &actual.config_block)?;
     if expected.layers.len() != actual.layers.len() {
         return Err(format!(
@@ -116,122 +127,6 @@ fn compare_impl(
 // away; anything that changes state (a different fan, a different
 // speed, an M104 reorder, a deleted M107 while the fan runs) is
 // preserved and compared in order.
-fn canonicalize_controls(parsed: &SemanticGcode) -> Vec<Vec<String>> {
-    let mut fans = std::collections::BTreeMap::<String, String>::new();
-    let mut plane_xy = false;
-    let mut seed = |line: &str| {
-        if line == "G17" {
-            plane_xy = true;
-        } else if line == "G18" || line == "G19" {
-            plane_xy = false;
-        } else if line.starts_with("M106 ") {
-            apply_fan(&mut fans, line);
-        } else if line == "M107" || line.starts_with("M107 ") {
-            let mut fan = "0".to_owned();
-            for token in line.split_ascii_whitespace().skip(1) {
-                if let Some(value) = token.strip_prefix('P') {
-                    fan = value.to_owned();
-                }
-            }
-            fans.insert(fan, "0".to_owned());
-        }
-    };
-    for line in &parsed.preamble {
-        seed(line);
-    }
-    parsed
-        .layers
-        .iter()
-        .map(|layer| {
-            let mut kept = Vec::new();
-            for line in &layer.controls {
-                if line == "G17" {
-                    if !plane_xy {
-                        plane_xy = true;
-                        kept.push(line.clone());
-                    }
-                    continue;
-                }
-                if line == "G18" || line == "G19" {
-                    plane_xy = false;
-                    kept.push(line.clone());
-                    continue;
-                }
-                if line.starts_with("M106 ") {
-                    if let Some((fan, speed)) = fan_assignment(line) {
-                        if fans.get(&fan) == Some(&speed) {
-                            continue;
-                        }
-                        fans.insert(fan, speed);
-                    }
-                    kept.push(line.clone());
-                    continue;
-                }
-                if line == "M107" || line.starts_with("M107 ") {
-                    let mut fan = "0".to_owned();
-                    for token in line.split_ascii_whitespace().skip(1) {
-                        if let Some(value) = token.strip_prefix('P') {
-                            fan = value.to_owned();
-                        }
-                    }
-                    if fans.get(&fan).is_some_and(|s| s == "0") {
-                        continue;
-                    }
-                    fans.insert(fan, "0".to_owned());
-                    kept.push(line.clone());
-                    continue;
-                }
-                kept.push(line.clone());
-            }
-            kept
-        })
-        .collect()
-}
-
-fn apply_fan(fans: &mut std::collections::BTreeMap<String, String>, line: &str) {
-    if let Some((fan, speed)) = fan_assignment(line) {
-        fans.insert(fan, speed);
-    }
-}
-
-// `M106 P<n> S<v>` → (fan, speed); `M106 S<v>` targets fan 0. Parameter
-// forms without S (e.g. `M106 P3 R1`) leave fan state untouched.
-fn fan_assignment(line: &str) -> Option<(String, String)> {
-    let mut fan = "0".to_owned();
-    let mut speed = None;
-    for token in line.split_ascii_whitespace().skip(1) {
-        if let Some(value) = token.strip_prefix('P') {
-            fan = value.to_owned();
-        } else if let Some(value) = token.strip_prefix('S') {
-            speed = Some(value.to_owned());
-        }
-    }
-    speed.map(|speed| (fan, speed))
-}
-
-fn compare_control_events(
-    layer: usize,
-    expected: &[String],
-    actual: &[String],
-) -> Result<(), String> {
-    if expected != actual {
-        let position = expected
-            .iter()
-            .zip(actual.iter())
-            .position(|(expected, actual)| expected != actual);
-        let shown = position.unwrap_or(expected.len().min(actual.len()));
-        return Err(format!(
-            "layer {layer} control events differs at index {shown}: \
-             expected {:?} vs actual {:?} (lengths {} vs {})",
-            expected.get(shown),
-            actual.get(shown),
-            expected.len(),
-            actual.len()
-        ));
-    }
-    Ok(())
-}
-
 fn compare_timing(expected: &SemanticGcode, actual: &SemanticGcode) -> Result<(), String> {
     for (name, expected, actual) in [
         (

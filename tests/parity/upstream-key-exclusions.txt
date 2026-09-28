@@ -1,3 +1,8 @@
+# Upstream `this->add` keys absent from the fixture: CLI flags, SLA-only
+# options, metadata/serialization keys, and pre-normalization aliases.
+# `extruder` is consumed by `normalize_fdm_1` (`PrintConfig.cpp:8619`)
+# and propagated into covered `*_filament_id` fields — its exclusion is
+# intentional, not a coverage hole.
 absolute_correction
 adaptive_layer_height
 align_xy

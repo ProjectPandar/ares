@@ -81,12 +81,15 @@ pub(super) fn run_printer_sweep() {
     // unverifiable there rather than divergent. Genuine parity failures
     // (`DIVERGENT`, `ARES_ERROR`, `INPUT_REJECTED`) still fail the
     // sweep; the exempt rows stay visible in the summary.
+    // `ARTIFACT_ERROR` means the comparison or evidence persistence
+    // itself failed — it is NOT an oracle-side exemption and must fail
+    // the sweep so a run cannot pass without successful comparisons.
     let failures = outcomes
         .iter()
         .filter(|outcome| {
             matches!(
                 outcome.status,
-                "DIVERGENT" | "ARES_ERROR" | "INPUT_REJECTED"
+                "DIVERGENT" | "ARES_ERROR" | "INPUT_REJECTED" | "ARTIFACT_ERROR"
             )
         })
         .count();

@@ -329,8 +329,11 @@ pub(crate) fn compare_exported_for(
             }
         }
     }
-    if outcome.status == "DIVERGENT" && budget > 1 {
-        outcome.detail = format!("(no match across {budget} oracle runs) {}", outcome.detail);
+    if outcome.status == "DIVERGENT" && attempt > 1 {
+        outcome.detail = format!(
+            "(no match across {attempt} completed oracle runs of {budget} budgeted) {}",
+            outcome.detail
+        );
     }
     outcome
 }
