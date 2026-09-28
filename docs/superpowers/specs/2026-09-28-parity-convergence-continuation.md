@@ -437,3 +437,23 @@ Next probe: dump upstream's `volumetric_extrusion_rate_start/end` per
 line across a role boundary (unattainable — dead build) OR hand-trace
 the sliding-window seeding for `[skirt..wall]` and compare against ares
 PDECISIONS at the same boundary.
+
+## 2026-09-29 (limiter cascade theory)
+
+The `emit_single_slope`/`emit_accel_then_decel` splits in orca's output
+(`Z1.2`-carrying ~2.15mm pieces where ares emits whole lines) need
+`delta_volumetric_rate >= 10` — unreachable via static window analysis
+(slope=360000 makes real rate-limiting a no-op on these segments). The
+remaining mechanism is cascade order: `adjust_volumetric_rate(start,i)`
+mutates `m_gcode_lines` as it slides — each early `i` call's marks feed
+the next call's `rate_succ`/`feedrate_per_role` seeds, so a single
+early divergence (e.g. the fixed EXTERNAL-tag rollback, or an
+unspotted `pos`/flag difference on ONE line) snowballs into different
+start/end rates on later lines — producing >=10 deltas upstream where
+ares emits ~0.2 noise.
+
+Path forward: full-sweep comparison is the only realistic oracle now —
+re-run the whole option sweep to measure the byte-identical fraction
+rather than chasing individual CL boundaries; then attack the remaining
+clusters (seam per-object visibility, M73 elapsed attribution,
+1µ-vertex rounding) which are independent of the equalizer.
