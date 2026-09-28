@@ -512,3 +512,27 @@ source-cited convention check in upstream `Polygon`/`ClipperLib`
 `BuildResult` before touching ordering; risk: rotating candidates
 affects enforcer-patch mid-point selection and `seam_index`
 projection indices.
+
+## 2026-09-29 (seam residual: all lead-chains exhausted statically)
+
+Verified identical to upstream: RNG (mt19937_64 seed 27644437,
+`u/2^64`), sample weights (f64×f32), normals (B-A)×(C-B) ≡ (B-A)×(C-A),
+search radius formula, front_adjustment formula, comparator chain,
+candidate set (external loop collect_points only), min-first-wins.
+
+Orca's SE pick for the layer-0 cube is unreachable under ares's
+computed candidate values (all four corners score identically,
+vis=1.91588). Reproducing SE requires either upstream's
+`collect_points` `polyline[0]` to start at SE (vertex-order
+convention through intersect_facet->chain->clipper-offset->loop,
+whose start vertex for this mesh is unverifiable without upstream
+runtime — the AppImage has no ORCA_DUMP support compiled in) or a
+per-corner score asymmetry ares does not produce. Both sign-flip
+experiments break everything else (3204), so the residual is a
+strict tie-ordering artifact confined to symmetric geometries at
+exactly-tied scores.
+
+M73 (116×3): P/R values identical, position drifts 2-4 G1 lines;
+traced to `process_line_move` `g1_times_cache` elapsed values
+differing ~0.1-0.3% cumulatively — upstream `ORCA_DUMP_TIMES` data
+dead, AppImage lacks dumps.
