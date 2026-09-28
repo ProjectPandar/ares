@@ -185,3 +185,38 @@ avoid-crossing-perimeters detour waypoint (`approach/waypoints.rs`,
 `AvoidCrossingPerimeters` (0.05mm on a corner waypoint), not seam
 placement. The M73/`F` rows on Sermoon therefore likely share the same
 upstream non-seam root — the detour waypoint or the wipe feedrate.
+
+## 2026-09-28 (late) — cancelled-lift merge + estimator findings
+
+### Committed
+- `08cab436` — `travel_to_xyz` cancelled-lift branch now emits the combined
+  `G1 X Y Z{leg}` when `will_move_z` returns true while lifted
+  (`GCodeWriter.cpp:782-806` `emit_xyz` clear-position path). The upstream
+  dead-band probe `z >= m_pos(2) - m_lifted` uses raw f64 — `0.6-0.4`
+  = `0.2+1ulp` correctly merges (empirically verified via ORCA_DUMP_LIFT:
+  `lifted=0.4 pos=0.6 z=0.2 -> will_move_z=1`). Fixed option/spiral_mode/1
+  (case-yvHhtc, 46-line -> 0) plus ~30 cases that now differ only in the
+  generated-by header.
+- Stale wipe expectations in `motion/tests/geometry.rs` updated to orca
+  golden values (regression from d5c19a0e seam midpoint change).
+
+### Remaining classes (evidence gathered)
+1. **M73/total drift**: ares `total` includes the trailing end-gcode
+   `G1 E-1` retract (+0.012s). Orca's `machine.time` = 313.233149 vs ares
+   313.245149 (case-Z06Min). Orca DOES create the block (BLOCKPUSH id=3315
+   type=Retract feed=83.33) but `machine.time` excludes it — mechanism
+   unpinned (all queued blocks should be consumed at finalize).
+   Affects EXO42/EXO65/SH65 + M73 boundary shifts elsewhere.
+2. **Cooling slowdown F drift** (Ginger G1 275 lines, SK1 116, U1 46...):
+   ares emits F841 where orca emits F843 — slowdown factor slightly stronger.
+   Cooling line streams segment differently: orca `CL i=1 len=23.29 f=70`
+   vs ares `len=39.16` — the CoolingLine segmentation/merge differs before
+   the slowdown math. `ORCA_DUMP_COOL` dumps upstream `CL` lines; ares has
+   `ARES_DUMP_SLOWDOWN=2` for the equivalent dump.
+3. **1µ rounding** (E3NG, Kobra3, SV06, DeltaFlyer): corner vertex rounding.
+
+### Instrumentation added to upstream-src (not in repo)
+- `ORCA_DUMP_LIFT` in `travel_to_xyz` + will_move_z probe.
+- `ORCA_DUMP_M73` in `export_line_M73` (counter/elapsed/machine.time/pct).
+- `ORCA_DUMP_G1` G1PROC deltas + BLOCKPUSH (id/dist/type/feed).
+- `ORCA_DUMP_TIMES` extended with `type` column.

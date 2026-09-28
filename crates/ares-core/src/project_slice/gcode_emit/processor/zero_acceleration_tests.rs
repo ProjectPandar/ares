@@ -15,16 +15,16 @@ fn zero_z_limits() -> ProcessorLimits {
 
 #[test]
 fn zero_acceleration_linear_move_has_one_second_total_and_complete_output() {
-    let input =
-        "M73 P0 R0\nG1 Z10 F600\nM73 P100 R0\n; estimated printing time (normal mode) = 0s\n";
+    // Two blocks: upstream `calculate_time` drops a lone trailing block.
+    let input = "M73 P0 R0\nG1 Z10 F600\nG1 Z20 F600\nM73 P100 R0\n; estimated printing time (normal mode) = 0s\n";
     let lines = input.lines().map(str::to_owned).collect::<Vec<_>>();
     let estimate = Estimate::from_lines(&lines, 0.0, zero_z_limits());
     // Upstream: both acceleration distances/times = 0; cruise = 10 / 10.
     assert!(estimate.total.is_finite());
-    assert_eq!(estimate.total, 1.0);
+    assert_eq!(estimate.total, 2.0);
     assert_eq!(
         process(input.as_bytes().to_vec(), true, 0.0, 0.0, zero_z_limits()),
-        b"M73 P0 R0\nG1 Z10 F600\nM73 P100 R0\n; estimated printing time (normal mode) = 1.000000s\n"
+        b"M73 P0 R0\nG1 Z10 F600\nG1 Z20 F600\nM73 P50 R0\nM73 P100 R0\n; estimated printing time (normal mode) = 2s\n"
     );
 }
 
@@ -99,6 +99,8 @@ fn zero_acceleration_zero_cruise_feedrate_has_zero_time() {
         .motion("G1 Z10 F600")
         .unwrap();
     block.speed = 0.0;
+    // Test hook force-drains the lone block (upstream's `<2` guard only
+    // guards the `time +=` accounting, not the trapezoid math).
     assert_eq!(planned_times(&[block]), [0.0]);
 }
 

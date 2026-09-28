@@ -60,12 +60,12 @@ impl RollingPlanner {
         }
     }
 
+    /// Final `calculate_time` pass (`GCodeProcessor.cpp:419-431` at
+    /// `finalize`, :2707 keep=0): shares the `blocks.size() < 2` guard — a
+    /// lone trailing block (e.g. an end-gcode `G1 E-1` after the last
+    /// tool-change flush) never reaches `machine.time`.
     pub(crate) fn finish(&mut self) -> Vec<f64> {
-        if self.blocks.is_empty() {
-            Vec::new()
-        } else {
-            self.process(0)
-        }
+        self.flush()
     }
 
     fn process(&mut self, keep: usize) -> Vec<f64> {
@@ -91,7 +91,13 @@ pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     for block in blocks {
         times.extend(planner.push(block));
     }
-    times.extend(planner.finish());
+    // Test hook: force-drain the queue even for a lone block so trapezoid
+    // math stays inspectable; production `finish` drops a lone tail block
+    // to mirror upstream `calculate_time`'s `blocks.size() < 2` guard.
+    if planner.blocks.is_empty() {
+        return times;
+    }
+    times.extend(planner.process(0));
     times
 }
 

@@ -53,12 +53,13 @@ fn legacy_m204_s_sets_travel_and_t_as_retract() {
 
 #[test]
 fn machine_max_feedrate_limits_extrusion_time() {
-    let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E60 F3600\nM73 P100 R0\n"
+    // Two blocks: upstream drops a lone trailing block from the total.
+    let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E30 F3600\nG1 E60 F3600\nM73 P100 R0\n"
         .to_vec();
 
     let output = String::from_utf8(process(output, false, 0.0, 0.0, bbl_limits())).unwrap();
 
-    assert!(output.contains("total estimated time: 2s"), "{output}");
+    assert!(output.contains("total estimated time: 3s"), "{output}");
 }
 
 #[test]
@@ -177,12 +178,22 @@ fn isolated_block_uses_firmware_safe_entry_speed() {
 
 #[test]
 fn single_block_synchronization_waits_for_next_motion() {
-    let lines = ["M204 S1000", "G1 X600 F3600", "M1", "G1 X1200 F3600"].map(str::to_owned);
+    // Upstream `calculate_time` keeps a lone queued block deferred until a
+    // later block arrives (`blocks.size() < 2` early return); the trailing
+    // `G1 X1200` pairs with it, so both count toward the total.
+    let lines = [
+        "M204 S1000",
+        "G1 X600 F3600",
+        "M1",
+        "G1 X1200 F3600",
+        "G1 X1800 F3600",
+    ]
+    .map(str::to_owned);
 
     let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
 
     assert!(
-        (estimate.total - 20.043_349_266_052_246).abs() < 1e-6,
+        (estimate.total - 30.043_349_266_052_246).abs() < 1e-6,
         "{}",
         estimate.total
     );
