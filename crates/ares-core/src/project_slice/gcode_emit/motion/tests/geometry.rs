@@ -157,9 +157,9 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
         window
             == [
                 "; WIPE_START",
-                "G1 X145.756 Y94.862 E-.16192",
-                "G1 X145.829 Y95.236 E-.1524",
-                "G1 X145.908 Y95.435 E-.08568",
+                "G1 X145.621 Y94.523 E-.1318",
+                "G1 X145.756 Y94.862 E-.14599",
+                "G1 X145.814 Y95.162 E-.12221",
                 "; WIPE_END",
             ]
     }));

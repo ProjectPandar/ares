@@ -75,7 +75,15 @@ pub(super) fn emit_approach_move(
     // and keeps `m_lifted` for the later descend — checking `leg_z`
     // against the dead-band here would cancel the lift and merge the
     // descent into the travel (Artillery M1 Pro `G1 X..Y..Z.16`).
-    if pending_target.is_none() && state.lifted_amount > 0.0 && travel_will_move_z(state, leg_z) {
+    // `will_move_z` true while lifted: upstream cancels the lift and
+    // emits the combined `G1 X Y Z{dest}` (`GCodeWriter.cpp:782-806`)
+    // — including the floating-point edge where `pos - m_lifted`
+    // lands one ulp above the nominal z (0.6 - 0.4 > 0.2), which
+    // legitimately merges a lift+descend pair that an epsilon-based
+    // check would leave split.
+    let cancelled_lift =
+        pending_target.is_none() && state.lifted_amount > 0.0 && travel_will_move_z(state, leg_z);
+    if cancelled_lift {
         state.lifted = false;
         state.lifted_amount = 0.0;
     }
@@ -146,6 +154,21 @@ pub(super) fn emit_approach_move(
         // with no hop in play (the enforce gate blocked the
         // change-layer hop), `m_need_change_layer_lift_z`
         // (`GCode.cpp:7479-7482`) forces the plain combined xyz move.
+        travel_emit::xyz_with_comment(
+            output,
+            state,
+            travel_x,
+            travel_y,
+            leg_z,
+            state.travel_feedrate,
+            first_travel_comment,
+        );
+        travel_set_layer_z = true;
+    } else if cancelled_lift && state.positioned {
+        // Clear-position `emit_xyz(point_on_plate)` path: one combined
+        // `G1 X Y Z` travel line at the travel feedrate
+        // (`GCodeWriter.cpp:799-805`). The unclear-position variant
+        // keeps the XY+`_travel_to_z` split via the `else` arm below.
         travel_emit::xyz_with_comment(
             output,
             state,
@@ -313,7 +336,8 @@ pub(super) fn emit_approach_move(
         // splits: the unclear-position branch of `travel_to_xyz`
         // (`GCodeWriter.cpp:754+`) emits XY then `_travel_to_z`
         // separately — `force_z` only merges Z for CLEAR-position
-        // travels.
+        // travels. A cancelled lift while still unpositioned lands here
+        // too (`first_position` == `!state.positioned`).
         if first_position {
             let z_feedrate = travel::lift_z_feedrate(state);
             output.extend_from_slice(
