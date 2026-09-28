@@ -61,15 +61,45 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         return;
     }
 
-    let mesh = mesh::TriangleMesh::from_project(&traversal.project);
-    if mesh.triangles.is_empty() {
-        return;
-    }
     let front_bias = placements.iter().any(|placement| {
         placement.is_some_and(|mode| mode == crate::ProcessSeamPosition::AlignedBack)
     });
-    let visibility =
-        visibility::GlobalVisibility::from_mesh(mesh, VISIBILITY_SAMPLE_COUNT, front_bias);
+    // `SeamPlacer.cpp:1442` — occlusion is computed per PrintObject, each
+    // with its own `trafo_centered` frame; share one visibility model per
+    // object index.
+    let visibilities = placements
+        .iter()
+        .enumerate()
+        .map(|(object_index, placement)| {
+            if placement.is_none() {
+                return None;
+            }
+            let source_index = traversal.resolved.objects[object_index].source_object_index;
+            let mesh = mesh::TriangleMesh::from_object(
+                &traversal.project.objects()[source_index],
+                traversal.scale,
+            );
+            if std::env::var_os("ARES_DUMP_VIS").is_some() {
+                let mut mn = [f32::INFINITY; 3];
+                let mut mx = [f32::NEG_INFINITY; 3];
+                for t in &mesh.triangles {
+                    for p in t.vertices {
+                        for (i, v) in [p.x, p.y, p.z].iter().enumerate() {
+                            mn[i] = mn[i].min(*v);
+                            mx[i] = mx[i].max(*v);
+                        }
+                    }
+                }
+                eprintln!(
+                    "VIS obj={object_index} tris={} bbox={mn:?}..{mx:?}",
+                    mesh.triangles.len()
+                );
+            }
+            (!mesh.triangles.is_empty()).then(|| {
+                visibility::GlobalVisibility::from_mesh(mesh, VISIBILITY_SAMPLE_COUNT, front_bias)
+            })
+        })
+        .collect::<Vec<_>>();
     let nozzle_diameter = traversal
         .resolved
         .views
@@ -86,7 +116,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         &mut prepared.objects,
         traversal,
         &placements,
-        &visibility,
+        &visibilities,
         nozzle_diameter,
         &mut nearest_seam_plans,
     );
@@ -97,12 +127,15 @@ fn apply_objects(
     objects: &mut [Vec<OrderedExtrusionLayer>],
     traversal: &PreparedPostClassicTraversal,
     placements: &[Option<ProcessSeamPosition>],
-    visibility: &visibility::GlobalVisibility,
+    visibilities: &[Option<visibility::GlobalVisibility>],
     nozzle_diameter: f32,
     nearest_plans: &mut [Vec<NearestSeamLayer>],
 ) {
     for (object_index, layers) in objects.iter_mut().enumerate() {
-        let Some(placement) = placements[object_index] else {
+        let (Some(placement), Some(visibility)) = (
+            placements[object_index],
+            visibilities[object_index].as_ref(),
+        ) else {
             continue;
         };
         let layer_zs = runtime::layer_slice_zs(&traversal.objects[object_index].records);

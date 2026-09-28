@@ -1,6 +1,8 @@
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
-use crate::{Project, ProjectVolumeType};
+use crate::{Point3d, ProjectObject, ProjectVolumeType, geometry::CoordinateScale};
+
+use crate::project_slice::raw_intersections::raw_center;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(super) struct Vec3 {
@@ -150,25 +152,35 @@ impl TriangleMesh {
         Self { triangles }
     }
 
-    pub(super) fn from_project(project: &Project) -> Self {
-        let object = project
-            .objects()
-            .first()
-            .expect("a sliced project has a printable object");
+    /// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
+    /// `PrintObject::trafo_centered()` = instance transform with zeroed XY
+    /// translation (`PrintApply.cpp` zeroes `trafo` XY, moving it to `shift`)
+    /// pretranslated by `-center_offset`. `raw_center` mirrors
+    /// `PrintObject.cpp:97-110` `center_offset` (bbox center of the
+    /// translation-stripped transformed mesh).
+    pub(super) fn from_object(object: &ProjectObject, scale: CoordinateScale) -> Self {
         let instance_transform = object
             .instances()
             .first()
             .expect("a sliced project object has an instance")
             .transform();
+        let center =
+            raw_center(object, scale).expect("resolved project object bounds must be finite");
+        let object_transform =
+            instance_transform
+                .without_xy_translation()
+                .pretranslated(Point3d::new(
+                    -scale.unscale(center.x()),
+                    -scale.unscale(center.y()),
+                    0.0,
+                ));
         let mut triangles = Vec::new();
         for volume in object
             .volumes()
             .iter()
             .filter(|volume| volume.volume_type() == ProjectVolumeType::ModelPart)
         {
-            let transform = instance_transform
-                .without_xy_translation()
-                .then(volume.transform());
+            let transform = object_transform.then(volume.transform());
             let vertices = volume
                 .mesh()
                 .vertices()
