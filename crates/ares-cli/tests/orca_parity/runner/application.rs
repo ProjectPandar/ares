@@ -40,6 +40,33 @@ pub(crate) fn settings(project: &[u8]) -> Result<Map<String, Value>, StageError>
     serde_json::from_slice(&bytes).map_err(|e| error(e.to_string()))
 }
 
+/// Generic requested-vs-effective check for non-width cases: the
+/// exported `project_settings.config` must carry the option with a value
+/// equal to the requested one (scalar-string equality after
+/// serialization — `apply_override` already canonicalizes types).
+pub(crate) fn verify_value(
+    project: &[u8],
+    key: &str,
+    requested: &Value,
+) -> Result<Value, StageError> {
+    let mismatch =
+        |detail| StageError::new(Stage::Application, FailureKind::ApplicationMismatch, detail);
+    let effective = settings(project)?;
+    let actual = effective
+        .get(key)
+        .ok_or_else(|| mismatch(format!("missing {key}")))?;
+    let matches = match (actual, requested) {
+        (Value::String(actual), Value::String(requested)) => actual == requested,
+        (actual, requested) => actual == requested,
+    };
+    if !matches {
+        return Err(mismatch(format!(
+            "{key}: requested {requested}, effective {actual}"
+        )));
+    }
+    Ok(serde_json::json!({"key": key, "requested": requested, "effective": actual}))
+}
+
 pub(crate) fn verify(
     project: &[u8],
     key: &str,

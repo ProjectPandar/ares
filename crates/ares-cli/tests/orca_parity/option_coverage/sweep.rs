@@ -200,6 +200,21 @@ fn execute_plan(
                 &runner::repo_root().join("tests/parity/cube10.stl"),
             )
             .and_then(|exported| {
+                // Requested-vs-effective verification for EVERY injected
+                // value: a case can only credit coverage when the exported
+                // project actually carries the probed value (width domains
+                // additionally type-check the percent/literal tag).
+                if let Some(value) = &case.value {
+                    let proof =
+                        runner::application::verify_value(&exported.project, &plan.key, value)?;
+                    let root = parity::artifacts::root_from_env().map_err(io_error)?;
+                    let file = root.join(format!("{}-{}-application.json", plan.key, case.label));
+                    parity::artifacts::overwrite(
+                        &file,
+                        &serde_json::to_vec_pretty(&proof).unwrap(),
+                    )
+                    .map_err(io_error)?;
+                }
                 if let Some(domain) = &plan.width_domain {
                     let proof = runner::application::verify(
                         &exported.project,
