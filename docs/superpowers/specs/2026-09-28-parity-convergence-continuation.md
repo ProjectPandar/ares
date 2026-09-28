@@ -79,3 +79,49 @@ commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`, oracle executable
   reclassified ORCA_ERROR/VENDOR_INCOMPLETE with recorded evidence.
 - `cargo nextest run --workspace`, `cargo fmt --check`, warning-denying
   `cargo clippy`, WASM checks green; no file over 400 LOC.
+
+## Independent-review fix loop (round 2)
+
+- `verify_value` compares canonicalized values — upstream serialization
+  writes `"2.0"` as `"2"` (`Config.hpp:777-781`), so literal JSON
+  equality falsely rejected authored probes (`bridge_flow`,
+  `filament_diameter`).
+- Wipe-before-external `next` vertex restored to upstream semantics:
+  upstream `paths` are seam-gap clipped before endpoint selection
+  (`GCode.cpp:5804 clip_end`, `5833-5840`); Ares stores the loop
+  unclipped, so `clipped_loop_end` reproduces the same vertex. KP3S 3.0
+  and ER20 still PASS byte-exact after the correction.
+- Sweep gate now fails on `ARTIFACT_ERROR` (comparison/persistence
+  failure is not an oracle-side exemption), and the divergence banner
+  reports completed oracle runs rather than the full budget.
+- `m73_profile` window check honors upstream's `+0.5f` rounding.
+- KSR semantic compare asserts M73 progress count within the documented
+  ±1 residual bound (wholesale loss/insertion now fails).
+- 400-LOC splits: `semantic/controls.rs`, `semantic/parser/motion_apply.rs`,
+  `option_coverage/domains/probes.rs`, `loop_paths/inward.rs`.
+
+## M73 residual cluster — root-cause note
+
+Instrumented upstream (`ORCA_DUMP_TIMES` per-block dump) vs ares
+`ARES_DUMP_BLOCKS` on Sermoon V1 shows byte-identical block timing
+through g1-line 146, then a segmentation difference at ids 147–149
+(the seam-adjacent travel lands 0.05mm off: orca `X91.599` vs ares
+`X91.649`) and a per-extrusion cruise difference afterward (orca
+37.55mm/s vs ares 37.9). Net total time differs ~0.38s which tips M73
+minute boundaries (R6 vs R7) and shifts emission by one line
+(Volumic/TinyBot/SK1). The seam-offset is the same class as the
+"travel/seam-point" rows; the next slice is upstream-equivalent seam
+vertex selection plus the cruise-feedrate clamp ordering in
+`GCodeProcessor.cpp:4020-4060`.
+
+Downstream causality: with `seam_position=aligned`, Ares splits the
+outer loop at a candidate ~0.05mm outward of upstream's
+(`ARES_DUMP_SEAMPT` gives 4.645 vs the emitted 91.649/4.595 pattern).
+`SeamPlacer.cpp:1500-1620` (`place_seam` + `get_closest_path_and_point`
++ `split_at` + vertex snap `scaled_epsilon`) is mirrored in
+`seam_placement.rs::place_loop` / `split.rs::split_at`, so the residual
+lives in the *candidate selection* upstream of `place_loop` — the
+aligned-seam scoring/visibility pass (`alignment::align`,
+`visibility::GlobalVisibility`) — not in the split mechanics. Resolving
+the 0.05mm vertex difference should collapse both the M73 value cluster
+and the "seam-point" rows simultaneously.
