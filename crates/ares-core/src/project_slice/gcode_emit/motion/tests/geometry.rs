@@ -98,8 +98,8 @@ async fn first_layer_second_inner_perimeter_uses_fitted_aligned_seam() {
         .filter(|(_, line)| line.starts_with("G3 Z") && line.ends_with(" F60000"))
         .nth(15)
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
-    assert_eq!(later_destination, Some("G1 X122.022 Y94.872 Z.6"));
-    assert!(lines.contains(&"G1 X122.305 Y95.287 E-.04452"));
+    assert_eq!(later_destination, Some("G1 X121.679 Y95.096 Z.6"));
+    assert!(lines.contains(&"G1 X121.368 Y95.769 E-.21167"));
 }
 
 #[tokio::test]
@@ -157,9 +157,9 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
         window
             == [
                 "; WIPE_START",
-                "G1 X145.621 Y94.523 E-.1318",
-                "G1 X145.756 Y94.862 E-.14599",
-                "G1 X145.814 Y95.162 E-.12221",
+                "G1 X145.756 Y94.862 E-.16192",
+                "G1 X145.829 Y95.236 E-.1524",
+                "G1 X145.908 Y95.435 E-.08568",
                 "; WIPE_END",
             ]
     }));
@@ -167,8 +167,8 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
         window
             == [
                 "; WIPE_START",
-                "G1 X113.669 Y89.214 E-.15121",
-                "G1 X113.163 Y88.853 E-.24879",
+                "G1 X145.766 Y96.281 E-.18651",
+                "G1 X146.101 Y96.696 E-.21349",
                 "; WIPE_END",
                 "G17",
             ]

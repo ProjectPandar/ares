@@ -60,11 +60,7 @@ pub(crate) fn artificial_distance(
     let in_range: Vec<&CurledLine> = curled
         .iter()
         .filter(|line| {
-            f64::from(point_segment_distance(
-                middle,
-                (line.x0, line.y0),
-                (line.x1, line.y1),
-            )) < dist_limit
+            point_segment_distance(middle, (line.x0, line.y0), (line.x1, line.y1)) < dist_limit
         })
         .collect();
     if in_range.is_empty() {
@@ -78,7 +74,7 @@ pub(crate) fn artificial_distance(
         .map(|line| {
             let distance_from_curled =
                 point_segment_distance(middle, (line.x0, line.y0), (line.x1, line.y1));
-            let ratio = 1.0 - distance_from_curled / dist_limit as f32;
+            let ratio = (1.0 - distance_from_curled / dist_limit) as f32;
             width * ratio * ratio * (line.curled_height / (height * 10.0))
         })
         .fold(0.0_f32, f32::max)
@@ -283,28 +279,36 @@ fn next_index(index: usize, count: usize, looped: bool) -> usize {
     }
 }
 
-pub(super) fn point_segment_distance(point: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f32 {
+/// `distance_to` on the previous-layer extrusion lines
+/// (`ExtrusionProcessor.hpp`/AABBTreeLines over `Vec2f` endpoints):
+/// f64 projection distance, clamped to the segment.
+pub(super) fn point_segment_distance(point: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
     let dx = b.0 - a.0;
     let dy = b.1 - a.1;
     let length_squared = dx * dx + dy * dy;
     if length_squared <= 0.0 {
-        return (point.0 - a.0).hypot(point.1 - a.1) as f32;
+        return (point.0 - a.0).hypot(point.1 - a.1);
     }
     let t = (((point.0 - a.0) * dx + (point.1 - a.1) * dy) / length_squared).clamp(0.0, 1.0);
-    (point.0 - (a.0 + t * dx)).hypot(point.1 - (a.1 + t * dy)) as f32
+    (point.0 - (a.0 + t * dx)).hypot(point.1 - (a.1 + t * dy))
 }
 
 pub(super) fn signed_distance(
     tree: &LineDistanceTree<'_>,
     scale: CoordinateScale,
     point: (f64, f64),
-) -> f32 {
+) -> f64 {
+    // `distance_from_lines<true>` on the previous-layer `lslices`
+    // boundary (`SupportSpotsGenerator.cpp:153,178-180`): f64 unscaled
+    // distance, negative inside. Kept in f64 — the `+ 0.5 * flow_width`
+    // boundary check upstream (`0.5f * flow_width` cast to double)
+    // decides sign on sub-ULP values for axis-aligned walls.
     let nearest = tree
-        .nearest_f32([point.0 as f32, point.1 as f32], scale)
+        .nearest_mm([point.0, point.1])
         .expect("a nonempty boundary has a nearest line");
     let scaled = Point::new(
         (point.0 / scale.factor()) as i64,
         (point.1 / scale.factor()) as i64,
     );
-    tree.outside(scaled) as f32 * nearest.squared_distance.sqrt()
+    tree.outside(scaled) as f64 * nearest.squared_distance.sqrt()
 }

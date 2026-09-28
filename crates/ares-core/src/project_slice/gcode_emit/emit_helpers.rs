@@ -49,10 +49,15 @@ pub(super) fn layer_boundary_slices_rc(
     cache
         .entry((source_object_index, layer_index))
         .or_insert_with(|| {
-            let mut all: Vec<ExPolygon> = Vec::new();
-            for slices in traversal.objects[object_index].occurrence_slices(layer_index) {
-                all.extend(slices.iter().cloned());
-            }
+            // `Layer::lslices` carries the xy-compensated surfaces
+            // (`PrintObjectSlice.cpp` applies `xy_contour_compensation`
+            // upstream); the volume-level `occurrence_slices` are
+            // uncompensated and would inflate the avoid-crossing
+            // boundary by the compensation amount.
+            let all = traversal.objects[object_index]
+                .slices(layer_index)
+                .unwrap_or(&[])
+                .to_vec();
             std::rc::Rc::from(crate::geometry::union_expolygons(&all, &[]).unwrap_or_default())
         })
         .clone()

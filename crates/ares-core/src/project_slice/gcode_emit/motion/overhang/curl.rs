@@ -92,17 +92,29 @@ impl CurlTracker {
         for index in 0..points.len() {
             let previous = index.saturating_sub(1);
             let (a, b) = (points[previous], points[index]);
-            let middle = ((a.0 + b.0) * 0.5, (a.1 + b.1) * 0.5);
+            // Upstream stores `ExtrusionLine.a/b` as `Vec2f` — both
+            // endpoints and the midpoint are rounded to f32
+            // (`SupportSpotsGenerator.cpp:170-174`).
+            let a = (a.0 as f32 as f64, a.1 as f32 as f64);
+            let b = (b.0 as f32 as f64, b.1 as f32 as f64);
+            let middle = (
+                f64::from((a.0 as f32 + b.0 as f32) * 0.5),
+                f64::from((a.1 as f32 + b.1 as f32) * 0.5),
+            );
             let (distance, bottom_height) = self.nearest_previous(middle);
-            let sign = boundary.map_or(1.0, |tree| {
-                if signed_distance(tree, scale, middle) + 0.5 * width < 0.0 {
+            let sign = boundary.map_or(1.0_f64, |tree| {
+                let signed = signed_distance(tree, scale, middle);
+                if signed + f64::from(0.5_f32 * width) < 0.0 {
                     -1.0
                 } else {
                     1.0
                 }
             });
+            // `estimate_curled_up_height` takes `float distance` —
+            // the f64 signed distance is narrowed to f32 at the call
+            // boundary (`SupportSpotsGenerator.cpp:181-183`).
             let curled = estimate_curled_up_height(
-                distance * sign,
+                (distance * sign) as f32,
                 0.5 * (curvature[previous] + curvature[index]),
                 height,
                 width,
@@ -130,8 +142,8 @@ impl CurlTracker {
     /// Unsigned distance to the nearest previous-layer external line and
     /// that line's chained curl height
     /// (`prev_layer_lines.distance_from_lines_extra<false>`).
-    fn nearest_previous(&self, point: (f64, f64)) -> (f32, f32) {
-        let mut best = (f32::MAX, 0.0_f32);
+    fn nearest_previous(&self, point: (f64, f64)) -> (f64, f32) {
+        let mut best = (f64::MAX, 0.0_f32);
         for line in &self.previous {
             let distance = point_segment_distance(point, (line.x0, line.y0), (line.x1, line.y1));
             if distance < best.0 {

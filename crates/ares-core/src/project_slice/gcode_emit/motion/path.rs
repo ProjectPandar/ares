@@ -110,12 +110,14 @@ pub(super) fn emit(
     // role ratios pre-baked into `PathProperties::mm3_per_mm`), and the cap
     // only applies while `filament_max_volumetric_speed > 0`
     // (`GCode.cpp:6615-6617`).
+    let slope_flow_ratio = properties.slope.map_or(1.0, |slope| slope.flow_ratio);
     let original_speed = if state.options.max_volumetric_speed > 0.0 {
         configured_speed.min(
             state.options.max_volumetric_speed
                 / (properties.mm3_per_mm
                     * state.options.print_flow_ratio
-                    * state.options.filament_flow_ratio),
+                    * state.options.filament_flow_ratio
+                    * slope_flow_ratio),
         )
     } else {
         configured_speed

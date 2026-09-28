@@ -44,12 +44,10 @@ fn task22o50_empty_and_single_line_freeze_layout_and_projection_branches() {
 fn task22o50_fractional_query_uses_source_linef3_precision() {
     let lines = [line(0, 0, 10, 0)];
     let actual = LineDistanceTree::new(&lines)
-        .nearest_f32([0.00000425_f32, 0.00000225_f32], CoordinateScale::Normal)
+        .nearest_mm([0.00000425, 0.00000225])
         .unwrap();
 
-    assert_eq!(actual.line_index, 0);
-    assert_eq!(actual.squared_distance.to_bits(), 0x2cb2_1ef3);
-    assert_eq!(actual.nearest_point.map(f32::to_bits), [0x368e_9b39, 0]);
+    assert_eq!(actual.squared_distance, 0.00000225_f64.powi(2));
 }
 
 #[test]

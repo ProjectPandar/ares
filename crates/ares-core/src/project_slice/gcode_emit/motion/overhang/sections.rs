@@ -167,15 +167,20 @@ impl BoundaryContext<'_> {
     }
 
     fn signed_distance(&self, point: (f64, f64)) -> f32 {
+        // `distance_from_lines_extra<true>` over `LinesDistancer<Linef3>`
+        // (`ExtrusionProcessor.hpp:92-101,366`): the previous-layer
+        // boundary lines are unscaled f64 — the distance is measured in
+        // f64 millimetres, then signed by the inside/outside winding
+        // (negative inside).
         let nearest = self
             .tree
-            .nearest_f32([point.0 as f32, point.1 as f32], self.scale)
+            .nearest_mm([point.0, point.1])
             .expect("a nonempty boundary has a nearest line");
         let scaled = Point::new(
             scale_trunc(point.0, self.scale),
             scale_trunc(point.1, self.scale),
         );
-        self.tree.outside(scaled) as f32 * nearest.squared_distance.sqrt()
+        (self.tree.outside(scaled) as f64 * nearest.squared_distance.sqrt()) as f32
     }
 
     fn scaled(&self, point: ExtendedPoint) -> Point {
