@@ -122,7 +122,18 @@ fn append_wipe_before_external(
     }
     let current = first.polyline.points[0];
     let previous = first.polyline.points[1];
-    let next = clipped_loop_end(paths, state.options.seam_gap, geometry);
+    // `GCode.cpp:5833-5840`: the reference "next" vertex is the LAST
+    // point of the last path — the loop's un-clipped end — falling back
+    // to the second-to-last point only when seam_gap clipping made the
+    // last point coincide with the start ("can happen if seam_gap is
+    // null"). It is NOT the clipped end; using `clipped_loop_end` here
+    // shifted the rotation arm by the seam_gap distance and moved the
+    // de-retraction point off upstream's location (KP3S outer-wall seam
+    // hop `G1 X94.35 Y94.204`).
+    let mut next = *last.polyline.points.last().unwrap();
+    if next.x == current.x && next.y == current.y && last.polyline.points.len() >= 2 {
+        next = last.polyline.points[last.polyline.points.len() - 2];
+    }
     let mut a = next;
     let mut b = previous;
     let is_hole = loop_role == ExtrusionLoopRole::Hole;
