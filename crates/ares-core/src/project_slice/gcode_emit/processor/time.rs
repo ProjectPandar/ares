@@ -22,5 +22,7 @@ pub(super) fn duration(seconds: f64) -> String {
 }
 
 pub(super) fn minutes(seconds: f64) -> u64 {
-    (((seconds as f32) + 0.5) / 60.0) as u64
+    // Upstream `time_in_minutes` (`GCodeProcessor.cpp:1013-1016`) performs the
+    // +0.5 offset and the /60 division in f32: int((t + 0.5f) / 60.0f).
+    ((seconds as f32 + 0.5_f32) / 60.0_f32) as u64
 }
