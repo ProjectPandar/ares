@@ -74,6 +74,28 @@ fn value_equivalent(actual: &Value, requested: &Value) -> bool {
             canonical_number_text(actual) == canonical_number_text(requested)
         }
         (Value::Array(actual), Value::Array(requested)) => {
+            if actual.len() != requested.len()
+                && requested.len() == 1
+                && requested[0]
+                    .as_str()
+                    .is_some_and(|joined| joined.contains(','))
+            {
+                // A probe may send one comma-joined element (e.g. the
+                // `XxY,XxY,...` POLYGON probe) while the canonical export
+                // emits one element per value — flatten and retry before
+                // declaring a mismatch.
+                let flattened: Vec<Value> = requested[0]
+                    .as_str()
+                    .unwrap()
+                    .split(',')
+                    .map(|part| Value::String(part.to_owned()))
+                    .collect();
+                return actual.len() == flattened.len()
+                    && actual
+                        .iter()
+                        .zip(flattened.iter())
+                        .all(|(actual, requested)| value_equivalent(actual, requested));
+            }
             actual.len() == requested.len()
                 && actual
                     .iter()
@@ -85,17 +107,34 @@ fn value_equivalent(actual: &Value, requested: &Value) -> bool {
 }
 
 /// Normalize a numeric literal the way upstream serialization does:
-/// `"2.0"` → `"2"`. Non-numeric strings (`"150%"`, `"0.4mm"`) compare
-/// byte-for-byte.
+/// `"2.0"` → `"2"`. Trailing zeroes are stripped only inside the
+/// fractional part — `"10"` must not collapse to `"1"`. A trailing
+/// percent sign is preserved while its numeric prefix is normalized
+/// (`"54.717499%"` vs serialized `"54.7175%"`); other suffixed strings
+/// (`"0.4mm"`) compare byte-for-byte.
 fn canonical_number_text(text: &str) -> String {
-    if text.parse::<f64>().is_err() {
+    let (numeric, percent) = match text.strip_suffix('%') {
+        Some(numeric) => (numeric, true),
+        None => (text, false),
+    };
+    if numeric.parse::<f64>().is_err() {
         return text.to_owned();
     }
-    let trimmed = text.trim_end_matches('0').trim_end_matches('.');
-    if trimmed.is_empty() {
-        "0".to_owned()
+    let canonical = match numeric.split_once('.') {
+        Some((integer, fraction)) => {
+            let fraction = fraction.trim_end_matches('0');
+            if fraction.is_empty() {
+                integer.to_owned()
+            } else {
+                format!("{integer}.{fraction}")
+            }
+        }
+        None => numeric.to_owned(),
+    };
+    if percent {
+        format!("{canonical}%")
     } else {
-        trimmed.to_owned()
+        canonical
     }
 }
 

@@ -1,7 +1,7 @@
 use regex::Regex;
 use serde_json::Value;
 
-use super::{OptionCase, OptionPlan};
+use super::OptionCase;
 
 // `coFloatOrPercent` line-width options share the single-nozzle context
 // bound modeled by `widths::generate` (`Print::validate` caps the feasible
@@ -22,13 +22,33 @@ pub(super) fn is_width_option(key: &str) -> bool {
     )
 }
 
+/// Upstream generates `filament_*` extruder-override definitions via
+/// `add_nullable(opt_key, base.type)` (`PrintConfig.cpp:7288-7302`),
+/// copying min/max/enum metadata from the base key — there is no
+/// literal `add("filament_retraction_distances_when_cut"`. Resolve the
+/// base key for such generated options so their bounds come from the
+/// real definition instead of unrelated neighbouring source.
 pub(super) fn definition_block(lines: &[&str], key: &str, reported_line: usize) -> String {
     let needle = format!("add(\"{key}\"");
     let lower = reported_line.saturating_sub(20);
     let upper = (reported_line + 20).min(lines.len());
-    let start = (lower..upper)
-        .find(|index| lines[*index].contains(&needle))
-        .unwrap_or_else(|| reported_line.saturating_sub(1));
+    let mut start = (lower..upper).find(|index| lines[*index].contains(&needle));
+    if start.is_none() {
+        // Generated filament_* overrides have no literal `add("filament_..."`
+        // definition — the inventory points at the key list, not a `def`.
+        // Fall back to the base key's `add("base"` definition anywhere in
+        // the file (`PrintConfig.cpp:7288-7302` copies its min/max/enums).
+        if let Some(base) = key
+            .strip_prefix("filament_")
+            .filter(|base| !base.is_empty())
+        {
+            let base_needle = format!("add(\"{base}\"");
+            if let Some(index) = lines.iter().position(|line| line.contains(&base_needle)) {
+                start = Some(index);
+            }
+        }
+    }
+    let start = start.unwrap_or_else(|| reported_line.saturating_sub(1));
     let end = (start + 1..lines.len())
         .find(|index| lines[*index].contains("this->add(\"") || lines[*index].contains("add(\""))
         .unwrap_or(lines.len());
@@ -232,7 +252,11 @@ pub(super) fn seeded_interior(key: &str, minimum: f64, maximum: f64, integer: bo
     if integer {
         value.round().clamp(minimum + 1.0, maximum - 1.0)
     } else {
-        value
+        // Quantize to the milligrid upstream `opt_serialize` writes (3
+        // decimals): raw `ratio`-scaled floats carry binary noise
+        // (`590.6709999999999`) that serializes differently (`590.671`),
+        // making the application check report a false mismatch.
+        (value * 1000.0).round() / 1000.0
     }
 }
 

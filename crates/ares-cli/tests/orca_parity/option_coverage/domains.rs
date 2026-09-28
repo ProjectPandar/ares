@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use regex::Regex;
 use serde_json::Value;
 
 #[path = "widths.rs"]
@@ -26,6 +25,19 @@ pub(super) struct OptionPlan {
 pub(super) struct OptionCase {
     pub(super) label: String,
     pub(super) value: Option<Value>,
+}
+
+/// Offline callers return `None` (and skip) when the vendored upstream
+/// source tree is absent — CI jobs do not checkout `OrcaSlicer/`.
+pub(super) fn try_load(repo: &Path) -> Option<Vec<OptionPlan>> {
+    if !repo
+        .join("OrcaSlicer/src/libslic3r/PrintConfig.cpp")
+        .exists()
+    {
+        eprintln!("skipping: OrcaSlicer source tree not vendored at {repo:?}/OrcaSlicer");
+        return None;
+    }
+    Some(load(repo))
 }
 
 pub(super) fn load(repo: &Path) -> Vec<OptionPlan> {

@@ -3,6 +3,20 @@
 # `extruder` is consumed by `normalize_fdm_1` (`PrintConfig.cpp:8619`)
 # and propagated into covered `*_filament_id` fields — its exclusion is
 # intentional, not a coverage hole.
+#
+# G-code-inert exclusions (defined in PrintConfig but with no libslic3r
+# G-code consumer — verified 2026-09-28 against upstream 2.4.2 source):
+# - `first_layer_sequence_choice` / `other_layers_sequence_choice`: the
+#   coEnum only drives GUI filament-sequence UI (`src/slic3r/GUI/Tab.cpp`,
+#   `OptionsGroup.cpp`); slicing reads `filament_sequence` (a covered
+#   coStrings fixture key), not these choices.
+# - `enable_filament_dynamic_map` / `has_filament_switcher`: plater-level
+#   machine capabilities serialized only as 3MF plater metadata
+#   (`Format/bbs_3mf.cpp:4554-4564, 8219-8220`) — no slice-time consumer.
+# - `tree_support_with_infill`: defined (PrintConfig.cpp:6550) but the
+#   tree-support engine derives `with_infill` from `support_base_pattern`
+#   (`Support/TreeSupport.cpp:653`) — the option value is never read
+#   upstream; it is a GUI round-trip remnant.
 absolute_correction
 adaptive_layer_height
 align_xy

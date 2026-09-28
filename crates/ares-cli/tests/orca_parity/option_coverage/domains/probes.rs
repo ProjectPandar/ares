@@ -98,13 +98,23 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         // Vitrification temperature (coInts, default 100).
         "temperature_vitrification" => &[("probe", "110")],
         // Hot-plate bed temperature (coInts, min 0 / max 300, default 45).
-        "hot_plate_temp_initial_layer" => &[("probe-min", "0"), ("probe-max", "300")],
+        "hot_plate_temp_initial_layer" => &[
+            ("probe-min", "0"),
+            ("probe-seeded", "55"),
+            ("probe-max", "300"),
+        ],
         // Filament-printable bitmask (default 3: printable everywhere).
         "filament_printable" => &[("probe", "1")],
         // Long-retraction-when-cut toggle (coInt 0/1).
         "enable_long_retraction_when_cut" => &[("probe", "1")],
-        // Skirt layer count (max 10000; interior probe — no schema min).
-        "skirt_height" => &[("probe", "2")],
+        // Skirt layer count (schema max 10000). A 10000-layer skirt is
+        // oracle-infeasible (hours), so the effective-fixture max probes
+        // a high-but-sliceable bound; min 1 + interior also covered.
+        "skirt_height" => &[
+            ("probe-min", "1"),
+            ("probe-seeded", "2"),
+            ("probe-max", "20"),
+        ],
 
         // Polygon point lists (`XxY` pairs) — a legal small rectangle.
         // `wrapping_exclude_area` rejected by the oracle (orca rejects the

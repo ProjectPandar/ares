@@ -69,6 +69,12 @@ pub(super) struct CaseInputs<'a> {
 }
 
 impl OrcaRunner {
+    /// Path to the executable invoked for reference production — used by
+    /// the sweep preflight to verify the wrapper actually runs.
+    pub(super) fn bin(&self) -> &PathBuf {
+        &self.bin
+    }
+
     /// Only absent configuration returns None; initialization errors must fail callers.
     pub(super) fn from_env() -> Result<Option<Self>, StageError> {
         let Some(bin) = std::env::var_os("ARES_ORCA_BIN")

@@ -18,6 +18,20 @@ pub(super) fn run_printer_sweep() {
     let runner = OrcaRunner::from_env()
         .unwrap_or_else(|e| panic!("{e}"))
         .expect("explicit sweep requires an Orca executable");
+    // Preflight: the oracle wrapper must actually execute — a missing
+    // `ORCA_APPDIR` exits 127 before producing any reference, and the
+    // sweep would otherwise record only `ORCA_ERROR` outcomes and pass
+    // without a single comparison.
+    let preflight = std::process::Command::new(runner.bin())
+        .arg("--help")
+        .output()
+        .expect("spawn Orca oracle preflight");
+    assert!(
+        preflight.status.success(),
+        "Orca oracle preflight failed (status {:?}) — set ORCA_APPDIR to the extracted official AppImage: {}",
+        preflight.status.code(),
+        String::from_utf8_lossy(&preflight.stderr).trim()
+    );
     let root = profiles_root();
     let model = cube_model();
     let vendors = parity::vendors(&root);
@@ -93,6 +107,15 @@ pub(super) fn run_printer_sweep() {
             )
         })
         .count();
+    let compared = outcomes
+        .iter()
+        .filter(|outcome| !matches!(outcome.status, "ORCA_ERROR" | "VENDOR_INCOMPLETE"))
+        .count();
+    assert!(
+        compared > 0,
+        "printer sweep produced no oracle comparisons — all {} outcomes were oracle-side exemptions",
+        outcomes.len()
+    );
     assert!(
         failures == 0,
         "{failures}/{} printers diverge; see tests/parity/printer-smoke-summary.md",

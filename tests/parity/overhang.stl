@@ -1,0 +1,170 @@
+solid overhang
+ facet normal 0 0 -1
+  outer loop
+   vertex -5 -5 0
+   vertex -5 5 0
+   vertex 5 5 0
+  endloop
+ endfacet
+ facet normal 0 0 -1
+  outer loop
+   vertex -5 -5 0
+   vertex 5 5 0
+   vertex 5 -5 0
+  endloop
+ endfacet
+ facet normal 0.7071067811865475 0 0.7071067811865475
+  outer loop
+   vertex -5 -5 10
+   vertex 5 5 0
+   vertex -5 5 10
+  endloop
+ endfacet
+ facet normal 0 0.7071067811865475 0.7071067811865475
+  outer loop
+   vertex -5 -5 10
+   vertex 5 -5 10
+   vertex 5 5 0
+  endloop
+ endfacet
+ facet normal 0 -1 0
+  outer loop
+   vertex -5 -5 0
+   vertex 5 -5 0
+   vertex 5 -5 10
+  endloop
+ endfacet
+ facet normal 0 -1 0
+  outer loop
+   vertex -5 -5 0
+   vertex 5 -5 10
+   vertex -5 -5 10
+  endloop
+ endfacet
+ facet normal 0 1 0
+  outer loop
+   vertex -5 5 0
+   vertex -5 5 10
+   vertex 5 5 10
+  endloop
+ endfacet
+ facet normal 0 1 0
+  outer loop
+   vertex -5 5 0
+   vertex 5 5 10
+   vertex 5 5 0
+  endloop
+ endfacet
+ facet normal -1 0 0
+  outer loop
+   vertex -5 -5 0
+   vertex -5 -5 10
+   vertex -5 5 10
+  endloop
+ endfacet
+ facet normal -1 0 0
+  outer loop
+   vertex -5 -5 0
+   vertex -5 5 10
+   vertex -5 5 0
+  endloop
+ endfacet
+ facet normal 1 0 0
+  outer loop
+   vertex 5 -5 0
+   vertex 5 5 0
+   vertex 5 5 10
+  endloop
+ endfacet
+ facet normal 1 0 0
+  outer loop
+   vertex 5 -5 0
+   vertex 5 5 10
+   vertex 5 -5 10
+  endloop
+ endfacet
+ facet normal 0 0 -1
+  outer loop
+   vertex -15 -5 10
+   vertex -15 5 10
+   vertex 15 5 10
+  endloop
+ endfacet
+ facet normal 0 0 -1
+  outer loop
+   vertex -15 -5 10
+   vertex 15 5 10
+   vertex 15 -5 10
+  endloop
+ endfacet
+ facet normal 0.16439898730535732 0 0.9863939238321439
+  outer loop
+   vertex -15 -5 15
+   vertex 15 5 10
+   vertex -15 5 15
+  endloop
+ endfacet
+ facet normal 0 0.4472135954999579 0.8944271909999159
+  outer loop
+   vertex -15 -5 15
+   vertex 15 -5 15
+   vertex 15 5 10
+  endloop
+ endfacet
+ facet normal 0 -1 0
+  outer loop
+   vertex -15 -5 10
+   vertex 15 -5 10
+   vertex 15 -5 15
+  endloop
+ endfacet
+ facet normal 0 -1 0
+  outer loop
+   vertex -15 -5 10
+   vertex 15 -5 15
+   vertex -15 -5 15
+  endloop
+ endfacet
+ facet normal 0 1 0
+  outer loop
+   vertex -15 5 10
+   vertex -15 5 15
+   vertex 15 5 15
+  endloop
+ endfacet
+ facet normal 0 1 0
+  outer loop
+   vertex -15 5 10
+   vertex 15 5 15
+   vertex 15 5 10
+  endloop
+ endfacet
+ facet normal -1 0 0
+  outer loop
+   vertex -15 -5 10
+   vertex -15 -5 15
+   vertex -15 5 15
+  endloop
+ endfacet
+ facet normal -1 0 0
+  outer loop
+   vertex -15 -5 10
+   vertex -15 5 15
+   vertex -15 5 10
+  endloop
+ endfacet
+ facet normal 1 0 0
+  outer loop
+   vertex 15 -5 10
+   vertex 15 5 10
+   vertex 15 5 15
+  endloop
+ endfacet
+ facet normal 1 0 0
+  outer loop
+   vertex 15 -5 10
+   vertex 15 5 15
+   vertex 15 -5 15
+  endloop
+ endfacet
+endsolid overhang

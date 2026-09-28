@@ -35,8 +35,22 @@ fn inject_case(
     filaments: &mut [Map<String, Value>],
 ) {
     // Value-compatibility co-injections that must edit BOTH presets
-    // run before the scope match moves `machine`/`process`.
+    // run before the scope match borrows `machine`/`process`.
     normalize_case_dependencies(plan, case, machine, process, filaments);
+    // Options that only take effect when another option is enabled must
+    // co-inject that enabler, otherwise the case exercises a feature the
+    // slicer never activates (e.g. `ironing_pattern` under `ironing_type =
+    // "no ironing"`). (option -> (enabler, activating value))
+    for (enabler, value) in activating_overrides(&plan.key) {
+        // Enabler scope: `input_shaping_emit` is printer-scoped
+        // (machine_envelope_config); every other enabler is process-scoped.
+        let enabler_target = if *enabler == "input_shaping_emit" {
+            &mut *machine
+        } else {
+            &mut *process
+        };
+        enabler_target.insert((*enabler).to_owned(), Value::String((*value).to_owned()));
+    }
     let target = match plan.raw_scope.as_str() {
         "printer" => machine,
         "process" => process,
@@ -47,13 +61,6 @@ fn inject_case(
     };
     if let Some(value) = &case.value {
         target.insert(plan.key.clone(), value.clone());
-    }
-    // Options that only take effect when another option is enabled must
-    // co-inject that enabler, otherwise the case exercises a feature the
-    // slicer never activates (e.g. `ironing_pattern` under `ironing_type =
-    // "no ironing"`). (option -> (enabler, activating value))
-    for (enabler, value) in activating_overrides(&plan.key) {
-        process.insert((*enabler).to_owned(), Value::String((*value).to_owned()));
     }
     // Upstream validation rejects some option VALUES in combination with
     // an incompatible baseline sibling — the value itself is legal, the
@@ -109,6 +116,16 @@ fn normalize_case_dependencies(
 
 /// Enabler (key, activating value) pairs for options gated behind a disabled
 /// feature in the baseline process preset.
+/// Support-structure options need an overhanging model — on a solid cube
+/// `enable_support = 1` produces no support layers and the whole family
+/// stays inert. `tests/parity/overhang.stl` (T-shape, 10mm cantilevers)
+/// produces ordinary + interface support geometry under the same preset.
+/// Raft options stay on the cube: `raft_layers > 0` alone generates the
+/// raft regardless of overhang geometry (`Print.hpp:430`).
+pub(crate) fn support_geometry_option(key: &str) -> bool {
+    key.starts_with("support_") || key.starts_with("tree_support_")
+}
+
 fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
     match key {
         // Ironing sub-options only run when `ironing_type != "no ironing"`.
@@ -132,6 +149,85 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
             ("fuzzy_skin", "external"),
             ("fuzzy_skin_noise_type", "perlin"),
         ],
+        // Input-shaping params only emit `M593`/`SET_INPUT_SHAPER` when
+        // `input_shaping_emit` is on (`GCode.cpp:3991`); the marlin
+        // baseline is already `gcfMarlinFirmware`, so no flavor override.
+        "input_shaping_damp_x"
+        | "input_shaping_damp_y"
+        | "input_shaping_freq_x"
+        | "input_shaping_freq_y"
+        | "input_shaping_type" => &[("input_shaping_emit", "1")],
+        // Support structure sub-options only run when supports generate
+        // (`support_layers`/`raft`/`tree_support_*` all gate on
+        // `enable_support`). `support_type`/`support_style` select the
+        // generator and stay active on the cube only when supports are
+        // enabled AND the model overhangs — the sweep uses
+        // `tests/parity/overhang.stl` for these keys (see
+        // `support_geometry_option`).
+        "support_angle"
+        | "support_air_filtration"
+        | "support_base_pattern"
+        | "support_base_pattern_spacing"
+        | "support_bottom_interface_spacing"
+        | "support_bottom_z_distance"
+        | "support_chamber_temp_control"
+        | "support_critical_regions_only"
+        | "support_expansion"
+        | "support_filament"
+        | "support_flow_ratio"
+        | "support_interface_bottom_layers"
+        | "support_interface_filament"
+        | "support_interface_flow_ratio"
+        | "support_interface_loop_pattern"
+        | "support_interface_not_for_body"
+        | "support_interface_pattern"
+        | "support_interface_spacing"
+        | "support_interface_speed"
+        | "support_interface_top_layers"
+        | "support_ironing"
+        | "support_ironing_flow"
+        | "support_ironing_pattern"
+        | "support_ironing_spacing"
+        | "support_line_width"
+        | "support_material_angle"
+        | "support_material_enforce_layers"
+        | "support_material_extruder"
+        | "support_material_interface_extruder"
+        | "support_material_interface_fan_speed"
+        | "support_multi_bed_types"
+        | "support_object_first_layer_gap"
+        | "support_object_skip_flush"
+        | "support_object_xy_distance"
+        | "support_on_build_plate_only"
+        | "support_parallel_printheads"
+        | "support_remove_small_overhang"
+        | "support_speed"
+        | "support_style"
+        | "support_threshold_angle"
+        | "support_threshold_overlap"
+        | "support_top_z_distance"
+        | "support_type" => &[("enable_support", "1")],
+        // Raft params gate on `raft_layers > 0` (`Print.hpp:430`), not
+        // `enable_support`; a raft does not need support enabled.
+        "raft_contact_distance"
+        | "raft_expansion"
+        | "raft_first_layer_density"
+        | "raft_first_layer_expansion" => &[("raft_layers", "2")],
+        // Tree-support params only apply when the tree generator is
+        // selected (`support_type` default is `normal(auto)`).
+        "tree_support_angle_slow"
+        | "tree_support_auto_brim"
+        | "tree_support_branch_angle"
+        | "tree_support_branch_angle_organic"
+        | "tree_support_branch_diameter"
+        | "tree_support_branch_diameter_angle"
+        | "tree_support_branch_diameter_organic"
+        | "tree_support_branch_distance"
+        | "tree_support_branch_distance_organic"
+        | "tree_support_brim_width"
+        | "tree_support_tip_diameter"
+        | "tree_support_top_rate"
+        | "tree_support_wall_count" => &[("enable_support", "1"), ("support_type", "tree(auto)")],
         // Gap-fill params only run when gap filling is enabled.
         "gap_fill_target" => &[("gap_infill_type", "everywhere")],
         // Wrapping templates and their exclude area only emit when

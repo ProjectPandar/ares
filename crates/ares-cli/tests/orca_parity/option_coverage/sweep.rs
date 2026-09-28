@@ -197,7 +197,13 @@ fn execute_plan(
                     filaments: &case_filaments,
                 },
                 &overrides,
-                &runner::repo_root().join("tests/parity/cube10.stl"),
+                &runner::repo_root().join(if support_geometry_option(&plan.key) {
+                    // Support-family options are inert on a solid cube —
+                    // the T-shape produces real support + interface layers.
+                    "tests/parity/overhang.stl"
+                } else {
+                    "tests/parity/cube10.stl"
+                }),
             )
             .and_then(|exported| {
                 // Requested-vs-effective verification for EVERY injected
