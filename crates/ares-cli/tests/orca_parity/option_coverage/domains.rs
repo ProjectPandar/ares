@@ -277,6 +277,10 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         | "change_extrusion_role_gcode"
         | "process_change_extrusion_role_gcode"
         | "filament_change_extrusion_role_gcode"
+        | "filament_start_gcode"
+        | "filament_end_gcode"
+        | "machine_start_gcode"
+        | "machine_end_gcode"
         | "template_custom_gcode"
         | "wrapping_detection_gcode"
         | "file_start_gcode" => TEMPLATE_LITERAL,
@@ -287,6 +291,21 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         "filament_notes"
         | "printer_notes"
         | "model_notes"
+        | "notes"
+        | "print_settings_id"
+        | "filament_settings_id"
+        | "printer_model"
+        | "printer_variant"
+        | "printer_agent"
+        | "flashforge_serial_number"
+        | "filament_type"
+        | "filament_vendor"
+        | "filament_ids"
+        | "filament_extruder_variant"
+        | "printer_extruder_variant"
+        | "print_extruder_variant"
+        | "extruder_variant_list"
+        | "extruder_ams_count"
         | "filament_colour"
         | "default_filament_colour"
         | "extruder_colour"
@@ -297,6 +316,35 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         | "default_filament_profile"
         | "bed_custom_texture"
         | "bed_custom_model" => NOTE,
+        // An empty string is the legal "feature off" value for these
+        // model/post-process/compatibility fields — it exercises
+        // parse+serialize on both sides without external scripts or models.
+        "adaptive_pressure_advance_model"
+        | "small_area_infill_flow_compensation_model"
+        | "volumetric_speed_coefficients"
+        | "parallel_printheads_bed_exclude_areas"
+        | "upward_compatible_machine" => &[("probe-empty", "")],
+        // Full-bed rectangle: `printable_area` must still contain the placed
+        // model, so probe the whole Ender-3 envelope rather than a sub-rect.
+        "printable_area" => &[("probe-bed", "0x0,220x0,220x220,0x220")],
+        // `extruder_printable_area` (coPointsGroups): one polygon per
+        // extruder; the single-extruder profile takes one bed-sized group.
+        "extruder_printable_area" => &[("probe-bed", "0x0,220x0,220x220,0x220")],
+        // Infill rotation templates take a comma list of degrees.
+        "solid_infill_rotate_template" | "sparse_infill_rotate_template" => &[("probe", "30,60")],
+        // Thumbnail format `WxH` — one legal additional size.
+        "thumbnails" => &[("probe", "300x300")],
+        // Vitrification temperature (coInts, default 100).
+        "temperature_vitrification" => &[("probe", "110")],
+        // Hot-plate bed temperature (coInts, min 0 / max 300, default 45).
+        "hot_plate_temp_initial_layer" => &[("probe-min", "0"), ("probe-max", "300")],
+        // Filament-printable bitmask (default 3: printable everywhere).
+        "filament_printable" => &[("probe", "1")],
+        // Long-retraction-when-cut toggle (coInt 0/1).
+        "enable_long_retraction_when_cut" => &[("probe", "1")],
+        // Skirt layer count (max 10000; interior probe — no schema min).
+        "skirt_height" => &[("probe", "2")],
+
         // Polygon point lists (`XxY` pairs) — a legal small rectangle.
         // `wrapping_exclude_area` rejected by the oracle (orca rejects the
         // rect probe upstream), so it keeps its unexercised baseline.

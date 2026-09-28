@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-550/650 bounded domains complete; 1581 generated, 1558 strictly compared, 22 rejected. Not all-printer/default coverage.
+608/650 bounded domains complete; 1592 generated, 1589 strictly compared, 3 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -12,8 +12,8 @@
 | PASS | activate_chamber_temp_control | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6599 |  |
 | PASS | adaptive_bed_mesh_margin | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2283 |  |
 | PASS | adaptive_pressure_advance | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2353 |  |
-| INCOMPLETE | adaptive_pressure_advance_bridges | coFloats | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:2401 | required legal cases not all compared; probe-seeded: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-Wh6Axs") |
-| INCOMPLETE | adaptive_pressure_advance_model | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2369 | required legal cases not all compared;  |
+| INCOMPLETE | adaptive_pressure_advance_bridges | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2401 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| PASS | adaptive_pressure_advance_model | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2369 |  |
 | PASS | adaptive_pressure_advance_overhangs | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2394 |  |
 | PASS | additional_cooling_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4780 |  |
 | PASS | additional_fan_full_speed_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4799 |  |
@@ -22,15 +22,15 @@
 | PASS | auxiliary_fan | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3824 |  |
 | PASS | bbl_calib_mark_logo | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5478 |  |
 | PASS | bbl_use_printhost | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:814 |  |
-| INCOMPLETE | bed_custom_model | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:733 | required legal cases not all compared;  |
-| INCOMPLETE | bed_custom_texture | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:727 | required legal cases not all compared;  |
-| INCOMPLETE | bed_exclude_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:719 | required legal cases not all compared;  |
-| INCOMPLETE | bed_mesh_max | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2262 | required legal cases not all compared;  |
-| INCOMPLETE | bed_mesh_min | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2250 | required legal cases not all compared;  |
-| INCOMPLETE | bed_mesh_probe_distance | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2274 | required legal cases not all compared;  |
+| PASS | bed_custom_model | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:733 |  |
+| PASS | bed_custom_texture | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:727 |  |
+| PASS | bed_exclude_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:719 |  |
+| PASS | bed_mesh_max | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2262 |  |
+| PASS | bed_mesh_min | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2250 |  |
+| PASS | bed_mesh_probe_distance | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2274 |  |
 | PASS | bed_temperature_formula | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2591 |  |
-| INCOMPLETE | before_layer_change_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1147 | required legal cases not all compared;  |
-| INCOMPLETE | best_object_pos | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3818 | required legal cases not all compared;  |
+| PASS | before_layer_change_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1147 |  |
+| PASS | best_object_pos | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3818 |  |
 | PASS | bottom_shell_layers | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1156 |  |
 | PASS | bottom_shell_thickness | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1167 |  |
 | PASS | bottom_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1377 |  |
@@ -40,7 +40,7 @@
 | PASS | bridge_acceleration | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3224 |  |
 | PASS | bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1250 |  |
 | PASS | bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1292 |  |
-| INCOMPLETE | bridge_flow | coFloat | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:1327 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-nEbnxX") |
+| INCOMPLETE | bridge_flow | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1327 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | bridge_line_width | coFloatOrPercent | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:1339 |  |
 | PASS | bridge_no_support | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1933 |  |
 | PASS | bridge_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1658 |  |
@@ -54,8 +54,8 @@
 | PASS | calib_flowrate_topinfill_special_order | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4277 |  |
 | PASS | chamber_minimal_temperature | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6629 |  |
 | PASS | chamber_temperature | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6608 |  |
-| INCOMPLETE | change_extrusion_role_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6691 | required legal cases not all compared;  |
-| INCOMPLETE | change_filament_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6682 | required legal cases not all compared;  |
+| PASS | change_extrusion_role_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6691 |  |
+| PASS | change_filament_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6682 |  |
 | PASS | close_additional_fan_first_x_layers | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4790 |  |
 | PASS | close_fan_the_first_x_layers | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1923 |  |
 | PASS | combine_brims | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1744 |  |
@@ -67,13 +67,13 @@
 | PASS | counterbore_hole_bridging | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1547 |  |
 | PASS | curr_bed_type | coEnum | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:1080 |  |
 | PASS | default_acceleration | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1865 |  |
-| INCOMPLETE | default_bed_type | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1102 | required legal cases not all compared;  |
-| INCOMPLETE | default_filament_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2447 | required legal cases not all compared;  |
-| INCOMPLETE | default_filament_profile | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1874 | required legal cases not all compared;  |
+| PASS | default_bed_type | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1102 |  |
+| PASS | default_filament_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2447 |  |
+| PASS | default_filament_profile | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1874 |  |
 | PASS | default_jerk | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3289 |  |
 | PASS | default_junction_deviation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3298 |  |
 | PASS | default_nozzle_volume_type | coEnums | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5360 |  |
-| INCOMPLETE | default_print_profile | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1880 | required legal cases not all compared;  |
+| PASS | default_print_profile | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1880 |  |
 | PASS | deretraction_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5463 |  |
 | PASS | detect_narrow_internal_solid_infill | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7320 |  |
 | PASS | detect_overhang_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5003 |  |
@@ -90,7 +90,7 @@
 | PASS | enable_arc_fitting | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3727 |  |
 | PASS | enable_extra_bridge_layer | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:1959 |  |
 | PASS | enable_filament_ramming | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5989 |  |
-| INCOMPLETE | enable_long_retraction_when_cut | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5210 | required legal cases not all compared;  |
+| INCOMPLETE | enable_long_retraction_when_cut | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5210 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | enable_overhang_bridge_fan | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1207 |  |
 | PASS | enable_overhang_speed | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1580 |  |
 | PASS | enable_power_loss_recovery | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3752 |  |
@@ -107,17 +107,17 @@
 | PASS | exclude_object | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3959 |  |
 | PASS | extra_loading_move | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4936 |  |
 | PASS | extra_perimeters_on_overhangs | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1519 |  |
-| INCOMPLETE | extra_solid_infills | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2987 | required legal cases not all compared;  |
-| INCOMPLETE | extruder_ams_count | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5379 | required legal cases not all compared;  |
-| INCOMPLETE | extruder_clearance_height_to_lid | coFloat | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:2225 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-Ot6hkn") |
-| INCOMPLETE | extruder_clearance_height_to_rod | coFloat | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:2215 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-QkHHeE") |
-| INCOMPLETE | extruder_clearance_radius | coFloat | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:2234 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-KIw7ua") |
-| INCOMPLETE | extruder_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2297 | required legal cases not all compared;  |
-| INCOMPLETE | extruder_offset | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2305 | required legal cases not all compared;  |
-| INCOMPLETE | extruder_printable_area | coPointsGroups | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:692 | required legal cases not all compared;  |
+| PASS | extra_solid_infills | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2987 |  |
+| PASS | extruder_ams_count | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5379 |  |
+| INCOMPLETE | extruder_clearance_height_to_lid | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2225 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| INCOMPLETE | extruder_clearance_height_to_rod | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2215 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| INCOMPLETE | extruder_clearance_radius | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2234 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| PASS | extruder_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2297 |  |
+| PASS | extruder_offset | coPoints | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2305 |  |
+| INCOMPLETE | extruder_printable_area | coPointsGroups | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:692 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | extruder_printable_height | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:788 |  |
 | PASS | extruder_type | coEnums | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5335 |  |
-| INCOMPLETE | extruder_variant_list | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5372 | required legal cases not all compared;  |
+| PASS | extruder_variant_list | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5372 |  |
 | PASS | extrusion_rate_smoothing_external_perimeter_only | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4763 |  |
 | PASS | fan_cooling_layer_time | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2437 |  |
 | PASS | fan_kickstart | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3849 |  |
@@ -127,10 +127,10 @@
 | PASS | fan_speedup_time | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3830 |  |
 | PASS | filament_adaptive_volumetric_speed | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2645 |  |
 | PASS | filament_adhesiveness_category | coInts | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2684 |  |
-| INCOMPLETE | filament_change_extrusion_role_gcode | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6700 | required legal cases not all compared;  |
+| PASS | filament_change_extrusion_role_gcode | coStrings | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6700 |  |
 | PASS | filament_change_length | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2892 |  |
-| INCOMPLETE | filament_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2455 | required legal cases not all compared;  |
-| INCOMPLETE | filament_colour_type | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2477 | required legal cases not all compared;  |
+| PASS | filament_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2455 |  |
+| PASS | filament_colour_type | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2477 |  |
 | PASS | filament_cooling_before_tower | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2777 |  |
 | PASS | filament_cooling_final_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2825 |  |
 | PASS | filament_cooling_initial_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2758 |  |
@@ -138,13 +138,13 @@
 | PASS | filament_cost | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2925 |  |
 | PASS | filament_density | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2864 |  |
 | PASS | filament_deretraction_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:72 |  |
-| INCOMPLETE | filament_diameter | coFloats | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:2606 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-N9uAzQ") |
-| INCOMPLETE | filament_end_gcode | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2046 | required legal cases not all compared;  |
-| INCOMPLETE | filament_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5425 | required legal cases not all compared;  |
-| INCOMPLETE | filament_flow_ratio | coFloats | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:2315 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-RlQZHl") |
+| INCOMPLETE | filament_diameter | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2606 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| PASS | filament_end_gcode | coStrings | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2046 |  |
+| PASS | filament_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5425 |  |
+| INCOMPLETE | filament_flow_ratio | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2315 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | filament_flush_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2530 |  |
 | PASS | filament_flush_volumetric_speed | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2540 |  |
-| INCOMPLETE | filament_ids | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2938 | required legal cases not all compared;  |
+| PASS | filament_ids | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2938 |  |
 | PASS | filament_ironing_flow | coPercents | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3493 |  |
 | PASS | filament_ironing_inset | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3517 |  |
 | PASS | filament_ironing_spacing | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3505 |  |
@@ -157,12 +157,12 @@
 | PASS | filament_map_mode | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:2502 |  |
 | PASS | filament_max_volumetric_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2550 |  |
 | PASS | filament_minimal_purge_on_wipe_tower | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2766 |  |
-| INCOMPLETE | filament_multi_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2473 | required legal cases not all compared;  |
+| PASS | filament_multi_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2473 |  |
 | PASS | filament_multitool_ramming | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2840 |  |
 | PASS | filament_multitool_ramming_flow | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2856 |  |
 | PASS | filament_multitool_ramming_volume | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2848 |  |
-| INCOMPLETE | filament_notes | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2463 | required legal cases not all compared;  |
-| INCOMPLETE | filament_printable | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2910 | required legal cases not all compared;  |
+| PASS | filament_notes | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2463 |  |
+| INCOMPLETE | filament_printable | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2910 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | INCOMPLETE | filament_ramming_parameters | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2833 | required legal cases not all compared;  |
 | PASS | filament_retract_before_wipe | coPercents | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:81 |  |
 | PASS | filament_retract_lift_above | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:68 |  |
@@ -175,35 +175,35 @@
 | PASS | filament_retraction_minimum_travel | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:74 |  |
 | PASS | filament_retraction_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:71 |  |
 | INCOMPLETE | filament_self_index | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5432 | required legal cases not all compared;  |
-| INCOMPLETE | filament_settings_id | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2933 | required legal cases not all compared;  |
+| PASS | filament_settings_id | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2933 |  |
 | PASS | filament_shrink | coPercents | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2659 |  |
 | PASS | filament_shrinkage_compensation_z | coPercents | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2672 |  |
 | PASS | filament_soluble | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2886 |  |
 | PASS | filament_stamping_distance | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2750 |  |
 | PASS | filament_stamping_loading_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2743 |  |
-| INCOMPLETE | filament_start_gcode | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5949 | required legal cases not all compared;  |
+| PASS | filament_start_gcode | coStrings | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5949 |  |
 | PASS | filament_toolchange_delay | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2724 |  |
 | PASS | filament_tower_interface_pre_extrusion_dist | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2785 |  |
 | PASS | filament_tower_interface_pre_extrusion_length | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2793 |  |
 | PASS | filament_tower_interface_print_temp | coInts | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2817 |  |
 | PASS | filament_tower_interface_purge_volume | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2809 |  |
 | PASS | filament_tower_ironing_area | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2801 |  |
-| INCOMPLETE | filament_type | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2872 | required legal cases not all compared;  |
+| PASS | filament_type | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2872 |  |
 | PASS | filament_unloading_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2707 |  |
 | PASS | filament_unloading_speed_start | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2716 |  |
-| INCOMPLETE | filament_vendor | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2942 | required legal cases not all compared;  |
+| PASS | filament_vendor | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2942 |  |
 | PASS | filament_wipe | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:79 |  |
 | PASS | filament_wipe_distance | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:76 |  |
 | PASS | filament_z_hop | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:66 |  |
 | PASS | filament_z_hop_types | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:67 |  |
-| INCOMPLETE | file_start_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5928 | required legal cases not all compared;  |
+| PASS | file_start_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5928 |  |
 | INCOMPLETE | filename_format | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4967 | required legal cases not all compared;  |
 | PASS | fill_multiline | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2996 |  |
 | PASS | filter_out_gap_fill | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3698 |  |
 | PASS | first_layer_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1394 |  |
 | PASS | first_layer_print_sequence | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1109 |  |
 | PASS | first_x_layer_fan_speed | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4808 |  |
-| INCOMPLETE | flashforge_serial_number | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:861 | required legal cases not all compared;  |
+| PASS | flashforge_serial_number | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:861 |  |
 | PASS | flush_into_infill | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7013 |  |
 | PASS | flush_into_objects | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7030 |  |
 | PASS | flush_into_support | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7022 |  |
@@ -222,7 +222,7 @@
 | PASS | fuzzy_skin_ripple_offset | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3673 |  |
 | PASS | fuzzy_skin_ripples_per_layer | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3665 |  |
 | PASS | fuzzy_skin_scale | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3637 |  |
-| PASS | fuzzy_skin_thickness | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3561 |  |
+| FAIL | fuzzy_skin_thickness | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3561 | max: (no match across 3 oracle runs) first difference at byte 6689 (line 294, column 11; expected 413758 bytes, actual 413806 bytes) context:   line 293: "G1 X106.525 Y103.907 E.02028"   line 294: expected "G1 X106.722 Y104.8 E.02528"; actual "G1 X106.724 Y104.8 E.02529"   line 295: ";TYPE:Outer wall" |
 | PASS | gap_fill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1454 |  |
 | PASS | gap_fill_target | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1178 |  |
 | PASS | gap_infill_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3707 |  |
@@ -233,14 +233,14 @@
 | PASS | grab_length | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2290 |  |
 | PASS | gyroid_optimized | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3008 |  |
 | PASS | has_scarf_joint_seam | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4493 |  |
-| INCOMPLETE | head_wrap_detect_zone | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6669 | required legal cases not all compared;  |
+| PASS | head_wrap_detect_zone | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6669 |  |
 | PASS | high_current_on_filament_swap | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4919 |  |
 | PASS | hole_to_polyhole | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7093 |  |
 | PASS | hole_to_polyhole_threshold | coFloatOrPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7102 |  |
 | PASS | hole_to_polyhole_twisted | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7115 |  |
 | PASS | host_type | coEnum | 16 | 16 | 0 | src/libslic3r/PrintConfig.cpp:4853 |  |
 | PASS | hot_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1001 |  |
-| INCOMPLETE | hot_plate_temp_initial_layer | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1061 | required legal cases not all compared;  |
+| INCOMPLETE | hot_plate_temp_initial_layer | coInts | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1061 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | idle_temperature | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7064 |  |
 | PASS | independent_support_layer_height | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6383 |  |
 | PASS | infill_anchor | coFloatOrPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3137 |  |
@@ -258,7 +258,7 @@
 | PASS | initial_layer_jerk | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3344 |  |
 | PASS | initial_layer_line_width | coFloatOrPercent | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:3371 |  |
 | PASS | initial_layer_min_bead_width | coPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7265 |  |
-| INCOMPLETE | initial_layer_print_height | coFloat | 2 | 0 | 2 | src/libslic3r/PrintConfig.cpp:3384 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-NaUke5"); seeded: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-ic84U6") |
+| INCOMPLETE | initial_layer_print_height | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3384 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | initial_layer_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3400 |  |
 | PASS | initial_layer_travel_acceleration | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3263 |  |
 | PASS | initial_layer_travel_jerk | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3362 |  |
@@ -285,7 +285,7 @@
 | PASS | internal_bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1268 |  |
 | PASS | internal_bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1309 |  |
 | PASS | internal_bridge_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3470 |  |
-| INCOMPLETE | internal_bridge_flow | coFloat | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:1354 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-jdEpHw") |
+| INCOMPLETE | internal_bridge_flow | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1354 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | internal_bridge_speed | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1670 |  |
 | PASS | internal_solid_filament_id | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5781 |  |
 | PASS | internal_solid_infill_acceleration | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3244 |  |
@@ -299,22 +299,22 @@
 | PASS | ironing_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3481 |  |
 | PASS | ironing_flow | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4310 |  |
 | PASS | ironing_inset | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4332 |  |
-| PASS | ironing_pattern | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4298 |  |
+| FAIL | ironing_pattern | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4298 | concentric: (no match across 3 oracle runs) first difference at byte 468 (line 18, column 9; expected 107537 bytes, actual 107136 bytes) context:   line 17: "; EXECUTABLE_BLOCK_START"   line 18: expected "M73 P0 R9"; actual "M73 P0 R10"   line 19: "M201 X500 Y500 Z100 E5000" |
 | PASS | ironing_spacing | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4322 |  |
 | PASS | ironing_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4342 |  |
 | PASS | ironing_type | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:4281 |  |
 | PASS | is_infill_first | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2181 |  |
 | PASS | lateral_lattice_angle_1 | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3076 |  |
 | PASS | lateral_lattice_angle_2 | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3086 |  |
-| INCOMPLETE | layer_change_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4415 | required legal cases not all compared;  |
-| INCOMPLETE | layer_height | coFloat | 2 | 0 | 2 | src/libslic3r/PrintConfig.cpp:771 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-QXs1CW"); seeded: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-4V97Vg") |
+| PASS | layer_change_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4415 |  |
+| INCOMPLETE | layer_height | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:771 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | lightning_overhang_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3106 |  |
 | PASS | lightning_prune_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3116 |  |
 | PASS | lightning_straightening_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3127 |  |
 | PASS | line_width | coFloatOrPercent | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:2410 |  |
 | PASS | long_retractions_when_cut | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5214 |  |
 | PASS | long_retractions_when_ec | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5229 |  |
-| INCOMPLETE | machine_end_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2028 | required legal cases not all compared;  |
+| PASS | machine_end_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2028 |  |
 | PASS | machine_load_filament_time | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2560 |  |
 | PASS | machine_max_acceleration_e | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1260 |  |
 | PASS | machine_max_acceleration_extruding | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4601 |  |
@@ -334,8 +334,8 @@
 | PASS | machine_max_speed_z | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.hpp:1264 |  |
 | PASS | machine_min_extruding_rate | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4581 |  |
 | PASS | machine_min_travel_rate | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4591 |  |
-| INCOMPLETE | machine_pause_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4454 | required legal cases not all compared;  |
-| INCOMPLETE | machine_start_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5940 | required legal cases not all compared;  |
+| PASS | machine_pause_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4454 |  |
+| PASS | machine_start_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5940 |  |
 | PASS | machine_tool_change_time | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2578 |  |
 | PASS | machine_unload_filament_time | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2569 |  |
 | PASS | make_overhang_printable | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4974 |  |
@@ -359,10 +359,10 @@
 | PASS | minimum_sparse_infill_area | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5772 |  |
 | PASS | mmu_segmented_region_interlocking_depth | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4215 |  |
 | PASS | mmu_segmented_region_max_width | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4206 |  |
-| INCOMPLETE | notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4843 | required legal cases not all compared;  |
+| PASS | notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4843 |  |
 | PASS | nozzle_diameter | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4835 |  |
 | INCOMPLETE | nozzle_flush_dataset | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2602 | required legal cases not all compared;  |
-| INCOMPLETE | nozzle_height | coFloat | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:2242 | required legal cases not all compared; min: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-eU3xdr") |
+| INCOMPLETE | nozzle_height | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2242 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | nozzle_hrc | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3792 |  |
 | PASS | nozzle_temperature | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6644 |  |
 | PASS | nozzle_temperature_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3436 |  |
@@ -392,7 +392,7 @@
 | PASS | overhang_reverse | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1526 |  |
 | PASS | overhang_reverse_internal_only | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1534 |  |
 | PASS | overhang_reverse_threshold | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1565 |  |
-| INCOMPLETE | parallel_printheads_bed_exclude_areas | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:712 | required legal cases not all compared;  |
+| PASS | parallel_printheads_bed_exclude_areas | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:712 |  |
 | PASS | parallel_printheads_count | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:704 |  |
 | PASS | parking_pos_retraction | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4927 |  |
 | PASS | part_cooling_fan_min_pwm | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3861 |  |
@@ -405,7 +405,7 @@
 | PASS | preferred_orientation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:797 |  |
 | PASS | preheat_steps | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5918 |  |
 | PASS | preheat_time | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5908 |  |
-| INCOMPLETE | pressure_advance | coFloats | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:2345 | required legal cases not all compared; probe-seeded: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-lgLcUy") |
+| INCOMPLETE | pressure_advance | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2345 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | prime_tower_brim_width | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6891 |  |
 | PASS | prime_tower_enable_framework | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6819 |  |
 | PASS | prime_tower_flat_ironing | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6989 |  |
@@ -415,32 +415,32 @@
 | PASS | prime_volume | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6852 |  |
 | INCOMPLETE | print_compatible_printers | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1832 | required legal cases not all compared;  |
 | INCOMPLETE | print_extruder_id | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5405 | required legal cases not all compared;  |
-| INCOMPLETE | print_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5412 | required legal cases not all compared;  |
+| PASS | print_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5412 |  |
 | PASS | print_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2327 |  |
 | PASS | print_order | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1847 |  |
 | PASS | print_sequence | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1836 |  |
-| INCOMPLETE | print_settings_id | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5111 | required legal cases not all compared;  |
-| INCOMPLETE | printable_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:686 | required legal cases not all compared;  |
-| INCOMPLETE | printable_height | coFloat | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:779 | required legal cases not all compared; min: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-xb1bEQ") |
-| INCOMPLETE | printer_agent | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:829 | required legal cases not all compared;  |
+| PASS | print_settings_id | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5111 |  |
+| PASS | printable_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:686 |  |
+| INCOMPLETE | printable_height | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:779 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| PASS | printer_agent | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:829 |  |
 | INCOMPLETE | printer_extruder_id | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5385 | required legal cases not all compared;  |
-| INCOMPLETE | printer_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5392 | required legal cases not all compared;  |
-| INCOMPLETE | printer_model | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5090 | required legal cases not all compared;  |
-| INCOMPLETE | printer_notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5096 | required legal cases not all compared;  |
+| PASS | printer_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5392 |  |
+| PASS | printer_model | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5090 |  |
+| PASS | printer_notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5096 |  |
 | INCOMPLETE | printer_settings_id | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5116 | required legal cases not all compared;  |
 | PASS | printer_structure | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:3801 |  |
 | PASS | printer_technology | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:678 |  |
-| INCOMPLETE | printer_variant | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5105 | required legal cases not all compared;  |
+| PASS | printer_variant | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5105 |  |
 | PASS | printhost_authorization_type | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:915 |  |
 | PASS | printhost_ssl_ignore_revoke | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:901 |  |
-| INCOMPLETE | printing_by_object_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2037 | required legal cases not all compared;  |
-| INCOMPLETE | process_change_extrusion_role_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5081 | required legal cases not all compared;  |
+| PASS | printing_by_object_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2037 |  |
+| PASS | process_change_extrusion_role_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5081 |  |
 | PASS | purge_in_prime_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5983 |  |
 | PASS | raft_contact_distance | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5121 |  |
 | PASS | raft_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5132 |  |
 | PASS | raft_first_layer_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5141 |  |
 | PASS | raft_first_layer_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5151 |  |
-| FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: (no match across 3 oracle runs) first difference at byte 126281 (line 4885, column 29; expected 353925 bytes, actual 353921 bytes) context:   line 4884: "G1 X102.712 Y102.518 E-.12751"   line 4885: expected "G1 X102.518 Y102.712 E-.20595"; actual "G1 X102.518 Y102.712 E-.20594"   line 4886: "M73 P43 R17" |
+| FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: (no match across 3 oracle runs) first difference at byte 1419 (line 64, column 1; expected 353925 bytes, actual 354855 bytes) context:   line 63: "G1 E4 F2400"   line 64: expected "M73 P2 R30"; actual ";TYPE:Skirt"   line 65: expected ";TYPE:Skirt"; actual ";WIDTH:0.42" |
 | PASS | reduce_crossing_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:941 |  |
 | PASS | reduce_fan_stop_start_freq | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2422 |  |
 | PASS | reduce_infill_retraction | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4953 |  |
@@ -482,12 +482,12 @@
 | PASS | single_extruder_multi_material_priming | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6014 |  |
 | PASS | single_loop_draft_shield | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5700 |  |
 | PASS | skeleton_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4018 |  |
-| INCOMPLETE | skeleton_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:4074 | required legal cases not all compared; seeded: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-aildph"); seeded-literal: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-1PjTY0") |
+| INCOMPLETE | skeleton_infill_line_width | coFloatOrPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4074 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | skin_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4031 |  |
 | PASS | skin_infill_depth | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4044 |  |
-| INCOMPLETE | skin_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:4064 | required legal cases not all compared; seeded: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-V2avSa"); seeded-literal: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-eAi56I") |
+| INCOMPLETE | skin_infill_line_width | coFloatOrPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4064 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | skirt_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5673 |  |
-| INCOMPLETE | skirt_height | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5692 | required legal cases not all compared;  |
+| INCOMPLETE | skirt_height | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5692 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | skirt_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5733 |  |
 | PASS | skirt_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5742 |  |
 | PASS | skirt_start_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5682 |  |
@@ -500,18 +500,18 @@
 | PASS | slow_down_min_speed | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4826 |  |
 | PASS | slowdown_for_curled_perimeters | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1587 |  |
 | PASS | small_area_infill_flow_compensation | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4472 |  |
-| INCOMPLETE | small_area_infill_flow_compensation_model | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4479 | required legal cases not all compared;  |
+| PASS | small_area_infill_flow_compensation_model | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4479 |  |
 | PASS | small_perimeter_speed | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2137 |  |
 | PASS | small_perimeter_threshold | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2149 |  |
 | PASS | solid_infill_direction | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2959 |  |
-| INCOMPLETE | solid_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4007 | required legal cases not all compared;  |
+| PASS | solid_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4007 |  |
 | PASS | sparse_infill_acceleration | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3234 |  |
 | PASS | sparse_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2969 |  |
 | PASS | sparse_infill_filament_id | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4127 |  |
 | PASS | sparse_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1434 |  |
 | PASS | sparse_infill_line_width | coFloatOrPercent | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:4136 |  |
-| PASS | sparse_infill_pattern | coEnum | 26 | 25 | 0 | src/libslic3r/PrintConfig.cpp:3017 |  |
-| INCOMPLETE | sparse_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3993 | required legal cases not all compared;  |
+| FAIL | sparse_infill_pattern | coEnum | 26 | 26 | 0 | src/libslic3r/PrintConfig.cpp:3017 | concentric: (no match across 3 oracle runs) first difference at byte 1534 (line 72, column 1; expected 96293 bytes, actual 95589 bytes) context:   line 71: "G1 X116.363 Y102.827 E.04359"   line 72: expected "M73 P9 R8"; actual "G1 X117.31 Y103.883 E.04359"   line 73: expected "G1 X117.31 Y103.883 E.04359"; actual "G1 X117.566 Y105 E.0352" |
+| PASS | sparse_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3993 |  |
 | PASS | sparse_infill_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4174 |  |
 | PASS | spiral_finishing_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5868 |  |
 | PASS | spiral_mode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5829 |  |
@@ -520,7 +520,7 @@
 | PASS | spiral_starting_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5857 |  |
 | PASS | staggered_inner_seams | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5508 |  |
 | PASS | standby_temperature_delta | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5896 |  |
-| INCOMPLETE | start_end_points | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4945 | required legal cases not all compared;  |
+| PASS | start_end_points | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4945 |  |
 | PASS | supertack_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:961 |  |
 | PASS | supertack_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1021 |  |
 | PASS | support_air_filtration | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3899 |  |
@@ -563,19 +563,19 @@
 | PASS | support_top_z_distance | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6134 |  |
 | PASS | support_type | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:6061 |  |
 | PASS | symmetric_infill_y_axis | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4084 |  |
-| INCOMPLETE | temperature_vitrification | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2917 | required legal cases not all compared;  |
-| INCOMPLETE | template_custom_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4463 | required legal cases not all compared;  |
+| INCOMPLETE | temperature_vitrification | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2917 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| PASS | template_custom_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4463 |  |
 | PASS | textured_cool_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:981 |  |
 | PASS | textured_cool_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1041 |  |
 | PASS | textured_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1011 |  |
 | PASS | textured_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1070 |  |
 | PASS | thick_bridges | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1941 |  |
 | PASS | thick_internal_bridges | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1950 |  |
-| INCOMPLETE | thumbnails | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7122 | required legal cases not all compared;  |
+| PASS | thumbnails | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7122 |  |
 | PASS | thumbnails_format | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:7129 |  |
 | PASS | time_cost | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3883 |  |
-| INCOMPLETE | time_lapse_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4424 | required legal cases not all compared;  |
-| INCOMPLETE | timelapse_type | coEnum | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5879 | required legal cases not all compared; 1: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-oOhz9k") |
+| PASS | time_lapse_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4424 |  |
+| INCOMPLETE | timelapse_type | coEnum | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5879 | required legal cases not all compared; 1: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts/orca-runner-wpEHtd/command-l4ZI6p") |
 | PASS | tool_change_on_wipe_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5995 |  |
 | PASS | top_bottom_infill_wall_overlap | coPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4161 |  |
 | PASS | top_shell_layers | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6730 |  |
@@ -606,11 +606,11 @@
 | PASS | tree_support_tip_diameter | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6496 |  |
 | PASS | tree_support_top_rate | coPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6469 |  |
 | PASS | tree_support_wall_count | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6541 |  |
-| INCOMPLETE | upward_compatible_machine | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1788 | required legal cases not all compared;  |
+| PASS | upward_compatible_machine | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1788 |  |
 | PASS | use_3mf | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:821 |  |
-| INCOMPLETE | use_firmware_retraction | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5471 | required legal cases not all compared; true: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-nmTaxn") |
-| INCOMPLETE | use_relative_e_distances | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:7146 | required legal cases not all compared; false: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-full-r8/orca-runner-KtD0Bv/command-fJibzZ") |
-| INCOMPLETE | volumetric_speed_coefficients | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2655 | required legal cases not all compared;  |
+| INCOMPLETE | use_firmware_retraction | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5471 | required legal cases not all compared; true: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts/orca-runner-wpEHtd/command-0CngSz") |
+| INCOMPLETE | use_relative_e_distances | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:7146 | required legal cases not all compared; false: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts/orca-runner-wpEHtd/command-BYW2Uv") |
+| PASS | volumetric_speed_coefficients | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2655 |  |
 | PASS | wall_direction | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2188 |  |
 | PASS | wall_distribution_count | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7208 |  |
 | PASS | wall_generator | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7155 |  |
@@ -642,7 +642,7 @@
 | PASS | wipe_tower_x | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6860 |  |
 | PASS | wipe_tower_y | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6868 |  |
 | PASS | wiping_volumes_extruders | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6976 |  |
-| INCOMPLETE | wrapping_detection_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4432 | required legal cases not all compared;  |
+| PASS | wrapping_detection_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4432 |  |
 | PASS | wrapping_detection_layers | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4113 |  |
 | INCOMPLETE | wrapping_exclude_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4120 | required legal cases not all compared;  |
 | PASS | xy_contour_compensation | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7083 |  |
