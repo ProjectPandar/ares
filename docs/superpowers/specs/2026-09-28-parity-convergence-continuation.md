@@ -410,3 +410,30 @@ emitted WALL text (not skirt) — if rates are exactly equal there but
 noisy in ares's equivalent output, the divergence is in emitted
 number formatting (E digits / XYZ digits), i.e. `GCodeFormatter`
 precision parity, not the equalizer.
+
+## 2026-09-29 (equalizer rollback fix + Z-contour residual)
+
+FIXED (b25d6426): `is_just_line_with_extrude_set_speed_tag` now accepts a
+comment after `EXTRUDE_SET_SPEED_TAG` — upstream `is_eol(*p)` includes
+';', so `G1 F4200;...;_EXTERNAL_PERIMETER` qualifies for the
+bare-SET_SPEED rollback. Ares required exact-tail match → each modified
+external segment opened a fresh block → empty EXTERNAL blocks (the
+phantom `SET_SPEED;EXTERNAL`/`_EXTRUDE_END` pair).
+
+Residual: orca's inner-wall emission shows `emit_single_slope` /
+`emit_accel_then_decel` splitting (8×2.15mm pieces carrying `Z1.2` where
+ares emits one `G1 X.. E4.39657`) — i.e. upstream's
+`delta_volumetric_rate >= NON_TRIVIAL(10)` on those lines while ares
+computes ~0.22. Since slopes (360000 mm3/min²) are far too large for
+real slope-limiting at these rates/lengths, the ≥10 delta must come
+from `feedrate_per_extrusion_role` seeding at ROLE TRANSITIONS (the
+first inner wall after the skirt region takes a reduced
+`volumetric_extrusion_rate_start` from the previous role's stored
+rate). Ares's `feedrate_per_role` seeded values apparently end up
+matching the line's own rate — a subtle difference in which role index
+carries the stored rate, or in `rate_succ` capture, remains.
+
+Next probe: dump upstream's `volumetric_extrusion_rate_start/end` per
+line across a role boundary (unattainable — dead build) OR hand-trace
+the sliding-window seeding for `[skirt..wall]` and compare against ares
+PDECISIONS at the same boundary.
