@@ -487,3 +487,28 @@ the visibility weights decides which corner is "first" — upstream's
 ordering has SE first in `collect_points` order. Verified: candidates
 n=5 match upstream (only original vertices + closure, plus enforcer
 oversampling which is inactive here).
+
+## 2026-09-29 (seam residual isolated: loop start-vertex convention)
+
+Root cause pinned: `ARES_DUMP_LSLICES` shows ares's slice polygon
+`points[0]` = NE (+5,+5); orca's `ExtrusionLoop::collect_points`
+`polyline.points[0]` starts at SE (+3.75,−3.75) — Clipper's `OutRec`
+first vertex convention (local-minimum/rightmost-bottom). When all
+candidate scores tie (layer-0 cube: 4 corners vis=1.91588 exactly),
+`best_candidate`/`pick_seam_point` keeps the FIRST candidate —
+ares's NE vs upstream's SE — and the projected inner seams follow.
+
+Flipping `front_adjustment` sign or negating sample normals produces
+matching SE anchors on NON-tied layers but catastrophic divergence
+(3204) elsewhere — confirming the normals/adjustment signs are
+correct and the residual is purely the tied-first-candidate ordering.
+
+To fix: replicate upstream's loop start vertex for seam candidate
+collection only — i.e., rotate `collect_loop_points` so the first
+point matches ClipperLib's `OutRec` convention (bottom-most; the
+rightmost of the lowest vertices) — or derive the candidate ordering
+from the raw slice polygon chain anchor upstream uses. Needs a
+source-cited convention check in upstream `Polygon`/`ClipperLib`
+`BuildResult` before touching ordering; risk: rotating candidates
+affects enforcer-patch mid-point selection and `seam_index`
+projection indices.
