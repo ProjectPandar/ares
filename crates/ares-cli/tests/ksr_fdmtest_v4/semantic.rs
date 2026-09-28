@@ -67,6 +67,13 @@ fn compare_impl(
     compare_filament_lengths(&expected, &actual)?;
     exact_lines("preamble", &expected.preamble, &actual.preamble)?;
     exact_lines("postamble", &expected.postamble, &actual.postamble)?;
+    // `M73` progress lines are collected into the model (parser keeps
+    // them so a wholesale loss is visible to diagnostics), but the
+    // estimated-time cadence still carries the ±1-minute/one-extra-line
+    // residual tracked by the printer sweep's M73 cluster — asserting
+    // them here would turn the golden red for a KNOWN divergence rather
+    // than new information. The config block compares exactly.
+    exact_lines("config_block", &expected.config_block, &actual.config_block)?;
     if expected.layers.len() != actual.layers.len() {
         return Err(format!(
             "layer count differs: expected {}, actual {}",

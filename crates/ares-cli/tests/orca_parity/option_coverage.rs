@@ -34,6 +34,9 @@ fn inject_case(
     process: &mut Map<String, Value>,
     filaments: &mut [Map<String, Value>],
 ) {
+    // Value-compatibility co-injections that must edit BOTH presets
+    // run before the scope match moves `machine`/`process`.
+    normalize_case_dependencies(plan, case, machine, process, filaments);
     let target = match plan.raw_scope.as_str() {
         "printer" => machine,
         "process" => process,
@@ -51,6 +54,56 @@ fn inject_case(
     // "no ironing"`). (option -> (enabler, activating value))
     for (enabler, value) in activating_overrides(&plan.key) {
         process.insert((*enabler).to_owned(), Value::String((*value).to_owned()));
+    }
+    // Upstream validation rejects some option VALUES in combination with
+    // an incompatible baseline sibling — the value itself is legal, the
+    // fixture is not. Co-inject the dependent setting so the oracle
+    // actually slices the probed value (`Print.cpp:1740-1746` G92 guard,
+    // `--use-firmware-retraction is not compatible with --wipe`).
+}
+
+fn normalize_case_dependencies(
+    plan: &domains::OptionPlan,
+    case: &domains::OptionCase,
+    machine: &mut Map<String, Value>,
+    process: &mut Map<String, Value>,
+    filaments: &mut [Map<String, Value>],
+) {
+    let active = case
+        .value
+        .as_ref()
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if plan.key == "use_firmware_retraction" && active == "1" {
+        // `wipe` is a filament-scoped option — `--use-firmware-retraction`
+        // is rejected while wiping stays enabled on the material preset.
+        for filament in filaments.iter_mut() {
+            filament.insert("wipe".to_owned(), Value::String("0".to_owned()));
+        }
+    }
+    if plan.key == "use_relative_e_distances" && active == "0" {
+        for key in ["before_layer_change_gcode", "layer_change_gcode"] {
+            for preset in [&mut *machine, &mut *process] {
+                if let Some(text) = preset.get(key).and_then(Value::as_str).map(str::to_owned)
+                    && text.contains("G92 E0")
+                {
+                    // Replace the absolute-mode-incompatible reset with a
+                    // neutral comment, keeping any other lines.
+                    let normalized = text
+                        .lines()
+                        .map(|line| {
+                            if line.trim_start().starts_with("G92 E0") {
+                                "; absolute-mode case: reset removed"
+                            } else {
+                                line
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    preset.insert(key.to_owned(), Value::String(normalized));
+                }
+            }
+        }
     }
 }
 
@@ -150,6 +203,15 @@ impl OptionOutcome {
                     "required legal cases not all compared; {}",
                     rejected.join("; ")
                 ),
+            )
+        } else if excused > 0 {
+            // Nondeterministic-oracle cases never byte-match by
+            // construction; crediting them as strict coverage would
+            // certify the domain on fewer verified values than it
+            // declares. Report them as an evidenced incomplete instead.
+            (
+                "INCOMPLETE",
+                format!("{excused} case(s) excused: oracle is nondeterministic for these values"),
             )
         } else if !plan.provably_legal {
             // Baseline-only/unbounded domains carry no legality proof: a

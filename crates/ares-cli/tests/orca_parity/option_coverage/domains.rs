@@ -139,8 +139,24 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 // upper schema bound — the legal domain is `[min, ∞)`, fully
                 // covered by probing `min` and a seeded interior. There is no
                 // `max` to exercise because none exists in the schema.
-                match lower_bound(&block) {
-                    Some(minimum) => {
+                match (lower_bound(&block), upper_bound(&block)) {
+                    (None, Some(maximum)) => {
+                        // Upper-only bound (`max` declared, no `min` — e.g.
+                        // `nozzle_diameter` max=100, `PrintConfig.cpp:4835`):
+                        // exercise the declared ceiling and a seeded interior
+                        // between the schema floor 0 and it.
+                        let interior =
+                            seeded_interior(&key, 0.0, maximum, option_type.contains("Int"));
+                        provably_legal = true;
+                        (
+                            vec![
+                                numeric_case("max", maximum, entry, &option_type),
+                                numeric_case("seeded", interior, entry, &option_type),
+                            ],
+                            None,
+                        )
+                    }
+                    (Some(minimum), _) => {
                         let interior = seeded_interior(
                             &key,
                             minimum,
@@ -170,7 +186,7 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         provably_legal = true;
                         (cases, None)
                     }
-                    None => {
+                    (None, None) => {
                         // Schema-unbounded numeric option (`coFloat`/
                         // `coInt`/`coFloatOrPercent` with neither min
                         // nor max — e.g. `adaptive_bed_mesh_margin`).

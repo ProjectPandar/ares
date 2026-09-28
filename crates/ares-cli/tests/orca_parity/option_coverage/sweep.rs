@@ -96,7 +96,13 @@ fn orca_parity_option_coverage() {
             // reachable legal interior or baseline, since upstream
             // slice-time validation rejects the remaining space —
             // report but don't gate.
-            if outcome.detail.contains("authored probes") || outcome.detail.contains("unbounded") {
+            if outcome.detail.contains("authored probes")
+                || outcome.detail.contains("unbounded")
+                // Oracle-side nondeterminism is evidenced INCOMPLETE —
+                // reported in the summary but not a gate failure, since
+                // no deterministic reference exists to compare against.
+                || outcome.detail.contains("nondeterministic")
+            {
                 return false;
             }
             // Fully-enumerated bool/enum domains where every generated

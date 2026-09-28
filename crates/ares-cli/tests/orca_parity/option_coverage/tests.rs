@@ -73,6 +73,9 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
             || labels == ["min", "seeded"]
             || labels == ["min", "max", "seeded", "seeded-literal"]
             || labels == ["min", "seeded", "seeded-literal"]
+            // Upper-only bounds (`nozzle_diameter` max=100) probe the
+            // declared ceiling and a seeded interior below it.
+            || labels == ["max", "seeded"]
     }));
 
     let baselines = plans

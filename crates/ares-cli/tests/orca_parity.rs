@@ -319,7 +319,14 @@ pub(crate) fn compare_exported_for(
             Ok(case) => {
                 outcome = compare_case(&case);
             }
-            Err(error) => return ares_error(&exported.label, error.to_string()),
+            // A failed retry must not erase an already-established
+            // divergence — keep the mismatch and attach the retry
+            // failure as evidence instead.
+            Err(error) => {
+                outcome.detail =
+                    format!("{} (retry {attempt} oracle error: {error})", outcome.detail);
+                break;
+            }
         }
     }
     if outcome.status == "DIVERGENT" && budget > 1 {
@@ -334,8 +341,13 @@ pub(crate) fn vendors(root: &std::path::Path) -> Vec<String> {
     };
     let mut vendors = Vec::new();
     for entry in entries.flatten() {
+        // Only directories that carry a `machine/` inventory contribute
+        // printers — filament-only collections like `OrcaFilamentLibrary`
+        // have no machine presets and previously produced a fake
+        // ARES_ERROR row in the printer denominator.
         if let Some(name) = entry
             .path()
+            .join("machine")
             .is_dir()
             .then(|| entry.file_name())
             .and_then(|name| name.to_str().map(ToOwned::to_owned))

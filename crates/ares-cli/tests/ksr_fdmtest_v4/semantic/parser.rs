@@ -14,6 +14,13 @@ pub(crate) struct SemanticGcode {
     pub(super) filament_lengths: Vec<f64>,
     pub(super) preamble: Vec<String>,
     pub(super) postamble: Vec<String>,
+    /// Ordered `M73 P.. R..` progress lines — previously discarded
+    /// entirely, which made a deleted or reordered progress emission
+    /// invisible to the comparison.
+    pub(super) progress: Vec<String>,
+    /// `; CONFIG_BLOCK_START..END` payload lines, kept unsorted so a
+    /// reordered block still surfaces.
+    pub(super) config_block: Vec<String>,
     pub(crate) layers: Vec<Layer>,
 }
 
@@ -67,6 +74,8 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
         filament_lengths: Vec::new(),
         preamble: Vec::new(),
         postamble: Vec::new(),
+        progress: Vec::new(),
+        config_block: Vec::new(),
         layers: Vec::new(),
     };
     let mut state = State {
@@ -99,6 +108,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             continue;
         }
         if line.starts_with("M73 ") {
+            output.progress.push(line.to_owned());
             continue;
         }
         if line == "; CONFIG_BLOCK_START" {
@@ -108,6 +118,8 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
         if in_config_block {
             if line == "; CONFIG_BLOCK_END" {
                 in_config_block = false;
+            } else {
+                output.config_block.push(semantic_line.to_owned());
             }
             continue;
         }

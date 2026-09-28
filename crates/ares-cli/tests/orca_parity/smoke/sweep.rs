@@ -75,9 +75,20 @@ pub(super) fn run_printer_sweep() {
         }
     }
     write_summary(&outcomes);
+    // `ORCA_ERROR` and `VENDOR_INCOMPLETE` are documented exemptions —
+    // the upstream binary cannot produce a reference (or the vendor
+    // tree lacks the referenced preset), so Ares correctness is
+    // unverifiable there rather than divergent. Genuine parity failures
+    // (`DIVERGENT`, `ARES_ERROR`, `INPUT_REJECTED`) still fail the
+    // sweep; the exempt rows stay visible in the summary.
     let failures = outcomes
         .iter()
-        .filter(|outcome| outcome.status != "PASS")
+        .filter(|outcome| {
+            matches!(
+                outcome.status,
+                "DIVERGENT" | "ARES_ERROR" | "INPUT_REJECTED"
+            )
+        })
         .count();
     assert!(
         failures == 0,

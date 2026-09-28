@@ -162,6 +162,22 @@ pub(super) fn lower_bound(block: &str) -> Option<f64> {
         })
 }
 
+pub(super) fn upper_bound(block: &str) -> Option<f64> {
+    Regex::new(r"def->max\s*=\s*([-+]?\d+(?:\.\d+)?|-?max_temp)")
+        .unwrap()
+        .captures(block)
+        .and_then(|captures| {
+            let token = &captures[1];
+            if token == "max_temp" {
+                Some(1500.0)
+            } else if token == "-max_temp" {
+                Some(-1500.0)
+            } else {
+                token.parse::<f64>().ok()
+            }
+        })
+}
+
 pub(super) fn numeric_bounds(block: &str) -> Option<(f64, f64)> {
     let bound = |name: &str| {
         // `def->max = <literal>` OR `def->max = max_temp` (the 1500 constant
