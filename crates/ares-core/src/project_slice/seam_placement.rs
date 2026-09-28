@@ -105,7 +105,7 @@ fn apply_objects(
         let Some(placement) = placements[object_index] else {
             continue;
         };
-        let layer_zs = runtime::layer_mid_zs(&traversal.objects[object_index].records);
+        let layer_zs = runtime::layer_slice_zs(&traversal.objects[object_index].records);
         let mut plans = alignment::prepare(
             (layers, &layer_zs),
             traversal,

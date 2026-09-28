@@ -46,13 +46,18 @@ pub(super) fn placement_modes(
         .collect()
 }
 
-pub(super) fn layer_mid_zs(records: &[Option<ClassicTraversalRecord>]) -> Vec<f32> {
+/// Candidate z is `layer->slice_z` (`SeamPlacer.cpp:1025` `unscaled_z =
+/// layer->slice_z`), the bottom of the layer, not the mid-layer extrusion
+/// height. Used both for the candidate z stored in `positions` and for the
+/// `projected_position.z` during seam-string search.
+pub(super) fn layer_slice_zs(records: &[Option<ClassicTraversalRecord>]) -> Vec<f32> {
     records
         .iter()
         .scan(0.0_f64, |print_z, record| {
             let height = record.as_ref().map_or(0.0, |record| record.layer_height);
+            let slice_z = *print_z;
             *print_z += height;
-            Some((*print_z - 0.5 * height) as f32)
+            Some(slice_z as f32)
         })
         .collect()
 }

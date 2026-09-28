@@ -114,14 +114,23 @@ minute boundaries (R6 vs R7) and shifts emission by one line
 vertex selection plus the cruise-feedrate clamp ordering in
 `GCodeProcessor.cpp:4020-4060`.
 
-Downstream causality: with `seam_position=aligned`, Ares splits the
-outer loop at a candidate ~0.05mm outward of upstream's
-(`ARES_DUMP_SEAMPT` gives 4.645 vs the emitted 91.649/4.595 pattern).
-`SeamPlacer.cpp:1500-1620` (`place_seam` + `get_closest_path_and_point`
-+ `split_at` + vertex snap `scaled_epsilon`) is mirrored in
-`seam_placement.rs::place_loop` / `split.rs::split_at`, so the residual
-lives in the *candidate selection* upstream of `place_loop` — the
-aligned-seam scoring/visibility pass (`alignment::align`,
-`visibility::GlobalVisibility`) — not in the split mechanics. Resolving
-the 0.05mm vertex difference should collapse both the M73 value cluster
-and the "seam-point" rows simultaneously.
+Downstream causality: with `seam_position=aligned`, the emitted seam
+vertex is NOT a raw candidate vertex — upstream stores
+`perimeter.final_seam_position` (`SeamPlacer.cpp:1391`), a
+BSpline-fitted interpolation
+(`fit_cubic_bspline` + `t*current + (1-t)*fitted` blend at
+`SeamPlacer.cpp:1367-1389`) produced by `alignment::align`
+equivalent. Sermoon evidence: orca lands at `X91.599` while ares
+emitted `X91.649` — 0.05mm off, consistent with a different fitted
+position or a different `seam_string` membership, not with a different
+vertex pick. The scoring constants match
+(`seam_align_score_tolerance=0.3`, `tolerable_dist_factor=4.0`,
+`minimum_string_seams=6`, `mm_per_segment=4`,
+`sharp_angle_snapping_threshold=55°`) and `finalize_string` mirrors the
+upstream formula, so the residual sits in the *string composition*
+(`find_seam_string`/`find_next_in_layer`/`is_better`) or the spline
+evaluation (`spline::CubicSpline::fit/value` vs
+`Geometry::fit_cubic_bspline`), or in per-candidate `local_ccw_angle`/
+`unsupported_dist` inputs. Resolving the 0.05mm fitted-position
+difference should collapse both the M73 value cluster and the
+"seam-point" rows simultaneously.
