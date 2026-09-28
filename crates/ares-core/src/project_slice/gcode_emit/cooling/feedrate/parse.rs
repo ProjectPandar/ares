@@ -22,6 +22,16 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
     let mut active_speed_modifier = None;
     let mut layer_had_extrusion = false;
     let mut start = 0;
+    if let Ok(path) = std::env::var("ARES_DUMP_RAW") {
+        let _ = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+            .and_then(|mut file| {
+                use std::io::Write;
+                writeln!(file, "RAWLAYER").and_then(|()| file.write_all(gcode))
+            });
+    }
 
     while start < gcode.len() {
         let end = gcode[start..]
