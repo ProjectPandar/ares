@@ -325,3 +325,27 @@ lines `modified` (rate limiting engaged) where upstream's doesn't
 not the cooling buffer. Instrumented upstream build is dead (nix GC), so
 the residual fix has to be guided by upstream source reading +
 ares-side dumps.
+
+## 2026-09-29 (deep equalizer dive, unresolved)
+
+Ares emits the skirt as ONE `_EXTRUDE_SET_SPEED.._EXTRUDE_END` block
+(pre-equalizer text verified via ARES_DUMP_PEINPUT) — path emit is
+correct. The per-segment `END;SET_SPEED` pairs seen in ARES_DUMP_RAW are
+produced by `PressureEqualizerPass` (`modified=true` on ~70% of skirt
+segments, driven by ±0.4 mm3/min volumetric-rate noise from rounded E
+values in `rate = A*F*|de|/len` — the `rate_succ` clamp chains the noise
+through the whole uniform-speed run).
+
+But upstream `adjust_volumetric_rate` has identical logic and identical
+float noise, so it should mark the same lines — yet orca's sorted
+adjustable CL dump shows LONG merged blocks (74.4mm outer-wall, 23mm
+inner) where ares produces per-segment splits. Either upstream's
+`rate_succ`/`feedrate_per_role` tracking avoids the noise clamp
+(implementation detail not yet spotted) or the marking differs at
+`role==iRole` boundary handling. The 275-diff class is driven by this
+CL-segmentation difference in `apply_layer_cooldown`.
+
+Unresolved: identical source-level logic → different `modified` marks.
+Needs an upstream-line-level dump (impossible — instrumented build dead)
+or a targeted unit test replicating the limiter on a constant-rate run
+to find where `rate_succ` semantics diverge.
