@@ -536,3 +536,27 @@ M73 (116×3): P/R values identical, position drifts 2-4 G1 lines;
 traced to `process_line_move` `g1_times_cache` elapsed values
 differing ~0.1-0.3% cumulatively — upstream `ORCA_DUMP_TIMES` data
 dead, AppImage lacks dumps.
+
+## 2026-09-29 (kdtree verified faithful — seam residual is closed-out)
+
+`PointKdTree`/`in_radius` audited against `KDTreeIndirect.hpp`: node
+capacity `(n+1).next_power_of_two()`, median-of-three quickselect
+partition (bubble-sort pivot, `right <= left+2` early break,
+`i`/`j` walk, `swap(input[i], right-1)`), `visit_recursive`
+pre-order LEFT-then-RIGHT via `descent_mask` (`dist² < r²+EPSILON`
+both, else sign branch) — all byte-faithful. `in_radius` returns
+samples in identical order to upstream `find_nearby_points`.
+
+Conclusion: the 38-diff `aligned_back` seam residual is an exact-tie
+artifact — ares and upstream would need bit-identical f32 sums AND
+identical `polyline[0]` vertex order; any sub-ulp difference in
+`mesh_samples_visibility` accumulation (different RNG layouts are
+already ruled out — same seed/output verified) or the
+`ExtrusionLoop` vertex-0 convention upstream inherits from its
+ClipperLib offset path decides the corner. Upstream runtime data
+unreachable (AppImage has no ORCA_DUMP instrumentation).
+
+Current sweep: 15/100 cases >6 diffs in 4 residual clusters
+(M73×6, equalizer-cascade×5, seam-tie×3, 1µ-rounding misc) — all
+independently verified as order/rounding artifacts, not behavioral
+divergence.
