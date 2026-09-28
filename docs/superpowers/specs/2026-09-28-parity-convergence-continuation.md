@@ -246,3 +246,35 @@ upstream non-seam root — the detour waypoint or the wipe feedrate.
    ORCA_DUMP_COOL vs ARES_DUMP_SLOWDOWN shows the CoolingLine streams
    segment differently (orca i=1 len=23.29 vs ares 39.16) before the
    slowdown math.
+
+## 2026-09-28 (late-2) — sample-weight fix committed (55a0ca8c)
+
+`sample_its_uniform_parallel` computes `A*(1-sq_u)` with double weights on
+f32 vertices; ares truncated the weight to f32 before multiplying — ~1ulp
+position drift per sample → flipped symmetric back-corner ties in
+`aligned_back`. Fixed by keeping f64 weights through the multiply.
+
+Cleared stlBdK/sgjBnj/6kZFjT. Still open in the same family:
+hECm1F/bg6wKq/H39DKQ (TinyBotV1 0.4, 38 lines) — layer-0 seam for the
+second `cube10` copy picks +Y in ares vs -Y in orca (`SEAM point
+(2.887,-2.887)`). Visibility here is per-OBJECT mesh in upstream
+(`gather_occlusion_mesh` + `its_transform(obj_transform)`), while ares
+builds `TriangleMesh::from_project` from only the FIRST object/first
+instance — multi-object plates get `nearby.is_empty() -> 1.0` for other
+objects' samples. That is the probable residual gap.
+
+## 2026-09-28 (late-3) — cooling-buffer segment diagnosis
+
+`case-LIVPLC` CL streams (orca `ORCA_DUMP_COOL` vs ares `ARES_DUMP_SLOWDOWN=2`)
+match on all 143 lines except i=1/i=3: orca splits an external-perimeter
+SET_SPEED block (type 1e0) around an internal block (type 160) into
+23.29mm + 10.75mm + 21.79mm, while ares merges the region into 39.16mm +
+4.32mm — total adjustable time differs by 0.023s (tt 13.743 vs 13.720;
+tmax 695.88 vs 694.26), shifting the equalized slowdown feedrate
+(14.05 vs 14.016 mm/s -> F843 vs F841).
+
+Both sides have identical final gcode; the divergence is inside the
+`_EXTRUDE_SET_SPEED.._EXTRUDE_END` marker stream / merge attribution.
+Next step: dump the marker stream on both sides (orca emit points at
+GCode.cpp `set_extrusion_speed`/`;_EXTRUDE_SET_SPEED`; ares
+motion/extrusion.rs `speed()`) and compare where SET_SPEED blocks start.
