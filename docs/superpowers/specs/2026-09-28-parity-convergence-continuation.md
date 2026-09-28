@@ -40,11 +40,37 @@ commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`, oracle executable
   id-valued/unprovable domains, all with `compared ≥ 1` or documented
   oracle rejection.
 - Printer sweep last full run: 958/1002 PASS; 15 DIVERGENT, 18 ORCA_ERROR,
-  10 VENDOR_INCOMPLETE, 1 ARES_ERROR (vendor-load probe).
+  10 VENDOR_INCOMPLETE, 1 ARES_ERROR (vendor-load probe). After the
+  pending-lift raised-Z fix and the wipe-before-external `next`-vertex fix,
+  Artillery M1 Pro, Qidi Q2/Q2C, Eryone ER20 (0.4) and Kingroon KP3S verify
+  PASS under `ARES_RACE_TARGET` — a refreshed sweep regenerates the
+  summary's denominators (the OrcaFilamentLibrary row is gone now that
+  vendor discovery requires a `machine/` dir).
 - Divergence clusters observed: M73 `R` minute-boundary rounding and
-  cache-entry mapping (Sermoon V1, ER20, Ginger G1, KP3S, SK1, Volumic x3,
+  cache-entry mapping (Sermoon V1, ER20, Ginger G1, SK1, Volumic x3,
   TinyBotV1); last-digit f32 coordinate/E rounding (Kobra 3 0.2, E3NG,
   Rolohaun, SV06); travel-point ordering (PhoenixProV1, TiQ8).
+
+## Independent-review fix loop (round 1)
+
+- KSR semantic model now keeps `M73` progress lines and the
+  `CONFIG_BLOCK`; the config block compares exactly while the progress
+  lines remain diagnostic (the estimate-machine residual is the M73
+  cluster below).
+- Every option case verifies requested-vs-effective exported values
+  (width domains previously were the only ones checked —
+  `printer_technology/SLA` had passed while exporting `FFF`).
+- Upstream `this->add` keys reconcile against the inventory through
+  `tests/parity/upstream-key-exclusions.txt`.
+- Upper-only numeric bounds probe the declared ceiling (`nozzle_diameter`
+  max=100); bool values rejected by oracle-side fixture conflicts now
+  co-inject the dependent option (`use_firmware_retraction`→`wipe=0`,
+  `use_relative_e_distances`→G92-free layer gcodes).
+- Excused oracle-nondeterministic cases report as evidenced INCOMPLETE;
+  sweep acceptance gates only genuine failures; a failed oracle retry no
+  longer overwrites an established divergence; `OrcaFilamentLibrary` no
+  longer manufactures a printer row; `m73_profile` diagnostics reproduce
+  the upstream f32 arithmetic and (P, desc R) merge order.
 
 ## Acceptance
 
