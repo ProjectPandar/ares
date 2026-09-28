@@ -51,7 +51,15 @@ fn is_just_line_with_extrude_set_speed_tag(line: &str) -> bool {
         return false;
     }
     let after_value = skip_number(tail);
-    after_value.map_or(false, |tail| tail == EXTRUDE_SET_SPEED_TAG)
+    after_value.is_some_and(|tail| {
+        // Upstream accepts `is_eol(*p)` after the tag — a trailing
+        // `;_EXTERNAL_PERIMETER` (or any comment) also counts
+        // (`PressureEqualizer.cpp:881-884`).
+        let Some(rest) = tail.strip_prefix(EXTRUDE_SET_SPEED_TAG) else {
+            return false;
+        };
+        rest.is_empty() || rest.starts_with(';') || rest.starts_with('\r') || rest.starts_with('\n')
+    })
 }
 
 fn skip_number(text: &str) -> Option<&str> {
