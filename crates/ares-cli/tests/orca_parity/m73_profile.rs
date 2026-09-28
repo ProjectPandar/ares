@@ -155,7 +155,11 @@ fn m73_progress_profile_report() {
     let mut ac = 0_usize;
     while oc < orca.emissions.len() && ac < ares.emissions.len() {
         let (left, right) = (&orca.emissions[oc], &ares.emissions[ac]);
-        let order = (left.p, left.r).cmp(&(right.p, right.r));
+        // Emissions progress by elapsed time: `P` is nondecreasing and
+        // `R` nonincreasing, so the merge order key is `(P, Reverse(R))`
+        // — a plain `(P, R)` tuple would treat a same-P lower-R step as
+        // "earlier" and misalign the two streams.
+        let order = (left.p, std::cmp::Reverse(left.r)).cmp(&(right.p, std::cmp::Reverse(right.r)));
         match order {
             std::cmp::Ordering::Equal => {
                 matched += 1;
@@ -166,8 +170,16 @@ fn m73_progress_profile_report() {
                         // total must reproduce the emitted pair; otherwise
                         // the id mapping (arcs) is unreliable for this
                         // stream and the comparison would lie.
-                        let self_p = (100.0 * elapsed / ares.total) as u32;
-                        let self_r = ((ares.total - elapsed) / 60.0 + 1.0e-9) as u32;
+                        // Upstream arithmetic (`GCodeProcessor.cpp:1020,
+                        // 1259`): `int(100.0f * elapsed / total)` for the
+                        // percent and `int((t + 0.5f) / 60.0f)` — ALL in
+                        // f32 — for the remaining minutes. Truncating the
+                        // f64 quotient mis-attributes boundary cases to
+                        // the id mapping.
+                        let elapsed32 = elapsed as f32;
+                        let total32 = ares.total as f32;
+                        let self_p = (100.0f32 * elapsed32 / total32) as u32;
+                        let self_r = ((total32 - elapsed32) + 0.5f32).div_euclid(60.0f32) as u32;
                         if self_p != right.p || self_r != right.r {
                             mapping_errors += 1;
                         } else {

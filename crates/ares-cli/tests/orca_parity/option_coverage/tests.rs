@@ -262,3 +262,43 @@ fn provably_legal_domains_cover_enumerable_and_bounded_options() {
         );
     }
 }
+
+/// The fixture inventory is a curated subset of upstream's
+/// `this->add("key", ...)` set — CLI action flags (`slice`,
+/// `export_gcode`), SLA options, placeholder variables, and
+/// GUI/networking metadata never reach slicing. This test reconciles
+/// the fixture against the upstream key set: every upstream key absent
+/// from the inventory must be listed in
+/// `tests/parity/upstream-key-exclusions.txt` — so a key can never
+/// silently drop out of coverage tracking without a deliberate record.
+#[test]
+fn option_inventory_reconciles_with_upstream_key_set() {
+    let repo = runner::repo_root();
+    let source =
+        std::fs::read_to_string(repo.join("OrcaSlicer/src/libslic3r/PrintConfig.cpp")).unwrap();
+    let upstream: std::collections::BTreeSet<String> =
+        regex::Regex::new(r#"this->add\("([a-zA-Z0-9_]+)""#)
+            .unwrap()
+            .captures_iter(&source)
+            .map(|captures| captures[1].to_owned())
+            .collect();
+    let covered: std::collections::BTreeSet<String> = domains::load(&repo)
+        .iter()
+        .map(|plan| plan.key.clone())
+        .collect();
+    let exclusions: std::collections::BTreeSet<String> =
+        std::fs::read_to_string(repo.join("tests/parity/upstream-key-exclusions.txt"))
+            .unwrap()
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty() && !line.starts_with('#'))
+            .map(ToOwned::to_owned)
+            .collect();
+    let uncovered: std::collections::BTreeSet<String> =
+        upstream.difference(&covered).cloned().collect();
+    assert_eq!(
+        uncovered, exclusions,
+        "upstream keys missing from the option inventory must match the \
+         recorded exclusion list (add coverage or record the exclusion)"
+    );
+}
