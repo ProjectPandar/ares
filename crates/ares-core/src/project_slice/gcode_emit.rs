@@ -82,15 +82,16 @@ pub(super) fn emit(
     );
     let options = motion::MotionOptions::from_traversal(traversal);
     let small_area_flow = small_area::from_traversal(traversal)?;
-    let model_offset = footprint::model_center(traversal).unwrap_or_default();
-    let model_offset = (
-        traversal
-            .scale
-            .unscale(traversal.scale.checked_scale(model_offset.0).unwrap()),
-        traversal
-            .scale
-            .unscale(traversal.scale.checked_scale(model_offset.1).unwrap()),
-    );
+    let model_offset = traversal
+        .resolved
+        .objects
+        .first()
+        .map_or((0.0, 0.0), |object| {
+            footprint::object_origin(
+                &traversal.project.objects()[object.source_object_index],
+                traversal.scale,
+            )
+        });
     let extruder_offset = offset::initial_extruder(traversal);
     let offset = (
         model_offset.0 - extruder_offset.0,

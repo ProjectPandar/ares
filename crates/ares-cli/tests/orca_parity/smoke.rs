@@ -220,6 +220,11 @@ fn orca_parity_kobra3_02_wipe_smoke() {
 }
 
 #[test]
+fn orca_parity_rolohaun_delta_flyer_smoke() {
+    assert_printer_smoke("RolohaunDesign", "Rolohaun Delta Flyer Refit 0.4 nozzle");
+}
+
+#[test]
 fn orca_parity_zaa_enabled_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("zaa_enabled", value);

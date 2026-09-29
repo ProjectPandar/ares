@@ -275,12 +275,12 @@ pub(super) fn append(
                 .predecessor
                 .object
                 .identity();
-            if let Some((center_x, center_y)) =
-                footprint::object_center(traversal, source_object_index)
-            {
-                state.origin = (center_x, center_y);
-                state.offset = (center_x - extruder_offset.0, center_y - extruder_offset.1);
-            }
+            let (center_x, center_y) = footprint::object_origin(
+                &traversal.project.objects()[source_object_index],
+                traversal.scale,
+            );
+            state.origin = (center_x, center_y);
+            state.offset = (center_x - extruder_offset.0, center_y - extruder_offset.1);
             // Raft chunks emit the materialized raft layer; the motion
             // machinery (travel/Z/TYPE/wipe/retract) is identical to the
             // object path.

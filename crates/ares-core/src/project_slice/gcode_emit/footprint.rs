@@ -8,7 +8,7 @@ use crate::project_slice::gcode_emit::{
 };
 use crate::project_slice::gcode_emit::{format_processor_float, tags::Tags};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
-use crate::{ProjectInstance, ProjectObject, ProjectVolumeType};
+use crate::{Point3d, ProjectInstance, ProjectObject, ProjectVolumeType};
 
 pub(super) type FirstLayerBounds = (f64, f64, f64, f64);
 
@@ -136,16 +136,35 @@ fn object_bounds(object: &ProjectObject) -> Option<(f64, f64, f64, f64)> {
     bounds
 }
 
-/// World-space center of the `index`th project object: its build-item
-/// transform places the sliced object on the plate (`bbs_3mf.cpp:3554-3560`
-/// applies build-item transforms; `GCode.cpp:5380` `set_origin(unscale(
-/// instance.shift))` re-origins coordinates per print object).
+/// World-space center for layer scheduling, distinct from the integer
+/// print-instance origin used during emission.
 pub(super) fn object_center(
     traversal: &PreparedPostClassicTraversal,
     index: usize,
 ) -> Option<(f64, f64)> {
     let (min_x, min_y, max_x, max_y) = object_bounds(traversal.project.objects().get(index)?)?;
     Some(((min_x + max_x) * 0.5, (min_y + max_y) * 0.5))
+}
+
+/// `PrintApply.cpp:150`, `PrintObject.cpp:110,130`: scale translation and
+/// raw model center separately, then add the integer instance shift.
+pub(super) fn object_origin(object: &ProjectObject, scale: CoordinateScale) -> (f64, f64) {
+    let translation = object
+        .instances()
+        .iter()
+        .find(|instance| instance.printable())
+        .expect("resolved object has a printable instance")
+        .transform()
+        .transform_point(Point3d::new(0.0, 0.0, 0.0));
+    let center = crate::project_slice::raw_intersections::raw_center(object, scale)
+        .expect("sliced object has validated raw bounds");
+    let x = scale
+        .checked_scale(translation.x)
+        .expect("resolved instance has a scaled X translation");
+    let y = scale
+        .checked_scale(translation.y)
+        .expect("resolved instance has a scaled Y translation");
+    (scale.unscale(x + center.x()), scale.unscale(y + center.y()))
 }
 
 pub(in crate::project_slice) fn model_center(

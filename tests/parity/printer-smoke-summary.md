@@ -1,8 +1,8 @@
 # OrcaSlicer printer smoke summary
 
-974 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
+975 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
 
-The historical matrix includes targeted fresh Sovol SV06 High-Speed and RH3D E3NG 0.2 nozzle passes from the plate-loop coordinate fix, plus Anycubic Kobra 3 0.2 nozzle from the plate-frame wipe fix; this is not a fresh all-printer sweep. Rolohaun Delta Flyer Refit was rechecked and remains divergent.
+The historical matrix includes targeted fresh Sovol SV06 High-Speed and RH3D E3NG 0.2 nozzle passes from the plate-loop coordinate fix, Anycubic Kobra 3 0.2 nozzle from the plate-frame wipe fix, and Rolohaun Delta Flyer Refit from the integer instance-origin fix; this is not a fresh all-printer sweep.
 
 This matrix pins a MODIFIED baseline (`smoke_overrides`: `wall_generator=classic`, `detect_thin_wall=0`, bed-exclude and post-process cleared, one filament) — it verifies parity of the ported classic-wall slice across every printer's machine/process parameterization, not untouched default profiles. Arachne, thin-wall detection, multi-extruder, and vendor post-process paths are upstream boundaries pending port; an untouched-profile acceptance matrix is deferred to those milestones.
 
@@ -677,7 +677,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.6 nozzle |  |
 | PASS | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.8 nozzle |  |
 | PASS | Ratrig/RatRig V-Minion 0.4 nozzle |  |
-| DIVERGENT | RolohaunDesign/Rolohaun Delta Flyer Refit 0.4 nozzle | first difference at byte 86654 (line 3704, column 16; expected 126094 bytes, actual 126094 bytes) context:   line 3703: "G1 X-1.055 Y6.015 E.00391"   line 3704: expected "G1 X5.877 Y6.014 E.19257"; actual "G1 X5.877 Y6.013 E.19257"   line 3705: "G1 X5.986 Y5.986 E.00312" |
+| PASS | RolohaunDesign/Rolohaun Delta Flyer Refit 0.4 nozzle |  |
 | PASS | RolohaunDesign/Rook MK1 LDO 0.2 nozzle |  |
 | PASS | RolohaunDesign/Rook MK1 LDO 0.4 nozzle |  |
 | PASS | RolohaunDesign/Rook MK1 LDO 0.6 nozzle |  |
