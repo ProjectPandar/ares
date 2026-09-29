@@ -210,6 +210,11 @@ fn orca_parity_max_raft_wipe_smoke() {
 }
 
 #[test]
+fn orca_parity_sovol_sv06_high_speed_smoke() {
+    assert_printer_smoke("Sovol", "Sovol SV06 0.4 High-Speed nozzle");
+}
+
+#[test]
 fn orca_parity_zaa_enabled_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("zaa_enabled", value);

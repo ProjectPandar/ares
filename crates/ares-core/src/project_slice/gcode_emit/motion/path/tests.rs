@@ -135,3 +135,58 @@ fn test_geometry() -> LayerGeometry<'static> {
         },
     }
 }
+
+#[test]
+fn plate_loops_unscale_after_integer_translation() {
+    for feature in ["Skirt", "Brim"] {
+        for (extruder_y, expected_y) in [(0.0, "98.188"), (2.0, "96.188")] {
+            let mut state = EmitState {
+                origin: (110.0, 110.0),
+                offset: (110.0, 110.0 - extruder_y),
+                extruder_offset: (0.0, extruder_y),
+                scale_factor: 1e-6,
+                options: MotionOptions {
+                    filament_flow_ratio: 1.0,
+                    print_flow_ratio: 1.0,
+                    filament_area: 1.0,
+                    use_relative_e_distances: true,
+                    ..MotionOptions::default()
+                },
+                ..EmitState::default()
+            };
+            let mut output = Vec::new();
+            path::emit(
+                &mut output,
+                [(8_000_000, -11_811_500), (8_550_000, -11_811_500)].into_iter(),
+                PathProperties {
+                    mm3_per_mm: 0.08,
+                    width: 0.45,
+                    height: 0.2,
+                    feature,
+                    is_perimeter: false,
+                    end_clip: 0.0,
+                    fitting: &[],
+                    slope: None,
+                },
+                test_geometry(),
+                &mut state,
+            );
+            let text = String::from_utf8(output).unwrap();
+            assert!(
+                text.contains(&format!("G1 X118 Y{expected_y} ")),
+                "{feature}: {text}"
+            );
+            assert!(
+                text.contains(&format!("G1 X118.55 Y{expected_y} E")),
+                "{feature}: {text}"
+            );
+            assert_eq!(state.last_scaled_position, Some((8_550_000, -11_811_500)));
+            assert_eq!(state.origin, (110.0, 110.0));
+            assert_eq!(state.wipe_path.len(), 2);
+            for (point, expected_x) in state.wipe_path.iter().zip([8.55, 8.0]) {
+                assert!((point.x - expected_x).abs() < 1e-12);
+                assert!((point.y + 11.8115).abs() < 1e-12);
+            }
+        }
+    }
+}

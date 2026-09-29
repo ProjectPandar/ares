@@ -1,6 +1,8 @@
 # OrcaSlicer printer smoke summary
 
-971 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
+973 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
+
+The historical matrix includes targeted fresh Sovol SV06 High-Speed and RH3D E3NG 0.2 nozzle passes from the plate-loop coordinate fix; this is not a fresh all-printer sweep. Rolohaun Delta Flyer Refit and Anycubic Kobra 3 0.2 nozzle were rechecked and remain divergent.
 
 This matrix pins a MODIFIED baseline (`smoke_overrides`: `wall_generator=classic`, `detect_thin_wall=0`, bed-exclude and post-process cleared, one filament) — it verifies parity of the ported classic-wall slice across every printer's machine/process parameterization, not untouched default profiles. Arachne, thin-wall detection, multi-extruder, and vendor post-process paths are upstream boundaries pending port; an untouched-profile acceptance matrix is deferred to those milestones.
 
@@ -597,7 +599,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Qidi/Qidi X-Smart 3 0.4 nozzle |  |
 | PASS | Qidi/Qidi X-Smart 3 0.6 nozzle |  |
 | PASS | Qidi/Qidi X-Smart 3 0.8 nozzle |  |
-| DIVERGENT | RH3D/E3NG v1.2S - 0.2 nozzle | first difference at byte 13777 (line 523, column 11; expected 291096 bytes, actual 291096 bytes) context:   line 522: "G1 X121 Y105.338 E.10775"   line 523: expected "G1 X123.081 Y105.734 E.02283"; actual "G1 X123.082 Y105.734 E.02283"   line 524: "G1 X124.872 Y106.868 E.02283" |
+| PASS | RH3D/E3NG v1.2S - 0.2 nozzle |  |
 | PASS | RH3D/E3NG v1.2S - 0.3 nozzle |  |
 | PASS | RH3D/E3NG v1.2S - 0.4 nozzle |  |
 | PASS | RH3D/E3NG v1.2S - 0.5 nozzle |  |
@@ -791,7 +793,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Sovol/Sovol SV01 Pro 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV02 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV05 0.4 nozzle |  |
-| DIVERGENT | Sovol/Sovol SV06 0.4 High-Speed nozzle | first difference at byte 1666 (line 90, column 19; expected 101958 bytes, actual 101958 bytes) context:   line 89: "G1 X117.495 Y97.735 E.05224"   line 90: expected "G1 X118.551 Y98.188 E.05224"; actual "G1 X118.551 Y98.189 E.05224"   line 91: "G1 X119.527 Y98.794 E.05224" |
+| PASS | Sovol/Sovol SV06 0.4 High-Speed nozzle |  |
 | PASS | Sovol/Sovol SV06 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV06 ACE 0.2 nozzle |  |
 | PASS | Sovol/Sovol SV06 ACE 0.4 nozzle |  |
