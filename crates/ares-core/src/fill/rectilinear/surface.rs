@@ -28,7 +28,7 @@ pub(crate) struct MonotonicFillParams {
     pub(crate) consistent_pattern: bool,
     /// `params.horiz_move` (`FillBase.hpp:103`, applied `FillRectilinear.cpp:
     /// 2811-2816`): the crosszag/lockedzag per-layer horizontal grid shift.
-    pub(crate) horiz_move: i64,
+    pub(crate) horiz_move: f32,
     /// `extended_object_bounding_box()` x-bounds (`FillBase.cpp:1569-1578`) in
     /// scaled coordinates: the object bounding box transpose-merged and
     /// sqrt(2)-scaled so it covers every rotation. `has_consistent_pattern`
@@ -139,14 +139,14 @@ fn fill_surface(
     // shifts the grid start, adding one column when the shift lands on an
     // odd multiple of the spacing.
     let mut count = count;
-    if params.horiz_move != 0 {
-        let gap_line = params.horiz_move / line_spacing;
-        if gap_line % 2 == 0 {
-            x0 += params.horiz_move - gap_line * line_spacing;
-        } else {
-            x0 += params.horiz_move - (gap_line - 1) * line_spacing;
-            count += 1;
-        }
+    // The upstream compound addition rounds x0 through float even at zero shift.
+    let gap_line = (params.horiz_move / line_spacing as f32) as i32;
+    if gap_line % 2 == 0 {
+        x0 = (x0 as f32 + (params.horiz_move - (i64::from(gap_line) * line_spacing) as f32)) as i64;
+    } else {
+        x0 = (x0 as f32 + (params.horiz_move - (i64::from(gap_line - 1) * line_spacing) as f32))
+            as i64;
+        count += 1;
     }
     populate_vertical_lines(&mut slice, count, x0, line_spacing)?;
     let link_max_length = checked_scale(scale, params.link_max_length)? as f64;

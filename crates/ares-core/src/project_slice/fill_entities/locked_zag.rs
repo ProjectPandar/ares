@@ -39,7 +39,7 @@ pub(super) fn append(
         anchor_length_max: params.anchor_length_max,
         link_max_length: 0.0,
         consistent_pattern: true,
-        horiz_move: params.horiz_move as i64,
+        horiz_move: params.horiz_move,
         extended_object_min_x: Some(extended_object_bounds_x.0),
         extended_object_max_x: Some(extended_object_bounds_x.1),
         locked_zag: false,

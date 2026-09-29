@@ -10,15 +10,15 @@ fn fresh_runtime_controls_do_not_leak_raw_group_phase_into_other_fillers() {
                 ProcessInfillPattern::Monotonic,
                 ProcessInfillPattern::MonotonicLine,
             ] {
-                assert_eq!(runtime_controls(pattern, phase, symmetric), (0, false));
+                assert_eq!(runtime_controls(pattern, phase, symmetric), (0.0, false));
             }
             assert_eq!(
                 runtime_controls(ProcessInfillPattern::ZigZag, phase, symmetric),
-                (0, symmetric)
+                (0.0, symmetric)
             );
             assert_eq!(
                 runtime_controls(ProcessInfillPattern::CrossZag, phase, symmetric),
-                (phase as i64, symmetric)
+                (phase, symmetric)
             );
         }
     }

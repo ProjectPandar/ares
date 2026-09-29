@@ -14,11 +14,11 @@ use super::{
 mod tests;
 
 // Fill.cpp constructs fresh FillParams; raw group metadata remains sticky.
-fn runtime_controls(pattern: ProcessInfillPattern, phase: f32, symmetric: bool) -> (i64, bool) {
+fn runtime_controls(pattern: ProcessInfillPattern, phase: f32, symmetric: bool) -> (f32, bool) {
     let phase = if pattern == ProcessInfillPattern::CrossZag {
-        phase as i64
+        phase
     } else {
-        0
+        0.0
     };
     let symmetric = symmetric
         && matches!(
@@ -72,8 +72,7 @@ pub(super) fn append(
         extended_object_max_x: pattern
             .has_consistent_pattern()
             .then_some(extended_object_bounds_x.1),
-        // `params.horiz_move` is already in scaled coord units (`f32`) —
-        // truncating to `i64` matches the `coord_t`/`float` mix upstream.
+        // Keep the upstream f32 shift in scaled coordinate units.
         horiz_move,
         locked_zag: false,
     };

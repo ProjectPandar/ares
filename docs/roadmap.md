@@ -7,6 +7,16 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Current numerical dependency: rewrite `FillBase.hpp::FillParams::horiz_move`
+and `FillRectilinear.cpp::fill_surface_by_lines` grid-shift arithmetic in
+`fill/rectilinear/surface.rs` (ARD-0038). The wide-solid tracer has complete
+official-output RED→GREEN evidence; signed cross-zag and locked-zag cases pass.
+The isolated slice passes all 7372 workspace tests, four live complete-output
+cases, fmt and clippy. Independent review is recorded in the slice plan.
+The adjacent `Fill.cpp` phase-generation narrowing,
+remaining KSR differences and all-printer/all-option coverage remain open;
+this source slice is not completion of the active program.
+
 The active development program is the source-cited vertical rewrite defined by
 `docs/architecture/ard-0023-3mf-project-gcode-parity.md` and
 `docs/superpowers/specs/2026-07-10-ksr-fdmtest-v4-gcode-parity.md`. Its fixed

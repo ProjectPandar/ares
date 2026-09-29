@@ -35,6 +35,10 @@ mod skirt_height;
 #[path = "option_coverage/hot_plate.rs"]
 mod hot_plate;
 
+#[cfg(test)]
+#[path = "option_coverage/fill_grid.rs"]
+mod fill_grid;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,
