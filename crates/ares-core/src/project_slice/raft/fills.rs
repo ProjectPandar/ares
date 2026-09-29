@@ -70,17 +70,6 @@ pub(crate) fn raft_layer_polylines(
     // just inside the polygon boundary. `SCALED_EPSILON = scale_(1e-4)`
     // and `float(SCALED_EPSILON)` keeps the fractional 0.4096 units
     // (`libslic3r.h:52,96`).
-    if std::env::var("ARES_INNER_CONTOUR").is_ok() {
-        for (i, p) in layer_polygons.iter().enumerate() {
-            let pts = p
-                .points()
-                .iter()
-                .map(|pt| format!("{},{}", pt.x(), pt.y()))
-                .collect::<Vec<_>>()
-                .join(" ");
-            eprintln!("FIRSTL {i} {}", pts);
-        }
-    }
     let epsilon = scale.scaled_delta(1e-4) as f32;
     // `SCALED_EPSILON + 0.5*flow.scaled_width()`
     // (`SupportCommon.cpp:738`, `Flow.hpp:62`): `scaled_width` is the
@@ -125,24 +114,6 @@ pub(crate) fn raft_layer_polylines(
         .iter()
         .map(|expolygon| expolygon.contour().clone())
         .collect::<Vec<_>>();
-    if std::env::var("ARES_INNER_CONTOUR").is_ok() {
-        for (i, e) in closing.iter().enumerate() {
-            let xs = e.contour().points().iter().map(|p| p.x());
-            eprintln!(
-                "CLOSING {i} x={}..{}",
-                xs.clone().min().unwrap_or(0),
-                xs.max().unwrap_or(0)
-            );
-        }
-        for (i, e) in fill_region.iter().enumerate() {
-            let xs = e.contour().points().iter().map(|p| p.x());
-            eprintln!(
-                "FILLREG {i} x={}..{}",
-                xs.clone().min().unwrap_or(0),
-                xs.max().unwrap_or(0)
-            );
-        }
-    }
     out.extend(raft_layer_fill(
         &fill_polygons,
         spec,
@@ -185,13 +156,6 @@ pub(crate) fn raft_layer_fill(
             )?
         }
     };
-    if std::env::var("ARES_RAFT_DEBUG").is_ok() {
-        eprintln!(
-            "RAFTDBG expolygons={} in={}",
-            expolygons.len(),
-            layer_polygons.len()
-        );
-    }
     let mut out = Vec::new();
     for expolygon in expolygons {
         // `aoffset1 = coord_t(scale_(overlap − 0.5·spacing))`
@@ -218,15 +182,6 @@ pub(crate) fn raft_layer_fill(
         // precision bit-for-bit.
         let rotate_by = f64::from(-((spec.angle as f32) + std::f32::consts::FRAC_PI_2));
         let mut slice = prepare_rectilinear_contours(&expolygon, rotate_by, 0.0, inner_offset)?;
-        if std::env::var("ARES_RAFT_DEBUG").is_ok() {
-            for (ci, c) in slice.contours.iter().enumerate() {
-                eprintln!(
-                    "RAFTDBG contour {ci} inner={} pts={}",
-                    c.inner,
-                    c.polygon.points().len()
-                );
-            }
-        }
         // Upstream `connect_base_support(..., poly_with_offset.polygons_outer,
         // ...)` — `polygons_outer` there is the DELTA-shrunk fill boundary
         // (where the infill endpoints sit), which is ares' `inner`
@@ -237,17 +192,6 @@ pub(crate) fn raft_layer_fill(
             .filter(|contour| contour.inner)
             .map(|contour| contour.polygon.clone())
             .collect();
-        if std::env::var("ARES_INNER_CONTOUR").is_ok() {
-            for (bi, b) in boundary.iter().enumerate() {
-                let xs = b.points().iter().map(|p| p.x());
-                eprintln!(
-                    "INNER {bi} n={} x={}..{}",
-                    b.points().len(),
-                    xs.clone().min().unwrap_or(0),
-                    xs.max().unwrap_or(0)
-                );
-            }
-        }
         if boundary.is_empty() {
             continue;
         }
@@ -264,30 +208,17 @@ pub(crate) fn raft_layer_fill(
         let width = source_bounds.max().x() - aligned_min_x;
         let count = usize::try_from((width + line_spacing - 1) / line_spacing).unwrap_or(0);
         populate_vertical_lines(&mut slice, count, aligned_min_x, line_spacing)?;
-        if std::env::var("ARES_RAFT_DEBUG").is_ok() {
-            eprintln!(
-                "RAFTDBG count={count} nonempty={}",
-                slice
-                    .lines
-                    .iter()
-                    .filter(|l| !l.intersections.is_empty())
-                    .count()
-            );
-        }
 
-        // `x_margin = line_width + SCALED_EPSILON` (`make_fill_lines:2924-2925,
-        // 3016-3017`, `line_width = coord_t(scale_(spacing))`): lines fully
-        // overlapping the infill perimeter (within one line-width of the bbox
-        // edge) are not produced.
-        let x_margin = scale.scaled_delta(spec.spacing) + scale.scaled_delta(1e-4);
-        let x_min = source_bounds.min().x() as f64 + x_margin;
-        let x_max = source_bounds.max().x() as f64 - x_margin;
+        // `FillSupportBase::fill_surface` passes `x_margin = 0`
+        // (`FillRectilinear.cpp:3621`): keep every line inside the source
+        // bbox (`make_fill_lines:2924-2925, 2937-2939`).
+        let (x_min, x_max) = (source_bounds.min().x(), source_bounds.max().x());
         let mut fill_lines = Vec::new();
         for line in &slice.lines {
-            if (line.x as f64) < x_min {
+            if line.x < x_min {
                 continue;
             }
-            if (line.x as f64) > x_max {
+            if line.x > x_max {
                 break;
             }
             fill_lines.extend(vertical_segments(line));
@@ -305,8 +236,6 @@ pub(crate) fn raft_layer_fill(
         // — f64 cos of the f32 angle (`FillRectilinear.cpp:3627-3633`).
         let rotate_back = f64::from((spec.angle as f32) + std::f32::consts::FRAC_PI_2);
         let (cos_a, sin_a) = (rotate_back.cos(), rotate_back.sin());
-        #[allow(unused_variables)]
-        let pre_connect_count = fill_lines.len();
         let connected = connect_base_support(
             fill_lines,
             &boundary,
@@ -315,30 +244,6 @@ pub(crate) fn raft_layer_fill(
             spec.density,
             scale,
         )?;
-        if std::env::var("ARES_CONN_DUMP").is_ok() {
-            eprintln!("CONN n={}", connected.len());
-            for p in &connected {
-                let pts = p
-                    .points()
-                    .iter()
-                    .map(|pt| format!("{},{}", pt.x(), pt.y()))
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                eprintln!("PL n={} {}", p.points().len(), pts);
-            }
-            eprintln!("CONNEND");
-        }
-        #[allow(unused_variables)]
-        if std::env::var("ARES_RAFT_DEBUG").is_ok() {
-            eprintln!(
-                "CONNECTDBG pre={pre_connect_count} post={} pts={:?}",
-                connected.len(),
-                connected
-                    .iter()
-                    .map(|p| p.points().len())
-                    .collect::<Vec<_>>()
-            );
-        }
         out.extend(connected.into_iter().map(|polyline| {
             let rotated = polyline
                 .points()

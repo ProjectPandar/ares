@@ -825,3 +825,26 @@ Remaining raft residuals, for follow-up slices:
   `F2997`): `raft_expansion/*`.
 - First-layer flange hatch and travel differences:
   `raft_first_layer_density/seeded`, `raft_first_layer_expansion/seeded`.
+
+## 2026-09-29 (raft `FillSupportBase` edge lines)
+
+Ported from `Fill/FillRectilinear.cpp:3610-3634`
+(`FillSupportBase::fill_surface`) into `project_slice/raft/fills.rs`.
+- Upstream calls `make_fill_lines` with `x_margin = 0` (`:3621`). The
+  `line_width + SCALED_EPSILON` margin belongs to the plain-rectilinear
+  caller at `:3016`. Ares applied that margin to raft fills and dropped
+  hatch lines within one line width of the bbox edge. The connector then
+  traced the boundary instead and entered the zig-zag from the other
+  side.
+- That also cleared the raft-layer cooling feedrate residual
+  (`F2986` / `F2997`): the extra line changes the layer time.
+- The two assertion-free `probe_*` tests in `raft/fills/tests.rs` are
+  replaced by `support_base_keeps_hatch_lines_next_to_the_edge`, which
+  fails without the fix. The `ARES_*` debug env hooks in `fills.rs` are
+  removed.
+- Oracle: 7/12 raft cases PASS (summary 608/650). Every remaining raft
+  diff is the single-digit wipe-retract E residual (`-.92554` /
+  `-.92553`, `-.20595` / `-.20594`). Upstream's `Point::rotate` back-
+  rotation and the f32 angle arithmetic are already matched, so the
+  ~1nm endpoint difference behind it sits inside `connect_base_support`
+  or `ExPolygonWithOffset`.
