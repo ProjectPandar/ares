@@ -4,11 +4,10 @@ use crate::project::{
     xml::{XmlRole, deserialize_xml},
 };
 
-use super::fixture::FIXTURE;
-
 #[test]
 fn project_model_deserializes_root_and_leaf_without_precision_loss() {
-    let mut archive = ProjectArchive::open(FIXTURE, ArchiveLimits::PROJECT).unwrap();
+    let mut archive =
+        ProjectArchive::open(crate::test_fixtures::ksr_project(), ArchiveLimits::PROJECT).unwrap();
     let root = model(&mut archive, "3D/3dmodel.model");
     let leaf = model(&mut archive, "3D/Objects/ksr_fdmtest_v4.drc_2.model");
 

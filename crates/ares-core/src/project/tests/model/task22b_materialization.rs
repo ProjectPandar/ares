@@ -3,7 +3,7 @@ use crate::{
     slice_project,
 };
 
-use super::fixture::{FIXTURE, ProjectParts};
+use super::fixture::ProjectParts;
 use crate::project::{
     ArchiveLimits, PackagePath, ProjectArchive,
     xml::{XmlRole, deserialize_xml},
@@ -100,7 +100,7 @@ fn task22b_empty_geometry_is_omitted_before_volume_metadata_association() {
 
 #[test]
 fn task22b_ksr_import_preparation_has_exact_mesh_facts() {
-    let project = load_project(FIXTURE).unwrap();
+    let project = load_project(crate::test_fixtures::ksr_project()).unwrap();
     let volume = &project.objects()[0].volumes()[0];
     assert_eq!(volume.mesh().vertices().len(), 6_109);
     assert_eq!(volume.mesh().triangles().len(), 12_234);
@@ -139,7 +139,8 @@ fn unit_parts(unit: &str, x: &str) -> ProjectParts {
 }
 
 fn fixture_source_mesh() -> (Vec<[f32; 3]>, Vec<[u32; 3]>) {
-    let mut archive = ProjectArchive::open(FIXTURE, ArchiveLimits::PROJECT).unwrap();
+    let mut archive =
+        ProjectArchive::open(crate::test_fixtures::ksr_project(), ArchiveLimits::PROJECT).unwrap();
     let bytes = archive
         .read(&PackagePath::entry(b"3D/Objects/ksr_fdmtest_v4.drc_2.model").unwrap())
         .unwrap();

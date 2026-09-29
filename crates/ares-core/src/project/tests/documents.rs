@@ -13,14 +13,12 @@ use crate::project::{
     xml::{JsonRole, XmlRole, deserialize_json, deserialize_xml},
 };
 
-const FIXTURE: &[u8] =
-    include_bytes!("../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
-
 mod object_settings_metadata;
 
 #[test]
 fn project_documents_deserialize_content_types_relationships_and_all_previews() {
-    let mut archive = ProjectArchive::open(FIXTURE, ArchiveLimits::PROJECT).unwrap();
+    let mut archive =
+        ProjectArchive::open(crate::test_fixtures::ksr_project(), ArchiveLimits::PROJECT).unwrap();
     let content_types: ContentTypes = deserialize_xml(
         &read(&mut archive, "[Content_Types].xml"),
         XmlRole::ContentTypes,
@@ -108,7 +106,8 @@ fn project_documents_deserialize_content_types_relationships_and_all_previews() 
 
 #[test]
 fn project_documents_deserialize_typed_project_metadata() {
-    let mut archive = ProjectArchive::open(FIXTURE, ArchiveLimits::PROJECT).unwrap();
+    let mut archive =
+        ProjectArchive::open(crate::test_fixtures::ksr_project(), ArchiveLimits::PROJECT).unwrap();
     let model: ModelSettings = deserialize_xml(
         &read(&mut archive, "Metadata/model_settings.config"),
         XmlRole::ModelSettings,

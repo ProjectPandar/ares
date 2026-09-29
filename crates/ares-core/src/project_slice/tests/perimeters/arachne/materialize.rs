@@ -8,12 +8,12 @@ use crate::project_slice::perimeters::{
     prepare_post_layer_region_perimeters, types::PerimeterDispatch,
 };
 
-const FIXTURE: &[u8] =
-    include_bytes!("../../../../../../../tests/parity/arachne/default-prisms.3mf");
+const FIXTURE: &str = "tests/parity/arachne/default-prisms.3mf";
 
 #[test]
 fn task22w17_fixture_materializes_real_arachne_perimeters() {
-    let output = prepare_post_layer_region_perimeters(FIXTURE).unwrap();
+    let output =
+        prepare_post_layer_region_perimeters(&crate::test_fixtures::read(FIXTURE)).unwrap();
 
     let mut walls = 0_usize;
     let mut loops = 0_usize;
@@ -63,7 +63,7 @@ fn task22w17_fixture_materializes_real_arachne_perimeters() {
 fn task22w18_no_classic_fallback_for_arachne_records() {
     // The classic chain must generate no classic surfaces for arachne
     // records: every perimeter entity comes from `process_arachne`.
-    let prelude = prepare_post_classic_prelude(FIXTURE).unwrap();
+    let prelude = prepare_post_classic_prelude(&crate::test_fixtures::read(FIXTURE)).unwrap();
     for object in &prelude.objects {
         let dispatches = object
             .object

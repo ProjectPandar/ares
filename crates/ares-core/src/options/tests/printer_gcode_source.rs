@@ -213,9 +213,7 @@ fn printer_gcode_source_rejects_duplicate_unknown_and_invalid_enum_fields() {
 }
 
 fn inventory_rows() -> Vec<InventoryRow> {
-    serde_json::from_str::<Vec<InventoryRow>>(include_str!(
-        "../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    serde_json::from_str::<Vec<InventoryRow>>(crate::test_fixtures::options_inventory())
     .unwrap()
     .into_iter()
     .filter(|row| row.raw_scope == "printer" && row.static_owner == "g_code_config")

@@ -5,10 +5,7 @@ use std::{
 
 use zip::{CompressionMethod, ZipArchive, ZipWriter, write::SimpleFileOptions};
 
-pub(super) const FIXTURE: &[u8] =
-    include_bytes!("../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
-
-const CONTENT_TYPES: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+pub(super) const CONTENT_TYPES: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
@@ -84,7 +81,8 @@ impl ProjectParts {
     }
 
     pub(in crate::project::tests) fn fixture() -> Self {
-        let mut archive = ZipArchive::new(Cursor::new(FIXTURE)).unwrap();
+        let mut archive =
+            ZipArchive::new(Cursor::new(crate::test_fixtures::ksr_project())).unwrap();
         let mut entries = BTreeMap::new();
         for index in 0..archive.len() {
             let mut file = archive.by_index(index).unwrap();

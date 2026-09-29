@@ -6,9 +6,6 @@ use crate::{
 };
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
-const FIXTURE: &[u8] = include_bytes!(
-    "../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-);
 
 #[test]
 fn absent_thumbnails_do_not_normalize_resolved_defaults() {
@@ -210,7 +207,7 @@ fn thumbnail_composite_does_not_change_flush_volumes_matrix() {
 
 #[tokio::test]
 async fn real_project_bytes_are_canonical_after_one_pass_and_reach_the_existing_boundary() {
-    let project = load_project(FIXTURE).unwrap();
+    let project = load_project(crate::test_fixtures::ksr_project()).unwrap();
     let thumbnails = project.settings().printer.remaining.thumbnails.as_str();
     assert_eq!(thumbnails, "48x48/PNG, 300x300/PNG");
 
@@ -228,7 +225,7 @@ async fn real_project_bytes_are_canonical_after_one_pass_and_reach_the_existing_
     );
 
     let output = slice_project(
-        FIXTURE,
+        crate::test_fixtures::ksr_project(),
         GenerationMetadata::deterministic(2026, 7, 13, 1, 2, 3),
     )
     .await
@@ -237,7 +234,7 @@ async fn real_project_bytes_are_canonical_after_one_pass_and_reach_the_existing_
 }
 
 fn project_with_thumbnails(thumbnails: &str, format: &str) -> Vec<u8> {
-    let mut source = ZipArchive::new(Cursor::new(FIXTURE)).unwrap();
+    let mut source = ZipArchive::new(Cursor::new(crate::test_fixtures::ksr_project())).unwrap();
     let mut destination = ZipWriter::new(Cursor::new(Vec::new()));
 
     for index in 0..source.len() {

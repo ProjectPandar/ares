@@ -13,14 +13,13 @@ use crate::GCodeFlavor;
 #[test]
 
 fn layer_corpus_matches_gt_chunk_outputs() {
-    let layers: [&str; 2] = [
-        include_str!("corpus_layer1.txt"),
-        include_str!("corpus_layer2.txt"),
-    ];
-    let expected: [&str; 2] = [
-        include_str!("corpus_gt1.txt"),
-        include_str!("corpus_gt2.txt"),
-    ];
+    let [layers, expected] = [["layer1", "layer2"], ["gt1", "gt2"]].map(|names| {
+        names.map(|name| {
+            crate::test_fixtures::read_str(&format!(
+                "crates/ares-core/src/project_slice/gcode_emit/fan_mover/corpus_{name}.txt"
+            ))
+        })
+    });
     let mut mover = FanMover::new(0.3, 0.0, false, true, GCodeFlavor::MarlinLegacy);
     for (layer, expected) in layers.iter().zip(expected.iter()) {
         let out = mover.process_gcode(layer, true);

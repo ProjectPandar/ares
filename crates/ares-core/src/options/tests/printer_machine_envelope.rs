@@ -101,9 +101,7 @@ const fn field(
 
 #[test]
 fn printer_machine_envelope_inventory_and_fixture_are_exact_and_typed() {
-    let rows: Vec<InventoryRow> = serde_json::from_str(include_str!(
-        "../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    let rows: Vec<InventoryRow> = serde_json::from_str(crate::test_fixtures::options_inventory())
     .unwrap();
     let rows = rows
         .iter()

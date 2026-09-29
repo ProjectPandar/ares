@@ -7,9 +7,13 @@ struct OptionInventoryRow {
 }
 
 fn committed_inventory() -> Vec<OptionInventoryRow> {
-    serde_json::from_str(include_str!(
-        "../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    serde_json::from_str(
+        &std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/ksr_fdmtest_v4/options-v242.json"
+        ))
+        .unwrap(),
+    )
     .unwrap()
 }
 

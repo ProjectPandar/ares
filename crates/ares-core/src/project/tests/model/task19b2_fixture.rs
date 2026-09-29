@@ -1,11 +1,9 @@
 use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 use crate::{OrcaInt, ProjectVolumeType, load_project};
 
-use super::fixture::FIXTURE;
-
 #[test]
 fn real_fixture_associates_typed_model_configuration_with_domain_owners() {
-    let project = load_project(FIXTURE).unwrap();
+    let project = load_project(crate::test_fixtures::ksr_project()).unwrap();
     let [object] = project.objects() else {
         panic!("expected one project object")
     };

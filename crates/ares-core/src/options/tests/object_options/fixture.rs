@@ -10,8 +10,6 @@ use super::super::super::{
 };
 use super::{ObjectOptionOverrides, ObjectOptions, types};
 
-const FIXTURE: &[u8] =
-    include_bytes!("../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
 
 const FIXTURE_DIFFERENCES: [(&str, &str, &str); 18] = [
     ("brim_object_gap", "0", "0.1"),
@@ -36,7 +34,7 @@ const FIXTURE_DIFFERENCES: [(&str, &str, &str); 18] = [
 
 #[test]
 fn object_options_fixture_preserves_document_metadata_and_part_matrix() {
-    let project = crate::load_project(FIXTURE).unwrap();
+    let project = crate::load_project(crate::test_fixtures::ksr_project()).unwrap();
     let domain_object = project
         .objects()
         .iter()
@@ -71,7 +69,7 @@ fn object_options_fixture_preserves_document_metadata_and_part_matrix() {
 
 #[test]
 fn object_options_fixture_resolves_typed_base_and_exact_difference_ledger() {
-    let project = crate::load_project(FIXTURE).unwrap();
+    let project = crate::load_project(crate::test_fixtures::ksr_project()).unwrap();
     let domain_object = project
         .objects()
         .iter()

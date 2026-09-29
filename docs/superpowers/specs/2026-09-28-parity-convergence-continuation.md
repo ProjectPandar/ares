@@ -933,3 +933,21 @@ Ported the `is_final` drain of `GCodeProcessor::TimeMachine::calculate_time`
   - 27 artifact `input.3mf` re-slices match `orca.gcode` byte for byte.
     TinyBotV1 0.4 is the exception, a known residual, and its output
     matches the pre-cleanup `ares.gcode`.
+
+## Slice: fixture loading without `include_bytes!` / `include_str!`
+
+- The goal forbids `include!`/`include_bytes!`. The 38 compile-time fixture
+  embeds in tests now read the files at run time instead.
+  - `ares-core` tests use the new `#[cfg(test)]` module `test_fixtures`,
+    which resolves `CARGO_MANIFEST_DIR/../../<repo path>`.
+    `LazyLock`-cached `ksr_project()` and `options_inventory()` keep the
+    `&'static` borrows the deserializers need.
+  - The integration tests in `ares-core/tests` and `ares-cli/tests` call
+    `std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), ...))`
+    directly.
+- Production `ares-core` still does no file I/O, because the module is
+  test-only.
+- `no_unapproved_dynamic_values` keeps `include!` only as string literals
+  inside its source-scanner fixtures. Nothing invokes the macro.
+- Verification: `cargo nextest run --workspace` passed 7344 of 7344, and
+  `grep` finds no `include_(bytes|str)!` invocations.

@@ -25,8 +25,6 @@ use super::{
 const CONTENT_TYPES: &str = r#"<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="png" ContentType="image/png"/></Types>"#;
 const ROOT_MODEL_PATH: &str = "3D/root.model";
 const KSR_MODEL_PATH: &str = "3D/3dmodel.model";
-const KSR_FIXTURE: &[u8] =
-    include_bytes!("../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
 type ExactPending = (PackagePath, u32, Transform3d);
 type ExactQueueSeam = fn(
     &mut VecDeque<ExactPending>,
@@ -217,6 +215,11 @@ fn task22b_expanded_model_budget_is_request_wide_instances_reuse_dag_and_ksr_cla
     assert_eq!(reused.used, 1 + 3 + 1);
 
     let mut ksr = ExpandedModelBudget::default();
-    assemble_with_budget(KSR_FIXTURE, KSR_MODEL_PATH, &mut ksr).unwrap();
+    assemble_with_budget(
+        crate::test_fixtures::ksr_project(),
+        KSR_MODEL_PATH,
+        &mut ksr,
+    )
+    .unwrap();
     assert_eq!(ksr.used, 2 + 6_109 + 12_234);
 }

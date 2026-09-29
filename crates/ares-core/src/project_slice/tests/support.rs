@@ -17,10 +17,8 @@ use crate::{
     },
 };
 
-const KSR_PROJECT: &[u8] =
-    include_bytes!("../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
 pub(in crate::project_slice) fn ksr_project() -> &'static [u8] {
-    KSR_PROJECT
+    crate::test_fixtures::ksr_project()
 }
 
 pub(in crate::project_slice) fn metadata() -> GenerationMetadata {

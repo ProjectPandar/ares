@@ -16,9 +16,7 @@ struct LegacyInput {
 
 #[test]
 fn typed_legacy_fixture_oracle_has_exact_rows_names_and_source_delta() {
-    let rows: Vec<InventoryRow> = serde_json::from_str(include_str!(
-        "../../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    let rows: Vec<InventoryRow> = serde_json::from_str(crate::test_fixtures::options_inventory())
     .unwrap();
     let ledger_rows = rows
         .iter()

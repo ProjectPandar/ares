@@ -73,9 +73,7 @@ fn project_settings_accepts_every_inventory_wire_family() {
     let raw = project_settings_bytes();
     let fixture: serde_json::Value = serde_json::from_slice(&raw).unwrap();
     let fixture = fixture.as_object().unwrap();
-    let inventory: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    let inventory: serde_json::Value = serde_json::from_str(crate::test_fixtures::options_inventory())
     .unwrap();
     let rows = inventory.as_array().unwrap();
     let families = rows

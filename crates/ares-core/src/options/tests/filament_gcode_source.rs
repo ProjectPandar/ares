@@ -135,9 +135,7 @@ fn aggregate_exposes_filament_gcode_source_options() {
 }
 
 fn inventory() -> Vec<InventoryRow> {
-    serde_json::from_str(include_str!(
-        "../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    serde_json::from_str(crate::test_fixtures::options_inventory())
     .unwrap()
 }
 

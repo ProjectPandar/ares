@@ -8,12 +8,10 @@ use crate::options::{
 
 use super::{RegionOptions, inventory};
 
-const FIXTURE: &[u8] =
-    include_bytes!("../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
 
 #[test]
 fn fixture_resolves_region_only_from_typed_project_and_model_settings() {
-    let project = crate::load_project(FIXTURE).unwrap();
+    let project = crate::load_project(crate::test_fixtures::ksr_project()).unwrap();
     let raw = super::super::project_fixture::project_settings_value();
     let raw = raw.as_object().unwrap();
     let rows = inventory();

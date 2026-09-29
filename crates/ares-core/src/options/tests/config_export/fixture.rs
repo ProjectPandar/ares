@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, sync::LazyLock};
 
 use sha2::{Digest, Sha256};
 
@@ -13,11 +13,8 @@ use crate::{
 
 use super::assignment_lines;
 
-const PROJECT: &[u8] = include_bytes!(
-    "../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-);
-const REFERENCE: &[u8] =
-    include_bytes!("../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode");
+static REFERENCE: LazyLock<Vec<u8>> =
+    LazyLock::new(|| crate::test_fixtures::read("tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode"));
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
 const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
 const BLOCK_SHA256: &str = "6a14052054bfd46b7ea0268917246f8ce0c6388936351816fc4b41a5a6cd6706";
@@ -106,7 +103,7 @@ fn config_export_fixture_freezes_the_committed_reference_block_contract() {
 
 #[test]
 fn config_export_fixture_matches_resolved_task19b3_views_byte_for_byte() {
-    let project = load_project(PROJECT).unwrap();
+    let project = load_project(crate::test_fixtures::ksr_project()).unwrap();
     let resolved = resolve_bounded_project_config(&project).unwrap();
     let full_entries = collect_config_entries(&resolved.views.full).unwrap();
     let runtime_entries = collect_config_entries(&resolved.views.runtime).unwrap();
@@ -158,7 +155,7 @@ fn config_export_fixture_matches_resolved_task19b3_views_byte_for_byte() {
 }
 
 fn reference_block() -> &'static [u8] {
-    let start = find_once(REFERENCE, START);
+    let start = find_once(&REFERENCE, START);
     let end = start + find_once(&REFERENCE[start..], END) + END.len();
     &REFERENCE[start..end]
 }

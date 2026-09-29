@@ -112,9 +112,7 @@ enum ConfigExportRule {
 
 #[test]
 fn project_inventory_has_exact_v242_shape_and_ownership() {
-    let rows: Vec<InventoryRow> = serde_json::from_str(include_str!(
-        "../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    let rows: Vec<InventoryRow> = serde_json::from_str(crate::test_fixtures::options_inventory())
     .unwrap();
     assert_eq!(rows.len(), 653);
     assert!(rows.windows(2).all(|pair| pair[0].key < pair[1].key));
@@ -257,9 +255,7 @@ fn project_inventory_has_exact_v242_shape_and_ownership() {
 fn project_inventory_matches_the_embedded_fixture_keys_and_shapes() {
     let fixture = super::project_fixture::project_settings_value();
     let fixture = fixture.as_object().unwrap();
-    let rows: Vec<InventoryRow> = serde_json::from_str(include_str!(
-        "../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    let rows: Vec<InventoryRow> = serde_json::from_str(crate::test_fixtures::options_inventory())
     .unwrap();
 
     let inventory_keys = rows.iter().map(|row| row.key.as_str()).collect::<BTreeSet<_>>();

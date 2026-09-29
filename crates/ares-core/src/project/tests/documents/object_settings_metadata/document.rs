@@ -6,7 +6,7 @@ use crate::project::{
 };
 use crate::{OrcaFloat, SliceError};
 
-use super::super::{FIXTURE, read};
+use super::super::read;
 use super::{
     object_module, object_name, object_overrides, pairs, parse_settings, region_overrides,
 };
@@ -173,7 +173,8 @@ fn object_settings_metadata_keeps_matrix_and_discards_object_only_key_on_nested_
 
 #[test]
 fn object_settings_metadata_real_fixture_preserves_named_retained_and_part_boundaries() {
-    let mut archive = ProjectArchive::open(FIXTURE, ArchiveLimits::PROJECT).unwrap();
+    let mut archive =
+        ProjectArchive::open(crate::test_fixtures::ksr_project(), ArchiveLimits::PROJECT).unwrap();
     let settings: ModelSettings = deserialize_xml(
         &read(&mut archive, "Metadata/model_settings.config"),
         XmlRole::ModelSettings,

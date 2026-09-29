@@ -5,8 +5,6 @@ use std::{
 
 use zip::{CompressionMethod, DateTime, System, ZipArchive, ZipWriter, write::SimpleFileOptions};
 
-use super::KSR_PROJECT;
-
 const FLUSH_MATRIX: &str = concat!(
     "\t\"flush_volumes_matrix\": [\r\n",
     "\t\t\"0\",\r\n",
@@ -28,7 +26,8 @@ pub(in crate::project_slice) struct KsrArchive {
 
 impl KsrArchive {
     pub(in crate::project_slice) fn new() -> Self {
-        let mut archive = ZipArchive::new(Cursor::new(KSR_PROJECT)).unwrap();
+        let mut archive =
+            ZipArchive::new(Cursor::new(crate::test_fixtures::ksr_project())).unwrap();
         let mut entries = BTreeMap::new();
         for index in 0..archive.len() {
             let mut file = archive.by_index(index).unwrap();

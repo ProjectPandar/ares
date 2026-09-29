@@ -252,4 +252,6 @@ pub async fn slice(input: impl AsRef<[u8]>, options: SliceOptions) -> Result<Vec
 }
 
 #[cfg(test)]
+mod test_fixtures;
+#[cfg(test)]
 mod tests;

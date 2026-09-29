@@ -181,7 +181,7 @@ fn printer_options_rejects_duplicate_unknown_cross_scope_and_wrong_shapes() {
 }
 
 fn inventory() -> Vec<InventoryRow> {
-    serde_json::from_str(include_str!("../../../../../tests/ksr_fdmtest_v4/options-v242.json")).unwrap()
+    serde_json::from_str(crate::test_fixtures::options_inventory()).unwrap()
 }
 
 fn remaining_rows(rows: &[InventoryRow]) -> Vec<&InventoryRow> {

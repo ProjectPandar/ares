@@ -11,9 +11,7 @@ use super::support::{assert_all_twelve_runtime_gcode_fields, floats, ints, z_hop
 
 #[test]
 fn project_config_views_fixture_preserves_full_and_resolves_runtime_retracts() {
-    let project = load_project(include_bytes!(
-        "../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-    ))
+    let project = load_project(crate::test_fixtures::ksr_project())
     .unwrap();
     let raw = project.settings().clone();
     let original_raw = raw.clone();
@@ -75,9 +73,7 @@ fn project_config_views_fixture_preserves_full_and_resolves_runtime_retracts() {
 
 #[test]
 fn project_config_views_rematerializes_each_map_from_original_raw_source() {
-    let project = load_project(include_bytes!(
-        "../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-    ))
+    let project = load_project(crate::test_fixtures::ksr_project())
     .unwrap();
     let raw = project.settings().clone();
     let original_raw = raw.clone();

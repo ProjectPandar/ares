@@ -101,9 +101,7 @@ fn aggregate_exposes_remaining_children_direct_pellet_and_122_flat_keys() {
 }
 
 fn inventory() -> Vec<InventoryRow> {
-    serde_json::from_str(include_str!(
-        "../../../../../tests/ksr_fdmtest_v4/options-v242.json"
-    ))
+    serde_json::from_str(crate::test_fixtures::options_inventory())
     .unwrap()
 }
 
