@@ -633,6 +633,19 @@ artifact, same family as seam-tie and equalizer-cascade — requires
 upstream runtime trace to pinpoint (unreachable: no ORCA_DUMP_* in
 AppImage, instrumented build dead).
 
+**Update (2026-09-29):** not a uniform mirror. On
+`raft_first_layer_density/seeded` (case-OaGJVW), orca's support-
+interface layer ends with an X-ascending diagonal weave from the
+left edge (`X103.018`), while ares' differing hatch means the
+`connect_base_support` phase selection itself diverges — not just
+entry corner. Boundary-ring experiments exhausted: vertex-0
+rotation to min-Y/min-X was a no-op (vertex-0 already at that
+corner), ring reversal increased the diff count (786 vs 331), so
+orientation is already upstream-consistent. The divergence lives
+inside the endpoint-hit insertion/`take` ordering or the
+`emit_excess_arches`/`link` phase interplay — still needs upstream
+runtime traces to disambiguate.
+
 ### Vertex-convention audit — clipper `build_paths` is faithful
 
 Ares `clipper/output/fixup.rs::build_paths` emits `out_rec` rings
