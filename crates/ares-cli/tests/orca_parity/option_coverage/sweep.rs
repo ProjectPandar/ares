@@ -167,8 +167,18 @@ pub(super) fn oracle_nondeterministic(key: &str, label: &str) -> bool {
 /// correct, honest status is a named unimplemented boundary, not a
 /// byte-parity regression. Raft is implemented (`project_slice/raft/`)
 /// and is deliberately not in this set.
-fn unimplemented_feature(key: &str) -> bool {
-    key == "enable_support" || key.starts_with("support_") || key.starts_with("tree_support_")
+/// `case` restricts the `enable_support` exemption: with
+/// `enable_support = 0` upstream skips support generation entirely
+/// (`Print.hpp:429-431`, `PrintObject.cpp:887-890`), so a divergence in
+/// the disabled case is a real regression, not a missing port.
+pub(super) fn unimplemented_feature(key: &str, case: &domains::OptionCase) -> bool {
+    if key == "enable_support" {
+        return matches!(
+            case.value.as_ref(),
+            Some(Value::String(value)) if value == "1"
+        ) || matches!(case.value.as_ref(), Some(Value::Bool(true)));
+    }
+    key.starts_with("support_") || key.starts_with("tree_support_")
 }
 
 fn execute_plan(
@@ -282,7 +292,7 @@ fn execute_plan(
                     eprintln!("[option] INPUT_REJECTED {label}");
                     continue;
                 }
-                if outcome.status == "DIVERGENT" && unimplemented_feature(&plan.key) {
+                if outcome.status == "DIVERGENT" && unimplemented_feature(&plan.key, case) {
                     // Ares has not yet ported the upstream support-material
                     // generators (`PrintObjectSupportMaterial.cpp`,
                     // `Support/TreeSupport.cpp`): `enable_support` parses

@@ -343,3 +343,27 @@ fn option_inventory_reconciles_with_upstream_key_set() {
          recorded exclusion list (add coverage or record the exclusion)"
     );
 }
+
+/// `unimplemented_feature` must only excuse the `enable_support=1` case:
+/// with `0` upstream skips support generation entirely
+/// (`Print.hpp:429-431`, `PrintObject.cpp:887-890`), so a divergence in
+/// the disabled case is a real regression and must surface as FAIL.
+#[test]
+fn enable_support_unimplemented_exemption_only_covers_enabled_case() {
+    use super::sweep::unimplemented_feature;
+    use serde_json::Value;
+
+    let enabled = domains::OptionCase {
+        label: "true".to_owned(),
+        value: Some(Value::String("1".to_owned())),
+    };
+    let disabled = domains::OptionCase {
+        label: "false".to_owned(),
+        value: Some(Value::String("0".to_owned())),
+    };
+    assert!(unimplemented_feature("enable_support", &enabled));
+    assert!(!unimplemented_feature("enable_support", &disabled));
+    // Unconditional for the support-parameter family.
+    assert!(unimplemented_feature("support_type", &disabled));
+    assert!(unimplemented_feature("tree_support_branch_angle", &enabled));
+}
