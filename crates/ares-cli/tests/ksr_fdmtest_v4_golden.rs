@@ -1,10 +1,13 @@
-//! Golden parity test for ksr_fdmtest_v4.
+//! Golden structural test for ksr_fdmtest_v4 — a mid-fidelity check, NOT
+//! the strict acceptance gate.
 //!
-//! Validates that Ares produces structurally and geometrically correct G-code
-//! for the reference project file. Byte-level parity with the OrcaSlicer
-//! reference is achievable except where gap-fill skeleton vertices depend on
-//! boostvoronoi (Rust) vs boost::polygon (C++) floating-point evaluation;
-//! those differ by ≤1µm and shift arc-fit segmentation decisions downstream.
+//! This 11-hour real-world fixture is ~44k ordered-byte lines away from
+//! byte parity with OrcaSlicer 2.4.2 (residual clusters: voronoi/bool-eval
+//! 1µ geometry drift, M73 position attribution, equalizer cascade order,
+//! seam tie order). Strict generator-only ordered-byte acceptance is in
+//! `tests/orca_parity.rs` (printer sweep + per-option coverage cases);
+//! this golden validates structural features and ≥90% XY multiset
+//! coverage as a coarse regression tripwire on the full fixture.
 
 use std::path::PathBuf;
 

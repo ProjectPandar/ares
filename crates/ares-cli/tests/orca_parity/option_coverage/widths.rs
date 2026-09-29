@@ -1,4 +1,9 @@
 //! Bounded PrintConfig/Print::validate width candidates, not Flow success claims.
+//!
+//! `probes` are RECORDED-EXPECTATION entries (`execute:false`) documenting
+//! the predicted oracle rejection for out-of-context / sentinel values;
+//! they are not executed comparisons — the executed legal-context domain
+//! (`cases`) is what the sweep verifies end-to-end.
 use serde_json::{Value, json};
 
 use super::{OptionCase, case, seeded_interior};

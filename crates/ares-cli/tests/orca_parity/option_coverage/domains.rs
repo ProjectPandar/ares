@@ -136,12 +136,25 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 // `mm/s^2` literals with only a percent `max`); bound it by
                 // `max_literal` when present else by the declared max.
                 if option_type == "coFloatOrPercent" {
+                    // Note: upstream applies `min`/`max` to BOTH the
+                    // percent and the absolute branch (numeric validation
+                    // `PrintConfig.cpp:10529-10535`); `max_literal` is a
+                    // GUI typo-warning threshold only
+                    // (`Config.hpp:2481-2482`), used here solely to bound
+                    // the seeded absolute probe's interior pick.
                     let lit_max = literal_maximum(&block).unwrap_or(maximum);
-                    let lit_interior = seeded_interior(&key, minimum, lit_max, false);
-                    let mut absolute =
-                        numeric_case("seeded-literal", lit_interior, entry, "coFloat");
-                    absolute.label = "seeded-literal".to_owned();
-                    cases.push(absolute);
+                    for (label, value) in [
+                        ("min-literal", minimum),
+                        ("max-literal", maximum),
+                        (
+                            "seeded-literal",
+                            seeded_interior(&key, minimum, lit_max, false),
+                        ),
+                    ] {
+                        let mut absolute = numeric_case(label, value, entry, "coFloat");
+                        absolute.label = label.to_owned();
+                        cases.push(absolute);
+                    }
                 }
                 (cases, None)
             }
@@ -191,13 +204,21 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                             // `max_literal` may be absent; the literal branch
                             // still accepts absolutes — bound by the literal
                             // maximum when declared else a nominal bound.
+                            // The absolute branch shares the declared `min`
+                            // bound (`PrintConfig.cpp:10529-10535`) — probe it.
                             let lit_max =
                                 literal_maximum(&block).unwrap_or(minimum.max(1.0) * 4.0 + 1.0);
-                            let lit_interior = seeded_interior(&key, minimum, lit_max, false);
-                            let mut absolute =
-                                numeric_case("seeded-literal", lit_interior, entry, "coFloat");
-                            absolute.label = "seeded-literal".to_owned();
-                            cases.push(absolute);
+                            for (label, value) in [
+                                ("min-literal", minimum),
+                                (
+                                    "seeded-literal",
+                                    seeded_interior(&key, minimum, lit_max, false),
+                                ),
+                            ] {
+                                let mut absolute = numeric_case(label, value, entry, "coFloat");
+                                absolute.label = label.to_owned();
+                                cases.push(absolute);
+                            }
                         }
                         provably_legal = true;
                         (cases, None)

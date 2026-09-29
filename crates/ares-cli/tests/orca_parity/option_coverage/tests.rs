@@ -77,8 +77,18 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
             .collect::<Vec<_>>();
         labels == ["min", "max", "seeded"]
             || labels == ["min", "seeded"]
-            || labels == ["min", "max", "seeded", "seeded-literal"]
-            || labels == ["min", "seeded", "seeded-literal"]
+            || labels
+                == [
+                    "min",
+                    "max",
+                    "seeded",
+                    "min-literal",
+                    "max-literal",
+                    "seeded-literal",
+                ]
+            || labels
+                == ["min", "seeded", "min-literal", "max-literal", "seeded-literal"]
+            || labels == ["min", "seeded", "min-literal", "seeded-literal"]
             // Upper-only bounds (`nozzle_diameter` max=100) probe the
             // declared ceiling and a seeded interior below it.
             || labels == ["max", "seeded"]
@@ -177,11 +187,12 @@ fn upstream_rejection_does_not_mask_compared_case_parity() {
     .find(|plan| plan.key == "bridge_flow")
     .unwrap();
 
-    let passing = OptionOutcome::executed(&plan, 2, vec!["min: rejected".to_owned()], 0, None);
+    let passing = OptionOutcome::executed(&plan, 2, vec!["min: rejected".to_owned()], 0, 0, None);
     let failing = OptionOutcome::executed(
         &plan,
         2,
         vec!["min: rejected".to_owned()],
+        0,
         0,
         Some("max: divergent".to_owned()),
     );

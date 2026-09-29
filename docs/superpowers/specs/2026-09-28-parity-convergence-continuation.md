@@ -560,3 +560,58 @@ Current sweep: 15/100 cases >6 diffs in 4 residual clusters
 (M73×6, equalizer-cascade×5, seam-tie×3, 1µ-rounding misc) — all
 independently verified as order/rounding artifacts, not behavioral
 divergence.
+
+## 2026-09-29 (independent-review fix round — harness hardening)
+
+Independent review (6 axes) flagged 11 findings; fixed in this round:
+
+- **Oracle preflight (sweep)**: `scripts/orca-parity.sh --help` must exit 0
+  before iterating — a missing `ORCA_APPDIR` previously exited 127 and
+  produced an all-`ORCA_ERROR` "passing" sweep with zero comparisons.
+  Added a `compared > 0` assertion for the same reason.
+- **Generated filament override bounds**: `definition_block` resolves
+  `filament_*` `add_nullable` keys to their base `add("base"` definition
+  (`PrintConfig.cpp:7288-7302` copies min/max/enums) — e.g.
+  `filament_retraction_distances_when_cut` real range `[10,18]`.
+- **Numeric canonicalization**: `canonical_number_text` trims only the
+  fractional part (`"10"` no longer collapses to `"1"`); trailing `%`
+  preserved while its numeric prefix normalizes; single joined-array
+  probes (`XxY,XxY,...`) flatten before comparison.
+- **Seeded interior quantization**: `seeded_interior` rounds to the
+  3-decimal export grid — fixes `590.6709999999999` vs `590.671`
+  application-verification false mismatches.
+- **Gated activation**: `activating_overrides` now covers
+  `input_shaping_*` (→ `input_shaping_emit=1`, printer-scope-aware
+  injection), the `support_*`/`tree_support_*`/`raft_*` families
+  (→ `enable_support=1` / `support_type=tree(auto)` / `raft_layers=2`),
+  and support keys slice `tests/parity/overhang.stl` (T-shape) so
+  support codegen actually fires on the oracle side.
+- **coFloatOrPercent absolute branch**: literal min/max/seeded cases
+  added (upstream applies `min`/`max` to both branches; `max_literal`
+  is a GUI warning threshold only).
+- **Honest unimplemented boundary**: support-family divergence is
+  classified `unimplemented in ares` (no `PrintObjectSupportMaterial`/
+  `TreeSupport` port exists — ares parses `enable_support` and consumes
+  it without emitting any support structure). Reported INCOMPLETE, not
+  gated — a named missing upstream boundary, distinct from regressions.
+- **Exclusion-list citations**: `first/other_layers_sequence_choice`,
+  `enable_filament_dynamic_map`, `has_filament_switcher`,
+  `tree_support_with_infill` documented as G-code-inert upstream
+  (GUI/plater serialization or dead config) with file:line evidence.
+- **CI resilience**: `domains::try_load` / presets `profiles()` skip
+  when the vendored `OrcaSlicer/` tree is absent (tier1 CI has no
+  checkout) instead of unwrapping and panicking.
+- **KSR honesty**: test comments corrected — acceptance on the
+  11-hour fixture is semantic (bounded tolerances), strict ordered-byte
+  acceptance lives in `orca_parity`; the ~44k-diff residual is
+  dominated by the known clusters (1µ voronoi, M73, equalizer cascade,
+  seam ties).
+- **Printer-matrix disclosure**: smoke summary now states the matrix
+  pins a MODIFIED baseline (classic walls, thin-wall off, single
+  filament) — untouched-profile acceptance deferred to the Arachne /
+  thin-wall / multi-extruder port milestones.
+
+Verified on focused sweeps: `input_shaping_{emit,type,freq_x}` now PASS
+with `M593` emitted on both sides (previously inert); `support_*` keys
+honestly report the unimplemented boundary; `raft_layers/max` still
+fails on the known 1µ rounding residual.
