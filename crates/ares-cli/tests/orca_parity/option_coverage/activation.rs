@@ -62,6 +62,15 @@ fn normalize_case_dependencies(
     process: &mut Map<String, Value>,
     filaments: &mut [Map<String, Value>],
 ) {
+    if plan.key == "pressure_advance" {
+        // `GCode.cpp:3156-3157`: fixed PA is gated by the filament enabler.
+        for (key, value) in [
+            ("enable_pressure_advance", "1"),
+            ("adaptive_pressure_advance", "0"),
+        ] {
+            filaments[0].insert(key.to_owned(), serde_json::json!([value]));
+        }
+    }
     let active = case
         .value
         .as_ref()

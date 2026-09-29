@@ -23,6 +23,10 @@ mod tests;
 #[path = "option_coverage/completion_tests.rs"]
 mod completion_tests;
 
+#[cfg(test)]
+#[path = "option_coverage/pressure_advance.rs"]
+mod pressure_advance;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

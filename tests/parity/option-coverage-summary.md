@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-612/650 bounded domains complete; 1594 generated, 1591 strictly compared, 1 rejected. Not all-printer/default coverage.
+613/650 bounded domains complete; 1594 generated, 1591 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -405,7 +405,7 @@
 | PASS | preferred_orientation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:797 |  |
 | PASS | preheat_steps | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5918 |  |
 | PASS | preheat_time | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5908 |  |
-| INCOMPLETE | pressure_advance | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2345 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| PASS | pressure_advance | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2345 |  |
 | PASS | prime_tower_brim_width | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6891 |  |
 | PASS | prime_tower_enable_framework | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6819 |  |
 | PASS | prime_tower_flat_ironing | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6989 |  |
