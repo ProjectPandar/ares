@@ -35,3 +35,28 @@ fn first_layer_uses_wall_and_infill_speed_classes() {
         60.0
     );
 }
+
+#[test]
+fn resonance_avoidance_clamps_outer_wall_speed_band() {
+    let options = MotionOptions {
+        resonance_avoidance: Some((40.0, 90.0)),
+        ..MotionOptions::default()
+    };
+    let outer = properties("Outer wall", true);
+
+    // Lower half of [min, max) drops to min, upper half boosts to max.
+    assert_eq!(outer.resonance_avoided(&options, 50.0), 40.0);
+    assert_eq!(outer.resonance_avoided(&options, 70.0), 90.0);
+    // Below min and at/above max are untouched.
+    assert_eq!(outer.resonance_avoided(&options, 30.0), 30.0);
+    assert_eq!(outer.resonance_avoided(&options, 90.0), 90.0);
+    // Only `erExternalPerimeter` participates.
+    assert_eq!(
+        properties("Inner wall", true).resonance_avoided(&options, 50.0),
+        50.0
+    );
+    assert_eq!(
+        outer.resonance_avoided(&MotionOptions::default(), 50.0),
+        50.0
+    );
+}

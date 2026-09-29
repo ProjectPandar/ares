@@ -684,3 +684,39 @@ Named open boundary: support-material generation
 (`PrintObjectSupportMaterial.cpp` + `Support/*` ≈ 17K LOC upstream)
 — honest INCOMPLETE in the sweep; `enable_support=0` correctly FAILs
 on the residual M73 placement rather than hiding behind the boundary.
+
+## 2026-09-29 (resonance avoidance on the project emit path)
+
+Ported `GCode.cpp:6618-6651` (ORCA resonance avoidance on
+`erExternalPerimeter`) into the project emit path:
+`MotionOptions::resonance_avoidance` carries the printer `(min, max)`
+band when enabled, and `PathProperties::resonance_avoided`
+(`gcode_emit/motion/features.rs`) rewrites the volumetric-capped speed
+in `motion/path.rs` before it feeds `estimate_extrusion_quality`. The
+`m_resonance_avoidance` flag resets to true after every external path,
+so it only gates the `ref_speed > max` case the `speed < max` test
+already excludes — no per-path state is ported. The legacy
+`speeds/resonance_avoidance.rs` helper was never reached by the project
+emit path.
+
+- Snapmaker U1 0.4 (`resonance_avoidance=1`, band 40–90, first-layer
+  outer wall 50mm/s → F2400) now PASS byte-exact; the bottom-surface
+  `F3566` and M73 placement deltas were downstream layer-time effects.
+- Option coverage previously passed `resonance_avoidance`/`min`/`max`
+  vacuously (fixture outer wall 25mm/s under the default 70mm/s min).
+  `activating_overrides` now enables the feature for the band keys and
+  lowers the min to 20 for the enable domain; `resonance_avoidance/true`
+  DIVERGES without the port and PASSES with it.
+
+Re-verified against the oracle (stale summary rows): Peacock V2 0.2,
+Ginger G1 8.0, iQ TiQ8 now PASS (958/1001);
+`sparse_infill_pattern`, `ironing_pattern`, `fuzzy_skin_thickness`,
+`use_firmware_retraction`, `use_relative_e_distances` PASS.
+Honestly re-reported: `printer_technology/SLA` (the oracle exports
+`FFF` for an FFF-preset project — not sliceable by OrcaSlicer's FFF
+CLI), `nozzle_diameter/max` (100mm nozzle, M73 `R` minute-boundary
+cluster), `raft_layers` max/seeded (raft interface-hatch residual).
+
+Known gate gap: `cargo clippy --workspace -- -D warnings` fails on
+clean HEAD with 692 lints under clippy 0.1.96 (dead code, same-type
+casts, `get(0)`); the tier1 CI gate is red until a lint slice lands.

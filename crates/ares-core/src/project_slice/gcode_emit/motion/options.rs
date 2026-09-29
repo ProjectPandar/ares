@@ -45,6 +45,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) internal_bridge_speed: f64,
     pub(in crate::project_slice::gcode_emit) sparse_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) skirt_speed: f64,
+    /// `(min, max)` resonance-avoidance band when `resonance_avoidance`
+    /// is enabled (`GCode.cpp:6618-6651`).
+    pub(in crate::project_slice::gcode_emit) resonance_avoidance: Option<(f64, f64)>,
     pub(in crate::project_slice::gcode_emit) slow_down_layers: u32,
     pub(in crate::project_slice::gcode_emit) raft_layers: u32,
     pub(in crate::project_slice::gcode_emit) internal_solid_infill_speed: f64,

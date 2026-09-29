@@ -111,7 +111,7 @@ pub(super) fn emit(
     // only applies while `filament_max_volumetric_speed > 0`
     // (`GCode.cpp:6615-6617`).
     let slope_flow_ratio = properties.slope.map_or(1.0, |slope| slope.flow_ratio);
-    let original_speed = if state.options.max_volumetric_speed > 0.0 {
+    let capped_speed = if state.options.max_volumetric_speed > 0.0 {
         configured_speed.min(
             state.options.max_volumetric_speed
                 / (properties.mm3_per_mm
@@ -122,6 +122,7 @@ pub(super) fn emit(
     } else {
         configured_speed
     };
+    let original_speed = properties.resonance_avoided(&state.options, capped_speed);
     let processed = overhang::estimate(overhang::EstimateRequest {
         points: &local_points,
         properties,

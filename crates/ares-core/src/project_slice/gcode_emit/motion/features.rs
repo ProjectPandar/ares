@@ -165,6 +165,25 @@ impl PathProperties<'_> {
         }
     }
 
+    /// `GCode.cpp:6618-6651`: on external perimeters, a volumetric-capped
+    /// speed below `max_resonance_avoidance_speed` drops to the band `min`
+    /// in the lower half and boosts to `max` in the upper half. The
+    /// `m_resonance_avoidance` flag resets to true after every path, so it
+    /// only gates the `speed > max` case the `speed < max` test already
+    /// excludes.
+    pub(super) fn resonance_avoided(self, options: &MotionOptions, speed: f64) -> f64 {
+        let Some((min, max)) = options.resonance_avoidance else {
+            return speed;
+        };
+        if self.feature != "Outer wall" || speed >= max {
+            speed
+        } else if speed < min + ((max - min) / 2.0) {
+            speed.min(min)
+        } else {
+            max
+        }
+    }
+
     /// `GCode.cpp:6569-6588`: with `slow_down_layers > 1`, early layers ramp
     /// from the first-layer speed toward the configured speed via
     /// `lerp(first, speed, layer/N)`; the raft variant anchors the ramp

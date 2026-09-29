@@ -21,10 +21,16 @@ pub(crate) fn inject_case(
     // slicer never activates (e.g. `ironing_pattern` under `ironing_type =
     // "no ironing"`). (option -> (enabler, activating value))
     for (enabler, value) in activating_overrides(&plan.key) {
-        // Enabler scope: `input_shaping_emit` + `gcode_flavor` are
-        // printer-scoped (machine_envelope_config); every other enabler is
-        // process-scoped.
-        let enabler_target = if matches!(*enabler, "input_shaping_emit" | "gcode_flavor") {
+        // Enabler scope: `input_shaping_emit`, `gcode_flavor` and the
+        // resonance-avoidance keys are printer-scoped
+        // (machine_envelope_config); every other enabler is process-scoped.
+        let enabler_target = if matches!(
+            *enabler,
+            "input_shaping_emit"
+                | "gcode_flavor"
+                | "resonance_avoidance"
+                | "min_resonance_avoidance_speed"
+        ) {
             &mut *machine
         } else {
             &mut *process
@@ -144,6 +150,14 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         // `input_shaping_emit`'s own 0/1 domain: the `1` case emits
         // `M593` only on a non-legacy flavor.
         "input_shaping_emit" => &[("gcode_flavor", "marlin2")],
+        // Resonance avoidance only rewrites external-perimeter speeds when
+        // enabled (`GCode.cpp:6621-6622`) and the speed lies below the band
+        // max. The fixture outer wall (25mm/s) sits under the default 70mm/s
+        // min, so the enable domain lowers the min to put it inside the band.
+        "min_resonance_avoidance_speed" | "max_resonance_avoidance_speed" => {
+            &[("resonance_avoidance", "1")]
+        }
+        "resonance_avoidance" => &[("min_resonance_avoidance_speed", "20")],
         // Support structure sub-options only run when supports generate
         // (`support_layers`/`raft`/`tree_support_*` all gate on
         // `enable_support`). `support_type`/`support_style` select the

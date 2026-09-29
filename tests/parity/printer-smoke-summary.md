@@ -1,6 +1,6 @@
 # OrcaSlicer printer smoke summary
 
-954 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
+958 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
 
 Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference), `ORCA_ERROR` (the upstream OrcaSlicer 2.4.2 reference binary itself failed, so no reference stream exists), `VENDOR_INCOMPLETE` (the vendor profile tree does not ship the machine's referenced default process preset), `ARES_ERROR` (Ares failed to load or slice the case).
 
@@ -450,7 +450,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | Ginger Additive/Ginger G1 1.2 nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 597 (line 19, column 10; expected 39732 bytes, actual 39531 bytes) context:   line 18: "EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"   line 19: expected "M73 P0 R10"; actual "M73 P0 R11"   line 20: ";TYPE:Custom" |
 | PASS | Ginger Additive/Ginger G1 3.0 nozzle |  |
 | PASS | Ginger Additive/Ginger G1 5.0 nozzle |  |
-| DIVERGENT | Ginger Additive/Ginger G1 8.0 nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 19700 (line 709, column 5; expected 41509 bytes, actual 41509 bytes) context:   line 708: "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0"   line 709: expected "G1 X500.725 Y500.725 Z5 F15000"; actual "G1 X499.275 Y499.275 Z5 F15000"   line 710: ";WIDTH:8.54943" |
+| PASS | Ginger Additive/Ginger G1 8.0 nozzle |  |
 | PASS | InfiMech/InfiMech EX 0.4 nozzle |  |
 | PASS | InfiMech/InfiMech EX+APS 0.4 nozzle |  |
 | PASS | InfiMech/InfiMech TX 0.4 nozzle |  |
@@ -484,7 +484,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Mellow/M1 0.4 nozzle |  |
 | PASS | Mellow/M1 0.6 nozzle |  |
 | PASS | Mellow/M1 0.8 nozzle |  |
-| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.2 nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 1877 (line 50, column 6; expected 313034 bytes, actual 315149 bytes) context:   line 49: "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0"   line 50: expected "G1 X122.268 Y125.018 F30000"; actual "G1 X114.232 Y125.018 F30000"   line 51: "G1 Z.5" |
+| PASS | OpenEYE/OpenEYE Peacock V2 0.2 nozzle |  |
 | PASS | OpenEYE/OpenEYE Peacock V2 0.4 nozzle |  |
 | PASS | OpenEYE/OpenEYE Peacock V2 0.6 nozzle |  |
 | PASS | OpenEYE/OpenEYE Peacock V2 0.8 nozzle |  |
@@ -781,7 +781,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Snapmaker/Snapmaker J1 (0.6 nozzle) |  |
 | PASS | Snapmaker/Snapmaker J1 (0.8 nozzle) |  |
 | ORCA_ERROR | Snapmaker/Snapmaker U1 (0.2 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts2/orca-runner-1qTdem/command-br5DZB") |
-| DIVERGENT | Snapmaker/Snapmaker U1 (0.4 nozzle) | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 3792 (line 158, column 5; expected 248533 bytes, actual 248533 bytes) context:   line 157: ";TYPE:Outer wall"   line 158: expected "G1 F2400"; actual "G1 F3000"   line 159: "G1 X130.9 Y140.6 E.34267" (retry 3 oracle error: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts2/orca-runner-1qTdem/command-kos0hL")) |
+| PASS | Snapmaker/Snapmaker U1 (0.4 nozzle) |  |
 | ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts2/orca-runner-1qTdem/command-pGC2KE") |
 | PASS | Snapmaker/Snapmaker U1 (0.6 nozzle) |  |
 | ORCA_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts2/orca-runner-1qTdem/command-x8FXbv") |
@@ -992,7 +992,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | VENDOR_INCOMPLETE | iQ/iQ TiQ2 0.6 Nozzle | iQ/iQ TiQ2 0.6 Nozzle process: no compatible preset |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ2 0.8 Nozzle | iQ/iQ TiQ2 0.8 Nozzle process: no compatible preset |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ8 0.25 Nozzle | iQ/iQ TiQ8 0.25 Nozzle process: no compatible preset |
-| DIVERGENT | iQ/iQ TiQ8 0.4 Nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 22135 (line 885, column 6; expected 130340 bytes, actual 130358 bytes) context:   line 884: "G1 Z1 F18000"   line 885: expected "G1 X246.061 Y187.924 Z1"; actual "G1 X237.93 Y195.977 Z1"   line 886: "G1 Z.6" |
+| PASS | iQ/iQ TiQ8 0.4 Nozzle |  |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ8 0.6 Nozzle | iQ/iQ TiQ8 0.6 Nozzle process: no compatible preset |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ8 0.8 Nozzle | iQ/iQ TiQ8 0.8 Nozzle process: no compatible preset |
 | PASS | re3D/re3D Gigabot 4 0.4 nozzle |  |

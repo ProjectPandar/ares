@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-608/650 bounded domains complete; 1592 generated, 1589 strictly compared, 3 rejected. Not all-printer/default coverage.
+610/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -222,7 +222,7 @@
 | PASS | fuzzy_skin_ripple_offset | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3673 |  |
 | PASS | fuzzy_skin_ripples_per_layer | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3665 |  |
 | PASS | fuzzy_skin_scale | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3637 |  |
-| FAIL | fuzzy_skin_thickness | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3561 | max: (no match across 3 oracle runs) first difference at byte 6689 (line 294, column 11; expected 413758 bytes, actual 413806 bytes) context:   line 293: "G1 X106.525 Y103.907 E.02028"   line 294: expected "G1 X106.722 Y104.8 E.02528"; actual "G1 X106.724 Y104.8 E.02529"   line 295: ";TYPE:Outer wall" |
+| PASS | fuzzy_skin_thickness | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3561 |  |
 | PASS | gap_fill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1454 |  |
 | PASS | gap_fill_target | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1178 |  |
 | PASS | gap_infill_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3707 |  |
@@ -299,7 +299,7 @@
 | PASS | ironing_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3481 |  |
 | PASS | ironing_flow | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4310 |  |
 | PASS | ironing_inset | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4332 |  |
-| FAIL | ironing_pattern | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4298 | concentric: (no match across 3 oracle runs) first difference at byte 468 (line 18, column 9; expected 107537 bytes, actual 107136 bytes) context:   line 17: "; EXECUTABLE_BLOCK_START"   line 18: expected "M73 P0 R9"; actual "M73 P0 R10"   line 19: "M201 X500 Y500 Z100 E5000" |
+| PASS | ironing_pattern | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4298 |  |
 | PASS | ironing_spacing | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4322 |  |
 | PASS | ironing_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4342 |  |
 | PASS | ironing_type | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:4281 |  |
@@ -360,7 +360,7 @@
 | PASS | mmu_segmented_region_interlocking_depth | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4215 |  |
 | PASS | mmu_segmented_region_max_width | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4206 |  |
 | PASS | notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4843 |  |
-| PASS | nozzle_diameter | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4835 |  |
+| FAIL | nozzle_diameter | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4835 | max: first difference at byte 1302 (line 58, column 9; expected 98594 bytes, actual 99845 bytes) context:   line 57: "G1 E-4 F3600"   line 58: expected "M73 P8 R8"; actual "M73 P8 R7"   line 59: ";_SET_FAN_SPEED_CHANGING_LAYER" |
 | INCOMPLETE | nozzle_flush_dataset | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2602 | required legal cases not all compared;  |
 | INCOMPLETE | nozzle_height | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2242 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | nozzle_hrc | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3792 |  |
@@ -429,7 +429,7 @@
 | PASS | printer_notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5096 |  |
 | INCOMPLETE | printer_settings_id | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5116 | required legal cases not all compared;  |
 | PASS | printer_structure | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:3801 |  |
-| PASS | printer_technology | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:678 |  |
+| FAIL | printer_technology | coEnum | 2 | 1 | 0 | src/libslic3r/PrintConfig.cpp:678 | SLA: Application/ApplicationMismatch: printer_technology: requested "SLA", effective "FFF"; evidence None |
 | PASS | printer_variant | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5105 |  |
 | PASS | printhost_authorization_type | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:915 |  |
 | PASS | printhost_ssl_ignore_revoke | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:901 |  |
@@ -440,7 +440,7 @@
 | PASS | raft_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5132 |  |
 | PASS | raft_first_layer_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5141 |  |
 | PASS | raft_first_layer_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5151 |  |
-| FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: (no match across 3 oracle runs) first difference at byte 1419 (line 64, column 1; expected 353925 bytes, actual 354855 bytes) context:   line 63: "G1 E4 F2400"   line 64: expected "M73 P2 R30"; actual ";TYPE:Skirt"   line 65: expected ";TYPE:Skirt"; actual ";WIDTH:0.42" |
+| FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: first difference at byte 126281 (line 4885, column 29; expected 353925 bytes, actual 353925 bytes) context:   line 4884: "G1 X102.712 Y102.518 E-.12751"   line 4885: expected "G1 X102.518 Y102.712 E-.20595"; actual "G1 X102.518 Y102.712 E-.20594"   line 4886: "M73 P43 R17" |
 | PASS | reduce_crossing_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:941 |  |
 | PASS | reduce_fan_stop_start_freq | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2422 |  |
 | PASS | reduce_infill_retraction | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4953 |  |
@@ -510,7 +510,7 @@
 | PASS | sparse_infill_filament_id | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4127 |  |
 | PASS | sparse_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1434 |  |
 | PASS | sparse_infill_line_width | coFloatOrPercent | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:4136 |  |
-| FAIL | sparse_infill_pattern | coEnum | 26 | 26 | 0 | src/libslic3r/PrintConfig.cpp:3017 | concentric: (no match across 3 oracle runs) first difference at byte 1534 (line 72, column 1; expected 96293 bytes, actual 95589 bytes) context:   line 71: "G1 X116.363 Y102.827 E.04359"   line 72: expected "M73 P9 R8"; actual "G1 X117.31 Y103.883 E.04359"   line 73: expected "G1 X117.31 Y103.883 E.04359"; actual "G1 X117.566 Y105 E.0352" |
+| INCOMPLETE | sparse_infill_pattern | coEnum | 26 | 25 | 0 | src/libslic3r/PrintConfig.cpp:3017 | 1 case(s) excused: oracle is nondeterministic for these values |
 | PASS | sparse_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3993 |  |
 | PASS | sparse_infill_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4174 |  |
 | PASS | spiral_finishing_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5868 |  |
@@ -608,8 +608,8 @@
 | PASS | tree_support_wall_count | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6541 |  |
 | PASS | upward_compatible_machine | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1788 |  |
 | PASS | use_3mf | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:821 |  |
-| INCOMPLETE | use_firmware_retraction | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5471 | required legal cases not all compared; true: Export/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts/orca-runner-wpEHtd/command-0CngSz") |
-| INCOMPLETE | use_relative_e_distances | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:7146 | required legal cases not all compared; false: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts/orca-runner-wpEHtd/command-BYW2Uv") |
+| PASS | use_firmware_retraction | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5471 |  |
+| PASS | use_relative_e_distances | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7146 |  |
 | PASS | volumetric_speed_coefficients | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2655 |  |
 | PASS | wall_direction | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2188 |  |
 | PASS | wall_distribution_count | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7208 |  |
