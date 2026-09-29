@@ -19,6 +19,10 @@ mod sweep;
 #[path = "option_coverage/tests.rs"]
 mod tests;
 
+#[cfg(test)]
+#[path = "option_coverage/completion_tests.rs"]
+mod completion_tests;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,
@@ -97,7 +101,7 @@ impl OptionOutcome {
             // context-bounded width domains are provably legal by construction.
             // An authored-probe omission marks a deliberately-sampled domain
             // (schema bounds rejected by upstream validation) — still
-            // INCOMPLETE, but the sweep gate treats it as covered interior.
+            // INCOMPLETE, so it does not pass the sweep completion gate.
             (
                 "INCOMPLETE",
                 plan.omission

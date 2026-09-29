@@ -1,4 +1,5 @@
-use super::*;
+use super::EdgeGrid;
+use crate::geometry::{Coord, Point};
 
 const RESOLUTION: Coord = 1000;
 

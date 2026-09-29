@@ -77,61 +77,24 @@ fn orca_parity_option_coverage() {
         .map(|plan| execute_plan(&runner, plan, &machine, &process, &filaments))
         .collect::<Vec<_>>();
     write_summary(&outcomes);
+    require_complete(&outcomes).unwrap_or_else(|error| panic!("{error}"));
+}
+
+pub(super) fn require_complete(outcomes: &[OptionOutcome]) -> Result<(), String> {
+    if outcomes.is_empty() {
+        return Err("empty option coverage selection; no domains compared".into());
+    }
     let incomplete = outcomes
         .iter()
-        .filter(|outcome| {
-            // Only INCOMPLETE may be exempted — FAIL is always a failure,
-            // no matter what the detail text contains (evidence paths can
-            // carry arbitrary words).
-            if outcome.status != "INCOMPLETE" {
-                return outcome.status != "PASS";
-            }
-            // A domain that compared NOTHING is never acceptable — the
-            // exemptions below only apply once at least one generated
-            // case ran through the byte comparator successfully. The
-            // sole exception: every case lands in the named
-            // unimplemented-support-material boundary, which diverges
-            // before the comparator can credit any byte equality.
-            if outcome.compared == 0 {
-                return !outcome.detail.contains("unimplemented in ares");
-            }
-            // Authored-probe / schema-unbounded domains: sampled the
-            // reachable legal interior or baseline, since upstream
-            // slice-time validation rejects the remaining space —
-            // report but don't gate.
-            if outcome.detail.contains("authored probes")
-                || outcome.detail.contains("unbounded")
-                // Oracle-side nondeterminism is evidenced INCOMPLETE —
-                // reported in the summary but not a gate failure, since
-                // no deterministic reference exists to compare against.
-                || outcome.detail.contains("nondeterministic")
-                // Divergence confined to the named
-                // unimplemented-support-material boundary is a missing
-                // upstream port, not a byte-parity regression.
-                || outcome.detail.contains("unimplemented in ares")
-            {
-                return false;
-            }
-            // Fully-enumerated bool/enum domains where every generated
-            // case either compared byte-exact or was rejected by the
-            // ORACLE itself (fixture-illegal values like
-            // `use_relative_e_distances=0` on a relative-only profile):
-            // the domain is exercised as far as the oracle permits.
-            // Also covers baseline-only single-case domains (unbounded
-            // coString/coPoints metadata that cannot be probed).
-            if outcome
-                .detail
-                .contains("required legal cases not all compared")
-            {
-                return outcome.compared + outcome.rejected != outcome.cases;
-            }
-            true
-        })
+        .filter(|outcome| outcome.status != "PASS")
         .count();
-    assert_eq!(
-        incomplete, 0,
-        "{incomplete} option domains incomplete or failed; see external option-coverage-summary.md"
-    );
+    if incomplete == 0 {
+        Ok(())
+    } else {
+        Err(format!(
+            "{incomplete} option domains incomplete or failed; see external option-coverage-summary.md"
+        ))
+    }
 }
 
 /// `(option, value)` pairs whose upstream oracle is nondeterministic by
@@ -299,7 +262,7 @@ fn execute_plan(
                     // and consumes but no `support_*`/`tree_support_*`
                     // option can produce matching output. The divergence is
                     // honest evidence of a missing upstream boundary, not a
-                    // correctness regression — report, don't gate.
+                    // correctness regression. It still fails the completion gate.
                     unimplemented += 1;
                     eprintln!("[option] UNIMPLEMENTED (support-material port pending) {label}");
                     continue;
