@@ -848,3 +848,18 @@ Ported from `Fill/FillRectilinear.cpp:3610-3634`
   rotation and the f32 angle arithmetic are already matched, so the
   ~1nm endpoint difference behind it sits inside `connect_base_support`
   or `ExPolygonWithOffset`.
+
+## 2026-09-29 (`combine_infill` area threshold)
+
+Ported `LayerRegion::infill_area_threshold` (`LayerRegion.cpp:975-979`)
+into `prepare_infill/combine_infill/process.rs`.
+- Upstream `combine_infill` (`PrintObject.cpp:4230-4234`) drops combined
+  islands no bigger than `flow(frSolidInfill).scaled_spacing()²`. Ares
+  used `minimum_sparse_infill_area` instead: 70mm² on many vendor
+  profiles, which exceeds a 10mm cube's ~64mm² core. The top sparse
+  pair then never combined, which also shifted the M73 progress lines.
+- Test: `area_threshold_is_squared_scaled_solid_infill_spacing`.
+- Oracle: `infill_combination*` and `minimum_sparse_infill_area` sweeps
+  PASS. Ten printers that were divergent now PASS: TwoTrees SK1, Eryone
+  ER20, Volumic EXO42/EXO65/SH65, WEMAKE3D PhoenixProV1 0.2/0.3/0.4 and
+  TinyBotV1 0.2/0.3. Printer smoke: 968 of 1001.

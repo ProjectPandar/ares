@@ -6,7 +6,10 @@ use crate::{
         CoordinateScale, ExPolygon, JoinType, difference_ex, intersection_ex, offset_expolygons,
     },
     project_slice::{
-        perimeters::{classic::traversal::PostClassicTraversalPrintObject, types::PerimeterFlows},
+        perimeters::{
+            classic::traversal::PostClassicTraversalPrintObject,
+            types::{Flow, PerimeterFlows},
+        },
         prepare_infill::surface_type_detection::{
             PreparedSurfaceTypeObject, types::PreparedSurfaceTypeRecord,
         },
@@ -90,7 +93,7 @@ fn layer_configs(
                 kind,
                 pattern,
                 maximum_height,
-                area_threshold: options.minimum_sparse_infill_area.0 / scale.factor().powi(2),
+                area_threshold: infill_area_threshold(input.solid_infill_flow, scale),
                 layer_height: input.layer_height,
                 flows: PerimeterFlows {
                     perimeter_flow: input.perimeter_flow,
@@ -117,6 +120,13 @@ fn absolute_height(options: &RegionOptions, nozzle: f64) -> f64 {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => value.0 * 0.01 * nozzle,
     }
+}
+
+/// `LayerRegion::infill_area_threshold` (`LayerRegion.cpp:975-979`):
+/// `flow(frSolidInfill).scaled_spacing()` squared.
+fn infill_area_threshold(solid_infill_flow: Flow, scale: CoordinateScale) -> f64 {
+    let spacing = (f64::from(solid_infill_flow.spacing) / scale.factor()) as i64 as f64;
+    spacing * spacing
 }
 
 fn groups(configs: &[LayerConfig]) -> Vec<usize> {

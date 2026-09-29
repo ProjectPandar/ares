@@ -1,6 +1,6 @@
 # OrcaSlicer printer smoke summary
 
-958 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
+968 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
 
 Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference), `ORCA_ERROR` (the upstream OrcaSlicer 2.4.2 reference binary itself failed, so no reference stream exists), `VENDOR_INCOMPLETE` (the vendor profile tree does not ship the machine's referenced default process preset), `ARES_ERROR` (Ares failed to load or slice the case).
 
@@ -342,7 +342,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Eryone/Eryone ER20 0.8 nozzle |  |
 | PASS | Eryone/Eryone ER20 Klipper 0.2 nozzle |  |
 | PASS | Eryone/Eryone ER20 Klipper 0.4 nozzle |  |
-| DIVERGENT | Eryone/Eryone ER20 Klipper 0.5 nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 4471 (line 138, column 9; expected 144405 bytes, actual 144344 bytes) context:   line 137: "G1 X125.235 Y114.077 F15000"   line 138: expected "M73 P5 R2"; actual "M73 P5 R1"   line 139: "SET_VELOCITY_LIMIT ACCEL=500 ACCEL_TO_DECEL=250 SQUARE_CORNER_VELOCITY=9" |
+| PASS | Eryone/Eryone ER20 Klipper 0.5 nozzle |  |
 | PASS | Eryone/Eryone ER20 Klipper 0.6 nozzle |  |
 | PASS | Eryone/Eryone ER20 Klipper 0.8 nozzle |  |
 | PASS | Eryone/Thinker X400 0.2 nozzle |  |
@@ -816,18 +816,18 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Tiertime/Tiertime UP600 HS 0.6 nozzle |  |
 | PASS | Tiertime/Tiertime UP600 HS 0.8 nozzle |  |
 | PASS | Tronxy/Tronxy X5SA 400 0.4 nozzle |  |
-| DIVERGENT | TwoTrees/TwoTrees SK1 0.4 nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 1414 (line 60, column 1; expected 101783 bytes, actual 102276 bytes) context:   line 59: "G1 X190 Y12 F6000 ;Wipe"   line 60: expected "M73 P66 R2"; actual "G1 X180 Y8 F6000 ;Wipe"   line 61: expected "G1 X180 Y8 F6000 ;Wipe"; actual "G1 X170 Y12 F6000 ;Wipe" |
+| PASS | TwoTrees/TwoTrees SK1 0.4 nozzle |  |
 | PASS | TwoTrees/TwoTrees SP-5 Klipper 0.4 nozzle |  |
 | PASS | UltiMaker/UltiMaker 2 0.4 nozzle |  |
 | PASS | Vivedino/Troodon 2.0 Klipper 0.4 nozzle |  |
 | PASS | Vivedino/Troodon 2.0 RRF 0.4 nozzle |  |
-| DIVERGENT | Volumic/EXO42 (0.4 nozzle) | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 40140 (line 1760, column 1; expected 120293 bytes, actual 120292 bytes) context:   line 1759: "G1 X214.328 Y205.672"   line 1760: expected "M73 P38 R3"; actual "G1 X208.497 Y205.672"   line 1761: expected "G1 X208.497 Y205.672"; actual "M73 P38 R3" |
+| PASS | Volumic/EXO42 (0.4 nozzle) |  |
 | PASS | Volumic/EXO42 IDRE (0.4 nozzle) |  |
 | PASS | Volumic/EXO42 IDRE COPY MODE (0.4 nozzle) |  |
 | PASS | Volumic/EXO42 IDRE MIRROR MODE (0.4 nozzle) |  |
 | PASS | Volumic/EXO42 Performance (0.4 nozzle) |  |
 | PASS | Volumic/EXO42 Stage 2 (0.4 nozzle) |  |
-| DIVERGENT | Volumic/EXO65 (0.6 nozzle) | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 39837 (line 1917, column 1; expected 115024 bytes, actual 115034 bytes) context:   line 1916: "G1 X328.968 Y328.968"   line 1917: expected "M73 P41 R2"; actual "G1 X329.64 Y329.64"   line 1918: expected "G1 X329.64 Y329.64"; actual "M73 P41 R2" |
+| PASS | Volumic/EXO65 (0.6 nozzle) |  |
 | PASS | Volumic/EXO65 IDRE (0.4 nozzle) |  |
 | PASS | Volumic/EXO65 IDRE COPY MODE (0.4 nozzle) |  |
 | PASS | Volumic/EXO65 IDRE MIRROR MODE (0.4 nozzle) |  |
@@ -835,7 +835,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Volumic/EXO65 Performance (0.6 nozzle) |  |
 | PASS | Volumic/EXO65 Performance (0.8 nozzle) |  |
 | PASS | Volumic/EXO65 Stage 2 (0.6 nozzle) |  |
-| DIVERGENT | Volumic/SH65 (0.4 nozzle) | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 4836 (line 220, column 1; expected 120290 bytes, actual 120290 bytes) context:   line 219: "G1 X328.474 Y148.946 E.01769"   line 220: expected "M73 P4 R4"; actual "G1 X323.946 Y153.474 E.17881"   line 221: expected "G1 X323.946 Y153.474 E.17881"; actual "M73 P4 R4" |
+| PASS | Volumic/SH65 (0.4 nozzle) |  |
 | PASS | Volumic/SH65 IDRE (0.4 nozzle) |  |
 | PASS | Volumic/SH65 IDRE COPY MODE (0.4 nozzle) |  |
 | PASS | Volumic/SH65 IDRE MIRROR MODE (0.4 nozzle) |  |
@@ -921,12 +921,12 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Vzbot/Vzbot 330 AWD 0.4 nozzle |  |
 | PASS | Vzbot/Vzbot 330 AWD 0.5 nozzle |  |
 | PASS | Vzbot/Vzbot 330 AWD 0.6 nozzle |  |
-| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.2mm nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 1025 (line 40, column 11; expected 213124 bytes, actual 213129 bytes) context:   line 39: "G1 X205.0 E19 F1000"   line 40: expected "M73 P28 R10"; actual "M73 P28 R11"   line 41: "G1 Y1.6" |
-| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.3mm nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 2070 (line 97, column 1; expected 246953 bytes, actual 247092 bytes) context:   line 96: "G1 X156.463 Y142.474 E.03406"   line 97: expected "G1 X157.532 Y143.547 E.03406"; actual "M73 P27 R13"   line 98: expected "G1 X157.92 Y145 E.0338"; actual "G1 X157.532 Y143.547 E.03406" |
-| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.4mm nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 1797 (line 87, column 1; expected 123779 bytes, actual 123787 bytes) context:   line 86: "G1 X143.613 Y157.255 E.08106"   line 87: expected "M73 P43 R6"; actual "G1 X142.637 Y156.194 E.08106"   line 88: expected "G1 X142.637 Y156.194 E.08106"; actual "M73 P43 R6" |
+| PASS | WEMAKE3D/WEMAKE3D PhoenixProV1 0.2mm nozzle |  |
+| PASS | WEMAKE3D/WEMAKE3D PhoenixProV1 0.3mm nozzle |  |
+| PASS | WEMAKE3D/WEMAKE3D PhoenixProV1 0.4mm nozzle |  |
 | PASS | WEMAKE3D/WEMAKE3D PhoenixProV1 0.6mm nozzle |  |
-| DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.2mm nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 3712 (line 165, column 1; expected 139401 bytes, actual 139535 bytes) context:   line 164: "G1 X101.566 Y101.566 E.16373"   line 165: expected "M73 P43 R6"; actual "G1 X108.434 Y101.566 E.16373"   line 166: expected "G1 X108.434 Y101.566 E.16373"; actual "M73 P43 R6" |
-| DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.3mm nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 1505 (line 75, column 1; expected 242589 bytes, actual 242717 bytes) context:   line 74: "G1 X100 Y96.713 E.04238"   line 75: expected "M73 P27 R13"; actual "G1 X110 Y96.713 E.22479"   line 76: expected "G1 X110 Y96.713 E.22479"; actual "M73 P27 R13" |
+| PASS | WEMAKE3D/WEMAKE3D TinyBotV1 0.2mm nozzle |  |
+| PASS | WEMAKE3D/WEMAKE3D TinyBotV1 0.3mm nozzle |  |
 | DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.4mm nozzle | (no match across 3 completed oracle runs of 3 budgeted) first difference at byte 2009 (line 96, column 1; expected 132655 bytes, actual 132680 bytes) context:   line 95: "G1 X110 Y97.784 E.56236"   line 96: expected "M73 P43 R6"; actual "G1 X111.257 Y98.175 E.07402"   line 97: expected "G1 X111.257 Y98.175 E.07402"; actual "M73 P43 R6" |
 | PASS | WEMAKE3D/WEMAKE3D TinyBotV1 0.6mm nozzle |  |
 | PASS | Wanhao/Wanhao D12-300 0.4 nozzle |  |
