@@ -797,3 +797,31 @@ Ported from `Fill/Lightning/DistanceField.cpp:96-148`
 - Oracle: `sparse_infill_pattern/lightning` is nondeterministic
   upstream (unseeded `rand()`). The case slices without error, and
   total sparse-infill E is 166.243 against OrcaSlicer's 166.248.
+
+## 2026-09-29 (raft `SupportLayer::interface_id` assignment)
+
+Ported from `Support/SupportCommon.cpp:1369-1406` (the interface-id
+bookkeeping of `generate_support_layers`) into
+`project_slice/raft/emit.rs::interface_ids`.
+- A contacts-only layer takes the `interface_id` of the layer whose
+  `print_z` equals its `bottom_z`, plus one. Interface layers advance
+  the counter; base and contact layers don't.
+- Ares used to number contact layers from zero, so with
+  `raft_layers = 2` the contact layer used `+π/4` instead of `−π/4`
+  (`raft_interface_angle`, `SupportParameters.hpp:284-285`). That
+  rotated the whole interface hatch 90° — the "entry-corner mirror"
+  residual recorded above.
+
+Stale summary rows: the committed raft rows still showed PASS from the
+`7e35c4a2` sweep (2026-09-27). Ares output for raft cases is identical
+at `b43023a8` and HEAD, so this is not a regression. A fresh sweep gave
+11/12 raft cases DIVERGENT before this fix and 4/12 PASS after it. The
+rows now record the true FAIL status (summary: 606/650).
+
+Remaining raft residuals, for follow-up slices:
+- Last-digit wipe-retract E (`-.92554` vs `-.92553`):
+  `raft_contact_distance/min`, `raft_layers/max`, `raft_layers/seeded`.
+- Cooling slowdown feedrate on the raft interface layer (`F2986` vs
+  `F2997`): `raft_expansion/*`.
+- First-layer flange hatch and travel differences:
+  `raft_first_layer_density/seeded`, `raft_first_layer_expansion/seeded`.

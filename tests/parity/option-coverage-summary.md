@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-610/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
+606/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -436,10 +436,10 @@
 | PASS | printing_by_object_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2037 |  |
 | PASS | process_change_extrusion_role_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5081 |  |
 | PASS | purge_in_prime_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5983 |  |
-| PASS | raft_contact_distance | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5121 |  |
-| PASS | raft_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5132 |  |
-| PASS | raft_first_layer_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5141 |  |
-| PASS | raft_first_layer_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5151 |  |
+| FAIL | raft_contact_distance | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5121 | min: first difference at byte 7058 (line 292, column 28; expected 107522 bytes, actual 107522 bytes) context:   line 291: "G1 F3000"   line 292: expected "G1 X102.108 Y98.871 E-.92554"; actual "G1 X102.108 Y98.871 E-.92553"   line 293: "G1 X102.337 Y98.871 E-.27447" |
+| FAIL | raft_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5132 | min: first difference at byte 5485 (line 234, column 7; expected 106327 bytes, actual 106298 bytes) context:   line 233: ";TYPE:Skirt"   line 234: expected "G1 F2986"; actual "G1 F2997"   line 235: "G1 X103.719 Y100.105 E.04547" |
+| FAIL | raft_first_layer_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5141 | seeded: first difference at byte 1989 (line 89, column 1; expected 105878 bytes, actual 105965 bytes) context:   line 88: "G1 F3000"   line 89: expected "M73 P9 R8"; actual "G1 X100.56 Y99.512 E.02401"   line 90: expected "G1 X100.56 Y99.512 E.02401"; actual "G1 X102.108 Y98.871 E.05147" |
+| FAIL | raft_first_layer_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5151 | seeded: first difference at byte 2967 (line 131, column 9; expected 107340 bytes, actual 107656 bytes) context:   line 130: "G1 Z.6 F9000"   line 131: expected "G1 X118.259 Y119.217 Z.6"; actual "G1 X118.812 Y118.665 Z.6"   line 132: "G1 Z.2" |
 | FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: first difference at byte 126281 (line 4885, column 29; expected 353925 bytes, actual 353925 bytes) context:   line 4884: "G1 X102.712 Y102.518 E-.12751"   line 4885: expected "G1 X102.518 Y102.712 E-.20595"; actual "G1 X102.518 Y102.712 E-.20594"   line 4886: "M73 P43 R17" |
 | PASS | reduce_crossing_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:941 |  |
 | PASS | reduce_fan_stop_start_freq | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2422 |  |

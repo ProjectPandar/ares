@@ -42,7 +42,7 @@ pub(crate) fn raft_layer_plans(
     first_layer_height_mm: f64,
 ) -> Vec<RaftLayerPlan> {
     let mut plans = Vec::with_capacity(raft_grid.len());
-    let mut interface_id = 0usize;
+    let interface_ids = interface_ids(raft_grid);
     for (index, z) in raft_grid.iter().enumerate() {
         let (polygons, spec) = match z.kind {
             RaftLayerKind::Base if index == 0 => {
@@ -72,8 +72,7 @@ pub(crate) fn raft_layer_plans(
                 },
             ),
             RaftLayerKind::Interface | RaftLayerKind::Contact => {
-                let angle = fill_params.interface_angle_for_layer(interface_id);
-                interface_id += 1;
+                let angle = fill_params.interface_angle_for_layer(interface_ids[index]);
                 (
                     // The contact layer extrudes the raw contact polygons;
                     // the +0.5mm `inflate_factor_fine` expansion only builds
@@ -186,3 +185,31 @@ const _: () = {
     // Silence the unused re-export until the pipeline slice lands.
     let _: Option<RaftFillInputs> = None;
 };
+
+/// Per-layer `SupportLayer::interface_id` (`SupportCommon.cpp:1369-1406`).
+fn interface_ids(raft_grid: &[RaftLayerZ]) -> Vec<usize> {
+    const EPSILON: f64 = 1e-4;
+    let mut ids: Vec<usize> = Vec::with_capacity(raft_grid.len());
+    let mut layer_id_interface = 0;
+    for layer in raft_grid {
+        let id = match layer.kind {
+            // Contacts-only layer: one past the layer it rests on
+            // (`:1391-1402`), without advancing the counter.
+            RaftLayerKind::Contact => raft_grid
+                .iter()
+                .zip(&ids)
+                .find(|(other, _)| (other.print_z - layer.bottom_z).abs() < EPSILON)
+                .map_or(layer_id_interface, |(_, &id)| id + 1),
+            RaftLayerKind::Interface => {
+                layer_id_interface += 1;
+                layer_id_interface - 1
+            }
+            RaftLayerKind::Base => layer_id_interface,
+        };
+        ids.push(id);
+    }
+    ids
+}
+
+#[cfg(test)]
+mod tests;
