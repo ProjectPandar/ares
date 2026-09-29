@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-611/650 bounded domains complete; 1594 generated, 1591 strictly compared, 1 rejected. Not all-printer/default coverage.
+612/650 bounded domains complete; 1594 generated, 1591 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -360,7 +360,7 @@
 | PASS | mmu_segmented_region_interlocking_depth | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4215 |  |
 | PASS | mmu_segmented_region_max_width | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4206 |  |
 | PASS | notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4843 |  |
-| FAIL | nozzle_diameter | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4835 | max: first difference at byte 1302 (line 58, column 9; expected 98594 bytes, actual 99845 bytes) context:   line 57: "G1 E-4 F3600"   line 58: expected "M73 P8 R8"; actual "M73 P8 R7"   line 59: ";_SET_FAN_SPEED_CHANGING_LAYER" |
+| PASS | nozzle_diameter | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4835 |  |
 | INCOMPLETE | nozzle_flush_dataset | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2602 | required legal cases not all compared;  |
 | INCOMPLETE | nozzle_height | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2242 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | nozzle_hrc | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3792 |  |

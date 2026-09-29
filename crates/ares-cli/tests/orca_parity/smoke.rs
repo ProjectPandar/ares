@@ -8,6 +8,9 @@ use crate::{
     runner::{self, CaseInputs, OrcaRunner},
 };
 
+#[path = "smoke/nozzle.rs"]
+mod nozzle;
+
 /// Focused re-check of the nearest-seam / layer-1 deposition cluster
 /// after seam-placement changes (env-gated, prints outcomes).
 #[test]

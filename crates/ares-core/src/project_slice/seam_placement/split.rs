@@ -16,8 +16,14 @@ pub(super) fn scale_position(position: (f32, f32), scale: CoordinateScale) -> (i
 }
 
 pub(super) fn normalized(vector: (f32, f32)) -> (f32, f32) {
-    let length = vector.0.hypot(vector.1);
-    (vector.0 / length, vector.1 / length)
+    // `SeamPlacer.cpp:1584-1587`: Eigen leaves a zero direction unchanged.
+    let squared_norm = vector.0 * vector.0 + vector.1 * vector.1;
+    if squared_norm > 0.0 {
+        let length = squared_norm.sqrt();
+        (vector.0 / length, vector.1 / length)
+    } else {
+        vector
+    }
 }
 
 #[derive(Clone, Copy)]
