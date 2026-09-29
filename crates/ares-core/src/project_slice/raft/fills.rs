@@ -13,7 +13,9 @@ use super::fill_params::RaftFillPattern;
 use crate::fill::base_support::connect_base_support;
 use crate::fill::checked_rotate::rotate_point;
 use crate::fill::rectilinear::segments::{populate_vertical_lines, prepare_rectilinear_contours};
-use crate::geometry::{BoundingBox, ClipperError, CoordinateScale, Point, Polygon, Polyline};
+use crate::geometry::{
+    BoundingBox, ClipperError, CoordinateScale, ExPolygon, Point, Polygon, Polyline,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct RaftFillSpec {
@@ -57,12 +59,11 @@ pub(crate) enum RaftFillPreprocess {
 
 /// The emitted raft-layer polylines (sheath + fill) in source order
 /// (`fill_expolygons_with_sheath_generate_paths`,
-/// `SupportCommon.cpp:705-757`). For the flange this is the sheath
-/// perimeter (`closing_ex(polygons, ε, ε + 0.5·width)` contour closed and
-/// clipped by `0.15·spacing`) followed by the fill on
-/// `offset(-0.4·spacing)` of the same region; other layers just take the
-/// fill on the `-0.5·spacing` inset. `Print.cpp:2693` collects these
-/// points for the skirt hull.
+/// `SupportCommon.cpp:705-757`). With a sheath, each region of
+/// `closing_ex(polygons, ε, ε + 0.5·width)` emits its contour and hole
+/// loops closed and clipped by `0.15·spacing`, then the fill on
+/// `offset_ex(-0.4·spacing)` of that region; other layers just take the
+/// fill. `Print.cpp:2693` collects these points for the skirt hull.
 pub(crate) fn raft_layer_polylines(
     layer_polygons: &[Polygon],
     spec: RaftFillSpec,
@@ -86,50 +87,50 @@ pub(crate) fn raft_layer_polylines(
     // `float` (`Flow.cpp:129-143`), so narrow through f32 before the
     // scale/trunc, then halve the integer.
     let erode = (0.5 * ((f64::from(spec.width_mm as f32) * units) as i64) as f64) as f32;
-    let closing = crate::geometry::offset2_ex(
-        &layer_polygons
-            .iter()
-            .map(|polygon| crate::geometry::ExPolygon::new(polygon.clone(), Vec::new()))
-            .collect::<Vec<_>>(),
-        epsilon,
-        -(epsilon + erode),
-        crate::geometry::JoinType::Miter,
-        3.0,
-    )?;
-    // `spacing * 0.15` (`:735`): `spacing = coord_t(scale_(spacing))`
-    // (`:733`) — `Flow` spacing is stored as `float`, so narrow through
-    // f32 before the trunc, then the integer scaled spacing × 0.15.
-    let clip = 0.15 * (f64::from(spec.sheath_spacing as f32) * units) as i64 as f64;
+    // `spacing = flow.scaled_spacing()` (`:733`): `Flow` spacing is
+    // stored as `float`, so narrow through f32 before the trunc.
+    let spacing = (f64::from(spec.sheath_spacing as f32) * units) as i64 as f64;
     let mut out = Vec::new();
-    for expolygon in &closing {
-        let mut points = expolygon.contour().points().to_vec();
-        points.push(points[0]);
-        let mut polyline = Polyline::new(points);
-        clip_polyline_end(&mut polyline, clip);
-        if polyline.points().len() > 1 {
-            out.push(polyline);
+    for expolygon in closing_polygons(layer_polygons, epsilon, epsilon + erode)? {
+        // `draw_perimeters(expoly, spacing * 0.15)` (`:459-475,735`): the
+        // contour, then each hole reversed, each closed and clipped.
+        let loops = std::iter::once((expolygon.contour(), false))
+            .chain(expolygon.holes().iter().map(|hole| (hole, true)));
+        for (polygon, hole) in loops {
+            let mut points = polygon.points().to_vec();
+            points.push(points[0]);
+            if hole {
+                points.reverse();
+            }
+            let mut polyline = Polyline::new(points);
+            clip_polyline_end(&mut polyline, 0.15 * spacing);
+            if polyline.points().len() > 1 {
+                out.push(polyline);
+            }
         }
+        // `offset_ex(expoly, float(-0.4 * spacing))` (`:749`).
+        let fill_region = crate::geometry::offset_expolygon(
+            &expolygon,
+            (-0.4 * spacing) as f32,
+            crate::geometry::JoinType::Miter,
+            3.0,
+        )?;
+        out.extend(fill_expolygons(fill_region, spec, Point::new(0, 0), scale)?);
     }
-    let fill_region = crate::geometry::offset_expolygons(
-        &closing,
-        // `float(-0.4 * spacing)` (`:749`) — integer scaled spacing
-        // (f32-narrowed like `scaled_spacing()`); negative delta
-        // SHRINKS the fill region.
-        (-0.4 * ((f64::from(spec.sheath_spacing as f32) * units) as i64) as f64) as f32,
-        crate::geometry::JoinType::Miter,
-        3.0,
-    )?;
-    let fill_polygons = fill_region
-        .iter()
-        .map(|expolygon| expolygon.contour().clone())
-        .collect::<Vec<_>>();
-    out.extend(raft_layer_fill(
-        &fill_polygons,
-        spec,
-        Point::new(0, 0),
-        scale,
-    )?);
     Ok(out)
+}
+
+/// `closing_ex(const Polygons&, delta1, delta2)` (`ClipperUtils.cpp:599-604`):
+/// `shrink_paths<PolyTree>(expand_paths(polygons, delta1), delta2)`, which
+/// keeps clockwise hole polygons as holes.
+fn closing_polygons(
+    polygons: &[Polygon],
+    expand: f32,
+    shrink: f32,
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    use crate::geometry::{JoinType, offset_paths, offset_paths_tree};
+    let expanded = offset_paths(polygons, expand, JoinType::Miter, 3.0)?;
+    Ok(offset_paths_tree(&expanded, -shrink, JoinType::Miter, 3.0)?.into_expolygons())
 }
 
 /// `Polyline::clip_end` (`Polyline.cpp`): shorten the polyline tail by
@@ -158,17 +159,20 @@ pub(crate) fn raft_layer_fill(
         // (`SupportCommon.cpp:727`): `SCALED_EPSILON = scale_(1e-4)`.
         RaftFillPreprocess::Closing => {
             let epsilon = scale.scaled_delta(1e-4) as f32;
-            crate::geometry::closing_ex(
-                &layer_polygons
-                    .iter()
-                    .map(|polygon| crate::geometry::ExPolygon::new(polygon.clone(), Vec::new()))
-                    .collect::<Vec<_>>(),
-                epsilon,
-                crate::geometry::JoinType::Miter,
-                3.0,
-            )?
+            closing_polygons(layer_polygons, epsilon, epsilon)?
         }
     };
+    fill_expolygons(expolygons, spec, reference, scale)
+}
+
+/// `fill_expolygons_generate_paths` (`SupportCommon.cpp:432-443`); the
+/// `SupportBase` body is `FillSupportBase::fill_surface`.
+fn fill_expolygons(
+    expolygons: Vec<ExPolygon>,
+    spec: RaftFillSpec,
+    reference: Point,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
     let mut out = Vec::new();
     for expolygon in expolygons {
         match spec.pattern {

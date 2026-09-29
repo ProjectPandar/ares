@@ -99,3 +99,82 @@ fn honeycomb_pattern_draws_diagonal_hexagon_walls() {
         });
     assert!(diagonal);
 }
+
+const MM: i64 = 1_000_000;
+
+fn sheath_spec(sheath_spacing: f64) -> RaftFillSpec {
+    RaftFillSpec {
+        sheath: true,
+        sheath_spacing,
+        ..spec(RaftFillPattern::SupportBase, 0.2)
+    }
+}
+
+fn signed_area(points: &[Point]) -> f64 {
+    points
+        .windows(2)
+        .map(|pair| {
+            (pair[0].x() as f64) * (pair[1].y() as f64)
+                - (pair[1].x() as f64) * (pair[0].y() as f64)
+        })
+        .sum::<f64>()
+        / 2.0
+}
+
+/// The sheath clip (`0.15·spacing`) and the fill inset (`-0.4·spacing`)
+/// use the layer's own flow spacing (`SupportCommon.cpp:733-749`), not the
+/// filler spacing.
+#[test]
+fn sheath_offsets_use_the_layer_flow_spacing() {
+    let out = raft_layer_polylines(
+        &[square(0, 20 * MM)],
+        sheath_spec(2.0),
+        CoordinateScale::Normal,
+    )
+    .unwrap();
+    let sheath = out[0].points();
+    let (first, last) = (sheath[0], sheath[sheath.len() - 1]);
+    let gap = ((first.x() - last.x()) as f64).hypot((first.y() - last.y()) as f64);
+    assert!((gap - 0.3 * MM as f64).abs() < 1_000.0, "clip gap {gap}");
+    // Sheath at `0.5·width` inside, fill region a further `0.4·2mm`.
+    let fill_min = out[1..]
+        .iter()
+        .flat_map(|polyline| polyline.points())
+        .map(|point| point.x().min(point.y()))
+        .min()
+        .unwrap();
+    assert!(fill_min >= MM + 10 * 1_000 - 1_000, "fill min {fill_min}");
+}
+
+/// `closing_ex(const Polygons&)` keeps clockwise hole polygons as holes;
+/// `draw_perimeters` draws each hole reversed (`SupportCommon.cpp:
+/// 464-472`) and the filler gets the whole `ExPolygon` (`:749`).
+#[test]
+fn sheath_draws_hole_loops_and_fills_around_the_hole() {
+    let mut hole = square(8 * MM, 12 * MM);
+    hole.reverse();
+    let out = raft_layer_polylines(
+        &[square(0, 20 * MM), hole],
+        sheath_spec(0.4),
+        CoordinateScale::Normal,
+    )
+    .unwrap();
+    let hole_loop = out[1].points();
+    assert!(hole_loop.iter().all(|point| {
+        (7 * MM..=13 * MM).contains(&point.x()) && (7 * MM..=13 * MM).contains(&point.y())
+    }));
+    assert!(
+        signed_area(hole_loop) > 0.0,
+        "hole loop runs CCW after the reversal"
+    );
+    let inside_hole = |point: &Point| {
+        let inner = 7 * MM + 950_000..13 * MM - 950_000;
+        inner.contains(&point.x()) && inner.contains(&point.y())
+    };
+    assert!(
+        out[2..]
+            .iter()
+            .flat_map(|polyline| polyline.points())
+            .all(|point| !inside_hole(point))
+    );
+}

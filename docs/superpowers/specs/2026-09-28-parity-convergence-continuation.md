@@ -1020,3 +1020,45 @@ and 6, and failed 1 and 5. Fixes:
 - Planner test-hook comment updated for `drain_final`.
 - Removed the `const _` shim in `raft/emit.rs` that kept an unused
   `RaftFillInputs` import alive.
+
+## 2026-09-29 (raft sheath holes + wiring coverage)
+
+The re-review of `359843a0`/`5e6a9d1d` failed aspect 5 (test coverage)
+and raised one minor logic item. Fixes:
+- `raft/fills.rs`: ported `closing_ex(const Polygons&, δ1, δ2)`
+  (`ClipperUtils.cpp:599-604`,
+  `shrink_paths<PolyTree>(expand_paths(polygons, δ1), δ2)`) as
+  `closing_polygons`. It is used by both the sheath path and the
+  `Closing` preprocess, so clockwise hole polygons from `raft_polygons`
+  stay holes. Before this, each hole was wrapped as a standalone
+  contour.
+- The sheath path now follows `fill_expolygons_with_sheath_generate_paths`
+  (`SupportCommon.cpp:728-752`) per region:
+  - `draw_perimeters` (`:459-475`) draws the contour, then each hole
+    reversed, each closed and clipped by `0.15·spacing`.
+  - Then the whole `offset_ex(expoly, -0.4·spacing)` result, holes
+    included, is filled through `fill_expolygons`
+    (`fill_expolygons_generate_paths`, `:432-443`).
+- Deferred: `with_sheath && density == 0` →
+  `tree_supports_generate_paths` (`:719-722`); raft base density is
+  never 0 on the covered profiles.
+- Tests:
+  - `sheath_offsets_use_the_layer_flow_spacing` covers the clip gap and
+    the fill inset with `sheath_spacing = 2mm ≠ spacing`.
+  - `sheath_draws_hole_loops_and_fills_around_the_hole` covers a ring
+    region. It fails on the previous contour-only code.
+  - The end-to-end
+    `gcode_raft_filler::raft_base_follows_sheath_and_honeycomb_settings`
+    slices KSR with `raft_layers=4`. Each of
+    `tree_support_wall_count=1` and `support_base_pattern=honeycomb`
+    must change the raft layers. Reverting either wiring line in
+    `bridge/project.rs:76-77` fails it.
+- Oracle probes: control, A, B and C are now byte-identical to Orca
+  (the `; generated` line is excluded).
+- Regression sweep: 150 newest raft/support artifact cases, HEAD vs this
+  change, each diffed against `orca.gcode`. 22 cases improved and none
+  regressed.
+  - The `raft_expansion`/`raft_contact_distance` seeded and min cases go
+    from 2 to 0.
+  - The `support_*` cases lose 2 lines each.
+  - The total drops from 11390 to 11346 lines; 63 cases are exact.
