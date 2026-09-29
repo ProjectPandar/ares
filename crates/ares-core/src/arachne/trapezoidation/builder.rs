@@ -16,23 +16,8 @@ impl SkeletalTrapezoidation<'_> {
         polygons: &[Polygon],
     ) -> Result<(), TrapezoidationError> {
         let segments = collect_segments(polygons);
-        if std::env::var("ARES_DUMP_STPOLY").is_ok() {
-            eprintln!(
-                "STPOLY polys={} pts={}",
-                polygons.len(),
-                polygons.iter().map(|p| p.points().len()).sum::<usize>()
-            );
-        }
         let vd = voronoi::build(polygons, &segments)?;
         for cell in vd.cells() {
-            if std::env::var("ARES_DUMP_CELLS").is_ok() {
-                eprintln!(
-                    "CELL id={:?} pt={} src={:?}",
-                    cell.id(),
-                    cell.contains_point(),
-                    cell.source_index()
-                );
-            }
             let Some(range) = voronoi::cell_range(&vd, cell.id(), polygons, &segments)? else {
                 continue;
             };

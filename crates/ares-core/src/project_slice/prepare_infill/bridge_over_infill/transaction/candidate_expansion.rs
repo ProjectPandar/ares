@@ -274,20 +274,6 @@ pub(super) fn build_lightning_generator(
             }
         })
         .collect();
-    if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
-        eprintln!(
-            "LIGHTNING-IN rec_some={:?} outlines={:?}",
-            horizontal
-                .records
-                .iter()
-                .map(|r| r.is_some())
-                .collect::<Vec<_>>(),
-            layer_internal_outlines
-                .iter()
-                .map(Vec::len)
-                .collect::<Vec<_>>()
-        );
-    }
     crate::fill::lightning::generator::Generator::new(
         layer_internal_outlines,
         layer_height,

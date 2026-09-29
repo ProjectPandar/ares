@@ -211,29 +211,6 @@ impl Estimate {
         // Per-block signature dump (id, cumulative, distance, speed) for
         // sequence alignment against the GT oracle's ORCA_DUMP_TIMES — env
         // gated like the cache dump.
-        if let Ok(path) = std::env::var("ARES_DUMP_BLOCKS") {
-            use std::io::Write;
-            let mut out = std::fs::File::create(&path).unwrap();
-            let mut running = 0.0;
-            for ((block, id), time) in blocks.iter().zip(&block_line_ids).zip(&times) {
-                running += time;
-                writeln!(
-                    out,
-                    "{id} {running:.6} {:.6} {:.3} {} {:.4} {:.4} {:.4}",
-                    block.distance,
-                    block.speed,
-                    match block.kind {
-                        MotionKind::Regular => "reg",
-                        MotionKind::Unretract => "unretract",
-                        MotionKind::ToolChange => "tool",
-                    },
-                    block.delta[0],
-                    block.delta[1],
-                    block.delta[2]
-                )
-                .unwrap();
-            }
-        }
         // `machine.time` accumulates `time += double(block_time)`
         // (`GCodeProcessor.cpp:471`) in f64; `g1_times_cache` then snapshots
         // each entry as `float(time)` (:576). Keep the f64 accumulator for
@@ -321,22 +298,6 @@ impl Estimate {
                 elapsed[index + 1] = Some(cache[cache_index].1);
             }
         }
-        // Diagnostic backing for the committed `m73_profile` parity harness
-        // (`ares-cli/tests/orca_parity/m73_profile.rs`): dumps the
-        // `g1_times_cache` pairs `<id> <cumulative-seconds>`. No effect on
-        // slicing unless `ARES_DUMP_ELAPSED` names an output path.
-        if let Ok(path) = std::env::var("ARES_DUMP_ELAPSED") {
-            use std::io::Write;
-            let mut out = std::fs::File::create(&path).unwrap();
-            for (id, cumulative) in &cache {
-                writeln!(out, "{id} {cumulative:.6}").unwrap();
-            }
-            for (index, e) in elapsed.iter().enumerate() {
-                if let Some(e) = e {
-                    writeln!(out, "HIT {index} {e:.6} {}", lines[index - 1]).unwrap();
-                }
-            }
-        }
         // `prepare_time += block_time` accumulates in f32
         // (`GCodeProcessor.cpp:475-476`), so the exported trailer matches
         // upstream's float rounding at the sixth decimal.
@@ -345,12 +306,6 @@ impl Estimate {
             .zip(prepare_stages)
             .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
             .fold(0.0_f32, |sum, time| sum + *time as f32) as f64;
-        if std::env::var("ARES_DUMP_TOTAL").is_ok() {
-            eprintln!(
-                "ARES_TOTAL cumulative={cumulative:.9} trailing_delay={trailing_delay:.9} total={:.9} prepare={prepare}",
-                cumulative + trailing_delay
-            );
-        }
         Self {
             total: cumulative + trailing_delay,
             prepare,

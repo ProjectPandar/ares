@@ -912,3 +912,24 @@ Ported the `is_final` drain of `GCodeProcessor::TimeMachine::calculate_time`
   within 1e-7. TinyBotV1 0.2 flipped from PASS to DIVERGENT. The tie
   depends on sub-ulp accumulation that this pair of changes does not
   reproduce, so it stays a known residual.
+
+## Slice: debug-hook cleanup (ares-core no-file-I/O boundary)
+
+- Removed ~150 `ARES_*` environment-variable debug hooks and their file/stderr
+  dumps from about 89 `ares-core` files. These dumps broke the
+  WASM/no-file-I/O boundary in AGENTS.md. Also removed:
+  - The dump-only modules `project_slice/dump_surfaces.rs` and
+    `fill_entities/dump.rs`.
+  - The ignored `/tmp` fan-mover repro test.
+  - The CLI `m73_profile` probe, which depended on the core dump.
+- Collapsed the parameters and `*_inner` wrappers that existed only to feed
+  those dumps (`group_fills::coalesce`, `lower_series`,
+  `finalize_polylines`, gyroid `make_one_period`,
+  `emit_monotonic_polylines`, `chain_segments_constrained`).
+- Test-only env fixtures (`envelope_replay_tests`, `seam_tests`,
+  `gt_oracle_tests`) are kept.
+- Verification:
+  - `cargo nextest run --workspace` passed 7344 of 7344.
+  - 27 artifact `input.3mf` re-slices match `orca.gcode` byte for byte.
+    TinyBotV1 0.4 is the exception, a known residual, and its output
+    matches the pre-cleanup `ares.gcode`.

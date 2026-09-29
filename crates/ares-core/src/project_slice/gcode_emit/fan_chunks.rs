@@ -9,9 +9,6 @@ use super::fan_mover::FanMover;
 /// prepends the fan to the rebuilt layer text).
 pub(super) fn process_layer_chunks(mover: &mut FanMover, layers: Vec<u8>) -> Vec<u8> {
     let text = String::from_utf8(layers).expect("generated G-code is UTF-8");
-    if let Ok(path) = std::env::var("ARES_DUMP_PREFAN") {
-        let _ = std::fs::write(path, &text);
-    }
     let mut flushed = String::with_capacity(text.len());
     let mut chunk_start = 0;
     for (offset, _) in text.match_indices("\n;") {

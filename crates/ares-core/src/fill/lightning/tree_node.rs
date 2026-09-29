@@ -9,7 +9,7 @@ use std::rc::{Rc, Weak};
 
 use crate::geometry::{Coord, EdgeGrid, Point, Polygon};
 
-use super::tree_geom::{dist, inside};
+use super::tree_geom::dist;
 
 pub(super) type NodeSPtr = Rc<RefCell<Node>>;
 
@@ -171,15 +171,6 @@ impl Node {
         Self::prune(&tree_below, prune_distance);
         Self::straighten(&tree_below, smooth_magnitude, max_remove_colinear_dist);
         let ok = Self::realign(&tree_below, next_outlines, outline_locator, next_trees);
-        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
-            eprintln!(
-                "PROPAGATE outlines={} root_inside={} ok={} children={}",
-                next_outlines.len(),
-                inside(next_outlines, this.borrow().p),
-                ok,
-                tree_below.borrow().children.len()
-            );
-        }
         if ok {
             next_trees.push(tree_below);
         }

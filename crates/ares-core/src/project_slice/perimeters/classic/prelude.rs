@@ -80,31 +80,14 @@ fn prepare_record(
         Vec::new()
     };
     let nozzle_diameter = record.ext_perimeter_flow.nozzle_diameter;
-    let lower_polygons_series = lower_series(
-        lower,
-        record.layer_id,
-        record.perimeter_flow,
-        nozzle_diameter,
-        scale,
-    )?;
+    let lower_polygons_series = lower_series(lower, record.perimeter_flow, nozzle_diameter, scale)?;
     let external_lower_polygons_series = if external_width == perimeter_width {
         lower_polygons_series.clone()
     } else {
-        lower_series(
-            lower,
-            record.layer_id,
-            record.ext_perimeter_flow,
-            nozzle_diameter,
-            scale,
-        )?
+        lower_series(lower, record.ext_perimeter_flow, nozzle_diameter, scale)?
     };
-    let smaller_external_lower_polygons_series = lower_series(
-        lower,
-        record.layer_id,
-        smaller_external_flow,
-        nozzle_diameter,
-        scale,
-    )?;
+    let smaller_external_lower_polygons_series =
+        lower_series(lower, smaller_external_flow, nozzle_diameter, scale)?;
     let surfaces = prepare_surfaces(object, record, config)?;
     Ok(ClassicPreludeRecord {
         perimeter_width,
@@ -147,35 +130,6 @@ fn prepare_surfaces(
         .map(|surface| surface.as_parts().1.clone())
         .collect::<Vec<ExPolygon>>();
     let order = chain_expolygons_order(&geometry);
-    if let Ok(path) = std::env::var("ARES_DUMP_PRELUDE") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let centers = geometry
-                .iter()
-                .map(|expolygon| {
-                    let bounds = crate::geometry::BoundingBox::from_expolygon(expolygon)
-                        .expect("a region surface ExPolygon contour must be nonempty");
-                    let center = bounds.center();
-                    format!("({},{})", center.x(), center.y())
-                })
-                .collect::<Vec<_>>()
-                .join(" ");
-            let chain = order
-                .iter()
-                .map(|index| index.to_string())
-                .collect::<Vec<_>>()
-                .join(",");
-            let _ = writeln!(
-                file,
-                "PRELUDE n={} centers={centers} chain={chain}",
-                geometry.len()
-            );
-        }
-    }
     order
         .into_iter()
         .map(|source_index| {
@@ -208,7 +162,6 @@ fn prepare_surfaces(
 
 fn lower_series(
     lower: Option<&[ExPolygon]>,
-    layer_id: usize,
     flow: Flow,
     nozzle_diameter: f32,
     scale: CoordinateScale,
@@ -216,24 +169,6 @@ fn lower_series(
     let Some(lower) = lower else {
         return Ok(Vec::new());
     };
-    if let Ok(path) = std::env::var("ARES_DUMP_LOWSL") {
-        use std::io::Write;
-        if let Ok(mut f) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = write!(f, "L{layer_id} ");
-            for e in lower {
-                let _ = write!(f, "[");
-                for p in e.contour().points() {
-                    let _ = write!(f, "{},{};", p.x(), p.y());
-                }
-                let _ = write!(f, "]");
-            }
-            let _ = writeln!(f);
-        }
-    }
     let offsets = lower_sample_offsets(flow.width, nozzle_diameter);
     offsets
         .into_iter()

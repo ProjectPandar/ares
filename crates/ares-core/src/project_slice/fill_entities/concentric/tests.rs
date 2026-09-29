@@ -51,12 +51,7 @@ fn task22o201_concentric_finalization_rotates_then_clips_closed_loop() {
         endpoints: (false, false),
     }];
 
-    finalize_polylines(
-        &mut polylines,
-        0,
-        5.0,
-        crate::geometry::CoordinateScale::Normal,
-    );
+    finalize_polylines(&mut polylines, 0, 5.0);
 
     assert_eq!(polylines.len(), 1);
     assert_eq!(polylines[0].points[0], Point::new(0, 0));
@@ -76,12 +71,7 @@ fn concentric_rotation_uses_last_equidistant_point_like_upstream() {
         endpoints: (false, false),
     }];
 
-    finalize_polylines(
-        &mut polylines,
-        0,
-        1.0,
-        crate::geometry::CoordinateScale::Normal,
-    );
+    finalize_polylines(&mut polylines, 0, 1.0);
 
     assert_eq!(polylines[0].points[0], Point::new(0, 10));
 }
@@ -127,12 +117,7 @@ fn task22o203_concentric_arachne_matches_source_narrow_branch() {
     );
     let mut output =
         generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
-    finalize_polylines(
-        &mut output,
-        0,
-        40_000.0,
-        crate::geometry::CoordinateScale::Normal,
-    );
+    finalize_polylines(&mut output, 0, 40_000.0);
     assert!(output.iter().any(|line| {
         line.points.windows(3).any(|points| {
             points
@@ -329,12 +314,7 @@ fn concentric_arachne_matches_source_single_bead_peak_filtering() {
     );
     let mut output =
         generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
-    finalize_polylines(
-        &mut output,
-        0,
-        40_000.0,
-        crate::geometry::CoordinateScale::Normal,
-    );
+    finalize_polylines(&mut output, 0, 40_000.0);
 
     let actual = output
         .iter()

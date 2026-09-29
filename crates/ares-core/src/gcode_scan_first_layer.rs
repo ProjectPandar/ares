@@ -5,17 +5,6 @@ pub(crate) fn layer_command(
     layer_index: usize,
 ) -> Result<&'static str, SliceError> {
     let scan_first_layer = options.bool_option("scan_first_layer", false)?;
-    if std::env::var("ARES_SCAN_DBG").is_ok() {
-        eprintln!(
-            "SCANDBG idx={} flag={} model={:?}",
-            layer_index,
-            scan_first_layer,
-            options
-                .values()
-                .get("printer_model")
-                .and_then(serde_json::Value::as_str)
-        );
-    }
     if layer_index != 1 || !scan_first_layer {
         return Ok("");
     }

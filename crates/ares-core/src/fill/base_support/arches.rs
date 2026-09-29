@@ -218,12 +218,6 @@ pub(super) fn emit_excess_arches(
         if param_end < 0.0 {
             param_end += contour_length;
         }
-        if std::env::var("ARES_EXCESS_DBG").is_ok() {
-            eprintln!(
-                "XARCH idx={index} next={next} first={first} x={x} left={left} right={right} pstart={param_start} pend={param_end} ntk={}",
-                intersections[index].not_taken_next
-            );
-        }
         super::emit_loops_in_band(
             left as i64,
             right as i64,

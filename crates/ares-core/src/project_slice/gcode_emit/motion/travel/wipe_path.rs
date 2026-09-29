@@ -75,20 +75,6 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
         }
         clip -= lsqr.sqrt();
     }
-    if let Ok(path) = std::env::var("ARES_DUMP_WIPE") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = write!(file, "WP");
-            for point in &points {
-                let _ = write!(file, " ({},{})", point.0, point.1);
-            }
-            let _ = writeln!(file);
-        }
-    }
     let segments = points
         .windows(2)
         .filter_map(|segment| {

@@ -44,29 +44,6 @@ pub(crate) fn fill_tpmsd_surface(
         expolygon.clone()
     };
     let (mut min, mut max) = contour_bounds(rotated.contour());
-    if let Ok(path) = std::env::var("ARES_DUMP_TPMSREG") {
-        use std::io::Write;
-        if let Ok(mut f) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                f,
-                "TPMSD z={:.4} angle={:.5} dens={:.5} ml={} min={} {} max={} {} npts={} rot={}",
-                params.layer_z,
-                params.angle,
-                params.density,
-                params.multiline,
-                min.x(),
-                min.y(),
-                max.x(),
-                max.y(),
-                rotated.contour().points().len(),
-                rotate
-            );
-        }
-    }
 
     let density_adjusted =
         (f64::from(params.density) * DENSITY_ADJUST / f64::from(params.multiline)).max(0.0);
@@ -142,19 +119,6 @@ fn make_waves(
     let a = z.sin() - z.cos();
     let b = z.sin() + z.cos();
     let swap_uv = a.abs() > b.abs();
-    if let Ok(path) = std::env::var("ARES_DUMP_TPMSW") {
-        use std::io::Write;
-        if let Ok(mut f) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                f,
-                "W z={z:.6} a={a:.6} b={b:.6} swap={swap_uv} sf={scale_factor:.4} gz={grid_z:.4} w={width} h={height} tol={tolerance:.4}"
-            );
-        }
-    }
     // `minU = 0 - height; maxU = width; minV = 0; maxV = width + height`,
     // swapped alongside a/b when `swapUV` (FillTpmsD.cpp:50-58).
     let (a, b, min_u, max_u, min_v, max_v) = if swap_uv {

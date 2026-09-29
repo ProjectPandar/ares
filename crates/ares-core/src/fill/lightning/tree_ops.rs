@@ -46,17 +46,6 @@ impl Node {
                         )
                     })
                     .flatten();
-                if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
-                    eprintln!(
-                        "REALIGN root=({},{}) child=({},{}) cb={} cross={:?}",
-                        p.x(),
-                        p.y(),
-                        child_p.x(),
-                        child_p.y(),
-                        connect_branch,
-                        crossing.map(|q| (q.x(), q.y()))
-                    );
-                }
                 if connect_branch && crossing.is_some() {
                     {
                         let mut c = child.borrow_mut();

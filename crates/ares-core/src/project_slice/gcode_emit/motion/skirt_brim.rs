@@ -128,31 +128,4 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
     // `GCode.cpp:5979-5991` stores loop wipe paths forward so the wipe
     // wraps from the loop end back toward the path start.
     state.wipe_path.reverse();
-    if let Ok(path) = std::env::var("ARES_DUMP_FULLLOOP") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            // Wipe points are already LOCAL mm (`path.rs` stores
-            // `unscale`-ed ints) — recover ints with the bare scale.
-            let scaled = state
-                .wipe_path
-                .iter()
-                .map(|point| {
-                    (
-                        (point.x / state.scale_factor).round() as i64,
-                        (point.y / state.scale_factor).round() as i64,
-                    )
-                })
-                .collect::<Vec<_>>();
-            // `state.wipe_path` was already reversed into forward order
-            // above (`:131`) — dump as-is like upstream `path.points`.
-            for (x, y) in scaled {
-                let _ = writeln!(file, "FL ({x},{y})");
-            }
-            let _ = writeln!(file, "FL_END");
-        }
-    }
 }

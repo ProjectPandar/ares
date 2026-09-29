@@ -28,20 +28,6 @@ pub(super) fn emit(
     let role = role_id(properties.feature);
     let role_changed = state.last_extrusion_role != Some(role);
     let mut scaled_points = points.collect::<Vec<_>>();
-    if let Ok(path) = std::env::var("ARES_DUMP_PATH") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-            && properties.feature != "Skirt"
-        {
-            for &(x, y) in &scaled_points {
-                let _ = writeln!(file, "P ({x},{y})");
-            }
-            let _ = writeln!(file, "P_END");
-        }
-    }
     let source_length = scaled_points
         .windows(2)
         .map(|pair| {

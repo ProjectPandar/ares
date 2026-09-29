@@ -72,33 +72,6 @@ fn fill_component(
         height,
     )?;
     translate_polylines(&mut polylines, bbox_min)?;
-    if let Ok(path) = std::env::var("ARES_DUMP_CH") {
-        use std::io::Write;
-        if let Ok(mut f) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                f,
-                "CH z={} ls={} bbmin={},{} w={} h={} npol={}",
-                params.z / scale.factor(),
-                line_spacing(params.spacing, params.density, params.multiline, scale),
-                bbox_min.x(),
-                bbox_min.y(),
-                width,
-                height,
-                polylines.len()
-            );
-            for (i, p) in polylines.iter().take(3).enumerate() {
-                let _ = write!(f, "  pl{i}:");
-                for pt in p.points() {
-                    let _ = write!(f, " {},{}", pt.x(), pt.y());
-                }
-                let _ = writeln!(f);
-            }
-        }
-    }
     let polylines = multiline_offset::apply(polylines, params.multiline, params.spacing, scale)?;
 
     let (contour, holes) = component.into_parts();

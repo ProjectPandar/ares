@@ -121,25 +121,6 @@ pub(super) fn emit_needs_travel(
             },
         );
     }
-    if std::env::var("ARES_DUMP_TRAVEL").is_ok() {
-        eprintln!(
-            "TV layer={} feat={} from=({:.3},{:.3}) to=({:.3},{:.3}) routed={:.3} min={:.3} retracted={} skip={} retract={} ext_once={} disabled_once={} first_pos={}",
-            state.layer_index,
-            properties.feature,
-            state.x,
-            state.y,
-            first_x,
-            first_y,
-            routed_length,
-            state.options.retraction_minimum_travel,
-            state.retracted,
-            skip_retraction,
-            retract,
-            state.use_external_mp_once,
-            state.avoid_crossing_disabled_once,
-            first_position,
-        );
-    }
     let first_travel = route[0];
     let (travel_x, travel_y) = (first_travel.x, first_travel.y);
     append_object_start(output, state);

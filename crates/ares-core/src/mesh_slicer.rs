@@ -76,36 +76,6 @@ pub(crate) fn slice_mesh_on_planes(
         |_, _| {},
         |plane_index, line| lines[plane_index].push(line),
     )?;
-    if let Ok(path) = std::env::var("ARES_DUMP_ILINES") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for (plane_index, layer_lines) in lines.iter().enumerate() {
-                let mut coords = layer_lines
-                    .iter()
-                    .flat_map(|line| {
-                        [line.a().point(), line.b().point()]
-                            .into_iter()
-                            .map(|p| (p.x(), p.y()))
-                    })
-                    .collect::<Vec<_>>();
-                coords.sort_unstable();
-                let body = coords
-                    .iter()
-                    .map(|(x, y)| format!("{x},{y}"))
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                let _ = writeln!(
-                    file,
-                    "ILINES p={plane_index} n={} {body}",
-                    layer_lines.len()
-                );
-            }
-        }
-    }
     Ok(lines)
 }
 

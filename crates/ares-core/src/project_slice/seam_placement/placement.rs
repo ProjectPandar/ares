@@ -176,20 +176,5 @@ fn place_loop(
             seam = (point.x, point.y);
         }
     }
-    if let Ok(path) = std::env::var("ARES_DUMP_SEAMPT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "SPT {} {}",
-                scale.unscale(seam.0),
-                scale.unscale(seam.1)
-            );
-        }
-    }
     split_at(loop_, seam, scale);
 }

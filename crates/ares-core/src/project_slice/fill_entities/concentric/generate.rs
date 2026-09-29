@@ -56,21 +56,6 @@ fn generate_with_mode(
     scale: CoordinateScale,
     standard: bool,
 ) -> Result<Vec<ThickPolyline>, SliceError> {
-    if let Ok(path) = std::env::var("ARES_DUMP_CI2") {
-        use std::io::Write;
-        if let Ok(mut out) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let (contour, holes) = (&expolygon.contour(), expolygon.holes());
-            let _ = write!(out, "ADOM n={}", contour.points().len());
-            for point in contour.points() {
-                let _ = write!(out, " {},{}", point.x(), point.y());
-            }
-            let _ = writeln!(out, " holes={}", holes.len());
-        }
-    }
     let (contour, holes) = expolygon.into_parts();
     let (minimum_x, maximum_x, minimum_y, maximum_y) = contour.points().iter().fold(
         (i64::MAX, i64::MIN, i64::MAX, i64::MIN),
@@ -131,46 +116,6 @@ fn generate_with_mode(
     let generated = generate(&polygons, config).map_err(|error| {
         SliceError::InvalidInput(format!("concentric Arachne generation failed: {error:?}"))
     })?;
-    if let Ok(path) = std::env::var("ARES_DUMP_CI") {
-        use std::io::Write;
-        if let Ok(mut out) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for group in &generated.toolpaths {
-                for line in group {
-                    if line.junctions.len() < 2 {
-                        continue;
-                    }
-                    let widths = line
-                        .junctions
-                        .iter()
-                        .map(|junction| junction.width.to_string())
-                        .collect::<Vec<_>>()
-                        .join(",");
-                    let first = &line.junctions[0].point;
-                    let idxs = line
-                        .junctions
-                        .iter()
-                        .map(|junction| junction.perimeter_index.to_string())
-                        .collect::<Vec<_>>()
-                        .join(",");
-                    let _ = writeln!(
-                        out,
-                        "ARESCI closed={} odd={} n={} w=[{}] idx=[{}] p0={},{}",
-                        line.is_closed,
-                        line.is_odd,
-                        line.junctions.len(),
-                        widths,
-                        idxs,
-                        first.x(),
-                        first.y()
-                    );
-                }
-            }
-        }
-    }
     Ok(generated
         .toolpaths
         .into_iter()

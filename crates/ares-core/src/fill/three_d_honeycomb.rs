@@ -191,29 +191,6 @@ fn points(x: Vec<f64>, y: Vec<f64>, reverse: bool) -> Result<Polyline, ClipperEr
 fn critical_points(z: f64, grid: f64) -> Vec<f64> {
     let mut output = vec![0.0];
     let normalized = (tri_wave(z, grid) * 0.5).abs() / grid;
-    if let Ok(path) = std::env::var("ARES_DUMP_CRIT") {
-        use std::io::Write as _;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = write!(
-                file,
-                "CRIT z={:.17} grid={:.17} triWave={:.17} half={:.17} perp={:.17} norm={:.17} crits=",
-                z,
-                grid,
-                tri_wave(z, grid),
-                tri_wave(z, grid) * 0.5,
-                (tri_wave(z, grid) * 0.5).abs(),
-                normalized
-            );
-            for c in &output {
-                let _ = write!(file, " {:.17}", c);
-            }
-            let _ = writeln!(file);
-        }
-    }
     if normalized > 0.0 {
         output.extend([
             grid * normalized,

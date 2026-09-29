@@ -167,40 +167,6 @@ fn fill_component(
     let mut clip = Vec::with_capacity(holes.len() + 1);
     clip.push(contour);
     clip.extend(holes);
-    if let Ok(path) = std::env::var("ARES_DUMP_GYROID_PRECLIP") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "PRECLIP n={}", polylines.len());
-            for polyline in &polylines {
-                let _ = write!(file, "PL {}:", polyline.points().len());
-                for point in polyline.points() {
-                    let _ = write!(
-                        file,
-                        " ({},{})",
-                        scale.unscale(point.x()),
-                        scale.unscale(point.y())
-                    );
-                }
-                let _ = writeln!(file);
-            }
-            for polygon in &clip {
-                let _ = write!(file, "CLIP_CONTOUR:");
-                for point in polygon.points() {
-                    let _ = write!(
-                        file,
-                        " ({},{})",
-                        scale.unscale(point.x()),
-                        scale.unscale(point.y())
-                    );
-                }
-                let _ = writeln!(file);
-            }
-        }
-    }
     polylines = intersection_open_polylines(&polylines, &clip)?;
     let minimum_length = 0.8 * params.spacing / scale.factor();
     polylines.retain(|polyline| polyline_length(polyline) >= minimum_length);
@@ -266,19 +232,6 @@ fn make_gyroid_waves(
 ) -> Result<Vec<Polyline>, ClipperError> {
     let scale_factor = spacing / scale.factor() / density;
     let tolerance = (spacing / 2.0).min(PATTERN_TOLERANCE) / (scale_factor * scale.factor());
-    if let Ok(path) = std::env::var("ARES_DUMP_GWAVE") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "GWAVE sf={scale_factor:.17e} tol={tolerance:.17e} z={grid_z:.17e} den={density:.17e} sp={spacing:.17e}"
-            );
-        }
-    }
     let z = grid_z / scale_factor;
     let (z_sin, z_cos) = z.sin_cos();
     let context = WaveContext {

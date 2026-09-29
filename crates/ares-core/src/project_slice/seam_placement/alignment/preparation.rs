@@ -41,7 +41,6 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         traversal.scale,
     );
     for plan in &mut plans {
-        dump_seam_candidates(plan);
         plan.choices = plan
             .candidates
             .perimeters
@@ -54,36 +53,6 @@ pub(in crate::project_slice::seam_placement) fn prepare(
             .collect();
     }
     plans
-}
-
-fn dump_seam_candidates(plan: &LayerPlan) {
-    let Ok(path) = std::env::var("ARES_DUMP_SEAM") else {
-        return;
-    };
-    use std::io::Write;
-    let Ok(mut file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-    else {
-        return;
-    };
-    for perimeter in &plan.candidates.perimeters {
-        let _ = writeln!(
-            file,
-            "PERIM first={} n={}",
-            perimeter.start_index,
-            perimeter.end_index - perimeter.start_index
-        );
-        for index in perimeter.start_index..perimeter.end_index {
-            let position = plan.positions[index];
-            let _ = writeln!(
-                file,
-                "C {:.6} {:.6} {:.6} vis={:.8} overhang={:.8}",
-                position.x, position.y, position.z, plan.scores[index], plan.overhangs[index]
-            );
-        }
-    }
 }
 
 fn embedding_layers(
@@ -134,42 +103,6 @@ fn prepare_layer(
         .collect::<Vec<_>>();
     let mut source_order = (0..collections.len()).collect::<Vec<_>>();
     source_order.sort_unstable_by_key(|&index| collections[index].source_order);
-    if let Ok(path) = std::env::var("ARES_DUMP_SEAM") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "LAYER z={z}");
-            for collection in &collections {
-                let _ = writeln!(
-                    file,
-                    "COLL n={} roles={}",
-                    collection.entities.len(),
-                    collection
-                        .entities
-                        .iter()
-                        .map(|entity| {
-                            let first_path = match entity {
-                                ExtrusionEntity::Loop(ordered) => {
-                                    ordered.extrusion_loop.paths.first()
-                                }
-                                ExtrusionEntity::MultiPath(multi_path) => multi_path.paths.first(),
-                                ExtrusionEntity::Path(path) => Some(path),
-                            };
-                            format!(
-                                "{:?}/{}",
-                                first_path.map(|path| path.role),
-                                first_path.map(|path| path.width).unwrap_or_default()
-                            )
-                        })
-                        .collect::<Vec<_>>()
-                        .join(",")
-                );
-            }
-        }
-    }
     let regions = source_order
         .iter()
         .map(|&index| {

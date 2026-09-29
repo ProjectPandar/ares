@@ -31,12 +31,6 @@ pub(super) fn take_next(
     // take_first flag only controls the trim direction and which
     // polyline receives the arc, NOT the cp1/cp2 assignment.
     let (cp1, cp2) = (index, next);
-    if std::env::var("ARES_TAKE_TRACE").is_ok() {
-        eprintln!(
-            "TAKE cp1={cp1} cp2={cp2} tf={} c1consumed={} c2consumed={}",
-            take_first, intersections[cp1].consumed, intersections[cp2].consumed
-        );
-    }
     if intersections[if take_first { cp1 } else { cp2 }].consumed {
         return;
     }

@@ -134,15 +134,6 @@ impl Layer {
                 &tree_node_locator,
                 None,
             );
-            if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
-                eprintln!(
-                    "ATTACH unsupported=({},{}) boundary={} tree={}",
-                    unsupported_location.x(),
-                    unsupported_location.y(),
-                    grounding.boundary_location.is_some(),
-                    grounding.tree_node.is_some()
-                );
-            }
             let (new_child, new_parent) = self.attach(unsupported_location, &grounding);
             tree_node_locator.insert(
                 to_grid_point(
@@ -175,58 +166,7 @@ impl Layer {
         }
         let mut result_lines = Vec::new();
         for tree in &self.tree_roots {
-            if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
-                let (tp, ch): ((i64, i64), Vec<(i64, i64)>) = {
-                    let n = tree.borrow();
-                    (
-                        (n.p.x(), n.p.y()),
-                        n.children
-                            .iter()
-                            .map(|c| {
-                                let b = c.borrow();
-                                (b.p.x(), b.p.y())
-                            })
-                            .collect(),
-                    )
-                };
-                eprintln!(
-                    "C2LT root=({},{}) children={:?} overlap={}",
-                    tp.0, tp.1, ch, line_overlap
-                );
-            }
             result_lines.extend(Node::convert_to_polylines(tree, line_overlap, rng));
-        }
-        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
-            let pts: Vec<(i64, i64)> = result_lines
-                .iter()
-                .flat_map(|l| l.points().iter().map(|p| (p.x(), p.y())))
-                .collect();
-            let (mut minx, mut miny, mut maxx, mut maxy) = (i64::MAX, i64::MAX, i64::MIN, i64::MIN);
-            for (x, y) in &pts {
-                minx = minx.min(*x);
-                miny = miny.min(*y);
-                maxx = maxx.max(*x);
-                maxy = maxy.max(*y);
-            }
-            let obb = limit_to_outline
-                .iter()
-                .flat_map(|p| p.points().iter().map(|pt| (pt.x(), pt.y())))
-                .fold((i64::MAX, i64::MAX, i64::MIN, i64::MIN), |a, (x, y)| {
-                    (a.0.min(x), a.1.min(y), a.2.max(x), a.3.max(y))
-                });
-            eprintln!(
-                "C2LP raw_lines={} pts={} tree_bbox=({},{})-({},{}) outline_bbox=({},{})-({},{})",
-                result_lines.len(),
-                pts.len(),
-                minx,
-                miny,
-                maxx,
-                maxy,
-                obb.0,
-                obb.1,
-                obb.2,
-                obb.3
-            );
         }
         intersection_open_polylines(&result_lines, limit_to_outline)
     }

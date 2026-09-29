@@ -44,27 +44,6 @@ impl SkeletalTrapezoidation<'_> {
                 interpolate_beading(&lower, 1.0 - f64::from(data.transition_ratio), &higher)
             };
             assert_eq!(beading.total_thickness, thickness);
-            if let Ok(path) = std::env::var("ARES_DUMP_DIST") {
-                let node_ref = self.graph.node(node);
-                let _ = std::fs::OpenOptions::new()
-                    .append(true)
-                    .create(true)
-                    .open(&path)
-                    .and_then(|mut f| {
-                        use std::io::Write;
-                        writeln!(
-                            f,
-                            "OSTORE p={},{} dist={} bc={} ratio={} w={:?} loc={:?}",
-                            node_ref.point.x(),
-                            node_ref.point.y(),
-                            data.distance_to_boundary,
-                            data.bead_count,
-                            data.transition_ratio,
-                            beading.bead_widths,
-                            beading.toolpath_locations
-                        )
-                    });
-            }
             let storage = Rc::new(RefCell::new(BeadingPropagation::new(beading)));
             self.graph.node_mut(node).data.set_beading(&storage);
             self.beading_storage.push(storage);

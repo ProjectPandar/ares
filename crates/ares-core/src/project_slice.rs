@@ -14,7 +14,6 @@ mod chained_intersections;
 mod closing;
 mod compensation;
 mod conical_overhang;
-mod dump_surfaces;
 mod elephant_foot;
 mod extruders;
 mod extrusion_islands;

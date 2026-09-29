@@ -106,66 +106,6 @@ pub(crate) fn build_project_raft(
         },
     )
     .map_err(raft_geometry_error)?;
-    if std::env::var("ARES_RAFT_DEBUG").is_ok() {
-        let span = |polygons: &[_]| {
-            let xs = polygons
-                .iter()
-                .flat_map(|polygon: &crate::geometry::Polygon| polygon.points())
-                .map(|point| point.x())
-                .collect::<Vec<_>>();
-            if xs.is_empty() {
-                (0, 0)
-            } else {
-                (*xs.iter().min().unwrap(), *xs.iter().max().unwrap())
-            }
-        };
-        eprintln!(
-            "RAFTPOLY contact={:?} interface={:?} base={:?} first={:?} (units/mm {})",
-            span(&polygons.contact),
-            span(&polygons.interface),
-            span(&polygons.base),
-            span(&polygons.first_layer),
-            1.0 / scale.factor()
-        );
-        if std::env::var("ARES_RAFT_VERTS").is_ok() {
-            for (i, poly) in polygons.contact.iter().enumerate() {
-                let vs = poly
-                    .points()
-                    .iter()
-                    .map(|p| {
-                        format!(
-                            "({:.3},{:.3})",
-                            p.x() as f64 * scale.factor(),
-                            p.y() as f64 * scale.factor()
-                        )
-                    })
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                eprintln!("RAFTVERT contact[{i}] n={} {}", poly.points().len(), vs);
-            }
-            for (name, polys) in [
-                ("interface", &polygons.interface),
-                ("base", &polygons.base),
-                ("first", &polygons.first_layer),
-            ] {
-                for (i, poly) in polys.iter().enumerate() {
-                    let vs = poly
-                        .points()
-                        .iter()
-                        .map(|p| {
-                            format!(
-                                "({:.3},{:.3})",
-                                p.x() as f64 * scale.factor(),
-                                p.y() as f64 * scale.factor()
-                            )
-                        })
-                        .collect::<Vec<_>>()
-                        .join(" ");
-                    eprintln!("RAFTVERT {name}[{i}] n={} {}", poly.points().len(), vs);
-                }
-            }
-        }
-    }
     let plans = raft_layer_plans(
         &raft_grid,
         &polygons,

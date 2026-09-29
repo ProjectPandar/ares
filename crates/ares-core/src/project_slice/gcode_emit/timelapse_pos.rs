@@ -142,19 +142,6 @@ pub(super) fn position(
     let model_bounds = footprint::model_bounds(traversal)?;
     let printer = &traversal.resolved.views.full.printer;
     let clearance_radius = printer.remaining.extruder_clearance_radius.0;
-    if let Ok(path) = std::env::var("ARES_DUMP_TIMELAPSE_POS") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "bounds={model_bounds:?} picture={picture_extruder} clearance={clearance_radius}"
-            );
-        }
-    }
     let bed = scaled_polygon(
         &printer
             .remaining

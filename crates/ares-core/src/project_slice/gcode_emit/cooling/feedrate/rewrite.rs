@@ -21,17 +21,6 @@ pub(super) fn append(
             output.extend_from_slice(&gcode[position..line.start]);
         }
         let source = &gcode[line.start..line.end];
-        if std::env::var("ARES_DUMP_REWRITE").is_ok() {
-            eprintln!(
-                "RW start={} end={} kind={:x} len={:.4} slowed={} src={:?}",
-                line.start,
-                line.end,
-                line.kind,
-                line.length,
-                line.slowed,
-                String::from_utf8_lossy(&source[..source.len().min(40)])
-            );
-        }
         if line.kind & TYPE_EXTRUDE_END != 0 {
             if keep_markers {
                 output.extend_from_slice(b";_EXTRUDE_END\n");

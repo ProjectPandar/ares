@@ -48,20 +48,6 @@ pub(crate) fn fill_surface(
     let expansion_scaled = ((params.overlap + 0.5 * f64::from(params.multiline) * params.spacing)
         / scale.factor()) as i64;
     let expanded = offset_expolygon(surface, expansion_scaled as f32, JoinType::Miter, 3.0)?;
-    if let Ok(path) = std::env::var("ARES_DUMP_PREXP") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for component in &expanded {
-                for point in component.contour().points() {
-                    let _ = writeln!(file, "P {},{}", point.x(), point.y());
-                }
-            }
-        }
-    }
     if expanded.is_empty() {
         return Ok(Vec::new());
     }
@@ -201,37 +187,6 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
         let needs_ccw = index == 0;
         if (polygon.area() >= 0.0) != needs_ccw {
             polygon.reverse();
-        }
-    }
-    if let Ok(path) = std::env::var("ARES_DUMP_FGRID") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "FGRID angle={:.9} bbmin={},{} bbmax={},{} refpt={},{} spacing={} first_x={} count={} xmin={} xmax={}",
-                angle,
-                minimum.x(),
-                minimum.y(),
-                maximum.x(),
-                maximum.y(),
-                rotated_reference.x(),
-                rotated_reference.y(),
-                spacing,
-                first_x,
-                count,
-                x_min,
-                x_max
-            );
-            let points = clip[0].points();
-            let _ = write!(file, "SRC n={}", points.len());
-            for point in points.iter().take(6) {
-                let _ = write!(file, " {},{}", point.x(), point.y());
-            }
-            let _ = writeln!(file);
         }
     }
     // Exact-rational scanline slicer (`slice_region_by_vertical_lines`,

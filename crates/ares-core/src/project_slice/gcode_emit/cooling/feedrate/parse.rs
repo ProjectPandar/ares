@@ -8,30 +8,10 @@ const EXTERNAL_PERIMETER: &[u8] = b";_EXTERNAL_PERIMETER";
 const WIPE: &[u8] = b";_WIPE";
 
 pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
-    if let Ok(path) = std::env::var("ARES_DUMP_CLINES") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "CLLAYER");
-        }
-    }
     let mut lines: Vec<CoolingLine> = Vec::new();
     let mut active_speed_modifier = None;
     let mut layer_had_extrusion = false;
     let mut start = 0;
-    if let Ok(path) = std::env::var("ARES_DUMP_RAW") {
-        let _ = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-            .and_then(|mut file| {
-                use std::io::Write;
-                writeln!(file, "RAWLAYER").and_then(|()| file.write_all(gcode))
-            });
-    }
 
     while start < gcode.len() {
         let end = gcode[start..]
@@ -93,23 +73,6 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
             line.maximum_time = 0.0;
         }
         if line.kind != 0 {
-            if let Ok(path) = std::env::var("ARES_DUMP_CLINES") {
-                use std::io::Write;
-                if let Ok(mut file) = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)
-                {
-                    let raw =
-                        String::from_utf8_lossy(&gcode[line.start..line.end.min(gcode.len())]);
-                    let raw: String = raw.chars().take(46).collect();
-                    let _ = writeln!(
-                        file,
-                        "CL kind={:x} len={:.6} f={:.3} t={:.9} tmax={:.9} | {}",
-                        line.kind, line.length, line.feedrate, line.time, line.maximum_time, raw
-                    );
-                }
-            }
             lines.push(line);
         }
         start = end;
@@ -199,33 +162,6 @@ fn measure_and_aggregate(
         state.config.minimum_speed,
         adjustable_block,
     );
-    if let Ok(path) = std::env::var("ARES_DUMP_CLALL") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "CLALL kind={:x} len={:.6} f={:.3} t={:.9} cur=({:.3},{:.3},{:.3},{:.3},{:.1}) new=({:.3},{:.3},{:.3},{:.3},{:.1})",
-                line.kind,
-                line.length,
-                line.feedrate,
-                line.time,
-                state.position[0],
-                state.position[1],
-                state.position[2],
-                state.position[3],
-                state.position[4],
-                new_position[0],
-                new_position[1],
-                new_position[2],
-                new_position[3],
-                new_position[4]
-            );
-        }
-    }
 
     let Some(index) = active_speed_modifier else {
         return;

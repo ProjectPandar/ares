@@ -72,22 +72,6 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
                 &traversal.project.objects()[source_index],
                 traversal.scale,
             );
-            if std::env::var_os("ARES_DUMP_VIS").is_some() {
-                let mut mn = [f32::INFINITY; 3];
-                let mut mx = [f32::NEG_INFINITY; 3];
-                for t in &mesh.triangles {
-                    for p in t.vertices {
-                        for (i, v) in [p.x, p.y, p.z].iter().enumerate() {
-                            mn[i] = mn[i].min(*v);
-                            mx[i] = mx[i].max(*v);
-                        }
-                    }
-                }
-                eprintln!(
-                    "VIS obj={object_index} tris={} bbox={mn:?}..{mx:?}",
-                    mesh.triangles.len()
-                );
-            }
             (!mesh.triangles.is_empty()).then(|| {
                 visibility::GlobalVisibility::from_mesh(mesh, VISIBILITY_SAMPLE_COUNT, front_bias)
             })

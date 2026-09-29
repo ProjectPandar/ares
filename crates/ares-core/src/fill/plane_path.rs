@@ -139,77 +139,7 @@ fn fill_component(
         scale,
     )?;
     let clip = expolygon_polygons(&rotated);
-    if let Ok(path) = std::env::var("ARES_DUMP_PLANEIN") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "IN n={}", polylines.len());
-            for polyline in &polylines {
-                let _ = write!(file, "PL");
-                for point in polyline.points() {
-                    let _ = write!(file, " {},{}", point.x(), point.y());
-                }
-                let _ = writeln!(file);
-            }
-            for polygon in &clip {
-                let _ = write!(file, "CLIP");
-                for point in polygon.points() {
-                    let _ = write!(file, " {},{}", point.x(), point.y());
-                }
-                let _ = writeln!(file);
-            }
-        }
-    }
-    if let Ok(path) = std::env::var("ARES_DUMP_PLANEBOUND") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "D {direction}");
-            for polygon in &clip {
-                for point in polygon.points() {
-                    let _ = writeln!(
-                        file,
-                        "B {:.6} {:.6}",
-                        scale.unscale(point.x()),
-                        scale.unscale(point.y())
-                    );
-                }
-            }
-        }
-    }
     let clipped = intersection_open_polylines(&polylines, &clip)?;
-    if let Ok(path) = std::env::var("ARES_DUMP_PLANECLIP") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "CLIP n={}", clipped.len());
-            for polyline in &clipped {
-                let _ = write!(file, "P {}:", polyline.points().len());
-                for point in polyline.points() {
-                    let _ = write!(
-                        file,
-                        " ({:.6},{:.6})",
-                        scale.unscale(point.x()),
-                        scale.unscale(point.y())
-                    );
-                }
-                let _ = write!(file, "  R");
-                for point in polyline.points() {
-                    let _ = write!(file, " ({},{})", point.x(), point.y());
-                }
-                let _ = writeln!(file);
-            }
-        }
-    }
     if clipped.is_empty() {
         return Ok(Vec::new());
     }

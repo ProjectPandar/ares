@@ -1,45 +1,6 @@
 use std::{cmp::Ordering, collections::BTreeSet};
 
-use crate::{ExtrusionRole, ProcessInfillPattern, geometry::ExPolygon};
-
-use crate::project_slice::region_slices::RegionSurfaceKind;
-
-fn dump_kind(
-    path: &str,
-    region_id: usize,
-    object_index: usize,
-    layer_id: usize,
-    kind: RegionSurfaceKind,
-    expolygon: &ExPolygon,
-) {
-    use std::io::Write;
-    if let Ok(mut file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-    {
-        let (mut minx, mut miny, mut maxx, mut maxy) = (i64::MAX, i64::MAX, i64::MIN, i64::MIN);
-        for p in expolygon.contour().points() {
-            minx = minx.min(p.x());
-            miny = miny.min(p.y());
-            maxx = maxx.max(p.x());
-            maxy = maxy.max(p.y());
-        }
-        let _ = writeln!(
-            file,
-            "KIND o={} r={} l={} kind={:?} bb={} {} {} {} n={}",
-            object_index,
-            region_id,
-            layer_id,
-            kind,
-            minx,
-            miny,
-            maxx,
-            maxy,
-            expolygon.contour().points().len()
-        );
-    }
-}
+use crate::{ExtrusionRole, ProcessInfillPattern};
 
 use super::{
     GroupedFills, RepresentativeSurface, SurfaceFill, SurfaceFillParams, SurfaceFillPattern,
@@ -69,11 +30,7 @@ impl Ord for ParamsKey {
     }
 }
 
-pub(super) fn coalesce(
-    projected: ProjectedLayer<'_>,
-    object_index: usize,
-    layer_id: usize,
-) -> GroupedFills {
+pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> GroupedFills {
     let mut unique = BTreeSet::new();
     for params in projected.params.iter().flatten().copied() {
         unique.insert(ParamsKey(params));
@@ -87,23 +44,6 @@ pub(super) fn coalesce(
         })
         .collect::<Vec<_>>();
 
-    if let Ok(path) = std::env::var("ARES_DUMP_KINDS") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)
-        {
-            let _ = writeln!(
-                file,
-                "CALL o={} r={} l={} surfaces={}",
-                object_index,
-                projected.region_id,
-                layer_id,
-                projected.surfaces.len()
-            );
-        }
-    }
     for (surface, params) in projected.surfaces.iter().zip(&projected.params) {
         let Some(params) = params else {
             continue;
@@ -114,16 +54,6 @@ pub(super) fn coalesce(
         let pending = &mut fills[index];
         let (kind, expolygon, thickness, thickness_layers, _, extra_perimeters) =
             surface.as_parts();
-        if let Ok(path) = std::env::var("ARES_DUMP_KINDS") {
-            dump_kind(
-                &path,
-                projected.region_id,
-                object_index,
-                layer_id,
-                kind,
-                expolygon,
-            );
-        }
         if let Some(fill) = &mut pending.fill {
             fill.expolygons.push(expolygon.clone());
         } else {

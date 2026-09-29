@@ -38,33 +38,6 @@ impl SkeletalTrapezoidation<'_> {
             force_new_path = true;
         }
         let tolerance = self.config.coordinate_scale.checked_scale(0.010).unwrap();
-        if let Ok(path) = std::env::var("ARES_DUMP_SEG") {
-            let _ = std::fs::OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open(&path)
-                .and_then(|mut f| {
-                    use std::io::Write;
-                    writeln!(
-                        f,
-                        "OSEG f={},{},{} t={},{},{} odd={} fnew={} f3w={} t3w={} nlines={} fpi={} tpi={} inset={}",
-                        from.point.x(),
-                        from.point.y(),
-                        from.width,
-                        to.point.x(),
-                        to.point.y(),
-                        to.width,
-                        is_odd,
-                        force_new_path,
-                        from_is_three_way,
-                        to_is_three_way,
-                        lines.len(),
-                        from.perimeter_index,
-                        to.perimeter_index,
-                        inset_index
-                    )
-                });
-        }
         if !force_new_path
             && compatible_endpoint(
                 lines.last().unwrap().junctions.last().unwrap(),

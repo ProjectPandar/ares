@@ -71,20 +71,6 @@ fn fill_surface(
     scale: CoordinateScale,
     monotonic: bool,
 ) -> Result<MonotonicFillOutput, ClipperError> {
-    if let Ok(path) = std::env::var("ARES_DUMP_MONOALL") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "MONOALL monotonic={monotonic} spacing={} density={} layer={}",
-                params.spacing, params.density, params.layer_index
-            );
-        }
-    }
     let mut direction = infill_direction(params);
     if params.locked_zag {
         direction += std::f32::consts::FRAC_PI_2;
@@ -120,40 +106,12 @@ fn fill_surface(
     };
     let minimum_x = if full_infill && !params.dont_adjust {
         line_spacing = adjust_solid_spacing(source_width, line_spacing);
-        if let Ok(path) = std::env::var("ARES_DUMP_MONO") {
-            use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = writeln!(
-                    file,
-                    "MONOFULL dir={direction} min_x={grid_minimum_x} spacing={line_spacing} src_min={source_minimum_x} src_max={grid_maximum_x}"
-                );
-            }
-        }
         grid_minimum_x
     } else {
         let reference = rotate_point(params.reference_point, -f64::from(direction))?;
         // `bounding_box.merge(align_to_grid(bounding_box.min, spacing, refpt))`
         // — snap the (possibly object-wide) grid minimum onto the reference grid.
-        let minimum_x = align_to_grid(grid_source_min_x, line_spacing, reference.x())?;
-        if let Ok(path) = std::env::var("ARES_DUMP_MONO") {
-            use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = writeln!(
-                    file,
-                    "MONO dir={direction} min_x={minimum_x} spacing={line_spacing} ref={} src_min={source_minimum_x} src_max={grid_maximum_x}",
-                    reference.x()
-                );
-            }
-        }
-        minimum_x
+        align_to_grid(grid_source_min_x, line_spacing, reference.x())?
     };
     let grid_spacing = (line_spacing as f64 * scale.factor()) as f32;
     // `n_vlines` spans `bounding_box` (object-wide for consistent patterns,
@@ -193,29 +151,6 @@ fn fill_surface(
     populate_vertical_lines(&mut slice, count, x0, line_spacing)?;
     let link_max_length = checked_scale(scale, params.link_max_length)? as f64;
     connect_contours(&mut slice, params.anchor_length_max < 0.05, link_max_length);
-    if let Ok(path) = std::env::var("ARES_DUMP_SEGS") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for line in &slice.lines {
-                let _ = write!(file, "SEGS layer={} x={} ", params.layer_index, line.x);
-                for intersection in &line.intersections {
-                    let _ = write!(
-                        file,
-                        "[{:?} y={} prev={:?} next={:?}]",
-                        intersection.kind,
-                        intersection.point.y(),
-                        intersection.previous,
-                        intersection.next
-                    );
-                }
-                let _ = writeln!(file);
-            }
-        }
-    }
     let generated = if monotonic {
         insert_phony_outer_pairs(&mut slice.lines);
         let mut regions = generate_monotonic_regions(&slice.lines);
@@ -226,22 +161,6 @@ fn fill_surface(
     } else {
         super::traverse::generate(&slice, params.consistent_pattern)
     };
-    if let Ok(path) = std::env::var("ARES_DUMP_POLY") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for polyline in &generated {
-                let _ = write!(file, "POLY layer={} ", params.layer_index);
-                for point in polyline.points() {
-                    let _ = write!(file, "{} {}", point.x(), point.y());
-                }
-                let _ = writeln!(file);
-            }
-        }
-    }
     let polylines: Vec<Polyline> = generated
         .into_iter()
         .map(|polyline| {

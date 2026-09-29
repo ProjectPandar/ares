@@ -75,30 +75,6 @@ pub(in crate::project_slice) fn prepare(
 }
 
 fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExtrusionIslands {
-    if let Ok(path) = std::env::var("ARES_DUMP_LSLICES") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let points = slices
-                .iter()
-                .map(|s| {
-                    let pts = s
-                        .contour()
-                        .points()
-                        .iter()
-                        .map(|p| format!("{}.{}", p.x(), p.y()))
-                        .collect::<Vec<_>>()
-                        .join(",");
-                    format!("({})", pts)
-                })
-                .collect::<Vec<_>>()
-                .join(" ");
-            let _ = writeln!(file, "LSLICES n={} pts={}", slices.len(), points);
-        }
-    }
     let bounds = slices.iter().map(contour_bounds).collect::<Vec<_>>();
     let mut order = (0..slices.len()).collect::<Vec<_>>();
     fixed_gcc_sort_by(&mut order, |left, right| {
@@ -110,33 +86,6 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
 
     for collection in std::mem::take(&mut layer.collections) {
         let island = island_index(collection.first_point(), slices, &bounds, &order);
-        let probe_point = collection.first_point();
-        if let Ok(path) = std::env::var("ARES_DUMP_IORDER") {
-            use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = writeln!(
-                    file,
-                    "ASSIGN island={} n={} first=({},{}) kinds={}",
-                    island,
-                    collection.entities.len(),
-                    probe_point.x(),
-                    probe_point.y(),
-                    collection
-                        .entities
-                        .iter()
-                        .map(|entity| match entity {
-                            FillExtrusionEntity::Path(path) => format!("P{:.3}", path.width),
-                            FillExtrusionEntity::VariableWidth(_) => "V".to_owned(),
-                        })
-                        .collect::<Vec<_>>()
-                        .join(",")
-                );
-            }
-        }
         if collection.no_sort {
             islands[island]
                 .infills

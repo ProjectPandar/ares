@@ -27,25 +27,6 @@ pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
     });
     let adjustable = lines.iter().take_while(|line| line.adjustable()).count();
     let target_time = config.target_time * 1.001;
-    if let Ok(level) = std::env::var("ARES_DUMP_SLOWDOWN") {
-        eprintln!(
-            "SD total={total_time:.6} max={maximum_time:.6} target={target_time:.6} min_speed={:.3} lines={}",
-            config.minimum_speed,
-            lines.len()
-        );
-        if level == "2" {
-            for (index, line) in lines.iter().enumerate() {
-                eprintln!(
-                    "SDL {index:03} adj={} length={:.4} feed={:.4} time={:.6} max_time={:.6}",
-                    line.adjustable(),
-                    line.length,
-                    line.feedrate,
-                    line.time,
-                    line.maximum_time
-                );
-            }
-        }
-    }
     if total_time > target_time {
         return total_time;
     }
@@ -128,35 +109,7 @@ fn slow_down_non_proportional(
         let mut feedrate_limit = next_feedrate.max(minimum_speed);
         let maximum_stretch = time_stretch_to_feedrate(&lines[..adjustable], feedrate_limit);
         let done = maximum_stretch >= time_stretch;
-        if let Ok(path) = std::env::var("ARES_DUMP_COOL") {
-            use std::io::Write;
-            if let Ok(mut f) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = writeln!(
-                    f,
-                    "LOOP fr={:.9} nextfr={:.9} limit0={:.9} maxstretch={:.9} stretch={:.9} done={}",
-                    feedrate, next_feedrate, feedrate_limit, maximum_stretch, time_stretch, done
-                );
-            }
-        }
         if done {
-            if let Ok(path) = std::env::var("ARES_DUMP_COOL") {
-                use std::io::Write;
-                if let Ok(mut f) = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)
-                {
-                    let _ = writeln!(
-                        f,
-                        "ADJ stretch={:.9} limit={:.9} minsp={:.9}",
-                        time_stretch, feedrate_limit, minimum_speed
-                    );
-                }
-            }
             feedrate_limit = new_feedrate_to_reach_time_stretch(
                 &lines[..adjustable],
                 feedrate_limit,
@@ -232,20 +185,6 @@ fn new_feedrate_to_reach_time_stretch(
             }
         }
         new_feedrate = (numerator / denominator) as f32;
-        if let Ok(path) = std::env::var("ARES_DUMP_COOL") {
-            use std::io::Write;
-            if let Ok(mut f) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = writeln!(
-                    f,
-                    "NFR iter nomin={:.9} denom={:.9} nfr={:.9} minfr={:.9}",
-                    numerator, denominator, new_feedrate, minimum_feedrate
-                );
-            }
-        }
         if f64::from(new_feedrate) < f64::from(minimum_feedrate) + EPSILON {
             break;
         }

@@ -30,16 +30,6 @@ pub(super) fn append(
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    if let Ok(path) = std::env::var("ARES_DUMP_CI") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "CALL");
-        }
-    }
     let spacing = scale
         .checked_scale(f64::from(fill.params.flow.spacing))
         .ok_or_else(|| SliceError::InvalidInput("concentric spacing is out of range".into()))?;
@@ -62,57 +52,15 @@ pub(super) fn append(
                 minimum_nozzle_diameter,
                 scale,
             )?;
-            if let Ok(path) = std::env::var("ARES_DUMP_PRECLIP")
-                && !generated.is_empty()
-            {
-                use std::io::Write;
-                if let Ok(mut out) = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)
-                {
-                    for polyline in &generated {
-                        let _ = writeln!(
-                            out,
-                            "PRECLIP n={} w0={}",
-                            polyline.points.len(),
-                            polyline.width.first().copied().unwrap_or_default()
-                        );
-                    }
-                }
-            }
             polylines.extend(generated);
             finalize_polylines(
                 &mut polylines,
                 first_polyline,
                 fill.params.loop_clipping as f64,
-                scale,
             );
         }
         let entities = variable_width::convert_with_role(
-            {
-                if let Ok(path) = std::env::var("ARES_DUMP_MEDIAL")
-                    && !polylines.is_empty()
-                {
-                    use std::io::Write;
-                    if let Ok(mut out) = std::fs::OpenOptions::new()
-                        .create(true)
-                        .append(true)
-                        .open(path)
-                    {
-                        for polyline in &polylines {
-                            let widths = polyline
-                                .width
-                                .iter()
-                                .map(|width| format!("{width}"))
-                                .collect::<Vec<_>>()
-                                .join(",");
-                            let _ = writeln!(out, "CONC1 W{widths}");
-                        }
-                    }
-                }
-                &polylines
-            },
+            &polylines,
             with_spacing(fill.params.flow, fill.params.spacing as f32),
             scale,
             MaterializedRole::SolidInfill,
@@ -229,32 +177,6 @@ pub(super) fn append_configured(
             )?);
         }
         finalize_standard_polylines(&mut polylines, params.loop_clipping as f64);
-        if let Ok(path) = std::env::var("ARES_DUMP_MEDIAL")
-            && !polylines.is_empty()
-        {
-            use std::io::Write;
-            if let Ok(mut out) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                for polyline in &polylines {
-                    let points = polyline
-                        .points
-                        .iter()
-                        .map(|point| format!("({},{})", point.x(), point.y()))
-                        .collect::<Vec<_>>()
-                        .join("");
-                    let widths = polyline
-                        .width
-                        .iter()
-                        .map(|width| format!("{width}"))
-                        .collect::<Vec<_>>()
-                        .join(",");
-                    let _ = writeln!(out, "CONC P{points} W{widths}");
-                }
-            }
-        }
         let materialized_role = match params.extrusion_role {
             crate::ExtrusionRole::TopSolidInfill => MaterializedRole::TopSolidInfill,
             crate::ExtrusionRole::BottomSurface => MaterializedRole::BottomSurface,
@@ -300,49 +222,11 @@ fn finalize_polylines(
     polylines: &mut Vec<ThickPolyline>,
     first_polyline: usize,
     loop_clipping: f64,
-    scale: CoordinateScale,
 ) {
     for polyline in &mut polylines[first_polyline..] {
         if polyline.points.first() == polyline.points.last()
             && polyline.width.first() == polyline.width.last()
         {
-            if let Ok(path) = std::env::var("ARES_DUMP_CI") {
-                use std::io::Write;
-                if let Ok(mut file) = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)
-                {
-                    let _ = write!(file, "E closed=1 n={}:", polyline.points.len());
-                    for point in &polyline.points {
-                        let _ = write!(
-                            file,
-                            " ({:.6},{:.6})",
-                            scale.unscale(point.x()),
-                            scale.unscale(point.y())
-                        );
-                    }
-                    let _ = writeln!(file);
-                }
-            }
-            if let Ok(path) = std::env::var("ARES_DUMP_CI") {
-                use std::io::Write;
-                if let Ok(mut file) = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)
-                {
-                    let _ = write!(
-                        file,
-                        "W n={} first={:?} last={:?} match={}",
-                        polyline.width.len(),
-                        polyline.width.first(),
-                        polyline.width.last(),
-                        polyline.width.first() == polyline.width.last()
-                    );
-                    let _ = writeln!(file);
-                }
-            }
             polyline.points.pop();
             let start = finalize::nearest_to_origin(&polyline.points);
             polyline.points.push(polyline.points[0]);

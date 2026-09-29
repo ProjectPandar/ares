@@ -155,108 +155,10 @@ fn split_lines(
         let sections = filter::apply(sections, maximum_short);
         reconstructed.extend(trace::reconstruct(&sections, spacing));
     }
-    if let Ok(path) = std::env::var("ARES_DUMP_SECT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for polygon in &reconstructed {
-                let points = polygon
-                    .points()
-                    .iter()
-                    .map(|point| format!("({},{})", point.x(), point.y()))
-                    .collect::<Vec<_>>()
-                    .join("");
-                let _ = writeln!(file, "RPR {points}");
-            }
-        }
-    }
-    if let Ok(path) = std::env::var("ARES_DUMP_SECT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for polygon in &reconstructed {
-                let points = polygon
-                    .points()
-                    .iter()
-                    .map(|point| format!("({},{})", point.x(), point.y()))
-                    .collect::<Vec<_>>()
-                    .join("");
-                let _ = writeln!(file, "RPU {points}");
-            }
-        }
-    }
     reconstructed = rotate_polygons(&reconstructed, -aligning_angle);
-    if let Ok(path) = std::env::var("ARES_DUMP_SECT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for polygon in &reconstructed {
-                let points = polygon
-                    .points()
-                    .iter()
-                    .map(|point| format!("({},{})", point.x(), point.y()))
-                    .collect::<Vec<_>>()
-                    .join("");
-                let _ = writeln!(file, "RPU2 {points}");
-            }
-        }
-    }
-    if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "RECON n={}", reconstructed.len());
-        }
-    }
 
     let mut normal = union_safety_offset_ex(&reconstructed)?;
     let mut narrow = difference_ex(&fill.expolygons, &normal)?;
-    if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            for expolygon in &normal {
-                let points = expolygon
-                    .contour()
-                    .points()
-                    .iter()
-                    .map(|point| format!("({},{})", point.x(), point.y()))
-                    .collect::<Vec<_>>()
-                    .join("");
-                let _ = writeln!(file, "ANORM {points}");
-            }
-        }
-    }
-    if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "SPLITOUT normal={} narrow={}",
-                normal.len(),
-                narrow.len()
-            );
-        }
-    }
     let mut index = 0;
     while index < narrow.len() {
         let shrunk = offset_expolygon(
@@ -286,26 +188,6 @@ fn split_lines(
     }
     if narrow.is_empty() {
         return Ok((Vec::new(), Vec::new()));
-    }
-    if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(file, "FINAL narrow={}", narrow.len());
-            for expolygon in &narrow {
-                let points = expolygon
-                    .contour()
-                    .points()
-                    .iter()
-                    .map(|point| format!("({},{})", point.x(), point.y()))
-                    .collect::<Vec<_>>()
-                    .join("");
-                let _ = writeln!(file, "FNARROW {points}");
-            }
-        }
     }
     let expanded_normal = offset_expolygons(
         &normal,

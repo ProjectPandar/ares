@@ -9,7 +9,6 @@ use crate::{
     },
 };
 
-use super::dump::{dump_entities, dump_surfaces, plane_path_object_bounding_box};
 use super::simplify_before_ordering;
 use super::types::LayerFillEntities;
 
@@ -88,25 +87,6 @@ pub(in crate::project_slice) fn generate_layer(
     } = grouped;
 
     for fill in surface_fills {
-        if let Ok(path) = std::env::var("ARES_DUMP_FLOW") {
-            use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = writeln!(
-                    file,
-                    "FLOW w={:016b} h={:016b} mm3={:016b}",
-                    fill.params.flow.width.to_bits(),
-                    fill.params.flow.height.to_bits(),
-                    fill.params.flow.mm3_per_mm.to_bits()
-                );
-            }
-        }
-        if let Ok(path) = std::env::var("ARES_DUMP_SURF") {
-            dump_surfaces(&path, &fill);
-        }
         match fill.params.pattern {
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
                 super::crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
@@ -300,9 +280,6 @@ pub(in crate::project_slice) fn generate_layer(
             }
         }
     }
-    if let Ok(path) = std::env::var("ARES_DUMP_ENT") {
-        dump_entities(&path, layer_index, &output);
-    }
     if let (Some(record), Some(input)) = (
         prepared.predecessor.objects[object_index].records[layer_index].as_ref(),
         prelude.records[layer_index].as_ref(),
@@ -340,4 +317,21 @@ pub(in crate::project_slice) fn generate_layer(
         );
     }
     Ok(output)
+}
+
+fn plane_path_object_bounding_box(
+    slices: &[Vec<crate::geometry::ExPolygon>],
+) -> Option<crate::geometry::BoundingBox> {
+    let mut points = slices
+        .iter()
+        .flatten()
+        .flat_map(|expolygon| expolygon.contour().points());
+    let first = *points.next()?;
+    let (minimum, maximum) = points.fold((first, first), |(minimum, maximum), point| {
+        (
+            crate::geometry::Point::new(minimum.x().min(point.x()), minimum.y().min(point.y())),
+            crate::geometry::Point::new(maximum.x().max(point.x()), maximum.y().max(point.y())),
+        )
+    });
+    Some(crate::geometry::BoundingBox::new(minimum, maximum))
 }

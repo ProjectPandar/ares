@@ -58,18 +58,6 @@ impl ProjectSpiralVaseRunState {
             .expect("generated G-code is UTF-8")
             .to_owned();
         let enabled = self.config.enabled && layer.enabled;
-        if std::env::var("ARES_SPIRAL_DEBUG").is_ok() {
-            eprintln!(
-                "SPIRAL layer enabled={} body={} final={} rel_e={} vase_on={} z={} input_len={}",
-                self.config.enabled,
-                layer.enabled,
-                layer.final_layer,
-                self.config.relative_e,
-                self.vase_enabled,
-                layer.z,
-                output.len() - layer.start
-            );
-        }
         if !enabled {
             self.vase_enabled = false;
             self.observe(&input);

@@ -43,9 +43,6 @@ fn cube_mesh(half: f64) -> (Vec<[f64; 3]>, Vec<[u32; 3]>) {
 
 #[test]
 fn generates_lines_on_midplane() {
-    if std::env::var("ARES_DBG_MIDPLANE").is_ok() {
-        eprintln!("DBG invoked");
-    }
     let scale = CoordinateScale::Normal;
     let (vertices, triangles) = cube_mesh(5.0);
     let octree =

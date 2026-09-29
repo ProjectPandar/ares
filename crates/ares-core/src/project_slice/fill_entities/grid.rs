@@ -66,22 +66,6 @@ fn grid_polylines_inner(
     layer_id: usize,
     object_reference: crate::geometry::Point,
 ) -> Result<Vec<Polyline>, SliceError> {
-    if let Ok(path) = std::env::var("ARES_DUMP_IORDER") {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
-            let _ = writeln!(
-                file,
-                "GRID layer={} angle={:.3} expolygons={}",
-                layer_id,
-                fill.params.angle,
-                fill.expolygons.len()
-            );
-        }
-    }
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,

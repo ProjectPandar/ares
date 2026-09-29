@@ -80,7 +80,6 @@ impl<'a> LinkPhases<'a> {
     /// Vertical-arch consumption (`:2425-2455`).
     pub(super) fn consume_vertical_arches(&mut self) {
         for index in 0..self.intersections.len() {
-            self.trace_order_debug(index);
             if self.intersections[index].consumed {
                 continue;
             }
@@ -107,20 +106,6 @@ impl<'a> LinkPhases<'a> {
             }
         }
     }
-
-    #[cfg(test)]
-    fn trace_order_debug(&self, index: usize) {
-        if std::env::var("ARES_ORDER_DEBUG").is_ok() && index < 8 {
-            let i = &self.intersections[index];
-            eprintln!(
-                "ORDR idx={index} consumed={} prev_trim={} prev_len={:.3} next_trim={} next_len={:.3}",
-                i.consumed, i.prev_trimmed, i.not_taken_prev, i.next_trimmed, i.not_taken_next
-            );
-        }
-    }
-
-    #[cfg(not(test))]
-    fn trace_order_debug(&self, _index: usize) {}
 
     /// Take a vertical arch unless it is trimmed below
     /// `min_arch_length` (`:2448-2455`).

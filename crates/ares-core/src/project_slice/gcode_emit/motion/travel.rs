@@ -19,7 +19,6 @@ pub(super) use lift::{
     emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
     mode_for as lift_mode_for, schedule_normal, z_feedrate as lift_z_feedrate,
 };
-pub(in crate::project_slice::gcode_emit::motion) use wipe_path::scaled_position;
 
 /// Firmware retraction substitutes a fixed `1.0` retract length
 /// (`GCodeWriter.cpp:1027-1037` `_retract` firmware branch) — the

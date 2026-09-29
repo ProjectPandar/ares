@@ -31,17 +31,6 @@ pub(in crate::project_slice) fn prepare(
         transaction::dispose(predecessor);
         return Err(error);
     }
-    for object in &horizontal.objects {
-        for (index, record) in object.records.iter().enumerate() {
-            if let Some(record) = record {
-                crate::project_slice::dump_surfaces::dump_stage_surfaces(
-                    "COMBINED",
-                    index,
-                    &record.fill_surfaces,
-                );
-            }
-        }
-    }
     Ok(PreparedPostInfillCombination { predecessor })
 }
 

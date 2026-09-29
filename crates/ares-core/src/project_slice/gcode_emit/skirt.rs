@@ -135,12 +135,6 @@ impl SkirtPlan {
                 }
             }
         }
-        if std::env::var("ARES_OCCUPIED_DUMP").is_ok() {
-            eprintln!("OCCUPIED n={}", occupied.len());
-            for p in &occupied {
-                eprintln!("OPT {},{}", p.x(), p.y());
-            }
-        }
         let hull = convex_hull(&occupied);
         if hull.len() < 3 {
             return Ok(None);
@@ -177,23 +171,6 @@ impl SkirtPlan {
         let mut distance =
             ((print.skirt_distance.0 - f64::from(flow.spacing) * 0.5) / scale.factor()) as f32;
         let arc_tolerance = checked_scale(scale, 0.1)? as f64;
-        if std::env::var("ARES_SKIRT_HULL").is_ok() {
-            eprintln!(
-                "SKIRTHULL n={} dist0={} spacing={} arc_tol={} pts={}",
-                hull.len(),
-                distance,
-                scaled_spacing,
-                arc_tolerance,
-                hull.iter()
-                    .map(|p| format!(
-                        "({:.3},{:.3})",
-                        p.x() as f64 * scale.factor(),
-                        p.y() as f64 * scale.factor()
-                    ))
-                    .collect::<Vec<_>>()
-                    .join(" ")
-            );
-        }
         let hull_polygon = Polygon::new(hull);
         let minimum_filament = print.min_skirt_length.0;
         let filament = &full.filament.gcode;

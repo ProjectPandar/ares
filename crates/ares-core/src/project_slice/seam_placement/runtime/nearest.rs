@@ -87,27 +87,6 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         scale.unscale(cursor.x) as f32,
         scale.unscale(cursor.y) as f32,
     );
-    if let Ok(dbg) = std::env::var("ARES_DUMP_SCORE") {
-        use std::io::Write;
-        if let Ok(mut f) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(dbg)
-        {
-            let _ = writeln!(f, "RANGE {start}..{end} cur {},{}", cursor.0, cursor.1);
-            for index in start..end {
-                let (x, y, _) = layer.positions[index];
-                let _ = writeln!(
-                    f,
-                    "ACAND {index} {x:.6},{y:.6} oh={:.4} sc={:.4} emb={:.3} ang={:.4}",
-                    layer.overhangs[index],
-                    layer.scores[index],
-                    layer.embedded[index],
-                    layer.ccw_angles[index]
-                );
-            }
-        }
-    }
     // `SeamPlacer.cpp:760-794` `SeamComparator::is_first_better` (spNearest):
     // lexicographic cascade — overhang wins outright, then embedded
     // (hidden) points, then the composite penalty.
