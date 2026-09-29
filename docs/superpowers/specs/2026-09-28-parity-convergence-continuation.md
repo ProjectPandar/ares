@@ -659,3 +659,28 @@ contour's orientation and vertex-0 of the *rotated* inner contour —
 clipper offset shrink output ring orientation relative to upstream
 `shrink()`/`offset()` return values, or zigzag chain linking parity
 inside `map_infill_end_point_to_boundary` construction).
+
+### Status 2026-09-29 — review loop converged, milestone-scale remains
+
+Review verdict: OK with notes (reviewer run 22ea146a). Fixed in this
+round: ported `GCodeWriter::set_input_shaping` into the project emit
+path (`gcode_emit/machine/envelope.rs`) — M593/SET_INPUT_SHAPER were
+never emitted; corrected `marlin`/`marlin2` flavor mapping so
+input-shaping cases actually exercise the branch; `enable_support`
+now runs the overhang fixture with the unimplemented boundary scoped
+to the enabled case only; nullable booleans gain `nil` probes;
+`skirt_height` probes the real schema max; option_coverage.rs split
+under 400 LOC. 172/172 orca_parity tests, 7337/7337 workspace green.
+
+Printer smoke: 954/1001 PASS strict ordered-byte compare. Remaining
+DIVERGENT rows decompose into: M73 elapsed-time model residuals
+(`P*`/`R*` off-by-one or placement inside a section — needs the
+upstream `g1_times_cache`/`machine.time` trace), single-ULP
+coordinate/E-value diffs (f32-vs-f64 path precision — seam-tie
+family), and a handful of content-ordering diffs on wide-nozzle or
+non-Cartesian profiles (Ginger G1 8.0, Peacock, iQ TiQ8).
+
+Named open boundary: support-material generation
+(`PrintObjectSupportMaterial.cpp` + `Support/*` ≈ 17K LOC upstream)
+— honest INCOMPLETE in the sweep; `enable_support=0` correctly FAILs
+on the residual M73 placement rather than hiding behind the boundary.
