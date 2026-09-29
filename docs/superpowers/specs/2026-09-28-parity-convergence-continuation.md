@@ -750,5 +750,7 @@ Remaining gate gap: with the repo's strict `clippy.toml` thresholds,
 structural (loop bodies mirroring upstream nesting, upstream-shaped
 signatures) and need refactoring or a threshold decision rather than a
 mechanical fix. Every other lint is clean across `--workspace
---all-targets --all-features`. `seam_placement.rs` (433 LOC, over the
-limit before this slice) still needs a split.
+--all-targets --all-features`. The follow-up split moved per-loop placement
+(`SeamPlacer::place_seam_in_loop`) into `seam_placement/placement.rs`, and
+`fields/assemble.rs` now reuses the wipe tail nozzle diameter for
+`seam_gap`, so no source file exceeds 400 LOC.

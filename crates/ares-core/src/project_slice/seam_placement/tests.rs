@@ -3,7 +3,7 @@ use super::{
     mesh::{Triangle, TriangleMesh, Vec3},
     place_nearest,
     sampling::sample_uniform,
-    split_at,
+    split::split_at,
     visibility::GlobalVisibility,
 };
 use crate::{

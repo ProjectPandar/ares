@@ -384,12 +384,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .map_or(0.0, |value| value.0.to_radians()),
         seam_gap: absolute(
             region.map_or(full.process.region.seam_gap, |value| value.seam_gap),
-            full.project
-                .print
-                .nozzle_diameter
-                .0
-                .first()
-                .map_or(0.4, |value| value.0),
+            wipe_tail.nozzle_diameter,
         ),
         seam_position: object.map_or(full.process.object.seam_position, |value| {
             value.object.seam_position
