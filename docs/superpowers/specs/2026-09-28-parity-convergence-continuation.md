@@ -615,3 +615,20 @@ Verified on focused sweeps: `input_shaping_{emit,type,freq_x}` now PASS
 with `M593` emitted on both sides (previously inert); `support_*` keys
 honestly report the unimplemented boundary; `raft_layers/max` still
 fails on the known 1µ rounding residual.
+
+### Newly-surfaced residual cluster — raft interface hatch anchor
+
+Activating `raft_*` options exposed a real ares-vs-orca ordering
+difference in the raft FIRST-INTERFACE layer: identical zig-zag hatch
+geometry, but ares emits it anchored from the top-right of the raft
+polygon while orca anchors from the bottom-left (case
+`raft_first_layer_density/min`, `raft_first_layer_expansion/min`,
+`raft_layers/max` — ~178 diff lines each). Lines and E-values match
+exactly when mirrored; the divergence is entry-corner + traversal
+order inside `connect_base_support` (`fill/base_support/link.rs`
+zigzag order verified faithful to `FillBase.cpp:2577-2592` — the seed
+chain/endpoint ordering upstream derives from its boundary-graph
+walk differs from ares' `intersections` ordering). Class: order
+artifact, same family as seam-tie and equalizer-cascade — requires
+upstream runtime trace to pinpoint (unreachable: no ORCA_DUMP_* in
+AppImage, instrumented build dead).
