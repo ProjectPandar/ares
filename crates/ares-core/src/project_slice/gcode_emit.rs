@@ -259,7 +259,7 @@ pub(super) fn emit(
     } else {
         header::plate_layer_count(traversal)
     };
-    let emitted_layer_count = header::finalize_layer_count(&mut output, layer_count);
+    header::finalize_layer_count(&mut output, layer_count);
     // The compatible tail's `; total layers count` prints `m_layer_count`
     // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
     // tag-based count the header placeholder carries.

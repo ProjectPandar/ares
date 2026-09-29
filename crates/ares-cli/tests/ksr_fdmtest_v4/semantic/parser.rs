@@ -1,7 +1,7 @@
 mod metadata;
 mod motion;
 mod number;
-use super::model::{LifecycleEvent, MotionRecord, Position};
+use super::model::{LifecycleEvent, MotionRecord};
 
 use metadata::{Timing, ignored_postamble_stat, parse_filament_lengths, parse_timing};
 use motion::Motion;

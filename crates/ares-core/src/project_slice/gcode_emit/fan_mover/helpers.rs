@@ -38,10 +38,12 @@ pub(super) fn read_fan_speed(code: &str, flavor: GCodeFlavor) -> i16 {
     let command = code.split_whitespace().next().unwrap_or_default();
     if command == "M106" {
         let p = word(code, 'P');
-        if let Some(p) = p {
-            if flavor != GCodeFlavor::Mach3 && flavor != GCodeFlavor::Machinekit && p != 1.0 {
-                return -1;
-            }
+        if let Some(p) = p
+            && flavor != GCodeFlavor::Mach3
+            && flavor != GCodeFlavor::Machinekit
+            && p != 1.0
+        {
+            return -1;
         }
         word(code, 'S').map_or(-1, |s| (100.0 * s / 255.0) as i16)
     } else if command == "M127" || command == "M107" {
@@ -139,13 +141,14 @@ pub(super) fn replace_word(line: &str, axis: char, value: f32, digits: usize) ->
         }
         if !replaced {
             let mut characters = token.chars();
-            if let Some(first) = characters.next() {
-                if first.eq_ignore_ascii_case(&axis) && characters.as_str().parse::<f32>().is_ok() {
-                    result.push(first);
-                    result.push_str(&format!("{value:.digits$}"));
-                    replaced = true;
-                    continue;
-                }
+            if let Some(first) = characters.next()
+                && first.eq_ignore_ascii_case(&axis)
+                && characters.as_str().parse::<f32>().is_ok()
+            {
+                result.push(first);
+                result.push_str(&format!("{value:.digits$}"));
+                replaced = true;
+                continue;
             }
         }
         result.push_str(token);

@@ -8,9 +8,7 @@
 
 use crate::fill::connect::contour::{append_full, closed_contour_distance_ccw};
 use crate::fill::connect::types::{BoundaryContour, Intersection};
-use crate::geometry::Point;
 
-#[expect(dead_code, reason = "wired by connect_base_support in the next slice")]
 pub(super) fn base_support_extend_infill_lines(
     paths: &mut [Option<Vec<crate::geometry::Point>>],
     boundary: &[BoundaryContour],
@@ -242,7 +240,7 @@ mod walk_probe {
         let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
         let graph = build_working_graph(
             lines,
-            &[polygon.clone()],
+            std::slice::from_ref(&polygon),
             bbox,
             0.407,
             CoordinateScale::Normal,

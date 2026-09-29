@@ -121,7 +121,7 @@ fn task22m_apply_signed_raft_and_disabled_objects_preserve_complete_current_stat
     let surfaces = objects.iter().map(surface_snapshot).collect::<Vec<_>>();
     let lslices = objects
         .iter_mut()
-        .map(|object| make_single_region_slices(object))
+        .map(make_single_region_slices)
         .collect::<Vec<_>>();
     let resolved = [
         resolved(8, compensation_options(0.15, 1, -1), vec![region()]),

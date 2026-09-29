@@ -84,28 +84,6 @@ fn overhang_band_speed(
     })
 }
 
-#[derive(Clone, Copy)]
-struct PrintFlow {
-    mm3_per_mm: f64,
-    distance_mm: f64,
-    rate_mm3_s: f64,
-    duration_s: f64,
-}
-
-impl PrintFlow {
-    fn at_speed(mm3_per_mm: f64, distance_mm: f64, speed_mm_s: f64) -> Option<Self> {
-        if mm3_per_mm <= 0.0 || distance_mm <= 0.0 || speed_mm_s <= 0.0 {
-            return None;
-        }
-        Some(Self {
-            mm3_per_mm,
-            distance_mm,
-            rate_mm3_s: mm3_per_mm * speed_mm_s,
-            duration_s: distance_mm / speed_mm_s,
-        })
-    }
-}
-
 struct VolumetricSpeedCap {
     filament_area_mm2: f64,
     max_mm3_s: f64,

@@ -126,7 +126,7 @@ fn line_intersections(polygons: &[Polygon], x: Coord) -> Vec<Intersection> {
             if !(left <= x && x <= right) {
                 continue;
             }
-            let (mut pos_p, mut pos_q) = if p1.x() == x {
+            let (pos_p, mut pos_q) = if p1.x() == x {
                 if p2.x() == x {
                     // Strictly vertical segments are ignored.
                     continue;
@@ -136,29 +136,29 @@ fn line_intersections(polygons: &[Polygon], x: Coord) -> Vec<Intersection> {
                 } else {
                     previous - 1
                 }];
-                if (p0.x() as i64 - p1.x() as i64) * (p2.x() as i64 - p1.x() as i64) > 0 {
+                if (p0.x() - p1.x()) * (p2.x() - p1.x()) > 0 {
                     // Contour touches the line from one side.
                     continue;
                 }
-                (p1.y() as i64, 1u64)
+                (p1.y(), 1u64)
             } else if p2.x() == x {
                 let p3 = points[(segment + 1) % points.len()];
-                if (p3.x() as i64 - p2.x() as i64) * (p1.x() as i64 - p2.x() as i64) > 0 {
+                if (p3.x() - p2.x()) * (p1.x() - p2.x()) > 0 {
                     continue;
                 }
-                (p2.y() as i64, 1u64)
+                (p2.y(), 1u64)
             } else {
                 // General position: the rational parameter t in (0, 1) with a
                 // positive denominator, then pos = t * (p2.y - p1.y) + p1.y.
                 let (numerator, denominator) = if p2.x() > p1.x() {
-                    (x as i64 - p1.x() as i64, p2.x() as i64 - p1.x() as i64)
+                    (x - p1.x(), p2.x() - p1.x())
                 } else {
-                    (p1.x() as i64 - x as i64, p1.x() as i64 - p2.x() as i64)
+                    (p1.x() - x, p1.x() - p2.x())
                 };
                 (
                     numerator
-                        .saturating_mul(p2.y() as i64 - p1.y() as i64)
-                        .saturating_add(p1.y() as i64 * denominator),
+                        .saturating_mul(p2.y() - p1.y())
+                        .saturating_add(p1.y() * denominator),
                     denominator as u64,
                 )
             };

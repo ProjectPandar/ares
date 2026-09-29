@@ -1,5 +1,5 @@
 use crate::{
-    ProcessInfillPattern, SliceError,
+    SliceError,
     fill::locked_zag::{self, LockDensityParam, LockFlowParam, LockRegionParam},
     fill::rectilinear::{MonotonicFillParams, fill_rectilinear_surface},
     geometry::{CoordinateScale, Point},
@@ -66,7 +66,7 @@ pub(super) fn append(
                 sub.density = density;
                 sub.horiz_move = horiz_move;
                 sub.locked_zag = locked_zag;
-                Ok(fill_rectilinear_surface(exp, sub, scale).map(|out| out.polylines)?)
+                fill_rectilinear_surface(exp, sub, scale).map(|out| out.polylines)
             },
         )
         .map_err(geometry_error)?;

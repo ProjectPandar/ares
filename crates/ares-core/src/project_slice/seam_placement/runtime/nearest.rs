@@ -1,6 +1,6 @@
 use super::super::{
     kdtree,
-    split::{self, split_at, squared_distance},
+    split::{self, split_at},
 };
 use crate::{
     geometry::CoordinateScale,
@@ -164,7 +164,6 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         let mut projection = split::closest_projection(&loop_.paths, seam_query, false);
         // `depth` is the UNSCALED distance from the candidate to the
         // projected foot (`SeamPlacer.cpp:1569` works in mm on `Vec3f`).
-        let scale_factor = scale.factor() as f32;
         // `seam_position` is the unscaled candidate position (`Vec3f`,
         // mm); `depth` is `unscale(new_scale(seam_position) - foot_pt)` —
         // the seam coordinate is round-tripped through the scaled domain

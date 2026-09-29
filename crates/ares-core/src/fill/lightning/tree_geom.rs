@@ -1,9 +1,6 @@
 //! `FillLightning::Node` convertToPolylines + geometry helpers
 //! (`TreeNode.cpp`), split from `tree_node.rs` for the <400 LOC rule.
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use crate::geometry::point_in_polygon;
 use crate::geometry::{Coord, EdgeGrid, Point, Polygon, Polyline};
 

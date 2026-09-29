@@ -34,7 +34,7 @@ pub(super) fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> 
 
     let mut exit = previous
         .direction
-        .map(|direction| previous.cruise * direction as f32);
+        .map(|direction| previous.cruise * direction);
     if previous_larger {
         exit.iter_mut().for_each(|value| *value *= smaller_factor);
     }
@@ -46,9 +46,9 @@ pub(super) fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> 
     // inflates the junction speed (the wipe→travel junction 3.5355 vs
     // the oracle's 2.0).
     let mut difference = [
-        (cruise * direction[0] as f32 - exit[0]).abs(),
-        (cruise * direction[1] as f32 - exit[1]).abs(),
-        (cruise * direction[2] as f32 - exit[2]).abs(),
+        (cruise * direction[0] - exit[0]).abs(),
+        (cruise * direction[1] - exit[1]).abs(),
+        (cruise * direction[2] - exit[2]).abs(),
     ];
     for axis in 0..3 {
         if difference[axis] > jerk[axis] {

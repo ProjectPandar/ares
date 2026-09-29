@@ -188,16 +188,17 @@ impl GCodeWriter {
         } else {
             speed
         };
-        let comment = self
-            .full_gcode_comment
-            .then(|| {
+        let comment = if self.full_gcode_comment {
+            {
                 if speed == 0 {
                     " ; disable fan"
                 } else {
                     " ; enable fan"
                 }
-            })
-            .unwrap_or("");
+            }
+        } else {
+            ""
+        };
         match (self.gcode_flavor, speed) {
             (GCodeFlavor::MakerWare | GCodeFlavor::Sailfish, 0) => {
                 format!("M127{comment}\n")
@@ -216,30 +217,32 @@ impl GCodeWriter {
     }
 
     pub(crate) fn set_exhaust_fan(&self, speed: u8) -> String {
-        let comment = self
-            .full_gcode_comment
-            .then(|| {
+        let comment = if self.full_gcode_comment {
+            {
                 if speed == 0 {
                     " ; disable exhaust fan "
                 } else {
                     " ; enable exhaust fan "
                 }
-            })
-            .unwrap_or("");
+            }
+        } else {
+            ""
+        };
         format!("M106 P3 S{}{comment}\n", exhaust_fan_pwm(speed))
     }
 
     pub(crate) fn set_additional_fan(&self, speed: u8) -> String {
-        let comment = self
-            .full_gcode_comment
-            .then(|| {
+        let comment = if self.full_gcode_comment {
+            {
                 if speed == 0 {
                     " ; disable additional fan "
                 } else {
                     " ; enable additional fan "
                 }
-            })
-            .unwrap_or("");
+            }
+        } else {
+            ""
+        };
         format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed))
     }
 

@@ -36,11 +36,11 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
                 state.options.travel_feedrate
             };
             let raised = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
-            let comment = state
-                .options
-                .gcode_comments
-                .then_some(" ; lift Z")
-                .unwrap_or("");
+            let comment = if state.options.gcode_comments {
+                " ; lift Z"
+            } else {
+                ""
+            };
             output.extend_from_slice(
                 format!(
                     "G1 Z{} F{}{comment}\n",
@@ -79,11 +79,11 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
         } else {
             state.options.travel_feedrate
         };
-        let comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; restore layer Z")
-            .unwrap_or("");
+        let comment = if state.options.gcode_comments {
+            " ; restore layer Z"
+        } else {
+            ""
+        };
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}{comment}\n",

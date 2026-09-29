@@ -92,7 +92,7 @@ impl Outline {
             let p = (SUBPIXEL_SCALE as i64) * ((y2 as i64) - y1 + delta);
             let lift = p / dx;
             let rem = p % dx;
-            let (mut lift, mut rem) = if rem < 0 {
+            let (lift, rem) = if rem < 0 {
                 (lift - 1, rem + dx)
             } else {
                 (lift, rem)
@@ -134,7 +134,6 @@ impl Outline {
 
         let mut dy = y2 as i64 - y1 as i64;
         let ex1 = x1 >> SUBPIXEL_SHIFT;
-        let ex2 = x2 >> SUBPIXEL_SHIFT;
         let mut ey1 = y1 >> SUBPIXEL_SHIFT;
         let ey2 = y2 >> SUBPIXEL_SHIFT;
         let fy1 = y1 & SUBPIXEL_MASK;
@@ -160,7 +159,6 @@ impl Outline {
                 first = 0;
                 incr = -1;
             }
-            let x_from = x1;
             let delta = (first - fy1) as i64;
             {
                 let c = self.cell_mut();

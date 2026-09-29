@@ -23,7 +23,7 @@ pub(super) fn seed_segment_corners(
 ) {
     let (p1, p2) = grid.segment(edge);
     let (seg_x, seg_y) = (p2.x() - p1.x(), p2.y() - p1.y());
-    let l2_seg = i64::from(seg_x) * i64::from(seg_x) + i64::from(seg_y) * i64::from(seg_y);
+    let l2_seg = seg_x * seg_x + seg_y * seg_y;
     if l2_seg == 0 {
         return;
     }
@@ -46,19 +46,14 @@ pub(super) fn seed_segment_corners(
             let pt_x = grid.bounds_min.x() + corner_col as Coord * grid.resolution;
             let pt_y = grid.bounds_min.y() + corner_row as Coord * grid.resolution;
             let (pt_x, pt_y) = (pt_x - p1.x(), pt_y - p1.y());
-            let t_pt = i64::from(seg_x) * i64::from(pt_x) + i64::from(seg_y) * i64::from(pt_y);
+            let t_pt = seg_x * pt_x + seg_y * pt_y;
             if t_pt < 0 {
                 // Closest to p1: only inside the wedge of the vertex.
-                let t2_pt =
-                    i64::from(prev_x) * i64::from(pt_x) + i64::from(prev_y) * i64::from(pt_y);
+                let t2_pt = prev_x * pt_x + prev_y * pt_y;
                 if t2_pt > 0 {
-                    let dabs = ((i64::from(pt_x) * i64::from(pt_x)
-                        + i64::from(pt_y) * i64::from(pt_y))
-                        as f64)
-                        .sqrt();
+                    let dabs = ((pt_x * pt_x + pt_y * pt_y) as f64).sqrt();
                     if dabs < field[addr] as f64 {
-                        let det = i64::from(prev_x) * i64::from(seg_y)
-                            - i64::from(prev_y) * i64::from(seg_x);
+                        let det = prev_x * seg_y - prev_y * seg_x;
                         field[addr] = dabs as f32;
                         vectors[addr * 2] = pt_x.abs() as f32;
                         vectors[addr * 2 + 1] = pt_y.abs() as f32;
@@ -67,7 +62,7 @@ pub(super) fn seed_segment_corners(
                 }
             } else if t_pt <= l2_seg {
                 // Closest to the segment interior.
-                let d_seg = i64::from(seg_y) * i64::from(pt_x) - i64::from(seg_x) * i64::from(pt_y);
+                let d_seg = seg_y * pt_x - seg_x * pt_y;
                 let distance = d_seg as f64 / (l2_seg as f64).sqrt();
                 let dabs = distance.abs();
                 if dabs < field[addr] as f64 {

@@ -1,9 +1,9 @@
 mod reorder;
 mod search;
 
-pub(in crate::project_slice) use reorder::{
-    chain_and_reorder_extrusion_paths, reorder_extrusion_paths,
-};
+pub(in crate::project_slice) use reorder::chain_and_reorder_extrusion_paths;
+#[cfg(test)]
+pub(in crate::project_slice) use reorder::reorder_extrusion_paths;
 
 use super::{kd_tree::KdTree, priority_queue::MutablePriorityQueue};
 use crate::project_slice::perimeters::classic::{

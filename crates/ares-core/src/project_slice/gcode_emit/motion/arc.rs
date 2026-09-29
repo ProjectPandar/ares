@@ -35,6 +35,7 @@ pub(super) enum Segment {
     Arc(ArcSegment),
 }
 
+#[cfg(test)]
 pub(super) fn fit(points: &[Point], tolerance: f64) -> Vec<Segment> {
     let ranges = simplify::fit_ranges(points, tolerance, 1_000_000.0);
     let mut segments = Vec::with_capacity(points.len());

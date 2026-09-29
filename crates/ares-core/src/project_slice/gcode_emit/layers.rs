@@ -74,7 +74,6 @@ pub(super) fn append(
     let mut max_layer_z = 0.0f64;
     let layer_change_template =
         layer_gcode::LayerChangeTemplate::new(traversal, metadata, first_layer_bounds);
-    let runtime_gcode = &traversal.resolved.views.runtime_gcode;
     let timelapse_gate = timelapse::gate(traversal, state);
     let traditional_interlude = timelapse_gate.traditional_interlude;
     let mut second_layer_done = false;
@@ -148,9 +147,7 @@ pub(super) fn append(
                 traversal.objects[object_index]
                     .slices(layer_index)
                     .unwrap_or(&[])
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<_>>()
+                    .to_vec()
             })
             .collect();
         let chunk_perimeter_spacing = if entries.is_empty() {

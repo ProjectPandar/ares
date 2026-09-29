@@ -1,6 +1,4 @@
-use super::{
-    Point, Segment, arc_direction, circle_from_three, fit, simplify::simplify_linear_points,
-};
+use super::simplify::simplify_linear_points;
 
 #[test]
 fn dp_pre129_matches_oracle_post() {

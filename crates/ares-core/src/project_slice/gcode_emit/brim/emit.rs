@@ -1,9 +1,8 @@
 //! Brim emission + covered-hull queries (`BrimPlan::emit` /
 //! `covered_hull` / `covered_bounds`).
 
-use super::{BrimPlan, append_loops, brim_geometry_error, scaled_f32, scaled_f64};
+use super::BrimPlan;
 use crate::{
-    SliceError,
     geometry::{CoordinateScale, Point},
     project_slice::gcode_emit::motion::{self, EmitState, LayerGeometry},
 };

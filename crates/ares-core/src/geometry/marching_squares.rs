@@ -9,8 +9,6 @@
 //! observable in the emitted point order). The raster `Field` is injected as a
 //! closure `fn(row, col) -> f32` returning the field value.
 
-use crate::geometry::Point;
-
 /// `marchsq::Coord` — a raster/grid coordinate (`r` row, `c` col).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct Coord {
@@ -19,10 +17,6 @@ pub(crate) struct Coord {
 }
 
 impl Coord {
-    fn seq(self, res: Coord) -> usize {
-        (self.r * res.c + self.c) as usize
-    }
-
     // Raster-pixel distance from `self` to `other` along the single axis that
     // `dir` walks (Left/Right change `c`, Up/Down change `r`).
     fn manhattan_along(self, dir: Dir) -> i64 {
@@ -80,7 +74,7 @@ const NEXT_CCW: [u32; 16] = {
     map
 };
 
-pub(super) fn step(crd: &mut Coord, d: Dir, n: i64) {
+fn step(crd: &mut Coord, d: Dir, n: i64) {
     match d {
         Dir::Left => crd.c -= n,
         Dir::Down => crd.r += n,
@@ -93,8 +87,6 @@ pub(super) fn step(crd: &mut Coord, d: Dir, n: i64) {
 /// `marchsq::Grid` over a field `F: Fn(i64 row, i64 col) -> f32` with `rows`/`cols`.
 pub(crate) struct Grid<F: Fn(i64, i64) -> f32> {
     field: F,
-    rows: i64,
-    cols: i64,
     window: Coord,
     rastsize: Coord,
     gridsize: Coord,
@@ -113,8 +105,6 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
         let gridlen = (gridsize.r * gridsize.c) as usize;
         Self {
             field,
-            rows,
-            cols,
             window,
             rastsize,
             gridsize,
@@ -136,10 +126,6 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
             r: i as i64 / self.gridsize.c,
             c: i as i64 % self.gridsize.c,
         }
-    }
-
-    fn seq(&self, crd: Coord) -> usize {
-        crd.seq(self.gridsize)
     }
 
     fn is_within(&self, crd: Coord) -> bool {

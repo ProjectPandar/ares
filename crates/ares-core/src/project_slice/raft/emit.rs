@@ -11,9 +11,8 @@
 
 use super::fill_params::RaftFillInputs;
 use super::fills::{self, RaftFillSpec, raft_layer_fill};
-use super::grid::{RaftLayerKind, RaftLayerZ, raft_layer_grid};
-use super::polygons::{RaftPolygonParams, raft_polygons};
-use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
+use super::grid::{RaftLayerKind, RaftLayerZ};
+use crate::geometry::{CoordinateScale, Point, Polygon};
 use crate::print_paths::{LayerPrintPaths, PrintPath, PrintPathRole};
 
 #[derive(Clone, Debug)]
@@ -31,7 +30,6 @@ pub(crate) struct RaftLayerPlan {
 /// (`SupportCommon.cpp:1440-1523`).
 #[expect(clippy::too_many_arguments, reason = "layer inputs mirror the source")]
 pub(crate) fn raft_layer_plans(
-    first_layer_lslices: &[ExPolygon],
     raft_grid: &[RaftLayerZ],
     raft_polygons: &super::polygons::RaftPolygons,
     fill_params: &super::fill_params::RaftFillParams,

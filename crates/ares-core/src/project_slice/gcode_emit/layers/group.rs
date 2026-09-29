@@ -25,7 +25,7 @@ pub(super) fn chunk_bookkeeping(
     // layer index for the CHANGE_LAYER numbering (the raft flange is
     // print layer 0).
     let leading_raft = raft
-        .and_then(|raft| raft_schedule::classify(first_layer).ok().flatten())
+        .and_then(|_raft| raft_schedule::classify(first_layer).ok().flatten())
         .map(|raft_index| (raft_index, first_object));
     let (previous_layer_z, boundary_layer_index) = match leading_raft {
         Some((raft_index, _)) => {

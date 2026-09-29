@@ -4,23 +4,10 @@
 
 use crate::{
     ProcessInfillPattern, SliceError,
-    fill::{
-        cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
-        gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
-        multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
-        rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
-        three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
-    },
+    fill::multiline::{MultilineFillParams, fill_surface as fill_multiline_surface},
     geometry::{JoinType, Point, Polyline, offset_expolygon},
-    project_slice::{
-        group_fills::{SurfaceFillPattern, group_fills},
-        prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
-        region_slices::RegionSurfaceKind,
-    },
+    project_slice::group_fills::SurfaceFillPattern,
 };
-
-use super::projected::projected_anchor_lengths;
-use super::{GRID_SWEEPS, TRIANGLE_SWEEPS};
 
 mod lightning;
 
@@ -34,7 +21,6 @@ pub(super) fn dispatch_tail(
     pattern: SurfaceFillPattern,
     fill: crate::project_slice::group_fills::SurfaceFill,
     traversal: &crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal,
-    object_index: usize,
     layer_index: usize,
     z: f64,
     object_reference: Point,
@@ -132,7 +118,6 @@ pub(super) fn dispatch_tail(
         SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsD) => {
             let params = crate::fill::tpms_d::TpmsDFillParams {
                 spacing: fill.params.spacing,
-                overlap: 0.0,
                 density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                 angle: fill.params.angle,
                 layer_z: z,
@@ -151,7 +136,6 @@ pub(super) fn dispatch_tail(
         SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {
             let params = crate::fill::tpms_fk::TpmsFKFillParams {
                 spacing: fill.params.spacing,
-                overlap: 0.0,
                 density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                 angle: fill.params.angle,
                 layer_z: z,

@@ -147,17 +147,6 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     state.pending_layer_retract = false;
 }
 
-/// Core-xy BBL change-layer retraction: the wipe lands inside the new
-/// layer's CHANGE_LAYER block and the lift is emitted eagerly right after
-/// (`GCode.cpp:5693` change_layer retract, `GCode.cpp:5205-5210` second
-/// retract whose E half is a no-op once retracted).
-pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-) {
-    flush_pending_retract_eager_with(output, state, false);
-}
-
 /// Mirrors `GCode.cpp:5205-5210`: the BBL non-traditional layer-start
 /// fires `retract()` at EVERY change regardless of the pending flag
 /// (labeled layers never arm it); `Extruder::retract` still emits
@@ -208,13 +197,6 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     state.pending_lift = None;
     if state.retracted {
         lift::append_eager(output, state);
-    }
-}
-
-fn unscaled_position(point: (i64, i64), state: &EmitState) -> arc::Point {
-    arc::Point {
-        x: point.0 as f64 * state.scale_factor + state.origin.0 - state.extruder_offset.0,
-        y: point.1 as f64 * state.scale_factor + state.origin.1 - state.extruder_offset.1,
     }
 }
 

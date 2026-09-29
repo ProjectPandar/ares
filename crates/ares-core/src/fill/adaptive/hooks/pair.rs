@@ -66,19 +66,20 @@ pub(super) fn connect_pair(
     }
     // No third source line may cross the anchor segment.
     for (index, line) in source.iter().enumerate() {
-        if index != first.intersect_line && index != nearest.intersect_line {
-            if segments_cross(first_pt, nearest_pt, line.a, line.b).is_some() {
-                add_hook(
-                    first,
-                    source,
-                    working,
-                    scaled_offset,
-                    hook_length,
-                    scaled_trim_distance,
-                );
-                first.used = true;
-                return;
-            }
+        if index != first.intersect_line
+            && index != nearest.intersect_line
+            && segments_cross(first_pt, nearest_pt, line.a, line.b).is_some()
+        {
+            add_hook(
+                first,
+                source,
+                working,
+                scaled_offset,
+                hook_length,
+                scaled_trim_distance,
+            );
+            first.used = true;
+            return;
         }
     }
     // Connect (`:1209-1240`).

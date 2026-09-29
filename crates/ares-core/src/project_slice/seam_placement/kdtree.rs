@@ -113,8 +113,8 @@ impl KdTree {
         // replaces the slot iff `dist <= best.1` (lower_bound finds the
         // first slot whose value >= dist; `it != end` ⇒ dist <= current).
         let mut dist = 0.0f32;
-        for dim in 0..DIMS {
-            let d = point[dim] - coordinate(idx, dim);
+        for (dim, &value) in point.iter().enumerate().take(DIMS) {
+            let d = value - coordinate(idx, dim);
             dist += d * d;
         }
         if dist <= best.1 {

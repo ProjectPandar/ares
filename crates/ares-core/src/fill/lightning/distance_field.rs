@@ -7,8 +7,7 @@
 
 use crate::fill::multiline::vline::sample_grid_pattern;
 use crate::geometry::{
-    BoundingBox, ClipperError, Coord, ExPolygon, FillRule, JoinType, Point, Polygon, offset2_ex,
-    union_ex,
+    BoundingBox, ClipperError, Coord, FillRule, JoinType, Point, Polygon, offset2_ex, union_ex,
 };
 
 /// `radius_per_cell_size` — cell size = supporting radius / 6 (DistanceField.cpp:14).
@@ -149,12 +148,11 @@ impl DistanceField {
     /// set each cell's `dist_to_boundary`, sort by the prime-hash, build the grid.
     pub(super) fn new(
         radius: Coord,
-        current_outline: &[Polygon],
         current_outlines_bbox: BoundingBox,
         current_overhang: &[Polygon],
     ) -> Result<Self, ClipperError> {
         let cell_size = radius / RADIUS_PER_CELL_SIZE;
-        let supporting_radius2 = (radius as i64) * (radius as i64);
+        let supporting_radius2 = radius * radius;
         let overhang_bbox =
             BoundingBox::from_polygons(current_overhang).unwrap_or(current_outlines_bbox);
 
@@ -245,11 +243,6 @@ impl DistanceField {
             .map(|i| (i, self.unsupported_points[i].loc))
     }
 
-    /// `getUnsupportedCell` — the cell at `cell_idx` (loc + dist_to_boundary).
-    pub(super) fn cell(&self, cell_idx: usize) -> UnsupportedCell {
-        self.unsupported_points[cell_idx]
-    }
-
     fn to_grid_point(&self, p: Point) -> Point {
         Point::new(
             (p.x() - self.unsupported_points_bbox.min().x()) / self.cell_size,
@@ -257,6 +250,10 @@ impl DistanceField {
         )
     }
 
+    #[expect(
+        clippy::wrong_self_convention,
+        reason = "mirrors upstream `DistanceField::from_grid_point`"
+    )]
     fn from_grid_point(&self, p: Point) -> Point {
         Point::new(
             p.x() * self.cell_size + self.unsupported_points_bbox.min().x(),
@@ -311,8 +308,8 @@ impl DistanceField {
                 let grid_addr = Point::new(gx, gy);
                 let grid_loc = self.from_grid_point(grid_addr);
                 let inside_circle = {
-                    let dx = (grid_loc.x() - added_leaf.x()) as i64;
-                    let dy = (grid_loc.y() - added_leaf.y()) as i64;
+                    let dx = grid_loc.x() - added_leaf.x();
+                    let dy = grid_loc.y() - added_leaf.y();
                     dx * dx + dy * dy <= self.supporting_radius2
                 };
                 if !inside_circle {
@@ -324,15 +321,15 @@ impl DistanceField {
                         continue;
                     }
                     let de = ex * vxx + ey * vyy;
-                    if de < -1.0 || de > 1.0 {
+                    if !(-1.0..=1.0).contains(&de) {
                         continue;
                     }
                 }
                 let cell_idx = self.unsupported_points_grid.find_cell_idx(grid_addr);
                 if cell_idx != UnsupportedPointsGrid::NONE {
                     let cell = self.unsupported_points[cell_idx];
-                    let dx = (cell.loc.x() - added_leaf.x()) as i64;
-                    let dy = (cell.loc.y() - added_leaf.y()) as i64;
+                    let dx = cell.loc.x() - added_leaf.x();
+                    let dy = cell.loc.y() - added_leaf.y();
                     if dx * dx + dy * dy <= self.supporting_radius2 {
                         self.unsupported_points_erased[cell_idx] = true;
                         self.unsupported_points_grid.mark_erased(grid_addr);

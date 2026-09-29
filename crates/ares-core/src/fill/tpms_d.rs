@@ -22,7 +22,6 @@ const EPSILON: f64 = 1.0e-4;
 
 pub(crate) struct TpmsDFillParams {
     pub(crate) spacing: f64,
-    pub(crate) overlap: f64,
     pub(crate) density: f32,
     pub(crate) angle: f32,
     pub(crate) layer_z: f64,

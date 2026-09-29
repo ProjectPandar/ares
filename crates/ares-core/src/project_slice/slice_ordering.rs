@@ -41,7 +41,7 @@ pub(super) fn make_single_region_slices(object: &mut PostRegionPrintObject) -> V
             .layers
             .iter_mut()
             .map(|layer| {
-                let mut surfaces = std::mem::take(&mut layer.surfaces);
+                let surfaces = std::mem::take(&mut layer.surfaces);
                 let ordering_points = surfaces
                     .iter()
                     .map(|surface| {

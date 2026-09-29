@@ -191,7 +191,6 @@ fn record(layer_id: usize) -> ClassicTraversalRecord {
         layer_height: 0.2,
         slice_z: layer_id as f64 * 0.2 + 0.1,
         fuzzy_skin: crate::perimeters::FuzzySkinConfig::disabled(),
-        simplification_tolerance: 0.012,
         overhang_flow: flow(),
         ext_perimeter_flow: flow(),
         scale: crate::geometry::CoordinateScale::Normal,

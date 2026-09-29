@@ -1,6 +1,6 @@
 //! The single-segment block builder (`MotionState::segment_block`).
 
-use super::{GCodeFlavor, MotionBlock, MotionKind, MotionState};
+use super::{MotionBlock, MotionKind, MotionState};
 
 impl MotionState {
     pub(super) fn segment_block(&self, delta: [f64; 4]) -> Option<MotionBlock> {

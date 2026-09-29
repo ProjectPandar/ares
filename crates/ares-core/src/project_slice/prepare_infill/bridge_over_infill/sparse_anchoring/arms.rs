@@ -12,14 +12,9 @@ use crate::{
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
     geometry::{Point, Polyline},
-    project_slice::{
-        group_fills::{SurfaceFillPattern, group_fills},
-        prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
-        region_slices::RegionSurfaceKind,
-    },
+    project_slice::group_fills::SurfaceFillPattern,
 };
 
-use super::projected::projected_anchor_lengths;
 use super::{GRID_SWEEPS, TRIANGLE_SWEEPS};
 
 /// `match fill.params.pattern` dispatch — first half of the sparse-anchoring
@@ -37,18 +32,6 @@ pub(super) fn dispatch(
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
-    let multiline_params =
-        |params: crate::project_slice::group_fills::SurfaceFillParams| MultilineFillParams {
-            spacing: params.spacing,
-            overlap: 0.0,
-            angle: params.angle + std::f32::consts::FRAC_PI_2,
-            reference: object_reference,
-            density: (0.01_f64 * f64::from(params.density)) as f32,
-            multiline: params.multiline,
-            anchor_length: params.anchor_length,
-            anchor_length_max: params.anchor_length_max,
-            dont_sort: false,
-        };
     match fill.params.pattern {
         SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
             let params = CrossHatchFillParams {
@@ -150,7 +133,7 @@ pub(super) fn dispatch(
                 angle: fill.params.angle,
                 density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                 multiline: fill.params.multiline,
-                layer_height: fill.params.flow.height as f32,
+                layer_height: fill.params.flow.height,
                 gyroid_optimized: fill.params.gyroid_optimized,
                 anchor_length: fill.params.anchor_length,
                 anchor_length_max: fill.params.anchor_length_max,
@@ -383,7 +366,6 @@ pub(super) fn dispatch(
                 pattern,
                 fill,
                 traversal,
-                object_index,
                 layer_index,
                 z,
                 object_reference,

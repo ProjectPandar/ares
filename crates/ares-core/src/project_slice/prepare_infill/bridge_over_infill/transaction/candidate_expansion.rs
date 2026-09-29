@@ -1,38 +1,17 @@
-use std::collections::BTreeMap;
-
 use crate::{
     OrcaFloats, SliceError,
-    geometry::{CoordinateScale, Polyline},
+    geometry::CoordinateScale,
     project_slice::{
-        perimeters::{
-            classic::traversal::PostClassicTraversalPrintObject,
-            flow::{resolve_nominal_sparse_infill_flow, resolve_thick_solid_infill_bridge_flow},
-            types::PostPerimeterInputPrintObject,
-        },
+        perimeters::types::PostPerimeterInputPrintObject,
         prepare_infill::{
-            bridge_over_infill::types::{BridgeCandidateObject, CandidateSurface},
+            bridge_over_infill::types::BridgeCandidateObject,
             external_surfaces::PreparedPostExternalSurfaces,
             surface_type_detection::types::PreparedSurfaceTypeObject,
         },
     },
 };
 
-use super::super::{
-    anchored_polygon::scaled_flow_value,
-    candidate_anchored_bridge::construct_candidate_anchored_bridge,
-    candidate_boundary_polylines::prepare_candidate_boundary_polylines,
-    candidate_bridge_angle::determine_candidate_bridge_angle,
-    candidate_bridge_area::prepare_candidate_bridge_area,
-    candidate_bridge_commit::{append_postprocessed_candidate, replace_candidate_layer},
-    candidate_bridge_postprocessing::postprocess_candidate_bridge,
-    candidate_collision_reconstruction::reconstruct_candidate_bridge_collision,
-    candidate_ordering::order_candidate_surfaces,
-    current_layer_context::{CurrentLayerBridgeRegion, prepare_current_layer_bridge_context},
-    deep_sparse_area::{DeepSparseLayer, gather_deep_sparse_infill_area},
-    layer_clustering::cluster_candidate_object,
-    lower_cluster_subtraction::{ClusterBridgeHistoryLayer, subtract_filled_lower_cluster_bridges},
-    sparse_anchoring::generate_sparse_infill_polylines_for_anchoring,
-};
+use super::super::{deep_sparse_area::DeepSparseLayer, layer_clustering::cluster_candidate_object};
 use super::geometry_error;
 
 pub(super) const TARGET_FLOW_HEIGHT_FACTOR: f32 = 0.9;

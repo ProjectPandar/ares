@@ -37,11 +37,7 @@ pub(super) fn build(
         .map(|resolved| resolved.object.clone())
         .collect::<Vec<_>>();
     let first_layer_lslices = (0..object_count)
-        .map(|object_index| {
-            traversal.objects[object_index]
-                .slices(0)
-                .map(|slices| slices)
-        })
+        .map(|object_index| traversal.objects[object_index].slices(0))
         .collect::<Vec<_>>();
     let object_heights = traversal
         .objects
@@ -144,7 +140,6 @@ pub(super) fn build(
     let object_layer_counts: Vec<usize> = objects.iter().map(|object| object.len()).collect();
     // Prepend the raft entries (all raft z's sit below the first
     // object layer after the shift).
-    let mut merged = merged;
     if let Some(raft) = &raft {
         let mut all = raft.entries.clone();
         all.extend(merged);

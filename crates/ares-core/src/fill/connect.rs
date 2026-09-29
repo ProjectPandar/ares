@@ -118,19 +118,16 @@ pub(crate) fn connect_infill_polygons(
 }
 
 fn debug_dump() -> Option<std::fs::File> {
-    std::env::var("ARES_DUMP_FCONNECT")
-        .ok()
-        .map(|path| {
-            use std::io::Write;
-            let mut file = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(&path)
-                .expect("ARES_DUMP_FCONNECT path is writable");
-            let _ = writeln!(file, "SECTION");
-            Some(file)
-        })
-        .flatten()
+    std::env::var("ARES_DUMP_FCONNECT").ok().map(|path| {
+        use std::io::Write;
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)
+            .expect("ARES_DUMP_FCONNECT path is writable");
+        let _ = writeln!(file, "SECTION");
+        file
+    })
 }
 
 fn dump_polygons_input(

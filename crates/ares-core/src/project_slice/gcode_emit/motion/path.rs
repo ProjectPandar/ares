@@ -34,13 +34,12 @@ pub(super) fn emit(
             .create(true)
             .append(true)
             .open(path)
+            && properties.feature != "Skirt"
         {
-            if properties.feature != "Skirt" {
-                for &(x, y) in &scaled_points {
-                    let _ = writeln!(file, "P ({x},{y})");
-                }
-                let _ = writeln!(file, "P_END");
+            for &(x, y) in &scaled_points {
+                let _ = writeln!(file, "P ({x},{y})");
             }
+            let _ = writeln!(file, "P_END");
         }
     }
     let source_length = scaled_points

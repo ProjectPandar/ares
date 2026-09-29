@@ -112,7 +112,7 @@ pub(super) fn perlin(
         let nx = make_int32_range(x);
         let ny = make_int32_range(y);
         let nz = make_int32_range(z);
-        let seed = (0i32.wrapping_add(cur_octave as i32)) as u32 & 0xffff_ffff;
+        let seed = (0i32.wrapping_add(cur_octave as i32)) as u32;
         let signal = gradient_coherent_noise_3d(nx, ny, nz, seed as i32);
         value += signal * cur_persistence;
         x *= 2.0;
@@ -178,7 +178,7 @@ pub(super) fn ridged_multi(
     let mut weight = 1.0f64;
     let offset = 1.0;
     let gain = 2.0;
-    for cur_octave in 0..octave_count {
+    for (cur_octave, &spectral_weight) in spectral_weights.iter().enumerate().take(octave_count) {
         let nx = make_int32_range(x);
         let ny = make_int32_range(y);
         let nz = make_int32_range(z);
@@ -189,13 +189,8 @@ pub(super) fn ridged_multi(
         signal *= signal;
         signal *= weight;
         weight = signal * gain;
-        if weight > 1.0 {
-            weight = 1.0;
-        }
-        if weight < 0.0 {
-            weight = 0.0;
-        }
-        value += signal * spectral_weights[cur_octave];
+        weight = weight.clamp(0.0, 1.0);
+        value += signal * spectral_weight;
         x *= 2.0;
         y *= 2.0;
         z *= 2.0;

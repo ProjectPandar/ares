@@ -74,10 +74,11 @@ fn line_feedrate_word(line: &str) -> Option<i64> {
         .strip_prefix("G0")
         .or_else(|| line.strip_prefix("G1"))?;
     for word in rest.split_whitespace() {
-        if let Some(digits) = word.strip_prefix('F') {
-            if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) {
-                return digits.parse().ok();
-            }
+        if let Some(digits) = word.strip_prefix('F')
+            && !digits.is_empty()
+            && digits.bytes().all(|b| b.is_ascii_digit())
+        {
+            return digits.parse().ok();
         }
     }
     None

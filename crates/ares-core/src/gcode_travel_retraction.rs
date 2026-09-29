@@ -6,15 +6,13 @@ use crate::{
         LayerChangeRetractCommand, LayerChangeUnretractCommand, layer_change_retract_gcode,
         layer_change_unretract_gcode, layer_change_z_restore_gcode,
     },
-    gcode_lift::{TravelLiftMove, distance, slope_lift_move, spiral_lift_move},
+    gcode_lift::{TravelLiftMove, slope_lift_move, spiral_lift_move},
     gcode_writer::GCodeWriter,
     options::{RetractLiftEnforce, ZHopLiftMode},
 };
 use wipe::{SCALE, WipePath, scaled_length};
 
 struct PreviousPrintSegment {
-    start: Point2,
-    end: Point2,
     feedrate: f64,
 }
 
@@ -131,8 +129,6 @@ impl TravelRetractionState {
         let (before_wipe, during_wipe) = if let Some(path) = wipe_path.as_ref() {
             let feedrate = selected_wipe_feedrate(
                 PreviousPrintSegment {
-                    start: *path.points.first().unwrap_or(&Point2::new(0.0, 0.0)),
-                    end: *path.points.last().unwrap_or(&Point2::new(0.0, 0.0)),
                     feedrate: path.feedrate,
                 },
                 role_based_wipe_speed,
@@ -164,8 +160,6 @@ impl TravelRetractionState {
         if let Some(path) = wipe_path.as_ref() {
             let feedrate = selected_wipe_feedrate(
                 PreviousPrintSegment {
-                    start: *path.points.first().unwrap_or(&Point2::new(0.0, 0.0)),
-                    end: *path.points.last().unwrap_or(&Point2::new(0.0, 0.0)),
                     feedrate: path.feedrate,
                 },
                 role_based_wipe_speed,

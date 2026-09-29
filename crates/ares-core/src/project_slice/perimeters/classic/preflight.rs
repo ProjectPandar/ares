@@ -33,7 +33,6 @@ struct RecordValidationContext<'a> {
     enable_arc_fitting: bool,
     scaled_resolution: f64,
     nozzle_diameters: &'a crate::OrcaFloats,
-    scale: crate::geometry::CoordinateScale,
 }
 
 pub(super) fn validate_project(
@@ -76,7 +75,6 @@ pub(super) fn validate_project(
                                     enable_arc_fitting: context.enable_arc_fitting,
                                     scaled_resolution,
                                     nozzle_diameters: context.nozzle_diameters,
-                                    scale: context.scale,
                                 },
                             )
                         })
@@ -99,7 +97,6 @@ fn validate_record(
         enable_arc_fitting,
         scaled_resolution,
         nozzle_diameters,
-        scale,
     } = context;
     // `detect_thin_wall` is supported: `i == 0` medial-axis extraction in
     // `first_outer::thin_wall_offsets` (PerimeterGenerator.cpp:1251-1266),

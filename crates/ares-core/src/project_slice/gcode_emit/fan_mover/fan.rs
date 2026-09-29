@@ -3,8 +3,8 @@
 
 use crate::ExtrusionRole;
 
+use super::helpers::set_fan_line;
 use super::helpers::{LineMotion, split_line};
-use super::helpers::{fan_pwm, set_fan_line};
 use super::{BufferData, FanMover, Kickstart};
 
 impl FanMover {

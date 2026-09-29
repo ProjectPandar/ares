@@ -49,7 +49,6 @@ fn record() -> ClassicTraversalRecord {
         layer_height: 0.123_456_789_012_3,
         slice_z: 0.25,
         fuzzy_skin: crate::perimeters::FuzzySkinConfig::disabled(),
-        simplification_tolerance: 0.012,
         overhang_flow: Flow {
             width: 0.51,
             height: 0.27,

@@ -89,7 +89,7 @@ pub(super) fn slicing_parameters(
     let mut interface_raft_layers = 0usize;
     let (base_raft_layer_height, interface_raft_layer_height, contact_raft_layer_height) =
         if base_raft_layers > 0 {
-            interface_raft_layers = (base_raft_layers + 1) / 2;
+            interface_raft_layers = base_raft_layers.div_ceil(2);
             base_raft_layers -= interface_raft_layers;
             (
                 layer_height.max(0.75 * support_nozzle),

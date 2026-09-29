@@ -68,7 +68,7 @@ mod chain_probe {
         let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
         let graph = crate::fill::connect::graph::build_working_graph(
             lines.clone(),
-            &[polygon.clone()],
+            std::slice::from_ref(&polygon),
             bbox,
             0.407,
             crate::geometry::CoordinateScale::Normal,
@@ -128,7 +128,7 @@ mod arch_probe {
         let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
         let graph = crate::fill::connect::graph::build_working_graph(
             lines.clone(),
-            &[polygon.clone()],
+            std::slice::from_ref(&polygon),
             bbox,
             0.407,
             crate::geometry::CoordinateScale::Normal,

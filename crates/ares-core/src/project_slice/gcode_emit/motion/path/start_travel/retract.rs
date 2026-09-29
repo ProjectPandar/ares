@@ -72,11 +72,11 @@ pub(super) fn decide(
                 )
                 && state.e_position.abs() >= 1e-6
             {
-                let comment = state
-                    .options
-                    .gcode_comments
-                    .then_some(" ; reset extrusion distance")
-                    .unwrap_or("");
+                let comment = if state.options.gcode_comments {
+                    " ; reset extrusion distance"
+                } else {
+                    ""
+                };
                 output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
                 state.e_position = 0.0;
             }
@@ -103,11 +103,11 @@ pub(super) fn decide(
                 )
                 && state.e_position.abs() >= 1e-6
             {
-                let comment = state
-                    .options
-                    .gcode_comments
-                    .then_some(" ; reset extrusion distance")
-                    .unwrap_or("");
+                let comment = if state.options.gcode_comments {
+                    " ; reset extrusion distance"
+                } else {
+                    ""
+                };
                 output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
                 state.e_position = 0.0;
             }
@@ -171,11 +171,11 @@ pub(super) fn decide(
             )
             && state.e_position.abs() >= 1e-6
         {
-            let comment = state
-                .options
-                .gcode_comments
-                .then_some(" ; reset extrusion distance")
-                .unwrap_or("");
+            let comment = if state.options.gcode_comments {
+                " ; reset extrusion distance"
+            } else {
+                ""
+            };
             output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
             state.e_position = 0.0;
         }

@@ -71,8 +71,7 @@ impl PressureEqualizerPass {
     pub(crate) fn flush(&mut self) -> Option<String> {
         self.buffered.take().map(|gcode| {
             self.buffered = Some(gcode);
-            let out = self.buffered.take().unwrap();
-            out
+            self.buffered.take().unwrap()
         })
     }
 
@@ -178,10 +177,5 @@ impl PressureEqualizerPass {
     }
 }
 
-mod tests;
-
 #[cfg(test)]
-mod decisions {
-    use super::*;
-    use crate::project_slice::pressure_equalizer::line::LineParser;
-}
+mod tests;

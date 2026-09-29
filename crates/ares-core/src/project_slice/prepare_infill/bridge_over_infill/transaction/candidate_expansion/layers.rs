@@ -32,12 +32,11 @@ use super::super::super::{
     candidate_ordering::order_candidate_surfaces,
     current_layer_context::{CurrentLayerBridgeRegion, prepare_current_layer_bridge_context},
     deep_sparse_area::{DeepSparseLayer, gather_deep_sparse_infill_area},
-    layer_clustering::cluster_candidate_object,
     lower_cluster_subtraction::{ClusterBridgeHistoryLayer, subtract_filled_lower_cluster_bridges},
     sparse_anchoring::generate_sparse_infill_polylines_for_anchoring,
 };
 use super::super::geometry_error;
-use super::{ObjectView, TARGET_FLOW_HEIGHT_FACTOR};
+use super::TARGET_FLOW_HEIGHT_FACTOR;
 
 pub(super) fn prepare_infill_lines(
     predecessor: &PreparedPostExternalSurfaces,

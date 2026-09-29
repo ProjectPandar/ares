@@ -50,12 +50,3 @@ pub(super) fn norm(value: [f64; 4]) -> f64 {
         .sum::<f64>()
         .sqrt()
 }
-
-pub(super) fn scale(value: [f64; 4], factor: f64) -> [f64; 4] {
-    [
-        value[0] * factor,
-        value[1] * factor,
-        value[2] * factor,
-        value[3] * factor,
-    ]
-}

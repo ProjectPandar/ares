@@ -1,8 +1,8 @@
 //! Rate-transition splitting — the accel-then-decel peak solver and
 //! the single-slope fallback (`PressureEqualizer.cpp:570-730`).
 
-use super::{NON_TRIVIAL_RATE_DELTA, OutputBuffer, format_axis, push_line_to_output};
-use crate::project_slice::pressure_equalizer::line::{E, F, GCodeLine};
+use super::{NON_TRIVIAL_RATE_DELTA, OutputBuffer, push_line_to_output};
+use crate::project_slice::pressure_equalizer::line::{F, GCodeLine};
 
 pub(super) fn emit_accel_then_decel(
     buffer: &mut OutputBuffer,
@@ -114,9 +114,7 @@ pub(super) fn emit_accel_then_decel(
         line.pos_start = line.pos_end;
     }
 
-    for index in 0..4 {
-        line.pos_end[index] = pos_end_backup[index];
-    }
+    line.pos_end[..4].copy_from_slice(&pos_end_backup[..4]);
     push_line_to_output(
         buffer,
         line,
@@ -211,16 +209,12 @@ pub(super) fn emit_single_slope(
         line.pos_start = line.pos_end;
     }
     if l_steady > 0.0 && accelerating {
-        for index in 0..4 {
-            line.pos_end[index] = pos_end2[index];
-            line.pos_provided[index] = true;
-        }
+        line.pos_end[..4].copy_from_slice(&pos_end2[..4]);
+        line.pos_provided[..4].fill(true);
         push_line_to_output(buffer, line, use_relative_e_distances, pos_end[F], comment);
     } else {
-        for index in 0..4 {
-            line.pos_end[index] = pos_end_backup[index];
-            line.pos_provided[index] = true;
-        }
+        line.pos_end[..4].copy_from_slice(&pos_end_backup[..4]);
+        line.pos_provided[..4].fill(true);
         push_line_to_output(buffer, line, use_relative_e_distances, pos_end[F], comment);
     }
     let _ = pos_start_backup;

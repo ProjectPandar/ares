@@ -1,4 +1,4 @@
-use super::{motion_matches, parser::Deposition};
+use super::parser::Deposition;
 
 #[path = "depositions/cross_target.rs"]
 mod cross_target;
@@ -155,7 +155,7 @@ pub(super) fn compare_deposition(
                     let sum = |list: &[&Deposition]| {
                         list.iter()
                             .filter(|d| d.feature == *f)
-                            .map(|d| measure(d))
+                            .map(&measure)
                             .sum::<f64>()
                     };
                     (sum(list_a) - sum(list_b)).abs()

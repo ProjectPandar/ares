@@ -96,7 +96,3 @@ pub(super) fn geometry_error(error: ClipperError) -> SliceError {
         }
     }
 }
-
-fn unsupported(key: &str) -> SliceError {
-    SliceError::UnsupportedProjectFeature(key.to_owned())
-}

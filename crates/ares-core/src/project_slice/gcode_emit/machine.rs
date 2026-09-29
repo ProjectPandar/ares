@@ -175,7 +175,7 @@ pub(super) fn append_start(
         // `e_retracted` → `e_restart_extra` (`GCode.cpp:1702-1713`).
         let resized_key = ["position", "e_position", "e_retracted", "e_restart_extra"]
             .iter()
-            .find(|key| match config.get(*key) {
+            .find(|key| match config.get(key) {
                 Some(value::Value::List(list)) => {
                     list.len() != if **key == "position" { 3 } else { 64 }
                 }

@@ -50,10 +50,8 @@ pub(super) fn emit_needs_travel(
     begin_path_travel(output, state, properties.feature, travel_distance);
     // `GCode.cpp:6378`: the path's first travel carries
     // "move to first {description} point" under `gcode_comments`.
-    let first_travel_comment = state
-        .options
-        .gcode_comments
-        .then(|| {
+    let first_travel_comment = if state.options.gcode_comments {
+        {
             let bridge = if is_bridge_feature(properties.feature) {
                 " (bridge)"
             } else {
@@ -63,8 +61,10 @@ pub(super) fn emit_needs_travel(
                 " ; move to first {}{bridge} point",
                 feature_description(properties.feature)
             )
-        })
-        .unwrap_or_default();
+        }
+    } else {
+        Default::default()
+    };
     let first_travel_comment = first_travel_comment.as_str();
     // Upstream's `travel` polyline anchors at `m_last_pos` — the last
     // EXTRUDED point (`GCode.cpp:7356`), not the head position left by a

@@ -1,24 +1,5 @@
-use super::estimate::Estimate;
-use super::motion::{MotionBlock, MotionState, planned_times};
-use super::{ProcessorLimits, process};
+use super::motion::MotionState;
 
-// Synthetic timing tests isolate other behavior with nonbinding axis caps;
-// zero is a real acceleration limit, not an unlimited sentinel.
-fn nonbinding_axis_limits() -> ProcessorLimits {
-    ProcessorLimits {
-        max_acceleration: [f64::MAX; 4],
-        ..ProcessorLimits::default()
-    }
-}
-
-// The synthetic footer fixtures use the BBL placeholder set; the end-to-end
-// suite covers the compatible set via Orca parity.
-fn bbl_limits() -> ProcessorLimits {
-    ProcessorLimits {
-        bbl_printer: true,
-        ..nonbinding_axis_limits()
-    }
-}
 // discretization consumes one g1 line id per segment.
 #[test]
 fn full_circle_arc_consumes_discretized_g1_line_ids() {

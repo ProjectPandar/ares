@@ -1,7 +1,7 @@
 mod feedrate;
 mod markers;
 
-use markers::{bare_feedrate_word, strip_pressure_markers};
+use markers::strip_pressure_markers;
 
 #[cfg(test)]
 mod tests;
@@ -93,7 +93,7 @@ impl CoolingState {
                     .filament_diameter
                     .0
                     .iter()
-                    .map(|value| f64::from(value.0))
+                    .map(|value| value.0)
                     .collect::<Vec<f64>>(),
                 gcode.use_relative_e_distances.0,
             )
@@ -152,16 +152,17 @@ impl CoolingState {
                 || (layer_index == 0 && self.emit_initial_fan))
         {
             self.additional_speed = additional_speed;
-            let comment = self
-                .gcode_comments
-                .then(|| {
+            let comment = if self.gcode_comments {
+                {
                     if additional_speed == 0 {
                         " ; disable additional fan "
                     } else {
                         " ; enable additional fan "
                     }
-                })
-                .unwrap_or("");
+                }
+            } else {
+                ""
+            };
             output.extend_from_slice(
                 format!(
                     "M106 P2 S{}{comment}\n",
@@ -223,16 +224,17 @@ impl CoolingState {
         );
         let replacement = if part_speed != self.part_speed || initial {
             let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
-            let comment = self
-                .gcode_comments
-                .then(|| {
+            let comment = if self.gcode_comments {
+                {
                     if speed == 0 {
                         " ; disable fan"
                     } else {
                         " ; enable fan"
                     }
-                })
-                .unwrap_or("");
+                }
+            } else {
+                ""
+            };
             format!("M106 S{}{comment}\n", part_fan_pwm(speed)).into_bytes()
         } else {
             Vec::new()
@@ -292,16 +294,17 @@ impl CoolingState {
             let replacement = if force {
                 self.physical_part_speed = target;
                 let emitted = clamped_part_speed(target, self.part_cooling_fan_min_pwm);
-                let comment = self
-                    .gcode_comments
-                    .then(|| {
+                let comment = if self.gcode_comments {
+                    {
                         if emitted == 0 {
                             " ; disable fan"
                         } else {
                             " ; enable fan"
                         }
-                    })
-                    .unwrap_or("");
+                    }
+                } else {
+                    ""
+                };
                 format!("M106 S{}{comment}\n", part_fan_pwm(emitted)).into_bytes()
             } else {
                 Vec::new()

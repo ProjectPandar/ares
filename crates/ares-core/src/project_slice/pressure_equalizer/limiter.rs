@@ -41,6 +41,9 @@ pub(crate) fn role_index(role: ExtrusionRole) -> usize {
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 const ROLE_COUNT: usize = 20;
 const UNLIMITED: f32 = f32::MAX;
 
@@ -48,8 +51,6 @@ const UNLIMITED: f32 = f32::MAX;
 /// volumetric rate slopes of `lines[first..=last]` (a continuous
 /// extrusion segment window) so that no line's entry/exit rate exceeds
 /// the configured slope relative to its extruding neighbours.
-mod tests;
-
 pub(crate) fn adjust_volumetric_rate(
     lines: &mut [GCodeLine],
     slopes: &[RateSlope; ROLE_COUNT],

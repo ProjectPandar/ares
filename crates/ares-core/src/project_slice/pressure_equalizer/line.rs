@@ -74,10 +74,6 @@ impl GCodeLine {
             || (self.pos_end[Y] - self.pos_start[Y]).abs() > 0.0
     }
 
-    pub(crate) fn moving_z(&self) -> bool {
-        (self.pos_end[Z] - self.pos_start[Z]).abs() > 0.0
-    }
-
     pub(crate) fn extruding(&self) -> bool {
         self.moving_xy() && self.pos_end[E] > self.pos_start[E]
     }
@@ -305,4 +301,4 @@ impl LineParser {
 /// `is_eol` (`PressureEqualizer.cpp:210`): a comment ends the line too.
 mod lex;
 
-use lex::{is_eol, role_from_u32, skip_ws, split_float, split_float_opt, split_int};
+use lex::{is_eol, role_from_u32, split_float, split_float_opt, split_int};

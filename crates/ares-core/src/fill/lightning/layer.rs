@@ -113,12 +113,8 @@ impl Layer {
         supporting_radius: Coord,
         wall_supporting_radius: Coord,
     ) -> Result<(), ClipperError> {
-        let mut distance_field = DistanceField::new(
-            supporting_radius,
-            current_outlines,
-            current_outlines_bbox,
-            current_overhang,
-        )?;
+        let mut distance_field =
+            DistanceField::new(supporting_radius, current_outlines_bbox, current_overhang)?;
 
         let mut tree_node_locator = SparseNodeGrid::new();
         self.fill_locator(&mut tree_node_locator, current_outlines_bbox);
@@ -166,9 +162,6 @@ impl Layer {
         }
         Ok(())
     }
-
-    /// `getBestGroundingLocation` — the closest boundary point or the best
-    /// existing tree node to attach `unsupported_location` (Layer.cpp:111).
 
     /// `convertToLines` — emit the tree polylines clipped to the outline.
     pub(super) fn convert_to_lines(

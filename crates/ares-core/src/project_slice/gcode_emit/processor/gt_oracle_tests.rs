@@ -1,6 +1,5 @@
+use super::ProcessorLimits;
 use super::estimate::Estimate;
-use super::motion::{MotionBlock, MotionState, planned_times};
-use super::{ProcessorLimits, process};
 
 // Synthetic timing tests isolate other behavior with nonbinding axis caps;
 // zero is a real acceleration limit, not an unlimited sentinel.
@@ -11,14 +10,6 @@ fn nonbinding_axis_limits() -> ProcessorLimits {
     }
 }
 
-// The synthetic footer fixtures use the BBL placeholder set; the end-to-end
-// suite covers the compatible set via Orca parity.
-fn bbl_limits() -> ProcessorLimits {
-    ProcessorLimits {
-        bbl_printer: true,
-        ..nonbinding_axis_limits()
-    }
-}
 /// Spiral-lift arc microbench against the GT `--process-gcode` oracle
 /// (2026-09-16): upstream creates all 22 segment blocks for a
 /// `G3 Z.. I.. J.. P1` full-circle arc with ~7ms times under

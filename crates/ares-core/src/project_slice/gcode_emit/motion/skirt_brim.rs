@@ -5,11 +5,10 @@ use super::features::PathProperties;
 use super::local_cursor;
 use super::path;
 use super::state::{EmitState, LayerGeometry};
-use super::{extrusion, loop_paths, options, scarf};
 use crate::geometry::Point;
 use crate::project_slice::gcode_emit::motion::SkirtLoopFlow;
 
-pub(in crate::project_slice) fn emit_brim_loop(
+pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
     flow: SkirtLoopFlow,
@@ -91,7 +90,7 @@ pub(in crate::project_slice) fn emit_brim_loop(
     );
 }
 
-pub(in crate::project_slice) fn emit_skirt_loop(
+pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
     flow: SkirtLoopFlow,

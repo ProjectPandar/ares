@@ -12,7 +12,6 @@ use classify::classify_roots;
 use types::{ClassicTraversalRecord as Record, RouteFlows};
 
 pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClassicTraversal {
-    let simplification_tolerance = prepared.resolved.views.full.process.print.resolution.0;
     let objects = prepared
         .objects
         .iter()
@@ -32,12 +31,7 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
                 .object
                 .raft_layers
                 .0;
-            prepare_object(
-                predecessor,
-                raft_layers,
-                simplification_tolerance,
-                prepared.scale,
-            )
+            prepare_object(predecessor, raft_layers, prepared.scale)
         })
         .collect::<Vec<_>>();
     let PreparedPostClassicHierarchy {
@@ -69,7 +63,6 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
 fn prepare_object(
     hierarchy: &PostClassicHierarchyPrintObject,
     raft_layers: i32,
-    simplification_tolerance: f64,
     scale: crate::geometry::CoordinateScale,
 ) -> Vec<Option<ClassicTraversalRecord>> {
     let onion = &hierarchy.predecessor;
@@ -119,7 +112,6 @@ fn prepare_object(
                             layer_height: input.layer_height,
                             slice_z: plan.layers[input.planned_layer_index].slice_z,
                             fuzzy_skin: crate::perimeters::FuzzySkinConfig::from_region(region),
-                            simplification_tolerance,
                             overhang_flow: input.overhang_flow,
                             ext_perimeter_flow: input.ext_perimeter_flow,
                             scale,
@@ -176,17 +168,6 @@ impl PostClassicTraversalPrintObject {
             .get(record_index)
             .and_then(|record| record.as_ref())
             .map(|record| prelude.object.current_slices(record))
-    }
-
-    /// Slices of every volume occurrence at the layer (`Layer::lslices`
-    /// spans all instances of the print object; each arranged copy is a
-    /// separate occurrence here).
-    pub(in crate::project_slice) fn occurrence_slices(
-        &self,
-        record_index: usize,
-    ) -> Vec<&[crate::geometry::ExPolygon]> {
-        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
-        prelude.object.occurrence_slices(record_index)
     }
 
     /// Perimeter flow spacing of the record's region in millimetres

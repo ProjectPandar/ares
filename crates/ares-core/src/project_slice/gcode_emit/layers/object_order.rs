@@ -15,7 +15,7 @@ fn queue_key(end_points: &[EndPoint], index: usize) -> (f64, usize) {
     (end_points[index].distance_out, index)
 }
 
-fn sift_down(end_points: &[EndPoint], queue: &mut Vec<usize>, start: usize) {
+fn sift_down(end_points: &[EndPoint], queue: &mut [usize], start: usize) {
     let mut root = start;
     loop {
         let left = 2 * root + 1;
@@ -187,13 +187,13 @@ pub(super) fn chain_instance_order(centers: &[(f64, f64)], start_near: (i64, i64
     let seed_chain = chains.new_chain();
     end_points[seed_point].distance_out = 0.0;
     end_points[seed_point].chain_id = seed_chain;
-    for index in 0..count * 2 {
+    for (index, end_point) in end_points.iter_mut().enumerate() {
         if index == seed_point {
             continue;
         }
         let (next, distance) = nearest(index, Some(seed_point));
-        end_points[index].edge_out = Some(next);
-        end_points[index].distance_out = distance;
+        end_point.edge_out = Some(next);
+        end_point.distance_out = distance;
     }
 
     let mut queue: Vec<usize> = (0..count * 2)
@@ -203,7 +203,7 @@ pub(super) fn chain_instance_order(centers: &[(f64, f64)], start_near: (i64, i64
         sift_down(&end_points, &mut queue, start);
     }
 
-    let mut first_point = Some(seed_point);
+    let first_point = Some(seed_point);
     let mut remaining_links = count - 1;
     while !queue.is_empty() {
         let end_point1 = pop_top(&end_points, &mut queue);
@@ -225,9 +225,7 @@ pub(super) fn chain_instance_order(centers: &[(f64, f64)], start_near: (i64, i64
                 } else {
                     chain2
                 }
-            } else if chain2 == 0 {
-                chain1
-            } else if chain1 == chain2 {
+            } else if chain2 == 0 || chain1 == chain2 {
                 chain1
             } else {
                 chains.merge(chain1, chain2)

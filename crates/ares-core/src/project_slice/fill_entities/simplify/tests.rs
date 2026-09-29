@@ -1,6 +1,4 @@
-use super::{simplify_extrusion_path, simplify_fill_path};
-use crate::geometry::{Point, Polyline};
-use crate::project_slice::fill_entities::FillExtrusionPath;
+use super::simplify_extrusion_path;
 use crate::project_slice::perimeters::classic::materialize::{
     ExtrusionPath, ExtrusionRole, Point3, Polyline3,
 };

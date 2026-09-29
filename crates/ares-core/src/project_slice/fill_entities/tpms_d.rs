@@ -22,7 +22,6 @@ pub(super) fn append(
 ) -> Result<(), SliceError> {
     let params = TpmsDFillParams {
         spacing: fill.params.spacing,
-        overlap: fill.params.overlap,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         // `FillTpmsD` reads `this->angle` (the un-alternated base angle), not
         // `direction.first` — same convention as `FillGyroid`.

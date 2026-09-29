@@ -79,19 +79,6 @@ impl Transform3d {
         transform
     }
 
-    /// Matches upstream `make_trafo_for_slicing`'s `t.prescale(Vec3d(s,s,1))`:
-    /// scales the x and y INPUT columns (right-multiplies by diag(s,s,1,1)),
-    /// leaving the translation column and z input unscaled.
-    pub(crate) fn prescale_xy_input(self, factor: f64) -> Self {
-        let mut transform = self;
-        let reciprocal = 1.0 / factor;
-        for row in &mut transform.0 {
-            row[0] *= reciprocal;
-            row[1] *= reciprocal;
-        }
-        transform
-    }
-
     pub(crate) fn with_z_shrinkage_compensation(self, factor: f64) -> Self {
         let mut transform = self;
         for coefficient in &mut transform.0[2] {

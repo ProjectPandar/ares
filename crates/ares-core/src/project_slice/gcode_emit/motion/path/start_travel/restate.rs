@@ -41,11 +41,11 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
     {
         let z_feedrate = travel::lift_z_feedrate(state);
-        let reset_comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; reset Z after contouring")
-            .unwrap_or("");
+        let reset_comment = if state.options.gcode_comments {
+            " ; reset Z after contouring"
+        } else {
+            ""
+        };
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}{reset_comment}\n",
@@ -66,11 +66,11 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     let needs_z_restate = never_positioned && (eager_lifted_travel || unclear_position_travel);
     if needs_z_restate && !travel_set_layer_z {
         let z_feedrate = travel::lift_z_feedrate(state);
-        let z_comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; ensure Z matches planned layer height")
-            .unwrap_or("");
+        let z_comment = if state.options.gcode_comments {
+            " ; ensure Z matches planned layer height"
+        } else {
+            ""
+        };
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}{z_comment}\n",
@@ -145,11 +145,11 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
                 // flavor-excluded (`GCodeWriter.cpp:480-499,1064-1070`).
                 travel::reset_e(output, state);
             } else {
-                let comment = state
-                    .options
-                    .gcode_comments
-                    .then_some(" ;  ; unretract")
-                    .unwrap_or("");
+                let comment = if state.options.gcode_comments {
+                    " ;  ; unretract"
+                } else {
+                    ""
+                };
                 output.extend_from_slice(
                     format!(
                         "G1 E{} F{}{comment}\n",

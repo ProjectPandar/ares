@@ -141,7 +141,7 @@ pub(super) fn position(
 ) -> Option<(i32, i32)> {
     let model_bounds = footprint::model_bounds(traversal)?;
     let printer = &traversal.resolved.views.full.printer;
-    let clearance_radius = f64::from(printer.remaining.extruder_clearance_radius.0);
+    let clearance_radius = printer.remaining.extruder_clearance_radius.0;
     if let Ok(path) = std::env::var("ARES_DUMP_TIMELAPSE_POS") {
         use std::io::Write;
         if let Ok(mut file) = std::fs::OpenOptions::new()

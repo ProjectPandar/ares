@@ -25,15 +25,15 @@ mod travel;
 
 pub(super) use acceleration::{set_accel_and_jerk, set_layer_acceleration_and_jerk};
 pub(in crate::project_slice) use arc::{simplify_linear_points, simplify_points};
-pub(in crate::project_slice) use skirt_brim::{emit_brim_loop, emit_skirt_loop};
+pub(super) use skirt_brim::{emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
     AvoidCrossingGeometry, EmitState, LayerGeometry, LiftMode, append_exclude_end,
     append_object_start, begin_layer, begin_path_travel, queue_exclude_end, queue_exclude_start,
     queue_object_start, queue_object_stop_label,
 };
 pub(super) use travel::{
-    flush_pending_retract_eager, flush_pending_retract_eager_forced, flush_pending_retract_lift,
-    flush_pending_retract_wipe, retract_for_print_end,
+    flush_pending_retract_eager_forced, flush_pending_retract_lift, flush_pending_retract_wipe,
+    retract_for_print_end,
 };
 
 use features::PathProperties;
@@ -136,11 +136,11 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         return;
     }
     let retract = extrusion::coordinate(state, -(length - state.retracted_amount));
-    let comment = state
-        .options
-        .gcode_comments
-        .then_some(" ; retract")
-        .unwrap_or("");
+    let comment = if state.options.gcode_comments {
+        " ; retract"
+    } else {
+        ""
+    };
     output.extend_from_slice(
         format!(
             "G1 E{} F{}{comment}\n",

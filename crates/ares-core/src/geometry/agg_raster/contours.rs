@@ -75,8 +75,8 @@ pub(crate) fn contours_simplified(
             let hi = start_to_idx.partition_point(|&(p, _)| p <= target);
             let mut i_next: i64 = -1;
             let mut closed = false;
-            for k in lo..hi {
-                let idx = start_to_idx[k].1;
+            for entry in &start_to_idx[lo..hi] {
+                let idx = entry.1;
                 if idx == i_candidate {
                     closed = true;
                     break;

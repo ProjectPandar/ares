@@ -2,8 +2,8 @@
 //! make_wave family) and the point/contour helpers.
 
 use super::super::checked_rotate::{rotate_points, rotate_points_with_trig};
-use super::{DENSITY_ADJUST, EPSILON, PATTERN_TOLERANCE, WaveContext, WavePlacement};
-use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Line, Point, Polygon, Polyline};
+use super::{EPSILON, WaveContext, WavePlacement};
+use crate::geometry::{ClipperError, ExPolygon, Line, Point, Polygon, Polyline};
 
 pub(super) fn make_one_period(width: f64, context: WaveContext, flip: bool) -> Vec<(f64, f64)> {
     let points = make_one_period_inner(width, context, flip);

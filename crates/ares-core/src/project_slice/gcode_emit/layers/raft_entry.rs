@@ -15,7 +15,7 @@ use crate::project_slice::perimeters::classic::traversal::types::PreparedPostCla
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    raft_layers: &mut Vec<Vec<OrderedExtrusionLayer>>,
+    raft_layers: &mut [Vec<OrderedExtrusionLayer>],
     raft: &Option<RaftSchedule>,
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,

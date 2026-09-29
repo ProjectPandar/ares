@@ -10,9 +10,7 @@ use crate::{ExtrusionRole, GCodeFlavor};
 
 use helpers::fan_pwm;
 
-use helpers::{
-    LineMotion, parse_motion, read_fan_speed, role_from_str, set_fan_line, split_line, word,
-};
+use helpers::{LineMotion, parse_motion, read_fan_speed, role_from_str};
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct BufferData {
@@ -270,21 +268,21 @@ impl FanMover {
                 start,
                 e_start,
             );
-            if let Some(mut kick) = self.current_kickstart {
-                if time > 0.0 {
-                    kick.time -= time;
-                    if kick.time < 0.0 {
-                        let split = time + kick.time;
-                        let data = BufferData::new(
-                            std::mem::take(&mut self.current_kickstart_raw),
-                            0.0,
-                            kick.fan_speed,
-                            true,
-                        );
-                        self.put_in_middle(self.buffer.len() - 1, split, data);
-                    }
-                    self.current_kickstart = (kick.time >= 0.0).then_some(kick);
+            if let Some(mut kick) = self.current_kickstart
+                && time > 0.0
+            {
+                kick.time -= time;
+                if kick.time < 0.0 {
+                    let split = time + kick.time;
+                    let data = BufferData::new(
+                        std::mem::take(&mut self.current_kickstart_raw),
+                        0.0,
+                        kick.fan_speed,
+                        true,
+                    );
+                    self.put_in_middle(self.buffer.len() - 1, split, data);
                 }
+                self.current_kickstart = (kick.time >= 0.0).then_some(kick);
             }
         }
 

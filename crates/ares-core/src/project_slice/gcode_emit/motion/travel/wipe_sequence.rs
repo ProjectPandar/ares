@@ -131,11 +131,11 @@ pub(super) fn retract_and_wipe_impl(
         // `_retract` emits only when `!is_zero(dE)` (`GCodeWriter.cpp:
         // 1035`, `libslic3r.h:294` — 1e-6).
         let retract = extrusion::coordinate(state, -before);
-        let comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; retract")
-            .unwrap_or("");
+        let comment = if state.options.gcode_comments {
+            " ; retract"
+        } else {
+            ""
+        };
         if before >= 1e-6 {
             output.extend_from_slice(
                 format!(
@@ -189,11 +189,11 @@ pub(super) fn retract_and_wipe_impl(
             // distribute during the wipe).
             let line = if retraction > f64::EPSILON {
                 let retract = extrusion::coordinate(state, -retraction);
-                let comment = state
-                    .options
-                    .gcode_comments
-                    .then_some(" ; wipe and retract")
-                    .unwrap_or("");
+                let comment = if state.options.gcode_comments {
+                    " ; wipe and retract"
+                } else {
+                    ""
+                };
                 format!(
                     "G1 X{} Y{} E{}{comment}\n",
                     format_axis(point.x),
@@ -241,11 +241,11 @@ pub(super) fn retract_and_wipe_impl(
             // `coordinate` applies the counter update for both cases.
             let retract = extrusion::coordinate(state, -topup);
             if topup >= 1e-6 {
-                let comment = state
-                    .options
-                    .gcode_comments
-                    .then_some(" ; retract")
-                    .unwrap_or("");
+                let comment = if state.options.gcode_comments {
+                    " ; retract"
+                } else {
+                    ""
+                };
                 output.extend_from_slice(
                     format!(
                         "G1 E{} F{}{comment}\n",
@@ -275,11 +275,11 @@ pub(in crate::project_slice::gcode_emit) fn reset_e(output: &mut Vec<u8>, state:
         )
         && state.e_position.abs() >= 1e-6
     {
-        let comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; reset extrusion distance")
-            .unwrap_or("");
+        let comment = if state.options.gcode_comments {
+            " ; reset extrusion distance"
+        } else {
+            ""
+        };
         output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
         state.e_position = 0.0;
     }

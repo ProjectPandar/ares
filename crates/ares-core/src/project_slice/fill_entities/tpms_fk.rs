@@ -20,7 +20,6 @@ pub(super) fn append(
 ) -> Result<(), SliceError> {
     let params = TpmsFKFillParams {
         spacing: fill.params.spacing,
-        overlap: fill.params.overlap,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         angle: fill.params.angle,
         layer_z,

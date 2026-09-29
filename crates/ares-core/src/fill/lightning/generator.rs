@@ -6,8 +6,8 @@
 //! `m_wall_supporting_radius`); `generateTrees` propagates trees downward.
 
 use crate::geometry::{
-    BoundingBox, ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, FillRule, JoinType,
-    Point, Polygon, Polyline, difference_polygons_ex, offset_expolygons,
+    BoundingBox, ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point,
+    Polygon, Polyline, difference_polygons_ex, offset_expolygons,
 };
 
 use super::layer::Layer;

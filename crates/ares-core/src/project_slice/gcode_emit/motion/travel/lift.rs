@@ -83,10 +83,6 @@ fn height_is_allowed_at(state: &EmitState, layer_z: f64) -> bool {
         && (state.options.retract_lift_below == 0.0 || layer_z <= state.options.retract_lift_below)
 }
 
-fn height_is_allowed(state: &EmitState) -> bool {
-    height_is_allowed_at(state, state.layer_z)
-}
-
 pub(in crate::project_slice::gcode_emit::motion) fn is_allowed_at(
     state: &EmitState,
     writer_z: f64,
@@ -162,11 +158,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
             let feedrate = z_feedrate(state);
             // `GCodeWriter::_travel_to_z` (`GCodeWriter.cpp:841`): the lift
             // carries a trailing ` ; normal lift Z` under `gcode_comments`.
-            let comment = state
-                .options
-                .gcode_comments
-                .then_some(" ; normal lift Z")
-                .unwrap_or("");
+            let comment = if state.options.gcode_comments {
+                " ; normal lift Z"
+            } else {
+                ""
+            };
             output.extend_from_slice(
                 format!(
                     "G1 Z{} F{}{comment}\n",
@@ -203,11 +199,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                 let y = state.y + dy * slope_distance / travel_distance;
                 // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:747`)
                 // trails the slope XYZ move under `gcode_comments`.
-                let comment = state
-                    .options
-                    .gcode_comments
-                    .then_some(" ; normal lift Z")
-                    .unwrap_or("");
+                let comment = if state.options.gcode_comments {
+                    " ; normal lift Z"
+                } else {
+                    ""
+                };
                 output.extend_from_slice(
                     format!(
                         "G1 X{} Y{} Z{} F{}{comment}\n",
@@ -276,11 +272,11 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
         state.current_feedrate = state.travel_feedrate;
     } else {
         let feedrate = z_feedrate(state);
-        let comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; normal lift Z")
-            .unwrap_or("");
+        let comment = if state.options.gcode_comments {
+            " ; normal lift Z"
+        } else {
+            ""
+        };
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}{comment}\n",

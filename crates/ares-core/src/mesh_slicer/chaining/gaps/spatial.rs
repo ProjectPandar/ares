@@ -39,7 +39,6 @@ pub(super) struct Nearest {
 /// returning the closest candidate whose squared distance is below
 /// `search_radius^2` (double comparison, first-found wins ties).
 pub(super) struct RadiusGrid {
-    radius: Coord,
     radius_squared: f64,
     log2: u32,
     cells: BTreeMap<Cell, Vec<Entry>>,
@@ -71,7 +70,6 @@ impl RadiusGrid {
             log2 += 1;
         }
         Self {
-            radius,
             radius_squared: (radius as f64).powi(2),
             log2,
             cells: BTreeMap::new(),

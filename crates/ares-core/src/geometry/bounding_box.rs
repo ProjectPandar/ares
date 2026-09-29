@@ -83,19 +83,6 @@ impl BoundingBox {
         self.max = Point::new(self.max.x().max(point.x()), self.max.y().max(point.y()));
     }
 
-    /// `BoundingBox::contains`.
-    pub(crate) fn contains(self, point: Point) -> bool {
-        point.x() >= self.min.x()
-            && point.x() <= self.max.x()
-            && point.y() >= self.min.y()
-            && point.y() <= self.max.y()
-    }
-
-    /// `BoundingBox::size` — (width, height) as a `Point`.
-    pub(crate) fn size(self) -> Point {
-        Point::new(self.max.x() - self.min.x(), self.max.y() - self.min.y())
-    }
-
     /// `BoundingBox::inflated` — grow by `delta` on all sides (returns copy).
     pub(crate) fn inflated(mut self, delta: i64) -> Self {
         self.offset(delta);

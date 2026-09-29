@@ -1,13 +1,11 @@
 //! `FillLightning::Layer` grounding/reconnect methods + geometry helpers
 //! (`Layer.cpp`), split from `layer.rs` for the <400 LOC rule.
 
-use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 use crate::geometry::{BoundingBox, Coord, EdgeGrid, Point, Polygon};
 
 use super::layer::{GroundingLocation, Layer, SparseNodeGrid, to_grid_point};
-use super::tree_geom::{inside, line_segment_polygons_intersection};
 use super::tree_node::Node;
 use super::tree_node::NodeSPtr;
 
@@ -74,10 +72,10 @@ impl Layer {
                         let Some(candidate) = weak.upgrade() else {
                             continue;
                         };
-                        if let Some(ex) = exclude_tree {
-                            if Rc::ptr_eq(&candidate, ex) || Node::has_offspring(ex, &candidate) {
-                                continue;
-                            }
+                        if let Some(ex) = exclude_tree
+                            && (Rc::ptr_eq(&candidate, ex) || Node::has_offspring(ex, &candidate))
+                        {
+                            continue;
                         }
                         if polygon_collides_with_line(
                             unsupported_location,
@@ -171,36 +169,35 @@ impl Layer {
                 let r = root_ptr.borrow();
                 (r.p, r.last_grounding_location)
             };
-            if let Some(ground_loc) = last_grounding {
-                if ground_loc != root_p {
-                    if let Some(new_root_pt) = super::tree_geom::line_segment_polygons_intersection(
-                        root_p,
-                        ground_loc,
-                        outline_locator,
-                        within_max_dist,
-                    ) {
-                        let new_root = Node::create_grounded(new_root_pt, Some(new_root_pt));
-                        // `root_ptr->addChild(new_root); new_root->reroot();`
-                        // (Layer.cpp:248-250): new_root becomes a CHILD of the
-                        // old root, then `reroot(nullptr)` flips the edge —
-                        // new_root ends up the ROOT with the entire old tree
-                        // beneath it (depth +1, subtree preserved).
-                        Node::add_child_node(&root_ptr, new_root.clone());
-                        Node::reroot(&new_root, None);
-                        tree_node_locator.insert(
-                            to_grid_point(
-                                new_root.borrow().p,
-                                current_outlines_bbox,
-                                self.locator_cell_size,
-                            ),
-                            &new_root,
-                        );
-                        if let Some(pos) = old_root_pos {
-                            self.tree_roots[pos] = new_root;
-                        }
-                        continue;
-                    }
+            if let Some(ground_loc) = last_grounding
+                && ground_loc != root_p
+                && let Some(new_root_pt) = super::tree_geom::line_segment_polygons_intersection(
+                    root_p,
+                    ground_loc,
+                    outline_locator,
+                    within_max_dist,
+                )
+            {
+                let new_root = Node::create_grounded(new_root_pt, Some(new_root_pt));
+                // `root_ptr->addChild(new_root); new_root->reroot();`
+                // (Layer.cpp:248-250): new_root becomes a CHILD of the
+                // old root, then `reroot(nullptr)` flips the edge —
+                // new_root ends up the ROOT with the entire old tree
+                // beneath it (depth +1, subtree preserved).
+                Node::add_child_node(&root_ptr, new_root.clone());
+                Node::reroot(&new_root, None);
+                tree_node_locator.insert(
+                    to_grid_point(
+                        new_root.borrow().p,
+                        current_outlines_bbox,
+                        self.locator_cell_size,
+                    ),
+                    &new_root,
+                );
+                if let Some(pos) = old_root_pos {
+                    self.tree_roots[pos] = new_root;
                 }
+                continue;
             }
 
             let tree_connecting_ignore_width =

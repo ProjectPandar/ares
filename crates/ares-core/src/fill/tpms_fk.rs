@@ -25,7 +25,6 @@ pub(super) const SPARSE_INFILL_RESOLUTION: f64 = 0.04;
 
 pub(crate) struct TpmsFKFillParams {
     pub(crate) spacing: f64,
-    pub(crate) overlap: f64,
     pub(crate) density: f32,
     pub(crate) angle: f32,
     pub(crate) layer_z: f64,

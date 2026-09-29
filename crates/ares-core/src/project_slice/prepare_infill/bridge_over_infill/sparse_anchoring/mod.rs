@@ -7,18 +7,11 @@ mod arms;
 mod arms_tail;
 
 use crate::{
-    ProcessInfillPattern, SliceError,
-    fill::{
-        cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
-        gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
-        multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
-        rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
-        three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
-    },
-    geometry::{Point, Polyline},
+    SliceError,
+    fill::multiline::Sweep,
+    geometry::Polyline,
     project_slice::{
-        group_fills::{SurfaceFillPattern, group_fills},
-        prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
+        group_fills::group_fills, prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
         region_slices::RegionSurfaceKind,
     },
 };
@@ -73,19 +66,6 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     // `fill_entities/generate.rs`). Keep the contour-derived bbox.
     let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
-
-    let multiline_params =
-        |params: crate::project_slice::group_fills::SurfaceFillParams| MultilineFillParams {
-            spacing: params.spacing,
-            overlap: 0.0,
-            angle: params.angle + std::f32::consts::FRAC_PI_2,
-            reference: object_reference,
-            density: (0.01_f64 * f64::from(params.density)) as f32,
-            multiline: params.multiline,
-            anchor_length: params.anchor_length,
-            anchor_length_max: params.anchor_length_max,
-            dont_sort: false,
-        };
 
     for fill in grouped.surface_fills {
         if fill.representative.kind != RegionSurfaceKind::Internal {

@@ -720,3 +720,35 @@ cluster), `raft_layers` max/seeded (raft interface-hatch residual).
 Known gate gap: `cargo clippy --workspace -- -D warnings` fails on
 clean HEAD with 692 lints under clippy 0.1.96 (dead code, same-type
 casts, `get(0)`); the tier1 CI gate is red until a lint slice lands.
+
+## 2026-09-29 (clippy mechanical cleanup)
+
+Mechanical lint slice against the gate gap above; no behavior change.
+
+- Removed dead code with no remaining caller, including items superseded
+  by later ports: `seam_placement/runtime` stagger helpers (staggering
+  is wired in `seam_placement.rs`), `raft/bridge.rs` `build_raft_stream`,
+  `speeds/volumetric.rs` `PrintFlow`, dead struct fields and unused
+  parameters together with their call-site arguments. Items only used by
+  unit tests are now `#[cfg(test)]`.
+- Folded same-type casts, collapsible branches, range loops and
+  `&mut Vec` parameters into their idiomatic forms.
+- Verification: `cargo nextest run --workspace` 7338/7338. Oracle
+  cluster PASS for Creality Ender-3 V3 0.4, Snapmaker U1 0.4 and Voron
+  2.4 300 0.4. The coherent-noise fuzzy-skin cases are oracle
+  nondeterministic, so the Ares G-code for all five noise types was
+  diffed against clean HEAD instead: byte-identical.
+
+Surfaced gap: `raft/fill_params.rs` `base_fill_pattern` /
+`interface_fill_pattern` (`SupportCommon.cpp` raft pattern selection)
+are computed but not yet read by the raft emitter. This is a candidate
+lead for the `raft_layers` interface-hatch residual.
+
+Remaining gate gap: with the repo's strict `clippy.toml` thresholds,
+`clippy::excessive_nesting` (~320 in `ares-core` lib) and
+`clippy::too_many_arguments` sites still fail `-D warnings`. These are
+structural (loop bodies mirroring upstream nesting, upstream-shaped
+signatures) and need refactoring or a threshold decision rather than a
+mechanical fix. Every other lint is clean across `--workspace
+--all-targets --all-features`. `seam_placement.rs` (433 LOC, over the
+limit before this slice) still needs a split.

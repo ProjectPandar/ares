@@ -91,7 +91,6 @@ fn plain_rectilinear_graph_traversal_is_repeatable_and_valid() {
     assert!(!first.polylines.is_empty());
 }
 #[test]
-#[test]
 fn unadjusted_solid_fill_aligns_scanlines_to_the_object_grid() {
     let source = ExPolygon::new(
         Polygon::new(vec![

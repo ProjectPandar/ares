@@ -9,7 +9,6 @@
 //! naturally reads original state.
 
 use crate::{
-    ProcessInfillPattern,
     geometry::{
         ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Polygon, difference_ex,
         intersection_polygons_paths, offset_paths, union_safety_offset_ex,
@@ -18,18 +17,6 @@ use crate::{
 };
 
 const MITER_LIMIT: f64 = 3.0;
-
-/// `region->fill_surfaces.filter_by_type(stInternal)` non-empty AND the region
-/// uses `ipLightning` — the Phase-1 gate (`PrintObject.cpp:2637`).
-pub(super) fn lower_layer_needs_expansion(
-    lower_fill_surfaces: &[RegionSurface],
-    lower_is_lightning: bool,
-) -> bool {
-    lower_is_lightning
-        && lower_fill_surfaces
-            .iter()
-            .any(|s| s.as_parts().0 == RegionSurfaceKind::Internal)
-}
 
 /// Phase-2 expansion (`PrintObject.cpp:2666-2707`) for one layer's
 /// `fill_surfaces`: `expansion = intersection_ex(sparse, expand(new_polys,
@@ -97,9 +84,4 @@ pub(super) fn expand_layer(
     }
     let _ = FillRule::EvenOdd; // silence unused import if FillRule unused
     Ok(out)
-}
-
-/// `sparse_infill_pattern == ipLightning` for the region's config.
-pub(super) fn is_lightning(pattern: ProcessInfillPattern) -> bool {
-    pattern == ProcessInfillPattern::Lightning
 }

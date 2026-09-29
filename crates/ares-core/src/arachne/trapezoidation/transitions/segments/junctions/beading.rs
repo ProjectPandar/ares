@@ -44,9 +44,9 @@ impl SkeletalTrapezoidation<'_> {
                 .open(&path)
                 .and_then(|mut f| {
                     use std::io::Write;
-                    write!(
+                    writeln!(
                         f,
-                        "OBEAD p={},{} radius={} bc={} w={:?}\n",
+                        "OBEAD p={},{} radius={} bc={} w={:?}",
                         node_ref.point.x(),
                         node_ref.point.y(),
                         radius,

@@ -186,8 +186,7 @@ impl EdgeGrid {
                         // one enclosing the smallest angle.
                         let (v1x, v1y) = edge_vector(&lines[current]);
                         let (v2x, v2y) = edge_vector(&lines[index]);
-                        let cross =
-                            i64::from(v1x) * i64::from(v2y) - i64::from(v2x) * i64::from(v1y);
+                        let cross = v1x * v2y - v2x * v1y;
                         if cross > 0 {
                             // Convex right angle; no better next line.
                             next = index;

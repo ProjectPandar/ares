@@ -292,10 +292,8 @@ fn sandwich_reorder(entities: &mut Vec<ExtrusionEntity>) {
                         first_internal = arr_i as isize;
                     }
                 }
-                2 => {
-                    if second_internal == -1 && (arr_i as isize) > first_internal && outer != -1 {
-                        second_internal = arr_i as isize;
-                    }
+                2 if second_internal == -1 && (arr_i as isize) > first_internal && outer != -1 => {
+                    second_internal = arr_i as isize;
                 }
                 _ => {}
             }

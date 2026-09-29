@@ -64,11 +64,8 @@ fn sat_rejects_disjoint_triangle() {
 #[test]
 fn world_rotation_is_orthonormal() {
     let r = octree_rotation_to_world();
-    for row in 0..3 {
-        let mut norm2 = 0.0;
-        for col in 0..3 {
-            norm2 += r[row][col] * r[row][col];
-        }
+    for row in &r {
+        let norm2: f64 = row.iter().map(|value| value * value).sum();
         assert!((norm2 - 1.0).abs() < 1e-12);
     }
 }

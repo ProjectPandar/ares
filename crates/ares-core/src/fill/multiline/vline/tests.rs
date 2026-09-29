@@ -1,14 +1,5 @@
 use super::*;
 
-fn diamond(radius: Coord) -> Polygon {
-    Polygon::new(vec![
-        Point::new(0, radius),
-        Point::new(radius, 0),
-        Point::new(0, -radius),
-        Point::new(-radius, 0),
-    ])
-}
-
 #[test]
 fn center_line_spans_the_diamond() {
     // Rounded diamond (as the rotated square produces after integer

@@ -1,10 +1,10 @@
 //! Boundary resampling — the polygon/contour resampler and the inner
 //! offset walker feeding `Boundary` grids (`avoid_crossing` family).
 
-use super::{Boundary, MITER_LIMIT, SCALED_EPSILON, contours_bounds, distance};
+use super::{MITER_LIMIT, SCALED_EPSILON, contours_bounds, distance};
 use crate::geometry::{
-    BoundingBox, ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point,
-    Polygon, offset_expolygon, offset_paths, union_expolygons,
+    ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point, Polygon,
+    offset_paths, union_expolygons,
 };
 use crate::project_slice::elephant_foot::distance::{
     DistanceThresholds, ResampledPoint, filtered_contour_distances,

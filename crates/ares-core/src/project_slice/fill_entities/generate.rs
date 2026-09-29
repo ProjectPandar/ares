@@ -3,7 +3,6 @@
 
 use crate::{
     ExtrusionRole, ProcessInfillPattern, SliceError,
-    geometry::ExPolygon,
     project_slice::{
         group_fills::{SurfaceFillPattern, group_fills},
         prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
@@ -12,7 +11,7 @@ use crate::{
 
 use super::dump::{dump_entities, dump_surfaces, plane_path_object_bounding_box};
 use super::simplify_before_ordering;
-use super::types::{FillExtrusionCollection, FillExtrusionEntity, LayerFillEntities};
+use super::types::LayerFillEntities;
 
 pub(in crate::project_slice) fn generate_layer(
     prepared: &PreparedPostExternalSurfaces,
@@ -299,7 +298,6 @@ pub(in crate::project_slice) fn generate_layer(
                     traversal.scale,
                 )?;
             }
-            SurfaceFillPattern::Configured(_) => {}
         }
     }
     if let Ok(path) = std::env::var("ARES_DUMP_ENT") {

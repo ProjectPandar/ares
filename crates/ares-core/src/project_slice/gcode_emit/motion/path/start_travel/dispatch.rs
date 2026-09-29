@@ -37,11 +37,11 @@ pub(super) fn emit_retracted_first_travel(
     // `travel_to_xyz` NormalLift emits the lift via
     // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:678`),
     // trailing the ` ; normal lift Z` comment under `gcode_comments`.
-    let lift_comment = state
-        .options
-        .gcode_comments
-        .then_some(" ; normal lift Z")
-        .unwrap_or("");
+    let lift_comment = if state.options.gcode_comments {
+        " ; normal lift Z"
+    } else {
+        ""
+    };
     if mode == LiftMode::Normal {
         let feedrate = travel::lift_z_feedrate(state);
         output.extend_from_slice(

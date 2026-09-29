@@ -14,10 +14,6 @@ use crate::geometry::{Point, Polyline};
 /// SCALED_EPSILON = scale_(EPSILON) = 1e-4 / 1e-6 = 100 lattice units.
 const SCALED_EPSILON: f64 = 100.0;
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the source marker keeps its arc-walk scalars explicit"
-)]
 pub(super) fn mark_boundary_segments_overlapping_infill(
     boundary: &[crate::fill::connect::types::BoundaryContour],
     intersections: &mut [Intersection],
@@ -183,8 +179,6 @@ fn point_line_distance_squared(line: &F64Segment, point: Point) -> f64 {
     ex * ex + ey * ey
 }
 
-// Silence unused warnings until the caller lands in the next slice.
-
 #[cfg(test)]
 mod overlap_probe {
     #[test]
@@ -225,8 +219,7 @@ mod overlap_probe {
             407_086.0,
             100.0,
         );
-        for idx in 0..6 {
-            let i = &intersections[idx];
+        for (idx, i) in intersections.iter().enumerate().take(6) {
             if i.contour_index.is_some() {
                 eprintln!(
                     "OVL idx={idx} next_trim={} next_len={:.0} prev_trim={} prev_len={:.0}",
@@ -245,7 +238,6 @@ mod radius_probe {
         // at idx=3 = (0, 7650601) top of line 1. Distance of that
         // endpoint to line 0 (the walk's final segment endpoint):
         let line_a = (crate::geometry::Point::new(-537_000, 7_650_601),);
-        let line_b = crate::geometry::Point::new(-537_000, -7_650_601);
         let endpoint = crate::geometry::Point::new(0, 7_650_601);
         let d = (endpoint.x() - line_a.0.x()).abs();
         eprintln!(

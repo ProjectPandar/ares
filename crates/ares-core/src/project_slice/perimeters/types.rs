@@ -148,28 +148,6 @@ impl PostPerimeterInputPrintObject {
         self.layer_slices(record.current.layer_index)
     }
 
-    /// Slices of every volume occurrence at the record's layer
-    /// (`Layer::lslices` spans all instances of the print object).
-    pub(in crate::project_slice) fn occurrence_slices(
-        &self,
-        record_index: usize,
-    ) -> Vec<&[ExPolygon]> {
-        let layer_index = self
-            .records
-            .get(record_index)
-            .and_then(Option::as_ref)
-            .map(|record| record.current.layer_index);
-        let Some(layer_index) = layer_index else {
-            return Vec::new();
-        };
-        let (post_region, _) = self.object.as_parts();
-        post_region
-            .volume_slices
-            .iter()
-            .filter_map(|volume| volume.layers.get(layer_index).map(Vec::as_slice))
-            .collect()
-    }
-
     pub(in crate::project_slice) fn region_options(
         &self,
         record: &PerimeterInputRecord,

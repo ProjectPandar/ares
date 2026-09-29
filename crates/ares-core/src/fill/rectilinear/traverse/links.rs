@@ -5,7 +5,7 @@
 use crate::geometry::Point;
 
 use super::super::perimeter::{emit_horizontal_arc, emit_vertical_arc, measure_horizontal_arc};
-use super::super::segments::{LinkQuality, LinkType, RectilinearSlice, SegmentIntersection};
+use super::super::segments::{LinkQuality, LinkType, RectilinearSlice};
 use super::{intersection_point, is_inner, is_low, push_distinct, vertical_segment};
 
 pub(super) struct Consumption<'a> {

@@ -346,7 +346,7 @@ fn rotate_polyline(polyline: Polyline, angle: f64) -> Result<Polyline, ClipperEr
 
 /// `Polyline::remove_duplicate_points` after the rotate-back: consecutive
 /// points that round onto the same integer coordinate are dropped.
-fn remove_duplicate_consecutive(mut polyline: Polyline) -> Polyline {
+fn remove_duplicate_consecutive(polyline: Polyline) -> Polyline {
     let mut points = polyline.into_points();
     let mut write = 0;
     for read in 0..points.len() {

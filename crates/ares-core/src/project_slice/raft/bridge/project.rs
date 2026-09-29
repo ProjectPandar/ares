@@ -1,16 +1,14 @@
 //! `raft::bridge::build_project_raft` — project-path raft stream, split
 //! from `bridge.rs` for the <400 LOC rule.
 
-use super::super::emit::{RaftLayerPlan, raft_layer_plans};
+use super::super::emit::raft_layer_plans;
 use super::super::fill_params::RaftFillInputs;
 use super::super::grid::raft_layer_grid;
 use super::super::polygons::{RaftPolygonParams, raft_polygons};
-use super::{RaftStream, raft_contact_distance, raft_geometry_error, support_base_pattern_spacing};
-use crate::contours::Contour;
+use super::{RaftStream, raft_geometry_error};
+use crate::SliceError;
 use crate::geometry::support_grid::SupportGridParams;
-use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Point, Polygon};
-use crate::project_slice::parameters::SlicingParameters;
-use crate::{SliceError, SliceOptions};
+use crate::geometry::{CoordinateScale, ExPolygon};
 
 /// Project-path variant: derives everything from the resolved
 /// `ProjectSettings` + `ObjectOptions` (the types the project
@@ -169,7 +167,6 @@ pub(crate) fn build_project_raft(
         }
     }
     let plans = raft_layer_plans(
-        first_layer_lslices,
         &raft_grid,
         &polygons,
         &fill_params,

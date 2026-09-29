@@ -59,7 +59,7 @@ impl ObjectLabels {
             && !super::tags::Tags::of(traversal).is_bbl();
         Some(Self {
             name: object.name().to_owned(),
-            object_id: ids_assigned.then_some(object_index as u32).unwrap_or(0),
+            object_id: if ids_assigned { object_index as u32 } else { 0 },
             copy_id: instance.instance_id(),
             label_id: instance.loaded_label_id(),
             encoded_labels: encode_base64(bitset.to_le_bytes()),

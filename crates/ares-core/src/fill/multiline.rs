@@ -197,10 +197,10 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
     // The scanline slicer requires upstream's orientation convention (outer
     // CCW, holes CW) for the OUTER_LOW/OUTER_HIGH pairing; normalize the
     // offset output which may arrive flipped.
-    for index in 0..clip.len() {
+    for (index, polygon) in clip.iter_mut().enumerate() {
         let needs_ccw = index == 0;
-        if (clip[index].area() >= 0.0) != needs_ccw {
-            clip[index].reverse();
+        if (polygon.area() >= 0.0) != needs_ccw {
+            polygon.reverse();
         }
     }
     if let Ok(path) = std::env::var("ARES_DUMP_FGRID") {

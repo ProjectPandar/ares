@@ -30,7 +30,7 @@ pub(super) struct Projection {
 
 /// `get_next_loop_point` (SeamPlacer.cpp:1511-1519): advance to the next
 /// polyline point, wrapping across paths.
-pub(super) fn next_loop_point(loop_: &ExtrusionLoop, mut current: &Projection) -> Projection {
+pub(super) fn next_loop_point(loop_: &ExtrusionLoop, current: &Projection) -> Projection {
     let mut segment = current.segment + 1;
     let mut path = current.path;
     if segment >= loop_.paths[path].polyline.points.len() {
@@ -91,10 +91,8 @@ pub(super) fn closest_projection(
             }
         }
     }
-    if prefer_non_overhang {
-        if let Some((projection, _)) = best_non_overhang {
-            return projection;
-        }
+    if prefer_non_overhang && let Some((projection, _)) = best_non_overhang {
+        return projection;
     }
     best.expect("an extrusion loop has a segment").0
 }

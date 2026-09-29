@@ -132,7 +132,7 @@ pub(super) fn triangle_aabb_intersects(
     // Each test: `if (r + |tc - d1| < |tc|) return false;`
     let sat = |d1: f64, d2: f64, r: f64| -> bool {
         let tc = (d1 + d2) * 0.5;
-        !(r + (tc - d1).abs() < tc.abs())
+        r + (tc - d1).abs() >= tc.abs()
     };
 
     // eX × t[0], eX × t[1], eX × t[2]

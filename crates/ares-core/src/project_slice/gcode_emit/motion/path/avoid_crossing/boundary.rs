@@ -7,13 +7,10 @@ mod resample;
 
 use crate::geometry::{
     ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point, Polygon,
-    difference_ex, offset_expolygons, offset_paths, union_expolygons,
-};
-use crate::project_slice::elephant_foot::distance::{
-    DistanceThresholds, ResampledPoint, filtered_contour_distances,
+    difference_ex, offset_expolygons, offset_paths,
 };
 use crate::project_slice::gcode_emit::motion::state::AvoidCrossingGeometry;
-use resample::{inner_offset, resample_expolygon, resample_polygon};
+use resample::inner_offset;
 
 pub(super) const SCALED_EPSILON: f64 = 1.0e-4;
 pub(super) const MITER_LIMIT: f64 = 2.0;

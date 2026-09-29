@@ -5,11 +5,12 @@ mod config_commands;
 mod firmware;
 mod homing;
 mod segment;
+#[cfg(test)]
 mod test_hooks;
 #[cfg(test)]
 pub(in crate::project_slice) use test_hooks::{planned_times, planned_trapezoid_time};
 mod limits;
-use super::motion_util::{MMMIN_TO_MMSEC, assignment, clamp, clamped_word, norm, scale, word};
+use super::motion_util::{MMMIN_TO_MMSEC, norm, word};
 use crate::options::GCodeFlavor;
 mod planner;
 pub(super) use planner::RollingPlanner;
@@ -121,6 +122,7 @@ impl MotionState {
         self.wiping = wiping;
     }
 
+    #[cfg(test)]
     pub(super) fn motions(&mut self, code: &str) -> Vec<MotionBlock> {
         self.motions_indexed(code)
             .into_iter()

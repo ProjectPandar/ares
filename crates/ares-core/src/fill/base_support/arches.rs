@@ -2,9 +2,8 @@
 //! (`FillBase.cpp:2173-2243` arc costs, `:2281-2296` empty-contour
 //! perimeters, `:2298-2324` excess-arch band emission).
 
-use super::emit_loops_in_band;
 use crate::fill::connect::contour::{append_full, append_limited};
-use crate::fill::connect::types::{BoundaryContour, Intersection};
+use crate::fill::connect::types::Intersection;
 use crate::geometry::{Point, Polyline};
 
 pub(super) const SCALED_EPSILON: f64 = 16.0;
@@ -32,57 +31,57 @@ pub(super) fn evaluate_support_arches(
         let contour = &boundary[contour_index];
         let point = contour.points[intersections[index].point_index];
 
-        if intersections[index].not_taken_next > scaled_epsilon {
-            if let Some(next) = intersections[index].next {
-                scratch.clear();
-                scratch.push(point);
-                if intersections[index].next_trimmed {
-                    append_limited(
-                        &mut scratch,
-                        contour,
-                        intersections[index].point_index,
-                        intersections[next].point_index,
-                        false,
-                        intersections[index].not_taken_next,
-                        scaled_epsilon,
-                    );
-                } else {
-                    append_full(
-                        &mut scratch,
-                        &contour.points,
-                        intersections[index].point_index,
-                        intersections[next].point_index,
-                        false,
-                    );
-                }
-                arches[index * 2 + 1].cost = evaluate_support_arch_cost(&scratch);
+        if intersections[index].not_taken_next > scaled_epsilon
+            && let Some(next) = intersections[index].next
+        {
+            scratch.clear();
+            scratch.push(point);
+            if intersections[index].next_trimmed {
+                append_limited(
+                    &mut scratch,
+                    contour,
+                    intersections[index].point_index,
+                    intersections[next].point_index,
+                    false,
+                    intersections[index].not_taken_next,
+                    scaled_epsilon,
+                );
+            } else {
+                append_full(
+                    &mut scratch,
+                    &contour.points,
+                    intersections[index].point_index,
+                    intersections[next].point_index,
+                    false,
+                );
             }
+            arches[index * 2 + 1].cost = evaluate_support_arch_cost(&scratch);
         }
-        if intersections[index].not_taken_prev > scaled_epsilon {
-            if let Some(prev) = intersections[index].prev {
-                scratch.clear();
-                scratch.push(point);
-                if intersections[index].prev_trimmed {
-                    append_limited(
-                        &mut scratch,
-                        contour,
-                        intersections[index].point_index,
-                        intersections[prev].point_index,
-                        true,
-                        intersections[index].not_taken_prev,
-                        scaled_epsilon,
-                    );
-                } else {
-                    append_full(
-                        &mut scratch,
-                        &contour.points,
-                        intersections[index].point_index,
-                        intersections[prev].point_index,
-                        true,
-                    );
-                }
-                arches[index * 2].cost = evaluate_support_arch_cost(&scratch);
+        if intersections[index].not_taken_prev > scaled_epsilon
+            && let Some(prev) = intersections[index].prev
+        {
+            scratch.clear();
+            scratch.push(point);
+            if intersections[index].prev_trimmed {
+                append_limited(
+                    &mut scratch,
+                    contour,
+                    intersections[index].point_index,
+                    intersections[prev].point_index,
+                    true,
+                    intersections[index].not_taken_prev,
+                    scaled_epsilon,
+                );
+            } else {
+                append_full(
+                    &mut scratch,
+                    &contour.points,
+                    intersections[index].point_index,
+                    intersections[prev].point_index,
+                    true,
+                );
             }
+            arches[index * 2].cost = evaluate_support_arch_cost(&scratch);
         }
         let _ = paths;
     }
@@ -179,7 +178,6 @@ fn clip_polyline_end(polyline: &mut Polyline, distance: f64) {
     *polyline = Polyline::new(points);
 }
 
-#[expect(clippy::too_many_arguments, reason = "band inputs mirror the source")]
 pub(super) fn emit_excess_arches(
     boundary: &[crate::fill::connect::types::BoundaryContour],
     intersections: &[Intersection],

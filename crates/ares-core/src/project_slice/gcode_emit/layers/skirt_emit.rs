@@ -44,7 +44,7 @@ pub(super) fn emit(
         let geometry = if let Some((raft_index, _)) = leading_raft {
             let raft_polygons = raft
                 .as_ref()
-                .and_then(|raft| raft.plans.get(0))
+                .and_then(|raft| raft.plans.first())
                 .and_then(|plans| plans.get(raft_index))
                 .map(|plan| {
                     plan.polygons

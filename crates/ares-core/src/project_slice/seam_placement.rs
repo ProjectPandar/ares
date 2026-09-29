@@ -20,7 +20,7 @@ use crate::{
         perimeters::classic::{
             chained_loops::ExtrusionLoop,
             entity_collections::{ExtrusionEntity, ExtrusionEntityCollection},
-            materialize::{ExtrusionPath, ExtrusionRole, Point3},
+            materialize::ExtrusionRole,
             traversal::PreparedPostClassicTraversal,
         },
         seam_candidates::SeamCandidate,

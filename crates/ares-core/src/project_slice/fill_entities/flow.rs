@@ -1,9 +1,6 @@
 //! The materialized flow for fill entities (role/bridge spacing rules).
 
 use crate::ExtrusionRole;
-use crate::project_slice::group_fills::SurfaceFillParams;
-use crate::project_slice::perimeters::flow;
-use crate::project_slice::perimeters::types::Flow;
 
 pub(in crate::project_slice) fn materialized_flow(
     params: crate::project_slice::group_fills::SurfaceFillParams,

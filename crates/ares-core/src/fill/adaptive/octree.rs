@@ -42,9 +42,7 @@ pub(crate) struct Octree {
 
 mod frame;
 
-use frame::{
-    Matrix3, abs, cross, dot, norm, octree_rotation_to_world, sub, triangle_aabb_intersects,
-};
+use frame::{Matrix3, cross, dot, norm, octree_rotation_to_world, sub, triangle_aabb_intersects};
 pub(crate) use frame::{octree_rotation_to_octree, rotate_point};
 
 impl Octree {
@@ -222,10 +220,8 @@ fn transform_center(cube: &mut Cube, rot: Matrix3, offset: [f64; 3]) {
         rotated[1] + offset[1],
         rotated[2] + offset[2],
     ];
-    for child in &mut cube.children {
-        if let Some(child) = child {
-            transform_center(child, rot, offset);
-        }
+    for child in cube.children.iter_mut().flatten() {
+        transform_center(child, rot, offset);
     }
 }
 
@@ -244,8 +240,8 @@ fn insert_triangle(
 
     for (i, child_center_dir) in CHILD_CENTERS.iter().enumerate() {
         let mut bbox = ([0.0; 3], [0.0; 3]);
-        for k in 0..3 {
-            if child_center_dir[k] == -1.0 {
+        for (k, &dir) in child_center_dir.iter().enumerate() {
+            if dir == -1.0 {
                 bbox.0[k] = current_bbox.0[k];
                 bbox.1[k] = current_cube.center[k] + EPSILON;
             } else {

@@ -7,9 +7,8 @@
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
-use crate::geometry::{BoundingBox, Coord, EdgeGrid, Point, Polygon};
+use crate::geometry::{Coord, EdgeGrid, Point, Polygon};
 
-use super::segment_distance_squared;
 use super::tree_geom::{dist, inside};
 
 pub(super) type NodeSPtr = Rc<RefCell<Node>>;
@@ -121,7 +120,7 @@ impl Node {
 
     /// `reroot` — re-root this subtree onto `new_parent` (or make root).
     pub(super) fn reroot(this: &NodeSPtr, new_parent: Option<NodeSPtr>) {
-        let (is_root, parent, children) = {
+        let (is_root, parent, _children) = {
             let n = this.borrow();
             (n.is_root, n.parent.upgrade(), n.children.clone())
         };
@@ -183,16 +182,6 @@ impl Node {
         }
         if ok {
             next_trees.push(tree_below);
-        }
-    }
-
-    /// `visitBranches` — DFS over branches, calling `visitor(parent_p, child_p)`.
-    pub(super) fn visit_branches(this: &NodeSPtr, visitor: &mut dyn FnMut(Point, Point)) {
-        let children = this.borrow().children.clone();
-        let p = this.borrow().p;
-        for child in &children {
-            visitor(p, child.borrow().p);
-            Self::visit_branches(child, visitor);
         }
     }
 

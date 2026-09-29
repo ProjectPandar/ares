@@ -1,5 +1,4 @@
 use super::estimate::Estimate;
-use super::motion::{MotionBlock, MotionState, planned_times};
 use super::{ProcessorLimits, process};
 
 // Synthetic timing tests isolate other behavior with nonbinding axis caps;
@@ -192,7 +191,6 @@ fn preparation_time_ends_at_first_print_feature() {
     );
 }
 
-#[test]
 #[test]
 fn progress_skips_e_only_retract_lines() {
     // E-only moves have no g1_times_cache entry of their own (their ids are

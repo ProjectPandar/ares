@@ -7,12 +7,9 @@ use waves::{
     rotate_polylines, translate,
 };
 
-use super::{
-    checked_rotate::{rotate_points, rotate_points_with_trig},
-    connect::{FillConnectionParams, connect_infill},
-};
+use super::connect::{FillConnectionParams, connect_infill};
 use crate::geometry::{
-    ClipperError, CoordinateScale, ExPolygon, JoinType, Line, Point, Polygon, Polyline,
+    ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polyline,
     intersection_open_polylines, offset_expolygon,
 };
 
@@ -145,8 +142,7 @@ fn fill_component(
         // `period = float(2π) * spacing / density_factor`.
         let density_factor =
             (f64::from(params.density) * DENSITY_ADJUST / f64::from(params.multiline)).max(0.001);
-        let period =
-            (2.0_f32 * std::f32::consts::PI * params.spacing as f32 / density_factor as f32);
+        let period = 2.0_f32 * std::f32::consts::PI * params.spacing as f32 / density_factor as f32;
         let bb = crate::geometry::BoundingBox::new(minimum, maximum);
         // `GyroidField(bb, this->z, period, omega)` — `this->z` is the mm
         // height (FillGyroid.cpp:332); only the XY raster is scale-domain, the

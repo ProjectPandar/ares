@@ -1,6 +1,5 @@
 use crate::{
     SliceError,
-    arachne::wall_toolpaths::{RawWallToolPathConfig, generate},
     geometry::{
         CoordinateScale, ExPolygon, JoinType, ThickPolyline, intersection_ex_with_safety_offset,
         offset_expolygon,
@@ -148,7 +147,7 @@ pub(super) fn append_configured(
     // at full density; below `density > 0.9999` upstream uses the plain
     // `offset2_ex` ring loop emitting fixed-width `Polyline` entities.
     let density_fraction = 0.01 * params.density;
-    let sparse = !(density_fraction > 0.9999 && !params.bridge);
+    let sparse = density_fraction <= 0.9999 || params.bridge;
     for expolygon in fill.expolygons {
         if sparse {
             // `Fill::fill_surface` contracts the surface by

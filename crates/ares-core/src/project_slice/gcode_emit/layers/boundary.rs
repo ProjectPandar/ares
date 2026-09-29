@@ -30,7 +30,7 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
 ) {
     // `GCode.cpp:5692`: `z = print_z + m_config.z_offset` — the writer's
     // Z domain is offset; `source_layer_z`/`;Z:`/comments stay model z.
-    state.layer_z = f64::from(layer_z) + state.options.z_offset;
+    state.layer_z = layer_z + state.options.z_offset;
     state.source_layer_z = precise_layer_z;
     state.layer_index = layer_index;
     state.object_layer_over_raft = object_layer_over_raft;
@@ -47,8 +47,6 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
 }
 
 pub(super) struct BoundaryAdvance<'a> {
-    pub layer_z: f64,
-    pub layer_height: f64,
     pub timelapse_context: timelapse::Context<'a>,
 }
 
@@ -82,8 +80,8 @@ pub(super) fn append<'a>(
     state.max_layer_z = state.max_layer_z.max(layer_z as f32);
     let header = format!(
         "{}\n{}\n",
-        tags.z(&format_processor_float(f64::from(layer_z))),
-        tags.height(&format_processor_float(f64::from(layer_height))),
+        tags.z(&format_processor_float(layer_z)),
+        tags.height(&format_processor_float(layer_height)),
     );
     output.extend_from_slice(header.as_bytes());
     let timelapse_context = timelapse::Context {
@@ -94,7 +92,7 @@ pub(super) fn append<'a>(
             // the running max writer z — `m_layer_index` after
             // `change_layer` and `m_max_layer_z` over the offset domain.
             index: layer_index,
-            z: f64::from(layer_z),
+            z: layer_z,
             // `GCode.cpp:890`: `{max_layer_z}` = `m_max_layer_z`, the
             // float-domain running max over RAW print z (no `z_offset`).
             max_z: f64::from(state.max_layer_z),
@@ -118,7 +116,7 @@ pub(super) fn append<'a>(
             // `{layer_num}` = `m_layer_index + 1` pre-increment = the new
             // PHYSICAL layer index (`GCode.cpp:4636`, :5689).
             layer_index,
-            layer_z: f64::from(layer_z),
+            layer_z,
             // `{max_layer_z}` = `m_max_layer_z` — float-domain running
             // max over raw print z (`GCode.cpp:4638`), not `layer_z`.
             max_layer_z: f64::from(state.max_layer_z),
@@ -134,7 +132,7 @@ pub(super) fn append<'a>(
     // move; otherwise upstream suppresses only diff STRICTLY below
     // EPSILON (`GCodeWriter.cpp:927-930`), so equality still moves.
     let will_move_z = state.writer_z.is_none_or(|writer_z| {
-        let target = f64::from(layer_z) + state.options.z_offset;
+        let target = layer_z + state.options.z_offset;
         if state.lifted_amount > 0.0 {
             let nominal = writer_z - state.lifted_amount;
             !(target >= nominal && target <= writer_z)
@@ -182,11 +180,7 @@ pub(super) fn append<'a>(
     // Spiral filter targets live in the writer (offset) Z domain
     // (`GCode.cpp:5692` emits the `print_z + z_offset` move, then
     // `SpiralVase.cpp` rewrites that move and derives its ramp).
-    spiral.append_layer_z(
-        output,
-        layer_index,
-        f64::from(layer_z) + state.options.z_offset,
-    );
+    spiral.append_layer_z(output, layer_index, layer_z + state.options.z_offset);
     // `change_layer`'s explicit `travel_to_z` (`GCode.cpp:5702-5704`) and
     // the silent `m_pos.z() = z` both leave the writer at the new layer z —
     // but that z change happens AFTER the deferred-lift gate reads the
@@ -199,10 +193,10 @@ pub(super) fn append<'a>(
     // The `retract_lift_above/below` gate reads the LIVE writer Z at
     // retract time — including any `position[2]` assigned by the
     // before-layer template (`GCodeWriter.cpp:633-639` reads `m_pos(2)`).
-    let live_writer_z = f64::from(state.writer_z.unwrap_or(state.layer_z));
+    let live_writer_z = state.writer_z.unwrap_or(state.layer_z);
     advance_for_layer(
         state,
-        f64::from(layer_z),
+        layer_z,
         layer_z,
         layer_index,
         object_layer_over_raft,
@@ -229,7 +223,7 @@ pub(super) fn append<'a>(
             // Post-`change_layer` `{layer_num}` = `m_layer_index` = the
             // new PHYSICAL layer index (`GCode.cpp:4669`, :5689).
             layer_index,
-            layer_z: f64::from(layer_z),
+            layer_z,
             max_layer_z: f64::from(state.max_layer_z),
             totals: state.extrusion_totals(),
             context: layer_change_template,
@@ -252,13 +246,7 @@ pub(super) fn append<'a>(
     {
         motion::scan_first_layer_block(output, state);
     }
-    motion::begin_layer(
-        output,
-        state,
-        layer_index,
-        f64::from(layer_z),
-        f64::from(layer_height),
-    );
+    motion::begin_layer(output, state, layer_index, layer_z, layer_height);
     // Second-layer transition: bed temperature for the remaining
     // layers (`GCode.cpp:4777-4830`), once per slice.
     if layer_index == 1 && !*second_layer_done {
@@ -276,9 +264,5 @@ pub(super) fn append<'a>(
     if bbl_layer_start {
         timelapse::append_and_track(output, state, timelapse_context)?;
     }
-    Ok(BoundaryAdvance {
-        layer_z,
-        layer_height,
-        timelapse_context,
-    })
+    Ok(BoundaryAdvance { timelapse_context })
 }

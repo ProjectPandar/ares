@@ -21,7 +21,9 @@
 //!   layer hatches perpendicularly. Per-layer interface angle
 //!   alternates ±45° (`:284-285`).
 
-use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use std::f64::consts::FRAC_PI_2;
+#[cfg(test)]
+use std::f64::consts::{FRAC_PI_4, PI};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum RaftFillPattern {
@@ -34,7 +36,21 @@ pub(crate) enum RaftFillPattern {
 pub(crate) struct RaftFillParams {
     pub(crate) support_density: f64,
     pub(crate) raft_interface_density: f64,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "SupportCommon.cpp raft pattern selection is not yet consumed by the raft emitter"
+        )
+    )]
     pub(crate) base_fill_pattern: RaftFillPattern,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "SupportCommon.cpp raft pattern selection is not yet consumed by the raft emitter"
+        )
+    )]
     pub(crate) interface_fill_pattern: RaftFillPattern,
     /// Radians.
     pub(crate) flange_angle: f64,
@@ -102,7 +118,7 @@ impl RaftFillInputs {
             // Only the interface angle gets the even-layer rotation;
             // the flange keeps the plain interface angle
             // (`SupportParameters.hpp:153-158`).
-            let adjusted = if self.interface_raft_layers % 2 == 0 {
+            let adjusted = if self.interface_raft_layers.is_multiple_of(2) {
                 rotate_quarter(interface_angle)
             } else {
                 interface_angle
@@ -142,6 +158,7 @@ impl RaftFillParams {
 }
 
 /// Normalized angle into [0, π) for comparing line directions.
+#[cfg(test)]
 pub(crate) fn normalized_direction(angle: f64) -> f64 {
     let mut angle = angle.rem_euclid(PI);
     if angle < 0.0 {

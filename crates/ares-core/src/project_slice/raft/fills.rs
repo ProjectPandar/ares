@@ -11,10 +11,7 @@
 
 use crate::fill::base_support::connect_base_support;
 use crate::fill::checked_rotate::rotate_point;
-use crate::fill::rectilinear::segments::{
-    IntersectionKind, SegmentIntersection, SegmentedLine, populate_vertical_lines,
-    prepare_rectilinear_contours,
-};
+use crate::fill::rectilinear::segments::{populate_vertical_lines, prepare_rectilinear_contours};
 use crate::geometry::{BoundingBox, ClipperError, CoordinateScale, Point, Polygon, Polyline};
 
 #[derive(Clone, Copy, Debug)]
@@ -161,7 +158,6 @@ mod geom;
 use geom::{align_to_grid, checked_scale_f32, clip_polyline_end, vertical_segments};
 
 /// Fill one raft layer (`FillSupportBase::fill_surface`).
-#[expect(dead_code, reason = "wired by the raft emission slice")]
 pub(crate) fn raft_layer_fill(
     layer_polygons: &[Polygon],
     spec: RaftFillSpec,
@@ -360,10 +356,6 @@ pub(crate) fn raft_layer_fill(
     }
     Ok(out)
 }
-
-/// Emit OuterLow→OuterHigh pairs as 2-point polylines
-/// (`make_fill_lines:2948-2960`); the slice frame already carries the
-/// back-rotated points.
 
 #[cfg(test)]
 mod tests;

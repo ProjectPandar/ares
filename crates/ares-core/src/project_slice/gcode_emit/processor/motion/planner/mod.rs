@@ -287,27 +287,27 @@ fn prepare(
     // `min_feedrate_factor` and the axis-limited cruise
     // (`GCodeProcessor.cpp:4043-4053`).
     let mut factor = 1.0_f32;
-    for axis in 0..4 {
-        if abs_axis_feedrate[axis] != 0.0 {
-            let max = block.max_feedrate[axis] as f32;
+    for (&abs_feedrate, &max_feedrate) in abs_axis_feedrate.iter().zip(&block.max_feedrate) {
+        if abs_feedrate != 0.0 {
+            let max = max_feedrate as f32;
             if max != 0.0 {
-                factor = factor.min((f64::from(max) / abs_axis_feedrate[axis]) as f32);
+                factor = factor.min((f64::from(max) / abs_feedrate) as f32);
             }
         }
     }
     feedrate *= factor;
     let cruise = feedrate;
     if factor < 1.0 {
-        for axis in 0..4 {
-            axis_feedrate[axis] *= f64::from(factor);
-            abs_axis_feedrate[axis] *= f64::from(factor);
+        for (feedrate, abs_feedrate) in axis_feedrate.iter_mut().zip(&mut abs_axis_feedrate) {
+            *feedrate *= f64::from(factor);
+            *abs_feedrate *= f64::from(factor);
         }
     }
     // Acceleration axis limits (`GCodeProcessor.cpp:4065-4071`).
     let mut acceleration = block.acceleration as f32;
-    for axis in 0..4 {
-        let max = block.max_acceleration[axis] as f32;
-        let component = delta[axis].abs() * f64::from(inv_distance);
+    for (&max_acceleration, &axis_delta) in block.max_acceleration.iter().zip(&delta) {
+        let max = max_acceleration as f32;
+        let component = axis_delta.abs() * f64::from(inv_distance);
         if f64::from(acceleration) * component > f64::from(max) {
             acceleration = (f64::from(max) / component) as f32;
         }

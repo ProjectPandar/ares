@@ -23,11 +23,11 @@ pub(super) fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
     // only when `!is_zero(dE)` (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
     let retract = extrusion::coordinate(state, -remaining);
     if remaining >= 1e-6 {
-        let comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; retract")
-            .unwrap_or("");
+        let comment = if state.options.gcode_comments {
+            " ; retract"
+        } else {
+            ""
+        };
         output.extend_from_slice(
             format!(
                 "G1 E{} F{}{comment}\n",
@@ -47,11 +47,11 @@ pub(super) fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
             )
             && state.e_position.abs() >= 1e-6
         {
-            let comment = state
-                .options
-                .gcode_comments
-                .then_some(" ; reset extrusion distance")
-                .unwrap_or("");
+            let comment = if state.options.gcode_comments {
+                " ; reset extrusion distance"
+            } else {
+                ""
+            };
             output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
             state.e_position = 0.0;
         }

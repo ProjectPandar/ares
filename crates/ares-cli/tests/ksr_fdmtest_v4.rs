@@ -56,13 +56,13 @@ fn compare_actual(actual: &[u8]) {
     .unwrap_or_else(|error| panic!("{error}"));
 }
 
-/// `; (stop )?printing object <name> id:<N> copy <M>` — the id is
-/// `PrintObject::get_id()` (an ObjectBase sequential counter seeded per
-/// process). Two back-to-back OrcaSlicer CLI runs on the same fixture
-/// produce different ids (verified 2026-09-15 on ksr_fdmtest_v4:
-/// 4575657221408423936 vs the stored reference's 13965068898260364096),
-/// so the semantic comparison normalizes the per-run id while the strict
-/// comparator keeps comparing ids between mutations of one stream.
+// `; (stop )?printing object <name> id:<N> copy <M>` — the id is
+// `PrintObject::get_id()` (an ObjectBase sequential counter seeded per
+// process). Two back-to-back OrcaSlicer CLI runs on the same fixture
+// produce different ids (verified 2026-09-15 on ksr_fdmtest_v4:
+// 4575657221408423936 vs the stored reference's 13965068898260364096),
+// so the semantic comparison normalizes the per-run id while the strict
+// comparator keeps comparing ids between mutations of one stream.
 
 fn local_now_to_second() -> DateTime {
     let now = jiff::Zoned::now().datetime();

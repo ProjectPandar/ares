@@ -2,7 +2,6 @@
 //! expand to a fake G1 with the retraction E delta and the
 //! retraction/deretraction feedrate.
 
-use super::super::motion_util::MMMIN_TO_MMSEC;
 use super::MotionKind;
 use super::MotionState;
 

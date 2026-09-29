@@ -117,9 +117,9 @@ impl SkeletalTrapezoidation<'_> {
                         .open(&path)
                         .and_then(|mut f| {
                             use std::io::Write;
-                            write!(
+                            writeln!(
                                 f,
-                                "ONODE p={},{} dist={} bc={}\n",
+                                "ONODE p={},{} dist={} bc={}",
                                 node.point.x(),
                                 node.point.y(),
                                 node.data.distance_to_boundary,

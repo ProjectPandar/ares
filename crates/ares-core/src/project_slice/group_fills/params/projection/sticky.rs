@@ -22,7 +22,11 @@ pub(super) fn apply_pattern_fields(
         // (layer_id/2)` — sign flips by layer parity, magnitude grows with
         // the layer pair index.
         let shift = (region.infill_shift_step.0 / scale.factor()) as f32 * (layer_id / 2) as f32;
-        params.horiz_move = if layer_id % 2 == 0 { -shift } else { shift };
+        params.horiz_move = if layer_id.is_multiple_of(2) {
+            -shift
+        } else {
+            shift
+        };
     } else if region.sparse_infill_pattern == ProcessInfillPattern::ZigZag {
         params.symmetric_infill_y_axis = region.symmetric_infill_y_axis.0;
     }

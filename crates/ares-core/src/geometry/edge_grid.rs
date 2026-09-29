@@ -1,9 +1,9 @@
 mod query;
 pub(crate) mod raster;
+#[cfg(test)]
 mod simplify;
 
 pub(crate) use query::ClosestPointResult;
-pub(crate) use simplify::SignedDistanceField;
 
 use super::{ClipperError, Coord, ExPolygon, Point};
 use raster::{RasterGrid, visit_line};

@@ -48,10 +48,8 @@ pub(in crate::project_slice) fn apply_inner_outer_inner(
                         first_internal = arr_i;
                     }
                 }
-                2 => {
-                    if second_internal == -1 && arr_i > first_internal && outer != -1 {
-                        second_internal = arr_i;
-                    }
+                2 if second_internal == -1 && arr_i > first_internal && outer != -1 => {
+                    second_internal = arr_i;
                 }
                 _ => {}
             }

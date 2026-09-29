@@ -13,7 +13,7 @@ mod tests;
 
 use crate::geometry::{ExPolygon, Line, Point, Polyline};
 use geometry::{
-    Thresholds, candidate_dir, distance_point_to_segment_squared, dot, left_of, length, line_dir,
+    Thresholds, candidate_dir, distance_point_to_segment_squared, dot, left_of, line_dir,
     normalize, projects_interior, ray_segment_hit, segment_line_intersection,
     shift_from_thick_line,
 };
@@ -162,7 +162,7 @@ pub(crate) fn connect_lines_using_hooks(
     // sorted along the line direction; `merged_with` re-points polylines
     // merged into a lower slot (`:1042-1049`).
     let mut merged_with: Vec<usize> = (0..working.len()).collect();
-    joints.sort_by(|j1, j2| (j1.closest_line, j1.left).cmp(&(j2.closest_line, j2.left)));
+    joints.sort_by_key(|j1| (j1.closest_line, j1.left));
     let mut i = 0;
     while i < joints.len() {
         let closest = joints[i].closest_line;

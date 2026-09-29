@@ -38,7 +38,7 @@ pub(super) fn emit(
     is_group_end: bool,
     layer_output_start: usize,
 ) -> Result<(), SliceError> {
-    let spiral_body_layer = spiral.is_body_layer(layer, layer_index, f64::from(layer_z));
+    let spiral_body_layer = spiral.is_body_layer(layer, layer_index, layer_z);
     state.spiral_vase_layer = spiral_body_layer;
     let geometry = entry_builder.geometry(
         object_index,
@@ -101,8 +101,8 @@ pub(super) fn emit(
             },
             enabled: spiral_body_layer,
             final_layer: is_last_entry && layer_index + 1 == object_layer_counts[object_index],
-            z: f64::from(layer_z) + state.options.z_offset,
-            height: f64::from(layer_height),
+            z: layer_z + state.options.z_offset,
+            height: layer_height,
         },
     );
     Ok(())

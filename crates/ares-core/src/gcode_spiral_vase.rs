@@ -1,9 +1,7 @@
 mod geometry;
 mod project;
 
-use geometry::{
-    distance, distance_f32, nearest_point_on_polyline, project_point_to_segment, total_print_xy,
-};
+use geometry::{distance, distance_f32, nearest_point_on_polyline, total_print_xy};
 
 pub(crate) use project::{
     ProjectSpiralVaseConfig, ProjectSpiralVaseLayer, ProjectSpiralVaseRunState,

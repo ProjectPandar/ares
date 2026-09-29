@@ -1,11 +1,4 @@
-use crate::{
-    ExtrusionMove, InputFormat, Layer, LayerBrims, LayerContours, LayerExtrusionMoves,
-    LayerGapFills, LayerInfills, LayerPerimeters, LayerPrintPaths, LayerSkirts, LayerSlice,
-    LayerToolpathMoves, Model, PipelineDiagnostics, PipelineStage, Point2, PrintPath,
-    PrintPathRole, SliceOptions, SlicingPipeline, ToolpathMove, ToolpathMoveKind,
-    build_print_domain, gcode::format_gcode, generate_speed_moves,
-    pipeline::test_support::rectangular_pipeline,
-};
+use crate::{SliceOptions, gcode::format_gcode, pipeline::test_support::rectangular_pipeline};
 use serde_json::json;
 
 #[test]
@@ -118,15 +111,5 @@ fn first_speed_feedrate(gcode: &str, role: &str, kind: &str) -> f64 {
             line.starts_with(&target)
                 .then(|| line.rsplit(':').next().unwrap().parse().unwrap())
         })
-        .unwrap_or_else(|| panic!("missing {kind} {role} speed"))
-}
-
-fn last_speed_feedrate(gcode: &str, role: &str, kind: &str) -> f64 {
-    let target = format!(";SPEED:{kind}:{role}:");
-    gcode
-        .lines()
-        .filter(|line| line.starts_with(&target))
-        .map(|line| line.rsplit(':').next().unwrap().parse().unwrap())
-        .next_back()
         .unwrap_or_else(|| panic!("missing {kind} {role} speed"))
 }

@@ -123,28 +123,6 @@ impl OrcaRunner {
         Ok(Some(Self { bin, work }))
     }
 
-    /// Flattened preset overrides applied on top of the base presets before
-    /// the 3MF export; the same map is visible to both slicers.
-    pub(super) fn build_case(
-        &self,
-        inputs: &CaseInputs<'_>,
-        overrides: &Map<String, Value>,
-        model: &Path,
-    ) -> Result<ParityCase, String> {
-        self.build_case_checked(inputs, overrides, model)
-            .map_err(|error| error.to_string())
-    }
-
-    pub(super) fn build_case_checked(
-        &self,
-        inputs: &CaseInputs<'_>,
-        overrides: &Map<String, Value>,
-        model: &Path,
-    ) -> Result<ParityCase, StageError> {
-        let exported = self.export_case(inputs, overrides, model)?;
-        self.slice_case(&exported)
-    }
-
     pub(super) fn export_case(
         &self,
         inputs: &CaseInputs<'_>,
@@ -164,13 +142,11 @@ impl OrcaRunner {
             .get("compatible_printers")
             .and_then(Value::as_array)
             .is_none_or(|printers| printers.is_empty());
-        if compatible_empty {
-            if let Some(name) = machine.get("name").and_then(Value::as_str) {
-                process.insert(
-                    "compatible_printers".to_owned(),
-                    Value::Array(vec![Value::String(name.to_owned())]),
-                );
-            }
+        if compatible_empty && let Some(name) = machine.get("name").and_then(Value::as_str) {
+            process.insert(
+                "compatible_printers".to_owned(),
+                Value::Array(vec![Value::String(name.to_owned())]),
+            );
         }
         let filaments: Vec<Map<String, Value>> = inputs
             .filaments

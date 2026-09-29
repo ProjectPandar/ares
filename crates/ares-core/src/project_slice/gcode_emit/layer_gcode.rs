@@ -297,7 +297,7 @@ pub(super) fn append_layer_change(
         traversal,
         layer_index,
         layer_z,
-        max_layer_z,
+        max_layer_z: _,
         totals,
         context,
     } = template_context;

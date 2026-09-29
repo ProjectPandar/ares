@@ -28,7 +28,7 @@ pub(super) fn emit(
         // (`GCodeWriter.cpp:816-822,927-928`) — a sub-EPSILON assigned
         // Z survives the silent move.
         let current = state.writer_z.unwrap_or(0.0);
-        if (state.options.z_offset - f64::from(current)).abs() >= 1e-4 {
+        if (state.options.z_offset - current).abs() >= 1e-4 {
             state.writer_z = Some(state.options.z_offset);
         } else if state.writer_z.is_none() {
             state.writer_z = Some(0.0);

@@ -46,8 +46,6 @@ pub(crate) struct SupportGridParams {
     /// `flow.scaled_spacing() / 2 + 5` (`:625`): `coord_t` of the
     /// scaled spacing, integer-halved, plus 5.
     pub(crate) expansion_to_slice: Coord,
-    /// `-3` (`:626`).
-    pub(crate) expansion_to_propagate: Coord,
     /// Lattice units per millimetre (`1 / CoordinateScale::factor()`),
     /// applying `scale_` to the mm-valued fields.
     pub(crate) units_per_mm: f64,
@@ -62,7 +60,6 @@ impl SupportGridParams {
             grid_resolution,
             extrusion_width: flow_spacing,
             expansion_to_slice: flow_spacing_scaled / 2 + 5,
-            expansion_to_propagate: -3,
             units_per_mm,
         }
     }

@@ -64,18 +64,18 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
                 format_axis(end.y),
                 z_word,
                 format_extrusion(extrusion),
-                state
-                    .options
-                    .gcode_comments
-                    .then(|| {
+                if state.options.gcode_comments {
+                    {
                         let bridge = if is_bridge_feature(properties.feature) {
                             " (bridge)"
                         } else {
                             ""
                         };
                         format!(" ; {}{bridge}", feature_description(properties.feature))
-                    })
-                    .unwrap_or_default()
+                    }
+                } else {
+                    Default::default()
+                }
             )
             .as_bytes(),
         );

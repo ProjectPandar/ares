@@ -1,6 +1,6 @@
 //! Extrusion-path reorder entry points (chain_and_reorder wrappers).
 
-use super::{chain_extrusion_paths, chain_multiple, chain_points};
+use super::chain_extrusion_paths;
 use crate::project_slice::perimeters::classic::materialize::ExtrusionPath;
 
 pub(in crate::project_slice) fn reorder_extrusion_paths(

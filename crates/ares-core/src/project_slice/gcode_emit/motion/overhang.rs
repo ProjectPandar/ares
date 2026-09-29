@@ -8,7 +8,6 @@ pub(in crate::project_slice::gcode_emit) use curl::CurlTracker;
 use sections::{scale_trunc, speed_for_distance, speed_sections};
 
 use super::{LayerGeometry, MotionOptions, features::PathProperties};
-use crate::{FloatOrPercent, geometry::Point};
 
 pub(super) const OVERLAPS: [f64; 6] = [90.0, 75.0, 50.0, 25.0, 13.0, 0.0];
 pub(super) const INTERSECTION_EPSILON_MM: f64 = 1e-4;

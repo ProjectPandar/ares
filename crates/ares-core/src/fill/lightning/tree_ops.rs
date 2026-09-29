@@ -98,7 +98,7 @@ impl Node {
     /// `straighten` (two-arg) — entry: magnitude + max_remove_colinear_dist.
     pub(super) fn straighten(this: &NodeSPtr, magnitude: Coord, max_remove_colinear_dist: Coord) {
         let p = this.borrow().p;
-        let m2 = (max_remove_colinear_dist as i64) * (max_remove_colinear_dist as i64);
+        let m2 = max_remove_colinear_dist * max_remove_colinear_dist;
         Self::straighten_rec(this, magnitude, p, 0, m2);
     }
 
@@ -114,7 +114,7 @@ impl Node {
         const JUNCT_NUM: i64 = 3;
         const JUNCT_DEN: i64 = 4;
         let junction_magnitude = magnitude * JUNCT_NUM / JUNCT_DEN;
-        let (children, p, is_root, parent) = {
+        let (children, p, _is_root, parent) = {
             let n = this.borrow();
             (n.children.clone(), n.p, n.is_root, n.parent.upgrade())
         };
@@ -133,16 +133,16 @@ impl Node {
             let b = junction_below.junction_loc;
             if a != b {
                 // destination = a + (b-a) * accumulated_dist / total_dist
-                let (ax, ay) = (a.x() as i64, a.y() as i64);
+                let (ax, ay) = (a.x(), a.y());
                 let (bx, by) = (b.x() as i64, b.y() as i64);
                 let (abx, aby) = (bx - ax, by - ay);
-                let ad = accumulated_dist as i64;
+                let ad = accumulated_dist;
                 let td = total_dist.max(1) as i64;
                 let dest = Point::new((ax + abx * ad / td) as Coord, (ay + aby * ad / td) as Coord);
                 let dm = dest.x() - p.x();
                 let dn = dest.y() - p.y();
                 let dm2 = (dm as i64) * (dm as i64) + (dn as i64) * (dn as i64);
-                let mag2 = (magnitude as i64) * (magnitude as i64);
+                let mag2 = magnitude * magnitude;
                 let mut n = this.borrow_mut();
                 if dm2 <= mag2 {
                     n.p = dest;
@@ -167,7 +167,7 @@ impl Node {
                 let pp = parent_node.borrow().p;
                 let d = cp.x() - pp.x();
                 let e = cp.y() - pp.y();
-                let dd = (d as i64) * (d as i64) + (e as i64) * (e as i64);
+                let dd = d * d + e * e;
                 if dd < max_remove_colinear_dist2
                     && segment_distance_squared(cur_mp, pp, cp)
                         < (CLOSE_ENOUGH * CLOSE_ENOUGH) as f64

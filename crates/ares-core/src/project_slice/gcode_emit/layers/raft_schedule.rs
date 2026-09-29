@@ -30,16 +30,8 @@ pub(super) struct RaftSchedule {
     pub(super) counts: Vec<usize>,
 }
 
-impl RaftSchedule {
-    pub(super) const fn active(&self) -> bool {
-        !self.entries.is_empty()
-    }
-}
+impl RaftSchedule {}
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the schedule seam forwards the traversal's per-object inputs"
-)]
 pub(super) fn build(
     settings: &crate::ProjectSettings,
     objects: &[crate::ObjectOptions],

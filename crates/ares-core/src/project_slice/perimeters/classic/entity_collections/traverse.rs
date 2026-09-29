@@ -86,6 +86,9 @@ fn loop_endpoints(entity: &ExtrusionEntity) -> [[crate::geometry::Coord; 2]; 2] 
     }
 }
 
+/// Children, child seeds and chain reversal of a loop entity to descend into.
+type LoopDescent<'a> = (Vec<ChainedLoopNode>, &'a [TraversalSeed], bool);
+
 impl<'a> GroupFrame<'a> {
     fn new(
         mut nodes: Vec<ChainedLoopNode>,
@@ -157,10 +160,7 @@ impl<'a> GroupFrame<'a> {
     /// entity to descend into, or `Err(entity, reverse)` for a thin-wall
     /// entity emitted directly (upstream `idx.first >= loops.size()` branch,
     /// PerimeterGenerator.cpp:241-247).
-    fn begin_next(
-        &mut self,
-    ) -> Option<Result<(Vec<ChainedLoopNode>, &'a [TraversalSeed], bool), (ExtrusionEntity, bool)>>
-    {
+    fn begin_next(&mut self) -> Option<Result<LoopDescent<'a>, (ExtrusionEntity, bool)>> {
         let &(index, reverse) = self.chain.get(self.next)?;
         self.next += 1;
         let entity = self.entities[index]

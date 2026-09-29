@@ -18,10 +18,10 @@
 //! 6. 1st layer polygons = `base`, further expanded by
 //!    `max(0, raft_first_layer_expansion - fine)` (`:279-281`, `:366-371`).
 
+#[cfg(test)]
+use crate::geometry::Coord;
 use crate::geometry::support_grid::{SupportGridParams, SupportGridPattern};
-use crate::geometry::{
-    ClipperError, Coord, ExPolygon, FillRule, JoinType, Polygon, offset_expolygons, union_ex,
-};
+use crate::geometry::{ExPolygon, FillRule, JoinType, Polygon, offset_expolygons, union_ex};
 
 /// Scaled millimeters (`scale_`).
 const INFLATE_FACTOR_FINE_MM: f64 = 0.5;

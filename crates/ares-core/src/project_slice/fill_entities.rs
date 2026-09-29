@@ -25,6 +25,7 @@ mod tpms_fk;
 pub(in crate::project_slice) use flow::{
     extended_object_bounding_box_x, materialized_flow, object_center,
 };
+#[cfg(test)]
 pub(in crate::project_slice) use generate::generate_layer;
 
 mod generate;
@@ -39,14 +40,10 @@ pub(in crate::project_slice) use types::{
 };
 
 use crate::{
-    ExtrusionRole, ProcessInfillPattern, SliceError,
-    geometry::{ExPolygon, Point},
-    project_slice::{
-        group_fills::{SurfaceFillPattern, group_fills},
-        prepare_infill::{
-            combine_infill::{self, PreparedPostInfillCombination},
-            external_surfaces::PreparedPostExternalSurfaces,
-        },
+    SliceError,
+    project_slice::prepare_infill::{
+        combine_infill::{self, PreparedPostInfillCombination},
+        external_surfaces::PreparedPostExternalSurfaces,
     },
 };
 

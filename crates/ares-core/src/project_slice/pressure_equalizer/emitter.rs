@@ -175,7 +175,7 @@ pub(crate) fn output_gcode_line(
     let comment: Option<String> = line.raw.find(';').map(|index| line.raw[index..].to_owned());
 
     let length = line.dist_xyz();
-    let mut segments = (length / max_segment_length).ceil() as usize;
+    let segments = (length / max_segment_length).ceil() as usize;
 
     let delta_volumetric_rate = ([
         (line.volumetric_extrusion_rate_end - line.volumetric_extrusion_rate_start).abs(),
@@ -207,17 +207,16 @@ pub(crate) fn output_gcode_line(
 
     if line.volumetric_extrusion_rate > line.volumetric_extrusion_rate_start
         && line.volumetric_extrusion_rate > line.volumetric_extrusion_rate_end
-    {
-        if emit_accel_then_decel(
+        && emit_accel_then_decel(
             buffer,
             line,
             length,
             max_segment_length,
             use_relative_e_distances,
             comment.as_deref(),
-        ) {
-            return;
-        }
+        )
+    {
+        return;
     }
 
     emit_single_slope(
@@ -239,4 +238,5 @@ mod split;
 
 use split::{emit_accel_then_decel, emit_single_slope};
 
+#[cfg(test)]
 mod tests;

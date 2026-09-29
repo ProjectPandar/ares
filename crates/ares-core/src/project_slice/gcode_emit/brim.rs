@@ -4,14 +4,9 @@
 
 use crate::{
     ProcessBrimType, SliceError,
-    geometry::{
-        CoordinateScale, ExPolygon, JoinType, Point, Polygon, difference_ex, offset_expolygons,
-    },
-    project_slice::{
-        gcode_emit::motion::{self, EmitState, LayerGeometry},
-        perimeters::{
-            classic::traversal::PreparedPostClassicTraversal, flow::build_nonbridging_flow,
-        },
+    geometry::{CoordinateScale, ExPolygon, JoinType, Point, difference_ex, offset_expolygons},
+    project_slice::perimeters::{
+        classic::traversal::PreparedPostClassicTraversal, flow::build_nonbridging_flow,
     },
 };
 
@@ -178,7 +173,7 @@ impl BrimPlan {
             }
             append_loops(&mut loops, &area);
             area = offset_expolygons(&area, -1.3f32 * spacing, JoinType::Round, resolution)
-                .map(|area| {
+                .inspect(|area| {
                     if let Ok(path) = std::env::var("ARES_DUMP_M13") {
                         use std::io::Write;
                         if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -186,7 +181,7 @@ impl BrimPlan {
                             .append(true)
                             .open(path)
                         {
-                            for expolygon in &area {
+                            for expolygon in area {
                                 let _ = write!(file, "M13 {}:", loops.len());
                                 for point in expolygon.contour().points() {
                                     let _ = write!(file, " ({},{})", point.x(), point.y());
@@ -195,7 +190,6 @@ impl BrimPlan {
                             }
                         }
                     }
-                    area
                 })
                 .and_then(|mut area| {
                     for expolygon in &mut area {
@@ -217,7 +211,7 @@ impl BrimPlan {
                             }
                         }
                     }
-                    offset_expolygons(&area, 0.3f32 * spacing, JoinType::Round, resolution).map(
+                    offset_expolygons(&area, 0.3f32 * spacing, JoinType::Round, resolution).inspect(
                         |area| {
                             if let Ok(path) = std::env::var("ARES_DUMP_PEUCK") {
                                 use std::io::Write;
@@ -226,7 +220,7 @@ impl BrimPlan {
                                     .append(true)
                                     .open(path)
                                 {
-                                    for expolygon in &area {
+                                    for expolygon in area {
                                         let _ = write!(file, "PEU {}:", loops.len());
                                         for point in expolygon.contour().points() {
                                             let _ = write!(file, " ({},{})", point.x(), point.y());
@@ -235,7 +229,6 @@ impl BrimPlan {
                                     }
                                 }
                             }
-                            area
                         },
                     )
                 })
@@ -253,7 +246,7 @@ impl BrimPlan {
                 .collect::<Vec<_>>(),
         )
         .map_err(brim_geometry_error)?;
-        let mut loops = unified;
+        let loops = unified;
         // The union's contour-then-holes order IS the outside-in nesting
         // (`traverse_pt_outside_in` recursion — the area sort would
         // re-interleave nested rings destructively).
@@ -285,18 +278,16 @@ impl BrimPlan {
                 points.push(first);
             }
             let is_closed = points.len() > 1 && points.first() == points.last();
-            if !is_closed {
-                if let Some(end) = previous_end {
-                    let distance = |point: &Point| {
-                        let dx = (point.x() - end.x()) as f64;
-                        let dy = (point.y() - end.y()) as f64;
-                        dx * dx + dy * dy
-                    };
-                    let first = points[0];
-                    let last = points[points.len() - 1];
-                    if distance(&last) < distance(&first) {
-                        points.reverse();
-                    }
+            if !is_closed && let Some(end) = previous_end {
+                let distance = |point: &Point| {
+                    let dx = (point.x() - end.x()) as f64;
+                    let dy = (point.y() - end.y()) as f64;
+                    dx * dx + dy * dy
+                };
+                let first = points[0];
+                let last = points[points.len() - 1];
+                if distance(&last) < distance(&first) {
+                    points.reverse();
                 }
             }
             let spacing_squared = f64::from(spacing) * f64::from(spacing) * 4.0;
