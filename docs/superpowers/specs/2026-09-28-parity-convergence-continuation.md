@@ -632,3 +632,17 @@ walk differs from ares' `intersections` ordering). Class: order
 artifact, same family as seam-tie and equalizer-cascade — requires
 upstream runtime trace to pinpoint (unreachable: no ORCA_DUMP_* in
 AppImage, instrumented build dead).
+
+### Vertex-convention audit — clipper `build_paths` is faithful
+
+Ares `clipper/output/fixup.rs::build_paths` emits `out_rec` rings
+starting at `Pts->Prev` walking `previous` — identical to upstream
+`Clipper::BuildResult` (`clipper.cpp:2779-2795`). The seam-tie and
+raft-hatch residuals therefore do NOT come from the OutRec→Path
+vertex-0 conversion; the remaining candidate is the boundary-walk
+ORDER inside `connect_base_support`/`seam collect_points`
+(contour-intersection insertion direction, which follows each
+contour's orientation and vertex-0 of the *rotated* inner contour —
+clipper offset shrink output ring orientation relative to upstream
+`shrink()`/`offset()` return values, or zigzag chain linking parity
+inside `map_infill_end_point_to_boundary` construction).
