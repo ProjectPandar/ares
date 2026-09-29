@@ -107,15 +107,6 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         "filament_printable" => &[("probe", "1")],
         // Long-retraction-when-cut toggle (coInt 0/1).
         "enable_long_retraction_when_cut" => &[("probe", "1")],
-        // Skirt layer count. Upstream clamps `skirt_height` to the
-        // object's layer count (`Print.cpp:2663-2665`), so the schema
-        // max 10000 slices cheaply — probe the declared maximum.
-        "skirt_height" => &[
-            ("probe-min", "1"),
-            ("probe-seeded", "2"),
-            ("probe-max", "10000"),
-        ],
-
         // Polygon point lists (`XxY` pairs) — a legal small rectangle.
         // `wrapping_exclude_area` rejected by the oracle (orca rejects the
         // rect probe upstream), so it keeps its unexercised baseline.

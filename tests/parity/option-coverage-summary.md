@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-613/650 bounded domains complete; 1594 generated, 1591 strictly compared, 1 rejected. Not all-printer/default coverage.
+614/650 bounded domains complete; 1596 generated, 1593 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -487,7 +487,7 @@
 | PASS | skin_infill_depth | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4044 |  |
 | INCOMPLETE | skin_infill_line_width | coFloatOrPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4064 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
 | PASS | skirt_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5673 |  |
-| INCOMPLETE | skirt_height | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5692 | authored probes sample the legal interior; schema bounds rejected by upstream validation |
+| PASS | skirt_height | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5692 |  |
 | PASS | skirt_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5733 |  |
 | PASS | skirt_speed | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5742 |  |
 | PASS | skirt_start_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5682 |  |

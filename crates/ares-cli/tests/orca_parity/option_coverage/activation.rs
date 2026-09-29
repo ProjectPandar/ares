@@ -123,6 +123,8 @@ pub(crate) fn support_geometry_option(key: &str) -> bool {
 
 fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
     match key {
+        // `Print.cpp:575-585`: infinite skirts bypass the configured height.
+        "skirt_height" => &[("skirt_loops", "1"), ("draft_shield", "disabled")],
         // Ironing sub-options only run when `ironing_type != "no ironing"`.
         "ironing_flow" | "ironing_spacing" | "ironing_speed" | "ironing_pattern" => {
             &[("ironing_type", "top")]

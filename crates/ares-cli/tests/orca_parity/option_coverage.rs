@@ -27,6 +27,10 @@ mod completion_tests;
 #[path = "option_coverage/pressure_advance.rs"]
 mod pressure_advance;
 
+#[cfg(test)]
+#[path = "option_coverage/skirt_height.rs"]
+mod skirt_height;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

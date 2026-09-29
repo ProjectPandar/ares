@@ -119,7 +119,14 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             .then_some("enum domain not explicit in definition block");
         (values, omission)
     } else if range_type(&option_type) {
-        match numeric_bounds(&block) {
+        let bounds = if key == "skirt_height" {
+            // `PrintConfig.cpp:10422-10424` rejects negatives at validation,
+            // although the option definition only declares the upper bound.
+            Some((0.0, upper_bound(&block).expect("skirt height ceiling")))
+        } else {
+            numeric_bounds(&block)
+        };
+        match bounds {
             Some((minimum, maximum)) if minimum < maximum => {
                 let interior = seeded_interior(&key, minimum, maximum, option_type.contains("Int"));
                 // An explicit `min`/`max` schema bound makes min+max+interior
