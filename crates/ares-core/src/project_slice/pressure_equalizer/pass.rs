@@ -19,7 +19,8 @@ pub(crate) struct PressureEqualizerPass {
     max_segment_length: f32,
     use_relative_e_distances: bool,
     lines: Vec<GCodeLine>,
-    buffered: Option<String>,
+    /// `!m_layer_results.empty()`: a processed layer is held back.
+    pending: bool,
 }
 
 impl PressureEqualizerPass {
@@ -50,28 +51,30 @@ impl PressureEqualizerPass {
             max_segment_length: segment_length as f32,
             use_relative_e_distances,
             lines: Vec::new(),
-            buffered: None,
+            pending: false,
         }
     }
 
-    /// `process_layer(LayerResult&&)`: process this layer's text and
-    /// return the PREVIOUS layer's rewritten G-code (the first call
-    /// returns `None` — a NOP layer result upstream).
+    /// `process_layer(LayerResult&&)` (`PressureEqualizer.cpp:174-200`):
+    /// append and re-run the limiter over the held-back previous layer
+    /// plus this one (a segment may span the layer change), then return
+    /// the PREVIOUS layer's rewritten G-code (the first call returns
+    /// `None` — a NOP layer result upstream).
     pub(crate) fn process_layer(&mut self, gcode: &str) -> Option<String> {
-        let previous = self.buffered.take();
-        if !gcode.is_empty() {
-            self.process_layer_lines(gcode);
+        let next_layer_first_idx = self.lines.len();
+        self.process_layer_lines(gcode);
+        if !self.pending {
+            self.pending = true;
+            return None;
         }
-        self.buffered = Some(self.emit_all());
-        previous
+        Some(self.emit(next_layer_first_idx))
     }
 
-    /// Flush the final buffered layer (`DoExport` ends with a NOP layer
-    /// result upstream; ares calls this once after the last layer).
+    /// The trailing NOP layer result (`DoExport`): emit the held-back layer.
     pub(crate) fn flush(&mut self) -> Option<String> {
-        self.buffered.take().map(|gcode| {
-            self.buffered = Some(gcode);
-            self.buffered.take().unwrap()
+        self.pending.then(|| {
+            self.pending = false;
+            self.emit(self.lines.len())
         })
     }
 
@@ -144,27 +147,9 @@ impl PressureEqualizerPass {
         idx_orig
     }
 
-    fn emit_all(&mut self) -> String {
-        if std::env::var("ARES_DUMP_PEDECISIONS").is_ok() {
-            for (i, l) in self.lines.iter().enumerate() {
-                if l.extruding() {
-                    eprintln!(
-                        "RATE {i} rate={:.5} start={:.5} end={:.5} mod={} adj={} role={:?} len={:.5} feed={:.3} | {}",
-                        l.volumetric_extrusion_rate,
-                        l.volumetric_extrusion_rate_start,
-                        l.volumetric_extrusion_rate_end,
-                        l.modified,
-                        l.adjustable_flow,
-                        l.extrusion_role,
-                        l.dist_xyz(),
-                        l.feedrate(),
-                        l.raw.trim()
-                    );
-                }
-            }
-        }
+    fn emit(&mut self, count: usize) -> String {
         let mut buffer = OutputBuffer::default();
-        for line in &mut self.lines {
+        for line in &mut self.lines[..count] {
             output_gcode_line(
                 &mut buffer,
                 line,
@@ -172,7 +157,7 @@ impl PressureEqualizerPass {
                 self.use_relative_e_distances,
             );
         }
-        self.lines.clear();
+        self.lines.drain(..count);
         buffer.finish()
     }
 }

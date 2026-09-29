@@ -378,5 +378,6 @@ pub(super) fn append(
         }
         cooling.finish_layer(output, layer_output_start);
     }
+    cooling.finish(output);
     Ok((max_layer_z, fan_mover_handle))
 }

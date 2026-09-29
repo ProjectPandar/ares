@@ -39,6 +39,8 @@ pub(super) struct CoolingState {
     physical_part_speed: u8,
     provisional_part_speed: u8,
     pending_layer_index: Option<usize>,
+    /// The layer the equalizer is holding back.
+    equalized_layer_index: Option<usize>,
     part_fan_ramp: PartCoolingFanRamp,
     additional_speed: u8,
     additional_fan_speed: u8,
@@ -104,6 +106,7 @@ impl CoolingState {
             physical_part_speed: 0,
             provisional_part_speed: 0,
             pending_layer_index: None,
+            equalized_layer_index: None,
             part_fan_ramp,
             additional_speed: 0,
             additional_fan_speed: first_percent_int(&filament.additional_cooling_fan_speed.0),
@@ -177,39 +180,48 @@ impl CoolingState {
 
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
         // Upstream pipeline order (GCode.cpp:3752): generator →
-        // PressureEqualizer → CoolingBuffer → fan logic. The equalizer
-        // re-emits the `;_EXTRUDE_SET_SPEED`/`;_EXTRUDE_END` markers for the
-        // cooling buffer, which runs its slowdown on the equalized text;
-        // the final marker strip happens after the cooling.
-        let mut layer = output.split_off(layer_start);
-        let mut equalized = false;
-        if let Some(pass) = self.equalizer.as_mut() {
-            equalized = true;
-            if let Ok(path) = std::env::var("ARES_DUMP_PEINPUT") {
-                use std::io::Write;
-                if let Ok(mut file) = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)
-                {
-                    let _ = file.write_all(b"=== LAYER ===\n");
-                    let _ = file.write_all(&layer);
-                }
-            }
-            pass.process_layer(&String::from_utf8_lossy(&layer));
-            layer = pass
-                .flush()
-                .map(|text| text.into_bytes())
-                .unwrap_or_default();
+        // PressureEqualizer → CoolingBuffer → fan logic. The equalizer holds
+        // each layer back until the next one arrives
+        // (`PressureEqualizer.cpp:174-200`), so the cooling buffer runs one
+        // layer behind; `finish` drains the last layer.
+        let layer_index = self.pending_layer_index.take().unwrap();
+        let layer = output.split_off(layer_start);
+        let Some(pass) = self.equalizer.as_mut() else {
+            self.cool_layer(output, layer, layer_index, false);
+            return;
+        };
+        let previous = pass.process_layer(&String::from_utf8_lossy(&layer));
+        let previous_index = self.equalized_layer_index.replace(layer_index);
+        if let (Some(previous), Some(previous_index)) = (previous, previous_index) {
+            self.cool_layer(output, previous.into_bytes(), previous_index, true);
         }
-        let had_equalizer = equalized;
+    }
+
+    /// The trailing NOP layer result that drains the equalizer.
+    pub(super) fn finish(&mut self, output: &mut Vec<u8>) {
+        if let Some(last) = self.equalizer.as_mut().and_then(|pass| pass.flush()) {
+            let layer_index = self.equalized_layer_index.take().unwrap();
+            self.cool_layer(output, last.into_bytes(), layer_index, true);
+        }
+    }
+
+    /// `CoolingBuffer::process_layer` plus the fan resolution for one layer.
+    /// The equalizer re-emits the `;_EXTRUDE_SET_SPEED`/`;_EXTRUDE_END`
+    /// markers for the slowdown; they are stripped after the cooling.
+    fn cool_layer(
+        &mut self,
+        output: &mut Vec<u8>,
+        mut layer: Vec<u8>,
+        layer_index: usize,
+        equalized: bool,
+    ) {
+        let layer_start = output.len();
         let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
-        if had_equalizer {
+        if equalized {
             let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));
             layer = stripped.into_bytes();
         }
         output.extend_from_slice(&layer);
-        let layer_index = self.pending_layer_index.take().unwrap();
         let part_speed = self
             .part_fan_ramp
             .speed_for_layer_time(layer_index, Some(f64::from(layer_time)))

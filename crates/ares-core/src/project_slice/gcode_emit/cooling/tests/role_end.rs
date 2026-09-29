@@ -9,6 +9,7 @@ fn cooling_state() -> CoolingState {
         physical_part_speed: 100,
         provisional_part_speed: 100,
         pending_layer_index: None,
+        equalized_layer_index: None,
         part_fan_ramp: PartCoolingFanRamp::new(PartCoolingFanRampConfig {
             min_speed: 100.0,
             max_speed: 100.0,

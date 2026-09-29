@@ -863,3 +863,27 @@ into `prepare_infill/combine_infill/process.rs`.
   PASS. Ten printers that were divergent now PASS: TwoTrees SK1, Eryone
   ER20, Volumic EXO42/EXO65/SH65, WEMAKE3D PhoenixProV1 0.2/0.3/0.4 and
   TinyBotV1 0.2/0.3. Printer smoke: 968 of 1001.
+
+## 2026-09-29 (PressureEqualizer one-layer lag)
+
+Ported the layer hand-off of `PressureEqualizer::process_layer(LayerResult&&)`
+(`PressureEqualizer.cpp:174-200`) into `pressure_equalizer/pass.rs`, and the
+`generator & pressure_equalizer & cooling` pipeline order
+(`GCode.cpp:3752`) into `gcode_emit/cooling.rs`.
+- Upstream keeps the previous layer's parsed lines in `m_gcode_lines`.
+  It appends the next layer, re-runs the segment/limiter loop from index
+  0, and only then emits the previous layer. An extrusion segment can
+  therefore span the layer change: the next layer's first wall ramps up
+  from the previous layer's tail, and the split segments carry `Z`.
+  Ares equalized and flushed each layer on its own.
+- `CoolingState::finish_layer` now feeds the equalizer and cools the layer
+  it hands back, one layer behind. `CoolingState::finish` drains the last
+  layer (upstream's trailing NOP `LayerResult`). Without an equalizer the
+  cooling path is unchanged. The `ARES_DUMP_PEINPUT` and
+  `ARES_DUMP_PEDECISIONS` debug hooks are removed.
+- Test: `segment_spans_the_layer_change` (fails without the port).
+- Oracle: Ginger G1 1.2 now PASSes; it was F843/F836 plus the Z-split
+  inner wall. Printer sweep: 969 of 1001. The ORCA_ERROR rows move
+  between runs, so the oracle crashes are flaky. Bambu Lab A1
+  0.2/0.4/0.6/0.8 show a 1s estimate and M73 drift that predates this
+  slice; HEAD without it gives the same output.
