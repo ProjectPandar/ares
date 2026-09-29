@@ -21,7 +21,7 @@ pub(super) fn apply_pattern_fields(
         // `Fill.cpp:1311-1316`: `horiz_move = ±scale_(infill_shift_step) *
         // (layer_id/2)` — sign flips by layer parity, magnitude grows with
         // the layer pair index.
-        let shift = (region.infill_shift_step.0 / scale.factor()) as f32 * (layer_id / 2) as f32;
+        let shift = (region.infill_shift_step.0 / scale.factor() * (layer_id / 2) as f64) as f32;
         params.horiz_move = if layer_id.is_multiple_of(2) {
             -shift
         } else {

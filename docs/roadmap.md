@@ -13,9 +13,20 @@ and `FillRectilinear.cpp::fill_surface_by_lines` grid-shift arithmetic in
 official-output RED→GREEN evidence; signed cross-zag and locked-zag cases pass.
 The isolated slice passes all 7372 workspace tests, four live complete-output
 cases, fmt and clippy. Independent review is recorded in the slice plan.
-The adjacent `Fill.cpp` phase-generation narrowing,
-remaining KSR differences and all-printer/all-option coverage remain open;
+Remaining KSR differences and all-printer/all-option coverage remain open;
 this source slice is not completion of the active program.
+
+The completed dependency pair is `Fill.cpp::Layer::make_fills` phase construction
+in `group_fills/params/projection/sticky.rs` (ARD-0039), and
+`GCodeReader` / `GCodeProcessor` per-move volume precision in
+`gcode_emit/finish.rs::account_used_filament` (ARD-0040). The tall cross-zag
+fixture exposed both movement and final-statistics discrepancies. The final
+isolated patch passes all 7375 workspace tests, seven strict complete-output
+cases (including 2.85 mm diameter and absolute E), fmt/clippy and Tier-1
+compilation checks. Independent review and execution evidence are recorded
+in the two slice plans.
+These adapters remain temporary shells around the cited upstream concepts;
+full processor, all-printer/all-option and remaining KSR parity remain open.
 
 The active development program is the source-cited vertical rewrite defined by
 `docs/architecture/ard-0023-3mf-project-gcode-parity.md` and

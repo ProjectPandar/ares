@@ -128,7 +128,10 @@ pub(super) fn append_compatible_stats(
 /// (`move_type`, `GCodeProcessor.cpp:3834-3851`) and count only Extrude
 /// moves — E-positive with an X or Y displacement. Retracts, unretracts
 /// and E-only bowden re-primes do not count.
-pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
+pub(super) fn account_used_filament(gcode: &[u8], filament_diameter: f64) -> f64 {
+    let diameter = filament_diameter as f32;
+    let radius = 0.5_f32 * diameter;
+    let area = std::f32::consts::PI * (radius * radius);
     let text = std::str::from_utf8(gcode).unwrap_or_default();
     let mut e_position = 0.0_f64;
     let mut x_position = 0.0_f64;
@@ -146,6 +149,7 @@ pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
             words.clone().find_map(|word| {
                 word.strip_prefix(letter)
                     .and_then(|value| value.parse::<f64>().ok())
+                    .map(|value| f64::from(value as f32))
             })
         };
         match command {
@@ -162,22 +166,8 @@ pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
                 let x = letter_value('X');
                 let y = letter_value('Y');
                 let e = letter_value('E');
-                let dx = match x {
-                    Some(value) if global_relative => value,
-                    Some(value) => value - x_position,
-                    None => 0.0,
-                };
-                let dy = match y {
-                    Some(value) if global_relative => value,
-                    Some(value) => value - y_position,
-                    None => 0.0,
-                };
+                let start = (x_position, y_position, e_position);
                 let e_relative = global_relative || e_local_relative;
-                let delta_e = match e {
-                    Some(value) if e_relative => value,
-                    Some(value) => value - e_position,
-                    None => 0.0,
-                };
                 if let Some(value) = x {
                     x_position = apply_axis(x_position, value, global_relative);
                 }
@@ -187,14 +177,18 @@ pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
                 if let Some(value) = e {
                     e_position = apply_e(e_position, value, e_relative);
                 }
+                let dx = x_position - start.0;
+                let dy = y_position - start.1;
+                let delta_e = e_position - start.2;
                 if delta_e > 0.0 && (dx != 0.0 || dy != 0.0) {
-                    used += delta_e;
+                    // GCodeProcessor::process_G1 stores each extruded volume as float.
+                    used += f64::from((f64::from(area) * delta_e) as f32);
                 }
             }
             _ => {}
         }
     }
-    used
+    used / (std::f64::consts::PI * (0.5 * f64::from(diameter)).powi(2))
 }
 
 fn apply_e(current: f64, value: f64, relative: bool) -> f64 {

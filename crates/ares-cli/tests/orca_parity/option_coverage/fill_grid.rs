@@ -4,29 +4,100 @@ use serde_json::json;
 
 #[test]
 fn orca_parity_wide_solid_fill_preserves_complete_output() {
-    compare("fill-grid/wide-solid", None, false);
+    compare("fill-grid/wide-solid", None, false, 0.4, 0, "1.75", true);
 }
 
 #[test]
 fn orca_parity_signed_cross_zag_shifts_preserve_complete_output() {
     for step in ["0.731272", "2.30772"] {
-        compare(&format!("fill-grid/cross-zag-{step}"), Some(step), false);
+        compare(
+            &format!("fill-grid/cross-zag-{step}"),
+            Some(step),
+            false,
+            2.4,
+            4,
+            "1.75",
+            true,
+        );
     }
 }
 
 #[test]
 fn orca_parity_locked_zag_shifts_preserve_complete_output() {
-    compare("fill-grid/locked-zag", Some("0.731272"), true);
+    compare(
+        "fill-grid/locked-zag",
+        Some("0.731272"),
+        true,
+        2.4,
+        4,
+        "1.75",
+        true,
+    );
 }
 
-fn compare(label: &str, shift: Option<&str>, locked: bool) {
+#[test]
+fn orca_parity_accumulated_cross_zag_phase_preserves_complete_output() {
+    compare(
+        "fill-grid/accumulated-cross-zag",
+        Some("0.0655373"),
+        false,
+        22.4,
+        110,
+        "1.75",
+        true,
+    );
+}
+
+#[test]
+fn orca_parity_nondefault_filament_diameter_preserves_complete_output() {
+    compare(
+        "fill-grid/diameter-2.85",
+        Some("0.0655373"),
+        false,
+        22.4,
+        110,
+        "2.85",
+        true,
+    );
+}
+
+#[test]
+fn orca_parity_absolute_extrusion_preserves_complete_output() {
+    compare(
+        "fill-grid/absolute-e",
+        Some("0.0655373"),
+        false,
+        22.4,
+        110,
+        "1.75",
+        false,
+    );
+}
+
+fn compare(
+    label: &str,
+    shift: Option<&str>,
+    locked: bool,
+    height: f64,
+    minimum_sparse_layers: usize,
+    diameter: &str,
+    relative: bool,
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
-    let machine = profiles.machine(&selection.printer).unwrap();
+    let mut machine = profiles.machine(&selection.printer).unwrap();
+    let relative_value = if relative { "1" } else { "0" };
+    machine.insert("use_relative_e_distances".into(), json!(relative_value));
+    if !relative {
+        machine.insert(
+            "before_layer_change_gcode".into(),
+            json!(";BEFORE_LAYER_CHANGE\n;[layer_z]\n"),
+        );
+    }
     let mut process = profiles.process(&selection.process).unwrap();
     parity::normalize_process_defaults(&machine, &mut process);
     let mut settings = vec![
@@ -59,9 +130,12 @@ fn compare(label: &str, shift: Option<&str>, locked: bool) {
         .map(|name| profiles.filament(name).unwrap())
         .collect::<Vec<_>>();
     parity::normalize_filament_defaults(&mut filaments);
+    for filament in &mut filaments {
+        filament.insert("filament_diameter".into(), json!([diameter]));
+    }
     let directory = tempfile::tempdir().unwrap();
     let model = directory.path().join("wide-slab.stl");
-    std::fs::write(&model, slab(if shift.is_some() { 2.4 } else { 0.4 })).unwrap();
+    std::fs::write(&model, slab(height)).unwrap();
     let exported = runner
         .export_case(
             &CaseInputs {
@@ -77,13 +151,40 @@ fn compare(label: &str, shift: Option<&str>, locked: bool) {
     for (key, value) in settings {
         runner::application::verify_value(&exported.project, key, &json!(value)).unwrap();
     }
+    runner::application::verify_value(&exported.project, "filament_diameter", &json!([diameter]))
+        .unwrap();
     let sliced = runner.slice_case(&exported).unwrap();
+    runner::application::verify_value(
+        &exported.project,
+        "use_relative_e_distances",
+        &json!(relative_value),
+    )
+    .unwrap();
     if shift.is_some() {
         let mut sparse = false;
         let mut relative_extrusion = false;
         let mut counted_layer = false;
         let mut sparse_layers = 0;
+        let mut e_position = 0.0;
         for line in std::str::from_utf8(&sliced.reference).unwrap().lines() {
+            let command = line.split_whitespace().next();
+            let e = line
+                .split_whitespace()
+                .find_map(|word| word.strip_prefix('E'))
+                .and_then(|value| value.parse::<f64>().ok());
+            let mut delta_e = 0.0;
+            if let Some(e) = e {
+                if command == Some("G92") {
+                    e_position = e;
+                } else if matches!(command, Some("G0" | "G1" | "G2" | "G3")) {
+                    delta_e = if relative_extrusion {
+                        e
+                    } else {
+                        e - e_position
+                    };
+                    e_position += delta_e;
+                }
+            }
             if line.split_whitespace().next() == Some("M83") {
                 relative_extrusion = true;
             } else if line.split_whitespace().next() == Some("M82") {
@@ -95,18 +196,15 @@ fn compare(label: &str, shift: Option<&str>, locked: bool) {
             } else if sparse
                 && !counted_layer
                 && (line.starts_with("G1 X") || line.starts_with("G1 Y"))
-                && line
-                    .split_whitespace()
-                    .find_map(|word| word.strip_prefix('E'))
-                    .is_some_and(|value| value.parse::<f64>().unwrap() > 0.0)
+                && delta_e > 0.0
             {
-                assert!(relative_extrusion, "fixture must use relative extrusion");
+                assert_eq!(relative_extrusion, relative, "fixture extrusion mode");
                 sparse_layers += 1;
                 counted_layer = true;
             }
         }
         assert!(
-            sparse_layers >= 4,
+            sparse_layers >= minimum_sparse_layers,
             "expected multiple signed-shift layers, got {sparse_layers}"
         );
     }
