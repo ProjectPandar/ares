@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-611/650 bounded domains complete; 1593 generated, 1590 strictly compared, 1 rejected. Not all-printer/default coverage.
+611/650 bounded domains complete; 1594 generated, 1591 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -467,7 +467,7 @@
 | PASS | scarf_joint_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5584 |  |
 | PASS | scarf_joint_speed | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5570 |  |
 | PASS | scarf_overhang_threshold | coPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5558 |  |
-| PASS | seam_gap | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5515 |  |
+| PASS | seam_gap | coFloatOrPercent | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5515 |  |
 | PASS | seam_position | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:5490 |  |
 | PASS | seam_slope_conditional | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5539 |  |
 | PASS | seam_slope_entire_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5604 |  |

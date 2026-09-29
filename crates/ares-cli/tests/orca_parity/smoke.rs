@@ -225,6 +225,11 @@ fn orca_parity_rolohaun_delta_flyer_smoke() {
 }
 
 #[test]
+fn orca_parity_wemake_tinybot_smoke() {
+    assert_printer_smoke("WEMAKE3D", "WEMAKE3D TinyBotV1 0.4mm nozzle");
+}
+
+#[test]
 fn orca_parity_zaa_enabled_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("zaa_enabled", value);

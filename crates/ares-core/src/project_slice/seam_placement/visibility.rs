@@ -63,7 +63,9 @@ impl GlobalVisibility {
             let sample = self.samples.positions[index];
             let normal = self.samples.normals[index];
             let plane_distance = (position - sample).dot(normal).abs();
-            let weight = self.radius - plane_distance + self.radius - (position - sample).norm();
+            // `SeamPlacer.cpp:341-342` adds two separately rounded contributions.
+            let weight =
+                (self.radius - plane_distance) + (self.radius - (position - sample).norm());
             total_visibility += weight * self.values[index];
             total_weight += weight;
         }
