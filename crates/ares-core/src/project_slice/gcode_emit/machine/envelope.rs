@@ -107,25 +107,33 @@ pub(super) fn append_machine_envelope(
     // the Y call is skipped for RepRapFirmware and when the type is
     // `Disable`.
     if machine.input_shaping_emit.0 && flavor != crate::GCodeFlavor::MarlinLegacy {
+        // `GCodeWriter.cpp:473-477`: the ` ; Override input shaping`
+        // suffix is emitted only under `gcode_comments`
+        // (`full_gcode_comment`).
+        let comment = traversal.resolved.views.full.process.print.gcode_comments.0;
+        // `GCodeWriter.cpp:395` — `float damp, float freq` params: values
+        // narrow to f32 before the fixed-precision format.
+        let x_damp = machine.input_shaping_damp_x.0 as f32;
+        let x_freq = machine.input_shaping_freq_x.0 as f32;
         let disable = machine.input_shaping_type == InputShaperType::Disable;
         output.extend_from_slice(
-            set_input_shaping(
-                flavor,
-                'X',
-                machine.input_shaping_damp_x.0,
-                machine.input_shaping_freq_x.0,
-                machine.input_shaping_type,
+            suffix_comment(
+                set_input_shaping(flavor, 'X', x_damp, x_freq, machine.input_shaping_type),
+                comment,
             )
             .as_bytes(),
         );
         if flavor != crate::GCodeFlavor::RepRapFirmware && !disable {
-            // Upstream passes `type = ""` for the Y call — model that as
-            // `None` so no `SHAPER_TYPE`/`P"..."` params are emitted.
+            // Upstream passes `type = ""` for the Y call — no
+            // `SHAPER_TYPE`/`P"..."` params are emitted.
             output.extend_from_slice(
-                set_input_shaping_y(
-                    flavor,
-                    machine.input_shaping_damp_y.0,
-                    machine.input_shaping_freq_y.0,
+                suffix_comment(
+                    set_input_shaping_y(
+                        flavor,
+                        machine.input_shaping_damp_y.0 as f32,
+                        machine.input_shaping_freq_y.0 as f32,
+                    ),
+                    comment,
                 )
                 .as_bytes(),
             );
@@ -133,7 +141,7 @@ pub(super) fn append_machine_envelope(
     }
 }
 
-fn set_input_shaping_y(flavor: crate::GCodeFlavor, damp: f64, freq: f64) -> String {
+fn set_input_shaping_y(flavor: crate::GCodeFlavor, damp: f32, freq: f32) -> String {
     let mut params = String::new();
     match flavor {
         crate::GCodeFlavor::Klipper => {
@@ -146,7 +154,7 @@ fn set_input_shaping_y(flavor: crate::GCodeFlavor, damp: f64, freq: f64) -> Stri
             if params.is_empty() {
                 String::new()
             } else {
-                format!("SET_INPUT_SHAPER{params}\n")
+                format!("SET_INPUT_SHAPER{params}")
             }
         }
         crate::GCodeFlavor::MarlinFirmware => {
@@ -157,7 +165,7 @@ fn set_input_shaping_y(flavor: crate::GCodeFlavor, damp: f64, freq: f64) -> Stri
             if damp > 0.0 {
                 params.push_str(&format!(" D{damp:.3}"));
             }
-            format!("M593{params}\n")
+            format!("M593{params}")
         }
         _ => String::new(),
     }
@@ -173,11 +181,22 @@ fn set_input_shaping_y(flavor: crate::GCodeFlavor, damp: f64, freq: f64) -> Stri
 /// `|| disable` guards still emit the zeroed params. `full_gcode_comment`
 /// suffix (`GCodeWriter.cpp:473-477`) is omitted — the smoke fixture
 /// leaves comments off.
+fn suffix_comment(line: String, comment: bool) -> String {
+    if line.is_empty() {
+        return String::new();
+    }
+    if comment {
+        format!("{line} ; Override input shaping\n")
+    } else {
+        format!("{line}\n")
+    }
+}
+
 fn set_input_shaping(
     flavor: crate::GCodeFlavor,
     axis: char,
-    damp: f64,
-    freq: f64,
+    damp: f32,
+    freq: f32,
     shaper_type: InputShaperType,
 ) -> String {
     let disable = shaper_type == InputShaperType::Disable;
@@ -212,7 +231,7 @@ fn set_input_shaping(
             if params.is_empty() {
                 String::new()
             } else {
-                format!("SET_INPUT_SHAPER{params}\n")
+                format!("SET_INPUT_SHAPER{params}")
             }
         }
         crate::GCodeFlavor::RepRapFirmware => {
@@ -228,7 +247,7 @@ fn set_input_shaping(
             if params.is_empty() {
                 String::new()
             } else {
-                format!("M593{params}\n")
+                format!("M593{params}")
             }
         }
         crate::GCodeFlavor::MarlinFirmware => {
@@ -244,7 +263,7 @@ fn set_input_shaping(
             if params.is_empty() {
                 String::new()
             } else {
-                format!("M593{params}\n")
+                format!("M593{params}")
             }
         }
         _ => String::new(),
