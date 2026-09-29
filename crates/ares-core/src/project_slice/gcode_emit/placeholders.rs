@@ -341,14 +341,11 @@ fn insert_bed_temperature_placeholders(config: &mut value::Config) {
             Some(formula) if formula == "by_first_filament" => {
                 value.index(0).and_then(|item| item.as_number())
             }
-            _ => value.iter_list().filter_map(|item| item.as_number()).fold(
-                None::<f64>,
-                |acc, next| {
-                    Some(match acc {
-                        Some(current) => current.max(next),
-                        None => next,
-                    })
-                },
+            _ => Some(
+                value
+                    .iter_list()
+                    .filter_map(|item| item.as_number())
+                    .fold(0.0, f64::max),
             ),
         };
         if let Some(single) = single {

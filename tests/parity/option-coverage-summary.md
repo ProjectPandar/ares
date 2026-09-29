@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-614/650 bounded domains complete; 1597 generated, 1594 strictly compared, 1 rejected. Not all-printer/default coverage.
+615/650 bounded domains complete; 1597 generated, 1594 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -240,7 +240,7 @@
 | PASS | hole_to_polyhole_twisted | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7115 |  |
 | PASS | host_type | coEnum | 16 | 16 | 0 | src/libslic3r/PrintConfig.cpp:4853 |  |
 | PASS | hot_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1001 |  |
-| INCOMPLETE | hot_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1061 | active High Temp Plate: zero/55/max 300 match; lower domain and random coverage remain unproven |
+| PASS | hot_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1061 | active High Temp Plate: signed min -2147483648, max 300, seeded -691504564; both formulas/startup paths separately verified |
 | PASS | idle_temperature | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7064 |  |
 | PASS | independent_support_layer_height | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6383 |  |
 | PASS | infill_anchor | coFloatOrPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3137 |  |

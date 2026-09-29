@@ -97,12 +97,6 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         "thumbnails" => &[("probe", "300x300")],
         // Vitrification temperature (coInts, default 100).
         "temperature_vitrification" => &[("probe", "110")],
-        // Hot-plate temperature declares max 300, but no minimum.
-        "hot_plate_temp_initial_layer" => &[
-            ("probe-zero", "0"),
-            ("probe-interior", "55"),
-            ("probe-max", "300"),
-        ],
         // Filament-printable bitmask (default 3: printable everywhere).
         "filament_printable" => &[("probe", "1")],
         // Long-retraction-when-cut toggle (coInt 0/1).

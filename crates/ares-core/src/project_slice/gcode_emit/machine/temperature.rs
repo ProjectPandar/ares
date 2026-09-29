@@ -35,7 +35,7 @@ fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 
         .collect::<Vec<_>>();
     match settings.printer.gcode.bed_temperature_formula {
         crate::BedTemperatureFormula::FirstFilament => temps.first().copied().unwrap_or(0),
-        crate::BedTemperatureFormula::HighestTemp => temps.iter().copied().max().unwrap_or(0),
+        crate::BedTemperatureFormula::HighestTemp => temps.iter().copied().fold(0, i32::max),
     }
 }
 
@@ -54,7 +54,7 @@ pub(super) fn append_startup(
     }
 
     let bed_temperature = first_layer_bed_temperature(traversal);
-    if !sets_temperature(machine_start_gcode, &["M140", "M190"], false) {
+    if bed_temperature != 0 && !sets_temperature(machine_start_gcode, &["M140", "M190"], false) {
         output.extend_from_slice(
             format!(
                 "M190 S{bed_temperature} ; set bed temperature and wait for it to be reached\n"

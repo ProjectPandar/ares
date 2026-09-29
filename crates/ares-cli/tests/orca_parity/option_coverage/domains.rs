@@ -123,6 +123,13 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             // `PrintConfig.cpp:10422-10424` rejects negatives at validation,
             // although the option definition only declares the upper bound.
             Some((0.0, upper_bound(&block).expect("skirt height ceiling")))
+        } else if key == "hot_plate_temp_initial_layer" {
+            // `ConfigOptionInts` stores signed 32-bit values; the default
+            // schema min (-FLT_MAX) is below its representable domain.
+            Some((
+                f64::from(i32::MIN),
+                upper_bound(&block).expect("hot plate ceiling"),
+            ))
         } else {
             numeric_bounds(&block)
         };
