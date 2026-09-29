@@ -31,6 +31,10 @@ mod pressure_advance;
 #[path = "option_coverage/skirt_height.rs"]
 mod skirt_height;
 
+#[cfg(test)]
+#[path = "option_coverage/hot_plate.rs"]
+mod hot_plate;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,
