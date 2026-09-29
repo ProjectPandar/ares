@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-611/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
+611/650 bounded domains complete; 1593 generated, 1590 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -625,7 +625,7 @@
 | PASS | wipe_before_external_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5650 |  |
 | PASS | wipe_distance | coFloats | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6801 |  |
 | PASS | wipe_on_loops | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5643 |  |
-| PASS | wipe_speed | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5661 |  |
+| PASS | wipe_speed | coFloatOrPercent | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5661 |  |
 | PASS | wipe_tower_bridging | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7038 |  |
 | PASS | wipe_tower_cone_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6902 |  |
 | PASS | wipe_tower_extra_flow | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7054 |  |

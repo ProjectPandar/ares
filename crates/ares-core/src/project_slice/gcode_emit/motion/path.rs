@@ -63,6 +63,7 @@ pub(super) fn emit(
     // (GCode.cpp:4411,4482,4499,5249). Restore their plate-space integer points
     // before unscaling; keep local points for cursors and wipe storage.
     let plate_space = matches!(properties.feature, "Skirt" | "Brim");
+    state.plate_loop_origin = plate_space;
     let plate_points = plate_space.then(|| {
         let origin = (
             (state.origin.0 / geometry.scale.factor()).round() as i64,

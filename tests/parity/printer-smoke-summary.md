@@ -1,8 +1,8 @@
 # OrcaSlicer printer smoke summary
 
-973 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
+974 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
 
-The historical matrix includes targeted fresh Sovol SV06 High-Speed and RH3D E3NG 0.2 nozzle passes from the plate-loop coordinate fix; this is not a fresh all-printer sweep. Rolohaun Delta Flyer Refit and Anycubic Kobra 3 0.2 nozzle were rechecked and remain divergent.
+The historical matrix includes targeted fresh Sovol SV06 High-Speed and RH3D E3NG 0.2 nozzle passes from the plate-loop coordinate fix, plus Anycubic Kobra 3 0.2 nozzle from the plate-frame wipe fix; this is not a fresh all-printer sweep. Rolohaun Delta Flyer Refit was rechecked and remains divergent.
 
 This matrix pins a MODIFIED baseline (`smoke_overrides`: `wall_generator=classic`, `detect_thin_wall=0`, bed-exclude and post-process cleared, one filament) — it verifies parity of the ported classic-wall slice across every printer's machine/process parameterization, not untouched default profiles. Arachne, thin-wall detection, multi-extruder, and vendor post-process paths are upstream boundaries pending port; an untouched-profile acceptance matrix is deferred to those milestones.
 
@@ -33,7 +33,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Anycubic/Anycubic Kobra 2 Neo 0.4 nozzle |  |
 | PASS | Anycubic/Anycubic Kobra 2 Plus 0.4 nozzle |  |
 | PASS | Anycubic/Anycubic Kobra 2 Pro 0.4 nozzle |  |
-| DIVERGENT | Anycubic/Anycubic Kobra 3 0.2 nozzle | first difference at byte 18994 (line 661, column 29; expected 454235 bytes, actual 454235 bytes) context:   line 660: ";WIPE_START"   line 661: expected "G1 X121.761 Y120.566 E-.70072"; actual "G1 X121.761 Y120.566 E-.70071"   line 662: expected "G1 X121.88 Y120.53 E-.09928"; actual "G1 X121.88 Y120.53 E-.09929" |
+| PASS | Anycubic/Anycubic Kobra 3 0.2 nozzle |  |
 | PASS | Anycubic/Anycubic Kobra 3 0.4 nozzle |  |
 | PASS | Anycubic/Anycubic Kobra 3 0.6 nozzle |  |
 | PASS | Anycubic/Anycubic Kobra 3 0.8 nozzle |  |

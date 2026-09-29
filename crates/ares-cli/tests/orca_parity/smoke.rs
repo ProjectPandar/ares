@@ -215,6 +215,11 @@ fn orca_parity_sovol_sv06_high_speed_smoke() {
 }
 
 #[test]
+fn orca_parity_kobra3_02_wipe_smoke() {
+    assert_printer_smoke("Anycubic", "Anycubic Kobra 3 0.2 nozzle");
+}
+
+#[test]
 fn orca_parity_zaa_enabled_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("zaa_enabled", value);

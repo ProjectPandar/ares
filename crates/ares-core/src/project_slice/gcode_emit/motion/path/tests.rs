@@ -190,3 +190,71 @@ fn plate_loops_unscale_after_integer_translation() {
         }
     }
 }
+
+#[test]
+fn wipe_clipping_uses_the_destination_origin_frame() {
+    for (source, destination, expected_e) in [
+        ("Inner wall", "Brim", "-.70072"),
+        ("Brim", "Skirt", "-.70072"),
+        ("Skirt", "Inner wall", "-.70071"),
+    ] {
+        let mut state = EmitState {
+            origin: (127.5, 127.5),
+            offset: (127.5, 125.5),
+            extruder_offset: (0.0, 2.0),
+            scale_factor: 1e-6,
+            options: MotionOptions {
+                filament_flow_ratio: 1.0,
+                print_flow_ratio: 1.0,
+                filament_area: 1.0,
+                use_relative_e_distances: true,
+                wipe: true,
+                wipe_distance: 1.0,
+                wipe_speed: 40.0,
+                retraction_length: 0.8,
+                retraction_during_wipe_speed: 40.0,
+                ..MotionOptions::default()
+            },
+            ..EmitState::default()
+        };
+        let properties = PathProperties {
+            mm3_per_mm: 0.08,
+            width: 0.45,
+            height: 0.2,
+            feature: source,
+            is_perimeter: false,
+            end_clip: 0.0,
+            fitting: &[],
+            slope: None,
+        };
+        path::emit(
+            &mut Vec::new(),
+            [
+                (-5_489_965, -7_008_781),
+                (-5_738_597, -6_933_761),
+                (-6_462_748, -6_441_019),
+            ]
+            .into_iter(),
+            properties,
+            test_geometry(),
+            &mut state,
+        );
+        let mut output = Vec::new();
+        path::emit(
+            &mut output,
+            [(-9_000_000, -9_000_000), (-8_000_000, -9_000_000)].into_iter(),
+            PathProperties {
+                feature: destination,
+                ..properties
+            },
+            test_geometry(),
+            &mut state,
+        );
+        let text = String::from_utf8(output).unwrap();
+        assert!(
+            text.contains(&format!("G1 X121.761 Y118.566 E{expected_e}\n")),
+            "{source} -> {destination}: {text}"
+        );
+        assert_eq!(state.last_scaled_position, Some((-8_000_000, -9_000_000)));
+    }
+}
