@@ -61,11 +61,16 @@ impl RollingPlanner {
     }
 
     /// Final `calculate_time` pass (`GCodeProcessor.cpp:419-431` at
-    /// `finalize`, :2707 keep=0): shares the `blocks.size() < 2` guard — a
-    /// lone trailing block (e.g. an end-gcode `G1 E-1` after the last
-    /// tool-change flush) never reaches `machine.time`.
-    pub(crate) fn finish(&mut self) -> Vec<f64> {
-        self.flush()
+    /// `finalize`, :2699 keep=0, `is_final`): shares the `blocks.size() < 2`
+    /// guard — a lone trailing block (e.g. an end-gcode `G1 E-1` after the
+    /// last tool-change flush) never reaches `machine.time` — unless extra
+    /// time is still buffered (`drain_final`), which drains the lone block.
+    pub(crate) fn finish(&mut self, delay_buffered: bool) -> Vec<f64> {
+        if self.blocks.is_empty() || self.blocks.len() < 2 && !delay_buffered {
+            Vec::new()
+        } else {
+            self.process(0)
+        }
     }
 
     fn process(&mut self, keep: usize) -> Vec<f64> {

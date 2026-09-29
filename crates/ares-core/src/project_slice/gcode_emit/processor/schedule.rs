@@ -51,7 +51,7 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
         pushed += 1;
         record_batch(blocks, &mut times, &mut emitted, batch, &mut pending);
     }
-    let batch = planner.finish();
+    let batch = planner.finish(!pending.is_empty());
     record_batch(blocks, &mut times, &mut emitted, batch, &mut pending);
 
     let trailing_delay = pending

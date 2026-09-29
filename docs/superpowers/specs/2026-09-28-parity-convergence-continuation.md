@@ -887,3 +887,28 @@ Ported the layer hand-off of `PressureEqualizer::process_layer(LayerResult&&)`
   between runs, so the oracle crashes are flaky. Bambu Lab A1
   0.2/0.4/0.6/0.8 show a 1s estimate and M73 drift that predates this
   slice; HEAD without it gives the same output.
+
+## 2026-09-29 (`calculate_time` final drain)
+
+Ported the `is_final` drain of `GCodeProcessor::TimeMachine::calculate_time`
+(`GCodeProcessor.cpp:419-434`, called from `finalize` at :2699) into
+`RollingPlanner::finish` (`processor/motion/planner/mod.rs`).
+- `fdfcecad` gave the final pass the `blocks.size() < 2` guard, which
+  drops a lone trailing block. Upstream skips that guard on the final pass
+  while extra time is still buffered (`drain_final`). The lone block
+  then counts, together with the buffered delay. `scheduled_times` passes
+  `!pending.is_empty()`, since the `pending` queue is Ares's
+  `m_additional_time_buffer`. A leftover delay with no matching block was
+  already added as `trailing_delay`.
+- Test: `final_pass_drains_a_lone_block_with_buffered_delay` (total was
+  5s without the port).
+- Oracle: Bambu Lab A1 0.2/0.4/0.6/0.8 PASS again; since `fdfcecad` they
+  had been 1s short in the estimate and M73. Printer sweep: 971 of 1001.
+- Tried and reverted: making `GlobalVisibility` seed each sample with the
+  aligned-back `front_adjustment` before the ray decrements, and group
+  the point-visibility weight as `(r - d_plane) + (r - d)`, both as
+  upstream writes it (`SeamPlacer.cpp:160-167`, `:324-345`). TinyBotV1
+  0.4 still picked the other layer-0 corner: its four candidates tie to
+  within 1e-7. TinyBotV1 0.2 flipped from PASS to DIVERGENT. The tie
+  depends on sub-ulp accumulation that this pair of changes does not
+  reproduce, so it stays a known residual.

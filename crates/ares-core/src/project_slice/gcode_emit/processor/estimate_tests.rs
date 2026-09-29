@@ -200,6 +200,18 @@ fn single_block_synchronization_waits_for_next_motion() {
 }
 
 #[test]
+fn final_pass_drains_a_lone_block_with_buffered_delay() {
+    // `calculate_time(is_final)` (`GCodeProcessor.cpp:427`) processes a
+    // lone queued block when extra time is still buffered: the `G4 S5`
+    // found fewer than two blocks, so the block and the delay both count.
+    let lines = ["M204 S1000", "G1 X600 F3600", "G4 S5"].map(str::to_owned);
+
+    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+
+    assert!(estimate.total > 15.0, "{}", estimate.total);
+}
+
+#[test]
 fn initial_tool_selection_adds_machine_load_time_once() {
     let lines = ["T0 H-1", "T0 H-1"].map(str::to_owned);
 
