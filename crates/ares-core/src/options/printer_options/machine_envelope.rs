@@ -40,6 +40,28 @@ pub enum InputShaperType {
     Disable,
 }
 
+impl InputShaperType {
+    /// Serialized enum spelling, matching upstream `opt_serialize`
+    /// (`input_shaping_type` values are capitalized identifiers).
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Default => "Default",
+            Self::Mzv => "MZV",
+            Self::Zv => "ZV",
+            Self::Zvd => "ZVD",
+            Self::Zvdd => "ZVDD",
+            Self::Zvddd => "ZVDDD",
+            Self::Ei => "EI",
+            Self::Ei2 => "EI2",
+            Self::TwoHumpEi => "2HUMP_EI",
+            Self::Ei3 => "EI3",
+            Self::ThreeHumpEi => "3HUMP_EI",
+            Self::Daa => "DAA",
+            Self::Disable => "Disable",
+        }
+    }
+}
+
 declare_option_group! {
     pub struct MachineEnvelopeOptions, MachineEnvelopeOptionsBuilder {
         emit_machine_limits_to_gcode => "emit_machine_limits_to_gcode": OrcaBool = OrcaBool(true),

@@ -99,11 +99,14 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     } else if matches!(option_type.as_str(), "coBool" | "coBools") {
         // A boolean domain is exactly {0,1}; both cases are legal by
         // construction, so full comparison is the legality proof.
+        // Nullable booleans additionally admit `nil` (the option is
+        // then omitted from the exported config) — probe it too.
         provably_legal = true;
-        (
-            vec![case("false", "0", entry), case("true", "1", entry)],
-            None,
-        )
+        let mut values = vec![case("false", "0", entry), case("true", "1", entry)];
+        if entry.get("nullable").and_then(Value::as_bool) == Some(true) {
+            values.push(case("nil", "nil", entry));
+        }
+        (values, None)
     } else if matches!(option_type.as_str(), "coEnum" | "coEnums") {
         let values = enum_values(&key, &block, source_text)
             .into_iter()

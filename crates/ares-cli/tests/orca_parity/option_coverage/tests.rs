@@ -44,7 +44,9 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
         .filter(|plan| matches!(plan.option_type.as_str(), "coBool" | "coBools"))
         .collect::<Vec<_>>();
     assert!(!booleans.is_empty());
-    assert!(booleans.iter().all(|plan| plan.cases.len() == 2));
+    // Non-nullable booleans cover {0,1}; nullable ones add the `nil`
+    // probe (the key is then omitted from the exported config).
+    assert!(booleans.iter().all(|plan| plan.cases.len() >= 2));
 
     let enums = plans
         .iter()

@@ -52,6 +52,17 @@ pub(crate) fn verify_value(
     let mismatch =
         |detail| StageError::new(Stage::Application, FailureKind::ApplicationMismatch, detail);
     let effective = settings(project)?;
+    // `nil` probes: the option is nullable, so the legal export either
+    // omits the key or serializes the literal `nil`.
+    if requested == &Value::String("nil".to_owned()) {
+        return match effective.get(key) {
+            None | Some(Value::Null) => Ok(Value::String("nil".to_owned())),
+            Some(actual) if actual.as_str() == Some("nil") => Ok(Value::String("nil".to_owned())),
+            Some(actual) => Err(mismatch(format!(
+                "{key}: requested nil, effective {actual}"
+            ))),
+        };
+    }
     let actual = effective
         .get(key)
         .ok_or_else(|| mismatch(format!("missing {key}")))?;

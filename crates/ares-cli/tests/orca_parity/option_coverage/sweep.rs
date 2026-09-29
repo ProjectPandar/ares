@@ -168,7 +168,7 @@ pub(super) fn oracle_nondeterministic(key: &str, label: &str) -> bool {
 /// byte-parity regression. Raft is implemented (`project_slice/raft/`)
 /// and is deliberately not in this set.
 fn unimplemented_feature(key: &str) -> bool {
-    key.starts_with("support_") || key.starts_with("tree_support_")
+    key == "enable_support" || key.starts_with("support_") || key.starts_with("tree_support_")
 }
 
 fn execute_plan(
