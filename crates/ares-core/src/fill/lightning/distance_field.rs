@@ -263,15 +263,19 @@ impl DistanceField {
 
     /// `DistanceField::update` — mark cells supported by the new branch
     /// (circle at `added_leaf` ∪ rotated rectangle `to_node`→`added_leaf`).
+    #[expect(
+        clippy::manual_range_contains,
+        reason = "upstream `d < -1 || d > 1` is false for a NaN extent; `contains` is not"
+    )]
     pub(super) fn update(&mut self, to_node: Point, added_leaf: Point) {
         let (vx, vy) = (
             (added_leaf.x() - to_node.x()) as f64,
             (added_leaf.y() - to_node.y()) as f64,
         );
+        // No zero-length guard upstream: `extent` goes NaN, the saturating
+        // cast keeps the grid at the leaf circle, and the NaN extent test
+        // below never rejects — only the radius-gated erase applies.
         let l2 = vx * vx + vy * vy;
-        if l2 == 0.0 {
-            return;
-        }
         let ex = -vy * self.supporting_radius as f64 / l2.sqrt();
         let ey = vx * self.supporting_radius as f64 / l2.sqrt();
 
@@ -317,11 +321,9 @@ impl DistanceField {
                     let vxx = (grid_loc.x() - to_node.x()) as f64;
                     let vyy = (grid_loc.y() - to_node.y()) as f64;
                     let d = vx * vxx + vy * vyy;
-                    if !(d >= 0.0 && d <= l2) {
-                        continue;
-                    }
                     let de = ex * vxx + ey * vyy;
-                    if !(-1.0..=1.0).contains(&de) {
+                    // Outside `[0, l2]` falls through to the erase check.
+                    if (0.0..=l2).contains(&d) && (de < -1.0 || de > 1.0) {
                         continue;
                     }
                 }
@@ -339,3 +341,6 @@ impl DistanceField {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

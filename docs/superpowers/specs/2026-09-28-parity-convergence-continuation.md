@@ -781,3 +781,19 @@ Deferred:
   (`continue` when the projection falls outside `[0, l2]`) as a
   possible divergence from `DistanceField.cpp:130-136`. It predates
   these commits and gets its own parity check.
+
+## 2026-09-29 (lightning `DistanceField::update` fall-through)
+
+Ported from `Fill/Lightning/DistanceField.cpp:96-148`
+(`DistanceField::update`) into `fill/lightning/distance_field.rs`.
+- A grid location whose projection falls outside `[0, l2]` now skips
+  only the rotated-rectangle test and reaches the radius-gated erase
+  check, as upstream does. Ares used to `continue`.
+- The zero-length early return is removed. Upstream has none: the NaN
+  `extent` makes `d < -1 || d > 1` false, so cells within the radius of
+  the leaf are still erased.
+- Tests: `fill/lightning/distance_field/tests.rs`, one per behavior.
+  Both failed before the fix.
+- Oracle: `sparse_infill_pattern/lightning` is nondeterministic
+  upstream (unseeded `rand()`). The case slices without error, and
+  total sparse-infill E is 166.243 against OrcaSlicer's 166.248.
