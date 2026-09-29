@@ -97,7 +97,8 @@ pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     }
     // Test hook: force-drain the queue even for a lone block so trapezoid
     // math stays inspectable; production `finish` drops a lone tail block
-    // to mirror upstream `calculate_time`'s `blocks.size() < 2` guard.
+    // (upstream `calculate_time`'s `blocks.size() < 2` guard) unless a
+    // buffered delay is still pending (`drain_final`).
     if planner.blocks.is_empty() {
         return times;
     }

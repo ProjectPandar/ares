@@ -2,7 +2,7 @@
 //! conditional START; the final layer baseline still selects the fan speed.
 use super::super::*;
 
-fn cooling_state() -> CoolingState {
+pub(super) fn cooling_state() -> CoolingState {
     CoolingState {
         equalizer: None,
         part_speed: 100,

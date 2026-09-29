@@ -1000,3 +1000,23 @@ every raft layer went through `FillSupportBase`.
 - The reviewer's out-of-scope item on `distance_field.rs:320`
   (fall-through) was already ported in `f2ab98f3`. It matches
   `DistanceField.cpp:130-136`.
+
+## 2026-09-29 (review round fixes)
+
+The independent review of `f2ab98f3..9f68dd5d` passed aspects 2, 3, 4
+and 6, and failed 1 and 5. Fixes:
+- Deleted the assertion-free `fill/base_support/probes.rs`, and the
+  inline `overlap_probe`/`radius_probe`/`collision_probe` (`mark.rs`) and
+  `walk_probe` (`extend.rs`) test modules.
+- `cooling.finish` is now covered by
+  `cooling::tests::equalizer_drain`, which runs two layers through the
+  equalizer and then drains. The end-to-end
+  `gcode_equalizer_drain::pressure_equalizer_keeps_the_final_layer`
+  slices KSR with slope 300 and fails when the `layers.rs` call is
+  removed.
+- `combine_infill`: `layer_configs_take_the_threshold_from_the_solid_infill_flow`
+  checks the wired `LayerConfig.area_threshold` on the KSR traversal,
+  where `minimum_sparse_infill_area` is 15mm².
+- Planner test-hook comment updated for `drain_final`.
+- Removed the `const _` shim in `raft/emit.rs` that kept an unused
+  `RaftFillInputs` import alive.

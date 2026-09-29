@@ -1,3 +1,4 @@
+mod equalizer_drain;
 mod role_end;
 
 #[tokio::test]

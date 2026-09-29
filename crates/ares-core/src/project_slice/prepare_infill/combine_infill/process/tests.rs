@@ -1,5 +1,5 @@
 use super::{EPSILON, LayerConfig};
-use super::{groups, infill_area_threshold};
+use super::{groups, infill_area_threshold, layer_configs};
 use crate::{ProcessInfillPattern, project_slice::perimeters::types::PerimeterFlows};
 
 fn config(height: f64, maximum: f64) -> LayerConfig {
@@ -50,4 +50,33 @@ fn grouping_combines_layers_strictly_below_cap_plus_epsilon() {
 fn area_threshold_is_squared_scaled_solid_infill_spacing() {
     let threshold = infill_area_threshold(flow(), crate::geometry::CoordinateScale::Normal);
     assert_eq!(threshold, 360_000.0 * 360_000.0);
+}
+
+/// `PrintObject::combine_infill` filters with `layerms.front()`'s
+/// `infill_area_threshold()` (`PrintObject.cpp:4230-4237`): each layer config
+/// carries its own solid-infill-flow threshold, not the KSR
+/// `minimum_sparse_infill_area` of 15mm².
+#[test]
+fn layer_configs_take_the_threshold_from_the_solid_infill_flow() {
+    let scale = crate::geometry::CoordinateScale::Normal;
+    let prepared = crate::project_slice::perimeters::prepare_post_classic_traversal(
+        crate::test_fixtures::ksr_project(),
+    )
+    .unwrap();
+    let traversal = &prepared.objects[0];
+    let nozzles = crate::OrcaFloats(vec![crate::OrcaFloat(0.4)]);
+    let configs = layer_configs(traversal, &nozzles, scale).unwrap();
+    let inputs = &traversal
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object
+        .records;
+    assert_eq!(configs.len(), inputs.len());
+    for (config, input) in configs.iter().zip(inputs) {
+        let flow = input.as_ref().unwrap().solid_infill_flow;
+        assert_eq!(config.area_threshold, infill_area_threshold(flow, scale));
+        assert!(config.area_threshold < 1.0e12);
+    }
 }

@@ -16,8 +16,6 @@ mod connect;
 mod extend;
 mod link;
 mod mark;
-#[cfg(test)]
-mod probes;
 mod take;
 #[cfg(test)]
 mod tests;
