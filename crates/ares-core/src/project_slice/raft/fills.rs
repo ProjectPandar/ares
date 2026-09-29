@@ -9,6 +9,7 @@
 //! OuterLow→OuterHigh intersection pairs become vertical fill lines;
 //! the connection boundary is the `-0.5·spacing` inset outer contour.
 
+use super::fill_params::RaftFillPattern;
 use crate::fill::base_support::connect_base_support;
 use crate::fill::checked_rotate::rotate_point;
 use crate::fill::rectilinear::segments::{populate_vertical_lines, prepare_rectilinear_contours};
@@ -20,6 +21,11 @@ pub(crate) struct RaftFillSpec {
     pub(crate) angle: f64,
     /// Flow spacing in mm.
     pub(crate) spacing: f64,
+    /// `flow.spacing()` of the layer's own extrusion flow, mm: the sheath
+    /// offsets use it (`SupportCommon.cpp:733`), while the filler keeps
+    /// `spacing`. Raft base layers are taller than the object layer the
+    /// filler spacing is derived from (`:1476` vs `:1479`).
+    pub(crate) sheath_spacing: f64,
     /// Density in [0, 1].
     pub(crate) density: f32,
     /// `with_sheath` (`SupportCommon.cpp:1516`): the flange (raft layer 0)
@@ -28,6 +34,9 @@ pub(crate) struct RaftFillSpec {
     /// `first_layer_flow.width()` for the flange `closing_ex` inflate
     /// (`0.5·width`), mm.
     pub(crate) width_mm: f64,
+    /// `Fill::new_from_type(base_fill_pattern / raft_interface_fill_pattern)`
+    /// (`SupportCommon.cpp:1450-1451`).
+    pub(crate) pattern: RaftFillPattern,
     /// Region preprocessing before the fill
     /// (`fill_expolygons_with_sheath_generate_paths` vs
     /// `extrude_interface`, `SupportCommon.cpp:725-727,1729`).
@@ -90,7 +99,7 @@ pub(crate) fn raft_layer_polylines(
     // `spacing * 0.15` (`:735`): `spacing = coord_t(scale_(spacing))`
     // (`:733`) — `Flow` spacing is stored as `float`, so narrow through
     // f32 before the trunc, then the integer scaled spacing × 0.15.
-    let clip = 0.15 * (f64::from(spec.spacing as f32) * units) as i64 as f64;
+    let clip = 0.15 * (f64::from(spec.sheath_spacing as f32) * units) as i64 as f64;
     let mut out = Vec::new();
     for expolygon in &closing {
         let mut points = expolygon.contour().points().to_vec();
@@ -106,7 +115,7 @@ pub(crate) fn raft_layer_polylines(
         // `float(-0.4 * spacing)` (`:749`) — integer scaled spacing
         // (f32-narrowed like `scaled_spacing()`); negative delta
         // SHRINKS the fill region.
-        (-0.4 * ((f64::from(spec.spacing as f32) * units) as i64) as f64) as f32,
+        (-0.4 * ((f64::from(spec.sheath_spacing as f32) * units) as i64) as f64) as f32,
         crate::geometry::JoinType::Miter,
         3.0,
     )?;
@@ -128,7 +137,11 @@ pub(crate) fn raft_layer_polylines(
 mod geom;
 use geom::{align_to_grid, checked_scale_f32, clip_polyline_end, vertical_segments};
 
-/// Fill one raft layer (`FillSupportBase::fill_surface`).
+mod patterns;
+
+/// Fill one raft layer with the filler `Fill::new_from_type(pattern)` builds
+/// (`SupportCommon.cpp:1450-1451`); the inline body is
+/// `FillSupportBase::fill_surface`.
 pub(crate) fn raft_layer_fill(
     layer_polygons: &[Polygon],
     spec: RaftFillSpec,
@@ -158,6 +171,17 @@ pub(crate) fn raft_layer_fill(
     };
     let mut out = Vec::new();
     for expolygon in expolygons {
+        match spec.pattern {
+            RaftFillPattern::SupportBase => {}
+            RaftFillPattern::Rectilinear => {
+                out.extend(patterns::rectilinear(&expolygon, spec, reference, scale)?);
+                continue;
+            }
+            RaftFillPattern::Honeycomb => {
+                out.extend(patterns::honeycomb(&expolygon, spec, scale)?);
+                continue;
+            }
+        }
         // `aoffset1 = coord_t(scale_(overlap − 0.5·spacing))`
         // (`FillRectilinear.cpp:3613`, `FillBase.cpp:394`) truncates to an
         // integer lattice unit, matching `checked_scale`.

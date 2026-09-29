@@ -951,3 +951,52 @@ Ported the `is_final` drain of `GCodeProcessor::TimeMachine::calculate_time`
   inside its source-scanner fixtures. Nothing invokes the macro.
 - Verification: `cargo nextest run --workspace` passed 7344 of 7344, and
   `grep` finds no `include_(bytes|str)!` invocations.
+
+## 2026-09-29 (raft filler selection: `base_fill_pattern` / `raft_interface_fill_pattern`)
+
+Ported the per-layer filler choice in `SupportCommon.cpp:1450-1516` into
+`project_slice/raft/{emit.rs,fills.rs,fills/patterns.rs}`. Before this,
+every raft layer went through `FillSupportBase`.
+- `RaftFillSpec.pattern`: the flange and the interface/contact layers use
+  `filler_interface`, built from `raft_interface_fill_pattern`. Base
+  layers use `filler_support`, built from `base_fill_pattern`
+  (`SupportParameters.hpp:129-135`).
+- In `fills.rs`:
+  - `Rectilinear` goes to `FillRectilinear::fill_surface` →
+    `fill_surface_by_lines` (`fill_rectilinear_surface`).
+  - `Honeycomb` goes to `Fill::fill_surface` → `FillHoneycomb`
+    (`fill_honeycomb`).
+  - Both run as a fresh `Fill`: `layer_id = -1` (so no layer
+    alternation), overlap 0, `link_max_length` 0, and anchors 1000.
+- `raft/bridge/project.rs` now fills in `with_sheath`
+  (`tree_support_wall_count > 0`) and `honeycomb_base`
+  (`support_base_pattern == honeycomb`). Both used to be hard-coded
+  `false`.
+- Base layers take the sheath when `with_sheath` is set (`:1484`).
+  - The sheath offsets (`0.15·spacing` clip, `-0.4·spacing` fill region)
+    use `flow.scaled_spacing()` of the layer's own flow, which is built at
+    `raft_layer.height` (`:1476`, `:733`).
+  - The filler keeps `support_material_flow.spacing()`. That is why
+    `RaftFillSpec.sheath_spacing` is a separate field. Without it, probe
+    C missed Orca by 9µm per side, because the 0.3mm raft base is taller
+    than the 0.2mm object layer.
+- `flow_spacing` (`Flow.cpp:200-206`) moved into `raft/fill_params.rs` so
+  that `bridge/project.rs` and `emit.rs` share it.
+- Oracle probes were built from `case-6SIL49` by rewriting
+  `project_settings.config`. The table shows diff lines before → after.
+  | Probe | Settings | Diff lines |
+  |---|---|---|
+  | control | `raft_layers=4` | 4 → 4 |
+  | A | `support_interface_spacing=0` (dense interface → Rectilinear) | 483 → 0 |
+  | B | `raft_layers=4`, `support_base_pattern=honeycomb` | 884 → 4 |
+  | C | `raft_layers=4`, `tree_support_wall_count=1` (base sheath + Rectilinear) | 239 → 4 |
+
+  The 4 lines left in control, B and C are the known one-digit
+  wipe-retract E residual.
+- Tests. The two fill tests fail without the dispatch.
+  - `plans_select_the_upstream_filler_and_sheath_per_layer`
+  - `rectilinear_pattern_connects_the_hatch_into_one_zig_zag`
+  - `honeycomb_pattern_draws_diagonal_hexagon_walls`
+- The reviewer's out-of-scope item on `distance_field.rs:320`
+  (fall-through) was already ported in `f2ab98f3`. It matches
+  `DistanceField.cpp:130-136`.

@@ -9,7 +9,7 @@
 //! incorporates the raft layers, `SupportMaterial.cpp:2130`) and
 //! `print_z` shifts by `object_print_z_min`.
 
-use super::fill_params::RaftFillInputs;
+use super::fill_params::flow_spacing;
 use super::fills::{self, RaftFillSpec, raft_layer_fill};
 use super::grid::{RaftLayerKind, RaftLayerZ};
 use crate::geometry::{CoordinateScale, Point, Polygon};
@@ -53,7 +53,10 @@ pub(crate) fn raft_layer_plans(
                     RaftFillSpec {
                         angle: fill_params.flange_angle,
                         spacing: first_layer_flow_spacing_mm,
+                        sheath_spacing: first_layer_flow_spacing_mm,
                         density: (first_layer_density_percent * 0.01) as f32,
+                        // The flange uses `filler_interface` (`:1450,1496-1500`).
+                        pattern: fill_params.interface_fill_pattern,
                         sheath: true,
                         width_mm: first_layer_width_mm,
                         preprocess: fills::RaftFillPreprocess::Closing,
@@ -65,8 +68,10 @@ pub(crate) fn raft_layer_plans(
                 RaftFillSpec {
                     angle: fill_params.base_angle,
                     spacing: support_flow_spacing_mm,
+                    sheath_spacing: flow_spacing(support_width_mm, z.height),
                     density: fill_params.support_density as f32,
-                    sheath: false,
+                    pattern: fill_params.base_fill_pattern,
+                    sheath: fill_params.with_sheath,
                     width_mm: support_width_mm,
                     preprocess: fills::RaftFillPreprocess::Closing,
                 },
@@ -86,7 +91,9 @@ pub(crate) fn raft_layer_plans(
                     RaftFillSpec {
                         angle,
                         spacing: support_flow_spacing_mm,
+                        sheath_spacing: flow_spacing(interface_width_mm, z.height),
                         density: fill_params.raft_interface_density as f32,
+                        pattern: fill_params.interface_fill_pattern,
                         sheath: false,
                         width_mm: interface_width_mm,
                         // `extrude_interface` wraps the contact input in
@@ -180,11 +187,6 @@ pub(crate) fn apply_raft_to_stream(
     }
     Ok(stream)
 }
-
-const _: () = {
-    // Silence the unused re-export until the pipeline slice lands.
-    let _: Option<RaftFillInputs> = None;
-};
 
 /// Per-layer `SupportLayer::interface_id` (`SupportCommon.cpp:1369-1406`).
 fn interface_ids(raft_grid: &[RaftLayerZ]) -> Vec<usize> {

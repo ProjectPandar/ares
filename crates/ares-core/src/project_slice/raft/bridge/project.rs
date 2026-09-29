@@ -2,7 +2,7 @@
 //! from `bridge.rs` for the <400 LOC rule.
 
 use super::super::emit::raft_layer_plans;
-use super::super::fill_params::RaftFillInputs;
+use super::super::fill_params::{RaftFillInputs, flow_spacing};
 use super::super::grid::raft_layer_grid;
 use super::super::polygons::{RaftPolygonParams, raft_polygons};
 use super::{RaftStream, raft_geometry_error};
@@ -50,16 +50,8 @@ pub(crate) fn build_project_raft(
 
     let layer_height = parameters.layer_height;
     let first_height = parameters.first_print_layer_height;
-    // `rounded_rectangle_extrusion_spacing` (`Flow.cpp:200-206`)
-    // computes `width - height·float(1 − 0.25·π)`: the constant is
-    // `float(1. − 0.25·PI)` — a double expression narrowed to f32 once,
-    // not an f32 π multiplication.
-    let spacing = |width: f64, height: f64| {
-        let factor = (1.0 - 0.25 * std::f64::consts::PI) as f32;
-        (width as f32 - height as f32 * factor) as f64
-    };
-    let support_flow_spacing = spacing(support_width, layer_height);
-    let interface_flow_spacing = spacing(interface_width, layer_height);
+    let support_flow_spacing = flow_spacing(support_width, layer_height);
+    let interface_flow_spacing = flow_spacing(interface_width, layer_height);
     // First-layer support flow follows the FIRST-LAYER width chain
     // (`initial_layer_line_width` else `line_width`, header.rs:214),
     // not `support_line_width` (oracle flange pitch 0.419 =
@@ -70,7 +62,7 @@ pub(crate) fn build_project_raft(
     )
     .or_else(|| explicit_width(object.line_width, support_nozzle))
     .unwrap_or(support_width);
-    let first_layer_flow_spacing = spacing(first_layer_width, first_height);
+    let first_layer_flow_spacing = flow_spacing(first_layer_width, first_height);
 
     let fill_inputs = RaftFillInputs {
         support_flow_spacing,
@@ -80,8 +72,9 @@ pub(crate) fn build_project_raft(
         support_angle_degrees: object.support_angle.0,
         base_raft_layers: parameters.base_raft_layers,
         interface_raft_layers: parameters.interface_raft_layers,
-        with_sheath: false,
-        honeycomb_base: false,
+        // `SupportParameters.hpp:129-133`.
+        with_sheath: object.tree_support_wall_count.0 > 0,
+        honeycomb_base: object.support_base_pattern == crate::ProcessSupportBasePattern::Honeycomb,
     };
     let fill_params = fill_inputs.derive();
 

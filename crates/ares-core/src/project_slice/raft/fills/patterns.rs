@@ -1,0 +1,75 @@
+//! The non-`FillSupportBase` raft fillers: `SupportParameters` selects
+//! `ipRectilinear` for dense bases/interfaces and `ipHoneycomb` for a
+//! honeycomb `support_base_pattern` (`SupportParameters.hpp:133-135`).
+//! Raft fillers are fresh `Fill` objects: `layer_id = size_t(-1)` (no layer
+//! alternation), `overlap = 0`, `link_max_length = 0`
+//! (`link_max_length_factor = 0`, `SupportCommon.cpp:1436`) and default
+//! `FillParams` apart from `density` and `dont_adjust = true` (`:453-455`).
+
+use super::RaftFillSpec;
+use crate::fill::honeycomb::{HoneycombFillParams, fill_honeycomb};
+use crate::fill::rectilinear::{MonotonicFillParams, fill_rectilinear_surface};
+use crate::geometry::{
+    ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polyline, offset_expolygon,
+};
+
+/// `FillParams::anchor_length{_max}` defaults (`FillBase.hpp:60-61`).
+const DEFAULT_ANCHOR_LENGTH: f32 = 1000.0;
+
+/// `FillRectilinear::fill_surface` with `multiline == 1` →
+/// `fill_surface_by_lines` (`FillRectilinear.cpp:3387-3399`).
+pub(super) fn rectilinear(
+    expolygon: &ExPolygon,
+    spec: RaftFillSpec,
+    reference: Point,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    let params = MonotonicFillParams {
+        spacing: spec.spacing,
+        overlap: 0.0,
+        density: spec.density,
+        angle: spec.angle as f32,
+        layer_index: 0,
+        thickness_layers: 1,
+        fixed_angle: true,
+        bridge_angle: None,
+        reference_point: reference,
+        dont_adjust: true,
+        anchor_length_max: DEFAULT_ANCHOR_LENGTH,
+        link_max_length: 0.0,
+        consistent_pattern: false,
+        horiz_move: 0,
+        extended_object_min_x: None,
+        extended_object_max_x: None,
+        locked_zag: false,
+    };
+    Ok(fill_rectilinear_surface(expolygon, params, scale)?.polylines)
+}
+
+/// `Fill::fill_surface` (`FillBase.cpp:102-118`): offset by
+/// `overlap - 0.5·spacing`, then `FillHoneycomb::_fill_surface_single` per
+/// component.
+pub(super) fn honeycomb(
+    expolygon: &ExPolygon,
+    spec: RaftFillSpec,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    let params = HoneycombFillParams {
+        spacing: spec.spacing,
+        density: spec.density,
+        multiline: 1,
+        angle: spec.angle as f32,
+        layer_index: 0,
+        thickness_layers: 1,
+        fixed_angle: true,
+        bridge_angle: None,
+        anchor_length: DEFAULT_ANCHOR_LENGTH,
+        anchor_length_max: DEFAULT_ANCHOR_LENGTH,
+    };
+    let delta = (-0.5 * spec.spacing / scale.factor()) as f32;
+    let mut out = Vec::new();
+    for component in offset_expolygon(expolygon, delta, JoinType::Miter, 3.0)? {
+        out.extend(fill_honeycomb(&component, params, scale)?);
+    }
+    Ok(out)
+}

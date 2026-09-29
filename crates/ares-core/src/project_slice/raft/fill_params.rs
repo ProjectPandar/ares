@@ -25,6 +25,14 @@ use std::f64::consts::FRAC_PI_2;
 #[cfg(test)]
 use std::f64::consts::{FRAC_PI_4, PI};
 
+/// `rounded_rectangle_extrusion_spacing` (`Flow.cpp:200-206`):
+/// `width - height·float(1 − 0.25·π)` in f32 — the double factor narrows
+/// to f32 once, not an f32 π multiplication.
+pub(crate) fn flow_spacing(width: f64, height: f64) -> f64 {
+    let factor = (1.0 - 0.25 * std::f64::consts::PI) as f32;
+    (width as f32 - height as f32 * factor) as f64
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum RaftFillPattern {
     Rectilinear,
@@ -36,22 +44,11 @@ pub(crate) enum RaftFillPattern {
 pub(crate) struct RaftFillParams {
     pub(crate) support_density: f64,
     pub(crate) raft_interface_density: f64,
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "SupportCommon.cpp raft pattern selection is not yet consumed by the raft emitter"
-        )
-    )]
     pub(crate) base_fill_pattern: RaftFillPattern,
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "SupportCommon.cpp raft pattern selection is not yet consumed by the raft emitter"
-        )
-    )]
     pub(crate) interface_fill_pattern: RaftFillPattern,
+    /// `with_sheath` (`SupportParameters.hpp:130`): the base layers draw a
+    /// sheath perimeter too (`SupportCommon.cpp:1484`).
+    pub(crate) with_sheath: bool,
     /// Radians.
     pub(crate) flange_angle: f64,
     pub(crate) base_angle: f64,
@@ -135,6 +132,7 @@ impl RaftFillInputs {
             raft_interface_density,
             base_fill_pattern,
             interface_fill_pattern,
+            with_sheath: self.with_sheath,
             flange_angle,
             base_angle,
             interface_angle,
