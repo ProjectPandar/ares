@@ -154,9 +154,15 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         // enabled (`GCode.cpp:6621-6622`) and the speed lies below the band
         // max. The fixture outer wall (25mm/s) sits under the default 70mm/s
         // min, so the enable domain lowers the min to put it inside the band.
-        "min_resonance_avoidance_speed" | "max_resonance_avoidance_speed" => {
-            &[("resonance_avoidance", "1")]
-        }
+        "min_resonance_avoidance_speed" => &[("resonance_avoidance", "1")],
+        // The max domain only probes 0 and a seeded 3.523 (min-only schema),
+        // both under the fixture wall: slow the wall to 1.5mm/s and drop the
+        // min to 1 so the seeded band [1, 3.523] clamps it to the min.
+        "max_resonance_avoidance_speed" => &[
+            ("resonance_avoidance", "1"),
+            ("min_resonance_avoidance_speed", "1"),
+            ("outer_wall_speed", "1.5"),
+        ],
         "resonance_avoidance" => &[("min_resonance_avoidance_speed", "20")],
         // Support structure sub-options only run when supports generate
         // (`support_layers`/`raft`/`tree_support_*` all gate on

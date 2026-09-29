@@ -153,12 +153,10 @@ impl CoolingState {
         {
             self.additional_speed = additional_speed;
             let comment = if self.gcode_comments {
-                {
-                    if additional_speed == 0 {
-                        " ; disable additional fan "
-                    } else {
-                        " ; enable additional fan "
-                    }
+                if additional_speed == 0 {
+                    " ; disable additional fan "
+                } else {
+                    " ; enable additional fan "
                 }
             } else {
                 ""
@@ -225,12 +223,10 @@ impl CoolingState {
         let replacement = if part_speed != self.part_speed || initial {
             let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
             let comment = if self.gcode_comments {
-                {
-                    if speed == 0 {
-                        " ; disable fan"
-                    } else {
-                        " ; enable fan"
-                    }
+                if speed == 0 {
+                    " ; disable fan"
+                } else {
+                    " ; enable fan"
                 }
             } else {
                 ""
@@ -295,12 +291,10 @@ impl CoolingState {
                 self.physical_part_speed = target;
                 let emitted = clamped_part_speed(target, self.part_cooling_fan_min_pwm);
                 let comment = if self.gcode_comments {
-                    {
-                        if emitted == 0 {
-                            " ; disable fan"
-                        } else {
-                            " ; enable fan"
-                        }
+                    if emitted == 0 {
+                        " ; disable fan"
+                    } else {
+                        " ; enable fan"
                     }
                 } else {
                     ""

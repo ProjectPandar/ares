@@ -754,3 +754,30 @@ mechanical fix. Every other lint is clean across `--workspace
 (`SeamPlacer::place_seam_in_loop`) into `seam_placement/placement.rs`, and
 `fields/assemble.rs` now reuses the wipe tail nozzle diameter for
 `seam_gap`, so no source file exceeds 400 LOC.
+
+### Review round (2026-09-29) — resonance and cleanup commits
+
+An independent reviewer covered `84943ec0`, `5bcc2f72` and `daf34af6`.
+Verdict: PASS, with no blockers or majors.
+- The resonance port matches `GCode.cpp:6618-6651` for order (after the
+  volumetric cap, before overhang estimation), roles and band edges.
+- The cleanup and split were confirmed behavior-neutral.
+
+Minor fixes applied:
+- `max_resonance_avoidance_speed` coverage was vacuous. Its min-only
+  domain probes 0 and a seeded 3.523, both below the 25mm/s fixture
+  wall. The domain now co-injects `min_resonance_avoidance_speed = 1`
+  and `outer_wall_speed = 1.5`, so the seeded band clamps the wall to
+  F60. Both slicers agree.
+- Removed the empty `impl RaftSchedule {}`, the leftover `_`-prefixed
+  bindings (including a needless `children` clone in the lightning
+  `reroot`), and doubled `{ { … } }` blocks at nine comment sites.
+
+Deferred:
+- The legacy `speeds/resonance_avoidance.rs` belongs to the older
+  `pipeline` path, not the project emit path. It goes with that
+  pipeline's retirement rather than this slice.
+- The reviewer flagged `fill/lightning/distance_field.rs:320`
+  (`continue` when the projection falls outside `[0, l2]`) as a
+  possible divergence from `DistanceField.cpp:130-136`. It predates
+  these commits and gets its own parity check.

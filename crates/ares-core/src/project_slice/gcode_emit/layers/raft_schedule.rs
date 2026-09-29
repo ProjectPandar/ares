@@ -30,8 +30,6 @@ pub(super) struct RaftSchedule {
     pub(super) counts: Vec<usize>,
 }
 
-impl RaftSchedule {}
-
 pub(super) fn build(
     settings: &crate::ProjectSettings,
     objects: &[crate::ObjectOptions],

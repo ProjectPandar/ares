@@ -114,9 +114,9 @@ impl Node {
         const JUNCT_NUM: i64 = 3;
         const JUNCT_DEN: i64 = 4;
         let junction_magnitude = magnitude * JUNCT_NUM / JUNCT_DEN;
-        let (children, p, _is_root, parent) = {
+        let (children, p, parent) = {
             let n = this.borrow();
-            (n.children.clone(), n.p, n.is_root, n.parent.upgrade())
+            (n.children.clone(), n.p, n.parent.upgrade())
         };
         if children.len() == 1 {
             let child_p = children[0].clone();

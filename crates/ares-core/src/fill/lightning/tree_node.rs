@@ -120,9 +120,9 @@ impl Node {
 
     /// `reroot` — re-root this subtree onto `new_parent` (or make root).
     pub(super) fn reroot(this: &NodeSPtr, new_parent: Option<NodeSPtr>) {
-        let (is_root, parent, _children) = {
+        let (is_root, parent) = {
             let n = this.borrow();
-            (n.is_root, n.parent.upgrade(), n.children.clone())
+            (n.is_root, n.parent.upgrade())
         };
         if !is_root {
             let old_parent = parent.expect("non-root has a parent");

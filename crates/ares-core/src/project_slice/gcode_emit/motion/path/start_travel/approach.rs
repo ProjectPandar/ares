@@ -51,17 +51,15 @@ pub(super) fn emit_needs_travel(
     // `GCode.cpp:6378`: the path's first travel carries
     // "move to first {description} point" under `gcode_comments`.
     let first_travel_comment = if state.options.gcode_comments {
-        {
-            let bridge = if is_bridge_feature(properties.feature) {
-                " (bridge)"
-            } else {
-                ""
-            };
-            format!(
-                " ; move to first {}{bridge} point",
-                feature_description(properties.feature)
-            )
-        }
+        let bridge = if is_bridge_feature(properties.feature) {
+            " (bridge)"
+        } else {
+            ""
+        };
+        format!(
+            " ; move to first {}{bridge} point",
+            feature_description(properties.feature)
+        )
     } else {
         Default::default()
     };

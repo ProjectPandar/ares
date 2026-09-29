@@ -30,14 +30,12 @@ pub(super) fn linear_segment(
     } else {
         let extrusion = coordinate(state, extrusion);
         let comment = if state.options.gcode_comments {
-            {
-                let bridge = if is_bridge_feature(properties.feature) {
-                    " (bridge)"
-                } else {
-                    ""
-                };
-                format!(" ; {}{bridge}", feature_description(properties.feature))
-            }
+            let bridge = if is_bridge_feature(properties.feature) {
+                " (bridge)"
+            } else {
+                ""
+            };
+            format!(" ; {}{bridge}", feature_description(properties.feature))
         } else {
             Default::default()
         };

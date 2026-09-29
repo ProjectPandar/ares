@@ -189,12 +189,10 @@ impl GCodeWriter {
             speed
         };
         let comment = if self.full_gcode_comment {
-            {
-                if speed == 0 {
-                    " ; disable fan"
-                } else {
-                    " ; enable fan"
-                }
+            if speed == 0 {
+                " ; disable fan"
+            } else {
+                " ; enable fan"
             }
         } else {
             ""
@@ -218,12 +216,10 @@ impl GCodeWriter {
 
     pub(crate) fn set_exhaust_fan(&self, speed: u8) -> String {
         let comment = if self.full_gcode_comment {
-            {
-                if speed == 0 {
-                    " ; disable exhaust fan "
-                } else {
-                    " ; enable exhaust fan "
-                }
+            if speed == 0 {
+                " ; disable exhaust fan "
+            } else {
+                " ; enable exhaust fan "
             }
         } else {
             ""
@@ -233,12 +229,10 @@ impl GCodeWriter {
 
     pub(crate) fn set_additional_fan(&self, speed: u8) -> String {
         let comment = if self.full_gcode_comment {
-            {
-                if speed == 0 {
-                    " ; disable additional fan "
-                } else {
-                    " ; enable additional fan "
-                }
+            if speed == 0 {
+                " ; disable additional fan "
+            } else {
+                " ; enable additional fan "
             }
         } else {
             ""
