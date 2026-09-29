@@ -1062,3 +1062,56 @@ and raised one minor logic item. Fixes:
     from 2 to 0.
   - The `support_*` cases lose 2 lines each.
   - The total drops from 11390 to 11346 lines; 63 cases are exact.
+
+## 2026-09-29 (tree sheath branch + support_fills structure)
+
+The reviewer passed `a4fef2b3` on all six aspects. Its one minor item was
+refreshing `tests/parity/option-coverage-summary.md`: the
+`raft_contact_distance`/`raft_expansion` rows are now PASS and the header
+reads 610/650.
+
+The user asked for the deferred branch to be ported with its plumbing:
+- **Upstream boundary:** `tree_supports_generate_paths`
+  (`SupportCommon.cpp:477-703`), the `with_sheath && density == 0` branch
+  of `fill_expolygons_with_sheath_generate_paths` (`:719-722`), and the
+  `support_fills.entities` structure that `GCode::extrude_support`
+  chains (`GCode.cpp:6178-6230`).
+- **Geometry:**
+  - `Clipper::execute_z_paths_marked` ports `ClipperLib_Z` `Execute` into
+    `Paths` with a `ZFillFunction` that stamps each intersection
+    (`SupportCommon.cpp:550-554`).
+  - `build_z_paths` shares `BuildResult` with `build_paths`.
+  - `shrink_expolygon_with_contour_idx` (`:486-570`) lives in
+    `geometry/clipper/z_clip.rs`.
+- **Fill entities:** `FillExtrusionEntity::Oriented` is
+  `ExtrusionPathOriented` (`ExtrusionEntity.hpp:364-372`). The chainer
+  never reverses it.
+- **Raft:**
+  - `raft_layer_entities` returns `RaftEntity::{Path, Oriented, NoSort}`,
+    the `support_fills.entities` entries.
+  - The flange (`no_sort = true`, `:1517`) is now one ordered collection
+    per region instead of one collection for the whole layer.
+  - Top-level paths become island `Fill` entities, which `emit_infills`
+    chains like `chain_and_reorder_extrusion_entities`.
+  - `fills/sheath.rs` holds the density > 0 path and `draw_perimeters`.
+    `SheathFlow` computes `float(SCALED_EPSILON + 0.5·scaled_width)` in
+    double first, as upstream does. `fills/tree.rs` holds the tree
+    branch: anchor search/cut and the double-wall `no_sort` collection,
+    inner loop first.
+  - `tree_double_wall_area` ports
+    `tree_branch_diameter_double_wall_area_scaled`
+    (`SupportParameters.hpp:186-188`).
+- **Reachability:** raft `support_density` is never 0, so the tree branch
+  runs only once TreeSupport lands (roadmap). It is covered by unit tests:
+  - single wall anchor
+  - double wall order
+  - hole anchor from Z = 1
+  - Z tags and crossings
+  - flange per-region collections
+
+  Removing the anchor cut or the collection reversal fails them.
+- **Evidence:**
+  - Probes ctrl/A/B/C are still byte-identical to Orca.
+  - The 150-case raft/support sweep is identical to `a4fef2b3` (11346
+    lines, 63 exact).
+  - Nextest: 7350/7350.

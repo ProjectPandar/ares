@@ -123,12 +123,15 @@ impl SkirtPlan {
                     // the hull takes the EMITTED fill polyline points —
                     // the flange sheath perimeter plus the `-0.4·spacing`
                     // fill (`fill_expolygons_with_sheath_generate_paths`).
-                    if let Ok(polylines) = crate::project_slice::raft::fills::raft_layer_polylines(
+                    if let Ok(entities) = crate::project_slice::raft::fills::raft_layer_entities(
                         &plan.polygons,
                         plan.spec,
                         traversal.scale,
                     ) {
-                        for polyline in &polylines {
+                        for polyline in entities
+                            .iter()
+                            .flat_map(crate::project_slice::raft::fills::RaftEntity::polylines)
+                        {
                             occupied.extend(polyline.points().iter().copied());
                         }
                     }

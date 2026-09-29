@@ -67,6 +67,7 @@ fn plans_select_the_upstream_filler_and_sheath_per_layer() {
         interface_raft_layers: 1,
         with_sheath: true,
         honeycomb_base: true,
+        tree_double_wall_area: 7.0,
     }
     .derive();
     let plans = raft_layer_plans(
@@ -84,8 +85,11 @@ fn plans_select_the_upstream_filler_and_sheath_per_layer() {
     let specs: Vec<_> = plans.iter().map(|plan| plan.spec).collect();
     assert_eq!(specs[0].pattern, RaftFillPattern::Rectilinear);
     assert!(specs[0].sheath);
+    assert!(specs[0].no_sort);
+    assert_eq!(specs[0].tree_double_wall_area, 7.0);
     assert_eq!(specs[1].pattern, RaftFillPattern::Honeycomb);
     assert!(specs[1].sheath);
+    assert!(!specs[1].no_sort);
     assert_eq!(specs[1].spacing, 0.337);
     assert_eq!(specs[1].sheath_spacing, flow_spacing(0.38, 0.3));
     assert_eq!(specs[2].pattern, RaftFillPattern::Rectilinear);

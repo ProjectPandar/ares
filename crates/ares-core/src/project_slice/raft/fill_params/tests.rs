@@ -15,6 +15,7 @@ fn ksr_inputs() -> RaftFillInputs {
         interface_raft_layers: 50,
         with_sheath: false,
         honeycomb_base: false,
+        tree_double_wall_area: 0.0,
     }
 }
 
@@ -112,4 +113,13 @@ fn honeycomb_base_wins() {
 
     assert_eq!(params.base_fill_pattern, RaftFillPattern::Honeycomb);
     assert_eq!(params.interface_fill_pattern, RaftFillPattern::SupportBase);
+}
+
+/// `tree_branch_diameter_double_wall_area_scaled`
+/// (`SupportParameters.hpp:186-188`).
+#[test]
+fn tree_double_wall_area_follows_the_wall_count() {
+    assert_eq!(tree_double_wall_area(2, 1e6), 0.1);
+    assert_eq!(tree_double_wall_area(1, 1e6), f64::MAX);
+    assert_eq!(tree_double_wall_area(0, 1e6), 0.25 * 25e12 * PI);
 }

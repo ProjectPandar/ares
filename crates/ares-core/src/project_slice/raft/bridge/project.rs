@@ -75,6 +75,10 @@ pub(crate) fn build_project_raft(
         // `SupportParameters.hpp:129-133`.
         with_sheath: object.tree_support_wall_count.0 > 0,
         honeycomb_base: object.support_base_pattern == crate::ProcessSupportBasePattern::Honeycomb,
+        tree_double_wall_area: super::super::fill_params::tree_double_wall_area(
+            object.tree_support_wall_count.0,
+            1.0 / scale.factor(),
+        ),
     };
     let fill_params = fill_inputs.derive();
 

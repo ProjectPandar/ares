@@ -21,9 +21,20 @@
 //!   layer hatches perpendicularly. Per-layer interface angle
 //!   alternates ±45° (`:284-285`).
 
-use std::f64::consts::FRAC_PI_2;
 #[cfg(test)]
-use std::f64::consts::{FRAC_PI_4, PI};
+use std::f64::consts::FRAC_PI_4;
+use std::f64::consts::{FRAC_PI_2, PI};
+
+/// `tree_branch_diameter_double_wall_area_scaled`
+/// (`SupportParameters.hpp:186-188`): branches larger than this area get a
+/// second wall; lattice units².
+pub(crate) fn tree_double_wall_area(tree_support_wall_count: i32, units_per_mm: f64) -> f64 {
+    match tree_support_wall_count {
+        count if count > 1 => 0.1,
+        0 => 0.25 * (5.0 * units_per_mm).powi(2) * PI,
+        _ => f64::MAX,
+    }
+}
 
 /// `rounded_rectangle_extrusion_spacing` (`Flow.cpp:200-206`):
 /// `width - height·float(1 − 0.25·π)` in f32 — the double factor narrows
@@ -49,6 +60,8 @@ pub(crate) struct RaftFillParams {
     /// `with_sheath` (`SupportParameters.hpp:130`): the base layers draw a
     /// sheath perimeter too (`SupportCommon.cpp:1484`).
     pub(crate) with_sheath: bool,
+    /// See [`tree_double_wall_area`].
+    pub(crate) tree_double_wall_area: f64,
     /// Radians.
     pub(crate) flange_angle: f64,
     pub(crate) base_angle: f64,
@@ -74,6 +87,8 @@ pub(crate) struct RaftFillInputs {
     pub(crate) with_sheath: bool,
     /// `support_base_pattern == honeycomb`.
     pub(crate) honeycomb_base: bool,
+    /// See [`tree_double_wall_area`].
+    pub(crate) tree_double_wall_area: f64,
 }
 
 impl RaftFillInputs {
@@ -133,6 +148,7 @@ impl RaftFillInputs {
             base_fill_pattern,
             interface_fill_pattern,
             with_sheath: self.with_sheath,
+            tree_double_wall_area: self.tree_double_wall_area,
             flange_angle,
             base_angle,
             interface_angle,

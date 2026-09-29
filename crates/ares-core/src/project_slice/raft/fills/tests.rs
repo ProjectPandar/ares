@@ -19,6 +19,8 @@ fn support_base_keeps_hatch_lines_next_to_the_edge() {
         sheath_spacing: 0.407_086_4,
         density: 0.9,
         sheath: false,
+        no_sort: false,
+        tree_double_wall_area: 0.0,
         width_mm: 0.42,
         pattern: RaftFillPattern::SupportBase,
         preprocess: RaftFillPreprocess::Closing,
@@ -41,7 +43,7 @@ fn support_base_keeps_hatch_lines_next_to_the_edge() {
     assert!(edge_hatch);
 }
 
-fn square(min: i64, max: i64) -> Polygon {
+pub(super) fn square(min: i64, max: i64) -> Polygon {
     Polygon::new(vec![
         Point::new(min, min),
         Point::new(max, min),
@@ -57,6 +59,8 @@ fn spec(pattern: RaftFillPattern, density: f32) -> RaftFillSpec {
         sheath_spacing: 0.4,
         density,
         sheath: false,
+        no_sort: false,
+        tree_double_wall_area: 0.0,
         width_mm: 0.42,
         pattern,
         preprocess: RaftFillPreprocess::Closing,
@@ -100,9 +104,9 @@ fn honeycomb_pattern_draws_diagonal_hexagon_walls() {
     assert!(diagonal);
 }
 
-const MM: i64 = 1_000_000;
+pub(super) const MM: i64 = 1_000_000;
 
-fn sheath_spec(sheath_spacing: f64) -> RaftFillSpec {
+pub(super) fn sheath_spec(sheath_spacing: f64) -> RaftFillSpec {
     RaftFillSpec {
         sheath: true,
         sheath_spacing,
@@ -126,7 +130,7 @@ fn signed_area(points: &[Point]) -> f64 {
 /// filler spacing.
 #[test]
 fn sheath_offsets_use_the_layer_flow_spacing() {
-    let out = raft_layer_polylines(
+    let out = sheath_polylines(
         &[square(0, 20 * MM)],
         sheath_spec(2.0),
         CoordinateScale::Normal,
@@ -153,7 +157,7 @@ fn sheath_offsets_use_the_layer_flow_spacing() {
 fn sheath_draws_hole_loops_and_fills_around_the_hole() {
     let mut hole = square(8 * MM, 12 * MM);
     hole.reverse();
-    let out = raft_layer_polylines(
+    let out = sheath_polylines(
         &[square(0, 20 * MM), hole],
         sheath_spec(0.4),
         CoordinateScale::Normal,
@@ -177,4 +181,44 @@ fn sheath_draws_hole_loops_and_fills_around_the_hole() {
             .flat_map(|polyline| polyline.points())
             .all(|point| !inside_hole(point))
     );
+}
+
+fn sheath_polylines(
+    polygons: &[Polygon],
+    spec: RaftFillSpec,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    Ok(raft_layer_entities(polygons, spec, scale)?
+        .iter()
+        .flat_map(RaftEntity::polylines)
+        .cloned()
+        .collect())
+}
+
+/// The flange passes `no_sort = true` (`SupportCommon.cpp:1517`): each
+/// region is one collection, its sheath loop first (`:741-750`).
+#[test]
+fn no_sort_sheath_keeps_one_collection_per_region() {
+    let spec = RaftFillSpec {
+        no_sort: true,
+        ..sheath_spec(0.4)
+    };
+    let out = raft_layer_entities(
+        &[square(0, 10 * MM), square(20 * MM, 30 * MM)],
+        spec,
+        CoordinateScale::Normal,
+    )
+    .unwrap();
+    assert_eq!(out.len(), 2);
+    for entity in &out {
+        let RaftEntity::NoSort(polylines) = entity else {
+            panic!("expected no_sort collections, got {out:?}");
+        };
+        assert!(polylines.len() > 1);
+        let sheath = polylines[0].points();
+        let (min_x, max_x) = sheath.iter().fold((i64::MAX, i64::MIN), |(lo, hi), point| {
+            (lo.min(point.x()), hi.max(point.x()))
+        });
+        assert!((max_x - min_x - (10 * MM - 420_000)).abs() < 2_000);
+    }
 }

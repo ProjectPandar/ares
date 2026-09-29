@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-608/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
+610/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -436,8 +436,8 @@
 | PASS | printing_by_object_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2037 |  |
 | PASS | process_change_extrusion_role_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5081 |  |
 | PASS | purge_in_prime_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5983 |  |
-| FAIL | raft_contact_distance | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5121 | min: first difference at byte 7058 (line 292, column 28; expected 107522 bytes, actual 107522 bytes) context:   line 291: "G1 F3000"   line 292: expected "G1 X102.108 Y98.871 E-.92554"; actual "G1 X102.108 Y98.871 E-.92553"   line 293: "G1 X102.337 Y98.871 E-.27447" |
-| FAIL | raft_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5132 | seeded: first difference at byte 7058 (line 292, column 28; expected 107328 bytes, actual 107328 bytes) context:   line 291: "G1 F3000"   line 292: expected "G1 X102.108 Y98.871 E-.92554"; actual "G1 X102.108 Y98.871 E-.92553"   line 293: "G1 X102.337 Y98.871 E-.27447" |
+| PASS | raft_contact_distance | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5121 |  |
+| PASS | raft_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5132 |  |
 | PASS | raft_first_layer_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5141 |  |
 | PASS | raft_first_layer_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5151 |  |
 | FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: first difference at byte 126281 (line 4885, column 29; expected 353925 bytes, actual 353925 bytes) context:   line 4884: "G1 X102.712 Y102.518 E-.12751"   line 4885: expected "G1 X102.518 Y102.712 E-.20595"; actual "G1 X102.518 Y102.712 E-.20594"   line 4886: "M73 P43 R17" |

@@ -1,7 +1,7 @@
 use super::super::Clipper;
 use super::super::predicates::slopes_equal_three;
 use super::super::types::OutRecId;
-use super::super::z::KernelPoint;
+use super::super::z::{KernelPoint, ZPath};
 use crate::geometry::Polygon;
 
 impl Clipper {
@@ -45,6 +45,18 @@ impl Clipper {
     }
 
     pub(in crate::geometry::clipper) fn build_paths(&self) -> Vec<Polygon> {
+        self.collect_out_paths(|point| point.xy)
+            .into_iter()
+            .map(Polygon::new)
+            .collect()
+    }
+
+    pub(in crate::geometry::clipper) fn build_z_paths(&self) -> Vec<ZPath> {
+        self.collect_out_paths(|point| point)
+    }
+
+    /// `Clipper::BuildResult`: every closed output ring with 2+ points.
+    fn collect_out_paths<T>(&self, map: impl Fn(KernelPoint) -> T) -> Vec<Vec<T>> {
         let mut paths = Vec::with_capacity(self.out_recs.len());
         for out_rec in &self.out_recs {
             let Some(front) = out_rec.points else {
@@ -59,10 +71,10 @@ impl Clipper {
             let mut points = Vec::with_capacity(count);
             for _ in 0..count {
                 let output = self.out_points.point(point);
-                points.push(output.point.xy);
+                points.push(map(output.point));
                 point = output.previous;
             }
-            paths.push(Polygon::new(points));
+            paths.push(points);
         }
         paths
     }

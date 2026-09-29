@@ -88,6 +88,10 @@ impl Clipper {
                 return;
             }
         }
+        if let Some(mark) = self.z_fill_mark {
+            point.z = mark;
+            return;
+        }
         let Some(table) = self.z_intersections.as_mut() else {
             return;
         };

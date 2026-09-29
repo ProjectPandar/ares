@@ -100,7 +100,7 @@ fn path_endpoints(collection: &FillExtrusionCollection) -> Vec<(i64, i64)> {
         .entities
         .iter()
         .map(|entity| match entity {
-            FillExtrusionEntity::Path(path) => (
+            FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => (
                 path.polyline.front().unwrap().x(),
                 path.polyline.back().unwrap().x(),
             ),

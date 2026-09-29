@@ -270,7 +270,7 @@ fn emit_infills(
 }
 
 fn is_ironing_entity(entity: &IslandPrintEntity) -> bool {
-    let path_is_ironing = |entity: &FillExtrusionEntity| matches!(entity, FillExtrusionEntity::Path(path) if path.role == crate::ExtrusionRole::Ironing);
+    let path_is_ironing = |entity: &FillExtrusionEntity| matches!(entity, FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) if path.role == crate::ExtrusionRole::Ironing);
     match entity {
         IslandPrintEntity::Fill(entity) => path_is_ironing(entity),
         IslandPrintEntity::FillCollection(collection) => {
@@ -287,7 +287,7 @@ fn emit_fill_entity(
     state: &mut EmitState,
 ) {
     match entity {
-        FillExtrusionEntity::Path(path) => path::emit(
+        FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => path::emit(
             output,
             path.polyline
                 .points()

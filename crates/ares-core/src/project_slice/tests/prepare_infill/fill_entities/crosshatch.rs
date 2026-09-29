@@ -39,7 +39,7 @@ fn task22o76_crosshatch_group_becomes_owned_flow_annotated_entities() {
             .entities
             .iter()
             .all(|entity| match entity {
-                FillExtrusionEntity::Path(path) => {
+                FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
                     path.role == crate::ExtrusionRole::InternalInfill
                         && path.mm3_per_mm.to_bits() == 0x3fb4_d7ac_a000_0000
                         && path.width.to_bits() == 0x3ee6_6666

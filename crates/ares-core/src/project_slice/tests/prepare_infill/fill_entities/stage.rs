@@ -105,7 +105,9 @@ fn task22o91_stage_materializes_all_objects_and_layers_in_order() {
 
 fn valid_fill_entity(entity: &FillExtrusionEntity) -> bool {
     match entity {
-        FillExtrusionEntity::Path(path) => path.polyline.is_valid(),
+        FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
+            path.polyline.is_valid()
+        }
         FillExtrusionEntity::VariableWidth(GapFillEntity::Path(path)) => {
             path.polyline.points.len() >= 2
         }

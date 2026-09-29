@@ -15,7 +15,7 @@ pub(super) fn apply(output: &mut LayerFillEntities, resolution: f64, scale: Coor
     for collection in &mut output.collections {
         for entity in &mut collection.entities {
             match entity {
-                FillExtrusionEntity::Path(path) => {
+                FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
                     simplify_fill_path(path, resolution / scale.factor());
                 }
                 FillExtrusionEntity::VariableWidth(entity) => {

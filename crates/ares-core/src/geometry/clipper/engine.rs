@@ -57,6 +57,34 @@ impl Clipper {
         (paths, intersections)
     }
 
+    /// `ClipperLib_Z::Clipper::Execute(ClipType, Paths&, ...)` with a
+    /// `ZFillFunction` setting each intersection Z to `mark`.
+    pub(in crate::geometry) fn execute_z_paths_marked(
+        &mut self,
+        operation: ClipOperation,
+        subject_fill: FillRule,
+        clip_fill: FillRule,
+        mark: i64,
+    ) -> Vec<ZPath> {
+        self.z_intersections = Some(Vec::new());
+        self.z_fill_mark = Some(mark);
+        self.using_polytree = false;
+        let succeeded = self.execute_internal(ExecutionConfig {
+            operation,
+            subject_fill,
+            clip_fill,
+        });
+        let paths = if succeeded {
+            self.build_z_paths()
+        } else {
+            Vec::new()
+        };
+        self.z_intersections = None;
+        self.z_fill_mark = None;
+        self.dispose_all_out_recs();
+        paths
+    }
+
     pub(crate) fn execute_polytree(
         &mut self,
         operation: ClipOperation,
@@ -92,6 +120,7 @@ impl Clipper {
         self.maxima.clear();
         self.has_open_paths = false;
         self.z_intersections = None;
+        self.z_fill_mark = None;
         #[cfg(test)]
         self.collected_maxima_for_test.clear();
         #[cfg(test)]

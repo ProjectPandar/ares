@@ -58,6 +58,9 @@ pub(crate) fn raft_layer_plans(
                         // The flange uses `filler_interface` (`:1450,1496-1500`).
                         pattern: fill_params.interface_fill_pattern,
                         sheath: true,
+                        // `no_sort = true` (`SupportCommon.cpp:1517`).
+                        no_sort: true,
+                        tree_double_wall_area: fill_params.tree_double_wall_area,
                         width_mm: first_layer_width_mm,
                         preprocess: fills::RaftFillPreprocess::Closing,
                     },
@@ -72,6 +75,8 @@ pub(crate) fn raft_layer_plans(
                     density: fill_params.support_density as f32,
                     pattern: fill_params.base_fill_pattern,
                     sheath: fill_params.with_sheath,
+                    no_sort: false,
+                    tree_double_wall_area: fill_params.tree_double_wall_area,
                     width_mm: support_width_mm,
                     preprocess: fills::RaftFillPreprocess::Closing,
                 },
@@ -95,6 +100,8 @@ pub(crate) fn raft_layer_plans(
                         density: fill_params.raft_interface_density as f32,
                         pattern: fill_params.interface_fill_pattern,
                         sheath: false,
+                        no_sort: false,
+                        tree_double_wall_area: fill_params.tree_double_wall_area,
                         width_mm: interface_width_mm,
                         // `extrude_interface` wraps the contact input in
                         // `union_safety_offset_ex` (`:1729`); plain

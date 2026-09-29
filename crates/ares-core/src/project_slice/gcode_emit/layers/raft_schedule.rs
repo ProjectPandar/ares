@@ -79,8 +79,7 @@ pub(super) fn build(
         object_z_shift[object_index] = stream.object_print_z_min;
         layers[object_index] = plans[object_index]
             .iter()
-            .enumerate()
-            .filter_map(|(raft_index, plan)| materialize_layer(plan, scale, raft_index == 0))
+            .filter_map(|plan| materialize_layer(plan, scale))
             .collect();
     }
     if entries.is_empty() {
@@ -111,14 +110,13 @@ pub(super) fn classify(layer_index: usize) -> Result<Option<usize>, crate::Slice
 fn materialize_layer(
     plan: &RaftLayerPlan,
     scale: crate::geometry::CoordinateScale,
-    flange: bool,
 ) -> Option<crate::project_slice::island_print_order::OrderedExtrusionLayer> {
     use crate::ExtrusionRole;
     use crate::project_slice::fill_entities::{
         FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath,
     };
     use crate::project_slice::island_print_order::{IslandPrintEntity, OrderedExtrusionIsland};
-    use crate::project_slice::raft::fills::raft_layer_polylines;
+    use crate::project_slice::raft::fills::{RaftEntity, raft_layer_entities};
 
     let role = if plan.z.kind == crate::project_slice::raft::RaftLayerKind::Base {
         ExtrusionRole::SupportMaterial
@@ -128,35 +126,44 @@ fn materialize_layer(
     let width = plan.width_mm as f32;
     let height = plan.height_mm as f32;
     let mm3_per_mm = crate::project_slice::perimeters::flow::ordinary_volume(width, height);
-    let make_path = |polyline| {
-        FillExtrusionEntity::Path(FillExtrusionPath {
-            polyline,
-            fitting: Vec::new(),
-            role,
-            mm3_per_mm,
-            width,
-            height,
-        })
+    let make_path = |polyline| FillExtrusionPath {
+        polyline,
+        fitting: Vec::new(),
+        role,
+        mm3_per_mm,
+        width,
+        height,
     };
 
-    // Flange (raft layer 0): `with_sheath = no_sort = true`
-    // (`SupportCommon.cpp:1516-1517`); `raft_layer_polylines` returns the
-    // sheath perimeter then the `-0.4·spacing` fill
-    // (`fill_expolygons_with_sheath_generate_paths:705-757`).
-    let no_sort = flange;
-    let polylines = raft_layer_polylines(&plan.polygons, plan.spec, scale).ok()?;
-    if polylines.is_empty() {
+    // `support_fills.entities` (`SupportCommon.cpp:1476-1520`): the flange
+    // regions are `no_sort` collections, tree loops are oriented paths.
+    let entities = raft_layer_entities(&plan.polygons, plan.spec, scale).ok()?;
+    if entities.is_empty() {
         return None;
     }
-    let entities: Vec<_> = polylines.into_iter().map(make_path).collect();
+    let entities = entities
+        .into_iter()
+        .map(|entity| match entity {
+            RaftEntity::Path(polyline) => {
+                IslandPrintEntity::Fill(FillExtrusionEntity::Path(make_path(polyline)))
+            }
+            RaftEntity::Oriented(polyline) => {
+                IslandPrintEntity::Fill(FillExtrusionEntity::Oriented(make_path(polyline)))
+            }
+            RaftEntity::NoSort(polylines) => {
+                IslandPrintEntity::FillCollection(FillExtrusionCollection {
+                    entities: polylines
+                        .into_iter()
+                        .map(|polyline| FillExtrusionEntity::Path(make_path(polyline)))
+                        .collect(),
+                    no_sort: true,
+                })
+            }
+        })
+        .collect();
     Some(
         crate::project_slice::island_print_order::OrderedExtrusionLayer {
-            islands: vec![OrderedExtrusionIsland {
-                entities: vec![IslandPrintEntity::FillCollection(FillExtrusionCollection {
-                    entities,
-                    no_sort,
-                })],
-            }],
+            islands: vec![OrderedExtrusionIsland { entities }],
         },
     )
 }

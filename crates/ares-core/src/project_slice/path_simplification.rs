@@ -86,7 +86,7 @@ fn simplify_fill_entity(
     arc_fitting: bool,
 ) {
     match entity {
-        FillExtrusionEntity::Path(path) => {
+        FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
             let mut points = path
                 .polyline
                 .points()

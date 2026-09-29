@@ -146,16 +146,18 @@ fn covered_polygons(
     let mut output = Vec::new();
     for entity in entities {
         match entity {
-            FillExtrusionEntity::Path(path) => append_covered_path(
-                &mut output,
-                path.polyline
-                    .points()
-                    .iter()
-                    .map(|point| Point::new(point.x(), point.y())),
-                path.width,
-                path.height,
-                scale,
-            )?,
+            FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
+                append_covered_path(
+                    &mut output,
+                    path.polyline
+                        .points()
+                        .iter()
+                        .map(|point| Point::new(point.x(), point.y())),
+                    path.width,
+                    path.height,
+                    scale,
+                )?
+            }
             FillExtrusionEntity::VariableWidth(entity) => match entity {
                 crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(
                     path,

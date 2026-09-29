@@ -33,6 +33,11 @@ pub(crate) struct RaftFillSpec {
     /// `with_sheath` (`SupportCommon.cpp:1516`): the flange (raft layer 0)
     /// draws a perimeter loop before the fill.
     pub(crate) sheath: bool,
+    /// `no_sort` (`:1517`): each sheath region is one ordered collection.
+    pub(crate) no_sort: bool,
+    /// `tree_branch_diameter_double_wall_area_scaled`
+    /// (`SupportParameters.hpp:186-188`), lattice units².
+    pub(crate) tree_double_wall_area: f64,
     /// `first_layer_flow.width()` for the flange `closing_ex` inflate
     /// (`0.5·width`), mm.
     pub(crate) width_mm: f64,
@@ -57,68 +62,55 @@ pub(crate) enum RaftFillPreprocess {
     SafetyOffset,
 }
 
-/// The emitted raft-layer polylines (sheath + fill) in source order
-/// (`fill_expolygons_with_sheath_generate_paths`,
-/// `SupportCommon.cpp:705-757`). With a sheath, each region of
-/// `closing_ex(polygons, ε, ε + 0.5·width)` emits its contour and hole
-/// loops closed and clipped by `0.15·spacing`, then the fill on
-/// `offset_ex(-0.4·spacing)` of that region; other layers just take the
-/// fill. `Print.cpp:2693` collects these points for the skirt hull.
-pub(crate) fn raft_layer_polylines(
+/// One entry of a raft layer's `support_fills.entities`; `extrude_support`
+/// chains the top-level entries (`GCode.cpp:6199-6201`).
+#[derive(Debug, PartialEq)]
+pub(crate) enum RaftEntity {
+    /// `ExtrusionPath` (`extrusion_entities_append_paths`,
+    /// `ExtrusionEntity.hpp:581-590`).
+    Path(Polyline),
+    /// `ExtrusionPathOriented`: appended with `can_reverse = false`.
+    Oriented(Polyline),
+    /// `ExtrusionEntityCollection` with `no_sort = true`, printed in order.
+    NoSort(Vec<Polyline>),
+}
+
+impl RaftEntity {
+    /// The entity's polylines in print order.
+    pub(crate) fn polylines(&self) -> &[Polyline] {
+        match self {
+            Self::Path(polyline) | Self::Oriented(polyline) => std::slice::from_ref(polyline),
+            Self::NoSort(polylines) => polylines,
+        }
+    }
+}
+
+/// The raft layer's `support_fills.entities` (`SupportCommon.cpp:1476-1520`):
+/// `fill_expolygons_with_sheath_generate_paths` (`:705-757`) with a sheath,
+/// otherwise the plain fill. `Print.cpp:2693` collects their points for
+/// the skirt hull.
+pub(crate) fn raft_layer_entities(
     layer_polygons: &[Polygon],
     spec: RaftFillSpec,
     scale: CoordinateScale,
-) -> Result<Vec<Polyline>, ClipperError> {
+) -> Result<Vec<RaftEntity>, ClipperError> {
     if !spec.sheath {
-        return raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale);
+        return Ok(
+            raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale)?
+                .into_iter()
+                .map(RaftEntity::Path)
+                .collect(),
+        );
     }
     debug_assert!(matches!(spec.preprocess, RaftFillPreprocess::Closing));
-    let units = 1.0 / scale.factor();
-    // `closing_ex(polygons, SCALED_EPSILON, SCALED_EPSILON + 0.5·width)`
-    // (`SupportCommon.cpp:728`): dilate by `ε` then erode by
-    // `ε + 0.5·width` — net shrink of `0.5·width`, so the sheath sits
-    // just inside the polygon boundary. `SCALED_EPSILON = scale_(1e-4)`
-    // and `float(SCALED_EPSILON)` keeps the fractional 0.4096 units
-    // (`libslic3r.h:52,96`).
-    let epsilon = scale.scaled_delta(1e-4) as f32;
-    // `SCALED_EPSILON + 0.5*flow.scaled_width()`
-    // (`SupportCommon.cpp:738`, `Flow.hpp:62`): `scaled_width` is the
-    // integer `coord_t(scale_(width))` — `Flow` stores the width as
-    // `float` (`Flow.cpp:129-143`), so narrow through f32 before the
-    // scale/trunc, then halve the integer.
-    let erode = (0.5 * ((f64::from(spec.width_mm as f32) * units) as i64) as f64) as f32;
-    // `spacing = flow.scaled_spacing()` (`:733`): `Flow` spacing is
-    // stored as `float`, so narrow through f32 before the trunc.
-    let spacing = (f64::from(spec.sheath_spacing as f32) * units) as i64 as f64;
-    let mut out = Vec::new();
-    for expolygon in closing_polygons(layer_polygons, epsilon, epsilon + erode)? {
-        // `draw_perimeters(expoly, spacing * 0.15)` (`:459-475,735`): the
-        // contour, then each hole reversed, each closed and clipped.
-        let loops = std::iter::once((expolygon.contour(), false))
-            .chain(expolygon.holes().iter().map(|hole| (hole, true)));
-        for (polygon, hole) in loops {
-            let mut points = polygon.points().to_vec();
-            points.push(points[0]);
-            if hole {
-                points.reverse();
-            }
-            let mut polyline = Polyline::new(points);
-            clip_polyline_end(&mut polyline, 0.15 * spacing);
-            if polyline.points().len() > 1 {
-                out.push(polyline);
-            }
-        }
-        // `offset_ex(expoly, float(-0.4 * spacing))` (`:749`).
-        let fill_region = crate::geometry::offset_expolygon(
-            &expolygon,
-            (-0.4 * spacing) as f32,
-            crate::geometry::JoinType::Miter,
-            3.0,
-        )?;
-        out.extend(fill_expolygons(fill_region, spec, Point::new(0, 0), scale)?);
+    if spec.density == 0.0 {
+        return tree::tree_supports_generate_paths(layer_polygons, spec, scale);
     }
-    Ok(out)
+    sheath::fill_with_sheath(layer_polygons, spec, scale)
 }
+
+mod sheath;
+mod tree;
 
 /// `closing_ex(const Polygons&, delta1, delta2)` (`ClipperUtils.cpp:599-604`):
 /// `shrink_paths<PolyTree>(expand_paths(polygons, delta1), delta2)`, which
@@ -136,7 +128,7 @@ fn closing_polygons(
 /// `Polyline::clip_end` (`Polyline.cpp`): shorten the polyline tail by
 /// `distance`, dropping exhausted segments.
 mod geom;
-use geom::{align_to_grid, checked_scale_f32, clip_polyline_end, vertical_segments};
+use geom::{align_to_grid, checked_scale_f32, vertical_segments};
 
 mod patterns;
 

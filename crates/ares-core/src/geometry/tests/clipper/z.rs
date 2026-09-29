@@ -1,6 +1,7 @@
 mod input_fill;
 mod lifecycle;
 mod output;
+mod shrink_contour_idx;
 
 use crate::geometry::clipper::{
     Clipper, ClipperOptions, PathRole,

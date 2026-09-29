@@ -19,6 +19,8 @@ pub(in crate::project_slice) struct FillExtrusionPath {
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) enum FillExtrusionEntity {
     Path(FillExtrusionPath),
+    /// `ExtrusionPathOriented` (`ExtrusionEntity.hpp:364-372`): never reversed.
+    Oriented(FillExtrusionPath),
     VariableWidth(GapFillEntity),
 }
 

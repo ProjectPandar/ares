@@ -136,14 +136,14 @@ impl ChainEntity for FillExtrusionPath {
 impl ChainEntity for FillExtrusionEntity {
     fn first_point(&self) -> Point {
         match self {
-            Self::Path(path) => path.first_point(),
+            Self::Path(path) | Self::Oriented(path) => path.first_point(),
             Self::VariableWidth(entity) => entity.first_point(),
         }
     }
 
     fn last_point(&self) -> Point {
         match self {
-            Self::Path(path) => path.last_point(),
+            Self::Path(path) | Self::Oriented(path) => path.last_point(),
             Self::VariableWidth(entity) => entity.last_point(),
         }
     }
@@ -151,13 +151,14 @@ impl ChainEntity for FillExtrusionEntity {
     fn can_reverse(&self) -> bool {
         match self {
             Self::Path(_) => true,
+            Self::Oriented(_) => false,
             Self::VariableWidth(entity) => entity.can_reverse(),
         }
     }
 
     fn reverse(&mut self) {
         match self {
-            Self::Path(path) => path.reverse(),
+            Self::Path(path) | Self::Oriented(path) => path.reverse(),
             Self::VariableWidth(entity) => entity.reverse(),
         }
     }

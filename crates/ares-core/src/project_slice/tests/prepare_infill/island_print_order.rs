@@ -128,7 +128,7 @@ fn assert_valid_fill_entity(entity: &FillExtrusionEntity) {
 
 fn valid_fill_entity(entity: &FillExtrusionEntity) -> bool {
     match entity {
-        FillExtrusionEntity::Path(path) => {
+        FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
             path.polyline.front().is_some() && path.polyline.back().is_some()
         }
         FillExtrusionEntity::VariableWidth(GapFillEntity::Path(path)) => {

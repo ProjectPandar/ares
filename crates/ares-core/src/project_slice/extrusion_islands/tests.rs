@@ -68,7 +68,9 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
         infills
             .iter()
             .map(|infill| match infill {
-                IslandInfillEntity::Fill(FillExtrusionEntity::Path(path)) => {
+                IslandInfillEntity::Fill(
+                    FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path),
+                ) => {
                     path.polyline.front()
                 }
                 IslandInfillEntity::Fill(FillExtrusionEntity::VariableWidth(_))
