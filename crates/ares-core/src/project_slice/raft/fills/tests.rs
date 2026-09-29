@@ -1,6 +1,39 @@
 use super::*;
 use crate::geometry::Polygon;
 
+#[test]
+fn support_fill_preserves_the_oracle_wipe_corner() {
+    let polygon = Polygon::new(
+        [
+            (7_650_587, -7_357_679),
+            (7_650_587, 7_357_694),
+            (7_357_694, 7_650_587),
+            (-7_357_679, 7_650_587),
+            (-7_650_572, 7_357_694),
+            (-7_650_572, -7_357_679),
+            (-7_357_679, -7_650_572),
+            (7_357_694, -7_650_572),
+        ]
+        .into_iter()
+        .map(|(x, y)| Point::new(x, y))
+        .collect(),
+    );
+    let mut fill = spec(RaftFillPattern::SupportBase, 0.627_615_75);
+    fill.angle = f64::from(3.0 * std::f32::consts::FRAC_PI_4);
+    fill.spacing = 0.337_079_644_203_186_04;
+    let paths =
+        raft_layer_fill(&[polygon], fill, Point::new(0, 0), CoordinateScale::Normal).unwrap();
+    // Independently observed Orca endpoint Y102.712134 with origin (110,110).
+    // Double trig instead moves this corner one lattice unit down; XY output
+    // still rounds to the same 3 decimals, but wipe extrusion does not.
+    assert!(
+        paths
+            .iter()
+            .any(|path| path.points().contains(&Point::new(-7_482_033, -7_287_866))),
+        "missing reference wipe corner"
+    );
+}
+
 /// `FillSupportBase::fill_surface` calls `make_fill_lines` with
 /// `x_margin = 0` (`FillRectilinear.cpp:3621`), so hatch lines within one
 /// line width of the bounding-box edge are kept.

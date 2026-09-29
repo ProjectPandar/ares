@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-610/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
+611/650 bounded domains complete; 1592 generated, 1589 strictly compared, 1 rejected. Not all-printer/default coverage.
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -440,7 +440,7 @@
 | PASS | raft_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5132 |  |
 | PASS | raft_first_layer_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5141 |  |
 | PASS | raft_first_layer_expansion | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5151 |  |
-| FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: first difference at byte 126281 (line 4885, column 29; expected 353925 bytes, actual 353925 bytes) context:   line 4884: "G1 X102.712 Y102.518 E-.12751"   line 4885: expected "G1 X102.518 Y102.712 E-.20595"; actual "G1 X102.518 Y102.712 E-.20594"   line 4886: "M73 P43 R17" |
+| PASS | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 |  |
 | PASS | reduce_crossing_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:941 |  |
 | PASS | reduce_fan_stop_start_freq | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2422 |  |
 | PASS | reduce_infill_retraction | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4953 |  |

@@ -252,10 +252,10 @@ fn fill_expolygons(
         // Connect in the SLICE frame (upstream connects before the
         // rotate-back), then rotate the connected output back by
         // +(angle+π/2) (`FillSupportBase::fill_surface:3627-3633`).
-        // `pt.rotate(cos_a, sin_a)` with `cos_a = cos(rotate_vector.first)`
-        // — f64 cos of the f32 angle (`FillRectilinear.cpp:3627-3633`).
-        let rotate_back = f64::from((spec.angle as f32) + std::f32::consts::FRAC_PI_2);
-        let (cos_a, sin_a) = (rotate_back.cos(), rotate_back.sin());
+        // `cos(float)` / `sin(float)` return float before promotion into
+        // the double arguments of `Point::rotate` (:3627-3633).
+        let rotate_back = (spec.angle as f32) + std::f32::consts::FRAC_PI_2;
+        let (cos_a, sin_a) = (f64::from(rotate_back.cos()), f64::from(rotate_back.sin()));
         let connected = connect_base_support(
             fill_lines,
             &boundary,

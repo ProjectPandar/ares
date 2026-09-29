@@ -205,6 +205,11 @@ fn orca_parity_skirt_loops_smoke() {
 }
 
 #[test]
+fn orca_parity_max_raft_wipe_smoke() {
+    assert_process_option_smoke("raft_layers", "100");
+}
+
+#[test]
 fn orca_parity_zaa_enabled_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("zaa_enabled", value);
