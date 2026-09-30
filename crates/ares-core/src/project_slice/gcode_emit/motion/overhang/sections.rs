@@ -4,7 +4,6 @@
 use super::super::options::MotionOptions;
 use super::{BoundaryContext, ExtendedPoint, INTERSECTION_EPSILON_MM, OVERLAPS};
 use crate::FloatOrPercent;
-use crate::geometry::Point;
 
 pub(super) fn speed_sections(
     width: f32,
@@ -75,11 +74,11 @@ impl BoundaryContext<'_> {
         if previous_outside == next_outside {
             return;
         }
-        let line = crate::geometry::Line::new(self.scaled(previous), self.scaled(next));
-        for (intersection, _) in self.tree.intersections_sorted(line) {
+        let line = [[previous.x, previous.y], [next.x, next.y]];
+        for (intersection, _) in self.tree.intersections_sorted_mm(line, self.scale.factor()) {
             let intersection = ExtendedPoint {
-                x: self.scale.unscale(intersection.x()),
-                y: self.scale.unscale(intersection.y()),
+                x: intersection[0],
+                y: intersection[1],
                 distance: self.offset,
             };
             if distance(previous, intersection) > self.minimum_spacing
@@ -183,13 +182,6 @@ impl BoundaryContext<'_> {
         self.tree
             .outside_mm([point.0, point.1], self.scale.factor()) as f64
             * nearest.squared_distance.sqrt()
-    }
-
-    fn scaled(&self, point: ExtendedPoint) -> Point {
-        Point::new(
-            scale_trunc(point.x, self.scale),
-            scale_trunc(point.y, self.scale),
-        )
     }
 }
 

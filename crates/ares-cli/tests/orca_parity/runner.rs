@@ -20,6 +20,9 @@ mod filament_map_tests;
 #[path = "runner/initialization_tests.rs"]
 mod initialization_tests;
 #[cfg(test)]
+#[path = "runner/initialized_overhang_intersections.rs"]
+mod initialized_overhang_intersections;
+#[cfg(test)]
 #[path = "runner/lifecycle_tests.rs"]
 mod lifecycle_tests;
 #[cfg(test)]

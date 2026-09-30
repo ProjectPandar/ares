@@ -7,6 +7,27 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Floating overhang intersections (ARD-0079) ports the unscaled
+`ExtrusionProcessor.hpp`, `AABBTreeLines.hpp` and `Line.hpp` boundary into
+`motion/overhang/sections.rs` and `geometry/line_distance_tree/intersections_mm.rs`.
+Identical KSR raw paths and previous contours reveal premature integer
+intersection truncation. A two-layer public closed-loft test verifies20
+effective settings and ordinary input placement, then compares complete
+G-code RED before/GREEN after the floating query. Integer queries, speed
+bands and curl behavior remain unchanged. Exit requires original KSR
+revalidation, affected consumers, workspace no-fail-fast, fmt/clippy,
+Tier-1 builds and independent six-axis review with repair/re-review;
+Workspace passes7460/7460 with9 skips; eight live complete-output consumers
+and24 cached stepped fixtures pass. Fmt/clippy and all Tier-1 builds pass.
+Initial independent six-axis review has no required production findings;
+final immutable-patch review approves this slice with no required fixes.
+Review-status documentation is re-confirmed before submission. Original KSR
+still fails first at M73 line9946; diagnostic movement mismatch advances to
+Z52. M73, later path ordering and global
+all-printer/default/all-option parity remain open. See the
+[spec](superpowers/specs/2026-10-01-overhang-segmentation.md) and
+[plan](superpowers/plans/2026-10-01-overhang-segmentation.md).
+
 Stitch candidate order (ARD-0078) rewrites the selected native libstdc++
 same-cell enumeration contract of `PolylineStitcher.hpp::stitch` and
 `SparseGrid.hpp::processFromCell` into `wall_toolpaths/stitch.rs`. A public

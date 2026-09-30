@@ -1,5 +1,6 @@
 mod build;
 mod intersections;
+mod intersections_mm;
 mod outside;
 mod query;
 
@@ -71,6 +72,14 @@ impl<'a> LineDistanceTree<'a> {
 
     pub(crate) fn intersections_sorted(&self, line: Line) -> Vec<(Point, usize)> {
         intersections::sorted(self.lines, &self.nodes, line)
+    }
+
+    pub(crate) fn intersections_sorted_mm(
+        &self,
+        line: [[f64; 2]; 2],
+        scale_factor: f64,
+    ) -> Vec<([f64; 2], usize)> {
+        intersections_mm::sorted(self.lines, &self.nodes, line, scale_factor)
     }
 
     pub(crate) fn outside(&self, point: Point) -> i32 {
