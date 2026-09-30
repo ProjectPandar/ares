@@ -24,7 +24,8 @@ fn task22o7_overhang_materialization_uses_only_the_final_lower_series_element() 
     }
     assert!(changed > 0);
 
-    let with_changed_earlier_series = materialize::finish(traversal).unwrap();
+    let with_changed_earlier_series =
+        materialize::finish(traversal, &mut crate::SlicerContext::new(0)).unwrap();
     assert_eq!(baseline.objects, with_changed_earlier_series.objects);
 }
 

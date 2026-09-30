@@ -21,7 +21,7 @@ async fn task22o24_each_o23_geometry_failure_precedes_assignment() {
         vertical_shell_filtering::fail_geometry_at(step);
         vertical_shell_assignment::reset_invocations();
         assert!(matches!(
-            slice_project(KsrArchive::new().bytes(), metadata()).await,
+            slice_project(KsrArchive::new().bytes(), metadata(), crate::SlicerContext::new(0)).await,
             Err(SliceError::InvalidInput(message))
                 if message == "vertical-shell tiny-island filtering geometry is outside the supported Clipper range"
         ));

@@ -72,8 +72,12 @@ async fn process_arachne_default_prisms_plate_layout() {
     let reference =
         String::from_utf8(fs::read(directory.join("default-prisms.orca.gcode")).unwrap()).unwrap();
     let metadata = GenerationMetadata::new_local(2026, 9, 8, 0, 0, 0).unwrap();
-    let actual =
-        String::from_utf8(slice_project(project, metadata).await.expect("ARES_ERROR")).unwrap();
+    let actual = String::from_utf8(
+        slice_project(project, metadata, ares_core::SlicerContext::new(0))
+            .await
+            .expect("ARES_ERROR"),
+    )
+    .unwrap();
 
     // Plate-level layer count (`GCode.cpp:2513-2527` merges every object's
     // layer print_z set; per-object emission must not sum to 36).
@@ -147,6 +151,8 @@ async fn process_arachne_actual_default_prisms_full_output() {
     let project = fs::read(directory.join("default-prisms.3mf")).unwrap();
     let reference = fs::read(directory.join("default-prisms.orca.gcode")).unwrap();
     let metadata = GenerationMetadata::new_local(2026, 9, 8, 0, 0, 0).unwrap();
-    let actual = slice_project(project, metadata).await.expect("ARES_ERROR");
+    let actual = slice_project(project, metadata, ares_core::SlicerContext::new(0))
+        .await
+        .expect("ARES_ERROR");
     strict::compare(&reference, &actual).unwrap();
 }

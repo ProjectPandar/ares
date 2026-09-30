@@ -30,7 +30,7 @@ async fn flush_placeholders_use_configured_values_with_zero_fallbacks() {
     );
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();

@@ -135,6 +135,7 @@ pub(super) fn compare(
             match runtime.block_on(ares_core::slice_project(
                 project,
                 ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+                ares_core::SlicerContext::new(0),
             )) {
                 Ok(actual) => {
                     // Persist BOTH full supplied streams before the strict byte comparator.

@@ -16,7 +16,7 @@ async fn support_material_width_precedes_first_layer_width_when_enabled() {
     settings.insert("nozzle_diameter".to_owned(), json!(["0.4", "0.4"]));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let lines = std::str::from_utf8(&output)

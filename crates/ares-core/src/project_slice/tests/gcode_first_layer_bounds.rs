@@ -21,7 +21,7 @@ async fn first_layer_bounds_cover_the_outer_skirt_extrusion_width() {
     settings.insert("min_skirt_length".to_owned(), json!("0"));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
@@ -50,7 +50,7 @@ async fn bounds_keep_distance_fallback_without_a_generated_skirt_plan() {
     settings.insert("min_skirt_length".to_owned(), json!("0"));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();

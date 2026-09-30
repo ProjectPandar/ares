@@ -29,6 +29,7 @@ fn btt_artifacts_compare_raw_bytes_and_reject_output_mutations() {
         .block_on(ares_core::slice_project(
             &project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            ares_core::SlicerContext::new(0),
         ))
         .unwrap();
     let text = std::str::from_utf8(&actual).unwrap();

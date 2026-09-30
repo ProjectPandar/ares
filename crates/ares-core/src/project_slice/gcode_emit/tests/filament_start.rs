@@ -34,6 +34,7 @@ async fn print_preamble(value: &str) -> String {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

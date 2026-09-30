@@ -12,8 +12,11 @@ const FIXTURE: &str = "tests/parity/arachne/default-prisms.3mf";
 
 #[test]
 fn task22w17_fixture_materializes_real_arachne_perimeters() {
-    let output =
-        prepare_post_layer_region_perimeters(&crate::test_fixtures::read(FIXTURE)).unwrap();
+    let output = prepare_post_layer_region_perimeters(
+        &crate::test_fixtures::read(FIXTURE),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
 
     let mut walls = 0_usize;
     let mut loops = 0_usize;

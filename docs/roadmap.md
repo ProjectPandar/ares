@@ -7,6 +7,26 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Seeded Context rewrite (ARD-0068) follows
+`Feature/FuzzySkin/FuzzySkin.cpp::random_value`, `UniformNoise` and
+`fuzzy_polyline` into `ares-core::SlicerContext` and the active classic
+polygon consumer. Each project-slice task owns one continuously consumed
+MT19937 instance initialized with an explicit u32 seed. This replaces the
+active project's hash-based randomness, without a global RNG or path reseeding.
+The isolated seed-only original remains separate from the untouched official
+reference. Unfilled classic walls compare in complete generator-only ordered
+bytes for seeds 0, 1 and UINT_MAX against a single-CPU reference.
+Perlin/Billow/RidgedMulti/Voronoi also pass full seed-0 comparisons and job
+isolation checks, covering coherent spacing without uniform-amplitude draws.
+Fresh dedicated artifact roots prevent reference/seed cache mixing. Four thousand independent
+C++/Rust double bit comparisons, repeat/interleave/concurrent-job witnesses,
+lint/format and Tier-1 compiler checks pass. Final workspace checks pass 7449
+tests with nine skipped. A short-path padding fixture passes; restoring the
+wrong padding index fails its complete-output comparison. Independent six-axis
+final review approves this finite slice. Filled-case parity,
+parallel original replay, Arachne fuzzy and the older Point2/STL scaffold remain
+uncompleted adjacent source boundaries; no global parity completion is claimed.
+
 Elephant-foot count range coverage (ARD-0067) follows `ConfigOptionInt` and
 `PrintObjectSlice` into Rust's compensation preflight. Count min 1 / INT_MAX /
 full-range seed must retain the original ramp denominator; only backup storage
@@ -55,13 +75,13 @@ comparison and selected sweep pass; workspace Nextest passes 7438 tests
 (9 skipped), lint/format and Tier-1 compiler checks pass. Independent six-axis
 review approves this finite slice, not global parity completion.
 
-Latest immutable full option scan, bd951efa: 380 PASS, 268 INCOMPLETE, 2 FAIL
-out of 650 domains; 1659 generated, 1501 strictly compared, 1 rejected
-(1313.701s), `/tmp/ares-options-bd951efa.v1B9dv/option-coverage-summary.md`.
+Latest immutable full option scan, 92207777: 381 PASS, 267 INCOMPLETE, 2 FAIL
+out of 650 domains; 1660 generated, 1502 strictly compared, 1 rejected
+(1360.801s), `/tmp/ares-options-92207777.3xwRqr/option-coverage-summary.md`.
 The eight floating-bound parser rejections from d2949771 are resolved; the
 remaining rejection is `timelapse_type`. `enable_support=false` ordered-output
 divergence and SLA-to-FFF application mismatch remain failures. This snapshot
-includes ARD-0062 through ARD-0065, predates ARD-0066 and does not prove
+includes the top-shell range repair, predates ARD-0067 and does not prove
 all-printer/default coverage.
 
 Printer preset identity parity (ARD-0062) follows `PrintConfig`,

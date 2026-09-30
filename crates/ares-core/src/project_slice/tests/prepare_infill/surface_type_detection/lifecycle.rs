@@ -15,7 +15,7 @@ async fn task22o17_counterbore_fails_before_detection() {
     );
     reset_invocations();
     assert_eq!(
-        slice_project(archive.bytes(), metadata())
+        slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
         SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned())

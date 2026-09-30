@@ -50,7 +50,11 @@ fn archive_with_global(key: &str, from: &str, to: &str) -> KsrArchive {
 
 fn detected(archive: &KsrArchive) -> surface_type_detection::PreparedPostSurfaceTypeDetection {
     surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(&archive.clone().bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(
+            &archive.clone().bytes(),
+            &mut crate::SlicerContext::new(0),
+        )
+        .unwrap(),
     )
     .unwrap()
 }

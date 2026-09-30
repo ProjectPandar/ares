@@ -40,7 +40,9 @@ fn task22o16_preserves_object_record_and_none_slot_order() {
 
 #[test]
 fn task22o16_whole_project_keeps_every_trusted_one_region_alignment() {
-    let output = prepare_post_layer_region_perimeters(ksr_project()).unwrap();
+    let output =
+        prepare_post_layer_region_perimeters(ksr_project(), &mut crate::SlicerContext::new(0))
+            .unwrap();
     let classic = output.predecessor.as_classic();
     assert_eq!(output.objects.len(), classic.objects.len());
     for (object, traversal) in output.objects.iter().zip(&classic.objects) {

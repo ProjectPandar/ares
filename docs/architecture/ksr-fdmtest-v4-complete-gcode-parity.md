@@ -22,11 +22,12 @@ from the 3MF and options without fixture-specific data.
 
 ## Decision
 
-Treat `slice_project(project_bytes, metadata)` as the deep module and the CLI
+Treat `slice_project(project_bytes, metadata, context)` as the deep module and the CLI
 semantic golden comparison as its external seam. Complete it through
 source-cited Orca G-code slices rather than fixture-specific substitution.
-Values come only from the 3MF's typed effective configuration and generated
-geometry.
+Slicing settings come only from the 3MF's typed effective configuration and
+generated geometry. Execution-local random state is explicitly supplied by
+`SlicerContext` (ARD-0068).
 
 The implementation boundary follows `GCode.cpp:4539-7110`,
 `GCodeWriter.cpp`, `GCode/SeamPlacer.cpp`, the arc-fitting path selected by

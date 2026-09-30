@@ -14,8 +14,11 @@ use super::super::super::support::KsrArchive;
 
 #[test]
 fn task22o17_geometry_failure_consumes_the_unmoved_predecessor_transactionally() {
-    let prepared =
-        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let prepared = perimeters::prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     let (weak, dropped) = prepared.predecessor.as_classic().drop_probe_observer();
     reset_geometry_hooks();
     fail_geometry_at(GeometryStep::TopSafetyDifference);

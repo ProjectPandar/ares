@@ -12,7 +12,11 @@ use crate::{
 
 fn prepared() -> fill_surfaces::PreparedPostFillSurfacePreparation {
     let detected = surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(
+            &KsrArchive::new().bytes(),
+            &mut crate::SlicerContext::new(0),
+        )
+        .unwrap(),
     )
     .unwrap();
     fill_surfaces::prepare(detected)

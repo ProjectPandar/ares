@@ -15,7 +15,7 @@ async fn task22o19_earlier_capability_errors_have_precedence() {
         archive.replace_unique("Metadata/project_settings.config", from, to);
         vertical_shells::reset_invocations();
         assert_eq!(
-            slice_project(archive.bytes(), metadata())
+            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
                 .await
                 .unwrap_err(),
             SliceError::UnsupportedProjectFeature(feature.to_owned())
@@ -32,9 +32,13 @@ async fn task22o19_o17_geometry_failure_precedes_cache_population() {
     );
     vertical_shells::reset_invocations();
     assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
+        slice_project(
+            KsrArchive::new().bytes(),
+            metadata(),
+            crate::SlicerContext::new(0)
+        )
+        .await
+        .unwrap_err(),
         SliceError::InvalidInput(
             "surface-type detection geometry is outside the supported Clipper range".to_owned()
         )
@@ -48,7 +52,9 @@ async fn task22o19_multi_region_fails_before_cache_population() {
     let (multi_region, _) = crate::project_slice::tests::region_fixture::modifier_projects();
     vertical_shells::reset_invocations();
     assert_eq!(
-        slice_project(multi_region, metadata()).await.unwrap_err(),
+        slice_project(multi_region, metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned())
     );
     assert_eq!(vertical_shells::invocations(), 0);

@@ -29,7 +29,7 @@ pub(super) enum FuzzySkinNoiseType {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct FuzzySkinConfig {
     kind: FuzzySkinKind,
-    noise_type: FuzzySkinNoiseType,
+    pub(super) noise_type: FuzzySkinNoiseType,
     pub(super) thickness_mm: f64,
     pub(super) point_distance_mm: f64,
     pub(super) scale_mm: f64,
@@ -160,32 +160,14 @@ impl FuzzySkinConfig {
         layer_id: usize,
         print_z: f64,
         scale: CoordinateScale,
+        context: &mut crate::SlicerContext,
     ) -> Vec<Point> {
         if self.noise_type == FuzzySkinNoiseType::Ripple {
             return super::fuzzy_skin_noise::ripple_scaled_closed_polyline(
                 &points, self, layer_id, scale,
             );
         }
-        self.fuzzified_points(
-            points
-                .iter()
-                .map(|point| Point2::new(scale.unscale(point.x()), scale.unscale(point.y())))
-                .collect(),
-            layer_id,
-            print_z,
-        )
-        .into_iter()
-        .map(|point| {
-            Point::new(
-                scale
-                    .checked_scale(point.x())
-                    .expect("validated fuzzy point stays in the coordinate range"),
-                scale
-                    .checked_scale(point.y())
-                    .expect("validated fuzzy point stays in the coordinate range"),
-            )
-        })
-        .collect()
+        super::fuzzy_skin_seeded::fuzzify_closed(&points, self, print_z, scale, context.rng())
     }
 
     pub(crate) fn external_points(

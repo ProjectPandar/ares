@@ -37,7 +37,9 @@ const EMPTY_FILAMENT_DIAMETERS: &str = "\t\"filament_diameter\": []";
 async fn task22a_lifecycle_preserves_archive_effective_and_writer_precedence() {
     let malformed = b"not a 3MF archive";
     assert_eq!(
-        slice_project(malformed, metadata()).await.unwrap_err(),
+        slice_project(malformed, metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         load_project(malformed).unwrap_err()
     );
 
@@ -248,9 +250,13 @@ fn set_scalar(archive: &mut KsrArchive, key: &str, from: &str, to: &str) {
 }
 
 async fn slice_error(archive: &KsrArchive) -> SliceError {
-    slice_project(archive.clone().bytes(), metadata())
-        .await
-        .unwrap_err()
+    slice_project(
+        archive.clone().bytes(),
+        metadata(),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap_err()
 }
 
 fn flush_matrix_error() -> SliceError {

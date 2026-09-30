@@ -15,7 +15,9 @@ async fn slice_fixture(name: &str) -> Vec<u8> {
         .join(name);
     let project = fs::read(path).unwrap();
     let metadata = GenerationMetadata::new_local(2026, 9, 15, 0, 0, 0).unwrap();
-    slice_project(project, metadata).await.expect("slice")
+    slice_project(project, metadata, ares_core::SlicerContext::new(0))
+        .await
+        .expect("slice")
 }
 
 #[tokio::test]

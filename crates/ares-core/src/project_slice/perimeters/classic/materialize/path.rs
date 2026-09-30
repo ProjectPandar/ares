@@ -22,10 +22,11 @@ pub(super) fn materialize_seed(
     record: &ClassicTraversalRecord,
     seed: &TraversalSeed,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
     match record.branch {
         PendingPathBranch::OrdinaryUnsplit { .. } => {
-            let polygon = fuzzy_polygon(record, seed, scale)?;
+            let polygon = fuzzy_polygon(record, seed, scale, context)?;
             Ok(materialize_ordinary_polygon(
                 seed,
                 &polygon,
@@ -33,7 +34,7 @@ pub(super) fn materialize_seed(
             ))
         }
         PendingPathBranch::OverhangClipping { .. } => {
-            materialize_overhang(object, record_index, record, seed, scale)
+            materialize_overhang(object, record_index, record, seed, scale, context)
         }
     }
 }
@@ -44,12 +45,13 @@ fn materialize_overhang(
     record: &ClassicTraversalRecord,
     seed: &TraversalSeed,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
     let lower = object
         .lower_series(record_index, seed.route)
         .last()
         .expect("a traversal route has a source-prepared lower polygon series");
-    materialize_overhang_from_lower(record, seed, scale, lower)
+    materialize_overhang_from_lower(record, seed, scale, lower, context)
 }
 
 pub(in crate::project_slice) fn materialize_overhang_from_lower(
@@ -57,8 +59,9 @@ pub(in crate::project_slice) fn materialize_overhang_from_lower(
     seed: &TraversalSeed,
     scale: CoordinateScale,
     lower: &[Polygon],
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
-    let polygon = fuzzy_polygon(record, seed, scale)?;
+    let polygon = fuzzy_polygon(record, seed, scale, context)?;
     let mut bounds = BoundingBox::from_polygon(&polygon)
         .expect("a fuzzified traversal polygon remains source-valid");
     // `GCode.cpp:7559`: `instance_bbox.offset(scale_(EPSILON))` — the bbox
@@ -124,6 +127,7 @@ fn fuzzy_polygon(
     record: &ClassicTraversalRecord,
     seed: &TraversalSeed,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Polygon, SliceError> {
     let polygon = super::super::fuzzy_skin::apply(
         &seed.polygon,
@@ -135,6 +139,7 @@ fn fuzzy_polygon(
             is_contour: seed.is_contour,
             scale,
         },
+        context,
     )?;
     // Upstream keeps the fuzzified `Points` (scaled ints) verbatim through
     // `apply_fuzzy_skin` (`FuzzySkin.cpp:570-578`); an unscale→simplify→

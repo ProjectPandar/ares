@@ -147,7 +147,7 @@ async fn task22m_flow_public_raft_slices_instead_of_gating() {
         // The raft_layers gate is removed (raft milestone): raft projects
         // now slice through the raft pipeline — a full success, not an
         // UnsupportedProjectFeature.
-        let result = slice_project(archive.bytes(), metadata()).await;
+        let result = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0)).await;
         assert!(result.is_ok());
     }
 }

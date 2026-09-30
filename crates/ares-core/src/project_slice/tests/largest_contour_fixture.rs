@@ -12,7 +12,9 @@ const BOTTOM_THICKNESS_VECTOR: &str = r#""bottom_shell_thickness": "0.5001""#;
 
 #[tokio::test]
 async fn task22h_public_global_spiral_reaches_largest_contour_and_gcode() {
-    let output = slice_project(primary_mutation(), metadata()).await.unwrap();
+    let output = slice_project(primary_mutation(), metadata(), crate::SlicerContext::new(0))
+        .await
+        .unwrap();
     assert!(String::from_utf8_lossy(&output).contains("; CHANGE_LAYER"));
 }
 

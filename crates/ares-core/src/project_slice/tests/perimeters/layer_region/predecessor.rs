@@ -16,7 +16,11 @@ const CONFIG: &str = "Metadata/project_settings.config";
 
 #[test]
 fn post_perimeter_predecessor_envelopes_the_classic_traversal_without_copying() {
-    let prepared = prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let prepared = prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     let boxed = std::ptr::from_ref(prepared.predecessor.as_classic());
     assert!(matches!(
         prepared.predecessor,
@@ -28,7 +32,11 @@ fn post_perimeter_predecessor_envelopes_the_classic_traversal_without_copying() 
 
 #[test]
 fn surface_type_detection_forwards_the_drilled_classic_allocation() {
-    let prepared = prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let prepared = prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     let boxed = std::ptr::from_ref(prepared.predecessor.as_classic());
     let output = surface_type_detection::prepare(prepared).unwrap();
     assert_eq!(std::ptr::from_ref(output.predecessor.as_ref()), boxed);
@@ -48,7 +56,7 @@ fn post_perimeter_boundary_rejects_out_of_scope_arachne_dispatch_typed() {
         "\"wall_generator\": \"arachne\"",
     );
     assert_eq!(
-        prepare_post_layer_region_perimeters(&archive.bytes())
+        prepare_post_layer_region_perimeters(&archive.bytes(), &mut crate::SlicerContext::new(0))
             .err()
             .unwrap(),
         SliceError::UnsupportedProjectFeature("detect_overhang_wall".to_owned())

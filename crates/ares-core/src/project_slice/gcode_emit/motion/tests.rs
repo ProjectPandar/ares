@@ -67,6 +67,7 @@ async fn task22o133_contiguous_same_speed_paths_do_not_repeat_feedrate() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -98,6 +99,7 @@ async fn task22o134_overhang_role_uses_bridge_kinematics() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -119,6 +121,7 @@ async fn task22o135_overhang_overlap_bands_split_and_slow_wall_segments() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -154,6 +157,7 @@ async fn task22o136_dynamic_segments_keep_raw_path_endpoint_identity() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -191,6 +195,7 @@ async fn task22o137_dynamic_overhang_rounds_original_speed() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -216,6 +221,7 @@ async fn task22o138_cooling_removes_redundant_feedrate_commands() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

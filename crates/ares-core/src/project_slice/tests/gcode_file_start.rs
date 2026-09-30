@@ -16,7 +16,7 @@ async fn file_start_gcode_renders_stats_before_the_header() {
     );
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let lines = std::str::from_utf8(&output)

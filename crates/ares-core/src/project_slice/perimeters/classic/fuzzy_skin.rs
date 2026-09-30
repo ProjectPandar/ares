@@ -20,7 +20,11 @@ pub(super) struct FuzzySkinInput {
     pub(super) scale: CoordinateScale,
 }
 
-pub(super) fn apply(polygon: &Polygon, input: FuzzySkinInput) -> Result<Polygon, SliceError> {
+pub(super) fn apply(
+    polygon: &Polygon,
+    input: FuzzySkinInput,
+    context: &mut crate::SlicerContext,
+) -> Result<Polygon, SliceError> {
     if !input
         .config
         .should_fuzzify(input.layer_id, input.loop_index, input.is_contour)
@@ -33,5 +37,6 @@ pub(super) fn apply(polygon: &Polygon, input: FuzzySkinInput) -> Result<Polygon,
         input.layer_id,
         input.slice_z,
         input.scale,
+        context,
     )))
 }

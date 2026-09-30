@@ -3,6 +3,7 @@ async fn first_layer_seam_and_island_order_match_project_slice() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -41,6 +42,7 @@ async fn first_layer_inner_perimeter_uses_source_aligned_seam() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -70,6 +72,7 @@ async fn first_layer_second_inner_perimeter_uses_fitted_aligned_seam() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -107,6 +110,7 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -180,6 +184,7 @@ async fn bottom_surface_travel_crossing_external_slice_retracts() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

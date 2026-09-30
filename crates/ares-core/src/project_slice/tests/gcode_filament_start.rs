@@ -24,7 +24,7 @@ async fn filament_start_position_uses_assignments_not_machine_moves() {
     );
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
@@ -51,7 +51,7 @@ async fn bbl_filament_start_renders_before_vt_without_disabled_aux_fan() {
     settings.insert("enable_pressure_advance".to_owned(), json!(["0", "0"]));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();

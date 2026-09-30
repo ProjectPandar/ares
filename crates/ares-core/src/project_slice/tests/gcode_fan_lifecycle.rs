@@ -50,7 +50,7 @@ async fn non_bbl_fans_follow_orca_print_start_layer_and_finish_order() {
     settings.insert("close_fan_the_first_x_layers".to_owned(), json!(["0", "0"]));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let lines = std::str::from_utf8(&output)
@@ -121,7 +121,7 @@ async fn fan_mover_suppresses_redundant_initial_part_fan_off() {
     settings.insert("close_fan_the_first_x_layers".to_owned(), json!(["1", "1"]));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();

@@ -3,6 +3,7 @@ async fn dynamic_outer_wall_travels_to_the_unprocessed_first_point() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

@@ -113,8 +113,9 @@ pub(super) fn finish_classic_traversal(
 
 pub(super) fn finish_classic_raw_paths(
     prepared: Box<PreparedPostClassicTraversal>,
+    context: &mut crate::SlicerContext,
 ) -> Result<PreparedPostClassicRawPaths, SliceError> {
-    materialize::finish(prepared)
+    materialize::finish(prepared, context)
 }
 
 pub(super) fn finish_classic_chained_loops(

@@ -14,7 +14,7 @@ async fn pressure_equalizer_keeps_the_final_layer() {
         "\"max_volumetric_extrusion_rate_slope\": \"0\"",
         "\"max_volumetric_extrusion_rate_slope\": \"300\"",
     );
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let text = std::str::from_utf8(&output).unwrap();

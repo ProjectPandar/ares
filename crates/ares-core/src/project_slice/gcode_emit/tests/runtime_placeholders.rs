@@ -22,6 +22,7 @@ async fn project_templates_share_orca_runtime_placeholders() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

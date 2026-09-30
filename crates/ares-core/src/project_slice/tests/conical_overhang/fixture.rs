@@ -40,7 +40,10 @@ async fn task22l_stepped_invalid_options_fail_before_disabled_gate() {
         archive.replace_unique(PROCESS, from, to);
         let project = archive.bytes();
         let error = || SliceError::InvalidInput(message.to_owned());
-        assert_eq!(slice_project(&project, metadata()).await, Err(error()));
+        assert_eq!(
+            slice_project(&project, metadata(), crate::SlicerContext::new(0)).await,
+            Err(error())
+        );
     }
 }
 

@@ -14,7 +14,7 @@ async fn zero_deretraction_speed_falls_back_to_retraction_speed() {
     settings.insert("retraction_speed".to_owned(), json!(["30", "30"]));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();

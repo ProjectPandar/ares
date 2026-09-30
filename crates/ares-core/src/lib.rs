@@ -85,6 +85,7 @@ mod project;
 mod project_slice;
 mod segments;
 mod skirts;
+mod slicer_context;
 mod speeds;
 mod stl;
 mod surface;
@@ -172,6 +173,7 @@ pub use project::{
 pub use project_slice::{slice_project, slice_project_plate};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
+pub use slicer_context::SlicerContext;
 pub use speeds::{
     AccelerationOptions, JerkOptions, LayerSpeedMoves, OverhangSpeedBands, SpeedMove,
     SpeedMoveKinematics, SpeedOptions, generate_speed_moves,

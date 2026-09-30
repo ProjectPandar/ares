@@ -134,7 +134,14 @@ fn task22o7_overhang_appends_supported_then_remainder_with_distinct_flows_and_he
             vec![(20, 0, 0), (40, 0, 0), (40, 40, 0), (20, 40, 0)],
         ]
     );
-    let paths = materialize_overhang_from_lower(&record, &seed, normal_scale(), &lower).unwrap();
+    let paths = materialize_overhang_from_lower(
+        &record,
+        &seed,
+        normal_scale(),
+        &lower,
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     assert_eq!(
         paths
             .iter()
@@ -196,8 +203,14 @@ fn task22o7_bbox_prefilter_retains_a_polygon_whose_crossing_edge_has_no_inside_v
         Point::new(240, 20),
         Point::new(20, 240),
     ])];
-    let paths =
-        materialize_overhang_from_lower(&record(), &seed, normal_scale(), &crossing).unwrap();
+    let paths = materialize_overhang_from_lower(
+        &record(),
+        &seed,
+        normal_scale(),
+        &crossing,
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     assert!(
         paths
             .iter()
@@ -215,7 +228,13 @@ fn task22o7_coordinate_failure_is_reported_without_an_ordinary_fallback() {
         Point::new(high + 10, 10),
     ]);
     assert_eq!(
-        materialize_overhang_from_lower(&record(), &seed, normal_scale(), &[]),
+        materialize_overhang_from_lower(
+            &record(),
+            &seed,
+            normal_scale(),
+            &[],
+            &mut crate::SlicerContext::new(0)
+        ),
         Err(SliceError::InvalidInput(
             "classic perimeter raw path coordinate is outside the supported Clipper range".into()
         ))

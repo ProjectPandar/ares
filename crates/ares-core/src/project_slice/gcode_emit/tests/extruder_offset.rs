@@ -10,6 +10,7 @@ async fn active_extruder_offset_translates_emitted_motion() {
     let output = crate::slice_project(
         archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

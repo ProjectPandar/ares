@@ -80,6 +80,7 @@ async fn ksr_project_motion_is_finite_and_uses_configured_first_layer_rates() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -98,6 +99,7 @@ async fn task22o143_ksr_seam_gap_clips_before_path_simplification() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -138,6 +140,7 @@ async fn ksr_machine_start_uses_skirt_expanded_first_layer_hull() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -158,6 +161,7 @@ async fn disable_m73_true_suppresses_project_progress_lines() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -171,6 +175,7 @@ async fn ksr_layer_change_appends_fan_speed_marker_after_custom_gcode() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -205,6 +210,7 @@ async fn ksr_project_renders_timelapse_template_after_every_layer() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -226,6 +232,7 @@ async fn ksr_project_retracts_wipes_and_lifts_before_timelapse() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -249,6 +256,7 @@ async fn ksr_layer_metadata_uses_orca_float_precision() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -265,6 +273,7 @@ async fn ksr_internal_bridges_keep_their_processor_role() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -293,6 +302,7 @@ async fn ksr_project_renders_end_templates_and_closes_executable_block() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -319,6 +329,7 @@ async fn lifted_next_layer_travel_carries_new_layer_hop_z() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -344,6 +355,7 @@ async fn task22o162_project_emits_filament_statistics() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

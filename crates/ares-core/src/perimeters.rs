@@ -3,6 +3,7 @@ use crate::{LayerContours, Point2, SliceError};
 mod fuzzy_skin;
 mod fuzzy_skin_coherent_noise;
 mod fuzzy_skin_noise;
+mod fuzzy_skin_seeded;
 mod options;
 mod overhang;
 mod overhang_reverse;

@@ -20,6 +20,7 @@ pub(super) fn materialize_surface(
     record: &ClassicTraversalRecord,
     surface: &PreparedTraversalSurface,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<PreparedRawPathSurface, SliceError> {
     let mut frames = Vec::new();
     frames.extend(surface.roots.iter().rev().map(Frame::Visit));
@@ -33,14 +34,15 @@ pub(super) fn materialize_surface(
             Frame::Finish(seed) => {
                 let child_start = completed.len() - seed.children.len();
                 let children = completed.split_off(child_start);
-                let paths = match materialize_seed(object, record_index, record, seed, scale) {
-                    Ok(paths) => paths,
-                    Err(error) => {
-                        consume_nodes(children);
-                        consume_nodes(completed);
-                        return Err(error);
-                    }
-                };
+                let paths =
+                    match materialize_seed(object, record_index, record, seed, scale, context) {
+                        Ok(paths) => paths,
+                        Err(error) => {
+                            consume_nodes(children);
+                            consume_nodes(completed);
+                            return Err(error);
+                        }
+                    };
                 completed.push(RawPathNode { paths, children });
             }
         }

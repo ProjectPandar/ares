@@ -17,7 +17,7 @@ async fn missing_startup_temperatures_emit_before_custom_role_and_template() {
     settings.insert("auxiliary_fan".to_owned(), json!("0"));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let lines = std::str::from_utf8(&output)
@@ -51,7 +51,7 @@ async fn chamber_wait_brackets_with_auxiliary_fan_before_machine_start() {
     settings.insert("chamber_temperature".to_owned(), json!(["35", "35"]));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let lines = std::str::from_utf8(&output)

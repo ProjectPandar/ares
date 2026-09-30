@@ -40,7 +40,7 @@ async fn task22o22_earlier_capability_errors_have_precedence() {
         archive.replace_unique("Metadata/project_settings.config", from, to);
         vertical_shell_regularization::reset_invocations();
         assert_eq!(
-            slice_project(archive.bytes(), metadata())
+            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
                 .await
                 .unwrap_err(),
             expected
@@ -50,7 +50,9 @@ async fn task22o22_earlier_capability_errors_have_precedence() {
     let (multi_region, _) = crate::project_slice::tests::region_fixture::modifier_projects();
     vertical_shell_regularization::reset_invocations();
     assert_eq!(
-        slice_project(multi_region, metadata()).await.unwrap_err(),
+        slice_project(multi_region, metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned())
     );
     assert_eq!(vertical_shell_regularization::invocations(), 0);
@@ -151,7 +153,11 @@ async fn task22o22_each_o20_anchor_failure_precedes_regularization() {
         vertical_shell_projection::reset_geometry_hooks();
         vertical_shell_projection::fail_geometry_at(step);
         vertical_shell_regularization::reset_invocations();
-        assert!(slice_project(archive.bytes(), metadata()).await.is_err());
+        assert!(
+            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
+                .await
+                .is_err()
+        );
         assert_eq!(vertical_shell_regularization::invocations(), 0);
         vertical_shell_projection::reset_geometry_hooks();
     }
@@ -160,7 +166,7 @@ async fn task22o22_each_o20_anchor_failure_precedes_regularization() {
 async fn assert_precedes_o22(expected: &str) {
     vertical_shell_regularization::reset_invocations();
     assert!(matches!(
-        slice_project(KsrArchive::new().bytes(), metadata()).await,
+        slice_project(KsrArchive::new().bytes(), metadata(), crate::SlicerContext::new(0)).await,
         Err(SliceError::InvalidInput(message)) if message == expected
     ));
     assert_eq!(vertical_shell_regularization::invocations(), 0);

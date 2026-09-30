@@ -209,7 +209,9 @@ async fn task22b_layer_range_preflight_runs_after_task22a_and_before_all_raw_geo
         r#"<objects><object id="1"><range min_z="0" max_z="1"><option opt_key="extruder">1</option></range></object></objects>"#,
     );
     assert_eq!(
-        slice_project(benign.bytes(), metadata()).await.unwrap_err(),
+        slice_project(benign.bytes(), metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         unsupported("layer_config_ranges")
     );
 
@@ -219,7 +221,7 @@ async fn task22b_layer_range_preflight_runs_after_task22a_and_before_all_raw_geo
         r#"<objects><object id="1"><range min_z="0" max_z="1"><option opt_key="layer_height">0.18</option></range></object></objects>"#,
     );
     assert_eq!(
-        slice_project(task22a.bytes(), metadata())
+        slice_project(task22a.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
         unsupported("layer_height")

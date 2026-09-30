@@ -24,7 +24,7 @@ pub async fn slice_project(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
 #[wasm_bindgen(js_name = sliceProjectPlate)]
 pub async fn slice_project_plate(input: Vec<u8>, plate: Option<u32>) -> Result<Vec<u8>, JsValue> {
     let metadata = local_generation_metadata().map_err(slice_error_js)?;
-    ares_core::slice_project_plate(input, metadata, plate)
+    ares_core::slice_project_plate(input, metadata, plate, ares_core::SlicerContext::new(0))
         .await
         .map_err(slice_error_js)
 }

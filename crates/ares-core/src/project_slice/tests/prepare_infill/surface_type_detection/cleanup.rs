@@ -45,8 +45,11 @@ const ERROR: &str = "surface-type detection geometry is outside the supported Cl
 
 #[test]
 fn task22o17_success_cleanup_with_both_deep_predecessors_fits_constrained_stack() {
-    let mut source =
-        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let mut source = perimeters::prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     deepen_both_tree_families(source.predecessor.as_classic_mut());
     run_on_constrained_stack(move || {
         let output = surface_type_detection::prepare(source).unwrap();
@@ -59,8 +62,11 @@ fn task22o17_success_cleanup_with_both_deep_predecessors_fits_constrained_stack(
 
 #[test]
 fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_constrained_stack() {
-    let mut source =
-        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let mut source = perimeters::prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     deepen_both_tree_families(source.predecessor.as_classic_mut());
     run_on_constrained_stack(move || {
         reset_geometry_hooks();
@@ -102,8 +108,11 @@ fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_constrain
 
 #[test]
 fn task22o17_preflight_failure_with_deep_predecessors_fits_constrained_stack() {
-    let mut source =
-        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let mut source = perimeters::prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     deepen_both_tree_families(source.predecessor.as_classic_mut());
     source.predecessor.as_classic_mut().resolved.objects[0]
         .object
@@ -131,8 +140,11 @@ fn task22o17_preflight_failure_with_deep_predecessors_fits_constrained_stack() {
 
 #[test]
 fn task22o17_public_incomplete_cleanup_with_deep_predecessors_fits_constrained_stack() {
-    let mut source =
-        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let mut source = perimeters::prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     deepen_both_tree_families(source.predecessor.as_classic_mut());
     let (drop_probe, dropped) = source.predecessor.as_classic().drop_probe_observer();
     run_on_constrained_stack(move || {

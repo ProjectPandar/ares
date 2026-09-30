@@ -23,7 +23,7 @@ async fn golden_ksr_fdmtest_v4_slicing_produces_correct_output() {
     let project =
         std::fs::read(fixture_dir().join("ksr_fdmtest_v4.project.3mf")).expect("read 3mf fixture");
     let metadata = ares_core::GenerationMetadata::deterministic(2026, 7, 10, 11, 16, 9);
-    let output = ares_core::slice_project(&project, metadata)
+    let output = ares_core::slice_project(&project, metadata, ares_core::SlicerContext::new(0))
         .await
         .expect("slicing succeeds");
     let output_str = String::from_utf8(output).expect("utf8 gcode");

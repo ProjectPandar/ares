@@ -17,7 +17,7 @@ async fn task22o23_o22_failure_precedes_filtering() {
     );
     vertical_shell_filtering::reset_invocations();
     assert!(matches!(
-        slice_project(KsrArchive::new().bytes(), metadata()).await,
+        slice_project(KsrArchive::new().bytes(), metadata(), crate::SlicerContext::new(0)).await,
         Err(SliceError::InvalidInput(message))
             if message == "vertical-shell regularization geometry is outside the supported Clipper range"
     ));

@@ -73,9 +73,13 @@ fn two_plate_archive() -> KsrArchive {
 
 #[tokio::test]
 async fn slice_project_slices_only_the_first_plate_by_default() {
-    let output = crate::slice_project(two_plate_archive().bytes(), metadata())
-        .await
-        .unwrap();
+    let output = crate::slice_project(
+        two_plate_archive().bytes(),
+        metadata(),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
     let text = String::from_utf8(output).unwrap();
     assert!(
         text.contains("ksr_fdmtest_v4.drc"),
@@ -90,9 +94,14 @@ async fn slice_project_slices_only_the_first_plate_by_default() {
 #[tokio::test]
 async fn slice_project_plate_selects_instances_of_the_requested_plate() {
     let bytes = two_plate_archive().bytes();
-    let plate_two = crate::slice_project_plate(bytes.as_slice(), metadata(), Some(2))
-        .await
-        .unwrap();
+    let plate_two = crate::slice_project_plate(
+        bytes.as_slice(),
+        metadata(),
+        Some(2),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
     let text = String::from_utf8(plate_two).unwrap();
     assert!(
         text.contains("printing object plate_two.drc"),
@@ -102,9 +111,14 @@ async fn slice_project_plate_selects_instances_of_the_requested_plate() {
         !text.contains("printing object ksr_fdmtest_v4.drc"),
         "plate 1 object must not leak into plate 2"
     );
-    let plate_one = crate::slice_project_plate(bytes.as_slice(), metadata(), Some(1))
-        .await
-        .unwrap();
+    let plate_one = crate::slice_project_plate(
+        bytes.as_slice(),
+        metadata(),
+        Some(1),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
     assert!(
         String::from_utf8(plate_one)
             .unwrap()
@@ -114,9 +128,14 @@ async fn slice_project_plate_selects_instances_of_the_requested_plate() {
 
 #[tokio::test]
 async fn slice_project_plate_rejects_an_unknown_plate() {
-    let error = crate::slice_project_plate(two_plate_archive().bytes(), metadata(), Some(7))
-        .await
-        .unwrap_err();
+    let error = crate::slice_project_plate(
+        two_plate_archive().bytes(),
+        metadata(),
+        Some(7),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap_err();
     assert_eq!(
         error.to_string(),
         crate::SliceError::InvalidInput("project has no plate 7".to_owned()).to_string()
@@ -130,7 +149,11 @@ fn single_plate_project_loads_all_its_instances() {
         .build()
         .unwrap();
     let output = runtime
-        .block_on(crate::slice_project(ksr_project(), metadata()))
+        .block_on(crate::slice_project(
+            ksr_project(),
+            metadata(),
+            crate::SlicerContext::new(0),
+        ))
         .unwrap();
     assert!(
         String::from_utf8(output)

@@ -52,7 +52,9 @@ const EXTRUDER_RANGE: &str = r#"<objects><object id="1"><range min_z="0" max_z="
 async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_precedence() {
     let malformed = b"not a project archive";
     assert_eq!(
-        slice_project(malformed, metadata()).await.unwrap_err(),
+        slice_project(malformed, metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         load_project(malformed).unwrap_err()
     );
 
@@ -64,7 +66,9 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
         r#"<component objectid="2"/>"#,
     );
     assert_eq!(
-        slice_project(cycle.bytes(), metadata()).await.unwrap_err(),
+        slice_project(cycle.bytes(), metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         SliceError::InvalidInput(
             "invalid project model graph: component graph contains a cycle".to_owned()
         )
@@ -124,7 +128,7 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
     let repeated_components = REPEATED_COMPONENT.repeat(55);
     expanded.replace_unique("3D/3dmodel.model", ROOT_COMPONENT, &repeated_components);
     assert_eq!(
-        slice_project(expanded.bytes(), metadata())
+        slice_project(expanded.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
         SliceError::InvalidInput(
@@ -201,9 +205,13 @@ fn make_shrink_nonidentity(archive: &mut KsrArchive) {
 }
 
 async fn slice_error(archive: &KsrArchive) -> SliceError {
-    slice_project(archive.clone().bytes(), metadata())
-        .await
-        .unwrap_err()
+    slice_project(
+        archive.clone().bytes(),
+        metadata(),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap_err()
 }
 
 fn flush_matrix_error() -> SliceError {

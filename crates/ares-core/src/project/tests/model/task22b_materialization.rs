@@ -50,7 +50,8 @@ async fn task22b_vertex_unit_product_nonfinite_precedes_effective_config() {
     assert_eq!(
         slice_project(
             bytes,
-            GenerationMetadata::deterministic(2026, 7, 16, 1, 2, 3)
+            GenerationMetadata::deterministic(2026, 7, 16, 1, 2, 3),
+            crate::SlicerContext::new(0)
         )
         .await
         .unwrap_err(),

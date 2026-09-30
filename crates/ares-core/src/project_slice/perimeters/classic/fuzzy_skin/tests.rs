@@ -86,6 +86,7 @@ fn classic_polygon_fuzzy_runs_after_polygon_generation_for_all_modes() {
                 is_contour: true,
                 scale: scale(),
             },
+            &mut crate::SlicerContext::new(0),
         )
         .unwrap()
     });

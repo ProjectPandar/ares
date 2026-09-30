@@ -99,7 +99,7 @@ fn task22o7_coordinate_error_is_transactional_and_has_no_ordinary_fallback() {
         crate::geometry::Point::new(high + 10, 10),
     ]);
     assert!(matches!(
-        crate::project_slice::perimeters::classic::materialize::finish(prepared),
+        crate::project_slice::perimeters::classic::materialize::finish(prepared, &mut crate::SlicerContext::new(0)),
         Err(SliceError::InvalidInput(message))
             if message == "classic perimeter raw path coordinate is outside the supported Clipper range"
     ));
@@ -143,7 +143,7 @@ fn assert_nodes(
                 context.record,
                 seed,
                 context.scale,
-                lower,
+                lower, &mut crate::SlicerContext::new(0),
             )
             .unwrap();
             assert_eq!(raw.paths, expected);

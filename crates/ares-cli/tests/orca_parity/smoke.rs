@@ -67,6 +67,7 @@ fn orca_parity_nearest_cluster_check() {
                                     ares_core::GenerationMetadata::deterministic(
                                         2026, 8, 27, 0, 0, 0,
                                     ),
+                                    ares_core::SlicerContext::new(0),
                                 )
                                 .await
                             }) {

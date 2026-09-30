@@ -14,7 +14,7 @@ async fn task22o16_counterbore_preflight_precedes_layer_region_lifecycle() {
     );
     layer_region::reset_finish_invocations();
     assert_eq!(
-        slice_project(archive.bytes(), metadata())
+        slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
         SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned())

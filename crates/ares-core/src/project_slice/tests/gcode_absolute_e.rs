@@ -18,7 +18,7 @@ async fn absolute_e_preamble_resets_and_depositions_accumulate() {
     settings.insert("exclude_object".to_owned(), json!("1"));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();

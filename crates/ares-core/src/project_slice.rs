@@ -70,8 +70,9 @@ mod tests;
 pub async fn slice_project(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
+    context: crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_project_plate(project, metadata, None).await
+    slice_project_plate(project, metadata, None, context).await
 }
 
 /// Slices one plate of a multi-plate 3MF project. `plate` selects the plate
@@ -80,8 +81,9 @@ pub async fn slice_project_plate(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
     plate: Option<u32>,
+    context: crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_project_sync(project, metadata, plate)
+    slice_project_sync(project, metadata, plate, context)
 }
 
 #[inline(never)]
@@ -89,12 +91,16 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
     plate: Option<u32>,
+    mut context: crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
     let staged = prepare_infill::surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(ProjectSource {
-            bytes: project.as_ref(),
-            plate,
-        })?,
+        perimeters::prepare_post_layer_region_perimeters(
+            ProjectSource {
+                bytes: project.as_ref(),
+                plate,
+            },
+            &mut context,
+        )?,
     )?;
     // The avoid-crossing boundary subtracts the layer's top surfaces
     // (`get_boundary`, `AvoidCrossingPerimeters.cpp:1122-1132`); the

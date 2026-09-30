@@ -12,8 +12,11 @@ pub(in crate::project_slice::tests::prepare_infill) fn prepare_o19(
     bytes: impl AsRef<[u8]>,
 ) -> vertical_shells::PreparedPostVerticalShellCache {
     let detected = surface_type_detection::prepare(
-        crate::project_slice::perimeters::prepare_post_layer_region_perimeters(bytes.as_ref())
-            .unwrap(),
+        crate::project_slice::perimeters::prepare_post_layer_region_perimeters(
+            bytes.as_ref(),
+            &mut crate::SlicerContext::new(0),
+        )
+        .unwrap(),
     )
     .unwrap();
     vertical_shells::prepare(fill_surfaces::prepare(detected)).unwrap()

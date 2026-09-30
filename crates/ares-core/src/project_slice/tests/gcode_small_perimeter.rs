@@ -16,7 +16,7 @@ async fn later_layer_small_perimeter_uses_configured_relative_speed() {
     settings.insert("slow_down_for_layer_cooling".to_owned(), json!(["0", "0"]));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let lines = std::str::from_utf8(&output)

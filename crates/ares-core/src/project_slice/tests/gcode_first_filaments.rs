@@ -17,7 +17,7 @@ async fn first_filament_placeholders_keep_unused_physical_hotend_at_minus_one() 
     settings.insert("machine_end_gcode".to_owned(), json!(";END"));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();

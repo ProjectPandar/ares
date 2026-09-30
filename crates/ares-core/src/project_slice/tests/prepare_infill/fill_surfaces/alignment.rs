@@ -14,7 +14,11 @@ fn detected(active: bool) -> surface_type_detection::PreparedPostSurfaceTypeDete
         );
     }
     surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(&archive.bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(
+            &archive.bytes(),
+            &mut crate::SlicerContext::new(0),
+        )
+        .unwrap(),
     )
     .unwrap()
 }

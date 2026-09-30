@@ -245,6 +245,7 @@ async fn bbs_painted_triangle_attributes_remain_fail_closed_through_load_and_sli
             slice_project(
                 &bytes,
                 GenerationMetadata::deterministic(2026, 7, 19, 1, 2, 3),
+                crate::SlicerContext::new(0),
             )
             .await
             .unwrap_err(),

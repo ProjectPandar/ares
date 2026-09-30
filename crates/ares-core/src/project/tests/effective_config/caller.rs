@@ -14,7 +14,9 @@ async fn slice_project_reports_materialized_cardinality_before_incomplete() {
     load_project(&bytes).unwrap();
 
     assert_eq!(
-        slice_project(bytes, metadata()).await.unwrap_err(),
+        slice_project(bytes, metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         SliceError::InvalidInput("invalid Orca option filament_map".to_owned())
     );
 }
@@ -26,7 +28,9 @@ async fn slice_project_keeps_malformed_archive_before_resolution() {
 
     assert_ne!(load_error, SliceError::ProjectSlicingIncomplete);
     assert_eq!(
-        slice_project(bytes, metadata()).await.unwrap_err(),
+        slice_project(bytes, metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         load_error
     );
 }

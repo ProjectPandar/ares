@@ -13,7 +13,7 @@ async fn raft_layers(settings: &[(&str, &str)]) -> String {
     for (from, to) in settings {
         archive.replace_unique(PROJECT_SETTINGS, from, to);
     }
-    let output = crate::slice_project(&archive.bytes(), metadata())
+    let output = crate::slice_project(&archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap();
     let text = String::from_utf8(output).unwrap();

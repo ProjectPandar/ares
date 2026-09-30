@@ -87,7 +87,9 @@ fn geometry_metadata_checksum(prepared: &PreparedPostSurfaceTypeDetection) -> i1
 }
 
 fn prepare_option_case(archive: KsrArchive) -> (PreparedPostSurfaceTypeDetection, i128) {
-    let source = prepare_post_layer_region_perimeters(&archive.bytes()).unwrap();
+    let source =
+        prepare_post_layer_region_perimeters(&archive.bytes(), &mut crate::SlicerContext::new(0))
+            .unwrap();
     let predecessor = std::ptr::from_ref(source.predecessor.as_classic());
     let checksum = o16::checksum(&source);
     let output = surface_type_detection::prepare(source).unwrap();
@@ -105,7 +107,9 @@ async fn task22o17_interface_shells_single_region_reaches_output() {
     );
     reset_geometry_hooks();
     reset_invocations();
-    let output = slice_project(archive.bytes(), metadata()).await.unwrap();
+    let output = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
+        .await
+        .unwrap();
     assert!(!output.is_empty());
     assert_eq!(invocations(), 1);
 }
@@ -124,7 +128,7 @@ async fn task22o17_extra_bridge_values_reach_active_output() {
             &format!("\"enable_extra_bridge_layer\": \"{token}\""),
         );
         assert!(
-            !slice_project(archive.bytes(), metadata())
+            !slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
                 .await
                 .unwrap()
                 .is_empty()

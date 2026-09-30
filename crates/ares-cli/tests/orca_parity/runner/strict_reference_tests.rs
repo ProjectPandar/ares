@@ -57,6 +57,7 @@ fn reordered_reference_child() {
         .block_on(ares_core::slice_project(
             &project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            ares_core::SlicerContext::new(0),
         ))
         .unwrap();
     let text = String::from_utf8(ares.clone())

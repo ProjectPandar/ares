@@ -14,6 +14,7 @@ async fn non_bbl_timelapse_runs_between_before_and_after_layer_gcode() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -43,6 +44,7 @@ async fn traditional_timelapse_runs_between_perimeters_and_infill() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

@@ -14,7 +14,7 @@ async fn task22o18_earlier_errors_leave_invocations_zero() {
         archive.replace_unique("Metadata/project_settings.config", from, to);
         fill_surfaces::reset_invocations();
         assert_eq!(
-            slice_project(archive.bytes(), metadata())
+            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
                 .await
                 .unwrap_err(),
             SliceError::UnsupportedProjectFeature(error.to_owned())
@@ -28,7 +28,12 @@ async fn task22o18_earlier_errors_leave_invocations_zero() {
         surface_type_detection::GeometryStep::TopSafetyDifference,
     );
     assert!(matches!(
-        slice_project(KsrArchive::new().bytes(), metadata()).await,
+        slice_project(
+            KsrArchive::new().bytes(),
+            metadata(),
+            crate::SlicerContext::new(0)
+        )
+        .await,
         Err(SliceError::InvalidInput(_))
     ));
     assert_eq!(fill_surfaces::invocations(), 0);

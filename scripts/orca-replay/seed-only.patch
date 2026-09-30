@@ -1,0 +1,12 @@
+diff --git a/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp b/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp
+index 11e2d081d..b4c66f2ca 100644
+--- a/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp
++++ b/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp
+@@ -1,0 +2,2 @@
++#include <cstdlib>
++#include <string>
+@@ -26,3 +28 @@ static double random_value() {
+-    thread_local std::random_device rd;
+-    // Hash thread ID for random number seed if no hardware rng seed is available
+-    thread_local std::mt19937 gen(rd.entropy() > 0 ? rd() : std::hash<std::thread::id>()(std::this_thread::get_id()));
++    thread_local std::mt19937 gen(static_cast<uint32_t>(std::stoul(std::getenv("ORCA_REPLAY_SEED"))));

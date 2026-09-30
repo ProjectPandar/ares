@@ -34,8 +34,16 @@ const EXPOLYGON: i128 = 0x11_455850;
 
 #[test]
 fn task22o16_ksr_perimeter_outputs_are_populated_and_repeatable() {
-    let first = prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
-    let second = prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
+    let first = prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
+    let second = prepare_post_layer_region_perimeters(
+        &KsrArchive::new().bytes(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     let first_snapshot = (checksum(&first), totals(&first));
     let second_snapshot = (checksum(&second), totals(&second));
     assert_eq!(first_snapshot, second_snapshot);

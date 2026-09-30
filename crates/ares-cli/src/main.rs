@@ -65,7 +65,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
                 u8::try_from(now.minute())?,
                 u8::try_from(now.second())?,
             )?;
-            ares_core::slice_project_plate(input, metadata, args.plate).await?
+            ares_core::slice_project_plate(
+                input,
+                metadata,
+                args.plate,
+                ares_core::SlicerContext::new(0),
+            )
+            .await?
         }
         Some(extension) if extension == "stl" => {
             let options = args.options.ok_or_else(|| {

@@ -3,6 +3,7 @@ async fn ksr_object_travel_acceleration_follows_object_comment() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -92,6 +93,7 @@ async fn ksr_project_emits_3mf_object_labels_per_layer() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -124,6 +126,7 @@ async fn multi_object_project_uses_each_objects_identity() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -158,6 +161,7 @@ async fn nonprinting_prefix_does_not_supply_the_initial_emission_origin() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -177,6 +181,7 @@ async fn gcode_label_objects_false_suppresses_comments_and_bbl_labels() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

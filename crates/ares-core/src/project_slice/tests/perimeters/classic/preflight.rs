@@ -11,7 +11,9 @@ async fn fuzzy_skin_reaches_active_classic_output() {
         "\"fuzzy_skin\": \"external\"",
     );
 
-    let output = slice_project(archive.bytes(), metadata()).await.unwrap();
+    let output = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
+        .await
+        .unwrap();
 
     assert!(!output.is_empty());
 }
@@ -39,7 +41,7 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
         assert_eq!(
-            slice_project(archive.bytes(), metadata())
+            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
                 .await
                 .unwrap_err(),
             SliceError::UnsupportedProjectFeature(key.to_owned()),
@@ -50,16 +52,22 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
 
 #[tokio::test]
 async fn alternate_extra_wall_adds_one_wall_on_the_second_layer() {
-    let baseline = slice_project(KsrArchive::new().bytes(), metadata())
-        .await
-        .unwrap();
+    let baseline = slice_project(
+        KsrArchive::new().bytes(),
+        metadata(),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
         "\"alternate_extra_wall\": \"0\"",
         "\"alternate_extra_wall\": \"1\"",
     );
-    let alternate = slice_project(archive.bytes(), metadata()).await.unwrap();
+    let alternate = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
+        .await
+        .unwrap();
     let used_filament = |gcode: &[u8]| {
         String::from_utf8_lossy(gcode)
             .lines()
@@ -77,9 +85,13 @@ async fn alternate_extra_wall_adds_one_wall_on_the_second_layer() {
 
 #[tokio::test]
 async fn only_one_wall_first_layer_reduces_first_layer_perimeters() {
-    let baseline = slice_project(KsrArchive::new().bytes(), metadata())
-        .await
-        .unwrap();
+    let baseline = slice_project(
+        KsrArchive::new().bytes(),
+        metadata(),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
@@ -87,7 +99,9 @@ async fn only_one_wall_first_layer_reduces_first_layer_perimeters() {
         "\"only_one_wall_first_layer\": \"1\"",
     );
 
-    let reduced = slice_project(archive.bytes(), metadata()).await.unwrap();
+    let reduced = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
+        .await
+        .unwrap();
 
     let inner_walls = |gcode: &[u8]| {
         String::from_utf8_lossy(gcode)
@@ -115,7 +129,7 @@ async fn task22o1_preflight_raft_no_longer_gates_arachne() {
     );
     // The raft_layers gate is removed (raft milestone); arachne gates on
     // its own — the raft no longer shadows it.
-    let error = slice_project(archive.bytes(), metadata())
+    let error = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
         .await
         .unwrap_err();
     assert_eq!(

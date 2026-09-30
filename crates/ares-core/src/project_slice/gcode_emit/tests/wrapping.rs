@@ -18,6 +18,7 @@ async fn wrapping_max_layer_z_is_current_layer_raw_float_z() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -49,6 +50,7 @@ async fn wrapping_max_layer_z_excludes_z_offset() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

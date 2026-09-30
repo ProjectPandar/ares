@@ -10,6 +10,7 @@ async fn project_print_flow_ratio_scales_extrusion() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

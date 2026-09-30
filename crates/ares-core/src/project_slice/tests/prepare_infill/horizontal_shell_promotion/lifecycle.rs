@@ -81,7 +81,7 @@ async fn task22o25_public_parse_error_disposes_o24_and_preserves_error() {
     horizontal_shell_promotion::reset_hooks();
     horizontal_shell_propagation::reset_hooks();
     assert_eq!(
-        slice_project(archive.bytes(), metadata())
+        slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
         SliceError::InvalidInput("invalid extra_solid_infills pattern".to_owned())
@@ -104,7 +104,7 @@ async fn task22o25_every_earlier_capability_error_precedes_promotion() {
         horizontal_shell_promotion::reset_hooks();
         horizontal_shell_propagation::reset_hooks();
         assert_eq!(
-            slice_project(archive.bytes(), metadata())
+            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
                 .await
                 .unwrap_err(),
             SliceError::UnsupportedProjectFeature(feature.to_owned())
@@ -118,7 +118,9 @@ async fn task22o25_every_earlier_capability_error_precedes_promotion() {
     horizontal_shell_promotion::reset_hooks();
     horizontal_shell_propagation::reset_hooks();
     assert_eq!(
-        slice_project(multi_region, metadata()).await.unwrap_err(),
+        slice_project(multi_region, metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
         SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned())
     );
     assert_eq!(horizontal_shell_promotion::invocations(), 0);
@@ -130,9 +132,13 @@ async fn assert_precedes(expected: &str) {
     horizontal_shell_promotion::reset_hooks();
     horizontal_shell_propagation::reset_hooks();
     assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
+        slice_project(
+            KsrArchive::new().bytes(),
+            metadata(),
+            crate::SlicerContext::new(0)
+        )
+        .await
+        .unwrap_err(),
         SliceError::InvalidInput(expected.to_owned())
     );
     assert_eq!(horizontal_shell_promotion::invocations(), 0);

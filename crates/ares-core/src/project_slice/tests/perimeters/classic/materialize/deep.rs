@@ -37,7 +37,7 @@ fn materialize_deep_ordinary(
     let prototype = surface.roots.first().unwrap();
     surface.roots = vec![deep_seed(prototype, 10_000)];
 
-    let raw = materialize::finish(prepared).unwrap();
+    let raw = materialize::finish(prepared, &mut crate::SlicerContext::new(0)).unwrap();
     for object in raw.objects {
         incomplete_sink::consume_raw_path_object(object);
     }
@@ -60,7 +60,7 @@ fn reject_after_deep_overhang(
     surface.roots = vec![deep, invalid];
 
     assert!(matches!(
-        materialize::finish(prepared),
+        materialize::finish(prepared, &mut crate::SlicerContext::new(0)),
         Err(SliceError::InvalidInput(message))
             if message == "classic perimeter raw path coordinate is outside the supported Clipper range"
     ));

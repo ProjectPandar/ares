@@ -20,7 +20,7 @@ async fn task22o26_o25_error_precedes_invocation() {
     );
     horizontal_shell_propagation::reset_hooks();
     assert_eq!(
-        slice_project(archive.bytes(), metadata())
+        slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
         SliceError::InvalidInput("invalid extra_solid_infills pattern".to_owned())
@@ -41,7 +41,7 @@ async fn task22o26_geometry_error_precedes_terminal_incomplete_and_rolls_back_o2
     horizontal_shell_propagation::reset_hooks();
     horizontal_shell_propagation::fail_geometry_at(GeometryStep::SafetyIntersection);
     assert_eq!(
-        slice_project(archive.bytes(), metadata())
+        slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
         SliceError::InvalidInput(

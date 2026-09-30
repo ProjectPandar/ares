@@ -10,6 +10,7 @@ async fn before_layer_change_layer_num_is_zero_based() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();
@@ -35,6 +36,7 @@ async fn machine_end_layer_num_is_the_final_zero_based_index() {
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

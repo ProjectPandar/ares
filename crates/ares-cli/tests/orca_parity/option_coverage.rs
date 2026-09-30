@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/seeded_context.rs"]
+mod seeded_context;
+
+#[cfg(test)]
 #[path = "option_coverage/elephant_foot_count.rs"]
 mod elephant_foot_count;
 

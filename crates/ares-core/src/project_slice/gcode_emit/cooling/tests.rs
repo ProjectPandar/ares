@@ -6,6 +6,7 @@ async fn task22o174_layer_cooling_matches_orca_slowdown_feedrate() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
+        crate::SlicerContext::new(0),
     )
     .await
     .unwrap();

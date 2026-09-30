@@ -5,7 +5,11 @@ use crate::project_slice::{
 
 pub(super) fn prepare(bytes: impl AsRef<[u8]>) -> PreparedPostSurfaceTypeDetection {
     surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(bytes.as_ref()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(
+            bytes.as_ref(),
+            &mut crate::SlicerContext::new(0),
+        )
+        .unwrap(),
     )
     .unwrap()
 }
