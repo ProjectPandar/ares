@@ -7,6 +7,20 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Filament-map wire/plate evidence (ARD-0055) validates the three serialized
+`ConfigOptionEnum<FilamentMapMode>` keys and `bbs_3mf` plate-mode import through
+the existing typed enum and `project::plate_config` rewrite boundaries.
+The UI-only Default sentinel remains a rejected application-proof negative,
+not a fourth serialized value. Bind the generated plate to each concrete
+request and require both-owner evidence plus its final G-code header and full
+ordered output. Exit includes all three tokens, stale/missing owner and I/O
+negatives, selected/full tests, lint/platform checks and independent review.
+Three active modes pass direct complete-output comparisons and the selected
+sweep; final workspace has 7419 PASS/9 skipped, format/lint and Tier-1 compiler
+checks pass. Independent six-axis re-review passes after the I/O classification
+repair. Multi-extruder activation
+and GUI inheritance are separate boundaries; this does not close the global gate.
+
 Resolution floor evidence (ARD-0053) validates `DynamicPrintConfig::normalize_fdm_1`
 through the existing typed project normalization boundary and CLI evidence shell.
 The zero minimum must retain its requested value while proving effective 0.001;

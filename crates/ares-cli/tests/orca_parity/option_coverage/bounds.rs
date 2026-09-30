@@ -80,6 +80,10 @@ pub(super) fn enum_values(key: &str, block: &str, source: &str) -> Vec<String> {
     if values.is_empty() {
         values.extend(referenced_enum_values(&active_block, source, &push));
     }
+    // PrintConfig.cpp:579-584: Default is UI-only, absent from the wire map.
+    if key == "filament_map_mode" {
+        values.clear();
+    }
     if values.is_empty()
         && let Some(kind) = Regex::new(r"ConfigOptionEnum<([^>]+)>")
             .unwrap()
@@ -87,7 +91,7 @@ pub(super) fn enum_values(key: &str, block: &str, source: &str) -> Vec<String> {
     {
         let kind = kind[1].rsplit("::").next().unwrap();
         let map = Regex::new(&format!(
-            r"(?s)s_keys_map_{}\s*\{{(.*?)\}};",
+            r"(?s)s_keys_map_{}\s*(?:=\s*)?\{{(.*?)\}};",
             regex::escape(kind)
         ))
         .unwrap();

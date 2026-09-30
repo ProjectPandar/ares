@@ -173,6 +173,13 @@ fn execute_plan(
             error,
         )
     };
+    let verify_application = |project: &[u8], value: &Value| {
+        if plan.key == "filament_map_mode" {
+            runner::filament_map::verify(project, value)
+        } else {
+            runner::application::verify_value(project, &plan.key, value)
+        }
+    };
     for case in &plan.cases {
         let label_digest: String = Sha256::digest(case.label.as_bytes())
             .iter()
@@ -210,13 +217,19 @@ fn execute_plan(
                 }),
             )
             .and_then(|exported| {
+                if plan.key == "filament_map_mode" {
+                    runner.bind_filament_map_mode(exported, case.value.as_ref().unwrap())
+                } else {
+                    Ok(exported)
+                }
+            })
+            .and_then(|exported| {
                 // Requested-vs-effective verification for EVERY injected
                 // value: a case can only credit coverage when the exported
                 // project actually carries the probed value (width domains
                 // additionally type-check the percent/literal tag).
                 if let Some(value) = &case.value {
-                    let proof =
-                        runner::application::verify_value(&exported.project, &plan.key, value)?;
+                    let proof = verify_application(&exported.project, value)?;
                     let root = parity::artifacts::root_from_env().map_err(io_error)?;
                     let file = root.join(&proof_name);
                     parity::artifacts::overwrite(

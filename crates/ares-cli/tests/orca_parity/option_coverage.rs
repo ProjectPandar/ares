@@ -75,6 +75,10 @@ mod obsolete_silent_mode;
 #[path = "option_coverage/resolution_floor.rs"]
 mod resolution_floor;
 
+#[cfg(test)]
+#[path = "option_coverage/filament_map_mode.rs"]
+mod filament_map_mode;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

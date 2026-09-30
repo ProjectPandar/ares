@@ -11,6 +11,11 @@ pub(crate) mod application;
 #[cfg(test)]
 #[path = "runner/application_tests.rs"]
 mod application_tests;
+#[path = "runner/filament_map.rs"]
+pub(crate) mod filament_map;
+#[cfg(test)]
+#[path = "runner/filament_map_tests.rs"]
+mod filament_map_tests;
 #[cfg(test)]
 #[path = "runner/initialization_tests.rs"]
 mod initialization_tests;
