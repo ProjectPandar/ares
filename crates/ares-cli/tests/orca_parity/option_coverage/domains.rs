@@ -143,6 +143,12 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         ) {
             // ConfigOptionInts reserves INT_MAX as nil, even when non-nullable.
             Some((f64::from(i32::MIN), f64::from(i32::MAX - 1)))
+        } else if key == "slow_down_layers" {
+            // ConfigOptionInt has no nil sentinel; its scalar ceiling is INT_MAX.
+            Some((
+                lower_bound(&block).expect("slow layer minimum"),
+                f64::from(i32::MAX),
+            ))
         } else if key == "skirt_height" {
             // `PrintConfig.cpp:10422-10424` rejects negatives at validation,
             // although the option definition only declares the upper bound.
@@ -173,6 +179,9 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 }
                 if key == "filament_printable" {
                     cases.extend(["0", "1", "2", "3"].map(|value| case(value, value, entry)));
+                }
+                if key == "slow_down_layers" {
+                    cases.extend(["1", "4"].map(|value| case(value, value, entry)));
                 }
                 if key == "filament_retraction_distances_when_cut" {
                     // Generated nullable override: nil selects the machine distance.

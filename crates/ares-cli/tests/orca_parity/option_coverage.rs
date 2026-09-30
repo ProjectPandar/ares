@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/slow_layer_count.rs"]
+mod slow_layer_count;
+
+#[cfg(test)]
 #[path = "option_coverage/filename_format.rs"]
 mod filename_format;
 

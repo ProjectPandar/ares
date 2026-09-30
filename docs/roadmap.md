@@ -7,6 +7,15 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Slow-layer scalar range parity (ARD-0064) follows `ConfigOptionInt`, the
+`PrintConfig` slow-layer declaration and `GCode` early-layer speed ramp.
+The native domain now targets 0 / INT_MAX / full-range seed, with 1 and 4
+retained to check disabled and short active ramps. Five first-reference full
+outputs match, and active counts change motion. Final workspace Nextest passes
+7440 tests (9 skipped); lint/format and Tier-1 compiler checks pass. Independent
+six-axis re-review approves the slice; raft-relative ramp cross-products are
+not claimed. Pause requested after this slice's commit and push.
+
 Filename-format parity probes (ARD-0063) follow `PrintConfig` and the original
 CLI's explicit-file `PrintBase::output_filepath` branch. Empty, literal and
 placeholder-bearing values must reach exported/final config and retain complete

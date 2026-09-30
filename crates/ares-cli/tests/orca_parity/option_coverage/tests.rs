@@ -73,6 +73,7 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
             .map(|case| case.label.as_str())
             .collect::<Vec<_>>();
         labels == ["min", "max", "seeded"]
+            || (plan.key == "slow_down_layers" && labels == ["min", "max", "seeded", "1", "4"])
             || (plan.key == "filament_printable"
                 && labels == ["min", "max", "seeded", "0", "1", "2", "3"])
             || (plan.key == "temperature_vitrification"
