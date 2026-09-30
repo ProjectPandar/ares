@@ -7,6 +7,15 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Scalar-point probes (ARD-0051) validate `ConfigOptionPoint::serialize` through
+the existing Point2d rewrite and CLI shell. Four canonical generated probes
+and four alternate-spelling exports pass eight direct complete comparisons;
+the four-option sweep also passes with unchanged coordinates. Workspace tests
+(7408 PASS, 9 skipped), lint and platform compiler checks pass; independent
+review is recorded in the plan.
+Representative point probes do not close numeric ranges or adaptive-mesh
+template activation; those source-owned behaviors remain separate work.
+
 Enum proof filenames (ARD-0050) unblock the source-owned `WallSequence`
 rewrite's validation: preserve all upstream wire values while projecting
 case labels to stable flat evidence filenames. Three wall-order outputs

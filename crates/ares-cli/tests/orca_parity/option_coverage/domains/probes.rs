@@ -20,7 +20,7 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
     ];
     const TEMPLATE_LITERAL: &[(&str, &str)] = &[("probe-empty", ""), ("probe-text", ";ARES_PROBE")];
     const POLYGON: &[(&str, &str)] = &[("probe-rect", "10x10,20x10,20x20,10x20")];
-    const POINT: &[(&str, &str)] = &[("probe", "5x5")];
+    const POINT: &[(&str, &str)] = &[("probe", "5,5")];
     // Free-form metadata/note strings — content never alters toolpaths;
     // a distinct probe exercises profile round-trip equality.
     const NOTE: &[(&str, &str)] = &[("probe", "ares-parity-probe")];
@@ -114,10 +114,10 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         // patterns (`PrintConfig.cpp:2987-2991`); `2` (every 2nd layer
         // solid) is a legal probe that changes toolpaths on both sides.
         "extra_solid_infills" => &[("probe-2", "2")],
-        // Single `XxY` points.
+        // Scalar points serialize as `X,Y` (`Config.hpp:1465-1471`).
         "bed_mesh_min" | "bed_mesh_max" | "bed_mesh_probe_distance" => POINT,
         // `best_object_pos` is normalized `[0,1]` (`PrintConfig.cpp:3818-3822`).
-        "best_object_pos" => &[("probe", "0.25x0.75")],
+        "best_object_pos" => &[("probe", "0.25,0.75")],
         // Schema `def->min` values that upstream slice-time `validate`
         // rejects (`PrintConfig.cpp` `if (x <= 0) error_message` blocks,
         // e.g. :2225-2240 clearance, `layer_height` :771-777): the

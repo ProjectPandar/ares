@@ -63,6 +63,10 @@ mod air_filtration;
 #[path = "option_coverage/chamber_control.rs"]
 mod chamber_control;
 
+#[cfg(test)]
+#[path = "option_coverage/scalar_points.rs"]
+mod scalar_points;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,
