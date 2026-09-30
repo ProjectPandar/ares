@@ -62,6 +62,27 @@ fn normalize_case_dependencies(
     process: &mut Map<String, Value>,
     filaments: &mut [Map<String, Value>],
 ) {
+    if plan.key == "enable_long_retraction_when_cut" {
+        // PrintConfig's EnableFilament gate must choose between distinct values.
+        machine.insert("long_retractions_when_cut".into(), serde_json::json!(["0"]));
+        machine.insert(
+            "retraction_distances_when_cut".into(),
+            serde_json::json!(["12"]),
+        );
+        filaments[0].insert(
+            "filament_long_retractions_when_cut".into(),
+            serde_json::json!(["1"]),
+        );
+        filaments[0].insert(
+            "filament_retraction_distances_when_cut".into(),
+            serde_json::json!(["16"]),
+        );
+        let start = machine.get_mut("machine_start_gcode").unwrap();
+        *start = serde_json::json!(format!(
+            "{}\n;CUT_GATE_BEGIN\n;CUT_GATE {{long_retraction_when_cut}} {{retraction_distance_when_cut}}\n{{if long_retraction_when_cut}}G1 E-{{retraction_distance_when_cut}} F1800\n{{endif}};CUT_GATE_END",
+            start.as_str().unwrap()
+        ));
+    }
     if plan.key == "pressure_advance" {
         // `GCode.cpp:3156-3157`: fixed PA is gated by the filament enabler.
         for (key, value) in [

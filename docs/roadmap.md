@@ -8135,3 +8135,14 @@ boundary inputs. Exit: generated-domain RED/GREEN, 14 full-stream comparisons,
 10 reference rejection cases, workspace/lint/platform checks and independent
 review. Global ranges and other contexts remain INCOMPLETE; existing
 scaffolding is temporary, not a new pipeline. See ARD-0045 and its spec/plan.
+
+### 2026-09-30 Cut-retraction mode coverage
+
+Validate the PrintConfig LongRectrationLevel / filament-override and
+GCode placeholder rewrite through the CLI parity seam. Replace the lone
+mode-1 probe with modes 0/1/2 and active conflicting-setting witnesses.
+Repair stale cut-retraction placeholders using resolved runtime vectors;
+cover both Boolean conflict directions with complete-output comparisons.
+Exit: domain RED/GREEN, whole-output E2E, selected sweep, workspace/lint/
+platform checks and independent review. Raw integer ranges and multi-tool
+cutting remain deferred; scaffolding is temporary. See ARD-0046.

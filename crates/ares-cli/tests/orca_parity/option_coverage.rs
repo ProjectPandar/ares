@@ -47,6 +47,10 @@ mod monotonic_chain;
 #[path = "option_coverage/locked_widths.rs"]
 mod locked_widths;
 
+#[cfg(test)]
+#[path = "option_coverage/cut_retraction.rs"]
+mod cut_retraction;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

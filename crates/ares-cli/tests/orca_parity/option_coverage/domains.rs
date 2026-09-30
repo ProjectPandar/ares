@@ -87,7 +87,11 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 .map(|&(label, value)| case(label, value, entry))
                 .collect(),
             (!unbounded_schema).then_some(
-                "authored probes sample the legal interior; schema bounds rejected by upstream validation",
+                if key == "enable_long_retraction_when_cut" {
+                    "named modes covered; unbounded coInt endpoints remain unverified"
+                } else {
+                    "authored probes sample the legal interior; schema bounds rejected by upstream validation"
+                },
             ),
         )
     } else if is_width_option(&key) {

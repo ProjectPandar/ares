@@ -99,8 +99,10 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         "temperature_vitrification" => &[("probe", "110")],
         // Filament-printable bitmask (default 3: printable everywhere).
         "filament_printable" => &[("probe", "1")],
-        // Long-retraction-when-cut toggle (coInt 0/1).
-        "enable_long_retraction_when_cut" => &[("probe", "1")],
+        // Named LongRectrationLevel modes; the coInt schema is unbounded.
+        "enable_long_retraction_when_cut" => {
+            &[("disabled", "0"), ("machine", "1"), ("filament", "2")]
+        }
         // Polygon point lists (`XxY` pairs) — a legal small rectangle.
         // `wrapping_exclude_area` rejected by the oracle (orca rejects the
         // rect probe upstream), so it keeps its unexercised baseline.

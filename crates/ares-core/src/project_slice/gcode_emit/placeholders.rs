@@ -1,4 +1,5 @@
 mod bounds;
+mod cut_retraction;
 #[cfg(test)]
 mod tests;
 mod timestamp;
@@ -219,6 +220,7 @@ fn insert_runtime_placeholders(
     config.insert("model_name", Value::String(model_name));
     config.insert("input_filename_base", Value::String(input_filename));
     config.insert("zhop", Value::number(0.0));
+    cut_retraction::insert(config, &traversal.resolved.views.runtime_gcode);
     for (target, source) in [
         (
             "retraction_distance_when_cut",
