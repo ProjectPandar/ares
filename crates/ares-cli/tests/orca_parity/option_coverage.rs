@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/initialized_object_id.rs"]
+mod initialized_object_id;
+
+#[cfg(test)]
 #[path = "option_coverage/seeded_context.rs"]
 mod seeded_context;
 

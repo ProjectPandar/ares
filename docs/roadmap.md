@@ -75,14 +75,22 @@ comparison and selected sweep pass; workspace Nextest passes 7438 tests
 (9 skipped), lint/format and Tier-1 compiler checks pass. Independent six-axis
 review approves this finite slice, not global parity completion.
 
-Latest immutable full option scan, 92207777: 381 PASS, 267 INCOMPLETE, 2 FAIL
-out of 650 domains; 1660 generated, 1502 strictly compared, 1 rejected
-(1360.801s), `/tmp/ares-options-92207777.3xwRqr/option-coverage-summary.md`.
+Latest immutable full option scan, 046a1841: 386 PASS, 262 INCOMPLETE, 2 FAIL
+out of 650 domains; 1661 generated, 1517 strictly compared, 1 rejected
+(2740.606s), `/tmp/ares-options-046a1841-seed-init-provisioned.8d7rT7/option-coverage-summary.md`.
+This run uses the separately identified seed-and-two-fill-field initialization
+reference, `/nix/store/ay9g8smyvrzx2a105dxs4hhw35k4k116-orca-slicer-seed-replay-2.4.2`,
+seed 0 / CPU 0; it does not use the later object-ID-initialization reference.
+Previous untouched-reference snapshot 92207777 remains archived (381 PASS,
+267 INCOMPLETE, 2 FAIL, 1660 generated, 1502 compared, 1 rejected, 1360.801s),
+`/tmp/ares-options-92207777.3xwRqr/option-coverage-summary.md`.
 The eight floating-bound parser rejections from d2949771 are resolved; the
 remaining rejection is `timelapse_type`. `enable_support=false` ordered-output
 divergence and SLA-to-FFF application mismatch remain failures. This snapshot
-includes the top-shell range repair, predates ARD-0067 and does not prove
-all-printer/default coverage.
+includes ARD-0067 and ARD-0068 and does not prove all-printer/default coverage
+or untouched-official replay equality. ARD-0069's newer reference repairs
+confirm full single-object KSR native self-replay; Ares concentric consumer
+parity and KSR full-output equality remain unverified.
 
 Printer preset identity parity (ARD-0062) follows `PrintConfig`,
 `PresetBundle::construct_full_config` and CLI load-settings/compatibility into
