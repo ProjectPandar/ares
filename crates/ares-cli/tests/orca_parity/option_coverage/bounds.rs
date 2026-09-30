@@ -3,6 +3,10 @@ use serde_json::Value;
 
 use super::OptionCase;
 
+#[cfg(test)]
+#[path = "range_bound_tests.rs"]
+mod range_bound_tests;
+
 // `coFloatOrPercent` line-width options share the single-nozzle context
 // bound modeled by `widths::generate` (`Print::validate` caps the feasible
 // width relative to the nozzle, far below the raw `max`/`max_literal`
@@ -162,75 +166,48 @@ pub(super) fn known_vector_enum(key: &str) -> &'static [&'static str] {
 }
 
 pub(super) fn raw_numeric_bounds(block: &str) -> Option<(f64, f64)> {
-    let bound = |name: &str| {
-        Regex::new(&format!(r"def->{name}\s*=\s*([-+]?\d+(?:\.\d+)?)"))
-            .unwrap()
-            .captures(block)
-            .and_then(|captures| captures[1].parse::<f64>().ok())
-    };
-    Some((bound("min")?, bound("max")?))
+    numeric_bounds(block)
 }
 
-// Legacy domains outside the two-key vertical remain unverified.
 pub(super) fn lower_bound(block: &str) -> Option<f64> {
-    Regex::new(r"def->min\s*=\s*([-+]?\d+(?:\.\d+)?|-?max_temp)")
-        .unwrap()
-        .captures(block)
-        .and_then(|captures| {
-            let token = &captures[1];
-            if token == "max_temp" {
-                Some(1500.0)
-            } else if token == "-max_temp" {
-                Some(-1500.0)
-            } else {
-                token.parse::<f64>().ok()
-            }
-        })
+    numeric_bound(block, "min")?.ok()
 }
 
 pub(super) fn upper_bound(block: &str) -> Option<f64> {
-    Regex::new(r"def->max\s*=\s*([-+]?\d+(?:\.\d+)?|-?max_temp)")
-        .unwrap()
-        .captures(block)
-        .and_then(|captures| {
-            let token = &captures[1];
-            if token == "max_temp" {
-                Some(1500.0)
-            } else if token == "-max_temp" {
-                Some(-1500.0)
-            } else {
-                token.parse::<f64>().ok()
-            }
-        })
+    numeric_bound(block, "max")?.ok()
+}
+
+// None means no assignment; Err means an expression we cannot interpret.
+fn numeric_bound(block: &str, name: &str) -> Option<Result<f64, ()>> {
+    let active = strip_comments(block);
+    let assignment = Regex::new(&format!(r"def->{name}\s*=\s*([^;]+);")).unwrap();
+    let captures = assignment.captures(&active)?;
+    let token = captures[1].trim();
+    Some(match token {
+        "max_temp" => Ok(1500.0),
+        "-max_temp" => Ok(-1500.0),
+        _ => token
+            .parse::<f64>()
+            .ok()
+            .filter(|value| value.is_finite())
+            .ok_or(()),
+    })
 }
 
 pub(super) fn numeric_bounds(block: &str) -> Option<(f64, f64)> {
-    let bound = |name: &str| {
-        // `def->max = <literal>` OR `def->max = max_temp` (the 1500 constant
-        // upstream defines at `PrintConfig.cpp:939` for every temperature).
-        Regex::new(&format!(
-            r"def->{name}\s*=\s*([-+]?\d+(?:\.\d+)?|-?max_temp)"
-        ))
-        .unwrap()
-        .captures(block)
-        .and_then(|captures| {
-            let token = &captures[1];
-            if token == "max_temp" {
-                Some(1500.0)
-            } else if token == "-max_temp" {
-                Some(-1500.0)
-            } else {
-                token.parse::<f64>().ok()
-            }
-        })
-    };
-    // `def->max` is the PERCENT maximum; `def->max_literal` is the separate
-    // maximum for the absolute-float branch of `coFloatOrPercent` — the two
-    // are independent bounds, not a single ceiling. Return the percent bound
-    // untouched; the literal bound is surfaced separately for dual-mode opts.
-    let minimum = bound("min")?;
-    let maximum = bound("max")?;
-    Some((minimum, maximum))
+    Some((lower_bound(block)?, upper_bound(block)?))
+}
+
+pub(super) fn incomplete_numeric_domain(block: &str) -> &'static str {
+    match (numeric_bound(block, "min"), numeric_bound(block, "max")) {
+        (Some(Err(())), _) | (_, Some(Err(()))) => {
+            "unsupported numeric bound expression; endpoints and full-range seed unverified"
+        }
+        (None, Some(Ok(_))) => "implicit lower endpoint and full-range seed unverified",
+        (Some(Ok(_)), None) => "implicit upper endpoint and full-range seed unverified",
+        (None, None) => "implicit endpoints and full-range seed unverified",
+        (Some(Ok(_)), Some(Ok(_))) => "non-increasing numeric bounds; legal range unverified",
+    }
 }
 
 pub(super) fn literal_maximum(block: &str) -> Option<f64> {

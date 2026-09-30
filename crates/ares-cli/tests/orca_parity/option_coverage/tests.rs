@@ -64,8 +64,8 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
         .collect::<Vec<_>>();
     assert!(ranges.len() >= 100);
     // Bounded ranges emit min+max+seeded; `coFloatOrPercent` also emits a
-    // `seeded-literal` absolute case; min-only-bounded domains (`[min,∞)`)
-    // emit min+seeded — no `max` exists in the schema to probe.
+    // `seeded-literal` absolute case. Legacy local probes remain in the plan
+    // but their labels do not prove implicit endpoint coverage.
     assert!(ranges.iter().all(|plan| {
         let labels = plan
             .cases
@@ -265,26 +265,11 @@ fn seeded_range_values_are_repeatable() {
 }
 
 #[test]
-fn provably_legal_domains_cover_enumerable_and_bounded_options() {
-    // Enumerable (bool/enum), schema-bounded (`min`+`max`), min-only-bounded
-    // (`[min,∞)` covered by min+seeded), and context-bounded width domains
-    // are all provably legal. Only options with no parseable schema bound at
-    // all (strings, points, gcode blobs, unbounded numerics) stay
-    // baseline-only — their domain has no min/max to exercise.
+fn limited_width_contexts_stay_incomplete_when_all_samples_match() {
     let plans = match domains::try_load(&runner::repo_root()) {
         Some(v) => v,
         None => return,
     };
-    let legal = plans.iter().filter(|plan| plan.provably_legal).count();
-    let baseline = plans
-        .iter()
-        .filter(|plan| !plan.provably_legal)
-        .map(|plan| plan.key.clone())
-        .collect::<Vec<_>>();
-    assert!(
-        legal >= 519,
-        "provably_legal regressed: {legal}; unproven: {baseline:?}"
-    );
     // Even all matching streams cannot close an explicitly limited context.
     for plan in plans
         .iter()

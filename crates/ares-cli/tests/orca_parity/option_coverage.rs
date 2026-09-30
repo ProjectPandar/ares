@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/range_completion.rs"]
+mod range_completion;
+
+#[cfg(test)]
 #[path = "option_coverage/vitrification.rs"]
 mod vitrification;
 

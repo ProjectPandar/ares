@@ -7,6 +7,21 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Numeric completion correction (ARD-0059) projects
+`ConfigOptionDef`'s finite implicit endpoints into the native coverage gate.
+Existing local comparisons cannot certify min/max/full-range seeded coverage.
+Exit requires negative completion regressions, accurate missing/unsupported
+bound explanations, retained positive source-owned domains, original-binary
+selected sweeps, full checks and independent review. Actual missing endpoints
+remain follow-up work; this is not whole-program completion.
+Exit verified: final selected sweep retains 31/31 strict comparisons while
+seven incomplete ranges fail the gate; corrected spiral seeds compare 6/6.
+Workspace 7432 PASS / 9 skipped, fmt/Clippy and platform checks pass.
+Independent six-axis review approves the finite gate-correction slice.
+The immutable 3996459c scan ended with 559 PASS / 89 INCOMPLETE / 2 FAIL,
+1644 generated and 1486 strict comparisons, but its PASS count uses the old
+numeric completion logic and is not proof of the corrected range contract.
+
 Vitrification integer-domain parity (ARD-0058) follows
 `PrintConfig` / `ConfigOptionInts` and `GCode::_do_export` into existing project
 wire and placeholder code. Exit requires legal signed wire endpoints

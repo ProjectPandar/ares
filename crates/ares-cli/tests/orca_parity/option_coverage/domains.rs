@@ -172,28 +172,15 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                     // Generated nullable override: nil selects the machine distance.
                     cases.push(case("nil", "nil", entry));
                 }
-                // `coFloatOrPercent` accepts BOTH a percent and an absolute
-                // float — exercising only the `%` branch leaves the literal
-                // branch untested. Add an absolute-float seeded case bounded
-                // by `max_literal` (the absolute-branch maximum).
-                // The absolute-literal branch exists even when no explicit
-                // `max_literal` is declared (e.g. `bridge_acceleration` accepts
-                // `mm/s^2` literals with only a percent `max`); bound it by
-                // `max_literal` when present else by the declared max.
+                // Both units use the full schema range, not the GUI's
+                // max_literal warning threshold (Config.hpp:2481-2482).
                 if option_type == "coFloatOrPercent" {
-                    // Note: upstream applies `min`/`max` to BOTH the
-                    // percent and the absolute branch (numeric validation
-                    // `PrintConfig.cpp:10529-10535`); `max_literal` is a
-                    // GUI typo-warning threshold only
-                    // (`Config.hpp:2481-2482`), used here solely to bound
-                    // the seeded absolute probe's interior pick.
-                    let lit_max = literal_maximum(&block).unwrap_or(maximum);
                     for (label, value) in [
                         ("min-literal", minimum),
                         ("max-literal", maximum),
                         (
                             "seeded-literal",
-                            seeded_interior(&key, minimum, lit_max, false),
+                            seeded_interior(&key, minimum, maximum, false),
                         ),
                     ] {
                         let mut absolute = numeric_case(label, value, entry, "coFloat");
@@ -204,11 +191,9 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 (cases, None)
             }
             _ => {
-                // Many speed/distance options declare only `min` (e.g.
-                // `outer_wall_speed min=1`, `travel_speed min=1`) with no
-                // upper schema bound — the legal domain is `[min, ∞)`, fully
-                // covered by probing `min` and a seeded interior. There is no
-                // `max` to exercise because none exists in the schema.
+                // Retain local comparison probes, but absent assignments inherit
+                // ConfigOptionDef's finite defaults. Unknown expressions also
+                // leave endpoint and full-range seeded coverage unproved.
                 match (lower_bound(&block), upper_bound(&block)) {
                     (None, Some(maximum)) => {
                         // Upper-only bound (`max` declared, no `min` — e.g.
@@ -221,13 +206,12 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         // `PrintConfig.cpp:6941-6948`).
                         let interior =
                             seeded_interior(&key, 0.0, maximum, option_type.contains("Int"));
-                        provably_legal = true;
                         (
                             vec![
                                 numeric_case("max", maximum, entry, &option_type),
                                 numeric_case("seeded", interior, entry, &option_type),
                             ],
-                            None,
+                            Some(incomplete_numeric_domain(&block)),
                         )
                     }
                     (Some(minimum), _) => {
@@ -243,8 +227,8 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         ];
                         // `coFloatOrPercent` min-only options (e.g.
                         // `overhang_reverse_threshold` min=0, max_literal=20)
-                        // still admit an absolute-literal branch bounded by
-                        // `max_literal` — exercise it like the bounded case.
+                        // still admit an absolute-literal branch. `max_literal`
+                        // only supplies a local probe scale, not a legal bound.
                         if option_type == "coFloatOrPercent" {
                             // `max_literal` may be absent; the literal branch
                             // still accepts absolutes — bound by the literal
@@ -265,26 +249,12 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                                 cases.push(absolute);
                             }
                         }
-                        provably_legal = true;
-                        (cases, None)
+                        (cases, Some(incomplete_numeric_domain(&block)))
                     }
                     (None, None) => {
-                        // Schema-unbounded numeric option (`coFloat`/
-                        // `coInt`/`coFloatOrPercent` with neither min
-                        // nor max — e.g. `adaptive_bed_mesh_margin`).
-                        // The legal domain is open-ended; a single
-                        // default run proves nothing, so probe two
-                        // deterministic small-positive values that are
-                        // legal for every sane open range (a rejection
-                        // still reports honestly as INCOMPLETE).
-                        //
-                        // Integer-family probes are restricted below:
-                        // `coInt(s)` unbounded options are dominated by
-                        // per-filament vectors and id-valued keys where a
-                        // generic value is rejected or crashes the
-                        // oracle (`master_extruder_id`,
-                        // `filament_self_index`, `physical_extruder_map`)
-                        // — they stay INCOMPLETE by design.
+                        // Small local probes do not cover implicit endpoints.
+                        // Integer ID/vector options retain baseline-only probes
+                        // because generic values can crash the original slicer.
                         let unbounded_int = matches!(option_type.as_str(), "coInt" | "coInts");
                         let cases = if unbounded_int {
                             vec![baseline_case()]
@@ -302,16 +272,7 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                                 numeric_case("probe-seeded", seed_hi, entry, &option_type),
                             ]
                         };
-                        // Seeded probes are the strongest coverage an
-                        // unbounded domain admits (coInt(s) stay
-                        // unprovable — baseline only).
-                        provably_legal = !unbounded_int;
-                        (
-                            cases,
-                            unbounded_int.then_some(
-                                "unbounded coInt(s) — value-space unprovable, baseline only",
-                            ),
-                        )
+                        (cases, Some(incomplete_numeric_domain(&block)))
                     }
                 }
             }
