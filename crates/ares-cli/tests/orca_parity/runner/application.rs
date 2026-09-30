@@ -44,6 +44,7 @@ pub(crate) fn settings(project: &[u8]) -> Result<Map<String, Value>, StageError>
 /// exported `project_settings.config` must carry the option with a value
 /// equal to the requested one (scalar-string equality after
 /// serialization — `apply_override` already canonicalizes types).
+/// The obsolete silent-mode input instead requires its source-defined default.
 pub(crate) fn verify_value(
     project: &[u8],
     key: &str,
@@ -66,6 +67,22 @@ pub(crate) fn verify_value(
     let actual = effective
         .get(key)
         .ok_or_else(|| mismatch(format!("missing {key}")))?;
+    // `PrintConfig.cpp:8272-8278` consumes this key; :4444 defaults it to false.
+    if key == "silent_mode" {
+        if actual.as_str() != Some("0") {
+            return Err(mismatch(format!(
+                "{key}: obsolete input must export false, effective {actual}"
+            )));
+        }
+        return Ok(serde_json::json!({
+            "key": key, "requested": requested, "effective": actual,
+            "normalization": {
+                "kind": "obsolete_input",
+                "expected_effective": "0",
+                "source": "PrintConfig.cpp::PrintConfigDef::handle_legacy; silent_mode default"
+            }
+        }));
+    }
     if !value_equivalent(actual, requested) {
         return Err(mismatch(format!(
             "{key}: requested {requested}, effective {actual}"

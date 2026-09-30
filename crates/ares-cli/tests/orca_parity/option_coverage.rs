@@ -67,6 +67,10 @@ mod chamber_control;
 #[path = "option_coverage/scalar_points.rs"]
 mod scalar_points;
 
+#[cfg(test)]
+#[path = "option_coverage/obsolete_silent_mode.rs"]
+mod obsolete_silent_mode;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

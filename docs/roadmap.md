@@ -7,6 +7,22 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Obsolete silent-mode evidence (ARD-0052) validates the unconditional
+`PrintConfigDef::handle_legacy` consumption and false default through the
+existing typed_legacy rewrite. Exit: both Boolean requests, explicit
+requested/effective normalization proof, negative checks, two full outputs,
+selected sweep, workspace/lint/platform and independent review. This is
+obsolete-input parity, not activation of an enabled stealth estimator.
+Exit verified: both direct full-output cases and both sweep cases pass;
+workspace 7411 PASS / 9 skipped, fmt/Clippy, Tier-1 compiler checks and
+independent six-axis review pass. See the ARD-0052 plan for evidence limits.
+
+Latest full-option diagnostic baseline: commit 180ee58d reports 553 PASS,
+88 INCOMPLETE and 9 FAIL (1639 generated, 1474 strict comparisons, 1 rejected).
+It predates ARD-0052's proof repair and remains a failed global completion
+gate; targeted results are not spliced into its counts. See the ARD-0052
+plan for retained artifacts and provenance limits.
+
 Scalar-point probes (ARD-0051) validate `ConfigOptionPoint::serialize` through
 the existing Point2d rewrite and CLI shell. Four canonical generated probes
 and four alternate-spelling exports pass eight direct complete comparisons;

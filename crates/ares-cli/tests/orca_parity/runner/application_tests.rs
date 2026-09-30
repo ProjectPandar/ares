@@ -20,6 +20,47 @@ fn fields(value: Value) -> Value {
 }
 
 #[test]
+fn obsolete_silent_mode_proof_preserves_requests_and_requires_false_default() {
+    for requested in [json!("0"), json!("1")] {
+        let proof = super::application::verify_value(
+            &project(json!({"silent_mode": "0"})),
+            "silent_mode",
+            &requested,
+        )
+        .unwrap();
+        assert_eq!(proof["requested"], requested);
+        assert_eq!(proof["effective"], "0");
+        assert_eq!(proof["normalization"]["kind"], "obsolete_input");
+        assert_eq!(proof["normalization"]["expected_effective"], "0");
+    }
+}
+
+#[test]
+fn obsolete_silent_mode_proof_rejects_wrong_effective_values() {
+    for effective in [json!("1"), json!(false), json!(["0"]), Value::Null] {
+        assert!(
+            super::application::verify_value(
+                &project(json!({"silent_mode": effective})),
+                "silent_mode",
+                &json!("1"),
+            )
+            .is_err()
+        );
+    }
+    assert!(
+        super::application::verify_value(&project(json!({})), "silent_mode", &json!("1")).is_err()
+    );
+    assert!(
+        super::application::verify_value(
+            &project(json!({"support_air_filtration": "0"})),
+            "support_air_filtration",
+            &json!("1"),
+        )
+        .is_err()
+    );
+}
+
+#[test]
 fn exported_bytes_require_exact_typed_width_not_physical_equivalence() {
     let dependencies = json!({"nozzle_diameter": ["0.4"], "layer_height": "0.2"});
     for value in [json!("0.6"), json!("150%"), json!("0"), json!("0%")] {
