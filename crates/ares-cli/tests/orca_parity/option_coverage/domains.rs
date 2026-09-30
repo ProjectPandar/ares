@@ -145,7 +145,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             Some((f64::from(i32::MIN), f64::from(i32::MAX - 1)))
         } else if matches!(
             key.as_str(),
-            "slow_down_layers" | "bottom_shell_layers" | "top_shell_layers"
+            "slow_down_layers"
+                | "bottom_shell_layers"
+                | "top_shell_layers"
+                | "elefant_foot_compensation_layers"
         ) {
             // ConfigOptionInt has no nil sentinel; its scalar ceiling is INT_MAX.
             Some((

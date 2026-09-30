@@ -224,6 +224,11 @@ pub(crate) fn support_geometry_option(key: &str) -> bool {
 
 fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
     match key {
+        "elefant_foot_compensation_layers" => &[
+            ("elefant_foot_compensation", "0.15"),
+            ("elefant_foot_layers_density", "100%"),
+            ("raft_layers", "0"),
+        ],
         // `Fill.cpp::group_fills` builds these flows only for Locked Zag.
         "skin_infill_line_width" | "skeleton_infill_line_width" => &[
             ("sparse_infill_pattern", "lockedzag"),

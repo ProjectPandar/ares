@@ -7,6 +7,17 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Elephant-foot count range coverage (ARD-0067) follows `ConfigOptionInt` and
+`PrintObjectSlice` into Rust's compensation preflight. Count min 1 / INT_MAX /
+full-range seed must retain the original ramp denominator; only backup storage
+is limited by actual layer count. Four complete first-reference outputs pass,
+with positive-compensation and extension witnessed against an uncompensated
+control. Selected sweep passes three strict comparisons with zero rejection.
+Workspace Nextest passes 7446 tests (9 skipped); lint/format and Tier-1
+compiler checks pass. Independent six-axis review approves this finite slice.
+Reduced solid-fill density and raft cross-products are deferred, not claimed.
+Work is resumed by the explicit request to continue the full parity objective.
+
 Top-shell scalar range repair (ARD-0066) follows `ConfigOptionInt` and
 `PrintObject::discover_vertical_shells` into Rust's vertical-shell projection.
 Native debugging identifies the selected official binary's 32-bit count-end
