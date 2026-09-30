@@ -62,6 +62,7 @@ fn normalize_case_dependencies(
     process: &mut Map<String, Value>,
     filaments: &mut [Map<String, Value>],
 ) {
+    super::preset_identity::activate(plan, case, process, filaments);
     if matches!(
         plan.key.as_str(),
         "support_chamber_temp_control"

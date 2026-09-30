@@ -83,6 +83,13 @@ mod filament_map_mode;
 #[path = "option_coverage/thumbnails.rs"]
 mod thumbnails;
 
+#[cfg(test)]
+#[path = "option_coverage/preset_identity_tests.rs"]
+mod preset_identity_tests;
+
+#[path = "option_coverage/preset_identity.rs"]
+mod preset_identity;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

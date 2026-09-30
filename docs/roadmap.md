@@ -7,6 +7,18 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Preset-identity activation (ARD-0057) validates the final identity writes in
+`PresetBundle::construct_full_config` through existing project-runtime typed
+fields and the native fixture adapter. Exit requires three keys with two
+identities each, strict export proof, final config and complete ordered output,
+full checks and independent six-axis review. Six direct and three selected
+complete comparisons pass; final workspace 7424 PASS/9 skipped, fmt/Clippy
+and Tier-1 compiler checks pass. Independent six-axis review approves the
+slice; multi-filament and
+arbitrary string exhaustion are not claimed. Latest immutable full scan at
+17a214e0: 555 PASS/89 INCOMPLETE/6 FAIL, 1476 strict comparisons; it predates
+the thumbnail and identity changes and is not updated by targeted results.
+
 Thumbnail-definition probes (ARD-0056) validate `handle_legacy_composite`
 and `GCodeThumbnails::make_and_check_thumbnail_list` through existing typed
 normalization and the native parity adapter. It also ports the non-BBL
