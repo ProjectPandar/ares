@@ -93,8 +93,16 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         "extruder_printable_area" => &[("probe-bed", "0x0,220x0,220x220,0x220")],
         // Infill rotation templates take a comma list of degrees.
         "solid_infill_rotate_template" | "sparse_infill_rotate_template" => &[("probe", "30,60")],
-        // Thumbnail format `WxH` — one legal additional size.
-        "thumbnails" => &[("probe", "300x300")],
+        // Explicit formats survive handle_legacy_composite unchanged.
+        "thumbnails" => &[
+            ("png", "300x300/PNG"),
+            ("jpg", "300x300/JPG"),
+            ("qoi", "300x300/QOI"),
+            ("btt", "300x300/BTT_TFT"),
+            ("colpic", "300x300/COLPIC"),
+            ("empty", ""),
+            ("multiple", "48x48/PNG, 300x300/JPG"),
+        ],
         // Vitrification temperature (coInts, default 100).
         "temperature_vitrification" => &[("probe", "110")],
         // Filament-printable bitmask (default 3: printable everywhere).

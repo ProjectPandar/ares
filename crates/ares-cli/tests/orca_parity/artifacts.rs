@@ -11,6 +11,10 @@ use sha2::{Digest, Sha256};
 
 pub(super) const EVIDENCE: &str = "ordered_bytes_generator_only";
 
+#[cfg(test)]
+#[path = "artifacts_btt_tests.rs"]
+mod btt_tests;
+
 pub(super) fn root_from_env() -> Result<PathBuf, String> {
     let root = std::env::var_os("ARES_PARITY_ARTIFACT_ROOT")
         .map(PathBuf::from)
@@ -104,13 +108,25 @@ pub(super) fn compare(
         .tempdir_in(root)
         .map_err(|e| format!("{root:?}: {e}"))?
         .keep();
-    eprintln!("{label}: artifacts {directory:?} ({EVIDENCE})");
+    eprintln!("{label}: artifacts {directory:?}");
     let mut files = serde_json::Map::new();
     for (name, bytes) in [("input.3mf", &project), ("orca.gcode", &reference)] {
         if let Ok(bytes) = bytes {
             save(&directory, &mut files, name, bytes)?;
         }
     }
+    let mut evidence = EVIDENCE;
+    let mut comparator = "golden::compare_ordered_bytes_generator_only";
+    let mut compare = |btt: bool, reference: &[u8], actual: &[u8]| {
+        if btt {
+            evidence = "ordered_bytes_exact";
+            comparator = "golden::first_difference (raw bytes)";
+            crate::golden::first_difference(reference, actual)
+                .map_or(Ok(()), |difference| Err(difference.to_string()))
+        } else {
+            crate::golden::compare_ordered_bytes_generator_only(reference, actual)
+        }
+    };
     let mut outcome = match (project, reference) {
         (Ok(project), Ok(reference)) if !project.is_empty() && !reference.is_empty() => {
             let runtime = tokio::runtime::Builder::new_current_thread()
@@ -126,9 +142,23 @@ pub(super) fn compare(
                     if actual.is_empty() {
                         crate::ares_error(label, "Ares produced empty output".into())
                     } else {
-                        match crate::golden::compare_ordered_bytes_generator_only(
-                            reference, &actual,
-                        ) {
+                        let settings: ares_core::ProjectSettings =
+                            serde_json::from_value(Value::Object(
+                                crate::runner::application::settings(project)
+                                    .map_err(|error| error.to_string())?,
+                            ))
+                            .map_err(|error| error.to_string())?;
+                        let comparison = compare(
+                            settings
+                                .printer
+                                .remaining
+                                .thumbnails
+                                .as_str()
+                                .contains("BTT_TFT"),
+                            reference,
+                            &actual,
+                        );
+                        match comparison {
                             Ok(()) => crate::pass(label),
                             Err(difference) => crate::divergence(label, difference),
                         }
@@ -158,8 +188,8 @@ pub(super) fn compare(
     let manifest = json!({
         "schema": 1,
         "label": label,
-        "evidence": EVIDENCE,
-        "comparator": "golden::compare_ordered_bytes_generator_only",
+        "evidence": evidence,
+        "comparator": comparator,
         "not_checked": ["all-printer/default/domain inventory", "requested-versus-effective config coverage",
             "all plates and artifact inventory", "reference producer identity"],
         "status": outcome.status,

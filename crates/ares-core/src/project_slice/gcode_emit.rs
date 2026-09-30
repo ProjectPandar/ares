@@ -57,7 +57,9 @@ pub(super) fn emit(
     let mut output = Vec::new();
     file_start::append(&mut output, traversal, metadata, first_layer_bounds)?;
     let tags = tags::Tags::of(traversal);
-    header::append_header(&mut output, metadata, traversal);
+    if header::enabled(traversal) {
+        header::append_header(&mut output, metadata, traversal);
+    }
     // `GCode.cpp` + Orca export layout: BBL keeps the config block up front;
     // the compatible flavor moves it after the tail statistics.
     if tags.is_bbl()
@@ -260,7 +262,9 @@ pub(super) fn emit(
     } else {
         header::plate_layer_count(traversal)
     };
-    header::finalize_layer_count(&mut output, layer_count);
+    if header::enabled(traversal) {
+        header::finalize_layer_count(&mut output, layer_count);
+    }
     // The compatible tail's `; total layers count` prints `m_layer_count`
     // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
     // tag-based count the header placeholder carries.

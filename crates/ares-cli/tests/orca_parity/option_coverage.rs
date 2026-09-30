@@ -79,6 +79,10 @@ mod resolution_floor;
 #[path = "option_coverage/filament_map_mode.rs"]
 mod filament_map_mode;
 
+#[cfg(test)]
+#[path = "option_coverage/thumbnails.rs"]
+mod thumbnails;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

@@ -1,6 +1,19 @@
 use super::super::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::GenerationMetadata;
 
+pub(super) fn enabled(traversal: &PreparedPostClassicTraversal) -> bool {
+    // GCode::do_export omits the entire header for a BTT thumbnail list.
+    !traversal
+        .resolved
+        .views
+        .full
+        .printer
+        .remaining
+        .thumbnails
+        .as_str()
+        .contains("BTT_TFT")
+}
+
 pub(super) fn append_header(
     output: &mut Vec<u8>,
     metadata: GenerationMetadata,

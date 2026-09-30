@@ -7,6 +7,17 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Thumbnail-definition probes (ARD-0056) validate `handle_legacy_composite`
+and `GCodeThumbnails::make_and_check_thumbnail_list` through existing typed
+normalization and the native parity adapter. It also ports the non-BBL
+`GCode::do_export` BTT header omission with raw-byte comparison. Exit requires explicit formats,
+empty/multiple definitions, shorthand/default-format conversion, complete
+ordered output, full checks and independent six-axis review. Twelve direct
+complete outputs and twelve selected comparisons pass; final workspace
+7422 PASS/9 skipped, fmt/Clippy and Tier-1 compiler checks pass. Independent
+six-axis review approves this slice; GUI images, BBL state side effects, raw shorthand mode
+selection and exhaustive strings are not claimed.
+
 Filament-map wire/plate evidence (ARD-0055) validates the three serialized
 `ConfigOptionEnum<FilamentMapMode>` keys and `bbs_3mf` plate-mode import through
 the existing typed enum and `project::plate_config` rewrite boundaries.
