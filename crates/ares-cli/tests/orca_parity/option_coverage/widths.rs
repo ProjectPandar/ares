@@ -23,6 +23,7 @@ pub(in crate::option_coverage) fn generate(
     thick_internal_bridges: bool,
 ) -> (WidthDomain, Vec<OptionCase>) {
     let bridge = key == "bridge_line_width";
+    let locked = matches!(key, "skin_infill_line_width" | "skeleton_infill_line_width");
     let lower = if bridge && thick_bridges && thick_internal_bridges {
         0.0
     } else {
@@ -48,14 +49,23 @@ pub(in crate::option_coverage) fn generate(
             }
             cases.push(case(&format!("{unit}-{label}"), &rendered, entry));
         }
+        if locked {
+            let near_lower = if suffix.is_empty() {
+                "0.20001"
+            } else {
+                "50.001%"
+            };
+            cases.push(case(&format!("{unit}-near-lower"), near_lower, entry));
+        }
         units.push(json!({
             "unit": unit, "raw_schema": {"min": raw.0, "max": raw.1,
                 "endpoint_semantics": "ConfigOptionDef::is_value_valid precision=4 approximate endpoints; min=0 rejects negatives"},
             "positive_context": {"lower": minimum, "lower_open": true, "upper": maximum, "upper_open": false},
             "zero": {"wire": render(0.0, suffix), "validation_sentinel": true,
-                "flow": if bridge { "solid-infill fallback" } else if suffix.is_empty() { "auto" } else { "zero resolved width; runtime unverified" }}
+                "flow": if bridge { "solid-infill fallback" } else if suffix.is_empty() { "auto" } else if locked { "zero resolved width; Flow-spacing rejection verified by separate E2E" } else { "zero resolved width; runtime unverified" }}
         }));
-        for value in [-1.0, raw.1 + 1.0] {
+        // Adding one does not advance a FLT_MAX ceiling in f64 arithmetic.
+        for value in [-1.0, raw.1 + (raw.1 * 0.001).max(1.0)] {
             probes.push(json!({"wire": render(value, suffix), "expected": "raw-schema-rejection", "execute": false}));
         }
         if raw.1 > maximum {
@@ -65,14 +75,19 @@ pub(in crate::option_coverage) fn generate(
             probes.push(json!({"wire": render(minimum, suffix), "expected": "context-rejection", "execute": false}));
         }
     }
+    let mut dependencies = json!({"nozzle_diameter": ["0.4"], "layer_height": "0.2",
+        "thick_bridges": if thick_bridges { "1" } else { "0" },
+        "thick_internal_bridges": if thick_internal_bridges { "1" } else { "0" }});
+    if locked {
+        dependencies["sparse_infill_pattern"] = json!("lockedzag");
+        dependencies["sparse_infill_density"] = json!("40%");
+    }
     (
         WidthDomain {
             metadata: json!({
                 "scope": "single-nozzle validation candidates; not actual-default or slicing coverage",
                 "gui_missing_percent_threshold": 10, "units": units,
-                "dependencies": {"nozzle_diameter": ["0.4"], "layer_height": "0.2",
-                    "thick_bridges": if thick_bridges { "1" } else { "0" },
-                    "thick_internal_bridges": if thick_internal_bridges { "1" } else { "0" }},
+                "dependencies": dependencies,
                 "export_required": ["nozzle_diameter", "layer_height", "thick_bridges", "thick_internal_bridges", "internal_solid_infill_line_width"],
                 "deferred": ["mixed nozzles", "object/region overrides", "Flow/slicing feasibility", "tolerance edges"]
             }),

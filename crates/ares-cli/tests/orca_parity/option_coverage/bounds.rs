@@ -19,6 +19,8 @@ pub(super) fn is_width_option(key: &str) -> bool {
             | "internal_solid_infill_line_width"
             | "support_line_width"
             | "top_surface_line_width"
+            | "skin_infill_line_width"
+            | "skeleton_infill_line_width"
     )
 }
 

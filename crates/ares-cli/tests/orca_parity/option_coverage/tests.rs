@@ -14,16 +14,11 @@ fn option_domain_plan_is_complete_and_source_cited() {
             || plan.source.starts_with("src/libslic3r/PrintConfig.hpp:")
     }));
     assert!(plans.iter().all(|plan| !plan.cases.is_empty()));
-    // Omissions are allowed for authored numeric probe domains (interior
-    // samples of a schema range whose bounds upstream slice-time
-    // validation rejects) and for schema-unbounded string/int/point
-    // domains where only the baseline value is sliceable.
+    // Every unproven domain must explain what remains, without coupling
+    // valid explanations to a particular wording or probe implementation.
     assert!(
         plans.iter().all(|plan| {
-            plan.omission.is_none()
-                || plan
-                    .omission
-                    .is_some_and(|note| note.contains("authored") || note.contains("unbounded"))
+            plan.provably_legal || plan.omission.is_some_and(|note| !note.is_empty())
         }),
         "unexpected omission: {:?}",
         plans
@@ -284,22 +279,16 @@ fn provably_legal_domains_cover_enumerable_and_bounded_options() {
         .collect::<Vec<_>>();
     assert!(
         legal >= 519,
-        "provably_legal regressed: {legal}; baseline-only: {baseline:?}"
+        "provably_legal regressed: {legal}; unproven: {baseline:?}"
     );
-    // Every unbounded remainder is a type that cannot express min/max,
-    // or a key with authored interior probes (schema bound rejected by
-    // upstream slice-time validation — e.g. `skeleton_infill_line_width`
-    // min trips "Too small line width", `PrintConfig.cpp:4064-4082`).
-    for key in &baseline {
-        let authored = plans
-            .iter()
-            .find(|plan| &plan.key == key)
-            .and_then(|plan| plan.omission)
-            .is_some_and(|note| note.contains("authored"));
-        assert!(
-            authored || !key.ends_with("_line_width"),
-            "width option {key} must be provably legal via width_domain"
-        );
+    // Even all matching streams cannot close an explicitly limited context.
+    for plan in plans
+        .iter()
+        .filter(|plan| plan.width_domain.is_some() && !plan.provably_legal)
+    {
+        let outcome = OptionOutcome::executed(plan, plan.cases.len(), vec![], 0, 0, None);
+        assert_eq!(outcome.status, "INCOMPLETE", "{}", plan.key);
+        assert!(!outcome.detail.is_empty());
     }
 }
 

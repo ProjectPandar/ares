@@ -8123,3 +8123,15 @@ both literal/percent probes, actual sparse-extrusion witnesses, strict
 ordered comparison, workspace/lint checks and independent review.
 Range endpoints and untouched profiles remain deferred; these sampled
 domains stay INCOMPLETE. See ARD-0044 and the matching spec/plan.
+
+### 2026-09-30 Locked Zag width range evidence
+
+Extend the `PrintConfig.cpp::validate`, `Print::validate` and
+`Flow::new_from_config_width` rewrite validation at the CLI option-domain
+boundary. For both skin/skeleton widths, compare literal auto, effective
+upper endpoints, seeded interiors and near-open-lower-edge values through
+active Locked Zag. Separately require exact reference rejection for invalid
+boundary inputs. Exit: generated-domain RED/GREEN, 14 full-stream comparisons,
+10 reference rejection cases, workspace/lint/platform checks and independent
+review. Global ranges and other contexts remain INCOMPLETE; existing
+scaffolding is temporary, not a new pipeline. See ARD-0045 and its spec/plan.
