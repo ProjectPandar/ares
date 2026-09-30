@@ -7,6 +7,14 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Bottom-shell scalar range parity (ARD-0065) follows `ConfigOptionInt`,
+`PrintConfig` and `PrintObject` bottom-shell projection/propagation. Native
+coverage now targets 0 / INT_MAX / full-range seed without reducing requests
+to fixture layer count. Three first-reference complete outputs match, with
+zero thickness proven and motion changes for active counts. Workspace Nextest
+passes 7442 tests (9 skipped); lint/format and Tier-1 compiler checks pass.
+Independent six-axis review approves this finite bottom-shell range slice.
+
 Slow-layer scalar range parity (ARD-0064) follows `ConfigOptionInt`, the
 `PrintConfig` slow-layer declaration and `GCode` early-layer speed ramp.
 The native domain now targets 0 / INT_MAX / full-range seed, with 1 and 4

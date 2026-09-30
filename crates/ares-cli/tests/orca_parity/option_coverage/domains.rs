@@ -143,10 +143,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         ) {
             // ConfigOptionInts reserves INT_MAX as nil, even when non-nullable.
             Some((f64::from(i32::MIN), f64::from(i32::MAX - 1)))
-        } else if key == "slow_down_layers" {
+        } else if matches!(key.as_str(), "slow_down_layers" | "bottom_shell_layers") {
             // ConfigOptionInt has no nil sentinel; its scalar ceiling is INT_MAX.
             Some((
-                lower_bound(&block).expect("slow layer minimum"),
+                lower_bound(&block).expect("scalar layer-count minimum"),
                 f64::from(i32::MAX),
             ))
         } else if key == "skirt_height" {
