@@ -103,8 +103,6 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
             ("empty", ""),
             ("multiple", "48x48/PNG, 300x300/JPG"),
         ],
-        // Vitrification temperature (coInts, default 100).
-        "temperature_vitrification" => &[("probe", "110")],
         // Filament-printable bitmask (default 3: printable everywhere).
         "filament_printable" => &[("probe", "1")],
         // Named LongRectrationLevel modes; the coInt schema is unbounded.

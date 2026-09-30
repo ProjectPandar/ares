@@ -7,6 +7,17 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Vitrification integer-domain parity (ARD-0058) follows
+`PrintConfig` / `ConfigOptionInts` and `GCode::_do_export` into existing project
+wire and placeholder code. Exit requires legal signed wire endpoints
+(INT_MIN, INT_MAX-1), seeded interior and the retained 110 sample, explicit
+INT_MAX nil-sentinel rejection, active template checks, complete ordered
+outputs, full validation and independent review. No multi-filament selection,
+hardware execution or whole-program completion claim is implied.
+Exit verified: five direct complete comparisons, four selected sweep cases,
+separate sentinel rejection, 7426 workspace PASS / 9 skipped, fmt/Clippy and
+Tier-1 compiler checks pass. Independent six-axis review approves the slice.
+
 Preset-identity activation (ARD-0057) validates the final identity writes in
 `PresetBundle::construct_full_config` through existing project-runtime typed
 fields and the native fixture adapter. Exit requires three keys with two

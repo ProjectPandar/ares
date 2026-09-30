@@ -137,7 +137,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             .then_some("enum domain not explicit in definition block");
         (values, omission)
     } else if range_type(&option_type) {
-        let bounds = if key == "skirt_height" {
+        let bounds = if key == "temperature_vitrification" {
+            // ConfigOptionInts reserves INT_MAX as nil, even when non-nullable.
+            Some((f64::from(i32::MIN), f64::from(i32::MAX - 1)))
+        } else if key == "skirt_height" {
             // `PrintConfig.cpp:10422-10424` rejects negatives at validation,
             // although the option definition only declares the upper bound.
             Some((0.0, upper_bound(&block).expect("skirt height ceiling")))
@@ -162,6 +165,9 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                     numeric_case("max", maximum, entry, &option_type),
                     numeric_case("seeded", interior, entry, &option_type),
                 ];
+                if key == "temperature_vitrification" {
+                    cases.push(case("probe", "110", entry));
+                }
                 if key == "filament_retraction_distances_when_cut" {
                     // Generated nullable override: nil selects the machine distance.
                     cases.push(case("nil", "nil", entry));

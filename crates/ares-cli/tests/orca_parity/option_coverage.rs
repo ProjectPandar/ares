@@ -1,5 +1,9 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[cfg(test)]
+#[path = "option_coverage/vitrification.rs"]
+mod vitrification;
+
 #[path = "option_coverage/activation.rs"]
 mod activation;
 use activation::{inject_case, support_geometry_option};
