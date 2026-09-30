@@ -111,6 +111,16 @@ zero and enum discriminant zero. Final workspace (7457 PASS), platform and
 lint gates passed; independent six-axis final review approved. Auto map derivation, active Top Only lift behavior,
 ARD-0071 statistics and the global printer/option/KSR exit remain open.
 
+ARD-0071 follows `GCode.cpp::update_print_stats_and_format_filament_stats`
+and `GCode/GCodeProcessor.cpp::run_post_process`: existing weight/cost lines
+are replaced at configured filament-count width, retaining unused trailing
+`0.00` values without changing writer-side omission gates or accounting.
+The two-material native fixture has complete RED/GREEN; cost-zero and
+density-zero complete-output omission regressions pass. Counterfactual,
+workspace (7458 PASS), lint and Tier-1 checks pass; independent final six-axis
+review approved. This statistics shell remains temporary; multi-tool/wipe-tower,
+KSR and global printer/option parity are not declared complete.
+
 The immutable 541370f1 sweep against the seed/fill/object-ID initialized
 reference terminated after 2410.824s: 386 PASS, 262 INCOMPLETE, 2 FAIL out of
 650 domains; 1661 generated / 1517 strictly compared / 1 rejected. Complete

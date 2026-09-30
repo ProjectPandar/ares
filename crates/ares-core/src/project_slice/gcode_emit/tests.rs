@@ -367,13 +367,11 @@ async fn task22o162_project_emits_filament_statistics() {
         .filter(|line| line.starts_with("; filament"))
         .collect();
     assert_eq!(filament_lines.len(), 4);
-    // `GCode.cpp:2349-2368`: the [g]/cost values only cover extruders with
-    // positive weight/cost, so a print using just extruder 0 has a single
-    // value there, while [mm]/[cm3] always cover every extruder.
-    assert!(filament_lines[0].ends_with(", 0.00"));
-    assert!(filament_lines[1].ends_with(", 0.00"));
-    assert!(!filament_lines[2].contains(','));
-    assert!(!filament_lines[3].contains(','));
+    // Native KSR output retains the unused second material in all four lines.
+    for line in &filament_lines {
+        assert_eq!(line.split_once(" = ").unwrap().1.split(", ").count(), 2);
+        assert!(line.ends_with(", 0.00"));
+    }
     let values = filament_lines
         .iter()
         .map(|line| {

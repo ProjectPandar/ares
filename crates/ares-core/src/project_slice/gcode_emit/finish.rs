@@ -208,9 +208,8 @@ pub(super) fn append_filament_stats(
     let filament = &traversal.resolved.views.full.filament.gcode;
     let mut used_mm = Vec::with_capacity(filament.filament_diameter.0.len());
     let mut used_cm3 = Vec::with_capacity(filament.filament_diameter.0.len());
-    // `GCode.cpp:2349-2368`: the [g]/cost values are only appended for
-    // extruders with positive weight/cost; skipped slots fill with `0` and
-    // the whole line drops when no extruder contributed.
+    // `GCode.cpp:2349-2368` gates line presence; the processor replaces
+    // present lines with configured-width vectors, including trailing zeros.
     let mut used_g = vec![None; filament.filament_diameter.0.len()];
     let mut costs = vec![None; filament.filament_diameter.0.len()];
     let mut total_weight = 0.0;
@@ -271,23 +270,22 @@ pub(super) fn append_filament_stats(
         used_mm.join(", "),
         used_cm3.join(", "),
     );
-    if let Some(grams) = join_sparse(&used_g) {
+    if let Some(grams) = join_postprocessed(&used_g) {
         stats.push_str(&format!("; filament used [g] = {grams}\n"));
     }
-    if let Some(costs) = join_sparse(&costs) {
+    if let Some(costs) = join_postprocessed(&costs) {
         stats.push_str(&format!("; filament cost = {costs}\n"));
     }
     output.extend_from_slice(stats.as_bytes());
     (total_weight, total_cost)
 }
 
-/// Joins per-extruder optional values like upstream's `append` zero-fill
-/// (`GCode.cpp:2336-2346`); returns `None` when no extruder contributed.
-fn join_sparse(values: &[Option<String>]) -> Option<String> {
-    let last = values.iter().rposition(Option::is_some)?;
-    let parts = values[..=last]
+/// `GCodeProcessor.cpp:1148-1175` replaces existing lines at full vector width.
+fn join_postprocessed(values: &[Option<String>]) -> Option<String> {
+    values.iter().find(|value| value.is_some())?;
+    let parts = values
         .iter()
-        .map(|value| value.clone().unwrap_or_else(|| "0".into()))
+        .map(|value| value.as_deref().unwrap_or("0.00"))
         .collect::<Vec<_>>();
     Some(parts.join(", "))
 }
