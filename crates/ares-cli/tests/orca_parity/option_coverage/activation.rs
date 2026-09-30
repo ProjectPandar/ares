@@ -64,6 +64,39 @@ fn normalize_case_dependencies(
 ) {
     if matches!(
         plan.key.as_str(),
+        "support_chamber_temp_control"
+            | "activate_chamber_temp_control"
+            | "chamber_temperature"
+            | "chamber_minimal_temperature"
+            | "auxiliary_fan"
+    ) {
+        machine.insert(
+            "support_chamber_temp_control".into(),
+            serde_json::json!("1"),
+        );
+        machine.insert("auxiliary_fan".into(), serde_json::json!("0"));
+        for (key, value) in [
+            ("activate_chamber_temp_control", "1"),
+            (
+                "chamber_temperature",
+                if plan.key == "chamber_minimal_temperature" {
+                    "1500"
+                } else {
+                    "60"
+                },
+            ),
+            ("chamber_minimal_temperature", "0"),
+        ] {
+            filaments[0].insert(key.into(), serde_json::json!([value]));
+        }
+        let start = machine.get_mut("machine_start_gcode").unwrap();
+        *start = serde_json::json!(format!(
+            ";CHAMBER_TEMPLATE_BEGIN\n{}\n;CHAMBER_MIN {{chamber_minimal_temperature[0]}}\n",
+            start.as_str().unwrap()
+        ));
+    }
+    if matches!(
+        plan.key.as_str(),
         "support_air_filtration"
             | "activate_air_filtration"
             | "activate_air_filtration_during_print"
@@ -180,10 +213,12 @@ fn normalize_case_dependencies(
 /// Raft options stay on the cube: `raft_layers > 0` alone generates the
 /// raft regardless of overhang geometry (`Print.hpp:430`).
 pub(crate) fn support_geometry_option(key: &str) -> bool {
-    key != "support_air_filtration"
-        && (key == "enable_support"
-            || key.starts_with("support_")
-            || key.starts_with("tree_support_"))
+    !matches!(
+        key,
+        "support_air_filtration" | "support_chamber_temp_control"
+    ) && (key == "enable_support"
+        || key.starts_with("support_")
+        || key.starts_with("tree_support_"))
 }
 
 fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
@@ -258,7 +293,6 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         | "support_base_pattern_spacing"
         | "support_bottom_interface_spacing"
         | "support_bottom_z_distance"
-        | "support_chamber_temp_control"
         | "support_critical_regions_only"
         | "support_expansion"
         | "support_filament"

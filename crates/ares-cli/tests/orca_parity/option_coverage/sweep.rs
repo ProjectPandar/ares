@@ -141,8 +141,10 @@ pub(super) fn unimplemented_feature(key: &str, case: &domains::OptionCase) -> bo
             Some(Value::String(value)) if value == "1"
         ) || matches!(case.value.as_ref(), Some(Value::Bool(true)));
     }
-    key != "support_air_filtration"
-        && (key.starts_with("support_") || key.starts_with("tree_support_"))
+    !matches!(
+        key,
+        "support_air_filtration" | "support_chamber_temp_control"
+    ) && (key.starts_with("support_") || key.starts_with("tree_support_"))
 }
 
 fn execute_plan(

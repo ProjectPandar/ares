@@ -7,6 +7,16 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Chamber-control activation (ARD-0049) validates `GCode::_do_export` and
+`GCodeWriter::set_chamber_temperature` through the existing core temperature
+rewrite and CLI coverage shell. All three Boolean pairs, both temperature
+ranges and two custom-start suppression cases pass (14 full outputs), with
+effective-setting/command witnesses and a 5/5 selected sweep (12 values).
+Workspace tests (7406 PASS, 9 skipped), lint and platform compiler checks
+pass; independent review is recorded in the slice plan. Hardware capability
+must not activate model supports or incorrectly gate the upstream heater
+path. Multi-filament aggregation remains deferred; global parity stays open.
+
 Air-filtration activation (ARD-0048) validates the source-cited
 `GCode::_do_export` phase gates and `GCodeWriter::set_exhaust_fan` rewrite
 through the CLI harness and existing core exhaust-fan emitter. All four
