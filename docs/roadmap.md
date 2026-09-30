@@ -7,6 +7,17 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Air-filtration activation (ARD-0048) validates the source-cited
+`GCode::_do_export` phase gates and `GCodeWriter::set_exhaust_fan` rewrite
+through the CLI harness and existing core exhaust-fan emitter. All four
+Boolean domains and both speed ranges pass (14 complete outputs), with
+effective-setting and ordered-command witnesses and a 6/6 selected sweep.
+Workspace tests (7398 PASS, 9 skipped), lint and platform checks pass;
+independent review is recorded in the slice plan. Air filtration must
+not use support geometry or receive a support-generator exemption.
+Multi-tool maximum selection and custom-template interactions remain
+deferred; this temporary validation shell does not close global parity.
+
 Current numerical dependency: rewrite `FillBase.hpp::FillParams::horiz_move`
 and `FillRectilinear.cpp::fill_surface_by_lines` grid-shift arithmetic in
 `fill/rectilinear/surface.rs` (ARD-0038). The wide-solid tracer has complete

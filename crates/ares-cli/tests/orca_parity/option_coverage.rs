@@ -55,6 +55,10 @@ mod cut_retraction;
 #[path = "option_coverage/cut_retraction_values.rs"]
 mod cut_retraction_values;
 
+#[cfg(test)]
+#[path = "option_coverage/air_filtration.rs"]
+mod air_filtration;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

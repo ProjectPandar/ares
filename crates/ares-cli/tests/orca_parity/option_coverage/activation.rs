@@ -64,6 +64,26 @@ fn normalize_case_dependencies(
 ) {
     if matches!(
         plan.key.as_str(),
+        "support_air_filtration"
+            | "activate_air_filtration"
+            | "activate_air_filtration_during_print"
+            | "activate_air_filtration_on_completion"
+            | "during_print_exhaust_fan_speed"
+            | "complete_print_exhaust_fan_speed"
+    ) {
+        machine.insert("support_air_filtration".into(), serde_json::json!("1"));
+        for (key, value) in [
+            ("activate_air_filtration", "1"),
+            ("activate_air_filtration_during_print", "1"),
+            ("activate_air_filtration_on_completion", "1"),
+            ("during_print_exhaust_fan_speed", "40"),
+            ("complete_print_exhaust_fan_speed", "80"),
+        ] {
+            filaments[0].insert(key.into(), serde_json::json!([value]));
+        }
+    }
+    if matches!(
+        plan.key.as_str(),
         "enable_long_retraction_when_cut"
             | "long_retractions_when_cut"
             | "retraction_distances_when_cut"
@@ -160,7 +180,10 @@ fn normalize_case_dependencies(
 /// Raft options stay on the cube: `raft_layers > 0` alone generates the
 /// raft regardless of overhang geometry (`Print.hpp:430`).
 pub(crate) fn support_geometry_option(key: &str) -> bool {
-    key == "enable_support" || key.starts_with("support_") || key.starts_with("tree_support_")
+    key != "support_air_filtration"
+        && (key == "enable_support"
+            || key.starts_with("support_")
+            || key.starts_with("tree_support_"))
 }
 
 fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
@@ -231,7 +254,6 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         // `tests/parity/overhang.stl` for these keys (see
         // `support_geometry_option`).
         "support_angle"
-        | "support_air_filtration"
         | "support_base_pattern"
         | "support_base_pattern_spacing"
         | "support_bottom_interface_spacing"
