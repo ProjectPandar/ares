@@ -39,6 +39,10 @@ mod hot_plate;
 #[path = "option_coverage/fill_grid.rs"]
 mod fill_grid;
 
+#[cfg(test)]
+#[path = "option_coverage/monotonic_chain.rs"]
+mod monotonic_chain;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

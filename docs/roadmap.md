@@ -8077,3 +8077,21 @@ rows cluster into M73 minute-boundary/cache-mapping, last-digit f32
 coordinate rounding, and travel-point ordering classes; 18 ORCA_ERROR rows
 are upstream-binary failures and 10 VENDOR_INCOMPLETE rows lack a vendor
 default process — reported, not Ares failures.
+
+### 2026-09-30 Monotonic chain edge-cost rewrite slice
+
+Source boundary: `OrcaSlicer/src/libslic3r/Fill/FillRectilinear.cpp`,
+`AntPathMatrix::operator()`; destination:
+`ares-core/src/fill/rectilinear/path_matrix.rs`. Preserve the actual upstream
+straight endpoint cost for ordered regions, replacing the temporary Rust
+shell's reachable contour-cost branch. Include f32 norm/unscale arithmetic
+and observable chain direction; defer unrelated chain heuristics, M73 and
+broader printer/option coverage.
+
+Exit gate: a sensitive public-CLI complete-output RED/GREEN against the
+unpatched official binary, production KSR target-path restoration, workspace
+Nextest, fmt/Clippy, Tier-1 compilation and independent six-axis review.
+The reduced concave fixture passes after repair; KSR restores 975 consecutive
+target lines but still differs globally, including estimated time and M73.
+This slice does not close the all-printer/all-option parity goal.
+See ARD-0041 and the matching monotonic-chain-edge-cost spec and plan.
