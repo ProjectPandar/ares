@@ -62,9 +62,30 @@ fn normalize_case_dependencies(
     process: &mut Map<String, Value>,
     filaments: &mut [Map<String, Value>],
 ) {
-    if plan.key == "enable_long_retraction_when_cut" {
+    if matches!(
+        plan.key.as_str(),
+        "enable_long_retraction_when_cut"
+            | "long_retractions_when_cut"
+            | "retraction_distances_when_cut"
+            | "filament_long_retractions_when_cut"
+            | "filament_retraction_distances_when_cut"
+    ) {
         // PrintConfig's EnableFilament gate must choose between distinct values.
-        machine.insert("long_retractions_when_cut".into(), serde_json::json!(["0"]));
+        let mode_case = plan.key == "enable_long_retraction_when_cut";
+        machine.insert(
+            "long_retractions_when_cut".into(),
+            serde_json::json!([if mode_case { "0" } else { "1" }]),
+        );
+        if !mode_case {
+            machine.insert(
+                "enable_long_retraction_when_cut".into(),
+                serde_json::json!(if plan.key.starts_with("filament_") {
+                    "2"
+                } else {
+                    "1"
+                }),
+            );
+        }
         machine.insert(
             "retraction_distances_when_cut".into(),
             serde_json::json!(["12"]),

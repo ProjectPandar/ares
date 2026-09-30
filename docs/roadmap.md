@@ -8146,3 +8146,14 @@ cover both Boolean conflict directions with complete-output comparisons.
 Exit: domain RED/GREEN, whole-output E2E, selected sweep, workspace/lint/
 platform checks and independent review. Raw integer ranges and multi-tool
 cutting remain deferred; scaffolding is temporary. See ARD-0046.
+
+### 2026-09-30 Cut-retraction value coverage
+
+Continue the PrintConfig cut-retraction/nullable-override and GCode
+placeholder rewrite validation at the CLI parity boundary. Add the
+missing nullable distance input and activate both machine and filament
+value domains. Exit: thirteen complete comparisons (twelve generated cases
+plus reverse Boolean nil fallback) with actual template
+retractions/nil-fallback witnesses, selected sweep, full workspace/lint/
+platform checks and independent review. Other contexts remain deferred;
+the harness is a temporary upstream validation shell. See ARD-0047.

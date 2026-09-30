@@ -51,6 +51,10 @@ mod locked_widths;
 #[path = "option_coverage/cut_retraction.rs"]
 mod cut_retraction;
 
+#[cfg(test)]
+#[path = "option_coverage/cut_retraction_values.rs"]
+mod cut_retraction_values;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

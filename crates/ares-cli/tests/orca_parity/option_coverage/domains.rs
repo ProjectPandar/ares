@@ -162,6 +162,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                     numeric_case("max", maximum, entry, &option_type),
                     numeric_case("seeded", interior, entry, &option_type),
                 ];
+                if key == "filament_retraction_distances_when_cut" {
+                    // Generated nullable override: nil selects the machine distance.
+                    cases.push(case("nil", "nil", entry));
+                }
                 // `coFloatOrPercent` accepts BOTH a percent and an absolute
                 // float — exercising only the `%` branch leaves the literal
                 // branch untested. Add an absolute-float seeded case bounded
