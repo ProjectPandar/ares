@@ -1,6 +1,6 @@
 # OrcaSlicer printer smoke summary
 
-973 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
+979 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; cube model).
 
 This matrix pins a MODIFIED baseline (`smoke_overrides`: `wall_generator=classic`, `detect_thin_wall=0`, bed-exclude and post-process cleared, one filament) — it verifies parity of the ported classic-wall slice across every printer's machine/process parameterization, not untouched default profiles. Arachne, thin-wall detection, multi-extruder, and vendor post-process paths are upstream boundaries pending port; an untouched-profile acceptance matrix is deferred to those milestones.
 
@@ -244,9 +244,9 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Creality/Creality SPARKX i7 0.6 nozzle |  |
 | PASS | Creality/Creality SPARKX i7 0.8 nozzle |  |
 | PASS | Creality/Creality Sermoon V1 0.4 nozzle |  |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-llLI0Y") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-3H1iFy") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-ZcJFqE") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-TFBrLK") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-5axcjy") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-nJuo5M") |
 | PASS | Custom/MyKlipper 0.2 nozzle |  |
 | PASS | Custom/MyKlipper 0.4 nozzle |  |
 | PASS | Custom/MyKlipper 0.6 nozzle |  |
@@ -254,10 +254,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Custom/MyMarlin 0.4 nozzle |  |
 | PASS | Custom/MyRRF 0.4 nozzle |  |
 | PASS | Custom/MyRepetier 0.4 nozzle |  |
-| ORCA_ERROR | Custom/MyToolChanger 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-GyR9dr") |
+| ORCA_ERROR | Custom/MyToolChanger 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-ayAn2i") |
 | PASS | Custom/MyToolChanger 0.4 nozzle |  |
 | PASS | Custom/MyToolChanger 0.6 nozzle |  |
-| ORCA_ERROR | Custom/MyToolChanger 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-X0ur6N") |
+| ORCA_ERROR | Custom/MyToolChanger 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-PKaF5s") |
 | PASS | DeltaMaker/DeltaMaker 2 0.35 nozzle |  |
 | PASS | DeltaMaker/DeltaMaker 2T 0.5 nozzle |  |
 | PASS | DeltaMaker/DeltaMaker 2XT 0.5 nozzle |  |
@@ -374,11 +374,11 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle |  |
 | PASS | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle |  |
 | PASS | Flashforge/Flashforge Artemis 0.4 Nozzle |  |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-EAeFJ2") |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-l8fsvf") |
 | PASS | Flashforge/Flashforge Creator 5 0.6 nozzle |  |
 | PASS | Flashforge/Flashforge Creator 5 0.8 nozzle |  |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-KX5rzz") |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-jM0XyT") |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-oO1XLT") |
+| PASS | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle |  |
 | PASS | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle |  |
 | PASS | Flashforge/Flashforge Guider 2s 0.4 nozzle |  |
 | PASS | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle |  |
@@ -557,9 +557,9 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Prusa/Prusa XL 0.6 nozzle |  |
 | PASS | Prusa/Prusa XL 0.8 nozzle |  |
 | PASS | Prusa/Prusa XL 5T 0.25 nozzle |  |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.3 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-xxuA83") |
+| PASS | Prusa/Prusa XL 5T 0.3 nozzle |  |
 | PASS | Prusa/Prusa XL 5T 0.4 nozzle |  |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.5 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-h5rYd4") |
+| PASS | Prusa/Prusa XL 5T 0.5 nozzle |  |
 | PASS | Prusa/Prusa XL 5T 0.6 nozzle |  |
 | PASS | Prusa/Prusa XL 5T 0.8 nozzle |  |
 | PASS | Qidi/Qidi Q1 Pro 0.2 nozzle |  |
@@ -783,10 +783,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Snapmaker/Snapmaker J1 (0.6 nozzle) |  |
 | PASS | Snapmaker/Snapmaker J1 (0.8 nozzle) |  |
 | PASS | Snapmaker/Snapmaker U1 (0.2 nozzle) |  |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-t9SABM") |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-4vK09e") |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-jVfisR") |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-kOeOoc") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-775NtI") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-275IEw") |
+| PASS | Snapmaker/Snapmaker U1 (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker U1 (0.8 nozzle) |  |
 | PASS | Sovol/Sovol SV01 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV01 Pro 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV02 0.4 nozzle |  |
@@ -954,12 +954,12 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | WonderMaker/WonderMaker ZR 0.4 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR 0.6 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR 0.8 nozzle |  |
-| PASS | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle |  |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-rHQkjA") |
 | PASS | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle |  |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-JEwpcJ") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-Wp54Ev") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-VoV1c4") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-seam-sample-printer-sweep/orca-runner-NMHW89/command-VL43db") |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-oQ9wRa") |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle |  |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-printer-gate-live.tydga2/orca-runner-0Vn8d9/command-IwWCsl") |
 | PASS | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle |  |
 | PASS | Z-Bolt/Z-Bolt S1000 0.4 nozzle |  |

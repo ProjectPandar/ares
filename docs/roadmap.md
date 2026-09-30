@@ -8095,3 +8095,19 @@ The reduced concave fixture passes after repair; KSR restores 975 consecutive
 target lines but still differs globally, including estimated time and M73.
 This slice does not close the all-printer/all-option parity goal.
 See ARD-0041 and the matching monotonic-chain-edge-cost spec and plan.
+
+### 2026-09-30 Printer coverage completion gate
+
+The CLI matrix for the `libslic3r/PrintConfig.cpp`, `Print::process` and
+`GCode::do_export` rewrite must require nonempty, all-PASS outcomes.
+Known reference failures and missing vendor presets remain explicit coverage
+gaps, not successful comparisons. The destination is
+`ares-cli/tests/orca_parity/smoke/sweep.rs`; no slicing, preset-selection or
+comparison behavior changes in this acceptance repair.
+
+Exit: sensitive status-gate RED/GREEN, a fresh full official printer sweep
+whose exit status reflects every missing comparison, workspace Nextest,
+fmt/Clippy and independent review. The existing modified classic-wall
+baseline remains limited evidence; untouched profiles and missing upstream
+behavior remain open rather than becoming an Ares-owned alternative pipeline.
+See ARD-0042 and the matching printer-sweep-completion spec and plan.

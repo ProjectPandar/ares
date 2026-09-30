@@ -6,8 +6,11 @@ use crate::{
 
 use super::{cube_model, profiles_root};
 
+#[path = "sweep/tests.rs"]
+mod tests;
+
 /// Full vendor sweep; writes `tests/parity/printer-smoke-summary.md` and
-/// fails when any printer diverges, so each fix moves the summary to green.
+/// fails unless every printer produces a matching complete output.
 /// Gated behind `ARES_PARITY_SWEEP=1` because slicing every vendor preset
 /// through both slicers takes hours.
 pub(super) fn run_printer_sweep() {
@@ -89,36 +92,21 @@ pub(super) fn run_printer_sweep() {
         }
     }
     write_summary(&outcomes);
-    // `ORCA_ERROR` and `VENDOR_INCOMPLETE` are documented exemptions —
-    // the upstream binary cannot produce a reference (or the vendor
-    // tree lacks the referenced preset), so Ares correctness is
-    // unverifiable there rather than divergent. Genuine parity failures
-    // (`DIVERGENT`, `ARES_ERROR`, `INPUT_REJECTED`) still fail the
-    // sweep; the exempt rows stay visible in the summary.
-    // `ARTIFACT_ERROR` means the comparison or evidence persistence
-    // itself failed — it is NOT an oracle-side exemption and must fail
-    // the sweep so a run cannot pass without successful comparisons.
-    let failures = outcomes
-        .iter()
-        .filter(|outcome| {
-            matches!(
-                outcome.status,
-                "DIVERGENT" | "ARES_ERROR" | "INPUT_REJECTED" | "ARTIFACT_ERROR"
-            )
-        })
-        .count();
-    let compared = outcomes
-        .iter()
-        .filter(|outcome| !matches!(outcome.status, "ORCA_ERROR" | "VENDOR_INCOMPLETE"))
-        .count();
+    require_complete(&outcomes);
+}
+
+fn require_complete(outcomes: &[parity::ParityOutcome]) {
     assert!(
-        compared > 0,
-        "printer sweep produced no oracle comparisons — all {} outcomes were oracle-side exemptions",
-        outcomes.len()
+        !outcomes.is_empty(),
+        "empty printer sweep; no printers compared"
     );
+    let incomplete = outcomes
+        .iter()
+        .filter(|outcome| outcome.status != "PASS")
+        .count();
     assert!(
-        failures == 0,
-        "{failures}/{} printers diverge; see tests/parity/printer-smoke-summary.md",
+        incomplete == 0,
+        "{incomplete}/{} printers incomplete or failed; see tests/parity/printer-smoke-summary.md",
         outcomes.len()
     );
 }
