@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/filament_variant_zero_fill.rs"]
+mod filament_variant_zero_fill;
+
+#[cfg(test)]
 #[path = "option_coverage/single_volume_offset.rs"]
 mod single_volume_offset;
 

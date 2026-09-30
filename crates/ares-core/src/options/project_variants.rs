@@ -1,4 +1,5 @@
 mod filament;
+mod filament_select;
 mod index;
 mod printer;
 mod select;

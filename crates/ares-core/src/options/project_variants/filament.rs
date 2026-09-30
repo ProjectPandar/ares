@@ -1,17 +1,17 @@
 use crate::{SliceError, options::ProjectSettings};
 
-use super::select::select_stride;
+use super::filament_select::select_filament;
 
 macro_rules! select_wrapped_field {
     ($field:expr, $indices:expr, $key:literal) => {{
-        let selected = select_stride(&$field.0, $indices, 1, $key)?;
+        let selected = select_filament(&$field.0, $indices, $key)?;
         $field.0 = selected;
     }};
 }
 
 macro_rules! select_vec_field {
     ($field:expr, $indices:expr, $key:literal) => {{
-        let selected = select_stride(&$field, $indices, 1, $key)?;
+        let selected = select_filament(&$field, $indices, $key)?;
         $field = selected;
     }};
 }

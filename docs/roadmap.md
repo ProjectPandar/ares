@@ -102,6 +102,24 @@ complete output remains divergent (first difference: model-time header).
 This is importer parity, not a completed concentric
 consumer repair or all-printer/all-option exit.
 
+ARD-0072 ports the zero-initialized short payload branch of
+`PrintConfig.cpp::update_values_to_printer_extruders_for_multiple_filaments`
+into the typed filament variant selector, preserving the distinct first-value
+broadcast rule for printer/process fields. A valid two-material H2D fixture
+has complete RED/GREEN and broadcast-reversion evidence, including nullable
+zero and enum discriminant zero. Final workspace (7457 PASS), platform and
+lint gates passed; independent six-axis final review approved. Auto map derivation, active Top Only lift behavior,
+ARD-0071 statistics and the global printer/option/KSR exit remain open.
+
+The immutable 541370f1 sweep against the seed/fill/object-ID initialized
+reference terminated after 2410.824s: 386 PASS, 262 INCOMPLETE, 2 FAIL out of
+650 domains; 1661 generated / 1517 strictly compared / 1 rejected. Complete
+inputs/outputs and report are retained in
+`/tmp/ares-options-541370f1-initialized.5K1EdV/option-coverage-summary.md`.
+Failures remain `enable_support=false` M73 ordering and SLA applied as FFF.
+This snapshot predates ARD-0072 and does not establish all-device/default
+coverage or unchanged-official reference equality.
+
 Printer preset identity parity (ARD-0062) follows `PrintConfig`,
 `PresetBundle::construct_full_config` and CLI load-settings/compatibility into
 the existing native fixture activation and project config output. Exit requires

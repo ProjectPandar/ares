@@ -54,7 +54,7 @@ fn rematerializing_same_raw_source_is_deterministic_and_map_changes_exact_family
 }
 
 #[test]
-fn short_filament_payload_broadcasts_the_first_value() {
+fn short_filament_payload_keeps_the_missing_slot_zero() {
     let mut source = filament_sentinel_source();
     source
         .filament
@@ -73,7 +73,7 @@ fn short_filament_payload_broadcasts_the_first_value() {
             .0,
         [
             source.filament.gcode.filament_max_volumetric_speed.0[0],
-            source.filament.gcode.filament_max_volumetric_speed.0[0],
+            crate::OrcaFloat(0.0),
         ]
     );
 }

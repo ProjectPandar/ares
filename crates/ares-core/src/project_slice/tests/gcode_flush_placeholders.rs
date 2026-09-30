@@ -5,7 +5,7 @@ use super::support::{KsrArchive, metadata};
 const PROJECT_SETTINGS: &str = "Metadata/project_settings.config";
 
 #[tokio::test]
-async fn flush_placeholders_use_configured_values_with_zero_fallbacks() {
+async fn flush_placeholders_keep_missing_variant_slots_zero_and_temperature_fallbacks() {
     let mut archive = KsrArchive::new();
     let mut settings: serde_json::Value =
         serde_json::from_str(&archive.entry_text(PROJECT_SETTINGS)).unwrap();
@@ -37,6 +37,6 @@ async fn flush_placeholders_use_configured_values_with_zero_fallbacks() {
 
     assert_eq!(
         output.lines().find(|line| line.starts_with(";FLUSH ")),
-        Some(";FLUSH 18,18 230,230")
+        Some(";FLUSH 18,0 230,260")
     );
 }
