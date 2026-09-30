@@ -7,6 +7,17 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Top-shell scalar range repair (ARD-0066) follows `ConfigOptionInt` and
+`PrintObject::discover_vertical_shells` into Rust's vertical-shell projection.
+Native debugging identifies the selected official binary's 32-bit count-end
+addition; Rust now explicitly defines this wrapping result without changing
+requests. This is a measured binary contract, not portable C++ signed-overflow
+semantics. Five first-reference complete outputs pass for min/max/full-range
+seed and two adjacent boundary controls; the three-case selected sweep passes.
+Workspace Nextest passes 7444 tests (9 skipped); lint/format and Tier-1
+compiler checks pass. Independent six-axis review approves the finite slice. Pause after
+this slice's code+docs commit/push; global parity remains incomplete.
+
 Bottom-shell scalar range parity (ARD-0065) follows `ConfigOptionInt`,
 `PrintConfig` and `PrintObject` bottom-shell projection/propagation. Native
 coverage now targets 0 / INT_MAX / full-range seed without reducing requests
@@ -33,13 +44,14 @@ comparison and selected sweep pass; workspace Nextest passes 7438 tests
 (9 skipped), lint/format and Tier-1 compiler checks pass. Independent six-axis
 review approves this finite slice, not global parity completion.
 
-Latest immutable full option scan, 26dbef57: 376 PASS, 272 INCOMPLETE, 2 FAIL
-out of 650 domains; 1653 generated, 1495 strictly compared, 1 rejected
-(1362.889s), `/tmp/ares-options-26dbef57.tbYt1d/option-coverage-summary.md`.
+Latest immutable full option scan, bd951efa: 380 PASS, 268 INCOMPLETE, 2 FAIL
+out of 650 domains; 1659 generated, 1501 strictly compared, 1 rejected
+(1313.701s), `/tmp/ares-options-bd951efa.v1B9dv/option-coverage-summary.md`.
 The eight floating-bound parser rejections from d2949771 are resolved; the
 remaining rejection is `timelapse_type`. `enable_support=false` ordered-output
 divergence and SLA-to-FFF application mismatch remain failures. This snapshot
-predates ARD-0062/0063 and does not prove all-printer/default coverage.
+includes ARD-0062 through ARD-0065, predates ARD-0066 and does not prove
+all-printer/default coverage.
 
 Printer preset identity parity (ARD-0062) follows `PrintConfig`,
 `PresetBundle::construct_full_config` and CLI load-settings/compatibility into

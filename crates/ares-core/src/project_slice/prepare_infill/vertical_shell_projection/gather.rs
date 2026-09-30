@@ -59,7 +59,8 @@ fn gather_top(
         return Ok(());
     }
     let mut stopped = index + 1;
-    let count_end = index as i64 + i64::from(count);
+    // Original native count-end addition uses the low 32 bits before comparison.
+    let count_end = i64::from((index as i32).wrapping_add(count));
     let mut visited = false;
     while stopped < input.caches.len()
         && ((stopped as i64) < count_end

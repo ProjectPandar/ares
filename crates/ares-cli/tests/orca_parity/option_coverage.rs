@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/top_shell_count.rs"]
+mod top_shell_count;
+
+#[cfg(test)]
 #[path = "option_coverage/bottom_shell_count.rs"]
 mod bottom_shell_count;
 
