@@ -7,6 +7,16 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Enum proof filenames (ARD-0050) unblock the source-owned `WallSequence`
+rewrite's validation: preserve all upstream wire values while projecting
+case labels to stable flat evidence filenames. Three wall-order outputs
+pass, effective proofs survive filtered reruns, and the combined width sweep
+passes 2/2 domains (8 values). Workspace tests (7407 PASS, 9 skipped), lint
+and platform compiler checks pass; independent six-axis review approved
+this slice (details in the plan).
+This repairs the temporary CLI validation shell, not global parity or
+three-wall-specific ordering activation (the fixture has two wall loops).
+
 Chamber-control activation (ARD-0049) validates `GCode::_do_export` and
 `GCodeWriter::set_chamber_temperature` through the existing core temperature
 rewrite and CLI coverage shell. All three Boolean pairs, both temperature

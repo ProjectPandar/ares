@@ -1,5 +1,9 @@
 use super::*;
 use crate::runner::CaseInputs;
+use sha2::{Digest, Sha256};
+
+#[path = "sweep_tests.rs"]
+mod tests;
 
 #[test]
 fn orca_parity_option_coverage() {
@@ -170,6 +174,11 @@ fn execute_plan(
         )
     };
     for case in &plan.cases {
+        let label_digest: String = Sha256::digest(case.label.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
+        let proof_name = format!("{}-{label_digest}-application.json", plan.key);
         let mut case_machine = machine.clone();
         let mut case_process = process.clone();
         let mut case_filaments = filaments.to_vec();
@@ -209,7 +218,7 @@ fn execute_plan(
                     let proof =
                         runner::application::verify_value(&exported.project, &plan.key, value)?;
                     let root = parity::artifacts::root_from_env().map_err(io_error)?;
-                    let file = root.join(format!("{}-{}-application.json", plan.key, case.label));
+                    let file = root.join(&proof_name);
                     parity::artifacts::overwrite(
                         &file,
                         &serde_json::to_vec_pretty(&proof).unwrap(),
@@ -224,7 +233,7 @@ fn execute_plan(
                         domain.metadata["dependencies"].as_object().unwrap(),
                     )?;
                     let root = parity::artifacts::root_from_env().map_err(io_error)?;
-                    let file = root.join(format!("{}-{}-application.json", plan.key, case.label));
+                    let file = root.join(&proof_name);
                     parity::artifacts::overwrite(
                         &file,
                         &serde_json::to_vec_pretty(&proof).unwrap(),
