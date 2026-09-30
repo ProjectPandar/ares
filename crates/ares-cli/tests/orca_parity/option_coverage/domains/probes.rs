@@ -31,6 +31,12 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         // under relative extruder addressing, so no empty probe.
         "before_layer_change_gcode" => &[("probe-text", "G92 E0\n;ARES_PROBE {layer_num}")],
         "layer_change_gcode" => TEMPLATE,
+        // CLI explicit plate paths preserve this template without evaluating it.
+        "filename_format" => &[
+            ("empty", ""),
+            ("literal", "ares-parity.gcode"),
+            ("template", "{input_filename_base}_{filament_type[0]}.gcode"),
+        ],
         // Contexts without layer variables get a literal probe only.
         "machine_pause_gcode"
         | "printing_by_object_gcode"

@@ -7,6 +7,23 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Filename-format parity probes (ARD-0063) follow `PrintConfig` and the original
+CLI's explicit-file `PrintBase::output_filepath` branch. Empty, literal and
+placeholder-bearing values must reach exported/final config and retain complete
+ordered output equality. Recommended filename generation remains a separate
+upstream branch, not covered by this byte-output slice. Direct three-case
+comparison and selected sweep pass; workspace Nextest passes 7438 tests
+(9 skipped), lint/format and Tier-1 compiler checks pass. Independent six-axis
+review approves this finite slice, not global parity completion.
+
+Latest immutable full option scan, 26dbef57: 376 PASS, 272 INCOMPLETE, 2 FAIL
+out of 650 domains; 1653 generated, 1495 strictly compared, 1 rejected
+(1362.889s), `/tmp/ares-options-26dbef57.tbYt1d/option-coverage-summary.md`.
+The eight floating-bound parser rejections from d2949771 are resolved; the
+remaining rejection is `timelapse_type`. `enable_support=false` ordered-output
+divergence and SLA-to-FFF application mismatch remain failures. This snapshot
+predates ARD-0062/0063 and does not prove all-printer/default coverage.
+
 Printer preset identity parity (ARD-0062) follows `PrintConfig`,
 `PresetBundle::construct_full_config` and CLI load-settings/compatibility into
 the existing native fixture activation and project config output. Exit requires

@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/filename_format.rs"]
+mod filename_format;
+
+#[cfg(test)]
 #[path = "option_coverage/range_completion.rs"]
 mod range_completion;
 
