@@ -2,7 +2,12 @@ use super::*;
 use crate::runner::CaseInputs;
 use serde_json::json;
 
-const KEYS: [&str; 3] = ["filament_ids", "filament_settings_id", "print_settings_id"];
+const KEYS: [&str; 4] = [
+    "filament_ids",
+    "filament_settings_id",
+    "print_settings_id",
+    "printer_settings_id",
+];
 
 #[test]
 fn preset_identity_activation_preserves_requested_values_and_unrelated_fields() {
@@ -11,8 +16,9 @@ fn preset_identity_activation_preserves_requested_values_and_unrelated_fields() 
     };
     for key in KEYS {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
-        let mut machine = Map::new();
-        let mut process = json!({"name":"original-process", "layer_height":"0.2"})
+        let mut machine = json!({"name":"original-printer", "nozzle_diameter":["0.4"], "printer_model":"original-model"})
+            .as_object().unwrap().clone();
+        let mut process = json!({"name":"original-process", "layer_height":"0.2", "compatible_printers":["original-printer", "another-printer"]})
             .as_object()
             .unwrap()
             .clone();
@@ -25,18 +31,34 @@ fn preset_identity_activation_preserves_requested_values_and_unrelated_fields() 
             .clone(),
         ];
         let case = &plan.cases[0];
+        assert!(
+            case.value.is_some(),
+            "{key} must exercise a requested identity"
+        );
         inject_case(plan, case, &mut machine, &mut process, &mut filaments);
         match plan.key.as_str() {
             "filament_ids" => assert_eq!(filaments[0]["filament_id"], "ares-parity-probe"),
             "filament_settings_id" => assert_eq!(filaments[0]["name"], "ares-parity-probe"),
             "print_settings_id" => assert_eq!(process["name"], "ares-parity-probe"),
+            "printer_settings_id" => assert_eq!(machine["name"], "ares-parity-probe"),
             _ => unreachable!(),
         }
         assert_eq!(process["layer_height"], "0.2");
+        assert_eq!(machine["nozzle_diameter"], json!(["0.4"]));
+        assert_eq!(machine["printer_model"], "original-model");
+        assert_eq!(
+            process["compatible_printers"],
+            if key == "printer_settings_id" {
+                json!(["ares-parity-probe", "another-printer"])
+            } else {
+                json!(["original-printer", "another-printer"])
+            }
+        );
         assert_eq!(filaments[0]["filament_type"], json!(["PLA"]));
         assert_eq!(
             process
                 .get(&plan.key)
+                .or_else(|| machine.get(&plan.key))
                 .or_else(|| filaments[0].get(&plan.key)),
             case.value.as_ref()
         );

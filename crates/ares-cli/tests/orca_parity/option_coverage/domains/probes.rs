@@ -54,6 +54,7 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         | "model_notes"
         | "notes"
         | "print_settings_id"
+        | "printer_settings_id"
         | "filament_settings_id"
         | "printer_model"
         | "printer_variant"

@@ -7,6 +7,18 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Printer preset identity parity (ARD-0062) follows `PrintConfig`,
+`PresetBundle::construct_full_config` and CLI load-settings/compatibility into
+the existing native fixture activation and project config output. Exit requires
+two actual printer identities, exact exported and final G-code values, complete
+ordered comparisons, retained print/filament identity regressions, full checks
+and independent review. Only matching old machine-name references in process
+compatibility are renamed; no compatibility policy or production fallback.
+Eight direct comparisons and the four-domain sweep pass. Workspace Nextest
+passes 7436 tests (9 skipped); lint, formatting and Tier-1 compiler checks pass.
+Independent six-axis review approves this finite identity slice; global parity
+completion is not claimed.
+
 Floating-bound literal repair (ARD-0061) follows the cited `PrintConfig`
 definitions and `ConfigOptionDef::is_value_valid` into the native domain
 adapter. Complete floating literals with f/F suffixes must produce declared
