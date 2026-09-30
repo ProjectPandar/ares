@@ -76,7 +76,7 @@ fn same_index_then_first_source_match_handles_repeated_part_ids() {
 }
 
 #[test]
-fn unmatched_parts_default_without_mutating_source_or_component_transform() {
+fn unmatched_parts_default_without_mutating_source_or_world_geometry() {
     let resources = format!(
         "{}<object id=\"10\" type=\"model\"><components><component objectid=\"1\" transform=\"1 0 0 0 1 0 0 0 1 4 0 0\"/></components></object>",
         mesh(1, None)
@@ -95,8 +95,9 @@ fn unmatched_parts_default_without_mutating_source_or_component_transform() {
     assert!(volume.region_overrides().present_keys().is_empty());
     assert_eq!(volume.source_transform(), Transform3d::IDENTITY);
     assert_eq!(
-        volume
+        project.objects()[0].instances()[0]
             .transform()
+            .then(volume.transform())
             .transform_point(Point3d::new(0.0, 0.0, 0.0)),
         Point3d::new(4.5, 0.5, 0.0)
     );

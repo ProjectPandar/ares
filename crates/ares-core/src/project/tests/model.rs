@@ -13,3 +13,4 @@ mod task22b_materialization;
 #[path = "../load/mesh_prepare/tests.rs"]
 mod task22b_mesh_prepare;
 mod volume_defaults;
+mod volume_offsets;

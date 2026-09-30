@@ -92,6 +92,16 @@ or untouched-official replay equality. ARD-0069's newer reference repairs
 confirm full single-object KSR native self-replay; Ares concentric consumer
 parity and KSR full-output equality remain unverified.
 
+ARD-0070 ports the single-volume offset normalization loop from
+`Format/bbs_3mf.cpp:2187-2207` into the project importer. The rotated short-branch
+prism has complete native RED/GREEN and normalization-removal counterfactual
+evidence; independent pre-review approves source semantics and strengthened
+multi-instance/Eigen boundary coverage. Final workspace (7456 PASS), lint and
+Tier-1 checks passed; independent six-axis final review approved. Original KSR
+complete output remains divergent (first difference: model-time header).
+This is importer parity, not a completed concentric
+consumer repair or all-printer/all-option exit.
+
 Printer preset identity parity (ARD-0062) follows `PrintConfig`,
 `PresetBundle::construct_full_config` and CLI load-settings/compatibility into
 the existing native fixture activation and project config output. Exit requires

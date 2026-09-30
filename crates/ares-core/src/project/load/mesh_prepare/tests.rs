@@ -63,6 +63,7 @@ fn task22b_fresh_mesh_centering_keeps_f32_subtraction_and_f64_shift() {
         None,
     );
     let volume = &project.objects()[0].volumes()[0];
+    let instance = &project.objects()[0].instances()[0];
     let x = volume
         .mesh()
         .vertices()
@@ -71,25 +72,27 @@ fn task22b_fresh_mesh_centering_keeps_f32_subtraction_and_f64_shift() {
         .collect::<Vec<_>>();
     assert_eq!(x, vec![0.0, 0.000_015_258_789_062_5, 0.0]);
 
-    let shift = volume
+    let shift = instance
         .transform()
         .transform_point(Point3d::new(0.0, 0.0, 0.0));
     // Upstream `BoundingBoxf3::center()` evaluates `(min + max) / 2` in f32
     // (Vec3f): `(128.0 + 128.00001525878906) / 2` rounds to exactly `128.0`
     // because f32 cannot hold the half-ulp. The center is then widened to
     // f64 for the transform shift.
-    assert_eq!(shift.x, 128.0);
+    assert_eq!(shift.x - 10.0, 128.0);
     let reconstructed = x
         .iter()
         .map(|x| {
-            volume
+            instance
                 .transform()
+                .then(volume.transform())
                 .transform_point(Point3d::new(*x, -0.5, 0.0))
                 .x
+                - 10.0
         })
         .collect::<Vec<_>>();
     // With the f32 center the round-trip reconstructs the input vertices
-    // exactly (upstream `center_geometry_after_creation` behavior).
+    // exactly relative to build placement, after the single-volume shift.
     assert_eq!(reconstructed, vec![128.0, 128.000_015_258_789_06, 128.0]);
     let raw_center = ((reconstructed[0] + reconstructed[1]) * 0.5 * 1_000_000.0) as i64;
     assert_eq!(raw_center, 128_000_007);
@@ -114,18 +117,20 @@ fn task22b_fresh_mesh_compensation_is_component_then_shift_and_metadata_stays_pr
     );
     let project = load_project(parts.bytes()).unwrap();
     let volume = &project.objects()[0].volumes()[0];
+    let instance = &project.objects()[0].instances()[0];
 
     assert_eq!(
-        volume
+        instance
             .transform()
             .transform_point(Point3d::new(0.0, 0.0, 0.0)),
-        Point3d::new(12.0, 26.0, 42.0)
+        Point3d::new(22.0, 46.0, 72.0)
     );
     assert_eq!(
-        volume
+        instance
             .transform()
+            .then(volume.transform())
             .transform_point(volume.mesh().vertices()[0]),
-        Point3d::new(10.0, 20.0, 30.0)
+        Point3d::new(20.0, 40.0, 60.0)
     );
     assert_eq!(
         volume

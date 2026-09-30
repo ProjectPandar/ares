@@ -109,6 +109,7 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
         })?;
 
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
+    super::domain::normalize_volume_offsets(&mut objects);
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
     Ok(Project::new(
         models,

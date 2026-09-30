@@ -21,12 +21,13 @@ fn task22b_vertex_units_materialize_through_f32_before_promotion() {
     ] {
         let project = unit_project(unit, "0.3");
         let volume = &project.objects()[0].volumes()[0];
-        let reconstructed = volume
+        let reconstructed = project.objects()[0].instances()[0]
             .transform()
+            .then(volume.transform())
             .transform_point(volume.mesh().vertices()[1]);
         assert_eq!(reconstructed.x, f64::from(expected), "{unit}");
         if unit == "inch" {
-            let shift = volume
+            let shift = project.objects()[0].instances()[0]
                 .transform()
                 .transform_point(Point3d::new(0.0, 0.0, 0.0));
             assert_eq!((shift.x * 1_000_000.0) as i64, 3_810_000);
@@ -125,7 +126,13 @@ fn task22b_ksr_import_preparation_has_exact_mesh_facts() {
 }
 
 fn unit_project(unit: &str, x: &str) -> crate::Project {
-    load_project(unit_parts(unit, x).bytes()).unwrap()
+    let mut parts = unit_parts(unit, x);
+    parts.replace(
+        "3D/root.model",
+        "1 0 0 0 1 0 0 0 1 10 20 30",
+        "1 0 0 0 1 0 0 0 1 0 0 0",
+    );
+    load_project(parts.bytes()).unwrap()
 }
 
 fn unit_parts(unit: &str, x: &str) -> ProjectParts {

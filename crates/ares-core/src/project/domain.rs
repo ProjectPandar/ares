@@ -1,7 +1,9 @@
 mod documents;
+mod volume_offsets;
 
 pub use documents::PlateMetadata;
 pub(crate) use documents::ProjectDocuments;
+pub(crate) use volume_offsets::normalize_volume_offsets;
 
 use super::{layer_config_ranges::LayerConfigRange, transform::Transform3d};
 use crate::{
