@@ -103,8 +103,6 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
             ("empty", ""),
             ("multiple", "48x48/PNG, 300x300/JPG"),
         ],
-        // Filament-printable bitmask (default 3: printable everywhere).
-        "filament_printable" => &[("probe", "1")],
         // Named LongRectrationLevel modes; the coInt schema is unbounded.
         "enable_long_retraction_when_cut" => {
             &[("disabled", "0"), ("machine", "1"), ("filament", "2")]

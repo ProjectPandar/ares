@@ -5,6 +5,9 @@
 mod range_completion;
 
 #[cfg(test)]
+#[path = "option_coverage/filament_printable.rs"]
+mod filament_printable;
+#[cfg(test)]
 #[path = "option_coverage/vitrification.rs"]
 mod vitrification;
 

@@ -137,7 +137,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             .then_some("enum domain not explicit in definition block");
         (values, omission)
     } else if range_type(&option_type) {
-        let bounds = if key == "temperature_vitrification" {
+        let bounds = if matches!(
+            key.as_str(),
+            "temperature_vitrification" | "filament_printable"
+        ) {
             // ConfigOptionInts reserves INT_MAX as nil, even when non-nullable.
             Some((f64::from(i32::MIN), f64::from(i32::MAX - 1)))
         } else if key == "skirt_height" {
@@ -167,6 +170,9 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 ];
                 if key == "temperature_vitrification" {
                     cases.push(case("probe", "110", entry));
+                }
+                if key == "filament_printable" {
+                    cases.extend(["0", "1", "2", "3"].map(|value| case(value, value, entry)));
                 }
                 if key == "filament_retraction_distances_when_cut" {
                     // Generated nullable override: nil selects the machine distance.

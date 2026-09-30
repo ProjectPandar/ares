@@ -7,6 +7,19 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Filament-printable integer-domain parity (ARD-0060) follows `PrintConfig`,
+`ConfigOptionInts` and `Print::get_physical_unprintable_filaments` into the
+existing project wire boundary and native coverage adapter. Exit requires
+signed serializable endpoints, full-range seeded interior and masks 0/1/2/3,
+strict applied-value proof, complete ordered outputs, separate INT_MAX
+rejection, full checks and independent review. Single-extruder evidence does
+not cover two-extruder grouping/mapping or close the overall parity objective.
+Focused evidence: seven direct comparisons and seven sweep comparisons pass;
+strengthened single-nozzle/config-literal reruns pass. Workspace 7434 PASS /
+9 skipped; final equivalent lint-only generator change has separate original-
+binary regression evidence. Clippy/fmt and three platform compiler checks pass.
+Independent six-axis review approves this finite slice; global work remains.
+
 Numeric completion correction (ARD-0059) projects
 `ConfigOptionDef`'s finite implicit endpoints into the native coverage gate.
 Existing local comparisons cannot certify min/max/full-range seeded coverage.
