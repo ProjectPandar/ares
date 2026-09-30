@@ -1,6 +1,26 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/bookkeeping_export.rs"]
+mod bookkeeping_export;
+
+#[cfg(test)]
+#[path = "option_coverage/initialized_short_line.rs"]
+mod initialized_short_line;
+
+#[cfg(test)]
+#[path = "option_coverage/initialized_transition_snap.rs"]
+mod initialized_transition_snap;
+
+#[cfg(test)]
+#[path = "option_coverage/initialized_stitch_junction.rs"]
+mod initialized_stitch_junction;
+
+#[cfg(test)]
+#[path = "option_coverage/initialized_bridge_direction.rs"]
+mod initialized_bridge_direction;
+
+#[cfg(test)]
 #[path = "option_coverage/filament_stats_vectors.rs"]
 mod filament_stats_vectors;
 

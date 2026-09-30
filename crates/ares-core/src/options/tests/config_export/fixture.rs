@@ -117,7 +117,12 @@ fn config_export_fixture_matches_resolved_task19b3_views_byte_for_byte() {
     )
     .unwrap();
 
-    let expected = reference_block();
+    let initialized = crate::test_fixtures::read(
+        "tests/ksr_fdmtest_v4/ksr_fdmtest_v4.initialized-orca.gcode",
+    );
+    let start = find_once(&initialized, START);
+    let end = start + find_once(&initialized[start..], END) + END.len();
+    let expected = &initialized[start..end];
     if actual != expected {
         let index = actual
             .iter()

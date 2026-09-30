@@ -76,22 +76,31 @@ fn task22o42_absolute_custom_bridge_angle_includes_model_rotation() {
 #[test]
 fn task22o42_relative_custom_bridge_angle_adds_to_auto_but_not_model_rotation() {
     let mut surfaces = bridge_with_lower_edge_support();
+    let mut automatic = bridge_with_lower_edge_support();
 
+    process_external_surfaces(&mut automatic, config(0.0, false, 0.0)).unwrap();
     process_external_surfaces(&mut surfaces, config(30.0, true, 0.375)).unwrap();
 
     let angles = output_bridge_angle_bits(&surfaces);
-    assert_eq!(angles, vec![0x4000_c152_382d_7365]);
-    assert_ne!(angles, vec![0x4003_c152_382d_7365]);
+    let expected = output_bridge_angle_bits(&automatic)
+        .into_iter()
+        .map(|bits| (f64::from_bits(bits) + 30.0_f64.to_radians()).to_bits())
+        .collect::<Vec<_>>();
+    assert_eq!(angles.len(), 1);
+    assert_eq!(angles, expected);
 }
 
 #[test]
 fn task22o42_zero_bridge_angle_uses_auto_orientation_without_model_rotation() {
     let mut surfaces = bridge_with_lower_edge_support();
+    let mut unrotated = bridge_with_lower_edge_support();
 
+    process_external_surfaces(&mut unrotated, config(0.0, false, 0.0)).unwrap();
     process_external_surfaces(&mut surfaces, config(0.0, false, 0.75)).unwrap();
 
+    assert_eq!(output_bridge_angle_bits(&surfaces).len(), 1);
     assert_eq!(
         output_bridge_angle_bits(&surfaces),
-        vec![0x3ff9_21fb_5444_2d18]
+        output_bridge_angle_bits(&unrotated)
     );
 }

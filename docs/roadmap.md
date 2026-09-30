@@ -7,6 +7,54 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Stitch candidate order (ARD-0078) rewrites the selected native libstdc++
+same-cell enumeration contract of `PolylineStitcher.hpp::stitch` and
+`SparseGrid.hpp::processFromCell` into `wall_toolpaths/stitch.rs`. A public
+closed prism compares complete bytes RED before/GREEN after reverse cell
+iteration; actual candidate traces confirm snap early exit chooses different
+connections. KSR semantic diagnostic now passes; strict ordered KSR is still
+required, not replaced by that diagnostic. Independent finite code review
+recognizes the narrow repair. Workspace passes7459 tests (nine skipped);
+seven live full-output consumers, fmt/clippy and Tier-1 compilation pass.
+Strict original KSR revalidation remains RED at M73 line9946, with later
+outer-wall precision and path-order differences also retained. All-printer
+and all-option parity remain incomplete. Combined submission needs fixed
+staged scope and final approval; no global acceptance is claimed.
+
+Transition endpoint snapping (ARD-0077) ports original endpoint identity
+retention in `SkeletalTrapezoidation.cpp::applyTransitions` into
+`arachne/trapezoidation/transitions/apply.rs`. A public closed-prism complete
+output regression is RED before the two-line repair and GREEN afterward;
+the obsolete private mutated-endpoint expectation is removed. Six live
+affected complete-output cases, lint/format and Tier-1 compilation pass.
+KSR's first semantic mismatch advances from layer49 to layer64 internal-solid
+geometry; ordered full output still differs at M73 line9946. Workspace
+no-fail-fast reports7457 passed and one failed (nine skipped); this is neither
+a complete workspace pass nor global acceptance. Independent final review
+approves the finite repair, but not combined commit/push. Broader transition behavior,
+M73 nondeterminism and all-profile/all-option parity remain open.
+
+Initialized bridge candidate direction (ARD-0075) ports the collection dependency
+of `BridgeDetector.hpp::detect_bridging_direction` into `geometry/bridge_direction.rs`.
+Small and stretched-rehash complete-output cases pass, and removing only the
+rehash group reversal fails on actual bridge moves. Historical MSVC bucket pins
+are replaced by behavioral coverage; independent review accepts local evidence.
+KSR now progresses past layer26 bridge to layer49 internal-solid geometry, while
+ordered full output still fails at M73 line9946. This is not global acceptance;
+commit remains gated on unresolved complete-output and regression requirements.
+
+Initialized concentric short-line consumer (ARD-0073/0069) follows
+`FillConcentricInternal` parameter construction and
+`WallToolPaths::removeSmallLines` into `fill_entities/concentric/generate.rs`.
+Replace the empirical internal factor0 with the explicit common .5 convention
+of the separately initialized reference; downstream sorting is unchanged.
+Sensitive internal-fill short-branch complete output is RED on9ae and GREEN
+with this single production change; private UB-dependent short-path pinning
+is removed. Full gates and independent six-axis review are pending.
+The immutable9ae full smoke matrix is976/1001 PASS (15 native failures,
+10 incomplete vendor profiles), and386/650 option domains complete. These
+modified-baseline results do not close untouched-profile or all-domain parity.
+
 Seeded Context rewrite (ARD-0068) follows
 `Feature/FuzzySkin/FuzzySkin.cpp::random_value`, `UniformNoise` and
 `fuzzy_polyline` into `ares-core::SlicerContext` and the active classic

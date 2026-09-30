@@ -50,7 +50,9 @@ fn compare_actual(actual: &[u8]) {
     // timing within seconds, and per-run object ids normalized before
     // parsing.
     semantic::compare(
-        &normalize_object_ids(&reference()),
+        &normalize_object_ids(
+            &fs::read(fixture_path("ksr_fdmtest_v4.initialized-orca.gcode")).unwrap(),
+        ),
         &normalize_object_ids(actual),
     )
     .unwrap_or_else(|error| panic!("{error}"));

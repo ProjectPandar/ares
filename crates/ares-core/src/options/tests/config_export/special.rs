@@ -112,7 +112,10 @@ fn config_export_special_filters_only_the_fixed_nine_banned_keys() {
 
     write_canonical_entries(&ProjectSettings::default(), 0, &entries, &Default::default(), &mut output).unwrap();
 
-    assert_eq!(output, b"; print_compatible_printers = keep\n");
+    assert_eq!(
+        output,
+        b"; different_settings_to_system = ;;\n; inherits_group = ;;\n; print_compatible_printers = keep\n"
+    );
 }
 
 #[test]

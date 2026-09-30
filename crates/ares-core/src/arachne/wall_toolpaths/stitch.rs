@@ -41,7 +41,8 @@ impl StitchState<'_> {
                 self.grid
                     .get(&(cell_x, cell_y))
                     .into_iter()
-                    .flatten()
+                    // SparseGrid's libstdc++ equal_range visits newer endpoints first.
+                    .flat_map(|cell| cell.iter().rev())
                     .copied()
             })
         });

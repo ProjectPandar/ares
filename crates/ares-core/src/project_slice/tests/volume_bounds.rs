@@ -192,11 +192,8 @@ fn task22j_volume_bounds_compose_f64_then_narrow_matrix_and_vertices_to_f32() {
         vertices,
         0.3750000298023224,
     );
-    // `min.z` narrowed one f32 ulp when `center_shift` switched to evaluating
-    // `(min + max) / 2` in f32 to match `BoundingBoxf3::center()` (359eb0dc).
-    assert_bits(fixed.min(), [0xc0fb_c62e, 0xc03e_4085, 0x403e_0661]);
-    // `max.y` also narrowed one f32 ulp from the same f32-center change.
-    assert_bits(fixed.max(), [0x40a6_5ffa, 0x409b_1a1d, 0x40d4_0405]);
+    assert_bits(fixed.min(), [0xc0fb_c62e, 0xc03e_4085, 0x403e_0660]);
+    assert_bits(fixed.max(), [0x40a6_5ffa, 0x409b_1a1c, 0x40d4_0405]);
 
     let scale = row_major([
         1.00000006, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,

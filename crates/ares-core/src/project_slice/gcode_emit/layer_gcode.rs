@@ -126,9 +126,38 @@ pub(super) fn append_print_preamble(
     if is_bbl {
         output.extend_from_slice(b";VT0\n");
     }
+    // GCodeWriter::toolchange also emits the initial selection for a
+    // non-BBL multi-filament configuration, even if only filament0 is used.
+    let settings = &traversal.resolved.views.full;
+    if !is_bbl && settings.filament.gcode.filament_diameter.0.len() > 1 {
+        let runtime = &traversal.resolved.views.runtime_gcode;
+        let prefix = if runtime.manual_filament_change.0 {
+            "; MANUAL_TOOL_CHANGE T"
+        } else {
+            match runtime.gcode_flavor {
+                crate::GCodeFlavor::MakerWare => "M135 T",
+                crate::GCodeFlavor::Sailfish => "M108 T",
+                _ => "T",
+            }
+        };
+        let comments = settings.process.print.gcode_comments.0;
+        let comment = if comments { " ; change extruder" } else { "" };
+        output.extend_from_slice(format!("{prefix}0{comment}\n").as_bytes());
+        if runtime.gcode_flavor.resets_absolute_e() {
+            state.e_position = 0.0;
+            state.private_e_position = 0.0;
+        }
+        if runtime.gcode_flavor.resets_absolute_e() && !runtime.use_relative_e_distances.0 {
+            let comment = if comments {
+                " ; reset extrusion distance"
+            } else {
+                ""
+            };
+            output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
+        }
+    }
     // Orca: set the initial pressure advance for the first filament
     // (`GCode.cpp:8048-8052`, `GCodeWriter.cpp:370-391`).
-    let settings = &traversal.resolved.views.full;
     let enabled = settings
         .filament
         .gcode

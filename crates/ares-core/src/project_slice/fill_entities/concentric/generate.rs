@@ -104,10 +104,9 @@ fn generate_with_mode(
         transitioning_angle: f64::from((std::f32::consts::PI * 10.0_f32) / 180.0_f32),
         transition_filter_deviation: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         wall_distribution_count: 1,
-        // FillConcentric.cpp leaves this POD field unset. Repeated standalone
-        // Linux 2.4.2 artifacts retain the short standard-fill branch at the
-        // common wall-path factor; ConcentricInternal retains all odd branches.
-        min_length_factor: if standard { 0.5 } else { 0.0 },
+        // Explicit common WallToolPaths default; upstream fill constructors
+        // leave this field unset (ARD-0069's initialized reference convention).
+        min_length_factor: 0.5,
         wall_maximum_resolution: scale.checked_scale(0.5).unwrap(),
         wall_maximum_deviation: scale.checked_scale(0.025).unwrap(),
         is_top_or_bottom_layer: false,

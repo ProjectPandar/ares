@@ -125,11 +125,7 @@ pub(crate) fn write_canonical_entries(
     // plus any key the project presets define (`GCode.cpp:5636-5643`).
     // Ares registry keys outside that set only appear when the project
     // presets set them.
-    let filament_count = entries
-        .iter()
-        .find(|entry| entry.key == "filament_diameter")
-        .map(|entry| entry.token.split(';').count())
-        .unwrap_or(1);
+    let filament_count = settings.filament.gcode.filament_diameter.0.len();
     let mut lines: Vec<(String, String)> = Vec::new();
     fn emit(lines: &mut Vec<(String, String)>, key: &str, token: String, is_nil: bool) {
         if BANNED_KEYS.contains(&key) || is_nil || token == "nil" {
@@ -198,6 +194,13 @@ pub(crate) fn write_canonical_entries(
             continue;
         };
         emit(&mut lines, key, rendered.to_owned(), false);
+    }
+    // OrcaSlicer.cpp:2815-2818 creates the absent CLI bookkeeping vector
+    // at filament_count + 2 before GCode::append_full_config serializes it.
+    for key in ["different_settings_to_system", "inherits_group"] {
+        if !raw_settings.contains_key(key) {
+            emit(&mut lines, key, ";".repeat(filament_count + 1), false);
+        }
     }
     // Orca iterates a sorted key map; a stable sort keeps the duplicated
     // wipe-tower origin lines adjacent like upstream.

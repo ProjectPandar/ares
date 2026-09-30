@@ -3,9 +3,8 @@ mod principal_components;
 use super::{CoordinateScale, Line, Polygon};
 use principal_components::{Vec2f, compute_principal_components};
 
-const FNV_OFFSET_BASIS: u64 = 14_695_981_039_346_656_037;
-const FNV_PRIME: u64 = 1_099_511_628_211;
-const MIN_BUCKETS: usize = 8;
+// Single-insert prime growth covers all 6284 quantized angle keys.
+const BUCKET_COUNTS: [usize; 10] = [13, 29, 59, 127, 257, 541, 1109, 2357, 5087, 10273];
 
 type Vec2d = (f64, f64);
 
@@ -24,7 +23,7 @@ impl DirectionMap {
     fn new() -> Self {
         Self {
             entries: Vec::new(),
-            bucket_count: MIN_BUCKETS,
+            bucket_count: BUCKET_COUNTS[0],
         }
     }
 
@@ -40,7 +39,8 @@ impl DirectionMap {
         }
 
         if self.entries.len() + 1 > self.bucket_count {
-            self.bucket_count = grown_bucket_count(self.bucket_count, self.entries.len() + 1);
+            self.bucket_count =
+                BUCKET_COUNTS[BUCKET_COUNTS.partition_point(|&count| count <= self.bucket_count)];
             self.rehash();
         }
 
@@ -53,7 +53,7 @@ impl DirectionMap {
         {
             self.entries.insert(index, entry);
         } else {
-            self.entries.push(entry);
+            self.entries.insert(0, entry);
         }
     }
 
@@ -72,7 +72,7 @@ impl DirectionMap {
             };
             groups[group_index].push(entry);
         }
-        for mut group in groups {
+        for mut group in groups.into_iter().rev() {
             group.reverse();
             self.entries.extend(group);
         }
@@ -80,27 +80,21 @@ impl DirectionMap {
 }
 
 fn hash_double(value: f64) -> u64 {
-    let value = if value == 0.0 { 0.0 } else { value };
-    value
-        .to_le_bytes()
-        .into_iter()
-        .fold(FNV_OFFSET_BASIS, |hash, byte| {
-            (hash ^ u64::from(byte)).wrapping_mul(FNV_PRIME)
-        })
+    if value == 0.0 {
+        return 0;
+    }
+    // libstdc++'s 64-bit double hash, independent of the Rust host word size.
+    const MULTIPLIER: u64 = 0xc6a4_a793_5bd1_e995;
+    let data = value.to_bits().wrapping_mul(MULTIPLIER);
+    let data = (data ^ (data >> 47)).wrapping_mul(MULTIPLIER);
+    let hash = (0xc70f_6907 ^ 8_u64.wrapping_mul(MULTIPLIER)) ^ data;
+    let hash = hash.wrapping_mul(MULTIPLIER);
+    let hash = (hash ^ (hash >> 47)).wrapping_mul(MULTIPLIER);
+    hash ^ (hash >> 47)
 }
 
 fn bucket(hash: u64, bucket_count: usize) -> usize {
-    hash as usize & (bucket_count - 1)
-}
-
-fn grown_bucket_count(old_bucket_count: usize, new_size: usize) -> usize {
-    let required = new_size.max(MIN_BUCKETS);
-    let desired = if old_bucket_count < 512 && old_bucket_count * 8 >= required {
-        old_bucket_count * 8
-    } else {
-        required
-    };
-    desired.next_power_of_two()
+    (hash % bucket_count as u64) as usize
 }
 
 fn normalized_f64(vector: Vec2d) -> Vec2d {

@@ -56,35 +56,33 @@ fn apply_scarf_joint_seam(settings: &mut ProjectSettings) {
 /// The OrcaSlicer CLI slicing path fills per-extruder defaults for
 /// multi-extruder printers (`OrcaSlicer.cpp:5993-6022`, applied when
 /// `filament_map_mode < Manual`): every extruder gets the `1#0|4#1`
-/// AMS mapping, `flush_multiplier` resizes to the extruder count
-/// (default fill 1.0), and the flush volumes matrix collapses to a
-/// zero diagonal sized to the extruder count.
+/// AMS mapping, including when the input already supplies a mapping.
 fn prepare_multi_extruder_cli_defaults(settings: &mut ProjectSettings) {
     use crate::ProjectFilamentMapMode;
 
     let count = settings.project.print.nozzle_diameter.0.len();
-    if count <= 1
-        || !settings
-            .project
-            .gcode
-            .extruder_ams_count
-            .0
-            .iter()
-            .all(|value| value.is_empty())
-        || settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual
-    {
+    if count <= 1 || settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual {
         return;
     }
+    let missing_ams = settings
+        .project
+        .gcode
+        .extruder_ams_count
+        .0
+        .iter()
+        .all(String::is_empty);
     settings.project.gcode.extruder_ams_count.0 = vec!["1#0|4#1".to_owned(); count];
+    if !missing_ams {
+        return;
+    }
     settings
         .project
         .print
         .flush_multiplier
         .0
         .resize(count, OrcaFloat(1.0));
-    // The zero-diagonal collapse is only pinned for single-filament
-    // prints; multi-filament flush matrices come from the CLI's
-    // `get_flush_volumes_matrix` computation (out of scope here).
+    // Preserve the existing flush preparation shell's scope; the CLI's
+    // `get_flush_volumes_matrix` rewrite is separate from the AMS override.
     if settings.filament.gcode.filament_colour.0.len() == 1 {
         settings.project.print.flush_volumes_matrix.0 = vec![0.0; count];
     }

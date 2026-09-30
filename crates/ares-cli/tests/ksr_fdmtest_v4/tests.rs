@@ -128,17 +128,11 @@ fn first_difference_truncates_long_context_lines() {
         3
     );
 }
-// Acceptance here is SEMANTIC, not strict bytes: this 11-hour real-world
-// fixture carries ~44k ordered-byte differences dominated by the known
-// residual clusters (voronoi/bool-eval 1µ geometry drift, M73 position
-// attribution, equalizer cascade order, seam tie order — see
-// docs/superpowers/specs/2026-09-28-parity-convergence-continuation.md).
-// Strict generator-only ordered-byte acceptance lives in the
-// `orca_parity` suite (printer sweep + per-option cases); this test
-// verifies the same fixture parses to numerically equal motion with
-// bounded tolerances as a mid-fidelity check.
+// Diagnostic only, not ordered-byte acceptance. The independent initialized
+// native fixture replaces the historical UB-dependent tiny-branch reference;
+// comparison rules are unchanged. Original official streams stay preserved.
 #[test]
-fn project_matches_orca_242_semantically() {
+fn project_matches_initialized_orca_242_semantic_diagnostic() {
     let temp = tempfile::tempdir().unwrap();
     let output = temp.path().join("actual.gcode");
     let before = local_now_to_second();

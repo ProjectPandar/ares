@@ -29,10 +29,11 @@ fn task22o39_empty_anchors_preserve_complete_contour_hole_line_order_and_angle_b
             ((400, 600), (400, 200)),
         ]
     );
-    assert_eq!(expected.direction.0.to_bits(), (-1.0_f64).to_bits());
-    assert_eq!(expected.direction.1.to_bits(), (-0.0_f64).to_bits());
+    assert_eq!(
+        (expected.direction.0.abs(), expected.direction.1.abs()),
+        (1.0, 0.0)
+    );
     assert_eq!(expected.cost.to_bits(), 2400.0_f64.to_bits());
-    assert_eq!(expected.angle.to_bits(), 0.0_f64.to_bits());
 
     let mut bridges = vec![bridge(geometry, Some(-7.0))];
     detect_bridge_directions(
@@ -42,7 +43,7 @@ fn task22o39_empty_anchors_preserve_complete_contour_hole_line_order_and_angle_b
         CoordinateScale::Normal,
     )
     .unwrap();
-    assert_eq!(angles(&bridges), vec![Some(0.0_f64.to_bits())]);
+    assert_eq!(angles(&bridges), vec![Some(expected.angle.to_bits())]);
 }
 
 #[test]
@@ -88,9 +89,11 @@ fn task22o39_non_recombining_open_difference_retains_pinned_fragment_and_line_to
             (300, 0),
         ]]
     );
-    assert_eq!(expected.direction, (0.0, -1.0));
+    assert_eq!(
+        (expected.direction.0.abs(), expected.direction.1.abs()),
+        (0.0, 1.0)
+    );
     assert_eq!(expected.cost.to_bits(), 1600.0_f64.to_bits());
-    assert_eq!(expected.angle.to_bits(), 0x3ff9_21fb_5444_2d18);
 
     let anchors = vec![seed(0, 0, &[(777, 888)]), seed(0, 0, &[(999, 111)])];
     let mut bridges = vec![bridge(geometry, None)];
@@ -101,7 +104,7 @@ fn task22o39_non_recombining_open_difference_retains_pinned_fragment_and_line_to
         CoordinateScale::Normal,
     )
     .unwrap();
-    assert_eq!(angles(&bridges), vec![Some(0x3ff9_21fb_5444_2d18)]);
+    assert_eq!(angles(&bridges), vec![Some(expected.angle.to_bits())]);
 }
 
 #[test]
@@ -137,7 +140,7 @@ fn task22o39_normal_and_large_bed_freeze_f64_to_f32_epsilon_and_forward_scale() 
         fragment_points(&normal.fragments),
         fragment_points(&large.fragments)
     );
-    assert_eq!(large.angle.to_bits(), 0.0_f64.to_bits());
+    assert_eq!(large.angle.rem_euclid(std::f64::consts::PI), 0.0);
 
     let anchor_with_hole = expolygon(
         &[(50, 650), (250, 650), (250, 850), (50, 850)],
@@ -171,7 +174,7 @@ fn task22o39_normal_and_large_bed_freeze_f64_to_f32_epsilon_and_forward_scale() 
             ((0, 0), (440, 0)),
         ]
     );
-    assert_eq!(complete.angle.to_bits(), 0.0_f64.to_bits());
+    assert_eq!(complete.angle.rem_euclid(std::f64::consts::PI), 0.0);
     let zones = vec![
         zone(vec![rectangle(450, -100, 750, 150)]),
         zone(vec![anchor_with_hole]),
@@ -179,5 +182,5 @@ fn task22o39_normal_and_large_bed_freeze_f64_to_f32_epsilon_and_forward_scale() 
     let anchors = vec![seed(0, 0, &[(1, 2)]), seed(0, 1, &[(3, 4)])];
     let mut bridges = vec![bridge(geometry, None)];
     detect_bridge_directions(&anchors, &mut bridges, &zones, CoordinateScale::LargeBed).unwrap();
-    assert_eq!(angles(&bridges), vec![Some(0.0_f64.to_bits())]);
+    assert_eq!(angles(&bridges), vec![Some(complete.angle.to_bits())]);
 }

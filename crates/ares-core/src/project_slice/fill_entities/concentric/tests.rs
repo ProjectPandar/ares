@@ -11,7 +11,6 @@ use crate::{
 
 use super::{append, finalize_polylines, generate_thick_polylines, intersect_no_overlap_domains};
 
-mod source_cases;
 mod sparse;
 
 #[test]
