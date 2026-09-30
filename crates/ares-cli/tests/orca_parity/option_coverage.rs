@@ -43,6 +43,10 @@ mod fill_grid;
 #[path = "option_coverage/monotonic_chain.rs"]
 mod monotonic_chain;
 
+#[cfg(test)]
+#[path = "option_coverage/locked_widths.rs"]
+mod locked_widths;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

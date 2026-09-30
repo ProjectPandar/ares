@@ -123,6 +123,11 @@ pub(crate) fn support_geometry_option(key: &str) -> bool {
 
 fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
     match key {
+        // `Fill.cpp::group_fills` builds these flows only for Locked Zag.
+        "skin_infill_line_width" | "skeleton_infill_line_width" => &[
+            ("sparse_infill_pattern", "lockedzag"),
+            ("sparse_infill_density", "40%"),
+        ],
         "hot_plate_temp_initial_layer" => &[("curr_bed_type", "High Temp Plate")],
         // `Print.cpp:575-585`: infinite skirts bypass the configured height.
         "skirt_height" => &[("skirt_loops", "1"), ("draft_shield", "disabled")],

@@ -8111,3 +8111,15 @@ fmt/Clippy and independent review. The existing modified classic-wall
 baseline remains limited evidence; untouched profiles and missing upstream
 behavior remain open rather than becoming an Ares-owned alternative pipeline.
 See ARD-0042 and the matching printer-sweep-completion spec and plan.
+
+### 2026-09-30 Locked Zag width activation
+
+Rewrite validation for `libslic3r/Fill/Fill.cpp::group_fills` and
+`Flow::new_from_config_width` must activate Locked Zag before crediting
+skin/skeleton width probes. Destination: the existing CLI option-coverage
+activation helper and public project-to-complete-G-code tests; no new
+slicing pipeline. Exit: live sensitive RED/GREEN for both widths and
+both literal/percent probes, actual sparse-extrusion witnesses, strict
+ordered comparison, workspace/lint checks and independent review.
+Range endpoints and untouched profiles remain deferred; these sampled
+domains stay INCOMPLETE. See ARD-0044 and the matching spec/plan.
