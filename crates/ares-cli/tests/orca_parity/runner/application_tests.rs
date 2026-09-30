@@ -20,6 +20,68 @@ fn fields(value: Value) -> Value {
 }
 
 #[test]
+fn resolution_floor_proof_preserves_subthreshold_requests() {
+    for requested in ["0", "0.0005", "0.000999"] {
+        let proof = super::application::verify_value(
+            &project(json!({"resolution": "0.001"})),
+            "resolution",
+            &json!(requested),
+        )
+        .unwrap();
+        assert_eq!(proof["requested"], requested);
+        assert_eq!(proof["effective"], "0.001");
+        assert_eq!(proof["normalization"]["kind"], "resolution_floor");
+    }
+}
+
+#[test]
+fn resolution_floor_proof_rejects_wrong_exports_and_preserves_other_values() {
+    for effective in [
+        json!("0"),
+        json!("0.002"),
+        json!(["0.001"]),
+        json!(0.001),
+        Value::Null,
+    ] {
+        assert!(
+            super::application::verify_value(
+                &project(json!({"resolution": effective})),
+                "resolution",
+                &json!("0")
+            )
+            .is_err()
+        );
+    }
+    assert!(
+        super::application::verify_value(&project(json!({})), "resolution", &json!("0")).is_err()
+    );
+    for requested in ["0.001", "0.001001", "0.01", "2"] {
+        let proof = super::application::verify_value(
+            &project(json!({"resolution": requested})),
+            "resolution",
+            &json!(requested),
+        )
+        .unwrap();
+        assert!(proof.get("normalization").is_none());
+    }
+    for (key, requested) in [
+        ("resolution", "0.002"),
+        ("resolution", "-1"),
+        ("resolution", "NaN"),
+        ("layer_height", "0"),
+    ] {
+        assert!(
+            super::application::verify_value(
+                &project(json!({key: "0.001"})),
+                key,
+                &json!(requested)
+            )
+            .is_err()
+        );
+    }
+}
+
+#[test]
 fn obsolete_silent_mode_proof_preserves_requests_and_requires_false_default() {
     for requested in [json!("0"), json!("1")] {
         let proof = super::application::verify_value(

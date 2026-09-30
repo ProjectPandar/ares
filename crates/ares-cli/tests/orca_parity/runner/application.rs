@@ -44,7 +44,7 @@ pub(crate) fn settings(project: &[u8]) -> Result<Map<String, Value>, StageError>
 /// exported `project_settings.config` must carry the option with a value
 /// equal to the requested one (scalar-string equality after
 /// serialization — `apply_override` already canonicalizes types).
-/// The obsolete silent-mode input instead requires its source-defined default.
+/// Source-owned silent-mode and subthreshold-resolution normalization is explicit.
 pub(crate) fn verify_value(
     project: &[u8],
     key: &str,
@@ -80,6 +80,27 @@ pub(crate) fn verify_value(
                 "kind": "obsolete_input",
                 "expected_effective": "0",
                 "source": "PrintConfig.cpp::PrintConfigDef::handle_legacy; silent_mode default"
+            }
+        }));
+    }
+    // `PrintConfig.cpp:8681-8683`: normalize_fdm_1 floors resolution at 1um.
+    if key == "resolution"
+        && requested
+            .as_str()
+            .and_then(|value| value.parse::<f64>().ok())
+            .is_some_and(|value| (0.0..0.001).contains(&value))
+    {
+        if actual.as_str() != Some("0.001") {
+            return Err(mismatch(format!(
+                "{key}: subthreshold input must export 0.001, effective {actual}"
+            )));
+        }
+        return Ok(serde_json::json!({
+            "key": key, "requested": requested, "effective": actual,
+            "normalization": {
+                "kind": "resolution_floor",
+                "expected_effective": "0.001",
+                "source": "PrintConfig.cpp::DynamicPrintConfig::normalize_fdm_1"
             }
         }));
     }

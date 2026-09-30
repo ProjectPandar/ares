@@ -71,6 +71,10 @@ mod scalar_points;
 #[path = "option_coverage/obsolete_silent_mode.rs"]
 mod obsolete_silent_mode;
 
+#[cfg(test)]
+#[path = "option_coverage/resolution_floor.rs"]
+mod resolution_floor;
+
 use crate::{
     self as parity,
     presets::VendorProfiles,

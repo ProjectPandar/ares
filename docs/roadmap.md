@@ -7,6 +7,17 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Resolution floor evidence (ARD-0053) validates `DynamicPrintConfig::normalize_fdm_1`
+through the existing typed project normalization boundary and CLI evidence shell.
+The zero minimum must retain its requested value while proving effective 0.001;
+below/at/above-floor complete output cases and negative proofs are required.
+The implicit `ConfigOptionDef` FLT_MAX ceiling remains unverified, so the domain
+stays INCOMPLETE even when the two existing generated cases strictly compare.
+Do not equate this boundary slice with full resolution/simplification coverage.
+Six direct full-output comparisons and both generated comparisons pass;
+workspace 7415 PASS / 9 skipped, fmt/Clippy, Tier-1 compiler checks and
+independent six-axis review pass. The range-completion gate remains open.
+
 Obsolete silent-mode evidence (ARD-0052) validates the unconditional
 `PrintConfigDef::handle_legacy` consumption and false default through the
 existing typed_legacy rewrite. Exit: both Boolean requests, explicit
