@@ -7,6 +7,22 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Floating-bound literal repair (ARD-0061) follows the cited `PrintConfig`
+definitions and `ConfigOptionDef::is_value_valid` into the native domain
+adapter. Complete floating literals with f/F suffixes must produce declared
+min/max/seeded samples, while unsupported expressions remain incomplete.
+Exit requires failing regression, five-domain strict original-binary sweep,
+full checks and independent review; no comparator or production relaxation.
+Focused exit evidence: 8 regression tests PASS and 15/15 strict comparisons
+across the five repaired domains. Four adjacent domains generate 12 samples:
+fuzzy point distance compares 3/3; scale/persistence and tree tip remain
+incomplete. Workspace 7436 PASS / 9 skipped, fmt/Clippy and platform compiler
+checks pass; independent six-axis review approves this finite parser repair.
+The immutable d2949771 full scan ended with 369 PASS / 279 INCOMPLETE / 2 FAIL,
+1638 generated, 1475 strictly compared and 9 rejected. Unlike the older scan,
+its domain completion applies the corrected implicit-endpoint gate. It predates
+ARD-0060 and this repair; do not splice focused counts into its aggregate.
+
 Filament-printable integer-domain parity (ARD-0060) follows `PrintConfig`,
 `ConfigOptionInts` and `Print::get_physical_unprintable_filaments` into the
 existing project wire boundary and native coverage adapter. Exit requires

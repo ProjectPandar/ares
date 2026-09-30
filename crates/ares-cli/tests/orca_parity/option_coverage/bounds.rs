@@ -187,6 +187,9 @@ fn numeric_bound(block: &str, name: &str) -> Option<Result<f64, ()>> {
         "max_temp" => Ok(1500.0),
         "-max_temp" => Ok(-1500.0),
         _ => token
+            .strip_suffix(['f', 'F'])
+            .filter(|literal| literal.contains(['.', 'e', 'E']))
+            .unwrap_or(token)
             .parse::<f64>()
             .ok()
             .filter(|value| value.is_finite())

@@ -2,7 +2,15 @@ use super::*;
 
 #[test]
 fn numeric_bounds_do_not_accept_prefixes_of_unsupported_expressions() {
-    for expression in ["1 / 2", "10 * scale", "max_temp / 2"] {
+    for expression in [
+        "1 / 2",
+        "10 * scale",
+        "max_temp / 2",
+        "0.3f * scale",
+        "1f",
+        "0.3ff",
+        "1e999f",
+    ] {
         let block = format!("def->min = 0; def->max = {expression};");
         assert_eq!(numeric_bounds(&block), None, "{expression}");
         assert_eq!(raw_numeric_bounds(&block), None, "{expression}");
@@ -36,4 +44,17 @@ fn numeric_bounds_ignore_comments_and_parse_whole_literals() {
         numeric_bounds("def->min = -max_temp; def->max = max_temp;"),
         Some((-1500.0, 1500.0))
     );
+}
+
+#[test]
+fn numeric_bounds_accept_complete_suffixed_floating_literals() {
+    for (minimum, maximum, expected) in [
+        ("0.f", "0.3f", (0.0, 0.3)),
+        ("-.005F", "+.5f", (-0.005, 0.5)),
+        ("-2e-3f", "1.E2F", (-0.002, 100.0)),
+    ] {
+        let block = format!("def->min = {minimum}; def->max = {maximum};");
+        assert_eq!(numeric_bounds(&block), Some(expected));
+        assert_eq!(raw_numeric_bounds(&block), Some(expected));
+    }
 }
