@@ -246,7 +246,9 @@ fn finalize_string(layers: &mut [LayerPlan], seam_string: &[(usize, usize)]) {
             let current = candidate_position(layers, point);
             let fitted = curve.value(current.z);
             let angle_ratio = candidate_angle(layers, point).abs() / SHARP_ANGLE_THRESHOLD;
-            let blend = angle_ratio.powf(3.0).min(1.0);
+            // SeamPlacer.cpp:1377-1378: round the cube to float once;
+            // target-specific powf otherwise changes the blended seam.
+            let blend = (f64::from(angle_ratio).powi(3) as f32).min(1.0);
             Vec3::new(
                 blend * current.x + (1.0 - blend) * fitted.0,
                 blend * current.y + (1.0 - blend) * fitted.1,

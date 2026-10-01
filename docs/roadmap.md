@@ -7,6 +7,26 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+WASM seam math (ARD-0082) traces the first wipe difference upstream to
+`SeamPlacer.cpp::compute_angle_penalty` and `SeamPlacer::align_seam_points`: target
+f32 exp/pow results change spline weights and blended seams. Captured inputs
+eliminate formatter, wipe clip, retained arc projection and spline/QR as the
+first difference's source. Evaluate dynamic exp/cube in f64, cast once to the
+upstream float and keep surrounding arithmetic unchanged. Native full KSR and
+two actual Chromium runs now pass complete strict comparisons, with identical
+non-generator browser replay. Workspace7459PASS/9skip, Clippy/fmt and true
+Tier-1 core builds and10 live initialized consumer regressions pass. Both fresh
+native KSR references also match actual Chromium output. Final immutable
+review remains pending. This verifies the identified native math contract,
+not arbitrary libm/all-input equivalence. No comparator/reference changes.
+Immutable009d modified-classic printer scan finishes978/1001PASS,13 upstream
+errors and10 missing compatible presets. Untouched defaults/all printers and
+all option domains remain open. Immutable009d option scan completes386/650
+bounded domains (1661 generated,1519 strictly compared,1 rejected);264
+domains remain incomplete or failed. These scans predate the seam repair.
+See the [spec](superpowers/specs/2026-10-01-wasm-wipe-parity.md) and
+[plan](superpowers/plans/2026-10-01-wasm-wipe-parity.md).
+
 KSR ordered acceptance (ARD-0081) promotes the existing CLI/browser output
 checks of `Print::export_gcode` / `GCode::do_export` from tolerant semantic
 scaffolding to the shared full ordered comparator. Preserve both committed

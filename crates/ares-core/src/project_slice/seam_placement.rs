@@ -226,8 +226,12 @@ fn candidate_penalty(candidate: &SeamCandidate, visibility: &visibility::GlobalV
 
 fn angle_penalty(angle: f32) -> f32 {
     let denominator = 3.0 * angle * angle + 1.0;
-    let gaussian = ((1.0 / denominator).exp() - 1.0) / (1.0_f32.exp() - 1.0);
-    gaussian + 1.0 / (2.0 + (-angle).exp())
+    // Round exp once to the upstream float: native expf and WASM expf
+    // differ by an ulp for real seam weights (SeamPlacer.cpp:42-59).
+    let exponent = f64::from(1.0 / denominator).exp() as f32;
+    let sigmoid_exponent = f64::from(-angle).exp() as f32;
+    let gaussian = (exponent - 1.0) / (1.0_f32.exp() - 1.0);
+    gaussian + 1.0 / (2.0 + sigmoid_exponent)
 }
 
 #[cfg(test)]
