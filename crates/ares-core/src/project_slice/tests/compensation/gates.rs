@@ -1,3 +1,6 @@
+mod multi_region;
+mod public;
+
 use crate::{
     FloatOrPercent, ObjectOptions, OrcaFloat, OrcaFloats, OrcaInt, Percent, ProjectSettings,
     RegionOptions, SliceError,
@@ -11,10 +14,9 @@ use crate::{
         layers::{PlannedLayer, PlannedPrintObject},
         region_slices::{PostRegion, PostRegionPrintObject, RegionLayer, RegionSurface},
     },
-    slice_project,
 };
 
-use super::super::support::{KsrArchive, identity_resolved, metadata, region};
+use super::super::support::{identity_resolved, region};
 
 const GEOMETRY_ERROR: &str = "project elephant-foot compensation geometry is nonfinite or outside the supported Clipper range";
 
@@ -35,6 +37,7 @@ fn task22m_flow_validates_raw_config_before_unsigned_conversion() {
             compensation_layers: 3,
             raft_layers: -1,
             object_line_width: FloatOrPercent::Percent(Percent(110.0)),
+            closing_radius_mm: 0.049,
         }]
     );
 
@@ -121,6 +124,7 @@ fn task22m_flow_preflight_is_all_or_error() {
                 compensation_layers: 1,
                 raft_layers: 1,
                 object_line_width: FloatOrPercent::Float(0.4),
+                closing_radius_mm: 0.049,
             },
             ValidatedTask22mConfig {
                 compensation_mm: 0.2,
@@ -129,27 +133,10 @@ fn task22m_flow_preflight_is_all_or_error() {
                 compensation_layers: 2,
                 raft_layers: -1,
                 object_line_width: FloatOrPercent::Percent(Percent(105.0)),
+                closing_radius_mm: 0.049,
             },
         ]
     );
-}
-
-#[tokio::test]
-async fn task22m_flow_public_raft_slices_instead_of_gating() {
-    for raft_layers in ["1", "2"] {
-        let mut archive = KsrArchive::new();
-        archive.replace(
-            "Metadata/project_settings.config",
-            "\t\"raft_layers\": \"0\",",
-            &format!("\t\"raft_layers\": \"{raft_layers}\","),
-        );
-
-        // The raft_layers gate is removed (raft milestone): raft projects
-        // now slice through the raft pipeline — a full success, not an
-        // UnsupportedProjectFeature.
-        let result = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0)).await;
-        assert!(result.is_ok());
-    }
 }
 
 #[test]
@@ -179,7 +166,7 @@ fn task22m_transaction_preflight_phase_order_is_global() {
             ],
             &[0.4],
         ),
-        SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned()),
+        SliceError::InvalidInput("invalid external perimeter flow spacing".to_owned()),
     );
     let mut invalid_flow_options = task22m_options(0.15, 1, 0);
     invalid_flow_options.line_width = FloatOrPercent::Float(0.01);

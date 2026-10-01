@@ -15,6 +15,7 @@ pub(super) struct PreparedObjectCompensation {
     pub(super) backup_len: usize,
     pub(super) xy_contour: f32,
     pub(super) xy_hole: f32,
+    pub(super) closing_radius_mm: f64,
     pub(super) layers: Vec<Option<PreparedLayerCompensation>>,
 }
 
@@ -45,12 +46,13 @@ pub(super) fn prepare_object_compensation(
         0
     };
     let mut layers = vec![None; object.plan.layers.len()];
-    let [region] = object.regions.as_slice() else {
+    let Some(region) = object.regions.first() else {
         return Ok(PreparedObjectCompensation {
             backup_len,
             xy_contour,
             xy_hole,
             layers,
+            closing_radius_mm: config.closing_radius_mm,
         });
     };
 
@@ -83,5 +85,6 @@ pub(super) fn prepare_object_compensation(
         xy_contour,
         xy_hole,
         layers,
+        closing_radius_mm: config.closing_radius_mm,
     })
 }

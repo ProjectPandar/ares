@@ -10,10 +10,11 @@ use super::{
     PreparedPostRegions, ProjectBytes,
     elephant_foot::compensate_expolygons,
     prepare_post_conical_overhang,
-    region_slices::{PostRegionPrintObject, RegionSurface},
+    region_slices::{PostRegion, PostRegionPrintObject, RegionSurface},
     slice_ordering::{make_slices, order_expolygons},
 };
 
+mod multi_region;
 mod preflight;
 mod xy;
 
@@ -29,6 +30,7 @@ pub(in crate::project_slice) struct ValidatedTask22mConfig {
     pub(in crate::project_slice) compensation_layers: usize,
     pub(in crate::project_slice) raft_layers: i32,
     pub(in crate::project_slice) object_line_width: FloatOrPercent,
+    pub(in crate::project_slice) closing_radius_mm: f64,
 }
 
 pub(in crate::project_slice) fn validate_task22m_configs(
@@ -67,6 +69,7 @@ pub(in crate::project_slice) fn validate_task22m_configs(
                 compensation_layers,
                 raft_layers: options.raft_layers.0,
                 object_line_width: options.line_width,
+                closing_radius_mm: options.slice_closing_radius.0,
             })
         })
         .collect()
@@ -74,10 +77,6 @@ pub(in crate::project_slice) fn validate_task22m_configs(
 
 fn invalid(message: &str) -> SliceError {
     SliceError::InvalidInput(message.to_owned())
-}
-
-fn unsupported(key: &str) -> SliceError {
-    SliceError::UnsupportedProjectFeature(key.to_owned())
 }
 
 type ValidateTask22mConfigs =
@@ -177,7 +176,7 @@ pub(in crate::project_slice) fn apply_project_compensation(
         .map(|(resolved, _)| &resolved.object)
         .collect::<Vec<_>>();
     let configs = validate_task22m_configs(&options)?;
-    validate_structures(&objects)?;
+    validate_structures(&objects);
     let prepared = objects
         .iter()
         .zip(&configs)
@@ -192,14 +191,17 @@ pub(in crate::project_slice) fn apply_project_compensation(
         })
         .collect::<Result<Vec<_>, _>>()?;
 
+    let mut closing_epsilon = None;
     objects
         .into_iter()
         .zip(prepared)
-        .map(|(object, prepared)| apply_object_compensation(object, prepared, scale))
+        .map(|(object, prepared)| {
+            apply_object_compensation(object, prepared, scale, &mut closing_epsilon)
+        })
         .collect()
 }
 
-fn validate_structures(objects: &[PostRegionPrintObject]) -> Result<(), SliceError> {
+fn validate_structures(objects: &[PostRegionPrintObject]) {
     for object in objects {
         let layer_count = object.plan.layers.len();
         for region in &object.regions {
@@ -209,50 +211,20 @@ fn validate_structures(objects: &[PostRegionPrintObject]) -> Result<(), SliceErr
                 "Task 22M region layers must match the retained plan"
             );
         }
-        if layer_count != 0 && object.regions.len() > 1 {
-            return Err(unsupported("multi_region_layer_slices"));
-        }
     }
-    Ok(())
 }
 
 fn apply_object_compensation(
     mut object: PostRegionPrintObject,
     prepared: PreparedObjectCompensation,
     scale: CoordinateScale,
+    closing_epsilon: &mut Option<f32>,
 ) -> Result<PostCompensationPrintObject, SliceError> {
-    let PreparedObjectCompensation {
-        backup_len,
-        xy_contour,
-        xy_hole,
-        layers,
-    } = prepared;
-    let mut backups = (0..backup_len)
-        .map(|_| Vec::new())
-        .collect::<Vec<Vec<ExPolygon>>>();
-    if let [region] = object.regions.as_mut_slice() {
-        for (layer_index, prepared_layer) in layers.into_iter().enumerate() {
-            if xy_contour == 0.0 && xy_hole == 0.0 && prepared_layer.is_none() {
-                continue;
-            }
-            let surfaces = mem::take(&mut region.layers[layer_index].surfaces);
-            let raw = surfaces
-                .into_iter()
-                .map(|surface| surface.into_parts().1)
-                .collect::<Vec<_>>();
-            let adjusted = xy::apply(&raw, xy_contour, xy_hole).map_err(|_| geometry_error())?;
-            let compensated = if let Some(prepared_layer) = prepared_layer {
-                backups[layer_index] = adjusted.clone();
-                apply_elephant_foot(&adjusted, prepared_layer, scale)?
-            } else {
-                adjusted
-            };
-            region.layers[layer_index].surfaces = compensated
-                .into_iter()
-                .map(RegionSurface::internal)
-                .collect();
-        }
-    }
+    let backups = if object.regions.len() > 1 {
+        multi_region::apply(&mut object.regions, &prepared, scale, closing_epsilon)?
+    } else {
+        apply_single_region_compensation(&mut object.regions, prepared, scale)?
+    };
 
     let mut lslices = if object.plan.layers.is_empty() {
         Vec::new()
@@ -266,6 +238,46 @@ fn apply_object_compensation(
         post_regions: object,
         lslices,
     })
+}
+
+fn apply_single_region_compensation(
+    regions: &mut [PostRegion],
+    prepared: PreparedObjectCompensation,
+    scale: CoordinateScale,
+) -> Result<Vec<Vec<ExPolygon>>, SliceError> {
+    let PreparedObjectCompensation {
+        backup_len,
+        xy_contour,
+        xy_hole,
+        layers,
+        closing_radius_mm: _,
+    } = prepared;
+    let mut backups = vec![Vec::new(); backup_len];
+    let [region] = regions else {
+        return Ok(backups);
+    };
+    for (layer_index, prepared_layer) in layers.into_iter().enumerate() {
+        if xy_contour == 0.0 && xy_hole == 0.0 && prepared_layer.is_none() {
+            continue;
+        }
+        let surfaces = mem::take(&mut region.layers[layer_index].surfaces);
+        let raw = surfaces
+            .into_iter()
+            .map(|surface| surface.into_parts().1)
+            .collect::<Vec<_>>();
+        let adjusted = xy::apply(&raw, xy_contour, xy_hole).map_err(|_| geometry_error())?;
+        let compensated = if let Some(prepared_layer) = prepared_layer {
+            backups[layer_index] = adjusted.clone();
+            apply_elephant_foot(&adjusted, prepared_layer, scale)?
+        } else {
+            adjusted
+        };
+        region.layers[layer_index].surfaces = compensated
+            .into_iter()
+            .map(RegionSurface::internal)
+            .collect();
+    }
+    Ok(backups)
 }
 
 fn apply_elephant_foot(

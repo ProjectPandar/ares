@@ -8632,3 +8632,14 @@ multi-region compensation, Layer.cpp compatible-region perimeters,
 Fill.cpp region-owned fills and SupportMaterial.cpp all-region traversal,
 then the TreeSupport/TreeSupport3D/TreeModelVolumes output gates. All-printer
 and all-option completion remains required beyond these slices.
+
+The next independent prerequisite ports
+`PrintObjectSlice.cpp:1314-1365`/`Layer.cpp:119-138` multi-region compensation
+into `project_slice/compensation/multi_region.rs`
+([ARD0088](architecture/ard-0088-multi-region-compensation.md)). Its exit
+requires source-owned merged-outline/region-priority geometry and clean-HEAD
+preservation of existing complete public output, immutable six-axis review,
+lint, Tier1 compilation and real browser evidence. Native process-static and
+parallel first-arrival semantics remain explicitly unresolved. This slice
+does not close modifier perimeter/fill/support ownership or relax the Tree
+merge gate, original KSR test, or global printer/option acceptance.
