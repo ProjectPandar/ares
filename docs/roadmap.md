@@ -7,6 +7,31 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Stable KSR loop ordering (ARD-0080) identifies the actual owner as
+`PerimeterGenerator.cpp:238-270` / `ShortestPath.cpp:1026-1042` entity chaining.
+Rust `perimeters::classic::shortest_path::chain::chain_extrusion_loops`
+incorrectly canonicalized incoming loops by coordinates. Delete only that
+pre-sort, preserving the existing chaining algorithm. A closed base plate
+with raised posts gives a stable CPU0 public complete-output RED/GREEN;
+both fresh initialized native references match Ares after repair. Remove the
+obsolete private symmetric index pin instead of changing its expected order.
+Five seeded CPU0 full KSR outputs self-replay identically, while unrestricted
+runs vary. Original unchanged KSR now matches the retained reference, the
+stable CPU0 reference, and both newly generated native outputs in complete
+ordered comparisons, including M73/movements (6,321,724 raw Ares bytes).
+Nine live initialized full-output consumers, native KSR self-replay and24
+cached stepped fixtures pass. Initial workspace7460/7460 with9 skips and
+all-target Clippy pass. Final exact-code workspace7460/7460 with9 skips,
+fmt/diff checks and five real cargo builds pass (Windows requires the pinned
+cross-binutils tool). Immutable final six-axis review approves this slice with
+no required fixes; the review-status-only addition is re-confirmed before
+submission. All-printer/default/all-option completion remains open.
+Independent preliminary six-axis review finds no required production fix;
+explicit classic activation and placement checks are added before final review.
+This investigation does not close global printer/default/option coverage.
+See the [spec](superpowers/specs/2026-10-01-ksr-island-order.md) and
+[plan](superpowers/plans/2026-10-01-ksr-island-order.md).
+
 Floating overhang intersections (ARD-0079) ports the unscaled
 `ExtrusionProcessor.hpp`, `AABBTreeLines.hpp` and `Line.hpp` boundary into
 `motion/overhang/sections.rs` and `geometry/line_distance_tree/intersections_mm.rs`.

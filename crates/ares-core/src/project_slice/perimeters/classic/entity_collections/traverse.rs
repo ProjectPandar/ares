@@ -105,8 +105,7 @@ impl<'a> GroupFrame<'a> {
             .collect();
         let loop_count = loops.len();
         let chain = if thin_entities.is_empty() {
-            // Pure-loop frame keeps the upstream loop-only chaining
-            // (`chain_extrusion_loops`'s canonicalization).
+            // Pure-loop specialization preserves the collection's enumeration.
             chain_extrusion_loops(&loops)
         } else {
             // Mixed loop+thin-wall frame: `chain_extrusion_entities` over the

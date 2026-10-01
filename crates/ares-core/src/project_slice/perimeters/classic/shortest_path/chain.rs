@@ -103,26 +103,17 @@ pub(in crate::project_slice) fn chain_extrusion_loops(
         1 => return vec![(0, false)],
         _ => {}
     }
-    let mut ordered = loops
+    let positions = loops
         .iter()
-        .enumerate()
-        .map(|(index, loop_)| {
+        .flat_map(|loop_| {
             let first = &loop_.paths[0].polyline.points[0];
-            (index, [first.x, first.y])
-        })
-        .collect::<Vec<_>>();
-    // Canonicalize equivalent source orders before its index-sensitive KD-tree and heap ties.
-    ordered.sort_unstable_by_key(|&(index, [x, y])| (y, x, index));
-    let positions = ordered
-        .iter()
-        .flat_map(|&(_, [x, y])| {
-            let point = [x as f64, y as f64];
+            let point = [first.x as f64, first.y as f64];
             [point, point]
         })
         .collect::<Vec<_>>();
     chain_multiple(&positions, Some([0.0, 0.0]))
         .into_iter()
-        .map(|(index, _)| (ordered[index].0, false))
+        .map(|(index, _)| (index, false))
         .collect()
 }
 pub(super) fn chain_points(points: &[crate::geometry::Point]) -> Vec<usize> {
