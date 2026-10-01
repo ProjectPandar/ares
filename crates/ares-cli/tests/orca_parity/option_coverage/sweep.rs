@@ -115,8 +115,7 @@ pub(super) fn oracle_nondeterministic(key: &str, label: &str) -> bool {
     // the domains that force `noise_type = perlin` are excused.
     matches!(
         (key, label),
-        ("sparse_infill_pattern", "lightning")
-            | ("fuzzy_skin_noise_type", "billow")
+        ("fuzzy_skin_noise_type", "billow")
             | ("fuzzy_skin_noise_type", "classic")
             | ("fuzzy_skin_noise_type", "perlin")
             | ("fuzzy_skin_noise_type", "voronoi")

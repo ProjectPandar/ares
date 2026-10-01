@@ -114,6 +114,9 @@ mod fill_grid;
 #[path = "option_coverage/monotonic_chain.rs"]
 mod monotonic_chain;
 
+#[path = "option_coverage/lightning_output.rs"]
+mod lightning_output;
+
 #[cfg(test)]
 #[path = "option_coverage/locked_widths.rs"]
 mod locked_widths;

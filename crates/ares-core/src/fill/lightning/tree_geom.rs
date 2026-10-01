@@ -108,11 +108,12 @@ pub(super) fn line_segment_polygons_intersection(
     let _ = outline_locator.visit_cells_intersecting_line(a, b, |_row, _col, edges| {
         for &edge in edges {
             let (s1, s2) = outline_locator.segment(edge);
+            // TreeNode.cpp passes the outline edge first, then the branch.
             if let Some(ip) = seg_seg_intersection(
-                (a.x() as f64, a.y() as f64),
-                (b.x() as f64 - a.x() as f64, b.y() as f64 - a.y() as f64),
                 (s1.x() as f64, s1.y() as f64),
                 (s2.x() as f64 - s1.x() as f64, s2.y() as f64 - s1.y() as f64),
+                (a.x() as f64, a.y() as f64),
+                (b.x() as f64 - a.x() as f64, b.y() as f64 - a.y() as f64),
             ) {
                 let d = (ip.0 - b.x() as f64).powi(2) + (ip.1 - b.y() as f64).powi(2);
                 if d < d2min {

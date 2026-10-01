@@ -8583,3 +8583,15 @@ plus reverse Boolean nil fallback) with actual template
 retractions/nil-fallback witnesses, selected sweep, full workspace/lint/
 platform checks and independent review. Other contexts remain deferred;
 the harness is a temporary upstream validation shell. See ARD-0047.
+
+### 2026-10-01 Lightning complete-output parity
+
+Diagnose and repair the existing `FillLightning`/`Fill/Lightning` and
+`PrintObject.cpp` lightning-anchoring rewrite at the public project-output
+seam. Fresh native replay is stable but Ares motion differs. Determine the
+owning function before a production change; preserve upstream random stream
+and geometry semantics. Exit: witnessed complete-output RED/GREEN, original
+option sweep, shared consumer/workspace/lint/Tier-1 evidence and independent
+six-axis approval before code/docs push. No nondeterminism exemption is
+acceptance. Other option domains/default profiles and support/SLA remain
+open. See ARD0083 and the matching source-cited spec/plan.
