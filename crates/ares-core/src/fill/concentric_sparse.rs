@@ -20,7 +20,7 @@ use crate::{
 /// `Point::nearest_point_index` (`Point.cpp:199-220`): returns the LAST index
 /// achieving the minimal squared distance, with an X-then-Y early-exit prune.
 /// Distances are computed in `double` (i64 squared would overflow).
-fn nearest_point_index(last_pos: Point, points: &[Point]) -> usize {
+pub(crate) fn nearest_point_index(last_pos: Point, points: &[Point]) -> usize {
     let mut idx = 0usize;
     let mut best = -1.0f64;
     for (i, p) in points.iter().enumerate() {

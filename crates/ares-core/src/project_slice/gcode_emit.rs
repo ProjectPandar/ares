@@ -41,6 +41,7 @@ use crate::{GenerationMetadata, SliceError};
 pub(super) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
     let traversal = &prepared
         .predecessor
@@ -51,7 +52,7 @@ pub(super) fn emit(
         .predecessor
         .predecessor;
     let brim = brim::BrimPlan::generate(traversal)?;
-    let skirt = skirt::SkirtPlan::generate(traversal, brim.as_ref())?;
+    let skirt = skirt::SkirtPlan::generate(traversal, brim.as_ref(), context)?;
     let first_layer_bounds =
         footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref());
     let mut output = Vec::new();
@@ -239,6 +240,7 @@ pub(super) fn emit(
             extruder_offset,
             brim: &brim,
             skirt: &skirt,
+            slicer: context,
         },
     )?;
     let traversal = &prepared

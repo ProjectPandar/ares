@@ -117,6 +117,9 @@ mod monotonic_chain;
 #[path = "option_coverage/lightning_output.rs"]
 mod lightning_output;
 
+#[path = "option_coverage/normal_support_output.rs"]
+mod normal_support_output;
+
 #[cfg(test)]
 #[path = "option_coverage/locked_widths.rs"]
 mod locked_widths;

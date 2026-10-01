@@ -42,6 +42,7 @@ impl SkirtPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
         brim: Option<&super::brim::BrimPlan>,
+        context: &mut crate::SlicerContext,
     ) -> Result<Option<Self>, SliceError> {
         let print = &traversal.resolved.views.full.process.print;
         let loops_count = usize::try_from(print.skirt_loops.0).unwrap_or(0);
@@ -127,6 +128,7 @@ impl SkirtPlan {
                         &plan.polygons,
                         plan.spec,
                         traversal.scale,
+                        context,
                     ) {
                         for polyline in entities
                             .iter()

@@ -17,7 +17,6 @@ pub(super) struct LinkPhases<'a> {
     paths: &'a mut [Option<Vec<Point>>],
     merged_with: &'a mut [usize],
     line_half_width: f64,
-    line_spacing: f64,
     min_arch_length: f64,
     trim_length: f64,
 }
@@ -34,7 +33,6 @@ impl<'a> LinkPhases<'a> {
         paths: &'a mut [Option<Vec<Point>>],
         merged_with: &'a mut [usize],
         line_half_width: f64,
-        line_spacing: f64,
         min_arch_length: f64,
         trim_length: f64,
     ) -> LinkPhases<'a> {
@@ -44,7 +42,6 @@ impl<'a> LinkPhases<'a> {
             paths,
             merged_with,
             line_half_width,
-            line_spacing,
             min_arch_length,
             trim_length,
         }
@@ -130,15 +127,18 @@ impl<'a> LinkPhases<'a> {
     /// `:2203-2243` + selection `:2463-2502`). Returns the arc costs
     /// for the later T-joint and very-long-arch phases (upstream
     /// reuses the same table without recomputation).
-    pub(super) fn select_support_arches(&mut self) -> Vec<SupportArcCost> {
+    pub(super) fn select_support_arches(
+        &mut self,
+        costs: crate::slicer_context::SupportConnectionCosts,
+    ) -> Vec<SupportArcCost> {
         let arches = evaluate_support_arches(
             self.boundary,
             self.intersections,
             self.paths,
             SCALED_EPSILON,
         );
-        let cost_low = self.line_spacing * 1.3;
-        let cost_high = self.line_spacing * 2.0;
+        let cost_low = costs.low;
+        let cost_high = costs.high;
         let mut selected = Vec::new();
         for index in 0..self.intersections.len() {
             if self.intersections[index].consumed {
@@ -248,8 +248,7 @@ impl<'a> LinkPhases<'a> {
 
     /// T-joints (`:2625-2645`): connect with long arches; loops are
     /// only allowed for a very long arc.
-    pub(super) fn connect_t_joints(&mut self, arches: &[SupportArcCost]) {
-        let cost_high = self.line_spacing * 2.0;
+    pub(super) fn connect_t_joints(&mut self, arches: &[SupportArcCost], cost_high: f64) {
         let mut candidates = Vec::with_capacity(self.intersections.len() * 2);
         for index in 0..self.intersections.len() {
             if self.could_take_prev(index) {

@@ -41,6 +41,7 @@ fn single_wall_loop_starts_with_an_anchor_from_the_inner_loop() {
         &[square(0, SIDE)],
         tree_spec(f64::MAX),
         CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
     )
     .unwrap();
     let [RaftEntity::Oriented(polyline)] = out.as_slice() else {
@@ -67,8 +68,13 @@ fn single_wall_loop_starts_with_an_anchor_from_the_inner_loop() {
 /// (`:593-609,699-702`).
 #[test]
 fn double_wall_prints_the_inner_anchored_loop_first() {
-    let out =
-        raft_layer_entities(&[square(0, SIDE)], tree_spec(0.1), CoordinateScale::Normal).unwrap();
+    let out = raft_layer_entities(
+        &[square(0, SIDE)],
+        tree_spec(0.1),
+        CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     let [RaftEntity::NoSort(polylines)] = out.as_slice() else {
         panic!("expected one no_sort collection, got {out:?}");
     };
@@ -91,6 +97,7 @@ fn hole_loop_anchors_on_the_grown_hole() {
         &[square(0, SIDE), hole],
         tree_spec(f64::MAX),
         CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
     )
     .unwrap();
     let [RaftEntity::Oriented(_), RaftEntity::Oriented(hole_loop)] = out.as_slice() else {

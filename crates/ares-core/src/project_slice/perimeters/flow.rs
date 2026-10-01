@@ -4,6 +4,8 @@ use super::super::layers::PlannedLayer;
 use super::types::{Flow, PerimeterFlows};
 
 mod fill;
+mod support;
+pub(in crate::project_slice) use support::resolve_support_flows;
 
 pub(in crate::project_slice) use fill::{
     FillFlowContext, FillFlowRole, resolve_configured_fill_flow, resolve_fill_bridge_flow,

@@ -21,8 +21,14 @@ fn support_fill_preserves_the_oracle_wipe_corner() {
     let mut fill = spec(RaftFillPattern::SupportBase, 0.627_615_75);
     fill.angle = f64::from(3.0 * std::f32::consts::FRAC_PI_4);
     fill.spacing = 0.337_079_644_203_186_04;
-    let paths =
-        raft_layer_fill(&[polygon], fill, Point::new(0, 0), CoordinateScale::Normal).unwrap();
+    let paths = raft_layer_fill(
+        &[polygon],
+        fill,
+        Point::new(0, 0),
+        CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     // Independently observed Orca endpoint Y102.712134 with origin (110,110).
     // Double trig instead moves this corner one lattice unit down; XY output
     // still rounds to the same 3 decimals, but wipe extrusion does not.
@@ -58,7 +64,14 @@ fn support_base_keeps_hatch_lines_next_to_the_edge() {
         pattern: RaftFillPattern::SupportBase,
         preprocess: RaftFillPreprocess::Closing,
     };
-    let out = raft_layer_fill(&[polygon], spec, Point::new(0, 0), CoordinateScale::Normal).unwrap();
+    let out = raft_layer_fill(
+        &[polygon],
+        spec,
+        Point::new(0, 0),
+        CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
+    )
+    .unwrap();
     // The fill boundary is the source inset by half a spacing; the
     // connector traces it, so only a hatch line strictly inside it counts.
     let (inset, margin) = (203_543, 407_086);
@@ -110,6 +123,7 @@ fn rectilinear_pattern_connects_the_hatch_into_one_zig_zag() {
         spec(RaftFillPattern::Rectilinear, 1.0),
         Point::new(0, 0),
         CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
     )
     .unwrap();
     assert_eq!(out.len(), 1);
@@ -125,6 +139,7 @@ fn honeycomb_pattern_draws_diagonal_hexagon_walls() {
         spec(RaftFillPattern::Honeycomb, 0.2),
         Point::new(0, 0),
         CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
     )
     .unwrap();
     let diagonal = out
@@ -221,11 +236,13 @@ fn sheath_polylines(
     spec: RaftFillSpec,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    Ok(raft_layer_entities(polygons, spec, scale)?
-        .iter()
-        .flat_map(RaftEntity::polylines)
-        .cloned()
-        .collect())
+    Ok(
+        raft_layer_entities(polygons, spec, scale, &mut crate::SlicerContext::new(0))?
+            .iter()
+            .flat_map(RaftEntity::polylines)
+            .cloned()
+            .collect(),
+    )
 }
 
 /// The flange passes `no_sort = true` (`SupportCommon.cpp:1517`): each
@@ -240,6 +257,7 @@ fn no_sort_sheath_keeps_one_collection_per_region() {
         &[square(0, 10 * MM), square(20 * MM, 30 * MM)],
         spec,
         CoordinateScale::Normal,
+        &mut crate::SlicerContext::new(0),
     )
     .unwrap();
     assert_eq!(out.len(), 2);

@@ -42,6 +42,7 @@ pub(super) fn append(
         extruder_offset,
         brim,
         skirt,
+        slicer,
     } = context;
     let traversal = &prepared
         .predecessor
@@ -101,7 +102,7 @@ pub(super) fn append(
     // object extrudes around its own build-item placement
     // (`bbs_3mf.cpp:3554-3560`, `GCode.cpp:5380/5403/5437`
     // `set_origin(unscale(instance.shift))`).
-    let schedule = schedule::build(traversal, objects);
+    let schedule = schedule::build(traversal, objects, slicer);
     let Schedule {
         per_object_z,
         merged,

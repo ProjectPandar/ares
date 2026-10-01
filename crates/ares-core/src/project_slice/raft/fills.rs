@@ -93,10 +93,11 @@ pub(crate) fn raft_layer_entities(
     layer_polygons: &[Polygon],
     spec: RaftFillSpec,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<RaftEntity>, ClipperError> {
     if !spec.sheath {
         return Ok(
-            raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale)?
+            raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale, context)?
                 .into_iter()
                 .map(RaftEntity::Path)
                 .collect(),
@@ -106,7 +107,7 @@ pub(crate) fn raft_layer_entities(
     if spec.density == 0.0 {
         return tree::tree_supports_generate_paths(layer_polygons, spec, scale);
     }
-    sheath::fill_with_sheath(layer_polygons, spec, scale)
+    sheath::fill_with_sheath(layer_polygons, spec, scale, context)
 }
 
 mod sheath;
@@ -140,6 +141,7 @@ pub(crate) fn raft_layer_fill(
     spec: RaftFillSpec,
     reference: Point,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let expolygons = match spec.preprocess {
         // `union_safety_offset_ex` = `offset_ex(polygons, 10.f)`
@@ -154,7 +156,7 @@ pub(crate) fn raft_layer_fill(
             closing_polygons(layer_polygons, epsilon, epsilon)?
         }
     };
-    fill_expolygons(expolygons, spec, reference, scale)
+    fill_expolygons(expolygons, spec, reference, scale, context)
 }
 
 /// `fill_expolygons_generate_paths` (`SupportCommon.cpp:432-443`); the
@@ -164,6 +166,7 @@ fn fill_expolygons(
     spec: RaftFillSpec,
     reference: Point,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let mut out = Vec::new();
     for expolygon in expolygons {
@@ -175,6 +178,14 @@ fn fill_expolygons(
             }
             RaftFillPattern::Honeycomb => {
                 out.extend(patterns::honeycomb(&expolygon, spec, scale)?);
+                continue;
+            }
+            RaftFillPattern::Concentric => {
+                out.extend(patterns::concentric(&expolygon, spec, scale)?);
+                continue;
+            }
+            RaftFillPattern::Grid => {
+                out.extend(patterns::grid(&expolygon, spec, reference, scale)?);
                 continue;
             }
         }
@@ -263,6 +274,7 @@ fn fill_expolygons(
             spec.spacing,
             spec.density,
             scale,
+            context,
         )?;
         out.extend(connected.into_iter().map(|polyline| {
             let rotated = polyline

@@ -12,4 +12,5 @@ pub(crate) struct Context<'a> {
     pub(crate) extruder_offset: (f64, f64),
     pub(crate) brim: &'a Option<brim::BrimPlan>,
     pub(crate) skirt: &'a Option<skirt::SkirtPlan>,
+    pub(crate) slicer: &'a mut crate::SlicerContext,
 }

@@ -20,9 +20,9 @@ pub(super) fn emit_very_long_arches(
     polylines_out: &mut Vec<Polyline>,
     line_half_width: f64,
     line_spacing: f64,
+    cost_veryhigh: f64,
 ) {
     let cap_cost = 0.5 * line_spacing;
-    let cost_veryhigh = line_spacing * 3.0;
     for index in 0..intersections.len() {
         let cost_prev = arches[index * 2].cost;
         let cost_next = arches[index * 2 + 1].cost;

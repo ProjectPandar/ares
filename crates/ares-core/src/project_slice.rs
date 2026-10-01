@@ -134,7 +134,7 @@ fn slice_project_sync(
     let mut ordered = island_print_order::prepare(islands, top_surfaces);
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
-    consume_post_island_print_order(ordered, metadata)
+    consume_post_island_print_order(ordered, metadata, &mut context)
 }
 
 fn extract_top_surfaces(
@@ -180,8 +180,9 @@ fn extract_top_surfaces(
 fn consume_post_island_print_order(
     mut prepared: island_print_order::PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
-    let output = gcode_emit::emit(&mut prepared, metadata)?;
+    let output = gcode_emit::emit(&mut prepared, metadata, context)?;
     island_print_order::dispose(prepared);
     Ok(output)
 }

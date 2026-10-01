@@ -2,7 +2,7 @@
 //! from `bridge.rs` for the <400 LOC rule.
 
 use super::super::emit::raft_layer_plans;
-use super::super::fill_params::{RaftFillInputs, flow_spacing};
+use super::super::fill_params::RaftFillInputs;
 use super::super::grid::raft_layer_grid;
 use super::super::polygons::{RaftPolygonParams, raft_polygons};
 use super::{RaftStream, raft_geometry_error};
@@ -10,11 +10,7 @@ use crate::SliceError;
 use crate::geometry::support_grid::SupportGridParams;
 use crate::geometry::{CoordinateScale, ExPolygon};
 
-/// Project-path variant: derives everything from the resolved
-/// `ProjectSettings` + `ObjectOptions` (the types the project
-/// pipeline carries), with the support-flow width following the
-/// header's derivation (`gcode_emit/header.rs:205-221`:
-/// `resolved_width(support_line_width, line_width, support_nozzle)`).
+/// Project-path raft construction using native support flow selection.
 pub(crate) fn build_project_raft(
     settings: &crate::ProjectSettings,
     object: &crate::ObjectOptions,
@@ -29,40 +25,19 @@ pub(crate) fn build_project_raft(
     let parameters =
         crate::project_slice::parameters::slicing_parameters(settings, object, object_height, &[])?;
 
-    let nozzles = &settings.project.print.nozzle_diameter.0;
-    let nozzle = nozzles.first().map_or(0.4, |value| value.0);
-    let support_nozzle = {
-        let index = object.support_filament.0.saturating_sub(1) as usize;
-        nozzles
-            .get(index)
-            .or_else(|| nozzles.first())
-            .map_or(nozzle, |value| value.0)
-    };
-    // `resolved_width(support_line_width, line_width, support_nozzle, 1.0)`
-    // (`header.rs:235-244`).
-    let resolve_width = |configured: crate::FloatOrPercent| -> f64 {
-        explicit_width(configured, support_nozzle)
-            .or_else(|| explicit_width(object.line_width, support_nozzle))
-            .unwrap_or(support_nozzle)
-    };
-    let support_width = resolve_width(object.support_line_width);
-    let interface_width = support_width; // interface width shares the support width field
-
-    let layer_height = parameters.layer_height;
     let first_height = parameters.first_print_layer_height;
-    let support_flow_spacing = flow_spacing(support_width, layer_height);
-    let interface_flow_spacing = flow_spacing(interface_width, layer_height);
-    // First-layer support flow follows the FIRST-LAYER width chain
-    // (`initial_layer_line_width` else `line_width`, header.rs:214),
-    // not `support_line_width` (oracle flange pitch 0.419 =
-    // spacing(0.42)/0.9).
-    let first_layer_width = explicit_width(
-        settings.process.print.initial_layer_line_width,
-        support_nozzle,
-    )
-    .or_else(|| explicit_width(object.line_width, support_nozzle))
-    .unwrap_or(support_width);
-    let first_layer_flow_spacing = flow_spacing(first_layer_width, first_height);
+    let flows = crate::project_slice::perimeters::flow::resolve_support_flows(
+        settings,
+        object,
+        first_height,
+        parameters.layer_height,
+    )?;
+    let support_width = f64::from(flows.base.width);
+    let interface_width = f64::from(flows.interface.width);
+    let first_layer_width = f64::from(flows.first_layer.width);
+    let support_flow_spacing = f64::from(flows.base.spacing);
+    let interface_flow_spacing = f64::from(flows.interface.spacing);
+    let first_layer_flow_spacing = f64::from(flows.first_layer.spacing);
 
     let fill_inputs = RaftFillInputs {
         support_flow_spacing,
@@ -103,7 +78,7 @@ pub(crate) fn build_project_raft(
         },
     )
     .map_err(raft_geometry_error)?;
-    let plans = raft_layer_plans(
+    let mut plans = raft_layer_plans(
         &raft_grid,
         &polygons,
         &fill_params,
@@ -115,6 +90,17 @@ pub(crate) fn build_project_raft(
         first_layer_width,
         first_height,
     );
+    let contact_pattern = super::super::fill_params::contact_fill_pattern(
+        object,
+        interface_flow_spacing,
+        fill_params.interface_fill_pattern,
+    );
+    for plan in &mut plans {
+        if plan.z.kind == super::super::grid::RaftLayerKind::Contact {
+            plan.spec.pattern = contact_pattern;
+            plan.spec.spacing = interface_flow_spacing;
+        }
+    }
 
     Ok(Some(RaftStream {
         plans,
@@ -122,15 +108,4 @@ pub(crate) fn build_project_raft(
         support_flow_spacing_mm: support_flow_spacing,
         first_layer_flow_spacing_mm: first_layer_flow_spacing,
     }))
-}
-
-/// `width()` (`header.rs:246-258`): explicit Float/Percent resolution.
-fn explicit_width(value: crate::FloatOrPercent, nozzle: f64) -> Option<f64> {
-    match value {
-        crate::FloatOrPercent::Float(value) if value > 0.0 => Some(value),
-        crate::FloatOrPercent::Percent(value) if value.0 > 0.0 => {
-            Some(value.0 * f64::from(nozzle as f32) / 100.0)
-        }
-        _ => None,
-    }
 }

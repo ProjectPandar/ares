@@ -27,6 +27,7 @@ pub(super) struct Schedule {
 pub(super) fn build(
     traversal: &PreparedPostClassicTraversal,
     objects: &[Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>],
+    context: &mut crate::SlicerContext,
 ) -> Schedule {
     let object_count = objects.len();
     let settings = &traversal.resolved.views.full;
@@ -57,6 +58,7 @@ pub(super) fn build(
         &first_layer_lslices,
         &object_heights,
         traversal.scale,
+        context,
     )
     .ok()
     .flatten();

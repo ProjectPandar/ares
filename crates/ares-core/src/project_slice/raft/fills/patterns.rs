@@ -16,6 +16,46 @@ use crate::geometry::{
 /// `FillParams::anchor_length{_max}` defaults (`FillBase.hpp:60-61`).
 const DEFAULT_ANCHOR_LENGTH: f32 = 1000.0;
 
+mod concentric;
+pub(super) use concentric::concentric;
+
+/// `FillGrid::fill_surface` (`FillRectilinear.cpp:3422-3446`), with
+/// the fresh support filler's `layer_id = size_t(-1)` (odd).
+pub(super) fn grid(
+    expolygon: &ExPolygon,
+    spec: RaftFillSpec,
+    reference: Point,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    use crate::fill::multiline::{MultilineFillParams, Sweep, fill_surface};
+    let params = MultilineFillParams {
+        spacing: spec.spacing,
+        overlap: 0.0,
+        angle: spec.angle as f32 + std::f32::consts::FRAC_PI_2,
+        reference,
+        density: spec.density,
+        multiline: 1,
+        anchor_length: DEFAULT_ANCHOR_LENGTH,
+        anchor_length_max: DEFAULT_ANCHOR_LENGTH,
+        dont_sort: false,
+    };
+    let sweeps = [
+        Sweep {
+            angle: 0.0,
+            shift: 0.0,
+        },
+        Sweep {
+            angle: std::f32::consts::FRAC_PI_2,
+            shift: 0.0,
+        },
+    ];
+    let mut paths = fill_surface(expolygon, params, &sweeps, scale)?;
+    for path in &mut paths {
+        path.reverse();
+    }
+    Ok(paths)
+}
+
 /// `FillRectilinear::fill_surface` with `multiline == 1` →
 /// `fill_surface_by_lines` (`FillRectilinear.cpp:3387-3399`).
 pub(super) fn rectilinear(

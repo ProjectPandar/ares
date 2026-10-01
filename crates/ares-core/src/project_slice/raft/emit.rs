@@ -154,11 +154,12 @@ pub(crate) fn apply_raft_to_stream(
     layer_height_mm: f64,
     reference: Point,
     scale: CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<LayerPrintPaths>, crate::geometry::ClipperError> {
     let raft_count = plans.len();
     let mut stream = Vec::with_capacity(raft_count + object_layers.len());
     for (index, plan) in plans.iter().enumerate() {
-        let polylines = raft_layer_fill(&plan.polygons, plan.spec, reference, scale)?;
+        let polylines = raft_layer_fill(&plan.polygons, plan.spec, reference, scale, context)?;
         let role = if plan.z.kind == RaftLayerKind::Base {
             PrintPathRole::SupportMaterial
         } else {

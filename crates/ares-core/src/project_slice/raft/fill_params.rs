@@ -49,6 +49,42 @@ pub(crate) enum RaftFillPattern {
     Rectilinear,
     SupportBase,
     Honeycomb,
+    Concentric,
+    Grid,
+}
+
+/// `SupportParameters::contact_fill_pattern` (`SupportParameters.hpp:134-144`).
+pub(crate) fn contact_fill_pattern(
+    object: &crate::ObjectOptions,
+    interface_spacing: f64,
+    raft_interface_pattern: RaftFillPattern,
+) -> RaftFillPattern {
+    use crate::ProcessSupportInterfacePattern;
+    // `filler_raft_contact_ptr` (`SupportCommon.cpp:1569-1572`).
+    if object.support_interface_top_layers.0 == 0 {
+        return raft_interface_pattern;
+    }
+    let top_spacing = if object.support_ironing.0 {
+        0.0
+    } else {
+        object.support_interface_spacing.0
+    };
+    let density = (interface_spacing / (top_spacing + interface_spacing)).min(1.0);
+    let zero_gap_top =
+        object.support_interface_top_layers.0 > 0 && object.support_top_z_distance.0 == 0.0;
+    match object.support_interface_pattern {
+        ProcessSupportInterfacePattern::Grid => RaftFillPattern::Grid,
+        ProcessSupportInterfacePattern::RectilinearInterlaced => RaftFillPattern::Rectilinear,
+        ProcessSupportInterfacePattern::Concentric => RaftFillPattern::Concentric,
+        ProcessSupportInterfacePattern::Auto if zero_gap_top => RaftFillPattern::Concentric,
+        ProcessSupportInterfacePattern::Auto | ProcessSupportInterfacePattern::Rectilinear => {
+            if density > 0.95 {
+                RaftFillPattern::Rectilinear
+            } else {
+                RaftFillPattern::SupportBase
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

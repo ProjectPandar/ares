@@ -2,6 +2,7 @@ use crate::{ObjectOptions, OrcaFloats, ProjectSettings, SliceError};
 
 const MIN_LAYER_HEIGHT: f64 = 0.01;
 const DEFAULT_MIN_LAYER_HEIGHT: f64 = 0.07;
+const EPSILON: f64 = 1e-4;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct SlicingParameters {
@@ -64,6 +65,10 @@ pub(super) fn slicing_parameters(
         min_layer_height = min_layer_height.max(nozzle_minimum);
         max_layer_height = max_layer_height.min(nozzle_maximum);
     };
+    if object.enable_support.0 || object.raft_layers.0 > 0 || object.enforce_support_layers.0 > 0 {
+        accumulate(object.support_filament.0.max(0) as usize);
+        accumulate(object.support_interface_filament.0.max(0) as usize);
+    }
     if object_extruders.is_empty() {
         accumulate(0);
     } else {
@@ -100,17 +105,32 @@ pub(super) fn slicing_parameters(
             (0.0, 0.0, 0.0)
         };
     let total_raft_layers = base_raft_layers + interface_raft_layers;
-    // `Slicing.cpp:153-160`: `gap_raft_object` is the raw
-    // `raft_contact_distance`, rounded to a `layer_height` multiple only
-    // when `independent_support_layer_height` is off. With independent
-    // heights the gap stays the raw distance.
+    // Asymmetric zero-gap detection and assignment (`Slicing.cpp:86-190`).
+    let zero_top_contact = object.support_top_z_distance.0 == 0.0;
+    let zero_gap_top = object.support_interface_top_layers.0 > 0 && zero_top_contact;
+    let bottom_interface_layers = if object.support_interface_bottom_layers.0 < 0 {
+        object.support_interface_top_layers.0
+    } else {
+        object.support_interface_bottom_layers.0
+    };
+    let zero_gap_bottom = bottom_interface_layers > 0
+        && (object.support_bottom_z_distance.0 == 0.0 || zero_top_contact);
+    let gap = |distance: f64, zero_gap: bool| {
+        if zero_gap {
+            0.0
+        } else if settings.process.print.independent_support_layer_height.0 {
+            distance
+        } else {
+            (distance / layer_height + EPSILON).round() * layer_height
+        }
+    };
     let gap_raft_object = if total_raft_layers == 0 {
         0.0
-    } else if settings.process.print.independent_support_layer_height.0 {
-        object.raft_contact_distance.0
     } else {
-        (object.raft_contact_distance.0 / layer_height + f64::EPSILON).round() * layer_height
+        gap(object.raft_contact_distance.0, zero_top_contact)
     };
+    let gap_object_support = gap(object.support_bottom_z_distance.0, zero_gap_bottom);
+    let gap_support_object = gap(object.support_top_z_distance.0, zero_gap_top);
     let (first_object_layer_height, first_object_layer_bridging) = if total_raft_layers > 0 {
         (layer_height, false)
     } else {
@@ -147,8 +167,8 @@ pub(super) fn slicing_parameters(
         first_object_layer_height,
         first_object_layer_bridging,
         gap_raft_object,
-        gap_object_support: 0.0,
-        gap_support_object: 0.0,
+        gap_object_support,
+        gap_support_object,
         raft_base_top_z,
         raft_interface_top_z,
         raft_contact_top_z,

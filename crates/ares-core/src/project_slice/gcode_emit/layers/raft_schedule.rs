@@ -30,12 +30,17 @@ pub(super) struct RaftSchedule {
     pub(super) counts: Vec<usize>,
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the raft inputs share one job-local support connection context"
+)]
 pub(super) fn build(
     settings: &crate::ProjectSettings,
     objects: &[crate::ObjectOptions],
     first_layer_lslices: &[Option<&[crate::geometry::ExPolygon]>],
     object_heights: &[f64],
     scale: crate::geometry::CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Result<Option<RaftSchedule>, crate::SliceError> {
     let object_count = objects.len();
     let mut entries = Vec::new();
@@ -79,7 +84,7 @@ pub(super) fn build(
         object_z_shift[object_index] = stream.object_print_z_min;
         layers[object_index] = plans[object_index]
             .iter()
-            .filter_map(|plan| materialize_layer(plan, scale))
+            .filter_map(|plan| materialize_layer(plan, scale, context))
             .collect();
     }
     if entries.is_empty() {
@@ -110,6 +115,7 @@ pub(super) fn classify(layer_index: usize) -> Result<Option<usize>, crate::Slice
 fn materialize_layer(
     plan: &RaftLayerPlan,
     scale: crate::geometry::CoordinateScale,
+    context: &mut crate::SlicerContext,
 ) -> Option<crate::project_slice::island_print_order::OrderedExtrusionLayer> {
     use crate::ExtrusionRole;
     use crate::project_slice::fill_entities::{
@@ -137,7 +143,7 @@ fn materialize_layer(
 
     // `support_fills.entities` (`SupportCommon.cpp:1476-1520`): the flange
     // regions are `no_sort` collections, tree loops are oriented paths.
-    let entities = raft_layer_entities(&plan.polygons, plan.spec, scale).ok()?;
+    let entities = raft_layer_entities(&plan.polygons, plan.spec, scale, context).ok()?;
     if entities.is_empty() {
         return None;
     }

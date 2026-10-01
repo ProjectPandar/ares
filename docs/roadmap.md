@@ -8595,3 +8595,25 @@ option sweep, shared consumer/workspace/lint/Tier-1 evidence and independent
 six-axis approval before code/docs push. No nondeterminism exemption is
 acceptance. Other option domains/default profiles and support/SLA remain
 open. See ARD0083 and the matching source-cited spec/plan.
+
+### 2026-10-01 Normal support complete-output parity
+
+Port the ordinary-support `PrintObjectSupportMaterial::generate` dependency
+slice (`SupportMaterial.cpp`, `SupportLayer.hpp`, `SupportCommon.cpp`) and
+`GCode::collect_layers_to_print` object/support merging into source-cited
+`project_slice/support_material/` and existing G-code layer modules. Start
+with both enable_support Boolean values on the actual overhang fixture;
+native101/Ares75 is missing real support output, not a header-only repair.
+Exit: active support-motion witnesses, strict complete-output RED/GREEN,
+full artifacts, workspace/lint/Tier-1 gates and independent six-axis approval
+before combined code/docs push. Tree/organic, additional styles/materials
+and global all-option/default/printer acceptance remain subsequent work.
+
+The native flow/gap/raft-contact/first-call-cost dependency checkpoint is
+separately packaged in ARD0085 and its matching spec/plan. Eleven native
+complete-output cases and six real browser cases pass; workspace/lint and
+four target builds pass. Its exit requires immutable six-axis patch
+approval before a combined code/docs commit. This does not satisfy the
+ordinary-support exit above: the enabled overhang case still lacks actual
+support generation/merging and diverges101/75. Continue that source-owned
+generator slice and the full original global acceptance scope.
