@@ -44,27 +44,27 @@ fn count_bytes(haystack: &[u8], needle: &[u8]) -> usize {
         .count()
 }
 
-fn compare_actual(actual: &[u8]) {
-    // Semantic comparison with bounded tolerances: motion positions match
-    // numerically (sub-µm Coord rounding is not a motion difference),
-    // timing within seconds, and per-run object ids normalized before
-    // parsing.
-    semantic::compare(
-        &normalize_object_ids(
-            &fs::read(fixture_path("ksr_fdmtest_v4.initialized-orca.gcode")).unwrap(),
-        ),
-        &normalize_object_ids(actual),
+fn compare_actual(actual: &[u8]) -> Result<(), String> {
+    let directory = tempfile::Builder::new()
+        .prefix("ares-ksr-ordered-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    for (source, destination) in [
+        ("ksr_fdmtest_v4.project.3mf", "input.3mf"),
+        ("ksr_fdmtest_v4.initialized-orca.gcode", "orca.gcode"),
+        ("initialized-reference.json", "reference.json"),
+    ] {
+        fs::copy(fixture_path(source), directory.join(destination)).unwrap();
+    }
+    fs::write(directory.join("ares.gcode"), actual).unwrap();
+    eprintln!("complete KSR artifacts: {directory:?}");
+    golden::compare_ordered_bytes_generator_only(
+        &fs::read(directory.join("orca.gcode")).unwrap(),
+        actual,
     )
-    .unwrap_or_else(|error| panic!("{error}"));
+    .map_err(|error| format!("{error}; complete artifacts {directory:?}"))
 }
-
-// `; (stop )?printing object <name> id:<N> copy <M>` — the id is
-// `PrintObject::get_id()` (an ObjectBase sequential counter seeded per
-// process). Two back-to-back OrcaSlicer CLI runs on the same fixture
-// produce different ids (verified 2026-09-15 on ksr_fdmtest_v4:
-// 4575657221408423936 vs the stored reference's 13965068898260364096),
-// so the semantic comparison normalizes the per-run id while the strict
-// comparator keeps comparing ids between mutations of one stream.
 
 fn local_now_to_second() -> DateTime {
     let now = jiff::Zoned::now().datetime();
@@ -88,24 +88,4 @@ fn generated_at(bytes: &[u8]) -> DateTime {
         .find_map(|line| line.strip_prefix(prefix))
         .unwrap();
     line.replace(" at ", " ").parse().unwrap()
-}
-/// Map each distinct `id:N` to its first-appearance ordinal rather than a
-/// single `<ID>` — preserves the name↔id identity relationship (a name that
-/// splits across two ids, or two names sharing an id, still fails the
-/// comparison) while tolerating the non-deterministic absolute seed.
-fn normalize_object_ids(bytes: &[u8]) -> Vec<u8> {
-    let text = String::from_utf8_lossy(bytes);
-    let object_id =
-        regex::Regex::new(r"(; (?:stop )?printing object .+ id:)(\d+)( copy )").unwrap();
-    let mut rank_of_id: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-    object_id
-        .replace_all(&text, |caps: &regex::Captures| {
-            let rank = {
-                let next = rank_of_id.len();
-                *rank_of_id.entry(caps[2].to_owned()).or_insert(next)
-            };
-            format!("{}<ID{rank}>{}", &caps[1], &caps[3])
-        })
-        .into_owned()
-        .into_bytes()
 }

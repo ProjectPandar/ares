@@ -15,5 +15,5 @@
   "capture": "/tmp/ares-ard73-ksr-oracle.mh78O9",
   "repeat_control": "/tmp/ares-single-volume-ksr-replay-input.PLE7AN/input/plate_1.gcode",
   "repeat_difference": "only generator timestamp; complete raw streams retained",
-  "scope": "semantic diagnostic and config-export oracle only; not complete Ares ordered-byte acceptance or untouched official semantics"
+  "scope": "complete ordered KSR output oracle for this initialized build and input; not untouched official semantics or global printer/default/option acceptance"
 }

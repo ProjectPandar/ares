@@ -9,6 +9,12 @@ fn fixture_contract_is_stable() {
 
     assert_eq!(sha256(&project), PROJECT_SHA256);
     assert_eq!(sha256(&reference), REFERENCE_SHA256);
+    let initialized = fs::read(fixture_path("ksr_fdmtest_v4.initialized-orca.gcode")).unwrap();
+    let identity: serde_json::Value =
+        serde_json::from_slice(&fs::read(fixture_path("initialized-reference.json")).unwrap())
+            .unwrap();
+    assert_eq!(sha256(&initialized), identity["output_sha256"]);
+    assert_eq!(PROJECT_SHA256, identity["input_sha256"]);
     assert_eq!(
         zip::ZipArchive::new(Cursor::new(project)).unwrap().len(),
         15
@@ -128,11 +134,8 @@ fn first_difference_truncates_long_context_lines() {
         3
     );
 }
-// Diagnostic only, not ordered-byte acceptance. The independent initialized
-// native fixture replaces the historical UB-dependent tiny-branch reference;
-// comparison rules are unchanged. Original official streams stay preserved.
 #[test]
-fn project_matches_initialized_orca_242_semantic_diagnostic() {
+fn project_matches_initialized_orca_242_ordered_bytes() {
     let temp = tempfile::tempdir().unwrap();
     let output = temp.path().join("actual.gcode");
     let before = local_now_to_second();
@@ -148,20 +151,25 @@ fn project_matches_initialized_orca_242_semantic_diagnostic() {
         .success();
     let after = local_now_to_second();
     let actual = std::fs::read(output).unwrap();
+    compare_actual(&actual).unwrap();
     let generated_at = generated_at(&actual);
     assert!(
         (before..=after).contains(&generated_at),
         "generator timestamp {generated_at} was outside {before}..={after}"
     );
-    compare_actual(&actual);
+    let changed_id = String::from_utf8(actual)
+        .unwrap()
+        .replace(" id:0 copy 0", " id:1 copy 0");
+    let error = compare_actual(changed_id.as_bytes()).unwrap_err();
+    assert!(error.contains("first difference at byte"), "{error}");
 }
 
 #[test]
 #[ignore = "invoked by the Playwright browser parity test"]
-fn browser_output_matches_orca_242_semantically() {
+fn browser_output_matches_initialized_orca_242_ordered_bytes() {
     let path = std::env::var_os("ARES_BROWSER_GCODE").unwrap();
     let actual = fs::read(path).unwrap();
-    compare_actual(&actual);
+    compare_actual(&actual).unwrap();
 }
 
 /// Diagnostic dump (env-gated): per-layer deposition lists for the Elegoo

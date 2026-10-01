@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,36 +8,33 @@ import { expect, test } from "@playwright/test";
 
 const repositoryRoot = fileURLToPath(new URL("../../../../", import.meta.url));
 
-async function expectSemanticParity(gcode) {
+async function expectOrderedParity(gcode) {
   const directory = await mkdtemp(join(tmpdir(), "ares-wasm-gcode-"));
   const output = join(directory, "browser.gcode");
-  try {
-    await writeFile(output, gcode, "utf8");
-    const comparison = spawnSync(
-      "cargo",
-      [
-        "nextest",
-        "run",
-        "-p",
-        "ares-cli",
-        "browser_output_matches_orca_242_semantically",
-        "--run-ignored",
-        "all",
-      ],
-      {
-        cwd: repositoryRoot,
-        encoding: "utf8",
-        env: { ...process.env, ARES_BROWSER_GCODE: output },
-        timeout: 300_000,
-      },
-    );
-    expect(
-      comparison.status,
-      `${comparison.stdout ?? ""}\n${comparison.stderr ?? ""}`,
-    ).toBe(0);
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
+  console.log(`complete browser output: ${output}`);
+  await writeFile(output, gcode, "utf8");
+  const comparison = spawnSync(
+    "cargo",
+    [
+      "nextest",
+      "run",
+      "-p",
+      "ares-cli",
+      "browser_output_matches_initialized_orca_242_ordered_bytes",
+      "--run-ignored",
+      "all",
+    ],
+    {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+      env: { ...process.env, ARES_BROWSER_GCODE: output },
+      timeout: 300_000,
+    },
+  );
+  expect(
+    comparison.status,
+    `${comparison.stdout ?? ""}\n${comparison.stderr ?? ""}`,
+  ).toBe(0);
 }
 
 async function openFixturePage(page) {
@@ -57,6 +54,7 @@ test("browser project route emits complete finite KSR G-code", async ({ page }) 
   await openFixturePage(page);
 
   const result = await page.evaluate(() => window.sliceFixtureProject());
+  await expectOrderedParity(result.gcode);
 
   expect(result.gcode).toContain("; HEADER_BLOCK_START\n");
   expect(result.byteLength).toBeGreaterThan(6_000_000);
@@ -67,7 +65,6 @@ test("browser project route emits complete finite KSR G-code", async ({ page }) 
   expect(result.hasHeader).toBe(true);
   expect(result.hasFooter).toBe(true);
   expect(result.hasNonFiniteMotion).toBe(false);
-  await expectSemanticParity(result.gcode);
 });
 
 test("browser bindings expose no internal checkpoint hooks", async ({ page }) => {

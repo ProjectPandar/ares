@@ -7,6 +7,24 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+KSR ordered acceptance (ARD-0081) promotes the existing CLI/browser output
+checks of `Print::export_gcode` / `GCode::do_export` from tolerant semantic
+scaffolding to the shared full ordered comparator. Preserve both committed
+native captures and reference identity; remove the obsolete90% XY golden and
+orphaned ID rewrite. Witness a sensitive object-ID RED/GREEN, retain all
+paired bytes and execute actual browser WASM. Any browser mismatch remains
+an open gate, not a reason to restore tolerances. Global coverage stays open.
+See the [spec](superpowers/specs/2026-10-01-ksr-ordered-acceptance.md) and
+[plan](superpowers/plans/2026-10-01-ksr-ordered-acceptance.md).
+Native strict acceptance and the object-ID sensitivity RED/GREEN pass;
+final workspace7459PASS/9skip and all-target Clippy pass. Actual Chromium
+replays identically twice apart from its generator line, but is still RED
+against initialized Orca at line8134 (`E-.02098` versus `E-.02097`). Full
+paired artifacts survive the failed gate. Browser numerical/path parity and
+full printer/option coverage remain open. Independent six-axis re-review
+approves the finite gate promotion without approving browser producer parity;
+final immutable patch confirmation is required before commit.
+
 Stable KSR loop ordering (ARD-0080) identifies the actual owner as
 `PerimeterGenerator.cpp:238-270` / `ShortestPath.cpp:1026-1042` entity chaining.
 Rust `perimeters::classic::shortest_path::chain::chain_extrusion_loops`
