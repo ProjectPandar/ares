@@ -1,4 +1,4 @@
-use crate::geometry::{ExPolygon, chain_points};
+use crate::geometry::{ClipperError, ExPolygon, chain_points, union_safety_offset_ex};
 
 use super::region_slices::PostRegionPrintObject;
 
@@ -25,17 +25,13 @@ pub(super) fn order_expolygons(expolygons: Vec<ExPolygon>) -> Vec<ExPolygon> {
         .collect()
 }
 
-/// `Layer::make_slices` (`Layer.cpp:40-67`): chain the region surfaces by
-/// their first contour points into lslices, and — critically — set the
-/// region's own slices to the SAME order (`Layer.cpp:93`
-/// `m_regions.front()->slices.set(this->lslices, stInternal)`). The
-/// perimeter generator's BBS surface reorder
-/// (`PerimeterGenerator.cpp:1214-1224` `chain_expolygons` over bbox
-/// centers) then chains from the lslices order, and its lowest-index tie
-/// breaks make the input order observable in the collection emission
-/// order.
-pub(super) fn make_single_region_slices(object: &mut PostRegionPrintObject) -> Vec<Vec<ExPolygon>> {
-    match object.regions.as_mut_slice() {
+/// `Layer.cpp:34-67::make_slices` merges all regions using the safety offset.
+/// The single-region adapter retains its existing surface ordering until
+/// region-owned perimeter inputs replace that compatibility shell.
+pub(super) fn make_slices(
+    object: &mut PostRegionPrintObject,
+) -> Result<Vec<Vec<ExPolygon>>, ClipperError> {
+    Ok(match object.regions.as_mut_slice() {
         [] => (0..object.plan.layers.len()).map(|_| Vec::new()).collect(),
         [region] => region
             .layers
@@ -72,9 +68,25 @@ pub(super) fn make_single_region_slices(object: &mut PostRegionPrintObject) -> V
                 lslices
             })
             .collect(),
-        _ => unreachable!("Task 22M make_slices accepts at most one region"),
-    }
+        regions => {
+            return (0..object.plan.layers.len())
+                .map(|layer_index| {
+                    let paths = regions
+                        .iter()
+                        .flat_map(|region| &region.layers[layer_index].surfaces)
+                        .flat_map(|surface| {
+                            let polygon = surface.as_parts().1;
+                            std::iter::once(polygon.contour()).chain(polygon.holes())
+                        })
+                        .cloned()
+                        .collect::<Vec<_>>();
+                    union_safety_offset_ex(&paths).map(order_expolygons)
+                })
+                .collect();
+        }
+    })
 }
 
 const _: fn(Vec<ExPolygon>) -> Vec<ExPolygon> = order_expolygons;
-const _: fn(&mut PostRegionPrintObject) -> Vec<Vec<ExPolygon>> = make_single_region_slices;
+type MakeSlices = fn(&mut PostRegionPrintObject) -> Result<Vec<Vec<ExPolygon>>, ClipperError>;
+const _: MakeSlices = make_slices;

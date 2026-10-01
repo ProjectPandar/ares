@@ -7,7 +7,7 @@ use crate::{
             PostRegion, PostRegionPrintObject, RegionLayer, RegionSurface, RegionSurfaceKind,
             VolumeSlices,
         },
-        slice_ordering::{make_single_region_slices, order_expolygons},
+        slice_ordering::{make_slices, order_expolygons},
     },
 };
 
@@ -17,6 +17,8 @@ use super::{
     region_slices::complex::synthetic_outputs,
     support::{region, resolved},
 };
+
+mod multi_region;
 
 #[test]
 fn task22m_slice_ordering_uses_contour_first_points_and_preserves_holes() {
@@ -38,7 +40,7 @@ fn task22m_slice_ordering_uses_contour_first_points_and_preserves_holes() {
 fn task22m_slice_ordering_keeps_exact_layer_count_for_empty_and_multiple_layers() {
     let input = markers(&[(10, 0), (0, 0), (20, 0), (0, 10), (10, 10)]);
     let mut object = object(vec![Vec::new(), input.clone()]);
-    let output = make_single_region_slices(&mut object);
+    let output = make_slices(&mut object).unwrap();
 
     assert_eq!(output.len(), 2);
     assert!(output[0].is_empty());
@@ -54,10 +56,7 @@ fn task22m_slice_ordering_keeps_exact_layer_count_for_empty_and_multiple_layers(
     );
 
     let mut empty = object_with_regions(2, Vec::new());
-    assert_eq!(
-        make_single_region_slices(&mut empty),
-        [Vec::new(), Vec::new()]
-    );
+    assert_eq!(make_slices(&mut empty).unwrap(), [Vec::new(), Vec::new()]);
 }
 
 #[test]
@@ -121,7 +120,7 @@ fn task22m_apply_signed_raft_and_disabled_objects_preserve_complete_current_stat
     let surfaces = objects.iter().map(surface_snapshot).collect::<Vec<_>>();
     let lslices = objects
         .iter_mut()
-        .map(make_single_region_slices)
+        .map(|object| make_slices(object).unwrap())
         .collect::<Vec<_>>();
     let resolved = [
         resolved(8, compensation_options(0.15, 1, -1), vec![region()]),

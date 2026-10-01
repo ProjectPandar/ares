@@ -11,7 +11,7 @@ use super::{
     elephant_foot::compensate_expolygons,
     prepare_post_conical_overhang,
     region_slices::{PostRegionPrintObject, RegionSurface},
-    slice_ordering::{make_single_region_slices, order_expolygons},
+    slice_ordering::{make_slices, order_expolygons},
 };
 
 mod preflight;
@@ -257,7 +257,7 @@ fn apply_object_compensation(
     let mut lslices = if object.plan.layers.is_empty() {
         Vec::new()
     } else {
-        make_single_region_slices(&mut object)
+        make_slices(&mut object).map_err(|_| geometry_error())?
     };
     for (layer_index, raw) in backups.into_iter().enumerate() {
         lslices[layer_index] = order_expolygons(raw);

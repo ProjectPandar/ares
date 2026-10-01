@@ -8617,3 +8617,18 @@ approval before a combined code/docs commit. This does not satisfy the
 ordinary-support exit above: the enabled overhang case still lacks actual
 support generation/merging and diverges101/75. Continue that source-owned
 generator slice and the full original global acceptance scope.
+
+### Layer-region prerequisite ordering (2026-10-02)
+
+The Normal support batch must wait for completed Tree auto/manual and style
+output parity. Do not commit rejection guards or silent support omission as
+acceptance. Independent behavior-preserving prerequisites may merge after
+clean-HEAD verification and six-axis review. First port
+`Layer.cpp:34-67::make_slices` into `project_slice/slice_ordering.rs`
+([ARD0087](architecture/ard-0087-layer-region-islands.md)); its exit is
+aggregate-region geometry plus unchanged complete single-region output,
+not enabled modifier support. Continue source-owned PrintObjectSlice.cpp
+multi-region compensation, Layer.cpp compatible-region perimeters,
+Fill.cpp region-owned fills and SupportMaterial.cpp all-region traversal,
+then the TreeSupport/TreeSupport3D/TreeModelVolumes output gates. All-printer
+and all-option completion remains required beyond these slices.
