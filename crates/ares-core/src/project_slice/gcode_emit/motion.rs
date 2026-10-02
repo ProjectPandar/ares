@@ -60,8 +60,8 @@ pub(super) fn prepare_traditional_timelapse(output: &mut Vec<u8>, state: &mut Em
 
 /// The wrapping-detection per-layer retract (`GCode.cpp:5282/5303`,
 /// `retract(false, false, auto_lift_type, true)`): retract + wipe + eager
-/// lift. Unlike the timelapse retract it has no already-retracted early
-/// out — upstream's `retract()` always re-applies the full retract length.
+/// lift. Like the timelapse retract, it still performs an allowed eager
+/// lift when the tracked retraction is already complete.
 pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) {
     travel::retract_for_wrapping(output, state);
 }
@@ -193,6 +193,13 @@ where
     let mut interlude_emitted = false;
     for island in &mut layer.islands {
         let mut entities = std::mem::take(&mut island.entities);
+        let has_infill = entities
+            .iter()
+            .any(|entity| !matches!(entity, IslandPrintEntity::Perimeter(_)));
+        // GCode.cpp:5453-5468 emits ironing after infill-first walls.
+        let mut ironing = entities
+            .extract_if(.., |entity| is_ironing_entity(entity))
+            .collect::<Vec<_>>();
         let infill_first = matches!(
             entities.first(),
             Some(
@@ -207,6 +214,9 @@ where
                 .position(|entity| matches!(entity, IslandPrintEntity::Perimeter(_)))
                 .unwrap_or(entities.len());
             let perimeters = entities.split_off(split);
+            if !interlude_emitted && has_infill {
+                interlude_emitted = before_first_infill(output, state)?;
+            }
             emit_infills(output, &mut entities, geometry, state);
             for perimeter in perimeters {
                 perimeter::emit_perimeter(output, perimeter, geometry, state);
@@ -219,11 +229,12 @@ where
             for perimeter in entities.drain(..split) {
                 perimeter::emit_perimeter(output, perimeter, geometry, state);
             }
-            if !interlude_emitted && !entities.is_empty() {
+            if !interlude_emitted && has_infill {
                 interlude_emitted = before_first_infill(output, state)?;
             }
             emit_infills(output, &mut entities, geometry, state);
         }
+        emit_infills(output, &mut ironing, geometry, state);
     }
     Ok(interlude_emitted)
 }
@@ -237,17 +248,7 @@ fn emit_infills(
     if entities.is_empty() {
         return;
     }
-    let mut ironing = Vec::new();
-    let mut index = 0;
-    while index < entities.len() {
-        if is_ironing_entity(&entities[index]) {
-            ironing.push(entities.remove(index));
-        } else {
-            index += 1;
-        }
-    }
     chain_and_reorder_entities(entities, local_cursor(state, geometry));
-    entities.append(&mut ironing);
     for entity in entities.drain(..) {
         match entity {
             IslandPrintEntity::Fill(entity) => {

@@ -17,6 +17,9 @@ pub(crate) mod filament_map;
 #[path = "runner/filament_map_tests.rs"]
 mod filament_map_tests;
 #[cfg(test)]
+#[path = "runner/infill_first_ironing.rs"]
+mod infill_first_ironing;
+#[cfg(test)]
 #[path = "runner/initialization_tests.rs"]
 mod initialization_tests;
 #[cfg(test)]

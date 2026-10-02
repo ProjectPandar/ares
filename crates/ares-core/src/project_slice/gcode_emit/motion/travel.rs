@@ -70,10 +70,14 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
     state.restart_extra = state.options.retract_restart_extra;
     if retract_sequence_due(state) {
         retract_and_wipe(output, state);
-        lift::append_eager(output, state);
         state.retracted = true;
     }
     reset_e(output, state);
+    // GCode.cpp:7674-7704 lifts even when retraction is already complete.
+    let needs_lift = state.options.retraction_length > 0.0 || state.options.use_firmware_retraction;
+    if needs_lift && lift::is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)) {
+        lift::append_eager(output, state);
+    }
 }
 
 /// `retract(false, false, auto_lift_type, true)` for the wrapping-detection
