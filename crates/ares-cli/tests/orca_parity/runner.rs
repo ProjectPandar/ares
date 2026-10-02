@@ -11,6 +11,9 @@ pub(crate) mod application;
 #[cfg(test)]
 #[path = "runner/application_tests.rs"]
 mod application_tests;
+#[cfg(test)]
+#[path = "runner/clipped_loop_motion.rs"]
+mod clipped_loop_motion;
 #[path = "runner/filament_map.rs"]
 pub(crate) mod filament_map;
 #[cfg(test)]

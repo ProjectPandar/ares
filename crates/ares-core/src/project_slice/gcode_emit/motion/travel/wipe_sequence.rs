@@ -62,6 +62,7 @@ pub(super) fn retract_and_wipe_impl(
     cooling_marker: bool,
     suppressed_tail: bool,
 ) {
+    let has_wipe = wipe_eligible(state);
     // `Extruder::retract` assigns `m_restart_extra` on every call
     // (`Extruder.cpp:66,77`): the before-wipe call assigns
     // `retract_before_wipe * extra`, the post-wipe `retract()` call
@@ -110,7 +111,7 @@ pub(super) fn retract_and_wipe_impl(
     // (`Extruder.cpp:75-84`), so a partially-retracted nozzle (e.g. a
     // template `e_retracted` assignment) tops up rather than restarting
     // the full length.
-    let before = if segments.is_empty() {
+    let before = if !has_wipe {
         (state.options.retraction_length - state.retracted_amount).max(0.0)
     } else if during <= 0.0 {
         // `(fL, 0)` — no leftover difference is folded into the
@@ -148,7 +149,7 @@ pub(super) fn retract_and_wipe_impl(
             state.current_feedrate = state.options.retraction_feedrate;
         }
     }
-    if !segments.is_empty() {
+    if has_wipe {
         let wipe_start = if state.tags.is_bbl() {
             "; WIPE_START\n"
         } else {

@@ -20,7 +20,6 @@ pub(super) fn emit(
     state: &mut EmitState,
     region_perimeters: &[Vec<(i64, i64)>],
 ) {
-    append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
     if !state.spiral_vase
         && let Some(scarf) = super::scarf::build(
             paths,
@@ -30,6 +29,7 @@ pub(super) fn emit(
             state.layer_index,
         )
     {
+        append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
         for path in &scarf.paths {
             super::materialized::emit(
                 output,
@@ -63,6 +63,11 @@ pub(super) fn emit(
         path_count -= 1;
         remaining_clip -= length;
     }
+    // GCode.cpp:5804-5805 retains the preceding wipe when clipping consumes the loop.
+    if path_count == 0 {
+        return;
+    }
+    append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
     let mut emitted_loop_path = Vec::new();
     for (index, path) in paths[..path_count].iter().enumerate() {
         let end_clip = if index + 1 == path_count {
