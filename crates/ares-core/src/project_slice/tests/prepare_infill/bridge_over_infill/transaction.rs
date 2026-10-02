@@ -10,6 +10,7 @@ use crate::{
     },
 };
 
+mod lightning;
 mod options;
 mod plane_path_preflight;
 

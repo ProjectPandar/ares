@@ -210,13 +210,15 @@ pub(super) fn build_lightning_generator(
     scale: CoordinateScale,
 ) -> Result<Option<std::rc::Rc<crate::fill::lightning::generator::Generator>>, SliceError> {
     use crate::project_slice::region_slices::RegionSurfaceKind;
-    let Some(lightning_region) = regions
-        .iter()
-        .find(|r| r.as_parts().1.sparse_infill_pattern == crate::ProcessInfillPattern::Lightning)
-    else {
+    if !regions.iter().any(|region| {
+        let options = region.as_parts().1;
+        options.sparse_infill_density.0 > 0.0
+            && options.sparse_infill_pattern == crate::ProcessInfillPattern::Lightning
+    }) {
         return Ok(None);
-    };
-    let options = lightning_region.as_parts().1;
+    }
+    // Generator.cpp:70 uses the first shared region, not the activating region.
+    let options = regions[0].as_parts().1;
     // `*std::max_element(nozzle_diameters)` (Generator.cpp:72) — the MAX nozzle
     // diameter, not the min.
     let nozzle = nozzles
