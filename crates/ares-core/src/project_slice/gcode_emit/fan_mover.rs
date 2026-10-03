@@ -204,7 +204,7 @@ impl FanMover {
                     }
                 }
                 b'M' => {
-                    fan_speed = read_fan_speed(code, self.flavor);
+                    fan_speed = read_fan_speed(raw, self.flavor);
                     if fan_speed >= 0 {
                         self.current_kickstart = None;
                         if !self.is_custom_gcode {

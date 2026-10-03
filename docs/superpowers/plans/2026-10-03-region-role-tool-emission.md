@@ -1,5 +1,40 @@
 # Region-role tool emission implementation plan
 
+## Current slice: raw vendor fan-command identity
+
+Cooling checkpoint55136c5c is committed, worktree clean. Fresh complete
+RED2968 exited100: baseline3346/line234 and modifier3582/line241 both
+miss ` M107 P0 ;fan off T0` (/tmp/ares-fan-raw-red.log).
+Ranked probes: template generation, cooling filtering, fan state handling.
+Saved3MF contains the indented command; CoolingBuffer preserves raw text.
+FanMover instead trims before classifying, unlike upstream raw-line prefix
+recognition (`FanMover.cpp:90–114,310`). Its duplicate-off suppression then
+deletes this ordinary vendor line. Use the previously agreed public saved3MF
+and slice_project seam; native-first raw vendor-line diagnostic supplements
+the unchanged complete baseline/modifier test. No fixture/comparator changes.
+
+1. Add public native-first indented-command tracer and observe RED.
+2. Port source raw-prefix recognition and rerun tracer plus original full test.
+3. Preserve any remaining full-output differences; run focused regressions,
+   fmt/clippy/WASM and independent six-axis review before code+docs checkpoint.
+
+Public tracer RED14786 exited100,1.825s: native31 indented vendor fan
+lines versus Ares30, missing first off command; no original fixture changed.
+Raw-prefix repair official43215 exited100,40.133s:13 diagnostic controls
+PASS, original full test RED. First differences now baseline4593/line284
+and modifier4185/line266, M73 appears one motion earlier. Native-first vendor
+sequence and both cooling controls PASS. This is not complete dual parity.
+Clippy77255 exited0: existing253lib/269lib-test/31CLI warnings unchanged;
+fmt/diff checks pass. Seeded66416 exited100,12.969s: vendor tracer PASS,
+unchanged complete test RED at the same M73 locations. Frozen workspace96911
+exited0,7571PASS38slow9skip266.246s; WASM35629 and bindings70702 exited0.
+Actual Chromium browser65984 exited0,3PASS2.3m, including complete KSR bytes
+and repeated default-context bytes (/tmp/ares-fan-raw-browser.log).
+Independent six-axis final runtime readback approves the finite local
+code+test+docs checkpoint without mandatory changes. Full dual output, push,
+mainline integration and global all-printer/all-option acceptance remain open.
+
+
 ## Current slice: per-tool cooling speed ownership
 
 Header follow-up53dfd357 is committed; working tree was clean. Fresh original

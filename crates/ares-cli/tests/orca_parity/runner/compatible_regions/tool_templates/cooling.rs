@@ -2,6 +2,26 @@ use super::fixture::{Overrides, configured};
 use super::outputs;
 
 #[test]
+fn two_nozzle_vendor_indented_fan_commands_survive_output_processing() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs("", "", false, &[]);
+    let commands = |bytes: &[u8]| {
+        std::str::from_utf8(bytes)
+            .unwrap()
+            .lines()
+            .filter(|line| line.starts_with(" M107 P") || line.starts_with("  M106 P"))
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+    };
+    let expected = commands(&reference);
+    assert!(expected.iter().any(|line| line == " M107 P0 ;fan off T0"));
+    assert!(expected.iter().any(|line| line == " M107 P1 ;fan off T1"));
+    assert_eq!(commands(&actual), expected);
+}
+
+#[test]
 fn two_nozzle_first_layer_cooling_preserves_native_extrusion_feedrates() {
     if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
         return;

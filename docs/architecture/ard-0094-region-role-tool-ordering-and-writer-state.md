@@ -175,6 +175,13 @@ mutation is adjacent parser behavior, not claimed by this render slice.
 
 ## Included / deferred
 
+FanMover fan-command identity belongs to its raw line, not the trimmed
+GCodeReader command (`FanMover.cpp:90–114,310`). Preserve byte-zero prefix
+recognition separately from motion command parsing. Indented vendor fan
+commands are ordinary buffered text and must not mutate part-fan state or
+be suppressed as duplicate fan requests. This does not close adjacent PWM
+precision, fan configuration refresh or complete dual-output parity.
+
 Ooze prevention follows `GCode.cpp:267–309,2280,7788,8044`: old-end then
 pre-cooldown, custom render/writer/new-start, post-wait then PA. Read logical
 filament temperatures; absent layer, actual layer id0 or ordinary temperature0

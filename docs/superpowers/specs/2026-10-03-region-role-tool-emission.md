@@ -41,6 +41,16 @@ claiming deterministic default-multiworker parity.
 
 ## Exit criteria
 
+The raw fan-command recognition slice ports `FanMover.cpp::get_fan_speed`
+(90–114) and its raw-line call in `_process_gcode_line` (310) to
+`gcode_emit/fan_mover/helpers.rs` and its caller. Include byte-zero command
+prefix recognition: indented vendor template commands remain uninterpreted
+and must survive buffering unchanged. Do not trim the raw line for this
+consumer. Existing axis-value parsing, PWM conversion and Mach3/Machinekit
+branches are not closed by this identity slice. Defer configuration refresh and other complete
+dual-output differences. A public saved-3MF native-first diagnostic checks
+all indented vendor fan commands, without replacing complete acceptance.
+
 An independently closed prerequisite is the per-region wall/infill phase
 consumer: preserve canonical perimeter ownership and port
 `GCode.cpp::extrude_perimeters` / `process_layer` first-layer override and

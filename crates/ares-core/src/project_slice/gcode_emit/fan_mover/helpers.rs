@@ -35,8 +35,7 @@ pub(super) fn fan_pwm(percent: i16) -> u32 {
 }
 
 pub(super) fn read_fan_speed(code: &str, flavor: GCodeFlavor) -> i16 {
-    let command = code.split_whitespace().next().unwrap_or_default();
-    if command == "M106" {
+    if code.starts_with("M106") {
         let p = word(code, 'P');
         if let Some(p) = p
             && flavor != GCodeFlavor::Mach3
@@ -46,9 +45,9 @@ pub(super) fn read_fan_speed(code: &str, flavor: GCodeFlavor) -> i16 {
             return -1;
         }
         word(code, 'S').map_or(-1, |s| (100.0 * s / 255.0) as i16)
-    } else if command == "M127" || command == "M107" {
+    } else if code.starts_with("M127") || code.starts_with("M107") {
         0
-    } else if command == "M126"
+    } else if code.starts_with("M126")
         && (flavor == GCodeFlavor::MakerWare || flavor == GCodeFlavor::Sailfish)
     {
         word(code, 'T').map_or(-1, |t| (100.0 * t / 255.0) as i16)
