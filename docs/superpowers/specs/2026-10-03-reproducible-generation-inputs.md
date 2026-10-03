@@ -22,3 +22,14 @@ counts, and correcting other nondeterminism only when reproduced. Acceptance
 requires independent CLI processes and actual browser repeat slicing with
 full-byte equality and an exact fixed timestamp assertion (not same-second
 equality), plus existing KSR complete comparison and quality gates.
+
+Follow-up after ff8a2517: remove automatic header generation dates entirely,
+retaining generator/version and every other byte. Port boundary is the emission
+at `GCode.cpp:2576`, Rust `gcode_emit/header.rs` and its sole caller; template
+initialization at2557/2705 and `PlaceholderParser.cpp:78–101` stays present in
+the existing Rust timestamp owner. Preserve the seven template variables and
+epoch0/seed0 defaults. Supplied vendor/user templates are not rewritten.
+Public CLI and actual browser must first fail the exact undated-header assertion,
+then pass it and raw complete repeat equality. Public saved-project template
+output must prove the retained time-variable contract. Strict full Orca parity
+and all comparator mutations remain required; dated Ares headers are rejected.

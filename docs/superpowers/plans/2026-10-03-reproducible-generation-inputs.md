@@ -85,3 +85,80 @@ readback approves the36file local code+docs checkpoint with no must-fix,
 limited to default time/ZIP policy and the listed public controls. Preserve
 the explicit metadata boundary and deferred universal coverage; no push/main,
 dual-tool complete parity or global goal completion approval is inferred.
+
+## Header date removal after filament-change timing checkpoint
+
+ff8a2517 closes the current finite timing checkpoint locally. The dual-tool
+full comparison remains RED; no push/main/global completion is inferred.
+Source inventory and exact deletions are in ARD0095. Independent six-axis
+preflight approves automatic-header-only scope, strict per-producer patterns,
+retained template variables and raw fixture hashes, and public CLI/browser RED.
+
+1. RED: two real CLI processes and actual Chromium assert the exact undated
+   Ares header against unchanged production. Retain raw complete repeat checks.
+2. GREEN: static automatic header and delete its orphan metadata argument;
+   preserve timestamp template inputs. Add public saved3MF template output
+   proof. No vendor/user template rewriting without a separate scope decision.
+3. Match only the new Ares format in strict comparators; retain Orca dated
+   identity validation and all stream/mutation assertions. Recompute only the
+   derived normalized hash; adapt synthetic comparator inputs, not real fixtures.
+4. Focused full KSR/arachne/isolation/retry controls, workspace nextest,
+   fmt/clippy/WASM and actual Chromium, then independent six-axis local review.
+   Code and documents share a finite local commit; full dual-tool parity stays
+   open and is not replaced by these reproducibility controls.
+
+User confirmed automatic-header-only scope; retain vendor/custom template
+semantics. CLI RED terminal exit100, /tmp/ares-header-cli-red.log, 0.363s:
+actual epoch-dated line differs from exact undated expectation. Added public
+saved3MF template test passes before production changes: seven epoch variables
+emit `19700101-000000 1970 1 1 0 0 0`; no private injection.
+Chromium RED58365 terminal/reaped exit1, /tmp/ares-header-browser-red.log:
+first full KSR comparison succeeds, then exact undated header fails; repeat
+test likewise fails on the old epoch header. Bindings privacy passes. Production
+edits started after its terminal receipt. Comparator synthetic inputs adapt to
+the new format; all real fixtures and body assertions remain unchanged.
+
+Static six-axis review finds no new source must-fix. Date validation scope is
+unchanged: the shared golden normalizer checks the original numeric date syntax,
+not calendar validity; arachne/closest comparators keep their existing calendar
+validation on the Orca side. Do not claim the shared helper validates calendars.
+The undated sentinel changes only the derived KSR normalized SHA256 to
+`164e7d1383d6086c368fd1110ad14fb3bb6cd105696ada9b3f12523b1ad02d73`;
+both raw fixture hashes and committed inputs/reference bytes remain unchanged.
+Processor isolation compares raw complete bytes now, with no timestamp filter.
+
+Frozen header implementation receipts: focused84378 terminal/reaped0,
+/tmp/ares-header-focused.log, compile2m49 and96PASS18.703s. Includes complete
+KSR (18.679s), generator/stream mutation contracts, synthetic retry rejection,
+arachne full controls, processor isolation, CLI raw repeat and seven epoch
+variables. Clippy44551 terminal/reaped0, /tmp/ares-header-clippy.log,4m10
+including lock wait; unchanged253core-lib/269core-test/31CLI-parity warnings.
+WASM41410 terminal/reaped0, /tmp/ares-header-wasm.log,4m52 including lock
+wait; browser bindings4207 terminal/reaped0. Fmt and diff checks0. Workspace
+and final actual Chromium execution are pending, so no final approval yet.
+
+Final workspace4388 terminal/reaped0, /tmp/ares-header-workspace.log:
+compile6m22 including lock wait,7568PASS/38slow/9skip,269.005s runtime.
+Spiral-vase ramps and the retained four-assertion current-spacing behavior
+test both PASS. Chromium58760 terminal/reaped0, /tmp/ares-header-browser-green.log:
+3PASS4.8m, including CLI comparison dependency rebuild. Full KSR artifact
+`/tmp/ares-wasm-gcode-56hp8M/browser.gcode`, exact undated header, binding
+privacy and repeated complete raw bytes all pass without timeout/byte-assertion
+changes. Source remains frozen; final fmt/diff checks0.
+
+Fresh whole-process CPU0 official84792 and seeded84294 both terminal/reaped100,
+/tmp/ares-header-official.log (9.376s), /tmp/ares-header-seeded.log (10.426s):
+each single-tool modifier/infill-first full comparison PASS, original full
+dual comparison RED. Baseline first difference is now byte1913/line143,
+same M73-before-G0 ordering; modifier byte703/line25, same R16 versus R17.
+The15-byte offset reduction is only the undated normalization sentinel;
+actual body differences persist. Artifacts retain both references under
+/tmp/ares-header-{official,seeded}. No fixture/assertion changes or complete
+dual-tool GREEN is claimed. All launched handles are terminal/reaped.
+Request independent final six-axis approval for the finite16file local
+code+docs checkpoint; push/main/global closure remain outside this approval.
+
+Independent final six-axis readback approves all16files as a finite local
+code+docs checkpoint with no new must-fix. Scope excludes push/main, complete
+dual parity, universal reproducibility and global completion. Retain original
+dual RED in the commit body; no source edits after the verified snapshot.
