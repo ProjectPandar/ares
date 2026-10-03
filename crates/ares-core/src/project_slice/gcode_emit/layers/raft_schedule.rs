@@ -149,6 +149,7 @@ fn materialize_layer(
         crate::project_slice::island_print_order::OrderedExtrusionLayer {
             islands: vec![OrderedExtrusionIsland {
                 infill_regions: vec![0; entities.len()],
+                perimeter_regions: Vec::new(),
                 entities,
             }],
         },

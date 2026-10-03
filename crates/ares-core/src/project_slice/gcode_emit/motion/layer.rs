@@ -12,16 +12,23 @@ use crate::{
     },
 };
 
+#[derive(Default)]
+struct RegionEntities {
+    perimeters: Vec<IslandPrintEntity>,
+    infills: Vec<IslandPrintEntity>,
+    ironing: Vec<IslandPrintEntity>,
+}
+
 pub(in crate::project_slice::gcode_emit) fn emit_layer<F, D>(
     output: &mut Vec<u8>,
     layer: &mut OrderedExtrusionLayer,
-    (geometry, density_for_region): (LayerGeometry<'_>, D),
+    (geometry, first_layer, options_for_region): (LayerGeometry<'_>, bool, D),
     state: &mut EmitState,
     mut before_first_infill: F,
 ) -> Result<bool, SliceError>
 where
     F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
-    D: Fn(usize) -> f64,
+    D: Fn(usize) -> (f64, bool),
 {
     let mut interlude_emitted = false;
     for island in &mut layer.islands {
@@ -29,58 +36,81 @@ where
         let has_infill = entities
             .iter()
             .any(|entity| !matches!(entity, IslandPrintEntity::Perimeter(_)));
-        let infill_first = matches!(
-            entities.iter().find(|entity| !is_ironing_entity(entity)),
-            Some(
-                IslandPrintEntity::Fill(_)
-                    | IslandPrintEntity::FillCollection(_)
-                    | IslandPrintEntity::Thin(_)
-            )
-        );
-        let mut perimeters = Vec::new();
-        let mut regions = std::collections::BTreeMap::<usize, (Vec<_>, Vec<_>)>::new();
+        let mut regions = std::collections::BTreeMap::<usize, RegionEntities>::new();
         let mut region_ids = std::mem::take(&mut island.infill_regions).into_iter();
+        let mut perimeter_ids = std::mem::take(&mut island.perimeter_regions).into_iter();
         for entity in entities {
             if matches!(entity, IslandPrintEntity::Perimeter(_)) {
-                perimeters.push(entity);
+                let region = perimeter_ids
+                    .next()
+                    .expect("perimeter retains its source region");
+                regions.entry(region).or_default().perimeters.push(entity);
                 continue;
             }
             let region = region_ids.next().expect("infill retains its source region");
-            let (infills, ironing) = regions.entry(region).or_default();
+            let region = regions.entry(region).or_default();
             if is_ironing_entity(&entity) {
-                ironing.push(entity);
+                region.ironing.push(entity);
             } else {
-                infills.push(entity);
+                region.infills.push(entity);
             }
         }
-        // GCode.cpp:6150-6178 chains each region independently.
-        if infill_first {
-            if !interlude_emitted && has_infill {
-                interlude_emitted = before_first_infill(output, state)?;
-            }
-            for (&region, (infills, _)) in &mut regions {
-                emit_infills(output, infills, geometry, state, density_for_region(region));
-            }
-            for perimeter in perimeters {
-                perimeter::emit_perimeter(output, perimeter, geometry, state);
-            }
-        } else {
-            for perimeter in perimeters {
-                perimeter::emit_perimeter(output, perimeter, geometry, state);
-            }
-            if !interlude_emitted && has_infill {
-                interlude_emitted = before_first_infill(output, state)?;
-            }
-            for (&region, (infills, _)) in &mut regions {
-                emit_infills(output, infills, geometry, state, density_for_region(region));
+        // GCode.cpp:5450-5468,6131-6145: wall-first regions, all infills,
+        // infill-first region walls, then ironing. First layer is wall-first.
+        for (&id, region) in &mut regions {
+            let (density, infill_first) = options_for_region(id);
+            if first_layer || !infill_first {
+                emit_perimeters(output, &mut region.perimeters, geometry, state, density);
             }
         }
-        // GCode.cpp:5453-5468 emits ironing after infill-first walls.
-        for (&region, (_, ironing)) in &mut regions {
-            emit_infills(output, ironing, geometry, state, density_for_region(region));
+        if !interlude_emitted && has_infill {
+            interlude_emitted = before_first_infill(output, state)?;
+        }
+        for (&id, region) in &mut regions {
+            emit_infills(
+                output,
+                &mut region.infills,
+                geometry,
+                state,
+                options_for_region(id).0,
+            );
+        }
+        for (&id, region) in &mut regions {
+            emit_perimeters(
+                output,
+                &mut region.perimeters,
+                geometry,
+                state,
+                options_for_region(id).0,
+            );
+        }
+        for (&id, region) in &mut regions {
+            emit_infills(
+                output,
+                &mut region.ironing,
+                geometry,
+                state,
+                options_for_region(id).0,
+            );
         }
     }
     Ok(interlude_emitted)
+}
+
+fn emit_perimeters(
+    output: &mut Vec<u8>,
+    entities: &mut Vec<IslandPrintEntity>,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+    sparse_density: f64,
+) {
+    if entities.is_empty() {
+        return;
+    }
+    state.options.has_sparse_infill = sparse_density > 0.0;
+    for entity in entities.drain(..) {
+        perimeter::emit_perimeter(output, entity, geometry, state);
+    }
 }
 
 fn emit_infills(

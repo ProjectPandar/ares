@@ -24,7 +24,7 @@ pub(in crate::project_slice) enum IslandInfillEntity {
 #[derive(Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionIsland {
     pub(in crate::project_slice) infills: Vec<(usize, IslandInfillEntity)>,
-    pub(in crate::project_slice) perimeters: Vec<ExtrusionEntityCollection>,
+    pub(in crate::project_slice) perimeters: Vec<(usize, ExtrusionEntityCollection)>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -104,11 +104,16 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
         }
     }
     let perimeters = std::mem::take(&mut layer.perimeters);
-    for (source_order, mut perimeter) in perimeters.into_iter().enumerate() {
+    let perimeter_regions = layer
+        .perimeter_ranges
+        .iter()
+        .enumerate()
+        .flat_map(|(region, range)| std::iter::repeat_n(region, range.len()));
+    for (source_order, (region, mut perimeter)) in perimeter_regions.zip(perimeters).enumerate() {
         perimeter.source_order = source_order;
         let first = *perimeter.entities[0].first_point3();
         let island = island_index(Point::new(first.x, first.y), slices, &bounds, &order);
-        islands[island].perimeters.push(perimeter);
+        islands[island].perimeters.push((region, perimeter));
     }
     let thin_regions = layer
         .thin_fill_ranges

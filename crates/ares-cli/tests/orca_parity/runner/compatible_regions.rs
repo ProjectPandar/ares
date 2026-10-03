@@ -6,6 +6,9 @@ use std::io::{Cursor, Read};
 #[path = "compatible_regions/inherited_filament.rs"]
 mod inherited_filament;
 
+#[path = "compatible_regions/infill_first.rs"]
+mod infill_first;
+
 #[test]
 fn orca_parity_compatible_regions_with_later_higher_density_preserve_complete_output() {
     if std::env::var("ARES_PARITY_REGION_PERIMETERS_REFERENCE").as_deref() != Ok("1") {

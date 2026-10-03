@@ -6,8 +6,9 @@ Contract: [spec](../specs/2026-10-01-tree-support-output-parity.md).
 
 ## Current merge gates (2026-10-03)
 
-Current terminal state: independent connector35976504 is pushed; the coupled
-runtime is not committed or merged. All finite single-tool gates below are
+Current terminal state: independent connector35976504 and coupled runtime
+b86b73bd are pushed and fast-forward merged into origin/main. The accepted
+runtime tree is7d45e2e715a4fc885b2159be3a311e8b32fb229d. All finite single-tool gates below are
 closed. The user approved the multi-tool consumer as the next independent
 milestone after the baseline body gap was reproduced on `94d33b59`; the
 modifier input was previously rejected. See the ToolOrdering plan for both
@@ -56,7 +57,8 @@ as the next milestone after this explicitly single-tool merge.
 
 Independent connector prerequisite35976504 was committed and pushed to
 `codex/normal-tree-output-parity` after isolated1408-test/clippy/fmt and
-six-axis closure. Normal/Tree runtime remains unsubmitted. Full combined
+six-axis closure. At that pre-commit verification point the Normal/Tree runtime
+was unsubmitted; it subsequently merged as recorded above. Full combined
 clippy exits0 (257 core lib/273 lib-test/31 parity warnings, zero dead_code);
 fresh WASM check/release builds pass. Full7545 and browser ordered output
 subsequently passed as recorded below; binding-only browser probe PASS4.6s
@@ -107,8 +109,9 @@ Finite merge checklist:
 - Mainline attribution: baseline body gap reproduced on94d33b59; old modifier
   is rejected. Original-comparator replay exit100/1.306s records respectively
   DIVERGENT and ARES_ERROR, not two equivalent body failures.
-- Final updated-document frozen-tree review, combined source-closed runtime
-  commit and non-force push/merge remain required. Preserve unrelated work.
+- Final frozen-tree review approved7d45e2e; combined source-closed runtime
+  commit b86b73bd and non-force push/merge completed. Original dirty main
+  worktree was not checked out or replaced. ToolOrdering proceeds separately.
 
 Deferred follow-up coverage, not substitutes for implemented support output:
 remaining one-/two-edge split orientations, transformed/mirrored nested

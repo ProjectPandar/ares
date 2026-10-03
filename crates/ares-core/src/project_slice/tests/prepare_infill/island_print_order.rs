@@ -18,7 +18,7 @@ fn task22o95_orders_first_and_later_layer_phases_from_option() {
                 no_sort: true,
             }),
         )],
-        perimeters: vec![ExtrusionEntityCollection::default()],
+        perimeters: vec![(0, ExtrusionEntityCollection::default())],
     };
 
     let first = island_print_order::order_island(island(), true, true);

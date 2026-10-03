@@ -71,11 +71,15 @@ pub(super) fn emit(
         .0
         .as_parts()
         .2;
+    let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
+    let first_layer =
+        physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 0.0001;
     let timelapse_inserted = motion::emit_layer(
         output,
         layer,
-        (motion_geometry, |region: usize| {
-            regions[region].options.sparse_infill_density.0
+        (motion_geometry, first_layer, |region: usize| {
+            let options = &regions[region].options;
+            (options.sparse_infill_density.0, options.is_infill_first.0)
         }),
         state,
         |output, state| {

@@ -53,6 +53,11 @@ pub(super) fn emit(
         chunk_perimeter_spacing: 0.0,
     };
     let motion_geometry = geometry.view_raft(traversal.scale);
+    let plan = &raft
+        .as_ref()
+        .expect("a materialized raft has its schedule")
+        .plans[object_index][raft_index];
+    let first_layer = raft_index == 0 && plan.z.bottom_z.abs() < 0.0001;
     // Raft layers belong to the same print instance and
     // carry its object labels (`GCode.cpp:5348-5352` fires
     // per `instance_to_print`, raft layers included).
@@ -62,15 +67,9 @@ pub(super) fn emit(
     let timelapse_inserted = motion::emit_layer(
         output,
         layer,
-        (motion_geometry, |_| {
-            traversal
-                .resolved
-                .views
-                .full
-                .process
-                .region
-                .sparse_infill_density
-                .0
+        (motion_geometry, first_layer, |_| {
+            let region = &traversal.resolved.views.full.process.region;
+            (region.sparse_infill_density.0, region.is_infill_first.0)
         }),
         state,
         |output, state| {

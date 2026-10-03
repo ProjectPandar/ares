@@ -48,6 +48,13 @@ repair is not output parity.
 
 ## Included / deferred
 
+An independent prerequisite ports the per-region wall-before/after-infill
+phases from `GCode::extrude_perimeters` / `process_layer`. It preserves
+canonical perimeter region identity through island assignment and emits each
+region's walls according to its own `is_infill_first`, with the upstream
+first-layer wall-first override. Its public single-tool modifier complete
+output tracer does not replace the following dual-tool closure.
+
 The first proposed closure covers the existing Snapmaker J1 two-nozzle,
 prime-tower-disabled public baseline and density-only modifier fixture,
 including all transitions and complete G-code. Existing single-tool Normal,

@@ -70,6 +70,101 @@ gap; they do not claim the old modifier generated a comparable body.
 
 ### Implementation order
 
+First finite public tracer: a single-tool modifier sets only `is_infill_first`
+while the parent is wall-first. Source `GCode.cpp::extrude_perimeters` applies
+each nonempty region configuration and selects its before/after-infill phase;
+the first layer always prints walls first. Existing Rust order preparation
+reads only the first model-part region flag and drops perimeter region IDs
+despite `LayerFillEntities::perimeter_ranges` already retaining them. Public
+test `orca_parity_modifier_infill_first_preserves_region_wall_phases` compares
+both baseline and modifier complete files with unchanged comparison rules.
+Provisional official RED exit100/2.342s: baseline PASS, modifier DIVERGENT, first difference
+byte1296/line46 (`M73 P3 R16` versus `R17`), followed by body differences.
+Native role-sequence witness differs; this is not just a config-header change.
+Log `/tmp/ares-region-infill-first-red.log`; artifacts case-ueaqdU and
+case-Om1XYs in `/tmp/ares-region-infill-first-red-artifacts/`.
+This is a source-owned traversal prerequisite, not a multi-tool completion.
+
+The old held worktree was temporarily stashed and checked out to94d33b59 by
+the user's review process, then restored. Do not accept the provisional RED
+from that overlap as authoritative; rebuild and rerun on
+`codex/region-role-tool-emission` in `/tmp/ares-tool-ordering.jdZMyT`, with a
+separate build target, before implementation. Remote main and the accepted
+b86b73bd commit remain intact. Preserve the restored original-worktree edits.
+
+Authoritative isolated rerun completed before production edits:
+`/tmp/ares-region-infill-first-isolated-red.log` exit100/2.354s, baseline PASS,
+modifier DIVERGENT at the same byte1296/line46. Both reference role-sequence
+and unchanged complete-output assertions executed. Separate target
+`/tmp/ares-tool-ordering-target` prevents reuse of overlap builds.
+Implementation carries `perimeter_ranges` region IDs through island
+assignment and ordered collections; motion emits the source four phases using
+each region's flag. No geometry copies, header-only fix, tool guards or
+unused ToolOrdering scaffolding. First-layer semantics are explicitly derived
+from actual object/raft id and bottom_z, not the emitter's simplified id check.
+Authoritative official GREEN `/tmp/ares-region-infill-first-isolated-green.log`
+exit0:1 PASS/2.351s, both complete baseline and modifier comparisons executed.
+The final build took6m49s because the process-wide replay affinity also reached
+compilation; compiler-only affinity was expanded while actual test and Orca
+replay stayed CPU0. This does not change production worker behavior.
+Final official/seeded controls, workspace, clippy and WASM remain in progress;
+do not commit the slice as closed before their actual terminal results.
+
+Final frozen-source Clippy `/tmp/ares-region-infill-first-final-clippy.log`
+exit0, core257 lib/273 lib-test diagnostics unchanged from the accepted
+batch, no never-read/never-used/dead_code match. No added warning suppression.
+This is not a `-D warnings` claim. Fmt/diff checks pass; modified functional
+Rust files remain below400 LOC. Remaining validation is still live.
+
+WASM check `/tmp/ares-region-infill-first-wasm.log` exit0 for ares-core and
+ares-wasm, elapsed9m47s including build-lock queue. This is compilation, not
+a fresh browser/native Windows/macOS runtime certification. Both activated
+complete-output control runs select47 tests, exactly excluding the preserved
+dual-tool RED; 282 other tests are outside these filters. Workspace selects7546
+tests. Do not call any still-running control or workspace result PASS yet.
+
+Workspace terminal `/tmp/ares-region-infill-first-workspace.log` exit0:
+7546 PASS/36 slow/9 skipped in265.487s. The default env-gated parity returns
+are not substituted for activated native controls: both47-control runs are
+still live, and the new modifier tracer has already passed in seeded output
+(14.335s). Original fixtures, complete comparators and the dual-tool RED are
+unchanged. No current source edits remain after this frozen validation.
+
+Seeded47 terminal exit0/349.876s. First official47 terminal exit100/305.864s,
+46 PASS/1 FAIL: existing later-higher-density control failed its parent
+baseline before reaching the modifier, at byte12097/line524, equal normalized
+length138530. Native expected travel X113.388Y113.135; Ares X113.244Y113.297,
+followed by swapped variable-width solid-fill paths. Keep this result; do not
+report the initial suite all-green.
+
+Diagnosis used the identical input SHA256
+15811835a4ebaf38e3e391accc6a686d4255229021d476b48315677d9e3e41c2.
+Saved failing case-BJ4QiK is in the official-controls artifact root. Both the
+saved input and original producer path in orca-runner-NxZYui have that hash.
+Four official CPU0 replays (two saved path, two original path) print the Ares
+travel at line524, unlike the original reference. Replay1/2 are raw-identical,
+SHA4e29ad6ba7b3bd108925120fc881a875406c6340a41c8fef8f568118646f438a;
+replay3/4 are raw-identical too. Outputs/logs retained under
+`/tmp/ares-region-infill-first-official-replay-{1,2,3,4}`.
+This establishes observed producer variation, not its internal mechanism.
+
+Untouched isolated b86b73bd production in
+`/tmp/ares-region-phase-mainline.9Vk9pc` successfully slices that same input.
+Its complete Ares output is byte-identical to the candidate after removing
+only each Ares generator-time line (diagnostic old/new comparison, not a
+relaxed native acceptance assertion). CLI output/log retained at
+`/tmp/ares-region-phase-mainline-baseline.{gcode,log}`; source status is clean.
+Thus this baseline difference is not introduced by the region-phase slice.
+Unchanged full public test focused rerun exit0/2.338s:
+`/tmp/ares-region-phase-official-focused.log`. No source, fixture or comparator
+was modified during diagnosis. Fresh complete official47 terminal exit0:
+47 PASS/282 outside-filter skips in114.018s, recorded at
+`/tmp/ares-region-infill-first-official-final.log`. All validation processes
+have terminated and their handles have been collected. This closes the
+region-phase prerequisite validation, not the deferred dual-tool milestone.
+The initial official failure and its retained diagnosis remain part of this
+record; the complete-output assertions were never relaxed.
+
 1. Preserve canonical region ownership through ordered extrusion collections.
    Source: `GCode::process_layer` region/island buckets and split wall roles;
    destination: `island_print_order` and layer-entry adapters. Add behavior

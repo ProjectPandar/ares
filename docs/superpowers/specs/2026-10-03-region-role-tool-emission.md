@@ -32,6 +32,14 @@ claiming deterministic default-multiworker parity.
 
 ## Exit criteria
 
+An independently closed prerequisite is the per-region wall/infill phase
+consumer: preserve canonical perimeter ownership and port
+`GCode.cpp::extrude_perimeters` / `process_layer` first-layer override and
+four-stage traversal. Its public single-tool modifier changes only
+`is_infill_first`; unchanged complete baseline/modifier outputs must match
+both references, and the previously accepted single-tool controls must remain
+passing. Do not claim this closes the following multi-tool criteria.
+
 - Both existing baseline and modifier complete outputs match both references.
 - Role selection, canonical region ownership, layer order and per-filament
   state are consumed by production emission, not test-only scaffolding.

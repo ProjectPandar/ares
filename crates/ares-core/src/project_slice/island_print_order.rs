@@ -22,6 +22,7 @@ pub(in crate::project_slice) enum IslandPrintEntity {
 pub(in crate::project_slice) struct OrderedExtrusionIsland {
     pub(in crate::project_slice) entities: Vec<IslandPrintEntity>,
     pub(in crate::project_slice) infill_regions: Vec<usize>,
+    pub(in crate::project_slice) perimeter_regions: Vec<usize>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -140,6 +141,7 @@ pub(in crate::project_slice) fn order_island(
         infills,
         perimeters,
     } = island;
+    let (perimeter_regions, perimeters): (Vec<_>, Vec<_>) = perimeters.into_iter().unzip();
     let perimeters = perimeters.into_iter().map(IslandPrintEntity::Perimeter);
     let (infill_regions, infills): (Vec<_>, Vec<_>) = infills.into_iter().unzip();
     let infills = infills.into_iter().map(|entity| match entity {
@@ -157,6 +159,7 @@ pub(in crate::project_slice) fn order_island(
     OrderedExtrusionIsland {
         entities,
         infill_regions,
+        perimeter_regions,
     }
 }
 
