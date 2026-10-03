@@ -8,6 +8,9 @@ use std::path::Path;
 
 use serde_json::{Map, Value};
 
+#[cfg(unix)]
+#[path = "presets/filesystem_tests.rs"]
+mod filesystem_tests;
 #[cfg(test)]
 #[path = "presets/tests.rs"]
 mod tests;
@@ -176,7 +179,10 @@ fn index_directory(dir: &Path) -> Result<BTreeMap<String, Map<String, Value>>, S
             std::fs::read_dir(&directory).map_err(|error| format!("{directory:?}: {error}"))?;
         for entry in entries {
             let path = entry.map_err(|error| error.to_string())?.path();
-            if path.is_dir() {
+            if std::fs::metadata(&path)
+                .map_err(|error| format!("{path:?}: {error}"))?
+                .is_dir()
+            {
                 pending.push(path);
             } else if path.extension().and_then(|extension| extension.to_str()) == Some("json") {
                 files.push(path);

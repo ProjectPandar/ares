@@ -23,3 +23,14 @@ Deferred, not waived: all-printer stock enumeration, all-option domains and
 dependency fixtures, other preset-family inheritance, external post-process
 execution, seeded and default-thread nondeterminism investigation, and
 cross-platform runtime parity. No comparator exclusions are added.
+
+The next acceptance slice extends the same stock export into
+`stock_presets/sweep.rs`: enumerate every instantiated machine in the vendor
+tree, preserve every non-PASS outcome, and write an external JSON report
+before rejecting incomplete coverage. Do not use a printer filter, silently
+omit missing presets, or overwrite the tracked modified-classic summary.
+This implements the full stock sweep entrypoint, not a claim it already passes.
+Vendor discovery and nested preset indexing must propagate external directory
+and metadata failures; a partially enumerated inventory cannot be GREEN.
+Report counts are outcome rows, since an unreadable vendor is represented by
+an error sentinel rather than a known per-printer denominator.

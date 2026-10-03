@@ -18,6 +18,9 @@ Continue on `codex/printer-option-matrix`, not the long-lived tool branch.
    rewrites. The first Ender-3 tracer and source boundary are in
    [the spec](superpowers/specs/2026-10-04-stock-preset-parity.md) and
    [plan](superpowers/plans/2026-10-04-stock-preset-parity.md), ARD-0096.
+   The unfiltered stock inventory entrypoint continues in
+   [the sweep plan](superpowers/plans/2026-10-04-stock-printer-sweep.md);
+   live scans and correctly failing coverage are not accepted matrix completion.
 2. Execute the full stock printer inventory and every bool/enum value;
    retain complete input/output artifacts and truthful non-PASS rows.
 3. Complete range min/max/seeded interiors with active dependency fixtures;
