@@ -81,3 +81,14 @@ positive-only summary. Sequential Print ordering is empty upstream and yields
 zero. Defer tower-produced count precedence, dynamic `m_toolchange_count`,
 custom transition behavior and other filament/time accounting. The existing
 metadata struct is a temporary export shell, not a new source domain model.
+
+The printing pressure-advance slice ports `GCode::set_extruder`
+(`GCode.cpp:8048–8053`) after the new filament-start template, reusing the
+existing `GCodeWriter::set_pressure_advance` formatting rewrite
+(`GCodeWriter.cpp:370–391`). Destination: a shared `gcode_emit/pressure_advance`
+module called by initial startup and `tool_transition`. Include the selected
+logical filament's enabled/value getters and source command ordering. Keep
+startup output unchanged. Adaptive PA processing, custom change-filament
+templates, eager lift, temperatures and remaining complete-output differences
+remain open. A public native-first 3MF tracer checks all sixteen printing
+transitions; it does not replace full baseline/modifier output acceptance.

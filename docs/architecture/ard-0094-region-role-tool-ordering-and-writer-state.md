@@ -187,6 +187,13 @@ silent omission, fallback or comparator relaxation is permitted.
 
 ## Platform and interface
 
+Printing transitions restore selected logical-filament pressure advance
+after filament-start (`GCode.cpp:8048–8053`). Initial startup and transitions
+share the existing `GCodeWriter::set_pressure_advance` command-format owner
+(`GCodeWriter.cpp:370–391`), rather than duplicate flavor dispatch or retain
+startup-only behavior. This closes only fixed PA emission; adaptive processor
+state and other higher-level transition side effects remain deferred.
+
 Keep the public byte/options-to-byte API and slicer context platform-neutral.
 No filesystem, terminal, UI, native dependency or new workspace crate is
 required. New functional Rust modules stay below 400 lines. Avoid speculative

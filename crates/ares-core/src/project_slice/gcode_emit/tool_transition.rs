@@ -17,7 +17,9 @@ pub(super) fn emit(
     }
     // Eager lift/change_filament/temperature remain the next coupled slices.
     motion::tool_selection::toolchange(output, state, context.traversal, filament);
-    append_filament(output, state, filament, true, context)
+    append_filament(output, state, filament, true, context)?;
+    super::pressure_advance::append(output, context.traversal, filament);
+    Ok(())
 }
 
 fn append_filament(

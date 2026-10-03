@@ -1632,3 +1632,99 @@ reference/replay receipts; approved this finite non-tower prediction
 code+test+docs local checkpoint with no new must-fix. Approval excludes
 push/main merge, complete dual parity, tower precedence, dynamic counters
 and global printer/option completion.
+
+## Printing pressure advance restoration
+
+Start clean b1e2558c. Fresh unchanged full dual replay63049 exit100,
+2.467s, /tmp/ares-transition-current-red.log; baseline case-LgubvM byte1726
+line124 M73 position, modifier case-hO9U0g byte718 line25 M73 remaining
+minutes. Three hypotheses distinguish absent custom transition blocks,
+writer lift/motion state, and independent timing errors. Raw baseline diff
+shows all three remain plausible: missing printer custom block, SpiralLift,
+temperature and pressure-advance commands plus changed motion speeds.
+Do not fix or filter M73 independently to claim closure.
+
+Select the independently bounded fixed PA command consumer first:
+GCode.cpp::set_extruder8048–8053 and GCodeWriter.cpp::set_pressure_advance
+370–391. Existing startup.rs formats it correctly for this fixture but
+tool_transition never calls it. Move that existing formatter/getter unchanged
+to one shared functional module, preserve startup callers, and append after
+printing filament-start. Adaptive PA processor state, custom change template,
+eager lift, temperature and complete dual accounting remain open.
+
+Public native-first outputs helper, unchanged public 3MF seam: insert a
+comment-only filament-start marker and assert each of sixteen printing
+markers is followed by M900 K0.02 before its object body. Build93646 running;
+obtain behavioral RED before production edits. Original complete comparator
+still runs and retains its divergent artifacts. Verify both references,
+unchanged finite complete controls, workspace/fmt/clippy/WASM and independent
+six-axis read-only review before a finite local code+test+docs checkpoint.
+
+Red build93646 exit0,11.79s. First replay8142 exit100,1.812s is NOT valid
+behavioral RED: native scanning also matched template text in trailing config
+and unwrapped a missing object. Production still untouched. Limit this new
+diagnostic to LAYER_CHANGE..EXECUTABLE_BLOCK_END, rebuild47274 exit0, then
+replay53064 exit100,1.822s: native all16 windows and count pass first, Ares
+fails missing pressure advance. /tmp/ares-transition-pa-red2.log and
+case-hdYfHr retain actual RED. Only then extract existing helper mechanically
+and call it after new printing filament-start.
+
+Independent preflight approves this limited consumer boundary, not acceptance.
+Review identified pre-existing formatter scientific-notation gap (e.g. valid
+PA1e-5), decimals=0 trimming (large values require input reachability evidence),
+and BBL-first flavor priority mismatch. Keep them explicitly open for a
+subsequent source-cited writer-format slice; this checkpoint proves J1 PA0.02
+and unchanged prior startup controls, not all PA values/flavors. No adaptive
+PA reset implementation or full dual closure is claimed.
+
+Source frozen after mechanical extraction and consumer. Static six-axis
+review has no new finite-scope must-fix, requires actual runtime receipts.
+Clippy70660 terminated/reaped exit0,1m20s, unchanged253lib/269libtest and31
+CLI parity warnings; WASM86997 exit0,1m37s, core+adapter compile check only.
+Final fmt/diff checks exit0. Start full workspace prebuild with unrestricted
+CPU after quality checks, then approved whole-process CPU0 reference replays.
+
+Full native test prebuild53801 terminated/reaped exit0,2m47s. Start official
+42698 and seeded82586 unchanged broad controls plus new tracer:55 tests each,
+all12 explicit reference activation flags, approved whole-process CPU0.
+Logs /tmp/ares-transition-pa-{official,seeded}.log and matching artifacts.
+Do not infer completion from live tail output; await both terminal receipts,
+then run workspace alone without native references competing for CPU.
+
+The CLI-only replay target nevertheless rebuilds its ares_core feature
+artifact after workspace prebuild; batch logs initially show compilation,
+not test progress. Preserve live handles. Validated rustc1568815 alone is
+compiling this worktree's ares_core (feature set empty), affinity0. Expanded
+only that compiler and its threads to CPUs0–63 to finish the build; cargo,
+nextest and future reference/Ares runtime children remain constrained to0.
+No production worker clamp or replay-domain change. Future prebuild must
+also match the exact CLI target feature set, not assume workspace cache hit.
+
+Both reference batches terminated/reaped: official42698 exit100,
+54PASS/1FAIL261.269s; seeded82586 exit100,54PASS/1FAIL308.969s. New PA
+diagnostic PASS3.670s/4.808s, all7 limited diagnostics and all47 prior strict
+complete controls pass both references. Original complete dual remains the
+sole RED: baseline byte1726,line124 M73 placement and modifier byte718,
+line25 M73 remaining minutes; e.g. official case-n4HtYF/case-G7DQfn raw
+outputs retained. Expected/Ares lengths baseline182130/175924 and modifier
+270578/237223; no comparator relaxation. Earlier official Snug uncertainty
+receipt remains historical, not erased by this batch's passing control.
+
+Verified both live nextest parents1568795/1568821 affinity0 after compiler
+exception. Reference runtime domain stayed single CPU. All external batches
+ended before full unchanged workspace starts alone, with configured num-cpus
+parallelism, /tmp/ares-transition-pa-workspace.log. Source remains frozen;
+await actual full terminal receipt and independent final six-axis approval.
+
+Full workspace81077 terminated/reaped exit0:7562PASS,35slow,9SKIP,
+255.408s, /tmp/ares-transition-pa-workspace.log. No external reference
+batches overlapped this run. The prior spiral-vase ramps-Z regression test
+passes10.572s. All changed Rust files remain below400lines. Source stayed
+frozen; retained fmt/diff/clippy/WASM receipts apply. Request final independent
+six-axis finite local checkpoint approval; not push/main or complete dual,
+all-printer/option, adaptive PA or formatter-domain closure.
+
+Independent final six-axis review verifies actual7562PASS and reference54/1
+receipts, approves finite shared fixed-PA consumer code+test+docs LOCAL
+checkpoint with no new must-fix. Approval excludes push/main merge, full dual
+or global completion and all explicitly deferred formatter/transition work.

@@ -3,6 +3,35 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
 #[test]
+fn printing_toolchange_restores_pressure_advance_after_filament_start() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs("; pressure start {filament_extruder_id}", "", false, &[]);
+    for (label, bytes) in [("native", &reference), ("Ares", &actual)] {
+        let output = std::str::from_utf8(bytes).unwrap();
+        let body = &output
+            [output.find(";LAYER_CHANGE").unwrap()..output.find("; EXECUTABLE_BLOCK_END").unwrap()];
+        let mut transitions = 0;
+        for (offset, _) in body.match_indices("; pressure start ") {
+            let transition = &body[offset..];
+            let object = transition.find("; printing object").unwrap();
+            assert!(
+                transition[..object]
+                    .lines()
+                    .any(|line| line == "M900 K0.02; Override pressure advance value"),
+                "{label}: pressure advance missing after printing filament-start"
+            );
+            transitions += 1;
+        }
+        assert_eq!(
+            transitions, 16,
+            "{label}: every scheduled printing transition"
+        );
+    }
+}
+
+#[test]
 fn first_printing_toolchange_renders_old_end_then_new_start() {
     if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
         return;
