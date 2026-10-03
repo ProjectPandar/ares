@@ -1,5 +1,85 @@
 # Region-role tool emission implementation plan
 
+## Current slice: closed thin-corner boundary parameters
+
+Previous turn17506330 committed/pushed Auto Lift. Clean worktree; fresh
+complete RED61557 terminal100,2.591s, /tmp/ares-detour-red.log reproduces
+baseline17243/line844 and modifier9227/line488. Baseline has no modifier;
+keep it as the existing selected public reproducer, not a rewritten fixture.
+Ranked hypotheses: region-flow boundary, route selection/simplification,
+wipe/lift replan. Ares targeted diagnostic67698 terminal100 captures exact
+travel points and contours. Unmodified official GDB86996 terminal0 captures
+identical start2792993/4790001 and end4811212/4811212; main contour is
+identical, tiny corner contour differs. First two native debugger attempts
+missed due optimized ABI; unconditioned attempt decoded invalid memory and
+was stopped, so none are acceptance evidence. Corrected disassembly-based
+probe /tmp/ares-detour-native-corrected.log uses XMM points/32-byte Polygon.
+Probe panic removed from Rust after capture. No official source changes.
+
+Source849–863 precomputes f32 cumulative distances plus closing segment;
+the Ares own_parameters adapter uses f64 and omits the closing sentinel.
+Port that parameter contract first, preserving shared elephant-foot queries.
+Adjacent offset cascade/closest-line gaps are not bundled without evidence.
+
+1. Public saved3MF native-first Z0.84 raw travel sequence RED, existing
+   agreed output seam; original complete fixture/assertions unchanged.
+2. Source closed-contour parameter port, then original/tracer/control output.
+3. Preserve remaining RED; frozen full tests/fmt/clippy/WASM/browser and
+   independent six-axis review before code+docs commit/push.
+
+Public tracer79465 terminal100,1.810s /tmp/ares-detour-tracer-red.log:
+native3 raw G1 approach lines versus Ares4, same166.884 versus166.669
+first difference. Independent preflight confirms closure sentinel safe for
+shared query partitioning; preserve real len parameters plus source_index=len
+closure only in the parameter vector. Require integer difference before f64,
+sqrt sum-squares and f32 per-segment accumulation, not existing hypot helper.
+Constrain tracer to the single layer before RED; no original assertion edits.
+Apply this contract after confirmed RED and rerun outputs before claiming fix.
+
+Frozen build92205 terminal0,1m19; official attempt78761 terminal100,4.444s,
+/tmp/ares-detour-attempt.log:public thin-corner tracer PASS, original full
+dual RED. Baseline first difference4866/line298 is M73 before wipe motion;
+modifier still9227/line488 spiral direction. Parameter repair changes actual
+travel geometry and total timing; do not normalize remaining timing away.
+Static re-review finds no new must-fix. Full gates still pending; no checkpoint
+approval/commit or complete dual claim yet.
+
+Continuation validates all seven launched handles live without restarting.
+Clippy48807 terminal/reaped0,1m21:253core-lib/269core-test/31CLI warnings,
+zero increment (/tmp/ares-detour-clippy.log). Fmt1013 terminal0/diff check0.
+Workspace21286 is running; WASM74950, Windows40804, macOS21972 and
+official57679/seeded15551 remain live. Do not infer terminal results from
+logs or lock waits. Source remains frozen. A read-only body diff, ignoring
+M73 for diagnosis only, places next baseline motion gap at Z1.64 overhang
+wall seam/traversal and also exposes per-tool filament statistics; comparator
+and complete assertions are unchanged. Browser and final review still pending.
+
+WASM74950 terminal/reaped0 and bindings91747 terminal0; Windows40804
+and macOS21972 terminal0 (compilation only). Seeded15551 terminal100,
+24.927s:thin-corner tracer PASS, original complete dual RED with unchanged
+baseline4866/line298 and modifier9227/line488. Official controls57679,
+workspace21286 and actual Chromium17187 still live. Chromium full KSR
+comparison produced /tmp/ares-wasm-gcode-Ur5EoT/browser.gcode; wait for
+repeat-byte and whole browser-suite terminal result before approval.
+
+Final workspace21286 terminal/reaped0,263.603s:7573PASS37slow9skip,
+/tmp/ares-detour-workspace.log. Official57679 terminal/reaped100,82.631s:
+16 controls PASS, original complete dual RED with the same locations as
+seeded. Chromium17187 terminal/reaped0,3PASS1.9m,
+/tmp/ares-detour-browser.log:complete KSR bytes, binding privacy and repeated
+complete default bytes. All launched handles terminal/reaped; no source edits
+after frozen build. Request independent final six-axis runtime readback before
+code+docs commit/push. Main merge/global closure remain unproven.
+
+Final fmt3464 terminal/reaped0 and diff check0; no DEBUG-detour residue.
+Independent final six-axis readback approves these six files as a finite
+closed-boundary-parameter checkpoint, with no remaining slice must-fix.
+Commit code, public regression and documents together, then push the existing
+feature branch per user authority. Preserve official16PASS/1FAIL and
+seeded1PASS/1FAIL: complete dual output remains RED. This approval does not
+close all travel behavior, printer/option coverage, main merge or the global
+rewrite objective.
+
 ## Current slice: Auto lift overhang consumer
 
 Previous turn made verified progress:33ebbdcd raw vendor fan repair committed.

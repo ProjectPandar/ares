@@ -1,7 +1,7 @@
 //! Boundary resampling — the polygon/contour resampler and the inner
 //! offset walker feeding `Boundary` grids (`avoid_crossing` family).
 
-use super::{MITER_LIMIT, SCALED_EPSILON, contours_bounds, distance};
+use super::{MITER_LIMIT, SCALED_EPSILON, contours_bounds};
 use crate::geometry::{
     ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point, Polygon,
     offset_paths, union_expolygons,
@@ -194,18 +194,27 @@ pub(super) fn resample_expolygon(
 /// query contours themselves: every point anchors its own segment with the
 /// cumulative length as curve parameter.
 pub(super) fn own_parameters(contour: &[Point]) -> Vec<ResampledPoint> {
-    let mut parameters = Vec::with_capacity(contour.len());
-    let mut total = 0.0;
+    let mut parameters = Vec::with_capacity(contour.len() + 1);
+    let mut total = 0.0_f32;
     for (index, &point) in contour.iter().enumerate() {
         parameters.push(ResampledPoint {
             source_index: index,
             interpolated: false,
             step_length: 0.0,
-            curve_parameter: total,
+            curve_parameter: f64::from(total),
         });
         let next = contour[(index + 1) % contour.len()];
-        total += distance(point, next);
+        let dx = (next.x() - point.x()) as f64;
+        let dy = (next.y() - point.y()) as f64;
+        total += (dx * dx + dy * dy).sqrt() as f32;
     }
+    // The closed-curve total is a parameter, not another geometry vertex.
+    parameters.push(ResampledPoint {
+        source_index: contour.len(),
+        interpolated: false,
+        step_length: 0.0,
+        curve_parameter: f64::from(total),
+    });
     parameters
 }
 

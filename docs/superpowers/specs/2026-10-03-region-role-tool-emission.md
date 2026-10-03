@@ -5,6 +5,13 @@ Architecture: [ARD-0094](../../architecture/ard-0094-region-role-tool-ordering-a
 
 ## Contract and upstream ownership
 
+The thin-corner detour slice ports closed f32 contour parameters from
+`GCode/AvoidCrossingPerimeters.cpp:849–1012` into
+`gcode_emit/motion/path/avoid_crossing/boundary/resample`. Include closing
+segment and source accumulation precision in the existing query adapter.
+Defer adjacent offset-cascade/closest-line behavior pending output evidence;
+keep original complete dual comparison and public saved3MF acceptance intact.
+
 Port `LayerTools` / `ToolOrdering` from `GCode/ToolOrdering.cpp/.hpp`,
 `GCode::process_layer` / `set_extruder` from `GCode.cpp`, writer tool selection
 from `GCodeWriter.cpp/.hpp`, and state from `Extruder.cpp/.hpp` into

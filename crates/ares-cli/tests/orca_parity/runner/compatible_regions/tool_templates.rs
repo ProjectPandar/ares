@@ -13,6 +13,9 @@ mod timing;
 #[path = "tool_templates/auto_lift.rs"]
 mod auto_lift;
 
+#[path = "tool_templates/detour.rs"]
+mod detour;
+
 #[path = "tool_templates/cooling.rs"]
 mod cooling;
 

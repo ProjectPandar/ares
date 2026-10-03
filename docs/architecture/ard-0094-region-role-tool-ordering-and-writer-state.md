@@ -175,6 +175,16 @@ mutation is adjacent parser behavior, not claimed by this render slice.
 
 ## Included / deferred
 
+Thin-corner travel boundary follows `AvoidCrossingPerimeters.cpp:849–1012`
+(`precompute_polygon_distances`, `contour_distance`) in
+`motion/path/avoid_crossing/boundary/resample`. Closed-contour parameters
+include the last-to-first segment; accumulate each double segment norm into
+source f32 values before widening for distance queries. Existing elephant-foot
+query reuse is a temporary parameter adapter, not permission to omit the
+closing parameter. Preserve public saved3MF/full-output acceptance. Adjacent
+offset cascade, closest-line selection and routing differences remain open
+until demonstrated by output; no private shape/layout acceptance test.
+
 Auto lift selection follows `PrintObject.cpp:818–848,3836–3849`,
 `Print.cpp:594–614` and `GCode.cpp:7538–7613,7643–7648`, rewritten into
 `motion/auto_lift` and start-travel. Detect from compensated all-region
