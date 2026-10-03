@@ -5,10 +5,9 @@ use std::collections::VecDeque;
 use super::{
     movement,
     nodes::{NodeArena, NodeId},
-    position_map::PositionMap,
     spanning_tree::MinimumSpanningTree,
 };
-use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
+use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon, point_hash_map::PointHashMap};
 
 pub(super) struct Group {
     pub(super) nodes: Vec<NodeId>,
@@ -23,7 +22,7 @@ pub(super) fn group_nodes(
     scale: CoordinateScale,
 ) -> (Vec<Group>, VecDeque<NodeId>) {
     let mut maps = (0..=parts.len())
-        .map(|_| PositionMap::new())
+        .map(|_| PointHashMap::new())
         .collect::<Vec<_>>();
     let mut unsupported = VecDeque::new();
     for &id in nodes {

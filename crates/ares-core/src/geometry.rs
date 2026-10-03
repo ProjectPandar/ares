@@ -12,6 +12,7 @@ mod line_distance_tree;
 pub(crate) mod marching_squares;
 pub(crate) mod medial_axis;
 pub(crate) mod mutable_polygon;
+pub(crate) mod point_hash_map;
 mod polygon;
 mod polyline;
 mod region_expansion;
@@ -19,7 +20,8 @@ pub(crate) mod simplification;
 pub(crate) mod support_grid;
 
 pub(crate) use bbox_clip::{
-    clip_clipper_expolygons_with_subject_bbox, clip_clipper_polygons_with_subject_bbox,
+    clip_clipper_expolygons_with_subject_bbox, clip_clipper_expolygons_with_subject_bbox_mode,
+    clip_clipper_polygons_with_subject_bbox,
 };
 pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
 pub(crate) use bridge_direction::detect_bridging_direction;

@@ -186,13 +186,14 @@ fn materialize_record(
         } else {
             ordered
         };
-        let outcome = traverse::traverse_extrusions(
+        let mut outcome = traverse::traverse_extrusions(
             ordered,
             &TraverseExtrusionsContext {
                 layer_id: input.layer_id,
                 raft_layers: config.raft_layers,
                 detect_overhang_wall: region.detect_overhang_wall.0,
                 overhang_reverse: region.overhang_reverse.0,
+                overhang_reverse_threshold: region.overhang_reverse_threshold,
                 wall_direction: region.wall_direction,
                 wall_sequence: region.wall_sequence,
                 fuzzy_skin: crate::perimeters::FuzzySkinConfig::from_region(region),
@@ -200,12 +201,21 @@ fn materialize_record(
                 ext_perimeter_flow: input.ext_perimeter_flow,
                 overhang_flow: input.overhang_flow,
                 lower_slices_polygons: &prelude_record.lower_slices_polygons,
+                lower_slices: object.lower_slices(input).unwrap_or(&[]),
                 scale,
             },
         )?;
         // `this->loops->append(extrusion_coll)` only when non-empty
         // (`PerimeterGenerator.cpp:2470-2474`).
         if !outcome.collection.entities.is_empty() {
+            if region.overhang_reverse.0 {
+                super::super::classic::perimeter_append::reorient::reorient_perimeters(
+                    &mut outcome.collection,
+                    outcome.steep_overhang_contour,
+                    outcome.steep_overhang_hole,
+                    region.overhang_reverse_internal_only.0,
+                );
+            }
             perimeters.push(outcome.collection);
         }
         let boundary = walls::surface_infill_boundary(

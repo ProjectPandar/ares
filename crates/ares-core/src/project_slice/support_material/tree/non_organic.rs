@@ -15,7 +15,6 @@ mod merging;
 mod movement;
 mod neighbor_movement;
 mod nodes;
-mod position_map;
 mod pruning;
 mod raft_layers;
 mod sampling;

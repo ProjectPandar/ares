@@ -1,25 +1,24 @@
-//! `drop_nodes` PointHash map traversal in the selected Linux reference.
+//! Source PointHash traversal in the selected Linux reference (Point.hpp:496).
 
-use super::nodes::NodeId;
-use crate::geometry::Point;
+use super::Point;
 
-struct Entry {
+struct Entry<V> {
     position: Point,
-    node: NodeId,
+    value: V,
     hash: u64,
     previous: Option<usize>,
     next: Option<usize>,
 }
 
-pub(super) struct PositionMap {
-    entries: Vec<Entry>,
+pub(crate) struct PointHashMap<V> {
+    entries: Vec<Entry<V>>,
     buckets: Vec<Option<usize>>,
     head: Option<usize>,
     growth_index: usize,
 }
 
-impl PositionMap {
-    pub(super) fn new() -> Self {
+impl<V: Copy> PointHashMap<V> {
+    pub(crate) fn new() -> Self {
         Self {
             entries: Vec::new(),
             buckets: vec![None],
@@ -28,7 +27,7 @@ impl PositionMap {
         }
     }
 
-    pub(super) fn insert(&mut self, position: Point, node: NodeId) {
+    pub(crate) fn insert(&mut self, position: Point, value: V) {
         let hash = point_hash(position);
         let bucket = (hash % self.buckets.len() as u64) as usize;
         let mut current = self.buckets[bucket];
@@ -38,7 +37,7 @@ impl PositionMap {
                 break;
             }
             if entry.position == position {
-                entry.node = node;
+                entry.value = value;
                 return;
             }
             current = entry.next;
@@ -49,7 +48,7 @@ impl PositionMap {
         let index = self.entries.len();
         self.entries.push(Entry {
             position,
-            node,
+            value,
             hash,
             previous: None,
             next: None,
@@ -57,15 +56,32 @@ impl PositionMap {
         self.insert_bucket_front(index);
     }
 
-    pub(super) fn into_ordered(self) -> Vec<(Point, NodeId)> {
+    pub(crate) fn into_ordered(self) -> Vec<(Point, V)> {
         let mut ordered = Vec::with_capacity(self.entries.len());
         let mut current = self.head;
         while let Some(index) = current {
             let entry = &self.entries[index];
-            ordered.push((entry.position, entry.node));
+            ordered.push((entry.position, entry.value));
             current = entry.next;
         }
         ordered
+    }
+
+    pub(crate) fn get_mut(&mut self, position: Point) -> Option<&mut V> {
+        let hash = point_hash(position);
+        let bucket = (hash % self.buckets.len() as u64) as usize;
+        let mut current = self.buckets[bucket];
+        while let Some(index) = current {
+            let entry = &self.entries[index];
+            if entry.hash % self.buckets.len() as u64 != bucket as u64 {
+                break;
+            }
+            if entry.position == position {
+                return Some(&mut self.entries[index].value);
+            }
+            current = entry.next;
+        }
+        None
     }
 
     fn grow(&mut self) {

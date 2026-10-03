@@ -1,7 +1,7 @@
 // Inactive post-traversal ordering and nonempty append from OrcaSlicer v2.4.2
 // `PerimeterGenerator.cpp:1451-1569`.
 
-mod reorient;
+pub(in crate::project_slice) mod reorient;
 #[cfg(test)]
 mod tests;
 mod types;

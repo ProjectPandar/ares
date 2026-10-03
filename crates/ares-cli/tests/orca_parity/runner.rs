@@ -44,6 +44,9 @@ mod lifecycle_tests;
 #[path = "runner/multi_object_skirt.rs"]
 mod multi_object_skirt;
 #[cfg(test)]
+#[path = "runner/overhang_reverse.rs"]
+mod overhang_reverse;
+#[cfg(test)]
 #[path = "runner/path_tests.rs"]
 mod path_tests;
 #[cfg(test)]

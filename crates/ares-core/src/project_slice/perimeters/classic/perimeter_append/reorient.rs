@@ -78,7 +78,8 @@ impl<'a> ReorientPlan<'a> {
         let flags = self.steep_flags(seeds, lower, scale);
         reorient_perimeters(
             collection,
-            flags,
+            flags.contour,
+            flags.hole,
             self.region.overhang_reverse_internal_only.0,
         );
     }
@@ -180,12 +181,13 @@ impl<'a> ReorientPlan<'a> {
 }
 
 /// `reorient_perimeters` (`PerimeterGenerator.cpp:1117-1145`).
-fn reorient_perimeters(
+pub(in crate::project_slice) fn reorient_perimeters(
     collection: &mut ExtrusionEntityCollection,
-    flags: SteepOverhang,
+    contour: bool,
+    hole: bool,
     internal_only: bool,
 ) {
-    if !(flags.contour || flags.hole) {
+    if !(contour || hole) {
         return;
     }
     for entity in &mut collection.entities {
@@ -194,8 +196,8 @@ fn reorient_perimeters(
         };
         let extrusion_loop = &mut loop_.extrusion_loop;
         let need_reverse = match extrusion_loop.role {
-            ExtrusionLoopRole::Hole => flags.hole,
-            _ => flags.contour,
+            ExtrusionLoopRole::Hole => hole,
+            _ => contour,
         };
         let is_external = internal_only
             && extrusion_loop

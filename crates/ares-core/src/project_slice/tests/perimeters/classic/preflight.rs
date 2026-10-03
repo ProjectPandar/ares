@@ -19,35 +19,19 @@ async fn fuzzy_skin_reaches_active_classic_output() {
 }
 
 #[tokio::test]
-async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
-    let cases = [
-        // Arachne dispatch itself is enabled; the KSR configuration hits
-        // the arachne first-slice scope gate (`only_one_wall_top` is now
-        // implemented by the top-surface regeneration;
-        // `detect_overhang_wall` stays deferred).
-        (
-            "\"wall_generator\": \"classic\"",
-            "\"wall_generator\": \"arachne\"",
-            "detect_overhang_wall",
-        ),
-        (
-            "\"counterbore_hole_bridging\": \"none\"",
-            "\"counterbore_hole_bridging\": \"partiallybridge\"",
-            "counterbore_hole_bridging",
-        ),
-    ];
-
-    for (from, to, key) in cases {
-        let mut archive = KsrArchive::new();
-        archive.replace_unique("Metadata/project_settings.config", from, to);
-        assert_eq!(
-            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
-                .await
-                .unwrap_err(),
-            SliceError::UnsupportedProjectFeature(key.to_owned()),
-            "{key}"
-        );
-    }
+async fn partially_bridged_counterbore_hole_remains_out_of_scope() {
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"counterbore_hole_bridging\": \"none\"",
+        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+    );
+    assert_eq!(
+        slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
+            .await
+            .unwrap_err(),
+        SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
+    );
 }
 
 #[tokio::test]
@@ -112,28 +96,4 @@ async fn only_one_wall_first_layer_reduces_first_layer_perimeters() {
             .count()
     };
     assert!(inner_walls(&reduced) < inner_walls(&baseline));
-}
-
-#[tokio::test]
-async fn task22o1_preflight_raft_no_longer_gates_arachne() {
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\t\"raft_layers\": \"0\",",
-        "\t\"raft_layers\": \"1\",",
-    );
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\t\"wall_generator\": \"classic\",",
-        "\t\"wall_generator\": \"arachne\",",
-    );
-    // The raft_layers gate is removed (raft milestone); arachne gates on
-    // its own — the raft no longer shadows it.
-    let error = slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
-        .await
-        .unwrap_err();
-    assert_eq!(
-        error,
-        SliceError::UnsupportedProjectFeature("detect_overhang_wall".to_owned())
-    );
 }

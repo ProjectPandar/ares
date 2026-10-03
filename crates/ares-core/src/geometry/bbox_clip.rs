@@ -16,12 +16,20 @@ pub(crate) fn clip_clipper_expolygons_with_subject_bbox(
     expolygons: &[ExPolygon],
     bounds: BoundingBox,
 ) -> Vec<Polygon> {
+    clip_clipper_expolygons_with_subject_bbox_mode(expolygons, bounds, false)
+}
+
+pub(crate) fn clip_clipper_expolygons_with_subject_bbox_mode(
+    expolygons: &[ExPolygon],
+    bounds: BoundingBox,
+    get_entire_polygon: bool,
+) -> Vec<Polygon> {
     expolygons
         .iter()
         .flat_map(|expolygon| {
             std::iter::once(expolygon.contour())
                 .chain(expolygon.holes())
-                .filter_map(move |polygon| clip_polygon(polygon, bounds, false))
+                .filter_map(move |polygon| clip_polygon(polygon, bounds, get_entire_polygon))
         })
         .collect()
 }

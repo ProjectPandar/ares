@@ -43,6 +43,7 @@ fn context() -> TraverseExtrusionsContext<'static> {
         raft_layers: 0,
         detect_overhang_wall: false,
         overhang_reverse: false,
+        overhang_reverse_threshold: crate::FloatOrPercent::Percent(Percent(50.0)),
         wall_direction: ProcessWallDirection::CounterClockwise,
         wall_sequence: ProcessWallSequence::InnerOuter,
         fuzzy_skin: FuzzySkinConfig::disabled(),
@@ -50,6 +51,7 @@ fn context() -> TraverseExtrusionsContext<'static> {
         ext_perimeter_flow: flow(0.2),
         overhang_flow: flow(0.3),
         lower_slices_polygons: &[],
+        lower_slices: &[],
         scale: SCALE,
     }
 }
@@ -313,27 +315,6 @@ fn overhang_clipping_keeps_widths_for_covered_walls() {
     let outcome = traverse_extrusions(vec![wall(0, true, true, &rectangle(450_000))], &context)
         .expect("a covered wall clips through the Z path");
     assert_eq!(outcome.collection.entities.len(), 1);
-}
-
-#[test]
-fn overhang_clipping_fails_closed_on_interpolated_crossings() {
-    // A wall crossing the lower-slice boundary needs the upstream ZFill
-    // width interpolation (`PerimeterGenerator.cpp:311-357`); sentinel
-    // widths fail closed instead of emitting an approximation.
-    let lower: &[crate::geometry::Polygon] = &[crate::geometry::Polygon::new(vec![
-        crate::geometry::Point::new(500_000, -1_000_000),
-        crate::geometry::Point::new(2_000_000, -1_000_000),
-        crate::geometry::Point::new(2_000_000, 2_000_000),
-        crate::geometry::Point::new(500_000, 2_000_000),
-    ])];
-    let mut context = context();
-    context.detect_overhang_wall = true;
-    context.lower_slices_polygons = lower;
-    let error = traverse_extrusions(vec![wall(0, true, true, &rectangle(450_000))], &context)
-        .expect_err("a boundary crossing needs the ZFill seam");
-    assert!(
-        matches!(error, SliceError::UnsupportedProjectFeature(ref key) if key == "detect_overhang_wall")
-    );
 }
 
 #[test]

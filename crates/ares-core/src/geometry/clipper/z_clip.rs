@@ -1,9 +1,8 @@
 // `clip_extrusion` port from OrcaSlicer v2.4.2
-// `PerimeterGenerator.cpp:311-357`: clips one open variable-width wall
+// `PerimeterGenerator.cpp:280-357`: clips one open variable-width wall
 // polyline (width as the Z coordinate) against closed polygons, keeping a
-// width on every output vertex. The upstream ZFill callback interpolates the
-// subject width at true edge crossings; this engine records those crossings
-// as sentinel values instead, so callers must reject them (`z > 0` guard).
+// width on every output vertex, with the source ZFill callback and zero-width
+// subject projection repair.
 
 use super::{
     ClipOperation, Clipper, ClipperError, ClipperOffset, ClipperOptions, FillRule, JoinType,
@@ -26,6 +25,7 @@ pub(crate) fn clip_open_path_widths(
         .map(|&(x, y, width)| KernelPoint::new(x, y, width))
         .collect::<ZPath>();
     let mut clipper = Clipper::new(ClipperOptions::default());
+    clipper.add_z_open_path(&subject_path, PathRole::Subject)?;
     for polygon in clip {
         clipper.add_z_closed_path(
             &polygon
@@ -36,8 +36,43 @@ pub(crate) fn clip_open_path_widths(
             PathRole::Clip,
         )?;
     }
-    clipper.add_z_open_path(&subject_path, PathRole::Subject)?;
-    let (paths, _) = clipper.execute_z_paths(operation, FillRule::NonZero, FillRule::NonZero);
+    let mut paths = clipper.execute_z_width_paths(operation);
+    for point in paths.iter_mut().flatten().filter(|point| point.z == 0) {
+        if subject_path.len() <= 2 {
+            continue;
+        }
+        let mut nearest = (&subject_path[0], &subject_path[1], subject_path[0]);
+        let mut minimum = f64::MAX;
+        for segment in subject_path.windows(2) {
+            let (a, b) = (&segment[0], &segment[1]);
+            let dx = (b.x() - a.x()) as f64;
+            let dy = (b.y() - a.y()) as f64;
+            let theta = ((b.x() - point.x()) as f64 * dx + (b.y() - point.y()) as f64 * dy)
+                / (dx * dx + dy * dy);
+            let projected = if a.xy == b.xy {
+                *a
+            } else if (0.0..=1.0).contains(&theta) {
+                KernelPoint::new(
+                    (theta * a.x() as f64 + (1.0 - theta) * b.x() as f64) as i64,
+                    (theta * a.y() as f64 + (1.0 - theta) * b.y() as f64) as i64,
+                    0,
+                )
+            } else if distance_squared(*a, *point) < distance_squared(*b, *point) {
+                *a
+            } else {
+                *b
+            };
+            let distance = distance_squared(projected, *point);
+            if distance < minimum {
+                minimum = distance;
+                nearest = (a, b, projected);
+            }
+        }
+        let (a, b, projected) = nearest;
+        let length = distance_squared(*a, *b).sqrt();
+        let distance = distance_squared(projected, *a).sqrt();
+        point.z = (a.z as f64 + distance / length * (b.z - a.z) as f64) as i64;
+    }
     Ok(paths
         .into_iter()
         .map(|path| {
@@ -46,6 +81,12 @@ pub(crate) fn clip_open_path_widths(
                 .collect::<ZWidthPath>()
         })
         .collect())
+}
+
+fn distance_squared(a: KernelPoint, b: KernelPoint) -> f64 {
+    let dx = (a.x() - b.x()) as f64;
+    let dy = (a.y() - b.y()) as f64;
+    dx * dx + dy * dy
 }
 
 /// A closed path whose vertices carry a source contour index as Z.

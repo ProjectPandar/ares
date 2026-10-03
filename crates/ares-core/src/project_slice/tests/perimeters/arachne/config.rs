@@ -82,12 +82,6 @@ fn task22w8_arc_fitting_reduces_the_surface_simplify_resolution() {
 
 #[test]
 fn task22w9_rejects_deferred_scopes_typed() {
-    let mut region = default_region();
-    region.overhang_reverse.0 = true;
-    assert_eq!(
-        validate(&region, 3, Some(4)).unwrap_err(),
-        SliceError::UnsupportedProjectFeature("overhang_reverse".to_owned())
-    );
     // wall_sequence InnerOuterInner is now implemented by the sandwich
     // reordering (`PerimeterGenerator.cpp:2374-2464`); only the scope
     // gates below remain typed rejections.

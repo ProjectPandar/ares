@@ -54,11 +54,6 @@ pub(in crate::project_slice) fn validate_record(
     if crate::perimeters::FuzzySkinConfig::from_region(region).should_fuzzify(layer_id, 0, true) {
         return Err(unsupported("fuzzy_skin"));
     }
-    if region.overhang_reverse.0 {
-        // `detect_steep_overhang` / `reorient_perimeters`
-        // (`PerimeterGenerator.cpp:449-478,2472-2474`).
-        return Err(unsupported("overhang_reverse"));
-    }
     if region.alternate_extra_wall.0 && layer_id % 2 == 1 && region.sparse_infill_density.0 > 0.0 {
         // Alternating extra wall (`PerimeterGenerator.cpp:2116-2117`).
         return Err(unsupported("alternate_extra_wall"));

@@ -152,6 +152,7 @@ pub(crate) struct Clipper {
     /// A `ZFillFunction` that stamps every intersection with this Z
     /// (`SupportCommon.cpp:550-554`).
     z_fill_mark: Option<i64>,
+    z_fill_width: bool,
     #[cfg(test)]
     collected_maxima_for_test: Vec<i64>,
     #[cfg(test)]
@@ -178,6 +179,7 @@ impl Clipper {
             has_open_paths: false,
             z_intersections: None,
             z_fill_mark: None,
+            z_fill_width: false,
             #[cfg(test)]
             collected_maxima_for_test: Vec::new(),
             #[cfg(test)]

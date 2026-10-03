@@ -2,10 +2,13 @@ use crate::{
     geometry::CoordinateScale,
     project_slice::{
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
-        perimeters::classic::{
-            entity_collections::{ExtrusionEntity, ExtrusionEntityCollection},
-            materialize::{ExtrusionPath, ExtrusionRole},
-            traversal::PreparedPostClassicTraversal,
+        perimeters::{
+            classic::{
+                entity_collections::{ExtrusionEntity, ExtrusionEntityCollection},
+                materialize::ExtrusionPath,
+                traversal::PreparedPostClassicTraversal,
+            },
+            types::{PostPerimeterInputPrintObject, RegionLayerIndex},
         },
         seam_candidates::{self, LayerSeamCandidates, SeamPerimeter},
     },
@@ -22,17 +25,21 @@ pub(in crate::project_slice::seam_placement) fn prepare(
     visibility: &visibility::GlobalVisibility,
 ) -> Vec<LayerPlan> {
     let (layers, layer_zs) = layers;
-    let mut plans = layers
-        .iter()
-        .zip(layer_zs)
-        .map(|(layer, &z)| prepare_layer(layer, z, traversal.scale, nozzle_diameter, visibility))
-        .collect::<Vec<_>>();
     let input = &traversal.objects[object_index]
         .predecessor
         .predecessor
         .predecessor
         .predecessor
         .object;
+    let mut plans = layers
+        .iter()
+        .zip(layer_zs)
+        .enumerate()
+        .map(|(index, (layer, &z))| {
+            let regions = layer_regions(layer, input, index);
+            prepare_layer(&regions, z, traversal.scale, nozzle_diameter, visibility)
+        })
+        .collect::<Vec<_>>();
     let layer_slices = input.object.as_parts().1;
     context::populate(
         &mut plans,
@@ -83,44 +90,60 @@ fn embedding_layers(
     region_counts.into_iter().map(|count| count > 1).collect()
 }
 
+fn layer_regions<'a>(
+    layer: &'a OrderedExtrusionLayer,
+    input: &PostPerimeterInputPrintObject,
+    layer_index: usize,
+) -> Vec<seam_candidates::RegionPerimeters<'a>> {
+    layer
+        .islands
+        .iter()
+        .flat_map(|island| {
+            island
+                .entities
+                .iter()
+                .filter_map(|entity| match entity {
+                    IslandPrintEntity::Perimeter(collection) => Some(collection),
+                    IslandPrintEntity::Fill(_)
+                    | IslandPrintEntity::FillCollection(_)
+                    | IslandPrintEntity::Thin(_) => None,
+                })
+                .zip(&island.perimeter_regions)
+        })
+        .map(|(collection, &region_index)| {
+            let record_index = input.region_layer_record_index(RegionLayerIndex {
+                region_index,
+                layer_index,
+            });
+            let record = input.records[record_index]
+                .as_ref()
+                .expect("printing perimeter region has a flow record");
+            seam_candidates::RegionPerimeters {
+                collection: Some(collection),
+                external_flow_width: record.ext_perimeter_flow.width,
+            }
+        })
+        .collect()
+}
+
 fn prepare_layer(
-    layer: &OrderedExtrusionLayer,
+    regions: &[seam_candidates::RegionPerimeters<'_>],
     z: f32,
     scale: CoordinateScale,
     nozzle_diameter: f32,
     visibility: &visibility::GlobalVisibility,
 ) -> LayerPlan {
-    let collections = layer
-        .islands
+    let collections = regions
         .iter()
-        .flat_map(|island| &island.entities)
-        .filter_map(|entity| match entity {
-            IslandPrintEntity::Perimeter(collection) => Some(collection),
-            IslandPrintEntity::Fill(_)
-            | IslandPrintEntity::FillCollection(_)
-            | IslandPrintEntity::Thin(_) => None,
-        })
+        .map(|region| region.collection.expect("printing perimeter collection"))
         .collect::<Vec<_>>();
     let mut source_order = (0..collections.len()).collect::<Vec<_>>();
     source_order.sort_unstable_by_key(|&index| collections[index].source_order);
     let regions = source_order
         .iter()
-        .map(|&index| {
-            let collection = collections[index];
-            let external_flow_width = collection
-                .entities
-                .iter()
-                .flat_map(|entity| match entity {
-                    ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-                    ExtrusionEntity::MultiPath(multi_path) => &multi_path.paths,
-                    ExtrusionEntity::Path(path) => std::slice::from_ref(path),
-                })
-                .find(|path| path.role == ExtrusionRole::ExternalPerimeter)
-                .map_or(0.0, |path| path.width);
-            seam_candidates::RegionPerimeters {
-                collection: Some(collection),
-                external_flow_width,
-            }
+        .map(|&index| seam_candidates::RegionPerimeters {
+            collection: Some(collections[index]),
+            external_flow_width: regions[index].external_flow_width,
         })
         .collect::<Vec<_>>();
     let candidates = seam_candidates::generate_regions(&regions, z, scale, nozzle_diameter);

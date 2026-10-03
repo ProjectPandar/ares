@@ -2,6 +2,8 @@
 // (`GCode.cpp:6131-6147`): every collection entity dispatches through
 // `GCode::extrude_entity` (`GCode.cpp:6091`).
 
+mod multi_path;
+
 use super::{local_cursor, loop_paths, state::EmitState, state::LayerGeometry};
 use crate::project_slice::{
     island_print_order::IslandPrintEntity,
@@ -39,7 +41,11 @@ pub(super) fn emit_perimeter(
                 .iter()
                 .map(|point| (point.x, point.y))
                 .collect(),
-            _ => Vec::new(),
+            ExtrusionEntity::MultiPath(multi_path) => multi_path
+                .paths
+                .iter()
+                .flat_map(|path| path.polyline.points.iter().map(|point| (point.x, point.y)))
+                .collect(),
         })
         .collect();
     for entity in collection.entities {
@@ -52,13 +58,9 @@ pub(super) fn emit_perimeter(
                 super::materialized::emit_flat(output, &path, 0.0, geometry, state);
                 continue;
             }
-            _ => {
-                // `GCode::extrude_multi_path` (`GCode.cpp:6038`) is not ported
-                // yet; arachne wall generation stays typed-rejected before
-                // materialization, so no multi-path can reach emission.
-                unreachable!(
-                    "multi-path perimeter emission lands with the arachne materialization seam"
-                );
+            ExtrusionEntity::MultiPath(multi_path) => {
+                multi_path::emit(output, &multi_path.paths, geometry, state);
+                continue;
             }
         };
         if state.spiral_vase && loop_.extrusion_loop.role != ExtrusionLoopRole::Hole {

@@ -92,6 +92,22 @@ impl Clipper {
             point.z = mark;
             return;
         }
+        if self.z_fill_width {
+            // PerimeterGenerator.cpp:283–303: select the subject edge and
+            // truncate the width delta before adding its bottom width.
+            let (start, end) = if first.bottom.z <= 0 && first.top.z <= 0 {
+                (second.bottom, second.top)
+            } else {
+                (first.bottom, first.top)
+            };
+            let dx = (end.x() - start.x()) as f64;
+            let dy = (end.y() - start.y()) as f64;
+            let px = (point.x() - start.x()) as f64;
+            let py = (point.y() - start.y()) as f64;
+            let t = ((px * px + py * py) / (dx * dx + dy * dy)).sqrt();
+            point.z = start.z + ((end.z - start.z) as f64 * t) as i64;
+            return;
+        }
         let Some(table) = self.z_intersections.as_mut() else {
             return;
         };
