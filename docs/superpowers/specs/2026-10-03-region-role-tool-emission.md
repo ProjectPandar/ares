@@ -5,6 +5,19 @@ Architecture: [ARD-0094](../../architecture/ard-0094-region-role-tool-ordering-a
 
 ## Contract and upstream ownership
 
+The existing-vertex seam slice ports `GCode/SeamPlacer.cpp::place_seam`
+1624–1627 and `ExtrusionEntity.cpp::ExtrusionLoop::split_at_vertex`182–225,
+`split_at`266–314, using `MultiPoint3::find_point`609–623 and method defaults
+in `ExtrusionEntity.hpp:472–473`. Destination: `seam_placement/split.rs` and
+a vertex-splitting submodule, plus the direct projection caller in runtime.
+Include first matching path's nearest vertex, strict tolerance/first ties,
+fitting-preserving rotation,1.5um seam search versus1um projection/re-search,
+and the GCode spiral/non-perimeter caller's explicit non-overhang preference.
+Replace the compatibility adapter that snaps then projects every seam.
+Defer adjacent projection arithmetic, modifier travel routing and per-tool
+statistics; retain complete acceptance and add public native-first raw
+role/motion output coverage, not private source-layout tests.
+
 The thin-corner detour slice ports closed f32 contour parameters from
 `GCode/AvoidCrossingPerimeters.cpp:849–1012` into
 `gcode_emit/motion/path/avoid_crossing/boundary/resample`. Include closing

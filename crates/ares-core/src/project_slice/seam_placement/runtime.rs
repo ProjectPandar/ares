@@ -2,7 +2,7 @@ mod nearest;
 
 pub(in crate::project_slice) use nearest::place_nearest_penalized;
 
-use super::split::{split_at, squared_distance};
+use super::split::{split_at, split_at_projected, squared_distance};
 use crate::{
     ProcessSeamPosition,
     geometry::CoordinateScale,
@@ -127,5 +127,5 @@ pub(in crate::project_slice) fn place_nearest_projection(
     cursor: Point3,
     scale: CoordinateScale,
 ) {
-    split_at(loop_, (cursor.x, cursor.y), scale);
+    split_at_projected(loop_, (cursor.x, cursor.y), false, scale);
 }

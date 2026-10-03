@@ -1,6 +1,8 @@
 //! Loop splitting geometry — scale/normalize helpers, seam-point
 //! projection, and the loop split/reorder (`seam placement` tail).
 
+mod vertex;
+
 pub(super) const SEAM_VERTEX_SNAP_MM: f64 = 0.0015;
 
 use super::fitting;
@@ -131,22 +133,22 @@ pub(super) fn squared_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
 }
 
 pub(super) fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: CoordinateScale) {
-    let snap_distance = SEAM_VERTEX_SNAP_MM / scale.factor();
+    if !vertex::split_at_vertex(loop_, seam, SEAM_VERTEX_SNAP_MM / scale.factor(), scale) {
+        split_at_projected(loop_, seam, true, scale);
+    }
+}
+
+pub(super) fn split_at_projected(
+    loop_: &mut ExtrusionLoop,
+    seam: (i64, i64),
+    prefer_non_overhang: bool,
+    scale: CoordinateScale,
+) {
+    let snap_distance = 0.001 / scale.factor();
     let snap_distance_squared = snap_distance * snap_distance;
-    // `split_at_vertex` fast path (`ExtrusionEntity.cpp:1622-1626`): if an
-    // existing loop vertex is within scaled_epsilon of the seam, the split
-    // lands exactly on that vertex — projection never runs.
-    let seam = loop_
-        .paths
-        .iter()
-        .flat_map(|path| &path.polyline.points)
-        .find(|point| squared_distance((point.x, point.y), seam) < snap_distance_squared)
-        .map_or(seam, |point| (point.x, point.y));
-    // `ExtrusionLoop::split_at` (`ExtrusionEntity.cpp:266-284`): project
-    // onto the loop preferring non-overhang feet, THEN snap the projected
-    // foot to the projected segment's endpoints when closer than
-    // scaled_epsilon — never to an unrelated vertex elsewhere.
-    let mut projection = closest_projection(&loop_.paths, seam, true);
+    // `ExtrusionEntity.cpp:266–284`: projection owns its endpoint snap;
+    // this is distinct from SeamPlacer's initial vertex search.
+    let mut projection = closest_projection(&loop_.paths, seam, prefer_non_overhang);
     {
         let p1 = loop_.paths[projection.path].polyline.points[projection.segment];
         let p2 = loop_.paths[projection.path].polyline.points[projection.segment + 1];
@@ -163,9 +165,7 @@ pub(super) fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: Coord
         }
     }
     let single_path = loop_.paths.len() == 1;
-    let mut paths = std::mem::take(&mut loop_.paths);
-    let following = paths.split_off(projection.path + 1);
-    let target = paths.pop().expect("projected path exists");
+    let target = loop_.paths.remove(projection.path);
     let split = projected_parts(target, &projection, scale);
     if single_path {
         match split {
@@ -176,12 +176,15 @@ pub(super) fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: Coord
             (Some(path), None) | (None, Some(path)) => loop_.paths.push(path),
             (None, None) => unreachable!("a projected loop path has a valid side"),
         }
-        return;
+    } else {
+        // Source replaces the selected path in place before its separate
+        // vertex re-search; another path may own the same shared vertex.
+        loop_.paths.splice(
+            projection.path..projection.path,
+            split.1.into_iter().chain(split.0),
+        );
     }
-    loop_.paths.extend(split.0);
-    loop_.paths.extend(following);
-    loop_.paths.extend(paths);
-    loop_.paths.extend(split.1);
+    vertex::split_at_vertex(loop_, (projection.x, projection.y), snap_distance, scale);
 }
 
 pub(super) fn projected_parts(

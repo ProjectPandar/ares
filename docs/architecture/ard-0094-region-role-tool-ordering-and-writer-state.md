@@ -30,6 +30,17 @@ where they do not implement these upstream contracts.
 
 ## Decisions
 
+Seam placement owns its vertex-first1.5um search (`SeamPlacer.cpp:1624–1627`);
+`ExtrusionLoop::split_at` owns projection and a separate default1um vertex
+re-search (`ExtrusionEntity.cpp:266–314`, `.hpp:472–473`). A matched vertex
+retains its path role even when it is an overhang. Preserve first matching
+path/nearest vertex/first tie and fitting-aware path rotation. Direct
+GCode spiral/non-perimeter projection does not inherit SeamPlacer policy.
+Rust destination is `seam_placement/split` and its vertex submodule; the
+previous snap-then-project adapter is a temporary compatibility shell.
+Include these split contracts; adjacent projection arithmetic, modifier
+route and footer accounting remain separate output-evidenced boundaries.
+
 Custom tool changes produce CoolingBuffer's FORCE_RESUME_FAN event
 (`CoolingBuffer.cpp:543,890–898,1000–1005`). Its consumer belongs to the
 ordered printing-layer cooling flush, not the tool-transition renderer or

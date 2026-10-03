@@ -16,6 +16,9 @@ mod auto_lift;
 #[path = "tool_templates/detour.rs"]
 mod detour;
 
+#[path = "tool_templates/seam.rs"]
+mod seam;
+
 #[path = "tool_templates/cooling.rs"]
 mod cooling;
 

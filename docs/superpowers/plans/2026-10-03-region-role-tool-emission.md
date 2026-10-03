@@ -1,5 +1,257 @@
 # Region-role tool emission implementation plan
 
+## Current diagnosis: existing-vertex seam versus overhang projection
+
+Previous turn is progress: closed-boundary checkpoint8d698005 committed and
+pushed; remote HEAD matches and worktree was clean. Fresh original complete
+test14811 terminal/reaped100,2.117s reproduces baseline4866/line298 and
+modifier9227/line488 (/tmp/ares-seam-current-red.log). Initial direct-binary
+attempt exited127 in Export due missing runtime library; it is not slicing
+evidence. Re-run uses the existing official runtime wrapper unchanged.
+Artifacts: baselinecase-OKWIuk, modifiercase-Iwr7qA under that log root.
+
+Read-only body diff excluding M73/header for diagnosis only finds the first
+baseline physical-motion gap at Z1.64: native starts Overhang wall at
+X165.939 Y103.939; Ares starts Inner wall at X165.8 Y103.939. Complete
+comparator and original fixtures/assertions are untouched. Rank: differing
+seam selection (different target), split/projection (same target, different
+first path), or emission ordering (matching split, diverging emitted order).
+
+Source `GCode/SeamPlacer.cpp::place_seam`1624–1627 first tries
+`ExtrusionEntity.cpp::ExtrusionLoop::split_at_vertex`182–225 and only calls
+`split_at`266–314 with non-overhang preference when no vertex is found.
+The Ares `seam_placement/split.rs::split_at` compatibility adapter snaps a
+matching vertex but still projects with non-overhang preference. This is a
+confirmed static contract gap, not yet a confirmed cause of this output.
+Destination is that adapter and its seam-placement callers. Include source
+first matching path, nearest vertex within that path (`MultiPoint3::find_point`
+609–623), strict snap tolerance, path rotation and fitting
+preservation; keep projection-only behavior distinct from vertex-first seam
+placement. Include the direct projection caller's source false preference
+without importing the SeamPlacer search. Defer adjacent projection endpoint
+precision, modifier routing and per-tool footer accounting unless the
+selected output evidence requires them. No wider rewrite bundled by inference.
+
+1. Probe the original public baseline at the seam/split boundary to distinguish
+   these hypotheses; remove any tagged temporary instrumentation.
+2. Add native-first saved3MF raw role/motion regression in a separate test mod;
+   observe RED before implementing the source vertex-first return contract.
+3. Re-run original complete baseline/modifier output and retained controls,
+   preserving all remaining RED. Run frozen quality/platform/runtime gates
+   and independent six-axis review before the next code+docs commit/push.
+
+Independent read-only preflight confirms the source seam boundary but does
+not approve implementation/runtime/checkpoint. Required contracts: nearest
+vertex within first matching path, strict double squared-distance and first
+tie, fitting-preserving vertex rotation, single-path invalid-side no-op;
+SeamPlacer first search1.5um differs from both methods' default1um
+(`ExtrusionEntity.hpp:472–473`), and projection ends in its own default1um
+vertex re-search. Audit all callers before changing this shared adapter.
+
+Read-only Rust GDB probes97603/93617/91836 terminal/reaped0; debugger quit
+intentionally stops its own test inferior, not an acceptance result. First
+probe confirms types; targeted probe with standard Rust pretty-printers
+captures /tmp/ares-seam-gdb-paths.log: seam3939340/3939340 exactly matches
+the middle vertex of path1 OverhangPerimeter. Path0 Perimeter endpoints are
+3800000/3939340 and3939340/3800000,139340 scaled units away. Thus existing
+vertex-first splitting must keep the overhang start; the current non-overhang
+projection selects the inner-wall endpoint, matching the public wrong start
+165.8/103.939. Source-specific hypothesis2 is supported; no production edits
+or temporary Rust instrumentation were needed. Complete baseline remains RED;
+next step is the public raw role/motion regression before the fix.
+
+Public raw role/motion regression84737 terminal/reaped100,1.595s,
+/tmp/ares-seam-tracer-red.log, exposes the same wrong approach/role order
+and clipped ending on the approved saved3MF/public output seam. Original
+complete assertions unchanged. Implement only after this confirmed RED:
+separate vertex helper, source first-path nearest/strict first-tie search,
+fitting-aware rotation and single-path invalid-side no-op. Projection uses
+default1um snapping and installs prefix/suffix in place before a separate
+vertex re-search. All placement callers retain vertex-first1.5um; direct
+spiral/non-perimeter projection now explicitly passes false without that
+search (`GCode.cpp:5770–5775`). Attempt45713 builds/runs original complete
+and new regression; no result claim before its terminal receipt.
+
+Attempt45713 terminal/reaped100,2.132s: new public regression PASS,
+original complete dual RED (/tmp/ares-seam-attempt.log). Baseline now first
+diff151482/line7181 in filament statistics (native368.40,149.19 versus
+Ares517.59,0.00); its entire preceding body including M73 is identical under
+the unchanged complete comparator. Modifier remains9227/line488 spiral lift
+direction. Preserve both artifacts case-FHRMli and case-kbHdU1. This is not
+full dual GREEN. Independent six-axis static readback finds no new must-fix,
+but runtime/checkpoint approval remains pending.
+
+Frozen clippy97554 terminal/reaped0,1m52:253core-lib/269core-test/31CLI
+warnings unchanged (/tmp/ares-seam-clippy.log). Fmt17694 terminal0 and diff
+check0. No source edits after attempt build. Workspace79152, WASM8827,
+Windows43128, macOS35443, official33982 and corrected seeded56514 are live
+per direct handle polls; build locks are not completion or failure evidence.
+Initial seeded57994 omitted required replay environment; preserve its setup
+result separately, not slicing evidence. Corrected command explicitly uses
+the documented jqfsg42f6xzq3krnf5scm6w4g1z4kz4c seed-replay binary, seed0,
+CPU0. Actual Chromium validation and final independent readback remain due
+after final WASM bindings and all terminal receipts.
+
+Continuation confirms all seven previous handles live without restarting.
+WASM8827 then terminal/reaped0,5m13 including lock wait; bindings20458
+terminal/reaped0. Windows43128 and macOS35443 terminal/reaped0 (compilation
+only). First Chromium32775 terminal/reaped1 before slicing, missing libnspr4
+and other host runtime libraries; /tmp/ares-seam-browser.log is setup evidence,
+not a product regression or acceptance. Its launch overlapped binding
+generation, so it is not frozen browser evidence either. Resolve only current
+process library paths; ldd reports no missing libraries after the correction.
+Corrected Chromium99040 launches after bindings terminal0, with unchanged
+tests, timeouts and complete-byte assertions; /tmp/ares-seam-browser-fixed.log.
+Workspace79152, official33982 and seeded56514 remain live per handle polls;
+initial missing-environment seeded57994 still must be reaped separately.
+No Rust edits; final browser/workspace/oracle results and runtime review due.
+
+Workspace79152 terminal/reaped0,278.739s:7574PASS39slow9skip,
+/tmp/ares-seam-workspace.log; spiral-vase ramps and current-layer-spacing
+controls PASS. Corrected Chromium99040 terminal/reaped0,3PASS1.7m,
+/tmp/ares-seam-browser-fixed.log, complete artifact
+/tmp/ares-wasm-gcode-fsANrv/browser.gcode. Initial seeded57994 terminal100
+before reference Export (required environment missing),0.066s,2FAIL;
+corrected56514 terminal/reaped100,4.980s,1PASS/1original complete FAIL.
+Baseline151482/line7181 footer and modifier9227/line488 unchanged.
+Official33982 terminal/reaped100,11.760s,17PASS/1original complete FAIL;
+one of those passes (infill_first) is an inactive perimeter-reference guard,
+not native-output evidence. Do not claim all18 were activated comparisons.
+
+Coverage readback requires the existing Normal/Tree/region finite group
+before this shared seam adapter's checkpoint. Launch broad official3469 and
+seeded41392 with every owning flag explicitly enabled: filament/perimeter,
+clipped-loop, normal/style/flow/angle, support annotations/modifier,
+multi-object skirt, tree support/containment. Keep original complete dual
+assertions and seeded CPU0/seed0 reference. These tests are the existing
+acceptance group plus current diagnostics, not all-printer/all-option proof.
+Logs/artifacts /tmp/ares-seam-broad-{official,seeded}; wait for terminal
+receipts and six-axis runtime readback before code+docs commit/push.
+
+Broad group has64 tests. Default-multiworker official3469 terminal/reaped100,
+16.738s:49PASS/15FAIL;
+retain all /tmp/ares-seam-broad-official artifacts and its full summary.
+Two containment tests fail their native-reference literal precondition,
+before Ares comparison; other complete-output differences require controlled
+reference replay, not automatic classification as product regression or
+automatic dismissal as nondeterminism. Launch unmodified official CPU0
+2411 using the previously approved single-CPU wrapper and the same activated
+group (/tmp/ares-seam-broad-official-cpu0). Seeded41392 remains live on CPU0.
+Both reference jobs must finish before final approval. Default multiworker
+failures remain recorded and no comparator/assertion/input is weakened.
+
+Controlled broad official2411 terminal/reaped100,192.226s:58PASS/6FAIL;
+seeded41392 terminal/reaped100,233.442s:58PASS/6FAIL. Both share failures:
+original complete dual, Organic/default auto Tree, and manual default,
+organic/grid/snug normalized Organic styles. These five extra failures are
+must-investigate before checkpoint, not known reference variation excuses.
+The auto/default case's first complete diff897/line33 is M73, while diagnostic
+body diff reveals already-different first-layer skirt geometry. Compare
+current seededcase-LIGiQ3 with previously passing ExportLinescase-soH7Ov:
+project_settings.config, model_settings.config and3dmodel.model are identical;
+current Ares skirt differs from prior Ares as well as current native.
+No complete assertion edits. Independent final approval remains withheld.
+
+After every preceding validation handle terminated/reaped, create detached
+baseline worktree /tmp/ares-seam-baseline.UAna9g at8d698005, link unchanged
+upstream source and launch the existing auto/default complete test against
+CPU0/seed0 reference. No stash or checkout of the dirty implementation
+worktree. Reuse the build target only after all previous jobs stopped, so
+artifact executable hashes cannot change beneath running comparisons.
+Baseline log/artifacts /tmp/ares-seam-baseline-head; await its terminal
+result to distinguish this seam slice from earlier checkpoint regressions.
+
+Baseline HEAD38001 terminal/reaped100,2.974s: auto/default complete test
+fails at the same897/line33; case-hkNUcq raw Ares SHA256
+5a33864576fa17f5748f75e7f70dcd16e57ebf0406a706200c98fd50057c73dc exactly
+matches current case-LIGiQ3. This rules out this seam slice for that failure,
+but does not waive the five required Organic controls. All nine ZIP members
+and their order compare identically with prior ExportLinescase-soH7Ov,
+including escaped [Content_Types].xml and the actual Objects mesh member.
+Container timestamps/hashes differ, not decompressed input content.
+Production support/tree, skirt, slicer_context and project_slice pipeline
+have no diff betweenbe5d592f and8d698005. Ranked predictions: earlier
+checkpoint gap, current seam change, or input/concurrency dependence; HEAD
+standalone failure with identical bytes rejects the current seam change for
+this case, but does not exclude execution-worker dependence. The Orca wrapper
+alone pins CPU0; the parent Ares process has affinity0–63. Organic generation
+reads available_parallelism(), and upstream TreeSupport3D.cpp:2385–2391 uses
+the worker count to select two- versus four-leaf merge buckets. Observe the
+actual test thread and replay the whole process in the approved shared CPU0
+domain before attributing these five failures to a source regression.
+Rebuild the previously tested be5d592f commit in the same clean detached
+diagnostic worktree to establish an immutable source baseline rather than
+assuming the older artifact's unknown revision proves its producing commit.
+Log/artifacts /tmp/ares-seam-baseline-export-lines. Main dirty worktree stays
+untouched except this evidence record; no test/assertion modifications.
+
+The be5d592f replay9235 terminated/reaped100,2.933s. Its case-YpRXcf
+differs from HEAD case-hkNUcq only in the automatic header date line; all
+remaining bytes are identical. The old passing case-soH7Ov manifest has an
+unknown source revision, so its output alone cannot identify a producing
+commit or establish that both executions used the same worker domain.
+
+Read-only debugger49423/11724 terminated/reaped0; quitting intentionally
+stops their diagnostic inferior, not an acceptance run. Actual test thread
+pathing workers=64 and /proc thread affinity0–63 are observed in
+/tmp/ares-seam-worker-gdb-count.log. The merge probe observes input_size59;
+workers/bucket locals there are optimized out. Source calculation gives
+(59+2)/4=15, so workers64 selects bucket2 and workers1 selects bucket4.
+The separate be5d592f whole-process CPU0 replay10400 terminates/reaps0,
+1PASS2.877s (/tmp/ares-seam-baseline-shared-cpu0.log), with the original
+complete-output assertion unchanged. This closes that execution-domain
+diagnosis only, not the four other Organic controls or global parity.
+Restore current main-worktree binary before both64-case shared-CPU0 batches.
+Retain earlier mismatched-domain results and official default-multiworker
+results; no production worker logic, fixture or comparator is changed.
+
+Main restore66686 terminated/reaped101 before tests: Cargo reused a detached
+baseline core artifact without GenerationMetadata::default despite the main
+source's explicit Default implementation. Clean only ares-core's rebuildable
+artifacts in /tmp/ares-tool-ordering-target (277files/4.8GiB); no source or
+comparison output removed. Rebuild43762 must terminate before any reference
+batch; this setup failure is retained separately, not a slicing regression.
+
+Main rebuild43762 terminal/reaped0,1m15s, restores binary5fbb5659a3fb1a65
+(/tmp/ares-seam-main-rebuild-clean.log). Current-source read-only GDB46226
+terminal/reaped0 observes actual test-thread workers1 and affinity0 in
+/tmp/ares-seam-current-cpu0-gdb.log; diagnostic quit is not acceptance.
+Whole-process CPU0 official88022/seeded9586 launch all64 selected tests with
+all12 reference activation flags explicit1. Logs/artifacts are
+/tmp/ares-seam-shared-{official,seeded}. No concurrent rebuild or source edit
+may change the executable beneath these comparisons. Wait for both terminal
+receipts and independent six-axis readback before checkpoint commit/push.
+
+Shared-domain88022/9586 terminated/reaped100,52.186s/63.280s: each
+7PASS/1original-dualFAIL, but nextest's default fail-fast skipped the remaining
+56selected tests. These are incomplete coverage receipts, not64-case gates.
+Corrected86298/95049 rerun the identical frozen binaries, selection and12flags
+with explicit --no-fail-fast; log/artifact suffix is shared-{official,seeded}-full.
+Do not change assertions or drop the failing dual test to reach later controls.
+
+Corrected official86298 terminated/reaped100,322.154s: all64 ran,
+63PASS/1original-dualFAIL,281skipped. All five earlier mismatched-domain
+Organic controls now pass the unchanged complete comparator, as do new seam
+and activated infill-first controls. Seeded95049 still runs; do not substitute
+official completion for its terminal receipt. Retain every earlier failure.
+
+Corrected seeded95049 terminated/reaped100,374.046s: all64 ran,
+63PASS/1original-dualFAIL,281skipped. Its five Organic controls, new seam
+and infill-first controls also pass. Both complete dual failures preserve
+baseline151482/line7181 per-tool footer and modifier9227/line488 motion gap.
+These finite replays exclude those remaining gaps and all-printer/all-option
+closure; they do not establish cross-worker-count reproducibility. Source is
+unchanged since the frozen7574 workspace/quality/platform/browser receipts.
+Final fmt14078 terminal/reaped0 and git diff --check0 after evidence edits.
+Request independent final six-axis approval for this8file checkpoint and
+feature-branch push only, not main merge or global goal completion.
+
+Independent final six-axis readback approves this8file finite checkpoint
+for commit and feature-branch push, with no new must-fix. Approval explicitly
+excludes main merge, full dual output and cross-worker/global reproducibility.
+Preserve baseline footer151482/7181 and modifier motion9227/488 RED in the
+commit body, together with the retained mismatched-domain and fail-fast history.
+
 ## Current slice: closed thin-corner boundary parameters
 
 Previous turn17506330 committed/pushed Auto Lift. Clean worktree; fresh
