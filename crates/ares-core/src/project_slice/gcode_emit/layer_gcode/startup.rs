@@ -21,6 +21,15 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
     } else {
         initial
     };
+    if !is_bbl && multiple_extruders {
+        return super::super::tool_transition::initial(
+            output,
+            state,
+            traversal,
+            metadata,
+            first_layer_bounds,
+        );
+    }
     // BBL's `init_extruder` already selected the initial extruder
     // BEFORE its filament-start render (`GCode.cpp:3144-3148`), so
     // `position` write-backs carry the extruder offset; the non-BBL
@@ -108,7 +117,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
         if !multiple_extruders {
             super::super::pressure_advance::append(output, traversal, filament);
         }
-        super::super::motion::tool_selection::toolchange(output, state, traversal, filament);
+        super::super::motion::tool_selection::toolchange(output, state, traversal, filament, "");
     }
     if is_bbl {
         output.extend_from_slice(format!(";VT{initial}\n").as_bytes());

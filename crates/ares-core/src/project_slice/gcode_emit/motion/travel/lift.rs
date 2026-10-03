@@ -3,8 +3,10 @@ use super::super::{
     format::{axis as format_axis, offset as format_offset, z as format_z},
 };
 
+mod spiral;
 #[cfg(test)]
 mod tests;
+use spiral::append as append_spiral;
 
 pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
     // `lazy_lift` reads the live `m_pos(2)` (`GCodeWriter.cpp:633-639`)
@@ -98,11 +100,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn is_allowed_at(
     state: &EmitState,
     writer_z: f64,
 ) -> bool {
-    use crate::RetractLiftEnforce;
+    height_is_allowed_at(state, writer_z) && enforce_allows_lift(state)
+}
 
-    if !height_is_allowed_at(state, writer_z) {
-        return false;
-    }
+pub(super) fn enforce_allows_lift(state: &EmitState) -> bool {
+    use crate::RetractLiftEnforce;
     // `GCode.cpp:7691-7694`: the bottom-surface test reads
     // `m_layer_index == 0` — the physical counter (raft layers included).
     let bottom = state.layer_chunk_index == 0;
@@ -248,7 +250,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     Some(raised_z)
 }
 
-pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
+pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState, force_spiral: bool) {
     // Upstream `eager_lift` (`GCodeWriter.cpp:652-681`) gates and targets
     // the CURRENT writer position `m_pos.z()` — a second eager lift stacks
     // on the already-raised z, not the nominal layer z (`0.6` then `1.0`,
@@ -262,6 +264,13 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
     }
     let current_z = state.writer_z.map_or(state.layer_z, f64::from);
     if state.options.z_hop <= 0.0 || !height_is_allowed_at(state, current_z) {
+        if force_spiral {
+            // The writer still commits target_lift=0 and clears the pending
+            // lift when eager_lift was called but its height gate disallows it.
+            state.lifted_amount = 0.0;
+            state.lifted = false;
+            state.pending_lift = None;
+        }
         return;
     }
     let raised_z = current_z + state.options.z_hop;
@@ -271,10 +280,12 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
     // Slope hop types onto SpiralLift for the layer-chunk retract
     // (`GCode.cpp:4657-4660`), so the BBL eager layer-start lift takes the
     // spiral form for all three.
-    if matches!(
-        state.options.z_hop_type,
-        crate::ZHopType::Spiral | crate::ZHopType::Auto | crate::ZHopType::Slope
-    ) && state.options.travel_slope_radians > 0.0
+    if (force_spiral
+        || matches!(
+            state.options.z_hop_type,
+            crate::ZHopType::Spiral | crate::ZHopType::Auto | crate::ZHopType::Slope
+        ))
+        && state.options.travel_slope_radians > 0.0
         && state.positioned
     {
         let radius = state.options.z_hop
@@ -327,73 +338,4 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     state.record_z(raised);
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
-}
-
-fn append_spiral(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: f64, j: f64) {
-    // `GCodeWriter.cpp:861`: the linearized spiral interpolates Z from
-    // `z_start = m_pos(2)` — the CURRENT writer z (a stacked eager lift
-    // continues upward), not the nominal layer z.
-    let z_start = state.writer_z.map_or(state.layer_z, f64::from);
-    // `_spiral_travel_to_z` (`GCodeWriter.cpp:881`): under
-    // `gcode_comments` the comment is a standalone `;spiral lift Z` line
-    // before the feedrate set (arc-fitting uses ` ; XY plane for arc`).
-    if state.options.enable_arc_fitting {
-        if state.options.gcode_comments {
-            output.extend_from_slice(b"G17 ; XY plane for arc\n");
-        } else {
-            output.extend_from_slice(b"G17\n");
-        }
-        output.extend_from_slice(
-            format!(
-                "G3 Z{} I{} J{} P1  F{}\n",
-                format_z(raised_z),
-                format_offset(i),
-                format_offset(j),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.record_z(raised_z);
-        return;
-    }
-
-    if state.options.gcode_comments {
-        output.extend_from_slice(b";spiral lift Z\n");
-    }
-    output.extend_from_slice(format!("G1 F{}\n", format_axis(state.travel_feedrate)).as_bytes());
-    let segments = (8.0 * (0.01 / state.options.arc_fitting_tolerance))
-        .round()
-        .clamp(4.0, 16.0) as usize;
-    let center_x = state.x + i;
-    let center_y = state.y + j;
-    // `_spiral_travel_to_z` derives the circle radius from
-    // `ij_offset.norm()` (`GCodeWriter.cpp:876`) — `sqrt(i*i + j*j)` with
-    // its double rounding, not `hypot`.
-    let radius = (i * i + j * j).sqrt();
-    let start_angle = (state.y - center_y).atan2(state.x - center_x);
-    for index in 1..segments {
-        let progress = index as f64 / segments as f64;
-        let angle = start_angle + std::f64::consts::TAU * progress;
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} Z{}\n",
-                super::super::super::format_processor_float(center_x + radius * angle.cos()),
-                super::super::super::format_processor_float(center_y + radius * angle.sin()),
-                super::super::super::format_processor_float(
-                    z_start + (raised_z - z_start) * progress
-                )
-            )
-            .as_bytes(),
-        );
-    }
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{} Z{}\n",
-            super::super::super::format_processor_float(state.x),
-            super::super::super::format_processor_float(state.y),
-            super::super::super::format_processor_float(raised_z)
-        )
-        .as_bytes(),
-    );
-    state.record_z(raised_z);
 }

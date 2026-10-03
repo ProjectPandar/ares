@@ -44,7 +44,7 @@ pub(super) use state::{
 pub(super) use support::{LayerAreas, emit as emit_support};
 pub(super) use travel::{
     flush_pending_retract_eager_forced, flush_pending_retract_lift, flush_pending_retract_wipe,
-    retract_for_print_end, retract_for_toolchange,
+    retract_for_custom_toolchange, retract_for_print_end, retract_for_toolchange,
 };
 
 use features::PathProperties;

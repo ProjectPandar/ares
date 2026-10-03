@@ -58,6 +58,23 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_toolchange(
     state.wipe_start = None;
 }
 
+/// Mandatory `retract(false, false, SpiralLift, true)` before custom change
+/// processing (`GCode.cpp:7957`), independent of the configured hop type.
+pub(in crate::project_slice::gcode_emit) fn retract_for_custom_toolchange(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if !state.extruder_selected {
+        return;
+    }
+    let suppressed_tail = state.on_first_layer && state.options.bottom_surface_pattern_hilbert;
+    wipe_sequence::retract_and_wipe_impl(output, state, false, suppressed_tail, false);
+    state.extruder.retracted = state.extruder.retracted_amount > 0.0;
+    if lift::enforce_allows_lift(state) {
+        lift::append_eager(output, state, true);
+    }
+}
+
 pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     output: &mut Vec<u8>,
     state: &mut EmitState,
@@ -92,7 +109,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
     // GCode.cpp:7674-7704 lifts even when retraction is already complete.
     let needs_lift = state.options.retraction_length > 0.0 || state.options.use_firmware_retraction;
     if needs_lift && lift::is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)) {
-        lift::append_eager(output, state);
+        lift::append_eager(output, state, false);
     }
 }
 
@@ -116,7 +133,7 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
     // retraction, and `can_lift` honors `retract_lift_enforce`.
     let needs_lift = state.options.retraction_length > 0.0 || state.options.use_firmware_retraction;
     if needs_lift && lift::is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)) {
-        lift::append_eager(output, state);
+        lift::append_eager(output, state, false);
     }
 }
 
@@ -215,7 +232,7 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     // for the layer's first travel.
     state.pending_lift = None;
     if state.extruder.retracted {
-        lift::append_eager(output, state);
+        lift::append_eager(output, state, false);
     }
 }
 

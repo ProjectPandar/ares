@@ -3,22 +3,76 @@
 use super::{motion, placeholders, template, timelapse, value};
 use crate::SliceError;
 
+mod change;
+pub(super) use change::last_start_filament;
+
+pub(super) fn initial(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    metadata: crate::GenerationMetadata,
+    first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
+) -> Result<(), SliceError> {
+    emit_inner(
+        output,
+        state,
+        state.initial_filaments.initial(),
+        change::Context {
+            traversal,
+            metadata,
+            first_layer_bounds,
+            layer_num: -1,
+            print_z: 0.0,
+            max_z: 0.0,
+        },
+    )
+}
+
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     filament: usize,
     context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
+    emit_inner(
+        output,
+        state,
+        filament,
+        change::Context {
+            traversal: context.traversal,
+            metadata: context.metadata,
+            first_layer_bounds: context.first_layer_bounds,
+            layer_num: context.layer.index as i64,
+            print_z: context.layer.z,
+            max_z: context.layer.max_z,
+        },
+    )
+}
+
+fn emit_inner(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    filament: usize,
+    context: change::Context<'_>,
+) -> Result<(), SliceError> {
     if state.extruders.multiple() {
+        state.toolchange_count += 1;
         motion::retract_for_toolchange(output, state);
     }
     if state.extruders.multiple() && state.extruder_selected {
         append_filament(output, state, state.extruders.active_id(), false, context)?;
     }
-    // Eager lift/change_filament/temperature remain the next coupled slices.
-    motion::tool_selection::toolchange(output, state, context.traversal, filament);
+    let custom = if state.extruders.multiple() {
+        change::append(output, state, filament, context)?
+    } else {
+        String::new()
+    };
+    motion::tool_selection::toolchange(output, state, context.traversal, filament, &custom);
     append_filament(output, state, filament, true, context)?;
     super::pressure_advance::append(output, context.traversal, filament);
+    if state.extruders.multiple() {
+        state.last_scaled_position = None;
+    }
     Ok(())
 }
 
@@ -27,7 +81,7 @@ fn append_filament(
     state: &mut motion::EmitState,
     filament: usize,
     start: bool,
-    context: timelapse::Context<'_>,
+    context: change::Context<'_>,
 ) -> Result<(), SliceError> {
     let runtime = &context.traversal.resolved.views.runtime_gcode;
     let (name, sources) = if start {
@@ -45,15 +99,12 @@ fn append_filament(
         context.first_layer_bounds,
     )?;
     motion::refresh_writer_state(&mut config, state);
-    config.insert(
-        "layer_num",
-        value::Value::Integer(context.layer.index as i64),
-    );
+    config.insert("layer_num", value::Value::Integer(context.layer_num));
     config.insert(
         "layer_z",
         value::Value::number(state.writer_z.unwrap_or(0.0) - state.options.z_offset),
     );
-    config.insert("max_layer_z", value::Value::number(context.layer.max_z));
+    config.insert("max_layer_z", value::Value::number(context.max_z));
     let template_filament = if start {
         filament as i64
     } else {

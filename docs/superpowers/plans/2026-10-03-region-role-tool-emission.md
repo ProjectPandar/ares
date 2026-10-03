@@ -1728,3 +1728,137 @@ Independent final six-axis review verifies actual7562PASS and reference54/1
 receipts, approves finite shared fixed-PA consumer code+test+docs LOCAL
 checkpoint with no new must-fix. Approval excludes push/main merge, full dual
 or global completion and all explicitly deferred formatter/transition work.
+
+## Custom change-filament lifecycle
+
+Start clean0e039a63. Current unchanged full dual replay88488 exit100,
+2.458s, /tmp/ares-custom-change-current-red.log, case-fqfXrG/case-JLy3IO.
+First differences unchanged (baselineM73 placement/modifierremainingminutes).
+Ranked falsifiable hypotheses: template unconsumed (no injected marks),
+wrong dynamic context (marks but wrong IDs/counter), or state/command
+suppression (correct marks but duplicate T/incorrect Z at new start).
+
+Public native-first child tracer tool_templates/change.rs injects a minimal
+custom comment with previous/next IDs, runtime count, layer and relative-E;
+one whitespace-prefixed T[next_extruder] and G1 Z{toolchange_z+2}. Compare
+all17 native blocks (initial+16printing), first dynamic records, first new
+start Z2.2, exactly1 T per block and fan-resume flag. Unchanged complete
+comparator still runs. Red build45726 running; obtain valid native-first RED
+before production. Same previously approved public 3MF→slice byte seam.
+
+Source boundary set_extruder7749/7858–7980/7991–7997,
+custom_gcode_changes_tool241–264, retract7652–7704/eager_lift652–681.
+Port coupled context/render/select/startup consumer, not a counter-only
+checkpoint. Runtime count owned by generator state; initial included.
+Reuse live template owner and shared writer tool selection. Required eager
+retract executes before optional render even for empty/manual-skip templates.
+Custom supplied command suppresses emitted writer string but not writer
+installation/reset. Last custom Z propagates to next filament-start.
+SEMM purge/tower, ooze temperatures and remaining output timing stay open;
+do not claim original full dual closure until both complete outputs pass.
+
+Initial45726 build and76242 replay both exit101 missing child module;
+fixed path attribute before any production change. Build36143 exit0.
+Replay14735 exit1001.854s is native expectation failure, NOT behavioral
+RED: machine-start selectsT0, so source previous_extruder is0 rather than-1
+(GCode.cpp3141/7817, GCodeProcessor.cpp::get_gcode_last_filament2932).
+Correct native literal accordingly; build50925 exit0. Replay80611 exit100
+1.866s also NOT valid RED: final body cooling consumes the internal
+FORCE_RESUME marker, whereas initial marker survives. Assert initial marker,
+compare remaining native flags rather than requiring internal markers in
+all final body blocks. Rebuild in progress; production remains untouched.
+These oracle calibrations affect only the new diagnostic, never original
+full comparator/fixture. Implement machine-start last-filament tracking as
+part of the cited context lifecycle; don't hardcodeinitial0.
+
+Corrected diagnostic build53021 exit0. Replay93624 terminated/reaped exit100,
+1.836s, /tmp/ares-custom-change-red4.log and case-mVXdy7: all17 native block,
+ID/count/layer/start-Z and single-T checks pass; Ares blocks are empty.
+This is the valid behavior RED. Then implement shared initial/body lifecycle,
+runtime state count/start-filament, dynamic common fields, live render/write-
+back and custom-command suppression. Required injected eager SpiralLift
+reuses motion's retract/lift; split spiral output function into a child mod
+to avoid growing lift.rs beyond400. Existing eager callers retain previous
+hop-type dispatch; the custom call forces source SpiralLift. Build64423
+running after fmt. No GREEN/complete dual claim yet.
+
+Implementation patch retries (duplicate target/order mismatch) failed before
+applying the combined eager-call patch; spiral mechanical extraction was
+already applied in its preceding successful patch. Corrected patch completed
+before build64423 began. No compilation failure counts as behavioral RED.
+Coverage remains only public common identity/layer/command/Z lifecycle:
+purge-volume dynamic fields/SEMM state, all other dynamic values, eager
+trajectory controls and manual-first-skip need their own source/output
+evidence before broad transition claims. Full original acceptance stays open.
+
+Build64423 exited0 (1m17s). Probe62814 exited100 (1.885s): all17
+custom contexts/counts/single-T/new-start-Z match, but Ares retains every
+body FORCE_RESUME_FAN marker while native consumes them. This is still RED,
+not a complete lifecycle checkpoint. Static review required ordinary (not
+toolchange) injected wipe/retract, missing-map hardware0, clearing eager
+zero-target lift/pending state, and source signed-u32 custom T scanning;
+fixed all four before build4912, which exited0 (1m17s). No running build
+was edited. Reviewer readback confirms those fixes, not runtime acceptance.
+
+Fan consumer boundary: CoolingBuffer.cpp543,890–898,1000–1005. Resolve
+force events in the printing-layer cooling flush in the same ordered pass
+as role requests; retain baseline vs current effective speed and auxiliary
+resend. Existing priority-normalized role markers are a compatibility shell
+for active requests. Initial custom event remains outside CoolingBuffer and
+must survive. Do not strip globally or weaken the native-first flag checks.
+
+Independent source review gives a concrete remaining wider-domain gap: an
+Overhang request from toolA can remain active after switching to toolB whose
+control is disabled; source END only clears when control is enabled, unlike
+the existing normalized BASE shell. SupportInterface/Ironing identities also
+remain absent. Explicitly defer these source consumers, not their eventual
+acceptance: the finite same-fan-configuration tracer cannot prove them.
+
+Fan build92120 exit0. Official public replay38625 exit0,1.880s,
+/tmp/ares-custom-change-fan.log: all17 native/actual contexts, single-T,
+new-start-Z and retained-startup/consumed-body event flags match. Neither the
+original comparator nor its input/assertions was relaxed. Begin retained
+official/seeded controls and quality/full-workspace gates; original dual
+complete output and global printer/options closure remain open.
+
+Official broad19185 exited100 after default fail-fast:7PASS/1FAIL,
+48unrun; retained full dual baseline byte1726/line124 and modifier byte718/
+line25 remain RED. This is not a completed broad receipt. Clippy74470
+exit0 (1m19s) had254lib/270test, one more than baseline due the new
+DoubleEndedIterator::last scanner; WASM60406 exit0 (1m36s, compile only).
+After both terminal, replace last with next_back, preserving last-valid
+selection without unnecessary iteration. Re-run final gates, and use
+--no-fail-fast for both broad references so known RED does not hide controls.
+
+Final frozen-source receipts: fmt/diff check53374 exit0; clippy44978 exit0,
+1m32s, /tmp/ares-custom-change-final-clippy.log, unchanged253lib/269test
+and CLI31 warnings. WASM9055 exit0,17.57s,
+/tmp/ares-custom-change-final-wasm.log (core+adapter compile only).
+Prebuild70605 exit0: workspace4m14s (includes lock wait), then exact CLI
+1m16s; no CPU0 compilation during the final replays.
+
+Official99476 exited100 after all56 tests (132.102s), seeded93400 exited100
+after all56 (179.427s), /tmp/ares-custom-change-final-official.log and
+/tmp/ares-custom-change-final-seeded.log. Each:55PASS/1FAIL, with47 strict
+complete-output controls and8 limited diagnostics passing. The new custom
+17-block tracer passes1.874s/2.427s. Only inherited_filament's original
+complete dual comparator fails: baseline byte1726/line124, modifier
+byte718/line25, unchanged first-difference positions. All outputs/artifacts
+retained; do not call these whole-suite reference GREEN results.
+
+Final workspace26803 ran alone after both reference processes terminated:
+exit0, /tmp/ares-custom-change-final-workspace.log,7563PASS (36slow),9skip,
+256.857s. Spiral-vase ramp regression is PASS. All changed/new functional
+Rust modules are below400LOC. No original full-output assertion, fixture or
+warning suppression changed. Request final independent six-axis approval
+for this coupled common-template LOCAL code+test+docs checkpoint only.
+Full dual output, differing-tool fan/request identities, SEMM/tower/ooze,
+all-printer and complete option-domain acceptance remain open; no push/main
+or global milestone completion is authorized by these finite receipts.
+
+Independent final six-axis review read the actual terminal receipts and
+approved this finite coupled custom-lifecycle code+test+docs LOCAL checkpoint
+with no new must-fix. Approval covers common context/render/write-back,
+writer selection, eager and same-fan-configuration cooling consumer only.
+Differing-tool request identity, SEMM/tower/ooze, complete dual and global
+printer/option domains remain open; no push/main/global completion approval.

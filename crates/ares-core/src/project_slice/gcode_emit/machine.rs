@@ -159,6 +159,7 @@ pub(super) fn append_start(
             }
         }
     };
+    state.start_gcode_filament = super::tool_transition::last_start_filament(&rendered);
     let bed_cache = temperature::append_startup(output, traversal, &rendered);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
     output.extend_from_slice(custom.as_bytes());

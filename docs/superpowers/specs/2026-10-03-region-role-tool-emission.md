@@ -92,3 +92,29 @@ startup output unchanged. Adaptive PA processing, custom change-filament
 templates, eager lift, temperatures and remaining complete-output differences
 remain open. A public native-first 3MF tracer checks all sixteen printing
 transitions; it does not replace full baseline/modifier output acceptance.
+
+The next coupled slice ports `GCode::set_extruder`'s dynamic change-filament
+context and render/select lifecycle (`GCode.cpp:7749,7858–7980,7991–7997`),
+`custom_gcode_changes_tool` (`241–264`), and the mandatory injected eager
+retract/lift (`7652–7704`, `GCodeWriter.cpp:652–681`). Rust destination:
+`gcode_emit/tool_transition/change` and shared motion writer selection,
+used by compatible multi-tool startup and printing transitions. Include
+runtime integer counter (initial call included), old/new logical/hardware
+identity, layer context, live template refresh/write-back, conditional first
+manual-change skip, EOL/fan-resume marker, last-Z adoption and suppression of
+the whole generated tool-selection string while still installing writer
+state. Extend the existing startup compatibility shell rather than invent
+a second transition pipeline. Public native-first template tracer compares
+all initial/printing blocks, injected Z visible to filament-start and exactly
+one T command per transition. Complete original outputs remain required.
+SEMM flush/ramming/tower behavior, ooze-prevention temperature and subsequent
+time/accounting closure are adjacent slices; unsupported guards and silently
+skipping the existing Snapmaker change template are not permitted.
+
+The common same-fan-configuration diagnostic includes printing-layer force
+resume consumption (`CoolingBuffer.cpp:543,890–898,1000–1005`) and retains
+startup's event outside that flush. The existing priority-normalized fan
+markers are a temporary shell, not complete per-role request state. Differing
+tool fan controls, SupportInterface/Ironing request identities and tool-change
+fan configuration refresh remain open source consumers; this finite tracer
+does not establish that wider contract or full dual-output parity.

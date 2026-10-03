@@ -39,6 +39,7 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
     state: &mut EmitState,
     traversal: &PreparedPostClassicTraversal,
     filament: usize,
+    custom: &str,
 ) {
     select(state, traversal, filament);
     let runtime = &traversal.resolved.views.runtime_gcode;
@@ -62,13 +63,16 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
     } else {
         ""
     };
-    output.extend_from_slice(format!("{prefix}{filament}{comment}\n").as_bytes());
+    let supplied = custom_changes_tool(custom, prefix, filament);
+    if !supplied {
+        output.extend_from_slice(format!("{prefix}{filament}{comment}\n").as_bytes());
+    }
     // Forced reset_E clears private and shared positions, but not signed usage
     // or retraction (`Extruder.hpp:37`, `GCodeWriter.cpp:480–503`).
     if runtime.gcode_flavor.resets_absolute_e() {
         state.extruder.e_position = 0.0;
         state.extruder.private_e_position = 0.0;
-        if !runtime.use_relative_e_distances.0 {
+        if !runtime.use_relative_e_distances.0 && !supplied {
             let comment = if state.options.gcode_comments {
                 " ; reset extrusion distance"
             } else {
@@ -77,4 +81,31 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
             output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
         }
     }
+}
+
+/// Source scanner keeps the last parseable, line-leading prefix result
+/// (`GCode.cpp:241–264`); parsing begins one byte after the prefix's start.
+fn custom_changes_tool(source: &str, prefix: &str, filament: usize) -> bool {
+    let mut selected = false;
+    for line in source.lines() {
+        let line = line.trim_start_matches(|c: char| c.is_ascii_whitespace());
+        if !line.starts_with(prefix) {
+            continue;
+        }
+        let number = line[1..].trim_start_matches(|c: char| c.is_ascii_whitespace());
+        let digits = number.strip_prefix(['+', '-']).unwrap_or(number);
+        let end = digits
+            .find(|c: char| !c.is_ascii_digit())
+            .unwrap_or(digits.len());
+        let Ok(tool) = digits[..end].parse::<u32>() else {
+            continue;
+        };
+        let tool = if number.starts_with('-') {
+            0_u32.wrapping_sub(tool)
+        } else {
+            tool
+        };
+        selected = tool as usize == filament;
+    }
+    selected
 }

@@ -2,6 +2,9 @@ use super::super::{CaseInputs, OrcaRunner, application, repo_root};
 use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
+#[path = "tool_templates/change.rs"]
+mod change;
+
 #[test]
 fn printing_toolchange_restores_pressure_advance_after_filament_start() {
     if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {

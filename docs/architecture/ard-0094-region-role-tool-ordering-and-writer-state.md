@@ -30,6 +30,22 @@ where they do not implement these upstream contracts.
 
 ## Decisions
 
+Custom tool changes produce CoolingBuffer's FORCE_RESUME_FAN event
+(`CoolingBuffer.cpp:543,890–898,1000–1005`). Its consumer belongs to the
+ordered printing-layer cooling flush, not the tool-transition renderer or
+a whole-file comment filter. Keep baseline and current effective fan speed
+distinct; active role requests suppress part-fan resume, while enabled known
+auxiliary speed is resent. Startup lies outside that flush and retains its
+event. Existing normalized role markers remain a temporary compatibility
+shell around the source priority/request state.
+
+That shell proves only the existing same-fan-configuration domain. It cannot
+represent a request retained across a tool switch whose new control disables
+the matching END, nor SupportInterface/Ironing request identities. Keep those
+source consumers open and port identity/control refresh before claiming
+general multi-tool fan parity; do not equate one normalized active bit with
+CoolingBuffer's complete request map.
+
 Region configuration must reach every emitted perimeter and fill collection,
 not just the sparse-infill density consumer. Role selection follows
 `LayerTools::extruder`; external/internal walls and top/bottom/internal solid
@@ -158,6 +174,19 @@ current_extruder symbol is read-only. Explicit filament_change() context
 mutation is adjacent parser behavior, not claimed by this render slice.
 
 ## Included / deferred
+
+Custom change-filament rendering belongs between the old filament-end and
+writer selection (`GCode.cpp:7954–7997`), including the initial compatible
+multi-tool call. Runtime `m_toolchange_count` includes initial selection and
+is separate from immutable scheduled total. Preserve source dynamic types,
+new logical legacy-vector context, current old selection during rendering,
+writer write-back, source EOL and fan-resume/last-Z/position-clear behavior.
+If custom text supplies the intended tool command, still install/reset writer
+state but omit its entire generated command string (`241–264,7991–7997`).
+The required eager retract/lift uses the shared source motion owner and is
+not gated on whether the configured template is empty; manual first-change
+skip affects rendering only. Existing startup and layer adapters are temporary
+shells for this single source lifecycle, not independent transition owners.
 
 An independent prerequisite ports the per-region wall-before/after-infill
 phases from `GCode::extrude_perimeters` / `process_layer`. It preserves

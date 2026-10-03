@@ -28,7 +28,7 @@ fn eager_layer_start_lift_takes_the_spiral_form_for_slope_type() {
     };
     let mut output = Vec::new();
 
-    append_eager(&mut output, &mut state);
+    append_eager(&mut output, &mut state, false);
 
     // radius = 0.4 / (2π·atan(3°)) ≈ 1.2169 → I1.217 with 3-digit offsets.
     let text = String::from_utf8(output).unwrap();
