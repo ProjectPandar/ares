@@ -52,6 +52,7 @@ pub(super) fn emit(
         .expect("a materialized raft has its schedule")
         .plans[object_index][raft_index];
     let first_layer = raft_index == 0 && plan.z.bottom_z.abs() < 0.0001;
+    state.on_first_layer = first_layer;
     // Raft layers belong to the same print instance and
     // carry its object labels (`GCode.cpp:5348-5352` fires
     // per `instance_to_print`, raft layers included).

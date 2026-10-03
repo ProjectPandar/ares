@@ -42,6 +42,22 @@ pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     state.extruder.retracted = true;
 }
 
+/// `GCode::set_extruder`'s `retract(true, false)` and unconditional
+/// `m_wipe.reset_path()` (`GCode.cpp:7751–7755`).
+pub(in crate::project_slice::gcode_emit) fn retract_for_toolchange(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if state.extruder_selected {
+        let suppressed_tail = state.on_first_layer && state.options.bottom_surface_pattern_hilbert;
+        wipe_sequence::retract_and_wipe_impl(output, state, true, suppressed_tail, true);
+        state.extruder.retracted = state.extruder.retracted_amount > 0.0;
+        lift::schedule_for_toolchange(state);
+    }
+    state.wipe_path.clear();
+    state.wipe_start = None;
+}
+
 pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     output: &mut Vec<u8>,
     state: &mut EmitState,

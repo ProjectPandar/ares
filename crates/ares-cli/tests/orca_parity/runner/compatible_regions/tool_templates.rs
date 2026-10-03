@@ -11,6 +11,7 @@ fn first_printing_toolchange_renders_old_end_then_new_start() {
         "; parity filament start {filament_extruder_id}",
         "; parity filament end {filament_extruder_id}",
         false,
+        &[],
     );
     for (label, bytes) in [("native", &reference), ("Ares", &actual)] {
         let output = std::str::from_utf8(bytes).unwrap();
@@ -40,6 +41,7 @@ fn printing_tool_templates_use_selected_cut_and_ec_aliases() {
         "; alias start {filament_extruder_id} {retraction_distance_when_cut} {long_retraction_when_cut} {retraction_distance_when_ec} {long_retraction_when_ec}",
         "; alias end {filament_extruder_id} {retraction_distance_when_cut} {long_retraction_when_cut} {retraction_distance_when_ec} {long_retraction_when_ec}",
         true,
+        &[],
     );
     for (label, bytes) in [("native", &reference), ("Ares", &actual)] {
         let output = std::str::from_utf8(bytes).unwrap();
@@ -77,6 +79,7 @@ fn legacy_vectors_use_logical_tool_context_and_preserve_explicit_indices() {
         "; legacy start {filament_extruder_id} [retraction_distances_when_ec] {retraction_distances_when_ec[0]} {retraction_distances_when_ec[1]}",
         "; legacy end {filament_extruder_id} [retraction_distances_when_ec] {retraction_distances_when_ec[0]} {retraction_distances_when_ec[1]}",
         true,
+        &[],
     );
     for (label, bytes) in [("native", &reference), ("Ares", &actual)] {
         let output = std::str::from_utf8(bytes).unwrap();
@@ -105,7 +108,49 @@ fn legacy_vectors_use_logical_tool_context_and_preserve_explicit_indices() {
     }
 }
 
-fn outputs(start: &str, end: &str, aliases: bool) -> (Vec<u8>, Vec<u8>) {
+#[test]
+fn printing_toolchange_retracts_old_nozzle_before_filament_end() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(
+        "; retract start {filament_extruder_id}",
+        "; retract end {filament_extruder_id} {e_retracted[current_extruder]} {e_restart_extra[current_extruder]}",
+        false,
+        &[
+            ("retract_length_toolchange", json!(["6", "9"])),
+            ("retract_restart_extra_toolchange", json!(["0.25", "0.5"])),
+        ],
+    );
+    // Snapmaker's current printer variant expands its first value to both
+    // physical nozzles at slicing time, despite preserving both in the 3MF.
+    let reference_config = std::str::from_utf8(&reference).unwrap();
+    assert!(reference_config.contains("; retract_length_toolchange = 6,6\n"));
+    assert!(reference_config.contains("; retract_restart_extra_toolchange = 0.25,0.25\n"));
+    for (label, bytes) in [("native", &reference), ("Ares", &actual)] {
+        let output = std::str::from_utf8(bytes).unwrap();
+        let body = &output[output.find(";LAYER_CHANGE").unwrap()..];
+        let first_end = body.find("; retract end ").unwrap();
+        assert_eq!(
+            body[first_end..].lines().next().unwrap(),
+            "; retract end 0 6 0.25",
+            "{label}: toolchange retract and restart extra precede the old end"
+        );
+        let second_end = body[first_end + 1..].find("; retract end ").unwrap() + first_end + 1;
+        assert_eq!(
+            body[second_end..].lines().next().unwrap(),
+            "; retract end 1 6 0.25",
+            "{label}: the later nozzle also receives the normalized toolchange settings"
+        );
+    }
+}
+
+fn outputs(
+    start: &str,
+    end: &str,
+    aliases: bool,
+    machine_overrides: &[(&str, serde_json::Value)],
+) -> (Vec<u8>, Vec<u8>) {
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
@@ -117,6 +162,9 @@ fn outputs(start: &str, end: &str, aliases: bool) -> (Vec<u8>, Vec<u8>) {
     let mut machine = profiles.machine(&selection.printer).unwrap();
     machine.insert("filament_map_mode".into(), json!("Manual"));
     machine.insert("filament_map".into(), json!(["1", "2"]));
+    for (key, value) in machine_overrides {
+        machine.insert((*key).into(), value.clone());
+    }
     if aliases {
         machine.insert("enable_long_retraction_when_cut".into(), json!("2"));
         machine.insert("retraction_distances_when_cut".into(), json!(["10", "18"]));
@@ -179,6 +227,9 @@ fn outputs(start: &str, end: &str, aliases: bool) -> (Vec<u8>, Vec<u8>) {
     )
     .unwrap();
     application::verify_value(&exported.project, "filament_end_gcode", &json!([end, end])).unwrap();
+    for (key, value) in machine_overrides {
+        application::verify_value(&exported.project, key, value).unwrap();
+    }
     if aliases {
         for (key, expected) in [
             ("enable_long_retraction_when_cut", json!("2")),

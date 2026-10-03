@@ -45,7 +45,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_and_wipe_suppressed_tail(
     output: &mut Vec<u8>,
     state: &mut EmitState,
 ) {
-    retract_and_wipe_impl(output, state, true, true);
+    retract_and_wipe_impl(output, state, true, true, false);
 }
 
 pub(super) fn retract_and_wipe_with(
@@ -53,7 +53,7 @@ pub(super) fn retract_and_wipe_with(
     state: &mut EmitState,
     cooling_marker: bool,
 ) {
-    retract_and_wipe_impl(output, state, cooling_marker, false);
+    retract_and_wipe_impl(output, state, cooling_marker, false, false);
 }
 
 pub(super) fn retract_and_wipe_impl(
@@ -61,25 +61,38 @@ pub(super) fn retract_and_wipe_impl(
     state: &mut EmitState,
     cooling_marker: bool,
     suppressed_tail: bool,
+    toolchange: bool,
 ) {
+    let (retraction_length, restart_extra, retract_comment) = if toolchange {
+        (
+            state.options.retract_length_toolchange,
+            state.options.retract_restart_extra_toolchange,
+            " ; retract for toolchange",
+        )
+    } else {
+        (
+            state.options.retraction_length,
+            state.options.retract_restart_extra,
+            " ; retract",
+        )
+    };
     let has_wipe = wipe_eligible(state);
     // `Extruder::retract` assigns `m_restart_extra` on every call
     // (`Extruder.cpp:66,77`): the before-wipe call assigns
     // `retract_before_wipe * extra`, the post-wipe `retract()` call
     // reassigns the full `extra` (`GCodeWriter.cpp:1004-1011`).
     if has_wipe {
-        state.extruder.restart_extra =
-            state.options.retract_before_wipe * state.options.retract_restart_extra;
+        state.extruder.restart_extra = state.options.retract_before_wipe * restart_extra;
     } else if !suppressed_tail {
-        state.extruder.restart_extra = state.options.retract_restart_extra;
+        state.extruder.restart_extra = restart_extra;
     }
     let WipePath {
         segments,
         retraction_distance,
         distribution_distance,
     } = wipe_moves(state);
-    let requested_before = state.options.retraction_length * state.options.retract_before_wipe;
-    let remaining = state.options.retraction_length - requested_before;
+    let requested_before = retraction_length * state.options.retract_before_wipe;
+    let remaining = retraction_length - requested_before;
     let wipe_speed = if state.options.role_based_wipe_speed {
         state.extrusion_feedrate / 60.0
     } else {
@@ -113,7 +126,7 @@ pub(super) fn retract_and_wipe_impl(
     // template `e_retracted` assignment) tops up rather than restarting
     // the full length.
     let before = if !has_wipe {
-        (state.options.retraction_length - state.extruder.retracted_amount).max(0.0)
+        (retraction_length - state.extruder.retracted_amount).max(0.0)
     } else if during <= 0.0 {
         // `(fL, 0)` — no leftover difference is folded into the
         // pre-wipe amount (`GCode.cpp:351-352`).
@@ -122,7 +135,7 @@ pub(super) fn retract_and_wipe_impl(
         // The before-wipe call emits `max(0, before - m_retracted)`
         // (`Extruder.cpp:77-84`); the post-wipe `retract()` tops the
         // remainder off to the full length.
-        (state.options.retraction_length - during - state.extruder.retracted_amount).max(0.0)
+        (retraction_length - during - state.extruder.retracted_amount).max(0.0)
     };
     if state.options.use_firmware_retraction && (has_wipe || !suppressed_tail) {
         firmware_retract(output, state);
@@ -134,7 +147,7 @@ pub(super) fn retract_and_wipe_impl(
         // 1035`, `libslic3r.h:294` — 1e-6).
         let retract = extrusion::coordinate(state, -before);
         let comment = if state.options.gcode_comments {
-            " ; retract"
+            retract_comment
         } else {
             ""
         };
@@ -216,13 +229,12 @@ pub(super) fn retract_and_wipe_impl(
         // (`GCode.cpp:7664-7670`, `Extruder.cpp:75-84`). For the
         // suppressed tail the final call is skipped entirely.
         if !suppressed_tail {
-            state.extruder.restart_extra = state.options.retract_restart_extra;
+            state.extruder.restart_extra = restart_extra;
         }
         if !suppressed_tail && state.options.use_firmware_retraction {
             firmware_retract(output, state);
         } else if !suppressed_tail {
-            let topup =
-                (state.options.retraction_length - state.extruder.retracted_amount).max(0.0);
+            let topup = (retraction_length - state.extruder.retracted_amount).max(0.0);
             // `Extruder::retract` always accumulates `m_retracted`;
             // `_retract` emits only when `!is_zero(dE)` — `1e-6`, not
             // machine eps (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
@@ -230,7 +242,7 @@ pub(super) fn retract_and_wipe_impl(
             let retract = extrusion::coordinate(state, -topup);
             if topup >= 1e-6 {
                 let comment = if state.options.gcode_comments {
-                    " ; retract"
+                    retract_comment
                 } else {
                     ""
                 };

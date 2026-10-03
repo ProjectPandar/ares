@@ -59,6 +59,7 @@ pub(super) fn emit(
         tree_base: layer.tree_base_areas.as_deref(),
     });
     state.layer_index = layer.id;
+    state.on_first_layer = layer.id == 0 && (layer.print_z - layer.height).abs() < 1e-4;
     state.object_layer_over_raft = false;
     state.spiral_vase_layer = false;
     state.avoid_boundary = None;

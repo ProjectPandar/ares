@@ -160,7 +160,10 @@ pub(super) fn emit(
     let Some(layer_index) = entry.object_layer else {
         return Ok(());
     };
-    state.layer_index = traversal.objects[object_index].physical_layers()[layer_index].id;
+    let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
+    state.layer_index = physical_layer.id;
+    state.on_first_layer =
+        physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 1e-4;
     let slicing = traversal.objects[object_index].slicing_parameters();
     state.object_layer_over_raft =
         layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;

@@ -121,6 +121,15 @@ extruder ID; start-template filament_extruder_id is the new logical filament
 ID. Comment-only lifecycle tracers isolate this behavior but never replace
 the unchanged complete-output acceptance contract.
 
+Printing multi-tool transitions first run the old tool's retract/wipe/reset_E
+and lazy lift, then unconditionally clear its wipe path, including zero-length
+toolchange retraction (`GCode.cpp:7751–7755,7652–7704`). The shared travel
+sequence takes the source toolchange mode without temporarily replacing
+ordinary motion options. Toolchange length and restart extra use physical
+extruder getters (`Extruder.cpp:205–212`); ordinary retraction remains
+filament-indexed. Printer-variant normalization is upstream configuration
+behavior, not a reason to infer tool-specific values directly from raw 3MF.
+
 Cut/EC singular aliases are selected from the current logical filament,
 preserving the source boolean type. The shared live template refresh owns
 this selection (`GCode.cpp:8008–8013`); reconstructing base configuration

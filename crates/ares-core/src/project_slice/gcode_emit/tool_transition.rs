@@ -9,11 +9,13 @@ pub(super) fn emit(
     filament: usize,
     context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
+    if state.extruders.multiple() {
+        motion::retract_for_toolchange(output, state);
+    }
     if state.extruders.multiple() && state.extruder_selected {
         append_filament(output, state, state.extruders.active_id(), false, context)?;
     }
-    // Higher-level retract/change_filament/temperature remain the next coupled
-    // source slices; this consumer installs their end/start lifecycle boundary.
+    // Eager lift/change_filament/temperature remain the next coupled slices.
     motion::tool_selection::toolchange(output, state, context.traversal, filament);
     append_filament(output, state, filament, true, context)
 }

@@ -1324,3 +1324,149 @@ Final independent six-axis review found no new must-fix and approves only
 this finite code+docs local checkpoint. Commit body must retain full dual RED
 and the remaining startup/end/full-transition/per-tool allocation/ordering/
 accounting scope. No push/main or complete multi-tool/all-printer claim.
+
+## Printing toolchange retract/wipe slice
+
+The lifecycle checkpoint is committed locally as 9604a0b5. Continue the same
+milestone, retaining its original full baseline/modifier assertion. Port
+`GCode.cpp::set_extruder` 7751–7755 and `retract` 7652–7704,
+`Wipe::calculateWipeRetractionLengths` 310–358,
+`GCodeWriter::retract_for_toolchange` 1015–1023, and
+`Extruder::retract_length_toolchange` / `retract_restart_extra_toolchange`
+205–212 into the existing motion/travel sequence and tool_transition consumer.
+The two toolchange getters use physical extruder identity, unlike ordinary
+filament retraction. Reuse the live counters and wipe geometry; do not swap
+options temporarily or copy motion state. Included: old-tool retract/wipe,
+restart-extra assignment, reset_E, lazy lift and unconditional wipe-path
+reset before old-end. Subsequent eager/change template, temperatures/PA,
+startup/end and allocation/accounting remain open required source slices.
+
+TDD seam is the previously approved public exported 3MF -> slice bytes with
+native-first observations; no private-state injection. A new tracer changes
+only public toolchange lengths to 6/9 and extras to 0.25/0.5, verifies their
+export, then reads old-tool counters through legal end-template placeholders.
+Strict full artifacts are retained as DIVERGENT rather than replacing the
+original full-output acceptance. Require native-first RED, then actual GREEN,
+unmodified controls and independent six-axis review before checkpointing.
+
+Initial command31287 terminated exit100 before invoking Orca because the
+artifact variable was misspelled; setup failure, not RED. Corrected command
+15235 invokes native output but fails the second native assertion: exported
+6/9 and 0.25/0.5 become runtime6/6 and0.25/0.25 in this printer variant.
+Retain case-APsYec and explicit native config assertions; this is not unequal
+per-nozzle coverage. Calibrated command13592 terminated/reaped exit100,
+1.870s, /tmp/ares-toolchange-retract-calibrated-red.log, case-IiB4n3. Native
+assertions all pass; Ares old-end reports0/0 instead of6/0.25. This is valid
+public-seam RED before production changes. Implement mode-aware shared
+retract/wipe, physical toolchange getters, old-tool lazy lift and unconditional
+wipe reset; subsequent eager/custom change remains open.
+
+First GREEN85701 terminated/reaped exit0, native-first test PASS1.877s.
+Independent review found a required semantic fix: Hilbert suppression reads
+`GCode::on_first_layer` (`GCode.hpp:670`), not m_layer_index. Carry the actual
+current layer's id/bottom-Z projection in EmitState, initially from the
+source-leading object-or-support chunk layer (`GCode.cpp:4559–4591,4664`),
+then refresh at each object/support/raft emission matching m_layer changes.
+Use this only for the new toolchange Hilbert gate; lift enforce's chunk-index
+contract remains unchanged. The current public tracer is not evidence of
+mixed-object/elevated-support Hilbert coverage. Quality checks88026/59052/
+84353 were interrupted deliberately and reaped exit130 before this fix;
+do not count them as completed validation. Rerun final checks on frozen fix.
+
+Independent static revalidation closes the on_first_layer fix with no new
+must-fix. Frozen official focused30599 terminated/reaped exit100:4PASS/1FAIL
+5.233s, new retract tracer4.636s. Failure is solely the unchanged original
+dual complete comparison; all three previous template diagnostics also pass.
+Final clippy15789 terminated/reaped exit0,2m12s,253lib/269test warnings and
+no dead_code matches; final WASM82924 core+adapter check terminated/reaped
+exit0,2m29s. fmt/diff checks exit0. Workspace26732, seeded focused67346,
+official broader37466 and seeded broader13903 remain confirmed live. Each
+broader batch includes the47 prior strict complete-output controls,4 limited
+native-first diagnostic tests, and unchanged original dual contract. Await
+terminal results and independent actual-log review; no full/parity or commit
+approval from these partial receipts.
+
+Concurrent workspace26732 has a real FAIL in the unmodified command-lifecycle
+test timeout_returns_before_descendant_closes_inherited_output_handles:
+bounded descendant did not finish (5.864s). Preserve /tmp/lifecycle-Ydrjsu,
+command-m7Bcnu; direct child SIGKILL/reaped after500ms, all snapshot/live
+streams0bytes, no direct-child.pid or descendant finished marker. Independent
+read-only review supports a helper startup-path blockage hypothesis but does
+not establish scheduling as its cause or prove no descendant existed. Do not
+label this known or count this full round as PASS. Single-case diagnostic21960
+is running with original assertions. After all current handles terminate,
+rerun unchanged full workspace without external Orca batches; preserve both
+the initial result and clean rerun evidence, and require revalidation.
+
+All first-round handles are now terminal/reaped. Workspace26732 exit100:
+7558PASS/1FAIL,279.307s, solely the lifecycle helper above. Isolated21960
+exit0/PASS3.065s with unchanged assertions; this supports environment
+sensitivity, not erasure of the initial FAIL. Seeded focused67346 exit100:
+4PASS/1FAIL257.291s, solely original full dual; new retract196.914s.
+Broader37466/13903 exit100: each46PASS/6FAIL273.987s/280.284s. In addition to
+the original full dual, default auto Organic and manual default/organic/grid/
+snug styles differ. These first invocations mistakenly restricted only the
+Orca child, not the entire replay; they do not implement the already-approved
+whole-process CPU0 plan above. Ares Organic generation workers() reads
+available_parallelism; merge_areas.rs chooses2- or4-leaf buckets from that
+count. Previous saved PASS case-OGDQvB and new case-1BbebX have identical
+project_settings.config and Orca body (after date header), but Ares support/
+skirt geometry differs. This is evidence of an execution mismatch, pending
+the actual corrected replay, not permission to waive output assertions.
+
+Source remains frozen. Start corrected whole-process taskset -c0 official/
+seeded52-test controls, retaining both original and corrected logs/artifacts
+at /tmp/ares-toolchange-retract-{controls,cpu0}-{official,seeded}*. No new
+reference patches or production single-worker clamp; both consumers run at
+the previously approved same one-CPU replay boundary. After these handles
+terminate, run full unchanged workspace without concurrent external batches.
+
+Corrected whole-process CPU0 official36432 terminated/reaped exit100:
+51PASS/1FAIL250.346s. All47 prior strict complete-output controls and4
+native-first diagnostic windows PASS; only original full dual FAIL5.048s.
+Each of the five Organic cases that failed under the mismatched execution
+domain passes without source/input/assertion changes. Seeded89586 remains
+live, with those five cases already PASS; await its complete terminal totals
+and the subsequent clean full-workspace run before local commit approval.
+
+Corrected seeded89586 also terminated/reaped exit100:51PASS/1FAIL296.345s,
+only original dual FAIL6.706s. All47 strict complete controls and4 diagnostic
+windows pass; the five Organic domain mismatches are resolved in both
+references without production changes. Keep the mismatched domain failures
+as evidence, not reference nondeterminism or ignored tests. All native batch
+handles are now terminal/reaped. Rerun the unchanged lifecycle test alone,
+then the entire unchanged workspace without any external Orca batches.
+
+Independent actual-log revalidation closes all five suspected Organic
+regressions in the approved shared CPU0 domain only; it does not establish
+multiworker determinism. Clean lifecycle22443 terminated/reaped exit0,
+PASS3.026s with original assertions after all native batches ended. Now run
+clean full workspace97216 alone, /tmp/ares-toolchange-retract-clean-workspace.log.
+No source changes since the reviewed first-layer fix; final Clippy/WASM/fmt
+receipts still apply. Do not replace the earlier 7558PASS/1FAIL workspace
+record or call the remaining live full process complete.
+
+Clean full workspace97216 terminated/reaped exit0:7559PASS,9SKIP,
+35slow,256.465s. All tests ran with unchanged configured parallelism and
+without concurrent external Orca batches. Log:
+/tmp/ares-toolchange-retract-clean-workspace.log. This closes the current
+checkpoint's workspace gate; retain the earlier overloaded 7558PASS/1FAIL
+record and both unchanged lifecycle reruns rather than recasting that run
+as successful. Final fmt76559 exit0 and git diff --check exit0; final frozen
+source Clippy15789 exit0 (253lib/269test warnings, no new dead code) and
+WASM core/adapter82924 exit0 remain applicable.
+
+Independent static six-axis revalidation found no new must-fix and confirmed
+the real first-layer versus lift-counter separation. Final runtime approval
+is requested against the actual clean workspace receipt. The local code+
+documentation checkpoint remains limited to printing toolchange retraction,
+wipe reset and lazy normal lift. Official/seeded shared-CPU0 each51PASS/1FAIL
+does not close full dual-tool parity: the original complete-output comparison
+remains RED. Startup/end callers, subsequent transition behavior, ordering/
+accounting and the global printer/option matrix remain open; no push or main
+merge is claimed by this local checkpoint.
+
+Independent final six-axis review verified the actual clean terminal log
+and approved this finite code+docs local checkpoint with no new must-fix.
+Approval excludes push/main merge, complete transition/accounting parity
+and global goal completion; original full dual output remains RED.

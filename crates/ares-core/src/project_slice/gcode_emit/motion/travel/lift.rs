@@ -44,7 +44,18 @@ pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f
 /// `LiftType::NormalLift`; `auto_lift_type` is NormalLift outside
 /// spiral vase).
 pub(in crate::project_slice::gcode_emit::motion) fn schedule_normal(state: &mut EmitState) {
-    if state.options.retraction_length <= 0.0 && !state.options.use_firmware_retraction {
+    schedule_normal_with(state, false);
+}
+
+pub(super) fn schedule_for_toolchange(state: &mut EmitState) {
+    schedule_normal_with(state, true);
+}
+
+fn schedule_normal_with(state: &mut EmitState, toolchange: bool) {
+    if !toolchange
+        && state.options.retraction_length <= 0.0
+        && !state.options.use_firmware_retraction
+    {
         return;
     }
     let writer_z = state.writer_z.unwrap_or(state.layer_z);

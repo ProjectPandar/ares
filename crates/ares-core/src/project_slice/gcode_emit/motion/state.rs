@@ -50,6 +50,9 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// via `on_first_layer` (`id()==0 && bottom_z≈0`) and the over-raft
     /// flag below.
     pub(in crate::project_slice::gcode_emit) layer_index: usize,
+    /// Current `m_layer`'s `id()==0 && abs(bottom_z)<EPSILON`, distinct
+    /// from the global layer counter (`GCode.hpp:670`).
+    pub(in crate::project_slice::gcode_emit) on_first_layer: bool,
     /// Global merged chunk counter (`GCode::m_layer_index`).
     pub(in crate::project_slice::gcode_emit) layer_chunk_index: usize,
     /// `m_object_layer_over_raft` (`GCode.cpp:5339-5344`): the first
