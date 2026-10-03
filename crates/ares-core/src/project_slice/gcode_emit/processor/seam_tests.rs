@@ -33,7 +33,13 @@ fn replay(name: &str, reference: &str) {
         junction_deviation: 0.01,
         ..ProcessorLimits::default()
     };
-    let actual = process(input.as_bytes().to_vec(), true, 0.0, 0.0, limits);
+    let actual = process(
+        input.as_bytes().to_vec(),
+        true,
+        0.0,
+        0.0,
+        limits.with_settings(&Default::default()),
+    );
     let expected = reference.as_bytes();
     // Optional test-only artifact retention never alters the assertion.
     if let Some(directory) = std::env::var_os("ARES_SEAM_TEST_ARTIFACTS") {

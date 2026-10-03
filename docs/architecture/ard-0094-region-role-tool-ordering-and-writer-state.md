@@ -188,6 +188,29 @@ preheat owns its separate postprocessing behavior (`GCodeProcessor.cpp:1300–
 1390`); no renderer may manufacture its removed-command comment to imitate
 final output. Complete dual acceptance requires both source owners.
 
+`GCodeProcessor.cpp:682–960,1300–1488,2038–2050` owns buffered
+ExportLines backtrace and tool preheat. Its Rust owner is
+`gcode_emit/processor/export_lines`, replacing the straight-line export shell.
+Reuse the motion analysis once: cache entries retain id, arc remaining count
+and f32 elapsed snapshot; ExportLines update probes the post-increment id
+independently of the existing M73 pre-increment lookup. Buffer real lines
+with their normal-mode timestamp, replace cooldown only while walking a
+tool's window, and insert after the found older line with its timestamp.
+Previous identical T and case-insensitive start commands stop the walk.
+Preheat uses the postprocessor's own layer-marker count and zero-based
+physical_extruder_map; do not confuse either with writer layer-id or the
+one-based filament_map. Borrow effective settings, preserve float thresholds,
+and retain the source dynamic120f minimum retention window. Include normal
+mode and XL normal P emission; defer stealth/Q, viewer line-id maps and
+native file offsets. Core returns bytes without filesystem access. No
+second geometry pass, whole-file cooldown filter or synthetic time is allowed.
+Cooldown T-axis reading follows the actual char-axis `has_value` overload
+(`GCodeReader.cpp:292–322`), including signed/hexadecimal numbers, failed
+numeric-prefix versus no-conversion distinction and continued word scanning.
+Its private numeric helper serves this consumer only. Nonfinite/out-of-range
+external values cannot match non-negative physical tools; do not reproduce
+undefined native signed casts or claim general strtod NaN-payload bit identity.
+
 Custom change-filament rendering belongs between the old filament-end and
 writer selection (`GCode.cpp:7954–7997`), including the initial compatible
 multi-tool call. Runtime `m_toolchange_count` includes initial selection and

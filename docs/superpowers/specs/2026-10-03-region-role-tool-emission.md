@@ -133,3 +133,16 @@ not the merged chunk counter. Defer ExportLines preheat/cooldown backtrace
 coupling remains open for complete output and cannot be replaced by emitting
 the native postprocessor's removed-command comment directly. The existing
 unchanged full dual comparison is the RED and final acceptance entry point.
+
+The next production slice ports `ExportLines` (`GCodeProcessor.cpp:682–960`),
+postprocess T callback and loop (`1300–1488`), activation/mapping (`2038–2050`)
+and XL identification (`PrintConfig.cpp:11607–11622`). Destination:
+`gcode_emit/processor/export_lines` with motion-cache snapshot inputs from
+the existing Estimate owner, replacing its straight-line export shell.
+Include normal-mode timed buffering, stepped backtrace, barriers, in-window
+cooldown replacement, first/normal temperature selection, mapped preheat
+and XL normal P formatting. Existing M73 lookup semantics stay unchanged.
+Deferred adjacent behavior is stealth/Q, viewer line maps and native file
+offsets. The unchanged complete dual baseline/modifier test is the RED and
+final acceptance; no temperature-only window substitutes for it. Required
+remaining fan/F/Z/timing closure stays open even if this consumer is correct.

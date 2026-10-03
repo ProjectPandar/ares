@@ -9,8 +9,18 @@ pub(super) fn append(
     wait: bool,
     tool: Option<usize>,
 ) {
+    output.extend_from_slice(command(flavor, temperature, wait, tool, "").as_bytes());
+}
+
+pub(super) fn command(
+    flavor: GCodeFlavor,
+    temperature: u32,
+    wait: bool,
+    tool: Option<usize>,
+    comment: &str,
+) -> String {
     if wait && flavor.skips_waiting_nozzle_temperature() {
-        return;
+        return String::new();
     }
     let command = flavor.nozzle_temperature_code(wait);
     let parameter = if matches!(flavor, GCodeFlavor::Mach3 | GCodeFlavor::Machinekit) {
@@ -23,15 +33,16 @@ pub(super) fn append(
         (GCodeFlavor::RepRapFirmware, Some(tool)) => format!(" P{tool}"),
         (_, Some(tool)) => format!(" T{tool}"),
     };
-    let comment = if command == "M109" {
+    let comment = if !comment.is_empty() {
+        comment
+    } else if command == "M109" {
         "set nozzle temperature and wait for it to be reached"
     } else {
         "set nozzle temperature"
     };
-    output.extend_from_slice(
-        format!("{command} {parameter}{temperature}{tool} ; {comment}\n").as_bytes(),
-    );
+    let mut output = format!("{command} {parameter}{temperature}{tool} ; {comment}\n");
     if flavor.waits_after_nozzle_temperature(wait) {
-        output.extend_from_slice(b"M116 ; wait for temperature to be reached\n");
+        output.push_str("M116 ; wait for temperature to be reached\n");
     }
+    output
 }

@@ -1,5 +1,6 @@
 //! `GCodeProcessor` motion accounting and exported progress-time lookup.
 
+mod export_cache;
 mod seam;
 use seam::SeamDetector;
 
@@ -14,6 +15,7 @@ pub(super) struct Estimate {
     pub(super) total: f64,
     pub(super) prepare: f64,
     elapsed: Vec<Option<f64>>,
+    export_elapsed: Vec<Option<f32>>,
     #[cfg(test)]
     pub(super) block_line_ids: Vec<usize>,
 }
@@ -33,6 +35,7 @@ impl Estimate {
         let mut active_tool = None;
         let mut g1_line_id = 0;
         let mut block_line_ids = Vec::new();
+        let mut remaining_internal = Vec::new();
         let mut cache_eligible = Vec::new();
         let mut seams = SeamDetector::default();
         // Per-source-line arc bookkeeping for the M73 cache lookup: the
@@ -96,6 +99,7 @@ impl Estimate {
                     kind: MotionKind::ToolChange,
                 });
                 block_line_ids.push(g1_line_id);
+                remaining_internal.push(0);
                 cache_eligible.push(false);
                 prepare_stages.push(prepare_stage);
                 events.push(FlushEvent {
@@ -163,6 +167,11 @@ impl Estimate {
                     position = end;
                 }
             }
+            remaining_internal.extend(
+                motion_blocks
+                    .iter()
+                    .map(|(segment, _)| arc_internal.map_or(0, |internal| internal - segment)),
+            );
             match command {
                 "G0" | "G1" | "G28" => {
                     g1_line_id += 1;
@@ -223,14 +232,20 @@ impl Estimate {
             .into_iter()
             .zip(&times)
             .zip(cache_eligible)
-            .filter_map(|((id, time), eligible)| {
+            .zip(remaining_internal)
+            .filter_map(|(((id, time), eligible), remaining)| {
                 // calculate_time adds every block's time before testing the
                 // associated move vertex for Extrude, Travel or Wipe.
                 cumulative += time;
                 // (g1_line_id, f32 elapsed snapshot)
-                eligible.then_some((id, f64::from(cumulative as f32)))
+                eligible.then_some(export_cache::Entry {
+                    id,
+                    remaining,
+                    elapsed: cumulative as f32,
+                })
             })
             .collect::<Vec<_>>();
+        let export_elapsed = export_cache::snapshots(lines, &cache);
         let mut elapsed = vec![None; lines.len() + 1];
         let mut cache_index = 0;
         let mut exported_g1_lines = 0;
@@ -288,14 +303,14 @@ impl Estimate {
             let Some(lookup_id) = lookup_id else {
                 continue;
             };
-            while cache_index < cache.len() && cache[cache_index].0 < lookup_id {
+            while cache_index < cache.len() && cache[cache_index].id < lookup_id {
                 cache_index += 1;
             }
             let hit = cache
                 .get(cache_index)
-                .is_some_and(|(id, _)| *id == lookup_id);
+                .is_some_and(|entry| entry.id == lookup_id);
             if hit {
-                elapsed[index + 1] = Some(cache[cache_index].1);
+                elapsed[index + 1] = Some(f64::from(cache[cache_index].elapsed));
             }
         }
         // `prepare_time += block_time` accumulates in f32
@@ -310,6 +325,7 @@ impl Estimate {
             total: cumulative + trailing_delay,
             prepare,
             elapsed,
+            export_elapsed,
             #[cfg(test)]
             block_line_ids: block_line_ids_snapshot,
         }
@@ -317,6 +333,10 @@ impl Estimate {
 
     pub(super) fn elapsed_at(&self, line: usize) -> Option<f64> {
         self.elapsed.get(line).copied().flatten()
+    }
+
+    pub(super) fn export_elapsed_at(&self, line: usize) -> Option<f32> {
+        self.export_elapsed[line]
     }
 }
 

@@ -2016,3 +2016,95 @@ Final independent six-axis复验 read actual diff and receipts and approves
 these9files as a finite local code+docs checkpoint, with no new must-fix.
 The approval explicitly excludes push/main/complete parity/global completion;
 commit body must retain full dual RED and ExportLines/fan/F/Z open scope.
+
+### ExportLines RED / implementation preflight
+
+On clean1f42b99e, exact CLI prebuild exit0; original public complete dual
+90121 terminated/reaped exit100 in2.613s (`/tmp/ares-export-lines-red.log`).
+The baseline one-model/no-modifier case still reproduces; preserve both
+original fixtures. Ranked predictions are missing consumer (raw cooldown
+survives), activation/mapping mismatch (wrong target), or timestamp mismatch
+(wrong insertion/removal window). Missing production consumer is confirmed.
+
+Independent preflight accepts source boundary with three requirements:
+group existing envelope+borrowed effective settings as ProcessorConfig,
+keeping the existing five-argument process boundary rather than adding6;
+use ByTime only when enabled, otherwise preserve source BySize flushing;
+retain actual arc remaining-chain metadata for the new timestamp consumer.
+Private processor tests only adapt configuration construction, with default
+settings representing source-disabled backtrace. Production always borrows
+real effective settings. No geometry re-analysis or M73 lookup change.
+
+First CLI build73689 exit0,1m15; full19785 exit100,2.593s,
+`/tmp/ares-export-lines-first-replay.log`:baselineN90k6e/modifieri6AqAb,
+unchanged first differences1726/718. Read-only extraction of real removed
+M104/preheat/cooldown lines yields identical sequences(21/94), not a new
+acceptance test or complete GREEN. Fan/F/Z/time differences remain.
+
+Independent source review found the cooldown char-axis overload uses strtod,
+not the adjacent fast_float overload. Fixed signed +, repeated invalid words,
+bare axes, prefix-consumption versus no-conversion and C-locale hex floats.
+Hex helper preserves double rounding with normal/subnormal guard/sticky and
+ties-to-even before f32 conversion. It is private to cooldown T words, not
+a new general reader framework. External nonfinite/unrepresentable values
+cannot match physical IDs; no native-UB or NaN payload bit parity is claimed.
+Review withdrew an ordinary0-temperature concern after reading configuration
+normalization2076–2082; retain lazy source-equivalent normalization with citation.
+
+Clippy first55686 terminated exit101 due closure E0631; corrected closure.
+Next91221 exit0 but254/270 included new nonminimal_bool; corrected guard.
+Quality97300 and84674 exit0 (1m19/1m20),253/269 unchanged. Required nesting
+flattening follows source window/inserter callbacks, withoutallow attributes.
+All subsequent gates must run on the final matching-range guard snapshot;
+these intermediate quality receipts alone do not prove final approval.
+
+### ExportLines frozen gates and reference ordering evidence
+
+Final matching-range snapshot CLI80889 exit0 (1m17),
+`/tmp/ares-export-lines-frozen-build.log`; clippy55549 exit0 (1m19),
+253lib/269test/CLI31 unchanged, `/tmp/ares-export-lines-frozen-clippy.log`.
+fmt/diff exit0. WASM97064 exit0 (17.35s),
+`/tmp/ares-export-lines-frozen-wasm.log`, core+adapter compile only.
+No production edits occurred after these gates began.
+
+Official19515 terminated/reaped exit100 (131.164s),
+`/tmp/ares-export-lines-official-controls.log`:56run,54PASS/2FAIL,
+281skipped. Preserve both failures: original complete dual RED and the
+later-higher-density compatible-regions baseline failure. The latter's
+first normalized difference is byte12097/line524: native travels to
+X113.388 Y113.135 before X113.244 Y113.297; Ares uses the reverse block
+order. Native exchanges two Internal solid infill blocks and moves M73.
+
+Current failure case-u3KBIj/ares.gcode and prior passing checkpoint
+case-btWlnD/ares.gcode have identical raw SHA256
+9947b3e77058ea7889262e570560b60807bd662ae698965e3a968f0ad0b64c4d.
+Both roots remain under /tmp/ares-export-lines-official-controls and
+/tmp/ares-dual-ooze-official-controls respectively. Their saved input ZIPs
+have different container hashes/timestamps, but all nine decompressed
+members compare identically (including escaped [Content_Types].xml).
+This establishes unchanged input content and Ares output, with observed
+reference ordering variation; it does not identify its internal cause.
+Focused original complete-comparator reruns16405/85349 terminate exit0,
+2.306s/2.284s, logs/artifacts /tmp/ares-export-lines-density-repeat-one
+and /tmp/ares-export-lines-density-repeat-two. These passes do not replace
+the retained broad54/2 receipt or weaken any assertion.
+
+Seeded67501 terminated/reaped exit100 (179.815s),
+`/tmp/ares-export-lines-seeded-controls.log`:56run,55PASS/1FAIL,
+281skipped. Only original complete dual fails; later-density full comparator
+passes. These finite controls retain47strict complete-output comparisons
+and8limited diagnostics, not all-printer/options coverage.
+Workspace23643 terminated/reaped exit0:2m48 compile,257.884s run,
+`/tmp/ares-export-lines-workspace.log`:7563PASS,35slow,9skipped.
+Spiral vase ramps and current-layer-spacing behavioral controls pass.
+Final fmt/diff checks remain required after receipt-only documentation edits.
+Request independent finite local checkpoint approval; complete dual RED,
+fan/F/Z/time differences, all-printer/options coverage and push/main closure
+remain outside this approval. New reproducible-generation documents are a
+separate user-requested slice and are excluded from this checkpoint.
+
+Independent final six-axis readback approves the16file staged closure as a
+finite local checkpoint, with no source must-fix. Final fmt69151 and cached
+diff check terminate exit0. Approval excludes reproducibility documents,
+push/main, complete dual parity and global completion; preserve official54/2,
+seeded55/1 and unchanged-Ares/reference-variation evidence in commit body.

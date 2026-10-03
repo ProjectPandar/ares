@@ -57,7 +57,14 @@ fn machine_max_feedrate_limits_extrusion_time() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E30 F3600\nG1 E60 F3600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(output, false, 0.0, 0.0, bbl_limits())).unwrap();
+    let output = String::from_utf8(process(
+        output,
+        false,
+        0.0,
+        0.0,
+        bbl_limits().with_settings(&Default::default()),
+    ))
+    .unwrap();
 
     assert!(output.contains("total estimated time: 3s"), "{output}");
 }

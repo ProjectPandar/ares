@@ -267,7 +267,8 @@ pub(super) fn emit(
             .machine_load_filament_time
             .0,
         used_filament,
-        processor::ProcessorLimits::from_traversal(traversal, state.tags.is_bbl()),
+        processor::ProcessorLimits::from_traversal(traversal, state.tags.is_bbl())
+            .with_settings(&traversal.resolved.views.full),
     ))
 }
 

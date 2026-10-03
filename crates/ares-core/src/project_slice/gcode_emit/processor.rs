@@ -2,6 +2,7 @@ mod arc_accounting;
 mod delays;
 mod envelope;
 mod estimate;
+mod export_lines;
 mod motion;
 mod motion_util;
 mod schedule;
@@ -9,6 +10,7 @@ mod stats;
 mod time;
 use crate::options::GCodeFlavor;
 use estimate::Estimate;
+use export_lines::ExportLines;
 pub(super) use stats::{PRINT_TIME_SEC_PLACEHOLDER, USED_FILAMENT_LENGTH_PLACEHOLDER};
 use time::{duration, minutes};
 
@@ -29,6 +31,20 @@ pub(super) struct ProcessorLimits {
     pub(super) retract_restart_extra: f64,
     pub(super) retraction_feedrate: f64,
     pub(super) deretraction_feedrate: f64,
+}
+
+pub(super) struct ProcessorConfig<'a> {
+    limits: ProcessorLimits,
+    settings: &'a crate::ProjectSettings,
+}
+
+impl ProcessorLimits {
+    pub(super) fn with_settings(self, settings: &crate::ProjectSettings) -> ProcessorConfig<'_> {
+        ProcessorConfig {
+            limits: self,
+            settings,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -53,16 +69,22 @@ impl Default for ProcessorLimits {
 }
 
 pub(super) fn process(
-    mut output: Vec<u8>,
+    output: Vec<u8>,
     emit_progress: bool,
     machine_load_filament_time: f64,
     used_filament: f64,
-    limits: ProcessorLimits,
+    config: ProcessorConfig<'_>,
 ) -> Vec<u8> {
-    let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
+    let limits = config.limits;
+    let text = String::from_utf8(output).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
     let estimate = Estimate::from_lines(&lines, machine_load_filament_time, limits);
-    let mut result = String::with_capacity(text.len() + text.len() / 100);
+    let mut result = ExportLines::new(
+        config.settings,
+        limits.gcode_flavor,
+        limits.bbl_printer,
+        text.len(),
+    );
     let mut last_progress = None;
     let first_marker = lines
         .iter()
@@ -76,11 +98,12 @@ pub(super) fn process(
     for (index, line) in lines.iter().enumerate() {
         let expanded = stats::expand(line, &print_time_sec, &used_filament_length);
         let line = expanded.as_ref();
+        result.begin(line, estimate.export_elapsed_at(index + 1));
         if line == "M73 P0 R0" {
             if emit_progress {
                 let remaining = minutes(estimate.total);
                 last_progress = Some((0, remaining));
-                result.push_str(&format!("M73 P0 R{remaining}\n"));
+                result.append(format!("M73 P0 R{remaining}\n"));
             }
             continue;
         }
@@ -91,13 +114,13 @@ pub(super) fn process(
             || line == "; estimated printing time (normal mode) = 0s"
         {
             if limits.bbl_printer {
-                result.push_str(&format!(
+                result.append(format!(
                     "; model printing time: {}; total estimated time: {}\n",
                     duration(model_time),
                     duration(estimate.total),
                 ));
             } else {
-                result.push_str(&format!(
+                result.append(format!(
                     "; estimated printing time (normal mode) = {}\n",
                     duration(estimate.total),
                 ));
@@ -105,14 +128,13 @@ pub(super) fn process(
             continue;
         }
         if line.starts_with("; estimated first layer printing time") {
-            result.push_str(&format!(
+            result.append(format!(
                 "; estimated first layer printing time (normal mode) = {}\n",
                 duration(prepare_time),
             ));
             continue;
         }
-        result.push_str(line);
-        result.push('\n');
+        result.append(format!("{line}\n"));
         if index < first_marker || !emit_progress || !is_progress_motion(line) {
             continue;
         }
@@ -134,12 +156,10 @@ pub(super) fn process(
         let remaining = minutes(estimate.total - f64::from(elapsed));
         if last_progress != Some((percent, remaining)) {
             last_progress = Some((percent, remaining));
-            result.push_str(&format!("M73 P{percent} R{remaining}\n"));
+            result.append(format!("M73 P{percent} R{remaining}\n"));
         }
     }
-    output.clear();
-    output.extend_from_slice(result.as_bytes());
-    output
+    result.finish()
 }
 
 fn is_progress_motion(line: &str) -> bool {
