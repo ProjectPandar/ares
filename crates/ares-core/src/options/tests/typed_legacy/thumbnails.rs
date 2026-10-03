@@ -240,7 +240,7 @@ fn project_with_thumbnails(thumbnails: &str, format: &str) -> Vec<u8> {
     for index in 0..source.len() {
         let mut entry = source.by_index(index).unwrap();
         let name = entry.name().to_owned();
-        let options = SimpleFileOptions::default().compression_method(entry.compression());
+        let options = SimpleFileOptions::DEFAULT.compression_method(entry.compression());
         if entry.is_dir() {
             destination.add_directory(name, options).unwrap();
             continue;

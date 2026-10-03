@@ -23,7 +23,7 @@ fn shorten_payloads(project: &[u8]) -> Vec<u8> {
         output
             .start_file(
                 file.name(),
-                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
             )
             .unwrap();
         output.write_all(&bytes).unwrap();

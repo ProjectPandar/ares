@@ -71,7 +71,7 @@ fn paint_faces(project: &[u8], codes: &[&str], select: impl Fn([[f64; 3]; 3]) ->
         output
             .start_file(
                 file.name(),
-                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
             )
             .unwrap();
         output.write_all(&bytes).unwrap();

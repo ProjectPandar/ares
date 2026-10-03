@@ -17,7 +17,7 @@ fn btt_artifacts_compare_raw_bytes_and_reject_output_mutations() {
             bytes = serde_json::to_vec(&settings).unwrap();
         }
         output
-            .start_file(entry.name(), zip::write::SimpleFileOptions::default())
+            .start_file(entry.name(), zip::write::SimpleFileOptions::DEFAULT)
             .unwrap();
         output.write_all(&bytes).unwrap();
     }

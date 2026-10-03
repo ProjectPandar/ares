@@ -116,7 +116,7 @@ fn orca_parity_unequal_height_objects_preserve_complete_skirt_output() {
         output
             .start_file(
                 file.name(),
-                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
             )
             .unwrap();
         output.write_all(&bytes).unwrap();
@@ -130,7 +130,7 @@ fn orca_parity_unequal_height_objects_preserve_complete_skirt_output() {
     output
         .start_file(
             "3D/Objects/cube10-tall.model",
-            zip::write::SimpleFileOptions::default(),
+            zip::write::SimpleFileOptions::DEFAULT,
         )
         .unwrap();
     output.write_all(&tall_mesh).unwrap();

@@ -78,7 +78,7 @@ fn orca_parity_bookkeeping_matches_complete_configured_filament_output() {
             output
                 .start_file(
                     file.name(),
-                    zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+                    zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
                 )
                 .unwrap();
             output.write_all(&bytes).unwrap();

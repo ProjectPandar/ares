@@ -138,7 +138,6 @@ fn first_difference_truncates_long_context_lines() {
 fn project_matches_initialized_orca_242_ordered_bytes() {
     let temp = tempfile::tempdir().unwrap();
     let output = temp.path().join("actual.gcode");
-    let before = local_now_to_second();
     assert_cmd::Command::cargo_bin("ares")
         .unwrap()
         .args([
@@ -149,13 +148,11 @@ fn project_matches_initialized_orca_242_ordered_bytes() {
         ])
         .assert()
         .success();
-    let after = local_now_to_second();
     let actual = std::fs::read(output).unwrap();
     compare_actual(&actual).unwrap();
-    let generated_at = generated_at(&actual);
-    assert!(
-        (before..=after).contains(&generated_at),
-        "generator timestamp {generated_at} was outside {before}..={after}"
+    assert_eq!(
+        generated_at(&actual),
+        DateTime::new(1970, 1, 1, 0, 0, 0, 0).unwrap()
     );
     let changed_id = String::from_utf8(actual)
         .unwrap()

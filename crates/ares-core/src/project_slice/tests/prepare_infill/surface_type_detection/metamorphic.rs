@@ -65,7 +65,7 @@ fn repack_reverse(bytes: Vec<u8>) -> Vec<u8> {
     }
     entries.reverse();
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
-    let options = SimpleFileOptions::default()
+    let options = SimpleFileOptions::DEFAULT
         .compression_method(CompressionMethod::Stored)
         .system(System::Unix);
     for (path, bytes) in entries {

@@ -88,7 +88,7 @@ fn orca_parity_initialized_overhang_intersections_match_complete_output() {
         output
             .start_file(
                 file.name(),
-                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
             )
             .unwrap();
         output.write_all(&bytes).unwrap();

@@ -199,7 +199,7 @@ impl ProjectParts {
 
     pub(in crate::project::tests) fn bytes(self) -> Vec<u8> {
         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
-        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = SimpleFileOptions::DEFAULT.compression_method(CompressionMethod::Deflated);
         for (path, bytes) in self.entries {
             writer.start_file(path, options).unwrap();
             writer.write_all(&bytes).unwrap();

@@ -6,7 +6,7 @@ fn project(fields: Value) -> Vec<u8> {
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     zip.start_file(
         "Metadata/project_settings.config",
-        zip::write::SimpleFileOptions::default(),
+        zip::write::SimpleFileOptions::DEFAULT,
     )
     .unwrap();
     zip.write_all(&serde_json::to_vec(&fields).unwrap())

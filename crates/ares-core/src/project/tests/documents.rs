@@ -265,7 +265,7 @@ fn archive_with_corrupt_unreferenced_preview() -> Vec<u8> {
     const CONTENT_TYPES: &[u8] = br#"<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="png" ContentType="image/png"/></Types>"#;
     const PREVIEW: &[u8] = b"opaque-unreferenced-preview-payload";
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
-    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+    let options = SimpleFileOptions::DEFAULT.compression_method(CompressionMethod::Stored);
     writer.start_file("[Content_Types].xml", options).unwrap();
     writer.write_all(CONTENT_TYPES).unwrap();
     writer

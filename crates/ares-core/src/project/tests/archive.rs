@@ -163,7 +163,7 @@ fn project_archive_validates_zip64_data_descriptors() {
     let bytes = stream_zip_with_options(
         "stream64.bin",
         b"zip64 descriptor payload",
-        SimpleFileOptions::default().large_file(true),
+        SimpleFileOptions::DEFAULT.large_file(true),
     );
     let mut archive = ProjectArchive::open(&bytes, ArchiveLimits::PROJECT).unwrap();
     assert_eq!(
@@ -224,10 +224,7 @@ fn zip(entries: &[(&str, &[u8], CompressionMethod)]) -> Vec<u8> {
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
     for &(name, contents, method) in entries {
         writer
-            .start_file(
-                name,
-                SimpleFileOptions::default().compression_method(method),
-            )
+            .start_file(name, SimpleFileOptions::DEFAULT.compression_method(method))
             .unwrap();
         writer.write_all(contents).unwrap();
     }
@@ -240,7 +237,7 @@ fn empty_zip(count: usize) -> Vec<u8> {
         writer
             .start_file(
                 format!("{index}.empty"),
-                SimpleFileOptions::default().compression_method(CompressionMethod::Stored),
+                SimpleFileOptions::DEFAULT.compression_method(CompressionMethod::Stored),
             )
             .unwrap();
     }
@@ -248,7 +245,7 @@ fn empty_zip(count: usize) -> Vec<u8> {
 }
 
 fn stream_zip(name: &str, contents: &[u8]) -> Vec<u8> {
-    stream_zip_with_options(name, contents, SimpleFileOptions::default())
+    stream_zip_with_options(name, contents, SimpleFileOptions::DEFAULT)
 }
 
 fn stream_zip_with_options(name: &str, contents: &[u8], options: SimpleFileOptions) -> Vec<u8> {
@@ -262,7 +259,7 @@ fn zip_with_unicode_alias(physical: &str, alias: &str) -> Vec<u8> {
     let mut unicode_path = vec![1];
     unicode_path.extend_from_slice(&0u32.to_le_bytes());
     unicode_path.extend_from_slice(alias.as_bytes());
-    let mut options = SimpleFileOptions::default().into_full_options();
+    let mut options = SimpleFileOptions::DEFAULT.into_full_options();
     options.add_extra_data(0x7075, unicode_path, true).unwrap();
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
     writer.start_file(physical, options).unwrap();

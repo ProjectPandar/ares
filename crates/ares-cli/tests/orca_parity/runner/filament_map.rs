@@ -69,7 +69,7 @@ impl OrcaRunner {
             output
                 .start_file(
                     file.name(),
-                    zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+                    zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
                 )
                 .map_err(error)?;
             output.write_all(&bytes).map_err(error)?;

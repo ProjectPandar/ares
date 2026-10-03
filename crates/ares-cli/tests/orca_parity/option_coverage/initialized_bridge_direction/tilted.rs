@@ -125,7 +125,7 @@ fn project() -> Vec<u8> {
         ("3D/3dmodel.model", model.as_str()),
     ] {
         archive
-            .start_file(path, zip::write::SimpleFileOptions::default())
+            .start_file(path, zip::write::SimpleFileOptions::DEFAULT)
             .unwrap();
         archive.write_all(content.as_bytes()).unwrap();
     }

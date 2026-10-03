@@ -82,7 +82,7 @@ fn synthetic_archive(resources: &str, build_ids: &[u32]) -> Vec<u8> {
         ("Metadata/model_settings.config", model_settings(build_ids)),
     ];
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
-    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+    let options = SimpleFileOptions::DEFAULT.compression_method(CompressionMethod::Deflated);
     for (path, text) in entries {
         writer.start_file(path, options).unwrap();
         writer.write_all(text.as_bytes()).unwrap();

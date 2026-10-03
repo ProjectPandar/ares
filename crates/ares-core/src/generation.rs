@@ -12,6 +12,13 @@ pub struct GenerationMetadata {
     second: u8,
 }
 
+/// Default adapters use Unix epoch zero rather than the execution wall clock.
+impl Default for GenerationMetadata {
+    fn default() -> Self {
+        Self::deterministic(1970, 1, 1, 0, 0, 0)
+    }
+}
+
 impl GenerationMetadata {
     pub(crate) const fn timestamp(self) -> (u16, u8, u8, u8, u8, u8) {
         (

@@ -1,5 +1,4 @@
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};
-use js_sys::Date;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -23,26 +22,14 @@ pub async fn slice_project(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
 
 #[wasm_bindgen(js_name = sliceProjectPlate)]
 pub async fn slice_project_plate(input: Vec<u8>, plate: Option<u32>) -> Result<Vec<u8>, JsValue> {
-    let metadata = local_generation_metadata().map_err(slice_error_js)?;
-    ares_core::slice_project_plate(input, metadata, plate, ares_core::SlicerContext::new(0))
-        .await
-        .map_err(slice_error_js)
-}
-
-fn local_generation_metadata() -> Result<GenerationMetadata, SliceError> {
-    let now = Date::new_0();
-    GenerationMetadata::new_local(
-        u16::try_from(now.get_full_year()).map_err(|_| invalid_date())?,
-        u8::try_from(now.get_month() + 1).map_err(|_| invalid_date())?,
-        u8::try_from(now.get_date()).map_err(|_| invalid_date())?,
-        u8::try_from(now.get_hours()).map_err(|_| invalid_date())?,
-        u8::try_from(now.get_minutes()).map_err(|_| invalid_date())?,
-        u8::try_from(now.get_seconds()).map_err(|_| invalid_date())?,
+    ares_core::slice_project_plate(
+        input,
+        GenerationMetadata::default(),
+        plate,
+        ares_core::SlicerContext::new(0),
     )
-}
-
-fn invalid_date() -> SliceError {
-    SliceError::InvalidInput("browser local date is outside the supported range".to_owned())
+    .await
+    .map_err(slice_error_js)
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {

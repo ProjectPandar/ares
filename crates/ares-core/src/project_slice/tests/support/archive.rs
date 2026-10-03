@@ -5,6 +5,8 @@ use std::{
 
 use zip::{CompressionMethod, DateTime, System, ZipArchive, ZipWriter, write::SimpleFileOptions};
 
+mod tests;
+
 const FLUSH_MATRIX: &str = concat!(
     "\t\"flush_volumes_matrix\": [\r\n",
     "\t\t\"0\",\r\n",
@@ -116,7 +118,7 @@ impl KsrArchive {
         timestamp: Option<DateTime>,
     ) -> Vec<u8> {
         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
-        let mut options = SimpleFileOptions::default()
+        let mut options = SimpleFileOptions::DEFAULT
             .compression_method(compression)
             .system(system);
         if let Some(timestamp) = timestamp {

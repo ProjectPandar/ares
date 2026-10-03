@@ -38,7 +38,7 @@ fn project(global: &str, plate: &str) -> Vec<u8> {
             format!("<config><plate>{plate}</plate></config>").into_bytes(),
         ),
     ] {
-        zip.start_file(name, zip::write::SimpleFileOptions::default())
+        zip.start_file(name, zip::write::SimpleFileOptions::DEFAULT)
             .unwrap();
         zip.write_all(&bytes).unwrap();
     }

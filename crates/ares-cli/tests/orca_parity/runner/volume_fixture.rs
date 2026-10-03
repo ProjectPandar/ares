@@ -58,7 +58,7 @@ pub(super) fn add_volumes(
                 .into_bytes();
         }
         output
-            .start_file(file.name(), zip::write::SimpleFileOptions::default())
+            .start_file(file.name(), zip::write::SimpleFileOptions::DEFAULT)
             .unwrap();
         output.write_all(&bytes).unwrap();
     }
@@ -67,7 +67,7 @@ pub(super) fn add_volumes(
         output
             .start_file(
                 format!("3D/Objects/support-annotation-{id}.model"),
-                zip::write::SimpleFileOptions::default(),
+                zip::write::SimpleFileOptions::DEFAULT,
             )
             .unwrap();
         let model = annotation
