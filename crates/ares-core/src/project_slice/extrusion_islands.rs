@@ -1,6 +1,9 @@
 // Source boundary: OrcaSlicer v2.4.2 `GCode.cpp:4982-5000,5010-5068,8220-8249`
 // island membership and sortable collection flattening.
 
+mod tool_regions;
+pub(in crate::project_slice) use tool_regions::{RegionToolUsage, fill_role};
+
 use crate::{
     geometry::{Coord, ExPolygon, Point, fixed_gcc_sort_by},
     project_slice::{
@@ -30,6 +33,7 @@ pub(in crate::project_slice) struct ExtrusionIsland {
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct LayerExtrusionIslands {
     pub(in crate::project_slice) islands: Vec<ExtrusionIsland>,
+    pub(in crate::project_slice) tool_regions: Vec<RegionToolUsage>,
 }
 
 pub(in crate::project_slice) struct PreparedPostExtrusionIslands {
@@ -75,6 +79,7 @@ pub(in crate::project_slice) fn prepare(
 }
 
 fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExtrusionIslands {
+    let tool_regions = tool_regions::collect(layer);
     let bounds = slices.iter().map(contour_bounds).collect::<Vec<_>>();
     let mut order = (0..slices.len()).collect::<Vec<_>>();
     fixed_gcc_sort_by(&mut order, |left, right| {
@@ -126,7 +131,10 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
             .infills
             .push((region, IslandInfillEntity::Thin(thin)));
     }
-    LayerExtrusionIslands { islands }
+    LayerExtrusionIslands {
+        islands,
+        tool_regions,
+    }
 }
 
 fn thin_first_point(entity: &GapFillEntity) -> Point {

@@ -28,6 +28,7 @@ pub(in crate::project_slice) struct OrderedExtrusionIsland {
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct OrderedExtrusionLayer {
     pub(in crate::project_slice) islands: Vec<OrderedExtrusionIsland>,
+    pub(in crate::project_slice) tool_regions: Vec<super::extrusion_islands::RegionToolUsage>,
 }
 
 pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
@@ -113,6 +114,7 @@ pub(in crate::project_slice) fn prepare(
                 .iter_mut()
                 .enumerate()
                 .map(|(layer_index, layer)| OrderedExtrusionLayer {
+                    tool_regions: std::mem::take(&mut layer.tool_regions),
                     islands: std::mem::take(&mut layer.islands)
                         .into_iter()
                         .map(|island| {

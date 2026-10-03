@@ -23,6 +23,7 @@ mod timelapse;
 mod wrapping;
 
 use entry_builder::EntryBuilder;
+pub(super) use raft_schedule::RaftSchedule;
 use schedule::Schedule;
 pub(super) use schedule::build as build_schedule;
 
@@ -113,6 +114,7 @@ pub(super) fn append(
         object_layer_counts,
         last_entry,
         mut skirt_schedule,
+        tool_ordering,
         ..
     } = schedule;
     let mut raft_layers = raft
@@ -146,7 +148,7 @@ pub(super) fn append(
             group_end == merged.len(),
         );
         group_start = group_end;
-        if !group::has_tools(&entries, objects, support_layers, &raft_layers) {
+        if tool_ordering.tools_for_layer(group_z).is_empty() {
             cooling.empty_layer(output, cooling_layer_index, group_end == merged.len());
             continue;
         }

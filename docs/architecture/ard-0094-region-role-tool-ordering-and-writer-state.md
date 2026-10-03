@@ -11,6 +11,11 @@ multi-tool pipeline:
   `ToolOrdering::initialize_layers`, `collect_extruders`,
   `handle_dontcare_extruder`, `reorder_extruders_for_minimum_flush_volume`,
   `collect_extruder_statistics`, and `mark_skirt_layers`.
+- `GCode/ToolOrderUtils.cpp/.hpp`: `get_extruders_order`, forecast,
+  Hamilton-path and greedy solvers, and grouped layer sequence assembly.
+  `ToolOrdering::generate_first_layer_tool_order` owns area-based initial
+  order; `ParameterUtils.cpp::get_other_layers_print_sequence` decodes
+  configured layer ranges. Sorting collected IDs is not a final schedule.
 - `GCode.cpp`: `process_layer` region/role bucketing and per-extruder traversal
   (4971–5075, 5241, 5308), and `GCode::set_extruder` (7710 onward).
 - `GCodeWriter.cpp/.hpp`: filament-to-hardware selection, `toolchange`,
@@ -31,6 +36,24 @@ not just the sparse-infill density consumer. Role selection follows
 fills may select distinct configured filaments. Preserve canonical print-region
 identity through geometry grouping and print-order transformations.
 
+`ToolOrdering::collect_extruders` observes the first child role of each
+region fill collection before the G-code island adapter flattens sortable
+collections. Preserve that compact role-presence annotation during island
+assignment; do not infer tools from option declarations, copy geometry or
+classify every later flattened path as an independent source collection.
+ToolOrdering owns its `initialize_layers` grouping of original object/support
+Z values. Do not reuse the G-code schedule's already-paired/averaged Z values:
+near-Z grouping is not associative. Writer registration and empty-layer handling consume actual layer
+tools, while sorted collected IDs alone are not the final printing order.
+
+`ToolOrderUtils` output-affecting sequence production preserves single-
+precision matrix entries and comparisons, source forecast/DP/greedy ties,
+the fixed-width cache key and two-group assembly. Configured first-layer
+order is protected before later-layer reverse-precedence custom ranges.
+Non-BBL printers use the source's one-group scheduling even when writer
+hardware mapping uses multiple nozzles. Do not substitute ascending IDs or
+a newly designed optimizer for the source order.
+
 Layer emission must consume upstream tool order and its per-tool object,
 island, and region buckets. Do not insert ad hoc `T` commands into the existing
 entity stream: scheduling changes traversal and tool-change side effects.
@@ -40,6 +63,44 @@ from the number of used filaments. Port upstream ownership of E, retraction,
 restart extra, extrusion conversion, and statistics. Keep machine position
 and writer-global state global; do not duplicate the entire emitter per tool.
 Shared-extruder semantics must not leak into the independent-nozzle case.
+
+`Extruder` private position/retraction, restart extra and signed absolute-E
+remain filament-owned; SEMM motion E/retraction are physical-hotend-owned.
+`PlaceholderParserIntegration` (`GCode.cpp:1625–1713,3908–3914`) refreshes
+and writes back every registered extruder in ID order. E output vectors are
+64-wide only when tools exist; absolute position is absent in relative-E
+mode. Statistics are last-registered-ID-plus-one wide with zero-filled holes.
+Template failures preserve earlier write-backs, not an invented transaction.
+Writer registration must precede machine-start template refresh/write-back,
+as in `GCode.cpp:2791,2829,3118`. Startup and later templates use the same
+registered private-counter ownership; do not transfer a separate slot0-only
+outcome into a writer constructed after startup. Position assignments update
+the live writer before the existing silent preamble Z transition.
+
+Startup first/non-support filament slots are filled by actual ordered layer
+tools, not by sorting declared configuration IDs. Preserve source completion
+and no-map early exits, all-support initial fallback, integer placeholder
+types and the unconditional physical-slot remap. Resolve this metadata once
+and share its immutable values across machine/layer/role/end template refresh.
+Ordinary initial-tool metadata is not a physical writer selection; Type2
+wipe-tower priming selection remains part of the adjacent tower boundary.
+
+Selected-tool motion uses logical filament-indexed getters for extrusion,
+retraction and fan settings, and mapped physical-indexed nozzle geometry,
+travel slope and offsets. Source get_at repeats element0 only for an out-of-
+range index; a Nil override inherits its printer value, not another filament's
+first non-Nil override. Keep the skirt planner's separate pre-emission flow
+consumer outside this motion rewrite until its owning source slice changes it.
+BBL initialization precedes filament-start; compatible selection follows it.
+Global position remains shared and private E counters stay in the registry.
+
+Writer tool selection has one production owner in motion/tool_selection:
+registry activation, selected options/offset and physical hotend are installed
+together. GCodeWriter::toolchange's command predicate uses the highest used
+logical ID, not declared filament count alone; its forced reset clears private
+and shared E position without resetting usage or retraction. BBL startup's
+init_extruder uses installation without a command. This writer operation does
+not replace GCode::set_extruder's higher-level transition side effects.
 
 `GCode::set_extruder` owns transition ordering, templates, retract/wipe,
 offsets, temperatures and writer selection. Header IDs, tool-change counters,

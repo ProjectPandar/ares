@@ -16,14 +16,15 @@ use crate::project_slice::raft::bridge::build_project_raft;
 /// Object layer indices at or above this are raft sentinels.
 pub(super) const RAFT_SENTINEL_BASE: usize = usize::MAX / 2;
 
-pub(super) struct RaftSchedule {
+pub(in crate::project_slice::gcode_emit) struct RaftSchedule {
     /// `(z, object_index, RAFT_SENTINEL_BASE + raft_layer_index)`
     /// sorted by z.
     pub(super) entries: Vec<(f64, usize, usize)>,
     /// Per-object raft layer plans, `[object][raft_layer]`.
-    pub(super) plans: Vec<Vec<RaftLayerPlan>>,
+    pub(in crate::project_slice::gcode_emit) plans: Vec<Vec<RaftLayerPlan>>,
     /// Per-object materialized raft layers, `[object][raft_layer]`.
-    pub(super) layers: Vec<Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>>,
+    pub(in crate::project_slice::gcode_emit) layers:
+        Vec<Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>>,
 }
 
 #[expect(
@@ -147,6 +148,7 @@ fn materialize_layer(
         .collect();
     Some(
         crate::project_slice::island_print_order::OrderedExtrusionLayer {
+            tool_regions: Vec::new(),
             islands: vec![OrderedExtrusionIsland {
                 infill_regions: vec![0; entities.len()],
                 perimeter_regions: Vec::new(),

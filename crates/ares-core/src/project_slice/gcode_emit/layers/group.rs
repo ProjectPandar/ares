@@ -3,45 +3,8 @@
 use super::schedule::LayerToPrint;
 use crate::{
     geometry::ExPolygon,
-    project_slice::{
-        island_print_order::OrderedExtrusionLayer,
-        perimeters::classic::traversal::PreparedPostClassicTraversal,
-        support_material::InstalledSupportLayer,
-    },
+    project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
-
-// `ToolOrdering.cpp::collect_extruders`: support geometry alone owns no tool.
-pub(super) fn has_tools(
-    entries: &[LayerToPrint],
-    objects: &[Vec<OrderedExtrusionLayer>],
-    support: &[Vec<InstalledSupportLayer>],
-    raft: &[Vec<OrderedExtrusionLayer>],
-) -> bool {
-    entries.iter().any(|entry| {
-        let object = entry.object_index;
-        entry.object_layer.is_some_and(|layer| {
-            objects[object][layer]
-                .islands
-                .iter()
-                .any(|island| !island.entities.is_empty())
-        }) || entry.raft_layer.is_some_and(|layer| {
-            raft[object][layer]
-                .islands
-                .iter()
-                .any(|island| !island.entities.is_empty())
-        }) || entry.support_layer.is_some_and(|layer| {
-            support[object][layer].support_fills.iter().any(|entity| {
-                let role = entity.role();
-                matches!(
-                    role,
-                    crate::ExtrusionRole::SupportMaterial
-                        | crate::ExtrusionRole::SupportMaterialInterface
-                        | crate::ExtrusionRole::SupportTransition
-                )
-            })
-        })
-    })
-}
 
 pub(super) fn geometry(
     traversal: &PreparedPostClassicTraversal,

@@ -11,6 +11,15 @@ from `GCodeWriter.cpp/.hpp`, and state from `Extruder.cpp/.hpp` into
 `crates/ares-core/src/project_slice/gcode_emit/`. Existing layer/motion adapters
 are compatibility shells, not the design authority. Exact functions,
 included/deferred scope and state ownership are recorded in ARD-0094.
+The scheduling boundary includes the invoked `GCode/ToolOrderUtils.cpp/.hpp`
+order solvers and `ParameterUtils.cpp` layer-sequence decoder, not only the
+`ToolOrdering` wrapper. Preserve area-based first-layer ordering, next-layer
+forecast, flush-cost and transition-count tie breaking where exercised.
+The layer-tool producer owns raw object/support Z grouping independently of
+the G-code chunk pairing. Its region role-presence annotation is captured
+before sortable fill collections are flattened, matching the first child
+observed by `ToolOrdering::collect_extruders` and thin-fill wrappers in
+`Fill/Fill.cpp:1361–1369`; no extra geometry copy is required.
 
 Public project configuration that selects wall filament 1 and solid/sparse
 filament 2 must produce the same tool schedule, printing transitions,

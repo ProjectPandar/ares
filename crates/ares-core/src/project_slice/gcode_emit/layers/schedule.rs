@@ -19,6 +19,8 @@ pub(in crate::project_slice::gcode_emit) struct LayerToPrint {
 }
 
 pub(in crate::project_slice::gcode_emit) struct Schedule {
+    pub(in crate::project_slice::gcode_emit) tool_ordering:
+        super::super::tool_ordering::ToolOrdering,
     pub(in crate::project_slice::gcode_emit) merged: Vec<(f64, LayerToPrint)>,
     pub(super) raft: Option<raft_schedule::RaftSchedule>,
     pub(super) print_position: Vec<usize>,
@@ -203,6 +205,8 @@ pub(in crate::project_slice::gcode_emit) fn build(
         }
         begin = end;
     }
+    let tool_ordering =
+        super::super::tool_ordering::build(traversal, objects, support, raft.as_ref())?;
     let centers = traversal
         .objects
         .iter()
@@ -260,6 +264,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         );
     let skirt_schedule = super::skirt_schedule::SkirtSchedule::new(skirt_layers, max_layer_height);
     Ok(Schedule {
+        tool_ordering,
         merged,
         raft,
         print_position,
