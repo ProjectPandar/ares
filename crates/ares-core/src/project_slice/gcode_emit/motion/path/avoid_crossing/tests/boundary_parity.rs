@@ -1,4 +1,4 @@
-//! Captured `get_boundary` / `avoid_perimeters_inner` output, Orca 2.4.2.
+//! Native-captured boundaries/routes and source-cited travel emission, Orca 2.4.2.
 use super::*;
 
 fn square() -> Vec<ExPolygon> {
@@ -71,12 +71,25 @@ fn avoid_perimeters_inner_captured_retry_retains_backward_route() {
 }
 
 #[test]
-fn travel_to_same_point_outside_safe_zone_has_no_interior() {
-    assert_route((4_890_000, 4_890_000), (4_890_000, 4_890_000), &[]);
+fn travel_to_same_point_outside_safe_zone_retains_native_corner() {
+    // AvoidCrossingPerimeters.cpp:595,211–216 extends even an empty hit list.
+    // The native same-XY capture retains this protected common-boundary point.
+    assert_route(
+        (4_890_000, 4_890_000),
+        (4_890_000, 4_890_000),
+        &[(4_715_068, 4_715_068)],
+    );
 }
 
 #[test]
-fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_destination() {
+fn travel_to_same_point_outside_closest_line_radius_keeps_singleton_interior_empty() {
+    // The native route at (6,6) is a singleton: no closest lines are in range.
+    // Stripping its endpoints must not underflow (to_polyline, cpp:348–355).
+    assert_route((6_000_000, 6_000_000), (6_000_000, 6_000_000), &[]);
+}
+
+#[test]
+fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_corner_then_destination() {
     use crate::project_slice::gcode_emit::motion::{
         EmitState, MotionOptions, features::PathProperties, path::start_travel, scarf::Slope,
     };
@@ -128,7 +141,11 @@ fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_destination() {
             geometry,
         },
     );
-    assert_eq!(output, b"G1 X4.89 Y4.89 Z.75 F6000\n");
+    // GCode.cpp:7485–7502 emits the detour at nominal Z, then the scarf Z.
+    assert_eq!(
+        output,
+        b"G1 X4.715 Y4.715 F6000\nG1 X4.89 Y4.89 Z.75 F6000\n"
+    );
     assert_eq!(state.scarf_z, Some(0.75));
     assert_eq!(state.last_scaled_position, Some((4_890_000, 4_890_000)));
 }

@@ -9,6 +9,9 @@ mod inherited_filament;
 #[path = "compatible_regions/modifier_travel.rs"]
 mod modifier_travel;
 
+#[path = "compatible_regions/same_xy.rs"]
+mod same_xy;
+
 #[path = "compatible_regions/infill_first.rs"]
 mod infill_first;
 

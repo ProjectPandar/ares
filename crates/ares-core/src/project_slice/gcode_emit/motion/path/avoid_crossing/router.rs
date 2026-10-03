@@ -80,11 +80,8 @@ pub(super) fn avoid_perimeters(
             }
         }
     }
-    if !intersections.is_empty() {
-        let search_radius = f64::from(2.0 * boundary.scaled_spacing);
-        intersections =
-            extend_for_closest_lines(boundary, intersections, start, end, search_radius);
-    }
+    let search_radius = f64::from(2.0 * boundary.scaled_spacing);
+    intersections = extend_for_closest_lines(boundary, intersections, start, end, search_radius);
 
     let mut result = vec![TravelPoint {
         point: start,

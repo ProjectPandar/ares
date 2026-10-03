@@ -102,7 +102,7 @@ pub(super) fn extend_for_closest_lines(
             intersection_of(&end_line, distance_of),
         ];
     }
-    if !start_lines.is_empty() {
+    if !new_intersections.is_empty() && !start_lines.is_empty() {
         if let Some(line) = get_closer(&start_lines, new_intersections[0], start, search_radius) {
             new_intersections[0] = intersection_of(&line, distance_of);
         } else {
@@ -111,7 +111,7 @@ pub(super) fn extend_for_closest_lines(
             new_intersections.insert(0, intersection_of(&line, distance_of));
         }
     }
-    if !end_lines.is_empty() {
+    if !new_intersections.is_empty() && !end_lines.is_empty() {
         let last = new_intersections.len() - 1;
         if let Some(line) = get_closer(&end_lines, new_intersections[last], end, search_radius) {
             new_intersections[last] = intersection_of(&line, distance_of);

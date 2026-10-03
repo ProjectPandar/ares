@@ -1,5 +1,448 @@
 # Region-role tool emission implementation plan
 
+## Current slice: layer63 later-tool travel waypoint
+
+Counterfactual prebuild38092 exits0. Runtime82596 terminates/reaps100,
+3.368s, /tmp/ares-layer63-route-extension-focused.log. Original baseline
+PASS; modifier first difference advances from128699/6286 to239867/11023:
+native `; total_layer_number = 92`, Ares185 (270563/270564 bytes).
+No complete-output closure claim: nextest fail-fast ran only1/12 tests.
+Actual target2spacing radius831326 finds shared contour1/segment0 corner
+(13610435,4410434) as nearest at both endpoints. Extension generates two
+protected equal points; final integer dedup leaves the native printed
+X175.61Y104.41 intermediate before destinationX175.59Y104.39. This restores
+the disputed route and moves the complete comparison past the feedrate.
+All diagnostic production probes are now removed; whole-diff probe-prefix
+check is empty. Independent static six-axis review finds no new mandatory
+change; clean diagnostics and public/platform gates remain required.
+Footer placeholder ownership is a separate next slice. Later complete raw
+readback below corrects the initial total_layer_count hypothesis: Snapmaker's
+machine-end comment renders [layer_num], owned by GCode.cpp3476's live
+m_layer_index. Investigate through the public unchanged acceptance before
+implementing; do not alter comparator or serialize a fixture-specific count.
+Keep this route checkpoint separate from that fix.
+
+Clean fmt30501 exits0; unrestricted CLI prebuild73175 exits0. Clean
+no-fail-fast runtime91589 terminates/reaps100 in32.729s:
+12run11PASS/1FAIL, /tmp/ares-layer63-route-clean-focused.log. All eleven
+raw-motion diagnostics pass, including the previously RED entire cooling-off
+layer and the original cooling-on F5093 object block. Full original baseline
+PASS/modifier still239867/11023 footer92/185. Source counterfactual therefore
+closes the measured route/feedrate defect, not complete dual-tool parity.
+Clippy78451 exits0 in2m14s:253corelib/269coretest/31CLIparity warnings,
+unchanged. Production diff is only unconditional extension and two source
+nonempty conditions; no probe output, fixed-coordinate handling or fixture/
+comparator changes survive. Quality/native/platform closure still in progress.
+
+Checkpoint held: workspace91684 exits100 after4958/7587 tests (4956PASS,
+2FAIL,9skipped,2629unrun). Both failures are synthetic same-XY outside-safe-
+zone cases in boundary_parity.rs: routing now includes closest corner
+(4715068,4715068), and slope-Z emission consequently includes its waypoint.
+Retain failures and assertions unchanged. Independent provenance audit traces
+both to4255d6d5 wave17 singleton-underflow coverage, not the original captured
+native routes. The eight public native receipts listed in
+architecture/avoid-crossing-travel-waypoints.md do not contain either square
+case; old temporary receipt directories no longer exist. File-level captured
+wording does not prove their native expectations. Conversely source inference
+alone does not authorize changing them to current output or adding an invented
+zero-length shortcut. Source entry/extension has no such shortcut. Next use an
+isolated native diagnostic inferior with a real matching square Layer/GCode,
+verify slices/top/spacing/width/origin/safe-zone/max-detour, set equal endpoints
+only there, let full travel_to execute naturally, capture its Polyline, and quit
+without publishing it as a formal reference. The actual scarf-Z caller requires
+its own entry evidence. Do not copy STL vector headers or mutate layer slices
+while retaining stale grids. Native seeded ELF exports travel_to/init_layer/
+init_boundary; avoid_perimeters_inner has no usable standalone body symbol.
+Full no-fail-fast workspace64418 now runs to establish remaining failure scope.
+Repository public mesh tests/parity/cube10.stl is a candidate for exact square
+context; width0.22/layerheight0.14 suggests the required spacing, but actual
+native layer/flow readback must decide (not arithmetic assumption). Source
+GCode.cpp6355–6378 establishes the same-XY sloped caller can enter travel_to
+when will_move_z says its target differs; emission7480–7505 separately owns
+nominal-Z on the first detour and slope-Z at final point. Neither source fact
+alone proves the synthetic fixture's complete runtime output.
+
+WASM build18745 exits0 in3m18s, bindings56020 exits0; actual Chromium47736
+exits0,3/3PASS in1.6m. Complete KSR6321698 bytes, SHA256
+91e2fce752e5dc6d7ed221b39209838000ba1cd1bf134e937a59a8b8d2d27ab4,
+repeated complete slices byte-identical. WindowsGNU40003 exits0 (3m34s) and
+macDarwin46388 exits0 (3m51s), compile-only, not native runtime coverage.
+These passes do not override the two unverified unit failures; no commit/push
+is permitted until their native contract is resolved and the workspace is green.
+Final diagnostic receipts: no-fail-fast workspace64418 terminates/reaps100,
+258.745s,7587run7585PASS(35slow)/2FAIL/9skipped; no additional failure beyond
+the two same-XY cases. Seeded CPU0 broad runtime75920 terminates/reaps100,
+371.680s,77run76PASS/1FAIL/281skipped. The only complete-output failure is
+the unchanged original modifier footer92/185; Normal/Tree/painted/blocker/
+modifier/empty-tool/skirt/clipped-loop controls pass. Logs:
+/tmp/ares-layer63-route-workspace-no-fail-fast.log and
+/tmp/ares-layer63-route-seeded-controls.log. Official/default fresh gates are
+not yet rerun for this held source candidate; prior checkpoints' receipts are
+not counted for it. All processes started this round are terminal/reaped.
+This round made actual source/output diagnostic progress but does not close
+the route checkpoint or the overall printer/options/runtime goal. No commit
+or push has been performed; HEAD remains40ac0b1a. Continue with exact native
+same-XY context evidence before modifying either old assertion or production.
+
+User confirms both same-XY failures are mandatory pre-submit work; correcting
+an upstream-inconsistent assertion requires exact AvoidCrossingPerimeters.cpp
+line proof and an explicit commit explanation, never weakening/deleting it.
+Add separate native-first public thin-square ordinary/scarf complete-output
+cases, existing cube10 mesh and Creality Ender-3 V3 SE0.2 preset; width0.22,
+height0.14, two walls, routing enabled, max-detour0. Verify requested values in
+exported3MF, keep original modifier and two unit assertions unchanged.
+fmt28339/prebuild52712 exit0. Runtime45015 terminates/reaps0 in2.894s:
+2run2PASS, /tmp/ares-same-xy-public.log, complete artifacts case-XQXdxJ
+(ordinary) and case-ma4nzm(scarf) under /tmp/ares-same-xy-public. They provide
+real candidate contexts, not proof of injected same-XY runtime behavior.
+Source cpp211–218 produces two protected hits on a shared boundary even
+without intersections; cpp626–655 offsets/appends them; cpp448–457 prohibits
+their simplification removal; cpp348–355 appends/dedups integer-equal neighbors.
+These lines are the disputed contract, not a zero-length bypass. Exact native
+context and return bytes remain required before selecting a correction.
+The seeded ELF retains symbols but no DWARF; its previous debug output is
+missing from the local Nix store. Restore the same immutable derivation's
+debug output (4n1w0b6...drv!debug), not a changed reference build; runtime42898
+is currently active, /tmp/ares-same-xy-debug-restore.log. Do not borrow old
+symbol-package receipts or write diagnostic results into formal references.
+Pre-restore current wrapperSHA3d05d4ccab740ca5e13aa94d0d00867a75f867ba2159b9f5b024dc0fcaa3bfaa,
+ELFSHA8f0cf69dd9494ccfe53bf6749d6b685ccb5a0dd0df206694ce50d421007cc03d;
+check both again after restore before treating DWARF as that executable's oracle.
+Native output configs for ordinary input confirm nozzle0.2, layerheight0.14,
+inner/outer widths0.22, maxdetour0, seam_slope_type=none. Source-cited public
+cases remain candidate runtime contexts only. New test-only additions require
+fresh fmt/clippy/full-workspace gates after the final same-XY correction;
+previous7587-test and77-case snapshots do not include these two new tests.
+
+Continuation revalidates prior round as progress (public raw route/F5093
+closure, two native public thin-square complete passes, same-XY provenance
+audit), not completion. Debug restoration42898 is still confirmed live on the
+same handle; do not restart it. Fresh unit loop38565 terminates/reaps100:
+2run2FAIL, /tmp/ares-same-xy-fresh-red.log, preserving both exact symptoms.
+Only native diagnostics are being prepared; no old assertion or production
+change is made this continuation. Three predictions disclosed before probing:
+protected shared hit persists (old empty expectation false), entry/retry/detour
+returns direct (missing Rust source behavior), or scarf caller conditions differ.
+Isolated /tmp/ares-same-xy-capture.dziVyJ/context.gdb is read-only preflight,
+not yet executed; records actual Layer2 slices, fill/region surfaces, safe-zone,
+height/origin and max-detour. Independent review confirms Point3/Point/Vec2d
+layouts and requires actual get_perimeter_spacing return, nonempty region
+slices and external width before exact-match acceptance. Script intentionally
+stops at context; it has not captured spacing or Polyline. Later hidden-sret
+capture must use a separate exact entry breakpoint, not a source/prologue
+breakpoint register guess. Current ELF disassembly addresses127c3c0–127c45c
+shows rsi planner, rdx generator, rcx Point and rdi saved in rbx/used to
+initialize return object; full return-buffer ABI still must be confirmed on the
+actual stopping PC. Keep formal native references untouched and diagnostic
+inferior output separate. No checkpoint publication until both mandatory
+failures are resolved by evidence and fresh complete gates pass.
+
+Debug restoration42898 terminates/reaps0. Wrapper and ELF hashes above remain
+unchanged; restored DWARF matches build ID d1d964043a0097f4c33db3fa1bbd5991477aeef9.
+The initial preflight failed because the executable loaded before the debug
+search path; reloading it after that setting resolves source variables.
+Read-only preflight37193 captures actual Layer2: square lslices and region
+slices at ±5000000, no holes, height0.14, print_z0.48, origin(110,110),
+safe-zone square at ±4868001, both external flags false and max-detour0.
+Thus (4890000,4890000) is outside this actual safe zone. These are context
+facts, not returned-path evidence. Excessive info-args rendering was stopped;
+future scripts print only selected scalar/polygon data. Isolated diagnostic
+38757 now records the exact-entry hidden return buffer, changes only the
+inferior's start/end XY to the disputed point, and lets native travel_to run.
+Its spacing and complete Polyline capture are still pending. No production,
+old assertion, fixture or comparator changes are made during this diagnostic.
+
+Native diagnostic38757 terminates/reaps0. Actual spacing is189955, internal
+boundary±4715068, and complete returned Polyline is
+[(4890000,4890000),(4715068,4715068),(4890000,4890000)]. This independently
+contradicts the old empty-interior assertion. Source595 always extends;
+211–216 creates protected shared-boundary hits,627/655 appends offsets,
+448–457 preserves protected points, and348–355 only dedups neighbors.
+Correct that assertion to the exact native interior and rename its behavior;
+do not delete it or accept an arbitrary detour.
+
+First scarf diagnostic42060 exits0 but its breakpoint raises an optimized-out
+variable error before capture; it is not evidence of the scarf contract.
+Improved diagnostic41411 injects equal local endpoints at the exact outer
+GCode::travel_to entry before travel construction, synchronizing writer XY.
+Actual origin(110,110), nominal/writerZ0.48, targetZ0.3399999994 and zero
+lifted/to_lift are retained. ACP then sees equal(4890000,4890000), returns
+the same three-point Polyline, and outer native string is:
+M204 T1000; G1 X114.715 Y114.715 F9000;
+G1 X114.89 Y114.89 Z.34 F9000. Source GCode.cpp7485–7502 emits first
+detour at nominal Z and final point at target Z. Unit origin0/nominal1/
+target0.75/feed6000 are different parameters, not claimed identical capture
+bytes. Its strict expected bytes now include the corner before destination;
+scarf-Z and final scaled-position assertions remain intact.
+41411 terminates/reaps1 after successful return capture: editing its script
+while GDB was running shifted the subsequent command offset and caused an
+undefined-command error. Do not count this as a successful script gate.
+Independent review accepts both exact expectation corrections as old-oracle
+corrections, not weakened tests. Stable-script singleton diagnostic49255 is
+pending; correction tests and fresh complete gates remain required. Original
+modifier full-output footer92/185 remains RED and unchanged.
+
+Independent six-axis readback accepts the corrected route and parameterized
+scarf oracle: the improved parent-entry capture removes the stale parent
+travel-cache concern. Stable singleton diagnostic49255 terminates/reaps0;
+native returns exactly[(6000000,6000000)] on the same layer/boundary,
+so its interior is empty. Its later string reader raises a zero-length-read
+exception; only the already-captured Polyline is evidence, not a string gate.
+Source radius/empty-hit branches and integer dedup establish the distinct
+singleton-underflow contract. Add that strict route case after the current
+Rust compile is terminal. Package-only route42731 and boundary17805 builds
+are still live/queued; no GREEN receipt yet. The first build overlaps the
+second expectation edit and is not a final snapshot receipt; the queued
+boundary build and subsequent fresh gates must verify final files.
+Stable scarf replay83766 is live with the script frozen for its whole run;
+this rechecks clean diagnostic termination, not public complete-output parity.
+
+Frozen-script scarf replay83766 terminates/reaps0 with no Python exception or
+command error; /tmp/ares-same-xy-capture.dziVyJ/scarf-parent-clean.log repeats
+the exact parent-entry writer/Z context, boundary, spacing, Polyline and
+nominal-then-target-Z output. This supersedes the earlier script-termination
+gap, not the distinction between diagnostic injection and public receipts.
+Single route42731 exits0 (1run1PASS), but still does not replace the final
+boundary/singleton/workspace gate. Both corrected assertions remain strict;
+no production-only same-XY shortcut is added. Probe-prefix diff remains empty.
+
+Fresh boundary17805 terminates/reaps0:5run5PASS in0.028s, including both
+corrected mandatory cases and all three previous native boundary/route
+captures (/tmp/ares-same-xy-boundary-green.log). After that terminal state,
+add the independently captured(6000000,6000000) singleton empty-interior
+assertion to retain the old underflow-coverage intent; no old case is dropped.
+Formatting/check99672 terminates/reaps0 and diff-check is clean. New final
+workspace54305 and clippy32652 are live/queued, logs respectively
+/tmp/ares-same-xy-final-workspace.log and /tmp/ares-same-xy-final-clippy.log.
+Do not restart these builds or claim their result before actual termination.
+Whole-diff probe-prefix search is empty; its status1 is no matches, not a
+formatting failure. Snapshot has only three original production router changes,
+strict oracle corrections/native singleton and public travel diagnostics.
+No commit/push yet; final green workspace, clippy readback and independent
+completion review remain required. Overall printer/options/full-parity goal
+stays active; unchanged original modifier full-output footer remains open.
+
+Final workspace54305 terminates/reaps0:7590run7590PASS(35slow),9skipped,
+258.988s; all six boundary cases including the new singleton PASS. Clippy32652
+terminates/reaps0:253corelib/269coretest/31CLIparity warnings, unchanged.
+Selected CLI prebuild99803 exits0; final fmt/diff33915 exits0. Fresh WASM build
+exits0(0.50s), bindings12777 exits0, WinGNU/MacDarwin checks exit0(0.35/0.30s),
+the latter compilation only. Actual Chromium65790 exits0:3/3PASS(1.2m),
+complete KSR /tmp/ares-wasm-gcode-SocKPD/browser.gcode,6321698bytes,
+SHA25691e2fce752e5dc6d7ed221b39209838000ba1cd1bf134e937a59a8b8d2d27ab4;
+the unchanged browser tests include repeated complete-byte identity.
+
+Official CPU0 broad95690 terminates/reaps100:79run77PASS/2FAIL,281skipped,
+190.481s, /tmp/ares-same-xy-official-controls.log. Preserve original modifier
+footer239867/11023(92/185) and Organic zero-branch-angle61544/2340, native
+X113.388Y113.135 versus AresX113.244Y113.297. No general official-green claim.
+Unpinned official default45086 terminates/reaps100:14run13PASS/1modifierFAIL,
+346skipped,24.669s, /tmp/ares-same-xy-default-controls.log. Its two complete
+thin-square cases and eleven limited motion controls PASS; these are not
+fourteen whole-output comparisons. Default is the focused suite, not a fresh
+default replay of the entire broad inventory. All artifacts remain retained.
+
+Organic readback establishes unchanged Ares output, not a reference-internal
+cause: current official case-i6safk, prior official PASS route148/case-Rr0JTT,
+exit/case-gXLxzL, cascade/case-3Xhrlc and seeded PASS layer63/case-Hc5YLB all
+have raw Ares SHA25617608457aa4f81b14981315a50b030a4f39019b81cb5598b98b190db5a6bbc6c.
+Current/prior/seeded ZIP extraction contents compare recursively equal, and
+current/prior member names/order compare equal. Prior/current native files
+exchange two tiny Internal solid infill blocks and later M73 placement; the
+first non-header difference is61544/2340. Do not label this failure fixed or
+claim its root cause. Inputs/artifacts and diagnostic extraction are retained
+at /tmp/ares-organic-zero-readback.Je2YZO. Current official ELF SHA remains
+64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60.
+Seeded focused52103 terminates/reaps100:4run3PASS/1original-modifierFAIL,
+356skipped,9.981s. Both new whole-output thin-square cases and Organic control
+PASS; original complete baseline PASS/modifier retains exactly the same
+footer92/185. Preserve that result alongside prior seeded broad77run76PASS/
+1footerFAIL; neither replaces the actual official/default failure records.
+
+Readback corrects the next footer diagnosis before implementation: native and
+Ares both print total-layers-count93; the divergent machine-end line is the
+Snapmaker preset's [layer_num], not [total_layer_count]. GCode.cpp3476 inserts
+live m_layer_index, advanced by change_layer at5685–5690. Rust finish.rs
+currently derives layer_num from first object's traversal record-slot length
+minus one; motion/state.rs already distinguishes layer_chunk_index from active
+physical layer id. The separate next slice must consume the actual source
+counter, not change schedule count or total_layer_count to imitate92. Complete
+raw default-case diff confirms only generator header and this footer differ.
+Keep total_layer_count's separate static slot-count gap open; no footer code
+is changed in this route checkpoint. All six modified Rust files remain below
+400LOC(171/300/72/279/184/181). Final independent approval and branch-only
+commit/push remain pending; main merge and overall completion are not claimed.
+
+Independent final six-axis review approves this nine-path finite checkpoint
+for commit and feature-branch push, with no remaining slice-local mandatory
+fix. Reviewer reads the actual workspace/clippy/browser receipts and confirms
+Organic unchanged-Ares/input evidence. Preserve official77/2, default-focused
+13/1 and seeded-focused3/1 plus diagnostic injection scope/old-oracle source
+lines in the commit message. This is not approval for main merge, complete
+dual-tool parity or the overall printer/options objective. Footer live
+layer_num consumer remains the next independent source-owned correction.
+
+Previous goal turn made real diagnostic progress: rejected the isolated FORCE
+event counterfactual, then found a later T0 Inner→Outer travel missing waypoint
+through the entire cooling-disabled layer. HEAD40ac0b1a plus four diagnosis
+files is authoritative; no live prior build/test remains. Cached prebuild
+exits0. Fresh seededCPU0 runtime20701 terminates/reaps100 in6.070s:
+original baselinePASS/modifier128699/6286 and cooling-off whole-layer motion
+RED persist (/tmp/ares-layer63-route-fresh.log). Native intermediate
+X175.61Y104.41 before destinationX175.59Y104.39 is absent from Ares.
+Keep original full fixture/assertions intact; public seam stays saved3MF to
+raw complete layer, not private route coordinates. Add the sole routing-off
+control with cooling still disabled, verify serialized settings, then run
+RED/control before ranking hypotheses or instrumenting production. Included
+source boundary is GCode.cpp::travel_to and AvoidCrossingPerimeters::travel_to
+route generation/simplification, destination motion/path/avoid_crossing.
+Existing adapters remain temporary source compatibility shells. Include only
+the output-evidenced waypoint contract; defer unmeasured numeric/boolean/fan
+event gaps. Whole-file feedrate closure must be demonstrated after route fix.
+
+fmt38346/prebuild32345 exit0. Sole routing-off control runtime85505
+terminates/reaps100 in5.268s, /tmp/ares-layer63-route-control.log:1PASS/1FAIL.
+Cooling-off+routing-off whole raw layerPASS; cooling-off+routing-on whole
+raw layerRED remains. Native literal guard confirms waypoint absent only in
+off control. Ranked predictions shown before instrumentation: absent before
+simplification means route generation, removed during simplify means boolean
+crossing/skip consumer, present in final route but absent in output means
+emission. Target-only public-mm endpoint gate propagates to router probe;
+record initial/extended crossings and raw pre/post simplify paths. Probe is
+diagnostic only, not part of public acceptance or a fixture coordinate fix.
+Do not bundle static collinear/numeric gaps without measured target evidence.
+
+Probe prebuild18938 exits0; runtime10861 terminates/reaps100 in2.655s,
+/tmp/ares-layer63-route-probe.log. Actual matched endpoints local
+(13215013,3955012)→(13590012,4390011), offset162/100, internal. Initial and
+post-retry crossings empty; pre/post simplify both only endpoints. This rules
+out simplification removal and downstream waypoint omission for this matched
+call. XY alone does not prove layer identity; add caller's existing Z/tool/
+role context (no new writer state) and closest-point query results before
+claiming target causal evidence. Source candidate cpp592–612 always invokes
+extend_for_closest_lines, whereas Rust skips it when no crossing exists.
+Shared-boundary branch can produce protected closest endpoints even for an
+empty crossing input; source later start/end branches require nonempty input.
+Keep adjacent end-priority common-contour selection/numeric/collinear gaps
+separate until actual target data requires their inclusion.
+
+Caller-context prebuild19865 exits0; runtime42813 terminates/reaps100
+in2.684s, /tmp/ares-layer63-route-context.log. Actual context is
+Z10.280000000000006/layer63/logicaltool0/Outer wall, establishing target
+identity. 1.5spacing radius623494.5 finds identical nearest corner
+(13610435,4410434) at both endpoints; retry has no geometric crossings.
+Independent source preflight accepts unconditional extension plus source
+nonempty guards, requiring actual2spacing candidates as well. Apply exactly
+that caller/consumer counterfactual; target-only query probe records contour,
+segment and point for2spacing alongside context/pre/postroute. Do not change
+shared-contour choice, numeric queries, simplifier or cooling. Public motion
+RED/control and unchanged full cooling-on comparison decide acceptance.
+
+## Current diagnosis: layer63 modifier feedrate
+
+The preceding goal turn only checked probe cleanup; no slicing progress was
+made. Current implementation checkout is clean40ac0b1a before this diagnosis.
+Cached unrestricted CLI prebuild exits0. Fresh original seeded whole-process
+CPU0 comparison61706 terminates/reaps100 in3.372s: baseline PASS, modifier
+first difference128699/6286, nativeF5093 versus AresF5092. Preserve complete
+case-SGSUfQ and case-qGCNpM under /tmp/ares-modifier-feedrate-fresh. The
+actual disputed command belongs to Z10.28/layer_num63/Internal solid infill,
+not the previously corrected ninth-layer approach.
+
+Public seam remains saved3MF to complete byte output. Two focused diagnostics
+compare the full raw object block, bounded by the exact Z/next-layer and
+object-start/stop delimiters. They do not replace or modify the original
+complete acceptance. Build9227 exits0; runtime91549 terminates/reaps100:
+2run1PASS/1FAIL in5.275s, /tmp/ares-modifier-feedrate-tracer.log. Routing-on
+native literal precondition passes and object block differs in feedrate;
+sole reduce_crossing_wall=false control passes this entire object block.
+Its whole-file earlier M73 difference remains retained in case-mjhRZv.
+
+Next sole-variable control disables slow_down_for_layer_cooling on both
+filaments while retaining routing. Verify serialized public setting, run the
+same bounded object-block assertion, then rank falsifiable hypotheses before
+production instrumentation. No production fix or cause claim yet. Source
+owners under investigation are GCode.cpp speed/route emission and
+CoolingBuffer.cpp::parse_layer_gcode/calculate_layer_slowdown, with Rust
+destination gcode_emit/motion and cooling/feedrate. Include only the
+output-evidenced cause once identified; adjacent fan/request, inward numeric,
+all-printer/options and complete dual-output closure remain open.
+
+Formatted prebuild7133 exits0; runtime80050 terminates/reaps100 in7.959s:
+3run2PASS/1FAIL, /tmp/ares-modifier-feedrate-cooling-control.log. Both the
+routing-off and cooling-off entire object blocks PASS; routing-on/cooling-on
+retains exact128699/6286 RED. Independent read-only preflight confirms native
+original cooling setting was already[1,1], so helper's explicit true setting
+does not alter the baseline. The review accepts diagnostics only, not a fix.
+
+Ranked predictions shown to user: (1) path-time numeric/parse mismatch means
+pre-solver tool totals differ; (2) joint solver fold/tie mismatch means equal
+inputs produce differing solved speeds; (3) formatter mismatch means solved
+speed agrees but final integer differs. Upstream CoolingBuffer.cpp:913 uses
+floor(60.double*float_feedrate+0.5), matching current rewrite.rs; no formatter
+contract gap identified. Narrow temporary layer63 boundary probe records
+actual Ares per-tool elapsed/maximum and solved speeds. No native internal
+observation or cause confirmation is claimed. Remove probe before any frozen
+verification/commit, and retain all three public diagnostics plus original
+whole-output assertion. Minimized controls localize a coupled cooling chain,
+not independently prove which internal owner is defective.
+
+Probe prebuild72173 exits0; runtime75132 terminates/reaps100 in7.980s,
+/tmp/ares-modifier-feedrate-probe.log. Actual Ares target parser buckets:
+tool0 elapsed1.8171846/max15.24584/13lines; tool1 elapsed2.6520355/
+max31.694973/92lines. Solved speeds95.500656 and84.87459 respectively,
+the latter formats5092. Native internals were not instrumented. Independent
+source review confirms actual zero fan events enter native full-array
+nonstable sorting while current parser omits them, a static gap but not yet
+cause proof. First minimal counterfactual retains only raw FORCE marker as
+source-default zero CoolingLine in its current tool bucket. No normalized
+role events, dummy filler lines, pose/active-speed changes or fan semantics
+changes are included. Re-run three diagnostics and original full comparison;
+reject this candidate as the measured fix if target remains RED.
+
+Force counterfactual prebuild61136 exits0,1m16; runtime98542 terminates/reaps
+100 in11.323s, /tmp/ares-modifier-feedrate-force-counterfactual.log:
+4run2PASS/2FAIL. Original baselinePASS/modifier128699/6286 unchanged;
+routing-on diagnosticRED, routing-off/cooling-off raw blockPASS. Target tool0
+line count13→14, unchanged elapsed/max and both solved feedrates; tool1 stays
+92lines/84.87459. This falsifies FORCE omission alone as the measured cause.
+Withdraw that production candidate and all temporary probes. Production diff
+is empty. Keep static fan-event gap deferred; no fake events or bundled fix.
+Next diagnosis must inspect actual pre-cooling role/path inputs and ordered
+solver values, rather than declaring the first plausible source gap causal.
+
+Independent cleanup readback confirms four-files only, production diff empty,
+no probe prefixes in whole diff, no fix approval. Its next evidence suggestion is the
+whole cooling-off target layer, not only its first object/tool block. Actual
+read-only diff of case-hOeNMo whole Z10.28 layer finds exactly one discrepancy:
+native emits X175.61Y104.41 F18000 then X175.59Y104.39, Ares directly emits
+the latter with F18000. Earlier object-only diagnostics cover just the first
+tool occurrence, not all tool/object occurrences in the layer; preserve them
+and add a stricter whole-layer native-first public motion diagnostic.
+Missing later travel can affect earlier F via whole-layer cooling, but causal
+closure still requires the movement fix and unchanged original full replay.
+Clippy56600 terminates/reaps0 in1m19 before this new motion test, unchanged
+253corelib/269coretest warnings. fmt75693 exits0 on that prior snapshot;
+rerun checks on the new test. No successful implementation checkpoint yet.
+
+Final fmt85326 exits0; pipeline99094 terminates/reaps0: clippy exits0
+in3.66s (/tmp/ares-modifier-feedrate-final-diagnosis-clippy.log), unchanged
+253corelib/269coretest/31CLIparity, then restored no-probe CLI prebuild exits0
+in1m16 (/tmp/ares-modifier-feedrate-clean-motion-build.log). Runtime77345
+terminates/reaps100 in14.124s, /tmp/ares-modifier-feedrate-clean-motion-red.log:
+5run2PASS/3FAIL,352skipped. Original complete baselinePASS/modifier128699/6286
+remains; original feedrate tracerRED; new complete cooling-off layer motion
+native literal preconditionPASS then equalityRED; both first-block controls
+PASS. Fresh case-w65cpB whole-layer raw diff again isolates exactly the
+T0 Inner→Outer wall missing waypoint. Its whole-file earlier difference
+24179/1173 is separately retained, not filtered out. No production diff,
+all probes removed, complete diff probe-prefix search empty. Independent
+review approves diagnostic seams/cleanup only, not a checkpoint or fix.
+Next step: diagnose this missing later route at the same public seam, fix
+its source owner, then replay unchanged cooling-on complete acceptance to
+prove or falsify the coupled feedrate hypothesis. Goal remains active; no
+commit/push occurs for an unverified product fix.
+
 ## Current slice: modifier ninth-layer waypoint
 
 Previous turn made verified progress:63748b6b is pushed and current worktree

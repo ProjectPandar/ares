@@ -30,6 +30,28 @@ where they do not implement these upstream contracts.
 
 ## Decisions
 
+Closest-line extension follows AvoidCrossingPerimeters.cpp::avoid_perimeters_inner
+(592–612) and extend_for_closest_lines (171–294) in motion/path/avoid_crossing/router:
+an empty geometric intersection list does not bypass the shared-boundary
+endpoint branch. Always query extension, then retain source nonempty guards
+for replacement/prepend/append branches. Preserve the current shared-boundary
+selection and numeric queries unless target output evidence requires more;
+do not fabricate a waypoint or alter cooling to compensate a missing move.
+Equal XY does not independently bypass that branch. Native capture confirms
+its protected common-boundary point survives; GCode.cpp7485–7502 emits the
+detour at nominal Z before the final scarf target Z. Preserve strict route,
+byte-output and terminal-state assertions when correcting an old oracle;
+retain distinct native singleton coverage without adding a zero-length guard.
+
+CoolingLine fan events participate in the entire source nonstable speed sort
+even with zero time/feedrate (CoolingBuffer.cpp:49–82,184–195,543–555).
+Retaining an actual FORCE_RESUME_FAN_SPEED event in cooling/feedrate alone
+does not close the measured layer63 feedrate gap; defer that isolated change.
+Future event bookkeeping must preserve the current tool bucket, raw text for
+the later fan consumer and pose/active-speed state. Zero entries cannot be
+invented to tune ordering. Normalized role-fan shell equivalence remains
+separate from this actual raw event and full fan-request parity stays open.
+
 Missing modifier approach waypoints belong to GCode::travel_to and
 AvoidCrossingPerimeters::travel_to's route/simplification consumers, rewritten
 in motion/path and path/avoid_crossing. Diagnose at saved3MF/raw approach

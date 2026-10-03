@@ -1,5 +1,55 @@
 # Region-role tool emission rewrite
 
+Layer63 later-tool route slice rewrites avoid_perimeters_inner's unconditional
+closest-line extension (AvoidCrossingPerimeters.cpp:592–612) and the extension
+consumer's empty-input/shared-boundary contract (171–294) into
+gcode_emit/motion/path/avoid_crossing/router and router/closest_lines.rs.
+Include calling extension after an empty retry and source nonempty guards
+around later replacement/prepend/append branches. Existing no-crossing skip
+is a temporary source compatibility shell to replace. Native-first complete
+cooling-disabled layer diagnostics and sole routing-off control verify movement;
+unchanged original complete cooling-on output verifies coupled feedrate.
+Defer adjacent end-priority shared-contour selection, projection/nudge numeric,
+collinear simplification and fan event gaps unless separately output-evidenced.
+Require actual layer/tool identity and extension-radius candidate readback
+before attributing the target; diagnostic logs never become acceptance.
+Same-XY boundary regressions additionally require the owning
+AvoidCrossingPerimeters::travel_to/avoid_perimeters_inner/extend_for_closest_lines
+and GCode::travel_to scarf-Z consumer contract to be established from native
+execution in matching context. Keep existing unit assertions until that evidence
+decides the correction; neither an invented zero-length return nor source-only
+replacement of expected output is included. Public full-output acceptance stays
+unchanged; all workspace tests must pass before a route checkpoint is published.
+Native matching-context evidence now establishes the protected corner at equal
+XY and the nominal-then-scarf-Z emission. Correct the two old unit oracles using
+strict equality and retain their endpoint/state checks; separately preserve
+the native singleton-underflow case outside the closest-line search radius.
+Diagnostic endpoint injection is not an unmodified public full-output receipt.
+
+Layer63 cooling diagnosis follows CoolingBuffer.cpp::parse_layer_gcode,
+CoolingLine, PerExtruderAdjustments::sort_lines_by_decreasing_feedrate and
+calculate_layer_slowdown. Destination: existing gcode_emit/cooling/feedrate
+parser and source-owned solver; no independent cooling pipeline. Public saved
+3MF to raw layer63 object block supplies diagnostic coverage, including only
+routing-off and cooling-off single-variable controls. Original complete
+comparison remains final acceptance. First source counterfactual tested
+only actual raw FORCE_RESUME_FAN_SPEED events (cpp:543–545,554–555) as default
+zero CoolingLines in their active logical-tool bucket. Preserve full-array
+source sorting, pose/active-speed state and raw bytes for the existing fan
+consumer. It did not fix the measured RED and is withdrawn; no production
+change is accepted on this evidence. Ignoring source events remains a static
+gap in the temporary parser shell. Defer normalized
+role-marker equivalence until its source event occurrence is established;
+do not invent filler entries or claim complete fan-request parity. Require
+public output evidence before accepting this candidate as the feedrate fix.
+
+The stricter cooling-disabled whole-layer diagnostic includes every tool and
+object occurrence, not only the first object block. Its observed later
+waypoint gap belongs to GCode.cpp::travel_to and
+AvoidCrossingPerimeters.cpp::travel_to in gcode_emit/motion/path/avoid_crossing.
+Port only the output-evidenced movement contract once diagnosed, retaining
+the original full comparison to establish any coupled cooling correction.
+
 Modifier ninth-layer waypoint slice follows GCode.cpp::travel_to and
 GCode/AvoidCrossingPerimeters.cpp::travel_to, perimeter routing and its path
 simplification consumers. Destination: gcode_emit/motion/path and its

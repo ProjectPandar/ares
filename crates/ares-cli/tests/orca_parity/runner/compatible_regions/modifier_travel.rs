@@ -3,6 +3,84 @@ use crate::presets::VendorProfiles;
 use serde_json::json;
 
 #[test]
+fn modifier_preserves_layer_63_native_feedrate() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(true);
+    let expected = layer_63_object(&reference);
+    assert!(expected.contains(";TYPE:Internal solid infill\n;WIDTH:0.419999\nG1 F5093\n"));
+    assert_eq!(layer_63_object(&actual), expected);
+}
+
+#[test]
+fn modifier_without_wall_routing_preserves_layer_63_native_feedrate() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(false);
+    let expected = layer_63_object(&reference);
+    assert!(expected.contains(";TYPE:Internal solid infill\n;WIDTH:0.419999\nG1 F"));
+    assert_eq!(layer_63_object(&actual), expected);
+}
+
+#[test]
+fn modifier_without_cooling_slowdown_preserves_layer_63_native_feedrate() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs_with_cooling(true, false);
+    let expected = layer_63_object(&reference);
+    assert!(expected.contains(";TYPE:Internal solid infill\n;WIDTH:0.419999\nG1 F"));
+    assert!(!expected.contains("G1 F5093\n"));
+    assert_eq!(layer_63_object(&actual), expected);
+}
+
+#[test]
+fn modifier_without_cooling_slowdown_preserves_complete_layer_63_motion() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs_with_cooling(true, false);
+    let expected = layer_63(&reference);
+    assert!(expected.contains("G1 X175.61 Y104.41 F18000\nG1 X175.59 Y104.39\n"));
+    assert_eq!(layer_63(&actual), expected);
+}
+
+#[test]
+fn modifier_without_cooling_or_wall_routing_preserves_complete_layer_63_motion() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs_with_cooling(false, false);
+    let expected = layer_63(&reference);
+    assert!(!expected.contains("G1 X175.61 Y104.41 F18000\nG1 X175.59 Y104.39\n"));
+    assert!(expected.contains(";TYPE:Outer wall\n"));
+    assert_eq!(layer_63(&actual), expected);
+}
+
+fn layer_63(bytes: &[u8]) -> &str {
+    std::str::from_utf8(bytes)
+        .unwrap()
+        .split_once(";Z:10.28\n")
+        .unwrap()
+        .1
+        .split_once(";LAYER_CHANGE\n")
+        .unwrap()
+        .0
+}
+
+fn layer_63_object(bytes: &[u8]) -> &str {
+    layer_63(bytes)
+        .split_once("; printing object overhang.stl id:0 copy 0\n")
+        .unwrap()
+        .1
+        .split_once("; stop printing object overhang.stl id:0 copy 0\n")
+        .unwrap()
+        .0
+}
+
+#[test]
 fn modifier_preserves_ninth_layer_native_approach() {
     if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
         return;
@@ -108,6 +186,13 @@ fn approach(bytes: &[u8]) -> String {
 }
 
 fn outputs(reduce_crossing_wall: bool) -> (Vec<u8>, Vec<u8>) {
+    outputs_with_cooling(reduce_crossing_wall, true)
+}
+
+fn outputs_with_cooling(
+    reduce_crossing_wall: bool,
+    slow_down_for_layer_cooling: bool,
+) -> (Vec<u8>, Vec<u8>) {
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
@@ -138,6 +223,14 @@ fn outputs(reduce_crossing_wall: bool) -> (Vec<u8>, Vec<u8>) {
     parity::normalize_filament_defaults(&mut filaments);
     for (filament, colour) in filaments.iter_mut().zip(["#F2754E", "#0000FF"]) {
         filament.insert("filament_colour".into(), json!([colour]));
+        filament.insert(
+            "slow_down_for_layer_cooling".into(),
+            json!([if slow_down_for_layer_cooling {
+                "1"
+            } else {
+                "0"
+            }]),
+        );
     }
     let exported = runner
         .export_case(
@@ -164,6 +257,19 @@ fn outputs(reduce_crossing_wall: bool) -> (Vec<u8>, Vec<u8>) {
         &project,
         "reduce_crossing_wall",
         &json!(if reduce_crossing_wall { "1" } else { "0" }),
+    )
+    .unwrap();
+    application::verify_value(
+        &project,
+        "slow_down_for_layer_cooling",
+        &json!(vec![
+            if slow_down_for_layer_cooling {
+                "1"
+            } else {
+                "0"
+            };
+            2
+        ]),
     )
     .unwrap();
     let project_path = runner.work.join("modifier-travel.3mf");
