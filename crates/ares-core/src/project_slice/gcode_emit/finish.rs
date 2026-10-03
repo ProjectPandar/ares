@@ -5,6 +5,9 @@ use crate::{
 
 use super::{template, value};
 
+mod accounting;
+pub(super) use accounting::account_volumes;
+
 #[cfg(test)]
 mod tests;
 
@@ -134,172 +137,71 @@ pub(super) fn append_compatible_stats(
     }
 }
 
-/// Accounts used filament from the emitted G-code exactly like the upstream
-/// Totals filament usage the way `GCodeProcessor` does: track the E
-/// position (M82/M83, G90/G91, G92 resets), classify each move
-/// (`move_type`, `GCodeProcessor.cpp:3834-3851`) and count only Extrude
-/// moves — E-positive with an X or Y displacement. Retracts, unretracts
-/// and E-only bowden re-primes do not count.
-pub(super) fn account_used_filament(gcode: &[u8], filament_diameter: f64) -> f64 {
-    let diameter = filament_diameter as f32;
-    let radius = 0.5_f32 * diameter;
-    let area = std::f32::consts::PI * (radius * radius);
-    let text = std::str::from_utf8(gcode).unwrap_or_default();
-    let mut e_position = 0.0_f64;
-    let mut x_position = 0.0_f64;
-    let mut y_position = 0.0_f64;
-    let mut e_local_relative = false;
-    let mut global_relative = false;
-    let mut used = 0.0_f64;
-    for line in text.lines() {
-        let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
-        let mut words = code.split_ascii_whitespace();
-        let Some(command) = words.next() else {
-            continue;
-        };
-        let letter_value = |letter: char| {
-            words.clone().find_map(|word| {
-                word.strip_prefix(letter)
-                    .and_then(|value| value.parse::<f64>().ok())
-                    .map(|value| f64::from(value as f32))
-            })
-        };
-        match command {
-            "M82" => e_local_relative = false,
-            "M83" => e_local_relative = true,
-            "G90" => global_relative = false,
-            "G91" => global_relative = true,
-            "G92" => {
-                if let Some(value) = letter_value('E') {
-                    e_position = value;
-                }
-            }
-            "G0" | "G1" | "G2" | "G3" => {
-                let x = letter_value('X');
-                let y = letter_value('Y');
-                let e = letter_value('E');
-                let start = (x_position, y_position, e_position);
-                let e_relative = global_relative || e_local_relative;
-                if let Some(value) = x {
-                    x_position = apply_axis(x_position, value, global_relative);
-                }
-                if let Some(value) = y {
-                    y_position = apply_axis(y_position, value, global_relative);
-                }
-                if let Some(value) = e {
-                    e_position = apply_e(e_position, value, e_relative);
-                }
-                let dx = x_position - start.0;
-                let dy = y_position - start.1;
-                let delta_e = e_position - start.2;
-                if delta_e > 0.0 && (dx != 0.0 || dy != 0.0) {
-                    // GCodeProcessor::process_G1 stores each extruded volume as float.
-                    used += f64::from((f64::from(area) * delta_e) as f32);
-                }
-            }
-            _ => {}
-        }
-    }
-    used / (std::f64::consts::PI * (0.5 * f64::from(diameter)).powi(2))
-}
-
-fn apply_e(current: f64, value: f64, relative: bool) -> f64 {
-    if relative { current + value } else { value }
-}
-
-fn apply_axis(current: f64, value: f64, relative: bool) -> f64 {
-    if relative { current + value } else { value }
-}
-
 pub(super) fn append_filament_stats(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
-    used_filament: f64,
-    writer_used_filament: f64,
+    volumes: &[f64],
+    state: &super::motion::EmitState,
 ) -> (f64, f64) {
     let filament = &traversal.resolved.views.full.filament.gcode;
-    let mut used_mm = Vec::with_capacity(filament.filament_diameter.0.len());
-    let mut used_cm3 = Vec::with_capacity(filament.filament_diameter.0.len());
-    // `GCode.cpp:2349-2368` gates line presence; the processor replaces
-    // present lines with configured-width vectors, including trailing zeros.
-    let mut used_g = vec![None; filament.filament_diameter.0.len()];
-    let mut costs = vec![None; filament.filament_diameter.0.len()];
+    let mut used_mm = Vec::with_capacity(volumes.len());
+    let mut used_cm3 = Vec::with_capacity(volumes.len());
+    let mut used_g = Vec::with_capacity(volumes.len());
+    let mut costs = Vec::with_capacity(volumes.len());
     let mut total_weight = 0.0;
     let mut total_cost = 0.0;
-    for (index, diameter) in filament.filament_diameter.0.iter().enumerate() {
-        // `GCode.cpp:2330-2354`: the `[g]`/`cost` lines are gated on the
-        // WRITER-side weight (`Extruder::used_filament()` = signed
-        // `m_absolute_E + m_retracted` — wipe negatives drain it past the
-        // restart, so extreme flow ratios leave it <= 0 and drop both
-        // lines) while the emitted numbers come from the processor's
-        // `total_volumes_per_extruder` accumulation, which `used_filament`
-        // here already models (Extrude-only E).
-        let displayed_length = if index == 0 { used_filament } else { 0.0 };
-        let gate_length = if index == 0 {
-            writer_used_filament
-        } else {
-            0.0
-        };
-        let volume = displayed_length * diameter.0.powi(2) * 0.25 * std::f64::consts::PI;
-        let gate_volume = gate_length * diameter.0.powi(2) * 0.25 * std::f64::consts::PI;
-        let density = filament
-            .filament_density
-            .0
-            .get(index)
-            .or_else(|| filament.filament_density.0.first())
-            .expect("validated filament density vector is nonempty")
-            .0;
-        let cost = filament
-            .filament_cost
-            .0
-            .get(index)
-            .or_else(|| filament.filament_cost.0.first())
-            .expect("validated filament cost vector is nonempty")
-            .0;
-        let weight = volume * density * 0.001;
+    // Processor properties are floats; each output is derived from original
+    // volume independently (`GCodeProcessor.cpp:997–1009`).
+    for (index, &volume) in volumes.iter().enumerate() {
+        let diameter = f64::from(filament.filament_diameter.0[index].0 as f32);
+        let density = f64::from(float_at(&filament.filament_density, index) as f32);
+        let cost = f64::from(float_at(&filament.filament_cost, index) as f32);
+        let length = volume / (std::f64::consts::PI * (0.5 * diameter).powi(2));
+        let cm3 = volume * 0.001;
+        let weight = cm3 * density;
         let material_cost = weight * cost * 0.001;
-        // Writer-side weight decides whether upstream's `append` ran
-        // (`filament_weight > 0`, GCode.cpp:2349); the printed values are
-        // the processor's per-extruder accumulations.
-        let gate_weight = gate_volume * density * 0.001;
-        used_mm.push(format!("{displayed_length:.2}"));
-        used_cm3.push(format!("{:.2}", volume * 0.001));
-        // `; total filament used [g]` is `print_statistics.total_weight`,
-        // overwritten at `GCode.cpp:1915-1937` from processor volumes — it
-        // is printed even when the writer-side gate dropped the per-extruder
-        // `[g]`/`cost` lines.
+        used_mm.push(format!("{length:.2}"));
+        used_cm3.push(format!("{cm3:.2}"));
+        used_g.push(format!("{weight:.2}"));
+        costs.push(format!("{material_cost:.2}"));
         total_weight += weight;
         total_cost += material_cost;
-        if gate_weight > 0.0 {
-            used_g[index] = Some(format!("{weight:.2}"));
-            if material_cost > 0.0 {
-                costs[index] = Some(format!("{material_cost:.2}"));
-            }
+    }
+    // Writer signed counters decide line presence; once present, processor
+    // post-processing replaces the entire configured-width vector.
+    let mut weight_line = false;
+    let mut cost_line = false;
+    for &id in state.extruders.ids() {
+        let (_, weight) = state.extruders.statistics(
+            id,
+            &state.extruder,
+            (state.options.filament_area, state.options.filament_density),
+            state.options.single_extruder_multi_material,
+        );
+        if weight > 0.0 {
+            weight_line = true;
+            cost_line |= weight * float_at(&filament.filament_cost, id) * 0.001 > 0.0;
         }
     }
-    let mut stats = format!(
-        "; filament used [mm] = {}\n; filament used [cm3] = {}\n",
-        used_mm.join(", "),
-        used_cm3.join(", "),
-    );
-    if let Some(grams) = join_postprocessed(&used_g) {
-        stats.push_str(&format!("; filament used [g] = {grams}\n"));
+    if !state.extruders.ids().is_empty() {
+        let mut stats = format!(
+            "; filament used [mm] = {}\n; filament used [cm3] = {}\n",
+            used_mm.join(", "),
+            used_cm3.join(", "),
+        );
+        if weight_line {
+            stats.push_str(&format!("; filament used [g] = {}\n", used_g.join(", ")));
+        }
+        if cost_line {
+            stats.push_str(&format!("; filament cost = {}\n", costs.join(", ")));
+        }
+        output.extend_from_slice(stats.as_bytes());
     }
-    if let Some(costs) = join_postprocessed(&costs) {
-        stats.push_str(&format!("; filament cost = {costs}\n"));
-    }
-    output.extend_from_slice(stats.as_bytes());
     (total_weight, total_cost)
 }
 
-/// `GCodeProcessor.cpp:1148-1175` replaces existing lines at full vector width.
-fn join_postprocessed(values: &[Option<String>]) -> Option<String> {
-    values.iter().find(|value| value.is_some())?;
-    let parts = values
-        .iter()
-        .map(|value| value.as_deref().unwrap_or("0.00"))
-        .collect::<Vec<_>>();
-    Some(parts.join(", "))
+fn float_at(values: &crate::OrcaFloats, index: usize) -> f64 {
+    values.0.get(index).unwrap_or(&values.0[0]).0
 }
 
 fn append_template(

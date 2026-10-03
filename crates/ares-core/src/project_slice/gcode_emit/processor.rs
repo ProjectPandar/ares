@@ -3,7 +3,7 @@ mod delays;
 mod envelope;
 mod estimate;
 mod export_lines;
-mod filament_change;
+pub(super) mod filament_change;
 mod motion;
 mod motion_util;
 mod schedule;

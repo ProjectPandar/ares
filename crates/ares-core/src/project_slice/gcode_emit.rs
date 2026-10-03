@@ -213,13 +213,17 @@ pub(super) fn emit(
     machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let filament = &traversal.resolved.views.full.filament.gcode;
-    let used_filament = finish::account_used_filament(&output, filament.filament_diameter.0[0].0);
-    let (total_weight, total_cost) = finish::append_filament_stats(
-        &mut output,
-        traversal,
-        used_filament,
-        state.extrusion_totals().used_filament,
-    );
+    let volumes = finish::account_volumes(&output, &filament.filament_diameter.0);
+    let used_filament = volumes
+        .iter()
+        .zip(&filament.filament_diameter.0)
+        .map(|(volume, diameter)| {
+            let diameter = f64::from(diameter.0 as f32);
+            volume / (std::f64::consts::PI * (0.5 * diameter).powi(2))
+        })
+        .sum();
+    let (total_weight, total_cost) =
+        finish::append_filament_stats(&mut output, traversal, &volumes, &state);
     finish::append_compatible_stats(
         &mut output,
         traversal,

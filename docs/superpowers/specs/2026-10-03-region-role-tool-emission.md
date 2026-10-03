@@ -5,6 +5,24 @@ Architecture: [ARD-0094](../../architecture/ard-0094-region-role-tool-ordering-a
 
 ## Contract and upstream ownership
 
+The per-filament footer slice ports `GCodeProcessor.cpp::process_G1`
+(3828–3909), `UsedFilaments::process_total_volume_cache` (1556–1567),
+`process_T` (5470–5503), `run_post_process` (991–1007,
+1148–1175), and `GCode.cpp` writer statistics (2325–2375), using
+`Extruder.cpp::used_filament` (137–145). Destination: the existing
+`gcode_emit/finish` statistics adapter, a separate accounting submodule,
+and the shared processor logical-T validator. Include per-logical-filament
+processor volumes, configured-width length/volume/weight/cost vectors,
+per-registered-writer line-presence gates, source float properties, and
+total length for inline placeholders. Replace tool-zero-only accounting;
+never redistribute a scalar total by geometry proportions. Existing XYZ/E
+cursor remains global, independent of the selected logical filament.
+Defer adjacent M1020/M600 selection, processor arc-discretization/units
+and wipe-tower accounting to output-evidenced slices; retain their existing
+behavior without claiming those boundaries are complete. Keep the original
+baseline/modifier complete acceptance unchanged and add a native-first
+saved3MF footer-output tracer at the same approved public seam.
+
 The existing-vertex seam slice ports `GCode/SeamPlacer.cpp::place_seam`
 1624–1627 and `ExtrusionEntity.cpp::ExtrusionLoop::split_at_vertex`182–225,
 `split_at`266–314, using `MultiPoint3::find_point`609–623 and method defaults

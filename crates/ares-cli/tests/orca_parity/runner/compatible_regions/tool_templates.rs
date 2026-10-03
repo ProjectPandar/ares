@@ -19,6 +19,9 @@ mod detour;
 #[path = "tool_templates/seam.rs"]
 mod seam;
 
+#[path = "tool_templates/filament_stats.rs"]
+mod filament_stats;
+
 #[path = "tool_templates/cooling.rs"]
 mod cooling;
 

@@ -30,6 +30,18 @@ where they do not implement these upstream contracts.
 
 ## Decisions
 
+Footer accounting has two distinct upstream owners: `GCodeProcessor.cpp`
+stores float extrusion volumes by logical filament and replaces complete
+configured-width vectors (991–1007,1148–1175); writer `Extruder` signed
+counters gate line presence (`GCode.cpp:2325–2375`). Read each registered
+writer's private counters, not just the active tool. The scan's XYZ/E cursor
+stays global across logical T changes. Share logical-T validation with the
+processor timing owner; do not duplicate tool parsing or infer per-tool
+usage from path lengths. Destination: `gcode_emit/finish` and its accounting
+submodule; replace the tool-zero-only compatibility shell. Include generated
+T-selected streams; adjacent M1020/M600, arc/units and wipe-tower accounting
+remain open. Preserve all complete-output assertions and template semantics.
+
 Seam placement owns its vertex-first1.5um search (`SeamPlacer.cpp:1624–1627`);
 `ExtrusionLoop::split_at` owns projection and a separate default1um vertex
 re-search (`ExtrusionEntity.cpp:266–314`, `.hpp:472–473`). A matched vertex

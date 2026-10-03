@@ -1,5 +1,161 @@
 # Region-role tool emission implementation plan
 
+## Current slice: per-filament footer accounting
+
+Previous seam checkpoint442ff3f4 committed/pushed; main worktree clean.
+Fresh official shared-CPU0 complete test34727 terminates/reaps100,2.600s,
+/tmp/ares-footer-current-red.log. Baseline first difference151482/7181:
+native368.40,149.19 versus Ares517.59,0.00. Modifier9227/488 remains a
+separate motion gap. Original fixtures/comparator/assertions untouched.
+Ranked hypotheses: scan ignores logical T; writer private counters do not
+reach footer; tool0 properties reused. Current finish.rs explicitly uses
+index0 for display and writer gates, while ExtruderRegistry already retains
+all writer counters. Rewrite the source owners cited in spec/ARD, not an
+Ares-designed proportional allocation.
+
+1. Add native-first public saved3MF full-footer-block regression in separate
+   test mod; prove RED before production changes.
+2. Move existing scan into a functional accounting mod and extend it to
+   logical-filament volume vectors, sharing timing's source T validator;
+   preserve global cursors and return full processor vectors. Read existing
+   registry statistics for per-writer gates. No new public slicer API.
+3. Re-run tracer and original complete baseline/modifier acceptance, retaining
+   remaining RED. Add the next property-vector public tracer only after this
+   first RED→GREEN. Freeze quality/workspace/platform/browser and approved
+   shared-CPU0 official/seeded controls; independent six-axis review/fix loop
+   before code+docs commit/push. No main merge/global completion claim.
+
+Included/deferred scope and destinations are in spec/ARD. Existing scanner
+is a temporary compatibility shell; adjacent M1020/M600, arcs/units and tower
+accounting remain output-evidenced follow-up boundaries, not silent guards.
+
+Public footer tracer78875 terminal/reaped100,1.859s:
+/tmp/ares-footer-tracer-red.log. Native preconditions pass; the entire raw
+stats/totals/change-count block differs in the expected per-filament vectors.
+Minimal implementation follows only after RED: move scalar scan to accounting
+mod, retain global cursors, flush UsedFilaments total-volume cache on logical
+T changes (1556–1567), share existing unsigned-prefix/count validator, and
+preserve float volume directly. Writer registry statistics now gate global
+line presence; all configured slots are displayed independently of those
+gates, using source property precision/order. Empty registry emits no raw
+filament vector lines. Attempt27346 builds/runs tracer and original complete
+baseline/modifier; wait for terminal result before claiming GREEN.
+
+Attempt27346 terminal/reaped101 before tests: nested accounting function
+visibility was narrower than its gcode_emit re-export. Correct to the exact
+owning boundary (not a public API), and use a let-chain for the trusted prior
+logical ID instead of an unnecessary unwrap. Corrected60773 builds/runs the
+same public tracer and untouched original complete test; log/artifacts suffix
+footer-attempt-fixed. No successful-runtime claim from the compile failure.
+
+Corrected60773 terminal/reaped100,3.313s: footer tracer PASS and the original
+complete baseline now PASS; original modifier remains9227/488DIVERGENT.
+No fixture/comparator/assertion changes. Preserve baselinecase-uiqg48 and
+modifiercase-MhTDSb. After this first GREEN, add a public control using distinct
+diameters1.75/2.85,densities1.11/1.29,costs0/32; compare the entire raw footer
+block with native and independently require its zero first-cost/nonzero second
+slot. This exercises property selection and line replacement, not all ranges.
+
+Property90118 terminal/reaped0,2.539s: both full-footer public controls PASS
+(/tmp/ares-footer-properties.log). Source frozen after the visibility/let-chain
+fix; this property control required no further production edit. Launch final
+clippy44803, workspace30153 and WASM34275; fmt/diff38815 pending terminal.
+All quality/runtime results and approved-domain broad references remain due,
+not inferred from focused GREEN. No zero-usage/SEMM/empty-registry runtime
+claim from this distinct-properties/zero-cost control.
+
+Frozen clippy44803 terminal/reaped0,1m20s:253core-lib/269core-test/31CLI
+warnings unchanged (/tmp/ares-footer-clippy.log). fmt/diff38815 terminal/reaped0.
+Workspace30153 and WASM34275 remain live; cross-compile Windows7770/macOS66192
+also launched. Build locks are expected waiting, not completion or failure.
+Actual browser/reference receipts still due after appropriate builds terminate.
+
+WASM34275 terminal/reaped0,5m42s including build-lock wait; fmt52096
+terminal/reaped0. Workspace30153 runs7576 tests with no failure observed yet;
+Windows7770/macOS66192 remain live. Generate bindings only from this final
+WASM artifact, then run actual Chromium after workspace is terminal so its
+default-num-cpus runtime gates have no external slice load. Reference66-case
+groups likewise remain due; no gate is inferred from a compilation-only check.
+
+Workspace30153 terminal/reaped0,263.666s:7576PASS36slow9skip,
+/tmp/ares-footer-workspace.log. Spiral-vase ramps and current-layer-spacing
+behavioral controls PASS. Windows7770/macOS66192 terminal/reaped0,
+6m00s/6m35s including locks, compilation only. Bindings70065 terminal/reaped0.
+Prebuild selected CLI graph on unrestricted CPUs before whole-process CPU0
+references (workspace graph may differ); keep that binary frozen for both
+66-case batches. Actual browser and final runtime review still due.
+
+Final selected CLI prebuild terminates0 (cached),
+/tmp/ares-footer-final-cli-build.log. Launch official74066/seeded47994 all66
+with all12 activation flags, --no-fail-fast, whole-process CPU0; retain seed0
+and the explicitly approved replay executable. Logs/artifacts are
+/tmp/ares-footer-{official,seeded}. Chromium33836 launches only after final
+bindings/workspace terminal with the unchanged3 tests and finite timeouts,
+/tmp/ares-footer-browser.log. Resolve host libraries only in that process's
+LD_LIBRARY_PATH; do not change test assertions or host/product configuration.
+Await all terminal receipts before final independent checkpoint approval.
+
+Chromium33836 terminal/reaped0:3PASS1.2m, unchanged finite timeouts,
+strict ordered-byte KSR comparison, binding privacy and repeated complete-byte
+identity all PASS. Raw complete output is
+/tmp/ares-wasm-gcode-0tcAuY/browser.gcode. This is actual WASM/browser evidence,
+not inferred from native tests. Official74066/seeded47994 remain live;
+no source/binary changes beneath those comparisons.
+
+Broad official additionally FAILs support_blocker_volume at11886/508:
+two Internal solid infill blocks appear in the opposite order. Do not dismiss
+it without evidence. Current case-ZinXkl Ares raw SHA256
+adb5f07104c782e8bbeb6607807ee97162613312f3ab12e9d7210aa0febfda5d equals
+prior PASS /tmp/ares-seam-shared-official-full/case-W934FL and current seeded
+PASS case-ddyw6o exactly. Old/new saved inputs have the same ZIP member order
+and all10 decompressed members compare equal, including escaped content-types.
+Native old/new differ in the dated header and that solid-infill block order.
+This establishes unchanged Ares output and observed reference ordering change
+for this case, not its internal cause or an unknown manifest producer identity.
+Retain the official FAIL and await both broad terminals; then repeat the
+original full support-blocker test against the same current official binary.
+
+Official74066 terminal/reaped100,332.095s:66run63PASS3FAIL; seeded47994
+terminal/reaped100,385.317s:66run65PASS1original-modifierFAIL. Preserve all
+three official failures, not an all-green claim. The additional Hybrid first
+diff6496/254 is M73 placement; later native diff exchanges the same small
+solid-infill blocks. Independently verify current official case-UBEVS4,
+prior PASS case-T2995Z and current seeded PASS case-F7bSyI Ares raw SHA256
+6f9a9ab3bf60d7987356befe5106df6c6a0453e9baa21a409ac4fac3939ebe1a equals
+across all three. Old/new Hybrid inputs retain member order and all9
+decompressed members compare equal. This is evidence of unchanged Ares
+output, not a general declaration of no regression or reference internal cause.
+Current official binary SHA256 is
+64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60.
+Repeat both original complete tests twice on this same approved CPU0 domain,
+without rebuilding, dropping M73, relaxing assertions or changing fixtures.
+
+Original complete repeats15775/98106 terminal/reaped0: both2PASS,
+8.164s/7.810s, logs/artifacts footer-official-repeat-{one,two}. The official
+binary hash before/after is identical. Preserve initial official63/3 receipt
+and both failure cases; these repeated passes do not rewrite the earlier
+result or identify the native ordering mechanism. Seeded65/1 remains the
+finite reproducible control receipt. Run a separate fresh default-multiworker
+official66-case group, keeping both Ares and reference in the default domain,
+footer-default-official. Record any failures independently; do not substitute
+its domain for the approved shared-CPU0 comparison or weaken any assertion.
+
+Default official18953 terminal/reaped100,15.064s:all66ran49PASS17FAIL,
+/tmp/ares-footer-default-official.log and all case artifacts retained. This
+domain does not pass; do not classify every failure as one mechanism or use
+it to replace the controlled-domain receipt. Final fmt48176 terminal/reaped0,
+diff check0 after receipts. This11file checkpoint closes only the measured
+per-filament footer contract in the approved CPU0 domain, with original
+baseline complete PASS and original modifier motion RED9227/488. All-printer,
+all-option and default-domain/global parity remain open. Request final
+independent six-axis approval for commit+push to the feature branch only,
+not main merge or completion of the active goal.
+
+Independent final six-axis review approves this11file finite checkpoint
+for commit and feature-branch push, no new must-fix. Approval excludes main
+merge/global completion, preserves modifier9227/488 and default17FAIL, and
+does not mislabel zero-cost coverage as zero-usage or SEMM runtime acceptance.
+
 ## Current diagnosis: existing-vertex seam versus overhang projection
 
 Previous turn is progress: closed-boundary checkpoint8d698005 committed and

@@ -35,17 +35,7 @@ impl<'a> FilamentChange<'a> {
             // Upstream sets this before consulting its unload-time getter.
             self.unloaded = true;
         }
-        let digits = command.strip_prefix('T')?;
-        let length = digits.bytes().take_while(u8::is_ascii_digit).count();
-        if length == 0 {
-            return None;
-        }
-        // unsigned from_chars leaves the initialized destination at zero on
-        // overflow; trailing nonnumeric characters do not reject a prefix.
-        let filament = digits[..length].parse::<u32>().unwrap_or(0) as usize;
-        if filament > 254 || filament >= self.count {
-            return None;
-        }
+        let filament = selected_filament(command, self.count)?;
         let previous = self.physical.and_then(|id| self.current[id]);
         if previous == Some(filament) {
             return None;
@@ -83,6 +73,23 @@ impl<'a> FilamentChange<'a> {
     fn unload_time(&self) -> f32 {
         if self.unloaded { 0.0 } else { self.unload }
     }
+}
+
+/// `GCodeProcessor.cpp:5470–5499`: logical T validation, not writer selection.
+pub(in crate::project_slice::gcode_emit) fn selected_filament(
+    code: &str,
+    count: usize,
+) -> Option<usize> {
+    let command = code.split_whitespace().next()?;
+    let digits = command.strip_prefix('T')?;
+    let length = digits.bytes().take_while(u8::is_ascii_digit).count();
+    if length == 0 {
+        return None;
+    }
+    // unsigned from_chars leaves the initialized destination at zero on
+    // overflow; trailing nonnumeric characters do not reject a prefix.
+    let filament = digits[..length].parse::<u32>().unwrap_or(0) as usize;
+    (filament <= 254 && filament < count).then_some(filament)
 }
 
 pub(super) fn unloads_filament(code: &str) -> bool {
