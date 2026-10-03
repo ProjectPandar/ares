@@ -1,6 +1,39 @@
 use super::*;
 
 #[test]
+fn orca_parity_filament_layer_retraction_preserves_every_value_and_complete_output() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
+    let selection =
+        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
+    let machine = profiles.machine(&selection.printer).unwrap();
+    let mut process = profiles.process(&selection.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    let mut filaments = selection
+        .filaments
+        .iter()
+        .map(|name| profiles.filament(name).unwrap())
+        .collect::<Vec<_>>();
+    parity::normalize_filament_defaults(&mut filaments);
+    let plan = domains::load(&runner::repo_root())
+        .into_iter()
+        .find(|plan| plan.key == "filament_retract_when_changing_layer")
+        .unwrap();
+    assert_eq!(
+        plan.cases
+            .iter()
+            .map(|case| case.label.as_str())
+            .collect::<Vec<_>>(),
+        ["false", "true", "nil"]
+    );
+    let outcome = execute_plan(&runner, &plan, &machine, &process, &filaments);
+    assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+    assert_eq!(outcome.compared, 3);
+}
+
+#[test]
 fn orca_parity_wall_sequence_keeps_each_effective_value_and_full_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;

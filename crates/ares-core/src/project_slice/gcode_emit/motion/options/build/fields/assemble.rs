@@ -310,6 +310,6 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         arc_fitting_tolerance: full.process.print.resolution.0,
         ..Default::default()
     };
-    super::retraction::apply(&mut options, &prelude);
+    super::retraction::apply(&mut options, &prelude, &traversal.resolved.views.runtime);
     options
 }

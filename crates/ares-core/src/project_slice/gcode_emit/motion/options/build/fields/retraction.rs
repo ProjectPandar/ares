@@ -2,7 +2,7 @@
 
 use super::super::super::{MotionOptions, nullable_float_at};
 use super::super::context::Prelude;
-use crate::{Nullable, OrcaFloats};
+use crate::{Nullable, OrcaFloats, ProjectSettings};
 
 fn at<T>(values: &[T], index: usize) -> Option<&T> {
     values.get(index).or_else(|| values.first())
@@ -12,7 +12,7 @@ fn float(values: &OrcaFloats, index: usize) -> f64 {
     at(&values.0, index).map_or(0.0, |value| value.0)
 }
 
-pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>) {
+pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime: &ProjectSettings) {
     let Prelude {
         full,
         gcode,
@@ -59,6 +59,9 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>) {
         filament,
         float(&printer.retraction_minimum_travel, filament),
     );
-    options.retract_when_changing_layer =
-        at(&printer.retract_when_changing_layer.0, filament).is_some_and(|value| value.0);
+    options.retract_when_changing_layer = at(
+        &runtime.project.print.retract_when_changing_layer.0,
+        filament,
+    )
+    .is_some_and(|value| value.0);
 }
