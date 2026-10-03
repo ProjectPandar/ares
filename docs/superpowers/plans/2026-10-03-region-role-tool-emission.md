@@ -1,5 +1,221 @@
 # Region-role tool emission implementation plan
 
+## Current slice: modifier approach routing
+
+Footer checkpoint81504219 is pushed and the worktree was clean. Fresh original
+complete acceptance, /tmp/ares-modifier-motion-red-valid.log, terminates100:
+baseline PASS, modifier first difference9227/488. An earlier invocation lacked
+ORCA_APPDIR and failed export127; it is not motion evidence. Original fixtures
+and full assertions remain unchanged. Approved public seam is saved3MF to
+complete G-code; add a separate native-first raw second-layer approach tracer
+and then a one-variable reduce_crossing_wall=false control to isolate routing.
+
+Ranked falsifiable hypotheses: multi-region boundary changes route (disabling
+routing removes the approach difference); spiral direction diverges despite
+equal route; wipe cursor differs before routing. Raw wipe coordinates match,
+lowering the third hypothesis. No production fix yet: establish the tracer RED,
+run the routing-off control, then select the smallest source-owned correction.
+
+Upstream boundaries are AvoidCrossingPerimeters.cpp::get_perimeter_spacing,
+get_perimeter_spacing_external,get_external_perimeter_width(499–550),
+get_boundary/inner_offset(1014–1134),init_layer/travel_to, and GCode.cpp::travel_to
+(7356–7505). Rust destinations: gcode_emit/layers geometry adapters,
+perimeters/classic/traversal flow queries, and motion/path/avoid_crossing.
+Include only the output-evidenced routing defect in this slice; defer unrelated
+option/range expansion and other modifier differences without weakening the
+original complete acceptance. Any temporary instrumentation must be removed.
+Run focused/full controls, fmt/clippy and independent six-axis review before
+a logical code+docs commit/push; unverified work is not a completed checkpoint.
+
+Public approach tracer28170 terminates/reaps100,2.145s with identical first
+diff9227/488; native approach preconditions pass. Its routing-off control27946
+terminates/reaps0,2.106s (/tmp/ares-modifier-routing-off.log): the whole raw
+approach matches when only reduce_crossing_wall changes. Selected prebuild
+21080 is terminal0; the control waited on its build lock before running.
+This localizes this approach defect to routing, not every complete-file gap.
+Test the redundant-union hypothesis next: emit_helpers re-unions already
+merged compensated Layer::lslices, while get_boundary consumes them directly.
+Change only that union to an owned Rc slice copy, preserving point order.
+Prebuild13730 remains live; do not claim the hypothesis confirmed yet.
+
+Prebuild13730 terminates/reaps0,1m15s. Experiment7912 terminates/reaps100:
+three tests run, routing-off PASS, tracer and original acceptance both remain
+RED9227/488 (/tmp/ares-modifier-direct-slices.log). Redundant-union removal
+does not explain this symptom and is restored with apply_patch. No production
+change remains. Preserve the two public tests and request independent read-only
+six-axis diagnosis review, not completion/commit approval. Routing-off is a
+control, never a product workaround. Next correction needs discriminating
+boundary/closest-line evidence rather than speculative combined changes.
+
+Independent read-only review identifies resample_polygon(802–834): native
+vertex offsets truncate, middle vector is formed from those integer offsets,
+interpolated points truncate. Rust rounds both and computes middle with the
+unquantized vector. Main verifies the source and applies only this numeric
+contract (including source sqrt norm arithmetic) after public RED. Do not mix
+the separately identified inner_offset acceptance-cascade gap(1066+) into this
+experiment. Destination boundary/resample.rs, include resample_polygon/fill_middle;
+defer cascade pending measured output. No new private/source-pinning test.
+
+Truncation prebuild64578 terminal/reaped0,1m16s; runtime29420 terminal/reaped100,
+6.861s, /tmp/ares-modifier-truncation.log. Original complete and public tracer
+stay RED9227/488, routing-off control PASS. The numeric source gap does not
+explain this target symptom; restore the experiment and retain it on the
+review repair list for a separately red-capable public input. No production
+changes remain after this experiment. Diagnostic clippy15340 terminates0
+(31 CLI parity warnings) but predates the numeric experiment and is not a
+final-source implementation gate. Next work must capture discriminating
+region-flow/input-boundary and offset-stage evidence before further edits.
+
+Next diagnostic build60638 terminal/reaped0,1m16s; original runtime80310
+terminal/reaped100,2.618s, /tmp/ares-modifier-route-probe.log. Temporary
+Tagged route logging records the wrong physical target when gated by
+layer_index==1 (z=.36, not the first-difference z=.52). Do not infer target
+geometry from those lines; retarget the probe by print_z=.52. Independent
+read-only review additionally identifies unconditional closest expansion,
+end-first shared-contour selection, collinear simplification intersections,
+f32 boundary-distance accumulation, nudge conversion order and closest-hit
+dedup/precision differences. These are static gaps, not established causes.
+
+Target probe74126 build terminal0; runtime88509 terminal100 original acceptance
+still9227/488, /tmp/ares-modifier-z052-probe.log. At z=.52 both inputs have
+spacing=.4156637,width=.42,top0; baseline slices split a triangle/bulk while
+modifier has one four-point square at±5000010. Modifier route's first point
+is(164.875821,104.410214), consistent with its differing formatted approach.
+This does not prove native input contours equal to either Rust contour.
+Probe only the four-point modifier square's inner_offset round result count,
+hole count and selected contour to test the premature-acceptance prediction.
+Temporary route/offset diagnostic output must be removed before
+commit, and git diff plus relevant sources checked for diagnostic markers.
+
+Offset build20712 terminal/reaped0; runtime86247 terminal/reaped100,2.668s,
+/tmp/ares-modifier-offset-probe.log. Immediately preceding target z=.52
+approach (lines32–33), the modifier square has one hole after resampling;
+first width311747.25 returns two zero-hole polygons. Rust prematurely accepts
+the largest, while source1066–1091 retries before the last width. This is the
+discriminating target-stage evidence, unlike the rejected rounding/union
+experiments. Include only inner_offset's acceptance cascade: matching single
+topology immediately; otherwise retry until final width; final single/max-area
+or retained resampled original when empty. Largest-area ties retain first.
+Remove both temporary diagnostic probes now; keep numeric/top-inset/closest
+and region-flow gaps deferred for independently red-capable inputs. Rebuild
+and run public tracer/off-control/original complete before claiming GREEN.
+
+Cascade prebuild52519 terminal/reaped0; focused36184 terminal/reaped100,6.941s,
+/tmp/ares-modifier-cascade.log: public approach tracer RED→GREEN, routing-off
+control PASS, original complete baseline PASS; modifier moves to18606/905
+(native G1 X166.79 Y104.781 vs Ares X166.794 Y104.783). Preserve full RED;
+this slice closes the approach/cascade defect, not modifier/global parity.
+Independent static review confirms cascade/first-tie/empty retention and no
+bundled adjacent fixes, but awaits final runtime/quality results. Freeze source
+and run workspace, clippy/fmt, WASM/platform/browser and approved full controls;
+retain default/reference variability results before finite checkpoint review.
+
+Initial quality clippy5304 terminates0 but adds one excessive-nesting warning
+at the new maximum-selection loop (254lib/270lib-test versus253/269), so this
+source is not approved for commit. Flatten early-width rejection and consume
+the final candidates with a first-retaining strict maximum; same contract,
+no helper/allow attribute. Workspace2634, WASM80942, Windows59963/macOS54533
+were already launched: treat them as preliminary receipts, not final-source
+validation. Re-run final gates after all these handles are terminal and the
+flattened source is frozen; do not claim old or mixed build receipts as final.
+
+The first flattened loop still adds excessive_nesting (frozen attempt73717).
+Replace it with allocation-free area/candidate mapping, reversed max_by and
+destructuring: max_by's last-equal selection now preserves the original first
+tie. Integer polygon areas are finite; compute each candidate area only once
+as upstream does, avoiding repeated scans of the current maximum. Independent
+review caught and corrected this performance requirement before final freeze.
+Intermediate2634/82146 workspace and73717/53322/71687/67968 quality handles
+predate this final selection; record separately, not as final-source gates.
+
+Final production resample.rs SHA256 is
+f8c9096e4c3b0de354701e2b3139eb3e26493aef171dad6db1bc1f93789886d7.
+Checkpoint clippy4966 terminal/reaped0 (5m22 including shared build-lock wait),
+/tmp/ares-cascade-checkpoint-clippy.log:253lib/269lib-test/31CLI parity unchanged,
+no new resample warning. fmt1156 terminal/reaped0; diff check0 and both full
+diff and production gcode_emit diagnostic-marker searches have no matches.
+No production edits after this snapshot; other gate handles remain live.
+
+Intermediate workspace2634 and82146 terminal/reaped0:7578/7578 each (263.931s,
+262.571s runtime respectively). Preserve these successes but rerun the explicit
+checkpoint workspace command after the final snapshot, as promised.
+Final WASM88047, Windows73325 and macOS41254 terminal/reaped0; browser bindings
+10117 terminal/reaped0, generated from the checkpoint WASM artifact. These
+platform build/check receipts are not execution on Windows/macOS nor browser
+runtime approval. Exact public CLI prebuild5771 remains live; do not launch
+controlled reference runs until prebuild and workspace handles are terminal.
+
+Final workspace60911 terminal/reaped0, /tmp/ares-cascade-checkpoint-workspace.log:
+7578run/7578PASS,35slow,9skipped,254.874s runtime. Spiral-vase Z ramp and
+current-spacing/stopped-neighbor anchor tests PASS. Exact public CLI frozen
+prebuild terminal0(0.249s); source SHA256 remains unchanged before reference
+runs. Live-reference test flags are enabled separately below; unflagged
+workspace success is not a claim that every external comparison executed.
+
+Official CPU0 controls84209 retain an additional normal-auto/organic failure,
+20367/851: native X113.388/Y113.135 vs Ares X113.244/Y113.297 at the next
+Internal solid infill block. Current case-sX3yfB and prior official PASS
+footer/case-WdZL6n and seeded PASS footer/case-Rb7tO0 raw Ares hashes all equal
+6c2dd46ef4c68c3f514ae7d63d110af32b1979151777bda2664f5d40b776db38.
+Current/prior official saved3MF member order and all9 decompressed members
+match individually (including literal [Content_Types].xml). Thus Ares output
+is unchanged for identical input content; retain the actual failure, not an
+all-green claim or an unsupported explanation of reference internals. Current
+official binary hash remains64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60;
+seeded executable hash3d05d4ccab740ca5e13aa94d0d00867a75f867ba2159b9f5b024dc0fcaa3bfaa.
+
+Official84209 terminal/reaped100,168.571s,68run66PASS/2FAIL,281skipped;
+/tmp/ares-cascade-checkpoint-official-controls.log and artifacts retained.
+Failures are the unchanged-Ares organic normalization case above and original
+modifier later RED18606/905. Original complete baseline PASS and both new
+public approach tests PASS. This finite suite mixes strict whole-output
+acceptances and named limited diagnostics, not68whole-output successes.
+Seeded controls start only after official handle terminal, with both Ares
+and reference sharedCPU0 and seed0; no builder or fixture/comparator edits.
+
+Seeded2011 terminal/reaped100,222.227s:68run67PASS/1original-modifierFAIL,
+281skipped, /tmp/ares-cascade-checkpoint-seeded-controls.log. Complete baseline,
+organic normalization and both public approach tests PASS; modifier retains
+18606/905 full RED. Original organic normalization complete test repeats
+terminal0 twice (2.878s/2.876s), organic-repeat-{one,two} logs/artifacts; no
+fixture/assertion/build changes. These repeated passes do not replace the
+official66/2 receipt or establish a reference internal cause. Default-domain
+official batch uses no whole-process CPU pin and the unpinned official wrapper,
+retaining its independent complete-output results; browser runtime follows.
+
+Default official15697 terminal/reaped100,15.098s:68run48PASS/20FAIL,281skipped,
+/tmp/ares-cascade-checkpoint-default-controls.log with all artifacts retained.
+Both approach diagnostics PASS, but this execution domain does not pass its
+complete-output suite; do not classify all20 failures as one mechanism or
+substitute controlled67/1 for this receipt. Reference executable SHA256 values
+before/after all batches are unchanged. Final Chromium3test run26729 is live;
+bindings were produced from the frozen checkpoint WASM artifact, with no test
+assertion, comparator or timeout changes.
+
+Default artifact readback finds98current cases versus96previous footer cases:
+95match a prior same-label raw Ares hash,2are the new diagnostic labels, and
+the only changed old-label output is targeted inherited-second-filament
+modifier case-9FvB9k. Read-only verification23134 terminal0 additionally checks
+all95matched pairs' ZIP member names/order, every decompressed member, and
+actual raw G-code bytes:95identical,0misses. This is finite no-output-change
+evidence, not a claim all default failures have one reference cause.
+
+Final Chromium26729 terminal/reaped0:3/3PASS(1.2m), including original complete
+KSR ordered-byte comparison and repeated complete-byte identity, no timeout or
+assertion changes. Output /tmp/ares-wasm-gcode-mgcmyZ/browser.gcode is6321698bytes,
+SHA25691e2fce752e5dc6d7ed221b39209838000ba1cd1bf134e937a59a8b8d2d27ab4.
+Request independent final six-axis approval for this6file code+docs checkpoint
+and feature-branch commit/push only. Do not claim main merge, whole modifier
+parity, default-domain or all-printer/all-option/global completion. Preserve
+official66/2,seeded67/1,default48/20 and modifier18606/905 in the commit record.
+
+Final independent six-axis review approves this6file finite code+docs
+checkpoint for feature-branch commit+push, with no remaining source must-fix.
+Approval explicitly excludes main/global/full-modifier/default-domain closure;
+commit body must preserve all failure receipts and adjacent deferred contracts.
+Final fmt14786 terminal/reaped0, diffcheck0 and diagnostic-marker diff search
+has no matches.
+
 ## Current slice: per-filament footer accounting
 
 Previous seam checkpoint442ff3f4 committed/pushed; main worktree clean.

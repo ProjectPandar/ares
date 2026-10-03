@@ -30,6 +30,25 @@ where they do not implement these upstream contracts.
 
 ## Decisions
 
+AvoidCrossingPerimeters.cpp::inner_offset(1066–1091) owns topology acceptance:
+only a single result with unchanged hole count may stop an early width trial.
+Changed topology or split results retry; final width may accept a single or
+first largest-area result. Empty final output retains the resampled original.
+Port this cascade into motion/path/avoid_crossing/boundary/resample.rs, not
+an active-tool shortcut or suppressed detour. Adjacent resampling precision,
+closest-line and region-flow contracts remain separately output-evidenced
+work; do not silently bundle them into this correction.
+
+Modifier travel geometry is owned by AvoidCrossingPerimeters.cpp's layer-wide
+slice/flow queries and boundary routing, not the active emitting region or
+tool. GCode.cpp::travel_to consumes that route for spiral direction and each
+waypoint. Diagnose through public saved3MF/raw G-code and retain the original
+whole-output acceptance; do not compensate a geometry defect by changing arc
+formatting or filtering differing travel commands. Rust destination remains
+gcode_emit/layers and motion/path/avoid_crossing, with traversal queries only
+as the upstream layer geometry adapter. Scope is the measured modifier gap;
+adjacent behavior remains open until supported by output evidence.
+
 Footer accounting has two distinct upstream owners: `GCodeProcessor.cpp`
 stores float extrusion volumes by logical filament and replaces complete
 configured-width vectors (991–1007,1148–1175); writer `Extruder` signed

@@ -1,5 +1,23 @@
 # Region-role tool emission rewrite
 
+Modifier approach slice: rewrite only the output-evidenced routing gap from
+GCode/AvoidCrossingPerimeters.cpp::get_perimeter_spacing,
+get_perimeter_spacing_external,get_external_perimeter_width(499–550),
+inner_offset/get_boundary(1014–1134),init_layer/travel_to and
+GCode.cpp::travel_to(7356–7505). Destination: gcode_emit/layers geometry,
+perimeters/classic/traversal queries and motion/path/avoid_crossing. Existing
+adapters remain temporary upstream compatibility shells. Keep original
+complete acceptance intact; add native-first public saved3MF approach coverage.
+Included scope is the diagnosed modifier travel defect; adjacent geometry,
+other modifier differences and full option expansion remain deferred/open.
+
+The output-evidenced correction includes inner_offset's topology acceptance
+cascade(1066–1091) in motion/path/avoid_crossing/boundary/resample.rs: early
+unchanged-hole single result, otherwise retries through the final width;
+final single/first largest area or retained resampled original when empty.
+Adjacent rounding, closest-line and region-flow gaps are not bundled into
+this slice without their own public output evidence.
+
 Status: approved next milestone; mainline baseline body gap reproduced.
 Architecture: [ARD-0094](../../architecture/ard-0094-region-role-tool-ordering-and-writer-state.md).
 

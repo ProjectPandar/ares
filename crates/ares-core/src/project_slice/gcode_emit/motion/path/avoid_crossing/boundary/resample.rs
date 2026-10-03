@@ -116,7 +116,7 @@ pub(super) fn inner_offset(
             offset_dis,
             2.0 * offset_dis + SCALED_EPSILON,
         ];
-        'widths: for &min_contour_width in &widths {
+        'widths: for (width_index, &min_contour_width) in widths.iter().enumerate() {
             let search_radius = 2.0 * (offset_dis + min_contour_width);
             let contours = std::iter::once(ex_poly.contour().points())
                 .chain(ex_poly.holes().iter().map(|hole| hole.points()))
@@ -151,21 +151,24 @@ pub(super) fn inner_offset(
             }
             let offset_ex_poly =
                 crate::geometry::variable_offset_inner_ex(&ex_poly, &offsets, MITER_LIMIT)?;
-            // `variable_offset_inner_ex` may split thin artefacts away; keep
-            // the largest part per the upstream acceptance cascade.
-            if offset_ex_poly.len() == 1 {
-                ex_poly = offset_ex_poly.into_iter().next().expect("single result");
-                break 'widths;
-            } else if offset_ex_poly.len() > 1 {
-                let (best, _) = offset_ex_poly
-                    .iter()
-                    .map(|candidate| candidate.area())
-                    .enumerate()
-                    .max_by(|left, right| left.1.total_cmp(&right.1))
-                    .expect("nonempty result");
-                ex_poly = offset_ex_poly.into_iter().nth(best).expect("best exists");
-                break 'widths;
+            // Accept matching topology immediately; changed topology or split
+            // results are only accepted after the last width (1066–1091).
+            let unchanged_topology = offset_ex_poly.len() == 1
+                && offset_ex_poly[0].holes().len() == ex_poly.holes().len();
+            if !unchanged_topology && width_index + 1 < widths.len() {
+                continue;
             }
+            // max_by keeps the last tie; reverse to retain the source's first.
+            let Some((_, selected)) = offset_ex_poly
+                .into_iter()
+                .map(|candidate| (candidate.area(), candidate))
+                .rev()
+                .max_by(|left, right| left.0.total_cmp(&right.0))
+            else {
+                continue;
+            };
+            ex_poly = selected;
+            break 'widths;
         }
         result.push(ex_poly);
     }
