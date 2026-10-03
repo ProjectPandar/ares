@@ -1,6 +1,6 @@
 # ARD-0094: Region-role tool ordering and writer state
 
-Status: approved next independent milestone; mainline body gap reproduced.
+Status: initial public two-nozzle output closure validated; broader domains open.
 
 ## Source boundary
 
@@ -29,6 +29,14 @@ source-owned tool ordering in a dedicated submodule and writer state next to
 where they do not implement these upstream contracts.
 
 ## Decisions
+
+End-template layer_num consumes live GCode::m_layer_index as ConfigOptionInt
+(GCode.cpp3476, advanced by change_layer5685–5690). In finish.rs::append use
+existing EmitState::layer_chunk_index, not traversal region slots, physical
+layer id or total_layer_count. Preserve integer template arithmetic. Replace
+only this record-count compatibility shell; static total_layer_count and
+filament-end iteration remain separate owners. Public saved3MF complete output
+must validate both the original modifier and odd-index division semantics.
 
 Closest-line extension follows AvoidCrossingPerimeters.cpp::avoid_perimeters_inner
 (592–612) and extend_for_closest_lines (171–294) in motion/path/avoid_crossing/router:

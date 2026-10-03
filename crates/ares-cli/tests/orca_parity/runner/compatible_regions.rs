@@ -12,6 +12,9 @@ mod modifier_travel;
 #[path = "compatible_regions/same_xy.rs"]
 mod same_xy;
 
+#[path = "compatible_regions/end_layer.rs"]
+mod end_layer;
+
 #[path = "compatible_regions/infill_first.rs"]
 mod infill_first;
 

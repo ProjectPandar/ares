@@ -1,5 +1,18 @@
 # Region-role tool emission rewrite
 
+Footer layer_num slice rewrites GCode.cpp3474–3492's dynamic ConfigOptionInt
+m_layer_index consumer and change_layer5685–5690's emitted-layer counter into
+gcode_emit/finish.rs::append, consuming existing EmitState::layer_chunk_index.
+Replace traversal-record counting, a temporary compatibility shell which
+counts region slots rather than emitted layers. Include machine-end and the
+existing filament-end render's shared live integer layer_num. Public saved3MF
+complete-output seams cover the unchanged dual-tool modifier fixture and a
+single-tool odd-index integer-arithmetic template. Defer separate static
+total_layer_count, filament-end iteration, sequential/tower lifecycle and
+further printer/options domains; never defer encountered original acceptance
+differences or weaken its (PASS,PASS) assertion. No geometry/count recomputation
+or comparator change is included.
+
 Layer63 later-tool route slice rewrites avoid_perimeters_inner's unconditional
 closest-line extension (AvoidCrossingPerimeters.cpp:592–612) and the extension
 consumer's empty-input/shared-boundary contract (171–294) into

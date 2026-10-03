@@ -8709,16 +8709,22 @@ Current merge scope (2026-10-03): Normal Grid/Snug, Organic and non-Organic
 Tree style/manual dispatch, modifier region consumers and painted slab/vertical
 projection are integrated. Close the finite final gates in the Tree plan and
 merge the source-closed combined batch; do not indefinitely add painting cases.
-The next priority is the user-approved
+The active region-role rewrite boundary is the user-approved
 [region-role tool emission milestone](superpowers/plans/2026-10-03-region-role-tool-emission.md)
 ([ARD0094](architecture/ard-0094-region-role-tool-ordering-and-writer-state.md)):
 port ToolOrdering.cpp LayerTools/ToolOrdering and GCode.cpp process_layer /
 set_extruder, GCodeWriter and Extruder state into project_slice/gcode_emit.
 Its exit is both unchanged public Snapmaker baseline/modifier complete outputs
-matching official and seeded Orca. The baseline missing-body-toolchange gap
+matching official and seeded Orca. That initial fixture exit now passes after
+the source-owned live integer end-template layer index correction
+(`GCode.cpp:3476,5685–5690` → `gcode_emit/finish.rs`); the plan retains fresh
+full-workspace, reference-domain and browser receipts. This is not general
+multi-tool, sequential/tower or all-printer/options completion.
+The baseline missing-body-toolchange gap
 exists on94d33b59; that mainline rejects the modifier density input. Therefore
 the current merge closes single-tool Normal/Tree/region behavior, not multi-tool
-parity. Preserve the confirmed dual-tool RED and implement no header-only fix.
+parity. Preserve historical dual-tool RED receipts and the unchanged complete
+acceptance assertion; the current initial fixture closure is not a header-only fix.
 The subsequent coverage milestone follows TriangleSelector.cpp strict facet
 splits, PrintObject.cpp::project_and_append_custom_facets and
 TriangleMeshSlicer.cpp::slice_mesh_slabs in project/facets_annotation,

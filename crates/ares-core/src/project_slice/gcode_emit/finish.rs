@@ -39,7 +39,7 @@ pub(super) fn append(
     );
     config.insert(
         "layer_num",
-        value::Value::number(layer_count(traversal).saturating_sub(1) as f64),
+        value::Value::Integer(state.layer_chunk_index as i64),
     );
     // `GCode.cpp:3478`: `layer_z = get_position()(2) - z_offset` — the
     // model-domain writer z at print end, NOT the float-domain
@@ -256,11 +256,4 @@ fn append_template(
         output.push(b'\n');
     }
     Ok(())
-}
-
-fn layer_count(traversal: &PreparedPostClassicTraversal) -> usize {
-    traversal
-        .objects
-        .first()
-        .map_or(0, |object| object.records.len())
 }

@@ -1,5 +1,83 @@
 # Region-role tool emission implementation plan
 
+## Current slice: live integer footer layer_num
+
+Source: GCode.cpp3474–3492 end-template dynamic ConfigOptionInt(m_layer_index),
+change_layer5685–5690 advances the generator index. Destination:
+gcode_emit/finish.rs::append using existing EmitState::layer_chunk_index,
+which layers.rs passes from emitted chunk_index into boundary/begin_layer.
+Replace the traversal-record-count compatibility shell; do not recompute
+geometry, schedule totals or use source physical layer ids. Include live
+integer layer_num for existing end renders; defer separate static
+total_layer_count, complete filament-end iteration and sequential/tower
+lifecycle outside these public acceptance fixtures.
+
+Fresh RED68123 exits100, /tmp/ares-footer-layer-num-red.log: unchanged original
+baseline PASS/modifier DIVERGENT at239867/11023,92vs185. Existing public
+saved3MF→byte-output complete comparator is the user-approved seam.
+1. Add one public saved3MF machine-end odd-index integer-division tracer,
+   verify exported config and native preconditions, demonstrate RED.
+2. Consume live integer counter and remove orphaned record-count helper;
+   verify tracer and unchanged original complete baseline/modifier GREEN.
+3. Run native official/seeded/default controls, full nextest, fmt/clippy,
+   WASM/browser and platform gates; independent six-axis readback, fix any
+   regression, then commit/push code with docs. Full printer/options scope
+   remains active after this finite slice.
+
+Tracer build11989 exits0. Native precondition verifies final49 and integer
+division24, while tracer94548 exits100 with the complete comparator's first
+difference79590/3715: Ares49/24.5, native49/24. This independently exposes the
+incorrect Number type even when the single-region layer count happens to
+match. /tmp/ares-footer-layer-tracer-red.log retains case-6Qw9bz. Minimal
+production correction uses the existing live counter as Value::Integer and
+deletes the now-orphaned record-count helper; no other count changes.
+
+Frozen production prebuild46183 exits0(1m17s). Clippy51168 exits0(2m35s),
+/tmp/ares-footer-layer-final-clippy.log:253corelib/269coretest/31CLIparity
+warnings, unchanged. fmt/diff checks exit0. WASM1594 exits0(6m32s including
+build-lock wait), bindings52707 exit0; Windows51329/MacDarwin85415 checks
+exit0(7m08s/7m43s including wait), compilation only. Logs use
+/tmp/ares-footer-layer-final-{wasm-build,windows,macos}.log.
+Unpinned official default90003 exits0:15run15PASS,346skipped,7.301s,
+/tmp/ares-footer-layer-default-controls.log. Original complete baseline and
+modifier both PASS; odd-index template and two thin-square whole comparisons
+PASS, alongside eleven limited motion controls. Do not call all15 tests
+whole-file comparisons or this focused run a full printer/options sweep.
+Workspace8236 terminates/reaps0:7591run7591PASS(37slow),9skipped,269.920s,
+/tmp/ares-footer-layer-final-workspace.log; spiral-vase and all six boundary
+controls PASS. Real Chromium75044 terminates/reaps0:3/3PASS(2.4m),
+/tmp/ares-footer-layer-final-browser.log, including repeated complete bytes.
+Captured complete KSR output /tmp/ares-wasm-gcode-Cr81cn/browser.gcode,
+6321698bytes,SHA256
+91e2fce752e5dc6d7ed221b39209838000ba1cd1bf134e937a59a8b8d2d27ab4,
+identical to the prior route checkpoint.
+
+Official CPU0 broad34822 terminates/reaps0:80run80PASS,281skipped,415.514s,
+/tmp/ares-footer-layer-official-controls.log. Seed0/CPU0 broad6243
+terminates/reaps0:80run80PASS,281skipped,476.169s,
+/tmp/ares-footer-layer-seeded-controls.log. Both runs include the unchanged
+original complete baseline/modifier and odd-index integer template, plus
+Normal/Grid/Snug, Tree/manual/painted/modifier controls and limited diagnostics.
+These mixed80-test inventories are not80 whole-file tests or all-printer/
+option coverage. Organic zero-angle complete output PASS in both; retain
+historical official77/2 failure and its separate same-input replay audit.
+Final executable hashes are unchanged: official64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60,
+seeded ELF8f0cf69dd9494ccfe53bf6749d6b685ccb5a0dd0df206694ce50d421007cc03d.
+Live command records identify selected reference producers; generic cached
+manifests still honestly report unknown producer identity. Default complete
+baseline artifact is case-MDIOCs, modifier case-e1QB8l under
+/tmp/ares-footer-layer-default-controls; both retain paired full G-code and
+saved3MF with PASS manifests. Original fixture/assertion/comparator unchanged.
+Rust paths remain174/66/259LOC, no probe diff. This satisfies the initial
+unchanged Snapmaker fixture exit, not wider tool lifecycles, sequential/tower,
+all-printer/options or Windows/macOS runtime parity. Request final independent
+finite checkpoint approval before code-plus-doc commit and branch push.
+Final independent six-axis readback approves the seven-path code/docs staged
+checkpoint for commit and feature-branch push, with no new mandatory fixes.
+Approval includes the public end_layer.rs tracer and all terminal receipts;
+it excludes main merge and global completion. Final staged diff/fmt checks
+remain required after this approval receipt; production is unchanged.
+
 ## 8598ce2c Organic zero-angle regression audit
 
 User-requested audit runs on clean production commit
