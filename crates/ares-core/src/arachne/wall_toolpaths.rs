@@ -17,10 +17,11 @@ pub(crate) struct RawWallToolPathConfig {
     pub(crate) inner_spacing: i64,
     pub(crate) inset_count: usize,
     pub(crate) outer_wall_inset: i64,
-    pub(crate) layer_height: i64,
+    pub(crate) layer_height: f64,
     pub(crate) min_bead_width: i64,
     pub(crate) min_feature_size: i64,
     pub(crate) transition_length: i64,
+    /// Radians, as consumed by the beading and trapezoidation constructors.
     pub(crate) transitioning_angle: f64,
     pub(crate) transition_filter_deviation: i64,
     pub(crate) wall_distribution_count: i32,
@@ -64,7 +65,7 @@ pub(crate) fn generate_raw(
     }
     let rounded_rectangle_factor = 1.0 - 0.25 * std::f64::consts::PI;
     let scale = config.coordinate_scale.factor();
-    let layer_height = (config.layer_height as f64 * scale) as f32;
+    let layer_height = config.layer_height as f32;
     let extrusion_width = |spacing| {
         let spacing = spacing as f32 * scale as f32;
         (f64::from(spacing) + f64::from(layer_height) * rounded_rectangle_factor) as f32
@@ -92,7 +93,7 @@ pub(crate) fn generate_raw(
         prepared_outline,
         strategy.as_ref(),
         TrapezoidationConfig {
-            transitioning_angle: config.transitioning_angle,
+            transitioning_angle: strategy.transitioning_angle(),
             discretization_step_size: config.coordinate_scale.checked_scale(0.8).unwrap(),
             transition_filter_dist: config.coordinate_scale.checked_scale(100.0).unwrap(),
             allowed_filter_deviation: config.transition_filter_deviation,

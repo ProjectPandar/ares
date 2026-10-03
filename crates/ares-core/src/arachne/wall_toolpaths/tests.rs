@@ -17,7 +17,7 @@ fn fixture() -> (Polygon, RawWallToolPathConfig) {
             inner_spacing: scaled(0.4),
             inset_count: 26,
             outer_wall_inset: 0,
-            layer_height: scaled(0.2),
+            layer_height: 0.2,
             min_bead_width: scaled(0.34),
             min_feature_size: scaled(0.1),
             transition_length: scaled(0.4),

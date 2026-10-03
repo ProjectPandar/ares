@@ -9,9 +9,8 @@ use crate::{
     SliceError,
     arachne::{ExtrusionLine, wall_toolpaths},
     geometry::{
-        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Polygon,
-        append_simplified_expolygon, offset_expolygons, offset2_ex, simplify_expolygon_polygons,
-        union_ex,
+        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Polygon, offset_expolygons,
+        offset_paths_tree, offset2_ex, simplify_expolygon_polygons, union_ex,
     },
     project_slice::region_slices::RegionSurface,
 };
@@ -117,28 +116,21 @@ pub(in crate::project_slice) fn generate_surface_walls(
     } else {
         -(spacings.ext_perimeter_width as f64 / 2.0 - spacings.ext_perimeter_spacing as f64 / 2.0)
     };
-    let mut simplified = Vec::new();
-    append_simplified_expolygon(
-        expolygon.clone(),
-        config.surface_simplify_resolution,
-        &mut simplified,
-    )
-    .map_err(geometry_error)?;
-    let last = offset_expolygons(
+    let simplified = simplify_expolygon_polygons(expolygon, config.surface_simplify_resolution)
+        .map_err(geometry_error)?;
+    let last = offset_paths_tree(
         &simplified,
         outer_offset as f32,
         JoinType::Miter,
         MITER_LIMIT,
     )
-    .map_err(geometry_error)?;
+    .map_err(geometry_error)?
+    .into_expolygons();
     let wall_0_inset = if config.precise_outer_wall {
         -(spacings.ext_perimeter_width / 2 - spacings.ext_perimeter_spacing / 2)
     } else {
         0
     };
-    let layer_height = scale
-        .checked_scale(layer_height)
-        .ok_or_else(|| invalid("Arachne layer height exceeds the coordinate range"))?;
     let params = config.params;
     let generated = wall_toolpaths::generate(
         &to_polygons(&last),
@@ -152,7 +144,7 @@ pub(in crate::project_slice) fn generate_surface_walls(
             min_bead_width: params.min_bead_width,
             min_feature_size: params.min_feature_size,
             transition_length: params.wall_transition_length,
-            transitioning_angle: params.wall_transition_angle,
+            transitioning_angle: std::f64::consts::PI * params.wall_transition_angle / 180.0,
             transition_filter_deviation: params.wall_transition_filter_deviation,
             wall_distribution_count: params.wall_distribution_count,
             min_length_factor: params.min_length_factor,

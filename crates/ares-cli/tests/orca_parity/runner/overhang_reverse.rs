@@ -126,8 +126,82 @@ fn orca_parity_arachne_supported_reverse_boundaries_preserve_complete_output() {
 
 fn capture_settings(
     runner: &OrcaRunner,
+    settings: (&str, &str, &str, &str),
+    model: &str,
+) -> ParityCase {
+    capture_with_angle(runner, settings, model, None)
+}
+
+#[test]
+fn orca_parity_arachne_wall_transition_angle_range_preserves_complete_output() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let sample = 0x5eed_u32
+        .wrapping_mul(1_664_525)
+        .wrapping_add(1_013_904_223);
+    let interior = format!("{:.4}", 1.0 + f64::from(sample) * 58.0 / 4_294_967_296.0);
+    let mut boundaries = Vec::new();
+    for angle in ["1", "59", &interior] {
+        let case = capture_with_angle(&runner, ("0", "0%", "0", "0"), "overhang.stl", Some(angle));
+        if angle != interior {
+            boundaries.push(native_extrusion_xy(&case.reference));
+        }
+        let outcome = parity::compare_case(&case);
+        assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+    }
+    assert_ne!(
+        boundaries[0], boundaries[1],
+        "native angle boundaries must change extrusion moves"
+    );
+}
+
+fn native_extrusion_xy(bytes: &[u8]) -> Vec<Vec<String>> {
+    let mut relative = false;
+    let mut previous_e = 0.0;
+    let mut moves = Vec::new();
+    for line in std::str::from_utf8(bytes).unwrap().lines() {
+        let mut words = line.split(';').next().unwrap().split_whitespace();
+        let command = words.next();
+        match command {
+            Some("M82") => relative = false,
+            Some("M83") => relative = true,
+            Some("G1" | "G92") => {
+                let fields = words.collect::<Vec<_>>();
+                let Some(e) = fields.iter().find_map(|field| {
+                    field
+                        .strip_prefix('E')
+                        .map(|value| value.parse::<f64>().unwrap())
+                }) else {
+                    continue;
+                };
+                if command == Some("G92") {
+                    previous_e = e;
+                    continue;
+                }
+                let delta = if relative { e } else { e - previous_e };
+                previous_e = if relative { previous_e + e } else { e };
+                let xy = fields
+                    .iter()
+                    .filter(|field| field.starts_with('X') || field.starts_with('Y'))
+                    .map(|field| (*field).to_owned())
+                    .collect::<Vec<_>>();
+                if delta > 0.0 && !xy.is_empty() {
+                    moves.push(xy);
+                }
+            }
+            _ => {}
+        }
+    }
+    assert!(!moves.is_empty());
+    moves
+}
+
+fn capture_with_angle(
+    runner: &OrcaRunner,
     (reverse, threshold, internal_only, detect): (&str, &str, &str, &str),
     model: &str,
+    angle: Option<&str>,
 ) -> ParityCase {
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
@@ -150,14 +224,20 @@ fn capture_settings(
     for (key, value) in settings {
         process.insert(key.into(), json!(value));
     }
+    if let Some(angle) = angle {
+        process.insert("wall_transition_angle".into(), json!(angle));
+    }
     let mut filaments = selection
         .filaments
         .iter()
         .map(|name| profiles.filament(name).unwrap())
         .collect::<Vec<_>>();
     parity::normalize_filament_defaults(&mut filaments);
-    let label =
+    let mut label =
         format!("arachne-overhang-reverse/{model}/{reverse}/{threshold}/{internal_only}/{detect}");
+    if let Some(angle) = angle {
+        label.push_str(&format!("/angle-{angle}"));
+    }
     let exported = runner
         .export_case(
             &CaseInputs {
@@ -172,6 +252,10 @@ fn capture_settings(
         .unwrap();
     for (key, value) in settings {
         application::verify_value(&exported.project, key, &json!(value)).unwrap();
+    }
+    if let Some(angle) = angle {
+        application::verify_value(&exported.project, "wall_transition_angle", &json!(angle))
+            .unwrap();
     }
     runner.slice_case(&exported).unwrap()
 }

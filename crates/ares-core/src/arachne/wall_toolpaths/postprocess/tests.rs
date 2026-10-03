@@ -14,7 +14,7 @@ fn simplify_config() -> RawWallToolPathConfig {
         inner_spacing: 0,
         inset_count: 1,
         outer_wall_inset: 0,
-        layer_height: 0,
+        layer_height: 0.0,
         min_bead_width: 0,
         min_feature_size: 0,
         transition_length: 0,
