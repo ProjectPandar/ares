@@ -10,13 +10,13 @@ use crate::{
     },
 };
 
-pub(super) fn hull(
+pub(super) fn hulls(
     traversal: &PreparedPostClassicTraversal,
     support: &[Vec<InstalledSupportLayer>],
     brim: Option<&BrimPlan>,
     layer_limit: usize,
     context: &mut SlicerContext,
-) -> Vec<Point> {
+) -> Vec<Vec<Point>> {
     let skirt_height_z = traversal
         .objects
         .iter()
@@ -39,8 +39,9 @@ pub(super) fn hull(
         })
         .fold(0.0_f64, f64::max);
     let scale = traversal.scale;
-    let mut occupied = Vec::new();
+    let mut hulls = Vec::new();
     for (object_index, object) in traversal.objects.iter().enumerate() {
+        let mut occupied = Vec::new();
         let input = &object
             .predecessor
             .predecessor
@@ -119,20 +120,23 @@ pub(super) fn hull(
                     .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y())),
             );
         }
+        if object_index == 0
+            && let Some(brim) = brim
+        {
+            let (x, y) = footprint::object_origin(source, scale);
+            let shift = Point::new(
+                (x / scale.factor()).round() as i64,
+                (y / scale.factor()).round() as i64,
+            );
+            occupied.extend(
+                brim.covered_hull()
+                    .iter()
+                    .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y())),
+            );
+        }
+        if occupied.len() >= 3 {
+            hulls.push(super::convex_hull(&occupied));
+        }
     }
-    if let Some(brim) = brim {
-        let source =
-            &traversal.project.objects()[traversal.resolved.objects[0].source_object_index];
-        let (x, y) = footprint::object_origin(source, scale);
-        let shift = Point::new(
-            (x / scale.factor()).round() as i64,
-            (y / scale.factor()).round() as i64,
-        );
-        occupied.extend(
-            brim.covered_hull()
-                .iter()
-                .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y())),
-        );
-    }
-    super::convex_hull(&occupied)
+    hulls
 }

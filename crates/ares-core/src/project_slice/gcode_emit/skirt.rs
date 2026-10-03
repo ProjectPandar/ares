@@ -16,6 +16,7 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 use crate::project_slice::perimeters::flow::build_nonbridging_flow;
 
 mod geometry;
+mod groups;
 mod occupied;
 #[cfg(test)]
 mod tests;
@@ -27,10 +28,11 @@ use geometry::{closed_length, find_start_point};
 pub(super) struct SkirtPlan {
     /// Plate-frame closed loops, outermost first (`Print.cpp:2985`).
     loops: Vec<Vec<Point>>,
+    /// `_make_skirt` retains this outline even when skirt_loops is zero.
+    occupied_hull: Vec<Polygon>,
     /// First-layer flow values; later layers rescale `mm3_per_mm` by the
     /// actual layer height (`GCode.cpp:4413`).
     width: f32,
-    spacing: f32,
     /// Number of layers the skirt is printed on (`skirt_height`, or every
     /// layer when the draft shield makes it infinite).
     pub(super) layer_count: usize,
@@ -48,18 +50,8 @@ impl SkirtPlan {
     ) -> Result<Option<Self>, SliceError> {
         let print = &traversal.resolved.views.full.process.print;
         let loops_count = usize::try_from(print.skirt_loops.0).unwrap_or(0);
-        if loops_count == 0 {
-            return Ok(None);
-        }
-        if print.skirt_type != crate::ProcessSkirtType::Combined
-            && !(print.skirt_type == crate::ProcessSkirtType::PerObject
-                && traversal.resolved.objects.len() == 1)
-        {
-            return Err(SliceError::UnsupportedProjectFeature(
-                "skirt_type per-object".to_owned(),
-            ));
-        }
-        let infinite_skirt = print.draft_shield == crate::ProcessDraftShield::Enabled;
+        let infinite_skirt =
+            print.draft_shield == crate::ProcessDraftShield::Enabled && loops_count > 0;
         let layer_limit = if infinite_skirt {
             usize::MAX
         } else {
@@ -68,8 +60,17 @@ impl SkirtPlan {
         if layer_limit == 0 {
             return Ok(None);
         }
-
-        let hull = occupied::hull(traversal, support, brim, layer_limit, context);
+        if loops_count > 0
+            && print.skirt_type != crate::ProcessSkirtType::Combined
+            && !(print.skirt_type == crate::ProcessSkirtType::PerObject
+                && traversal.resolved.objects.len() == 1)
+        {
+            return Err(SliceError::UnsupportedProjectFeature(
+                "skirt_type per-object".to_owned(),
+            ));
+        }
+        let hulls = occupied::hulls(traversal, support, brim, layer_limit, context);
+        let hull = convex_hull(&hulls.iter().flatten().copied().collect::<Vec<_>>());
         if hull.len() < 3 {
             return Ok(None);
         }
@@ -118,7 +119,8 @@ impl SkirtPlan {
             flow.mm3_per_mm * flow_ratio / (std::f64::consts::PI * diameter.powi(2) * 0.25);
         let mut extruded_filament = 0.0;
         let mut loops = Vec::with_capacity(loops_count);
-        while loops.len() < loops_count || extruded_filament < minimum_filament {
+        while loops_count > 0 && (loops.len() < loops_count || extruded_filament < minimum_filament)
+        {
             distance += scaled_spacing;
             let offset = offset_paths(
                 std::slice::from_ref(&hull_polygon),
@@ -140,17 +142,37 @@ impl SkirtPlan {
             extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
             loops.push(simplified);
         }
-        if loops.is_empty() {
-            return Ok(None);
+        let groups = if loops_count == 0 && print.skirt_type == crate::ProcessSkirtType::PerObject {
+            groups::merge(
+                hulls,
+                checked_scale(scale, print.skirt_distance.0)? as f32,
+                arc_tolerance,
+            )?
+        } else {
+            vec![hull_polygon]
+        };
+        let mut occupied_hull = Vec::new();
+        for hull in groups {
+            occupied_hull.extend(
+                offset_paths(
+                    std::slice::from_ref(&hull),
+                    distance + 0.5_f32 * scaled_spacing,
+                    JoinType::Round,
+                    arc_tolerance,
+                )
+                .map_err(|_| {
+                    SliceError::InvalidInput("skirt occupied hull offset failed".to_owned())
+                })?,
+            );
         }
         loops.reverse();
 
-        let layer_count = layer_limit;
+        let layer_count = if loops.is_empty() { 0 } else { layer_limit };
         let start_angle_deg = object.map_or(-135.0, |value| value.object.skirt_start_angle.0);
         Ok(Some(Self {
             loops,
+            occupied_hull,
             width: flow.width,
-            spacing: flow.spacing,
             layer_count,
             start_angle_deg,
             single_loop_draft_shield: print.single_loop_draft_shield.0,
@@ -159,7 +181,7 @@ impl SkirtPlan {
 
     pub(super) fn covered_bounds(&self, scale: CoordinateScale) -> Option<(f64, f64, f64, f64)> {
         let mut bounds = None::<(f64, f64, f64, f64)>;
-        for point in self.loops.iter().flatten() {
+        for point in self.occupied_hull.iter().flat_map(Polygon::points) {
             let x = scale.unscale(point.x());
             let y = scale.unscale(point.y());
             bounds = Some(match bounds {
@@ -169,15 +191,7 @@ impl SkirtPlan {
                 None => (x, y, x, y),
             });
         }
-        let padding = 0.5 * f64::from(self.spacing);
-        bounds.map(|(min_x, min_y, max_x, max_y)| {
-            (
-                min_x - padding,
-                min_y - padding,
-                max_x + padding,
-                max_y + padding,
-            )
-        })
+        bounds
     }
 
     /// Emits the loops for `layer_index`, split at the seam point

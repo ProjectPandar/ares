@@ -14,13 +14,6 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
     skirt: Option<&SkirtPlan>,
     brim: Option<&BrimPlan>,
 ) -> Option<FirstLayerBounds> {
-    let print = &traversal.resolved.views.full.process.print;
-    let skirt_height = usize::try_from(print.skirt_height.0).unwrap_or_default();
-    let layer_limit = if print.draft_shield == crate::ProcessDraftShield::Enabled {
-        usize::MAX
-    } else {
-        skirt_height
-    };
     let scale = traversal.scale;
     let mut bounds = None;
     for (object, resolved) in traversal.objects.iter().zip(&traversal.resolved.objects) {
@@ -42,10 +35,7 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
             .filter(|instance| instance.printable())
         {
             let shift = instance_shift(instance, center, scale);
-            let selected_layers = layers
-                .iter()
-                .take(if skirt.is_some() { layer_limit } else { 1 });
-            for polygon in selected_layers.flatten() {
+            for polygon in layers.iter().take(1).flatten() {
                 include_polygon_bounds(polygon.contour(), shift, scale, &mut bounds);
             }
         }
@@ -63,19 +53,7 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
             &mut bounds,
         );
     }
-    let fallback_distance = if skirt.is_none() && skirt_height > 0 {
-        print.skirt_distance.0
-    } else {
-        0.0
-    };
-    bounds.map(|(min_x, min_y, max_x, max_y)| {
-        (
-            min_x - fallback_distance,
-            min_y - fallback_distance,
-            max_x - min_x + 2.0 * fallback_distance,
-            max_y - min_y + 2.0 * fallback_distance,
-        )
-    })
+    bounds.map(|(min_x, min_y, max_x, max_y)| (min_x, min_y, max_x - min_x, max_y - min_y))
 }
 
 fn include_bounds(additional: Option<FirstLayerBounds>, bounds: &mut Option<FirstLayerBounds>) {

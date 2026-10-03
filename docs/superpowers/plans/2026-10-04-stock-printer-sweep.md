@@ -80,3 +80,27 @@ The original modified-matrix vendor helper remains unchanged.
   eleven-file patch, closed the discovery omission and denominator findings,
   and approved the finite matrix-branch checkpoint. Both native full scans
   are still live and incomplete; no global completion approval.
+
+## Original discovery scan terminal evidence
+
+The unchanged pre-review loaded stock scan has now terminated with exit100:
+`/tmp/ares-stock-matrix-eb65bca3-wip-seeded.log`, 2708.747 seconds. Its
+legacy report contains1001 printer rows:783 PASS,108 DIVERGENT,39 ARES_ERROR,
+61 ORCA_ERROR and10 VENDOR_INCOMPLETE;218 remain incomplete. This is evidence
+for prioritizing paired residuals, not acceptance of the repaired discovery
+entrypoint or current production. Retain the full report, inputs and outputs.
+The separate original option scan was still live at that stock terminal readback.
+
+The immutable eb65bca3 Option scan subsequently terminates/reaps exit100 on
+handle44364,3632.467 seconds (`/tmp/ares-option-matrix-eb65bca3-seeded.log`).
+Its legacy summary reports410/650 complete domains,238 INCOMPLETE and2 FAIL;
+1661 cases generated,1622 strictly compared,1 rejected. This modified classic
+baseline is neither all-printer/default coverage nor current-code acceptance.
+The two failure rows are filament_retract_when_changing_layer/false (already
+fixed and independently verified in8672a382, not retroactively rewritten here)
+and printer_technology/SLA (native export application mismatch: effective FFF).
+Keep the latter unresolved, not silently counted as parity. Preserve the
+238 incomplete endpoint/domain/reference classifications for follow-up;
+seeded references also require re-auditing old nondeterminism exclusions.
+The external summary and every paired artifact remain unchanged. Neither
+original broad scan is live now, and neither proves global completion.
