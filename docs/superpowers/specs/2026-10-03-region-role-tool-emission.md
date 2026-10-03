@@ -1,5 +1,20 @@
 # Region-role tool emission rewrite
 
+Modifier ninth-layer waypoint slice follows GCode.cpp::travel_to and
+GCode/AvoidCrossingPerimeters.cpp::travel_to, perimeter routing and its path
+simplification consumers. Destination: gcode_emit/motion/path and its
+avoid_crossing module. Public saved3MF/raw approach output isolates the missing
+waypoint at printingZ1.48/liftZ1.88; preserve original complete acceptance.
+Include only the diagnosed missing-waypoint contract; adjacent routing/numeric
+changes, inward arithmetic and later modifier gaps remain open. Existing
+adapters are temporary compatibility shells around these upstream owners.
+Diagnosed boundary candidate extends source ownership to
+AvoidCrossingPerimeters.cpp::resample_polygon(802–832), destination
+motion/path/avoid_crossing/boundary/resample.rs: integer subtraction,
+source norm, truncating offset, integer middle vector, truncating insertion.
+Verify this single resampling contract against the public RED; do not combine
+it with offset cascade, closest-line or simplification predicate changes.
+
 Modifier loop-exit slice rewrites the output-evidenced Z=.84 outer-wall
 inward move from GCode.cpp::extrude_loop(5804,5993–6033),
 ExtrusionLoop::clip_end(ExtrusionEntity.cpp:317–334) and

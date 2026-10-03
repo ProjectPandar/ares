@@ -1,5 +1,132 @@
 # Region-role tool emission implementation plan
 
+## Current slice: modifier ninth-layer waypoint
+
+Previous turn made verified progress:63748b6b is pushed and current worktree
+is clean. Exact prebuild exit0; fresh original seededCPU0 full comparison
+41590 terminal/reaped100,3.368s, /tmp/ares-modifier-route188-original-red.log.
+Baseline PASS/modifier26707/1293 persists. Case-4onXcp shows printingZ1.48,
+liftZ1.88: matching G3 and first travel X166.33 Y104.27, then Ares omits
+native X165.821 Y104.78 before matching X165.6 Y105 and later waypoints.
+Approved public seam remains saved3MF to byte-output, not private geometry.
+Add native-first complete ninth-layer approach tracer, run RED, then vary
+only reduce_crossing_wall to distinguish routing from downstream emission.
+Do not change original fixture/full comparison. Rank falsifiable hypotheses
+only after this feedback loop and control verdict; no production fix yet.
+Source boundary is GCode.cpp::travel_to and
+GCode/AvoidCrossingPerimeters.cpp::travel_to, perimeter routing and its path
+simplification consumers. Rust destination is gcode_emit/motion/path and
+path/avoid_crossing. Include only output-evidenced waypoint contract; defer
+unmeasured routing/numeric changes, inward arithmetic and later modifier
+gaps. Existing adapters are temporary upstream compatibility shells.
+Require source-cited spec/ARD, focused/full E2E gates, platform/browser gates,
+six-axis independent review, probe cleanup and logical code+docs commit/push.
+
+Tracer prebuild91777 terminal/reaped0,11.83s; runtime57050 terminal/reaped100,
+2.646s, /tmp/ares-modifier-route188-tracer-red.log, case-1DPBuu.
+Native literal precondition PASS; complete ninth-layer approach differs only
+by the omitted waypoint. Independent preflight requires exact next-layer and
+unretract delimiters, avoiding scans into later layers; apply this before the
+one-variable routing-off control. No production code changed.
+
+Control prebuild18266 terminal/reaped0,11.60s; runtime87413 terminal/reaped100,
+5.296s, /tmp/ares-modifier-route188-control.log. Delimiter-tight tracer remains
+RED; routing-off full approach PASS and native omits the disputed waypoint.
+Only reduce_crossing_wall changes; its whole file retains earlier M73 RED.
+Ranked predictions: initial routing lacks the point (inspect pre-simplification);
+simplification removes it (inspect before/after retained points);
+emission drops it (compare final route to raw output). Target-only temporary
+route boundary probe distinguishes these, with no acceptance reading logs.
+Source FirstIntersectionVisitor uses Geometry.hpp::segments_intersect, whereas
+current crosses_boundary reuses coordinate-producing segment_intersection.
+This is a candidate distinction, not yet demonstrated as the runtime cause.
+
+Probe prebuild65084 exit0,1m16; runtime91275 terminal/reaped100,2.686s,
+/tmp/ares-modifier-route188-probe.log. Intended endpoints captured:
+(4790011,4730011) to(2539350,2539350), protected entry(4330063,4270063),
+exit(2976446,2976446). Disputed native waypoint is absent BEFORE simplification;
+final existing points match the emitted route. This falsifies the measured
+simplification/drop-at-emission hypotheses. Do not port the adjacent boolean
+intersection gap as this fix. Extend narrow probe to the selected boundary
+contour: if absent there, inspect boundary generation; if present, inspect
+entry/exit/vertex walk. Keep the candidate boolean gap deferred.
+
+Contour prebuild63821 exit0,1m15; runtime43404 terminal/reaped100,2.663s,
+/tmp/ares-modifier-route188-contour.log. Selected contour has nine vertices;
+the missing native point lies along its unsplit diagonal segment3. Raw walk
+is backward through indices3,2,1,0, consistent with these actual contour
+coordinates; do not infer forward indices without the ordered contour.
+No debugger is provisioned; native internals are not claimed observed.
+Source candidate resample_polygon802–832 uses integer p2-p1, sqrt squared
+norm, truncating offset, integer middle vector and truncating interpolation.
+Rust rounds points and subtracts unquantized floating offsets. Independently
+reviewed single-contract counterfactual will change only that resampling
+function; keep cascade, closest-line and simplifier unchanged. Retain target
+probe temporarily to compare selected contour/raw route before and after;
+public tracer/full outputs decide whether this candidate actually fixes it.
+
+Resampling counterfactual prebuild40911 exit0,1m17; runtime32496
+terminal/reaped100,19.476s, /tmp/ares-modifier-route188-resample-focused.log.
+Six public motion diagnostics PASS, including new ninth-layer on/off and
+previous second-layer/outer-exit controls. Original complete baseline PASS;
+modifier RED now128699/6286: nativeF5093 versus AresF5092. Preserve full
+artifacts case-qdPxfY(baseline),case-PGDGQl(modifier) and remaining diagnostics.
+Target modifier contour grows9→13 vertices; raw route includes
+(3820518,4779608), which survives simplification and formats to the missing
+X165.821Y104.78. Entry/exit geometry and contour segment indices consequently
+change, not a fabricated output line. This is actual Ares before/after and
+public native output evidence, not an observed native internal trace.
+Source contract and public RED→GREEN support this correction. Static boolean
+intersection gap remains deferred, unchanged. Remove temporary probes before
+frozen gates; do not extend this checkpoint into the later feedrate diagnosis.
+
+Temporary route probes removed; router diff is empty. Frozen production/test
+diff SHA25636086260b629358791bfb093ed000dd01a5243d9446178624d0d467a1197acf4.
+Prebuild44501 terminal/reaped0,1m17, /tmp/ares-modifier-route148-frozen-build.log.
+fmt96438 terminal/reaped0; diff/probe searches empty. Clippy stage within
+pipeline98463 finishes exit0,1m19 (workspace stage started via &&), unchanged
+253corelib/269coretest/31CLIparity. Source unchanged thereafter. New Rust
+resample247LOC and diagnostic194LOC remain below400. Independent static
+readback has no new must-fix; final approval still requires all frozen gates.
+
+Frozen seeded76722 terminal/reaped100:72run71PASS/1FAIL,236.839s;
+/tmp/ares-modifier-route148-seeded-controls.log and matching artifacts preserve
+only original complete modifier128699/6286. Quality pipeline98463
+terminal/reaped0:clippy+workspace,7582PASS,37slow,9skipped,269.619s run;
+/tmp/ares-modifier-route148-workspace.log. Existing vase ramps/current-spacing
+behavioral controls PASS. Platform81583 terminal/reaped0:WASMbuild4m13 plus
+bindings,WindowsGNUcheck37.68s,macOSDarwincheck37.82s; compile only, not native
+Windows/macOS runtime. Chromium82732 terminal/reaped0:3/3PASS2.3m,
+/tmp/ares-modifier-route148-browser.log; completeKSR6321698bytes at
+/tmp/ares-wasm-gcode-ZyXPj0/browser.gcode, SHA256
+91e2fce752e5dc6d7ed221b39209838000ba1cd1bf134e937a59a8b8d2d27ab4,
+unchanged from previous checkpoint, and repeated complete bytes identical.
+Official86779 terminal/reaped100:72run71PASS/1FAIL,258.732s,
+/tmp/ares-modifier-route148-official-controls.log, same original complete
+modifier128699/6286. Default67352 terminal/reaped100:72run54PASS/18FAIL,
+15.149s, /tmp/ares-modifier-route148-default-controls.log, all artifacts
+retained. Controlled71/1 does not replace the default-domain RED receipt or
+prove all default failures share a reference mechanism.
+Actual raw readback finds102current cases versus100previous,98identical raw
+Ares outputs; changed cases are three routing-on modifier-travel diagnostics
+and the target inherited-second-filament modifier. The two new diagnostic
+runs share existing labels; routing-off new output matches its old control.
+ZIP verification87660 terminal/reaped0 additionally confirms all98matched
+pairs' member names/order and every decompressed byte:98identical,0misses.
+Reference executable hashes unchanged (official64515d01...ba3b60,
+seeded3d05d4cc...a3bfaa). Final fmt/diff7123 terminal/reaped0.
+Source/test diff remains frozen, no probes. Request independent final six-axis
+approval for five-file feature checkpoint only. Modifier feedrate RED,
+boolean collision/inward arithmetic, default-domain parity and global printer/
+option coverage remain open; no main merge or full-goal closure is claimed.
+
+Independent final six-axis review approves the five-file finite checkpoint
+commit/push on the feature branch, with no new must-fix. Final diff check and
+production/diff probe searches are empty. Approval retains official/seeded
+71/1,default54/18 and modifierF5093/F5092 RED; it excludes main, complete
+modifier parity and full printer/options goal closure. Keep these docs with
+the logical source/test commit.
+
 ## Current slice: modifier loop exit
 
 Checkpoint5fb2e928 is pushed; worktree verified clean. Exact CLI prebuild exit0;

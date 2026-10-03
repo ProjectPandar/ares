@@ -3,6 +3,47 @@ use crate::presets::VendorProfiles;
 use serde_json::json;
 
 #[test]
+fn modifier_preserves_ninth_layer_native_approach() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(true);
+    let expected = ninth_layer_approach(&reference);
+    assert!(expected.contains("G1 X165.821 Y104.78\n"));
+    assert_eq!(ninth_layer_approach(&actual), expected);
+}
+
+#[test]
+fn modifier_without_wall_routing_preserves_ninth_layer_native_approach() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(false);
+    let expected = ninth_layer_approach(&reference);
+    assert!(expected.contains("G1 X164.539 Y102.539"));
+    assert!(!expected.contains("G1 X165.821 Y104.78\n"));
+    assert_eq!(ninth_layer_approach(&actual), expected);
+}
+
+fn ninth_layer_approach(bytes: &[u8]) -> &str {
+    let layer = std::str::from_utf8(bytes)
+        .unwrap()
+        .split_once(";Z:1.48\n")
+        .unwrap()
+        .1
+        .split_once(";LAYER_CHANGE\n")
+        .unwrap()
+        .0;
+    layer
+        .split_once("; printing object overhang.stl id:0 copy 0\n")
+        .unwrap()
+        .1
+        .split_once("G1 E.8 F1500\n")
+        .unwrap()
+        .0
+}
+
+#[test]
 fn modifier_preserves_fourth_layer_outer_wall_exit() {
     if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
         return;

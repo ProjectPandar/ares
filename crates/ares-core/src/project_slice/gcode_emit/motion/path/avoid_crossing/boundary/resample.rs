@@ -15,16 +15,15 @@ pub(super) fn resample_polygon(
     dist_from_vertex: f64,
     max_allowed_distance: f64,
 ) -> Result<Vec<Point>, ClipperError> {
-    let coordinate = |value: f64| -> Result<Coord, ClipperError> { Ok(value.round() as Coord) };
+    // `resample_polygon` (AvoidCrossingPerimeters.cpp:813–828) truncates
+    // offset and inserted points, with the middle vector computed as integers.
+    let coordinate = |value: f64| -> Result<Coord, ClipperError> { Ok(value as Coord) };
     let mut resampled = Vec::with_capacity(3 * polygon.len());
     for (point_index, &point) in polygon.iter().enumerate() {
         resampled.push(point);
         let next = polygon[(point_index + 1) % polygon.len()];
-        let line = (
-            next.x() as f64 - point.x() as f64,
-            next.y() as f64 - point.y() as f64,
-        );
-        let line_length = line.0.hypot(line.1);
+        let line = ((next.x() - point.x()) as f64, (next.y() - point.y()) as f64);
+        let line_length = (line.0 * line.0 + line.1 * line.1).sqrt();
         if line_length == 0.0 {
             continue;
         }
@@ -40,10 +39,10 @@ pub(super) fn resample_polygon(
                 point.y() + offset_coordinate.1,
             ));
             let middle = (
-                next.x() as f64 - point.x() as f64 - 2.0 * offset.0,
-                next.y() as f64 - point.y() as f64 - 2.0 * offset.1,
+                (next.x() - point.x() - 2 * offset_coordinate.0) as f64,
+                (next.y() - point.y() - 2 * offset_coordinate.1) as f64,
             );
-            let middle_length = middle.0.hypot(middle.1);
+            let middle_length = (middle.0 * middle.0 + middle.1 * middle.1).sqrt();
             if middle_length > max_allowed_distance {
                 let parts = (middle_length / max_allowed_distance).ceil() as usize;
                 let anchor = resampled.last().copied().expect("just pushed a point");

@@ -30,6 +30,20 @@ where they do not implement these upstream contracts.
 
 ## Decisions
 
+Missing modifier approach waypoints belong to GCode::travel_to and
+AvoidCrossingPerimeters::travel_to's route/simplification consumers, rewritten
+in motion/path and path/avoid_crossing. Diagnose at saved3MF/raw approach
+output; retain original full comparison. Do not compensate missing geometry
+by inserting fixture coordinates or filtering travel lines. Include only the
+output-evidenced waypoint contract; adjacent numeric/inward gaps stay open.
+Boundary resampling owns quantization before variable-width offset:
+AvoidCrossingPerimeters.cpp::resample_polygon(802–832) truncates the offset,
+computes the middle vector in integers, then truncates inserted points.
+Keep integer subtraction and source squared-norm/sqrt order in
+boundary/resample.rs. An all-floating/rounded adapter does not implement that
+contract. Public output must demonstrate the proposed correction; do not
+bundle adjacent offset, closest-line or simplification changes.
+
 GCode.cpp::extrude_loop(5993–6033) owns the post-loop zero-E inward move.
 Its segment selection, direction, nozzle-limited shift and Point conversions
 belong in motion/loop_paths/inward.rs, not routed travel or an output formatter
