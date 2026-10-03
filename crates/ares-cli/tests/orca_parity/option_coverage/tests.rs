@@ -191,12 +191,11 @@ fn upstream_rejection_does_not_mask_compared_case_parity() {
     .find(|plan| plan.key == "bridge_flow")
     .unwrap();
 
-    let passing = OptionOutcome::executed(&plan, 2, vec!["min: rejected".to_owned()], 0, 0, None);
+    let passing = OptionOutcome::executed(&plan, 2, vec!["min: rejected".to_owned()], 0, None);
     let failing = OptionOutcome::executed(
         &plan,
         2,
         vec!["min: rejected".to_owned()],
-        0,
         0,
         Some("max: divergent".to_owned()),
     );
@@ -278,7 +277,7 @@ fn limited_width_contexts_stay_incomplete_when_all_samples_match() {
         .iter()
         .filter(|plan| plan.width_domain.is_some() && !plan.provably_legal)
     {
-        let outcome = OptionOutcome::executed(plan, plan.cases.len(), vec![], 0, 0, None);
+        let outcome = OptionOutcome::executed(plan, plan.cases.len(), vec![], 0, None);
         assert_eq!(outcome.status, "INCOMPLETE", "{}", plan.key);
         assert!(!outcome.detail.is_empty());
     }
@@ -323,28 +322,4 @@ fn option_inventory_reconciles_with_upstream_key_set() {
         "upstream keys missing from the option inventory must match the \
          recorded exclusion list (add coverage or record the exclusion)"
     );
-}
-
-/// `unimplemented_feature` must only excuse the `enable_support=1` case:
-/// with `0` upstream skips support generation entirely
-/// (`Print.hpp:429-431`, `PrintObject.cpp:887-890`), so a divergence in
-/// the disabled case is a real regression and must surface as FAIL.
-#[test]
-fn enable_support_unimplemented_exemption_only_covers_enabled_case() {
-    use super::sweep::unimplemented_feature;
-    use serde_json::Value;
-
-    let enabled = domains::OptionCase {
-        label: "true".to_owned(),
-        value: Some(Value::String("1".to_owned())),
-    };
-    let disabled = domains::OptionCase {
-        label: "false".to_owned(),
-        value: Some(Value::String("0".to_owned())),
-    };
-    assert!(unimplemented_feature("enable_support", &enabled));
-    assert!(!unimplemented_feature("enable_support", &disabled));
-    // Unconditional for the support-parameter family.
-    assert!(unimplemented_feature("support_type", &disabled));
-    assert!(unimplemented_feature("tree_support_branch_angle", &enabled));
 }

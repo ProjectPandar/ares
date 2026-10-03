@@ -72,7 +72,7 @@ fn numeric_local_probes_cannot_complete_missing_endpoints() {
         "overhang_reverse_threshold",
     ] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
-        let outcome = OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, 0, None);
+        let outcome = OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
         assert_eq!(outcome.status, "INCOMPLETE", "{key}");
         assert_eq!(outcome.compared, plan.cases.len(), "{key}");
         assert!(
@@ -96,7 +96,7 @@ fn verified_numeric_domains_still_complete_after_all_cases_compare() {
         "support_air_filtration",
     ] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
-        let outcome = OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, 0, None);
+        let outcome = OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
         assert_eq!(outcome.status, "PASS", "{key}: {}", outcome.detail);
         assert!(sweep::require_complete(&[outcome]).is_ok(), "{key}");
     }

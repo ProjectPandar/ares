@@ -44,7 +44,7 @@ fn rejected_unexecuted_and_baseline_only_domains_are_incomplete() {
     let plan = plans.iter().find(|plan| plan.key == "bridge_flow").unwrap();
     for (compared, rejected) in [(0, vec![]), (0, vec!["rejected".into()]), (1, vec![])] {
         assert_eq!(
-            OptionOutcome::executed(plan, compared, rejected, 0, 0, None).status,
+            OptionOutcome::executed(plan, compared, rejected, 0, None).status,
             "INCOMPLETE"
         );
     }
@@ -53,7 +53,7 @@ fn rejected_unexecuted_and_baseline_only_domains_are_incomplete() {
         .find(|plan| plan.cases[0].value.is_none())
         .unwrap();
     assert_eq!(
-        OptionOutcome::executed(baseline, 1, vec![], 0, 0, None).status,
+        OptionOutcome::executed(baseline, 1, vec![], 0, None).status,
         "INCOMPLETE"
     );
 }
@@ -161,19 +161,13 @@ fn producer_error_does_not_count_as_comparison_or_application_failure() {
     .into_iter()
     .find(|plan| plan.key == "line_width")
     .unwrap();
-    let error = OptionOutcome::executed(
-        &plan,
-        0,
-        vec![],
-        0,
-        0,
-        Some("applied + producer error".into()),
-    );
+    let error =
+        OptionOutcome::executed(&plan, 0, vec![], 0, Some("applied + producer error".into()));
     assert_eq!(error.status, "FAIL");
     assert_eq!(error.compared, 0);
     assert_eq!(error.rejected, 0);
     assert_eq!(
-        OptionOutcome::executed(&plan, plan.cases.len(), vec![], 0, 0, None).status,
+        OptionOutcome::executed(&plan, plan.cases.len(), vec![], 0, None).status,
         "PASS"
     );
 }

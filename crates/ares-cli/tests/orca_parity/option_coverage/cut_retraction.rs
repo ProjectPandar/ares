@@ -18,7 +18,7 @@ fn cut_retraction_plan_covers_all_named_modes_without_claiming_integer_completio
         .collect::<Vec<_>>();
     assert_eq!(values, ["0", "1", "2"]);
     assert!(!plan.provably_legal);
-    let outcome = OptionOutcome::executed(plan, values.len(), vec![], 0, 0, None);
+    let outcome = OptionOutcome::executed(plan, values.len(), vec![], 0, None);
     assert_eq!(outcome.status, "INCOMPLETE");
 }
 

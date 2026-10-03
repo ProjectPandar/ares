@@ -69,16 +69,8 @@ fn chamber_control_domains_cover_gates_and_temperature_endpoints() {
 }
 
 #[test]
-fn chamber_capability_is_not_an_unimplemented_support_generator() {
-    let case = domains::OptionCase {
-        label: "true".into(),
-        value: Some(json!("1")),
-    };
+fn chamber_capability_does_not_select_support_geometry() {
     assert!(!support_geometry_option("support_chamber_temp_control"));
-    assert!(!sweep::unimplemented_feature(
-        "support_chamber_temp_control",
-        &case
-    ));
 }
 
 fn compare_values(key: &str, custom: Option<&str>) {

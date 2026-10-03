@@ -95,6 +95,10 @@ mod tests;
 mod completion_tests;
 
 #[cfg(test)]
+#[path = "option_coverage/support_report_tests.rs"]
+mod support_report_tests;
+
+#[cfg(test)]
 #[path = "option_coverage/pressure_advance.rs"]
 mod pressure_advance;
 
@@ -200,25 +204,12 @@ impl OptionOutcome {
         compared: usize,
         rejected: Vec<String>,
         excused: usize,
-        unimplemented: usize,
         failure: Option<String>,
     ) -> Self {
         let (status, detail) = if let Some(detail) = failure {
             ("FAIL", detail)
-        } else if unimplemented > 0 && compared + excused + unimplemented == plan.cases.len() {
-            // Every non-excused case lands in the named
-            // unimplemented-support-material boundary — a missing
-            // upstream port, distinct from nondeterministic-oracle
-            // excuses and from genuine byte regressions.
-            (
-                "INCOMPLETE",
-                format!(
-                    "{unimplemented} case(s) diverge: upstream feature unimplemented in ares \
-                     (support-material port pending; PrintObjectSupportMaterial/TreeSupport)"
-                ),
-            )
         } else if compared == 0
-            || compared + excused + unimplemented != plan.cases.len()
+            || compared + excused != plan.cases.len()
             || !rejected.is_empty()
             || plan.cases.iter().any(|case| case.value.is_none())
         {

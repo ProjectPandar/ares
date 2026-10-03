@@ -33,16 +33,8 @@ fn orca_parity_air_filtration_completion_speed() {
 }
 
 #[test]
-fn air_filtration_is_not_an_unimplemented_support_generator() {
-    let case = domains::OptionCase {
-        label: "true".into(),
-        value: Some(json!("1")),
-    };
+fn air_filtration_does_not_select_support_geometry() {
     assert!(!support_geometry_option("support_air_filtration"));
-    assert!(!sweep::unimplemented_feature(
-        "support_air_filtration",
-        &case
-    ));
 }
 
 #[test]

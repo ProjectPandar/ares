@@ -126,30 +126,6 @@ pub(super) fn oracle_nondeterministic(key: &str, label: &str) -> bool {
     )
 }
 
-/// Options whose upstream feature has no ares port yet: the normal/tree
-/// support-material generators (`PrintObjectSupportMaterial.cpp`,
-/// `Support/TreeSupport.cpp`). `enable_support` parses and consumes but
-/// emits no support structure, so every activating case diverges — the
-/// correct, honest status is a named unimplemented boundary, not a
-/// byte-parity regression. Raft is implemented (`project_slice/raft/`)
-/// and is deliberately not in this set.
-/// `case` restricts the `enable_support` exemption: with
-/// `enable_support = 0` upstream skips support generation entirely
-/// (`Print.hpp:429-431`, `PrintObject.cpp:887-890`), so a divergence in
-/// the disabled case is a real regression, not a missing port.
-pub(super) fn unimplemented_feature(key: &str, case: &domains::OptionCase) -> bool {
-    if key == "enable_support" {
-        return matches!(
-            case.value.as_ref(),
-            Some(Value::String(value)) if value == "1"
-        ) || matches!(case.value.as_ref(), Some(Value::Bool(true)));
-    }
-    !matches!(
-        key,
-        "support_air_filtration" | "support_chamber_temp_control"
-    ) && (key.starts_with("support_") || key.starts_with("tree_support_"))
-}
-
 fn execute_plan(
     runner: &OrcaRunner,
     plan: &domains::OptionPlan,
@@ -163,7 +139,6 @@ fn execute_plan(
     let mut first_failure = None;
     let mut compared = 0;
     let mut excused = 0;
-    let mut unimplemented = 0;
     let mut rejected = Vec::new();
     let io_error = |error| {
         runner::stages::StageError::new(
@@ -279,18 +254,6 @@ fn execute_plan(
                     eprintln!("[option] INPUT_REJECTED {label}");
                     continue;
                 }
-                if outcome.status == "DIVERGENT" && unimplemented_feature(&plan.key, case) {
-                    // Ares has not yet ported the upstream support-material
-                    // generators (`PrintObjectSupportMaterial.cpp`,
-                    // `Support/TreeSupport.cpp`): `enable_support` parses
-                    // and consumes but no `support_*`/`tree_support_*`
-                    // option can produce matching output. The divergence is
-                    // honest evidence of a missing upstream boundary, not a
-                    // correctness regression. It still fails the completion gate.
-                    unimplemented += 1;
-                    eprintln!("[option] UNIMPLEMENTED (support-material port pending) {label}");
-                    continue;
-                }
                 compared += usize::from(strict_comparator_ran(outcome.status));
                 eprintln!("[option] {} {label}", outcome.status);
                 if outcome.status != "PASS" && first_failure.is_none() {
@@ -307,12 +270,5 @@ fn execute_plan(
             }
         }
     }
-    OptionOutcome::executed(
-        plan,
-        compared,
-        rejected,
-        excused,
-        unimplemented,
-        first_failure,
-    )
+    OptionOutcome::executed(plan, compared, rejected, excused, first_failure)
 }
