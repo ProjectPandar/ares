@@ -4,6 +4,8 @@ mod collect;
 mod first_layer;
 mod reorder;
 
+pub(super) use collect::object_options;
+
 use super::layers::RaftSchedule;
 
 use crate::project_slice::{

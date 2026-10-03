@@ -19,6 +19,7 @@ pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     layer: &mut InstalledSupportLayer,
+    selected_role: crate::ExtrusionRole,
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     object_layer: Option<usize>,
@@ -64,7 +65,13 @@ pub(super) fn emit(
     if let Some(labels) = &labels[object_index] {
         labels.queue_start(output, state, emit_labels);
     }
-    motion::emit_support(output, &mut layer.support_fills, motion_geometry, state);
+    motion::emit_support(
+        output,
+        &mut layer.support_fills,
+        selected_role,
+        motion_geometry,
+        state,
+    );
     if standalone {
         if let Some(labels) = &labels[object_index] {
             labels.queue_stop(output, state, emit_labels, false);

@@ -20,6 +20,8 @@ mod skirt_emit;
 mod skirt_schedule;
 mod support_entry;
 mod timelapse;
+mod tool_buckets;
+mod tool_entry;
 mod wrapping;
 
 use entry_builder::EntryBuilder;
@@ -223,144 +225,53 @@ pub(super) fn append(
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
         // toolchange and every instance block (object skirt group, brim,
         // `; printing object` marker, content).
-        wrapping::emit(output, state, &timelapse_context)?;
-        for (entry_position, entry) in entries.iter().enumerate() {
-            let object_index = entry.object_index;
-            let is_group_end = entry_position + 1 == entries.len();
-            let raft_index = entry.raft_layer;
-            let (source_object_index, _) = traversal.objects[object_index]
-                .predecessor
-                .predecessor
-                .predecessor
-                .predecessor
-                .object
-                .identity();
-            let (center_x, center_y) = footprint::object_origin(
-                &traversal.project.objects()[source_object_index],
-                traversal.scale,
-            );
-            motion::set_origin(state, (center_x, center_y));
-            // Raft chunks emit the materialized raft layer; the motion
-            // machinery (travel/Z/TYPE/wipe/retract) is identical to the
-            // object path.
-            if let Some(raft_index) = raft_index {
-                raft_entry::emit(
+        let mut by_tool = tool_buckets::build(tool_buckets::Input {
+            traversal,
+            entries: &entries,
+            tools: tool_ordering.tools_for_layer(group_z),
+            objects,
+            support: support_layers,
+            raft: &mut raft_layers,
+        });
+        let last_tool = by_tool.last().map(|(tool, _)| *tool);
+        for (tool, tool_entries) in &mut by_tool {
+            wrapping::emit(output, state, &timelapse_context)?;
+            if !state.extruder_selected || state.extruders.active_id() != *tool {
+                // Writer-owned selection; full GCode::set_extruder side effects
+                // remain the next coupled transition slice.
+                motion::tool_selection::toolchange(output, state, traversal, *tool);
+                last_object_copy = None;
+            }
+            let entry_count = tool_entries.len();
+            for (entry_position, bucket) in tool_entries.iter_mut().enumerate() {
+                tool_entry::emit(
                     output,
                     state,
-                    &mut raft_layers,
-                    &raft,
-                    traversal,
-                    object_index,
-                    raft_index,
-                    &labels,
-                    emit_labels,
-                    traditional_interlude,
-                    timelapse_context,
-                    is_group_end,
-                )?;
-                continue;
-            }
-            // Upstream re-initializes the avoid-crossing boundaries for
-            // every instance's layer (`init_layer(*m_layer)` per
-            // `instance_to_print`, `GCode.cpp:5343-5345`); drop the cached
-            // boundary so each entry rebuilds it from its own slices.
-            state.avoid_boundary = None;
-            // `GCode.cpp:5380-5384`: when a new object copy starts, the
-            // first travel uses the external motion planner
-            // (`use_external_mp_once`).
-            if last_object_copy != Some(object_index) {
-                state.use_external_mp_once = true;
-                last_object_copy = Some(object_index);
-                // The `_retract` Hilbert suppression reads the
-                // DESTINATION object's region config (`GCode.cpp:7670`,
-                // `config()` is the current PrintRegionConfig) — refresh
-                // on every object switch so one object's Hilbert pattern
-                // does not leak into the next.
-                // Upstream `_retract` reads `config()` — the current
-                // PrintObject's config; refresh the flags per object.
-                // `resolved.objects` is compacted when objects lack
-                // printable instances — match by source index
-                // (`traversal.rs:27-31`), not by position.
-                let region = traversal
-                    .resolved
-                    .objects
-                    .iter()
-                    .find(|object| object.source_object_index == source_object_index)
-                    .and_then(|object| object.layer_candidates.first())
-                    .and_then(|layer| layer.model_parts.first())
-                    .map(|part| &part.region);
-                if let Some(region) = region {
-                    state.options.bottom_surface_pattern_hilbert =
-                        region.bottom_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
-                    state.options.top_surface_pattern_hilbert =
-                        region.top_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
-                }
-            }
-            if let Some(support_index) = entry.support_layer {
-                support_entry::emit(
-                    output,
-                    state,
-                    &mut support_layers[object_index][support_index],
-                    traversal,
-                    object_index,
-                    entry.object_layer,
-                    &mut entry_builder,
-                    &chunk_slices,
-                    chunk_perimeter_spacing,
-                    &labels,
-                    emit_labels,
-                    entry.object_layer.is_none(),
-                    is_group_end,
-                    timelapse_gate.traditional_timelapse,
-                    timelapse_context,
+                    bucket,
+                    tool_entry::Input {
+                        traversal,
+                        support_layers,
+                        raft: &raft,
+                        labels: &labels,
+                        emit_labels,
+                        traditional_interlude,
+                        traditional_timelapse: timelapse_gate.traditional_timelapse,
+                        timelapse_context,
+                        is_group_end: entry_position + 1 == entry_count && Some(*tool) == last_tool,
+                        last_object_copy: &mut last_object_copy,
+                        entry_builder: &mut entry_builder,
+                        chunk_slices: &chunk_slices,
+                        chunk_perimeter_spacing,
+                        brim,
+                        spiral: &mut spiral,
+                        layer_z,
+                        layer_height,
+                        object_layer_counts: &object_layer_counts,
+                        last_entry,
+                        layer_output_start,
+                    },
                 )?;
             }
-            let Some(layer_index) = entry.object_layer else {
-                continue;
-            };
-            state.layer_index = traversal.objects[object_index].physical_layers()[layer_index].id;
-            let slicing = traversal.objects[object_index].slicing_parameters();
-            state.object_layer_over_raft =
-                layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
-            brim_emit::emit(
-                output,
-                state,
-                brim,
-                object_index,
-                layer_index,
-                &mut entry_builder,
-                traversal,
-                &chunk_slices,
-                chunk_perimeter_spacing,
-            );
-            let object = &mut objects[object_index];
-            let Some(layer) = object.get_mut(layer_index) else {
-                continue;
-            };
-            object_entry::emit(
-                output,
-                state,
-                layer,
-                &mut spiral,
-                &mut entry_builder,
-                traversal,
-                object_index,
-                layer_index,
-                entry.support_layer.is_some(),
-                &chunk_slices,
-                chunk_perimeter_spacing,
-                &labels,
-                emit_labels,
-                traditional_interlude,
-                timelapse_gate.traditional_timelapse,
-                timelapse_context,
-                layer_z,
-                layer_height,
-                &object_layer_counts,
-                last_entry,
-                is_group_end,
-                layer_output_start,
-            )?;
         }
         cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
         previous_layer_z = layer_z;

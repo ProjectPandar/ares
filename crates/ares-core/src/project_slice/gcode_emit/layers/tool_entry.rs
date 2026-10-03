@@ -1,0 +1,206 @@
+//! Per-tool instance dispatch from GCode.cpp:5322–5560.
+
+use super::super::{
+    SliceError, brim::BrimPlan, footprint, motion, object::ObjectLabels, spiral_vase, timelapse,
+};
+use super::{
+    brim_emit, entry_builder::EntryBuilder, object_entry, raft_entry, support_entry, tool_buckets,
+};
+use crate::{
+    geometry::ExPolygon,
+    project_slice::{
+        perimeters::classic::traversal::PreparedPostClassicTraversal,
+        support_material::InstalledSupportLayer,
+    },
+};
+
+pub(super) struct Input<'a, 'b> {
+    pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) support_layers: &'a mut [Vec<InstalledSupportLayer>],
+    pub(super) raft: &'a Option<super::RaftSchedule>,
+    pub(super) labels: &'a [Option<ObjectLabels>],
+    pub(super) emit_labels: bool,
+    pub(super) traditional_interlude: bool,
+    pub(super) traditional_timelapse: bool,
+    pub(super) timelapse_context: timelapse::Context<'a>,
+    pub(super) is_group_end: bool,
+    pub(super) last_object_copy: &'a mut Option<usize>,
+    pub(super) entry_builder: &'a mut EntryBuilder<'b>,
+    pub(super) chunk_slices: &'a [ExPolygon],
+    pub(super) chunk_perimeter_spacing: f64,
+    pub(super) brim: &'a Option<BrimPlan>,
+    pub(super) spiral: &'a mut spiral_vase::SpiralVaseFilter,
+    pub(super) layer_z: f64,
+    pub(super) layer_height: f64,
+    pub(super) object_layer_counts: &'a [usize],
+    pub(super) last_entry: Option<(usize, usize)>,
+    pub(super) layer_output_start: usize,
+}
+
+pub(super) fn emit(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    bucket: &mut tool_buckets::Entry,
+    input: Input<'_, '_>,
+) -> Result<(), SliceError> {
+    let Input {
+        traversal,
+        support_layers,
+        raft,
+        labels,
+        emit_labels,
+        traditional_interlude,
+        traditional_timelapse,
+        timelapse_context,
+        is_group_end,
+        last_object_copy,
+        entry_builder,
+        chunk_slices,
+        chunk_perimeter_spacing,
+        brim,
+        spiral,
+        layer_z,
+        layer_height,
+        object_layer_counts,
+        last_entry,
+        layer_output_start,
+    } = input;
+    let entry = &bucket.source;
+    let object_index = entry.object_index;
+    let raft_index = entry.raft_layer;
+    let (source_object_index, _) = traversal.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object
+        .identity();
+    let (center_x, center_y) = footprint::object_origin(
+        &traversal.project.objects()[source_object_index],
+        traversal.scale,
+    );
+    motion::set_origin(state, (center_x, center_y));
+    // Raft chunks emit the materialized raft layer; the motion
+    // machinery (travel/Z/TYPE/wipe/retract) is identical to the
+    // object path.
+    if let Some(raft_index) = raft_index {
+        raft_entry::emit(
+            output,
+            state,
+            bucket.body.as_mut().expect("raft tool bucket retains body"),
+            raft,
+            traversal,
+            object_index,
+            raft_index,
+            labels,
+            emit_labels,
+            traditional_interlude,
+            timelapse_context,
+            is_group_end,
+        )?;
+        return Ok(());
+    }
+    // Upstream re-initializes the avoid-crossing boundaries for
+    // every instance's layer (`init_layer(*m_layer)` per
+    // `instance_to_print`, `GCode.cpp:5343-5345`); drop the cached
+    // boundary so each entry rebuilds it from its own slices.
+    state.avoid_boundary = None;
+    // `GCode.cpp:5380-5384`: when a new object copy starts, the
+    // first travel uses the external motion planner
+    // (`use_external_mp_once`).
+    if *last_object_copy != Some(object_index) {
+        state.use_external_mp_once = true;
+        *last_object_copy = Some(object_index);
+        // The `_retract` Hilbert suppression reads the
+        // DESTINATION object's region config (`GCode.cpp:7670`,
+        // `config()` is the current PrintRegionConfig) — refresh
+        // on every object switch so one object's Hilbert pattern
+        // does not leak into the next.
+        // Upstream `_retract` reads `config()` — the current
+        // PrintObject's config; refresh the flags per object.
+        // `resolved.objects` is compacted when objects lack
+        // printable instances — match by source index
+        // (`traversal.rs:27-31`), not by position.
+        let region = traversal
+            .resolved
+            .objects
+            .iter()
+            .find(|object| object.source_object_index == source_object_index)
+            .and_then(|object| object.layer_candidates.first())
+            .and_then(|layer| layer.model_parts.first())
+            .map(|part| &part.region);
+        if let Some(region) = region {
+            state.options.bottom_surface_pattern_hilbert =
+                region.bottom_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
+            state.options.top_surface_pattern_hilbert =
+                region.top_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
+        }
+    }
+    if let Some(selected_role) = bucket.support_role {
+        let support_index = entry.support_layer.expect("support bucket retains layer");
+        support_entry::emit(
+            output,
+            state,
+            &mut support_layers[object_index][support_index],
+            selected_role,
+            traversal,
+            object_index,
+            entry.object_layer,
+            entry_builder,
+            chunk_slices,
+            chunk_perimeter_spacing,
+            labels,
+            emit_labels,
+            bucket.body.is_none(),
+            is_group_end,
+            traditional_timelapse,
+            timelapse_context,
+        )?;
+    }
+    let Some(layer_index) = entry.object_layer else {
+        return Ok(());
+    };
+    state.layer_index = traversal.objects[object_index].physical_layers()[layer_index].id;
+    let slicing = traversal.objects[object_index].slicing_parameters();
+    state.object_layer_over_raft =
+        layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
+    brim_emit::emit(
+        output,
+        state,
+        brim,
+        object_index,
+        layer_index,
+        entry_builder,
+        traversal,
+        chunk_slices,
+        chunk_perimeter_spacing,
+    );
+    let Some(layer) = bucket.body.as_mut() else {
+        return Ok(());
+    };
+    object_entry::emit(
+        output,
+        state,
+        layer,
+        spiral,
+        entry_builder,
+        traversal,
+        object_index,
+        layer_index,
+        bucket.support_role.is_some(),
+        chunk_slices,
+        chunk_perimeter_spacing,
+        labels,
+        emit_labels,
+        traditional_interlude,
+        traditional_timelapse,
+        timelapse_context,
+        layer_z,
+        layer_height,
+        object_layer_counts,
+        last_entry,
+        is_group_end,
+        layer_output_start,
+    )?;
+    Ok(())
+}

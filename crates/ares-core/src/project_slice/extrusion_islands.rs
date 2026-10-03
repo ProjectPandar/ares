@@ -2,7 +2,7 @@
 // island membership and sortable collection flattening.
 
 mod tool_regions;
-pub(in crate::project_slice) use tool_regions::{RegionToolUsage, fill_role};
+pub(in crate::project_slice) use tool_regions::{RegionToolUsage, fill_role, gap_role};
 
 use crate::{
     geometry::{Coord, ExPolygon, Point, fixed_gcc_sort_by},

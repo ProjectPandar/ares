@@ -8,7 +8,7 @@ use crate::project_slice::{
 };
 use crate::{ExtrusionRole, ObjectOptions};
 
-pub(super) fn object_options(
+pub(in crate::project_slice::gcode_emit) fn object_options(
     traversal: &PreparedPostClassicTraversal,
     object: usize,
 ) -> &ObjectOptions {

@@ -15,7 +15,7 @@ use crate::project_slice::perimeters::classic::traversal::types::PreparedPostCla
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    raft_layers: &mut [Vec<OrderedExtrusionLayer>],
+    layer: &mut OrderedExtrusionLayer,
     raft: &Option<RaftSchedule>,
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
@@ -26,12 +26,6 @@ pub(super) fn emit(
     timelapse_context: timelapse_core::Context<'_>,
     is_group_end: bool,
 ) -> Result<(), SliceError> {
-    let Some(layer) = raft_layers
-        .get_mut(object_index)
-        .and_then(|layers| layers.get_mut(raft_index))
-    else {
-        return Ok(());
-    };
     let raft_polygons = raft
         .as_ref()
         .and_then(|raft| raft.plans.get(object_index))

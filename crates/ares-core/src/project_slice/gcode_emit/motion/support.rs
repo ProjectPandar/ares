@@ -18,15 +18,26 @@ pub(in crate::project_slice::gcode_emit) struct LayerAreas<'a> {
 pub(in crate::project_slice::gcode_emit) fn emit(
     output: &mut Vec<u8>,
     entities: &mut Vec<SupportExtrusionEntity>,
+    selected_role: ExtrusionRole,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
-    let (mut ordinary, mut ironing): (Vec<_>, Vec<_>) = std::mem::take(entities)
+    let (selected, mut remaining): (Vec<_>, Vec<_>) =
+        std::mem::take(entities).into_iter().partition(|entity| {
+            let role = entity.role();
+            role == selected_role
+                || (selected_role == ExtrusionRole::Mixed && role != ExtrusionRole::Ironing)
+                || (matches!(
+                    selected_role,
+                    ExtrusionRole::Mixed | ExtrusionRole::SupportMaterialInterface
+                ) && role == ExtrusionRole::Ironing)
+        });
+    let (mut ordinary, mut ironing): (Vec<_>, Vec<_>) = selected
         .into_iter()
         .partition(|entity| entity.role() != ExtrusionRole::Ironing);
     // Native Mixed excludes ironing; the caller dispatches ironing last.
     for (group, selected_role) in [
-        (&mut ordinary, ExtrusionRole::Mixed),
+        (&mut ordinary, selected_role),
         (&mut ironing, ExtrusionRole::Ironing),
     ] {
         chain_and_reorder_entities(group, local_cursor(state, geometry));
@@ -35,6 +46,7 @@ pub(in crate::project_slice::gcode_emit) fn emit(
         }
     }
     ordinary.append(&mut ironing);
+    ordinary.append(&mut remaining);
     *entities = ordinary;
 }
 

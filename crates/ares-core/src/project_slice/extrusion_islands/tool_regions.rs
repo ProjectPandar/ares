@@ -61,7 +61,7 @@ pub(in crate::project_slice) fn fill_role(entity: &FillExtrusionEntity) -> Extru
     }
 }
 
-fn gap_role(entity: &GapFillEntity) -> ExtrusionRole {
+pub(in crate::project_slice) fn gap_role(entity: &GapFillEntity) -> ExtrusionRole {
     use crate::project_slice::perimeters::classic::materialize::ExtrusionRole as Role;
     let role = match entity {
         GapFillEntity::Path(path) => path.role,

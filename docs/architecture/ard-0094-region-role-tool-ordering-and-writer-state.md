@@ -58,6 +58,13 @@ Layer emission must consume upstream tool order and its per-tool object,
 island, and region buckets. Do not insert ad hoc `T` commands into the existing
 entity stream: scheduling changes traversal and tool-change side effects.
 
+Body bucket ownership moves path entities, not shared layer geometry. Preserve
+canonical region IDs and island slots when splitting mixed outer/inner walls;
+support buckets carry source role selectors against shared support geometry.
+The actual outer loop consumes the ordered layer tools before object/island
+regions. A writer selection alone is only a temporary compatibility shell
+until the full GCode::set_extruder side-effect consumer is installed.
+
 Logical filament identity is distinct from physical extruder identity and
 from the number of used filaments. Port upstream ownership of E, retraction,
 restart extra, extrusion conversion, and statistics. Keep machine position

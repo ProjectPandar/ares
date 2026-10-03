@@ -937,3 +937,116 @@ none was restarted on a timeout. Local checkpoints preserve incomplete dual
 full-output status and do not authorize push, main integration or full-goal
 completion. Next implementation remains the actual per-tool body buckets and
 GCode::set_extruder transition consumer, followed by all-tool accounting.
+
+### Per-tool object/island/region body buckets
+
+Continue the unchanged public dual complete-output RED from both writer
+reference batches; fixture, assertion and comparator remain untouched.
+Port GCode.cpp:4864–5130 ObjectByExtruder bucket construction, support
+dontcare selectors, mixed-wall separation, and5241/5322/5434 per-tool
+instance/island traversal, plus ToolOrdering.cpp:102–141 LayerTools::extruder
+role selection. Rust destination: layers/tool_buckets with functional
+object/support modules and actual layers.rs/object_entry/support_entry/
+raft_entry consumers. Move owned paths into buckets; keep object/support/
+raft geometry shared, and preserve canonical region IDs and island slots.
+Filter support roles exactly as extrude_support6178–6242; do not emit the
+same support body on every tool. Writer selection uses the already ported
+writer operation at the outer tool boundary, not ad-hoc T words in entities.
+Included in this slice: role-owned object/raft buckets and support role
+dispatch, actual outer tool traversal and regional four-stage consumption.
+Deferred within this same incomplete milestone: the higher-level
+GCode::set_extruder template/retract/temperature side effects, per-tool
+skirt/brim allocation, subset-specific instance chaining and final accounting.
+These are explicitly not waived for complete dual parity. Wipe overrides,
+tower integration and Type2 priming remain adjacent source boundaries.
+Existing single-tool controls must remain passing; both full dual comparisons
+remain the final closure criterion, even if this slice changes body bytes.
+
+Independent six-axis review found three source-contract fixes before acceptance:
+FillCollection dispatch now combines every child infill/solid predicate and
+the collection role (the first-child rule belongs only to collect_extruders);
+raft reuses the same support dontcare selectors and selected-role/ironing
+passes; writer tool selection invalidates last_object_copy so the destination
+object configuration is reinstalled even for consecutive tools on one object.
+Read-only review confirmed these repairs statically. The initial controls303
+run passed52.208s, but the four initial check/build handles overlap these edits;
+all are intermediate receipts, not repaired frozen-source acceptance. Reap
+each handle and rerun controls, quality and full public references after the
+repair freeze. No comparator, dual fixture or assertion changed.
+
+The mechanical extraction then exposed missing imported parent modules and
+two stale timelapse_gate references; those failed check receipts are retained
+as intermediate, not waived. Repair the imports and pass Input's timelapse
+value. layers/tool_entry is the actual per-tool instance dispatch, not an
+unused compatibility facade. Fixed [Option;2] wall dispatch avoids a new
+small Vec allocation on every ordinary wall collection. Final static review
+found no remaining must-fix in these repairs. Functional files are282/206/250
+LOC or smaller. Repaired freeze: core check0; fmt0; diff0;303 controls all
+PASS55.021s; workspace/all-targets clippy0 with253lib/269test warnings, no
+dead-code diagnostics (prior254/270); WASM core+adapter check0. Both public
+48-case batches and workspace nextest are still running, not accepted yet.
+The unchanged dual assertion remains RED byte186,line7 in both references:
+baseline182130expected/175043actual, modifier270578expected/233743actual.
+Official artifacts M8Lafv/JJy2n6 and seeded cOjnk1/kNgoIj retain inputs and
+complete files. Corresponding raw Ares files cmp0 across both references;
+the modifier now emits97T0/T1 commands, as does native, but this is only a
+body-dispatch diagnostic, not complete transition or output parity.
+
+The first workspace run exposed sortable_fill_collections_flatten_before_
+island_print_ordering at tool_regions.rs44 (region0 into an empty vector).
+The compiled test executable reproduced exit101 in0.00s. Diagnosis compared
+the test's collection_ranges[region0] with the actual fill producer at
+fill_entities.rs129–142: the producer installs perimeter_ranges and
+thin_fill_ranges for every canonical region, even when empty. This test
+omitted that metadata. Supply the same empty region0 ranges, retain every
+flattening assertion and add assertions for its preserved internal-solid
+tool usage. No production fallback/defensive guard, no erased coverage and
+no changed public3MF fixture or full-output assertion. The initial workspace
+failure remains recorded; rerun focused+full tests and quality before commit.
+
+Both frozen production reference handles now terminated and were reaped:
+official48=47PASS/1FAIL290.398s; seeded48=47PASS/1FAIL395.665s. Only the unchanged
+dual full-output test fails in both; all47 prior single-tool/region/support/
+raft/tree controls preserve complete output. The region-range repair only
+changes unit-test construction, not production/reference source. Workspace
+initial run and repaired focused/full/clippy handles still need terminal
+receipts. Do not accept an in-flight handle or erase the first workspace RED.
+
+Initial workspace handle terminated/reaped:7555run,7554PASS37slow/1FAIL9skip,
+264.377s; its only failure is the reproduced unit-test region-range omission
+above. No other regressions; repaired full rerun remains mandatory/in flight.
+
+Focused repaired nextest terminated/reaped:1/1PASS0.023s (test0.013s),7107
+outside selection. Original flatten geometry/order assertions and new region
+usage assertions all pass. Full repaired workspace and clippy still in flight.
+
+Repaired region-metadata workspace terminated/reaped:7555/7555PASS35slow,
+9skip260.126s. KSR initialized ordered bytes and spiral-vase body both pass.
+The matching clippy run ended0 but269→271test warnings from the two new
+single_range_in_vec_init literals; not accepted as final quality. Replace
+those literals with equivalent once(0..0).collect() (no lint exemption),
+then rerun full workspace+clippy on that final test-source freeze. Production
+source/reference receipts are unchanged. Both final acceptance handles still
+in flight: /tmp/ares-body-buckets-acceptance-workspace.log and -clippy.log.
+No per-tool bucket commit yet; complete their receipts and independent review
+before making the user-authorized local logical checkpoint.
+
+Final acceptance clippy terminated/reaped exit0 (no dead-code diagnostics);
+only final acceptance workspace handle remains live. Final static/runtime
+review and logical local commit remain pending, not full transition closure.
+
+Final test-source freeze acceptance workspace terminated/reaped exit0:
+7555/7555PASS35slow,9skip255.465s. Final clippy0,253lib/269test, no new/dead
+code warnings; fmt0/diff0. Production WASM0 and reference47/1 receipts remain
+applicable (only equivalent test-range construction changed afterward).
+All handles begun by this slice have terminated and been reaped; no timed-out
+job was restarted. Request final independent six-axis receipt review before
+the local logical checkpoint. The full dual assertion remains untouched RED;
+GCode::set_extruder, per-tool skirt/brim, subset instance chaining and all-tool
+accounting are still mandatory next slices, not waived or claimed complete.
+
+Final independent six-axis review found no remaining must-fix and accepts
+only this local checkpoint after fmt0 (terminated/reaped). Include all
+bucket modules, registrations, consumers, metadata test repair and docs in
+one logical commit; record both47/1 references and open boundaries in its
+body. This does not authorize push or full dual/milestone/goal completion.

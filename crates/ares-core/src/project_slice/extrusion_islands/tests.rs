@@ -58,10 +58,14 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
             },
         ],
         collection_ranges: vec![(0, 0..2)],
+        perimeter_ranges: std::iter::once(0..0).collect(),
+        thin_fill_ranges: std::iter::once(0..0).collect(),
         ..LayerFillEntities::default()
     };
 
     let assigned = assign_layer(&mut layer, &[rectangle(-10, 10)]);
+    assert_eq!(assigned.tool_regions.len(), 1);
+    assert!(assigned.tool_regions[0].internal_solid);
     let infills = &assigned.islands[0].infills;
 
     assert_eq!(infills.len(), 3);
