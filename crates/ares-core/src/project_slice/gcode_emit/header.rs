@@ -18,7 +18,7 @@ pub(super) fn append_header(
     output: &mut Vec<u8>,
     metadata: GenerationMetadata,
     traversal: &PreparedPostClassicTraversal,
-    layers: usize,
+    schedule: &super::layers::Schedule,
     max_z: f64,
 ) {
     let (year, month, day, hour, minute, second) = metadata.timestamp();
@@ -50,7 +50,7 @@ pub(super) fn append_header(
     );
     // `GCode.cpp:2612-2618`: the max print z over every object's last
     // layer (raft layers included through the shifted object z chain).
-    let filament_count = traversal.resolved.usage.supported_used_filaments.len();
+    let layers = schedule.layer_count();
     output.extend_from_slice(b"; HEADER_BLOCK_START\n");
     output.extend_from_slice(
         format!(
@@ -72,7 +72,15 @@ pub(super) fn append_header(
     output.extend_from_slice(format!("; filament_density: {density}\n").as_bytes());
     output.extend_from_slice(format!("; filament_diameter: {diameter}\n").as_bytes());
     output.extend_from_slice(format!("; max_z_height: {max_z:.2}\n").as_bytes());
-    output.extend_from_slice(format!("; filament: {filament_count}\n").as_bytes());
+    // `Print.cpp:2514` supplies `GCode.cpp:2623–2632` with scheduled logical IDs.
+    output.extend_from_slice(b"; filament: ");
+    for (index, filament) in schedule.tool_ordering.all_extruders().iter().enumerate() {
+        if index != 0 {
+            output.push(b',');
+        }
+        output.extend_from_slice((filament + 1).to_string().as_bytes());
+    }
+    output.push(b'\n');
     output.extend_from_slice(b"; HEADER_BLOCK_END\n\n");
 }
 

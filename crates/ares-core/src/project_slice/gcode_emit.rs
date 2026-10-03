@@ -77,13 +77,7 @@ pub(super) fn emit(
     file_start::append(&mut output, traversal, metadata, first_layer_bounds)?;
     let tags = tags::Tags::of(traversal);
     if header::enabled(traversal) {
-        header::append_header(
-            &mut output,
-            metadata,
-            traversal,
-            sliced_layer_count,
-            max_print_z,
-        );
+        header::append_header(&mut output, metadata, traversal, &schedule, max_print_z);
     }
     // `GCode.cpp` + Orca export layout: BBL keeps the config block up front;
     // the compatible flavor moves it after the tail statistics.

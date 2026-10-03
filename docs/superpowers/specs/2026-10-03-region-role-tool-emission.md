@@ -61,3 +61,12 @@ passing. Do not claim this closes the following multi-tool criteria.
   no tool-only scaffolding or broken intermediate runtime commits.
 
 This is not an all-printers, all-options or wipe-tower completion claim.
+
+The header-ID slice ports `GCode.cpp:2623–2632`'s one-based logical IDs from
+`Print::get_slice_used_filaments(false)` (`Print.hpp:1021–1025`), populated
+by `Print.cpp:2514` from `ToolOrdering::all_extruders`. Destination:
+`gcode_emit/header.rs`, borrowing the materialized schedule's all-tools list
+instead of the configuration usage count. Include comma-separated logical
+IDs for actual scheduled tools; defer per-tool statistics and remaining
+transition behavior. A public native-first header diagnostic supplements,
+but never replaces, the unchanged full baseline/modifier acceptance test.

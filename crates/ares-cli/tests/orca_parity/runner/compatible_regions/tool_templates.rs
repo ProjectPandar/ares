@@ -145,6 +145,22 @@ fn printing_toolchange_retracts_old_nozzle_before_filament_end() {
     }
 }
 
+#[test]
+fn filament_header_lists_scheduled_logical_ids_not_their_count() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs("", "", false, &[]);
+    for (label, bytes) in [("native", &reference), ("Ares", &actual)] {
+        let output = std::str::from_utf8(bytes).unwrap();
+        assert_eq!(
+            output.lines().find(|line| line.starts_with("; filament: ")),
+            Some("; filament: 1,2"),
+            "{label}: header identifies both scheduled logical filaments"
+        );
+    }
+}
+
 fn outputs(
     start: &str,
     end: &str,

@@ -1470,3 +1470,70 @@ Independent final six-axis review verified the actual clean terminal log
 and approved this finite code+docs local checkpoint with no new must-fix.
 Approval excludes push/main merge, complete transition/accounting parity
 and global goal completion; original full dual output remains RED.
+
+## Scheduled filament header IDs
+
+Current source is checkpoint1f15f498, clean before this slice. Fresh unchanged
+full baseline/modifier native replay3273 exit100,2.472s; byte186,line7 expects
+`; filament: 1,2`, emits `; filament: 2`. Retain
+/tmp/ares-tool-transition-current-red.log and its artifacts. Hypotheses:
+initial-only selection, first-layer-only selection, or lost logical identity.
+Inspection falsifies those: header.rs serializes the configuration usage
+COUNT, not IDs. Upstream `GCode.cpp:2623–2632` serializes the actual
+`Print::get_slice_used_filaments(false)` IDs, populated by
+`Print.cpp:2514` from `ToolOrdering::all_extruders`.
+
+Same approved public 3MF import/slice/output seam: add a native-first header
+tracer using the unchanged two-filament export helper. Obtain its RED before
+changing production; then borrow schedule.tool_ordering.all_extruders() in
+header.rs and format one-based logical IDs. Include only scheduled-ID header
+output; existing config inventory is not removed or reused as geometry truth.
+Statistics/transition/all-printer/all-option coverage remain deferred/open.
+Require both references' tracer GREEN, original full comparisons retained,
+workspace/fmt/clippy/WASM and independent six-axis checkpoint review.
+
+Header tracer4807 terminated/reaped exit100,1.778s: native header assertion
+passes first; Ares emits `2` instead of `1,2`. Log
+/tmp/ares-filament-header-red.log. This is valid public-seam RED before
+production edits. Borrow the existing Schedule in append_header, retaining
+five arguments and avoiding a new too-many-arguments warning. Keep max-Z,
+layer-count and header-disable behavior unchanged; serialize the schedule's
+borrowed all-tools list directly, no new ID inventory or geometry copies.
+
+Source frozen after implementation. Build73535 exit0,1m15s; fmt16401/88722
+exit0; diff check0. Clippy43533 exit0,2m27s, unchanged253lib/269test warnings;
+WASM core+adapter89995 exit0,2m43s (compile, not browser runtime).
+Independent static six-axis review found no new must-fix and confirmed ID
+ownership, unchanged count/header-disable behavior and no new argument warning.
+
+Official shared-CPU0 broad65918 terminated/reaped exit100:52PASS/1FAIL,
+254.196s, /tmp/ares-filament-header-official.log and matching artifacts.
+New header diagnostic PASS3.601s, all47 strict complete-output controls and
+the4 prior limited diagnostics PASS. Only original full dual FAIL4.969s:
+baseline's first difference advances to byte998,line33 total_toolchanges16
+versus0; modifier first differs at byte718,line25 M73 P0 R17 versusR16.
+Header correction does not close these remaining runtime/accounting gaps.
+Seeded64723 remains live; require its terminal totals and a subsequent full
+workspace alone before local commit approval. No comparator/fixture changes.
+
+Seeded64723 terminated/reaped exit100:52PASS/1FAIL,300.331s. Header tracer
+PASS4.725s; all47 strict complete controls and4 prior diagnostics PASS.
+Only original full dual FAIL6.686s, with the same new first differences.
+Log /tmp/ares-filament-header-seeded.log and matching artifacts retained.
+All external batches are terminal. Start unchanged full workspace alone,
+/tmp/ares-filament-header-workspace.log; source remains frozen. Do not claim
+workspace GREEN or final checkpoint approval before its terminal receipt.
+
+Full workspace14113 terminated/reaped exit0:7560PASS,35slow,9SKIP,
+257.593s. Original configured num-cpus parallelism, no concurrent external
+Orca batches, no assertion changes. /tmp/ares-filament-header-workspace.log.
+Frozen-source fmt/diff/clippy/WASM gates and both actual52/1 reference rounds
+are complete. Request final independent six-axis approval for this header-ID
+code+test+docs checkpoint only; full dual remains RED and no push/main merge
+or global printer/option completion is implied.
+
+Independent final six-axis review verified workspace's actual terminal
+receipt and approved the finite header-ID code+test+docs local checkpoint,
+with no new must-fix. Approval excludes push/main merge and complete dual
+or global goal closure. Next original full-output gap is schedule-derived
+total_toolchanges and remaining transition/time/extrusion accounting.

@@ -114,6 +114,12 @@ offsets, temperatures and writer selection. Header IDs, tool-change counters,
 and final statistics must derive from the actual schedule/state. A header-only
 repair is not output parity.
 
+The filament header borrows the schedule's sorted logical IDs, formatted
+one-based with commas, not a count or a physical-nozzle map. This implements
+`GCode.cpp:2623–2632` through `Print.cpp:2514`/`Print.hpp:1021–1025`; the
+configuration-time usage inventory remains separate from generated layer
+tools. Header repair does not close the deferred statistics/transition gaps.
+
 Printing transitions render the old filament-end before writer selection and
 the new filament-start afterward, sharing the live writer's template refresh
 and write-back. Upstream end-template filament_extruder_id is the old mapped

@@ -26,7 +26,7 @@ mod wrapping;
 
 use entry_builder::EntryBuilder;
 pub(super) use raft_schedule::RaftSchedule;
-use schedule::Schedule;
+pub(super) use schedule::Schedule;
 pub(super) use schedule::build as build_schedule;
 
 use super::{
