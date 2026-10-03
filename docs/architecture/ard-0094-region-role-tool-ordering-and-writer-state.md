@@ -114,6 +114,25 @@ offsets, temperatures and writer selection. Header IDs, tool-change counters,
 and final statistics must derive from the actual schedule/state. A header-only
 repair is not output parity.
 
+Printing transitions render the old filament-end before writer selection and
+the new filament-start afterward, sharing the live writer's template refresh
+and write-back. Upstream end-template filament_extruder_id is the old mapped
+extruder ID; start-template filament_extruder_id is the new logical filament
+ID. Comment-only lifecycle tracers isolate this behavior but never replace
+the unchanged complete-output acceptance contract.
+
+Cut/EC singular aliases are selected from the current logical filament,
+preserving the source boolean type. The shared live template refresh owns
+this selection (`GCode.cpp:8008–8013`); reconstructing base configuration
+must not silently restore tool0 values for a selected later tool.
+
+Legacy vector expansion uses the logical filament argument supplied to
+placeholder processing (`PlaceholderParser.cpp:915`, `GCode.cpp:7773,8042`),
+not physical filament_extruder_id. Carry this context through recursive
+template branches; leave explicit modern indices unchanged. The ordinary
+current_extruder symbol is read-only. Explicit filament_change() context
+mutation is adjacent parser behavior, not claimed by this render slice.
+
 ## Included / deferred
 
 An independent prerequisite ports the per-region wall-before/after-infill

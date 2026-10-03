@@ -33,6 +33,7 @@ mod tests;
 mod timelapse;
 mod timelapse_pos;
 mod tool_ordering;
+mod tool_transition;
 
 #[cfg(test)]
 mod timelapse_tests;

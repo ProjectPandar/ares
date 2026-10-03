@@ -237,9 +237,7 @@ pub(super) fn append(
         for (tool, tool_entries) in &mut by_tool {
             wrapping::emit(output, state, &timelapse_context)?;
             if !state.extruder_selected || state.extruders.active_id() != *tool {
-                // Writer-owned selection; full GCode::set_extruder side effects
-                // remain the next coupled transition slice.
-                motion::tool_selection::toolchange(output, state, traversal, *tool);
+                super::tool_transition::emit(output, state, *tool, timelapse_context)?;
                 last_object_copy = None;
             }
             let entry_count = tool_entries.len();

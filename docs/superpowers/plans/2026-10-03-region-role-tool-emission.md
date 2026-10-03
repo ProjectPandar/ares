@@ -1050,3 +1050,277 @@ only this local checkpoint after fmt0 (terminated/reaped). Include all
 bucket modules, registrations, consumers, metadata test repair and docs in
 one logical commit; record both47/1 references and open boundaries in its
 body. This does not authorize push or full dual/milestone/goal completion.
+
+### GCode::set_extruder transition lifecycle
+
+9bc65b17 is the verified local body-bucket checkpoint. Resume the unchanged
+public dual RED: focused official nextest1FAIL2.460s, byte186,line7, retained
+in /tmp/ares-set-extruder-red-official.log. Minimise diagnosis by observing
+the first printing T0→T1 in the same public two-nozzle overhang scenario;
+do not minimise away baseline/modifier complete-output acceptance.
+Ranked hypotheses: missing set_extruder side effects/templates; incorrect
+per-tool skirt/brim/instance ordering; incomplete usage/header statistics.
+Native body before T1 contains old-tool wipe/retract, change_filament template
+and new-tool temperature/PA; Ares still calls writer selection alone.
+
+Upstream boundary GCode.cpp7710–8060 set_extruder and7666–7704 retract,
+GCodeWriter.cpp toolchange/retract, PlaceholderParserIntegration3900–3933.
+Destination gcode_emit/tool_transition functional modules plus shared template
+render consumer and actual layers/startup callers. Included next vertical
+slice: old filament_end and new filament_start render/write-back with correct
+old physical/new logical IDs, live writer state, layer placeholders, EOL and
+template failures. Next same-milestone slices: actual toolchange retract/wipe,
+change_filament dynamic values/template, counters, manual/custom-T handling,
+temperature/PA, cursor invalidation, then per-tool skirt/brim and accounting.
+Adjacent tower/ramming/ooze planning remains source-cited deferred, not common
+behavior waived for the Snapmaker fixture. Existing startup/template helper
+code is a compatibility shell to share/replace, not a second transition owner.
+
+Confirmed test seam remains public3MF export/import→slice output. Add a
+comment-only filament-lifecycle tracer on the same native two-nozzle scenario
+to isolate ordering around the first body T1. Its native-derived behavior
+assertions are a diagnostic, not a complete-output comparator substitute;
+the original baseline/modifier full assertions remain unchanged and RED until
+all coupled source behavior is ported. Obtain tracer RED before production
+edits, then port this actual lifecycle and rerun both references/controls.
+
+Tracer compile attempts1/2 failed from an assumed ParityCase.actual field
+and unavailable multi-thread Runtime::new; repair the test to call the public
+slice_project API with the same deterministic metadata/context and the
+existing current-thread runtime. These are setup failures, not behavior RED.
+Unrestricted tracer build3 exit0; official tracer1FAIL2.790s and seeded
+tracer1FAIL2.961s both pass native ordering assertions before failing Ares's
+missing old-tool end before first printing T1. Retain complete raw/reference
+artifacts D67TYd/PcYo9K and strict full-output DIVERGENT183192/175281bytes.
+The original dual complete assertion remains unchanged RED. Tracer clippy0.
+Initial actual lifecycle consumer core check0,17.53s; shared writer alone is
+now wrapped with actual old-end/new-start render/write-back. Reproduce physical
+ID mapping directly from Print.cpp3280–3286 (missing mapping returns0, not
+get_at element0). Re-freeze after this source correction; any build started
+before that correction is intermediate only, not final acceptance.
+
+The initial lifecycle CLI build handle has terminated/reaped exit0 but its
+source overlapped the mapping fix; keep it intermediate. Frozen native CLI
+build,303controls,workspace/all-targets clippy and WASM core+adapter handles
+are confirmed live, waiting/compiling on the shared target directory. Do not
+restart on observation timeout. Await frozen build0, then run both lifecycle
+tracers and original dual full-output comparisons before acceptance; independent
+six-axis review is in flight. No new lifecycle commit, push or closure yet.
+
+Independent review found two must-fix template-consumer contracts before
+acceptance: (1) base_config's cut/EC singular aliases use index0; restore all
+four for the current logical filament (old end/new start), matching
+GCode.cpp8008–8013. (2) legacy [vector_option] expansion in template.rs263
+also uses index0, whereas PlaceholderParser.cpp915 uses the explicit logical
+filament argument to placeholder_parser_process. Pass an immutable logical
+filament context through actual rendering; do not infer it from the end
+template's physical filament_extruder_id, nor alter explicit modern indices.
+Extend the public native tracer with differing per-tool alias/vector values
+and obtain behavior RED on this lifecycle source before repairing those
+contracts. Current comment-ID tracer alone cannot prove them. Frozen checks
+already begun remain intermediate until these review fixes and final reruns.
+
+Intermediate lifecycle quality receipts terminated/reaped: clippy0 with
+253lib/269test warnings; WASM0; fmt0; unrestricted frozen CLI build0. These
+do not close the two template-context review issues. Core303 handle54672
+and official/seeded lifecycle+original-dual handles93567/77913 are confirmed
+live and must be reaped before their results are assessed; their logs use
+ares-tool-lifecycle-frozen-controls and ares-tool-lifecycle-intermediate-*
+under /tmp. Keep unfinished coupled code/tests/docs in the worktree, not a
+commit or push, until repair and independent revalidation.
+
+### Local checkpoint status after the current reference round
+
+The user requested logical local commits without waiting for complete dual
+parity. The four existing checkpoints are 75699e7b (layer tool producer and
+ordering), f07ce210 (live extruder registry and machine-start write-back),
+5b2da82a (shared writer selection), and 9bc65b17 (actual body tool buckets).
+Each commit message names its verified scope and explicitly retains the full
+dual RED. Independent read-only review confirms no message amendment is
+needed. The branch is four commits ahead of its own remote; none is pushed.
+
+Intermediate handles54672/93567/77913 terminated and were reaped: core
+303/303 PASS; each reference round reported the original dual RED and a
+lifecycle tracer failure. Inspecting the saved complete Ares stream proves
+the tracer failure was a test-boundary false negative: old end is immediately
+adjacent to T1, and body[..tool] excludes the newline opening the T1 match.
+Replace newline-containing substring matching with exact line matching in
+that same pre-T1 interval. Marker contents and ordering remain unchanged;
+neither full comparator nor original dual fixture/assertion is changed.
+Independent review confirms this correction, subject to real reruns.
+
+The unrestricted corrected-tracer build exited0. Fresh official and seeded
+two-test runs are retained in /tmp/ares-lifecycle-line-{official,seeded}.log
+with full artifacts under the corresponding -artifacts directories. These
+handles58336/25536 terminated/reaped exit100: corrected lifecycle tracer PASS
+3.761s official /3.396s seeded; unchanged original full dual FAIL5.001s
+official /6.739s seeded. Each round has one PASS and one FAIL. Fmt and diff
+checks exit0. These are intermediate lifecycle evidence, not final acceptance: the scalar alias
+and immutable legacy-vector context review fixes remain open. Keep those
+coupled files uncommitted; do not amend or combine the four verified commits.
+
+### Selected filament aliases: public diagnostic loop
+
+Extend the confirmed public3MF export/import seam with distinct EC values
+3/7 and false/true. Retain native-first assertions on old end, new start and
+the later old end after tool1 was selected; preserve full stream artifacts
+and the original complete-output acceptance unchanged. The initial cut probe
+exports printer vectors10/18 and false/true but native templates normalize
+them to10/10 and false/false with the default cut override level. This is
+fixture setup evidence, not a production RED. The calibrated native run
+passes all native assertions, then fails Ares old-end bool rendering (0
+instead of false),1.864s, /tmp/ares-alias-tracer-red2.log, full case-yHpKVs.
+
+For distinct cut values, additionally select source EnableFilament(2) and
+set per-filament cut overrides10/18,false/true. Verify effective project
+configuration before using native output as the oracle. Do not infer runtime
+values solely from the printer vectors or waive any alias assertion.
+
+The EnableFilament public fixture passes all native assertions, then fails
+Ares old-end aliases1.853s, /tmp/ares-alias-filament-red.log, case-t63Gc1.
+This is the valid four-alias RED. Production now shares alias selection
+between base context and live writer refresh, selecting the logical filament
+and preserving bool output rather than footer numeric serialization. Initial
+build failed only on helper re-export visibility (E0364/E0603); corrected
+module visibility, reaped exit101, and rerun unrestricted build2. No behavior
+GREEN, final verification, commit or push is claimed by this compile attempt.
+
+Independent six-axis alias review found no new production must-fix, but
+requested effective project read-back of EnableFilament(2) and both filament
+cut override vectors. Add those checks before final runtime validation. This
+fixture proves selected alias values/types, not override priority (printer
+and filament cut inputs coincide). Legacy-vector indexing stays open. Build2
+handle15920 and intermediate clippy96390 remain confirmed live; no restart
+on timeout and no GREEN acceptance before terminal runtime results.
+
+Unrestricted build2 handle15920 terminated/reaped exit0 after the effective
+cut configuration assertions were added. Fmt/diff checks pass. Actual nextest
+runs are started and confirmed live: official44435 and seeded89978 select
+both lifecycle tracers plus the unchanged original dual; core controls80168
+and workspace/all-target clippy96390 share the build directory. Logs are
+/tmp/ares-alias-green-{official,seeded}.log, /tmp/ares-alias-controls.log and
+/tmp/ares-alias-intermediate-clippy.log. These handles currently wait/run;
+reap them, do not restart on timeout. No final GREEN or new commit/push yet.
+
+Alias round receipts terminated/reaped: clippy96390 exit0,253lib/269test,
+CLI31; official44435 has lifecycle3.731s PASS and aliases3.747s PASS, original
+dual4.956s FAIL; seeded89978 lifecycle4.812s PASS, aliases2.842s PASS, original
+dual6.657s FAIL. Each reference round is2PASS/1FAIL. Core303 handle80168 is
+still confirmed live. Do not attribute these receipts to the following new
+legacy-context test source.
+
+Next vertical slice, same confirmed public seam: add native-first legacy
+vector comments with EC3/7, explicit modern indices0/1, and an assignment
+of mutable current_extruder=0. Validate first old end, new start and later
+old end; the implicit legacy index must remain the immutable logical tool
+argument, independent of that mutable symbol. Source boundary remains
+PlaceholderParser.cpp::legacy_variable_expansion915 and GCode.cpp7773/8042.
+After valid RED, pass the explicit logical context through rendering and its
+recursive nodes; keep explicit modern indices unchanged. Existing default
+render callers are not claimed to close remaining startup/end lifecycle
+ports. Unrestricted legacy tracer build61755 currently waits on the shared
+target while core controls80168 run; reap before native replay.
+
+Independent review closes the finite four-alias repair after inspecting both
+runtime logs and effective override read-backs, but not the overall lifecycle
+or regression gate. Legacy tracer is statically valid; its context is only
+independent of ordinary current_extruder assignment. Upstream explicit
+filament_change() may modify parser context (PlaceholderParser.cpp1719–1722),
+and is not exercised or claimed implemented by this slice. Await valid RED
+before its render implementation; do not declare global context immutability.
+
+Core30380168 terminated/reaped exit0,303PASS53.699s; original alias code
+passes those controls. Legacy build61755 exited0, but the assignment probe
+fails natively with process156 /Cannot modify a read-only variable/ for
+current_extruder,0.962s in /tmp/ares-legacy-context-red.log. This invalid native
+input is setup evidence, not a valid production RED. Correct the static review
+assumption: current_extruder is a read-only symbol, not a writable ordinary
+variable. Remove that illegal assignment; retain logical tool1's legacy7 and
+modern explicit3/7 observations at start and later end. Legal tracer build
+20641 exited0. Full contract still passes an explicit logical argument, not
+the end-template physical filament_extruder_id. No render implementation
+before the legal tracer's native-first RED is observed.
+
+Legal native-first tracer9941 terminated/reaped FAIL1.865s: all native
+assertions pass, Ares new tool1 legacy value is tool0's3 instead of7 while
+modern explicit indices stay3/7. Retain complete case-umdixi and strict
+DIVERGENT in /tmp/ares-legacy-context-legal-red.log. Implement explicit logical
+filament context in template::render_for_filament and recursive rendering;
+actual tool_transition passes its logical old/new argument. Existing render
+callers retain their prior tool0 call context; remaining startup/end lifecycle
+ports are still open, not a new fallback or completion claim. Unrestricted
+green build is running; await runtime GREEN and independent revalidation.
+
+Independent read-only six-axis review finds no additional must-fix in this
+finite legacy index slice; actual template346LOC and test212LOC, no new
+copies/cache/suppressions. Existing tool0 render call sites and explicit
+filament_change() are not silently claimed ported. Final unrestricted CLI
+build91937 terminated/reaped exit0. Frozen fmt/diff0; live checks queued/run:
+clippy27940 (/tmp/ares-lifecycle-context-final-clippy.log), WASM32562
+(/tmp/ares-lifecycle-context-final-wasm.log), workspace84768
+(/tmp/ares-lifecycle-context-final-workspace.log). Start official and seeded
+four-test nextest rounds selecting all three lifecycle diagnostics plus the
+unchanged original dual; logs /tmp/ares-lifecycle-context-final-*.log and
+full artifacts under the matching -artifacts directories. These process
+handles must be reaped before asserting GREEN; no new commit/push yet.
+Official65742 and seeded81696 are confirmed live with the three quality
+handles27940/32562/84768; source is frozen while these checks run or await
+the shared build lock. Observation timeout is not terminal or a reason to
+restart any of these five processes.
+
+Frozen quality handles terminated/reaped: clippy27940 exit0,253lib/269test
+(CLI31),2m16s; WASM32562 core+adapter check exit0,2m33s. Workspace84768
+and focused official65742/seeded81696 remain confirmed live. Keep source
+frozen. Broader unchanged Normal/Tree/region finite references are additionally
+started with all twelve activation flags and strict complete comparisons:
+official22081 /seeded9538, logs /tmp/ares-lifecycle-context-controls-*.log,
+full artifact roots with the same prefix and -artifacts suffix. This batch
+includes the new lifecycle diagnostics but does not redefine original dual
+full-output acceptance or imply all-printer/all-option coverage. Await all
+terminal results before independent runtime review and any local commit.
+
+Focused official65742 and seeded81696 terminated/reaped exit100, each3PASS/
+1FAIL. Official lifecycle15.240s, legacy16.038s, aliases15.458s all PASS;
+seeded21.672s/19.756s/15.820s all PASS. Original full dual remains unchanged
+FAIL17.365s official /25.365s seeded, still header byte186,line7. These are
+actual activated native-first diagnostics, not the workspace's env-gated
+early-return receipts. Independent runtime revalidation requested for the
+two finite context fixes only. Workspace84768 (7558 tests) and broader
+51-case controls22081/9538 remain confirmed live; do not commit or claim
+global parity from these focused windows.
+
+Independent reviewer inspected the actual focused logs and closes both
+finite must-fixes (all four aliases and legacy logical default index), with
+the lifecycle window also PASS in both references. Approval is explicitly
+not all GREEN: each round3PASS/1FAIL, clippy retains253/269 warnings and WASM
+is compilation only. No commit or full dual closure until workspace84768
+and both broader51-case batches22081/9538 terminate and are revalidated.
+
+Frozen workspace84768 terminated/reaped exit0:7558/7558PASS,36slow,9skip,
+260.337s, /tmp/ares-lifecycle-context-final-workspace.log. Keep the activated
+native-reference receipts separate from env-gated workspace tests. Both
+51-case reference handles22081/9538 still run; their terminal totals and
+independent runtime review remain required before a local checkpoint.
+
+Final broader reference handles22081/9538 terminated/reaped exit100:
+official50PASS/1FAIL378.832s, seeded50PASS/1FAIL425.235s. Both batches
+preserve all47 existing strict complete-output controls and pass all3 new
+native-first lifecycle diagnostics. The only failure is the unchanged public
+dual baseline/modifier complete assertion,10.850s /14.108s respectively.
+Do not label the diagnostic3 as complete-output parity cases. Final fmt/diff
+checks exit0, all current validation handles are terminal/reaped, and the
+source remains frozen. Submit these final receipts for independent six-axis
+approval of a local lifecycle checkpoint only; no push/full dual closure.
+
+This checkpoint includes old-end/new-start ordering, physical end/logical
+start IDs, live template write-back, per-tool cut/EC aliases and explicit
+logical legacy-vector context. Required remaining source slices still include
+startup/end callers, full toolchange retract/wipe/counters/custom change and
+temperature/PA handling, per-tool skirt/brim and subset instance ordering,
+and all-tool output accounting. They stay open in this milestone; a local
+checkpoint does not waive them or close all-printer/all-option scope.
+
+Final independent six-axis review found no new must-fix and approves only
+this finite code+docs local checkpoint. Commit body must retain full dual RED
+and the remaining startup/end/full-transition/per-tool allocation/ordering/
+accounting scope. No push/main or complete multi-tool/all-printer claim.

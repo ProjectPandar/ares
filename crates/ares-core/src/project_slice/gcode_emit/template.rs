@@ -17,6 +17,14 @@ struct Arm {
 }
 
 pub(super) fn render(template: &str, config: &mut Config) -> Result<String, String> {
+    render_for_filament(template, config, 0)
+}
+
+pub(super) fn render_for_filament(
+    template: &str,
+    config: &mut Config,
+    filament: usize,
+) -> Result<String, String> {
     // Upstream `process_macro` calls `qi::phrase_parse` with the ASCII
     // whitespace skipper (`PlaceholderParser.cpp:2510-2517`), which runs
     // `skip_over` BEFORE the grammar — the template's leading
@@ -24,7 +32,7 @@ pub(super) fn render(template: &str, config: &mut Config) -> Result<String, Stri
     // `" _SP_PRINT_START"` loses its leading space).
     let template = template.trim_start_matches([' ', '\t', '\r', '\n']);
     let nodes = parse(template)?;
-    render_nodes(&nodes, config)
+    render_nodes(&nodes, config, filament)
 }
 
 fn parse(template: &str) -> Result<Vec<Node>, String> {
@@ -194,11 +202,11 @@ enum Directive {
     clippy::excessive_nesting,
     reason = "branch selection stays with node rendering"
 )]
-fn render_nodes(nodes: &[Node], config: &mut Config) -> Result<String, String> {
+fn render_nodes(nodes: &[Node], config: &mut Config, filament: usize) -> Result<String, String> {
     let mut output = String::new();
     for node in nodes {
         match node {
-            Node::Text(text) => output.push_str(&render_text(text, config)?),
+            Node::Text(text) => output.push_str(&render_text(text, config, filament)?),
             Node::Branch { arms } => {
                 for arm in arms {
                     let selected = match &arm.condition {
@@ -208,7 +216,7 @@ fn render_nodes(nodes: &[Node], config: &mut Config) -> Result<String, String> {
                             .as_bool(),
                     };
                     if selected {
-                        output.push_str(&render_nodes(&arm.nodes, config)?);
+                        output.push_str(&render_nodes(&arm.nodes, config, filament)?);
                         break;
                     }
                 }
@@ -218,7 +226,7 @@ fn render_nodes(nodes: &[Node], config: &mut Config) -> Result<String, String> {
     Ok(output)
 }
 
-fn render_text(text: &str, config: &mut Config) -> Result<String, String> {
+fn render_text(text: &str, config: &mut Config, filament: usize) -> Result<String, String> {
     let mut output = String::new();
     let mut index = 0;
     while index < text.len() {
@@ -260,7 +268,10 @@ fn render_text(text: &str, config: &mut Config) -> Result<String, String> {
         }
         let value =
             evaluate(expression, config).map_err(|error| format!("{error} in {expression}"))?;
-        let value = value.index(0).unwrap_or(&value);
+        // `PlaceholderParser.cpp:915`: legacy vectors use the process call's
+        // logical filament context, not a template's physical extruder ID.
+        let vector_index = if delimiter == '[' { filament } else { 0 };
+        let value = value.index(vector_index).unwrap_or(&value);
         let rendered = if delimiter == '[' {
             value.as_legacy_string()
         } else {

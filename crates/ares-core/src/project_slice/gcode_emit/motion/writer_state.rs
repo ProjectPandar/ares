@@ -21,6 +21,10 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
 ) {
     state.initial_filaments.insert(config);
     if state.extruder_selected {
+        crate::project_slice::gcode_emit::placeholders::refresh_filament_aliases(
+            config,
+            state.extruders.active_id(),
+        );
         for name in ["current_extruder", "filament_extruder_id"] {
             config.insert(name, Value::Integer(state.extruders.active_id() as i64));
         }

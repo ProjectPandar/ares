@@ -4,6 +4,8 @@ mod cut_retraction;
 mod tests;
 mod timestamp;
 
+pub(super) use cut_retraction::insert_aliases as refresh_filament_aliases;
+
 use crate::{
     GenerationMetadata, SliceError,
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -221,22 +223,7 @@ fn insert_runtime_placeholders(
     config.insert("input_filename_base", Value::String(input_filename));
     config.insert("zhop", Value::number(0.0));
     cut_retraction::insert(config, &traversal.resolved.views.runtime_gcode);
-    for (target, source) in [
-        (
-            "retraction_distance_when_cut",
-            "retraction_distances_when_cut",
-        ),
-        ("long_retraction_when_cut", "long_retractions_when_cut"),
-        (
-            "retraction_distance_when_ec",
-            "retraction_distances_when_ec",
-        ),
-        ("long_retraction_when_ec", "long_retractions_when_ec"),
-    ] {
-        if let Some(value) = config.get(source).and_then(|value| value.index(0)).cloned() {
-            config.insert(target, value);
-        }
-    }
+    refresh_filament_aliases(config, 0);
     config.insert(
         "position",
         Value::List(vec![
