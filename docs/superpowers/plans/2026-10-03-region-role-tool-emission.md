@@ -1,5 +1,71 @@
 # Region-role tool emission implementation plan
 
+## 8598ce2c Organic zero-angle regression audit
+
+User-requested audit runs on clean production commit
+8598ce2cd1f2c19ef2dd6eaaaadf365a3728e393 before any footer changes.
+No production code, fixture, comparator or reference executable is changed.
+Fresh seeded public complete test62968 exits0:1run1PASS,359skipped,
+3.727s; /tmp/ares-8598-organic-seeded.log and case-axvmAl retain artifacts.
+That export has a different ZIP container hash; it is not the identical-input
+replay evidence below.
+
+Re-slice the exact saved failing input
+/tmp/ares-same-xy-official-controls/case-i6safk/input.3mf, SHA256
+186cb8ac69a084e96918dfd6571f8c19c72f680a806b5ea14c62d8d5b386f3ef,
+without re-exporting or modifying it. Official CPU0 executions6105/38906
+both terminate/reap0; seeded CPU0 execution92010 terminates/reaps0.
+Native command in each case is `--slice 0 --outputdir <distinct-directory>
+<same-input.3mf>`. Logs and output roots are respectively
+/tmp/ares-8598-organic-official-one(.log), official-two(.log), and
+seeded-same-input(.log). Official executable SHA256 remains
+64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60;
+seeded ELF remains8f0cf69dd9494ccfe53bf6749d6b685ccb5a0dd0df206694ce50d421007cc03d,
+seed0/CPU0, with official originals preserved. Both fresh official complete
+files have identical raw SHA256
+4ccf3f5d08fcf0f66020242bac6de523e00d922fe5296dee4ebb7f2f0ee846b7;
+seeded raw output SHA256 is
+1ca87d88f32e20ed333377ede6c02e1ab309fc0951d9c725feef13838f6aa833.
+
+Use existing replay::orca_parity_replay_sweep and unchanged
+ordered_bytes_generator_only comparator for complete streams, not an ad-hoc
+body comparison. Three fresh references2199 exit0:3/3complete comparisons
+PASS, /tmp/ares-8598-organic-replay-results/replay-summary.json.
+Then retain and replay the original failing official stream alongside them:
+72892 terminates/reaps100:3PASS/1DIVERGENT, four complete comparisons,
+/tmp/ares-8598-organic-replay-with-failure/replay-summary.json. Original
+failure reproduces exactly at byte61544/line2340, equal normalized lengths
+1372385: native X113.388Y113.135 versus Ares X113.244Y113.297.
+Cached-stream manifests alone do not establish producer identity; the native
+execution commands, executable hashes and retained outputs above establish
+which fresh streams were selected. No cached replay is called a fresh native
+execution.
+
+All four Ares outputs, the fresh public seeded case and historical PASS/FAIL
+readbacks have the same raw SHA256
+17608457aa4f81b14981315a50b030a4f39019b81cb5598b98b190db5a6bbc6c.
+The old and fresh official streams exchange two Internal solid infill blocks
+at line2340, with later M73 placement differences. Thus the exact same input
+and unchanged official executable produce different reference bodies across
+the earlier failure and these replays, while unchanged Ares matches both
+fresh official CPU0 runs and seeded output under the strict comparator.
+Conclusion: observed official-reference ordering variability, with no
+8598ce2c output regression demonstrated for this case. Two fresh passes do
+not prove universal official determinism or identify its internal cause.
+Keep the original official77/2 broad receipt and its failure; do not relabel
+that run green. This audit clears the requested prerequisite for the next
+source-owned live footer layer_num slice, not global parity completion.
+
+Documentation-only audit: fmt and diff checks exit0; cached workspace
+all-targets clippy exits0(0.27s), /tmp/ares-8598-organic-audit-clippy.log,
+existing warnings retained. No Rust changes or DEBUG probe diff. Prior
+8598ce2c full-workspace/WASM/browser receipts remain the production gates;
+this audit does not claim a new full-workspace or browser run.
+Independent six-axis reviewer approves this single-file documentation
+checkpoint for commit and feature-branch push after reading the fresh strict
+replays, hashes and diff. Approval excludes footer changes, main merge and
+global completion.
+
 ## Current slice: layer63 later-tool travel waypoint
 
 Counterfactual prebuild38092 exits0. Runtime82596 terminates/reaps100,
