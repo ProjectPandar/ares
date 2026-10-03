@@ -120,6 +120,15 @@ one-based with commas, not a count or a physical-nozzle map. This implements
 configuration-time usage inventory remains separate from generated layer
 tools. Header repair does not close the deferred statistics/transition gaps.
 
+`DoExport::total_toolchanges_from_ordering` (`GCode.cpp:2289–2309`) counts
+logical transitions through ordered layers, not unique tools or hardware
+switches. First selection is excluded; empty layers preserve the prior ID.
+Cache the non-tower prediction once in the existing immutable export metadata
+shell and share it with template refresh (`2896`) and the positive-only
+compatible summary (`3539–3542`). Preserve sequential upstream empty-Print-
+ordering's zero. Tower-provided count precedence remains an adjacent deferred
+source slice; the prediction is not runtime `GCode::m_toolchange_count`.
+
 Printing transitions render the old filament-end before writer selection and
 the new filament-start afterward, sharing the live writer's template refresh
 and write-back. Upstream end-template filament_extruder_id is the old mapped

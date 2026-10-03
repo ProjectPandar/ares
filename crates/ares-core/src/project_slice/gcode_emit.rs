@@ -219,9 +219,9 @@ pub(super) fn emit(
     finish::append_compatible_stats(
         &mut output,
         traversal,
-        total_weight,
-        total_cost,
+        (total_weight, total_cost),
         tail_layer_count,
+        state.initial_filaments.total_toolchanges(),
     );
     output.push(b'\n');
     // Upstream applies FanMover ONLY to layer-chunk output (the tbb

@@ -1537,3 +1537,98 @@ receipt and approved the finite header-ID code+test+docs local checkpoint,
 with no new must-fix. Approval excludes push/main merge and complete dual
 or global goal closure. Next original full-output gap is schedule-derived
 total_toolchanges and remaining transition/time/extrusion accounting.
+
+## Non-tower scheduled total tool changes
+
+Start checkpoint11742228, clean. Fresh unchanged public full replay18814
+exit100,2.473s, /tmp/ares-tool-count-current-red.log and matching artifacts:
+baseline byte998,line33 total_toolchanges16vs0; modifier byte718,line25
+M73 R17vsR16. Hypotheses: uninstalled prediction, missing cross-layer changes,
+or physical/logical confusion. Inspecting placeholders.rs confirms prediction
+still defaults to0; upstream owner is `GCode.cpp` DoExport's
+total_toolchanges_from_ordering2289–2300/resolve_total_toolchanges2304–2309.
+
+Same approved public 3MF-to-output seam, native-first diagnostic in
+compatible_regions/tool_templates.rs: comment templates expose integer
+total_toolchanges and division-by3, and compatible summary must report16.
+Obtain actual RED before changing production. Port one-pass ordered logical
+transition counting (skip first/repeated IDs, preserve last across layers).
+Compute once in existing InitialFilaments immutable export shell, install
+Integer through shared metadata refresh and reuse value in positive-only
+finish.rs summary. Keep source sequential empty global ordering prediction0;
+no new support guard or output assertion relaxation. Tower count precedence,
+dynamic toolchange_count and other accounting remain deferred/open.
+
+Independent read-only boundary review agrees with this metadata owner and
+requires the above logical/sequential/tower distinctions. Verify tracer and
+prior strict full-output controls against both references, retain original
+dual RED, then workspace/fmt/clippy/WASM and final six-axis local review.
+
+Red build20940 exit0,11.42s. Native-first tracer99828 terminated/reaped
+exit100,1.848s, /tmp/ares-tool-count-red.log and case-n5Et0N. All native
+template and summary assertions pass; Ares emits `0 0` instead of `16 5`.
+Implement only after this valid RED: ToolOrdering one-pass prediction,
+InitialFilaments immutable Integer installation and shared positive-only
+compatible tail summary. Aggregate weight/cost arguments into their existing
+pair to retain five finish parameters without new argument-count warnings.
+
+First implementation patch matched the earlier first_non_support call rather
+than the struct initializer: fmt37464 exit1 and build69908 exit101 (parse
+error/missing field), /tmp/ares-tool-count-build.log. Both terminal before
+correction. Move the initializer to its intended struct; these are compile
+failures, not a new behavioral RED or a verified source snapshot.
+
+Corrected fmt5841 exit0 and build88964 exit0,1m15s. Independent static
+six-axis review finds no new must-fix and confirms logical transition
+semantics, sequential0, shared Integer/summary owner and deferred tower
+precedence. Source frozen. Clippy13091 exit0,2m17s, unchanged253lib/269test
+warnings; WASM core+adapter79595 exit0,2m33s (compile only). Final fmt56876
+and diff checks exit0. Prebuild all workspace tests55201 with unrestricted
+CPU before approved whole-process CPU0 replays, avoiding single-CPU compile
+cost; this build remains live and is not yet accepted as complete.
+
+Prebuild55201 exit0,2m47s. Official84634 terminated/reaped exit100:
+52PASS/2FAIL257.274s; seeded50673 exit100:53PASS/1FAIL303.498s. New total
+diagnostic PASS3.748s/4.918s, all prior windows pass. Original dual remains
+RED: baseline now first differs byte1726,line124 (native M73 P6 R14 versus
+Ares G92 E0); modifier remains byte718,line25 M73 R17vsR16. Actual logs
+/tmp/ares-tool-count-{official,seeded}.log and matching artifacts retained.
+
+Official also fails manual Snug painted at byte6778,line263: M73 P3 R28
+falls before rather than after the next motion. Do not erase this FAIL or
+report official53/1. Case-mz42Be current FAIL and prior header slice official
+case-0cJAce PASS have byte-identical input.3mf (SHA9802720d91bebeb8c8789462512e99e1f31699fb0c2eb04d6462adc1b0b0171d)
+and byte-identical Ares.gcode (SHAb55b8c274069dfb712f0333c84d6f1eeb0015b9a83c41eae7d0f7d4a322431e1),
+both cmp exit0. Native outputs differ after excluding generated-date line:
+first M73 position, then reordered small solid-fill blocks around original
+line2143, followed by more shifted M73 positions. Thus not an Ares-output
+regression from this slice; native cause is not established. Current seeded
+PASS case-urSYzY has the same Ares SHA. Preserve all raw artifacts/provenance
+limits; do not alter geometry or filter M73 in the acceptance comparator.
+Run unchanged public Snug official replays alone, then full workspace alone.
+
+Independent review confirms byte-identical input and Ares output against the
+prior PASS, and actual native differences; do not infer a specific native
+mechanism. Unchanged official public Snug replay72604 exit0/PASS3.149s,
+case-Ab0lbo; replay86788 exit0/PASS3.135s,case-wE1Fbd. Both replay input.3mf
+and Ares.gcode cmp exit0 against failing case-mz42Be; original full comparator
+PASS without filtering M73 or geometry. Logs
+/tmp/ares-tool-count-snug-official-replay{1,2}.log and artifacts retained.
+These separate exact-input PASS receipts do not change official batch52/2.
+All external batches/replays terminal/reaped; start full unchanged workspace
+alone, /tmp/ares-tool-count-workspace.log. Source still frozen. Await actual
+terminal summary and final independent six-axis approval before checkpoint.
+
+Full workspace84987 terminated/reaped exit0:7561PASS,35slow,9SKIP,
+258.345s, /tmp/ares-tool-count-workspace.log, unchanged configured num-cpus
+parallelism and no external batches. Source stayed frozen; fmt/diff/clippy/
+WASM receipts remain applicable. Request final independent six-axis local
+code+test+docs approval. Keep official52/2 and seeded53/1 plus the separate
+exact-input official Snug2PASS receipts; complete dual remains RED and neither
+reference internal cause nor tower/dynamic/full accounting is claimed closed.
+
+Independent final six-axis review verified actual7561PASS and all retained
+reference/replay receipts; approved this finite non-tower prediction
+code+test+docs local checkpoint with no new must-fix. Approval excludes
+push/main merge, complete dual parity, tower precedence, dynamic counters
+and global printer/option completion.

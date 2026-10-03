@@ -161,6 +161,45 @@ fn filament_header_lists_scheduled_logical_ids_not_their_count() {
     }
 }
 
+#[test]
+fn scheduled_toolchange_total_is_shared_by_templates_and_summary() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(
+        "; scheduled start {total_toolchanges} {total_toolchanges / 3}",
+        "; scheduled end {total_toolchanges} {total_toolchanges / 3}",
+        false,
+        &[],
+    );
+    for (label, bytes) in [("native", &reference), ("Ares", &actual)] {
+        let output = std::str::from_utf8(bytes).unwrap();
+        for prefix in ["; scheduled start ", "; scheduled end "] {
+            let lines = output
+                .lines()
+                .filter(|line| line.starts_with(prefix))
+                .collect::<Vec<_>>();
+            assert!(
+                !lines.is_empty(),
+                "{label}: scheduled-count template absent"
+            );
+            for line in lines {
+                assert_eq!(
+                    line.strip_prefix(prefix),
+                    Some("16 5"),
+                    "{label}: immutable integer prediction"
+                );
+            }
+        }
+        assert!(
+            output
+                .lines()
+                .any(|line| line == "; total filament change = 16"),
+            "{label}: compatible summary shares the prediction"
+        );
+    }
+}
+
 fn outputs(
     start: &str,
     end: &str,

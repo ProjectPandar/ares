@@ -70,3 +70,14 @@ instead of the configuration usage count. Include comma-separated logical
 IDs for actual scheduled tools; defer per-tool statistics and remaining
 transition behavior. A public native-first header diagnostic supplements,
 but never replaces, the unchanged full baseline/modifier acceptance test.
+
+The non-tower total-change slice ports `GCode.cpp`'s
+`DoExport::total_toolchanges_from_ordering` (2289–2300), its resolver fallback
+(2304–2309), parser installation (2896), and compatible summary (3539–3542).
+Destination: `gcode_emit/tool_ordering.rs`, existing immutable export metadata
+in `machine/first_filaments.rs`, and `finish.rs`. Include logical transitions
+across ordered layers, excluding first selection, integer placeholder and
+positive-only summary. Sequential Print ordering is empty upstream and yields
+zero. Defer tower-produced count precedence, dynamic `m_toolchange_count`,
+custom transition behavior and other filament/time accounting. The existing
+metadata struct is a temporary export shell, not a new source domain model.

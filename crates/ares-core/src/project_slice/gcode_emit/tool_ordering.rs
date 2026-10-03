@@ -26,6 +26,19 @@ pub(super) struct ToolOrdering {
 }
 
 impl ToolOrdering {
+    /// `DoExport::total_toolchanges_from_ordering` (`GCode.cpp:2289–2300`).
+    pub(super) fn total_toolchanges(&self) -> usize {
+        let mut last = None;
+        let mut changes = 0;
+        for filament in self.ordered_tools() {
+            if last.is_some_and(|last| last != filament) {
+                changes += 1;
+            }
+            last = Some(filament);
+        }
+        changes
+    }
+
     pub(super) fn all_extruders(&self) -> &[usize] {
         &self.all_extruders
     }

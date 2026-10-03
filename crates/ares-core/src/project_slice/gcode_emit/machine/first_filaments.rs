@@ -9,6 +9,8 @@ mod tests;
 
 /// `ToolOrdering::cal_non_support_filaments` and the physical-hotend remap in
 /// `GCode.cpp:2721-2851`. Unused physical hotends remain `-1`.
+/// This export metadata shell also caches the non-tower total-change
+/// prediction installed by `DoExport` (`GCode.cpp:2289–2309,2896`).
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct InitialFilaments {
     initial: usize,
@@ -17,9 +19,14 @@ pub(in crate::project_slice::gcode_emit) struct InitialFilaments {
     non_support_hotend: i32,
     first: Vec<i32>,
     first_non_support: Vec<i32>,
+    total_toolchanges: usize,
 }
 
 impl InitialFilaments {
+    pub(in crate::project_slice::gcode_emit) fn total_toolchanges(&self) -> usize {
+        self.total_toolchanges
+    }
+
     pub(in crate::project_slice::gcode_emit) fn initial(&self) -> usize {
         self.initial
     }
@@ -29,6 +36,10 @@ impl InitialFilaments {
     }
 
     pub(in crate::project_slice::gcode_emit) fn insert(&self, config: &mut value::Config) {
+        config.insert(
+            "total_toolchanges",
+            value::Value::Integer(self.total_toolchanges as i64),
+        );
         for (name, id) in [
             ("initial_tool", self.initial),
             ("initial_extruder", self.initial),
@@ -140,6 +151,11 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
         non_support_hotend: hotend(non_support),
         first,
         first_non_support,
+        // Sequential upstream leaves the global Print tool ordering empty.
+        total_toolchanges: match settings.process.print.print_sequence {
+            crate::ProcessPrintSequence::ByLayer => ordering.total_toolchanges(),
+            crate::ProcessPrintSequence::ByObject => 0,
+        },
     }
 }
 
