@@ -18,8 +18,6 @@ use super::mark::mark_boundary_segments_overlapping_infill;
 use crate::fill::connect::graph::build_working_graph;
 use crate::geometry::{BoundingBox, Point, Polyline};
 
-const SCALED_EPSILON: f64 = 16.0;
-
 pub(crate) fn connect_base_support(
     infill_ordered: Vec<Polyline>,
     boundary_source: &[crate::geometry::Polygon],
@@ -30,6 +28,7 @@ pub(crate) fn connect_base_support(
     context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, crate::geometry::ClipperError> {
     let scaled_spacing = spacing / scale.factor();
+    let scaled_epsilon = scale.scaled_delta(0.0001);
     let graph = build_working_graph(infill_ordered, boundary_source, bbox, spacing, scale)?;
     let mut paths = graph.paths.clone();
     let mut intersections = graph.intersections.clone();
@@ -44,7 +43,7 @@ pub(crate) fn connect_base_support(
         &mut intersections,
         &paths_as_polylines(&paths),
         scaled_spacing,
-        SCALED_EPSILON,
+        scaled_epsilon,
     );
 
     let mut polylines_out = Vec::new();
@@ -84,6 +83,7 @@ pub(crate) fn connect_base_support(
         line_half_width,
         min_arch_length,
         trim_length,
+        scaled_epsilon,
     );
 
     // Vertical-arch consumption (`:2425-2455`).
@@ -113,6 +113,7 @@ pub(crate) fn connect_base_support(
         line_half_width,
         line_spacing,
         costs.very_high,
+        scaled_epsilon,
     );
 
     // Final assembly (`:2693-2697`): the connected chains follow the

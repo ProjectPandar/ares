@@ -6,8 +6,6 @@ use crate::fill::connect::contour::{append_full, append_limited};
 use crate::fill::connect::types::Intersection;
 use crate::geometry::{Point, Polyline};
 
-pub(super) const SCALED_EPSILON: f64 = 16.0;
-
 /// SupportArcCost (`:2173-2182` + `evaluate_support_arches`
 /// `:2203-2243`): the max deviation of each candidate arc from its
 #[derive(Clone, Copy)]

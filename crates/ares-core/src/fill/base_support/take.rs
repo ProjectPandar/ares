@@ -9,8 +9,6 @@ use crate::fill::connect::contour::{
 use crate::fill::connect::types::{Intersection, WorkingGraph};
 use crate::geometry::Point;
 
-const SCALED_EPSILON: f64 = 16.0;
-
 #[expect(
     clippy::too_many_arguments,
     reason = "the source take_next keeps its arc-trimming scalars explicit"
@@ -24,6 +22,7 @@ pub(super) fn take_next(
     take_first: bool,
     line_half_width: f64,
     trim_length: f64,
+    scaled_epsilon: f64,
 ) {
     let next = intersections[index].next.expect("connected arc");
     // Upstream `:2384-2386`: cp1 = the passed index, cp2 = its
@@ -64,11 +63,11 @@ pub(super) fn take_next(
                 )
             };
             if take_first {
-                intersections[cp1].trim_next((length - trim_length - SCALED_EPSILON).max(0.0));
+                intersections[cp1].trim_next((length - trim_length - scaled_epsilon).max(0.0));
                 intersections[cp2].trim_prev(0.0);
             } else {
                 intersections[cp1].trim_next(0.0);
-                intersections[cp2].trim_prev((length - trim_length - SCALED_EPSILON).max(0.0));
+                intersections[cp2].trim_prev((length - trim_length - scaled_epsilon).max(0.0));
             }
         }
     }
@@ -97,6 +96,7 @@ pub(super) fn take_next(
                 clockwise,
                 1e10,
                 line_half_width,
+                scaled_epsilon,
             );
         }
     } else if !intersections[cp1].consumed && !intersections[cp2].consumed {
@@ -163,11 +163,12 @@ fn take_limited(
     clockwise: bool,
     take_max_length: f64,
     line_half_width: f64,
+    scaled_epsilon: f64,
 ) {
     let could_take = if clockwise {
-        !intersections[cp_start].consumed && intersections[cp_start].not_taken_prev > SCALED_EPSILON
+        !intersections[cp_start].consumed && intersections[cp_start].not_taken_prev > scaled_epsilon
     } else {
-        !intersections[cp_start].consumed && intersections[cp_start].not_taken_next > SCALED_EPSILON
+        !intersections[cp_start].consumed && intersections[cp_start].not_taken_next > scaled_epsilon
     };
     if !could_take {
         return;
@@ -192,7 +193,7 @@ fn take_limited(
         });
         intersections[cp_start].consume_prev();
         intersections[cp_start].consume_next();
-        if length_to_go > SCALED_EPSILON {
+        if length_to_go > scaled_epsilon {
             let index = intersections[cp_start].point_index;
             append_limited(
                 target,
@@ -201,7 +202,7 @@ fn take_limited(
                 index,
                 clockwise,
                 length_to_go,
-                SCALED_EPSILON,
+                scaled_epsilon,
             );
         }
     } else {
@@ -240,7 +241,7 @@ fn take_limited(
                 intersections[cp].consume_next();
             }
             if l >= length_to_go {
-                if length_to_go > SCALED_EPSILON {
+                if length_to_go > scaled_epsilon {
                     if clockwise {
                         intersections[neighbor].trim_next(l - length_to_go);
                     } else {
@@ -253,7 +254,7 @@ fn take_limited(
                         intersections[neighbor].point_index,
                         clockwise,
                         length_to_go,
-                        SCALED_EPSILON,
+                        scaled_epsilon,
                     );
                 }
                 break;

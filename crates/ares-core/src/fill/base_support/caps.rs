@@ -2,7 +2,7 @@
 //! from `OrcaSlicer/src/libslic3r/Fill/FillBase.cpp:2648-2691`, plus
 //! `Polyline::clip_start` / `clip_end` (`Polyline.cpp:52-101`).
 
-use super::arches::{SCALED_EPSILON, SupportArcCost};
+use super::arches::SupportArcCost;
 use crate::fill::connect::contour::append_limited;
 use crate::fill::connect::types::{BoundaryContour, Intersection};
 use crate::geometry::{Point, Polyline};
@@ -21,6 +21,7 @@ pub(super) fn emit_very_long_arches(
     line_half_width: f64,
     line_spacing: f64,
     cost_veryhigh: f64,
+    scaled_epsilon: f64,
 ) {
     let cap_cost = 0.5 * line_spacing;
     for index in 0..intersections.len() {
@@ -35,6 +36,7 @@ pub(super) fn emit_very_long_arches(
             cap_cost,
             cost_veryhigh,
             line_half_width,
+            scaled_epsilon,
             polylines_out,
         );
         emit_long_arc(
@@ -46,6 +48,7 @@ pub(super) fn emit_very_long_arches(
             cap_cost,
             cost_veryhigh,
             line_half_width,
+            scaled_epsilon,
             polylines_out,
         );
     }
@@ -66,6 +69,7 @@ fn emit_long_arc(
     cap_cost: f64,
     cost_veryhigh: f64,
     line_half_width: f64,
+    scaled_epsilon: f64,
     polylines_out: &mut Vec<Polyline>,
 ) {
     let other = index ^ 1;
@@ -84,7 +88,7 @@ fn emit_long_arc(
     } else {
         intersections[index].not_taken_next
     };
-    if not_taken <= SCALED_EPSILON || cost <= threshold {
+    if not_taken <= scaled_epsilon || cost <= threshold {
         return;
     }
     if prev && !intersections[index].prev_trimmed {
@@ -100,7 +104,7 @@ fn emit_long_arc(
     } else {
         intersections[index].not_taken_next
     };
-    if not_taken <= SCALED_EPSILON {
+    if not_taken <= scaled_epsilon {
         return;
     }
     let contour_index = intersections[index].contour_index.expect("connected arch");
@@ -113,7 +117,7 @@ fn emit_long_arc(
         intersections[neighbor].point_index,
         prev,
         not_taken,
-        SCALED_EPSILON,
+        scaled_epsilon,
     );
     if prev {
         intersections[index].trim_prev(0.0);

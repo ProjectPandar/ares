@@ -11,9 +11,6 @@ use crate::fill::connect::contour::{closed_contour_distance_ccw, closed_contour_
 use crate::fill::connect::types::{Intersection, WorkingGraph};
 use crate::geometry::{Point, Polyline};
 
-/// SCALED_EPSILON = scale_(EPSILON) = 1e-4 / 1e-6 = 100 lattice units.
-const SCALED_EPSILON: f64 = 100.0;
-
 pub(super) fn mark_boundary_segments_overlapping_infill(
     boundary: &[crate::fill::connect::types::BoundaryContour],
     intersections: &mut [Intersection],
@@ -21,7 +18,7 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
     spacing: f64,
     scaled_epsilon: f64,
 ) {
-    let radius = 0.5 * (spacing + SCALED_EPSILON);
+    let radius = 0.5 * (spacing + scaled_epsilon);
     for index in 0..intersections.len() {
         let Some(contour_index) = intersections[index].contour_index else {
             continue;

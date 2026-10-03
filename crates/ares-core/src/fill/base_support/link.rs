@@ -5,7 +5,7 @@
 //! `:2577-2592` and left caps `:2596-2607` (the very-long-arch
 //! emission lives in [`super::caps`], the T-joints follow here).
 
-use super::arches::{SCALED_EPSILON, SupportArcCost, evaluate_support_arches};
+use super::arches::{SupportArcCost, evaluate_support_arches};
 use super::take::{resolve_merged, take_next};
 use crate::fill::connect::types::{BoundaryContour, Intersection};
 use crate::geometry::Point;
@@ -19,6 +19,7 @@ pub(super) struct LinkPhases<'a> {
     line_half_width: f64,
     min_arch_length: f64,
     trim_length: f64,
+    scaled_epsilon: f64,
 }
 
 impl<'a> LinkPhases<'a> {
@@ -35,6 +36,7 @@ impl<'a> LinkPhases<'a> {
         line_half_width: f64,
         min_arch_length: f64,
         trim_length: f64,
+        scaled_epsilon: f64,
     ) -> LinkPhases<'a> {
         LinkPhases {
             boundary,
@@ -44,6 +46,7 @@ impl<'a> LinkPhases<'a> {
             line_half_width,
             min_arch_length,
             trim_length,
+            scaled_epsilon,
         }
     }
 
@@ -57,17 +60,18 @@ impl<'a> LinkPhases<'a> {
             take_first,
             self.line_half_width,
             self.trim_length,
+            self.scaled_epsilon,
         );
     }
 
     fn could_take_prev(&self, index: usize) -> bool {
         !self.intersections[index].consumed
-            && self.intersections[index].not_taken_prev > SCALED_EPSILON
+            && self.intersections[index].not_taken_prev > self.scaled_epsilon
     }
 
     fn could_take_next(&self, index: usize) -> bool {
         !self.intersections[index].consumed
-            && self.intersections[index].not_taken_next > SCALED_EPSILON
+            && self.intersections[index].not_taken_next > self.scaled_epsilon
     }
 
     fn same_chain(&self, left: usize, right: usize) -> bool {
@@ -85,19 +89,20 @@ impl<'a> LinkPhases<'a> {
                 self.intersections[index].prev,
                 self.intersections[index].next,
             );
-            let can_take_prev = prev.is_some_and(|prev| {
-                vertical_dir(self.boundary, self.intersections, index, prev)
-                    && !self.intersections[prev].consumed
-                    && prev != other
-            });
-            let can_take_next = next.is_some_and(|next| {
-                vertical_dir(self.boundary, self.intersections, index, next)
-                    && !self.intersections[next].consumed
-                    && next != other
-            });
+            let can_take_prev = self.could_take_prev(index)
+                && prev.is_some_and(|prev| {
+                    vertical_dir(self.boundary, self.intersections, index, prev)
+                        && !self.intersections[prev].consumed
+                        && prev != other
+                });
+            let can_take_next = self.could_take_next(index)
+                && next.is_some_and(|next| {
+                    vertical_dir(self.boundary, self.intersections, index, next)
+                        && !self.intersections[next].consumed
+                        && next != other
+                });
             if can_take_prev && (!can_take_next || take_vertical_prev(self.intersections, index)) {
-                let prev = self.intersections[index].prev.expect("checked above");
-                self.take_vertical(prev, false);
+                self.take_vertical(index, false);
             } else if can_take_next {
                 self.take_vertical(index, true);
             }
@@ -119,7 +124,12 @@ impl<'a> LinkPhases<'a> {
             )
         };
         if !trimmed || not_taken > self.min_arch_length {
-            self.take(index, take_first);
+            let take_index = if take_first {
+                index
+            } else {
+                self.intersections[index].prev.expect("checked above")
+            };
+            self.take(take_index, take_first);
         }
     }
 
@@ -135,7 +145,7 @@ impl<'a> LinkPhases<'a> {
             self.boundary,
             self.intersections,
             self.paths,
-            SCALED_EPSILON,
+            self.scaled_epsilon,
         );
         let cost_low = costs.low;
         let cost_high = costs.high;
