@@ -6,27 +6,37 @@ use super::*;
 pub(super) fn append_inward_move(
     output: &mut Vec<u8>,
     paths: &[ExtrusionPath],
-    loop_role: ExtrusionLoopRole,
+    clipping: (ExtrusionLoopRole, usize, f64),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
     let Some(first) = paths.first() else {
         return;
     };
-    let last = paths.last().unwrap();
+    let (loop_role, path_count, end_clip) = clipping;
+    let last = &paths[path_count - 1];
     if !state.options.wipe_on_loops
         || last.role != ExtrusionRole::ExternalPerimeter
         || state.options.wall_loops <= 1
         || first.polyline.points.len() < 2
-        || last.polyline.points.len() < 3
     {
+        return;
+    }
+
+    // GCode.cpp:5804,5994-6002 uses the clipped last path, but the original
+    // loop winding. The selected end-3 vertex precedes any inserted endpoint.
+    let (point_count, _) = super::super::clip::clipped_tail(
+        last.polyline.points.iter().map(|point| (point.x, point.y)),
+        end_clip / geometry.scale.factor(),
+    );
+    if point_count < 3 {
         return;
     }
 
     let point = inward_point(
         first.polyline.points[0],
         first.polyline.points[1],
-        last.polyline.points[last.polyline.points.len() - 3],
+        last.polyline.points[point_count - 3],
         (
             loop_role == ExtrusionLoopRole::Hole,
             loop_is_counter_clockwise(paths),

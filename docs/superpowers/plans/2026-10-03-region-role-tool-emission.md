@@ -1,5 +1,130 @@
 # Region-role tool emission implementation plan
 
+## Current slice: modifier loop exit
+
+Checkpoint5fb2e928 is pushed; worktree verified clean. Exact CLI prebuild exit0;
+fresh seededCPU0 original complete acceptance65136 terminal/reaped100,
+3.361s (/tmp/ares-modifier-waypoint-red.log): baseline PASS, modifier18606/905.
+Raw files case-salSPe locate the symptom atZ=.84 after two tiny outer-wall
+extrusions, not routed approach: native G1 X166.79 Y104.781 versus Ares
+X166.794 Y104.783. All preceding commands through this loop match.
+
+Approved public seam remains saved3MF to complete byte-output. Keep original
+fixture/full assertions; add a native-first fourth-layer object-output tracer,
+then the sole-variable reduce_crossing_wall=false control. Record complete
+comparison artifacts even for local diagnostics; no private geometry test.
+Owning source boundary is GCode.cpp::extrude_loop(5993–6033), with Point angle,
+rotation and integer conversion helpers; Rust destination is
+gcode_emit/motion/loop_paths/inward.rs and its loop-path consumer. Existing
+loop geometry adapters remain temporary upstream compatibility shells.
+Include only the measured loop-end move contract; adjacent seam/clipping,
+routing precision, region-flow and later modifier gaps remain open. First
+establish tracer RED/control verdicts, then rank falsifiable hypotheses; source
+must explain the differing destination before a production edit. Remove any
+temporary probes and run focused/full controls, fmt/clippy, platform/browser
+gates and independent six-axis review before logical code+docs commit/push.
+
+Native-first tracer prebuild82940 terminal/reaped0(12.14s), fmt77510 exit0;
+public runtime51693 terminal/reaped100,2.664s, same18606/905 whole-file first
+diff. Its complete fourth-layer first-object block differs only in the terminal
+inward move; native precondition passes. Artifacts /tmp/ares-modifier-exit-tracer-red
+case-vZYfYg preserve full input and both outputs. Add routing-off control next;
+do not change production until the control and source diagnosis distinguish
+this exit from the previous approach defect.
+
+Routing-off prebuild82640 terminal0(11.77s); control2185 terminal/reaped100,
+2.603s. Its fourth-layer block again differs only in the same inward endpoint,
+so routing is not load-bearing. Its whole file has separate earlier M73
+placement10599/552; preserve that output, not an all-file routing diagnosis.
+Ranked predictions: wrong clipped/unclipped angle inputs change direction;
+wrong point selection gives a distinct reference segment; shift/quantization
+changes distance despite matching direction. Source5993–6033 consumes already
+clipped paths(5804); current inward consumer receives original unclipped paths.
+Point::ccw_angle(81–89) and end-3 index themselves match, suggesting the
+container is wrong. No debugger installed; add one targetZ=.84/tiny-path probe
+for original points, seam gap and emitted cursor, then remove before commit.
+
+Probe build81000 terminal0(1m18); runtime57627 terminal100(2.653s) reproduces
+the target, but no probe lines appear. Exact layer_z==.84 plus an assumed raw
+point-count limit does not establish that the intended loop was inspected.
+Retarget by a narrow Z interval and the measured pre-exit writer cursor;
+do not infer its raw geometry from an unmatched probe.
+
+Retarget build16440 terminal0; runtime11793 terminal/reaped100(2.647s) now
+captures the intended loop: original A(4790011,4790011),B(4746960,4790011),
+C(4790011,4746960),A; seam_gap=.06mm; actual clipped extrusion cursor
+(4778026,4758944). Cutting60000scaled units removes the final C→A edge and
+shortens B→C, so a four-point closed path becomes three points and source
+end-3 moves fromB toA. Extend this target-only probe with actual orientation,
+last role, clipper result and pre-rotation integer point per independent
+preflight. Review also flags adjacent swapped-displacement-vector and missing
+pre-rotation truncation contracts; determine whether they affect this target
+before choosing scope. No acceptance reads diagnostic output.
+
+Expanded metadata runtime68312 terminal/reaped100:5m48 build,2.655s test,
+/tmp/ares-modifier-exit-metadata-probe.log. Confirmed ExternalPerimeter,
+orientation(false,true), clipped three points A,B,(4778026,4758944),
+pre-rotation integer(4781400,4790011). Compiler-only affinity was broadened;
+test/reference parents remainedCPU0. No source changed during that run.
+Temporary production probe removed. Include only clipped-tail ownership:
+share allocation-free tail query with current mutator, use existing emitted
+path_count/remaining_clip, retain original winding and scarf zero-clip paths.
+Do not change arithmetic helper: swapped displacement is not exercised here;
+pre-rotation fractional difference is below this formatted output's precision.
+Both remain explicit deferred gaps, not claimed parity. Formatter must finish
+before unrestricted prebuild, then CPU0 focused/full reference controls.
+
+Fix prebuild91134 exit0,1m16. First focused invocation used the wrong artifact
+environment name and failed before slicing; exclude it from behavior evidence.
+Corrected runtime87412 terminal/reaped100: four public travel diagnostics PASS
+(both fourth-layer exits and prior second-layer approaches), original full
+baseline PASS/modifier RED now26707/1293, native intermediate X165.821 Y104.78
+missing from Ares atZ1.88. Preserve complete outputs under
+/tmp/ares-modifier-exit-fix-focused-valid, log with same root suffix.log.
+Frozen clippy65441 exit0,1m20:253corelib/269coretest/31CLIparity unchanged;
+fmt14270/diff checks exit0, temporary production probes absent. Changed Rust
+files45/319/123LOC and diagnostic153LOC are below400. Independent source
+readback finds no new must-fix, but checkpoint waits for all frozen gates.
+
+Frozen source/test diff SHA256
+190ddfd61bccd471ddc5ebf63b407fab72aa3944028cbc78ff0ea7fa10b2e757.
+Seeded99331 terminal/reaped100:70run,69PASS/1FAIL,319.737s;
+/tmp/ares-modifier-exit-seeded-controls.log and matching artifacts preserve
+only original complete dual RED26707/1293. Workspace61352 terminal/reaped0:
+7580PASS,38slow,9skipped,266.792s, /tmp/ares-modifier-exit-workspace.log.
+Shared clip's three existing tests, spiral vase Z and current-spacing
+behavioral coverage PASS. No new test hooks or comparator normalization.
+Platform pipeline96075 terminal/reaped0:WASMbuild2m53 followed by bindings,
+WindowsGNUcheck37.96s,macOSDarwincheck37.15s. Compile checks are not native
+Windows/macOS runtime evidence. Chromium62312 terminal/reaped0:3/3PASS2.3m,
+/tmp/ares-modifier-exit-browser.log; actual completeKSR6321698bytes at
+/tmp/ares-wasm-gcode-yFnmD8/browser.gcode, SHA256
+91e2fce752e5dc6d7ed221b39209838000ba1cd1bf134e937a59a8b8d2d27ab4,
+same as previous checkpoint; repeated browser complete bytes identical.
+Official76838 terminal/reaped100:70run69PASS/1FAIL,203.707s;
+/tmp/ares-modifier-exit-official-controls.log and matching artifacts preserve
+same original modifier26707/1293. Default73117 terminal/reaped100:
+70run53PASS/17FAIL,15.132s, /tmp/ares-modifier-exit-default-controls.log,
+all artifacts retained. Default domain is not GREEN; controlled69/1 does not
+replace that receipt or prove all default failures share one cause.
+Read-only raw readback:100current cases versus98previous checkpoint,95raw
+Ares outputs identical; changed cases are four modifier-travel diagnostics
+(including two newly added runs sharing that label) and the targeted inherited
+second-filament modifier. Verification98627 terminal/reaped0 additionally
+checks all95matched pairs' ZIP member names/order and decompressed bytes:
+95identical,0misses. No unrelated raw Ares output changed in this finite suite.
+Reference hashes remain official64515d01...ba3b60 and seeded3d05d4cc...a3bfaa.
+Frozen source/test hash unchanged after all gates. Request independent final
+six-axis approval for this seven-file checkpoint only; complete modifier RED,
+adjacent inward arithmetic, default-domain parity and global coverage remain
+open. No main merge or global completion is requested.
+
+Independent final six-axis readback approves the seven-file finite checkpoint
+for feature-branch commit/push. Final fmt74897 terminal/reaped0, diff check0;
+production probe search and entire diff diagnostic-marker check are empty.
+Approval does not close the open modifier, arithmetic, default-domain or
+global coverage gaps. Document receipts remain with the code commit.
+
 ## Current slice: modifier approach routing
 
 Footer checkpoint81504219 is pushed and the worktree was clean. Fresh original

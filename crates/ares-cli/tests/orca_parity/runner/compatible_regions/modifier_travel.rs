@@ -3,6 +3,39 @@ use crate::presets::VendorProfiles;
 use serde_json::json;
 
 #[test]
+fn modifier_preserves_fourth_layer_outer_wall_exit() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(true);
+    let expected = fourth_layer_object(&reference);
+    assert!(expected.ends_with("G1 X166.79 Y104.781\n"));
+    assert_eq!(fourth_layer_object(&actual), expected);
+}
+
+#[test]
+fn modifier_without_wall_routing_preserves_fourth_layer_outer_wall_exit() {
+    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let (reference, actual) = outputs(false);
+    let expected = fourth_layer_object(&reference);
+    assert!(expected.ends_with("G1 X166.79 Y104.781\n"));
+    assert_eq!(fourth_layer_object(&actual), expected);
+}
+
+fn fourth_layer_object(bytes: &[u8]) -> &str {
+    std::str::from_utf8(bytes)
+        .unwrap()
+        .split(";Z:0.84\n")
+        .nth(1)
+        .unwrap()
+        .split("; stop printing object overhang.stl id:0 copy 0\n")
+        .next()
+        .unwrap()
+}
+
+#[test]
 fn modifier_preserves_second_layer_native_approach() {
     if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
         return;

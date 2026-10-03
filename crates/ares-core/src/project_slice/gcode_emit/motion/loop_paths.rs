@@ -43,7 +43,13 @@ pub(super) fn emit(
             );
         }
         state.wipe_path = wipe_points(&scarf.wipe_paths, geometry);
-        append_inward_move(output, &scarf.wipe_paths, loop_role, geometry, state);
+        append_inward_move(
+            output,
+            &scarf.wipe_paths,
+            (loop_role, scarf.wipe_paths.len(), 0.0),
+            geometry,
+            state,
+        );
         return;
     }
     // `GCode.cpp:4596-4612,5796-5804`: active vase layers keep complete
@@ -88,7 +94,13 @@ pub(super) fn emit(
         emitted_loop_path.extend(reversed.skip(usize::from(skip_first)));
     }
     state.wipe_path = emitted_loop_path;
-    append_inward_move(output, paths, loop_role, geometry, state);
+    append_inward_move(
+        output,
+        paths,
+        (loop_role, path_count, remaining_clip),
+        geometry,
+        state,
+    );
 }
 
 fn wipe_points(paths: &[ExtrusionPath], geometry: LayerGeometry<'_>) -> Vec<super::arc::Point> {

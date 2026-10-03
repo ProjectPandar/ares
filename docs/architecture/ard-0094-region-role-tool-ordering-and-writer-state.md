@@ -30,6 +30,21 @@ where they do not implement these upstream contracts.
 
 ## Decisions
 
+GCode.cpp::extrude_loop(5993–6033) owns the post-loop zero-E inward move.
+Its segment selection, direction, nozzle-limited shift and Point conversions
+belong in motion/loop_paths/inward.rs, not routed travel or an output formatter
+patch. Preserve public complete-output acceptance; isolate the measured move
+through saved3MF/raw G-code. The measured clipped-tail consumer includes
+ExtrusionLoop::clip_end(ExtrusionEntity.cpp:317–334) and
+Polyline::clip_end(Polyline.cpp:52–78): use the emitted last path and clipped
+point count for end-3, retaining original loop winding. Share a borrowed,
+allocation-free tail query with the existing mutator; do not copy the loop or
+add global writer metadata. Scarf keeps its own paths with zero ordinary clip.
+The adjacent inward vector-swap and pre-rotation truncation gaps remain
+deferred; this decision does not claim complete inward arithmetic parity.
+Adjacent seam and router contracts are
+separate owners and require their own output evidence before inclusion.
+
 AvoidCrossingPerimeters.cpp::inner_offset(1066–1091) owns topology acceptance:
 only a single result with unchanged hole count may stop an early width trial.
 Changed topology or split results retry; final width may accept a single or

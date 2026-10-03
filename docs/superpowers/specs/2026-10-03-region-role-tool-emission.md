@@ -1,5 +1,20 @@
 # Region-role tool emission rewrite
 
+Modifier loop-exit slice rewrites the output-evidenced Z=.84 outer-wall
+inward move from GCode.cpp::extrude_loop(5804,5993–6033),
+ExtrusionLoop::clip_end(ExtrusionEntity.cpp:317–334) and
+Polyline::clip_end(Polyline.cpp:52–78) into motion/loop_paths and motion/clip.
+Public saved3MF/raw
+fourth-layer object output supplies the diagnostic seam; original complete
+dual-tool acceptance remains unchanged. Include only the diagnosed move
+contract: choose the actual emitted last path and its clipped end-3 vertex,
+preserving original loop winding, scarf ownership and exhausted-loop return.
+Share an allocation-free tail query with the existing clip mutator; keep its
+arithmetic unchanged. Defer the existing inward helper's swapped displacement
+vector and pre-rotation truncation gaps, adjacent seam, routing/flow precision and
+later modifier gaps unless separately output-evidenced. Existing loop adapters
+are temporary compatibility shells, not an independently designed motion rule.
+
 Modifier approach slice: rewrite only the output-evidenced routing gap from
 GCode/AvoidCrossingPerimeters.cpp::get_perimeter_spacing,
 get_perimeter_spacing_external,get_external_perimeter_width(499–550),
