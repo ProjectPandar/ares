@@ -23,6 +23,8 @@ mod runner;
 mod smoke;
 #[path = "orca_parity/smoke_overrides.rs"]
 mod smoke_overrides;
+#[path = "orca_parity/stock_presets.rs"]
+mod stock_presets;
 
 #[path = "ksr_fdmtest_v4/golden.rs"]
 mod golden;

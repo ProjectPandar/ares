@@ -1,0 +1,29 @@
+use super::{OrcaRunner, VendorProfiles, export};
+use crate::runner::{application, repo_root};
+use serde_json::json;
+
+#[test]
+fn orca_parity_stock_ender3_preserves_thin_walls_and_complete_output() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let profiles = VendorProfiles::load(
+        &repo_root().join("OrcaSlicer/resources/profiles"),
+        "Creality",
+    )
+    .unwrap();
+    let selection =
+        crate::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
+    let process = profiles.process(&selection.process).unwrap();
+    assert_eq!(process["detect_thin_wall"], json!("1"));
+    let exported = export(
+        &runner,
+        &profiles,
+        &selection,
+        &repo_root().join("tests/parity/cube10.stl"),
+    )
+    .unwrap();
+    application::verify_value(&exported.project, "detect_thin_wall", &json!("1")).unwrap();
+    let outcome = crate::compare_exported(&runner, &exported);
+    assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+}

@@ -7,6 +7,30 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Current acceptance priorities (2026-10-04)
+
+ToolOrdering/region-role's finite initial dual-tool milestone is integrated
+into remote main at `76916d01`; final workspace7591PASS, fmt/Clippy and WASM
+compilation passed. This does not close all printers/options/platform runs.
+Continue on `codex/printer-option-matrix`, not the long-lived tool branch.
+
+1. Establish stock-preset native saved-3MF/full-output coverage without smoke
+   rewrites. The first Ender-3 tracer and source boundary are in
+   [the spec](superpowers/specs/2026-10-04-stock-preset-parity.md) and
+   [plan](superpowers/plans/2026-10-04-stock-preset-parity.md), ARD-0096.
+2. Execute the full stock printer inventory and every bool/enum value;
+   retain complete input/output artifacts and truthful non-PASS rows.
+3. Complete range min/max/seeded interiors with active dependency fixtures;
+   repair real divergences through their upstream owning rewrite boundaries.
+4. Remove obsolete implementation-source pinning where public behavior
+   coverage replaces it; retain schema inventory, not source structure tests.
+
+Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
+comparisons, Tier-1 verification and independent six-axis review. Historical
+modified-classic and sampled-domain summaries are not that exit evidence.
+
+### Historical support bring-up notes (superseded by later checkpoints)
+
 Tree support (ARD-0086) is the blocking prerequisite for merging the current
 Normal support batch. Rewrite `Support/TreeSupport.cpp/.hpp`,
 `TreeSupport3D.cpp/.hpp`, `TreeModelVolumes.cpp/.hpp` and
