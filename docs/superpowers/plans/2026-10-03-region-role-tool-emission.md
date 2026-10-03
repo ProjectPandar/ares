@@ -1,5 +1,97 @@
 # Region-role tool emission implementation plan
 
+## Current slice: processor filament-change timing
+
+Source and included/deferred boundary are recorded in the spec and ARD-0094.
+Reuse the approved public saved3MF → import/effective settings → slice_project
+→ complete output seam. Existing private timing tests only adapt their config
+argument; no private acceptance replacement or assertion relaxation.
+
+1. RED: unchanged original dual baseline/modifier complete comparison.
+2. Port per-physical filament state and scalar delay branches into a dedicated
+   processor module; connect Estimate using borrowed existing ProcessorConfig.
+3. Replay the unchanged full comparison; inspect full totals and first diffs.
+   Preserve known remaining fan/F/Z gaps as open, not fake GREEN.
+4. Run existing processor/public single-tool controls, fmt/clippy/WASM and
+   workspace tests; independent six-axis review before a logical checkpoint.
+
+Fresh RED /tmp/ares-dual-timing-red.log, session82249 terminal/reaped100,
+2.594s: baseline byte1726 line124 missing M73 P6 R14; modifier byte718 line25
+R16 versus R17. Baseline native15m46s versus Ares15m41s. All three configured
+filament load/unload/toolchange delays are zero, disproving positive-delay
+omission as this fixture's explanation. Source still synchronizes on every
+actual logical transition; Ares currently only synchronizes on initial T.
+That zero-duration planner boundary is the next falsifiable probe.
+
+Probe prebuild86761 terminal/reaped0 (1m16s); original full test97255
+terminal/reaped100,2.598s, /tmp/ares-filament-timing-probe.log. Baseline's
+missing line124 M73 is repaired; first difference now byte1928 line143
+(M73 appears one motion early), total15m42s versus native15m46s (old15m41s).
+Modifier remains R16 versus R17, total16m52s versus native17m0s. This is
+measured progress, not complete output closure. No assertions were changed.
+Independent static review found an M702 C-word boundary defect: substring C
+wrongly treats MACRO as an unload axis. Share the source word-prefix predicate
+between unloaded state and synchronization. Supplement original acceptance
+with public native-first nonzero delay deltas for maps[1,2] and[1,1]; load31,
+unload17 and change23 are verified in exported configuration. Exact native
+total-time delta is the independent expected value, not recomputed branch math.
+These timing diagnostics do not replace complete output comparison or prove
+all scalar ranges, parsers, configurations or platform runtime behavior.
+
+Nonzero delta controls10684 terminal/reaped0,2PASS6.915s. Exact C-word
+boundaries follow GCodeReader's space/tab separators and comment/CR/LF/NUL
+terminators, not all ASCII whitespace. Extended public shared-hotend control
+covers empty end template, M702 MACRO, M702 C and M702 VT C. Controls7946
+terminal/reaped0,2PASS16.908s (/tmp/ares-filament-timing-cword.log), after
+prebuild91125 terminal0 (1m17s). Further source inspection found the planner
+overwrites its preceding real motion with the zero ToolChange block, unlike
+process_G1's machine.prev ownership. Independent reviewer confirms required
+conditional previous update plus safe initial junction handling: a queued
+initial ToolChange is not proof that a previous real motion exists. Final
+snapshot preserves that state and will rerun original and scalar controls.
+
+Queued user follow-up: after this timing checkpoint, remove date/time from
+the generated-by header, retain epoch0/seed0 defaults, inspect GCode.cpp and
+PlaceholderParser::update_timestamp first, and record template-variable
+policy in ARD-0095. No parity comparator relaxation is authorized.
+
+Preserved-motion prebuild1722 terminal/reaped0 (1m17s). Original/delta replay
+38788 terminal/reaped100:2PASS/1originalRED in19.200s. Baseline firstdiff
+byte1928 line143, modifier byte718 line25. Clippy41281 terminal/reaped0
+(1m21s) exposed two new nesting warnings and one clone-to-slice warning.
+Replace the repeated unload conditional with the source unload-time getter
+and borrow the mapping slice; no assertion or expected output changed.
+Frozen final quality receipts: fmt/diff checks0; clippy32903 terminal/reaped0,
+5m33 including lock wait, /tmp/ares-filament-timing-clippy-final.log,
+253lib/269test/CLI31 unchanged. Workspace70426 terminal/reaped0,
+/tmp/ares-filament-timing-workspace.log:7567PASS,36slow,9skip,267.370s runtime.
+WASM39554 terminal/reaped0,5m16 including lock wait,
+/tmp/ares-filament-timing-wasm.log; bindings76598 terminal0. Windows58899 and
+macOS68634 core checks terminal/reaped0 (5m38/5m58 including lock wait),
+/tmp/ares-filament-timing-windows.log and /tmp/ares-filament-timing-macos.log;
+these are compilation, not native runtime. Chromium79777 terminal/reaped0,
+3PASS2.5m, /tmp/ares-filament-timing-browser.log; retained complete KSR
+comparison artifact /tmp/ares-wasm-gcode-LEPeqQ/browser.gcode and repeated
+complete byte/epoch checks pass. Official30620/seeded51349 58-control runs
+remain live; do not infer their terminal status from intermediate PASS lines.
+
+Official30620 terminal/reaped100,302.960s; seeded51349 terminal/reaped100,
+356.289s. Both 58 activated finite controls finish57PASS/1originalfulldualRED,
+/tmp/ares-filament-timing-official.log and /tmp/ares-filament-timing-seeded.log.
+The added nonzero delta controls (including all four shared-hotend end
+variants) pass both references on the final snapshot. No additional failure
+is observed. These PASS counts include diagnostic lifecycle tests, not58
+complete-output successes. Original complete baseline/modifier remains RED;
+no full dual-tool, all-printer/option, native-platform runtime or global
+completion is claimed. All launched handles are terminal/reaped. Request
+independent final six-axis readback for a local code+docs timing checkpoint.
+
+Independent final six-axis readback approves the14file finite local timing
+checkpoint with no remaining must-fix. Keep full dual RED and current M73/time
+differences in the commit body. Approval excludes push/main, all change-entry
+points/statistics, complete parity and global goal closure. Header follow-up
+must remain a separate source-cited code+docs slice after this checkpoint.
+
 Status: in progress as a separate milestone after the single-tool Normal/Tree
 merge. Isolated `94d33b59` reproduces the baseline body gap. The modifier input
 was previously rejected, not previously supported.

@@ -6,10 +6,11 @@ use seam::SeamDetector;
 
 use super::arc_accounting::arc_internal_g1_lines;
 use super::delays::command_delay;
+use super::filament_change::{FilamentChange, unloads_filament};
 use super::motion::{MotionBlock, MotionKind, MotionState};
 use super::motion_util::word;
 use super::schedule::{DelayTarget, FlushEvent, PendingDelay, scheduled_times};
-use super::{ProcessorLimits, is_progress_motion};
+use super::{ProcessorConfig, is_progress_motion};
 
 pub(super) struct Estimate {
     pub(super) total: f64,
@@ -23,8 +24,9 @@ impl Estimate {
     pub(super) fn from_lines(
         lines: &[String],
         machine_load_filament_time: f64,
-        limits: ProcessorLimits,
+        config: &ProcessorConfig<'_>,
     ) -> Self {
+        let limits = config.limits;
         let mut blocks = Vec::new();
         let mut state = MotionState::with_limits(limits);
         let mut prepare_stages = Vec::new();
@@ -32,7 +34,7 @@ impl Estimate {
         let mut prepare_stage = false;
         let mut saw_motion_command = false;
         let mut measure_g29_time = false;
-        let mut active_tool = None;
+        let mut filaments = FilamentChange::new(config, machine_load_filament_time);
         let mut g1_line_id = 0;
         let mut block_line_ids = Vec::new();
         let mut remaining_internal = Vec::new();
@@ -79,7 +81,7 @@ impl Estimate {
                     }),
                 });
             }
-            if selects_initial_tool(code, &mut active_tool) {
+            if let Some(extra_time) = filaments.command(code) {
                 blocks.push(MotionBlock {
                     distance: 0.0,
                     delta: [0.0; 4],
@@ -90,11 +92,8 @@ impl Estimate {
                     max_acceleration: [0.0; 4],
                     jerk: [0.0; 4],
                     extrude_factor: 1.0,
-                    // The tool-change block lands no `g1_times_cache` entry
-                    // (verified against the `ORCA_DUMP_TIMES` dump: the
-                    // initial `T0`'s load delay reaches the machine total via
-                    // blocks that the M73 lookup never sees), so M73 emission
-                    // never attaches to the tool-change line.
+                    // Tool_change never enters g1_times_cache or advances
+                    // the G1 ID, including zero-duration transitions.
                     e_only: true,
                     kind: MotionKind::ToolChange,
                 });
@@ -106,7 +105,7 @@ impl Estimate {
                     block_count: blocks.len(),
                     delay: Some(PendingDelay {
                         target: DelayTarget::ToolChange,
-                        seconds: machine_load_filament_time as f32,
+                        seconds: extra_time,
                     }),
                 });
             }
@@ -348,18 +347,6 @@ fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {
         || measured_g29
         || command == "M191" && word(code, 'S').unwrap_or(0.0) > 40.0
         || command == "G92" && word(code, 'E').is_none()
-        || command == "M702" && code.contains('C')
+        || unloads_filament(code)
         || command == "SYNC" && word(code, 'T').is_some()
-}
-
-fn tool_id(code: &str) -> Option<u8> {
-    let command = code.split_whitespace().next()?;
-    command.strip_prefix('T')?.parse().ok()
-}
-
-fn selects_initial_tool(code: &str, active_tool: &mut Option<u8>) -> bool {
-    let Some(tool) = tool_id(code) else {
-        return false;
-    };
-    active_tool.replace(tool).is_none()
 }

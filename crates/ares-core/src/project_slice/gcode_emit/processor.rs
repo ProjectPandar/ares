@@ -3,6 +3,7 @@ mod delays;
 mod envelope;
 mod estimate;
 mod export_lines;
+mod filament_change;
 mod motion;
 mod motion_util;
 mod schedule;
@@ -78,7 +79,7 @@ pub(super) fn process(
     let limits = config.limits;
     let text = String::from_utf8(output).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
-    let estimate = Estimate::from_lines(&lines, machine_load_filament_time, limits);
+    let estimate = Estimate::from_lines(&lines, machine_load_filament_time, &config);
     let mut result = ExportLines::new(
         config.settings,
         limits.gcode_flavor,

@@ -252,6 +252,22 @@ silent omission, fallback or comparator relaxation is permitted.
 
 ## Platform and interface
 
+Processor timing selection is distinct from writer selection and ExportLines
+preheat. `GCodeProcessor.cpp:5473–5627,5890–5906,2133–2136` owns logical T
+validation, per-physical current/last filament state and scalar delay branches.
+Rewrite this into `processor/filament_change`, borrowing effective settings
+through existing ProcessorConfig. Preserve unloaded-state ordering from
+`process_M702` (`5418–5427`). An actual logical transition always creates a
+zero-distance ToolChange block and synchronizes the planner, including zero
+delays; repeated identical logical selection does neither. These blocks have
+no motion cache entry. Do not confuse this one-based filament map with
+ExportLines' zero-based physical map or introduce another geometry pass.
+Only real motion updates the preceding kinematic state (`process_G1`,
+`3980–4182`); ToolChange queues a block without modifying it. The initial
+queued ToolChange can coexist with no previous real motion and uses safe
+junction speed for the first motion, rather than expecting a predecessor.
+Statistics/viewer vertices and M1020 parsing are adjacent deferred consumers.
+
 Printing transitions restore selected logical-filament pressure advance
 after filament-start (`GCode.cpp:8048–8053`). Initial startup and transitions
 share the existing `GCodeWriter::set_pressure_advance` command-format owner

@@ -146,3 +146,21 @@ Deferred adjacent behavior is stealth/Q, viewer line maps and native file
 offsets. The unchanged complete dual baseline/modifier test is the RED and
 final acceptance; no temperature-only window substitutes for it. Required
 remaining fan/F/Z/timing closure stays open even if this consumer is correct.
+
+The next timing consumer ports `GCodeProcessor::process_T`,
+`process_filament_change` and scalar delay getters (`GCodeProcessor.cpp:
+5473–5627,5890–5906`), configuration mapping (`2133–2136`) and unloaded
+state (`process_M702`, `5418–5427`). Destination: existing Estimate with
+borrowed ProcessorConfig and `processor/filament_change.rs`. Include actual
+logical transitions, per-physical current/last filament slots, one-based map,
+declared filament count, unsigned T numeric-prefix parsing, initial loading,
+same-hotend replacement and physical-switch timing. Every actual transition
+adds the source zero-distance ToolChange block and planner synchronization,
+even when all delay values are zero. `process_G1` alone updates the preceding
+motion state (`3980–4182`); direct ToolChange insertion must not replace it.
+No previous real motion uses the source initial safe junction speed.
+Existing initial-only selection is a
+temporary shell to replace, not a compatibility fallback. Defer statistics,
+viewer vertices and adjacent M1020 parsing; the selected fixture uses T.
+Keep original full public baseline/modifier assertions and all previous
+single-tool controls. A reduced timing diagnostic never replaces acceptance.

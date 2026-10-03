@@ -171,8 +171,16 @@ fn g4_dwell_s_word_adds_seconds_to_the_total_time() {
         "G1 X1800 F3600",
     ]
     .map(str::to_owned);
-    let plain = Estimate::from_lines(&plain, 0.0, nonbinding_axis_limits());
-    let dwell = Estimate::from_lines(&dwell, 0.0, nonbinding_axis_limits());
+    let plain = Estimate::from_lines(
+        &plain,
+        0.0,
+        &nonbinding_axis_limits().with_settings(&Default::default()),
+    );
+    let dwell = Estimate::from_lines(
+        &dwell,
+        0.0,
+        &nonbinding_axis_limits().with_settings(&Default::default()),
+    );
 
     // Upstream `calculate_time` drops a lone trailing block, so the last
     // move in each fixture never counts; the dwell adds exactly 10s over
@@ -203,8 +211,16 @@ fn g4_dwell_p_word_counts_milliseconds_and_s_takes_precedence() {
     ]
     .map(str::to_owned);
 
-    let p = Estimate::from_lines(&p, 0.0, nonbinding_axis_limits());
-    let s_and_p = Estimate::from_lines(&s_and_p, 0.0, nonbinding_axis_limits());
+    let p = Estimate::from_lines(
+        &p,
+        0.0,
+        &nonbinding_axis_limits().with_settings(&Default::default()),
+    );
+    let s_and_p = Estimate::from_lines(
+        &s_and_p,
+        0.0,
+        &nonbinding_axis_limits().with_settings(&Default::default()),
+    );
 
     // process_G4's has_value('S') || has_value('P') short-circuits, so a
     // parseable S suppresses the P lookup entirely. The 2e-6 tolerance covers

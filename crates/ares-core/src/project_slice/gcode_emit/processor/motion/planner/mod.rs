@@ -43,7 +43,10 @@ impl RollingPlanner {
 
     pub(crate) fn push(&mut self, block: &MotionBlock) -> Vec<f64> {
         let planned = prepare(block, self.previous, !self.blocks.is_empty());
-        self.previous = Some(planned);
+        // ToolChange inserts a time block without updating machine.prev.
+        if block.kind != MotionKind::ToolChange {
+            self.previous = Some(planned);
+        }
         self.blocks.push(planned);
         if self.blocks.len() > 256 {
             self.process(64)
@@ -288,9 +291,9 @@ fn prepare(
             safe = safe.min(jerk[axis]);
         }
     }
-    let max_entry = if has_junction {
+    let max_entry = if has_junction && let Some(previous) = previous {
         junction_speed(
-            previous.expect("queued block has a predecessor"),
+            previous,
             JunctionInput {
                 direction,
                 jerk,

@@ -197,7 +197,11 @@ fn single_block_synchronization_waits_for_next_motion() {
     ]
     .map(str::to_owned);
 
-    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+    let estimate = Estimate::from_lines(
+        &lines,
+        0.0,
+        &nonbinding_axis_limits().with_settings(&Default::default()),
+    );
 
     assert!(
         (estimate.total - 30.043_349_266_052_246).abs() < 1e-6,
@@ -213,7 +217,11 @@ fn final_pass_drains_a_lone_block_with_buffered_delay() {
     // found fewer than two blocks, so the block and the delay both count.
     let lines = ["M204 S1000", "G1 X600 F3600", "G4 S5"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+    let estimate = Estimate::from_lines(
+        &lines,
+        0.0,
+        &nonbinding_axis_limits().with_settings(&Default::default()),
+    );
 
     assert!(estimate.total > 15.0, "{}", estimate.total);
 }
@@ -222,7 +230,11 @@ fn final_pass_drains_a_lone_block_with_buffered_delay() {
 fn initial_tool_selection_adds_machine_load_time_once() {
     let lines = ["T0 H-1", "T0 H-1"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(&lines, 29.0, ProcessorLimits::default());
+    let estimate = Estimate::from_lines(
+        &lines,
+        29.0,
+        &ProcessorLimits::default().with_settings(&Default::default()),
+    );
 
     assert_eq!(estimate.total, 29.0);
 }
@@ -263,7 +275,11 @@ fn homing_command_emits_motion_to_requested_axes() {
 fn homing_motion_contributes_to_total_estimate() {
     let lines = ["G1 X10 F600", "G28 X"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+    let estimate = Estimate::from_lines(
+        &lines,
+        0.0,
+        &nonbinding_axis_limits().with_settings(&Default::default()),
+    );
 
     assert!(
         (estimate.total - 2.000_159_978_866_577).abs() < 1e-9,
