@@ -3,6 +3,8 @@ use crate::{
     project_slice::{extruders, perimeters::classic::traversal::PreparedPostClassicTraversal},
 };
 
+use super::super::temperature::append as append_nozzle_temperature;
+
 #[cfg(test)]
 mod tests;
 
@@ -173,7 +175,8 @@ fn append_nozzle_temperatures(
             append_nozzle_temperature(
                 output,
                 flavor,
-                temperature,
+                temperature as u32,
+                false,
                 multiple_extruders.then_some(tool),
             );
         }
@@ -195,27 +198,6 @@ fn used_filaments(traversal: &PreparedPostClassicTraversal) -> Vec<usize> {
     used.sort_unstable();
     used.dedup();
     used
-}
-
-fn append_nozzle_temperature(
-    output: &mut Vec<u8>,
-    flavor: GCodeFlavor,
-    temperature: i32,
-    tool: Option<usize>,
-) {
-    let (command, parameter) = match flavor {
-        GCodeFlavor::RepRapFirmware => ("G10", 'S'),
-        GCodeFlavor::Mach3 | GCodeFlavor::Machinekit => ("M104", 'P'),
-        _ => ("M104", 'S'),
-    };
-    let tool = match (flavor, tool) {
-        (_, None) => String::new(),
-        (GCodeFlavor::RepRapFirmware, Some(tool)) => format!(" P{tool}"),
-        (_, Some(tool)) => format!(" T{tool}"),
-    };
-    output.extend_from_slice(
-        format!("{command} {parameter}{temperature}{tool} ; set nozzle temperature\n").as_bytes(),
-    );
 }
 
 fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {

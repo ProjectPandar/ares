@@ -118,3 +118,18 @@ markers are a temporary shell, not complete per-role request state. Differing
 tool fan controls, SupportInterface/Ironing request identities and tool-change
 fan configuration refresh remain open source consumers; this finite tracer
 does not establish that wider contract or full dual-output parity.
+
+Next required common consumer: `OozePrevention::_get_temp`,
+`pre_toolchange`, `post_toolchange` (`GCode.cpp:267–309`), initialization
+(`2280–2283`) and `set_extruder` call order (`7788,8044`), rewritten into
+`gcode_emit/tool_transition/temperature.rs`. Share the source
+`GCodeWriter::set_temperature` formatter (`GCodeWriter.cpp:117–165`) with
+the existing machine-start non-waiting temperature shell. Include logical
+filament temperature/idle lookup, delta gates, absent/current layer-id0
+selection, raw cooldown marker, writer T suppression and flavor wait rules.
+Install the actual leading layer id before tool consumers (`GCode.cpp:4664`),
+not the merged chunk counter. Defer ExportLines preheat/cooldown backtrace
+(`GCodeProcessor.cpp:1300–1390`) to its own real consumer; this required
+coupling remains open for complete output and cannot be replaced by emitting
+the native postprocessor's removed-command comment directly. The existing
+unchanged full dual comparison is the RED and final acceptance entry point.

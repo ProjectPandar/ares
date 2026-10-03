@@ -201,6 +201,7 @@ pub(super) fn append(
             bed_cache,
         )?;
         let timelapse_context = boundary.timelapse_context;
+        state.layer_index = cooling_layer_index;
         state.on_first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
         // The skirt prints once per layer before any object content
         // (`GCode.cpp:4388+`), on the layers it covers. Raft chunks emit

@@ -4,6 +4,7 @@ use super::{motion, placeholders, template, timelapse, value};
 use crate::SliceError;
 
 mod change;
+mod temperature;
 pub(super) use change::last_start_filament;
 
 pub(super) fn initial(
@@ -61,6 +62,7 @@ fn emit_inner(
     }
     if state.extruders.multiple() && state.extruder_selected {
         append_filament(output, state, state.extruders.active_id(), false, context)?;
+        temperature::pre(output, state, context);
     }
     let custom = if state.extruders.multiple() {
         change::append(output, state, filament, context)?
@@ -69,6 +71,9 @@ fn emit_inner(
     };
     motion::tool_selection::toolchange(output, state, context.traversal, filament, &custom);
     append_filament(output, state, filament, true, context)?;
+    if state.extruders.multiple() {
+        temperature::post(output, state, context);
+    }
     super::pressure_advance::append(output, context.traversal, filament);
     if state.extruders.multiple() {
         state.last_scaled_position = None;

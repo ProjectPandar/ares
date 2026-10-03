@@ -175,6 +175,19 @@ mutation is adjacent parser behavior, not claimed by this render slice.
 
 ## Included / deferred
 
+Ooze prevention follows `GCode.cpp:267–309,2280,7788,8044`: old-end then
+pre-cooldown, custom render/writer/new-start, post-wait then PA. Read logical
+filament temperatures; absent layer, actual layer id0 or ordinary temperature0
+selects initial temperature. Do not substitute the bottom-Z first-layer gate.
+The active layer id before tool consumers is the leading source layer id
+(`4664`), not the merged generator counter. A shared writer temperature
+formatter (`GCodeWriter.cpp:117–165`) owns unsigned temperature conversion,
+logical T suffix, flavor wait suppression/M116 and unconditional comments.
+Emit real cooldown commands/markers. ExportLines backtrace suppression and
+preheat owns its separate postprocessing behavior (`GCodeProcessor.cpp:1300–
+1390`); no renderer may manufacture its removed-command comment to imitate
+final output. Complete dual acceptance requires both source owners.
+
 Custom change-filament rendering belongs between the old filament-end and
 writer selection (`GCode.cpp:7954–7997`), including the initial compatible
 multi-tool call. Runtime `m_toolchange_count` includes initial selection and

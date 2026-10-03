@@ -28,6 +28,7 @@ mod skirt;
 mod small_area;
 mod spiral_vase;
 mod tags;
+mod temperature;
 mod template;
 #[cfg(test)]
 mod tests;

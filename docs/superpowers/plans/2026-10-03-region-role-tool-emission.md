@@ -1862,3 +1862,157 @@ with no new must-fix. Approval covers common context/render/write-back,
 writer selection, eager and same-fan-configuration cooling consumer only.
 Differing-tool request identity, SEMM/tower/ooze, complete dual and global
 printer/option domains remain open; no push/main/global completion approval.
+
+## Ooze temperature consumer
+
+Previous goal turn made verified progress: local85b95cb1 plus7563PASS and
+both55/56 reference receipts. Authoritative worktree starts clean85b95cb1.
+Exact CLI prebuild exit0; fresh original dual30968 exit100,2.589s,
+/tmp/ares-dual-after-custom-red.log, baselinecase-6X8eVD and modifiercase-
+5IzwM7. Same baseline1726/line124 and modifier718/line25 first differences.
+The baseline's one model/no modifier/0%sparse already reproduces; retain
+both full fixtures rather than weaken or replace the failing comparator.
+
+Shown ranked predictions: time-only would leave no non-M73 differences;
+missing transition side effects would cluster at T/M104/M109; invalid writer
+position would first change post-transition travel/lift/retract. Raw diff
+rejects time-only: waiting nozzle commands missing at startup/every transition,
+plus feedrate, fan and duplicate Z travel differences. Source attribution is
+OozePrevention267–309/2280 and set_extruder7788/8044; the source's removed
+M104 comments instead come from real ExportLines backtrace1320–1384.
+
+Port Ooze pre/post into tool_transition/temperature with shared writer
+temperature formatter. Use actual leading layer id before tool iteration,
+then existing per-object layer-id updates, not on_first_layer or global count.
+Pre only with old selection and enabled independent-nozzle ooze; idle wins,
+otherwise delta gate; post only delta!=0. Keep raw cooldown and source order.
+Shared machine formatter replaces only nozzle non-wait shell, not bed/chamber.
+Preflight independent review approves this boundary, requires all above
+distinctions and unsigned/flavor wait contracts, and does not approve complete
+dual or a checkpoint. Existing original full test is the valid RED; coupled
+postprocessing/fan/feedrate/Z acceptance remains open. Do not fake a GREEN
+window or emit removed-command comments. No production modification yet.
+
+Then implemented shared writer nozzle formatter and actual Ooze pre/post
+consumer, with leading physical layer id installed before the tool loop.
+No test/fixture/assertion changes. Build13143 exited0 (1m15s).
+Original complete11557 exited100 (2.600s), /tmp/ares-dual-ooze-replay.log,
+baselineJF8FeZ/modifierCbqR53: same first-difference positions, still RED.
+Read-only native/actual extraction of existing waiting-temperature commands
+has identical sequence/value in both cases (17baseline,94modifier); this is
+diagnostic evidence, not a new window test or whole-output acceptance.
+Ares now emits actual M104...;cooldown, whose suppression/preheat remains
+the ExportLines coupling. Feedrate, repeated Z and fan differences remain.
+
+Frozen-source fmt/diff checks exit0; clippy96812 exit0 (1m19s), unchanged
+253lib/269test and CLI31; WASM30999 exit0 (1m35s, core+adapter compile only).
+Official broad3379 terminated/reaped exit100 (132.475s),
+/tmp/ares-dual-ooze-official-controls.log:56tests,55PASS/1FAIL, only original
+full dual;47strict complete-output controls and8limited diagnostics pass,
+including raft/support/skirt/retraction controls for the active-layer-id
+change. New/shared modules37/60LOC. Independent static six-axis readback
+found no new must-fix, but requires runtime gates and the real ExportLines
+coupling before checkpoint approval. Seeded and final full workspace have
+not been re-run on this snapshot; previous85b95cb1 receipts do not prove it.
+Keep this unfinished coupled source+docs slice uncommitted, without push or
+global completion; next action is real cooldown/preheat owner, not a comment
+filter or new substitute acceptance test.
+
+Independent result/source six-axis复验 confirmed actual55/1, unchanged
+warning corpus and no immediate new must-fix, while rejecting checkpoint /
+push/main/global closure. Keep the required follow-up boundary explicit:
+`ExportLines` (`GCodeProcessor.cpp:682–960`), `insert_lines` (`833`),
+postprocess tool handler (`1300–1390`) and configuration (`2038–2043`).
+Typed process preheat_time/preheat_steps already exist. Replace the current
+straight-line processor export shell with the source buffered-time/backtrace
+consumer against real motion elapsed caches; carry original tool/layer and
+logical-to-physical identities. Do not infer removal from command spelling
+alone or add a whole-file filter. Reproduce native preheat insertion and
+cooldown replacement, retaining the original complete dual assertion.
+
+### ExportLines implementation handoff (not implemented in Ooze checkpoint)
+
+Upstream boundary is `GCodeProcessor.cpp:682–960` (`ExportLines`,
+`LineData`, `Backtrace`, `update`, `append_line`, `insert_lines`, `write`,
+`flush`), the tool callback at1300–1390 and `apply_config`2038–2043;
+`PrintConfig.cpp:11607–11622` owns XL identification. Rust destination is
+`gcode_emit/processor/export_lines/`, replacing the processor's straight-line
+export shell, not adding a second analysis pass or a whole-file filter.
+
+Included next: borrowed effective preheat/temperature/physical-map inputs;
+normal-mode motion-cache timestamps; source deque buffering and strict
+time-threshold flushing; exact previous-tool and case-insensitive start
+barriers; in-window cooldown replacement; stepped temperature insertion;
+source layer-marker count for initial-versus-normal temperature. Activation
+is ooze enabled, positive preheat time, and XL or independent multi-filament
+configuration. Clamp preheat_steps to at least1 at the configuration boundary.
+
+`ExportLines::update` snapshots the post-increment motion-cache id, whereas
+the existing M73 move callback probes a pre-increment id. Expose distinct
+lookup results from the same Estimate cache; do not change progress lookups
+or recompute geometry. Replacements occur while walking the window even
+when a barrier ultimately prevents insertion. Insert after the found older
+entry, retain its timestamp, and suppress duplicate insertion timestamps.
+Buffer retention is1.1f times a dynamic max_backtrace_time: initially120f,
+updated to max(current, configured preheat time) only in the enabled T
+branch. It is not the configured preheat time from the first line. Process
+T before appending that T to the deque.
+
+Deferred adjacent behavior: stealth-mode cache and its XL Q parameter,
+viewer line-id map/file offsets and native filesystem export. Browser core
+still returns bytes. Any deferred behavior required by the unchanged
+selected dual-tool fixture must be implemented before its complete closure.
+Final acceptance remains the original two complete-output comparisons;
+temperature-only observations cannot replace them.
+
+Physical preheat/cooldown identity specifically uses the zero-based
+`physical_extruder_map` (`GCodeProcessor.cpp:2050,1366,1381`), with absent
+entries falling back to the logical tool id. Do not substitute the separate
+one-based `filament_map` used for nozzle offsets. XL is identified by both
+source printer_notes markers, not a guessed printer-model string. The reader
+command boundary is space/tab/semicolon/CR/LF/NUL (`GCodeReader.hpp:180–195`),
+and custom commands remain case-sensitive except for the start barriers.
+
+Retain cache entries' source `(id, remaining_internal_g1_lines, elapsed_time)`
+identity when exposing ExportLines timestamps. For arcs, update walks the
+eligible remaining-segment chain, increments its lookup counter for each
+entry, and snapshots only when the final cache id equals that counter.
+Geometry segment count alone is not that walk when seam/drop holes exist.
+Preserve the already-verified M73 behavior while porting this separate
+consumer; cover any required cache change with original arc controls.
+
+### Ooze local checkpoint final receipts
+
+No production or test changes during this final gate run. Fresh original
+complete dual91615 terminated/reaped exit100 in2.611s,
+`/tmp/ares-export-backtrace-current-red.log`; full assertion remains RED.
+Seeded48331 terminated/reaped exit100,179.511s,
+`/tmp/ares-ooze-checkpoint-seeded.log`:56 run,55PASS/1FAIL,281 skipped;
+only original complete dual fails. Together with the prior official55/1
+on this same frozen source, these retain47strict complete-output controls
+and8limited diagnostics, not a claim of all-printer/option coverage.
+
+Workspace67301 terminated/reaped exit0 after2m46 compile and255.025s run,
+`/tmp/ares-ooze-checkpoint-workspace.log`:7563PASS,35slow,9skipped.
+Spiral vase ramps and current-layer-spacing behavioral regressions both PASS.
+Current fmt/diff exit0; `/tmp/ares-ooze-checkpoint-clippy.log` exit0,
+253lib/269test/CLI31 unchanged; `/tmp/ares-ooze-checkpoint-wasm.log` exit0,
+core+adapter compile only. No comparator/fixture/coverage removal.
+
+Finite checkpoint scope is OozePrevention pre/post, leading actual layer id
+and shared writer nozzle formatter, plus its spec/ARD/plan. Complete dual
+output remains RED; real ExportLines consumer, fan/F/Z and time differences
+remain unfinished. No push/main/full-parity approval is inferred. Exact CLI
+prebuild must run again before the next CPU0 replay after this workspace build.
+
+Checkpoint policy correction: the user's explicit local logical-commit
+authorization permits the independently verified Ooze pre/post source slice
+while complete dual parity remains RED. The independent reviewer agrees
+that ExportLines/fan/F/Z closure is not a prerequisite for that finite local
+checkpoint, conditional on current seeded and workspace gates showing no
+new unexplained regression. This is not push/main/full-parity approval.
+
+Final independent six-axis复验 read actual diff and receipts and approves
+these9files as a finite local code+docs checkpoint, with no new must-fix.
+The approval explicitly excludes push/main/complete parity/global completion;
+commit body must retain full dual RED and ExportLines/fan/F/Z open scope.
