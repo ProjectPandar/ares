@@ -57,7 +57,7 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
     } else {
         super::travel::schedule_normal(state);
     }
-    state.retracted = true;
+    state.extruder.retracted = true;
     output.extend_from_slice(b"M976 S1 P1 ; scan model before printing 2nd layer\nM400 P100\n");
     // `unretract()` (`GCode.cpp:4789`) is `unlift() + E restore`
     // (`GCode.hpp:255`): the descent emits FIRST — `G1 Z… F…` plus
@@ -102,10 +102,10 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
     // `Extruder::unretract()` (`Extruder.cpp:92-104`) restores
     // `m_retracted + m_restart_extra` and clears both unconditionally;
     // the writer gates emission on the delta (`GCodeWriter.cpp:1063`).
-    let delta = state.retracted_amount + state.restart_extra;
+    let delta = state.extruder.retracted_amount + state.extruder.restart_extra;
     let unretract = extrusion::coordinate(state, delta);
-    state.retracted_amount = 0.0;
-    state.restart_extra = 0.0;
+    state.extruder.retracted_amount = 0.0;
+    state.extruder.restart_extra = 0.0;
     if delta.abs() >= 1e-6 {
         if state.options.use_firmware_retraction {
             // `GCodeWriter::unretract` firmware branch — bare `G11`
@@ -134,5 +134,5 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
             state.current_feedrate = state.options.deretraction_feedrate;
         }
     }
-    state.retracted = false;
+    state.extruder.retracted = false;
 }

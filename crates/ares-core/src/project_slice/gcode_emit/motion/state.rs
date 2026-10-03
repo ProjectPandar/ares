@@ -1,4 +1,6 @@
-use super::{MotionOptions, arc, set_accel_and_jerk, set_layer_acceleration_and_jerk};
+use super::{
+    MotionOptions, arc, extruder_state, set_accel_and_jerk, set_layer_acceleration_and_jerk,
+};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(in crate::project_slice::gcode_emit) enum LiftMode {
@@ -12,7 +14,10 @@ pub(in crate::project_slice::gcode_emit) enum LiftMode {
 pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) x: f64,
     pub(in crate::project_slice::gcode_emit) y: f64,
-    pub(in crate::project_slice::gcode_emit) e_position: f64,
+    pub(in crate::project_slice::gcode_emit) extruder: extruder_state::ExtruderState,
+    pub(in crate::project_slice::gcode_emit) extruders: super::ExtruderRegistry,
+    pub(in crate::project_slice::gcode_emit) initial_filaments:
+        crate::project_slice::gcode_emit::machine::first_filaments::InitialFilaments,
     pub(in crate::project_slice::gcode_emit) offset: (f64, f64),
     /// `GCode::point_to_gcode` (`GCode.cpp:8124-8127`) evaluates
     /// `unscale(point) + m_origin - extruder_offset` strictly left-to-right;
@@ -30,6 +35,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// selected inside `set_extruder` AFTER rendering filament-start
     /// (`GCode.cpp:7736-7746`).
     pub(in crate::project_slice::gcode_emit) extruder_selected: bool,
+    pub(in crate::project_slice::gcode_emit) current_hotend: i32,
     pub(in crate::project_slice::gcode_emit) scale_factor: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) extrusion_feedrate: f64,
@@ -54,15 +60,6 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) spiral_vase: bool,
     pub(in crate::project_slice::gcode_emit) spiral_vase_layer: bool,
     pub(in crate::project_slice::gcode_emit) positioned: bool,
-    /// SEMM template-private counters (`Extruder.hpp:36,49,51,56-58`):
-    /// under `single_extruder_multi_material` `set_position`/`set_retracted`
-    /// write the PRIVATE `m_E`/`m_retracted` slots while motion reads
-    /// `m_share_E`/`m_share_retracted`. `m_restart_extra` stays shared —
-    /// the shared `unretract` consumes it (`Extruder.cpp:87-90`) — and
-    /// placeholder refresh reads `position()`/`retracted()` (private)
-    /// but `restart_extra()` is the same field in both modes.
-    pub(in crate::project_slice::gcode_emit) private_retracted: f64,
-    pub(in crate::project_slice::gcode_emit) private_e_position: f64,
     /// The Z the machine start/filament g-code left the nozzle at; mirrors
     /// `GCodeWriter::m_pos(2)` for the `change_layer` `will_move_z` gate.
     pub(in crate::project_slice::gcode_emit) writer_z: Option<f64>,
@@ -96,10 +93,6 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) max_layer_z: f32,
     pub(in crate::project_slice::gcode_emit) source_layer_z: f64,
     pub(in crate::project_slice::gcode_emit) scarf_z: Option<f64>,
-    pub(in crate::project_slice::gcode_emit) retracted: bool,
-    /// Orca `Extruder::used_filament()` = `m_absolute_E + m_retracted` —
-    /// the cumulative forward extrusion through the writer's extrude()
-    /// calls. Template output (start g-code) never touches it.
     pub(in crate::project_slice::gcode_emit) wipe_path: Vec<arc::Point>,
     pub(in crate::project_slice::gcode_emit) wipe_start: Option<arc::Point>,
     pub(in crate::project_slice::gcode_emit) lifted: bool,
@@ -135,18 +128,6 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
         Option<super::arc::Point>,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
-    /// Orca `Extruder` state: `m_absolute_E` (signed cumulative E through
-    /// the writer) and `m_retracted` (outstanding retraction amount).
-    /// `used_filament()` returns `m_absolute_E` on share-extruder printers
-    /// (`single_extruder_multi_material`), else `m_absolute_E +
-    /// m_retracted`. Template output never touches these.
-    pub(in crate::project_slice::gcode_emit) filament_used: f64,
-    pub(in crate::project_slice::gcode_emit) retracted_amount: f64,
-    /// `Extruder::m_restart_extra` (`Extruder.cpp:66,92-101,108-122`):
-    /// assigned at every `retract()` from `retract_restart_extra`,
-    /// consumed (and zeroed) by `unretract()`, and writable through the
-    /// `e_restart_extra` placeholder.
-    pub(in crate::project_slice::gcode_emit) restart_extra: f64,
     /// Per-layer avoid-crossing routing boundary, built lazily on the first
     /// routed travel and dropped by `begin_layer`
     /// (`AvoidCrossingPerimeters::init_layer`).
@@ -290,9 +271,9 @@ impl EmitState {
         &self,
     ) -> crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
         let used_filament = if self.options.single_extruder_multi_material {
-            self.filament_used
+            self.extruder.filament_used
         } else {
-            self.filament_used + self.retracted_amount
+            self.extruder.filament_used + self.extruder.retracted_amount
         };
         crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
             diameter: 1.75,
@@ -331,7 +312,7 @@ pub(in crate::project_slice::gcode_emit) fn append_exclude_end(
     if let Some(text) = state.pending_exclude_end.take() {
         output.extend_from_slice(text.as_bytes());
         if !state.options.use_relative_e_distances && text.lines().any(|line| line == "G92 E0") {
-            state.e_position = 0.0;
+            state.extruder.e_position = 0.0;
         }
     }
 }
@@ -351,9 +332,10 @@ pub(in crate::project_slice::gcode_emit) fn append_object_start(
         output.push(b'\n');
     }
     if let Some(text) = state.pending_exclude_start.take() {
-        if !state.options.use_relative_e_distances && state.e_position.abs() > f64::EPSILON {
+        if !state.options.use_relative_e_distances && state.extruder.e_position.abs() > f64::EPSILON
+        {
             output.extend_from_slice(b"G92 E0\n");
-            state.e_position = 0.0;
+            state.extruder.e_position = 0.0;
         }
         output.extend_from_slice(text.as_bytes());
     }

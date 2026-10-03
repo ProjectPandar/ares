@@ -20,8 +20,8 @@ fn state() -> EmitState {
 #[test]
 fn first_layer_hilbert_bottom_suppresses_writer_retract_and_extra() {
     let mut state = state();
-    state.retracted = true;
-    state.restart_extra = 0.5;
+    state.extruder.retracted = true;
+    state.extruder.restart_extra = 0.5;
     let mut output = Vec::new();
     // A long, non-exempt already-retracted travel on the Hilbert first
     // layer: upstream `_retract` skips `m_writer.retract()` entirely, so
@@ -36,7 +36,7 @@ fn first_layer_hilbert_bottom_suppresses_writer_retract_and_extra() {
         "Internal infill",
         &mut |_| {},
     );
-    assert_eq!(state.restart_extra, 0.5);
+    assert_eq!(state.extruder.restart_extra, 0.5);
     assert!(output.is_empty());
 }
 
@@ -48,7 +48,7 @@ fn hilbert_suppression_still_emits_reset_e_in_absolute_mode() {
     state.options.use_relative_e_distances = false;
     // `reset_e` emits only when the E counter is nonzero
     // (`GCodeWriter.cpp:486-489`).
-    state.e_position = 0.4;
+    state.extruder.e_position = 0.4;
     let mut output = Vec::new();
     decide(
         &mut output,
@@ -73,8 +73,8 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
         },
         ..EmitState::default()
     };
-    state.retracted = true;
-    state.restart_extra = 0.5;
+    state.extruder.retracted = true;
+    state.extruder.restart_extra = 0.5;
     let mut output = Vec::new();
     decide(
         &mut output,
@@ -85,7 +85,7 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
         "Top surface",
         &mut |_| {},
     );
-    assert_eq!(state.restart_extra, 0.5);
+    assert_eq!(state.extruder.restart_extra, 0.5);
     // A non-top destination on the same layer still assigns.
     decide(
         &mut output,
@@ -96,7 +96,10 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
         "Internal infill",
         &mut |_| {},
     );
-    assert_eq!(state.restart_extra, state.options.retract_restart_extra);
+    assert_eq!(
+        state.extruder.restart_extra,
+        state.options.retract_restart_extra
+    );
 }
 
 #[test]
@@ -105,8 +108,8 @@ fn non_hilbert_already_retracted_travel_assigns_restart_extra() {
         layer_index: 3,
         ..EmitState::default()
     };
-    state.retracted = true;
-    state.restart_extra = 0.5;
+    state.extruder.retracted = true;
+    state.extruder.restart_extra = 0.5;
     state.options.retract_restart_extra = 0.0;
     let mut output = Vec::new();
     decide(
@@ -118,5 +121,5 @@ fn non_hilbert_already_retracted_travel_assigns_restart_extra() {
         "Internal infill",
         &mut |_| {},
     );
-    assert_eq!(state.restart_extra, 0.0);
+    assert_eq!(state.extruder.restart_extra, 0.0);
 }

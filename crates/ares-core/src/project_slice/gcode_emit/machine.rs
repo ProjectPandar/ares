@@ -3,11 +3,11 @@ use crate::{
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
-use super::{footprint, template, value};
+use super::{footprint, motion, template};
 
 mod envelope;
 mod exhaust_fan;
-mod first_filaments;
+pub(super) mod first_filaments;
 mod start_config;
 mod temperature;
 
@@ -130,120 +130,34 @@ pub(super) fn append_second_layer_transition(
     }
 }
 
-pub(super) struct StartRetractState {
-    /// `e_retracted[0]` assigned by the machine-start template
-    /// (`GCode.cpp:3905-3918` feeds assigned output variables back into the
-    /// extruder via `Extruder::set_retracted`).
-    pub(super) retracted: f64,
-    /// `e_restart_extra[0]` assigned by the template (0 unless set).
-    pub(super) restart_extra: f64,
-}
-
-/// Machine-start write-back products (`GCode.cpp:3898-3918`).
-pub(super) struct StartOutcome {
-    pub(super) bed_cache: i32,
-    pub(super) position: Option<value::Value>,
-    pub(super) retract: Option<StartRetractState>,
-    pub(super) failure: Option<String>,
-    /// `e_position[0]` write-back (absolute-E only).
-    pub(super) e_position: Option<f64>,
-}
-
 pub(super) fn append_start(
     output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
-) -> Result<StartOutcome, SliceError> {
+) -> Result<i32, SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    let (rendered, position, retract_state, failure, e_position) = if template.is_empty() {
-        (String::new(), None, None, None, None)
+    let rendered = if template.is_empty() {
+        String::new()
     } else {
-        let mut config = start_config::self_start_config(traversal, metadata, first_layer_bounds)?;
-        let rendered = template::render(template, &mut config).map_err(|error| {
-            SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
-        })?;
-        // `GCode.cpp:3118-3140` lets explicit template assignments update
-        // GCodeWriter position, but never parses G0/G1 text back into it.
-        // `GCode.cpp:3905-3918` additionally feeds assigned `e_retracted` /
-        // `e_restart_extra` back into the extruder (`set_retracted`).
-        // Output vector validation (`validate_output_vector_variables`,
-        // `GCode.cpp:1702-1713`) — `position` must stay size 3 and the E
-        // vectors size 64; a violation replaces the template output with
-        // the inline failure report (`GCode.cpp:3920-3933`).
-        // Upstream validates `position`, then `e_position` →
-        // `e_retracted` → `e_restart_extra` (`GCode.cpp:1702-1713`).
-        let resized_key = ["position", "e_position", "e_retracted", "e_restart_extra"]
-            .iter()
-            .find(|key| match config.get(key) {
-                Some(value::Value::List(list)) => {
-                    list.len() != if **key == "position" { 3 } else { 64 }
-                }
-                _ => false,
-            })
-            .map(|key| (*key).to_string());
-        let valid = resized_key.is_none();
-        let number_at = |key: &str| -> Option<f64> {
-            config
-                .get(key)
-                .and_then(|value| value.index(0))
-                .and_then(|value| value.as_number())
-        };
-        let retracted = number_at("e_retracted");
-        // `Extruder::set_retracted` throws below -EPSILON
-        // (`Extruder.cpp:108-122`) — same inline-failure path.
-        let invalid_retract = retracted.is_some_and(|value| value < -1e-4)
-            || number_at("e_restart_extra").is_some_and(|value| value < -1e-4);
-        let retract_state = retracted.map(|retracted| StartRetractState {
-            retracted,
-            restart_extra: number_at("e_restart_extra").unwrap_or(0.0),
-        });
-        // Distinct upstream diagnostics (`GCode.cpp:1702-1713`,
-        // `Extruder.cpp:108-122`).
-        let failure = if !valid {
-            Some(format!(
-                "\"{}\" output variable must not be resized by the script.",
-                resized_key.as_deref().unwrap_or("position")
-            ))
-        } else if retracted.is_some_and(|value| value < -1e-4) {
-            Some("Custom G-code reports negative z_retracted.".to_string())
-        } else if invalid_retract {
-            Some("Custom G-code reports negative z_restart_extra.".to_string())
-        } else {
-            None
-        };
-        // Write-back order upstream (`GCode.cpp:3898-3914`): vector-size
-        // validation FIRST (a resize failure never reaches `position`
-        // apply), then `set_position`, THEN `set_retracted` may throw —
-        // so a negative-retract failure still keeps the assigned
-        // position while the output becomes the inline report.
-        // `e_position[0]` write-back runs right after `position` and
-        // before `set_retracted` (`GCode.cpp:3908-3911`); a negative-
-        // retract failure keeps it too.
-        let e_position = (!traversal
-            .resolved
-            .views
-            .runtime_gcode
-            .use_relative_e_distances
-            .0)
-            .then(|| number_at("e_position"))
-            .flatten();
-        let (rendered, position, retract_state) = match (&failure, valid) {
-            (Some(error), _) => (
+        let mut config =
+            start_config::self_start_config(traversal, state, metadata, first_layer_bounds)?;
+        let name = "machine_start_gcode";
+        let result = template::render(template, &mut config)
+            .map_err(|error| error.to_string())
+            .and_then(|rendered| {
+                motion::apply_writer_state(name, &config, state).map(|()| rendered)
+            });
+        match result {
+            Ok(rendered) => rendered,
+            Err(error) => {
+                state.record_template_failure(name, &error);
                 format!(
-                    "\n!!!!! Failed to process the custom G-code template machine_start_gcode\n{error}!!!!! End of an error report for the custom G-code template machine_start_gcode\n\n\n"
-                ),
-                if valid {
-                    config.get("position").cloned()
-                } else {
-                    None
-                },
-                None,
-            ),
-            (None, _) => (rendered, config.get("position").cloned(), retract_state),
-        };
-        let e_position = e_position.filter(|_| valid);
-        (rendered, position, retract_state, failure, e_position)
+                    "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+                )
+            }
+        }
     };
     let bed_cache = temperature::append_startup(output, traversal, &rendered);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
@@ -261,13 +175,7 @@ pub(super) fn append_start(
     if !super::tags::Tags::of(traversal).is_bbl() {
         append_flavor_preamble(output, traversal);
     }
-    Ok(StartOutcome {
-        bed_cache,
-        position,
-        retract: retract_state,
-        failure,
-        e_position,
-    })
+    Ok(bed_cache)
 }
 
 pub(super) fn append_completion_controls(

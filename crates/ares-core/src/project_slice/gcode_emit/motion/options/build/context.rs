@@ -18,6 +18,8 @@ pub(super) struct Prelude<'a> {
     pub retract_overrides: &'a FilamentRetractOverrideOptions,
     pub object: Option<&'a ResolvedProjectObject>,
     pub region: Option<&'a RegionOptions>,
+    pub filament: usize,
+    pub physical: usize,
     pub filament_diameter: f64,
     pub travel_speed: f64,
     pub travel_acceleration: f64,
@@ -30,7 +32,7 @@ pub(super) struct Prelude<'a> {
     pub deretraction_speed: f64,
 }
 
-pub(super) fn prelude(traversal: &PreparedPostClassicTraversal) -> Prelude<'_> {
+pub(super) fn prelude(traversal: &PreparedPostClassicTraversal, filament: usize) -> Prelude<'_> {
     let full = &traversal.resolved.views.full;
     let gcode = &traversal.resolved.views.runtime_gcode;
     let retract_overrides = &full.filament.retract_overrides;
@@ -42,20 +44,27 @@ pub(super) fn prelude(traversal: &PreparedPostClassicTraversal) -> Prelude<'_> {
     let filament_diameter = gcode
         .filament_diameter
         .0
-        .first()
+        .get(filament)
+        .or_else(|| gcode.filament_diameter.0.first())
         .map_or(1.75, |value| value.0);
     let travel_speed = gcode.travel_speed.0;
     let travel_acceleration = object.map_or(full.process.object.travel_acceleration.0, |value| {
         value.object.travel_acceleration.0
     });
     let speeds = region::region_speeds(full, object, region);
-    let (retraction_speed, deretraction_speed) = retraction::speeds(gcode);
+    let (retraction_speed, deretraction_speed) = retraction::speeds(gcode, filament);
     Prelude {
         full,
         gcode,
         retract_overrides,
         object,
         region,
+        filament,
+        physical: gcode
+            .filament_map
+            .0
+            .get(filament)
+            .map_or(0, |value| (value.0 - 1) as usize),
         filament_diameter,
         travel_speed,
         travel_acceleration,

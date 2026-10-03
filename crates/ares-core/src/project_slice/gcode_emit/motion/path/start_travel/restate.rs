@@ -35,7 +35,8 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // marker — suppress the double reset only for that combined case. A
     // lift WITHOUT retraction (timelapse `G1 Z`) has no later descend, so
     // the reset must run to restore `m_nominal_z` (`GCode.cpp:6396-6400`).
-    let suppressed = state.retracted && (state.lifted_amount > 0.0 || state.template_lifted);
+    let suppressed =
+        state.extruder.retracted && (state.lifted_amount > 0.0 || state.template_lifted);
     if slope_start_z.is_none()
         && !suppressed
         && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
@@ -121,12 +122,12 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         // DELTA (`GCodeWriter.cpp:1063-1076`, `Extruder.cpp:98-103`) —
         // `coordinate` returns the absolute counter, which can land on
         // zero while the delta is real.
-        let delta = state.retracted_amount + state.restart_extra;
+        let delta = state.extruder.retracted_amount + state.extruder.restart_extra;
         let unretract = extrusion::coordinate(state, delta);
         // `Extruder::unretract()` zeroes `m_retracted`/`m_restart_extra`
         // after the extrude (`Extruder.cpp:92-104`).
-        state.retracted_amount = 0.0;
-        state.restart_extra = 0.0;
+        state.extruder.retracted_amount = 0.0;
+        state.extruder.restart_extra = 0.0;
         // A zero-length retraction (retraction_length=0 with wipe)
         // deretracts silently.
         if delta.abs() >= 1e-6 {
@@ -161,7 +162,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
                 state.current_feedrate = state.options.deretraction_feedrate;
             }
         }
-        state.retracted = false;
+        state.extruder.retracted = false;
         state.lifted = false;
         state.lifted_amount = 0.0;
         state.template_lifted = false;

@@ -7,7 +7,7 @@ mod retract_core;
 mod tests;
 mod wipe_path;
 mod wipe_sequence;
-use retract_core::plain_retract;
+pub(super) use retract_core::plain_retract;
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::reset_e;
 use wipe_sequence::{retract_and_wipe, retract_and_wipe_with, retract_sequence_due, wipe_eligible};
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::{
@@ -39,7 +39,7 @@ pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     } else {
         lift::schedule(state, false);
     }
-    state.retracted = true;
+    state.extruder.retracted = true;
 }
 
 pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
@@ -49,10 +49,10 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     // Upstream `m_writer.retract()` runs regardless of the retracted flag
     // (`GCode.cpp:7672`), so `m_restart_extra` is (re)assigned even on a
     // no-op retract (`Extruder.cpp:77`).
-    state.restart_extra = state.options.retract_restart_extra;
+    state.extruder.restart_extra = state.options.retract_restart_extra;
     if retract_sequence_due(state) {
         retract_and_wipe_with(output, state, false);
-        state.retracted = true;
+        state.extruder.retracted = true;
     }
     // `reset_e` runs unconditionally after the retract/wipe block
     // (`GCode.cpp:7674`), independent of whether anything retracted.
@@ -67,10 +67,10 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
 /// marker — no later cooling pass runs to clean it (print-end retraction
 /// happens after the final layer flushes).
 pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
-    state.restart_extra = state.options.retract_restart_extra;
+    state.extruder.restart_extra = state.options.retract_restart_extra;
     if retract_sequence_due(state) {
         retract_and_wipe(output, state);
-        state.retracted = true;
+        state.extruder.retracted = true;
     }
     reset_e(output, state);
     // GCode.cpp:7674-7704 lifts even when retraction is already complete.
@@ -88,10 +88,10 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
 /// both, only the eager lift is emitted. The lift itself always runs
 /// (`needs_lift && can_lift` → `eager_lift`, `GCode.cpp:7693-7696`).
 pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) {
-    state.restart_extra = state.options.retract_restart_extra;
+    state.extruder.restart_extra = state.options.retract_restart_extra;
     if retract_sequence_due(state) {
         retract_and_wipe(output, state);
-        state.retracted = true;
+        state.extruder.retracted = true;
     }
     reset_e(output, state);
     // The `needs_lift && can_lift` guards of the parent retract
@@ -119,11 +119,11 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     // Upstream `retract()` assigns `m_restart_extra` even when the extruder
     // is already retracted (`Extruder.cpp:77`).
     if state.pending_layer_retract && will_move_z {
-        state.restart_extra = state.options.retract_restart_extra;
+        state.extruder.restart_extra = state.options.retract_restart_extra;
     }
     if state.pending_layer_retract && will_move_z && retract_sequence_due(state) {
         retract_and_wipe(output, state);
-        state.retracted = true;
+        state.extruder.retracted = true;
     }
     if state.pending_layer_retract && will_move_z {
         reset_e(output, state);
@@ -138,14 +138,14 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
 ) {
     // Same `change_layer` gate as the wipe flush (`GCode.cpp:5693`).
     if state.pending_layer_retract && will_move_z {
-        state.restart_extra = state.options.retract_restart_extra;
+        state.extruder.restart_extra = state.options.retract_restart_extra;
     }
     if state.pending_layer_retract
         && will_move_z
-        && state.retracted_amount < effective_retraction_length(state)
+        && state.extruder.retracted_amount < effective_retraction_length(state)
     {
         lift::schedule_at(state, true, writer_z);
-        state.retracted = true;
+        state.extruder.retracted = true;
     }
     state.pending_layer_retract = false;
 }
@@ -167,7 +167,7 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     // (`Extruder.cpp:77`); only a nozzle already at FULL retraction
     // skips the E move.
     if force || state.pending_layer_retract {
-        state.restart_extra = state.options.retract_restart_extra;
+        state.extruder.restart_extra = state.options.retract_restart_extra;
     }
     if force || state.pending_layer_retract {
         // The forced `retract()` runs its wipe whenever a stored path is
@@ -177,15 +177,15 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
         if force {
             if wipe_eligible(state) {
                 retract_and_wipe(output, state);
-            } else if state.retracted_amount < effective_retraction_length(state) {
+            } else if state.extruder.retracted_amount < effective_retraction_length(state) {
                 // No stored wipe path (`GCode.cpp:5205-5210`); the plain
                 // retraction emits the remaining length.
                 plain_retract(output, state);
             }
-            state.retracted = true;
+            state.extruder.retracted = true;
         } else if retract_sequence_due(state) {
             retract_and_wipe(output, state);
-            state.retracted = true;
+            state.extruder.retracted = true;
         }
     }
     if force || state.pending_layer_retract {
@@ -198,7 +198,7 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     // The eager lift supersedes any lift that the deferred path scheduled
     // for the layer's first travel.
     state.pending_lift = None;
-    if state.retracted {
+    if state.extruder.retracted {
         lift::append_eager(output, state);
     }
 }

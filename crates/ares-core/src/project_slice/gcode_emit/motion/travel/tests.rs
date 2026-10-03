@@ -41,7 +41,7 @@ fn bottom_only_lift_does_not_lift_later_layers() {
     retract_and_lift(&mut output, &mut state);
 
     assert_eq!(output, b"G1 E-1 F3600\n");
-    assert!(state.retracted);
+    assert!(state.extruder.retracted);
     assert_eq!(state.pending_lift, None);
 }
 
@@ -81,7 +81,7 @@ fn deferred_bottom_only_lift_uses_the_target_layer_index() {
     flush_pending_retract_lift(&mut Vec::new(), &mut state, writer_z, true);
 
     assert_eq!(state.pending_lift, None);
-    assert!(state.retracted);
+    assert!(state.extruder.retracted);
 }
 
 #[test]
@@ -216,7 +216,7 @@ fn print_end_retracts_without_a_layer_change_lift() {
     retract_for_print_end(&mut output, &mut state);
 
     assert_eq!(output, b"G1 E-1 F3600\n");
-    assert!(state.retracted);
+    assert!(state.extruder.retracted);
     assert!(!state.lifted);
 }
 

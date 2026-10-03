@@ -901,3 +901,19 @@ snapshot and found no new must-fix or unused writer-only scaffolding.
 This snapshot has compile/format evidence, not a newly executed48-test
 runtime claim. Later registry/metadata getters and writer installation are
 staged only with their actual consumers. Dual complete output remains RED.
+
+Checkpoint1 is local75699e7b. Checkpoint2 combines the actual registry,
+relative-E/private-counter migration, common template refresh/write-back,
+machine-start lifecycle, ordered initial metadata and selected-tool options
+because the shared EmitState fields and template callers must change together.
+It retains the previously verified startup-local compatible command shell;
+checkpoint3 replaces that shell with the shared writer implementation. Its
+exported registry snapshot is independently being checked; fmt0. Final
+working-tree source remains untouched by index-only reconstruction. No claim
+that this intermediate snapshot ran the final48-test batches is made.
+
+Checkpoint2 registry snapshot reached terminal workspace/all-targets check
+exit0,53.16s, with no warnings. Independent review matched all44 source files
+to the snapshot, verified local startup has no dependency on the unstaged
+writer module and found no new must-fix. Snapshot fmt0 and cached diff0.
+Its freshly executed evidence is compile/format, not full runtime parity.

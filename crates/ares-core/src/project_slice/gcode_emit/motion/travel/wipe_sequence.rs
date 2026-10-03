@@ -19,7 +19,7 @@ pub(super) fn wipe_eligible(state: &EmitState) -> bool {
 /// `retract()` runs when it has something to do: a remaining retract
 /// distance or an eligible stored wipe path (`GCode.cpp:7659-7670`).
 pub(super) fn retract_sequence_due(state: &EmitState) -> bool {
-    state.retracted_amount < effective_retraction_length(state) || wipe_eligible(state)
+    state.extruder.retracted_amount < effective_retraction_length(state) || wipe_eligible(state)
 }
 
 pub(super) fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -67,11 +67,12 @@ pub(super) fn retract_and_wipe_impl(
     // (`Extruder.cpp:66,77`): the before-wipe call assigns
     // `retract_before_wipe * extra`, the post-wipe `retract()` call
     // reassigns the full `extra` (`GCodeWriter.cpp:1004-1011`).
-    state.restart_extra = if suppressed_tail {
-        state.options.retract_before_wipe * state.options.retract_restart_extra
-    } else {
-        state.options.retract_restart_extra
-    };
+    if has_wipe {
+        state.extruder.restart_extra =
+            state.options.retract_before_wipe * state.options.retract_restart_extra;
+    } else if !suppressed_tail {
+        state.extruder.restart_extra = state.options.retract_restart_extra;
+    }
     let WipePath {
         segments,
         retraction_distance,
@@ -112,21 +113,21 @@ pub(super) fn retract_and_wipe_impl(
     // template `e_retracted` assignment) tops up rather than restarting
     // the full length.
     let before = if !has_wipe {
-        (state.options.retraction_length - state.retracted_amount).max(0.0)
+        (state.options.retraction_length - state.extruder.retracted_amount).max(0.0)
     } else if during <= 0.0 {
         // `(fL, 0)` — no leftover difference is folded into the
         // pre-wipe amount (`GCode.cpp:351-352`).
-        (requested_before - state.retracted_amount).max(0.0)
+        (requested_before - state.extruder.retracted_amount).max(0.0)
     } else {
         // The before-wipe call emits `max(0, before - m_retracted)`
         // (`Extruder.cpp:77-84`); the post-wipe `retract()` tops the
         // remainder off to the full length.
-        (state.options.retraction_length - during - state.retracted_amount).max(0.0)
+        (state.options.retraction_length - during - state.extruder.retracted_amount).max(0.0)
     };
-    if state.options.use_firmware_retraction {
+    if state.options.use_firmware_retraction && (has_wipe || !suppressed_tail) {
         firmware_retract(output, state);
-        state.retracted = true;
-    } else if before > 0.0 {
+        state.extruder.retracted = true;
+    } else if has_wipe || !suppressed_tail {
         // `extrusion::coordinate` accumulates `retracted_amount`
         // (`Extruder.cpp:77-84` semantics live in the shared counter);
         // `_retract` emits only when `!is_zero(dE)` (`GCodeWriter.cpp:
@@ -214,8 +215,14 @@ pub(super) fn retract_and_wipe_impl(
         // wipe carried less than the remaining distance
         // (`GCode.cpp:7664-7670`, `Extruder.cpp:75-84`). For the
         // suppressed tail the final call is skipped entirely.
-        if !suppressed_tail && !state.options.use_firmware_retraction {
-            let topup = (state.options.retraction_length - state.retracted_amount).max(0.0);
+        if !suppressed_tail {
+            state.extruder.restart_extra = state.options.retract_restart_extra;
+        }
+        if !suppressed_tail && state.options.use_firmware_retraction {
+            firmware_retract(output, state);
+        } else if !suppressed_tail {
+            let topup =
+                (state.options.retraction_length - state.extruder.retracted_amount).max(0.0);
             // `Extruder::retract` always accumulates `m_retracted`;
             // `_retract` emits only when `!is_zero(dE)` — `1e-6`, not
             // machine eps (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
@@ -254,7 +261,7 @@ pub(in crate::project_slice::gcode_emit) fn reset_e(output: &mut Vec<u8>, state:
                 | crate::GCodeFlavor::MakerWare
                 | crate::GCodeFlavor::Sailfish
         )
-        && state.e_position.abs() >= 1e-6
+        && state.extruder.e_position.abs() >= 1e-6
     {
         let comment = if state.options.gcode_comments {
             " ; reset extrusion distance"
@@ -262,6 +269,6 @@ pub(in crate::project_slice::gcode_emit) fn reset_e(output: &mut Vec<u8>, state:
             ""
         };
         output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-        state.e_position = 0.0;
+        state.extruder.e_position = 0.0;
     }
 }

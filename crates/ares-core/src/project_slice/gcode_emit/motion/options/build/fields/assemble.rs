@@ -1,14 +1,14 @@
 //! `MotionOptions` field assembly (split from `fields.rs`).
 
 use super::super::super::MotionOptions;
-use super::super::super::first_nullable_float;
 use super::super::super::helpers::{
     absolute, acceleration, first_float, machine_acceleration_limit, rounded_acceleration,
 };
+use super::super::super::nullable_float_at;
 use super::super::context::Prelude;
 use super::super::{crossing, scarf};
 use super::hilbert;
-use crate::{Nullable, options::InternalBridgeFanSpeed};
+use crate::options::InternalBridgeFanSpeed;
 
 pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
     traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -18,9 +18,9 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
     let Prelude {
         full,
         gcode,
-        retract_overrides,
         object,
         region,
+        filament,
         filament_diameter,
         travel_speed,
         travel_acceleration,
@@ -29,10 +29,9 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         small_perimeter_speed,
         outer_wall_acceleration,
         default_acceleration,
-        retraction_speed,
-        deretraction_speed,
+        ..
     } = prelude;
-    MotionOptions {
+    let mut options = MotionOptions {
         wall_direction: region.map_or(full.process.region.wall_direction, |value| {
             value.wall_direction
         }),
@@ -42,16 +41,18 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         filament_density: gcode
             .filament_density
             .0
-            .first()
+            .get(filament)
+            .or_else(|| gcode.filament_density.0.first())
             .map_or(0.0, |value| value.0),
-        filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
+        filament_flow_ratio: nullable_float_at(&gcode.filament_flow_ratio, filament, 1.0),
         print_flow_ratio: region.map_or(full.process.region.print_flow_ratio.0, |value| {
             value.print_flow_ratio.0
         }),
         max_volumetric_speed: gcode
             .filament_max_volumetric_speed
             .0
-            .first()
+            .get(filament)
+            .or_else(|| gcode.filament_max_volumetric_speed.0.first())
             .map_or(0.0, |value| value.0),
         travel_feedrate: travel_speed * 60.0,
         z_travel_feedrate: gcode.travel_speed_z.0 * 60.0,
@@ -143,29 +144,32 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .print
             .enable_overhang_bridge_fan
             .0
-            .first()
+            .get(filament)
+            .or_else(|| full.filament.print.enable_overhang_bridge_fan.0.first())
             .is_some_and(|value| value.0),
         overhang_fan_speed: full
             .filament
             .print
             .overhang_fan_speed
             .0
-            .first()
+            .get(filament)
+            .or_else(|| full.filament.print.overhang_fan_speed.0.first())
             .map_or(100, |value| value.0.clamp(0, 100) as u8),
         overhang_fan_threshold: full
             .filament
             .print
             .overhang_fan_threshold
-            .first()
+            .get(filament)
+            .or_else(|| full.filament.print.overhang_fan_threshold.first())
             .copied()
             .unwrap_or_default(),
         role_change_machine: gcode.change_extrusion_role_gcode.0.clone(),
         role_change_process: gcode.process_change_extrusion_role_gcode.0.clone(),
-        // Single-filament profiles resolve `get_at(0)` (`GCode.cpp:6749`).
         role_change_filament: gcode
             .filament_change_extrusion_role_gcode
             .0
-            .first()
+            .get(filament)
+            .or_else(|| gcode.filament_change_extrusion_role_gcode.0.first())
             .cloned()
             .unwrap_or_default(),
         internal_bridge_fan_speed: full
@@ -173,7 +177,8 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .print
             .internal_bridge_fan_speed
             .0
-            .first()
+            .get(filament)
+            .or_else(|| full.filament.print.internal_bridge_fan_speed.0.first())
             .map_or_else(InternalBridgeFanSpeed::fallback, |value| {
                 if value.0 < 0 {
                     InternalBridgeFanSpeed::fallback()
@@ -267,75 +272,8 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         },
         accel_to_decel_enable: gcode.accel_to_decel_enable.0,
         accel_to_decel_factor: gcode.accel_to_decel_factor.0,
-        retraction_length: gcode
-            .retraction_length
-            .0
-            .first()
-            .map_or(0.0, |value| value.0),
         use_firmware_retraction: gcode.use_firmware_retraction.0,
-        retract_restart_extra: gcode
-            .retract_restart_extra
-            .0
-            .first()
-            .map_or(0.0, |value| value.0),
-        deretraction_feedrate: deretraction_speed * 60.0,
         z_offset: traversal.resolved.views.full.printer.remaining.z_offset.0,
-        z_hop: gcode.z_hop.0.first().map_or(0.0, |value| value.0),
-        retract_lift_above: gcode
-            .retract_lift_above
-            .0
-            .first()
-            .map_or(0.0, |value| value.0),
-        retract_lift_below: gcode
-            .retract_lift_below
-            .0
-            .first()
-            .map_or(0.0, |value| value.0),
-        retract_lift_enforce: gcode
-            .retract_lift_enforce
-            .0
-            .first()
-            .copied()
-            .unwrap_or_default(),
-        retraction_feedrate: retraction_speed * 60.0,
-        retraction_during_wipe_speed: gcode
-            .retraction_speed
-            .0
-            .first()
-            .map_or(0.0, |value| value.0),
-        wipe: retract_overrides
-            .filament_wipe
-            .iter()
-            .find_map(|value| match value {
-                Nullable::Value(value) => Some(value.0),
-                Nullable::Nil => None,
-            })
-            .unwrap_or_else(|| {
-                full.project
-                    .print
-                    .wipe
-                    .0
-                    .first()
-                    .is_some_and(|value| value.0)
-            }),
-        wipe_distance: first_nullable_float(
-            &retract_overrides.filament_wipe_distance,
-            full.project
-                .print
-                .wipe_distance
-                .0
-                .first()
-                .map_or(0.0, |value| value.0),
-        ),
-        retraction_minimum_travel: first_nullable_float(
-            &retract_overrides.filament_retraction_minimum_travel,
-            full.project
-                .print
-                .retraction_minimum_travel
-                .0
-                .first()
-                .map_or(0.0, |value| value.0),
-        ),
         reduce_infill_retraction: full.process.print.reduce_infill_retraction.0,
         bottom_surface_pattern_hilbert: hilbert::is_hilbert(
             region.map_or(full.process.region.bottom_surface_pattern, |region| {
@@ -358,22 +296,6 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         wipe_before_external_loop: wipe_tail.wipe_before_external_loop,
         wall_loops: wipe_tail.wall_loops,
         nozzle_diameter: wipe_tail.nozzle_diameter,
-        retract_when_changing_layer: traversal
-            .resolved
-            .views
-            .runtime
-            .project
-            .print
-            .retract_when_changing_layer
-            .0
-            .first()
-            .is_some_and(|value| value.0),
-        z_hop_type: gcode.z_hop_types.0.first().copied().unwrap_or_default(),
-        travel_slope_radians: gcode
-            .travel_slope
-            .0
-            .first()
-            .map_or(0.0, |value| value.0.to_radians()),
         seam_gap: absolute(
             region.map_or(full.process.region.seam_gap, |value| value.seam_gap),
             wipe_tail.nozzle_diameter,
@@ -386,5 +308,8 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         scarf: scarf::from_region(&full.process.region, region),
         enable_arc_fitting: gcode.enable_arc_fitting.0,
         arc_fitting_tolerance: full.process.print.resolution.0,
-    }
+        ..Default::default()
+    };
+    super::retraction::apply(&mut options, &prelude);
+    options
 }

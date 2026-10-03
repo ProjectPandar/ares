@@ -54,6 +54,21 @@ pub(super) fn first_float(values: &crate::OrcaFloats) -> f64 {
     values.0.first().map_or(0.0, |value| value.0)
 }
 
+pub(in crate::project_slice::gcode_emit) fn nullable_float_at(
+    values: &[Nullable<OrcaFloat>],
+    index: usize,
+    default: f64,
+) -> f64 {
+    values
+        .get(index)
+        .or_else(|| values.first())
+        .and_then(|value| match value {
+            Nullable::Value(value) => Some(value.0),
+            Nullable::Nil => None,
+        })
+        .unwrap_or(default)
+}
+
 pub(in crate::project_slice::gcode_emit) fn first_nullable_float(
     values: &[Nullable<OrcaFloat>],
     default: f64,

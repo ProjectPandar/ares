@@ -41,7 +41,6 @@ pub(super) fn append(
     let Context {
         metadata,
         first_layer_bounds,
-        start_position,
         bed_cache,
         brim,
         skirt,
@@ -164,14 +163,7 @@ pub(super) fn append(
         // off `first_group`, not `first_layer == 0`). Upstream emits the
         // filament-start g-code at the raft base, not the object base.
         if first_group {
-            preamble::emit(
-                output,
-                state,
-                traversal,
-                metadata,
-                start_position.as_ref(),
-                first_layer_bounds,
-            )?;
+            preamble::emit(output, state, traversal, metadata, first_layer_bounds)?;
             first_group = false;
         }
         // The cooling rewrite window opens after the preamble (the start

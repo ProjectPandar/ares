@@ -4,7 +4,7 @@ use crate::{
     FloatOrPercent, RawOverhangFanThreshold, RetractLiftEnforce, options::InternalBridgeFanSpeed,
 };
 
-pub(in crate::project_slice::gcode_emit) use helpers::first_nullable_float;
+pub(in crate::project_slice::gcode_emit) use helpers::{first_nullable_float, nullable_float_at};
 
 mod build;
 

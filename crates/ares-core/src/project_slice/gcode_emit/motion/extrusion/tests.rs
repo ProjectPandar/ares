@@ -76,5 +76,5 @@ fn zero_flow_move_omits_extrusion_axis() {
     );
 
     assert_eq!(output, b"G1 X1 Y2\n");
-    assert_eq!(state.e_position, 0.0);
+    assert_eq!(state.extruder.e_position, 0.0);
 }

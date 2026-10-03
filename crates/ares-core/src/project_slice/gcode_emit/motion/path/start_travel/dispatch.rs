@@ -8,7 +8,7 @@ use crate::project_slice::gcode_emit::motion::{
     travel,
 };
 
-/// `state.retracted && first_position && z_hop > 0` branch of
+/// `state.extruder.retracted && first_position && z_hop > 0` branch of
 /// `emit_needs_travel`: emit the Z lift, then the approach move whose
 /// shape depends on whether the source position is genuinely unknown
 /// (`GCodeWriter.cpp:748-777`).

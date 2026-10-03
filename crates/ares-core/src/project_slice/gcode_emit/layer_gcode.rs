@@ -1,9 +1,9 @@
 //! Per-layer emission helpers split from the emit driver: fan allowance,
 //! print preamble, and the layer-change G-code templates.
 
-use crate::GenerationMetadata;
+use crate::{GenerationMetadata, project_slice::extruders};
 
-use super::super::gcode_emit::{SliceError, extruders, tags, template, value};
+use super::super::gcode_emit::{SliceError, template, value};
 use super::PreparedPostClassicTraversal;
 
 pub(super) struct LayerChangeTemplate {
@@ -47,175 +47,8 @@ fn max_additional_fan(traversal: &PreparedPostClassicTraversal) -> f64 {
         .max()
         .map_or(0.0, f64::from)
 }
-pub(super) fn append_print_preamble(
-    output: &mut Vec<u8>,
-    state: &mut super::motion::EmitState,
-    traversal: &PreparedPostClassicTraversal,
-    metadata: GenerationMetadata,
-    start_position: Option<&value::Value>,
-    first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
-) -> Result<(), SliceError> {
-    let is_bbl = tags::Tags::of(traversal).is_bbl();
-    // BBL's `init_extruder` already selected the initial extruder
-    // BEFORE its filament-start render (`GCode.cpp:3144-3148`), so
-    // `position` write-backs carry the extruder offset; the non-BBL
-    // extruder is selected inside `set_extruder` AFTER the render
-    // (`GCode.cpp:7736-7746`), so its write-back omits the offset.
-    state.extruder_selected = is_bbl;
-    // BBL renders this explicitly before `;VT` (`GCode.cpp:3143-3154`);
-    // compatible printers render it from the initial set_extruder call
-    // (`GCode.cpp:7710-7745`).
-    // compatible printers render it from the initial set_extruder call
-    // (`GCode.cpp:7710-7745`).
-    if let Some(source) = traversal
-        .resolved
-        .views
-        .runtime_gcode
-        .filament_start_gcode
-        .0
-        .first()
-        // `GCode.cpp:7710-7745` processes this through PlaceholderParser;
-        // its skipper (`PlaceholderParser.cpp:2510-2520`) reduces Orca's
-        // whitespace-only default sentinel to no output and no newline.
-        .filter(|source| !source.trim().is_empty())
-    {
-        // Machine-start's `position` assignment was already written back
-        // into writer state by the caller (`gcode_emit.rs`), so the
-        // refresh below seeds upstream's post-assignment `m_pos`.
-        let _ = start_position;
-        let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
-        super::motion::refresh_writer_state(&mut config, state);
-        let name = "filament_start_gcode";
-        // Render and write-back failures both emit only the inline
-        // report (`GCode.cpp:3920-3933`).
-        let mut failure_error = String::new();
-        let failed = match template::render(source, &mut config) {
-            Err(error) => {
-                failure_error = error.to_string();
-                state.record_template_failure(name, &failure_error);
-                true
-            }
-            Ok(rendered) => match super::motion::apply_writer_state(name, &config, state) {
-                Ok(()) => {
-                    output.extend_from_slice(rendered.as_bytes());
-                    if !rendered.ends_with('\n') {
-                        output.push(b'\n');
-                    }
-                    false
-                }
-                Err(error) => {
-                    failure_error = error;
-                    true
-                }
-            },
-        };
-        if failed {
-            let error = failure_error;
-            output.extend_from_slice(
-                format!(
-                    "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
-                )
-                .as_bytes(),
-            );
-        }
-    }
-    // `set_extruder` finishes selecting the extruder once
-    // filament-start rendered (`GCode.cpp:7746`): later template
-    // write-backs (layer/before/after) apply the extruder offset.
-    state.extruder_selected = true;
-    if is_bbl {
-        output.extend_from_slice(b";VT0\n");
-    }
-    // GCodeWriter::toolchange also emits the initial selection for a
-    // non-BBL multi-filament configuration, even if only filament0 is used.
-    let settings = &traversal.resolved.views.full;
-    if !is_bbl && settings.filament.gcode.filament_diameter.0.len() > 1 {
-        let runtime = &traversal.resolved.views.runtime_gcode;
-        let prefix = if runtime.manual_filament_change.0 {
-            "; MANUAL_TOOL_CHANGE T"
-        } else {
-            match runtime.gcode_flavor {
-                crate::GCodeFlavor::MakerWare => "M135 T",
-                crate::GCodeFlavor::Sailfish => "M108 T",
-                _ => "T",
-            }
-        };
-        let comments = settings.process.print.gcode_comments.0;
-        let comment = if comments { " ; change extruder" } else { "" };
-        output.extend_from_slice(format!("{prefix}0{comment}\n").as_bytes());
-        if runtime.gcode_flavor.resets_absolute_e() {
-            state.e_position = 0.0;
-            state.private_e_position = 0.0;
-        }
-        if runtime.gcode_flavor.resets_absolute_e() && !runtime.use_relative_e_distances.0 {
-            let comment = if comments {
-                " ; reset extrusion distance"
-            } else {
-                ""
-            };
-            output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-        }
-    }
-    // Orca: set the initial pressure advance for the first filament
-    // (`GCode.cpp:8048-8052`, `GCodeWriter.cpp:370-391`).
-    let enabled = settings
-        .filament
-        .gcode
-        .enable_pressure_advance
-        .0
-        .first()
-        .is_some_and(|value| value.0);
-    if enabled {
-        let pa = settings
-            .filament
-            .gcode
-            .pressure_advance
-            .0
-            .first()
-            .map_or(0.0, |value| value.0);
-        if pa >= 0.0 {
-            let value = format_pa(pa);
-            let line = match settings.printer.gcode.gcode_flavor {
-                crate::GCodeFlavor::Klipper => {
-                    format!(
-                        "SET_PRESSURE_ADVANCE ADVANCE={value}; Override pressure advance value\n"
-                    )
-                }
-                crate::GCodeFlavor::RepRapFirmware => {
-                    format!("M572 D0 S{value}; Override pressure advance value\n")
-                }
-                crate::GCodeFlavor::Repetier => {
-                    format!("M233 X{value} Y{value} ; Override pressure advance value\n")
-                }
-                _ if is_bbl => {
-                    format!("M900 K{value} L1000 M10 ; Override pressure advance value\n")
-                }
-                _ => format!("M900 K{value}; Override pressure advance value\n"),
-            };
-            output.extend_from_slice(line.as_bytes());
-        }
-    }
-    if is_bbl {
-        super::machine::append_flavor_preamble(output, traversal);
-        output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\n");
-    }
-    Ok(())
-}
-
-/// `std::setprecision(4)`: four significant digits, trailing zeros trimmed
-/// by the ostream default formatting.
-fn format_pa(value: f64) -> String {
-    if value == 0.0 {
-        return "0".to_owned();
-    }
-    let magnitude = value.abs().log10().floor() as i32;
-    let decimals = (3 - magnitude).max(0) as usize;
-    let formatted = format!("{value:.decimals$}");
-    formatted
-        .trim_end_matches('0')
-        .trim_end_matches('.')
-        .to_owned()
-}
+mod startup;
+pub(super) use startup::append_print_preamble;
 
 pub(super) struct ExtrusionTotals {
     pub(super) diameter: f64,
@@ -335,7 +168,6 @@ pub(super) fn append_layer_change(
             context.first_layer_bounds,
         )?;
         super::motion::refresh_writer_state(&mut config, state);
-        config.insert("current_extruder", value::Value::number(0.0));
         config.insert("layer_num", value::Value::number(layer_index as f64));
         config.insert("layer_z", value::Value::number(layer_z));
         config.insert("overall_chamber_temperature", value::Value::number(0.0));

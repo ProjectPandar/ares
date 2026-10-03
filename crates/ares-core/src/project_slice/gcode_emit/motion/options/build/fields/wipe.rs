@@ -20,18 +20,21 @@ pub(super) fn tail(prelude: &Prelude<'_>) -> WipeTail {
         gcode,
         region,
         travel_speed,
+        filament,
+        physical,
         ..
     } = prelude;
     WipeTail {
         retract_before_wipe: gcode
             .retract_before_wipe
             .0
-            .first()
+            .get(*filament)
+            .or_else(|| gcode.retract_before_wipe.0.first())
             // `Extruder::retract_before_wipe` (`Extruder.cpp:171`):
             // `value * 0.01`, not `value / 100` — the inexact 0.01
             // shifts the wipe distribution by 1 ulp (a half-way E
             // rounds differently).
-            .map_or(0.0, |value| value.0 * 0.01),
+            .map_or(0.0, |value| (value.0 * 0.01).clamp(0.0, 1.0)),
         role_based_wipe_speed: full.process.region.role_based_wipe_speed.0,
         wipe_speed: absolute(
             region.map_or(full.process.region.wipe_speed, |value| value.wipe_speed),
@@ -50,7 +53,8 @@ pub(super) fn tail(prelude: &Prelude<'_>) -> WipeTail {
             .print
             .nozzle_diameter
             .0
-            .first()
+            .get(*physical)
+            .or_else(|| full.project.print.nozzle_diameter.0.first())
             .map_or(0.4, |value| value.0),
     }
 }

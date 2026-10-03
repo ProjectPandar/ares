@@ -13,7 +13,8 @@ use super::MotionOptions;
 impl MotionOptions {
     pub(in crate::project_slice::gcode_emit) fn from_traversal(
         traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+        filament: usize,
     ) -> Self {
-        fields::assemble(traversal, context::prelude(traversal))
+        fields::assemble(traversal, context::prelude(traversal, filament))
     }
 }

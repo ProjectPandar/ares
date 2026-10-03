@@ -4,7 +4,6 @@
 
 use super::super::{
     GenerationMetadata, SliceError, footprint, layer_gcode, motion, tags::Tags, trailing_gcode_xy,
-    value,
 };
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
@@ -13,7 +12,6 @@ pub(super) fn emit(
     state: &mut motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
-    start_position: Option<&value::Value>,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
 ) -> Result<(), SliceError> {
     // `GCode::preamble` performs a *silent* `travel_to_z(z_offset)`
@@ -42,20 +40,13 @@ pub(super) fn emit(
         // (`GCode.cpp:7736-7746`), so a machine-start `e_position`
         // write-back survives into the non-BBL filament-start.
         if !state.options.use_relative_e_distances && Tags::of(traversal).is_bbl() {
-            state.e_position = 0.0;
+            state.extruder.e_position = 0.0;
         }
     };
     if !Tags::of(traversal).is_bbl() {
         reset_writer(state);
     }
-    layer_gcode::append_print_preamble(
-        output,
-        state,
-        traversal,
-        metadata,
-        start_position,
-        first_layer_bounds,
-    )?;
+    layer_gcode::append_print_preamble(output, state, traversal, metadata, first_layer_bounds)?;
     if Tags::of(traversal).is_bbl() {
         reset_writer(state);
     }

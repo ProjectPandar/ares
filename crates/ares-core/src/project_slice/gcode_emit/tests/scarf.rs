@@ -8,7 +8,7 @@ fn ksr_scarf_options_reach_active_motion_projection() {
     )
     .unwrap();
 
-    let options = MotionOptions::from_traversal(&prepared);
+    let options = MotionOptions::from_traversal(&prepared, 0);
 
     assert_eq!(options.scarf.seam_slope_type, ProcessSeamScarfType::None);
     assert!(!options.scarf.conditional);

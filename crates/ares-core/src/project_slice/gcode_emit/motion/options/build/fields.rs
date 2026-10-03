@@ -2,6 +2,7 @@
 
 mod assemble;
 mod hilbert;
+mod retraction;
 mod wipe;
 
 pub(super) use assemble::assemble;

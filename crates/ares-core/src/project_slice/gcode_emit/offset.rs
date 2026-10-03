@@ -2,14 +2,14 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 
 /// `GCode.cpp:8124-8128`: points are translated by the print origin and then
 /// corrected by the active physical extruder offset.
-pub(super) fn initial_extruder(traversal: &PreparedPostClassicTraversal) -> (f64, f64) {
+pub(super) fn extruder(traversal: &PreparedPostClassicTraversal, filament: usize) -> (f64, f64) {
     let settings = &traversal.resolved.views.full;
     let slot = settings
         .project
         .gcode
         .filament_map
         .0
-        .first()
+        .get(filament)
         .map_or(0, |value| value.0.saturating_sub(1).max(0) as usize);
     let heterogeneous = settings
         .printer

@@ -21,7 +21,7 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     )
     .unwrap();
 
-    let options = MotionOptions::from_traversal(&prepared);
+    let options = MotionOptions::from_traversal(&prepared, 0);
 
     assert_eq!(options.travel_feedrate, 60_000.0);
     assert_eq!(options.first_layer_travel_feedrate, 60_000.0);
@@ -60,7 +60,7 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     assert_eq!(options.retract_before_wipe, 0.0);
     assert!(options.role_based_wipe_speed);
     assert_eq!(options.z_hop_type, crate::ZHopType::Spiral);
-    assert_eq!(options.travel_slope_radians, 3.0_f64.to_radians());
+    assert_eq!(options.travel_slope_radians, 0.05235987755982988);
     assert_eq!(options.seam_gap, 0.04);
 }
 

@@ -55,20 +55,24 @@ pub(super) fn linear_segment(
 }
 
 pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {
-    state.e_position += delta;
+    // `Extruder::extrude`: relative E resets the axis, not absolute usage.
+    if state.options.use_relative_e_distances {
+        state.extruder.e_position = 0.0;
+    }
+    state.extruder.e_position += delta;
     // Mirror Orca's `Extruder::extrude()`: `m_absolute_E += dE` for any
     // sign, and negative `dE` accumulates into `m_retracted`. With
     // `single_extruder_multi_material` (share extruder) `used_filament()`
     // returns the signed `m_absolute_E`; otherwise `m_absolute_E +
     // m_retracted`. Template output never calls this.
-    state.filament_used += delta;
+    state.extruder.filament_used += delta;
     if delta < 0.0 {
-        state.retracted_amount -= delta;
+        state.extruder.retracted_amount -= delta;
     }
     if state.options.use_relative_e_distances {
         delta
     } else {
-        state.e_position
+        state.extruder.e_position
     }
 }
 

@@ -208,7 +208,7 @@ fn append_wipe_before_external(
     // deferred yet, upstream's `retract()` (needs_retraction always
     // holds from the unclear start position) defers one — same here.
     let lift_here = state.pending_lift.is_some()
-        || (state.retracted
+        || (state.extruder.retracted
             && state.options.z_hop > 0.0
             && state.options.retraction_length > 0.0
             && state.lifted_amount <= 0.0

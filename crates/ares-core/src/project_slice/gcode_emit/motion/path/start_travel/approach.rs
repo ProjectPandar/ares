@@ -118,7 +118,7 @@ pub(super) fn emit_needs_travel(
     // `Extruder::retract` emits `max(0, length - m_retracted)`
     // (`Extruder.cpp:75-84`) — a template-assigned PARTIAL retract tops
     // up rather than skipping.
-    let retract = state.retracted_amount < travel::effective_retraction_length(state)
+    let retract = state.extruder.retracted_amount < travel::effective_retraction_length(state)
         && routed_length >= state.options.retraction_minimum_travel
         && !skip_retraction;
     {

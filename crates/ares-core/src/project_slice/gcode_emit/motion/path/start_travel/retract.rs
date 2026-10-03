@@ -50,14 +50,14 @@ pub(super) fn decide(
     // Lift eligibility is a separate, narrower condition
     // (`GCodeWriter.cpp:637` gates on m_lifted == 0 && m_to_lift == 0).
     let defer_lift_for_retracted_travel = upstream_would_retract
-        && state.retracted
+        && state.extruder.retracted
         && state.lifted_amount == 0.0
         && state.pending_lift.is_none();
     if retract {
         if hilbert_wipe_only {
             let head_before = (state.x, state.y);
             travel::retract_and_wipe_suppressed_tail(output, state);
-            state.retracted = true;
+            state.extruder.retracted = true;
             if (state.x, state.y) != head_before {
                 replan(state);
             }
@@ -70,7 +70,7 @@ pub(super) fn decide(
                         | crate::GCodeFlavor::MakerWare
                         | crate::GCodeFlavor::Sailfish
                 )
-                && state.e_position.abs() >= 1e-6
+                && state.extruder.e_position.abs() >= 1e-6
             {
                 let comment = if state.options.gcode_comments {
                     " ; reset extrusion distance"
@@ -78,7 +78,7 @@ pub(super) fn decide(
                     ""
                 };
                 output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-                state.e_position = 0.0;
+                state.extruder.e_position = 0.0;
             }
             if state.options.z_hop > 0.0
                 && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
@@ -101,7 +101,7 @@ pub(super) fn decide(
                         | crate::GCodeFlavor::MakerWare
                         | crate::GCodeFlavor::Sailfish
                 )
-                && state.e_position.abs() >= 1e-6
+                && state.extruder.e_position.abs() >= 1e-6
             {
                 let comment = if state.options.gcode_comments {
                     " ; reset extrusion distance"
@@ -109,7 +109,7 @@ pub(super) fn decide(
                     ""
                 };
                 output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-                state.e_position = 0.0;
+                state.extruder.e_position = 0.0;
             }
             // `needs_lift` (`GCode.cpp:7678-7681`): configured length OR
             // firmware retraction allows the deferred hop; upstream
@@ -153,7 +153,7 @@ pub(super) fn decide(
                 }
             }
         } else if !hilbert_suppressed {
-            state.restart_extra = state.options.retract_restart_extra;
+            state.extruder.restart_extra = state.options.retract_restart_extra;
             if wipe_eligible {
                 let head_before = (state.x, state.y);
                 travel::wipe_only_retract(output, state);
@@ -169,7 +169,7 @@ pub(super) fn decide(
                     | crate::GCodeFlavor::MakerWare
                     | crate::GCodeFlavor::Sailfish
             )
-            && state.e_position.abs() >= 1e-6
+            && state.extruder.e_position.abs() >= 1e-6
         {
             let comment = if state.options.gcode_comments {
                 " ; reset extrusion distance"
@@ -177,7 +177,7 @@ pub(super) fn decide(
                 ""
             };
             output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-            state.e_position = 0.0;
+            state.extruder.e_position = 0.0;
         }
         if defer_lift_for_retracted_travel
             && state.options.z_hop > 0.0

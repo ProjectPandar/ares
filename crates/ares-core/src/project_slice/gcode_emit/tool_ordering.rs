@@ -20,9 +20,20 @@ pub(super) struct LayerTools {
 
 pub(super) struct ToolOrdering {
     layers: Vec<LayerTools>,
+    all_extruders: Vec<usize>,
 }
 
 impl ToolOrdering {
+    pub(super) fn all_extruders(&self) -> &[usize] {
+        &self.all_extruders
+    }
+
+    pub(super) fn ordered_tools(&self) -> impl Iterator<Item = usize> + '_ {
+        self.layers
+            .iter()
+            .flat_map(|layer| layer.extruders.iter().copied())
+    }
+
     pub(super) fn tools_for_layer(&self, print_z: f64) -> &[usize] {
         let index = layer_index(&self.layers, print_z);
         &self.layers[index].extruders
@@ -80,7 +91,16 @@ pub(super) fn build(
     let first_order = first_layer::generate(traversal)?;
     first_layer::handle_dontcare(&mut layers, &first_order, traversal);
     reorder::apply(&mut layers, traversal);
-    Ok(ToolOrdering { layers })
+    let mut all_extruders = layers
+        .iter()
+        .flat_map(|layer| layer.extruders.iter().copied())
+        .collect::<Vec<_>>();
+    all_extruders.sort_unstable();
+    all_extruders.dedup();
+    Ok(ToolOrdering {
+        layers,
+        all_extruders,
+    })
 }
 
 fn layer_index(layers: &[LayerTools], z: f64) -> usize {

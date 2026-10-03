@@ -1,6 +1,8 @@
 mod acceleration;
 mod arc;
 pub(super) mod clip;
+mod extruder_registry;
+mod extruder_state;
 mod extrusion;
 mod fan;
 mod features;
@@ -25,9 +27,11 @@ mod support;
 #[cfg(test)]
 mod tests;
 mod travel;
+mod writer_state;
 
 pub(super) use acceleration::{set_accel_and_jerk, set_layer_acceleration_and_jerk};
 pub(in crate::project_slice) use arc::{simplify_linear_points, simplify_points};
+pub(super) use extruder_registry::ExtruderRegistry;
 pub(super) use layer::emit_layer;
 pub(super) use origin::set_origin;
 pub(super) use skirt_brim::{emit_brim_loop, emit_skirt_loop};
@@ -44,7 +48,7 @@ pub(super) use travel::{
 
 use features::PathProperties;
 pub(in crate::project_slice::gcode_emit) use options::{MotionOptions, first_nullable_float};
-pub(in crate::project_slice::gcode_emit) use path::role_change::{
+pub(in crate::project_slice::gcode_emit) use writer_state::{
     apply_writer_state, refresh_writer_state,
 };
 
@@ -100,66 +104,11 @@ pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitStat
 /// Configured retraction at the start of the first layer — matches the
 /// GCodeWriter `retract()` formatting (`GCodeWriter.cpp`).
 pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) {
-    let length = state.options.retraction_length;
-    // `Extruder::retract` assigns `m_restart_extra` on EVERY call — even a
-    // length-0 / already-retracted no-op (`Extruder.cpp:77`).
-    state.restart_extra = state.options.retract_restart_extra;
-    if length <= 0.0 {
-        // `retract()`'s trailing `reset_e()` runs on every call
-        // (`GCode.cpp:7674`), including the zero-length no-op.
-        travel::reset_e(output, state);
-        return;
-    }
-    // `Extruder::retract` only retracts the REMAINING distance
-    // (`to_retract = max(0, length - m_retracted)`, `Extruder.cpp:77`):
-    // a nozzle already fully retracted — e.g. by a start-gcode
-    // `e_retracted` assignment — emits nothing but still defers the lift.
-    if state.retracted_amount >= length {
+    travel::plain_retract(output, state);
+    if travel::effective_retraction_length(state) > 0.0 {
+        state.extruder.retracted = true;
         travel::defer_layer_change_lift(state);
-        travel::reset_e(output, state);
-        return;
     }
-    if state.options.use_firmware_retraction {
-        // `GCodeWriter::_retract` firmware branch (`GCodeWriter.cpp:1022-
-        // 1044`): the fake length 1 emits the bare `G10 ; retract`
-        // (`G22` for Machinekit) with the hardcoded comment.
-        output.extend_from_slice(
-            if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
-                b"G22 ; retract\n"
-            } else {
-                b"G10 ; retract\n"
-            },
-        );
-        state.retracted_amount = 1.0;
-        state.retracted = true;
-        travel::defer_layer_change_lift(state);
-        travel::reset_e(output, state);
-        return;
-    }
-    let retract = extrusion::coordinate(state, -(length - state.retracted_amount));
-    let comment = if state.options.gcode_comments {
-        " ; retract"
-    } else {
-        ""
-    };
-    output.extend_from_slice(
-        format!(
-            "G1 E{} F{}{comment}\n",
-            format::extrusion(retract),
-            format::axis(state.options.retraction_feedrate)
-        )
-        .as_bytes(),
-    );
-    state.current_feedrate = state.options.retraction_feedrate;
-    state.retracted = true;
-    // The layer-start retract defers the z-hop like upstream `retract()`
-    // (needs_lift && can_lift → `lazy_lift` above/below gate at the
-    // current writer z, `GCodeWriter.cpp:626-648`).
-    travel::defer_layer_change_lift(state);
-    // `retract()` returns `gcode + reset_e()` — the reset is emitted
-    // unconditionally on every call (`GCode.cpp:7674`) and carries the
-    // ` ; reset extrusion distance` comment + flavor exclusions
-    // (`GCodeWriter.cpp:480-499`).
     travel::reset_e(output, state);
 }
 

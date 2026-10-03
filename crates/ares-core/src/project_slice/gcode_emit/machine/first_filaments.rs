@@ -1,53 +1,118 @@
 use crate::{
-    OrcaInts,
-    project_slice::{extruders, perimeters::classic::traversal::PreparedPostClassicTraversal},
+    OrcaInts, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
-use super::super::value;
+use super::super::{tool_ordering::ToolOrdering, value};
 
 #[cfg(test)]
 mod tests;
 
 /// `ToolOrdering::cal_non_support_filaments` and the physical-hotend remap in
 /// `GCode.cpp:2721-2851`. Unused physical hotends remain `-1`.
-pub(super) fn resolve(traversal: &PreparedPostClassicTraversal) -> (value::Value, value::Value) {
+#[derive(Default)]
+pub(in crate::project_slice::gcode_emit) struct InitialFilaments {
+    initial: usize,
+    non_support: usize,
+    initial_hotend: i32,
+    non_support_hotend: i32,
+    first: Vec<i32>,
+    first_non_support: Vec<i32>,
+}
+
+impl InitialFilaments {
+    pub(in crate::project_slice::gcode_emit) fn initial(&self) -> usize {
+        self.initial
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn non_support(&self) -> usize {
+        self.non_support
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn insert(&self, config: &mut value::Config) {
+        for (name, id) in [
+            ("initial_tool", self.initial),
+            ("initial_extruder", self.initial),
+            ("initial_no_support_tool", self.non_support),
+            ("initial_no_support_extruder", self.non_support),
+        ] {
+            config.insert(name, value::Value::Integer(id as i64));
+        }
+        config.insert(
+            "initial_no_support_hotend",
+            value::Value::Integer(i64::from(self.non_support_hotend)),
+        );
+        for name in ["first_tools", "first_filaments"] {
+            config.insert(name, as_value(&self.first));
+        }
+        for name in ["first_non_support_tools", "first_non_support_filaments"] {
+            config.insert(name, as_value(&self.first_non_support));
+        }
+    }
+
+    pub(super) fn insert_machine(&self, config: &mut value::Config) {
+        self.insert(config);
+        for name in ["current_extruder", "filament_extruder_id"] {
+            config.insert(name, value::Value::Integer(self.initial as i64));
+        }
+        config.insert(
+            "current_hotend",
+            value::Value::Integer(i64::from(self.initial_hotend)),
+        );
+    }
+}
+
+pub(in crate::project_slice::gcode_emit) fn resolve(
+    traversal: &PreparedPostClassicTraversal,
+    ordering: &ToolOrdering,
+) -> InitialFilaments {
     let settings = &traversal.resolved.views.full;
     let physical_count = settings.project.print.nozzle_diameter.0.len().max(1);
     let mut first = vec![-1; physical_count];
     let mut first_non_support = vec![-1; physical_count];
     let filament_map = &settings.project.gcode.filament_map;
 
-    let mut used = extruders::collect_project_object_extruders(
-        traversal.project.objects(),
-        &traversal.resolved.objects,
-        traversal.resolved.logical_filament_count,
-    )
-    .into_iter()
-    .flatten()
-    .collect::<Vec<_>>();
-    used.sort_unstable();
-    used.dedup();
-    for filament in used {
-        let Some(slot) = int_at(filament_map, filament)
-            .checked_sub(1)
-            .and_then(|slot| usize::try_from(slot).ok())
-            .filter(|slot| *slot < physical_count)
-        else {
-            continue;
-        };
-        if first[slot] == -1 {
-            first[slot] = filament as i32;
-        }
-        let support = settings
+    let is_support = |filament| {
+        settings
             .filament
             .gcode
             .filament_is_support
             .0
             .get(filament)
             .or_else(|| settings.filament.gcode.filament_is_support.0.first())
-            .is_some_and(|value| value.0);
-        if !support && first_non_support[slot] == -1 {
+            .is_some_and(|value| value.0)
+    };
+    let initial = ordering.ordered_tools().next().unwrap_or(0);
+    let has_non_support = ordering.all_extruders().iter().any(|&id| !is_support(id));
+    let mut non_support = None;
+    let mut found_first = 0;
+    let mut found_non_support = 0;
+    for filament in ordering.ordered_tools() {
+        let slot = (!filament_map.0.is_empty()).then(|| (filament_map.0[filament].0 - 1) as usize);
+        if let Some(slot) = slot
+            && first[slot] == -1
+        {
+            first[slot] = filament as i32;
+            found_first += 1;
+        }
+        if !has_non_support {
+            if found_first == physical_count || slot.is_none() {
+                break;
+            }
+            continue;
+        }
+        if is_support(filament) {
+            continue;
+        }
+        non_support.get_or_insert(filament);
+        let Some(slot) = slot else {
+            break;
+        };
+        if first_non_support[slot] == -1 {
             first_non_support[slot] = filament as i32;
+            found_non_support += 1;
+        }
+        if found_non_support == physical_count {
+            break;
         }
     }
 
@@ -60,7 +125,22 @@ pub(super) fn resolve(traversal: &PreparedPostClassicTraversal) -> (value::Value
         &settings.printer.gcode.physical_extruder_map,
     );
 
-    (as_value(first), as_value(first_non_support))
+    let non_support = non_support.unwrap_or(initial);
+    let hotend = |filament: usize| {
+        if settings.printer.remaining.printer_model.0 == "Bambu Lab X2D" {
+            -1
+        } else {
+            filament_map.0.get(filament).map_or(0, |value| value.0 - 1)
+        }
+    };
+    InitialFilaments {
+        initial,
+        non_support,
+        initial_hotend: hotend(initial),
+        non_support_hotend: hotend(non_support),
+        first,
+        first_non_support,
+    }
 }
 
 fn int_at(values: &OrcaInts, index: usize) -> i32 {
@@ -84,11 +164,11 @@ fn apply_physical_map(filaments: Vec<i32>, physical_map: &OrcaInts) -> Vec<i32> 
     remapped
 }
 
-fn as_value(filaments: Vec<i32>) -> value::Value {
+fn as_value(filaments: &[i32]) -> value::Value {
     value::Value::List(
         filaments
-            .into_iter()
-            .map(|filament| value::Value::number(f64::from(filament)))
+            .iter()
+            .map(|&filament| value::Value::Integer(i64::from(filament)))
             .collect(),
     )
 }

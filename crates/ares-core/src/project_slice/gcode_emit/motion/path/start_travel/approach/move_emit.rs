@@ -148,7 +148,7 @@ pub(super) fn emit_approach_move(
                 state.record_z(raised);
             }
         }
-    } else if layer_change_travel && state.retracted {
+    } else if layer_change_travel && state.extruder.retracted {
         // With a hop actually deferred, the earlier `state.lifted_amount > 0.0`
         // branch emitted the ramp and the combined layer+hop travel;
         // with no hop in play (the enforce gate blocked the

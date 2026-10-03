@@ -34,7 +34,6 @@ pub(super) fn append(
             value::Value::number(position.2),
         ]),
     );
-    config.insert("current_extruder", value::Value::number(0.0));
     config.insert(
         "layer_num",
         value::Value::number(layer_count(traversal).saturating_sub(1) as f64),

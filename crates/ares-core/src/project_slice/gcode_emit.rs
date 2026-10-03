@@ -1,5 +1,5 @@
 use crate::project_slice::{
-    extruders, island_print_order::PreparedPostIslandPrintOrder,
+    island_print_order::PreparedPostIslandPrintOrder,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
@@ -95,18 +95,8 @@ pub(super) fn emit(
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
     machine::append_first_line_m73(&mut output);
-    // The Marlin-family machine envelope prints before the start G-code
-    // (`GCode.cpp:2819`), followed by the start G-code (`GCode.cpp:3137`).
-    machine::append_limits(&mut output, traversal);
-    let start_outcome =
-        machine::append_start(&mut output, traversal, metadata, first_layer_bounds)?;
-    let (bed_cache, start_position, start_retract, start_failure) = (
-        start_outcome.bed_cache,
-        start_outcome.position,
-        start_outcome.retract,
-        start_outcome.failure,
-    );
-    let options = motion::MotionOptions::from_traversal(traversal);
+    let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
+    let options = motion::MotionOptions::from_traversal(traversal, 0);
     let small_area_flow = small_area::from_traversal(traversal)?;
     let model_offset = traversal
         .resolved
@@ -118,13 +108,28 @@ pub(super) fn emit(
                 traversal.scale,
             )
         });
-    let extruder_offset = offset::initial_extruder(traversal);
+    let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
     let offset = (
         model_offset.0 - extruder_offset.0,
         model_offset.1 - extruder_offset.1,
     );
     let extrusion_role_markers = options.extrusion_role_markers;
+    let extruders = motion::ExtruderRegistry::new(
+        schedule.tool_ordering.all_extruders().to_vec(),
+        &traversal.resolved.views.runtime_gcode,
+        traversal
+            .resolved
+            .views
+            .full
+            .project
+            .print
+            .nozzle_diameter
+            .0
+            .len(),
+    );
     let mut state = motion::EmitState {
+        extruders,
+        initial_filaments,
         offset,
         origin: model_offset,
         extruder_offset,
@@ -151,105 +156,16 @@ pub(super) fn emit(
         },
         ..Default::default()
     };
-    if let Some(error) = start_failure {
-        state.record_template_failure("machine_start_gcode", &error);
-    }
-    // `e_position[0]` write-back — absolute-E counters feed the
-    // filament-start `{e_position}` placeholder (`GCode.cpp:3908-3911`;
-    // sub-EPSILON assignments are ignored via `is_approx`).
-    if let Some(e_position) = start_outcome.e_position {
-        // `set_position` writes the private `m_E` and the compare reads
-        // `position()` (`Extruder.hpp:49,56`; `GCode.cpp:3910-3911`).
-        let semm = state.options.single_extruder_multi_material;
-        let current = if semm {
-            state.private_e_position
-        } else {
-            state.e_position
-        };
-        if (e_position - current).abs() >= 1e-4 {
-            if semm {
-                state.private_e_position = e_position;
-            } else {
-                state.e_position = e_position;
-            }
-        }
-    }
-    // The machine-start template's `e_retracted[0]` assignment seeds the
-    // extruder state (`GCode.cpp:3905-3918`): a pre-retracted nozzle skips
-    // the layer-change retract and the first unretract restores exactly the
-    // assigned amount.
-    if let Some(retract) = &start_retract {
-        // `Extruder::set_retracted` (`Extruder.cpp:108-122`): values below
-        // `-EPSILON` throw (upstream aborts the export after writing the
-        // inline failure block — `GCode.cpp:3920-3933`); a retracted
-        // > EPSILON assignment takes both fields, otherwise both clear.
-        const EPSILON: f64 = 1e-4;
-        if retract.retracted < -EPSILON {
-            state.record_template_failure(
-                "machine_start_gcode",
-                "Custom G-code reports negative z_retracted.",
-            );
-        } else if retract.restart_extra < -EPSILON {
-            state.record_template_failure(
-                "machine_start_gcode",
-                "Custom G-code reports negative z_restart_extra.",
-            );
-        } else if retract.retracted > EPSILON {
-            // `set_retracted` targets the PRIVATE `m_retracted`
-            // (`Extruder.cpp:108-122`); under SEMM only the placeholder
-            // echoes observe it. `m_restart_extra` is the same field in
-            // both modes — the shared `unretract` consumes it
-            // (`Extruder.cpp:87-90,117`).
-            let restart_extra = if retract.restart_extra < EPSILON {
-                0.0
-            } else {
-                retract.restart_extra
-            };
-            if state.options.single_extruder_multi_material {
-                state.private_retracted = retract.retracted;
-            } else {
-                state.retracted = true;
-                state.retracted_amount = retract.retracted;
-            }
-            state.restart_extra = restart_extra;
-        } else if state.options.single_extruder_multi_material {
-            // `retracted <= EPSILON` clears BOTH fields
-            // (`Extruder.cpp:118-121`).
-            state.private_retracted = 0.0;
-            state.restart_extra = 0.0;
-        } else {
-            state.retracted = false;
-            state.retracted_amount = 0.0;
-            state.restart_extra = 0.0;
-        }
-    }
-    // A `position` assignment in the machine-start template writes back
-    // into the writer state — including the generator cursor — for every
-    // template call (`GCode.cpp:3900-3907`, `Point.hpp:665` truncates).
-    // It is overwritten again by the silent `travel_to_z(z_offset)` in
-    // `preamble` (`GCode.cpp:5676-5679`, applied inside
-    // `preamble::emit`). `set_last_pos` runs only when the position
-    // actually changed from the writer's initial (0,0,0)
-    // (`GCode.cpp:3900-3903`).
-    if let Some(value::Value::List(position)) = &start_position
-        && let [x, y, z] = position.as_slice()
-        && let (Some(x), Some(y), Some(z)) = (x.as_number(), y.as_number(), z.as_number())
-    {
-        let moved = x != 0.0 || y != 0.0 || z != 0.0;
-        state.x = x;
-        state.y = y;
-        state.writer_z = Some(z);
-        if moved {
-            // `gcode_to_point` adds the extruder offset only with an
-            // active extruder (`GCode.cpp:8138-8144`); machine-start
-            // runs before the initial `set_extruder`
-            // (`GCode.cpp:3144`), so no offset applies here.
-            state.last_scaled_position = Some((
-                ((x - state.origin.0) / state.scale_factor) as i64,
-                ((y - state.origin.1) / state.scale_factor) as i64,
-            ));
-        }
-    }
+    // Writer registration precedes machine-start and its output-variable
+    // refresh/write-back (`GCode.cpp:2791,2829,3118`). No extruder is selected yet.
+    machine::append_limits(&mut output, traversal);
+    let bed_cache = machine::append_start(
+        &mut output,
+        &mut state,
+        traversal,
+        metadata,
+        first_layer_bounds,
+    )?;
     let fan_layers_start = output.len();
     let (max_layer_z, mut fan_mover_handle) = layers::append(
         prepared,
@@ -258,7 +174,6 @@ pub(super) fn emit(
         layers::Context {
             metadata,
             first_layer_bounds,
-            start_position,
             bed_cache,
             brim: &brim,
             skirt: &skirt,
