@@ -27,7 +27,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
     // extruder is selected inside `set_extruder` AFTER the render
     // (`GCode.cpp:7736-7746`), so its write-back omits the offset.
     if is_bbl {
-        select(state, traversal, filament);
+        super::super::motion::tool_selection::select(state, traversal, filament);
     }
     // BBL renders this explicitly before `;VT` (`GCode.cpp:3143-3154`);
     // compatible printers render it from the initial set_extruder call
@@ -108,38 +108,10 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
         if !multiple_extruders {
             append_pa(output, traversal, filament);
         }
-        select(state, traversal, filament);
+        super::super::motion::tool_selection::toolchange(output, state, traversal, filament);
     }
     if is_bbl {
         output.extend_from_slice(format!(";VT{initial}\n").as_bytes());
-    }
-    let settings = &traversal.resolved.views.full;
-    if !is_bbl && settings.filament.gcode.filament_diameter.0.len() > 1 {
-        let runtime = &traversal.resolved.views.runtime_gcode;
-        let prefix = if runtime.manual_filament_change.0 {
-            "; MANUAL_TOOL_CHANGE T"
-        } else {
-            match runtime.gcode_flavor {
-                crate::GCodeFlavor::MakerWare => "M135 T",
-                crate::GCodeFlavor::Sailfish => "M108 T",
-                _ => "T",
-            }
-        };
-        let comments = settings.process.print.gcode_comments.0;
-        let comment = if comments { " ; change extruder" } else { "" };
-        output.extend_from_slice(format!("{prefix}{initial}{comment}\n").as_bytes());
-        if runtime.gcode_flavor.resets_absolute_e() {
-            state.extruder.e_position = 0.0;
-            state.extruder.private_e_position = 0.0;
-        }
-        if runtime.gcode_flavor.resets_absolute_e() && !runtime.use_relative_e_distances.0 {
-            let comment = if comments {
-                " ; reset extrusion distance"
-            } else {
-                ""
-            };
-            output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-        }
     }
     if is_bbl || multiple_extruders {
         append_pa(output, traversal, filament);
@@ -195,37 +167,6 @@ fn append_pa(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal, fil
             output.extend_from_slice(line.as_bytes());
         }
     }
-}
-
-fn select(
-    state: &mut super::super::motion::EmitState,
-    traversal: &PreparedPostClassicTraversal,
-    filament: usize,
-) {
-    state.extruders.activate(
-        filament,
-        &mut state.extruder,
-        state.options.single_extruder_multi_material,
-    );
-    state.options = super::super::motion::MotionOptions::from_traversal(traversal, filament);
-    state.extruder_offset = super::super::offset::extruder(traversal, filament);
-    state.offset = (
-        state.origin.0 - state.extruder_offset.0,
-        state.origin.1 - state.extruder_offset.1,
-    );
-    state.extruder_selected = true;
-    let config = &traversal.resolved.views.full;
-    state.current_hotend = if config.printer.remaining.printer_model.0 == "Bambu Lab X2D" {
-        -1
-    } else {
-        config
-            .project
-            .gcode
-            .filament_map
-            .0
-            .get(filament)
-            .map_or(0, |value| value.0 - 1)
-    };
 }
 
 /// `std::setprecision(4)`: four significant digits, trailing zeros trimmed

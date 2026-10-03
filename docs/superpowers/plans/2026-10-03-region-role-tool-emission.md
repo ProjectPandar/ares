@@ -917,3 +917,23 @@ exit0,53.16s, with no warnings. Independent review matched all44 source files
 to the snapshot, verified local startup has no dependency on the unstaged
 writer module and found no new must-fix. Snapshot fmt0 and cached diff0.
 Its freshly executed evidence is compile/format, not full runtime parity.
+
+Checkpoint2 is localf07ce210. Checkpoint3 restores the exact frozen shared
+writer-selection source, replacing the temporary startup-local shell. Only
+motion.rs module registration, motion/tool_selection.rs and startup.rs differ
+from checkpoint2; the remaining source already matches the final frozen
+controls303/303 and official/seeded47/1 integration runs above. Export and
+check the final staged snapshot too; no push or mainline integration is
+authorized by this local checkpoint request. All unfinished body/transition/
+temperature/accounting behavior remains explicitly open, not silently skipped.
+
+Final writer staged snapshot independently passed workspace/all-targets
+check exit0,53.35s, without warnings; snapshot fmt0/cached diff0. Independent
+review matched its three source files and plan to the export, confirmed the
+first two commit boundaries and found no new must-fix. The final shared writer
+source is byte-identical to the previously frozen, runtime-verified integration
+source. All three snapshot-check handles have terminated and been reaped;
+none was restarted on a timeout. Local checkpoints preserve incomplete dual
+full-output status and do not authorize push, main integration or full-goal
+completion. Next implementation remains the actual per-tool body buckets and
+GCode::set_extruder transition consumer, followed by all-tool accounting.
