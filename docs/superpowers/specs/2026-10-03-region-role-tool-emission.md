@@ -41,6 +41,20 @@ claiming deterministic default-multiworker parity.
 
 ## Exit criteria
 
+The next necessary motion slice ports `PrintObject.cpp::detect_overhangs_for_lift`
+(818–848), `get_certain_layers` (3836–3849), `Print.cpp::layers_sorted_for_object`
+(594–614), and `GCode.cpp::needs_retraction`'s Auto lift selection
+(7538–7613,7643–7648). Destination: `gcode_emit/motion/auto_lift/` and the
+existing start-travel consumer. Include compensated all-region layer slices,
+object line-width/nozzle0 threshold, raft skip, the source opening, recent
+0.4mm Z window, all placed objects and the clipped first route segment using
+global maximum hop and selected hardware travel slope. Pass the selected
+lift type only to newly deferred travel lifts; existing layer-change lift
+is not overwritten. Replace fixed Auto→Slope compatibility behavior.
+Defer remaining XY routing/seam, fan state and full timing closure. Public
+saved3MF native-first spiral-lift sequence is diagnostic only; the unchanged
+original complete baseline/modifier comparison remains the acceptance gate.
+
 The raw fan-command recognition slice ports `FanMover.cpp::get_fan_speed`
 (90–114) and its raw-line call in `_process_gcode_line` (310) to
 `gcode_emit/fan_mover/helpers.rs` and its caller. Include byte-zero command

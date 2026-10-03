@@ -10,6 +10,9 @@ mod change;
 #[path = "tool_templates/timing.rs"]
 mod timing;
 
+#[path = "tool_templates/auto_lift.rs"]
+mod auto_lift;
+
 #[path = "tool_templates/cooling.rs"]
 mod cooling;
 

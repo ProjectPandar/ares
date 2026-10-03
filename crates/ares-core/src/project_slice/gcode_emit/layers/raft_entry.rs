@@ -53,6 +53,7 @@ pub(super) fn emit(
         .plans[object_index][raft_index];
     let first_layer = raft_index == 0 && plan.z.bottom_z.abs() < 0.0001;
     state.on_first_layer = first_layer;
+    state.active_layer_print_z = plan.z.print_z;
     // Raft layers belong to the same print instance and
     // carry its object labels (`GCode.cpp:5348-5352` fires
     // per `instance_to_print`, raft layers included).

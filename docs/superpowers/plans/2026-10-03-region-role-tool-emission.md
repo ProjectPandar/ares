@@ -1,5 +1,83 @@
 # Region-role tool emission implementation plan
 
+## Current slice: Auto lift overhang consumer
+
+Previous turn made verified progress:33ebbdcd raw vendor fan repair committed.
+Fresh original complete RED99970 exited100,2.570s,
+/tmp/ares-m73-current-red.log: same M73 baseline4593/line284 and
+modifier4185/line266. Worktree initially clean. Ranked hypotheses shown:
+actual motion/fan differences, cache row mapping, tool timing synchronization.
+Read-only diff excluding M73 (diagnosis only, not comparator) finds XY
+routing differences at Z0.84 and missing Auto spiral lifts at Z10.28, followed
+by cooling F differences. Therefore an M73-only index change is not closure.
+Source GCode::needs_retraction tests recent object overhangs; Ares currently
+uses fixed Auto→Slope except layer change. Source boundaries and included/
+deferred contracts are in spec/ARD0094 before production implementation.
+
+1. Public saved3MF native-first spiral-lift tracer RED using the agreed
+   outputs seam. Do not alter original fixture/comparator/assertions.
+2. Prepare source lift overhang cache from compensated all-region slices;
+   wire the selected Auto lift into new travel deferrals, preserving existing
+   pending lifts and actual object/support print_z.
+3. Rerun tracer/original full output and controls. Keep remaining XY/seam,
+   fan/timing differences visible. Frozen fmt/clippy/workspace/WASM/browser
+   and independent six-axis review before local code+docs checkpoint.
+
+Public tracerRED59866 exited100,1.834s:6 native spiral lifts versus2 Ares
+at Z10.28. New test verifies savedAuto setting; original full assertions stay
+intact. First build9577 exited101 due formatting a non-Display ClipperError;
+use Debug error details. Intermediate compile53389 overlaps a later coordinate
+correction and is not frozen acceptance. Fresh84371 exited0 before attempt
+63093 exited100,4.444s: Auto tracerPASS, original full testRED. Baseline first
+difference moves to XY boundary path17243/line844; modifier9227/line488 is
+lift direction/preceding XY. Initial M73 location difference is gone, not
+normalized away. Complete output still differs; no full dual claim.
+
+Independent static review identifies one mandatory repair: actual raft entry
+print_z must update active layer Z just like object/support, instead of relying
+on merged chunk Z. Add that assignment. Preserve source's ineffective discarded
+travel_bbox.inflated(1), effective object bboxEPS offset, double×float overlap/
+opening order and integer clipping before translation. All other static axes
+have no new confirmed errors. Re-freeze and rerun gates after raft repair.
+
+Raft-fixed official23710 exited100,44.076s:15 controls PASS and original
+complete dual RED. Clippy44763 exited0 but adds four warnings (257lib versus
+253 baseline): nesting and argument count in the new cache. Extract the
+source detector to motion/auto_lift/detect.rs, borrow live EmitState for query
+inputs and give Layer its clipping predicate; retain arithmetic/order and
+avoid lint suppression. Independent static re-review confirms raft Z and
+all three changes with no new must-fix. Final frozen runtime remains pending.
+This finite source slice is a code+docs commit/push checkpoint after runtime
+review, not complete dual parity or all-printer/all-option closure.
+
+Frozen cleanup receipts: clippy22558 terminal0,253core-lib/269core-test/
+31CLI warnings (zero increment), /tmp/ares-auto-lift-clean-clippy.log.
+CLI build72951 terminal0; fmt53388 and diff check0. WASM16154 terminal0,
+bindings84238 terminal0. Windows36698 and macOS3677 check terminal0;
+these are compilation evidence, not native runtime parity. Official11675
+terminal100,84.318s:15 controls PASS, original complete dual RED. Seeded10515
+terminal100,25.687s:Auto tracer PASS, original complete dual RED. Both retain
+baseline17243/line844 XY166.884 versus166.669 and modifier9227/line488
+spiral direction differences. Full byte assertions and original inputs unchanged.
+Logs/artifacts: /tmp/ares-auto-lift-clean-{official,seeded}. Workspace1746 and
+actual Chromium38413 remain running; do not infer their final results yet.
+
+Final workspace1746 terminal/reaped0,272.762s:7572PASS37slow9skip,
+/tmp/ares-auto-lift-clean-workspace.log. Spiral-vase ramp regression PASS.
+Actual Chromium38413 terminal/reaped0,3PASS1.5m,
+/tmp/ares-auto-lift-clean-browser.log:complete KSR bytes, binding privacy
+and repeated complete default bytes. Artifact:
+/tmp/ares-wasm-gcode-56Y6sU/browser.gcode. Final fmt25381/diff checks0.
+All launched handles terminal/reaped; no source edits after the frozen build.
+Request final independent six-axis runtime readback. Full dual remains RED;
+remaining XY routing/seam/timing and global option/printer matrices stay open.
+
+Independent final six-axis readback approves all15 files as a finite
+Auto Lift code+test+docs checkpoint with no remaining slice must-fix.
+Commit/push on the existing feature branch per user objective; do not merge
+main or claim full dual parity/universal reproducibility/global completion.
+Next diagnosis starts with the unchanged public full-output XY routing RED.
+
 ## Current slice: raw vendor fan-command identity
 
 Cooling checkpoint55136c5c is committed, worktree clean. Fresh complete

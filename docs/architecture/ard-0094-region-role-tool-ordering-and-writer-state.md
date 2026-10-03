@@ -175,6 +175,20 @@ mutation is adjacent parser behavior, not claimed by this render slice.
 
 ## Included / deferred
 
+Auto lift selection follows `PrintObject.cpp:818–848,3836–3849`,
+`Print.cpp:594–614` and `GCode.cpp:7538–7613,7643–7648`, rewritten into
+`motion/auto_lift` and start-travel. Detect from compensated all-region
+Layer::lslices, never support contact overhangs or perimeter path roles.
+Cache opening-filtered geometry once per placed print object. Translate the
+short clipped travel into each object's local frame rather than cloning
+overhang polygons per query. Preserve the source float Z window, global hop
+maximum, selected hardware slope and actual active layer print_z. Bbox/Z
+rejection precedes clipping. Traversal ordering can be omitted for this pure
+existence query; it does not change its result. Newly scheduled travel lifts
+consume the chosen type; an existing layer-change/timelapse/toolchange lift
+retains its owner. Fixed Auto→Slope is a temporary shell to replace, not a
+fallback. XY routing, seam and remaining full timing differences stay open.
+
 FanMover fan-command identity belongs to its raw line, not the trimmed
 GCodeReader command (`FanMover.cpp:90–114,310`). Preserve byte-zero prefix
 recognition separately from motion command parsing. Indented vendor fan

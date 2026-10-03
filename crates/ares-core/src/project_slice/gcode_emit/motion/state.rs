@@ -43,6 +43,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) extrusion_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) current_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) options: MotionOptions,
+    pub(in crate::project_slice::gcode_emit) auto_lift: super::auto_lift::AutoLift,
+    pub(in crate::project_slice::gcode_emit) active_layer_print_z: f64,
     pub(in crate::project_slice::gcode_emit) small_area_flow:
         crate::extrusions::SmallAreaInfillFlowCompensation,
     /// Active layer id — upstream's `layer->id()`

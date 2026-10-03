@@ -113,6 +113,31 @@ pub(super) fn emit_needs_travel(
                 )
             }));
     let routed_length = polyline_length(travel_origin.x, travel_origin.y, &route);
+    let lift_mode = if state.options.z_hop_type == crate::ZHopType::Auto
+        && routed_length >= state.options.retraction_minimum_travel
+        && !skip_retraction
+        && state.auto_lift.crosses_overhang(
+            state,
+            [
+                cursor,
+                if route.len() == 1 {
+                    crate::geometry::Point::new(first_scaled.0, first_scaled.1)
+                } else {
+                    // Detour coordinates originate as integers; recover them
+                    // before clipping rather than truncating the added origin.
+                    crate::geometry::Point::new(
+                        ((route[0].x - state.offset.0) / geometry.scale.factor()).round() as i64,
+                        ((route[0].y - state.offset.1) / geometry.scale.factor()).round() as i64,
+                    )
+                },
+            ],
+            geometry.scale,
+        ) {
+        crate::project_slice::gcode_emit::motion::LiftMode::Spiral
+    } else {
+        travel::lift_mode_for(state, false)
+    };
+    let had_pending_lift = state.pending_lift.is_some();
     // Upstream calls `retract()` on every qualifying travel
     // (`needs_retraction` has no retracted check, `GCode.cpp:7528-7647`);
     // `Extruder::retract` emits `max(0, length - m_retracted)`
@@ -135,6 +160,9 @@ pub(super) fn emit_needs_travel(
                 route = plan_route(state, &geometry_ref, feature, first_x, first_y);
             },
         );
+    }
+    if !had_pending_lift && state.pending_lift.is_some() {
+        state.pending_lift = Some(lift_mode);
     }
     let first_travel = route[0];
     let (travel_x, travel_y) = (first_travel.x, first_travel.y);
@@ -192,7 +220,7 @@ pub(super) fn emit_needs_travel(
             )
             && state.lifted_amount <= 0.0
         {
-            state.pending_lift = Some(travel::lift_mode_for(state, false));
+            state.pending_lift = Some(lift_mode);
         }
         state.pending_lift.take()
     } else {

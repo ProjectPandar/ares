@@ -162,6 +162,7 @@ pub(super) fn emit(
     };
     let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
     state.layer_index = physical_layer.id;
+    state.active_layer_print_z = physical_layer.print_z;
     state.on_first_layer =
         physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 1e-4;
     let slicing = traversal.objects[object_index].slicing_parameters();

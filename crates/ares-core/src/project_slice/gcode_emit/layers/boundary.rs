@@ -32,6 +32,7 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     // Z domain is offset; `source_layer_z`/`;Z:`/comments stay model z.
     state.layer_z = layer_z + state.options.z_offset;
     state.source_layer_z = precise_layer_z;
+    state.active_layer_print_z = precise_layer_z;
     state.layer_index = layer_index;
     state.layer_chunk_index = layer_index;
     state.object_layer_over_raft = object_layer_over_raft;

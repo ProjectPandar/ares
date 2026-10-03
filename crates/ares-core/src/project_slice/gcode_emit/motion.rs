@@ -1,5 +1,6 @@
 mod acceleration;
 mod arc;
+pub(super) mod auto_lift;
 pub(super) mod clip;
 mod extruder_registry;
 mod extruder_state;

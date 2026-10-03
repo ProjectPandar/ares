@@ -125,6 +125,8 @@ pub(super) fn emit(
             .len(),
     );
     let mut state = motion::EmitState {
+        auto_lift: motion::auto_lift::AutoLift::prepare(traversal)
+            .map_err(|error| SliceError::InvalidInput(format!("auto lift geometry: {error:?}")))?,
         extruders,
         initial_filaments,
         offset,
