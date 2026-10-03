@@ -164,3 +164,20 @@ temporary shell to replace, not a compatibility fallback. Defer statistics,
 viewer vertices and adjacent M1020 parsing; the selected fixture uses T.
 Keep original full public baseline/modifier assertions and all previous
 single-tool controls. A reduced timing diagnostic never replaces acceptance.
+
+Next cooling speed consumer: `CoolingBuffer.cpp::parse_layer_gcode`
+(337–555), `PerExtruderAdjustments` (107–253),
+`calculate_layer_slowdown` (637–690), and the invoked non-proportional range
+solver (258–306,559–634). Rust destination: existing cooling/feedrate modules,
+with independent adjustment and range modules. Replace the single-config,
+single-bucket compatibility shell with registered logical tool buckets, actual
+tool-prefix selection, per-tool slowdown configuration and source float folds.
+Preserve joint target/minimum-speed ordering, source cached totals and global
+motion cursor. Include the existing first-layer native feedrate tracer as a
+diagnostic only; unchanged complete baseline/modifier output remains required.
+Initialize its logical tool from the existing InitialFilaments owner
+(`GCode.cpp:2811`), not constructor default0. Include the required forced Z-sync
+lift cancellation (`GCode.cpp:6381–6386`, `GCodeWriter.cpp:812–828`): omitting
+that state write causes duplicate Z before unretract and changes cooling time.
+Defer fan-request identity/config refresh, sequential cooling reset and other
+writer Z consumers; none is hidden by a narrowed complete comparator.

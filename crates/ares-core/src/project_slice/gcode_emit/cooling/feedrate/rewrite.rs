@@ -9,7 +9,7 @@ const WIPE: &[u8] = b";_WIPE";
 pub(super) fn append(
     output: &mut Vec<u8>,
     gcode: &[u8],
-    lines: &mut [CoolingLine],
+    lines: &mut [&CoolingLine],
     keep_markers: bool,
 ) {
     lines.sort_unstable_by_key(|line| line.start);

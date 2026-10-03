@@ -1,5 +1,120 @@
 # Region-role tool emission implementation plan
 
+## Current slice: per-tool cooling speed ownership
+
+Header follow-up53dfd357 is committed; working tree was clean. Fresh original
+complete RED60779 terminal/reaped100,2.582s,
+/tmp/ares-dual-next-red.log: same baseline1913/line143 M73 ordering and
+modifier703/line25 R16/R17. Preserve original fixtures/complete assertions.
+Baseline has no modifier and is already the minimal selected public reproducer;
+do not rewrite it while diagnosing the separate modifier acceptance case.
+
+Ranked falsifiable hypotheses: emitted speed/Z/fan differences affect total;
+planner synchronization differs on identical commands; M73-only cache alignment.
+Read-only command diff confirms first-layer F1569 versus1570 and bottom
+F1540 versus1570. Both baseline and modifier reproduce these actual commands;
+an M73-only index repair cannot close that output defect. Cooling currently
+uses one configuration/bucket, unlike source per-logical-tool joint slowdown.
+Source boundary and included/deferred scope are in spec/ARD0094.
+
+1. Public saved3MF native-first first-layer feedrate tracer RED, using the
+   already approved outputs seam. Original complete comparison stays RED.
+2. Replace single bucket with registered-ID parser and actual writer prefix;
+   port joint range slowdown with per-tool settings and source f32 folds.
+3. Rerun tracer and original complete comparison. Preserve remaining fan/Z,
+   timing and complete differences as open, not fabricated GREEN.
+4. Focused single-tool/cooling controls, workspace nextest, fmt/clippy/WASM,
+   actual browser and independent six-axis review before a logical checkpoint.
+   Code/documents together; no universal/all-printer/full-dual claim.
+
+Public five-raw-G1-F tracer RED51846 terminal/reaped100,1.809s,
+/tmp/ares-cooling-buckets-red.log: native1569/1569/1569/3000/1540 versus
+Ares1570/1570/1570/3000/1570. Joint bucket attempt: original91322
+terminal/reaped100,2.582s (/tmp/ares-cooling-buckets-green.log), first full
+differences move to baseline2697/line201 and modifier2933/line208, both F.
+Fail-fast cancelled the tracer, so it was separately rerun1872, terminal100,
+1.821s (/tmp/ares-cooling-buckets-green-tracer.log): last F1539, still RED.
+These log names are attempted GREEN stages, not passing results.
+
+Independent static review returned three fixes: wire actual initial logical
+tool (`GCode.cpp:2811`), retain denominator<0 return and total>target source
+comparison. All implemented. Further actual command diff identifies duplicate
+Z after printing tool changes: forced Z-sync in restate did not clear lift,
+so unlift emitted another Z. Its zero-XYZ line inherits relative E in the
+CoolingBuffer cursor and counts extra time. Include this necessary source
+state write (`GCode.cpp:6381–6386`, `GCodeWriter.cpp:812–828`) in the slice.
+The original first-layer tracer remains unchanged. Add a separate public
+nonzero-initial control with distinct filament settings; fixture helper accepts
+process/filament values and verifies their exported saved3MF configuration.
+
+Forced-sync repair75634 terminal/reaped100,5.549s,
+/tmp/ares-cooling-lift-green.log: original five-F tracer PASS1.865s;
+unchanged complete comparison remains RED at baseline3346/line234 and
+modifier3582/line241, missing vendor ` M107 P0 ;fan off T0`. No comparator or
+original fixture changed. The initial-tool candidate with all solid roles2 and
+sparse1 is blocked by existing `bridge_over_infill_anchor_extruder_order`,
+not cooling; retain this unmet adjacent scope. The isolated initial-tool
+control instead uses walls/bottom2 and internal/top/sparse1, density20%.
+Both tools must still actually extrude, startup ends withT1, and no first-layer
+T can mask initialization. Native's firstT0 block is internal solid, not sparse;
+correct the new witness to require some subsequentT0 Sparse block, without
+changing any original acceptance assertion. Both native and Ares emit the
+same five first-layer F commands for this corrected configuration in raw
+artifacts `/tmp/ares-cooling-initial-control/case-wwKqk6`; the corrected
+test must still execute to prove its final assertions.
+
+Initial-tool fault injection33081 terminal/reaped100,2.064s,
+/tmp/ares-cooling-initial-red.log: with only current_tool temporarily forced0,
+all native activation witnesses pass, Ares fiveF=2519/2519/2519/3000/2519
+versus native300/300/300/3000/300. Restore the actual initial parameter;
+the injection and its unused-argument warning are not retained. Independent
+review confirms forced-Z source ownership and fixture migration; requests
+final frozen runtime evidence. First clippy7976 terminal0 has9new warnings
+(262lib/278test versus253/269); flatten adjustable loops preserving f32 order,
+name mutation methods slow_to_*, pass existing Adjustment to parser aggregation,
+and isolate the source zero-minimum proportional range branch. No lint allow,
+numeric changes or independent algorithm; rerun clippy and final gates.
+
+Final source controls: official15509 terminal/reaped100,13PASS/1original
+completeRED52.889s (/tmp/ares-cooling-final-official.log); seeded66484
+terminal/reaped100,3PASS/1original completeRED23.107s
+(/tmp/ares-cooling-final-seeded.log). Both cold-start and nonzero-initial raw
+feedrate controls pass; single-tool infill-first complete comparison passes.
+Remaining original first differences are missing vendor M107, not hidden.
+No full-dual/all-option/all-printer claim. Workspace35298 terminal/reaped0,
+7570PASS39slow9skip274.971s; WASM34032 terminal/reaped0, optimized build,
+bindings13010 terminal/reaped0. Production source is unchanged since these
+gates. Final CLI test spelling uses rfind after clippy's filter_next warning;
+fresh workspace/clippy and actual browser are still pending. Browser launched
+while those build locks were pending; any queue delay is not a slicer result
+and does not authorize changing assertions/timeouts.
+
+Final clippy6039 terminal/reaped0, /tmp/ares-cooling-frozen-clippy.log:
+253lib/269test/31CLI warnings, identical to the existing accepted baseline;
+new increment is zero, no lint suppression. fmt/diff checks pass after rfind
+formatting. Independent18file static six-axis readback found no remaining
+code fix; update ARD wording to describe the former shell as replaced, not
+still pending. Latest workspace/browser terminal receipts remain required
+before the finite local checkpoint.
+
+Actual Chromium79083 terminal/reaped0,3PASS5.5m,
+/tmp/ares-cooling-final-browser.log: complete initialized-Orca ordered output,
+no private hooks, and identical complete bytes on repeated default slicing.
+Full browser artifact `/tmp/ares-wasm-gcode-ZrYXVf/browser.gcode` is retained.
+Build-lock wait is included in wall time; no assertion or timeout changed.
+
+Final frozen workspace15856 terminal/reaped0,
+/tmp/ares-cooling-frozen-workspace.log:7570PASS35slow9skip259.406s.
+No failed/regressed tests; source gates are now terminal. Keep original full
+dual baseline/modifier RED and adjacent fan/geometry/initial template gaps
+open. The passed finite cooling window is ready for final independent readback
+and a local code+docs checkpoint, not push/main/all-printer closure.
+
+Independent final six-axis readback approves the18file finite local
+code/tests/docs checkpoint with no remaining slice fix. Approval explicitly
+excludes complete dual, fan/sequential/adjacent behavior, push and main/global
+closure. Commit body must retain the original complete RED and verified scope.
+
 ## Current slice: processor filament-change timing
 
 Source and included/deferred boundary are recorded in the spec and ARD-0094.

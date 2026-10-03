@@ -1,201 +1,44 @@
+//! `CoolingBuffer::calculate_layer_slowdown` (637–690).
+use super::{Adjustment, range};
 use crate::geometry::fixed_gcc_sort_by;
 
-use super::{Config, CoolingLine};
-
-const EPSILON: f64 = 1e-4;
-
-pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
-    // `calculate_layer_slowdown` computes elapsed_time_total() and
-    // maximum_time_after_slowdown() BEFORE sort_lines_by_decreasing_
-    // feedrate() (`CoolingBuffer.cpp:650-657`) — the totals fold over
-    // the PARSE-ORDER array (the f32 rounding is order-sensitive, and
-    // upstream folds pre-sort).
-    let total_time = elapsed_time(lines);
-    let maximum_time = maximum_time(lines);
-    if !config.enabled || lines.is_empty() {
-        return total_time;
-    }
-
-    fixed_gcc_sort_by(lines, |left, right| {
-        let left_adjustable = left.adjustable();
-        let right_adjustable = right.adjustable();
-        if left_adjustable == right_adjustable {
-            left.feedrate > right.feedrate
+pub(super) fn apply(adjustments: &mut [Adjustment]) -> f32 {
+    let mut elapsed = 0.0_f32;
+    let mut order = Vec::new();
+    for (index, adjustment) in adjustments.iter_mut().enumerate() {
+        adjustment.total = adjustment.elapsed();
+        adjustment.maximum = adjustment.maximum_time();
+        if adjustment.config.enabled && !adjustment.lines.is_empty() {
+            order.push(index);
+            adjustment.sort();
         } else {
-            left_adjustable
+            elapsed += adjustment.elapsed();
         }
+    }
+    fixed_gcc_sort_by(&mut order, |&left, &right| {
+        adjustments[left].config.target_time < adjustments[right].config.target_time
     });
-    let adjustable = lines.iter().take_while(|line| line.adjustable()).count();
-    let target_time = config.target_time * 1.001;
-    if total_time > target_time {
-        return total_time;
-    }
-    if maximum_time > target_time {
-        slow_down_non_proportional(
-            lines,
-            adjustable,
-            config.minimum_speed,
-            target_time - total_time,
-        );
-    } else {
-        slow_down_to_minimum(lines);
-    }
-    elapsed_time(lines)
-}
-
-fn elapsed_time(lines: &[CoolingLine]) -> f32 {
-    // `PerExtruderAdjustments::elapsed_time_total` accumulates
-    // `time_total += line.time` in FLOAT (`CoolingBuffer.cpp:114`) — a
-    // per-add f32 rounding chain, not a single double sum cast once
-    // (a 1e-9 difference flips the stretched feed's 6th digit:
-    // F2930.735 vs 736).
-    lines.iter().fold(0.0_f32, |total, line| total + line.time)
-}
-
-fn maximum_time(lines: &[CoolingLine]) -> f32 {
-    let mut total = 0.0_f32;
-    for line in lines {
-        if line.adjustable() {
-            if line.maximum_time == f32::MAX {
-                return f32::MAX;
-            }
-            total += line.maximum_time;
-        } else {
-            total += line.time;
-        }
-    }
-    total
-}
-
-fn slow_down_to_minimum(lines: &mut [CoolingLine]) {
-    for line in lines {
-        if line.adjustable() {
-            line.slowed = true;
-            line.time = line.maximum_time;
-            if line.time > 0.0 {
-                line.feedrate = line.length / line.time;
-            }
-        }
-    }
-}
-
-fn slow_down_non_proportional(
-    lines: &mut [CoolingLine],
-    adjustable: usize,
-    minimum_speed: f32,
-    mut time_stretch: f32,
-) {
-    let mut begin = 0;
-    let mut feedrate = lines[0].feedrate;
-    loop {
-        let mut end = begin;
-        while end < adjustable && f64::from(lines[end].feedrate) > f64::from(feedrate) - EPSILON {
-            end += 1;
-        }
-        let next_feedrate = lines
-            .get(end..adjustable)
-            .and_then(|remaining| remaining.first())
-            .map_or(0.0, |line| line.feedrate);
-
-        if minimum_speed == 0.0 {
-            let adjustable_time = lines[..adjustable]
-                .iter()
-                .fold(0.0, |total, line| total + line.time);
-            let factor = (adjustable_time + time_stretch) / adjustable_time;
-            slow_down_proportionally(&mut lines[..adjustable], factor);
-            return;
-        }
-
-        let mut feedrate_limit = next_feedrate.max(minimum_speed);
-        let maximum_stretch = time_stretch_to_feedrate(&lines[..adjustable], feedrate_limit);
-        let done = maximum_stretch >= time_stretch;
-        if done {
-            feedrate_limit = new_feedrate_to_reach_time_stretch(
-                &lines[..adjustable],
-                feedrate_limit,
-                time_stretch,
-            );
-        } else {
-            time_stretch -= maximum_stretch;
-        }
-        slow_down_to_feedrate(&mut lines[..adjustable], feedrate_limit);
-        if done || next_feedrate == 0.0 {
-            return;
-        }
-        begin = end;
-        feedrate = next_feedrate;
-    }
-}
-
-fn slow_down_proportionally(lines: &mut [CoolingLine], factor: f32) {
-    // `slow_down_proportional` (`CoolingBuffer.cpp:164-179`): a plain
-    // FLOAT chain - `line.time = min(time_max, line.time * factor)` and
-    // `feedrate = length / time` all round in f32 per line.
-    for line in lines {
-        if line.adjustable() {
-            line.slowed = true;
-            line.time = line.maximum_time.min(line.time * factor);
-            if line.time > 0.0 {
-                line.feedrate = line.length / line.time;
-            }
-        }
-    }
-}
-
-fn time_stretch_to_feedrate(lines: &[CoolingLine], minimum_feedrate: f32) -> f32 {
-    // `time_stretch_when_slowing_down_to_feedrate` (`CoolingBuffer.cpp:
-    // 201-209`): a FLOAT accumulation `time_stretch += line.time *
-    // (line.feedrate / min_feedrate - 1.f)` — the per-add f32 rounding
-    // feeds the stretch decision.
-    let mut stretch = 0.0_f32;
-    for line in lines {
-        if line.feedrate > minimum_feedrate {
-            stretch += line.time * (line.feedrate / minimum_feedrate - 1.0);
-        }
-    }
-    stretch
-}
-
-fn slow_down_to_feedrate(lines: &mut [CoolingLine], minimum_feedrate: f32) {
-    // `slow_down_to_feedrate` (`CoolingBuffer.cpp:215-226`):
-    // `line.time *= std::max(1.f, line.feedrate / min_feedrate)` — the
-    // stretch multiply rounds in f32 per line.
-    for line in lines {
-        if line.feedrate > minimum_feedrate {
-            line.time *= (line.feedrate / minimum_feedrate).max(1.0);
-            line.feedrate = minimum_feedrate;
-            line.slowed = true;
-        }
-    }
-}
-
-fn new_feedrate_to_reach_time_stretch(
-    lines: &[CoolingLine],
-    mut minimum_feedrate: f32,
-    time_stretch: f32,
-) -> f32 {
-    let mut new_feedrate = minimum_feedrate;
-    for _ in 0..20 {
-        let mut numerator = 0.0_f64;
-        let mut denominator = f64::from(time_stretch);
-        for line in lines {
-            if line.feedrate > minimum_feedrate {
-                numerator += f64::from(line.time) * f64::from(line.feedrate);
-                denominator += f64::from(line.time);
-            }
-        }
-        new_feedrate = (numerator / denominator) as f32;
-        if f64::from(new_feedrate) < f64::from(minimum_feedrate) + EPSILON {
-            break;
-        }
-        if lines
+    for start in 0..order.len() {
+        let remaining = &order[start..];
+        let total = remaining
             .iter()
-            .any(|line| line.feedrate > minimum_feedrate && line.feedrate < new_feedrate)
-        {
-            minimum_feedrate = new_feedrate;
-        } else {
-            break;
+            .fold(elapsed, |total, &index| total + adjustments[index].total);
+        let target = adjustments[order[start]].config.target_time * 1.001_f32;
+        if total > target {
+            elapsed += adjustments[order[start]].elapsed();
+            continue;
         }
+        let maximum = remaining
+            .iter()
+            .fold(elapsed, |total, &index| total + adjustments[index].maximum);
+        if maximum > target {
+            range::slow_down(adjustments, remaining, target - total);
+        } else {
+            for &index in remaining {
+                adjustments[index].slow_to_minimum();
+            }
+        }
+        elapsed += adjustments[order[start]].elapsed();
     }
-    new_feedrate
+    elapsed
 }

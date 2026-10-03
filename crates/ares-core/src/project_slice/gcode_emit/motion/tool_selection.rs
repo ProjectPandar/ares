@@ -47,17 +47,7 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
     if !state.extruders.multiple() && (runtime.filament_diameter.0.len() <= 1 || is_bbl) {
         return;
     }
-    let prefix = if runtime.manual_filament_change.0 {
-        "; MANUAL_TOOL_CHANGE T"
-    } else if is_bbl {
-        "M1020 S"
-    } else {
-        match runtime.gcode_flavor {
-            crate::GCodeFlavor::MakerWare => "M135 T",
-            crate::GCodeFlavor::Sailfish => "M108 T",
-            _ => "T",
-        }
-    };
+    let prefix = prefix(traversal);
     let comment = if state.options.gcode_comments {
         " ; change extruder"
     } else {
@@ -79,6 +69,23 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
                 ""
             };
             output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
+        }
+    }
+}
+
+pub(in crate::project_slice::gcode_emit) fn prefix(
+    traversal: &PreparedPostClassicTraversal,
+) -> &'static str {
+    let runtime = &traversal.resolved.views.runtime_gcode;
+    if runtime.manual_filament_change.0 {
+        "; MANUAL_TOOL_CHANGE T"
+    } else if super::super::tags::Tags::of(traversal).is_bbl() {
+        "M1020 S"
+    } else {
+        match runtime.gcode_flavor {
+            crate::GCodeFlavor::MakerWare => "M135 T",
+            crate::GCodeFlavor::Sailfish => "M108 T",
+            _ => "T",
         }
     }
 }

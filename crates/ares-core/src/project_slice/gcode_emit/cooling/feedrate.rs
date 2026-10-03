@@ -1,7 +1,12 @@
+mod adjustment;
 mod parse;
+mod range;
 mod rewrite;
 mod slowdown;
 
+use adjustment::Adjustment;
+
+const TYPE_SET_TOOL: u32 = 1;
 const TYPE_EXTRUDE_END: u32 = 1 << 1;
 const TYPE_G0: u32 = 1 << 4;
 const TYPE_G1: u32 = 1 << 5;
@@ -29,15 +34,33 @@ pub(super) struct Config {
 }
 
 pub(super) struct State {
-    config: Config,
+    configs: Vec<Config>,
+    tool_map: Vec<usize>,
+    current_tool: usize,
+    toolchange_prefix: &'static str,
     position: [f32; 7],
 }
 
 impl State {
-    pub(super) fn new(config: Config, travel_speed: f64) -> Self {
+    pub(super) fn new(
+        configs: Vec<(usize, Config)>,
+        travel_speed: f64,
+        toolchange_prefix: &'static str,
+        current_tool: usize,
+    ) -> Self {
         let mut position = [0.0; 7];
         position[4] = travel_speed as f32;
-        Self { config, position }
+        let mut tool_map = vec![0; configs.last().unwrap().0 + 1];
+        for (index, (tool, _)) in configs.iter().enumerate() {
+            tool_map[*tool] = index;
+        }
+        Self {
+            configs: configs.into_iter().map(|(_, config)| config).collect(),
+            tool_map,
+            current_tool,
+            toolchange_prefix,
+            position,
+        }
     }
 }
 
@@ -74,8 +97,13 @@ impl CoolingLine {
 
 pub(super) fn rewrite_layer(output: &mut Vec<u8>, layer_start: usize, state: &mut State) -> f32 {
     let layer = output.split_off(layer_start);
-    let mut lines = parse::layer(&layer, state);
-    let layer_time = slowdown::apply(&mut lines, state.config);
-    rewrite::append(output, &layer, &mut lines, state.config.keep_markers);
+    let (mut adjustments, current_tool) = parse::layer(&layer, state);
+    let layer_time = slowdown::apply(&mut adjustments);
+    let mut lines = adjustments
+        .iter()
+        .flat_map(|adjustment| &adjustment.lines)
+        .collect::<Vec<_>>();
+    rewrite::append(output, &layer, &mut lines, state.configs[0].keep_markers);
+    state.current_tool = current_tool;
     layer_time
 }

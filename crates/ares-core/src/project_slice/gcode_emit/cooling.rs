@@ -55,7 +55,10 @@ pub(super) struct CoolingState {
 }
 
 impl CoolingState {
-    pub(super) fn from_traversal(traversal: &PreparedPostClassicTraversal) -> Self {
+    pub(super) fn from_traversal(
+        traversal: &PreparedPostClassicTraversal,
+        writer: &super::motion::EmitState,
+    ) -> Self {
         let full = &traversal.resolved.views.full;
         let filament = &full.filament.print;
         let runtime = &traversal.resolved.views.runtime_gcode;
@@ -114,19 +117,47 @@ impl CoolingState {
             part_cooling_fan_min_pwm: runtime.part_cooling_fan_min_pwm.0.clamp(0, 100) as u8,
             gcode_comments: full.process.print.gcode_comments.0,
             feedrate: feedrate::State::new(
-                feedrate::Config {
-                    enabled: first_bool(&filament.slow_down_for_layer_cooling.0),
-                    target_time: slow_down_layer_time as f32,
-                    minimum_speed: filament
-                        .slow_down_min_speed
-                        .0
-                        .first()
-                        .map_or(0.0, |value| value.0 as f32),
-                    keep_outer_wall_speed: first_bool(&filament.dont_slow_down_outer_wall.0),
-                    relative_e: runtime.use_relative_e_distances.0,
-                    keep_markers: slope > 0.0,
-                },
+                writer
+                    .extruders
+                    .ids()
+                    .iter()
+                    .map(|&id| {
+                        (
+                            id,
+                            feedrate::Config {
+                                enabled: filament
+                                    .slow_down_for_layer_cooling
+                                    .0
+                                    .get(id)
+                                    .unwrap_or(&filament.slow_down_for_layer_cooling.0[0])
+                                    .0,
+                                target_time: filament
+                                    .slow_down_layer_time
+                                    .0
+                                    .get(id)
+                                    .unwrap_or(&filament.slow_down_layer_time.0[0])
+                                    .0 as f32,
+                                minimum_speed: filament
+                                    .slow_down_min_speed
+                                    .0
+                                    .get(id)
+                                    .unwrap_or(&filament.slow_down_min_speed.0[0])
+                                    .0 as f32,
+                                keep_outer_wall_speed: filament
+                                    .dont_slow_down_outer_wall
+                                    .0
+                                    .get(id)
+                                    .unwrap_or(&filament.dont_slow_down_outer_wall.0[0])
+                                    .0,
+                                relative_e: runtime.use_relative_e_distances.0,
+                                keep_markers: slope > 0.0,
+                            },
+                        )
+                    })
+                    .collect(),
                 runtime.travel_speed.0,
+                super::motion::tool_selection::prefix(traversal),
+                writer.initial_filaments.initial(),
             ),
         }
     }

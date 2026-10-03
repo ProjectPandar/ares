@@ -26,15 +26,20 @@ pub(super) fn cooling_state() -> CoolingState {
         part_cooling_fan_min_pwm: 0,
         gcode_comments: false,
         feedrate: feedrate::State::new(
-            feedrate::Config {
-                enabled: false,
-                target_time: 0.0,
-                minimum_speed: 0.0,
-                keep_outer_wall_speed: false,
-                relative_e: true,
-                keep_markers: false,
-            },
+            vec![(
+                0,
+                feedrate::Config {
+                    enabled: false,
+                    target_time: 0.0,
+                    minimum_speed: 0.0,
+                    keep_outer_wall_speed: false,
+                    relative_e: true,
+                    keep_markers: false,
+                },
+            )],
             120.0,
+            "T",
+            0,
         ),
     }
 }

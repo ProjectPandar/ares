@@ -82,6 +82,10 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         );
         state.current_feedrate = z_feedrate;
         state.record_z(state.layer_z);
+        // Forced travel_to_z cancels the lift (GCodeWriter.cpp:824).
+        state.lifted = false;
+        state.lifted_amount = 0.0;
+        state.template_lifted = false;
     }
     // Upstream calls `unretract()` unconditionally before every
     // extrusion (`GCode.cpp:6407-6408`), and `unretract` runs `unlift()`

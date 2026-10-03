@@ -1,14 +1,20 @@
 use super::{
-    CoolingLine, State, TYPE_ADJUSTABLE, TYPE_EXTERNAL_PERIMETER, TYPE_EXTRUDE_END, TYPE_G0,
-    TYPE_G1, TYPE_G2, TYPE_G3, TYPE_G4, TYPE_G92, TYPE_HAS_F, TYPE_WIPE,
+    Adjustment, CoolingLine, State, TYPE_ADJUSTABLE, TYPE_EXTERNAL_PERIMETER, TYPE_EXTRUDE_END,
+    TYPE_G0, TYPE_G1, TYPE_G2, TYPE_G3, TYPE_G4, TYPE_G92, TYPE_HAS_F, TYPE_SET_TOOL, TYPE_WIPE,
 };
 
 const SET_SPEED: &[u8] = b";_EXTRUDE_SET_SPEED";
 const EXTERNAL_PERIMETER: &[u8] = b";_EXTERNAL_PERIMETER";
 const WIPE: &[u8] = b";_WIPE";
 
-pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
-    let mut lines: Vec<CoolingLine> = Vec::new();
+pub(super) fn layer(gcode: &[u8], state: &mut State) -> (Vec<Adjustment>, usize) {
+    let mut adjustments = state
+        .configs
+        .iter()
+        .copied()
+        .map(Adjustment::new)
+        .collect::<Vec<_>>();
+    let mut current_tool = state.current_tool;
     let mut active_speed_modifier = None;
     let mut layer_had_extrusion = false;
     let mut start = 0;
@@ -27,6 +33,8 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
         }
 
         let mut line = CoolingLine::new(command_type(text), start, end);
+        let index = state.tool_map[current_tool];
+        let config = adjustments[index].config;
         if line.kind != 0 {
             let mut new_position = state.position;
             parse_position(text, state.position, &mut new_position, &mut line.kind);
@@ -44,9 +52,9 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
             if set_speed {
                 layer_had_extrusion = true;
             }
-            if set_speed && !wipe && !(state.config.keep_outer_wall_speed && external_perimeter) {
+            if set_speed && !wipe && !(config.keep_outer_wall_speed && external_perimeter) {
                 line.kind |= TYPE_ADJUSTABLE;
-                active_speed_modifier = Some(lines.len());
+                active_speed_modifier = Some(adjustments[index].lines.len());
             }
 
             measure_and_aggregate(
@@ -54,12 +62,17 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
                 state,
                 new_position,
                 active_speed_modifier,
-                &mut lines,
+                &mut adjustments[index],
             );
             state.position = new_position;
         } else if text.starts_with(b";_EXTRUDE_END") {
             line.kind = TYPE_EXTRUDE_END;
             active_speed_modifier = None;
+        } else if let Some(tool) = tool_id(text, state.toolchange_prefix.as_bytes()) {
+            if tool < state.tool_map.len() && tool != current_tool {
+                line.kind = TYPE_SET_TOOL;
+                current_tool = tool;
+            }
         } else if text.starts_with(b"G4 ") {
             line.kind = TYPE_G4;
             line.time = word_value(text, b'S')
@@ -73,12 +86,26 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
             line.maximum_time = 0.0;
         }
         if line.kind != 0 {
-            lines.push(line);
+            adjustments[state.tool_map[current_tool]].lines.push(line);
         }
         start = end;
     }
 
-    lines
+    (adjustments, current_tool)
+}
+
+fn tool_id(line: &[u8], prefix: &[u8]) -> Option<usize> {
+    let suffix = line.strip_prefix(prefix)?;
+    let length = suffix
+        .iter()
+        .take_while(|byte| byte.is_ascii_digit())
+        .count();
+    (length > 0).then(|| {
+        std::str::from_utf8(&suffix[..length])
+            .unwrap()
+            .parse::<u32>()
+            .unwrap_or(0) as usize
+    })
 }
 
 fn command_type(line: &[u8]) -> u32 {
@@ -146,12 +173,14 @@ fn measure_and_aggregate(
     state: &mut State,
     new_position: [f32; 7],
     active_speed_modifier: Option<usize>,
-    lines: &mut [CoolingLine],
+    adjustment: &mut Adjustment,
 ) {
+    let config = adjustment.config;
+    let lines = &mut adjustment.lines;
     if line.kind & TYPE_G92 != 0 {
         return;
     }
-    if state.config.relative_e {
+    if config.relative_e {
         state.position[3] = 0.0;
     }
     let adjustable_block = line.kind & TYPE_ADJUSTABLE != 0 || active_speed_modifier.is_some();
@@ -159,7 +188,7 @@ fn measure_and_aggregate(
         line,
         &state.position,
         new_position,
-        state.config.minimum_speed,
+        config.minimum_speed,
         adjustable_block,
     );
 

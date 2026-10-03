@@ -252,6 +252,22 @@ silent omission, fallback or comparator relaxation is permitted.
 
 ## Platform and interface
 
+Cooling speed ownership follows `CoolingBuffer.cpp::parse_layer_gcode`,
+`PerExtruderAdjustments`, `calculate_layer_slowdown` and its non-proportional
+range solver (107–306,337–690). Registered logical IDs define buckets; absent
+ID slots map to the first registered bucket upstream. Actual writer tool-prefix
+commands select buckets, while XYZ/E/feedrate cursor remains global. Carry
+per-tool enabled/target/minimum/outer-wall controls, source f32 fold order,
+cached totals and GCC tie order. Joint ranges are not independent per-tool
+slowdown passes. Share the source writer prefix owner instead of hardcoding T.
+The initial logical tool comes from InitialFilaments (`GCode.cpp:2811`), not
+the constructor's default0. Forced layer-Z synchronization clears the lift
+(`GCode.cpp:6381–6386`, `GCodeWriter.cpp:812–828`) before unlift; a duplicate
+zero-XYZ command is not inert in the source relative-E cooling cursor model.
+This per-tool speed parser replaces the former single-tool compatibility
+shell. Fan request maps/config refresh, sequential reset and other writer Z
+consumers remain open; a five-raw-F-line tracer is not complete dual parity.
+
 Processor timing selection is distinct from writer selection and ExportLines
 preheat. `GCodeProcessor.cpp:5473–5627,5890–5906,2133–2136` owns logical T
 validation, per-physical current/last filament state and scalar delay branches.
