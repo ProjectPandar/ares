@@ -283,7 +283,7 @@ fn prepare_objects(
         &OrcaFloats(vec![OrcaFloat(0.4), OrcaFloat(0.4)]),
     )
     .unwrap();
-    prepare_perimeter_contexts(objects, flows, resolved, spiral_mode)
+    prepare_perimeter_contexts(objects, flows, resolved, spiral_mode).unwrap()
 }
 
 fn occurrence_outputs() -> Vec<PostPerimeterInputPrintObject> {

@@ -84,6 +84,7 @@ mod validation;
 mod vector_resize;
 pub(crate) use acceleration::AccelToDecelConfig;
 pub(crate) use bed_temperature::{FirstLayerBedTemperature, first_layer_bed_temperature_key_for};
+pub(crate) use config_types::format_number;
 use defaults::*;
 pub(crate) use fan_speedup::FanSpeedupControl;
 pub(crate) use gap_fill::GapFillTarget;

@@ -16,12 +16,7 @@ pub(super) fn collect_project_object_extruders(
         .iter()
         .map(|resolved| {
             let mut extruders = Vec::new();
-            for region in resolved
-                .layer_candidates
-                .iter()
-                .flat_map(|candidate| &candidate.model_parts)
-                .map(|part| &part.region)
-            {
+            for region in &resolved.all_regions {
                 append_region_extruders(&mut extruders, region, has_brim, logical_filament_count);
             }
 

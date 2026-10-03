@@ -1,4 +1,4 @@
-use crate::geometry::ExPolygon;
+use crate::geometry::{CoordinateScale, ExPolygon};
 
 use super::super::{compensation::PostCompensationPrintObject, region_slices::RegionSurface};
 
@@ -13,6 +13,44 @@ pub(in crate::project_slice) struct Flow {
 }
 
 impl Flow {
+    pub(in crate::project_slice) fn scaled_width(self, scale: CoordinateScale) -> i64 {
+        (f64::from(self.width) / scale.factor()) as i64
+    }
+
+    pub(in crate::project_slice) fn scaled_spacing(self, scale: CoordinateScale) -> i64 {
+        (f64::from(self.spacing) / scale.factor()) as i64
+    }
+
+    pub(in crate::project_slice) fn bridging_flow(diameter: f32, nozzle_diameter: f32) -> Self {
+        Self {
+            width: diameter,
+            height: diameter,
+            spacing: (f64::from(diameter) + 0.05) as f32,
+            nozzle_diameter,
+            bridge: true,
+            mm3_per_mm: super::flow::bridge_volume(diameter),
+        }
+    }
+
+    pub(in crate::project_slice) fn with_height(
+        self,
+        height: f32,
+    ) -> Result<Self, crate::SliceError> {
+        let spacing = self.width - height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
+        let mm3_per_mm = super::flow::ordinary_volume(self.width, height);
+        if spacing <= 0.0 || mm3_per_mm <= 0.0 {
+            return Err(crate::SliceError::InvalidInput(
+                "invalid support interface flow".to_owned(),
+            ));
+        }
+        Ok(Self {
+            height,
+            spacing,
+            mm3_per_mm,
+            ..self
+        })
+    }
+
     pub(in crate::project_slice) fn auto_infill_width(nozzle_diameter: f64) -> f64 {
         f64::from(1.125_f32 * nozzle_diameter as f32)
     }
@@ -107,9 +145,20 @@ pub(in crate::project_slice) struct PerimeterInputRecord {
 pub(in crate::project_slice) struct PostPerimeterInputPrintObject {
     pub(in crate::project_slice) object: PostCompensationPrintObject,
     pub(in crate::project_slice) records: Vec<Option<PerimeterInputRecord>>,
+    pub(super) groups: Vec<super::groups::PerimeterGroup>,
+    pub(super) record_groups: Vec<Option<usize>>,
 }
 
 impl PostPerimeterInputPrintObject {
+    pub(in crate::project_slice) fn region_layer_record_index(
+        &self,
+        index: RegionLayerIndex,
+    ) -> usize {
+        let (post_region, _) = self.object.as_parts();
+        let (plan, _, _) = post_region.as_parts();
+        index.region_index * plan.layers.len() + index.layer_index
+    }
+
     pub(in crate::project_slice) fn identity(&self) -> (usize, usize) {
         let (post_region, _) = self.object.as_parts();
         let (plan, _, _) = post_region.as_parts();
@@ -139,6 +188,26 @@ impl PostPerimeterInputPrintObject {
         record: &PerimeterInputRecord,
     ) -> &[RegionSurface] {
         self.region_surfaces(record.current)
+    }
+
+    pub(super) fn perimeter_surfaces(&self, record: &PerimeterInputRecord) -> &[RegionSurface] {
+        let slot = self.region_layer_record_index(record.current);
+        let group = &self.groups[self.record_groups[slot].unwrap()];
+        if group.owner != record.current {
+            return &[];
+        }
+        group
+            .merged_surfaces
+            .as_deref()
+            .unwrap_or_else(|| self.region_surfaces(record.current))
+    }
+
+    pub(in crate::project_slice) fn raw_slices(
+        &self,
+        region_index: usize,
+        layer_index: usize,
+    ) -> &[ExPolygon] {
+        self.object.raw_slices(region_index, layer_index)
     }
 
     pub(in crate::project_slice) fn current_slices(
@@ -188,7 +257,7 @@ impl PostPerimeterInputPrintObject {
         self.object.as_parts().1[layer_index].as_slice()
     }
 
-    fn region_surfaces(&self, index: RegionLayerIndex) -> &[RegionSurface] {
+    pub(super) fn region_surfaces(&self, index: RegionLayerIndex) -> &[RegionSurface] {
         let (post_region, _) = self.object.as_parts();
         let (_, _, regions) = post_region.as_parts();
         regions[index.region_index].as_parts().2[index.layer_index].surfaces()

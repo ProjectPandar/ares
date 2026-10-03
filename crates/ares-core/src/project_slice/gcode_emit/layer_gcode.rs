@@ -197,10 +197,7 @@ pub(super) fn append_print_preamble(
     }
     if is_bbl {
         super::machine::append_flavor_preamble(output, traversal);
-        output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\nM106 S0\n");
-        if traversal.resolved.views.runtime_gcode.auxiliary_fan.0 {
-            output.extend_from_slice(b"M106 P2 S0\n");
-        }
+        output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\n");
     }
     Ok(())
 }

@@ -1,6 +1,37 @@
 use super::clipper::simplify_polygons;
 use super::{ClipperError, ExPolygon, FillRule, Point, Polygon, union_ex};
 
+/// `Polygon.cpp::polygons_simplify`, preserving each input contour's winding.
+pub(crate) fn polygons_simplify(
+    polygons: Vec<Polygon>,
+    tolerance: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    polygons_simplify_with_mode(polygons, tolerance, true)
+}
+
+pub(crate) fn polygons_simplify_with_mode(
+    polygons: Vec<Polygon>,
+    tolerance: f64,
+    strictly_simple: bool,
+) -> Result<Vec<Polygon>, ClipperError> {
+    let mut output = Vec::with_capacity(polygons.len());
+    for mut polygon in polygons {
+        polygon.douglas_peucker(tolerance);
+        let counter_clockwise = polygon.area() > 0.0;
+        let mut simplified = super::clipper::simplify_polygons_with_mode(
+            std::slice::from_ref(&polygon),
+            strictly_simple,
+        )?;
+        if !counter_clockwise {
+            for path in &mut simplified {
+                path.reverse();
+            }
+        }
+        output.append(&mut simplified);
+    }
+    Ok(output)
+}
+
 pub(crate) fn append_simplified_expolygon(
     expolygon: ExPolygon,
     tolerance: f64,

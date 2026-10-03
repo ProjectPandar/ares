@@ -10,7 +10,7 @@ use crate::{
         perimeters::{
             classic::traversal::PostClassicTraversalPrintObject,
             flow::{resolve_nominal_sparse_infill_flow, resolve_thick_solid_infill_bridge_flow},
-            types::PostPerimeterInputPrintObject,
+            types::{PostPerimeterInputPrintObject, RegionLayerIndex},
         },
         prepare_infill::{
             bridge_over_infill::types::{BridgeCandidateObject, CandidateSurface},
@@ -61,36 +61,40 @@ pub(super) fn prepare_infill_lines(
         .expect("bridge transaction retains its resolved object")
         .object;
     let (_, inputs) = prelude.as_parts();
+    let region_count = prelude.as_parts().0.as_parts().0.as_parts().2.len();
     let mut result = BTreeMap::new();
     for &candidate_layer in candidates.surfaces_by_layer.keys() {
         let lower_layer = candidate_layer
             .checked_sub(1)
             .expect("bridge candidate always has a lower layer");
-        let lines = match (&inputs[lower_layer], &horizontal.records[lower_layer]) {
-            (Some(input), Some(record)) => {
-                let region = prelude.region_options(input);
-                if region.sparse_infill_density.0 == 0.0 {
-                    Vec::new()
-                } else {
-                    let nominal_flow =
-                        resolve_nominal_sparse_infill_flow(region, object_options, nozzles)?;
-                    super::super::anchor_projection::validate(
-                        region,
-                        &record.fill_surfaces,
-                        nominal_flow.spacing,
-                        scale,
-                    )?;
-                    generate_sparse_infill_polylines_for_anchoring(
-                        predecessor,
-                        object_index,
-                        lower_layer,
-                        lightning_generator,
-                    )?
-                }
+        for region_index in 0..region_count {
+            let slot = prelude.region_layer_record_index(RegionLayerIndex {
+                region_index,
+                layer_index: lower_layer,
+            });
+            let (input, record) = match (&inputs[slot], &horizontal.records[slot]) {
+                (Some(input), Some(record)) => (input, record),
+                (None, None) => continue,
+                _ => unreachable!("bridge anchor records remain aligned"),
+            };
+            let region = prelude.region_options(input);
+            if region.sparse_infill_density.0 == 0.0 {
+                continue;
             }
-            (None, None) => Vec::new(),
-            _ => unreachable!("bridge anchor records remain aligned"),
-        };
+            let nominal_flow = resolve_nominal_sparse_infill_flow(region, object_options, nozzles)?;
+            super::super::anchor_projection::validate(
+                region,
+                &record.fill_surfaces,
+                nominal_flow.spacing,
+                scale,
+            )?;
+        }
+        let lines = generate_sparse_infill_polylines_for_anchoring(
+            predecessor,
+            object_index,
+            lower_layer,
+            lightning_generator,
+        )?;
         result.insert(lower_layer, lines);
     }
     Ok(result)
@@ -133,9 +137,12 @@ pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
         .first()
         .expect("raw candidate map entries are nonempty");
     let (_, inputs) = prelude.as_parts();
-    let first_input = inputs[first.source.layer_index]
-        .as_ref()
-        .expect("candidate retains its source input");
+    let first_input = inputs[prelude.region_layer_record_index(RegionLayerIndex {
+        region_index: first.source.region_index,
+        layer_index: first.source.layer_index,
+    })]
+    .as_ref()
+    .expect("candidate retains its source input");
     let first_region = prelude.region_options(first_input);
     let first_flow = resolve_thick_solid_infill_bridge_flow(first_region, nozzles)?;
     let target_flow_height = first_flow.height * TARGET_FLOW_HEIGHT_FACTOR;
@@ -155,14 +162,36 @@ pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
         f64::from(target_flow_height),
     )
     .map_err(geometry_error)?;
-    let record = horizontal.records[layer_index]
-        .as_ref()
-        .expect("candidate layer retains its fill record");
-    let regions = [CurrentLayerBridgeRegion {
-        fill_surfaces: &record.fill_surfaces,
-        fill_expolygons: &record.fill_expolygons,
-        sparse_infill_pattern: first_region.sparse_infill_pattern,
-    }];
+    let regions = prelude
+        .as_parts()
+        .0
+        .as_parts()
+        .0
+        .as_parts()
+        .2
+        .iter()
+        .enumerate()
+        .map(|(region_index, region)| {
+            let slot = prelude.region_layer_record_index(RegionLayerIndex {
+                region_index,
+                layer_index,
+            });
+            let (fill_surfaces, fill_expolygons) =
+                horizontal.records[slot]
+                    .as_ref()
+                    .map_or((&[][..], &[][..]), |record| {
+                        (
+                            record.fill_surfaces.as_slice(),
+                            record.fill_expolygons.as_slice(),
+                        )
+                    });
+            CurrentLayerBridgeRegion {
+                fill_surfaces,
+                fill_expolygons,
+                sparse_infill_pattern: region.as_parts().1.sparse_infill_pattern,
+            }
+        })
+        .collect::<Vec<_>>();
     let context = prepare_current_layer_bridge_context(
         &deep,
         &regions,
@@ -196,9 +225,12 @@ pub(super) fn prepare_candidates(
     let (_, inputs) = prelude.as_parts();
     let mut completed = Vec::with_capacity(ordered.len());
     for candidate in ordered {
-        let input = inputs[candidate.source.layer_index]
-            .as_ref()
-            .expect("candidate retains its source input");
+        let input = inputs[prelude.region_layer_record_index(RegionLayerIndex {
+            region_index: candidate.source.region_index,
+            layer_index: candidate.source.layer_index,
+        })]
+        .as_ref()
+        .expect("candidate retains its source input");
         let region = prelude.region_options(input);
         let flow = resolve_thick_solid_infill_bridge_flow(region, nozzles)?;
         let scaled_spacing = scaled_flow_value(flow.spacing, scale);

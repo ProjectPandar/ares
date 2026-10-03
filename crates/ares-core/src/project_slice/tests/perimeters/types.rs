@@ -58,7 +58,7 @@ fn task22n_dispatch_preserves_spiral_thresholds_scalars_and_exhaustive_selection
         &OrcaFloats(vec![OrcaFloat(0.4), OrcaFloat(0.4)]),
     )
     .unwrap();
-    let outputs = prepare_perimeter_contexts(objects, flows, &resolved, true);
+    let outputs = prepare_perimeter_contexts(objects, flows, &resolved, true).unwrap();
 
     let records = outputs[0]
         .as_parts()
@@ -112,7 +112,7 @@ fn task22n_dispatch_preserves_spiral_thresholds_scalars_and_exhaustive_selection
         &OrcaFloats(vec![OrcaFloat(0.4), OrcaFloat(0.4)]),
     )
     .unwrap();
-    let outputs = prepare_perimeter_contexts(objects, flows, &resolved, false);
+    let outputs = prepare_perimeter_contexts(objects, flows, &resolved, false).unwrap();
     assert!(
         outputs[0]
             .as_parts()
@@ -143,7 +143,8 @@ fn task22n_context_maps_each_flow_role_and_layer_slot_without_aliasing() {
         }],
         std::slice::from_ref(&resolved),
         false,
-    );
+    )
+    .unwrap();
 
     for (record, expected) in outputs[0]
         .as_parts()
@@ -189,7 +190,7 @@ fn task22n_dispatch_spiral_requires_each_gate_and_exact_epsilon_boundary() {
         &OrcaFloats(vec![OrcaFloat(0.4), OrcaFloat(0.4)]),
     )
     .unwrap();
-    let outputs = prepare_perimeter_contexts(objects, flows, &resolved, true);
+    let outputs = prepare_perimeter_contexts(objects, flows, &resolved, true).unwrap();
     let records = outputs
         .iter()
         .map(|output| output.as_parts().1[0].as_ref().unwrap())

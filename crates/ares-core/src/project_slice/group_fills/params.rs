@@ -36,7 +36,6 @@ pub(super) struct ProjectedLayer<'a> {
     pub(super) params: Vec<Option<SurfaceFillParams>>,
     pub(super) region_id: usize,
     pub(super) no_overlap_expolygons: &'a [ExPolygon],
-    pub(super) lock_region_param: LockRegionParam,
 }
 
 impl<'a> LayerContext<'a> {
@@ -90,28 +89,31 @@ impl<'a> LayerContext<'a> {
     }
 }
 
-pub(super) fn project_layer(context: LayerContext<'_>) -> Result<ProjectedLayer<'_>, SliceError> {
+pub(super) fn project_layers<'a>(
+    contexts: &[LayerContext<'a>],
+) -> Result<(Vec<ProjectedLayer<'a>>, LockRegionParam), SliceError> {
     let mut current = projection::source_defaults();
-    let mut projected = Vec::with_capacity(context.record.fill_surfaces.len());
     let mut lock_region_param = locked::Builder::default();
-
-    for surface in &context.record.fill_surfaces {
-        if surface.as_parts().0 == RegionSurfaceKind::InternalVoid {
-            projected.push(None);
-            continue;
+    let mut layers = Vec::with_capacity(contexts.len());
+    for context in contexts {
+        let mut projected = Vec::with_capacity(context.record.fill_surfaces.len());
+        for surface in &context.record.fill_surfaces {
+            if surface.as_parts().0 == RegionSurfaceKind::InternalVoid {
+                projected.push(None);
+                continue;
+            }
+            let params = projection::project_surface(context, surface, &mut current)?;
+            if let Some(params) = params {
+                locked::append(context, surface, params, &mut lock_region_param)?;
+            }
+            projected.push(params);
         }
-        let params = projection::project_surface(&context, surface, &mut current)?;
-        if let Some(params) = params {
-            locked::append(&context, surface, params, &mut lock_region_param)?;
-        }
-        projected.push(params);
+        layers.push(ProjectedLayer {
+            surfaces: &context.record.fill_surfaces,
+            params: projected,
+            region_id: context.region_id,
+            no_overlap_expolygons: &context.record.fill_no_overlap_expolygons,
+        });
     }
-
-    Ok(ProjectedLayer {
-        surfaces: &context.record.fill_surfaces,
-        params: projected,
-        region_id: context.region_id,
-        no_overlap_expolygons: &context.record.fill_no_overlap_expolygons,
-        lock_region_param: lock_region_param.finish(),
-    })
+    Ok((layers, lock_region_param.finish()))
 }

@@ -28,15 +28,6 @@ async fn task22o20_earlier_errors_have_precedence_and_zero_invocations() {
         );
         assert_eq!(vertical_shell_projection::invocations(), 0);
     }
-    let (multi_region, _) = crate::project_slice::tests::region_fixture::modifier_projects();
-    vertical_shell_projection::reset_invocations();
-    assert_eq!(
-        slice_project(multi_region, metadata(), crate::SlicerContext::new(0))
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned())
-    );
-    assert_eq!(vertical_shell_projection::invocations(), 0);
 }
 
 #[tokio::test]

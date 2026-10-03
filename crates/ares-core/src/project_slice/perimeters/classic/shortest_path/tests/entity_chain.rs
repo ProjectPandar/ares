@@ -6,7 +6,10 @@ use crate::{
         perimeters::classic::{
             gap_extrusion::GapFillEntity,
             materialize::{ExtrusionPath, ExtrusionRole as PerimeterRole, Point3, Polyline3},
-            shortest_path::{ChainEntity, chain_and_reorder_entities, reorder_thick_polylines},
+            shortest_path::{
+                ChainEntity, chain_and_reorder_entities,
+                chain_and_reorder_entities_with_optional_start, reorder_thick_polylines,
+            },
         },
     },
 };
@@ -21,6 +24,27 @@ fn task22o96_constrained_chain_never_starts_by_reversing_no_sort_collection() {
     chain_and_reorder_entities(&mut entities, Point::new(99, 0));
 
     assert_eq!(endpoints(&entities), vec![(110, 120), (0, 100)]);
+}
+
+#[test]
+fn no_cursor_chain_preserves_nonreversible_collection_order() {
+    let mut entities = vec![collection(&[(0, 100)], true), collection(&[(20, 30)], true)];
+
+    chain_and_reorder_entities_with_optional_start(&mut entities, None);
+
+    assert_eq!(endpoints(&entities), vec![(0, 100), (20, 30)]);
+}
+
+#[test]
+fn no_cursor_chain_tries_opposite_order_before_nearest_point_order() {
+    let mut entities = vec![
+        collection(&[(0, 100)], false),
+        collection(&[(20, 30)], true),
+    ];
+
+    chain_and_reorder_entities_with_optional_start(&mut entities, None);
+
+    assert_eq!(endpoints(&entities), vec![(100, 0), (20, 30)]);
 }
 
 #[test]

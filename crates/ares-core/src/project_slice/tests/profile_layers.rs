@@ -1,4 +1,4 @@
-mod helpers;
+pub(super) mod helpers;
 
 use crate::{SliceError, Transform3d, project::effective_config::types::ResolvedPrintObjectConfig};
 use std::cell::Cell;

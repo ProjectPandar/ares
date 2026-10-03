@@ -4,7 +4,10 @@ use crate::{
     SliceError, Transform3d,
     mesh_slicer::SlicingMode,
     options::{FilamentRegionSourceOptions, RegionOptionOverrides},
-    project::effective_config::types::ResolvedModelPartCandidate,
+    project::{
+        effective_config::types::ResolvedModelPartCandidate,
+        region_graph::model_part_for_source_index,
+    },
 };
 
 use super::{
@@ -14,9 +17,7 @@ use super::{
         prepare_post_simplification,
         state::prepare_project_slice,
         volume_bounds::build_volume_bounds,
-        volume_regions::{
-            VolumeRegionGraph, build_volume_region_graph, model_part_for_source_index,
-        },
+        volume_regions::{VolumeRegionGraph, build_volume_region_graph},
     },
     region_fixture::modifier_projects,
     support::{KsrArchive, object, plan, region, resolved_object},

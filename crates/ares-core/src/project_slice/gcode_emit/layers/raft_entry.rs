@@ -48,7 +48,7 @@ pub(super) fn emit(
         lower_boundary_lines: Vec::new(),
         nearest_penalties: None,
         layer_slices: raft_polygons.clone().into(),
-        internal_surfaces: &[],
+        internal_surfaces: Vec::new(),
         chunk_slices: raft_polygons,
         chunk_perimeter_spacing: 0.0,
     };
@@ -59,15 +59,29 @@ pub(super) fn emit(
     if let Some(labels) = &labels[object_index] {
         labels.queue_start(output, state, emit_labels);
     }
-    let timelapse_inserted =
-        motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
+    let timelapse_inserted = motion::emit_layer(
+        output,
+        layer,
+        (motion_geometry, |_| {
+            traversal
+                .resolved
+                .views
+                .full
+                .process
+                .region
+                .sparse_infill_density
+                .0
+        }),
+        state,
+        |output, state| {
             timelapse_core::append_traditional(
                 traditional_interlude,
                 output,
                 state,
                 timelapse_context,
             )
-        })?;
+        },
+    )?;
     if let Some(labels) = &labels[object_index] {
         labels.queue_stop(
             output,

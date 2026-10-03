@@ -1,4 +1,4 @@
-use super::{DeepSparseLayer, gather_deep_sparse_infill_area};
+use super::{DeepSparseLayer, DeepSparseRegion, gather_deep_sparse_infill_area};
 use crate::{
     geometry::{ClipperError, CoordinateScale, ExPolygon, Point, Polygon},
     project_slice::{
@@ -209,8 +209,10 @@ impl Fixture {
             .zip(&self.densities)
             .map(|((planned, fill_surfaces), density)| DeepSparseLayer {
                 planned,
-                fill_surfaces,
-                sparse_infill_density_percent: *density,
+                regions: vec![DeepSparseRegion {
+                    fill_surfaces,
+                    sparse_infill_density_percent: *density,
+                }],
             })
             .collect()
     }

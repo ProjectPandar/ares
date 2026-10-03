@@ -9,6 +9,16 @@ pub(crate) fn union_polygons_paths(paths: &[Polygon]) -> Result<Vec<Polygon>, Cl
     execute(paths, &[], ClipOperation::Union)
 }
 
+pub(crate) fn union_polygons_paths_pair(
+    first: &[Polygon],
+    second: &[Polygon],
+) -> Result<Vec<Polygon>, ClipperError> {
+    let mut clipper = Clipper::new(ClipperOptions::default());
+    clipper.add_closed_paths(first, PathRole::Subject)?;
+    clipper.add_closed_paths(second, PathRole::Subject)?;
+    clipper.execute_paths(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero)
+}
+
 pub(crate) fn union_even_odd_polygons_paths(
     paths: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
@@ -35,6 +45,17 @@ pub(crate) fn difference_polygons_paths(
     clip: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
     execute(subject, clip, ClipOperation::Difference)
+}
+
+pub(crate) fn difference_polygons_paths_with_safety_offset(
+    subject: &[Polygon],
+    clip: &[Polygon],
+) -> Result<Vec<Polygon>, ClipperError> {
+    execute(
+        subject,
+        &safety_offset_polygons(clip)?,
+        ClipOperation::Difference,
+    )
 }
 
 pub(crate) fn intersection_polygons_paths_with_safety_offset(

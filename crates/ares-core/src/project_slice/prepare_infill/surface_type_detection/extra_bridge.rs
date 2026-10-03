@@ -19,7 +19,6 @@ use super::{geometry::geometry_error, types::StagedRecord};
 struct Cache {
     polygons: Vec<ExPolygon>,
     offset: f32,
-    region: usize,
 }
 
 pub(super) fn apply(
@@ -36,17 +35,15 @@ pub(super) fn apply(
         return Ok(());
     }
     let caches = collect(records, inputs, input_object, scale)?;
-    for layer in 0..records.len().saturating_sub(1) {
-        let Some(cache) = &caches[layer] else {
+    for (cache, input) in caches.iter().zip(inputs) {
+        let (Some(cache), Some(input)) = (cache, input) else {
             continue;
         };
-        let Some(input) = &inputs[layer + 1] else {
+        let Some(upper_same_region) = input.upper_same_region else {
             continue;
         };
-        if input.current.region_index != cache.region {
-            continue;
-        }
-        let Some(upper) = &mut records[layer + 1] else {
+        let upper_index = input_object.region_layer_record_index(upper_same_region);
+        let Some(upper) = &mut records[upper_index] else {
             continue;
         };
         upper.slices = rewrite(std::mem::take(&mut upper.slices), cache)?;
@@ -82,11 +79,7 @@ fn collect(
                     .checked_scale(f64::from(input.perimeter_flow.width))
                     .expect("validated perimeter flow width is in range");
                 let offset = (external + internal * i64::from(internal_walls)) as f32;
-                Ok(Some(Cache {
-                    polygons,
-                    offset,
-                    region: input.current.region_index,
-                }))
+                Ok(Some(Cache { polygons, offset }))
             }
             (None, None) => Ok(None),
             _ => unreachable!("external extra-bridge records remain aligned"),

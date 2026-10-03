@@ -11,6 +11,7 @@ mod line;
 mod line_distance_tree;
 pub(crate) mod marching_squares;
 pub(crate) mod medial_axis;
+pub(crate) mod mutable_polygon;
 mod polygon;
 mod polyline;
 mod region_expansion;
@@ -38,7 +39,8 @@ pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, SAFETY_OFFSET, closing_ex, diff_pl, difference_ex,
     difference_ex_polygons, difference_ex_polygons_with_safety_offset,
     difference_ex_with_safety_offset, difference_open_polylines, difference_polygons_ex,
-    difference_polygons_ex_with_safety_offset, difference_polygons_paths, intersection_ex,
+    difference_polygons_ex_with_safety_offset, difference_polygons_paths,
+    difference_polygons_paths_with_safety_offset, intersection_ex, intersection_ex_polygons,
     intersection_ex_with_safety_offset, intersection_open_polylines, intersection_pl,
     intersection_polygons_ex, intersection_polygons_paths,
     intersection_polygons_paths_with_safety_offset, intersection_polygons_polygons_ex,
@@ -46,8 +48,8 @@ pub(crate) use clipper::{
     offset_open_paths, offset_paths, offset_paths_tree, offset2_ex, offset2_ex_with_interstage,
     open_polyline_inside_expolygon, opening_ex, opening_paths, point_in_polygon,
     union_even_odd_polygons_paths, union_ex, union_expolygons, union_polygons_paths,
-    union_safety_offset_ex, union_safety_offset_expolygons, union_safety_offset_polygons,
-    variable_offset_inner_ex, xor_ex,
+    union_polygons_paths_pair, union_safety_offset_ex, union_safety_offset_expolygons,
+    union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
@@ -60,7 +62,7 @@ pub(crate) use line::{Line, ThickLine};
         reason = "consumed by the future automatic bridge-direction operation"
     )
 )]
-pub(crate) use line_distance_tree::{LineDistanceTree, NearestLine};
+pub(crate) use line_distance_tree::{FloatLineDistanceTree, LineDistanceTree, NearestLine};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};

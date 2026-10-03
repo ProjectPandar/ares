@@ -192,6 +192,7 @@ pub(super) fn resolved_object(
 ) -> ResolvedProjectObject {
     ResolvedProjectObject {
         source_object_index,
+        all_regions: Vec::new(),
         object: ObjectOptions::from_base(&ProjectSettings::default().process.object),
         print_objects: transforms
             .iter()
@@ -215,6 +216,12 @@ pub(super) fn plan(
     PlannedPrintObject {
         source_object_index,
         transform_index,
+        slicing_parameters: super::profile_layers::helpers::parameters(
+            0.2,
+            0.2,
+            0.07,
+            layer_count as f64 * 0.2,
+        ),
         layers: vec![
             PlannedLayer {
                 id: 0,
@@ -260,6 +267,7 @@ pub(super) fn resolved(
 ) -> ResolvedProjectObject {
     ResolvedProjectObject {
         source_object_index,
+        all_regions: regions.clone(),
         object,
         print_objects: vec![ResolvedPrintObjectConfig {
             transform: Transform3d::IDENTITY,

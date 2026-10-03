@@ -52,6 +52,8 @@ fn projection_input<'a>(
 ) -> super::gather::ProjectionInput<'a> {
     super::gather::ProjectionInput {
         caches,
+        physical: None,
+        num_layers: caches.len(),
         layers,
         lslices,
         options,

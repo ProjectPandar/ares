@@ -95,8 +95,8 @@ impl Node {
 }
 
 /// `lineSegmentPolygonsIntersection` (TreeNode.cpp) — walk the outline locator
-/// along `a→b`, find the nearest segment intersection within `within_max_dist`
-/// of `b`. Returns the intersection `Point`.
+/// along `a→b`, preserving the source visitor's stored-point distance/update
+/// sequence and final `within_max_dist` gate.
 pub(super) fn line_segment_polygons_intersection(
     a: Point,
     b: Point,
@@ -104,29 +104,30 @@ pub(super) fn line_segment_polygons_intersection(
     within_max_dist: Coord,
 ) -> Option<Point> {
     let mut d2min = f64::MAX;
-    let mut result: Option<(f64, f64)> = None;
+    let mut result = (0.0, 0.0);
     let _ = outline_locator.visit_cells_intersecting_line(a, b, |_row, _col, edges| {
         for &edge in edges {
             let (s1, s2) = outline_locator.segment(edge);
-            // TreeNode.cpp passes the outline edge first, then the branch.
+            // TreeNode.cpp supplies second endpoints as v1/v2, not differences.
             if let Some(ip) = seg_seg_intersection(
                 (s1.x() as f64, s1.y() as f64),
-                (s2.x() as f64 - s1.x() as f64, s2.y() as f64 - s1.y() as f64),
+                (s2.x() as f64, s2.y() as f64),
                 (a.x() as f64, a.y() as f64),
-                (b.x() as f64 - a.x() as f64, b.y() as f64 - a.y() as f64),
+                (b.x() as f64, b.y() as f64),
             ) {
-                let d = (ip.0 - b.x() as f64).powi(2) + (ip.1 - b.y() as f64).powi(2);
+                // TreeNode.cpp:166 tests the previous intersection, then saves ip.
+                let d = (result.0 - b.x() as f64).powi(2) + (result.1 - b.y() as f64).powi(2);
                 if d < d2min {
                     d2min = d;
-                    result = Some(ip);
+                    result = ip;
                 }
             }
         }
         true
     });
     if d2min < (within_max_dist as f64) * (within_max_dist as f64) {
-        let (x, y) = result?;
-        Some(Point::new(x as Coord, y as Coord))
+        let (x, y) = result;
+        Some(Point::new(x.round() as Coord, y.round() as Coord))
     } else {
         None
     }
@@ -140,7 +141,7 @@ fn seg_seg_intersection(
     v2: (f64, f64),
 ) -> Option<(f64, f64)> {
     let mut denom = v1.0 * v2.1 - v2.0 * v1.1;
-    if denom.abs() < 1e-6 {
+    if denom.abs() < 1e-4 {
         return None;
     }
     let s12 = (p1.0 - p2.0, p1.1 - p2.1);

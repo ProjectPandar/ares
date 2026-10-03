@@ -131,6 +131,20 @@ fn prepare_object(
 }
 
 impl PostClassicTraversalPrintObject {
+    pub(in crate::project_slice) fn physical_layers(
+        &self,
+    ) -> &[crate::project_slice::layers::PlannedLayer] {
+        let input = &self.predecessor.predecessor.predecessor.predecessor.object;
+        &input.object.as_parts().0.plan.layers
+    }
+
+    pub(in crate::project_slice) fn slicing_parameters(
+        &self,
+    ) -> &crate::project_slice::parameters::SlicingParameters {
+        let input = &self.predecessor.predecessor.predecessor.predecessor.object;
+        &input.object.as_parts().0.plan.slicing_parameters
+    }
+
     pub(in crate::project_slice) fn lower_series(
         &self,
         record_index: usize,

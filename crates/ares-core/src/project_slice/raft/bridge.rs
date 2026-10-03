@@ -10,8 +10,6 @@ use crate::geometry::ClipperError;
 
 pub(crate) struct RaftStream {
     pub(crate) plans: Vec<RaftLayerPlan>,
-    /// Object layer z shift (`Slicing.cpp:232-236`).
-    pub(crate) object_print_z_min: f64,
     #[expect(dead_code, reason = "consumed by the skirt wiring slice")]
     pub(crate) support_flow_spacing_mm: f64,
     #[expect(dead_code, reason = "consumed by the skirt wiring slice")]
@@ -23,4 +21,4 @@ pub(super) fn raft_geometry_error(error: ClipperError) -> SliceError {
 }
 
 mod project;
-pub(crate) use project::build_project_raft;
+pub(in crate::project_slice) use project::build_project_raft;

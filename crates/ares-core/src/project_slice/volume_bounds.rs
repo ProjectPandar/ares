@@ -1,15 +1,15 @@
 use std::num::{NonZeroU32, NonZeroUsize};
 
 use crate::{
-    ProjectObject, ProjectVolumeType, project::effective_config::types::ResolvedProjectObject,
+    ProjectObject, ProjectVolumeType,
+    project::effective_config::types::ResolvedProjectObject,
+    project::region_graph::bounds::{BoundingBox3f, transformed_mesh_bbox},
 };
 
 use super::{
     closing::{PostClosingLayer, PostClosingPrintObject},
     layers::PlannedPrintObject,
 };
-
-const Z_EPSILON: f32 = 1e-4;
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) struct VolumeOccurrenceId(NonZeroU32);
@@ -58,44 +58,6 @@ impl PostBoundsVolume {
             self.volume_type,
             self.layers,
         )
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct BoundingBox3f {
-    min: [f32; 3],
-    max: [f32; 3],
-}
-
-impl BoundingBox3f {
-    pub(super) const fn min(self) -> [f32; 3] {
-        self.min
-    }
-
-    pub(super) const fn max(self) -> [f32; 3] {
-        self.max
-    }
-
-    pub(super) fn contains_z(self, z: f32) -> bool {
-        self.min[2] <= z && z <= self.max[2]
-    }
-
-    pub(super) fn intersects_xy(self, other: Self) -> bool {
-        !(self.max[0] < other.min[0]
-            || other.max[0] < self.min[0]
-            || self.max[1] < other.min[1]
-            || other.max[1] < self.min[1])
-    }
-
-    pub(super) fn intersects(self, other: Self) -> bool {
-        self.intersects_xy(other) && !(self.max[2] < other.min[2] || other.max[2] < self.min[2])
-    }
-
-    pub(super) fn extend(&mut self, other: Self) {
-        for axis in 0..3 {
-            self.min[axis] = self.min[axis].min(other.min[axis]);
-            self.max[axis] = self.max[axis].max(other.max[axis]);
-        }
     }
 }
 
@@ -207,28 +169,10 @@ pub(super) fn build_volume_bounds(
         let transform = object_transform
             .then(source_volume.transform())
             .without_xy_translation();
-        let mesh = source_volume.mesh();
-        let first_vertex = mesh.vertices()[mesh.triangles()[0][0] as usize];
-        let first = transform.transform_point_f32(first_vertex);
-        let mut min = first;
-        let mut max = first;
-        for &vertex_index in mesh.triangles().iter().flatten() {
-            let point = transform.transform_point_f32(mesh.vertices()[vertex_index as usize]);
-            for axis in 0..3 {
-                min[axis] = min[axis].min(point[axis]);
-                max[axis] = max[axis].max(point[axis]);
-            }
-        }
-        min[0] -= xy_inflate;
-        min[1] -= xy_inflate;
-        max[0] += xy_inflate;
-        max[1] += xy_inflate;
-        min[2] -= Z_EPSILON;
-        max[2] += Z_EPSILON;
         bounds.push(VolumeBound {
             source_volume_index,
             occurrence_id,
-            bbox: BoundingBox3f { min, max },
+            bbox: transformed_mesh_bbox(source_volume.mesh(), transform, xy_inflate),
         });
         source_volume_positions[source_volume_index] = NonZeroUsize::new(volumes.len() + 1);
         volumes.push(PostBoundsVolume {

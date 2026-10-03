@@ -1,9 +1,9 @@
 use std::{cmp::Ordering, collections::BTreeSet};
 
-use crate::{ExtrusionRole, ProcessInfillPattern};
+use crate::{ExtrusionRole, ProcessInfillPattern, SliceError, geometry::union_expolygons};
 
 use super::{
-    GroupedFills, RepresentativeSurface, SurfaceFill, SurfaceFillParams, SurfaceFillPattern,
+    RepresentativeSurface, SurfaceFill, SurfaceFillParams, SurfaceFillPattern, geometry_error,
     params::ProjectedLayer,
 };
 
@@ -30,10 +30,14 @@ impl Ord for ParamsKey {
     }
 }
 
-pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> GroupedFills {
+pub(super) fn coalesce(
+    projected_layers: &[ProjectedLayer<'_>],
+) -> Result<Vec<SurfaceFill>, SliceError> {
     let mut unique = BTreeSet::new();
-    for params in projected.params.iter().flatten().copied() {
-        unique.insert(ParamsKey(params));
+    for projected in projected_layers {
+        for params in projected.params.iter().flatten().copied() {
+            unique.insert(ParamsKey(params));
+        }
     }
     let mut fills = unique
         .into_iter()
@@ -44,46 +48,51 @@ pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> GroupedFills {
         })
         .collect::<Vec<_>>();
 
-    for (surface, params) in projected.surfaces.iter().zip(&projected.params) {
-        let Some(params) = params else {
-            continue;
-        };
-        let index = fills
-            .binary_search_by(|fill| compare(&fill.params, params))
-            .expect("projected surface parameter was interned before coalescing");
-        let pending = &mut fills[index];
-        let (kind, expolygon, thickness, thickness_layers, _, extra_perimeters) =
-            surface.as_parts();
-        if let Some(fill) = &mut pending.fill {
+    for projected in projected_layers {
+        for (surface, params) in projected.surfaces.iter().zip(&projected.params) {
+            let Some(params) = params else {
+                continue;
+            };
+            let index = fills
+                .binary_search_by(|fill| compare(&fill.params, params))
+                .expect("projected surface parameter was interned before coalescing");
+            let pending = &mut fills[index];
+            let (kind, expolygon, thickness, thickness_layers, _, extra_perimeters) =
+                surface.as_parts();
+            let Some(fill) = &mut pending.fill else {
+                pending.fill = Some(SurfaceFill {
+                    region_id: projected.region_id,
+                    representative: RepresentativeSurface::from_parts(
+                        kind,
+                        thickness,
+                        thickness_layers,
+                        pending.params.bridge_angle,
+                        extra_perimeters,
+                    ),
+                    expolygons: vec![expolygon.clone()],
+                    params: pending.params,
+                    region_id_group: vec![projected.region_id],
+                    no_overlap_expolygons: projected.no_overlap_expolygons.to_vec(),
+                });
+                continue;
+            };
             fill.expolygons.push(expolygon.clone());
-        } else {
-            pending.fill = Some(SurfaceFill {
-                region_id: projected.region_id,
-                representative: RepresentativeSurface::from_parts(
-                    kind,
-                    thickness,
-                    thickness_layers,
-                    pending.params.bridge_angle,
-                    extra_perimeters,
-                ),
-                expolygons: vec![expolygon.clone()],
-                params: pending.params,
-                region_id_group: vec![projected.region_id],
-                no_overlap_expolygons: projected.no_overlap_expolygons.to_vec(),
-            });
+            if !fill.region_id_group.contains(&projected.region_id) {
+                fill.region_id_group.push(projected.region_id);
+                fill.no_overlap_expolygons =
+                    union_expolygons(&fill.no_overlap_expolygons, projected.no_overlap_expolygons)
+                        .map_err(geometry_error)?;
+            }
         }
     }
 
-    GroupedFills {
-        surface_fills: fills
-            .into_iter()
-            .map(|fill| {
-                fill.fill
-                    .expect("every interned parameter retains a projected surface")
-            })
-            .collect(),
-        lock_region_param: projected.lock_region_param,
-    }
+    Ok(fills
+        .into_iter()
+        .map(|fill| {
+            fill.fill
+                .expect("every interned parameter retains a projected surface")
+        })
+        .collect())
 }
 
 struct PendingFill {

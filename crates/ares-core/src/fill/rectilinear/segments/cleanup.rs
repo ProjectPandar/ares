@@ -57,7 +57,6 @@ fn remove_sticks(polygon: Polygon) -> Option<Polygon> {
     (output.len() >= 3).then(|| Polygon::new(output))
 }
 
-#[cfg(test)]
 pub(crate) fn remove_sticks_from_polygon(polygon: Polygon) -> Option<Polygon> {
     remove_sticks(polygon)
 }

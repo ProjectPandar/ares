@@ -26,6 +26,7 @@ fn equal_speed_ignores_start_and_reasserts_base_fan_at_end() {
             overhang_fan_speed: 100,
             ..MotionOptions::default()
         },
+        layer_chunk_index: 13,
         layer_index: 13,
         part_fan_speed: 100,
         physical_fan_speed: 100,
@@ -60,15 +61,15 @@ fn equal_speed_ignores_start_and_reasserts_base_fan_at_end() {
 }
 
 #[test]
-fn closed_layer_reasserts_baseline_when_overhang_region_ends() {
+fn first_chunk_retains_role_requests_until_cooling_resolution() {
     let mut state = EmitState {
         options: MotionOptions {
             enable_overhang_bridge_fan: true,
             overhang_fan_speed: 100,
             overhang_fan_threshold: crate::RawOverhangFanThreshold::Percent0,
-            close_fan_first_layers: 1,
             ..MotionOptions::default()
         },
+        layer_chunk_index: 0,
         layer_index: 0,
         ..EmitState::default()
     };
@@ -77,7 +78,10 @@ fn closed_layer_reasserts_baseline_when_overhang_region_ends() {
     update_for_constant_path(&mut output, properties("Outer wall"), &mut state);
     update_for_constant_path(&mut output, properties("Bottom surface"), &mut state);
 
-    assert_eq!(output, b";__ARES_ROLE_FAN_BASE__\n");
+    assert_eq!(
+        output,
+        b";__ARES_ROLE_FAN_CONDITIONAL_100__\n;__ARES_ROLE_FAN_BASE__\n"
+    );
 }
 
 #[test]
@@ -88,6 +92,7 @@ fn faster_overhang_fan_activates_for_variable_segment() {
             overhang_fan_speed: 100,
             ..MotionOptions::default()
         },
+        layer_chunk_index: 3,
         layer_index: 3,
         part_fan_speed: 40,
         physical_fan_speed: 40,
@@ -122,6 +127,7 @@ fn internal_bridge_marker_reasserts_equal_baseline_at_end() {
             overhang_fan_threshold: crate::RawOverhangFanThreshold::Percent50,
             ..MotionOptions::default()
         },
+        layer_chunk_index: 13,
         layer_index: 13,
         part_fan_speed: 100,
         physical_fan_speed: 100,
@@ -158,6 +164,7 @@ fn explicit_internal_bridge_speed_overrides_and_restores_baseline() {
             internal_bridge_fan_speed: crate::options::InternalBridgeFanSpeed::new(75),
             ..MotionOptions::default()
         },
+        layer_chunk_index: 13,
         layer_index: 13,
         part_fan_speed: 40,
         physical_fan_speed: 40,

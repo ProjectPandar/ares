@@ -49,16 +49,6 @@ fn task22o21_every_record_count_mismatch_rejects_before_geometry() {
         .pop();
     rejects(inputs);
 
-    let mut flows = prepared();
-    flows.predecessor.objects[0]
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .records
-        .pop();
-    rejects(flows);
-
     let mut plan = prepared();
     plan.predecessor.objects[0]
         .predecessor
@@ -111,15 +101,6 @@ fn task22o21_every_per_slot_presence_mismatch_rejects_before_geometry() {
         .object
         .records[1] = None;
     rejects(inputs);
-
-    let mut flows = prepared();
-    flows.predecessor.objects[0]
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .records[1] = None;
-    rejects(flows);
 }
 
 #[test]

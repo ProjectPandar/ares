@@ -31,16 +31,17 @@ pub(crate) use boolean_ex::{
     SAFETY_OFFSET, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
     difference_polygons_ex, difference_polygons_ex_with_safety_offset, intersection_ex,
-    intersection_ex_with_safety_offset, intersection_polygons_ex,
+    intersection_ex_polygons, intersection_ex_with_safety_offset, intersection_polygons_ex,
     intersection_polygons_polygons_ex, union_expolygons, union_safety_offset_ex,
     union_safety_offset_expolygons, xor_ex,
 };
 #[cfg(test)]
 pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;
 pub(crate) use boolean_paths::{
-    difference_polygons_paths, intersection_polygons_paths,
-    intersection_polygons_paths_with_safety_offset, union_even_odd_polygons_paths,
-    union_polygons_paths, union_safety_offset_polygons,
+    difference_polygons_paths, difference_polygons_paths_with_safety_offset,
+    intersection_polygons_paths, intersection_polygons_paths_with_safety_offset,
+    union_even_odd_polygons_paths, union_polygons_paths, union_polygons_paths_pair,
+    union_safety_offset_polygons,
 };
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
@@ -71,7 +72,7 @@ pub(crate) use polyline::{
 pub(crate) use polytree::PolyNode;
 pub(crate) use polytree::{PolyTree, union_contours, union_ex};
 pub(crate) use predicates::{fixed_round, slopes_equal};
-pub(super) use simplify::simplify_polygons;
+pub(super) use simplify::{simplify_polygons, simplify_polygons_with_mode};
 #[cfg(test)]
 pub(crate) use strictly_simple::MaximaCursor;
 pub(crate) use variable_offset::variable_offset_inner_ex;
@@ -79,7 +80,7 @@ pub(crate) use variable_offset::variable_offset_inner_ex;
 use std::collections::BinaryHeap;
 
 use super::{Point, Polygon, Polyline};
-use predicates::area;
+pub(super) use predicates::area;
 use types::{
     EdgeArena, EdgeId, GhostJoin, IntersectionNode, Join, LocalMinimum, OutPointArena, OutRec,
 };

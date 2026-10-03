@@ -25,7 +25,8 @@ fn geometry() -> LayerGeometry<'static> {
     LayerGeometry {
         nearest_seam_penalties: None,
         staggered_inner: false,
-        internal_surfaces: Box::leak(vec![surface].into_boxed_slice()),
+        internal_surfaces: Box::leak(vec![&*Box::leak(Box::new(surface))].into_boxed_slice()),
+        support_islands: None,
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
         avoid_crossing: AvoidCrossingGeometry {
@@ -139,6 +140,7 @@ fn boundary_builds_from_layer_slices() {
         nearest_seam_penalties: None,
         staggered_inner: false,
         internal_surfaces: &[],
+        support_islands: None,
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
         avoid_crossing: AvoidCrossingGeometry {

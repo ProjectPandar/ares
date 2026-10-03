@@ -24,6 +24,9 @@ fn task22m_two_pass_union_preserves_discriminant_geometry() {
         plan: PlannedPrintObject {
             source_object_index: 18,
             transform_index: 0,
+            slicing_parameters: crate::project_slice::tests::profile_layers::helpers::parameters(
+                0.2, 0.2, 0.07, 0.2,
+            ),
             layers: vec![PlannedLayer {
                 id: 0,
                 height: 0.2,

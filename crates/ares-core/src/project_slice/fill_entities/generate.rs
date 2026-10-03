@@ -87,6 +87,8 @@ pub(in crate::project_slice) fn generate_layer(
     } = grouped;
 
     for fill in surface_fills {
+        let region_id = fill.region_id;
+        let collection_start = output.collections.len();
         match fill.params.pattern {
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
                 super::crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
@@ -279,12 +281,16 @@ pub(in crate::project_slice) fn generate_layer(
                 )?;
             }
         }
+        output
+            .collection_ranges
+            .push((region_id, collection_start..output.collections.len()));
     }
     if let (Some(record), Some(input)) = (
         prepared.predecessor.objects[object_index].records[layer_index].as_ref(),
         prelude.records[layer_index].as_ref(),
     ) {
         let region = prelude.region_options(input);
+        let collection_start = output.collections.len();
         super::ironing::append(
             &mut output,
             super::ironing::Input {
@@ -304,6 +310,10 @@ pub(in crate::project_slice) fn generate_layer(
                 scale: traversal.scale,
             },
         )?;
+        output.collection_ranges.push((
+            input.current.region_index,
+            collection_start..output.collections.len(),
+        ));
     }
     let process = &traversal.resolved.views.full.process;
     if simplify_before_ordering(

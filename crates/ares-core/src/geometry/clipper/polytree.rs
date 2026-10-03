@@ -119,7 +119,7 @@ impl PolyTree {
                 _ => unreachable!(),
             };
             // `if (node->IsHole()) retval->back().reverse()` — CCW.
-            if hole && shoelace_area(polygon.points()) < 0.0 {
+            if hole {
                 polygon.reverse();
             }
             out.push(polygon.into_points());
@@ -385,13 +385,4 @@ pub(crate) fn union_contours(
     Ok(clipper
         .execute_polytree(ClipOperation::Union, FillRule::EvenOdd, FillRule::EvenOdd)
         .into_outside_in_contours())
-}
-
-fn shoelace_area(points: &[crate::geometry::Point]) -> f64 {
-    let mut area = 0.0;
-    for pair in points.windows(2) {
-        area += (pair[0].x() as f64) * (pair[1].y() as f64)
-            - (pair[1].x() as f64) * (pair[0].y() as f64);
-    }
-    area * 0.5
 }

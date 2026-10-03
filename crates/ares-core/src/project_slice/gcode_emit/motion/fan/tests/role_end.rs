@@ -12,6 +12,7 @@ fn cooling_buffer_internal_bridge_end_forces_equal_speed_outer_wall_fan() {
             overhang_fan_threshold: crate::RawOverhangFanThreshold::Percent0,
             ..MotionOptions::default()
         },
+        layer_chunk_index: 63,
         layer_index: 63,
         part_fan_speed: 100,
         physical_fan_speed: 100,
@@ -22,6 +23,7 @@ fn cooling_buffer_internal_bridge_end_forces_equal_speed_outer_wall_fan() {
     assert_eq!(output, b";__ARES_ROLE_FAN_FIXED_50__\n");
     output.clear();
     state.physical_fan_speed = 50;
+    state.layer_chunk_index = 64;
     state.layer_index = 64;
     update_for_constant_path(&mut output, properties("Outer wall"), &mut state);
     assert_eq!(

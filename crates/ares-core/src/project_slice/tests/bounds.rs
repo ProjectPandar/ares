@@ -235,6 +235,7 @@ fn volume(
 fn resolved(source_object_index: usize, transforms: &[Transform3d]) -> ResolvedProjectObject {
     ResolvedProjectObject {
         source_object_index,
+        all_regions: Vec::new(),
         object: ObjectOptions::from_base(&ProjectSettings::default().process.object),
         print_objects: transforms
             .iter()

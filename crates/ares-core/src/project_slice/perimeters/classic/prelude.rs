@@ -124,7 +124,7 @@ fn prepare_surfaces(
     if record.dispatch == PerimeterDispatch::Arachne {
         return Ok(Vec::new());
     }
-    let sources = object.current_surfaces(record);
+    let sources = object.perimeter_surfaces(record);
     let geometry = sources
         .iter()
         .map(|surface| surface.as_parts().1.clone())

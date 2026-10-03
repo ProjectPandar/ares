@@ -40,14 +40,14 @@ pub(super) fn vertical_segments(line: &SegmentedLine) -> Vec<Polyline> {
     let mut index = 0;
     while index < line.intersections.len() {
         let low = &line.intersections[index];
-        if low.kind != IntersectionKind::InnerLow {
+        if low.kind != IntersectionKind::OuterLow {
             index += 1;
             continue;
         }
         let Some(high) = line.intersections.get(index + 1) else {
             break;
         };
-        if high.kind == IntersectionKind::InnerHigh {
+        if high.kind == IntersectionKind::OuterHigh {
             out.push(Polyline::new(vec![low.point, high.point]));
             index += 2;
         } else {

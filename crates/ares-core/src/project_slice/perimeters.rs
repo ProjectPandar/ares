@@ -15,6 +15,7 @@ use types::PostPerimeterInputPrintObject;
 
 pub(super) mod context;
 pub(super) mod flow;
+mod groups;
 pub(super) mod preflight;
 pub(super) mod types;
 
@@ -175,10 +176,24 @@ pub(super) fn prepare_post_layer_region_perimeters<'a>(
         .iter()
         .any(|object| object.records.iter().any(Option::is_some));
     let infill_boundary = classic_infill_boundary(prelude, context)?;
-    Ok(layer_region::finish_with_arachne(
-        infill_boundary,
-        has_arachne.then_some(arachne),
-    ))
+    let mut prepared =
+        layer_region::finish_with_arachne(infill_boundary, has_arachne.then_some(arachne));
+    for (source, output) in prepared
+        .predecessor
+        .as_classic()
+        .objects
+        .iter()
+        .zip(&mut prepared.objects)
+    {
+        let input = &source
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .object;
+        groups::redistribute::apply(input, output)?;
+    }
+    Ok(prepared)
 }
 
 pub(super) fn finish_post_perimeter_inputs(
@@ -206,7 +221,7 @@ pub(super) fn finish_post_perimeter_inputs(
         scale,
         objects,
     } = prepared;
-    let objects = prepare_perimeter_contexts(objects, flows, &resolved.objects, spiral_mode);
+    let objects = prepare_perimeter_contexts(objects, flows, &resolved.objects, spiral_mode)?;
     Ok(PreparedPostPerimeterInputs {
         project,
         resolved,

@@ -14,11 +14,15 @@ const UNSCALED_EPSILON: f64 = 1.0e-4;
 
 pub(super) struct CandidateLayer<'a> {
     pub(super) lower_layer_index: Option<usize>,
+    pub(super) solid_infill_spacing: Coord,
+    pub(super) regions: Vec<CandidateRegion<'a>>,
+}
+
+pub(super) struct CandidateRegion<'a> {
     pub(super) region_index: usize,
     pub(super) fill_expolygons: &'a [ExPolygon],
     pub(super) fill_surfaces: &'a [RegionSurface],
     pub(super) sparse_infill_density_percent: f64,
-    pub(super) solid_infill_spacing: Coord,
 }
 
 pub(super) fn gather_candidates(
@@ -62,15 +66,20 @@ fn gather_layer(
         ProcessInternalBridgeFilter::Limited | ProcessInternalBridgeFilter::NoFilter => 1.0,
     };
 
-    let unsupported =
-        lower.map_or_else(Vec::new, |lower| flatten_expolygons(lower.fill_expolygons));
+    let unsupported = lower
+        .into_iter()
+        .flat_map(|lower| &lower.regions)
+        .flat_map(|region| region.fill_expolygons)
+        .flat_map(expolygon_paths)
+        .collect::<Vec<_>>();
     let unsupported = close_paths(&unsupported, scaled_epsilon)?;
     let mut lower_solids = lower
         .into_iter()
-        .flat_map(|lower| {
-            lower.fill_surfaces.iter().filter(move |surface| {
+        .flat_map(|lower| &lower.regions)
+        .flat_map(|region| {
+            region.fill_surfaces.iter().filter(move |surface| {
                 surface.as_parts().0 != RegionSurfaceKind::Internal
-                    || lower.sparse_infill_density_percent == 100.0
+                    || region.sparse_infill_density_percent == 100.0
             })
         })
         .flat_map(surface_paths)
@@ -91,7 +100,13 @@ fn gather_layer(
     let unsupported = difference_polygons_paths(&unsupported, &lower_solids)?;
 
     let mut candidates = Vec::new();
-    for (surface_index, surface) in current.fill_surfaces.iter().enumerate() {
+    for (region_index, surface_index, surface) in current.regions.iter().flat_map(|region| {
+        region
+            .fill_surfaces
+            .iter()
+            .enumerate()
+            .map(move |(index, surface)| (region.region_index, index, surface))
+    }) {
         let (kind, expolygon, ..) = surface.as_parts();
         if kind != RegionSurfaceKind::InternalSolid {
             continue;
@@ -120,7 +135,7 @@ fn gather_layer(
         candidates.push(CandidateSurface {
             source: CandidateSource {
                 layer_index,
-                region_index: current.region_index,
+                region_index,
                 surface_index,
             },
             new_polygons,
@@ -166,10 +181,6 @@ fn filtered_candidate(
 fn close_paths(paths: &[Polygon], delta: f32) -> Result<Vec<Polygon>, ClipperError> {
     let expanded = offset_paths(paths, delta, JoinType::Miter, MITER_LIMIT)?;
     offset_paths(&expanded, -delta, JoinType::Miter, MITER_LIMIT)
-}
-
-fn flatten_expolygons(expolygons: &[ExPolygon]) -> Vec<Polygon> {
-    expolygons.iter().flat_map(expolygon_paths).collect()
 }
 
 fn surface_paths(surface: &RegionSurface) -> impl Iterator<Item = Polygon> + '_ {

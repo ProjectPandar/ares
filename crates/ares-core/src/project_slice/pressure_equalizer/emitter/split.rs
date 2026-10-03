@@ -47,7 +47,7 @@ pub(super) fn emit_accel_then_decel(
 
     let delta = target_max_extrusion_rate
         - f64::from(line.volumetric_extrusion_rate_start)
-            .min(f64::from(line.volumetric_extrusion_rate_end));
+            .max(f64::from(line.volumetric_extrusion_rate_end));
     if delta.round() < f64::from(NON_TRIVIAL_RATE_DELTA) {
         return false;
     }
@@ -79,7 +79,6 @@ pub(super) fn emit_accel_then_decel(
         let feedrate = pos_start[F]
             + ((target_max_feedrate as f32) - pos_start[F]) * (i as f32 - 0.5) / segments as f32;
         push_line_to_output(buffer, line, use_relative_e_distances, feedrate, comment);
-        pos_start = line.pos_end;
         line.pos_start = line.pos_end;
     }
 

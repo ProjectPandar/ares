@@ -8,7 +8,7 @@ use crate::{
         layers::PlannedLayer,
         prepare_infill::{
             vertical_shell_projection::types::VerticalShellProjection,
-            vertical_shells::types::VerticalShellCache,
+            vertical_shells::types::{PhysicalShellCache, VerticalShellCache},
         },
     },
 };
@@ -22,27 +22,64 @@ const RANGE_ERROR: &str =
 
 pub(super) struct ProjectionInput<'a> {
     pub(super) caches: &'a [Option<VerticalShellCache>],
+    pub(super) physical: Option<&'a PhysicalShellCache>,
+    pub(super) num_layers: usize,
     pub(super) layers: &'a [PlannedLayer],
     pub(super) lslices: &'a [Vec<ExPolygon>],
     pub(super) options: &'a RegionOptions,
     pub(super) external_spacing: i64,
 }
 
+struct CacheView<'a> {
+    top_surfaces: &'a [Polygon],
+    bottom_surfaces: &'a [Polygon],
+    holes: &'a [Polygon],
+}
+
+impl ProjectionInput<'_> {
+    fn cache(&self, index: usize) -> Option<CacheView<'_>> {
+        match self.physical {
+            Some(PhysicalShellCache::Shared(layers)) => {
+                let cache = &layers[index];
+                Some(CacheView {
+                    top_surfaces: &cache.top_surfaces,
+                    bottom_surfaces: &cache.bottom_surfaces,
+                    holes: &cache.holes,
+                })
+            }
+            Some(PhysicalShellCache::RegionalHoles(holes)) => {
+                let cache = self.caches[index].as_ref();
+                Some(CacheView {
+                    top_surfaces: cache.map_or(&[], |cache| cache.top_surfaces.as_slice()),
+                    bottom_surfaces: cache.map_or(&[], |cache| cache.bottom_surfaces.as_slice()),
+                    holes: &holes[index],
+                })
+            }
+            None => self.caches[index].as_ref().map(|cache| CacheView {
+                top_surfaces: &cache.top_surfaces,
+                bottom_surfaces: &cache.bottom_surfaces,
+                holes: &cache.holes,
+            }),
+        }
+    }
+}
+
 pub(super) fn project_record(
     index: usize,
     input: ProjectionInput<'_>,
 ) -> Result<VerticalShellProjection, SliceError> {
-    if input.options.ensure_vertical_shell_thickness
-        != ProcessEnsureVerticalShellThickness::EnsureAll
+    if index >= input.num_layers
+        || input.options.ensure_vertical_shell_thickness
+            != ProcessEnsureVerticalShellThickness::EnsureAll
     {
         return Ok(empty());
     }
-    let current = input.caches[index]
-        .as_ref()
+    let current = input
+        .cache(index)
         .expect("a populated O20 record has a populated O19 cache");
     let mut projection = VerticalShellProjection {
         shell: Vec::new(),
-        holes: current.holes.clone(),
+        holes: current.holes.to_vec(),
     };
     gather_top(index, &input, &mut projection)?;
     gather_bottom(index, &input, &mut projection)?;
@@ -62,19 +99,19 @@ fn gather_top(
     // Original native count-end addition uses the low 32 bits before comparison.
     let count_end = i64::from((index as i32).wrapping_add(count));
     let mut visited = false;
-    while stopped < input.caches.len()
+    while stopped < input.num_layers
         && ((stopped as i64) < count_end
             || input.layers[stopped].print_z - input.layers[index].print_z
                 < input.options.top_shell_thickness.0 - EPSILON)
     {
         visited = true;
         geometry_step(GeometryStep::TopVisit)?;
-        combine_cache(projection, input.caches[stopped].as_ref(), true)?;
+        combine_cache(projection, input.cache(stopped), true)?;
         stopped += 1;
     }
-    if !visited && stopped < input.caches.len() {
+    if !visited && stopped < input.num_layers {
         anchor(
-            &input.caches[index].as_ref().unwrap().top_surfaces,
+            input.cache(index).unwrap().top_surfaces,
             &input.lslices[stopped],
             input.external_spacing,
             (
@@ -110,12 +147,12 @@ fn gather_bottom(
         }
         visited = true;
         geometry_step(GeometryStep::BottomVisit)?;
-        combine_cache(projection, input.caches[neighbor].as_ref(), false)?;
+        combine_cache(projection, input.cache(neighbor), false)?;
         stopped -= 1;
     }
     if !visited && stopped >= 0 {
         anchor(
-            &input.caches[index].as_ref().unwrap().bottom_surfaces,
+            input.cache(index).unwrap().bottom_surfaces,
             &input.lslices[stopped as usize],
             input.external_spacing,
             (
@@ -130,17 +167,16 @@ fn gather_bottom(
 
 fn combine_cache(
     projection: &mut VerticalShellProjection,
-    cache: Option<&VerticalShellCache>,
+    cache: Option<CacheView<'_>>,
     top: bool,
 ) -> Result<(), SliceError> {
-    let empty = Vec::new();
-    let (holes, shell) = cache.map_or((&empty, &empty), |cache| {
+    let (holes, shell) = cache.map_or((&[][..], &[][..]), |cache| {
         (
-            &cache.holes,
+            cache.holes,
             if top {
-                &cache.top_surfaces
+                cache.top_surfaces
             } else {
-                &cache.bottom_surfaces
+                cache.bottom_surfaces
             },
         )
     });

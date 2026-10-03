@@ -24,10 +24,6 @@ pub(super) struct RaftSchedule {
     pub(super) plans: Vec<Vec<RaftLayerPlan>>,
     /// Per-object materialized raft layers, `[object][raft_layer]`.
     pub(super) layers: Vec<Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>>,
-    /// Per-object object-layer z shift.
-    pub(super) object_z_shift: Vec<f64>,
-    /// Total raft layer count per object (0 = no raft).
-    pub(super) counts: Vec<usize>,
 }
 
 #[expect(
@@ -38,7 +34,7 @@ pub(super) fn build(
     settings: &crate::ProjectSettings,
     objects: &[crate::ObjectOptions],
     first_layer_lslices: &[Option<&[crate::geometry::ExPolygon]>],
-    object_heights: &[f64],
+    slicing_parameters: &[&crate::project_slice::parameters::SlicingParameters],
     scale: crate::geometry::CoordinateScale,
     context: &mut crate::SlicerContext,
 ) -> Result<Option<RaftSchedule>, crate::SliceError> {
@@ -48,8 +44,6 @@ pub(super) fn build(
     let mut layers = (0..object_count)
         .map(|_: usize| Vec::new())
         .collect::<Vec<_>>();
-    let mut object_z_shift = vec![0.0; object_count];
-    let mut counts = vec![0usize; object_count];
     for object_index in 0..object_count {
         if objects[object_index].raft_layers.0 <= 0 {
             continue;
@@ -62,10 +56,7 @@ pub(super) fn build(
         let Some(stream) = build_project_raft(
             settings,
             &objects[object_index],
-            object_heights
-                .get(object_index)
-                .copied()
-                .unwrap_or_default(),
+            slicing_parameters[object_index],
             lslices,
             scale,
         )?
@@ -79,9 +70,7 @@ pub(super) fn build(
                 RAFT_SENTINEL_BASE + raft_index,
             ));
         }
-        counts[object_index] = stream.plans.len();
         plans[object_index] = stream.plans;
-        object_z_shift[object_index] = stream.object_print_z_min;
         layers[object_index] = plans[object_index]
             .iter()
             .filter_map(|plan| materialize_layer(plan, scale, context))
@@ -95,18 +84,7 @@ pub(super) fn build(
         entries,
         plans,
         layers,
-        object_z_shift,
-        counts,
     }))
-}
-
-/// Split a merged entry into either a raft layer or an object layer.
-pub(super) fn classify(layer_index: usize) -> Result<Option<usize>, crate::SliceError> {
-    if layer_index < RAFT_SENTINEL_BASE {
-        return Ok(None);
-    }
-    let raft_index = layer_index - RAFT_SENTINEL_BASE;
-    Ok(Some(raft_index))
 }
 
 /// Materialize one raft layer plan into an `OrderedExtrusionLayer`
@@ -147,7 +125,7 @@ fn materialize_layer(
     if entities.is_empty() {
         return None;
     }
-    let entities = entities
+    let entities: Vec<_> = entities
         .into_iter()
         .map(|entity| match entity {
             RaftEntity::Path(polyline) => {
@@ -169,7 +147,10 @@ fn materialize_layer(
         .collect();
     Some(
         crate::project_slice::island_print_order::OrderedExtrusionLayer {
-            islands: vec![OrderedExtrusionIsland { entities }],
+            islands: vec![OrderedExtrusionIsland {
+                infill_regions: vec![0; entities.len()],
+                entities,
+            }],
         },
     )
 }

@@ -1,5 +1,6 @@
 mod feedrate;
 mod markers;
+mod role_fans;
 
 use markers::strip_pressure_markers;
 
@@ -17,7 +18,7 @@ const ROLE_FAN_MARKER_PREFIX: &str = ";__ARES_ROLE_FAN_";
 pub(super) enum DeferredRoleFan {
     Baseline,
     Conditional { speed: u8, force: bool },
-    Fixed(u8),
+    Fixed { speed: u8, force: bool },
 }
 
 pub(super) fn append_deferred_role_fan(output: &mut Vec<u8>, target: DeferredRoleFan) {
@@ -27,29 +28,27 @@ pub(super) fn append_deferred_role_fan(output: &mut Vec<u8>, target: DeferredRol
             let force = if force { "FORCE_" } else { "" };
             format!("{ROLE_FAN_MARKER_PREFIX}CONDITIONAL_{force}{speed}__\n")
         }
-        DeferredRoleFan::Fixed(speed) => {
-            format!("{ROLE_FAN_MARKER_PREFIX}FIXED_{speed}__\n")
+        DeferredRoleFan::Fixed { speed, force } => {
+            let force = if force { "FORCE_" } else { "" };
+            format!("{ROLE_FAN_MARKER_PREFIX}FIXED_{force}{speed}__\n")
         }
     };
     output.extend_from_slice(marker.as_bytes());
 }
 
 pub(super) struct CoolingState {
-    part_speed: u8,
+    part_speed: Option<u8>,
     physical_part_speed: u8,
     provisional_part_speed: u8,
     pending_layer_index: Option<usize>,
     /// The layer the equalizer is holding back.
-    equalized_layer_index: Option<usize>,
+    equalized_layer_result: Option<(usize, bool)>,
+    buffered_gcode: Vec<u8>,
     part_fan_ramp: PartCoolingFanRamp,
-    additional_speed: u8,
+    additional_speed: Option<u8>,
     additional_fan_speed: u8,
     auxiliary_fan: bool,
     part_cooling_fan_min_pwm: u8,
-    /// Non-BBL printers emit the initial fan state at the first layer
-    /// boundary; BBL machines carry it inside their start sequence.
-    emit_initial_fan: bool,
-    fan_mover_enabled: bool,
     gcode_comments: bool,
     equalizer: Option<crate::project_slice::pressure_equalizer::PressureEqualizerPass>,
     feedrate: feedrate::State,
@@ -102,18 +101,17 @@ impl CoolingState {
         });
         Self {
             equalizer,
-            part_speed: 0,
+            part_speed: None,
             physical_part_speed: 0,
             provisional_part_speed: 0,
             pending_layer_index: None,
-            equalized_layer_index: None,
+            equalized_layer_result: None,
+            buffered_gcode: Vec::new(),
             part_fan_ramp,
-            additional_speed: 0,
+            additional_speed: None,
             additional_fan_speed: first_percent_int(&filament.additional_cooling_fan_speed.0),
             auxiliary_fan: runtime.auxiliary_fan.0,
             part_cooling_fan_min_pwm: runtime.part_cooling_fan_min_pwm.0.clamp(0, 100) as u8,
-            emit_initial_fan: !super::tags::Tags::of(traversal).is_bbl(),
-            fan_mover_enabled: runtime.fan_speedup_time.0 != 0.0 || runtime.fan_kickstart.0 > 0.0,
             gcode_comments: full.process.print.gcode_comments.0,
             feedrate: feedrate::State::new(
                 feedrate::Config {
@@ -140,45 +138,13 @@ impl CoolingState {
             .speed_for_layer_time(layer_index, Some(0.0))
             .unwrap_or(0);
         output.extend_from_slice(PART_FAN_MARKER);
-
-        let additional_speed = if layer_index < self.part_fan_ramp.close_fan_first_layers() as usize
-        {
-            0
-        } else {
-            self.additional_fan_speed
-        };
-        // Orca emits the initial auxiliary-fan state unconditionally at the
-        // first layer boundary (print-start block, before LAYER_CHANGE), not
-        // only when the speed changes.
-        if self.auxiliary_fan
-            && (additional_speed != self.additional_speed
-                || (layer_index == 0 && self.emit_initial_fan))
-        {
-            self.additional_speed = additional_speed;
-            let comment = if self.gcode_comments {
-                if additional_speed == 0 {
-                    " ; disable additional fan "
-                } else {
-                    " ; enable additional fan "
-                }
-            } else {
-                ""
-            };
-            output.extend_from_slice(
-                format!(
-                    "M106 P2 S{}{comment}\n",
-                    additional_fan_pwm(additional_speed)
-                )
-                .as_bytes(),
-            );
-        }
     }
 
     pub(super) const fn provisional_part_speed(&self) -> u8 {
         self.provisional_part_speed
     }
 
-    pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
+    pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize, flush: bool) {
         // Upstream pipeline order (GCode.cpp:3752): generator →
         // PressureEqualizer → CoolingBuffer → fan logic. The equalizer holds
         // each layer back until the next one arrives
@@ -186,22 +152,42 @@ impl CoolingState {
         // layer behind; `finish` drains the last layer.
         let layer_index = self.pending_layer_index.take().unwrap();
         let layer = output.split_off(layer_start);
+        self.process_layer(output, layer, (layer_index, flush));
+    }
+
+    pub(super) fn empty_layer(
+        &mut self,
+        output: &mut Vec<u8>,
+        layer_index: usize,
+        last_layer: bool,
+    ) {
+        self.process_layer(output, Vec::new(), (layer_index, last_layer));
+    }
+
+    fn process_layer(&mut self, output: &mut Vec<u8>, layer: Vec<u8>, result: (usize, bool)) {
         let Some(pass) = self.equalizer.as_mut() else {
-            self.cool_layer(output, layer, layer_index, false);
+            self.cool_layer(output, layer, result, false);
             return;
         };
         let previous = pass.process_layer(&String::from_utf8_lossy(&layer));
-        let previous_index = self.equalized_layer_index.replace(layer_index);
-        if let (Some(previous), Some(previous_index)) = (previous, previous_index) {
-            self.cool_layer(output, previous.into_bytes(), previous_index, true);
+        let previous_result = self.equalized_layer_result.replace(result);
+        if let (Some(previous), Some((previous_index, previous_flush))) =
+            (previous, previous_result)
+        {
+            self.cool_layer(
+                output,
+                previous.into_bytes(),
+                (previous_index, previous_flush),
+                true,
+            );
         }
     }
 
     /// The trailing NOP layer result that drains the equalizer.
     pub(super) fn finish(&mut self, output: &mut Vec<u8>) {
         if let Some(last) = self.equalizer.as_mut().and_then(|pass| pass.flush()) {
-            let layer_index = self.equalized_layer_index.take().unwrap();
-            self.cool_layer(output, last.into_bytes(), layer_index, true);
+            let (layer_index, flush) = self.equalized_layer_result.take().unwrap();
+            self.cool_layer(output, last.into_bytes(), (layer_index, flush), true);
         }
     }
 
@@ -212,9 +198,18 @@ impl CoolingState {
         &mut self,
         output: &mut Vec<u8>,
         mut layer: Vec<u8>,
-        layer_index: usize,
+        (layer_index, flush): (usize, bool),
         equalized: bool,
     ) {
+        if self.buffered_gcode.is_empty() {
+            self.buffered_gcode = layer;
+        } else {
+            self.buffered_gcode.append(&mut layer);
+        }
+        if !flush {
+            return;
+        }
+        let mut layer = std::mem::take(&mut self.buffered_gcode);
         let layer_start = output.len();
         let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
         if equalized {
@@ -226,13 +221,7 @@ impl CoolingState {
             .part_fan_ramp
             .speed_for_layer_time(layer_index, Some(f64::from(layer_time)))
             .unwrap_or(0);
-        let initial = should_emit_initial_part_fan(
-            layer_index,
-            self.emit_initial_fan,
-            self.fan_mover_enabled,
-            part_speed,
-        );
-        let replacement = if part_speed != self.part_speed || initial {
+        let mut replacement = if self.part_speed != Some(part_speed) {
             let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
             let comment = if self.gcode_comments {
                 if speed == 0 {
@@ -247,86 +236,61 @@ impl CoolingState {
         } else {
             Vec::new()
         };
-        let marker_start = layer_start
-            + output[layer_start..]
-                .windows(PART_FAN_MARKER.len())
-                .position(|window| window == PART_FAN_MARKER)
-                .unwrap();
+        // `CoolingBuffer.cpp:834`: even empty final input updates the fan.
+        let marker_len = if layer.is_empty() {
+            0
+        } else {
+            PART_FAN_MARKER.len()
+        };
+        let marker_start = if layer.is_empty() {
+            layer_start
+        } else {
+            layer_start
+                + output[layer_start..]
+                    .windows(PART_FAN_MARKER.len())
+                    .position(|window| window == PART_FAN_MARKER)
+                    .unwrap()
+        };
         if !replacement.is_empty() {
             self.physical_part_speed = part_speed;
         }
-        output.splice(
-            marker_start..marker_start + PART_FAN_MARKER.len(),
-            replacement,
-        );
-        self.resolve_role_fans(output, layer_start, part_speed);
-        self.part_speed = part_speed;
-        self.provisional_part_speed = part_speed;
-    }
-
-    fn resolve_role_fans(&mut self, output: &mut Vec<u8>, layer_start: usize, baseline: u8) {
+        let additional_speed = if layer_index < self.part_fan_ramp.close_fan_first_layers() as usize
+        {
+            0
+        } else {
+            self.additional_fan_speed
+        };
+        if self.auxiliary_fan && self.additional_speed != Some(additional_speed) {
+            self.additional_speed = Some(additional_speed);
+            let comment = if self.gcode_comments {
+                if additional_speed == 0 {
+                    " ; disable additional fan "
+                } else {
+                    " ; enable additional fan "
+                }
+            } else {
+                ""
+            };
+            replacement.extend_from_slice(
+                format!(
+                    "M106 P2 S{}{comment}\n",
+                    additional_fan_pwm(additional_speed)
+                )
+                .as_bytes(),
+            );
+        }
+        output.splice(marker_start..marker_start + marker_len, replacement);
         while let Some(offset) = output[layer_start..]
-            .windows(ROLE_FAN_MARKER_PREFIX.len())
-            .position(|window| window == ROLE_FAN_MARKER_PREFIX.as_bytes())
+            .windows(PART_FAN_MARKER.len())
+            .position(|window| window == PART_FAN_MARKER)
         {
             let start = layer_start + offset;
-            let end = output[start..]
-                .iter()
-                .position(|byte| *byte == b'\n')
-                .map_or(output.len(), |offset| start + offset + 1);
-            let marker = std::str::from_utf8(&output[start..end]).unwrap();
-            let (target, force) = if marker.contains("_BASE__") {
-                (baseline, true)
-            } else if let Some(value) = marker
-                .strip_prefix(";__ARES_ROLE_FAN_CONDITIONAL_")
-                .and_then(|value| value.strip_suffix("__\n"))
-            {
-                let (value, force) = value
-                    .strip_prefix("FORCE_")
-                    .map_or((value, false), |value| (value, true));
-                let requested = value.parse::<u8>().unwrap();
-                (requested.max(baseline), force || requested > baseline)
-            } else {
-                (
-                    marker
-                        .strip_prefix(";__ARES_ROLE_FAN_FIXED_")
-                        .and_then(|value| value.strip_suffix("__\n"))
-                        .unwrap()
-                        .parse::<u8>()
-                        .unwrap(),
-                    true,
-                )
-            };
-            // Inactive conditional STARTs emit nothing, even if another role
-            // changed the physical fan speed (CoolingBuffer.cpp:780,851–855).
-            let replacement = if force {
-                self.physical_part_speed = target;
-                let emitted = clamped_part_speed(target, self.part_cooling_fan_min_pwm);
-                let comment = if self.gcode_comments {
-                    if emitted == 0 {
-                        " ; disable fan"
-                    } else {
-                        " ; enable fan"
-                    }
-                } else {
-                    ""
-                };
-                format!("M106 S{}{comment}\n", part_fan_pwm(emitted)).into_bytes()
-            } else {
-                Vec::new()
-            };
-            output.splice(start..end, replacement);
+            output.drain(start..start + PART_FAN_MARKER.len());
         }
+        self.resolve_role_fans(output, layer_start, part_speed, layer_index);
+        self.part_speed = Some(part_speed);
+        self.provisional_part_speed = part_speed;
     }
-}
-
-fn should_emit_initial_part_fan(
-    layer_index: usize,
-    emit_initial_fan: bool,
-    fan_mover_enabled: bool,
-    speed: u8,
-) -> bool {
-    layer_index == 0 && emit_initial_fan && !(fan_mover_enabled && speed == 0)
 }
 
 fn first_percent(values: &[crate::OrcaFloat]) -> f64 {

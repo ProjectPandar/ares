@@ -57,14 +57,26 @@ fn prepare_object(
     scale: crate::geometry::CoordinateScale,
     context: &mut crate::SlicerContext,
 ) -> Result<PreparedRawPathObject, SliceError> {
-    let mut records = Vec::with_capacity(object.records.len());
-    for (record_index, record) in object.records.iter().enumerate() {
-        let Some(record) = record else {
-            records.push(None);
-            continue;
-        };
+    let input = &object
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let mut records = object
+        .records
+        .iter()
+        .map(|record| {
+            record.as_ref().map(|_| PreparedRawPathRecord {
+                surfaces: Vec::new(),
+            })
+        })
+        .collect::<Vec<_>>();
+    for group in &input.groups {
+        let record_index = input.region_layer_record_index(group.owner);
+        let record = object.records[record_index].as_ref().unwrap();
         match prepare_record(object, record_index, record, scale, context) {
-            Ok(record) => records.push(Some(record)),
+            Ok(record) => records[record_index] = Some(record),
             Err(error) => {
                 consume_records(records);
                 return Err(error);

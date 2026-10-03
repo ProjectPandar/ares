@@ -9,8 +9,7 @@ pub(crate) struct Context<'a> {
     pub(crate) first_layer_bounds: Option<footprint::FirstLayerBounds>,
     pub(crate) start_position: Option<Value>,
     pub(crate) bed_cache: i32,
-    pub(crate) extruder_offset: (f64, f64),
     pub(crate) brim: &'a Option<brim::BrimPlan>,
     pub(crate) skirt: &'a Option<skirt::SkirtPlan>,
-    pub(crate) slicer: &'a mut crate::SlicerContext,
+    pub(in crate::project_slice::gcode_emit) schedule: super::schedule::Schedule,
 }

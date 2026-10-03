@@ -10,6 +10,7 @@ pub(in crate::project_slice::gcode_emit) use avoid_crossing::Boundary;
 #[allow(unused_imports)]
 pub(super) use avoid_crossing::build_boundary;
 pub(super) use retraction::can_skip_retraction;
+use retraction::inside_support_islands;
 
 use super::{
     EmitState, LayerGeometry, arc, clip, extrusion, fan, features::PathProperties,

@@ -179,14 +179,21 @@ fn projection_with_spacings(
             })
             .expect("KSR must contain an anchored top path with a stopped neighbor")
     };
+    let scale = input.predecessor.scale;
     let records = &mut input.predecessor.objects[0]
         .predecessor
         .predecessor
         .predecessor
         .predecessor
+        .object
         .records;
-    records[index].as_mut().unwrap().external_spacing = current_spacing;
-    records[index + 1].as_mut().unwrap().external_spacing = stopped_spacing;
+    records[index].as_mut().unwrap().ext_perimeter_flow.spacing =
+        (current_spacing as f64 * scale.factor()) as f32;
+    records[index + 1]
+        .as_mut()
+        .unwrap()
+        .ext_perimeter_flow
+        .spacing = (stopped_spacing as f64 * scale.factor()) as f32;
     let output = vertical_shell_projection::prepare(input).unwrap();
     let projection = output.projections[0].records[index].as_ref().unwrap();
     let snapshot = projection

@@ -333,6 +333,12 @@ fn post_object(
         plan: PlannedPrintObject {
             source_object_index,
             transform_index: 0,
+            slicing_parameters: crate::project_slice::tests::profile_layers::helpers::parameters(
+                0.2,
+                0.2,
+                0.07,
+                layer_count as f64 * 0.2,
+            ),
             layers: (0..layer_count)
                 .map(|id| PlannedLayer {
                     id,

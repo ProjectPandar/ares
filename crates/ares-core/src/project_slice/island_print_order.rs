@@ -21,6 +21,7 @@ pub(in crate::project_slice) enum IslandPrintEntity {
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct OrderedExtrusionIsland {
     pub(in crate::project_slice) entities: Vec<IslandPrintEntity>,
+    pub(in crate::project_slice) infill_regions: Vec<usize>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -31,6 +32,8 @@ pub(in crate::project_slice) struct OrderedExtrusionLayer {
 pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
     pub(in crate::project_slice) predecessor: PreparedPostExtrusionIslands,
     pub(in crate::project_slice) objects: Vec<Vec<OrderedExtrusionLayer>>,
+    pub(in crate::project_slice) support_layers:
+        Vec<Vec<super::support_material::InstalledSupportLayer>>,
     /// Top surfaces per object per layer — the classified kinds from the
     /// surface-type stage (`get_boundary`'s top subtraction,
     /// `AvoidCrossingPerimeters.cpp:1122-1132`).
@@ -124,6 +127,7 @@ pub(in crate::project_slice) fn prepare(
         objects,
         top_surfaces,
         nearest_seam_plans,
+        support_layers: Vec::new(),
     }
 }
 
@@ -137,6 +141,7 @@ pub(in crate::project_slice) fn order_island(
         perimeters,
     } = island;
     let perimeters = perimeters.into_iter().map(IslandPrintEntity::Perimeter);
+    let (infill_regions, infills): (Vec<_>, Vec<_>) = infills.into_iter().unzip();
     let infills = infills.into_iter().map(|entity| match entity {
         IslandInfillEntity::Fill(entity) => IslandPrintEntity::Fill(entity),
         IslandInfillEntity::FillCollection(collection) => {
@@ -149,7 +154,10 @@ pub(in crate::project_slice) fn order_island(
     } else {
         perimeters.chain(infills).collect()
     };
-    OrderedExtrusionIsland { entities }
+    OrderedExtrusionIsland {
+        entities,
+        infill_regions,
+    }
 }
 
 impl ChainEntity for IslandPrintEntity {
@@ -194,11 +202,18 @@ pub(in crate::project_slice) fn internal_surfaces(
     prepared: &PreparedPostExtrusionIslands,
     object_index: usize,
     layer_index: usize,
-) -> &[crate::project_slice::region_slices::RegionSurface] {
+) -> Vec<&crate::project_slice::region_slices::RegionSurface> {
     let external_surfaces = &prepared.predecessor.predecessor.predecessor.predecessor;
-    external_surfaces.predecessor.objects[object_index].records[layer_index]
-        .as_ref()
-        .map_or(&[], |record| record.slices.as_slice())
+    let horizontal = &external_surfaces.predecessor;
+    let layer_count = horizontal.predecessor.objects[object_index]
+        .physical_layers()
+        .len();
+    horizontal.objects[object_index]
+        .records
+        .chunks_exact(layer_count)
+        .filter_map(|records| records[layer_index].as_ref())
+        .flat_map(|record| &record.slices)
+        .collect()
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostIslandPrintOrder) {

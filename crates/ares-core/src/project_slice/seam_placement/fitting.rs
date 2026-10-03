@@ -3,7 +3,7 @@ use crate::{
     project_slice::perimeters::classic::materialize::{FittedArc, FittedMove, Point3, Polyline3},
 };
 
-pub(super) fn split_at_index(
+pub(in crate::project_slice) fn split_at_index(
     source: &Polyline3,
     index: usize,
     scale: CoordinateScale,
@@ -62,7 +62,7 @@ pub(super) fn split_at_index(
     )
 }
 
-pub(super) fn append(polyline: &mut Polyline3, point: Point3) {
+pub(in crate::project_slice) fn append(polyline: &mut Polyline3, point: Point3) {
     if polyline.points.last() == Some(&point) {
         return;
     }
@@ -81,7 +81,7 @@ pub(super) fn append(polyline: &mut Polyline3, point: Point3) {
     }
 }
 
-pub(super) fn append_polyline(target: &mut Polyline3, source: Polyline3) {
+pub(in crate::project_slice) fn append_polyline(target: &mut Polyline3, source: Polyline3) {
     if source.points.len() < 2 {
         return;
     }
@@ -123,7 +123,7 @@ pub(super) fn append_polyline(target: &mut Polyline3, source: Polyline3) {
     }
 }
 
-pub(super) fn prepend(polyline: &mut Polyline3, point: Point3) {
+pub(in crate::project_slice) fn prepend(polyline: &mut Polyline3, point: Point3) {
     if polyline.points.first() == Some(&point) {
         return;
     }

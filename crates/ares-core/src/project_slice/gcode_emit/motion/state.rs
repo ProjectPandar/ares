@@ -37,13 +37,15 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) options: MotionOptions,
     pub(in crate::project_slice::gcode_emit) small_area_flow:
         crate::extrusions::SmallAreaInfillFlowCompensation,
-    /// Physical layer index — upstream's `layer->id()`/`m_layer_index`
+    /// Active layer id — upstream's `layer->id()`
     /// (`GCode.cpp:5689`, `GCode.hpp:671-676`): raft layers occupy ids
     /// `0..raft_count`, so the first object layer after a raft has id
     /// `raft_count`, not 0. First-layer speed/accel/jerk gates read this
     /// via `on_first_layer` (`id()==0 && bottom_z≈0`) and the over-raft
     /// flag below.
     pub(in crate::project_slice::gcode_emit) layer_index: usize,
+    /// Global merged chunk counter (`GCode::m_layer_index`).
+    pub(in crate::project_slice::gcode_emit) layer_chunk_index: usize,
     /// `m_object_layer_over_raft` (`GCode.cpp:5339-5344`): the first
     /// object layer printed over a raft interface — applies
     /// `initial_layer_speed`/`initial_layer_infill_speed` to non-bottom
@@ -181,7 +183,10 @@ pub(in crate::project_slice::gcode_emit) struct LayerGeometry<'a> {
     /// `staggered_inner_seams` from the owning object (`SeamPlacer.cpp:1601`).
     pub(in crate::project_slice::gcode_emit) staggered_inner: bool,
     pub(in crate::project_slice::gcode_emit) internal_surfaces:
-        &'a [crate::project_slice::region_slices::RegionSurface],
+        &'a [&'a crate::project_slice::region_slices::RegionSurface],
+    /// Active SupportLayer containment, independent of pair-selected planner geometry.
+    pub(in crate::project_slice::gcode_emit) support_islands:
+        Option<super::support::LayerAreas<'a>>,
     pub(in crate::project_slice::gcode_emit) scale: crate::geometry::CoordinateScale,
     pub(in crate::project_slice::gcode_emit) previous_layer_boundary:
         Option<&'a crate::geometry::LineDistanceTree<'a>>,
@@ -213,6 +218,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     layer_height: f64,
 ) {
     state.layer_index = layer_index;
+    state.layer_chunk_index = layer_index;
     state.layer_change_travel_pending = true;
     state.avoid_boundary = None;
     state.last_height = Some(layer_height as f32);

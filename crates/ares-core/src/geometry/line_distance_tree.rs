@@ -1,8 +1,12 @@
 mod build;
+mod floating;
 mod intersections;
 mod intersections_mm;
 mod outside;
 mod query;
+mod segment;
+
+pub(crate) use floating::FloatLineDistanceTree;
 
 use super::{Line, Point};
 

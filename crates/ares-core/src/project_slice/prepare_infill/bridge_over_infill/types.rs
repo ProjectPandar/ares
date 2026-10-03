@@ -20,7 +20,8 @@ pub(in crate::project_slice) struct BridgeCandidateObject {
     pub(in crate::project_slice) has_lightning_infill: bool,
     pub(in crate::project_slice) surfaces_by_layer: BTreeMap<usize, Vec<CandidateSurface>>,
     /// `PrintObject.cpp:2593` LIGHTNING INFILL SECTION — the expanded
-    /// `fill_surfaces` (stInternal→stInternalSolid near candidates) per layer,
+    /// `fill_surfaces` (stInternal→stInternalSolid near candidates) keyed by the
+    /// canonical region/layer record slot,
     /// used to build the lightning `Generator` for both anchoring and emit.
     /// Empty for non-lightning objects.
     pub(in crate::project_slice) lightning_expanded_surfaces: BTreeMap<usize, Vec<RegionSurface>>,

@@ -28,6 +28,7 @@ impl Point3d {
 pub struct ProjectMesh {
     vertices: Vec<Point3d>,
     triangles: Vec<[u32; 3]>,
+    pub(crate) supported_facets: super::facets_annotation::FacetsAnnotation,
 }
 
 impl ProjectMesh {
@@ -35,6 +36,7 @@ impl ProjectMesh {
         Self {
             vertices,
             triangles,
+            supported_facets: super::facets_annotation::FacetsAnnotation::default(),
         }
     }
 

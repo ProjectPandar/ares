@@ -286,6 +286,9 @@ fn post_region_object(
         plan: PlannedPrintObject {
             source_object_index,
             transform_index: 0,
+            slicing_parameters: crate::project_slice::tests::profile_layers::helpers::parameters(
+                0.2, 0.2, 0.07, print_z,
+            ),
             layers: planned_layers,
         },
         volume_slices: Vec::new(),

@@ -234,7 +234,25 @@ fn chain_multiple_constrained(
             .iter()
             .any(|&(segment, reverse)| reverse && !reversible[segment])
     {
-        return chain_closest_point(positions, first_point.expect("explicit cursor"), reversible);
+        if start_near.is_none() {
+            let opposite = output
+                .iter()
+                .rev()
+                .map(|&(segment, reverse)| (segment, !reverse))
+                .collect::<Vec<_>>();
+            if opposite
+                .iter()
+                .all(|&(segment, reverse)| !reverse || reversible[segment])
+            {
+                return opposite;
+            }
+        }
+        let initial = if start_near.is_some() {
+            first_point.unwrap()
+        } else {
+            0
+        };
+        return chain_closest_point(positions, initial, reversible);
     }
     output
 }
@@ -270,24 +288,30 @@ pub(in crate::project_slice) fn chain_segments_constrained(
     can_reverse: &[bool],
 ) -> Vec<(usize, bool)> {
     debug_assert_eq!(endpoints.len(), can_reverse.len());
+    chain_segments_constrained_with_optional_start(endpoints, Some(start_near), can_reverse)
+}
+
+pub(super) fn chain_segments_constrained_with_optional_start(
+    endpoints: &[[[crate::geometry::Coord; 2]; 2]],
+    start_near: Option<[crate::geometry::Coord; 2]>,
+    can_reverse: &[bool],
+) -> Vec<(usize, bool)> {
     match endpoints.len() {
         0 => Vec::new(),
         1 => vec![(
             0,
             can_reverse[0]
-                && squared_coord_delta(endpoints[0][1], start_near)
-                    < squared_coord_delta(endpoints[0][0], start_near),
+                && start_near.is_some_and(|start| {
+                    squared_coord_delta(endpoints[0][1], start)
+                        < squared_coord_delta(endpoints[0][0], start)
+                }),
         )],
         _ => {
             let positions = endpoints
                 .iter()
                 .flat_map(|endpoints| endpoints.map(coord_to_f64))
                 .collect::<Vec<_>>();
-            chain_multiple_constrained(
-                &positions,
-                Some(coord_to_f64(start_near)),
-                Some(can_reverse),
-            )
+            chain_multiple_constrained(&positions, start_near.map(coord_to_f64), Some(can_reverse))
         }
     }
 }

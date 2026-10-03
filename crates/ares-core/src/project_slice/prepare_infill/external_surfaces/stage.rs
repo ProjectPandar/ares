@@ -47,20 +47,18 @@ fn process_records(
     {
         let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
         let (_, inputs) = prelude.object.as_parts();
-        for ((record, classic), input) in
-            object.records.iter_mut().zip(&prelude.records).zip(inputs)
-        {
-            match (record, classic, input) {
-                (Some(record), Some(classic), Some(input)) => {
+        for (record, input) in object.records.iter_mut().zip(inputs) {
+            match (record, input) {
+                (Some(record), Some(input)) => {
                     let options = prelude.object.region_options(input);
                     process_external_surfaces(
                         &mut record.fill_surfaces,
                         ProcessExternalSurfacesConfig {
                             wall_loops: options.wall_loops.0,
-                            perimeter_spacing: classic.perimeter_spacing,
-                            external_width: classic.external_width,
-                            external_spacing: classic.external_spacing,
-                            solid_infill_spacing: classic.solid_infill_spacing,
+                            perimeter_spacing: input.perimeter_flow.scaled_spacing(scale),
+                            external_width: input.ext_perimeter_flow.scaled_width(scale),
+                            external_spacing: input.ext_perimeter_flow.scaled_spacing(scale),
+                            solid_infill_spacing: input.solid_infill_flow.scaled_spacing(scale),
                             bridge_angle_degrees: options.bridge_angle.0,
                             relative_bridge_angle: options.relative_bridge_angle.0,
                             model_rotation_radians: input.model_rotation_rad,
@@ -71,7 +69,7 @@ fn process_records(
                         },
                     )?;
                 }
-                (None, None, None) => {}
+                (None, None) => {}
                 _ => unreachable!("validated O26 record slots remain aligned"),
             }
         }

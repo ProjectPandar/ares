@@ -57,6 +57,7 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
                 no_sort: true,
             },
         ],
+        collection_ranges: vec![(0, 0..2)],
         ..LayerFillEntities::default()
     };
 
@@ -67,7 +68,7 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
     assert_eq!(
         infills
             .iter()
-            .map(|infill| match infill {
+            .map(|(_, infill)| match infill {
                 IslandInfillEntity::Fill(
                     FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path),
                 ) => {
@@ -81,7 +82,7 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
         vec![Some(Point::new(-8, -8)), Some(Point::new(4, 8)), None]
     );
     assert!(matches!(
-        &infills[2],
+        &infills[2].1,
         IslandInfillEntity::FillCollection(collection)
             if collection.no_sort && collection.entities.len() == 1
     ));

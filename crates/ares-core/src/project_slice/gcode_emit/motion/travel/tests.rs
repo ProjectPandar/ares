@@ -24,6 +24,7 @@ fn internal_square() -> RegionSurface {
 #[test]
 fn bottom_only_lift_does_not_lift_later_layers() {
     let mut state = EmitState {
+        layer_chunk_index: 1,
         layer_index: 1,
         options: MotionOptions {
             retraction_length: 1.0,
@@ -64,6 +65,7 @@ fn top_only_lift_requires_a_top_or_ironing_feature() {
 #[test]
 fn deferred_bottom_only_lift_uses_the_target_layer_index() {
     let mut state = EmitState {
+        layer_chunk_index: 1,
         layer_index: 1,
         pending_layer_retract: true,
         options: MotionOptions {
@@ -97,6 +99,7 @@ fn layer_change_top_and_bottom_enforce_uses_the_new_layer_index() {
         layer_z: 0.4,
         writer_z: Some(0.2),
         // The state already advanced to the layer the change enters.
+        layer_chunk_index: 1,
         layer_index: 1,
         options: MotionOptions {
             retraction_length: 1.0,
@@ -114,10 +117,12 @@ fn layer_change_top_and_bottom_enforce_uses_the_new_layer_index() {
 
     // The print's first change-layer (index 0) still defers the hop, and
     // a top-surface ending defers it on any layer.
+    state.layer_chunk_index = 0;
     state.layer_index = 0;
     super::defer_layer_change_lift(&mut state);
     assert_eq!(state.pending_lift, Some(LiftMode::Spiral));
 
+    state.layer_chunk_index = 7;
     state.layer_index = 7;
     state.last_notgapfill_feature = Some("Top surface");
     state.pending_lift = None;

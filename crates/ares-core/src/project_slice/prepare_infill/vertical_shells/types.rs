@@ -13,6 +13,13 @@ pub(in crate::project_slice) struct VerticalShellCache {
 
 pub(in crate::project_slice) struct VerticalShellCacheObject {
     pub(in crate::project_slice) records: Vec<Option<VerticalShellCache>>,
+    pub(in crate::project_slice) physical: Option<PhysicalShellCache>,
+    pub(in crate::project_slice) num_layers: usize,
+}
+
+pub(in crate::project_slice) enum PhysicalShellCache {
+    Shared(Vec<VerticalShellCache>),
+    RegionalHoles(Vec<Vec<Polygon>>),
 }
 
 pub(in crate::project_slice) struct PreparedPostVerticalShellCache {

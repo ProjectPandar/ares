@@ -6,9 +6,11 @@ mod fan;
 mod features;
 pub(in crate::project_slice::gcode_emit) mod format;
 mod jerk;
+mod layer;
 mod loop_paths;
 mod materialized;
 mod options;
+mod origin;
 mod overhang;
 mod path;
 #[cfg(test)]
@@ -19,18 +21,22 @@ mod scan;
 mod scarf;
 mod skirt_brim;
 mod state;
+mod support;
 #[cfg(test)]
 mod tests;
 mod travel;
 
 pub(super) use acceleration::{set_accel_and_jerk, set_layer_acceleration_and_jerk};
 pub(in crate::project_slice) use arc::{simplify_linear_points, simplify_points};
+pub(super) use layer::emit_layer;
+pub(super) use origin::set_origin;
 pub(super) use skirt_brim::{emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
     AvoidCrossingGeometry, EmitState, LayerGeometry, LiftMode, append_exclude_end,
     append_object_start, begin_layer, begin_path_travel, queue_exclude_end, queue_exclude_start,
     queue_object_start, queue_object_stop_label,
 };
+pub(super) use support::{LayerAreas, emit as emit_support};
 pub(super) use travel::{
     flush_pending_retract_eager_forced, flush_pending_retract_lift, flush_pending_retract_wipe,
     retract_for_print_end,
@@ -42,15 +48,10 @@ pub(in crate::project_slice::gcode_emit) use path::role_change::{
     apply_writer_state, refresh_writer_state,
 };
 
-use super::super::island_print_order::{IslandPrintEntity, OrderedExtrusionLayer};
 use crate::{
-    SliceError,
     geometry::Point,
     project_slice::{
-        fill_entities::FillExtrusionEntity,
-        perimeters::classic::{
-            gap_extrusion::GapFillEntity, shortest_path::chain_and_reorder_entities,
-        },
+        fill_entities::FillExtrusionEntity, perimeters::classic::gap_extrusion::GapFillEntity,
     },
 };
 
@@ -178,107 +179,6 @@ pub(super) struct SkirtLoopFlow {
     pub(super) width: f32,
     pub(super) height: f32,
     pub(super) mm3_per_mm: f64,
-}
-
-pub(super) fn emit_layer<F>(
-    output: &mut Vec<u8>,
-    layer: &mut OrderedExtrusionLayer,
-    geometry: LayerGeometry<'_>,
-    state: &mut EmitState,
-    mut before_first_infill: F,
-) -> Result<bool, SliceError>
-where
-    F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
-{
-    let mut interlude_emitted = false;
-    for island in &mut layer.islands {
-        let mut entities = std::mem::take(&mut island.entities);
-        let has_infill = entities
-            .iter()
-            .any(|entity| !matches!(entity, IslandPrintEntity::Perimeter(_)));
-        // GCode.cpp:5453-5468 emits ironing after infill-first walls.
-        let mut ironing = entities
-            .extract_if(.., |entity| is_ironing_entity(entity))
-            .collect::<Vec<_>>();
-        let infill_first = matches!(
-            entities.first(),
-            Some(
-                IslandPrintEntity::Fill(_)
-                    | IslandPrintEntity::FillCollection(_)
-                    | IslandPrintEntity::Thin(_)
-            )
-        );
-        if infill_first {
-            let split = entities
-                .iter()
-                .position(|entity| matches!(entity, IslandPrintEntity::Perimeter(_)))
-                .unwrap_or(entities.len());
-            let perimeters = entities.split_off(split);
-            if !interlude_emitted && has_infill {
-                interlude_emitted = before_first_infill(output, state)?;
-            }
-            emit_infills(output, &mut entities, geometry, state);
-            for perimeter in perimeters {
-                perimeter::emit_perimeter(output, perimeter, geometry, state);
-            }
-        } else {
-            let split = entities
-                .iter()
-                .position(|entity| !matches!(entity, IslandPrintEntity::Perimeter(_)))
-                .unwrap_or(entities.len());
-            for perimeter in entities.drain(..split) {
-                perimeter::emit_perimeter(output, perimeter, geometry, state);
-            }
-            if !interlude_emitted && has_infill {
-                interlude_emitted = before_first_infill(output, state)?;
-            }
-            emit_infills(output, &mut entities, geometry, state);
-        }
-        emit_infills(output, &mut ironing, geometry, state);
-    }
-    Ok(interlude_emitted)
-}
-
-fn emit_infills(
-    output: &mut Vec<u8>,
-    entities: &mut Vec<IslandPrintEntity>,
-    geometry: LayerGeometry<'_>,
-    state: &mut EmitState,
-) {
-    if entities.is_empty() {
-        return;
-    }
-    chain_and_reorder_entities(entities, local_cursor(state, geometry));
-    for entity in entities.drain(..) {
-        match entity {
-            IslandPrintEntity::Fill(entity) => {
-                emit_fill_entity(output, &entity, geometry, state);
-            }
-            IslandPrintEntity::FillCollection(collection) => {
-                let collection = collection.chained_path_from(local_cursor(state, geometry));
-                for entity in &collection.entities {
-                    emit_fill_entity(output, entity, geometry, state);
-                }
-            }
-            IslandPrintEntity::Thin(entity) => {
-                emit_variable_width_entity(output, &entity, geometry, state);
-            }
-            IslandPrintEntity::Perimeter(_) => {
-                unreachable!("infill phase contains only infill entities")
-            }
-        }
-    }
-}
-
-fn is_ironing_entity(entity: &IslandPrintEntity) -> bool {
-    let path_is_ironing = |entity: &FillExtrusionEntity| matches!(entity, FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) if path.role == crate::ExtrusionRole::Ironing);
-    match entity {
-        IslandPrintEntity::Fill(entity) => path_is_ironing(entity),
-        IslandPrintEntity::FillCollection(collection) => {
-            collection.entities.first().is_some_and(path_is_ironing)
-        }
-        IslandPrintEntity::Perimeter(_) | IslandPrintEntity::Thin(_) => false,
-    }
 }
 
 fn emit_fill_entity(

@@ -1,5 +1,5 @@
 mod alignment;
-mod fitting;
+pub(in crate::project_slice) mod fitting;
 pub(in crate::project_slice) mod kdtree;
 mod mesh;
 mod placement;

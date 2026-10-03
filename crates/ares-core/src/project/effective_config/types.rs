@@ -48,6 +48,7 @@ pub(crate) struct ResolvedProjectObject {
     pub(crate) object: ObjectOptions,
     pub(crate) print_objects: Vec<ResolvedPrintObjectConfig>,
     pub(crate) layer_candidates: Vec<ResolvedLayerCandidate>,
+    pub(crate) all_regions: Vec<RegionOptions>,
 }
 
 #[cfg(test)]

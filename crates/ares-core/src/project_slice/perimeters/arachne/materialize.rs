@@ -137,7 +137,7 @@ fn materialize_record(
     let mut fill_surfaces = Vec::new();
     let mut fill_no_overlap = Vec::new();
     // we need each island separately (`PerimeterGenerator.cpp:2124-2126`).
-    for surface in object.current_surfaces(input) {
+    for surface in object.perimeter_surfaces(input) {
         // `only_one_wall_top` regeneration inputs (`PerimeterGenerator.cpp:2160-2175`):
         // gated on the upper layer existing (non-topmost).
         let top_surface =

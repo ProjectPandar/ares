@@ -43,7 +43,53 @@ pub(crate) struct Generator {
     rng: std::cell::RefCell<super::glibc_rand::GlibcRand>,
 }
 
+pub(crate) struct SupportSettings {
+    pub(crate) layer_height: f64,
+    pub(crate) infill_line_width: f64,
+    pub(crate) line_width: f64,
+    pub(crate) max_nozzle_diameter: f64,
+    pub(crate) scale: CoordinateScale,
+}
+
 impl Generator {
+    /// Support constructor and `generateTreesforSupport` (`Generator.cpp:104-145,236-285`).
+    pub(crate) fn for_support(
+        contours: &[Vec<Polygon>],
+        overhangs: Vec<Vec<Polygon>>,
+        density: f32,
+        settings: &SupportSettings,
+    ) -> Result<Self, ClipperError> {
+        let scale = settings.scale;
+        let mut width = scale.scaled_delta(settings.infill_line_width) as f32;
+        if f64::from(width) < 0.0001 {
+            let fallback = if settings.line_width < 0.0001 {
+                f64::from(1.125_f32 * settings.max_nozzle_diameter as f32)
+            } else {
+                settings.line_width
+            };
+            width = scale.scaled_delta(fallback) as f32;
+        }
+        let density = 0.15_f32.max(density);
+        let supporting_radius = (width as Coord as f32 / density) as Coord;
+        let growth_radius = (scale.scaled_delta(settings.layer_height)
+            * std::f64::consts::FRAC_PI_4.tan()) as Coord;
+        let locator_cell_size = super::layer::locator_cell_size(scale);
+        let mut generator = Self {
+            supporting_radius,
+            wall_supporting_radius: growth_radius,
+            prune_length: growth_radius,
+            straightening_max_distance: growth_radius,
+            overhang_per_layer: overhangs,
+            lightning_layers: (0..contours.len())
+                .map(|_| Layer::new(locator_cell_size))
+                .collect(),
+            locator_cell_size,
+            rng: std::cell::RefCell::new(super::glibc_rand::GlibcRand::new()),
+        };
+        generator.generate_trees(contours)?;
+        Ok(generator)
+    }
+
     /// `Generator::Generator` params (Generator.cpp:66-99): supporting radius
     /// `width*100*multiline/density`, and the overhang/prune/straighten radii
     /// from `layer_height * tan(angle)`.

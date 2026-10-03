@@ -8,7 +8,9 @@ use crate::{
     },
 };
 
-pub(super) fn prepare(archive: KsrArchive) -> bridge_over_infill::PreparedPostBridgeCandidates {
+pub(in crate::project_slice) fn prepare(
+    archive: KsrArchive,
+) -> bridge_over_infill::PreparedPostBridgeCandidates {
     let horizontal = super::horizontal_shell_propagation::fixture::prepare(archive.bytes());
     let external = external_surfaces::prepare(horizontal).unwrap();
     bridge_over_infill::prepare(external).unwrap()

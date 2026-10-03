@@ -262,6 +262,12 @@ fn bounded(layer_zs: &[(usize, f64, f64)], cases: Vec<VolumeCase>) -> BoundedPri
         PlannedPrintObject {
             source_object_index: 0,
             transform_index: 0,
+            slicing_parameters: super::profile_layers::helpers::parameters(
+                0.2,
+                0.2,
+                0.07,
+                layer_zs.len() as f64 * 0.2,
+            ),
             layers: layer_zs
                 .iter()
                 .map(|&(id, print_z, slice_z)| PlannedLayer {

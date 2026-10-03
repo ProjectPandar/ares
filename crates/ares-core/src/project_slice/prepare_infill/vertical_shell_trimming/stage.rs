@@ -14,8 +14,9 @@ pub(super) fn trim(
         .objects
         .iter()
         .zip(&prepared.projections)
+        .zip(&prepared.caches)
         .zip(&prepared.predecessor.objects)
-        .map(|((object, projection_object), traversal)| {
+        .map(|(((object, projection_object), cache_object), traversal)| {
             let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
             let input_object = &prelude.object;
             let (_, inputs) = input_object.as_parts();
@@ -32,7 +33,8 @@ pub(super) fn trim(
                             input_object
                                 .region_options(input)
                                 .ensure_vertical_shell_thickness
-                                == ProcessEnsureVerticalShellThickness::EnsureAll,
+                                == ProcessEnsureVerticalShellThickness::EnsureAll
+                                && input.current.layer_index < cache_object.num_layers,
                         )
                         .map(Some),
                         (None, None, None) => Ok(None),
@@ -65,35 +67,34 @@ fn validate_alignment(prepared: &PreparedPostVerticalShellProjection) {
         assert_eq!(cache_object.records.len(), count);
         assert_eq!(projection_object.records.len(), count);
         assert_eq!(inputs.len(), count);
-        assert_eq!(prelude.records.len(), count);
-        assert_eq!(plan.layers.len(), count);
-        assert_eq!(lslices.len(), count);
-        assert_eq!(regions.len(), 1);
+        assert_eq!(plan.layers.len() * regions.len(), count);
+        assert_eq!(lslices.len(), plan.layers.len());
         assert_eq!(plan.source_object_index, input_object.identity().0);
         assert_eq!(plan.transform_index, input_object.identity().1);
-        for (index, ((((record, cache), projection), input), flow)) in object
+        for (index, (((record, cache), projection), input)) in object
             .records
             .iter()
             .zip(&cache_object.records)
             .zip(&projection_object.records)
             .zip(inputs)
-            .zip(&prelude.records)
             .enumerate()
         {
-            match (record, cache, projection, input, flow) {
-                (Some(_), Some(_), Some(_), Some(input), Some(_)) => {
-                    assert_eq!(input.planned_layer_index, index);
-                    assert_eq!(input.layer_id, plan.layers[index].id);
-                    assert_eq!(input.current.layer_index, index);
-                    assert_eq!(input.current.region_index, 0);
-                    assert_eq!(input.region_id, regions[0].as_parts().0);
+            match (record, cache, projection, input) {
+                (Some(_), Some(_), Some(_), Some(input)) => {
+                    assert_eq!(input_object.region_layer_record_index(input.current), index);
+                    assert_eq!(input.planned_layer_index, input.current.layer_index);
+                    assert_eq!(input.layer_id, plan.layers[input.current.layer_index].id);
+                    assert_eq!(
+                        input.region_id,
+                        regions[input.current.region_index].as_parts().0
+                    );
                     assert_eq!(input.compatible_region_ids, [input.region_id]);
                     assert_eq!(
                         (input.source_object_index, input.transform_index),
                         input_object.identity()
                     );
                 }
-                (None, None, None, None, None) => {}
+                (None, None, None, None) => {}
                 _ => panic!("O21 slots remain aligned across the complete predecessor"),
             }
         }

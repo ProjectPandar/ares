@@ -75,7 +75,7 @@ async fn task22b_volume_ordinals_distinguish_bfs_from_dfs_and_restart_per_object
 }
 
 #[test]
-fn task22b_mesh_shared_presence_and_repeated_numeric_keys_are_rejected_request_wide() {
+fn task22b_mesh_shared_presence_and_repeated_resource_keys_are_rejected_request_wide() {
     let plain = load_project(KsrArchive::new().bytes()).unwrap();
     assert!(!plain.objects()[0].volumes()[0].has_mesh_shared());
 
@@ -117,7 +117,7 @@ fn task22b_mesh_shared_presence_and_repeated_numeric_keys_are_rejected_request_w
             "3D/root-b.model",
             20,
             vec![project_volume(
-                "3D/leaf-b.model",
+                "3D/leaf-a.model",
                 7,
                 ProjectVolumeType::SupportBlocker,
                 true,
@@ -177,7 +177,7 @@ fn task22b_shared_mesh_gate_ignores_empty_occurrences_and_precedes_dense_or_coor
         f64::from(f32::MAX),
     );
     volumes[1] = project_volume(
-        "other.model",
+        "huge.model",
         77,
         ProjectVolumeType::NegativeVolume,
         true,

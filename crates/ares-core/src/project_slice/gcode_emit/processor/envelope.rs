@@ -3,6 +3,67 @@ use super::ProcessorLimits;
 use crate::{GCodeFlavor, MachineEnvelopeOptions, OrcaFloats};
 
 impl ProcessorLimits {
+    pub(in crate::project_slice::gcode_emit) fn from_traversal(
+        traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+        bbl_printer: bool,
+    ) -> Self {
+        Self {
+            retraction_length: traversal
+                .resolved
+                .views
+                .runtime_gcode
+                .retraction_length
+                .0
+                .first()
+                .map_or(0.0, |value| value.0),
+            retract_restart_extra: traversal
+                .resolved
+                .views
+                .runtime_gcode
+                .retract_restart_extra
+                .0
+                .first()
+                .map_or(0.0, |value| value.0),
+            retraction_feedrate: traversal
+                .resolved
+                .views
+                .runtime_gcode
+                .retraction_speed
+                .0
+                .first()
+                .map_or(0.0, |value| value.0)
+                * 60.0,
+            deretraction_feedrate: {
+                let retraction = traversal
+                    .resolved
+                    .views
+                    .runtime_gcode
+                    .retraction_speed
+                    .0
+                    .first()
+                    .map_or(0.0, |value| value.0);
+                let deretraction = traversal
+                    .resolved
+                    .views
+                    .runtime_gcode
+                    .deretraction_speed
+                    .0
+                    .first()
+                    .map_or(0.0, |value| value.0);
+                (if deretraction > 0.0 {
+                    deretraction
+                } else {
+                    retraction
+                }) * 60.0
+            },
+            ..Self::from_config(
+                &traversal.resolved.views.full.printer.machine,
+                traversal.resolved.views.full.printer.gcode.gcode_flavor,
+                bbl_printer,
+            )
+        }
+    }
+
     pub(in crate::project_slice::gcode_emit) fn from_config(
         machine: &MachineEnvelopeOptions,
         gcode_flavor: GCodeFlavor,

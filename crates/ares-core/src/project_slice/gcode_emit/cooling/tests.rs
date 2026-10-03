@@ -52,12 +52,3 @@ fn redundant_feed_only_move_is_dropped() {
     // its newline (`CoolingBuffer.cpp:910-913`).
     assert_eq!(output, b"G1 F9000\n");
 }
-
-#[test]
-fn fan_mover_suppresses_only_the_redundant_initial_zero_state() {
-    assert!(!super::should_emit_initial_part_fan(0, true, true, 0));
-    assert!(super::should_emit_initial_part_fan(0, true, false, 0));
-    assert!(super::should_emit_initial_part_fan(0, true, true, 20));
-    assert!(!super::should_emit_initial_part_fan(1, true, false, 0));
-    assert!(!super::should_emit_initial_part_fan(0, false, false, 0));
-}

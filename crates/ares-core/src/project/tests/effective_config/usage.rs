@@ -67,6 +67,7 @@ fn collect(
 }
 
 fn resolved_object(object: ObjectOptions, regions: Vec<RegionOptions>) -> ResolvedProjectObject {
+    let all_regions = regions.clone();
     let model_parts = regions
         .into_iter()
         .enumerate()
@@ -77,6 +78,7 @@ fn resolved_object(object: ObjectOptions, regions: Vec<RegionOptions>) -> Resolv
         .collect();
     ResolvedProjectObject {
         source_object_index: 0,
+        all_regions,
         object,
         print_objects: vec![ResolvedPrintObjectConfig {
             transform: Transform3d::IDENTITY,

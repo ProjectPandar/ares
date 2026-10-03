@@ -18,8 +18,7 @@ pub(super) struct SheathFlow {
 
 impl SheathFlow {
     pub(super) fn new(spec: &RaftFillSpec, scale: CoordinateScale) -> Self {
-        let units = 1.0 / scale.factor();
-        let scaled = |mm: f64| (f64::from(mm as f32) * units) as i64 as f64;
+        let scaled = |mm: f64| (f64::from(mm as f32) / scale.factor()) as i64 as f64;
         Self {
             scaled_width: scaled(spec.width_mm),
             spacing: scaled(spec.sheath_spacing),

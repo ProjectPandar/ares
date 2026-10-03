@@ -10,12 +10,7 @@
 //! the connection boundary is the `-0.5·spacing` inset outer contour.
 
 use super::fill_params::RaftFillPattern;
-use crate::fill::base_support::connect_base_support;
-use crate::fill::checked_rotate::rotate_point;
-use crate::fill::rectilinear::segments::{populate_vertical_lines, prepare_rectilinear_contours};
-use crate::geometry::{
-    BoundingBox, ClipperError, CoordinateScale, ExPolygon, Point, Polygon, Polyline,
-};
+use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Point, Polygon, Polyline};
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct RaftFillSpec {
@@ -129,9 +124,11 @@ fn closing_polygons(
 /// `Polyline::clip_end` (`Polyline.cpp`): shorten the polyline tail by
 /// `distance`, dropping exhausted segments.
 mod geom;
-use geom::{align_to_grid, checked_scale_f32, vertical_segments};
+use geom::checked_scale_f32;
+pub(in crate::project_slice) mod support_base;
 
 mod patterns;
+pub(in crate::project_slice) use patterns::concentric;
 
 /// Fill one raft layer with the filler `Fill::new_from_type(pattern)` builds
 /// (`SupportCommon.cpp:1450-1451`); the inline body is
@@ -181,7 +178,12 @@ fn fill_expolygons(
                 continue;
             }
             RaftFillPattern::Concentric => {
-                out.extend(patterns::concentric(&expolygon, spec, scale)?);
+                out.extend(patterns::concentric(
+                    &expolygon,
+                    spec.spacing,
+                    spec.density,
+                    scale,
+                )?);
                 continue;
             }
             RaftFillPattern::Grid => {
@@ -189,107 +191,19 @@ fn fill_expolygons(
                 continue;
             }
         }
-        // `aoffset1 = coord_t(scale_(overlap − 0.5·spacing))`
-        // (`FillRectilinear.cpp:3613`, `FillBase.cpp:394`) truncates to an
-        // integer lattice unit, matching `checked_scale`.
-        let inner_offset = checked_scale_f32(scale, -0.5 * spec.spacing)?;
-        // `coord_t(scale_(this->spacing) / params.density)`
-        // (`FillRectilinear.cpp:3619`): the spacing narrows to f32
-        // (`Flow` stores it as `float`) and truncates to `coord_t`
-        // BEFORE the density division; the quotient truncates again.
-        // `coord_t(scale_(this->spacing) / params.density)`
-        // (`FillRectilinear.cpp:3619`): `this->spacing` is `float`
-        // (`Flow::spacing()` field is float, `Flow.hpp:62`), scaled to
-        // double lattice units, divided by density, then truncated.
-        let scaled_spacing = f64::from(spec.spacing as f32) / scale.factor();
-        let line_spacing = (scaled_spacing / f64::from(spec.density)) as i64;
-        if line_spacing <= 0 {
-            continue;
-        }
-        // Upstream `ExPolygonWithOffset(expoly, -rotate_vector.first, ...)`
-        // rotates by the f32 `float` angle; the extra FRAC_PI_2 below is
-        // ares' vertical-line convention translation. Round the combined
-        // argument through f32 so the trig matches upstream's `float`
-        // precision bit-for-bit.
-        let rotate_by = f64::from(-((spec.angle as f32) + std::f32::consts::FRAC_PI_2));
-        let mut slice = prepare_rectilinear_contours(&expolygon, rotate_by, 0.0, inner_offset)?;
-        // Upstream `connect_base_support(..., poly_with_offset.polygons_outer,
-        // ...)` — `polygons_outer` there is the DELTA-shrunk fill boundary
-        // (where the infill endpoints sit), which is ares' `inner`
-        // contour (`ExPolygonWithOffset` naming is inverted vs ares').
-        let boundary: Vec<Polygon> = slice
-            .contours
-            .iter()
-            .filter(|contour| contour.inner)
-            .map(|contour| contour.polygon.clone())
-            .collect();
-        if boundary.is_empty() {
-            continue;
-        }
-
-        // Grid anchor (`make_fill_lines:2928-2934`): align the source
-        // bbox minimum to the grid passing through the rotated
-        // reference point.
-        let source_bounds =
-            BoundingBox::from_expolygon(&slice.source).ok_or(ClipperError::CoordinateOutOfRange)?;
-        // `-rotate_vector.first` in upstream is the negated f32 angle.
-        let neg_angle = f64::from(-(spec.angle as f32));
-        let reference = rotate_point(reference, neg_angle.cos(), neg_angle.sin())?;
-        let aligned_min_x = align_to_grid(source_bounds.min().x(), line_spacing, reference.x())?;
-        let width = source_bounds.max().x() - aligned_min_x;
-        let count = usize::try_from((width + line_spacing - 1) / line_spacing).unwrap_or(0);
-        populate_vertical_lines(&mut slice, count, aligned_min_x, line_spacing)?;
-
-        // `FillSupportBase::fill_surface` passes `x_margin = 0`
-        // (`FillRectilinear.cpp:3621`): keep every line inside the source
-        // bbox (`make_fill_lines:2924-2925, 2937-2939`).
-        let (x_min, x_max) = (source_bounds.min().x(), source_bounds.max().x());
-        let mut fill_lines = Vec::new();
-        for line in &slice.lines {
-            if line.x < x_min {
-                continue;
-            }
-            if line.x > x_max {
-                break;
-            }
-            fill_lines.extend(vertical_segments(line));
-        }
-        if fill_lines.is_empty() {
-            continue;
-        }
-
-        let bbox =
-            BoundingBox::from_polygons(&boundary).ok_or(ClipperError::CoordinateOutOfRange)?;
-        // Connect in the SLICE frame (upstream connects before the
-        // rotate-back), then rotate the connected output back by
-        // +(angle+π/2) (`FillSupportBase::fill_surface:3627-3633`).
-        // `cos(float)` / `sin(float)` return float before promotion into
-        // the double arguments of `Point::rotate` (:3627-3633).
-        let rotate_back = (spec.angle as f32) + std::f32::consts::FRAC_PI_2;
-        let (cos_a, sin_a) = (f64::from(rotate_back.cos()), f64::from(rotate_back.sin()));
-        let connected = connect_base_support(
-            fill_lines,
-            &boundary,
-            bbox,
-            spec.spacing,
-            spec.density,
+        out.extend(support_base::fill_surface(
+            &expolygon,
+            support_base::SupportBaseFillParams {
+                spacing: spec.spacing,
+                density: spec.density,
+                angle: spec.angle as f32,
+                reference,
+                reference_angle: spec.angle as f32,
+                outer_offset: checked_scale_f32(scale, -0.5 * spec.spacing)?,
+            },
             scale,
             context,
-        )?;
-        out.extend(connected.into_iter().map(|polyline| {
-            let rotated = polyline
-                .points()
-                .iter()
-                .map(|point| {
-                    let (x, y) = (point.x() as f64, point.y() as f64);
-                    crate::geometry::Point::new(
-                        (x * cos_a - y * sin_a).round() as i64,
-                        (x * sin_a + y * cos_a).round() as i64,
-                    )
-                })
-                .collect::<Vec<_>>();
-            crate::geometry::Polyline::new(rotated)
-        }));
+        )?);
     }
     Ok(out)
 }

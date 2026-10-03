@@ -86,8 +86,9 @@ pub enum ProcessWallSequence {
     InnerOuterInner,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ProcessWallDirection {
+    #[default]
     #[serde(rename = "ccw")]
     CounterClockwise,
     #[serde(rename = "cw")]

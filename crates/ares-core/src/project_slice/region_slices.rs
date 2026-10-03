@@ -132,9 +132,14 @@ impl RegionSurface {
     }
 
     pub(super) fn clone_with_expolygon(&self, expolygon: ExPolygon) -> Self {
-        let mut surface = self.clone();
-        surface.expolygon = expolygon;
-        surface
+        Self {
+            expolygon,
+            kind: self.kind,
+            thickness: self.thickness,
+            thickness_layers: self.thickness_layers,
+            bridge_angle: self.bridge_angle,
+            extra_perimeters: self.extra_perimeters,
+        }
     }
 
     pub(super) fn retag(&mut self, kind: RegionSurfaceKind) {

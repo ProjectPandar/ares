@@ -5,7 +5,7 @@ use crate::{
 };
 
 use super::super::{
-    candidates::{CandidateLayer, gather_candidates},
+    candidates::{CandidateLayer, CandidateRegion, gather_candidates},
     types::BridgeCandidateObject,
 };
 
@@ -80,11 +80,14 @@ fn layer<'a>(
 ) -> CandidateLayer<'a> {
     CandidateLayer {
         lower_layer_index,
-        region_index: 7,
-        fill_expolygons,
-        fill_surfaces,
-        sparse_infill_density_percent: 15.0,
+
         solid_infill_spacing: 500,
+        regions: vec![CandidateRegion {
+            region_index: 7,
+            fill_expolygons,
+            fill_surfaces,
+            sparse_infill_density_percent: 15.0,
+        }],
     }
 }
 

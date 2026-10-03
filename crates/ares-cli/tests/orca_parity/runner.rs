@@ -14,6 +14,12 @@ mod application_tests;
 #[cfg(test)]
 #[path = "runner/clipped_loop_motion.rs"]
 mod clipped_loop_motion;
+#[cfg(test)]
+#[path = "runner/compatible_regions.rs"]
+mod compatible_regions;
+#[cfg(test)]
+#[path = "runner/empty_tools.rs"]
+mod empty_tools;
 #[path = "runner/filament_map.rs"]
 pub(crate) mod filament_map;
 #[cfg(test)]
@@ -35,6 +41,9 @@ mod initialized_overhang_intersections;
 #[path = "runner/lifecycle_tests.rs"]
 mod lifecycle_tests;
 #[cfg(test)]
+#[path = "runner/multi_object_skirt.rs"]
+mod multi_object_skirt;
+#[cfg(test)]
 #[path = "runner/path_tests.rs"]
 mod path_tests;
 #[cfg(test)]
@@ -43,8 +52,20 @@ mod stage_tests;
 #[path = "runner/stages.rs"]
 pub(crate) mod stages;
 #[cfg(test)]
+#[path = "runner/support_annotations.rs"]
+mod support_annotations;
+#[cfg(test)]
+#[path = "runner/support_modifier.rs"]
+mod support_modifier;
+#[cfg(test)]
 #[path = "runner/tests.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "runner/tree_support.rs"]
+mod tree_support;
+#[cfg(test)]
+#[path = "runner/volume_fixture.rs"]
+mod volume_fixture;
 
 #[path = "runner/command.rs"]
 mod command;

@@ -25,6 +25,7 @@ pub(super) struct PlannedLayer {
 pub(super) struct PlannedPrintObject {
     pub(super) source_object_index: usize,
     pub(super) transform_index: usize,
+    pub(super) slicing_parameters: SlicingParameters,
     pub(super) layers: Vec<PlannedLayer>,
 }
 
@@ -213,6 +214,10 @@ fn test_parameters() -> SlicingParameters {
         layer_height: 0.2,
         min_layer_height: 0.07,
         max_layer_height: 0.2,
+        max_support_layer_height: 0.0,
+        zero_gap_interface_top: false,
+        zero_gap_interface_bottom: false,
+        zero_gap_interface_raft: false,
         first_print_layer_height: 0.2,
         first_object_layer_height: 0.2,
         first_object_layer_bridging: false,
@@ -285,6 +290,7 @@ pub(super) fn plan_print_object(
     Ok(PlannedPrintObject {
         source_object_index,
         transform_index,
+        slicing_parameters: parameters.clone(),
         layers: planned_layers_with_zaa(&pairs, options.zaa_min_z, parameters)?,
     })
 }

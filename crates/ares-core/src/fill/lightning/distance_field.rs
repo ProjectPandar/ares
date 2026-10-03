@@ -156,14 +156,14 @@ impl DistanceField {
         let overhang_bbox =
             BoundingBox::from_polygons(current_overhang).unwrap_or(current_outlines_bbox);
 
-        // `union_ex` default `NonZero`; `offset2_ex` default `jtSquare` +
+        // `union_ex` default `NonZero`; `offset2_ex` default `jtMiter` +
         // miterLimit 3.0 (ClipperUtils.hpp).
         let unioned = union_ex(current_overhang, FillRule::NonZero)?;
         let expanded = offset2_ex(
             &unioned,
             -(cell_size / 2) as f32,
             (cell_size / 2) as f32,
-            JoinType::Square,
+            JoinType::Miter,
             3.0,
         )?;
 
@@ -199,14 +199,8 @@ impl DistanceField {
         // `std::stable_sort` with the single upstream comparator
         // (DistanceField.cpp:72-77): if `abs(b.dist - a.dist) > radius`, order
         // by dist_to_boundary ascending; else by the prime-hash of the loc.
-        // The upstream comparator is NOT a strict-weak-order (mixing the two
-        // keys can be non-transitive), which Rust's `sort_by` rejects with a
-        // total-order panic — use the GCC `stable_sort` emulation
-        // (`fixed_gcc_sort_by`), which tolerates it and reproduces upstream
-        // ordering byte-for-byte.
-        // `std::stable_sort` — STABLE ordering required (equal unsupported
-        // cells keep input order); `stable_sort_by` tolerates the upstream
-        // non-strict-weak-order comparator that `Vec::sort_by` would reject.
+        // The comparator is non-transitive: both stability and libstdc++'s
+        // seven-cell insertion runs / half-buffer merge sequence matter.
         crate::geometry::stable_sort_by(&mut unsupported_points, |a, b| {
             if (b.dist_to_boundary - a.dist_to_boundary).unsigned_abs() > radius as u64 {
                 a.dist_to_boundary < b.dist_to_boundary

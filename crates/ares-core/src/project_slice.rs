@@ -56,6 +56,7 @@ mod simplification;
 mod slice_ordering;
 mod slicing_mode_intersections;
 mod state;
+mod support_material;
 #[cfg(test)]
 mod test_consumers;
 mod top_empty_layers;
@@ -130,8 +131,16 @@ fn slice_project_sync(
     let bridged = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
     let filled = fill_entities::prepare(prepared)?;
+    let support_layers = match support_material::generate(&filled, &mut context) {
+        Ok(layers) => layers,
+        Err(error) => {
+            fill_entities::dispose(filled);
+            return Err(error);
+        }
+    };
     let islands = extrusion_islands::prepare(filled);
     let mut ordered = island_print_order::prepare(islands, top_surfaces);
+    ordered.support_layers = support_layers;
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
     consume_post_island_print_order(ordered, metadata, &mut context)

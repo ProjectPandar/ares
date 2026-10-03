@@ -213,6 +213,12 @@ fn plan(
     PlannedPrintObject {
         source_object_index,
         transform_index,
+        slicing_parameters: super::profile_layers::helpers::parameters(
+            0.2,
+            0.2,
+            0.07,
+            layers.len() as f64 * 0.2,
+        ),
         layers: layers
             .iter()
             .map(|&(id, height, print_z, slice_z)| PlannedLayer {

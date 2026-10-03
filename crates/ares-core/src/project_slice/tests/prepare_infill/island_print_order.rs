@@ -11,11 +11,12 @@ use crate::project_slice::{
 #[test]
 fn task22o95_orders_first_and_later_layer_phases_from_option() {
     let island = || ExtrusionIsland {
-        infills: vec![IslandInfillEntity::FillCollection(
-            FillExtrusionCollection {
+        infills: vec![(
+            0,
+            IslandInfillEntity::FillCollection(FillExtrusionCollection {
                 entities: Vec::new(),
                 no_sort: true,
-            },
+            }),
         )],
         perimeters: vec![ExtrusionEntityCollection::default()],
     };
@@ -85,7 +86,7 @@ fn record_source_inventory(
     counts.1 += usize::from(!island.perimeters.is_empty() || !island.infills.is_empty());
     counts.2 += usize::from(!island.perimeters.is_empty());
     counts.3 += island.perimeters.len();
-    for infill in &island.infills {
+    for (_, infill) in &island.infills {
         match infill {
             IslandInfillEntity::Fill(_) => {
                 counts.4 += 1;

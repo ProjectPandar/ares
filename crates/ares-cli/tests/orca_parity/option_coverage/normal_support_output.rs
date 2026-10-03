@@ -2,8 +2,14 @@ use super::*;
 use crate::runner::CaseInputs;
 use serde_json::json;
 
+#[path = "normal_support_output/angle.rs"]
+mod angle;
+#[path = "normal_support_output/cooling.rs"]
+mod cooling;
 #[path = "normal_support_output/dependencies.rs"]
 mod dependencies;
+#[path = "normal_support_output/style.rs"]
+mod style;
 
 #[test]
 fn orca_parity_normal_support_boolean_values_preserve_complete_output() {
@@ -79,7 +85,7 @@ fn orca_parity_normal_support_boolean_values_preserve_complete_output() {
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
-fn has_support_extrusion(reference: &str) -> bool {
+pub(crate) fn has_support_extrusion(reference: &str) -> bool {
     let mut support = false;
     let mut relative_e = false;
     reference.lines().any(|line| {

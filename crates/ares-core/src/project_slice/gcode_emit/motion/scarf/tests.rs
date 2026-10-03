@@ -36,6 +36,7 @@ fn geometry() -> LayerGeometry<'static> {
         nearest_seam_penalties: None,
         staggered_inner: false,
         internal_surfaces: &[],
+        support_islands: None,
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
         avoid_crossing: super::super::state::AvoidCrossingGeometry {

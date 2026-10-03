@@ -27,15 +27,9 @@ fn task22o23_every_inherited_record_count_mismatch_rejects_before_geometry() {
     let mut regularizations = prepared();
     regularizations.regularizations[0].records.pop();
     rejects(regularizations);
-    let mut traversal = prepared();
-    traversal.predecessor.objects[0].records.pop();
-    rejects(traversal);
     let mut inputs = prepared();
     prelude!(&mut inputs).object.records.pop();
     rejects(inputs);
-    let mut flows = prepared();
-    prelude!(&mut flows).records.pop();
-    rejects(flows);
     let mut plan = prepared();
     prelude!(&mut plan)
         .object
@@ -68,15 +62,9 @@ fn task22o23_every_slot_presence_mismatch_rejects_before_geometry() {
     let mut regularizations = prepared();
     regularizations.regularizations[0].records[1] = None;
     rejects(regularizations);
-    let mut traversal = prepared();
-    traversal.predecessor.objects[0].records[1] = None;
-    rejects(traversal);
     let mut inputs = prepared();
     prelude!(&mut inputs).object.records[1] = None;
     rejects(inputs);
-    let mut flows = prepared();
-    prelude!(&mut flows).records[1] = None;
-    rejects(flows);
 }
 
 #[test]

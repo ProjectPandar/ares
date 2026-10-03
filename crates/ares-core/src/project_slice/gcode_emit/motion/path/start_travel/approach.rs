@@ -75,7 +75,7 @@ pub(super) fn emit_needs_travel(
         y: cursor.y() as f64 * geometry.scale.factor() + state.offset.1,
     };
     let inside_internal_surface = travel::inside_internal_surfaces(
-        geometry.internal_surfaces,
+        geometry.internal_surfaces.iter().copied(),
         travel_origin,
         arc::Point {
             x: first_x,
@@ -97,6 +97,21 @@ pub(super) fn emit_needs_travel(
     // decide; a wiping retract moves the head and the route is planned
     // again from the new position (`GCode.cpp:7436-7443`).
     let mut route = plan_route(state, &geometry, properties.feature, first_x, first_y);
+    let skip_retraction = skip_retraction
+        || (!matches!(state.last_feature, Some("Outer wall" | "Overhang wall"))
+            && matches!(properties.feature, "Support" | "Support transition")
+            && geometry.support_islands.is_some_and(|islands| {
+                super::super::inside_support_islands(
+                    islands,
+                    [
+                        cursor,
+                        crate::geometry::Point::new(first_scaled.0, first_scaled.1),
+                    ],
+                    &route,
+                    geometry,
+                    state.offset,
+                )
+            }));
     let routed_length = polyline_length(travel_origin.x, travel_origin.y, &route);
     // Upstream calls `retract()` on every qualifying travel
     // (`needs_retraction` has no retracted check, `GCode.cpp:7528-7647`);

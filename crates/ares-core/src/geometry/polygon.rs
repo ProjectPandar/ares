@@ -36,6 +36,22 @@ impl Polygon {
         self.points.reverse();
     }
 
+    pub(crate) fn is_counter_clockwise(&self) -> bool {
+        super::clipper::area(&self.points) >= 0.0
+    }
+
+    /// `MultiPoint.cpp::rotate(double cos_angle, double sin_angle)`.
+    pub(crate) fn rotate(&mut self, cos_angle: f64, sin_angle: f64) {
+        for point in &mut self.points {
+            let x = point.x() as f64;
+            let y = point.y() as f64;
+            *point = Point::new(
+                (cos_angle * x - sin_angle * y).round() as super::Coord,
+                (cos_angle * y + sin_angle * x).round() as super::Coord,
+            );
+        }
+    }
+
     /// `MultiPoint::symmetric_y` — mirror every vertex X about `x_axis`.
     pub(crate) fn symmetric_y(&mut self, x_axis: super::Coord) {
         for point in &mut self.points {

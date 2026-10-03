@@ -14,12 +14,31 @@ pub(in crate::project_slice::gcode_emit::motion) fn can_skip_retraction(
         && !matches!(previous_feature, Some("Outer wall" | "Overhang wall"))
         && !current_is_perimeter
         && inside_internal_surface
-    // `GCode::needs_retraction` also exempts SupportMaterial /
-    // SupportTransition-role travels fully inside
-    // `support_layer->support_islands` (`GCode.cpp:7618-7632`). Ares
-    // does not generate `SupportLayer` islands yet; upstream leaves them
-    // empty for non-contact raft layers (`SupportCommon.cpp:1439-1441`
-    // — the loop ends before the contact layer, and contact travels are
-    // `erSupportMaterialInterface`, which the role test excludes), so
-    // the exemption is structurally unreachable here.
+}
+
+/// `GCode.cpp:7618-7632`: one support island or Tree base must contain the entire travel.
+pub(in crate::project_slice::gcode_emit::motion) fn inside_support_islands(
+    areas: super::super::support::LayerAreas<'_>,
+    [start, destination]: [crate::geometry::Point; 2],
+    route: &[super::super::arc::Point],
+    geometry: super::super::LayerGeometry<'_>,
+    offset: (f64, f64),
+) -> bool {
+    let point = |point: super::super::arc::Point| {
+        crate::geometry::Point::new(
+            ((point.x - offset.0) / geometry.scale.factor()).round() as i64,
+            ((point.y - offset.1) / geometry.scale.factor()).round() as i64,
+        )
+    };
+    let travel = crate::geometry::Polyline::new(
+        std::iter::once(start)
+            .chain(route[..route.len() - 1].iter().copied().map(point))
+            .chain(std::iter::once(destination))
+            .collect(),
+    );
+    areas
+        .islands
+        .iter()
+        .chain(areas.tree_base.into_iter().flatten())
+        .any(|island| crate::geometry::open_polyline_inside_expolygon(&travel, island).unwrap())
 }

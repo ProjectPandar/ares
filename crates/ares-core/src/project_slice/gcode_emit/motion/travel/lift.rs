@@ -94,7 +94,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn is_allowed_at(
     }
     // `GCode.cpp:7691-7694`: the bottom-surface test reads
     // `m_layer_index == 0` — the physical counter (raft layers included).
-    let bottom = state.layer_index == 0;
+    let bottom = state.layer_chunk_index == 0;
     // `m_last_notgapfill_extrusion_role == erTopSolidInfill || erIroning`
     // (`GCode.cpp:7682`) — the non-gapfill feature tracker.
     let top = matches!(

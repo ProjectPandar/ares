@@ -44,6 +44,15 @@ pub(super) fn apply(
     nozzles: &OrcaFloats,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
+    let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
+    let (post_regions, _) = prelude.object.object.as_parts();
+    let (_, _, regions) = post_regions.as_parts();
+    if regions.iter().all(|region| {
+        let options = region.as_parts().1;
+        !options.infill_combination.0 || options.sparse_infill_density.0 == 0.0
+    }) {
+        return Ok(());
+    }
     let configs = layer_configs(traversal, nozzles, scale)?;
     let groups = groups(&configs);
     for (top, count) in groups

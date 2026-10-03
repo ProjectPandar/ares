@@ -45,6 +45,7 @@ pub(crate) fn resolve_project_objects(
                     })
                     .collect(),
                 layer_candidates: Vec::new(),
+                all_regions: Vec::new(),
             })
         })
         .collect()
@@ -76,7 +77,7 @@ pub(crate) fn resolve_project_candidates(
         .filter(|groups| !groups.transforms.is_empty())
         .zip(&mut resolved)
     {
-        let representative = groups.transforms[0];
+        let representative = resolved_object.print_objects[0].transform;
         let object = &objects[groups.source_object_index];
 
         let normalized_ranges = layer_candidate_ranges(object.layer_config_ranges());
@@ -129,6 +130,13 @@ pub(crate) fn resolve_project_candidates(
             .collect();
 
         resolved_object.layer_candidates = layer_candidates;
+        resolved_object.all_regions = crate::project::region_graph::object_region_graph(
+            object,
+            resolved_object,
+            &settings.filament.region,
+            validated.logical_filament_count,
+        )
+        .all_regions;
     }
 
     Ok(resolved)
@@ -150,8 +158,6 @@ fn reject_unsupported_object_sources(object: &ProjectObject) -> Result<(), Slice
 fn first_unsupported_modifier_key(overrides: &RegionOptionOverrides) -> Option<&'static str> {
     if overrides.wall_loops.is_some() {
         Some("wall_loops")
-    } else if overrides.sparse_infill_density.is_some() {
-        Some("sparse_infill_density")
     } else if overrides.top_shell_layers.is_some() {
         Some("top_shell_layers")
     } else if overrides.bottom_shell_layers.is_some() {

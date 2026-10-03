@@ -86,6 +86,7 @@ const _: ValidateTask22mConfigs = validate_task22m_configs;
 pub(in crate::project_slice) struct PostCompensationPrintObject {
     post_regions: PostRegionPrintObject,
     lslices: Vec<Vec<ExPolygon>>,
+    raw_slices: Vec<Vec<Vec<ExPolygon>>>,
 }
 
 impl PostCompensationPrintObject {
@@ -95,6 +96,10 @@ impl PostCompensationPrintObject {
 
     pub(super) fn into_parts(self) -> (PostRegionPrintObject, Vec<Vec<ExPolygon>>) {
         (self.post_regions, self.lslices)
+    }
+
+    pub(super) fn raw_slices(&self, region_index: usize, layer_index: usize) -> &[ExPolygon] {
+        &self.raw_slices[region_index][layer_index]
     }
 
     #[cfg(test)]
@@ -234,9 +239,28 @@ fn apply_object_compensation(
     for (layer_index, raw) in backups.into_iter().enumerate() {
         lslices[layer_index] = order_expolygons(raw);
     }
+    // Layer::backup_untyped_slices saves regions, not the elephant-foot lslices backup.
+    let raw_slices = object
+        .regions
+        .iter()
+        .map(|region| {
+            region
+                .layers
+                .iter()
+                .map(|layer| {
+                    layer
+                        .surfaces
+                        .iter()
+                        .map(|surface| surface.as_parts().1.clone())
+                        .collect()
+                })
+                .collect()
+        })
+        .collect();
     Ok(PostCompensationPrintObject {
         post_regions: object,
         lslices,
+        raw_slices,
     })
 }
 

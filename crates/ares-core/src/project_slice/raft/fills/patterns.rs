@@ -17,7 +17,7 @@ use crate::geometry::{
 const DEFAULT_ANCHOR_LENGTH: f32 = 1000.0;
 
 mod concentric;
-pub(super) use concentric::concentric;
+pub(in crate::project_slice) use concentric::concentric;
 
 /// `FillGrid::fill_surface` (`FillRectilinear.cpp:3422-3446`), with
 /// the fresh support filler's `layer_id = size_t(-1)` (odd).

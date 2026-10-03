@@ -29,7 +29,7 @@ fn task22o94_assigns_ksr_entities_to_ordered_layer_islands() {
                     .iter()
                     .filter(|infill| {
                         matches!(
-                            infill,
+                            infill.1,
                             IslandInfillEntity::Fill(_) | IslandInfillEntity::FillCollection(_)
                         )
                     })
@@ -37,7 +37,7 @@ fn task22o94_assigns_ksr_entities_to_ordered_layer_islands() {
                 counts.4 += island
                     .infills
                     .iter()
-                    .filter(|infill| matches!(infill, IslandInfillEntity::Thin(_)))
+                    .filter(|infill| matches!(infill.1, IslandInfillEntity::Thin(_)))
                     .count();
                 counts.5 += island.perimeters.len();
                 match (island.infills.is_empty(), island.perimeters.is_empty()) {
@@ -85,7 +85,7 @@ fn task22o211_layer_two_thin_fills_follow_first_point_island_assignment() {
             island
                 .infills
                 .iter()
-                .any(|entity| matches!(entity, IslandInfillEntity::Thin(_)))
+                .any(|entity| matches!(entity.1, IslandInfillEntity::Thin(_)))
         })
         .count();
 

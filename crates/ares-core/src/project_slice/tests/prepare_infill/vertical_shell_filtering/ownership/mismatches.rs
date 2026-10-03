@@ -32,16 +32,10 @@ fn task22o23_every_new_record_alignment_mismatch_rejects_before_geometry() {
     let mut regularizations = prepared();
     regularizations.regularizations[0].records.pop();
     rejects(regularizations);
-    let mut traversal = prepared();
-    traversal.predecessor.objects[0].records.pop();
-    rejects(traversal);
 
     let mut regularization_presence = prepared();
     regularization_presence.regularizations[0].records[1] = None;
     rejects(regularization_presence);
-    let mut traversal_presence = prepared();
-    traversal_presence.predecessor.objects[0].records[1] = None;
-    rejects(traversal_presence);
 }
 
 #[test]

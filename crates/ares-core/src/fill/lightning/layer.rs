@@ -41,12 +41,17 @@ impl SparseNodeGrid {
             .or_default()
             .push(Rc::downgrade(node));
     }
-    /// `equal_range` — the candidate nodes at a grid address.
-    pub(super) fn equal_range(&self, grid_addr: Point) -> &[Weak<std::cell::RefCell<Node>>] {
+    /// No-hint `unordered_multimap` insertion prepends equivalent keys.
+    pub(super) fn equal_range(
+        &self,
+        grid_addr: Point,
+    ) -> impl Iterator<Item = &Weak<std::cell::RefCell<Node>>> {
         self.map
             .get(&(grid_addr.x(), grid_addr.y()))
             .map(Vec::as_slice)
             .unwrap_or(&[])
+            .iter()
+            .rev()
     }
 }
 

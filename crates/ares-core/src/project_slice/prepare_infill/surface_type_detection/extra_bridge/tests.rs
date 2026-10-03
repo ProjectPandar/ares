@@ -26,7 +26,6 @@ fn source_external_second_bridge_splits_only_upper_internal_surface() {
     let cache = Cache {
         polygons: vec![rectangle(0, 0, 600_000, 1_000_000)],
         offset: 10_000.0,
-        region: 0,
     };
 
     let output = rewrite(vec![internal, top.clone()], &cache).unwrap();

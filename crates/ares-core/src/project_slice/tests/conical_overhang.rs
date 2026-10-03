@@ -163,6 +163,12 @@ fn print_object(
         plan: PlannedPrintObject {
             source_object_index,
             transform_index,
+            slicing_parameters: super::profile_layers::helpers::parameters(
+                0.2,
+                0.2,
+                0.07,
+                heights.len() as f64 * 0.2,
+            ),
             layers: planned_layers(heights),
         },
         volume_slices: Vec::new(),

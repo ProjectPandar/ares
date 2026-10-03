@@ -16,9 +16,12 @@ const TARGET_FLOW_HEIGHT_FACTOR: f32 = 0.9;
 const EPSILON: f64 = 1.0e-4;
 const MITER_LIMIT: f64 = 3.0;
 
-#[derive(Clone, Copy)]
 pub(in crate::project_slice) struct DeepSparseLayer<'a> {
     pub(in crate::project_slice) planned: &'a PlannedLayer,
+    pub(in crate::project_slice) regions: Vec<DeepSparseRegion<'a>>,
+}
+
+pub(in crate::project_slice) struct DeepSparseRegion<'a> {
     pub(in crate::project_slice) fill_surfaces: &'a [RegionSurface],
     pub(in crate::project_slice) sparse_infill_density_percent: f64,
 }
@@ -39,13 +42,18 @@ pub(in crate::project_slice) fn gather_deep_sparse_infill_area(
     let mut sparse = Vec::new();
     let mut non_sparse = Vec::new();
     for layer_index in (0..candidate_layer_index).rev() {
-        let layer = layers[layer_index];
+        let layer = &layers[layer_index];
         if layer.planned.print_z < bottom_z && layer_index < candidate_layer_index - 1 {
             break;
         }
-        for surface in layer.fill_surfaces {
+        for (surface, density) in layer.regions.iter().flat_map(|region| {
+            region
+                .fill_surfaces
+                .iter()
+                .map(move |surface| (surface, region.sparse_infill_density_percent))
+        }) {
             let (kind, expolygon, ..) = surface.as_parts();
-            if (kind == RegionSurfaceKind::Internal && layer.sparse_infill_density_percent < 100.0)
+            if (kind == RegionSurfaceKind::Internal && density < 100.0)
                 || kind == RegionSurfaceKind::InternalVoid
             {
                 sparse.push(expolygon.clone());

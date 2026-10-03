@@ -31,17 +31,16 @@ pub(in crate::project_slice) fn preflight_perimeter_flows(
         let (plan, _, regions) = post_region.as_parts();
         assert_eq!(plan.source_object_index, resolved.source_object_index);
         assert_eq!(plan.transform_index, transform_index);
-        let [region] = regions else {
-            return Err(unsupported("multi_region_layer_slices"));
-        };
-        let (_, region_options, layers) = region.as_parts();
-        assert_eq!(plan.layers.len(), layers.len());
-        validate_options(
-            initial_layer_width,
-            region_options,
-            &resolved.object,
-            nozzle_diameters,
-        )?;
+        for region in regions {
+            let (_, region_options, layers) = region.as_parts();
+            assert_eq!(plan.layers.len(), layers.len());
+            validate_options(
+                initial_layer_width,
+                region_options,
+                &resolved.object,
+                nozzle_diameters,
+            )?;
+        }
         for layer in &plan.layers {
             validate_layer_height(layer.height)?;
         }
@@ -69,27 +68,27 @@ fn prepare_object_flows(
 ) -> Result<PreparedObjectFlows, SliceError> {
     let (post_region, _) = object.as_parts();
     let (plan, _, regions) = post_region.as_parts();
-    let [region] = regions else {
-        unreachable!("perimeter preflight already validated the region boundary")
-    };
-    let (_, region_options, layers) = region.as_parts();
-    let layers = plan
-        .layers
+    let layers = regions
         .iter()
-        .zip(layers)
-        .map(|(planned, region_layer)| {
-            if region_layer.surfaces().is_empty() {
-                Ok(None)
-            } else {
-                resolve_perimeter_flows(
-                    planned,
-                    initial_layer_width,
-                    region_options,
-                    object_options,
-                    nozzle_diameters,
-                )
-                .map(Some)
-            }
+        .flat_map(|region| {
+            let (_, region_options, layers) = region.as_parts();
+            plan.layers
+                .iter()
+                .zip(layers)
+                .map(move |(planned, region_layer)| {
+                    if region_layer.surfaces().is_empty() {
+                        Ok(None)
+                    } else {
+                        resolve_perimeter_flows(
+                            planned,
+                            initial_layer_width,
+                            region_options,
+                            object_options,
+                            nozzle_diameters,
+                        )
+                        .map(Some)
+                    }
+                })
         })
         .collect::<Result<_, _>>()?;
     Ok(PreparedObjectFlows { layers })
@@ -147,8 +146,4 @@ fn validate_layer_height(height: f64) -> Result<(), SliceError> {
 
 fn invalid(message: &str) -> SliceError {
     SliceError::InvalidInput(message.to_owned())
-}
-
-fn unsupported(key: &str) -> SliceError {
-    SliceError::UnsupportedProjectFeature(key.to_owned())
 }

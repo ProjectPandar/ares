@@ -28,22 +28,25 @@ pub(super) fn filter(
                     .iter()
                     .zip(&trim_object.records)
                     .zip(&regularization_object.records)
-                    .zip(&prelude.records)
-                    .enumerate()
-                    .map(|(index, (((record, trim), regularization), flow))| {
-                        match (record, trim, regularization, flow) {
-                            (Some(record), Some(trim), Some(regularization), Some(flow)) => {
+                    .zip(&input_object.records)
+                    .map(|(((record, trim), regularization), input)| {
+                        match (record, trim, regularization, input) {
+                            (Some(record), Some(trim), Some(regularization), Some(input)) => {
                                 filter::filter_record(
                                     filter::RecordOperands {
                                         trim,
                                         regularization,
                                         current: record,
-                                        previous_lslices: index
+                                        previous_lslices: input
+                                            .current
+                                            .layer_index
                                             .checked_sub(1)
                                             .map(|previous| lslices[previous].as_slice()),
-                                        next_lslices: lslices.get(index + 1).map(Vec::as_slice),
+                                        next_lslices: lslices
+                                            .get(input.current.layer_index + 1)
+                                            .map(Vec::as_slice),
                                     },
-                                    flow.solid_infill_spacing,
+                                    input.solid_infill_flow.scaled_spacing(scale),
                                     scale,
                                 )
                                 .map(Some)
@@ -84,58 +87,37 @@ fn validate_alignment(prepared: &PreparedPostVerticalShellRegularization) {
         assert_eq!(projection.records.len(), count);
         assert_eq!(trim.records.len(), count);
         assert_eq!(regularization.records.len(), count);
-        assert_eq!(traversal.records.len(), count);
         assert_eq!(inputs.len(), count);
-        assert_eq!(prelude.records.len(), count);
-        assert_eq!(plan.layers.len(), count);
-        assert_eq!(lslices.len(), count);
-        assert_eq!(regions.len(), 1);
+        assert_eq!(plan.layers.len() * regions.len(), count);
+        assert_eq!(lslices.len(), plan.layers.len());
         assert_eq!(plan.source_object_index, input_object.identity().0);
         assert_eq!(plan.transform_index, input_object.identity().1);
-        for (
-            index,
-            (
-                (
-                    (((((record, cache), projection), trim), regularization), traversal_record),
-                    input,
-                ),
-                flow,
-            ),
-        ) in object
+        for (index, (((((record, cache), projection), trim), regularization), input)) in object
             .records
             .iter()
             .zip(&cache.records)
             .zip(&projection.records)
             .zip(&trim.records)
             .zip(&regularization.records)
-            .zip(&traversal.records)
             .zip(inputs)
-            .zip(&prelude.records)
             .enumerate()
         {
-            match (
-                record,
-                cache,
-                projection,
-                trim,
-                regularization,
-                traversal_record,
-                input,
-                flow,
-            ) {
-                (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_), Some(input), Some(_)) => {
-                    assert_eq!(input.planned_layer_index, index);
-                    assert_eq!(input.layer_id, plan.layers[index].id);
-                    assert_eq!(input.current.layer_index, index);
-                    assert_eq!(input.current.region_index, 0);
-                    assert_eq!(input.region_id, regions[0].as_parts().0);
+            match (record, cache, projection, trim, regularization, input) {
+                (Some(_), Some(_), Some(_), Some(_), Some(_), Some(input)) => {
+                    assert_eq!(input_object.region_layer_record_index(input.current), index);
+                    assert_eq!(input.planned_layer_index, input.current.layer_index);
+                    assert_eq!(input.layer_id, plan.layers[input.current.layer_index].id);
+                    assert_eq!(
+                        input.region_id,
+                        regions[input.current.region_index].as_parts().0
+                    );
                     assert_eq!(input.compatible_region_ids, [input.region_id]);
                     assert_eq!(
                         (input.source_object_index, input.transform_index),
                         input_object.identity()
                     );
                 }
-                (None, None, None, None, None, None, None, None) => {}
+                (None, None, None, None, None, None) => {}
                 _ => panic!("O23 slots remain aligned across the complete predecessor"),
             }
         }

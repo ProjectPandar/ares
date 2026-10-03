@@ -15,7 +15,7 @@ pub(in crate::project_slice) fn prepare_perimeter_contexts(
     flows: Vec<PreparedObjectFlows>,
     resolved_objects: &[ResolvedProjectObject],
     spiral_mode: bool,
-) -> Vec<PostPerimeterInputPrintObject> {
+) -> Result<Vec<PostPerimeterInputPrintObject>, crate::SliceError> {
     let contexts = resolved_objects
         .iter()
         .flat_map(|resolved| {
@@ -36,7 +36,22 @@ pub(in crate::project_slice) fn prepare_perimeter_contexts(
         .map(|((object, flows), (resolved, transform_index))| {
             let records =
                 prepare_object_contexts(&object, flows, resolved, transform_index, spiral_mode);
-            PostPerimeterInputPrintObject { object, records }
+            let (post_regions, _) = object.as_parts();
+            let (plan, _, regions) = post_regions.as_parts();
+            let groups = super::groups::prepare(regions, plan.layers.len())?;
+            let mut record_groups = vec![None; records.len()];
+            for (group_index, group) in groups.iter().enumerate() {
+                for member in &group.members {
+                    record_groups[member.region_index * plan.layers.len() + member.layer_index] =
+                        Some(group_index);
+                }
+            }
+            Ok(PostPerimeterInputPrintObject {
+                object,
+                records,
+                groups,
+                record_groups,
+            })
         })
         .collect()
 }
@@ -52,32 +67,31 @@ fn prepare_object_contexts(
     let (plan, _, regions) = post_region.as_parts();
     assert_eq!(plan.source_object_index, resolved.source_object_index);
     assert_eq!(plan.transform_index, transform_index);
-    let [region] = regions else {
-        unreachable!("perimeter preflight already validated the single-region boundary")
-    };
-    let (region_id, region_options, layers) = region.as_parts();
-    assert_eq!(plan.layers.len(), layers.len());
-    assert_eq!(plan.layers.len(), flows.layers.len());
-
-    let model_rotation_rad = if region_options.align_infill_direction_to_model.0 {
-        let (m00, m10) = resolved.print_objects[transform_index]
-            .transform
-            .first_xy_column();
-        m10.atan2(m00)
-    } else {
-        0.0
-    };
-    let bottom_shell_layers = usize::try_from(region_options.bottom_shell_layers.0)
-        .expect("earlier slicing stages validate bottom_shell_layers");
-
-    plan.layers
-        .iter()
-        .zip(layers)
-        .zip(flows.layers)
-        .enumerate()
-        .map(|(layer_index, ((layer, region_layer), flows))| {
+    assert_eq!(plan.layers.len() * regions.len(), flows.layers.len());
+    let mut flows = flows.layers.into_iter();
+    let mut records = Vec::with_capacity(plan.layers.len() * regions.len());
+    for (region_index, region) in regions.iter().enumerate() {
+        let (region_id, region_options, layers) = region.as_parts();
+        assert_eq!(plan.layers.len(), layers.len());
+        let model_rotation_rad = if region_options.align_infill_direction_to_model.0 {
+            let (m00, m10) = resolved.print_objects[transform_index]
+                .transform
+                .first_xy_column();
+            m10.atan2(m00)
+        } else {
+            0.0
+        };
+        let bottom_shell_layers = usize::try_from(region_options.bottom_shell_layers.0)
+            .expect("earlier slicing stages validate bottom_shell_layers");
+        for (layer_index, ((layer, region_layer), flows)) in plan
+            .layers
+            .iter()
+            .zip(layers)
+            .zip(flows.by_ref())
+            .enumerate()
+        {
             assert_eq!(flows.is_some(), !region_layer.surfaces().is_empty());
-            flows.map(|flows| {
+            records.push(flows.map(|flows| {
                 let upper_layer_index =
                     (layer_index + 1 < plan.layers.len()).then_some(layer_index + 1);
                 let spiral_mode = global_spiral_mode
@@ -96,13 +110,13 @@ fn prepare_object_contexts(
                     region_id,
                     compatible_region_ids: [region_id],
                     current: RegionLayerIndex {
-                        region_index: 0,
+                        region_index,
                         layer_index,
                     },
                     lower_layer_index: layer_index.checked_sub(1),
                     upper_layer_index,
                     upper_same_region: upper_layer_index.map(|layer_index| RegionLayerIndex {
-                        region_index: 0,
+                        region_index,
                         layer_index,
                     }),
                     layer_height: layer.height,
@@ -114,7 +128,8 @@ fn prepare_object_contexts(
                     model_rotation_rad,
                     dispatch,
                 }
-            })
-        })
-        .collect()
+            }));
+        }
+    }
+    records
 }

@@ -55,6 +55,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) ironing_speed: f64,
     pub(in crate::project_slice::gcode_emit) gap_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) support_speed: f64,
+    pub(in crate::project_slice::gcode_emit) support_type: crate::ProcessSupportType,
+    pub(in crate::project_slice::gcode_emit) wall_direction: crate::ProcessWallDirection,
     /// `support_interface_speed` (`GCode.cpp:6548-6550`) —
     /// `erSupportMaterialInterface` paths use it, not `support_speed`.
     pub(in crate::project_slice::gcode_emit) support_interface_speed: f64,
@@ -72,8 +74,6 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) role_change_process: String,
     pub(in crate::project_slice::gcode_emit) role_change_filament: String,
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_speed: InternalBridgeFanSpeed,
-    pub(in crate::project_slice::gcode_emit) close_fan_first_layers: usize,
-    pub(in crate::project_slice::gcode_emit) full_fan_speed_layer: usize,
     pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,

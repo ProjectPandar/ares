@@ -8,7 +8,7 @@ pub(super) struct EntryGeometry<'a> {
     pub(super) nearest_penalties:
         Option<&'a crate::project_slice::island_print_order::NearestSeamLayer>,
     pub(super) layer_slices: std::rc::Rc<[ExPolygon]>,
-    pub(super) internal_surfaces: &'a [crate::project_slice::region_slices::RegionSurface],
+    pub(super) internal_surfaces: Vec<&'a crate::project_slice::region_slices::RegionSurface>,
     /// The chunk-wide slice list and cross-object average spacing for the
     /// external motion planner (`get_boundary_external`).
     pub(super) chunk_slices: Vec<ExPolygon>,
@@ -28,6 +28,7 @@ impl EntryGeometry<'_> {
             nearest_seam_penalties: None,
             staggered_inner: false,
             internal_surfaces: &[],
+            support_islands: None,
             scale,
             previous_layer_boundary: None,
             avoid_crossing: motion::AvoidCrossingGeometry {
@@ -57,7 +58,8 @@ impl EntryGeometry<'_> {
                     .object
                     .staggered_inner_seams
                     .0,
-            internal_surfaces: self.internal_surfaces,
+            internal_surfaces: &self.internal_surfaces,
+            support_islands: None,
             scale: traversal.scale,
             previous_layer_boundary,
             avoid_crossing: motion::AvoidCrossingGeometry {

@@ -196,6 +196,12 @@ fn object_with_context(
         plan: PlannedPrintObject {
             source_object_index,
             transform_index,
+            slicing_parameters: super::profile_layers::helpers::parameters(
+                0.2,
+                0.2,
+                0.07,
+                layer_count as f64 * 0.2,
+            ),
             layers: (0..layer_count)
                 .map(|id| PlannedLayer {
                     id,

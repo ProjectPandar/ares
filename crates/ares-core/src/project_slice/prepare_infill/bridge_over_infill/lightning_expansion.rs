@@ -10,22 +10,22 @@
 
 use crate::{
     geometry::{
-        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Polygon, difference_ex,
-        intersection_polygons_paths, offset_paths, union_safety_offset_ex,
+        ClipperError, CoordinateScale, ExPolygon, JoinType, Polygon, difference_ex,
+        intersection_ex_polygons, offset_paths, union_safety_offset_ex,
     },
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
 const MITER_LIMIT: f64 = 3.0;
 
-/// Phase-2 expansion (`PrintObject.cpp:2666-2707`) for one layer's
+/// Phase-2 expansion (`PrintObject.cpp:2666-2707`) for one region's
 /// `fill_surfaces`: `expansion = intersection_ex(sparse, expand(new_polys,
 /// scaled(3)))`; `solid_infill += expansion`; `sparse = diff_ex(sparse,
 /// union_safety_offset_ex(solid))`. Non-(Internal|InternalSolid) surfaces pass
 /// through; the rewritten `stInternalSolid`/`stInternal` pair is appended.
-pub(super) fn expand_layer(
+pub(super) fn expand_region<'a>(
     fill_surfaces: &[RegionSurface],
-    candidate_new_polygons: &[Polygon],
+    candidate_new_polygons: impl IntoIterator<Item = &'a [Polygon]>,
     scale: CoordinateScale,
 ) -> Result<Vec<RegionSurface>, ClipperError> {
     let mut passthrough: Vec<RegionSurface> = Vec::new();
@@ -38,27 +38,12 @@ pub(super) fn expand_layer(
             _ => passthrough.push(surface.clone()),
         }
     }
-    if sparse_infill.is_empty() {
-        return Ok(fill_surfaces.to_vec());
-    }
     // `expand(surface.new_polys, scaled<float>(3.0))`.
     let expand_delta = scale.scaled_delta(3.0) as f32;
-    let expanded = offset_paths(
-        candidate_new_polygons,
-        expand_delta,
-        JoinType::Miter,
-        MITER_LIMIT,
-    )?;
-    let sparse_polys: Vec<Polygon> = sparse_infill
-        .iter()
-        .flat_map(|e| {
-            let mut v = vec![e.contour().clone()];
-            v.extend(e.holes().iter().cloned());
-            v
-        })
-        .collect();
-    let expansion = intersection_polygons_paths(&sparse_polys, &expanded)?;
-    solid_infill.extend(expansion.into_iter().map(|p| ExPolygon::new(p, Vec::new())));
+    for polygons in candidate_new_polygons {
+        let expanded = offset_paths(polygons, expand_delta, JoinType::Miter, MITER_LIMIT)?;
+        solid_infill.extend(intersection_ex_polygons(&sparse_infill, &expanded)?);
+    }
 
     let solid = union_safety_offset_ex(
         &solid_infill
@@ -73,15 +58,11 @@ pub(super) fn expand_layer(
     let sparse = difference_ex(&sparse_infill, &solid)?;
 
     let mut out = passthrough;
-    for ep in &solid {
-        out.push(RegionSurface::new(
-            RegionSurfaceKind::InternalSolid,
-            ep.clone(),
-        ));
+    for ep in solid {
+        out.push(RegionSurface::new(RegionSurfaceKind::InternalSolid, ep));
     }
-    for ep in &sparse {
-        out.push(RegionSurface::internal(ep.clone()));
+    for ep in sparse {
+        out.push(RegionSurface::internal(ep));
     }
-    let _ = FillRule::EvenOdd; // silence unused import if FillRule unused
     Ok(out)
 }

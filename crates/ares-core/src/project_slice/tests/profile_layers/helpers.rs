@@ -6,7 +6,12 @@ use crate::project_slice::{
     parameters::SlicingParameters,
 };
 
-pub(super) fn parameters(first: f64, regular: f64, minimum: f64, top: f64) -> SlicingParameters {
+pub(in crate::project_slice::tests) fn parameters(
+    first: f64,
+    regular: f64,
+    minimum: f64,
+    top: f64,
+) -> SlicingParameters {
     SlicingParameters {
         base_raft_layers: 0,
         interface_raft_layers: 0,
@@ -16,6 +21,10 @@ pub(super) fn parameters(first: f64, regular: f64, minimum: f64, top: f64) -> Sl
         layer_height: regular,
         min_layer_height: minimum,
         max_layer_height: regular.max(minimum),
+        max_support_layer_height: 0.0,
+        zero_gap_interface_top: false,
+        zero_gap_interface_bottom: false,
+        zero_gap_interface_raft: false,
         first_print_layer_height: first,
         first_object_layer_height: first,
         first_object_layer_bridging: false,

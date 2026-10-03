@@ -16,6 +16,7 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 use crate::project_slice::perimeters::flow::build_nonbridging_flow;
 
 mod geometry;
+mod occupied;
 #[cfg(test)]
 mod tests;
 
@@ -24,7 +25,7 @@ pub(in crate::project_slice::gcode_emit) use geometry::split_at_nearest;
 use geometry::{closed_length, find_start_point};
 
 pub(super) struct SkirtPlan {
-    /// Closed loops in emission order — outermost first (`Print.cpp:2985`).
+    /// Plate-frame closed loops, outermost first (`Print.cpp:2985`).
     loops: Vec<Vec<Point>>,
     /// First-layer flow values; later layers rescale `mm3_per_mm` by the
     /// actual layer height (`GCode.cpp:4413`).
@@ -32,7 +33,7 @@ pub(super) struct SkirtPlan {
     spacing: f32,
     /// Number of layers the skirt is printed on (`skirt_height`, or every
     /// layer when the draft shield makes it infinite).
-    layer_count: usize,
+    pub(super) layer_count: usize,
     /// Seam target angle in degrees (`skirt_start_angle`).
     start_angle_deg: f64,
     single_loop_draft_shield: bool,
@@ -41,6 +42,7 @@ pub(super) struct SkirtPlan {
 impl SkirtPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
+        support: &[Vec<crate::project_slice::support_material::InstalledSupportLayer>],
         brim: Option<&super::brim::BrimPlan>,
         context: &mut crate::SlicerContext,
     ) -> Result<Option<Self>, SliceError> {
@@ -67,80 +69,7 @@ impl SkirtPlan {
             return Ok(None);
         }
 
-        // Occupied hull points: outer contours of the layers the skirt
-        // covers (`Print.cpp:2670-2686`).
-        let mut occupied = Vec::new();
-        let mut total_layers = 0usize;
-        for object in &traversal.objects {
-            let layers = &object
-                .predecessor
-                .predecessor
-                .predecessor
-                .predecessor
-                .object
-                .object
-                .as_parts()
-                .1;
-            total_layers = total_layers.max(layers.len());
-            for layer in layers.iter().take(layer_limit) {
-                occupied.extend(
-                    layer
-                        .iter()
-                        .flat_map(|expolygon| expolygon.contour().points().iter().copied()),
-                );
-            }
-        }
-        if let Some(brim) = brim {
-            occupied.extend_from_slice(brim.covered_hull());
-        }
-        // With a raft, the support fills (the raft) contribute to the
-        // occupied hull (`Print.cpp:2687-2694` — support layers up to
-        // skirt_height_z collect their fill points). The raft polygons
-        // bound the fills, so their contours stand in for the fill
-        // points.
-        for (object_index, resolved) in traversal.resolved.objects.iter().enumerate() {
-            if resolved.object.raft_layers.0 <= 0 {
-                continue;
-            }
-            let lslices = traversal.objects[object_index]
-                .slices(0)
-                .unwrap_or(&[])
-                .to_vec();
-            let object_height = traversal.objects[object_index]
-                .records
-                .iter()
-                .filter_map(|record| record.as_ref())
-                .map(|record| record.layer_height)
-                .sum();
-            if let Ok(Some(stream)) = crate::project_slice::raft::bridge::build_project_raft(
-                &traversal.resolved.views.full,
-                &resolved.object,
-                object_height,
-                &lslices,
-                traversal.scale,
-            ) {
-                for plan in &stream.plans {
-                    // `support_fills.collect_points` (`Print.cpp:2693`):
-                    // the hull takes the EMITTED fill polyline points —
-                    // the flange sheath perimeter plus the `-0.4·spacing`
-                    // fill (`fill_expolygons_with_sheath_generate_paths`).
-                    if let Ok(entities) = crate::project_slice::raft::fills::raft_layer_entities(
-                        &plan.polygons,
-                        plan.spec,
-                        traversal.scale,
-                        context,
-                    ) {
-                        for polyline in entities
-                            .iter()
-                            .flat_map(crate::project_slice::raft::fills::RaftEntity::polylines)
-                        {
-                            occupied.extend(polyline.points().iter().copied());
-                        }
-                    }
-                }
-            }
-        }
-        let hull = convex_hull(&occupied);
+        let hull = occupied::hull(traversal, support, brim, layer_limit, context);
         if hull.len() < 3 {
             return Ok(None);
         }
@@ -216,11 +145,7 @@ impl SkirtPlan {
         }
         loops.reverse();
 
-        let layer_count = if infinite_skirt {
-            total_layers
-        } else {
-            layer_limit.min(total_layers)
-        };
+        let layer_count = layer_limit;
         let start_angle_deg = object.map_or(-135.0, |value| value.object.skirt_start_angle.0);
         Ok(Some(Self {
             loops,
@@ -267,6 +192,7 @@ impl SkirtPlan {
         if layer.index >= self.layer_count {
             return;
         }
+        motion::set_origin(state, (0.0, 0.0));
         let height = layer.height_mm as f32;
         let rounded_rectangle = 1.0 - 0.25 * std::f64::consts::PI;
         let mm3_per_mm = f64::from(
@@ -288,19 +214,7 @@ impl SkirtPlan {
             )
         };
         for loop_points in loops {
-            // Upstream splits the plate-frame loop directly (`GCode::generate_skirt`
-            // `set_origin(unscale(Point(0,0)))`, `GCode.cpp:4424`): projection
-            // feet truncate in plate coordinates. Split there and restore.
-            let offset = (
-                (state.offset.0 / geometry.scale.factor()).round() as i64,
-                (state.offset.1 / geometry.scale.factor()).round() as i64,
-            );
-            let plate = loop_points
-                .iter()
-                .map(|point| Point::new(point.x() + offset.0, point.y() + offset.1))
-                .collect::<Vec<_>>();
-            let plate_target = Point::new(seam_target.x() + offset.0, seam_target.y() + offset.1);
-            let mut split = split_at_nearest(&plate, plate_target)
+            let mut split = split_at_nearest(loop_points, seam_target)
                 .into_iter()
                 .map(|point| (point.x(), point.y()))
                 .collect::<Vec<_>>();
@@ -310,10 +224,7 @@ impl SkirtPlan {
             // truncates toward zero (`Polyline.cpp:52-72` `.cast`), which
             // differs from clipping after the local-frame translate.
             motion::clip::clip_end(&mut split, state.options.seam_gap / geometry.scale.factor());
-            let split = split
-                .into_iter()
-                .map(|point| (point.0 - offset.0, point.1 - offset.1));
-            motion::emit_skirt_loop(output, split, flow, geometry, state, true);
+            motion::emit_skirt_loop(output, split.into_iter(), flow, geometry, state, true);
             if let Some(last) = state.last_scaled_position {
                 seam_target = Point::new(last.0, last.1);
             }

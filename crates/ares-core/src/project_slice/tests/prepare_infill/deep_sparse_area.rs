@@ -5,7 +5,7 @@ use crate::{
         perimeters::flow::resolve_thick_solid_infill_bridge_flow,
         prepare_infill::{
             bridge_over_infill::deep_sparse_area::{
-                DeepSparseLayer, gather_deep_sparse_infill_area,
+                DeepSparseLayer, DeepSparseRegion, gather_deep_sparse_infill_area,
             },
             external_surfaces,
         },
@@ -71,10 +71,12 @@ fn task22o47_real_ksr_deep_sparse_areas_are_repeatable_and_preserve_input() {
         .enumerate()
         .map(|(index, planned)| DeepSparseLayer {
             planned,
-            fill_surfaces: horizontal.objects[0].records[index]
-                .as_ref()
-                .map_or(&[], |record| record.fill_surfaces.as_slice()),
-            sparse_infill_density_percent: region.sparse_infill_density.0,
+            regions: vec![DeepSparseRegion {
+                fill_surfaces: horizontal.objects[0].records[index]
+                    .as_ref()
+                    .map_or(&[], |record| record.fill_surfaces.as_slice()),
+                sparse_infill_density_percent: region.sparse_infill_density.0,
+            }],
         })
         .collect::<Vec<_>>();
     let before = snapshot(&layers);
@@ -154,20 +156,23 @@ fn snapshot(layers: &[DeepSparseLayer<'_>]) -> Vec<u8> {
         output.extend_from_slice(&layer.planned.height.to_bits().to_le_bytes());
         output.extend_from_slice(&layer.planned.print_z.to_bits().to_le_bytes());
         output.extend_from_slice(&layer.planned.slice_z.to_bits().to_le_bytes());
-        output.extend_from_slice(&layer.sparse_infill_density_percent.to_bits().to_le_bytes());
-        for surface in layer.fill_surfaces {
-            let (kind, expolygon, thickness, count, angle, extra) = surface.as_parts();
-            output.extend_from_slice(
-                format!(
-                    "{kind:?}:{}:{count}:{}:{extra}|",
-                    thickness.to_bits(),
-                    angle.to_bits()
-                )
-                .as_bytes(),
-            );
-            append_polygon(&mut output, expolygon.contour());
-            for hole in expolygon.holes() {
-                append_polygon(&mut output, hole);
+        for region in &layer.regions {
+            output.extend_from_slice(&region.sparse_infill_density_percent.to_bits().to_le_bytes());
+            for surface in region.fill_surfaces {
+                let (kind, expolygon, thickness, count, angle, extra) = surface.as_parts();
+                output.extend_from_slice(
+                    format!(
+                        "{kind:?}:{}:{count}:{}:{extra}|",
+                        thickness.to_bits(),
+                        angle.to_bits()
+                    )
+                    .as_bytes(),
+                );
+                append_polygon(&mut output, expolygon.contour());
+                expolygon
+                    .holes()
+                    .iter()
+                    .for_each(|hole| append_polygon(&mut output, hole));
             }
         }
     }

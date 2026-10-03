@@ -2,6 +2,7 @@
 mod boundary;
 mod brim_emit;
 mod context;
+mod cooling_result;
 mod entry;
 mod entry_builder;
 mod fan_setup;
@@ -16,17 +17,19 @@ mod raft_entry;
 mod raft_schedule;
 mod schedule;
 mod skirt_emit;
+mod skirt_schedule;
+mod support_entry;
 mod timelapse;
 mod wrapping;
 
 use entry_builder::EntryBuilder;
 use schedule::Schedule;
+pub(super) use schedule::build as build_schedule;
 
 use super::{
     GenerationMetadata, PreparedPostIslandPrintOrder, SliceError, cooling, fan_mover, footprint,
     layer_gcode, motion, object, spiral_vase,
 };
-use crate::geometry::ExPolygon;
 
 pub(super) fn append(
     prepared: &mut PreparedPostIslandPrintOrder,
@@ -39,10 +42,9 @@ pub(super) fn append(
         first_layer_bounds,
         start_position,
         bed_cache,
-        extruder_offset,
         brim,
         skirt,
-        slicer,
+        schedule,
     } = context;
     let traversal = &prepared
         .predecessor
@@ -55,6 +57,7 @@ pub(super) fn append(
     // Disjoint field borrows: `objects` stays mutable while the geometry
     // buffers (top surfaces, seam plans, the traversal chain) are shared.
     let objects = &mut prepared.objects;
+    let support_layers = &mut prepared.support_layers;
     let top_surfaces = &prepared.top_surfaces;
     let nearest_seam_plans = &prepared.nearest_seam_plans;
     let island_predecessor = &prepared.predecessor;
@@ -102,15 +105,15 @@ pub(super) fn append(
     // object extrudes around its own build-item placement
     // (`bbs_3mf.cpp:3554-3560`, `GCode.cpp:5380/5403/5437`
     // `set_origin(unscale(instance.shift))`).
-    let schedule = schedule::build(traversal, objects, slicer);
     let Schedule {
-        per_object_z,
         merged,
         mut raft,
         print_position,
         labels,
         object_layer_counts,
         last_entry,
+        mut skirt_schedule,
+        ..
     } = schedule;
     let mut raft_layers = raft
         .as_mut()
@@ -120,53 +123,40 @@ pub(super) fn append(
     // object support paths (`PrintObject::simplify_extrusion_path` /
     // `simplify_support_extrusion_path` over the support layers).
     raft_schedule::simplify_layers(traversal, &mut raft_layers);
-    let raft_plans = raft.as_ref().map(|raft| &raft.plans);
 
     let mut group_start = 0;
     let mut first_group = true;
     let mut last_object_copy: Option<usize> = None;
+    let mut previous_layer_z = 0.0;
+    let mut chunk_index = 0;
     while group_start < merged.len() {
         let group_z = merged[group_start].0;
         let mut group_end = group_start;
         while group_end < merged.len() && merged[group_end].0 == group_z {
             group_end += 1;
         }
-        let mut entries: Vec<(usize, usize)> = merged[group_start..group_end]
+        let mut entries: Vec<schedule::LayerToPrint> = merged[group_start..group_end]
             .iter()
-            .map(|&(_, object_index, layer_index)| (object_index, layer_index))
+            .map(|&(_, entry)| entry)
             .collect();
-        entries.sort_by_key(|(object_index, _)| print_position[*object_index]);
-        max_layer_z = max_layer_z.max(f64::from(group_z as f32));
+        let (cooling_layer_index, cooling_buffer_flush) = cooling_result::metadata(
+            &entries,
+            traversal,
+            support_layers,
+            group_end == merged.len(),
+        );
         group_start = group_end;
+        if !group::has_tools(&entries, objects, support_layers, &raft_layers) {
+            cooling.empty_layer(output, cooling_layer_index, group_end == merged.len());
+            continue;
+        }
+        entries.sort_by_key(|entry| print_position[entry.object_index]);
+        max_layer_z = max_layer_z.max(f64::from(group_z as f32));
         // Chunk-wide inputs for the external motion planner
         // (`get_perimeter_spacing_external` averages the perimeter
         // spacing over every object with slices at this print z,
         // `AvoidCrossingPerimeters.cpp:511-529`).
-        let chunk_slices: Vec<ExPolygon> = entries
-            .iter()
-            .flat_map(|&(object_index, layer_index)| {
-                traversal.objects[object_index]
-                    .slices(layer_index)
-                    .unwrap_or(&[])
-                    .to_vec()
-            })
-            .collect();
-        let chunk_perimeter_spacing = if entries.is_empty() {
-            0.0
-        } else {
-            entries
-                .iter()
-                .map(|&(object_index, layer_index)| {
-                    f64::from(
-                        traversal.objects[object_index]
-                            .perimeter_spacing(layer_index)
-                            .unwrap_or_default(),
-                    )
-                })
-                .sum::<f64>()
-                / entries.len() as f64
-        };
-        let (first_object, first_layer) = entries[0];
+        let (chunk_slices, chunk_perimeter_spacing) = group::geometry(traversal, &entries);
         // The preamble fires on the first PHYSICAL layer chunk — raft layer
         // 0 included (`first_layer` is a sentinel there, so the check keys
         // off `first_group`, not `first_layer == 0`). Upstream emits the
@@ -182,22 +172,6 @@ pub(super) fn append(
             )?;
             first_group = false;
         }
-        // Raft chunks carry a `RAFT_SENTINEL_BASE + raft_index` layer index;
-        // the cooling fan ramp counts raft layers as the literal first
-        // physical layers (raft base = layer 0), so map the sentinel back
-        // to the raft index, and shift object layers by the raft count
-        // (object layer 0 follows the last raft layer).
-        let cooling_layer_index = match raft_schedule::classify(first_layer).ok().flatten() {
-            Some(raft_index) => raft_index,
-            None => {
-                first_layer
-                    + raft
-                        .as_ref()
-                        .and_then(|raft| raft.counts.get(first_object))
-                        .copied()
-                        .unwrap_or(0)
-            }
-        };
         // The cooling rewrite window opens after the preamble (the start
         // g-code is not part of the layer's buffered extrusions).
         let layer_output_start = output.len();
@@ -205,25 +179,14 @@ pub(super) fn append(
         state.part_fan_speed = cooling.provisional_part_speed();
         // The change-layer block uses the merged chunk's leading entry
         // (`change_layer` runs once per layer chunk, `GCode.cpp:5685`).
-        let (previous_layer_z, boundary_layer_index, object_layer_over_raft, leading_raft) =
-            group::chunk_bookkeeping(
-                raft.as_ref(),
-                raft_plans,
-                &per_object_z,
-                first_object,
-                first_layer,
-            );
+        let slicing = traversal.objects[entries[0].object_index].slicing_parameters();
+        let object_layer_over_raft = entries[0].object_layer == Some(0)
+            && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
         let layer_z = group_z;
         // The HEIGHT header keeps the f32-difference quirk (upstream
         // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
         // f64 print_z for template comparisons.
         let layer_height = f64::from(layer_z as f32) - f64::from(previous_layer_z as f32);
-        // The skirt flow height differences the RAW f64 print_z pair and
-        // casts to f32 only at the end (`GCode.cpp:4417` —
-        // `with_height(float(skirt_done.back() - skirt_done[size-2]))`);
-        // pre-casting each z to f32 shifts the layer-3 skirt `mm3_per_mm`
-        // one f32 ulp and flips the wipe F2930.735/736 boundary.
-        let skirt_height = f64::from((layer_z - previous_layer_z) as f32);
         let boundary = boundary::append(
             output,
             state,
@@ -234,7 +197,7 @@ pub(super) fn append(
                 metadata,
                 first_layer_bounds,
             },
-            boundary_layer_index,
+            chunk_index,
             object_layer_over_raft,
             layer_z,
             layer_height,
@@ -251,10 +214,11 @@ pub(super) fn append(
             output,
             state,
             &entries,
+            support_layers,
             skirt,
             &raft,
-            leading_raft,
-            skirt_height,
+            layer_z,
+            &mut skirt_schedule,
             &mut entry_builder,
             traversal,
             &chunk_slices,
@@ -266,9 +230,10 @@ pub(super) fn append(
         // toolchange and every instance block (object skirt group, brim,
         // `; printing object` marker, content).
         wrapping::emit(output, state, &timelapse_context)?;
-        for (entry_position, &(object_index, layer_index)) in entries.iter().enumerate() {
+        for (entry_position, entry) in entries.iter().enumerate() {
+            let object_index = entry.object_index;
             let is_group_end = entry_position + 1 == entries.len();
-            let raft_index = raft_schedule::classify(layer_index).ok().flatten();
+            let raft_index = entry.raft_layer;
             let (source_object_index, _) = traversal.objects[object_index]
                 .predecessor
                 .predecessor
@@ -280,8 +245,7 @@ pub(super) fn append(
                 &traversal.project.objects()[source_object_index],
                 traversal.scale,
             );
-            state.origin = (center_x, center_y);
-            state.offset = (center_x - extruder_offset.0, center_y - extruder_offset.1);
+            motion::set_origin(state, (center_x, center_y));
             // Raft chunks emit the materialized raft layer; the motion
             // machinery (travel/Z/TYPE/wipe/retract) is identical to the
             // object path.
@@ -338,6 +302,32 @@ pub(super) fn append(
                         region.top_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
                 }
             }
+            if let Some(support_index) = entry.support_layer {
+                support_entry::emit(
+                    output,
+                    state,
+                    &mut support_layers[object_index][support_index],
+                    traversal,
+                    object_index,
+                    entry.object_layer,
+                    &mut entry_builder,
+                    &chunk_slices,
+                    chunk_perimeter_spacing,
+                    &labels,
+                    emit_labels,
+                    entry.object_layer.is_none(),
+                    is_group_end,
+                    timelapse_gate.traditional_timelapse,
+                    timelapse_context,
+                )?;
+            }
+            let Some(layer_index) = entry.object_layer else {
+                continue;
+            };
+            state.layer_index = traversal.objects[object_index].physical_layers()[layer_index].id;
+            let slicing = traversal.objects[object_index].slicing_parameters();
+            state.object_layer_over_raft =
+                layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
             brim_emit::emit(
                 output,
                 state,
@@ -362,6 +352,7 @@ pub(super) fn append(
                 traversal,
                 object_index,
                 layer_index,
+                entry.support_layer.is_some(),
                 &chunk_slices,
                 chunk_perimeter_spacing,
                 &labels,
@@ -377,7 +368,9 @@ pub(super) fn append(
                 layer_output_start,
             )?;
         }
-        cooling.finish_layer(output, layer_output_start);
+        cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
+        previous_layer_z = layer_z;
+        chunk_index += 1;
     }
     cooling.finish(output);
     Ok((max_layer_z, fan_mover_handle))

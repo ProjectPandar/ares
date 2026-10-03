@@ -36,6 +36,24 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     }
 }
 
+pub(in crate::project_slice) fn simplify_support_layers(
+    layers: &mut [Vec<super::support_material::InstalledSupportLayer>],
+    scale: CoordinateScale,
+    tolerance: f64,
+    arc_fitting: bool,
+) {
+    let support_tolerance = if arc_fitting { 0.0375 } else { tolerance };
+    for entity in layers
+        .iter_mut()
+        .flat_map(|layers| layers.iter_mut())
+        .flat_map(|layer| &mut layer.support_fills)
+    {
+        entity.for_each_path_mut(&mut |path| {
+            simplify_polyline3(&mut path.polyline, scale, support_tolerance, arc_fitting);
+        });
+    }
+}
+
 pub(in crate::project_slice) fn simplify_layers(
     layers: &mut [OrderedExtrusionLayer],
     scale: CoordinateScale,
@@ -168,8 +186,17 @@ fn simplify_path3(
     tolerance: f64,
     arc_fitting: bool,
 ) {
-    let z = path.polyline.points[0].z;
-    let source_points = std::mem::take(&mut path.polyline.points);
+    simplify_polyline3(&mut path.polyline, scale, tolerance, arc_fitting);
+}
+
+fn simplify_polyline3(
+    polyline: &mut Polyline3,
+    scale: CoordinateScale,
+    tolerance: f64,
+    arc_fitting: bool,
+) {
+    let z = polyline.points[0].z;
+    let source_points = std::mem::take(&mut polyline.points);
     let mut points = source_points
         .iter()
         .map(|point| (scale.unscale(point.x), scale.unscale(point.y)))
@@ -180,7 +207,7 @@ fn simplify_path3(
         gcode_emit::motion::simplify_linear_points(&mut points, tolerance, units_per_mm(scale));
         Vec::new()
     };
-    path.polyline = Polyline3 {
+    *polyline = Polyline3 {
         points: points
             .into_iter()
             .map(|(x, y)| Point3 {

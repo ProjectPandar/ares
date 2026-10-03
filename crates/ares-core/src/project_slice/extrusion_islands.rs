@@ -23,7 +23,7 @@ pub(in crate::project_slice) enum IslandInfillEntity {
 
 #[derive(Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionIsland {
-    pub(in crate::project_slice) infills: Vec<IslandInfillEntity>,
+    pub(in crate::project_slice) infills: Vec<(usize, IslandInfillEntity)>,
     pub(in crate::project_slice) perimeters: Vec<ExtrusionEntityCollection>,
 }
 
@@ -84,18 +84,22 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
         .map(|_| ExtrusionIsland::default())
         .collect::<Vec<_>>();
 
-    for collection in std::mem::take(&mut layer.collections) {
+    let collection_regions = layer
+        .collection_ranges
+        .iter()
+        .flat_map(|(region, range)| std::iter::repeat_n(*region, range.len()));
+    for (region, collection) in collection_regions.zip(std::mem::take(&mut layer.collections)) {
         let island = island_index(collection.first_point(), slices, &bounds, &order);
         if collection.no_sort {
             islands[island]
                 .infills
-                .push(IslandInfillEntity::FillCollection(collection));
+                .push((region, IslandInfillEntity::FillCollection(collection)));
         } else {
             islands[island].infills.extend(
                 collection
                     .entities
                     .into_iter()
-                    .map(IslandInfillEntity::Fill),
+                    .map(|entity| (region, IslandInfillEntity::Fill(entity))),
             );
         }
     }
@@ -106,9 +110,16 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
         let island = island_index(Point::new(first.x, first.y), slices, &bounds, &order);
         islands[island].perimeters.push(perimeter);
     }
-    for thin in std::mem::take(&mut layer.thin_fills) {
+    let thin_regions = layer
+        .thin_fill_ranges
+        .iter()
+        .enumerate()
+        .flat_map(|(region, range)| std::iter::repeat_n(region, range.len()));
+    for (region, thin) in thin_regions.zip(std::mem::take(&mut layer.thin_fills)) {
         let island = island_index(thin_first_point(&thin), slices, &bounds, &order);
-        islands[island].infills.push(IslandInfillEntity::Thin(thin));
+        islands[island]
+            .infills
+            .push((region, IslandInfillEntity::Thin(thin)));
     }
     LayerExtrusionIslands { islands }
 }

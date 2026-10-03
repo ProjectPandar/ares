@@ -313,7 +313,10 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
     );
     // `ConfigOptionInt` upstream (`GCode.cpp:6758`) — integer semantics so
     // `{layer_num / 2}` divides as an integer.
-    config.insert("layer_num", Value::Integer((state.layer_index + 1) as i64));
+    config.insert(
+        "layer_num",
+        Value::Integer((state.layer_chunk_index + 1) as i64),
+    );
     config.insert("layer_z", Value::number(state.source_layer_z));
     let sources = [
         (

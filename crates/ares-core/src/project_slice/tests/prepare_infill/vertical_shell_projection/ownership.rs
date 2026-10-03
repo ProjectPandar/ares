@@ -82,7 +82,7 @@ fn task22o20_outer_object_and_surface_record_counts_fail_before_geometry() {
 }
 
 #[test]
-fn task22o20_input_and_prelude_record_counts_fail_before_geometry() {
+fn task22o20_canonical_input_record_count_fails_before_geometry() {
     let mut inputs = fixture::prepare_o19(KsrArchive::new().bytes());
     inputs.predecessor.objects[0]
         .predecessor
@@ -93,16 +93,6 @@ fn task22o20_input_and_prelude_record_counts_fail_before_geometry() {
         .records
         .pop();
     assert_preflight_rejects(inputs);
-
-    let mut flows = fixture::prepare_o19(KsrArchive::new().bytes());
-    flows.predecessor.objects[0]
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .records
-        .pop();
-    assert_preflight_rejects(flows);
 }
 
 #[test]

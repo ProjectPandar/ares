@@ -1,163 +1,313 @@
-//! The merged layer-chunk schedule: `collect_layers_to_print(Print)`
-//! (`GCode.cpp:1835-1870`) plus the per-chunk chained object order
-//! (`ShortestPath.cpp:2015-2042`, seeded and reversed per
-//! `GCode.cpp:5114-5131`).
-use super::object::ObjectLabels;
-use super::object_order;
-use super::raft_schedule;
-use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
+//! `GCode.cpp::collect_layers_to_print` object/support pairs and plate chunks.
 
-pub(super) struct Schedule {
-    /// Cumulative print z per object per layer.
-    pub(super) per_object_z: Vec<Vec<f64>>,
-    /// `(z, object_index, layer_index)` for every object layer, sorted by
-    /// print z (`collect_layers_to_print`'s ordering). Raft layers use
-    /// the sentinel index space of `raft_schedule`.
-    pub(super) merged: Vec<(f64, usize, usize)>,
-    /// Raft layer schedule (None when no object has a raft).
+use super::{object::ObjectLabels, object_order, raft_schedule};
+use crate::project_slice::{
+    island_print_order::OrderedExtrusionLayer,
+    perimeters::classic::traversal::PreparedPostClassicTraversal,
+    support_material::InstalledSupportLayer,
+};
+
+const EPSILON: f64 = 1e-4;
+
+#[derive(Clone, Copy)]
+pub(in crate::project_slice::gcode_emit) struct LayerToPrint {
+    pub(super) object_index: usize,
+    pub(super) object_layer: Option<usize>,
+    pub(super) support_layer: Option<usize>,
+    // Temporary raft-only adapter; ordinary support owns its raft layers.
+    pub(super) raft_layer: Option<usize>,
+}
+
+pub(in crate::project_slice::gcode_emit) struct Schedule {
+    pub(in crate::project_slice::gcode_emit) merged: Vec<(f64, LayerToPrint)>,
     pub(super) raft: Option<raft_schedule::RaftSchedule>,
-    /// Chained print order over the print objects, reversed
-    /// (`GCode.cpp:5120-5125`).
     pub(super) print_position: Vec<usize>,
     pub(super) labels: Vec<Option<ObjectLabels>>,
     pub(super) object_layer_counts: Vec<usize>,
     pub(super) last_entry: Option<(usize, usize)>,
+    pub(super) layer_count: usize,
+    pub(super) skirt_schedule: super::skirt_schedule::SkirtSchedule,
 }
 
-pub(super) fn build(
+impl Schedule {
+    pub(in crate::project_slice::gcode_emit) fn layer_count(&self) -> usize {
+        self.layer_count
+    }
+}
+
+pub(in crate::project_slice::gcode_emit) fn build(
     traversal: &PreparedPostClassicTraversal,
-    objects: &[Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>],
+    objects: &[Vec<OrderedExtrusionLayer>],
+    support: &[Vec<InstalledSupportLayer>],
     context: &mut crate::SlicerContext,
-) -> Schedule {
+) -> Result<Schedule, crate::SliceError> {
     let object_count = objects.len();
     let settings = &traversal.resolved.views.full;
     let object_options = traversal
-        .resolved
-        .objects
-        .iter()
-        .map(|resolved| resolved.object.clone())
-        .collect::<Vec<_>>();
-    let first_layer_lslices = (0..object_count)
-        .map(|object_index| traversal.objects[object_index].slices(0))
-        .collect::<Vec<_>>();
-    let object_heights = traversal
-        .objects
-        .iter()
-        .map(|object| {
-            object
-                .records
-                .iter()
-                .filter_map(|record| record.as_ref())
-                .map(|record| record.layer_height)
-                .sum()
-        })
-        .collect::<Vec<_>>();
-    let raft = raft_schedule::build(
-        settings,
-        &object_options,
-        &first_layer_lslices,
-        &object_heights,
-        traversal.scale,
-        context,
-    )
-    .ok()
-    .flatten();
-    let object_z_shift = raft
-        .as_ref()
-        .map(|raft| raft.object_z_shift.as_slice())
-        .unwrap_or(&[]);
-    let per_object_z: Vec<Vec<f64>> = traversal
         .objects
         .iter()
         .enumerate()
-        .map(|(object_index, object)| {
-            object
-                .records
-                .iter()
-                .filter_map(|record| record.as_ref())
-                .scan(
-                    if object_z_shift.is_empty() {
-                        0.0_f64
-                    } else {
-                        object_z_shift[object_index]
-                    },
-                    |precise, record| {
-                        *precise += record.layer_height;
-                        // Upstream accumulates print_z in double precision
-                        // (Print::Layer::print_z); the old f32 truncation made
-                        // template comparisons like `layer_z >=
-                        // initial_layer_print_height + layer_height * 2` fail on
-                        // ULP boundaries (Raise3D Pro3 M106 P2 ramp).
-                        Some(*precise)
-                    },
-                )
-                .collect()
-        })
-        .collect();
-    let mut merged: Vec<(f64, usize, usize)> = objects
-        .iter()
-        .enumerate()
-        .flat_map(|(object_index, object)| {
-            let z = &per_object_z[object_index];
-            (0..object.len()).map(move |layer_index| {
-                (
-                    z.get(layer_index).copied().unwrap_or(f64::MAX),
-                    object_index,
-                    layer_index,
-                )
-            })
-        })
-        .collect();
-    merged.sort_by(|&(a, _, _), &(b, _, _)| a.partial_cmp(&b).unwrap_or(std::cmp::Ordering::Equal));
-    let centers: Vec<(f64, f64)> = (0..object_count)
-        .map(|object_index| {
-            let (source_object_index, _) = traversal.objects[object_index]
+        .map(|(index, source)| {
+            let source_index = source
                 .predecessor
                 .predecessor
                 .predecessor
                 .predecessor
                 .object
-                .identity();
-            super::footprint::object_center(traversal, source_object_index).unwrap_or((0.0, 0.0))
+                .identity()
+                .0;
+            let mut options = traversal
+                .resolved
+                .objects
+                .iter()
+                .find(|object| object.source_object_index == source_index)
+                .expect("print object retains its resolved source")
+                .object
+                .clone();
+            if !support[index].is_empty() {
+                options.raft_layers.0 = 0;
+            }
+            options
         })
-        .collect();
-    // `GCode.cpp:5114-5125`: the per-layer instance ordering chains from
-    // the wipe-tower point and REVERSES the path. The Point constructor
-    // truncates the millimetre config values into scaled integers, so the
-    // seed sits a few microns from the origin for every sane config
-    // (`GCode.cpp:5115`, defaults `wipe_tower_x = 15`, `wipe_tower_y =
-    // 220`).
+        .collect::<Vec<_>>();
+    let first_layer_lslices = traversal
+        .objects
+        .iter()
+        .map(|object| object.slices(0))
+        .collect::<Vec<_>>();
+    let slicing_parameters = traversal
+        .objects
+        .iter()
+        .map(|object| object.slicing_parameters())
+        .collect::<Vec<_>>();
+    let raft = raft_schedule::build(
+        settings,
+        &object_options,
+        &first_layer_lslices,
+        &slicing_parameters,
+        traversal.scale,
+        context,
+    )?;
+    let mut merged = Vec::new();
+    let mut raw_zs = Vec::new();
+    let mut skirt_layers = Vec::new();
+    for (object_index, source) in traversal.objects.iter().enumerate() {
+        let object_z = source
+            .physical_layers()
+            .iter()
+            .map(|layer| layer.print_z)
+            .collect::<Vec<_>>();
+        let support_z = support[object_index]
+            .iter()
+            .map(|layer| layer.print_z)
+            .collect::<Vec<_>>();
+        raw_zs.extend_from_slice(&object_z);
+        raw_zs.extend_from_slice(&support_z);
+        skirt_layers.extend(
+            object_z
+                .iter()
+                .zip(&objects[object_index])
+                .map(|(&z, layer)| {
+                    let has_object = layer
+                        .islands
+                        .iter()
+                        .any(|island| !island.entities.is_empty());
+                    super::skirt_schedule::Layer::new(z, has_object, has_object)
+                }),
+        );
+        skirt_layers.extend(support[object_index].iter().map(|layer| {
+            let has_extrusions = layer.support_fills.iter().any(|entity| {
+                let role = entity.role();
+                matches!(
+                    role,
+                    crate::ExtrusionRole::SupportMaterial
+                        | crate::ExtrusionRole::SupportMaterialInterface
+                        | crate::ExtrusionRole::SupportTransition
+                )
+            });
+            super::skirt_schedule::Layer::new(layer.print_z, false, has_extrusions)
+        }));
+        pair_layers(&mut merged, object_index, &object_z, &support_z);
+    }
+    if let Some(raft) = &raft {
+        raw_zs.extend(raft.entries.iter().map(|entry| entry.0));
+        skirt_layers.extend(raft.entries.iter().map(|&(z, object, sentinel)| {
+            let layer = sentinel - raft_schedule::RAFT_SENTINEL_BASE;
+            let has_extrusions = raft.layers[object][layer]
+                .islands
+                .iter()
+                .any(|island| !island.entities.is_empty());
+            super::skirt_schedule::Layer::new(z, false, has_extrusions)
+        }));
+        merged.extend(raft.entries.iter().map(|&(z, object_index, sentinel)| {
+            (
+                z,
+                LayerToPrint {
+                    object_index,
+                    object_layer: None,
+                    support_layer: None,
+                    raft_layer: Some(sentinel - raft_schedule::RAFT_SENTINEL_BASE),
+                },
+            )
+        }));
+    }
+    merged.sort_by(|a, b| a.0.total_cmp(&b.0));
+    // Header/tail m_layer_count uses raw unique Z adjacency, not chunk groups.
+    raw_zs.sort_by(f64::total_cmp);
+    raw_zs.dedup();
+    let layer_count = usize::from(!raw_zs.is_empty())
+        + raw_zs
+            .windows(2)
+            .filter(|pair| (pair[1] - pair[0]).abs() >= EPSILON)
+            .count();
+    for object_index in 0..object_count {
+        let first = &merged
+            .iter()
+            .find(|(_, entry)| entry.object_index == object_index)
+            .ok_or_else(|| crate::SliceError::InvalidInput("no layers were detected".into()))?
+            .1;
+        let object_extrusions = first.object_layer.is_some_and(|layer| {
+            objects[object_index][layer]
+                .islands
+                .iter()
+                .any(|island| !island.entities.is_empty())
+        });
+        let support_extrusions = first
+            .support_layer
+            .is_some_and(|layer| !support[object_index][layer].support_fills.is_empty());
+        let raft_extrusions = first.raft_layer.is_some_and(|layer| {
+            raft.as_ref()
+                .expect("raft entry retains its adapter")
+                .layers[object_index][layer]
+                .islands
+                .iter()
+                .any(|island| !island.entities.is_empty())
+        });
+        if !object_extrusions && !support_extrusions && !raft_extrusions {
+            return Err(crate::SliceError::InvalidInput(
+                "one object has an empty first layer and cannot be printed".into(),
+            ));
+        }
+    }
+    // Native grouping compares against the group's minimum, not its previous Z.
+    let mut begin = 0;
+    while begin < merged.len() {
+        let minimum = merged[begin].0;
+        let mut end = begin + 1;
+        while end < merged.len() && merged[end].0 <= minimum + EPSILON {
+            end += 1;
+        }
+        let z = 0.5 * (minimum + merged[end - 1].0);
+        for entry in &mut merged[begin..end] {
+            entry.0 = z;
+        }
+        begin = end;
+    }
+    let centers = traversal
+        .objects
+        .iter()
+        .map(|source| {
+            let source_index = source
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object
+                .identity()
+                .0;
+            super::footprint::object_center(traversal, source_index).unwrap_or((0.0, 0.0))
+        })
+        .collect::<Vec<_>>();
     let mut print_order = object_order::chain_instance_order(&centers, (15, 220));
     print_order.reverse();
-    let print_position = {
-        let mut position = vec![0_usize; object_count];
-        for (rank, &object_index) in print_order.iter().enumerate() {
-            position[object_index] = rank;
-        }
-        position
-    };
-    let labels: Vec<Option<ObjectLabels>> = (0..object_count)
-        .map(|object_index| ObjectLabels::from_traversal(traversal, object_index))
-        .collect();
-    let object_layer_counts: Vec<usize> = objects.iter().map(|object| object.len()).collect();
-    // Prepend the raft entries (all raft z's sit below the first
-    // object layer after the shift).
-    if let Some(raft) = &raft {
-        let mut all = raft.entries.clone();
-        all.extend(merged);
-        all.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-        merged = all;
+    let mut print_position = vec![0; object_count];
+    for (rank, &object_index) in print_order.iter().enumerate() {
+        print_position[object_index] = rank;
     }
+    let labels = (0..object_count)
+        .map(|index| ObjectLabels::from_traversal(traversal, index))
+        .collect();
+    let object_layer_counts = objects.iter().map(Vec::len).collect();
     let last_entry = merged
         .last()
-        .map(|&(_, object_index, layer_index)| (object_index, layer_index));
-    Schedule {
-        per_object_z,
+        .and_then(|(_, entry)| entry.object_layer.map(|layer| (entry.object_index, layer)));
+    let print = &settings.project.print;
+    let max_layer_height = print
+        .nozzle_diameter
+        .0
+        .iter()
+        .enumerate()
+        .map(|(index, &nozzle)| {
+            // ConfigOptionVector::resize duplicates the first value.
+            let height = print
+                .max_layer_height
+                .0
+                .get(index)
+                .unwrap_or(&print.max_layer_height.0[0])
+                .0;
+            if height == 0.0 {
+                0.75 * nozzle.0
+            } else {
+                height
+            }
+        })
+        .fold(f64::MAX, f64::min)
+        .max(
+            object_options
+                .iter()
+                .map(|object| object.layer_height.0)
+                .fold(0.0, f64::max),
+        );
+    let skirt_schedule = super::skirt_schedule::SkirtSchedule::new(skirt_layers, max_layer_height);
+    Ok(Schedule {
         merged,
         raft,
         print_position,
         labels,
         object_layer_counts,
         last_entry,
+        layer_count,
+        skirt_schedule,
+    })
+}
+
+fn pair_layers(
+    destination: &mut Vec<(f64, LayerToPrint)>,
+    object_index: usize,
+    object_z: &[f64],
+    support_z: &[f64],
+) {
+    let (mut object, mut support) = (0, 0);
+    while object < object_z.len() || support < support_z.len() {
+        let minimum = object_z
+            .get(object)
+            .copied()
+            .unwrap_or(f64::MAX)
+            .min(support_z.get(support).copied().unwrap_or(f64::MAX));
+        let object_layer = object_z
+            .get(object)
+            .filter(|&&z| z <= minimum + EPSILON)
+            .map(|_| object);
+        let support_layer = support_z
+            .get(support)
+            .filter(|&&z| z <= minimum + EPSILON)
+            .map(|_| support);
+        let z = match (object_layer, support_layer) {
+            (Some(object), Some(support)) => 0.5 * (object_z[object] + support_z[support]),
+            (Some(object), None) => object_z[object],
+            (None, Some(support)) => support_z[support],
+            (None, None) => unreachable!("at least one next layer is at the minimum Z"),
+        };
+        destination.push((
+            z,
+            LayerToPrint {
+                object_index,
+                object_layer,
+                support_layer,
+                raft_layer: None,
+            },
+        ));
+        object += usize::from(object_layer.is_some());
+        support += usize::from(support_layer.is_some());
     }
 }

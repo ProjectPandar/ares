@@ -58,6 +58,7 @@ fn wipe_before_external_uses_the_source_rotated_inner_point() {
             nearest_seam_penalties: None,
             staggered_inner: false,
             internal_surfaces: &[],
+            support_islands: None,
             scale: CoordinateScale::Normal,
             previous_layer_boundary: None,
             avoid_crossing: super::super::state::AvoidCrossingGeometry {

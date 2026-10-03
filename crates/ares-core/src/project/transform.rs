@@ -35,6 +35,12 @@ impl Transform3d {
         (self.0[0][0], self.0[1][0])
     }
 
+    pub(crate) fn linear_determinant(self) -> f64 {
+        let [a, b, c, _] = self.0;
+        a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+            + a[2] * (b[0] * c[1] - b[1] * c[0])
+    }
+
     pub(crate) fn without_xy_translation(self) -> Self {
         let z_translation = self.0[2][3];
         let mut transform = self.without_translation();

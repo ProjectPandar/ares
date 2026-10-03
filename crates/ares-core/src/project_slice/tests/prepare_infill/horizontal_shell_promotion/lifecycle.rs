@@ -113,19 +113,6 @@ async fn task22o25_every_earlier_capability_error_precedes_promotion() {
         assert_eq!(horizontal_shell_promotion::disposals(), 0);
         assert_eq!(horizontal_shell_propagation::invocations(), 0);
     }
-
-    let (multi_region, _) = crate::project_slice::tests::region_fixture::modifier_projects();
-    horizontal_shell_promotion::reset_hooks();
-    horizontal_shell_propagation::reset_hooks();
-    assert_eq!(
-        slice_project(multi_region, metadata(), crate::SlicerContext::new(0))
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned())
-    );
-    assert_eq!(horizontal_shell_promotion::invocations(), 0);
-    assert_eq!(horizontal_shell_promotion::disposals(), 0);
-    assert_eq!(horizontal_shell_propagation::invocations(), 0);
 }
 
 async fn assert_precedes(expected: &str) {

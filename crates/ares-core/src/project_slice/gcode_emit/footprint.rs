@@ -2,108 +2,15 @@
 //! first-layer/timelapse bounds helpers.
 
 use crate::geometry::{CoordinateScale, Point, douglas_peucker};
-use crate::project_slice::gcode_emit::{
-    brim::BrimPlan,
-    skirt::{SkirtPlan, convex_hull},
-};
+use crate::project_slice::gcode_emit::skirt::convex_hull;
 use crate::project_slice::gcode_emit::{format_processor_float, tags::Tags};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::{Point3d, ProjectInstance, ProjectObject, ProjectVolumeType};
 
 pub(super) type FirstLayerBounds = (f64, f64, f64, f64);
 
-pub(super) fn first_layer_bounds(
-    traversal: &PreparedPostClassicTraversal,
-    skirt: Option<&SkirtPlan>,
-    brim: Option<&BrimPlan>,
-) -> Option<FirstLayerBounds> {
-    let print = &traversal.resolved.views.full.process.print;
-    let skirt_height = usize::try_from(print.skirt_height.0).unwrap_or_default();
-    let infinite_skirt = print.draft_shield == crate::ProcessDraftShield::Enabled;
-    let layer_limit = if infinite_skirt {
-        usize::MAX
-    } else {
-        skirt_height
-    };
-
-    let mut bounds = None;
-    for object in &traversal.objects {
-        let compensation_object = &object
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .object
-            .object;
-        let layers = compensation_object.as_parts().1;
-        let selected_layers = if skirt.is_some() {
-            layers.iter().take(layer_limit)
-        } else {
-            layers.iter().take(1)
-        };
-        for layer in selected_layers {
-            for polygon in layer {
-                include_polygon_bounds(polygon.contour(), traversal.scale, &mut bounds);
-            }
-        }
-    }
-    if let Some(skirt) = skirt {
-        include_bounds(skirt.covered_bounds(traversal.scale), &mut bounds);
-    }
-    if let Some(brim) = brim {
-        include_bounds(brim.covered_bounds(traversal.scale), &mut bounds);
-    }
-
-    let fallback_distance = if skirt.is_none() && skirt_height > 0 {
-        print.skirt_distance.0
-    } else {
-        0.0
-    };
-    let (center_x, center_y) = model_center(traversal)?;
-    bounds.map(|(min_x, min_y, max_x, max_y)| {
-        (
-            min_x - fallback_distance + center_x,
-            min_y - fallback_distance + center_y,
-            max_x - min_x + 2.0 * fallback_distance,
-            max_y - min_y + 2.0 * fallback_distance,
-        )
-    })
-}
-
-fn include_bounds(
-    additional: Option<(f64, f64, f64, f64)>,
-    bounds: &mut Option<(f64, f64, f64, f64)>,
-) {
-    let Some((min_x, min_y, max_x, max_y)) = additional else {
-        return;
-    };
-    *bounds = Some(match *bounds {
-        Some((old_min_x, old_min_y, old_max_x, old_max_y)) => (
-            old_min_x.min(min_x),
-            old_min_y.min(min_y),
-            old_max_x.max(max_x),
-            old_max_y.max(max_y),
-        ),
-        None => (min_x, min_y, max_x, max_y),
-    });
-}
-
-fn include_polygon_bounds(
-    polygon: &crate::geometry::Polygon,
-    scale: CoordinateScale,
-    bounds: &mut Option<(f64, f64, f64, f64)>,
-) {
-    for point in polygon.points() {
-        let x = scale.unscale(point.x());
-        let y = scale.unscale(point.y());
-        *bounds = Some(match *bounds {
-            Some((min_x, min_y, max_x, max_y)) => {
-                (min_x.min(x), min_y.min(y), max_x.max(x), max_y.max(y))
-            }
-            None => (x, y, x, y),
-        });
-    }
-}
+mod first_layer;
+pub(super) use first_layer::first_layer_bounds;
 
 pub(super) fn model_bounds(
     traversal: &PreparedPostClassicTraversal,
@@ -149,29 +56,32 @@ pub(super) fn object_center(
 /// `PrintApply.cpp:150`, `PrintObject.cpp:110,130`: scale translation and
 /// raw model center separately, then add the integer instance shift.
 pub(super) fn object_origin(object: &ProjectObject, scale: CoordinateScale) -> (f64, f64) {
-    let translation = object
+    let instance = object
         .instances()
         .iter()
         .find(|instance| instance.printable())
-        .expect("resolved object has a printable instance")
-        .transform()
-        .transform_point(Point3d::new(0.0, 0.0, 0.0));
+        .expect("resolved object has a printable instance");
     let center = crate::project_slice::raw_intersections::raw_center(object, scale)
         .expect("sliced object has validated raw bounds");
+    let shift = instance_shift(instance, center, scale);
+    (scale.unscale(shift.x()), scale.unscale(shift.y()))
+}
+
+pub(super) fn instance_shift(
+    instance: &ProjectInstance,
+    center: Point,
+    scale: CoordinateScale,
+) -> Point {
+    let translation = instance
+        .transform()
+        .transform_point(Point3d::new(0.0, 0.0, 0.0));
     let x = scale
         .checked_scale(translation.x)
         .expect("resolved instance has a scaled X translation");
     let y = scale
         .checked_scale(translation.y)
         .expect("resolved instance has a scaled Y translation");
-    (scale.unscale(x + center.x()), scale.unscale(y + center.y()))
-}
-
-pub(in crate::project_slice) fn model_center(
-    traversal: &PreparedPostClassicTraversal,
-) -> Option<(f64, f64)> {
-    let (min_x, min_y, max_x, max_y) = model_bounds(traversal)?;
-    Some(((min_x + max_x) * 0.5, (min_y + max_y) * 0.5))
+    Point::new(x + center.x(), y + center.y())
 }
 
 pub(super) const EXCLUDE_FLAVORS: [crate::GCodeFlavor; 4] = [

@@ -5,7 +5,7 @@ use super::types::{Flow, PerimeterFlows};
 
 mod fill;
 mod support;
-pub(in crate::project_slice) use support::resolve_support_flows;
+pub(in crate::project_slice) use support::{SupportFlows, resolve_support_flows};
 
 pub(in crate::project_slice) use fill::{
     FillFlowContext, FillFlowRole, resolve_configured_fill_flow, resolve_fill_bridge_flow,
@@ -16,19 +16,19 @@ const ROUNDED_RECTANGLE_FACTOR: f64 = 1.0 - 0.25 * std::f64::consts::PI;
 const FLOW_EPSILON: f64 = 1e-4;
 
 #[derive(Clone, Copy)]
-enum PerimeterFlowRole {
+pub(in crate::project_slice) enum PerimeterFlowRole {
     Internal,
     External,
     SolidInfill,
 }
 
 #[derive(Clone, Copy)]
-struct FlowContext<'a> {
-    layer: &'a PlannedLayer,
-    initial_layer_width: FloatOrPercent,
-    region: &'a RegionOptions,
-    object: &'a ObjectOptions,
-    nozzle_diameters: &'a OrcaFloats,
+pub(in crate::project_slice) struct FlowContext<'a> {
+    pub(in crate::project_slice) layer: &'a PlannedLayer,
+    pub(in crate::project_slice) initial_layer_width: FloatOrPercent,
+    pub(in crate::project_slice) region: &'a RegionOptions,
+    pub(in crate::project_slice) object: &'a ObjectOptions,
+    pub(in crate::project_slice) nozzle_diameters: &'a OrcaFloats,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -49,6 +49,21 @@ pub(in crate::project_slice) fn resolve_external_perimeter_flow(
         object_line_width,
     );
     build_nonbridging_flow(selected_width, height, nozzle_diameter)
+}
+
+/// `PrintRegion::flow(frExternalPerimeter, config.layer_height, false)`.
+pub(in crate::project_slice) fn resolve_nominal_external_perimeter_flow(
+    object: &ObjectOptions,
+    region: &RegionOptions,
+    nozzle_diameters: &OrcaFloats,
+) -> Result<Flow, SliceError> {
+    let nozzle = selected_nozzle(region.outer_wall_filament_id, nozzle_diameters)?;
+    let width = if raw(region.outer_wall_line_width) == 0.0 {
+        object.line_width
+    } else {
+        region.outer_wall_line_width
+    };
+    build_nonbridging_flow(width, object.layer_height.0 as f32, nozzle)
 }
 
 pub(in crate::project_slice) fn resolve_perimeter_flows(
@@ -77,7 +92,7 @@ pub(in crate::project_slice) fn resolve_perimeter_flows(
     })
 }
 
-fn resolve_role_flow(
+pub(in crate::project_slice) fn resolve_role_flow(
     context: FlowContext<'_>,
     role: PerimeterFlowRole,
 ) -> Result<Flow, SliceError> {
@@ -164,7 +179,10 @@ fn role_width(role: PerimeterFlowRole, region: &RegionOptions) -> FloatOrPercent
     }
 }
 
-fn selected_nozzle(selector: OrcaInt, nozzle_diameters: &OrcaFloats) -> Result<f32, SliceError> {
+pub(in crate::project_slice) fn selected_nozzle(
+    selector: OrcaInt,
+    nozzle_diameters: &OrcaFloats,
+) -> Result<f32, SliceError> {
     let nozzle_index = selector
         .0
         .checked_sub(1)
@@ -262,7 +280,7 @@ pub(in crate::project_slice) fn with_spacing(flow: Flow, spacing: f32) -> Flow {
     }
 }
 
-fn with_flow_ratio(flow: Flow, ratio: f64) -> Flow {
+pub(in crate::project_slice) fn with_flow_ratio(flow: Flow, ratio: f64) -> Flow {
     with_cross_section(flow, (flow.mm3_per_mm * ratio) as f32)
 }
 
@@ -319,7 +337,7 @@ pub(in crate::project_slice) fn ordinary_volume(width: f32, height: f32) -> f64 
     )
 }
 
-fn bridge_volume(width: f32) -> f64 {
+pub(super) fn bridge_volume(width: f32) -> f64 {
     f64::from((f64::from(width * width) * 0.25 * std::f64::consts::PI) as f32)
 }
 

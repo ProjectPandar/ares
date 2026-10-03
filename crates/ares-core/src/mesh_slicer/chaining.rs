@@ -69,7 +69,7 @@ impl ChainedLayer {
         &self.open_polylines
     }
 
-    fn into_parts(self) -> (Vec<Polygon>, Vec<OpenPolyline>) {
+    pub(super) fn into_parts(self) -> (Vec<Polygon>, Vec<OpenPolyline>) {
         (self.polygons, self.open_polylines)
     }
 }

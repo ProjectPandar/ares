@@ -4,7 +4,7 @@ use crate::{
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
-use super::super::candidates::{CandidateLayer, gather_candidates};
+use super::super::candidates::{CandidateLayer, CandidateRegion, gather_candidates};
 
 #[test]
 fn task22o43_gathers_a_wholly_unsupported_internal_solid() {
@@ -47,11 +47,14 @@ fn layer<'a>(
 ) -> CandidateLayer<'a> {
     CandidateLayer {
         lower_layer_index,
-        region_index: 0,
-        fill_expolygons,
-        fill_surfaces,
-        sparse_infill_density_percent: 15.0,
+
         solid_infill_spacing,
+        regions: vec![CandidateRegion {
+            region_index: 0,
+            fill_expolygons,
+            fill_surfaces,
+            sparse_infill_density_percent: 15.0,
+        }],
     }
 }
 

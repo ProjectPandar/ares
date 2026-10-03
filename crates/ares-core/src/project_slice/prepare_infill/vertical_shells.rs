@@ -1,5 +1,6 @@
 mod cache;
 mod cleanup;
+mod physical_cache;
 mod stage;
 #[cfg(test)]
 mod tests;

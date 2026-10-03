@@ -7,6 +7,79 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+Tree support (ARD-0086) is the blocking prerequisite for merging the current
+Normal support batch. Rewrite `Support/TreeSupport.cpp/.hpp`,
+`TreeSupport3D.cpp/.hpp`, `TreeModelVolumes.cpp/.hpp` and
+`TreeSupportCommon.hpp` into private `ares-core::project_slice::support_material`
+modules. Default Tree dispatches Organic; preserve Auto/Manual and all upstream
+styles rather than approximating them with normal support. Also close nonzero
+Normal angle, enforcer/blocker and multi-region inputs from `SupportMaterial.cpp`.
+Exit requires the unchanged KSR support-width test and complete native output,
+style/annotation/modifier E2E cases, Tier-1 checks and independent six-axis review.
+Unsupported guards or silent skips do not satisfy this gate. Only independently
+validated behavior-preserving slices may commit/push before Tree acceptance.
+See the [spec](superpowers/specs/2026-10-01-tree-support-output-parity.md) and
+[plan](superpowers/plans/2026-10-01-tree-support-output-parity.md).
+
+Organic settings/radius and the initial single-outline collision cache are
+unsubmitted source-owned WIP, not a Tree generator. Collision now preserves
+raft indexing, vertical spans, upper XY taper and radius-zero landing areas.
+Source-owned hole-free and nonzero-radius landing queries now consume that
+collision state internally; actual Tree generation still does not call it.
+Slow/FastSafe/Fast lazy avoidance tasks now consume collision and landing
+queries, preserving integer-narrowed step counts and source float substeps.
+Wall restrictions now preserve upper-zero/lower-snapped intersections and
+regular/minimum XY cache ownership. Precalculation installs ignored tip radii,
+simulates required layers and prepares cache dependencies; all avoidance task
+starts are snapshotted before execution. These remain unconsumed WIP.
+Smart-overhang first-pass filtering/detection and sequential sharp-tail
+propagation from `TreeSupport.cpp:795-983` are now private unconsumed WIP.
+They retain nearest-vertex cantilever distance and rounded Point growth
+thresholds. Tree-local clusters now preserve initial offset0, prior-layer
+identity, duplicate-layer non-overwrite, filtering exemptions and collection
+order in unconsumed WIP. The Tree break_bridge=false contact kernel now
+rewrites PrintObject.cpp4306-4436 with borrowed all-region inputs and integer
+scaled flow dimensions; real region/surface input assembly is still pending.
+Native timing/shared-flag/TBB scheduling, extreme arithmetic and generator
+gates remain. The final Tree overhang kernel now consumes the bridge kernel,
+orders blocker/critical/enforcer/tail geometry and records parallel overhang
+types plus highest-layer state. It remains unconsumed by production slicing.
+Next: real annotation/region adapters and single-pass detector coordination,
+then real branch/layer consumers from `TreeSupport3D.cpp`, not Normal
+approximations.
+Both public Tree tracers remain RED at the existing dispatch guard; cached
+reference producer identity remains unknown. Normal merge and complete-output/
+Tier-1 gates stay open. Final workspace checkpoint is recorded in the plan.
+
+The region-major perimeter handoff now visits every physical-layer slot,
+including empty regions, retaining borrowed regional ranges over one path
+owner. Support perimeter views no longer repeat the layer aggregate. Generated
+fill append ranges now retain SurfaceFill.region_id, and bridge detection
+borrows only those regional collections without changing geometry/order.
+Fill grouping now projects all region slots with shared parameter/LockedZag
+state and globally interns groups before source-ordered first-owner selection.
+New members merge no-overlap geometry once. Actual all-region execution still
+depends on compatible perimeter/downstream island/tool ownership; multi-region
+ironing remains open. Support input assembly now carries every region's
+raw/typed slices and regional paths into detection/contact/trim views, gathers
+all top surfaces, and averages all region bridge heights when any has bridging
+extrusions. Upstream front-width choices remain unchanged; actual modifier
+execution and support complete-output acceptance still await earlier consumers.
+Bottom-interface Flow branches now use average bridge_flow over all object
+printing regions. A new landed-model modifier tracer retains full comparison
+and independently witnesses native interface heights0.4 control/0.6 modifier;
+its new single-region control exposes a first M73 ordering residual plus
+later support-geometry differences, while Ares
+modifier execution remains at the existing guard. Neither is a passing case.
+SupportGridPattern selected-island flattening now preserves contour and
+holes per SupportMaterial.cpp739-820/ExPolygon.hpp415-422. The landed output
+is unchanged, so that repair is not its proven cause. Expanded shared-consumer
+output checks retain a mirrored-blocker infill-start residual requiring
+same-input before/after attribution; no hole-sensitive public GREEN or
+Normal submission approval is claimed.
+The unchanged single-region modifier control passes its existing
+generator-only ordered comparison; the actual modifier remains guard RED.
+
 WASM seam math (ARD-0082) traces the first wipe difference upstream to
 `SeamPlacer.cpp::compute_angle_penalty` and `SeamPlacer::align_seam_points`: target
 f32 exp/pow results change spline weights and blended seams. Captured inputs
@@ -8603,22 +8676,59 @@ slice (`SupportMaterial.cpp`, `SupportLayer.hpp`, `SupportCommon.cpp`) and
 `GCode::collect_layers_to_print` object/support merging into source-cited
 `project_slice/support_material/` and existing G-code layer modules. Start
 with both enable_support Boolean values on the actual overhang fixture;
-native101/Ares75 is missing real support output, not a header-only repair.
+The initial native101/Ares75 RED exposed missing real support output, not a
+header-only repair. Ordinary enabled/disabled and cooling witnesses now pass
+complete output; they do not close Tree or all-domain acceptance.
 Exit: active support-motion witnesses, strict complete-output RED/GREEN,
 full artifacts, workspace/lint/Tier-1 gates and independent six-axis approval
-before combined code/docs push. Tree/organic, additional styles/materials
-and global all-option/default/printer acceptance remain subsequent work.
+before combined code/docs push. Tree Auto/Manual/styles, nonzero angle,
+enforcers/blockers and modifier regions are mandatory before Normal merges,
+as specified in the active ARD0086 gate above. Additional material contexts
+and global all-option/default/printer acceptance remain open.
 
-The native flow/gap/raft-contact/first-call-cost dependency checkpoint is
+The landed bottom-interface control now has a focused public complete-output
+gate. Its source-owned AGG repeated-cell accumulation repair closes that
+control's projection leakage, not the modifier execution path. Keep the
+original bridge-flow modifier assertions, Tree merge gate, native replay
+variants and full printer/option/Tier1 acceptance requirements open.
+
+Historical prerequisite evidence: the native flow/gap/raft-contact/first-call-cost checkpoint is
 separately packaged in ARD0085 and its matching spec/plan. Eleven native
 complete-output cases and six real browser cases pass; workspace/lint and
 four target builds pass. Its exit requires immutable six-axis patch
 approval before a combined code/docs commit. This does not satisfy the
-ordinary-support exit above: the enabled overhang case still lacks actual
-support generation/merging and diverges101/75. Continue that source-owned
-generator slice and the full original global acceptance scope.
+ordinary-support exit above. Its historical 101/75 enabled failure has since
+been repaired; the latest raft replay retains two known automatic-width
+native first-arrival variants. Do not interpret the earlier eleven-case
+checkpoint as current unconditional parity or change reference policy to
+hide the variants. Continue the Tree merge gate and full original scope.
 
 ### Layer-region prerequisite ordering (2026-10-02)
+
+Current merge scope (2026-10-03): Normal Grid/Snug, Organic and non-Organic
+Tree style/manual dispatch, modifier region consumers and painted slab/vertical
+projection are integrated. Close the finite final gates in the Tree plan and
+merge the source-closed combined batch; do not indefinitely add painting cases.
+The next priority is the user-approved
+[region-role tool emission milestone](superpowers/plans/2026-10-03-region-role-tool-emission.md)
+([ARD0094](architecture/ard-0094-region-role-tool-ordering-and-writer-state.md)):
+port ToolOrdering.cpp LayerTools/ToolOrdering and GCode.cpp process_layer /
+set_extruder, GCodeWriter and Extruder state into project_slice/gcode_emit.
+Its exit is both unchanged public Snapmaker baseline/modifier complete outputs
+matching official and seeded Orca. The baseline missing-body-toolchange gap
+exists on94d33b59; that mainline rejects the modifier density input. Therefore
+the current merge closes single-tool Normal/Tree/region behavior, not multi-tool
+parity. Preserve the confirmed dual-tool RED and implement no header-only fix.
+The subsequent coverage milestone follows TriangleSelector.cpp strict facet
+splits, PrintObject.cpp::project_and_append_custom_facets and
+TriangleMeshSlicer.cpp::slice_mesh_slabs in project/facets_annotation,
+mesh_slicer/slabs and support_material/facet_projection. Included follow-up:
+remaining split orientations, transformed/mirrored nested selections and
+degenerate/coplanar facets through public complete-output tests. Deferred from
+that painting milestone: UI brush/viewer state; broader printer/option and
+Tier-1 runtime matrices remain independent overall rewrite gates.
+
+Historical prerequisite ordering:
 
 The Normal support batch must wait for completed Tree auto/manual and style
 output parity. Do not commit rejection guards or silent support omission as

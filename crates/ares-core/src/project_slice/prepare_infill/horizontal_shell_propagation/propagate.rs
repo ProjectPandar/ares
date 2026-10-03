@@ -118,16 +118,23 @@ fn propagate_kind(
         return Ok(());
     }
 
-    for neighbor_index in window::indices(kind, source_index, working_records.len()) {
+    for neighbor_layer in window::indices(kind, source_input.planned_layer_index, plan.layers.len())
+    {
         if !window::includes(
             kind,
-            [source_index, neighbor_index],
+            [source_input.planned_layer_index, neighbor_layer],
             &plan.layers,
             count,
             options,
         ) {
             break;
         }
+        let neighbor_index = input_object.region_layer_record_index(
+            crate::project_slice::perimeters::types::RegionLayerIndex {
+                region_index: source_input.current.region_index,
+                layer_index: neighbor_layer,
+            },
+        );
         record_event(PropagationEvent::NeighborVisit {
             object: object_index,
             source: source_index,

@@ -55,15 +55,9 @@ fn task22o25_every_record_count_mismatch_rejects_before_schedule_visits() {
     let mut filters = prepared();
     filters.filters[0].records.pop();
     rejects_alignment(filters);
-    let mut traversal = prepared();
-    traversal.predecessor.objects[0].records.pop();
-    rejects_alignment(traversal);
     let mut inputs = prepared();
     prelude!(&mut inputs).object.records.pop();
     rejects_alignment(inputs);
-    let mut flows = prepared();
-    prelude!(&mut flows).records.pop();
-    rejects_alignment(flows);
     let mut plan = prepared();
     prelude!(&mut plan)
         .object
@@ -99,15 +93,9 @@ fn task22o25_every_slot_presence_mismatch_rejects_before_schedule_visits() {
     let mut filters = prepared();
     filters.filters[0].records[1] = None;
     rejects_alignment(filters);
-    let mut traversal = prepared();
-    traversal.predecessor.objects[0].records[1] = None;
-    rejects_alignment(traversal);
     let mut inputs = prepared();
     prelude!(&mut inputs).object.records[1] = None;
     rejects_alignment(inputs);
-    let mut flows = prepared();
-    prelude!(&mut flows).records[1] = None;
-    rejects_alignment(flows);
 }
 
 #[test]

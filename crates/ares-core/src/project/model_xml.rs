@@ -183,6 +183,8 @@ pub(crate) struct Triangle {
     pub v2: u32,
     #[serde(rename = "@v3")]
     pub v3: u32,
+    #[serde(rename = "@paint_supports", default)]
+    pub paint_supports: super::facets_annotation::TriangleCodes,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

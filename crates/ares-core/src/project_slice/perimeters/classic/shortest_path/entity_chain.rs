@@ -1,4 +1,4 @@
-use super::chain::{chain_points, chain_segments_constrained};
+use super::chain::{chain_points, chain_segments_constrained_with_optional_start};
 use crate::{
     geometry::{Coord, Point, ThickPolyline},
     project_slice::{
@@ -12,11 +12,21 @@ pub(in crate::project_slice) trait ChainEntity {
     fn last_point(&self) -> Point;
     fn can_reverse(&self) -> bool;
     fn reverse(&mut self);
+    fn is_loop(&self) -> bool {
+        false
+    }
 }
 
 pub(in crate::project_slice) fn chain_and_reorder_entities<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Point,
+) {
+    chain_and_reorder_entities_with_optional_start(entities, Some(start_near));
+}
+
+pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T: ChainEntity>(
+    entities: &mut Vec<T>,
+    start_near: Option<Point>,
 ) {
     let endpoints = entities
         .iter()
@@ -29,9 +39,13 @@ pub(in crate::project_slice) fn chain_and_reorder_entities<T: ChainEntity>(
         .collect::<Vec<_>>();
     let can_reverse = entities
         .iter()
-        .map(ChainEntity::can_reverse)
+        .map(|entity| entity.is_loop() || entity.can_reverse())
         .collect::<Vec<_>>();
-    let chain = chain_segments_constrained(&endpoints, coordinates(start_near), &can_reverse);
+    let chain = chain_segments_constrained_with_optional_start(
+        &endpoints,
+        start_near.map(coordinates),
+        &can_reverse,
+    );
     let mut source = std::mem::take(entities)
         .into_iter()
         .map(Some)
@@ -39,7 +53,7 @@ pub(in crate::project_slice) fn chain_and_reorder_entities<T: ChainEntity>(
     entities.reserve(chain.len());
     for (index, reverse) in chain {
         let mut entity = source[index].take().expect("chain indices are unique");
-        if reverse {
+        if reverse && !entity.is_loop() {
             entity.reverse();
         }
         entities.push(entity);

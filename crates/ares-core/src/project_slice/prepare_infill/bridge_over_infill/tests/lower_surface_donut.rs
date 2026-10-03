@@ -5,7 +5,7 @@ use crate::{
 };
 
 use super::super::{
-    candidates::{CandidateLayer, gather_candidates},
+    candidates::{CandidateLayer, CandidateRegion, gather_candidates},
     types::CandidateSource,
 };
 
@@ -73,11 +73,14 @@ fn layer<'a>(
 ) -> CandidateLayer<'a> {
     CandidateLayer {
         lower_layer_index,
-        region_index,
-        fill_expolygons,
-        fill_surfaces,
-        sparse_infill_density_percent: 15.0,
+
         solid_infill_spacing: 100,
+        regions: vec![CandidateRegion {
+            region_index,
+            fill_expolygons,
+            fill_surfaces,
+            sparse_infill_density_percent: 15.0,
+        }],
     }
 }
 

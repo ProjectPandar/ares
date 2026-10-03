@@ -33,12 +33,7 @@ pub(crate) fn collect_bounded_project_usage(
     let mut support_uses_current = false;
 
     for (group, resolved) in qualifying() {
-        for region in resolved
-            .layer_candidates
-            .iter()
-            .flat_map(|candidate| &candidate.model_parts)
-            .map(|model_part| &model_part.region)
-        {
+        for region in &resolved.all_regions {
             append_region_filaments(&mut object_filaments, region, has_brim);
         }
 

@@ -4,7 +4,7 @@ use crate::{
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
-use super::super::candidates::{CandidateLayer, gather_candidates};
+use super::super::candidates::{CandidateLayer, CandidateRegion, gather_candidates};
 
 const OUTSIDE_CLIPPER_RANGE: i64 = 0x4000_0000_0000_0000;
 
@@ -230,11 +230,14 @@ fn layer<'a>(
 ) -> CandidateLayer<'a> {
     CandidateLayer {
         lower_layer_index,
-        region_index,
-        fill_expolygons,
-        fill_surfaces,
-        sparse_infill_density_percent: 15.0,
+
         solid_infill_spacing: 1,
+        regions: vec![CandidateRegion {
+            region_index,
+            fill_expolygons,
+            fill_surfaces,
+            sparse_infill_density_percent: 15.0,
+        }],
     }
 }
 

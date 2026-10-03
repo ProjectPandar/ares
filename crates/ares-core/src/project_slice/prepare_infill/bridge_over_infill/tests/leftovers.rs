@@ -4,7 +4,7 @@ use crate::{
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
-use super::super::candidates::{CandidateLayer, gather_candidates};
+use super::super::candidates::{CandidateLayer, CandidateRegion, gather_candidates};
 
 #[test]
 fn task22o43_leftover_area_must_strictly_exceed_spacing_squared() {
@@ -60,11 +60,14 @@ fn layer<'a>(
 ) -> CandidateLayer<'a> {
     CandidateLayer {
         lower_layer_index,
-        region_index: 0,
-        fill_expolygons,
-        fill_surfaces,
-        sparse_infill_density_percent,
+
         solid_infill_spacing,
+        regions: vec![CandidateRegion {
+            region_index: 0,
+            fill_expolygons,
+            fill_surfaces,
+            sparse_infill_density_percent,
+        }],
     }
 }
 

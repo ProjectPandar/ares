@@ -9,8 +9,8 @@
 //! containing a sampled input point survive (`island_samples`,
 //! `:1070-1095`: up to 4 samples from the first shrunk contour).
 //!
-//! Deferred: `support_angle != 0` rotation (KSR default 0°),
-//! non-grid styles, and the AGG rasterizer variant.
+//! Rotation follows `:659-666,841-842`; the active rasterizer is AGG.
+//! Deferred: non-grid styles.
 
 use crate::geometry::agg_raster;
 use crate::geometry::clipper::{
@@ -29,10 +29,14 @@ pub(crate) struct SupportGridPattern {
     grid_h: usize,
     pixel_size: f64,
     left_bottom: Point,
+    angle: f64,
+    rotated: Option<(Vec<Polygon>, Vec<Polygon>)>,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct SupportGridParams {
+    pub(crate) snug: bool,
+    pub(crate) angle: f64,
     /// `support_base_pattern_spacing + flow.spacing()`
     /// (`SupportMaterial.cpp:620`) — `m_support_spacing`, kept as a
     /// double mm like upstream (`:636`, `grid_resolution: double`);
@@ -57,6 +61,8 @@ impl SupportGridParams {
     pub(crate) fn new(grid_resolution: f64, flow_spacing: f64, units_per_mm: f64) -> Self {
         let flow_spacing_scaled = (flow_spacing * units_per_mm) as Coord;
         Self {
+            snug: false,
+            angle: 0.0,
             grid_resolution,
             extrusion_width: flow_spacing,
             expansion_to_slice: flow_spacing_scaled / 2 + 5,
@@ -71,18 +77,31 @@ impl SupportGridPattern {
         trimming_polygons: &[Polygon],
         params: &SupportGridParams,
     ) -> Result<Self, crate::geometry::ClipperError> {
-        let (min_x, min_y, max_x, max_y) = bounds_of(support_polygons);
-        // `bbox.offset(20); bbox.align_to_grid(grid_resolution);`
-        let (min_x, min_y) = (min_x - 20, min_y - 20);
-        let (max_x, max_y) = (max_x + 20, max_y + 20);
+        let rotated = (params.angle != 0.0).then(|| {
+            let mut support = support_polygons.to_vec();
+            let mut trimming = trimming_polygons.to_vec();
+            rotate(&mut support, -params.angle);
+            rotate(&mut trimming, -params.angle);
+            (support, trimming)
+        });
+        let (support_polygons, trimming_polygons) = rotated.as_ref().map_or(
+            (support_polygons, trimming_polygons),
+            |(support, trimming)| (support.as_slice(), trimming.as_slice()),
+        );
         // `coord_t grid_resolution = coord_t(scale_(m_support_spacing))`
         // (`:670`): trunc to the integer lattice.
         let resolution = (params.grid_resolution * params.units_per_mm) as Coord;
         let resolution = resolution.max(1);
-        let mut bx0 = align_down(min_x, resolution);
-        let mut by0 = align_down(min_y, resolution);
-        let mut bx1 = bx0 + div_ceil(max_x - bx0, resolution) * resolution;
-        let mut by1 = by0 + div_ceil(max_y - by0, resolution) * resolution;
+        // Native align_to_grid changes only the minimum of a defined box.
+        let (mut bx0, mut by0, mut bx1, mut by1) = match bounds_of(support_polygons) {
+            Some((min_x, min_y, max_x, max_y)) => (
+                align_down(min_x - 20, resolution),
+                align_down(min_y - 20, resolution),
+                max_x + 20,
+                max_y + 20,
+            ),
+            None => (-20, -20, 20, 20),
+        };
 
         // AGG path (`:676-696`): oversample the grid.
         // `scale_(params.extrusion_width)` trunc (`:679`).
@@ -140,6 +159,8 @@ impl SupportGridPattern {
             oversampling,
         );
         Ok(Self {
+            angle: params.angle,
+            rotated,
             grid2,
             grid_w,
             grid_h,
@@ -157,6 +178,10 @@ impl SupportGridPattern {
         offset_in_grid: Coord,
         fill_holes: bool,
     ) -> Vec<Polygon> {
+        let (support_polygons, trimming_polygons) = self.rotated.as_ref().map_or(
+            (support_polygons, trimming_polygons),
+            |(support, trimming)| (support.as_slice(), trimming.as_slice()),
+        );
         let simplified = agg_raster::contours_simplified(
             self.grid_w,
             self.grid_h,
@@ -192,15 +217,30 @@ impl SupportGridPattern {
         }
 
         // Keep islands containing a sample (`:776-820`).
-        islands
+        let mut output = islands
             .into_iter()
             .filter(|island| {
                 samples
                     .iter()
                     .any(|sample| island_contains(island, *sample))
             })
-            .map(|island| island.into_parts().0)
-            .collect()
+            .flat_map(|island| {
+                let (contour, holes) = island.into_parts();
+                std::iter::once(contour).chain(holes)
+            })
+            .collect::<Vec<_>>();
+        if self.angle != 0.0 {
+            rotate(&mut output, self.angle);
+        }
+        output
+    }
+}
+
+fn rotate(polygons: &mut [Polygon], angle: f64) {
+    let cos_angle = angle.cos();
+    let sin_angle = angle.sin();
+    for polygon in polygons {
+        polygon.rotate(cos_angle, sin_angle);
     }
 }
 
@@ -237,24 +277,22 @@ fn island_contains(island: &ExPolygon, point: Point) -> bool {
     island.contour().contains(&point) && !island.holes().iter().any(|hole| hole.contains(&point))
 }
 
-fn bounds_of(polygons: &[Polygon]) -> (Coord, Coord, Coord, Coord) {
-    let (mut min_x, mut min_y) = (Coord::MAX, Coord::MAX);
-    let (mut max_x, mut max_y) = (Coord::MIN, Coord::MIN);
-    for point in polygons.iter().flat_map(|polygon| polygon.points()) {
+fn bounds_of(polygons: &[Polygon]) -> Option<(Coord, Coord, Coord, Coord)> {
+    let mut points = polygons.iter().flat_map(|polygon| polygon.points());
+    let first = points.next()?;
+    let (mut min_x, mut min_y) = (first.x(), first.y());
+    let (mut max_x, mut max_y) = (min_x, min_y);
+    for point in points {
         min_x = min_x.min(point.x());
         min_y = min_y.min(point.y());
         max_x = max_x.max(point.x());
         max_y = max_y.max(point.y());
     }
-    (min_x, min_y, max_x, max_y)
+    Some((min_x, min_y, max_x, max_y))
 }
 
 fn align_down(value: Coord, resolution: Coord) -> Coord {
     value.div_euclid(resolution) * resolution
-}
-
-fn div_ceil(value: Coord, divisor: Coord) -> Coord {
-    (value + divisor - 1).div_euclid(divisor)
 }
 
 #[cfg(test)]

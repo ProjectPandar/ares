@@ -73,7 +73,7 @@ enum FanMarker {
 
 fn update_marker(output: &mut Vec<u8>, state: &mut EmitState, marker: FanMarker, active: bool) {
     let (was_active, marker_layer) = marker_state(state, marker);
-    let fresh_start = active && (!was_active || marker_layer != Some(state.layer_index));
+    let fresh_start = active && (!was_active || marker_layer != Some(state.layer_chunk_index));
     let stopping = !active && was_active;
     set_marker_state(state, marker, active);
     if (stopping || fresh_start)
@@ -94,7 +94,7 @@ fn marker_state(state: &EmitState, marker: FanMarker) -> (bool, Option<usize>) {
 }
 
 fn set_marker_state(state: &mut EmitState, marker: FanMarker, active: bool) {
-    let layer = active.then_some(state.layer_index);
+    let layer = active.then_some(state.layer_chunk_index);
     match marker {
         FanMarker::Overhang => {
             state.overhang_fan_active = active;
@@ -119,10 +119,7 @@ fn deferred_target(
     if !state.overhang_fan_active && !state.internal_bridge_fan_active {
         return Some(DeferredRoleFan::Baseline);
     }
-    if state.layer_index < state.options.close_fan_first_layers {
-        return None;
-    }
-    let overhang_speed = overhang_speed(state);
+    let overhang_speed = state.options.overhang_fan_speed;
     if state.overhang_fan_active {
         // `CoolingBuffer.cpp:856–869` forces emission on role END even
         // when the remaining role's START does not exceed the layer baseline.
@@ -142,21 +139,12 @@ fn deferred_target(
                         speed: overhang_speed,
                         force: stopping,
                     },
-                    DeferredRoleFan::Fixed,
+                    |speed| DeferredRoleFan::Fixed {
+                        speed,
+                        force: stopping,
+                    },
                 ),
         );
     }
     Some(DeferredRoleFan::Baseline)
-}
-
-fn overhang_speed(state: &EmitState) -> u8 {
-    if state.options.full_fan_speed_layer <= state.options.close_fan_first_layers
-        || state.layer_index + 1 >= state.options.full_fan_speed_layer
-    {
-        return state.options.overhang_fan_speed;
-    }
-    let numerator = state.layer_index + 1 - state.options.close_fan_first_layers;
-    let denominator = state.options.full_fan_speed_layer - state.options.close_fan_first_layers;
-    let speed = f64::from(state.options.overhang_fan_speed) * numerator as f64 / denominator as f64;
-    (speed + 0.5).floor().clamp(0.0, 100.0) as u8
 }

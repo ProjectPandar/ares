@@ -113,7 +113,7 @@ fn validate_record(
     }
     if region.counterbore_hole_bridging != ProcessCounterboreHoleBridging::None
         && object
-            .current_surfaces(record)
+            .perimeter_surfaces(record)
             .iter()
             .any(|surface| !surface.as_parts().1.holes().is_empty())
     {
@@ -173,7 +173,7 @@ fn has_layer_overhang(
         return false;
     };
     let current = object
-        .current_surfaces(record)
+        .perimeter_surfaces(record)
         .iter()
         .map(|surface| surface.as_parts().1)
         .collect::<Vec<_>>();

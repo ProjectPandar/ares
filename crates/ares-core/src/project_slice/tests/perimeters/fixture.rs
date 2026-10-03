@@ -72,6 +72,12 @@ pub(super) fn case(
         plan: PlannedPrintObject {
             source_object_index,
             transform_index: 0,
+            slicing_parameters: crate::project_slice::tests::profile_layers::helpers::parameters(
+                0.2,
+                0.2,
+                0.07,
+                planned.len() as f64 * 0.2,
+            ),
             layers: planned,
         },
         volume_slices: Vec::new(),

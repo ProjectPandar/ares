@@ -33,6 +33,9 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         deretraction_speed,
     } = prelude;
     MotionOptions {
+        wall_direction: region.map_or(full.process.region.wall_direction, |value| {
+            value.wall_direction
+        }),
         // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
         // — the multiplication order matters for f64 parity with upstream.
         filament_area: filament_diameter * filament_diameter * 0.25 * std::f64::consts::PI,
@@ -97,6 +100,9 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         }),
         support_speed: object.map_or(full.process.object.support_speed.0, |value| {
             value.object.support_speed.0
+        }),
+        support_type: object.map_or(full.process.object.support_type, |value| {
+            value.object.support_type
         }),
         support_interface_speed: object
             .map_or(full.process.object.support_interface_speed.0, |value| {
@@ -175,20 +181,6 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
                     InternalBridgeFanSpeed::new(value.0.clamp(0, 100) as u8)
                 }
             }),
-        close_fan_first_layers: full
-            .filament
-            .print
-            .close_fan_the_first_x_layers
-            .0
-            .first()
-            .map_or(0, |value| value.0.max(0) as usize),
-        full_fan_speed_layer: full
-            .filament
-            .print
-            .full_fan_speed_layer
-            .0
-            .first()
-            .map_or(0, |value| value.0.max(0) as usize),
         initial_layer_acceleration: acceleration(
             object.map(|value| &value.object),
             full.process.object.initial_layer_acceleration.0,

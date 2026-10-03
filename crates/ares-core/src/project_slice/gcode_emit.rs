@@ -52,14 +52,36 @@ pub(super) fn emit(
         .predecessor
         .predecessor;
     let brim = brim::BrimPlan::generate(traversal)?;
-    let skirt = skirt::SkirtPlan::generate(traversal, brim.as_ref(), context)?;
+    let skirt =
+        skirt::SkirtPlan::generate(traversal, &prepared.support_layers, brim.as_ref(), context)?;
+    let process = &traversal.resolved.views.full.process;
+    super::path_simplification::simplify_support_layers(
+        &mut prepared.support_layers,
+        traversal.scale,
+        process.print.resolution.0,
+        process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0,
+    );
+    let schedule = layers::build_schedule(
+        traversal,
+        &prepared.objects,
+        &prepared.support_layers,
+        context,
+    )?;
+    let sliced_layer_count = schedule.layer_count();
+    let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
     let first_layer_bounds =
         footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref());
     let mut output = Vec::new();
     file_start::append(&mut output, traversal, metadata, first_layer_bounds)?;
     let tags = tags::Tags::of(traversal);
     if header::enabled(traversal) {
-        header::append_header(&mut output, metadata, traversal);
+        header::append_header(
+            &mut output,
+            metadata,
+            traversal,
+            sliced_layer_count,
+            max_print_z,
+        );
     }
     // `GCode.cpp` + Orca export layout: BBL keeps the config block up front;
     // the compatible flavor moves it after the tail statistics.
@@ -68,7 +90,7 @@ pub(super) fn emit(
     {
         output.extend_from_slice(config);
     }
-    header::append_width_block(&mut output, traversal);
+    header::append_width_block(&mut output, traversal)?;
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
     machine::append_first_line_m73(&mut output);
@@ -237,10 +259,9 @@ pub(super) fn emit(
             first_layer_bounds,
             start_position,
             bed_cache,
-            extruder_offset,
             brim: &brim,
             skirt: &skirt,
-            slicer: context,
+            schedule,
         },
     )?;
     let traversal = &prepared
@@ -252,25 +273,10 @@ pub(super) fn emit(
         .predecessor
         .predecessor;
     let fan_layers_end = output.len();
-    // `GCodeProcessor.cpp:2139-2142`: in spiral vase mode the processor
-    // counts layers from the `;LAYER_CHANGE` tags in the emitted stream
-    // (`m_detect_layer_based_on_tag`), so the transition_out pseudo-layer
-    // (its duplicated header) counts as a layer.
-    let layer_count = if traversal.resolved.views.full.process.print.spiral_mode.0 {
-        output
-            .windows(header::LAYER_CHANGE_TAG.len())
-            .filter(|window| *window == header::LAYER_CHANGE_TAG)
-            .count()
-    } else {
-        header::plate_layer_count(traversal)
-    };
-    if header::enabled(traversal) {
-        header::finalize_layer_count(&mut output, layer_count);
-    }
     // The compatible tail's `; total layers count` prints `m_layer_count`
     // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
     // tag-based count the header placeholder carries.
-    let tail_layer_count = header::plate_layer_count(traversal);
+    let tail_layer_count = sliced_layer_count;
     // The final compatible layer has no following layer marker to flush its
     // deferred retraction. Flush only retract/wipe (not a travel lift) before
     // end G-code (`GCode.cpp` final object teardown).
@@ -325,6 +331,17 @@ pub(super) fn emit(
             "failed to process the custom G-code template {name}: {error}"
         )));
     }
+    // `GCodeProcessor.cpp:2920-2926,3323-3325,1136-1139`: count exact
+    // reserved comment lines in the complete stream, including end templates.
+    if header::enabled(traversal) {
+        let layer_count = output
+            .split(|byte| *byte == b'\n')
+            .filter(|line| {
+                line.strip_suffix(b"\r").unwrap_or(line) == state.tags.layer_change().as_bytes()
+            })
+            .count();
+        header::finalize_layer_count(&mut output, layer_count);
+    }
     Ok(processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,
@@ -337,61 +354,7 @@ pub(super) fn emit(
             .machine_load_filament_time
             .0,
         used_filament,
-        processor::ProcessorLimits {
-            retraction_length: traversal
-                .resolved
-                .views
-                .runtime_gcode
-                .retraction_length
-                .0
-                .first()
-                .map_or(0.0, |value| value.0),
-            retract_restart_extra: traversal
-                .resolved
-                .views
-                .runtime_gcode
-                .retract_restart_extra
-                .0
-                .first()
-                .map_or(0.0, |value| value.0),
-            retraction_feedrate: traversal
-                .resolved
-                .views
-                .runtime_gcode
-                .retraction_speed
-                .0
-                .first()
-                .map_or(0.0, |value| value.0)
-                * 60.0,
-            deretraction_feedrate: {
-                let retraction = traversal
-                    .resolved
-                    .views
-                    .runtime_gcode
-                    .retraction_speed
-                    .0
-                    .first()
-                    .map_or(0.0, |value| value.0);
-                let deretraction = traversal
-                    .resolved
-                    .views
-                    .runtime_gcode
-                    .deretraction_speed
-                    .0
-                    .first()
-                    .map_or(0.0, |value| value.0);
-                (if deretraction > 0.0 {
-                    deretraction
-                } else {
-                    retraction
-                }) * 60.0
-            },
-            ..processor::ProcessorLimits::from_config(
-                &traversal.resolved.views.full.printer.machine,
-                traversal.resolved.views.full.printer.gcode.gcode_flavor,
-                state.tags.is_bbl(),
-            )
-        },
+        processor::ProcessorLimits::from_traversal(traversal, state.tags.is_bbl()),
     ))
 }
 

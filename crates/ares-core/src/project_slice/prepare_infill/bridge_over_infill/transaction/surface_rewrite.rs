@@ -1,13 +1,20 @@
 use crate::{
     SliceError,
-    project_slice::prepare_infill::{
-        bridge_over_infill::types::BridgeCandidateObject,
-        external_surfaces::PreparedPostExternalSurfaces,
+    geometry::CoordinateScale,
+    project_slice::{
+        perimeters::types::{PerimeterInputRecord, RegionLayerIndex},
+        prepare_infill::{
+            bridge_over_infill::types::{BridgeCandidateObject, CandidateSurface},
+            external_surfaces::PreparedPostExternalSurfaces,
+            surface_type_detection::types::PreparedSurfaceTypeRecord,
+        },
     },
 };
 
 use super::super::{
-    bridge_rewrite_areas::{UpperBridgeEnsuringInput, collect_bridge_rewrite_areas},
+    bridge_rewrite_areas::{
+        BridgeRewriteAreas, UpperBridgeEnsuringInput, collect_bridge_rewrite_areas,
+    },
     internal_bridge_surfaces::build_internal_bridge_surfaces,
     internal_infill_rebuild::rebuild_internal_infills,
     internal_solid_recomposition::recompose_internal_solids,
@@ -15,6 +22,9 @@ use super::super::{
     region_bridge_surface_commit::commit_region_bridge_surfaces,
 };
 use super::geometry_error;
+
+#[cfg(test)]
+mod tests;
 
 pub(super) fn prepare(
     predecessor: &mut PreparedPostExternalSurfaces,
@@ -30,9 +40,12 @@ pub(super) fn prepare(
             .predecessor
             .predecessor
             .predecessor;
-        let (_, inputs) = prelude.object.as_parts();
+        let (compensated, inputs) = prelude.object.as_parts();
+        let (post_regions, _) = compensated.as_parts();
+        let (plan, _, regions) = post_regions.as_parts();
+        let layer_count = plan.layers.len();
         let object = &mut horizontal.objects[object_index];
-        for layer_index in 0..object.records.len() {
+        for layer_index in 0..layer_count {
             let current = candidates
                 .surfaces_by_layer
                 .get(&layer_index)
@@ -43,10 +56,15 @@ pub(super) fn prepare(
                     .iter()
                     .map(|surface| UpperBridgeEnsuringInput {
                         surface,
-                        solid_infill_flow: inputs[surface.source.layer_index]
-                            .as_ref()
-                            .expect("upper bridge source retains its perimeter input")
-                            .solid_infill_flow,
+                        solid_infill_flow: inputs[prelude.object.region_layer_record_index(
+                            RegionLayerIndex {
+                                region_index: surface.source.region_index,
+                                layer_index: surface.source.layer_index,
+                            },
+                        )]
+                        .as_ref()
+                        .expect("upper bridge source retains its perimeter input")
+                        .solid_infill_flow,
                     })
                     .collect::<Vec<_>>()
             });
@@ -55,43 +73,53 @@ pub(super) fn prepare(
             else {
                 continue;
             };
-            let (input, record) = match (&inputs[layer_index], &mut object.records[layer_index]) {
-                (Some(input), Some(record)) => (input, record),
-                (None, None) => continue,
-                _ => unreachable!("scheduled bridge layer records remain aligned"),
-            };
-            let ensuring = prepare_region_bridge_ensuring_areas(
-                &record.fill_surfaces,
-                &areas.additional_ensuring_areas,
-                input.solid_infill_flow,
-                scale,
-            )
-            .map_err(geometry_error)?;
-            let mut new_surfaces = rebuild_internal_infills(
-                &record.fill_surfaces,
-                &areas.cut_from_infill,
-                &ensuring.additional_ensuring,
-            )
-            .map_err(geometry_error)?;
-            new_surfaces.extend(
-                build_internal_bridge_surfaces(
-                    input.current.region_index,
-                    &record.fill_surfaces,
-                    current.unwrap_or(&[]),
-                )
-                .map_err(geometry_error)?,
-            );
-            new_surfaces.extend(
-                recompose_internal_solids(
-                    &record.fill_surfaces,
-                    &ensuring.additional_ensuring,
-                    &areas.cut_from_infill,
-                )
-                .map_err(geometry_error)?,
-            );
-            let original = std::mem::take(&mut record.fill_surfaces);
-            record.fill_surfaces = commit_region_bridge_surfaces(original, &new_surfaces);
+            for region_index in 0..regions.len() {
+                let slot = region_index * layer_count + layer_index;
+                let (input, record) = match (&inputs[slot], &mut object.records[slot]) {
+                    (Some(input), Some(record)) => (input, record),
+                    (None, None) => continue,
+                    _ => unreachable!("scheduled bridge region/layer records remain aligned"),
+                };
+                rewrite_region(input, record, current.unwrap_or(&[]), &areas, scale)?;
+            }
         }
     }
+    Ok(())
+}
+
+fn rewrite_region(
+    input: &PerimeterInputRecord,
+    record: &mut PreparedSurfaceTypeRecord,
+    current: &[CandidateSurface],
+    areas: &BridgeRewriteAreas,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    let ensuring = prepare_region_bridge_ensuring_areas(
+        &record.fill_surfaces,
+        &areas.additional_ensuring_areas,
+        input.solid_infill_flow,
+        scale,
+    )
+    .map_err(geometry_error)?;
+    let mut new_surfaces = rebuild_internal_infills(
+        &record.fill_surfaces,
+        &areas.cut_from_infill,
+        &ensuring.additional_ensuring,
+    )
+    .map_err(geometry_error)?;
+    new_surfaces.extend(
+        build_internal_bridge_surfaces(input.current.region_index, &record.fill_surfaces, current)
+            .map_err(geometry_error)?,
+    );
+    new_surfaces.extend(
+        recompose_internal_solids(
+            &record.fill_surfaces,
+            &ensuring.additional_ensuring,
+            &areas.cut_from_infill,
+        )
+        .map_err(geometry_error)?,
+    );
+    let original = std::mem::take(&mut record.fill_surfaces);
+    record.fill_surfaces = commit_region_bridge_surfaces(original, &new_surfaces);
     Ok(())
 }

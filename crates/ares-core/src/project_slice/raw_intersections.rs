@@ -237,7 +237,7 @@ pub(super) fn raw_center(
     Ok(Point::new(x, y))
 }
 
-fn transformed_vertices(
+pub(super) fn transformed_vertices(
     vertices: &[Point3d],
     transform: crate::Transform3d,
 ) -> Result<Vec<[f32; 3]>, SliceError> {
@@ -315,7 +315,8 @@ fn validate_shared_meshes(source_objects: &[ProjectObject]) -> Result<(), SliceE
         .flat_map(ProjectObject::volumes)
         .filter(|volume| !volume.mesh().triangles().is_empty())
     {
-        if volume.has_mesh_shared() || !source_ids.insert(volume.id()) {
+        if volume.has_mesh_shared() || !source_ids.insert((volume.source_model_path(), volume.id()))
+        {
             return unsupported("shared_mesh_centering");
         }
     }

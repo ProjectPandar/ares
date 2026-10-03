@@ -33,6 +33,7 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     state.layer_z = layer_z + state.options.z_offset;
     state.source_layer_z = precise_layer_z;
     state.layer_index = layer_index;
+    state.layer_chunk_index = layer_index;
     state.object_layer_over_raft = object_layer_over_raft;
     // `change_layer` retracts while the writer still sits at the previous
     // layer's z (`GCode.cpp:5693-5706` precede the z move), so the

@@ -61,52 +61,6 @@ pub(super) fn plan_resolved_objects(
                 &mut budget,
             )?);
         }
-        let parameters::SlicingParameters {
-            base_raft_layers,
-            interface_raft_layers,
-            base_raft_layer_height,
-            interface_raft_layer_height,
-            contact_raft_layer_height,
-            layer_height,
-            min_layer_height,
-            max_layer_height,
-            first_print_layer_height,
-            first_object_layer_height,
-            first_object_layer_bridging,
-            gap_raft_object,
-            gap_object_support,
-            gap_support_object,
-            raft_base_top_z,
-            raft_interface_top_z,
-            raft_contact_top_z,
-            object_print_z_min,
-            object_print_z_max,
-            object_print_z_uncompensated_max,
-            object_shrinkage_compensation_z,
-        } = parameters;
-        let _ = (
-            base_raft_layers,
-            interface_raft_layers,
-            base_raft_layer_height,
-            interface_raft_layer_height,
-            contact_raft_layer_height,
-            layer_height,
-            min_layer_height,
-            max_layer_height,
-            first_print_layer_height,
-            first_object_layer_height,
-            first_object_layer_bridging,
-            gap_raft_object,
-            gap_object_support,
-            gap_support_object,
-            raft_base_top_z,
-            raft_interface_top_z,
-            raft_contact_top_z,
-            object_print_z_min,
-            object_print_z_max,
-            object_print_z_uncompensated_max,
-            object_shrinkage_compensation_z,
-        );
     }
     Ok(planned_objects)
 }

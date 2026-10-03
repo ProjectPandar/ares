@@ -4,7 +4,7 @@ use crate::{
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
-use super::super::candidates::{CandidateLayer, gather_candidates};
+use super::super::candidates::{CandidateLayer, CandidateRegion, gather_candidates};
 
 #[test]
 fn task22o43_filtered_current_donut_preserves_flat_contour_and_hole() {
@@ -37,19 +37,25 @@ fn task22o43_filtered_current_donut_preserves_flat_contour_and_hole() {
     let layers = [
         Some(CandidateLayer {
             lower_layer_index: None,
-            region_index: 0,
-            fill_expolygons: &lower_fill,
-            fill_surfaces: &[],
-            sparse_infill_density_percent: 15.0,
+
             solid_infill_spacing: 100,
+            regions: vec![CandidateRegion {
+                region_index: 0,
+                fill_expolygons: &lower_fill,
+                fill_surfaces: &[],
+                sparse_infill_density_percent: 15.0,
+            }],
         }),
         Some(CandidateLayer {
             lower_layer_index: Some(0),
-            region_index: 0,
-            fill_expolygons: &[],
-            fill_surfaces: &current_surfaces,
-            sparse_infill_density_percent: 15.0,
+
             solid_infill_spacing: 100,
+            regions: vec![CandidateRegion {
+                region_index: 0,
+                fill_expolygons: &[],
+                fill_surfaces: &current_surfaces,
+                sparse_infill_density_percent: 15.0,
+            }],
         }),
     ];
 

@@ -75,6 +75,13 @@ pub(crate) fn intersection_ex(
     execute_ex(subject, clip, ClipOperation::Intersection, PathRole::Clip)
 }
 
+pub(crate) fn intersection_ex_polygons(
+    subject: &[ExPolygon],
+    clip: &[Polygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    execute_ex_with_paths(subject, clip, ClipOperation::Intersection)
+}
+
 pub(crate) fn intersection_ex_with_safety_offset(
     subject: &[ExPolygon],
     clip: &[ExPolygon],

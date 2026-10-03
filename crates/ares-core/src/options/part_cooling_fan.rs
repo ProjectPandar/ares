@@ -117,12 +117,8 @@ impl PartCoolingFanRamp {
         }
         let denominator = self.full_speed_layer - self.close_fan_first_layers;
         let numerator = layer_id + 1 - self.close_fan_first_layers;
-        let factor = f64::from(numerator) / f64::from(denominator);
-        Some(
-            (f64::from(raw_speed) * factor + 0.5)
-                .floor()
-                .clamp(0.0, 100.0) as u8,
-        )
+        let factor = numerator as f32 / denominator as f32;
+        Some((f32::from(raw_speed) * factor + 0.5).floor().clamp(0.0, 100.0) as u8)
     }
 
     fn base_speed_for_layer(self, layer_index: usize) -> f64 {

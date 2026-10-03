@@ -151,6 +151,7 @@ fn resolved(
 ) -> ResolvedProjectObject {
     ResolvedProjectObject {
         source_object_index,
+        all_regions: regions.clone(),
         object,
         print_objects: vec![ResolvedPrintObjectConfig {
             transform: Transform3d::IDENTITY,

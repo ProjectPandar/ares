@@ -33,6 +33,28 @@ pub(in crate::project_slice) struct FillExtrusionCollection {
 #[derive(Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct LayerFillEntities {
     pub(in crate::project_slice) perimeters: Vec<ExtrusionEntityCollection>,
+    pub(in crate::project_slice) perimeter_ranges: Vec<std::ops::Range<usize>>,
     pub(in crate::project_slice) collections: Vec<FillExtrusionCollection>,
+    pub(in crate::project_slice) collection_ranges: Vec<(usize, std::ops::Range<usize>)>,
     pub(in crate::project_slice) thin_fills: Vec<GapFillEntity>,
+    pub(in crate::project_slice) thin_fill_ranges: Vec<std::ops::Range<usize>>,
+}
+
+impl LayerFillEntities {
+    pub(in crate::project_slice) fn region_collections(
+        &self,
+        region_index: usize,
+    ) -> impl Iterator<Item = &FillExtrusionCollection> {
+        self.collection_ranges
+            .iter()
+            .filter(move |(region, _)| *region == region_index)
+            .flat_map(|(_, range)| &self.collections[range.clone()])
+    }
+
+    pub(in crate::project_slice) fn region_perimeters(
+        &self,
+        region_index: usize,
+    ) -> &[ExtrusionEntityCollection] {
+        &self.perimeters[self.perimeter_ranges[region_index].clone()]
+    }
 }

@@ -11,10 +11,10 @@ use crate::geometry::support_grid::SupportGridParams;
 use crate::geometry::{CoordinateScale, ExPolygon};
 
 /// Project-path raft construction using native support flow selection.
-pub(crate) fn build_project_raft(
+pub(in crate::project_slice) fn build_project_raft(
     settings: &crate::ProjectSettings,
     object: &crate::ObjectOptions,
-    object_height: f64,
+    parameters: &crate::project_slice::parameters::SlicingParameters,
     first_layer_lslices: &[ExPolygon],
     scale: CoordinateScale,
 ) -> Result<Option<RaftStream>, SliceError> {
@@ -22,9 +22,6 @@ pub(crate) fn build_project_raft(
     if raft_layers == 0 {
         return Ok(None);
     }
-    let parameters =
-        crate::project_slice::parameters::slicing_parameters(settings, object, object_height, &[])?;
-
     let first_height = parameters.first_print_layer_height;
     let flows = crate::project_slice::perimeters::flow::resolve_support_flows(
         settings,
@@ -64,7 +61,7 @@ pub(crate) fn build_project_raft(
         support_flow_spacing,
         units_per_mm,
     );
-    let raft_grid = raft_layer_grid(&parameters)?;
+    let raft_grid = raft_layer_grid(parameters)?;
     let polygons = raft_polygons(
         first_layer_lslices,
         &RaftPolygonParams {
@@ -104,7 +101,6 @@ pub(crate) fn build_project_raft(
 
     Ok(Some(RaftStream {
         plans,
-        object_print_z_min: parameters.object_print_z_min,
         support_flow_spacing_mm: support_flow_spacing,
         first_layer_flow_spacing_mm: first_layer_flow_spacing,
     }))

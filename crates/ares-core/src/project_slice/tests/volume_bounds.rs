@@ -1,12 +1,13 @@
 use crate::{
     OrcaFloat, Point3d, ProjectMesh, ProjectVolume, ProjectVolumeType, Transform3d,
     mesh_slicer::SlicingMode, options::RegionOptionOverrides,
+    project::region_graph::bounds::BoundingBox3f,
 };
 
 use super::{
     super::{
         closing::{PostClosingLayer, PostClosingPrintObject, PostClosingVolume},
-        volume_bounds::{BoundingBox3f, build_volume_bounds},
+        volume_bounds::build_volume_bounds,
     },
     support::{object, plan, project_volume, resolved_object},
 };

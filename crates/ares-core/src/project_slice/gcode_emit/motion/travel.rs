@@ -203,8 +203,8 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     }
 }
 
-pub(super) fn inside_internal_surfaces(
-    surfaces: &[crate::project_slice::region_slices::RegionSurface],
+pub(super) fn inside_internal_surfaces<'a>(
+    surfaces: impl IntoIterator<Item = &'a crate::project_slice::region_slices::RegionSurface>,
     start: arc::Point,
     end: arc::Point,
     scale: crate::geometry::CoordinateScale,
@@ -219,7 +219,7 @@ pub(super) fn inside_internal_surfaces(
         )
     };
     let travel = crate::geometry::Polyline::new(vec![point(start), point(end)]);
-    surfaces.iter().any(|surface| {
+    surfaces.into_iter().any(|surface| {
         let (kind, region, ..) = surface.as_parts();
         matches!(
             kind,

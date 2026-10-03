@@ -120,13 +120,26 @@ fn move_thin_fills(
     external: &mut PreparedPostExternalSurfaces,
 ) {
     for (output, source) in objects.iter_mut().zip(&mut external.predecessor.objects) {
-        for (layer, record) in output.iter_mut().zip(&mut source.records) {
-            if let Some(record) = record {
+        let layer_count = output.len();
+        for (slot, record) in source.records.iter_mut().enumerate() {
+            let layer = &mut output[slot % layer_count];
+            let start = layer.perimeters.len();
+            let thin_start = layer.thin_fills.len();
+            let Some(record) = record else {
+                layer.perimeter_ranges.push(start..start);
+                layer.thin_fill_ranges.push(thin_start..thin_start);
+                continue;
+            };
+            if layer.perimeters.is_empty() {
                 layer.perimeters = std::mem::take(&mut record.perimeters);
-                layer
-                    .thin_fills
-                    .extend(std::mem::take(&mut record.thin_fills));
+            } else {
+                layer.perimeters.append(&mut record.perimeters);
             }
+            layer.thin_fills.append(&mut record.thin_fills);
+            layer.perimeter_ranges.push(start..layer.perimeters.len());
+            layer
+                .thin_fill_ranges
+                .push(thin_start..layer.thin_fills.len());
         }
     }
 }

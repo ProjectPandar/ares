@@ -203,7 +203,6 @@ fn only_nonempty_model_parts_receive_candidates() {
 fn usage_affecting_modifier_keys_are_rejected_in_fixed_order() {
     let cases = [
         ("wall_loops", RegionOptionOverrides { wall_loops: Some(OrcaInt(2)), ..Default::default() }),
-        ("sparse_infill_density", RegionOptionOverrides { sparse_infill_density: Some(Percent(20.0)), ..Default::default() }),
         ("top_shell_layers", RegionOptionOverrides { top_shell_layers: Some(OrcaInt(2)), ..Default::default() }),
         ("bottom_shell_layers", RegionOptionOverrides { bottom_shell_layers: Some(OrcaInt(2)), ..Default::default() }),
         ("sparse_infill_filament_id", RegionOptionOverrides { sparse_infill_filament_id: Some(OrcaInt(2)), ..Default::default() }),

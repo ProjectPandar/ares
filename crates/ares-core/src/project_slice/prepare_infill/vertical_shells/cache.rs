@@ -76,7 +76,7 @@ fn filtered(
         .collect()
 }
 
-fn flatten(expolygons: &[ExPolygon]) -> Vec<Polygon> {
+pub(super) fn flatten(expolygons: &[ExPolygon]) -> Vec<Polygon> {
     let capacity = expolygons
         .iter()
         .map(|expolygon| 1 + expolygon.holes().len())
@@ -89,7 +89,7 @@ fn flatten(expolygons: &[ExPolygon]) -> Vec<Polygon> {
     paths
 }
 
-fn empty() -> VerticalShellCache {
+pub(super) fn empty() -> VerticalShellCache {
     VerticalShellCache {
         top_surfaces: Vec::new(),
         bottom_surfaces: Vec::new(),

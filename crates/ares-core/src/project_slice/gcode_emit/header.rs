@@ -18,10 +18,10 @@ pub(super) fn append_header(
     output: &mut Vec<u8>,
     metadata: GenerationMetadata,
     traversal: &PreparedPostClassicTraversal,
+    layers: usize,
+    max_z: f64,
 ) {
     let (year, month, day, hour, minute, second) = metadata.timestamp();
-    let plate_zs = plate_layer_zs(traversal);
-    let layers = plate_zs.len();
     let label_id = traversal
         .project
         .objects()
@@ -50,7 +50,6 @@ pub(super) fn append_header(
     );
     // `GCode.cpp:2612-2618`: the max print z over every object's last
     // layer (raft layers included through the shifted object z chain).
-    let max_z = plate_zs.last().copied().unwrap_or(0.0);
     let filament_count = traversal.resolved.usage.supported_used_filaments.len();
     output.extend_from_slice(b"; HEADER_BLOCK_START\n");
     output.extend_from_slice(
@@ -77,75 +76,6 @@ pub(super) fn append_header(
     output.extend_from_slice(b"; HEADER_BLOCK_END\n\n");
 }
 
-/// `GCode.cpp:2513-2527` (default print sequence): the plate layer count
-/// merges every print object's layer print_z values into one sorted unique
-/// set, rather than summing per-object layer counts.
-pub(super) fn plate_layer_zs(traversal: &PreparedPostClassicTraversal) -> Vec<f64> {
-    let mut zs = Vec::new();
-    for object in &traversal.objects {
-        let (post_region, _) = object
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .object
-            .object
-            .as_parts();
-        let (plan, _, _) = post_region.as_parts();
-        let object_index = traversal
-            .objects
-            .iter()
-            .position(|candidate| std::ptr::eq(candidate, object))
-            .unwrap_or(0);
-        let resolved_object = &traversal.resolved.objects[object_index];
-        // Raft layers precede the object layers (`PrintObject::layers()`
-        // carries the raft offset); their print z's join the plate grid.
-        // `PlannedLayer.print_z` already carries the raft lift
-        // (`PrintObjectSlice.cpp:66` `print_z = hi + zmin`).
-        let (raft_zs, _object_shift) = match crate::project_slice::raft::bridge::build_project_raft(
-            &traversal.resolved.views.full,
-            &resolved_object.object,
-            plan.layers.iter().map(|layer| layer.height).sum(),
-            &[],
-            traversal.scale,
-        ) {
-            Ok(Some(stream)) => (
-                stream
-                    .plans
-                    .iter()
-                    .map(|plan| plan.z.print_z)
-                    .collect::<Vec<_>>(),
-                stream.object_print_z_min,
-            ),
-            _ => (Vec::new(), 0.0),
-        };
-        zs.extend(plan.layers.iter().map(|layer| layer.print_z));
-        zs.extend(raft_zs);
-    }
-    zs.sort_by(f64::total_cmp);
-    let mut unique = Vec::new();
-    let mut previous: Option<f64> = None;
-    for z in zs {
-        if previous.is_none_or(|previous| (z - previous).abs() >= EPSILON) {
-            unique.push(z);
-            previous = Some(z);
-        }
-    }
-    unique
-}
-
-pub(super) fn plate_layer_count(traversal: &PreparedPostClassicTraversal) -> usize {
-    plate_layer_zs(traversal).len()
-}
-
-/// `libslic3r` `EPSILON` used by `GCode.cpp:2523` to merge numerically
-/// close layer print_z values.
-const EPSILON: f64 = 1e-4;
-
-/// The layer-change tag the GCodeProcessor counts when
-/// `m_detect_layer_based_on_tag` is set (spiral vase mode).
-pub(super) const LAYER_CHANGE_TAG: &[u8] = b";LAYER_CHANGE\n";
-
 pub(super) fn finalize_layer_count(output: &mut Vec<u8>, layers: usize) -> usize {
     let prefix = b"; total layer number: ";
     let start = output
@@ -170,66 +100,75 @@ fn format_values(values: &[crate::OrcaFloat]) -> String {
         .join(",")
 }
 
-pub(super) fn append_width_block(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
-    // `GCode.cpp:2676-2693`: one terse width block per print region, in
-    // region order (one region per object model part here).
-    for object in &traversal.resolved.objects {
-        append_object_width_block(output, traversal, object);
-    }
-}
-
-fn append_object_width_block(
+pub(super) fn append_width_block(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
-    object: &crate::project::effective_config::types::ResolvedProjectObject,
-) {
+) -> Result<(), crate::SliceError> {
+    let first_source = traversal.objects[0]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object
+        .identity()
+        .0;
+    let first = &traversal
+        .resolved
+        .objects
+        .iter()
+        .find(|object| object.source_object_index == first_source)
+        .expect("first print object retains its resolved source")
+        .object;
+    let has_support = traversal.resolved.objects.iter().any(|object| {
+        object.object.enable_support.0
+            || object.object.enforce_support_layers.0 > 0
+            || object.object.raft_layers.0 > 0
+    });
+    // PrintApply.cpp's shared-region loop never inserts into region_set.
+    for object in &traversal.resolved.objects {
+        for region in &object.all_regions {
+            append_region_width_block(output, traversal, first, region, has_support)?;
+        }
+    }
+    Ok(())
+}
+
+fn append_region_width_block(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    object_options: &crate::ObjectOptions,
+    region: &crate::RegionOptions,
+    has_support: bool,
+) -> Result<(), crate::SliceError> {
     let settings = &traversal.resolved.views.full;
-    let nozzle = settings
-        .project
-        .print
-        .nozzle_diameter
-        .0
-        .first()
-        .map_or(0.4, |value| value.0);
-    let object_options = &object.object;
-    let region = object
-        .layer_candidates
-        .first()
-        .and_then(|layer| layer.model_parts.first().map(|part| &part.region))
-        .expect("validated object has a model-part region");
+    let nozzles = &settings.project.print.nozzle_diameter;
     let widths = [
-        resolved_width(
+        (
             region.outer_wall_line_width,
-            object_options.line_width,
-            nozzle,
+            region.outer_wall_filament_id,
             1.125,
         ),
-        resolved_width(
+        (
             region.inner_wall_line_width,
-            object_options.line_width,
-            nozzle,
+            region.inner_wall_filament_id,
             1.125,
         ),
-        resolved_width(
+        (
             region.sparse_infill_line_width,
-            object_options.line_width,
-            nozzle,
+            region.sparse_infill_filament_id,
             1.125,
         ),
-        resolved_width(
+        (
             region.internal_solid_infill_line_width,
-            object_options.line_width,
-            nozzle,
+            region.internal_solid_filament_id,
             1.125,
         ),
-        resolved_width(
+        (
             region.top_surface_line_width,
-            object_options.line_width,
-            nozzle,
+            region.top_surface_filament_id,
             1.0,
         ),
     ];
-    let first_layer_width = width(settings.process.print.initial_layer_line_width, nozzle);
     let labels = [
         "external perimeters",
         "perimeters",
@@ -237,44 +176,39 @@ fn append_object_width_block(
         "solid infill",
         "top infill",
     ];
-    for (index, label) in labels.into_iter().enumerate() {
-        output.extend_from_slice(
-            format!("; {label} extrusion width = {:.2}mm\n", widths[index]).as_bytes(),
-        );
+    for (label, (configured, selector, ratio)) in labels.into_iter().zip(widths) {
+        let nozzle = f64::from(super::super::perimeters::flow::selected_nozzle(
+            selector, nozzles,
+        )?);
+        let width = resolved_width(configured, object_options.line_width, nozzle, ratio);
+        output.extend_from_slice(format!("; {label} extrusion width = {width:.2}mm\n").as_bytes());
     }
-    let support_width = if !object_options.enable_support.0
-        && object_options.enforce_support_layers.0 <= 0
-        && object_options.raft_layers.0 <= 0
-    {
-        None
-    } else {
-        let index = object_options.support_filament.0.saturating_sub(1) as usize;
-        let support_nozzle = settings
-            .project
-            .print
-            .nozzle_diameter
-            .0
-            .get(index)
-            .or_else(|| settings.project.print.nozzle_diameter.0.first())
-            .map_or(nozzle, |value| value.0);
-        Some(resolved_width(
+    if has_support {
+        let nozzle = f64::from(super::super::perimeters::flow::selected_nozzle(
+            object_options.support_filament,
+            nozzles,
+        )?);
+        let width = resolved_width(
             object_options.support_line_width,
             object_options.line_width,
-            support_nozzle,
+            nozzle,
             1.0,
-        ))
-    };
-    if let Some(width) = support_width {
+        );
         output.extend_from_slice(
             format!("; support material extrusion width = {width:.2}mm\n").as_bytes(),
         );
     }
-    if let Some(width) = first_layer_width {
+    let nozzle = f64::from(super::super::perimeters::flow::selected_nozzle(
+        region.inner_wall_filament_id,
+        nozzles,
+    )?);
+    if let Some(width) = width(settings.process.print.initial_layer_line_width, nozzle) {
         output.extend_from_slice(
             format!("; first layer extrusion width = {width:.2}mm\n").as_bytes(),
         );
     }
     output.push(b'\n');
+    Ok(())
 }
 
 pub(crate) fn resolved_width(

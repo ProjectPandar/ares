@@ -58,7 +58,6 @@ fn stage_object(
     let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
     let input_object = &prelude.object;
     assert_eq!(object.records.len(), input_object.records.len());
-    assert_eq!(object.records.len(), prelude.records.len());
     let source_index = input_object.identity().0;
     let options = &prepared
         .predecessor
@@ -91,31 +90,30 @@ fn stage_object(
         .records
         .iter()
         .zip(&input_object.records)
-        .zip(&prelude.records)
-        .map(
-            |((output, input), prelude)| match (output, input, prelude) {
-                (Some(output), Some(input), Some(prelude)) => {
-                    let bottom_shell_layers =
-                        usize::try_from(input_object.region_options(input).bottom_shell_layers.0)
-                            .expect("normalized bottom_shell_layers is non-negative");
-                    stage_record(
-                        input_object,
-                        input,
-                        output,
-                        StageRecordContext {
-                            external_width: prelude.external_width,
-                            bottom_kind,
-                            bottom_shell_layers,
-                            layer_count,
-                            spiral_mode,
-                        },
-                    )
-                    .map(Some)
-                }
-                (None, None, None) => Ok(None),
-                _ => unreachable!("O17 slots remain aligned with O16 and the Classic prelude"),
-            },
-        )
+        .map(|(output, input)| match (output, input) {
+            (Some(output), Some(input)) => {
+                let bottom_shell_layers =
+                    usize::try_from(input_object.region_options(input).bottom_shell_layers.0)
+                        .expect("normalized bottom_shell_layers is non-negative");
+                stage_record(
+                    input_object,
+                    input,
+                    output,
+                    StageRecordContext {
+                        external_width: input
+                            .ext_perimeter_flow
+                            .scaled_width(prepared.predecessor.as_classic().scale),
+                        bottom_kind,
+                        bottom_shell_layers,
+                        layer_count,
+                        spiral_mode,
+                    },
+                )
+                .map(Some)
+            }
+            (None, None) => Ok(None),
+            _ => unreachable!("O17 slots remain aligned with O16 and regional inputs"),
+        })
         .collect::<Result<Vec<_>, _>>()?;
     extra_bridge::apply(
         &mut records,

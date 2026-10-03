@@ -58,6 +58,10 @@ fn task22o43_object_lightning_config_survives_absent_layer_records() {
                 })
                 .collect(),
         });
+        prelude.object.records.resize_with(3 * layer_count, || None);
+        horizontal.objects[0]
+            .records
+            .resize_with(3 * layer_count, || None);
         (horizontal_records, prelude_records, inputs)
     };
 
@@ -100,6 +104,9 @@ fn task22o43_object_lightning_config_survives_absent_layer_records() {
 
     {
         let horizontal = &mut prepared.predecessor.predecessor;
+        horizontal.objects[0]
+            .records
+            .truncate(horizontal_records.len());
         for (slot, record) in horizontal.objects[0]
             .records
             .iter_mut()
@@ -109,6 +116,7 @@ fn task22o43_object_lightning_config_survives_absent_layer_records() {
         }
         let traversal = &mut horizontal.predecessor.objects[0];
         let prelude = &mut traversal.predecessor.predecessor.predecessor.predecessor;
+        prelude.object.records.truncate(inputs.len());
         for (slot, record) in prelude.records.iter_mut().zip(prelude_records) {
             *slot = record;
         }

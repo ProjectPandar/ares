@@ -167,44 +167,31 @@ fn validate_alignment(prepared: &PreparedPostHorizontalShellPromotion) {
         assert_eq!(trim.records.len(), count);
         assert_eq!(regularization.records.len(), count);
         assert_eq!(filter.records.len(), count);
-        assert_eq!(traversal.records.len(), count);
         let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
         let input_object = &prelude.object;
         let (compensated, inputs) = input_object.as_parts();
         let (post_regions, lslices) = compensated.as_parts();
         let (plan, _, regions) = post_regions.as_parts();
         assert_eq!(inputs.len(), count);
-        assert_eq!(prelude.records.len(), count);
-        assert_eq!(plan.layers.len(), count);
-        assert_eq!(lslices.len(), count);
-        assert_eq!(regions.len(), 1);
+        assert_eq!(plan.layers.len() * regions.len(), count);
+        assert_eq!(lslices.len(), plan.layers.len());
         assert_eq!(
             (plan.source_object_index, plan.transform_index),
             input_object.identity()
         );
 
-        for (
-            index,
-            (
-                (
-                    (((((record, cache), projection), trim), regularization), filter),
-                    traversal_record,
-                ),
-                input,
-            ),
-        ) in object
-            .records
-            .iter()
-            .zip(&cache.records)
-            .zip(&projection.records)
-            .zip(&trim.records)
-            .zip(&regularization.records)
-            .zip(&filter.records)
-            .zip(&traversal.records)
-            .zip(inputs)
-            .enumerate()
+        for (index, ((((((record, cache), projection), trim), regularization), filter), input)) in
+            object
+                .records
+                .iter()
+                .zip(&cache.records)
+                .zip(&projection.records)
+                .zip(&trim.records)
+                .zip(&regularization.records)
+                .zip(&filter.records)
+                .zip(inputs)
+                .enumerate()
         {
-            let flow = &prelude.records[index];
             match (
                 record,
                 cache,
@@ -212,33 +199,23 @@ fn validate_alignment(prepared: &PreparedPostHorizontalShellPromotion) {
                 trim,
                 regularization,
                 filter,
-                traversal_record,
                 input,
-                flow,
             ) {
-                (
-                    Some(_),
-                    Some(_),
-                    Some(_),
-                    Some(_),
-                    Some(_),
-                    Some(_),
-                    Some(_),
-                    Some(input),
-                    Some(_),
-                ) => {
-                    assert_eq!(input.planned_layer_index, index);
-                    assert_eq!(input.layer_id, plan.layers[index].id);
-                    assert_eq!(input.current.layer_index, index);
-                    assert_eq!(input.current.region_index, 0);
-                    assert_eq!(input.region_id, regions[0].as_parts().0);
+                (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_), Some(input)) => {
+                    assert_eq!(input_object.region_layer_record_index(input.current), index);
+                    assert_eq!(input.planned_layer_index, input.current.layer_index);
+                    assert_eq!(input.layer_id, plan.layers[input.current.layer_index].id);
+                    assert_eq!(
+                        input.region_id,
+                        regions[input.current.region_index].as_parts().0
+                    );
                     assert_eq!(input.compatible_region_ids, [input.region_id]);
                     assert_eq!(
                         (input.source_object_index, input.transform_index),
                         input_object.identity()
                     );
                 }
-                (None, None, None, None, None, None, None, None, None) => {}
+                (None, None, None, None, None, None, None) => {}
                 _ => panic!("O26 slots remain aligned across the complete predecessor"),
             }
         }

@@ -43,20 +43,28 @@ pub(super) fn prepare(
         }
     }
 
+    let mut mesh = ProjectMesh::new(
+        vertices
+            .into_iter()
+            .map(|vertex| {
+                Point3d::new(
+                    f64::from(vertex[0]),
+                    f64::from(vertex[1]),
+                    f64::from(vertex[2]),
+                )
+            })
+            .collect(),
+        triangles,
+    );
+    mesh.supported_facets = crate::project::facets_annotation::FacetsAnnotation::from_triangles(
+        source
+            .triangles
+            .triangles
+            .iter()
+            .map(|triangle| &triangle.paint_supports),
+    );
     PreparedMesh {
-        mesh: ProjectMesh::new(
-            vertices
-                .into_iter()
-                .map(|vertex| {
-                    Point3d::new(
-                        f64::from(vertex[0]),
-                        f64::from(vertex[1]),
-                        f64::from(vertex[2]),
-                    )
-                })
-                .collect(),
-            triangles,
-        ),
+        mesh,
         transform: component_transform.translated(shift),
     }
 }

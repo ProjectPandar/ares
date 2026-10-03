@@ -7,6 +7,20 @@ pub(crate) struct MeshTopology {
 }
 
 impl MeshTopology {
+    pub(crate) fn build_face_neighbors(&self) -> Vec<[Option<usize>; 3]> {
+        let mut neighbors = vec![[None; 3]; self.face_edge_ids.len()];
+        let mut first_use: Vec<Option<(usize, usize)>> = vec![None; self.edge_count as usize];
+        for (slot, &edge) in self.face_edge_ids.iter().flatten().enumerate() {
+            let (face, local) = (slot / 3, slot % 3);
+            if let Some((other_face, other_local)) = first_use[edge as usize] {
+                neighbors[face][local] = Some(other_face);
+                neighbors[other_face][other_local] = Some(face);
+            } else {
+                first_use[edge as usize] = Some((face, local));
+            }
+        }
+        neighbors
+    }
     pub(crate) fn face_edge_ids(&self) -> &[[u32; 3]] {
         &self.face_edge_ids
     }

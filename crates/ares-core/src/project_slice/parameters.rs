@@ -14,6 +14,10 @@ pub(super) struct SlicingParameters {
     pub(super) layer_height: f64,
     pub(super) min_layer_height: f64,
     pub(super) max_layer_height: f64,
+    pub(super) max_support_layer_height: f64,
+    pub(super) zero_gap_interface_top: bool,
+    pub(super) zero_gap_interface_bottom: bool,
+    pub(super) zero_gap_interface_raft: bool,
     pub(super) first_print_layer_height: f64,
     pub(super) first_object_layer_height: f64,
     pub(super) first_object_layer_bridging: bool,
@@ -55,25 +59,35 @@ pub(super) fn slicing_parameters(
     let print = &settings.project.print;
     let mut min_layer_height = MIN_LAYER_HEIGHT;
     let mut max_layer_height = f64::MAX;
-    let mut accumulate = |extruder| {
+    let mut max_support_layer_height = 0.0;
+    let accumulate = |extruder, minimum: &mut f64, maximum: &mut f64| {
         let (nozzle_minimum, nozzle_maximum) = nozzle_limits(
             extruder,
             &print.nozzle_diameter,
             &print.min_layer_height,
             &print.max_layer_height,
         );
-        min_layer_height = min_layer_height.max(nozzle_minimum);
-        max_layer_height = max_layer_height.min(nozzle_maximum);
+        *minimum = minimum.max(nozzle_minimum);
+        *maximum = maximum.min(nozzle_maximum);
     };
     if object.enable_support.0 || object.raft_layers.0 > 0 || object.enforce_support_layers.0 > 0 {
-        accumulate(object.support_filament.0.max(0) as usize);
-        accumulate(object.support_interface_filament.0.max(0) as usize);
+        accumulate(
+            object.support_filament.0.max(0) as usize,
+            &mut min_layer_height,
+            &mut max_layer_height,
+        );
+        accumulate(
+            object.support_interface_filament.0.max(0) as usize,
+            &mut min_layer_height,
+            &mut max_layer_height,
+        );
+        max_support_layer_height = max_layer_height;
     }
     if object_extruders.is_empty() {
-        accumulate(0);
+        accumulate(0, &mut min_layer_height, &mut max_layer_height);
     } else {
         for &extruder in object_extruders {
-            accumulate(extruder);
+            accumulate(extruder, &mut min_layer_height, &mut max_layer_height);
         }
     }
     min_layer_height = min_layer_height.min(layer_height);
@@ -163,6 +177,10 @@ pub(super) fn slicing_parameters(
         layer_height,
         min_layer_height,
         max_layer_height,
+        max_support_layer_height,
+        zero_gap_interface_top: zero_gap_top,
+        zero_gap_interface_bottom: zero_gap_bottom,
+        zero_gap_interface_raft: object.raft_contact_distance.0 == 0.0 || zero_top_contact,
         first_print_layer_height: first_height,
         first_object_layer_height,
         first_object_layer_bridging,

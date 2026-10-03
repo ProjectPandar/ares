@@ -171,8 +171,9 @@ impl Outline {
             let area = two_fx * delta;
             while ey1 != ey2 {
                 let c = self.cell_mut();
-                c.cover = delta;
-                c.area = area;
+                // Native assigns a fresh local cell, then sums visits in the sweep.
+                c.cover += delta;
+                c.area += area;
                 ey1 += incr;
                 self.set_curr_cell(ex, ey1);
             }

@@ -24,6 +24,7 @@ pub(super) fn emit(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     layer_index: usize,
+    starts_after_support: bool,
     chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
     labels: &[Option<ObjectLabels>],
@@ -55,18 +56,37 @@ pub(super) fn emit(
         lower_boundary.as_ref(),
     );
     let entry_output_start = output.len();
-    if let Some(labels) = &labels[object_index] {
+    if !starts_after_support && let Some(labels) = &labels[object_index] {
         labels.queue_start(output, state, emit_labels);
     }
-    let timelapse_inserted =
-        motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
+    let regions = traversal.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object
+        .as_parts()
+        .0
+        .as_parts()
+        .0
+        .as_parts()
+        .2;
+    let timelapse_inserted = motion::emit_layer(
+        output,
+        layer,
+        (motion_geometry, |region: usize| {
+            regions[region].options.sparse_infill_density.0
+        }),
+        state,
+        |output, state| {
             timelapse_core::append_traditional(
                 traditional_interlude,
                 output,
                 state,
                 timelapse_context,
             )
-        })?;
+        },
+    )?;
     let is_last_entry = Some((object_index, layer_index)) == last_entry;
     if let Some(labels) = &labels[object_index] {
         labels.queue_stop(

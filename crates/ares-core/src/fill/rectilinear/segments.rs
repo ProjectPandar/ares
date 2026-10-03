@@ -1,6 +1,5 @@
 mod cleanup;
 
-#[cfg(test)]
 pub(crate) use cleanup::remove_sticks_from_polygon;
 use cleanup::{clean_expolygon, clean_paths};
 

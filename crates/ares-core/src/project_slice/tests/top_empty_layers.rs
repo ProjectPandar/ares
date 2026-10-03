@@ -248,6 +248,12 @@ fn object(ids: &[usize], occupancy: &[&[bool]]) -> PostRegionPrintObject {
         plan: PlannedPrintObject {
             source_object_index: 7,
             transform_index: 9,
+            slicing_parameters: super::profile_layers::helpers::parameters(
+                0.2,
+                0.2,
+                0.07,
+                ids.len() as f64 * 0.2,
+            ),
             layers: ids
                 .iter()
                 .copied()
