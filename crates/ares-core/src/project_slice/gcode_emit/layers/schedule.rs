@@ -235,33 +235,13 @@ pub(in crate::project_slice::gcode_emit) fn build(
     let last_entry = merged
         .last()
         .and_then(|(_, entry)| entry.object_layer.map(|layer| (entry.object_index, layer)));
-    let print = &settings.project.print;
-    let max_layer_height = print
-        .nozzle_diameter
-        .0
-        .iter()
-        .enumerate()
-        .map(|(index, &nozzle)| {
-            // ConfigOptionVector::resize duplicates the first value.
-            let height = print
-                .max_layer_height
-                .0
-                .get(index)
-                .unwrap_or(&print.max_layer_height.0[0])
-                .0;
-            if height == 0.0 {
-                0.75 * nozzle.0
-            } else {
-                height
-            }
-        })
-        .fold(f64::MAX, f64::min)
-        .max(
-            object_options
-                .iter()
-                .map(|object| object.layer_height.0)
-                .fold(0.0, f64::max),
-        );
+    let max_layer_height = super::super::tool_ordering::max_layer_height(
+        settings,
+        object_options
+            .iter()
+            .map(|object| object.layer_height.0)
+            .fold(0.0, f64::max),
+    );
     let skirt_schedule = super::skirt_schedule::SkirtSchedule::new(skirt_layers, max_layer_height);
     Ok(Schedule {
         tool_ordering,

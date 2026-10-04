@@ -144,10 +144,13 @@ and UI are deferred; shared Type2 dependencies and all activated Type2 branches
 above are included. Exhaustive printer/options coverage remains unclaimed.
 
 Only after integrated complete-output GREEN: workspace Nextest, Clippy with
-zero new warnings, fmt and core/adapter WASM; feature-branch commit/push;
+zero new warnings, fmt and core/adapter WASM; final review-candidate push;
 `REVIEW-REQUEST`, then stop for matching approval. Fetch/rebase, repeat gates
-and ff-only integration afterwards. Snapmaker bridge-direction residuals remain
-in the later bridge slice, not this tower change.
+and ff-only integration afterwards. Coordinator additionally authorizes
+intermediate feature-branch commit/push checkpoints (including the initial RED)
+every one or two sub-boundaries. These are not review requests, main candidates
+or claims that the active path is complete. Snapmaker bridge-direction residuals
+remain in the later bridge slice, not this tower change.
 
 ## Provenance and execution
 
@@ -240,3 +243,35 @@ the prime-tower role is present only in smooth mode. Evidence:
 `/tmp/ares-pi-tower-type2-red-official.log`, reference pair `case-LjY9Xj`.
 Production Type2 behavior remains unimplemented at this RED checkpoint;
 this is not a green slice or review request.
+
+## Authorized branch checkpoints and A progress
+
+Coordinator approved A–G and requested the plan/RED checkpoint followed by
+incremental branch pushes. `dc7a848f` contains that initial checkpoint and is
+published on `pi/smooth-type2-timelapse-tower`; no main push or review request.
+Latest coordinator main notice: `94a0a629` fixes the fill reference center.
+Fetch/rebase current main before eventual integration and rerun all gates;
+do not overwrite that fix.
+
+A's partition kernel is now connected to the existing `ToolOrdering::build`:
+partition counts propagate downward, tower flags retain wrapping/smooth rules,
+raft gaps insert or reuse a midpoint with the following tool, support-only
+changes retain their tower, and selected tower filament insertion reruns
+reordering/partition planning. `calc_max_layer_height` is shared with the
+existing skirt scheduling consumer. The upstream per-object bottom-Z update
+is retained, not replaced with an independently designed minimum-Z rule.
+
+Six supplementary source-example unit tests were first run against missing
+behavior: 6 FAIL (`/tmp/ares-pi-tower-type2-partitions-red.log`), then 6 PASS
+(`/tmp/ares-pi-tower-type2-partitions-green.log`). Both live references retain
+29 passing BBL/PA cases and the traditional Type2 control; smooth still fails
+at the original M73 mismatch. Each aggregate is **5 tests PASS / 1 FAIL**, not
+green: `/tmp/ares-pi-tower-type2-partitions-{official,seeded}.log`, 26.115s and
+42.965s. These live runs precede an equivalent nesting-only Clippy adjustment
+inside the already non-tower sparse-layer loop; final checks are recorded in
+`/tmp/ares-pi-tower-type2-partitions-{clippy,green}-final.log`.
+
+A is not yet complete: source activation/priming ordering and materializing
+tower-only gap layers into the merged support/emission schedule remain. B–G
+are pending. The partition checkpoint is not an isolated writer/geometry
+completion claim and does not enable a same-tool-only generator.

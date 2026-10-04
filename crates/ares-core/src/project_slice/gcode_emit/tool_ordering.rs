@@ -2,9 +2,11 @@
 
 mod collect;
 mod first_layer;
+mod partitions;
 mod reorder;
 
 pub(super) use collect::object_options;
+pub(super) use partitions::max_layer_height;
 
 use super::layers::RaftSchedule;
 
@@ -14,10 +16,14 @@ use crate::project_slice::{
     support_material::InstalledSupportLayer,
 };
 
+#[derive(Default)]
 pub(super) struct LayerTools {
     print_z: f64,
     extruders: Vec<usize>,
     has_object: bool,
+    wipe_tower_partitions: usize,
+    has_wipe_tower: bool,
+    wipe_tower_layer_height: f64,
 }
 
 pub(super) struct ToolOrdering {
@@ -63,8 +69,25 @@ pub(super) fn build(
 ) -> Result<ToolOrdering, crate::SliceError> {
     let mut layers = initialize_layers(traversal, support, raft.map(|raft| raft.plans.as_slice()));
     let candidates = collect::print_extruders(traversal);
+    let mut object_bottom_z = 0.0;
+    let mut max_object_layer_height = 0.0_f64;
     for object in 0..objects.len() {
         let options = collect::object_options(traversal, object);
+        max_object_layer_height = max_object_layer_height.max(options.layer_height.0);
+        // `sort_and_build_data(Print)` retains the last object's first extrusion bottom.
+        if let Some((physical, _)) = traversal.objects[object]
+            .physical_layers()
+            .iter()
+            .zip(&objects[object])
+            .find(|(_, layer)| {
+                layer
+                    .islands
+                    .iter()
+                    .any(|island| !island.entities.is_empty())
+            })
+        {
+            object_bottom_z = physical.print_z - physical.height;
+        }
         for (physical, layer) in traversal.objects[object]
             .physical_layers()
             .iter()
@@ -106,6 +129,13 @@ pub(super) fn build(
     let first_order = first_layer::generate(traversal)?;
     first_layer::handle_dontcare(&mut layers, &first_order, traversal);
     reorder::apply(&mut layers, traversal);
+    let settings = &traversal.resolved.views.full;
+    let max_height = max_layer_height(settings, max_object_layer_height);
+    partitions::fill(&mut layers, settings, object_bottom_z, max_height);
+    if partitions::insert_extruder(&mut layers, settings) {
+        reorder::apply(&mut layers, traversal);
+        partitions::fill(&mut layers, settings, object_bottom_z, max_height);
+    }
     let mut all_extruders = layers
         .iter()
         .flat_map(|layer| layer.extruders.iter().copied())
@@ -157,8 +187,7 @@ fn initialize_layers(
         }
         layers.push(LayerTools {
             print_z: 0.5 * (zs[begin] + zs[end - 1]),
-            extruders: Vec::new(),
-            has_object: false,
+            ..Default::default()
         });
         begin = end;
     }
