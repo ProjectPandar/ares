@@ -115,7 +115,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
     // write-backs (layer/before/after) apply the extruder offset.
     if !is_bbl {
         if !multiple_extruders {
-            super::super::pressure_advance::append(output, traversal, filament);
+            super::super::pressure_advance::append(output, state, traversal, filament);
         }
         super::super::motion::tool_selection::toolchange(output, state, traversal, filament, "");
     }
@@ -123,7 +123,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
         output.extend_from_slice(format!(";VT{initial}\n").as_bytes());
     }
     if is_bbl || multiple_extruders {
-        super::super::pressure_advance::append(output, traversal, filament);
+        super::super::pressure_advance::append(output, state, traversal, filament);
     }
     if is_bbl {
         super::super::machine::append_flavor_preamble(output, traversal);

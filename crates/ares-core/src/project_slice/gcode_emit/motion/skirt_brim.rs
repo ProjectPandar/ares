@@ -15,6 +15,8 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
+    state.adaptive_pa_flow = Some(flow.mm3_per_mm);
+    state.adaptive_pa_emitted = false;
     // `GCode::extrude_entity("brim")` dispatches to `extrude_loop`, which
     // splits every non-perimeter loop at the point nearest the last
     // position (`GCode.cpp:5771`). The projection foot truncates in plate
@@ -70,6 +72,8 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
                 y: geometry.scale.unscale(point.1 - offset.1),
             })
             .collect::<Vec<_>>();
+        state.adaptive_pa_flow = None;
+        state.adaptive_pa_emitted = false;
         return;
     }
     path::emit(
@@ -88,6 +92,8 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
         geometry,
         state,
     );
+    state.adaptive_pa_flow = None;
+    state.adaptive_pa_emitted = false;
 }
 
 pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
@@ -101,6 +107,8 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
     // `end_clip` inside `path::emit`.
     preclipped: bool,
 ) {
+    state.adaptive_pa_flow = Some(flow.mm3_per_mm);
+    state.adaptive_pa_emitted = false;
     path::emit(
         output,
         points,
@@ -125,6 +133,8 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
         geometry,
         state,
     );
+    state.adaptive_pa_flow = None;
+    state.adaptive_pa_emitted = false;
     // `GCode.cpp:5979-5991` stores loop wipe paths forward so the wipe
     // wraps from the loop end back toward the path start.
     state.wipe_path.reverse();

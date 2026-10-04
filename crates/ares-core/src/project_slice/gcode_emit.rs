@@ -3,6 +3,7 @@ use crate::project_slice::{
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
+mod adaptive_pa;
 mod brim;
 mod emit_helpers;
 use emit_helpers::{append_layer_end_timelapse, layer_boundary_slices_rc, trailing_gcode_xy};
@@ -235,11 +236,19 @@ pub(super) fn emit(
     // Upstream applies FanMover ONLY to layer-chunk output (the tbb
     // pipeline after the cooling filter, GCode.cpp:3749), never to the
     // machine start g-code.
-    if let Some(mover) = fan_mover_handle.as_mut() {
+    if fan_mover_handle.is_some()
+        || state
+            .extruders
+            .ids()
+            .iter()
+            .any(|&tool| adaptive_pa::enabled(&traversal.resolved.views.full, tool))
+    {
         let mut layers = output.split_off(fan_layers_start);
         let tail = layers.split_off(fan_layers_end - fan_layers_start);
-        let processed = fan_chunks::process_layer_chunks(mover, layers);
-        output.extend(processed);
+        if let Some(mover) = fan_mover_handle.as_mut() {
+            layers = fan_chunks::process_layer_chunks(mover, layers);
+        }
+        output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);
     }
     // Upstream throws after emit when any custom template failed

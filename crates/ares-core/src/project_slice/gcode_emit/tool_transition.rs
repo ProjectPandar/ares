@@ -74,7 +74,7 @@ fn emit_inner(
     if state.extruders.multiple() {
         temperature::post(output, state, context);
     }
-    super::pressure_advance::append(output, context.traversal, filament);
+    super::pressure_advance::append(output, state, context.traversal, filament);
     if state.extruders.multiple() {
         state.last_scaled_position = None;
     }

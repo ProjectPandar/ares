@@ -4,6 +4,7 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 
 pub(super) fn append(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     filament: usize,
 ) {
@@ -26,27 +27,31 @@ pub(super) fn append(
             .get(filament)
             .or_else(|| settings.filament.gcode.pressure_advance.0.first())
             .map_or(0.0, |value| value.0);
-        if pa >= 0.0 {
-            let value = format_pa(pa);
-            let line = match settings.printer.gcode.gcode_flavor {
-                crate::GCodeFlavor::Klipper => {
-                    format!(
-                        "SET_PRESSURE_ADVANCE ADVANCE={value}; Override pressure advance value\n"
-                    )
-                }
-                crate::GCodeFlavor::RepRapFirmware => {
-                    format!("M572 D0 S{value}; Override pressure advance value\n")
-                }
-                crate::GCodeFlavor::Repetier => {
-                    format!("M233 X{value} Y{value} ; Override pressure advance value\n")
-                }
-                _ if is_bbl => {
-                    format!("M900 K{value} L1000 M10 ; Override pressure advance value\n")
-                }
-                _ => format!("M900 K{value}; Override pressure advance value\n"),
-            };
-            output.extend_from_slice(line.as_bytes());
+        state.adaptive_pa_resets.push((state.adaptive_pa_layer, pa));
+        output
+            .extend_from_slice(command(pa, settings.printer.gcode.gcode_flavor, is_bbl).as_bytes());
+    }
+}
+
+pub(super) fn command(pa: f64, flavor: crate::GCodeFlavor, is_bbl: bool) -> String {
+    if pa < 0.0 {
+        return String::new();
+    }
+    let value = format_pa(pa);
+    match flavor {
+        crate::GCodeFlavor::Klipper => {
+            format!("SET_PRESSURE_ADVANCE ADVANCE={value}; Override pressure advance value\n")
         }
+        crate::GCodeFlavor::RepRapFirmware => {
+            format!("M572 D0 S{value}; Override pressure advance value\n")
+        }
+        crate::GCodeFlavor::Repetier => {
+            format!("M233 X{value} Y{value} ; Override pressure advance value\n")
+        }
+        _ if is_bbl => {
+            format!("M900 K{value} L1000 M10 ; Override pressure advance value\n")
+        }
+        _ => format!("M900 K{value}; Override pressure advance value\n"),
     }
 }
 

@@ -32,6 +32,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         ..
     } = prelude;
     let mut options = MotionOptions {
+        adaptive_pa: crate::project_slice::gcode_emit::adaptive_pa::Options::new(full, filament),
         wall_direction: region.map_or(full.process.region.wall_direction, |value| {
             value.wall_direction
         }),

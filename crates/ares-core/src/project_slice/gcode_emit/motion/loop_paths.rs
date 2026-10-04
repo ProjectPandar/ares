@@ -1,3 +1,4 @@
+mod adaptive_pa;
 mod inward;
 use inward::{append_inward_move, ccw_angle, loop_is_counter_clockwise, path_length};
 #[cfg(test)]
@@ -30,6 +31,7 @@ pub(super) fn emit(
         )
     {
         append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
+        begin_adaptive_loop(state, paths, 0.0, geometry);
         for path in &scarf.paths {
             super::materialized::emit(
                 output,
@@ -42,6 +44,8 @@ pub(super) fn emit(
                 },
             );
         }
+        state.adaptive_pa_flow = None;
+        state.adaptive_pa_emitted = false;
         state.wipe_path = wipe_points(&scarf.wipe_paths, geometry);
         append_inward_move(
             output,
@@ -74,6 +78,16 @@ pub(super) fn emit(
         return;
     }
     append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
+    begin_adaptive_loop(
+        state,
+        paths,
+        if state.spiral_vase_layer {
+            0.0
+        } else {
+            state.options.seam_gap
+        },
+        geometry,
+    );
     let mut emitted_loop_path = Vec::new();
     for (index, path) in paths[..path_count].iter().enumerate() {
         let end_clip = if index + 1 == path_count {
@@ -93,6 +107,8 @@ pub(super) fn emit(
             .is_some_and(|(tail, next)| *tail == *next);
         emitted_loop_path.extend(reversed.skip(usize::from(skip_first)));
     }
+    state.adaptive_pa_flow = None;
+    state.adaptive_pa_emitted = false;
     state.wipe_path = emitted_loop_path;
     append_inward_move(
         output,
@@ -101,6 +117,19 @@ pub(super) fn emit(
         geometry,
         state,
     );
+}
+
+fn begin_adaptive_loop(
+    state: &mut EmitState,
+    paths: &[ExtrusionPath],
+    end_clip: f64,
+    geometry: LayerGeometry<'_>,
+) {
+    if !state.options.adaptive_pa.enabled {
+        return;
+    }
+    state.adaptive_pa_flow = adaptive_pa::mean(paths, end_clip, geometry.scale);
+    state.adaptive_pa_emitted = false;
 }
 
 fn wipe_points(paths: &[ExtrusionPath], geometry: LayerGeometry<'_>) -> Vec<super::arc::Point> {

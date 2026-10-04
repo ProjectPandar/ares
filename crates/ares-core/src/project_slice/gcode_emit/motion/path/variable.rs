@@ -1,4 +1,6 @@
-use super::{EmitState, PathProperties, SOURCE_EPSILON_MM, arc, extrusion, fan, overhang};
+use super::{
+    EmitState, PathProperties, SOURCE_EPSILON_MM, adaptive_pa, arc, extrusion, fan, overhang,
+};
 
 pub(super) struct Emission<'a> {
     pub(super) output: &'a mut Vec<u8>,
@@ -6,6 +8,7 @@ pub(super) struct Emission<'a> {
     pub(super) wipe_points: &'a [(f64, f64)],
     pub(super) processed: &'a [overhang::ProcessedPoint],
     pub(super) original_speed: f64,
+    pub(super) acceleration: u32,
     pub(super) properties: PathProperties<'a>,
     pub(super) state: &'a mut EmitState,
 }
@@ -17,6 +20,7 @@ pub(super) fn emit(command: Emission<'_>) {
         wipe_points,
         processed,
         original_speed,
+        acceleration,
         properties,
         state,
     } = command;
@@ -42,6 +46,16 @@ pub(super) fn emit(command: Emission<'_>) {
             continue;
         }
         let feedrate = processed[index - 1].speed * 60.0;
+        adaptive_pa::ramp(
+            output,
+            state,
+            properties,
+            acceleration,
+            adaptive_pa::Ramp::Variable {
+                previous: last_feedrate,
+                next: feedrate,
+            },
+        );
         if (last_feedrate - feedrate).abs() > 60.0 {
             extrusion::speed(output, feedrate, properties);
             state.current_feedrate = feedrate;

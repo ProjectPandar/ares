@@ -1,3 +1,4 @@
+mod adaptive_pa;
 mod avoid_crossing;
 mod constant;
 mod retraction;
@@ -213,6 +214,7 @@ pub(super) fn emit(
     if role_changed {
         state.last_extrusion_role = Some(role);
     }
+    let previous_extrusion_feedrate = state.extrusion_feedrate;
     state.extrusion_feedrate = processed
         .as_ref()
         .map_or(original_speed, |points| points[0].speed)
@@ -264,6 +266,19 @@ pub(super) fn emit(
         );
         state.last_height = Some(properties.height);
     }
+    let evaluated = adaptive_pa::tag(output, state, properties, acceleration, role_changed);
+    if processed.is_none() && !evaluated {
+        adaptive_pa::ramp(
+            output,
+            state,
+            properties,
+            acceleration,
+            adaptive_pa::Ramp::Constant {
+                previous: previous_extrusion_feedrate,
+                next: state.extrusion_feedrate,
+            },
+        );
+    }
     extrusion::speed(output, state.extrusion_feedrate, properties);
     state.current_feedrate = state.extrusion_feedrate;
     if let Some(target) = state.pending_wipe_before_external_target.take() {
@@ -301,6 +316,7 @@ pub(super) fn emit(
             wipe_points: &wipe_points_source,
             processed: &processed,
             original_speed,
+            acceleration,
             properties,
             state,
         });

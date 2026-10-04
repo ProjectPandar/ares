@@ -7,6 +7,23 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Selective WIP port: timelapse tower / adaptive PA / bridge (2026-10-04)
+
+Branch `pi/timelapse-tower-adaptive-pa` ports WIP `a53bc00c` in independent,
+source-owned slices, never as a whole-branch merge. Adaptive PA starts at
+`GCode/AdaptivePAProcessor`, `AdaptivePAInterpolator`, `PchipInterpolatorHelper`
+and the `GCode.cpp` marker/filter call sites; see
+[ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md) and
+[plan](superpowers/plans/2026-10-04-adaptive-pressure-advance-port.md).
+The current region/tool emitter is preserved as a temporary compatibility shell.
+Type2 smooth tower planning/emission and its PA reset remain dependent work;
+old WIP unsupported-feature guards are not accepted. Bridge candidate traversal
+and slicing affine arithmetic are already represented by ARD-0075/0076 in main;
+revalidate rather than overwrite those implementations. Each slice requires
+fresh official complete-output RED/GREEN, separate seeded-reference checks,
+workspace Nextest, Clippy, rustfmt and WASM compilation before commit/push.
+No all-printer/option or completed-tower claim is made by this planned port.
+
 ### Current acceptance priorities (2026-10-04)
 
 ToolOrdering/region-role's finite initial dual-tool milestone is integrated

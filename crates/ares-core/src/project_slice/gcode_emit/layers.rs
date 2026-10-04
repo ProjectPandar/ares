@@ -276,6 +276,7 @@ pub(super) fn append(
         cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
         previous_layer_z = layer_z;
         chunk_index += 1;
+        state.adaptive_pa_layer = chunk_index;
     }
     cooling.finish(output);
     Ok((max_layer_z, fan_mover_handle))

@@ -23,6 +23,7 @@ pub(in crate::project_slice::gcode_emit) struct ScarfOptions {
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
+    pub(in crate::project_slice::gcode_emit) adaptive_pa: super::super::adaptive_pa::Options,
     pub(in crate::project_slice::gcode_emit) filament_area: f64,
     /// `filament_density` g/cc for the `extruded_weight`
     /// placeholders (`Extruder.cpp:133-135`).

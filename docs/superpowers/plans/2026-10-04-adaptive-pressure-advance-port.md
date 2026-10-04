@@ -1,0 +1,105 @@
+# Adaptive PA selective-port plan
+
+1. Confirm the source and current Rust ownership in the matching spec; establish
+   a public constant-model RED without a tower dependency.
+2. Port model/PCHIP/scanner and PA_CHANGE generation from WIP `a53bc00c`,
+   adapting only source-owned behavior to current region/filament interfaces.
+3. Make the tracer GREEN, then add nonconstant, parser, cooling/overhang and
+   lifecycle cases individually, preserving complete-output comparison.
+4. Verify official and seeded references separately, full workspace Nextest,
+   Clippy, rustfmt, WASM; review before committing and pushing this slice.
+5. Per the user's updated integration rule: fetch, rebase onto latest
+   `origin/main`, rerun workspace Nextest, Clippy, rustfmt and WASM, then
+   `git push origin HEAD:main` (fast-forward only). If rejected because main
+   advanced, repeat rebase and all checks; never force-push.
+
+## Baseline
+
+Worktree `/tmp/ares-pi-tower`, branch `pi/timelapse-tower-adaptive-pa`,
+base `c3f61645`. All Cargo commands use `/tmp/ares-pi-tower-target`.
+The pristine upstream source is exported locally from the pinned upstream Git
+object; the replay tree's FuzzySkin modification is not copied.
+Bridge-direction behavior from the WIP is already in main under ARD-0075
+(`50fe97a6`); do not overwrite it or replay historical MSVC pins.
+The old WIP tower's unsupported-feature guards are explicitly not transferable.
+
+## Current execution
+
+The original CPU0 binary SHA-256 is
+`64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60`.
+Fresh no-tower constant-model RED:
+`/tmp/ares-pi-tower-pa-red.log`, Nextest run
+`181886a4-1eca-4c09-8e81-ed03fc07b4bc`, one executed test failed in 1.767s
+(after the isolated target's initial 15m52s build). Exported PA activation/model
+and the original static/adaptive command sequence passed their assertions.
+Complete paired artifacts: `/tmp/ares-pi-tower-pa-red-official/case-pCvyuZ`.
+The first mismatch is line 69: missing `M900 K0.045`; 100816 reference bytes
+versus 100771 Ares bytes. No movement or timing normalization was introduced.
+
+The first constant-model official GREEN completed in
+`/tmp/ares-pi-tower-pa-green.log`: one live test PASS (2.105s), Nextest run
+`52862fd5-5aca-487a-8fce-e47856dcbb7d`. The subsequent matrix adds nine active
+scenarios: multi-acceleration interpolation, decimal prefixes, invalid/insufficient
+models, both disabled-activation controls, disabled cooling, overhang/bridge
+and source diagnostic comments. `/tmp/ares-pi-tower-pa-matrix-official.log`
+passes both tests (ten full-output cases). These are finite no-tower cases,
+not proof of arbitrary calibration strings, multi-tool resets or smooth towers.
+
+The selective implementation is being validated. It retains current region
+selection and actual logical tool IDs, unlike the WIP's fixed tool-zero tags.
+Source PA resets are captured as generation-layer events, not inferred from
+arbitrary user-written M900 commands. Loop clipping/weights and the existing
+static formatter are reused without copying the WIP's obsolete emitter.
+Checkpoint authorized by the coordinator: preserve the self-contained port
+and explicit open regressions on the work branch, then rebase and verify.
+This is not completion approval and must not be fast-forwarded to main while
+any live parity case remains RED.
+
+## Checkpoint evidence and remaining work
+
+- Earlier workspace: `/tmp/ares-pi-tower-pa-workspace.log`, 7621/7621 PASS,
+  nine existing skips, 327.633s. Its binary predates the last get_at/negative-PA
+  repairs and newest fixtures; it is not final checkpoint validation.
+- Official and seeded runs each execute seven tests: five PASS, two FAIL.
+  Logs: `/tmp/ares-pi-tower-pa-bridge-final-official.log` and
+  `/tmp/ares-pi-tower-pa-bridge-seeded.log`. All four bridge/affine tests and
+  the constant PA tracer pass in both environments. The initialized seeded
+  reference is `/nix/store/jqfsg42f6xzq3krnf5scm6w4g1z4kz4c-orca-slicer-seed-replay-2.4.2/bin/orca-slicer`,
+  explicitly seed 0 / CPU 0, with a separate artifact root.
+- Multi-tool RED is an index-out-of-bounds on the one-element overhang option
+  for logical tool 1 (official `case-JXHT9a`). The checkpoint fixes **all**
+  PA option reads with upstream `ConfigOptionVector::get_at` first-value
+  semantics. The full two-tool and mixed-activation cases still require GREEN.
+- Negative-default RED (official `case-LakHOa`) emits erroneous `M900 K-1`
+  where upstream emits nothing. The checkpoint moves the existing negative
+  suppression into the shared command formatter, preserving reset state.
+  This repair still requires the fresh live GREEN run.
+- **Open parser RED candidate:** `std::stod` accepts hexadecimal calibration
+  prefixes; the port's decimal-only parser does not. Added public fixture,
+  not yet executed. Port source semantics, not a rejection or silent exclusion.
+- **Open formatter RED candidate:** four-significant-digit output must preserve
+  integer trailing zeroes and scientific notation. The old shared formatter
+  turns 10 into 1; the adaptive model now exposes it. Added integer/scientific
+  public fixtures, not yet executed. No expected-output relaxation is allowed.
+- Independent preliminary Codex review:
+  `/tmp/ares-pi-tower-pa-preliminary-review.md`, run
+  `7be90eb6-86e0-4fc2-8164-02e6c81d7e8c`, verdict changes required.
+  It confirms the get_at panic, hex parsing and formatter issues; flags reset
+  lifecycle/performance as unverified. This is not publication approval.
+- Smooth Type2 tower planning/emission and tower reset are **not ported** in
+  this checkpoint. WIP tower guards and unrelated support/AGG changes remain
+  excluded. No all-printer/all-option completion is claimed.
+
+Before rebasing, the ongoing pre-rebase Clippy chain was deliberately stopped
+(session 24, SIGTERM) after the 7621-test workspace pass; that interrupted chain
+is not Clippy/fmt/WASM success evidence. All gates will be rerun after rebase.
+`git hash-object` of local `GCode.cpp`, `Config.hpp` and all three processor/
+interpolator `.cpp` files exactly matches their blobs at pinned upstream
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` (command log
+`/tmp/pi-unified-exec-28-93aa8b1f.log`). This closes the preliminary review's
+local-source provenance uncertainty without altering the reference binary.
+
+Before main integration: repair and re-review the open source-owned cases,
+retain full official/seeded output, rerun workspace/lint/fmt/WASM on the rebased
+commit, and obey fast-forward-only publication. Checkpoint branch push does
+not imply permission to publish a known-RED implementation to main.

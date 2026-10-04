@@ -5,6 +5,8 @@
 //! Environment-gated: runs only when `ARES_ORCA_BIN` (or the repository
 //! wrapper `scripts/orca-parity.sh`) names a working OrcaSlicer CLI.
 
+#[path = "orca_parity/adaptive_pressure_advance.rs"]
+mod adaptive_pressure_advance;
 #[path = "orca_parity/artifacts.rs"]
 mod artifacts;
 #[path = "orca_parity/honeycomb_multiline.rs"]
