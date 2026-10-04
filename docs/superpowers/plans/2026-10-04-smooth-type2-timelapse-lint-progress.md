@@ -30,19 +30,36 @@ without growing that file beyond 400 lines. ARD-0105 remains authoritative.
 
 ## Remaining source audit
 
-ARD-0105 records actual metadata consumers. Do not delete width/rib/depth-profile
-state: mesh-bottom, fake-tower, brim exclusion and chamber-hold consumers remain
-in scope. In particular, the current chamber-hold placeholder is hard-coded false.
+ARD-0105 records actual metadata consumers. Preserve width/rib/depth-profile
+state: mesh-bottom, fake-tower conflict checking and chamber-hold consumers remain
+in scope. The chamber-hold placeholder is still hard-coded false. The fresh Type2
+path does not populate `FakeWipeTower::outer_wall`; `Brim.cpp:651` requires that
+map to be nonempty, so its mask must not be invented for Type2. First-layer
+support/raft fallback, actual print-object membership and brim boxes still need
+coverage.
 
-Before unloading refactors, add native full-output witnesses with ramming enabled,
-two cooling moves, stamp distance 3, and tube lengths 4 and 10 to activate both
-stamping branches. Verify applied machine/filament settings and emitted phases.
+## Approved metadata boundary and unloading checkpoint
 
-The narrower result/preview-metadata boundary still needs coordinator confirmation:
-`is_finish_first` is consumed by Type1, result elapsed time has no downstream read,
-and extrusion tool colors are consumed by the GUI preview adapter. No such fields
-or their tests have been removed. `Writer::tool` is independently required by
-RepRap `M572 D... S0`; all G-code timing and filament statistics stay required.
+The coordinator authorized deferring Type1-only finish metadata, GUI extrusion
+colors and unread result/writer timing bookkeeping. Removed only those fields
+and their metadata assertions, with source citations in ARD-0105 and the spec.
+`Writer::tool` remains; a new regression checks `M572 D2 S0` then `M572 D1 S0`
+for both RepRap flavors. Geometry, filament accounting and processed timing stay.
+
+Before changing unloading, added official full-output witnesses with ramming
+enabled, two cooling moves, stamp distance 3, and tube lengths 4 and 10. Both
+machine and filament applied settings and emitted ramming/cooling/load phases
+are asserted. `/tmp/ares-pi-tower-unload-witness-official.log` passes the tool
+matrix (now nine cases); this is a refactoring baseline, not a behavioral RED.
+`/tmp/ares-pi-tower-deferred-unit.log` passes 324 focused tests.
+
+Extracted private ramming-first-line, cooling and stamping phases from
+`WipeTower2::toolchange_Unload`, preserving arithmetic and command ordering.
+`/tmp/ares-pi-tower-unload-green-*` gates: **324 focused PASS**, official
+**8/8 PASS**, seeded **8/8 PASS**, WASM/fmt/diff PASS. Full workspace has not
+been rerun for this checkpoint. Clippy **160 → 158 → 155**: the five metadata
+and unload sites are gone; the live-geometry field diagnostic remains. These
+counts are not zero-new-diagnostic clearance; identity comparison is still due.
 
 ## Integration status
 
@@ -59,7 +76,10 @@ Clippy completes with **160 warnings**; the six introduced sites above remain.
 The previously reported `no_unapproved_dynamic_values` failure is fixed upstream
 and that exact policy test passed in this workspace run; no local workaround.
 
-Latest rebased history has not been force-pushed over the approved remote branch.
-A new remote ref or local-only continuation needs confirmation, as does the
-unused result/GUI metadata boundary. No final REVIEW-REQUEST, approval or main
-integration is claimed here.
+With coordinator authorization, `8354b87c` was published without force to
+`pi/smooth-type2-timelapse-tower-rebased-944c0459` and local upstream updated;
+the older published history remains intact. The coordinator subsequently reported
+main `f10c3b17` (region ironing speed). Before integration, rebase the then-latest
+`origin/main` and revalidate; the 944-based gates above are not final integration
+evidence. Never force-push the published ref. No final REVIEW-REQUEST, approval
+or main integration is claimed here.

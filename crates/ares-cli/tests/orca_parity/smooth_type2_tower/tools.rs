@@ -41,6 +41,20 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             "0",
         ),
         (
+            "semm-ramming-short",
+            "Creality",
+            "Creality Ender-3 0.4 nozzle",
+            "1",
+            "0",
+        ),
+        (
+            "semm-ramming-long",
+            "Creality",
+            "Creality Ender-3 0.4 nozzle",
+            "1",
+            "0",
+        ),
+        (
             "semm-priming",
             "Creality",
             "Creality Ender-3 0.4 nozzle",
@@ -107,6 +121,38 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             filament.insert("filament_colour".into(), json!([color]));
             filament.insert("filament_is_support".into(), json!(["0"]));
         }
+        let ramming = label.starts_with("semm-ramming-");
+        let tube = if label.ends_with("short") { "4" } else { "10" };
+        let ramming_machine = [
+            ("enable_filament_ramming", json!("1")),
+            ("high_current_on_filament_swap", json!("1")),
+            ("cooling_tube_retraction", json!("35")),
+            ("cooling_tube_length", json!(tube)),
+            ("parking_pos_retraction", json!("80")),
+            ("extra_loading_move", json!("5")),
+        ];
+        let ramming_filament = [
+            ("filament_ramming_parameters", json!(["120 100 6 6 6 6"])),
+            ("filament_cooling_moves", json!(["2"])),
+            ("filament_cooling_initial_speed", json!(["2"])),
+            ("filament_cooling_final_speed", json!(["4"])),
+            ("filament_stamping_distance", json!(["3"])),
+            ("filament_stamping_loading_speed", json!(["20"])),
+            ("filament_loading_speed", json!(["28"])),
+            ("filament_loading_speed_start", json!(["3"])),
+            ("filament_unloading_speed", json!(["90"])),
+            ("filament_unloading_speed_start", json!(["100"])),
+        ];
+        if ramming {
+            for (key, value) in &ramming_machine {
+                machine.insert((*key).into(), value.clone());
+            }
+            for filament in &mut filaments {
+                for (key, value) in &ramming_filament {
+                    filament.insert((*key).into(), value.clone());
+                }
+            }
+        }
         let exported = runner
             .export_case(
                 &CaseInputs {
@@ -150,6 +196,15 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
                 runner::application::verify_value(&exported.project, key, &value).unwrap();
             }
         }
+        if ramming {
+            for (key, value) in &ramming_machine {
+                runner::application::verify_value(&exported.project, key, value).unwrap();
+            }
+            for (key, value) in &ramming_filament {
+                let both = json!([value[0].clone(), value[0].clone()]);
+                runner::application::verify_value(&exported.project, key, &both).unwrap();
+            }
+        }
         let exported = if copies {
             runner::type2_copies::second_copy(exported)
         } else {
@@ -181,6 +236,18 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
         );
         if label.starts_with("semm-infill") {
             assert!(reference.contains("; PURGING FINISHED\n"));
+        }
+        if ramming {
+            for phase in [
+                "; Ramming start\n",
+                "; Retract(unload)\n",
+                "; Cooling\n",
+                "; Cooling park\n",
+                "; CP TOOLCHANGE LOAD\n",
+                "M907 E750\n",
+            ] {
+                assert!(reference.contains(phase), "{label}: missing {phase:?}");
+            }
         }
         let outcome = crate::compare_case(&sliced);
         if label.starts_with("semm-infill") {

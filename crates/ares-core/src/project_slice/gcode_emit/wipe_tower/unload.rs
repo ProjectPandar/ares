@@ -42,25 +42,13 @@ impl Generator<'_> {
             writer.position = start;
         }
         // set_layer always selects SHAPE_NORMAL in the source.
-        if do_ramming && self.layer_index > 1 && self.layer_index < self.plan.layers.len() {
-            let previous = &self.plan.layers[self.layer_index - 1];
-            let sparse_start = previous.changes_depth() + perimeter;
-            let mut depth = 0.0;
-            for change in &self.plan.layers[self.layer_index].changes {
-                if change.old_tool == self.current_tool {
-                    depth += change.ramming_depth;
-                    let end_y = depth - (y_step / self.plan.ramming_spacing - perimeter) / 2.0;
-                    if end_y > sparse_start + 0.5 * perimeter {
-                        writer.extrude(
-                            [xl + change.first_wipe_line - perimeter, writer.position[1]],
-                            0.0,
-                        );
-                        remaining -= change.first_wipe_line - perimeter;
-                    }
-                    break;
-                }
-                depth += change.required_depth;
-            }
+        if do_ramming
+            && self.layer_index > 1
+            && self.layer_index < self.plan.layers.len()
+            && let Some(first_line) = self.ramming_first_line(y_step)
+        {
+            writer.extrude([xl + first_line - perimeter, writer.position[1]], 0.0);
+            remaining -= first_line - perimeter;
         }
         if self.mk4_mmu3 {
             writer.switch_filament_monitoring(false);
@@ -158,44 +146,12 @@ impl Generator<'_> {
             self.old_temperature = new_temperature;
         }
         if cooling {
-            writer.gcode.push_str("; Cooling\n");
-            let increment = (filament.cooling_final - filament.cooling_initial)
-                / (2.0 * filament.cooling_moves as f32 - 1.0);
-            if self.mk4_mmu3 {
-                writer.disable_linear_advance();
-            }
-            writer.suppress_preview = true;
-            writer.travel([writer.position[0], writer.position[1] + y_step], 0.0);
-            let old_x = writer.position[0];
-            let turning = if xr - old_x > old_x - xl { xr } else { xl };
-            let stamping = filament.stamping_distance + tube / 2.0;
-            let travel_speed = self.settings.process.gcode.travel_speed.0 as f32;
-            for i in 0..filament.cooling_moves {
-                if i > 0 && filament.stamping_distance != 0.0 {
-                    let turn = (old_x + 20.0 * if turning - old_x > 0.0 { 1.0 } else { -1.0 })
-                        .clamp(xl, xr);
-                    if stamping > 5.0 {
-                        let center = writer.position[0];
-                        writer.load_move_x(turn, stamping - 5.0, filament.stamping_speed, 200.0);
-                        writer.load_move_x(center, 5.0, filament.stamping_speed, travel_speed);
-                        writer.travel([center, writer.position[1]], 0.0);
-                    } else {
-                        writer.load_move_x_there_and_back(
-                            turn,
-                            stamping,
-                            filament.stamping_speed,
-                            travel_speed,
-                        );
-                    }
-                    writer.load(-stamping, filament.unloading_speed * 60.0);
-                }
-                if i == filament.cooling_moves - 1 && change_later {
-                    writer.set_temperature(new_temperature, false);
-                }
-                let speed = filament.cooling_initial + increment * 2.0 * i as f32;
-                writer.load_move_x(turning, tube, speed, 50.0);
-                writer.load_move_x(old_x, -tube, speed + increment, 50.0);
-            }
+            self.cooling_moves(
+                writer,
+                bounds,
+                y_step,
+                change_later.then_some(new_temperature),
+            );
         }
         if enabled && semm {
             writer.gcode.push_str("; Cooling park\n");
@@ -219,5 +175,90 @@ impl Generator<'_> {
         }
         writer.suppress_preview = false;
         writer.gcode.push_str("G4 S0\n");
+    }
+
+    fn ramming_first_line(&self, y_step: f32) -> Option<f32> {
+        let perimeter = self.plan.perimeter_width;
+        let previous = &self.plan.layers[self.layer_index - 1];
+        let sparse_start = previous.changes_depth() + perimeter;
+        let mut depth = 0.0;
+        for change in &self.plan.layers[self.layer_index].changes {
+            if change.old_tool != self.current_tool {
+                depth += change.required_depth;
+                continue;
+            }
+            depth += change.ramming_depth;
+            let end_y = depth - (y_step / self.plan.ramming_spacing - perimeter) / 2.0;
+            return (end_y > sparse_start + 0.5 * perimeter).then_some(change.first_wipe_line);
+        }
+        None
+    }
+
+    fn cooling_moves(
+        &self,
+        writer: &mut Writer,
+        bounds: BoxCoordinates,
+        y_step: f32,
+        change_temperature: Option<i32>,
+    ) {
+        let filament = &self.filaments[self.current_tool];
+        let perimeter = self.plan.perimeter_width;
+        let xl = bounds.lower[0] + perimeter;
+        let xr = bounds.upper[0] - perimeter;
+        let tube = self.settings.printer.gcode.cooling_tube_length.0 as f32;
+        writer.gcode.push_str("; Cooling\n");
+        let increment = (filament.cooling_final - filament.cooling_initial)
+            / (2.0 * filament.cooling_moves as f32 - 1.0);
+        if self.mk4_mmu3 {
+            writer.disable_linear_advance();
+        }
+        writer.suppress_preview = true;
+        writer.travel([writer.position[0], writer.position[1] + y_step], 0.0);
+        let old_x = writer.position[0];
+        let turning = if xr - old_x > old_x - xl { xr } else { xl };
+        let stamping = filament.stamping_distance + tube / 2.0;
+        for i in 0..filament.cooling_moves {
+            if i > 0 && filament.stamping_distance != 0.0 {
+                self.cooling_stamp(writer, bounds, [old_x, turning], stamping);
+            }
+            if i == filament.cooling_moves - 1
+                && let Some(temperature) = change_temperature
+            {
+                writer.set_temperature(temperature, false);
+            }
+            let speed = filament.cooling_initial + increment * 2.0 * i as f32;
+            writer.load_move_x(turning, tube, speed, 50.0);
+            writer.load_move_x(old_x, -tube, speed + increment, 50.0);
+        }
+    }
+
+    fn cooling_stamp(
+        &self,
+        writer: &mut Writer,
+        bounds: BoxCoordinates,
+        stroke: [f32; 2],
+        stamping: f32,
+    ) {
+        let [old_x, turning] = stroke;
+        let filament = &self.filaments[self.current_tool];
+        let perimeter = self.plan.perimeter_width;
+        let xl = bounds.lower[0] + perimeter;
+        let xr = bounds.upper[0] - perimeter;
+        let travel_speed = self.settings.process.gcode.travel_speed.0 as f32;
+        let turn = (old_x + 20.0 * if turning - old_x > 0.0 { 1.0 } else { -1.0 }).clamp(xl, xr);
+        if stamping > 5.0 {
+            let center = writer.position[0];
+            writer.load_move_x(turn, stamping - 5.0, filament.stamping_speed, 200.0);
+            writer.load_move_x(center, 5.0, filament.stamping_speed, travel_speed);
+            writer.travel([center, writer.position[1]], 0.0);
+        } else {
+            writer.load_move_x_there_and_back(
+                turn,
+                stamping,
+                filament.stamping_speed,
+                travel_speed,
+            );
+        }
+        writer.load(-stamping, filament.unloading_speed * 60.0);
     }
 }
