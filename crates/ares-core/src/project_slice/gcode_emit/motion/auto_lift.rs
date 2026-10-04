@@ -9,6 +9,8 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 use crate::{FloatOrPercent, ZHopType};
 
 mod detect;
+#[cfg(test)]
+mod tests;
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct AutoLift {
@@ -17,7 +19,7 @@ pub(in crate::project_slice::gcode_emit) struct AutoLift {
 }
 
 struct Object {
-    shift: Point,
+    shifts: Vec<Point>,
     layers: Vec<Layer>,
 }
 
@@ -55,13 +57,13 @@ impl AutoLift {
                 .object;
             let (regions, slices) = input.object.as_parts();
             let (plan, _, _) = regions.as_parts();
-            let options = &traversal
+            let resolved = traversal
                 .resolved
                 .objects
                 .iter()
                 .find(|resolved| resolved.source_object_index == plan.source_object_index)
-                .unwrap()
-                .object;
+                .unwrap();
+            let options = &resolved.object;
             let line_width = match options.line_width {
                 FloatOrPercent::Float(value) => value,
                 FloatOrPercent::Percent(value) => value.0 * nozzle / 100.0,
@@ -71,11 +73,17 @@ impl AutoLift {
             let center = crate::project_slice::raw_intersections::raw_center(project_object, scale)
                 .expect("sliced object has validated raw bounds");
             objects.push(Object {
-                shift: super::super::footprint::instance_shift(
-                    &project_object.instances()[plan.transform_index],
-                    center,
-                    scale,
-                ),
+                shifts: resolved.print_objects[plan.transform_index]
+                    .instance_indices
+                    .iter()
+                    .map(|&index| {
+                        super::super::footprint::instance_shift(
+                            &project_object.instances()[index],
+                            center,
+                            scale,
+                        )
+                    })
+                    .collect(),
                 layers,
             });
         }
@@ -117,49 +125,63 @@ impl AutoLift {
         let upper = state.active_layer_print_z as f32;
         let lower = (upper - 0.4_f32).max(0.0);
         self.objects.iter().any(|object| {
-            let shift = |point: Point| {
-                Point::new(point.x() - object.shift.x(), point.y() - object.shift.y())
-            };
-            let (start, end) = (shift(start), shift(end));
+            object.crosses(
+                [start, end],
+                (f64::from(lower), f64::from(upper) + 1e-4),
+                scale,
+            )
+        })
+    }
+}
+
+impl Object {
+    fn crosses(
+        &self,
+        [start, end]: [Point; 2],
+        (lower, upper): (f64, f64),
+        scale: CoordinateScale,
+    ) -> bool {
+        let first = self.layers.partition_point(|layer| layer.print_z < lower);
+        let last = self.layers.partition_point(|layer| layer.print_z <= upper);
+        let layers = &self.layers[first..last];
+        let Some(mut object_bounds) =
+            layers
+                .iter()
+                .filter_map(|layer| layer.bounds)
+                .reduce(|mut bounds, next| {
+                    bounds.merge_point(next.min());
+                    bounds.merge_point(next.max());
+                    bounds
+                })
+        else {
+            return false;
+        };
+        object_bounds.offset(scale.checked_scale(1e-4).unwrap());
+        let min = object_bounds.min();
+        let max = object_bounds.max();
+        self.shifts.iter().any(|shift| {
+            let translate = |point: Point| Point::new(point.x() - shift.x(), point.y() - shift.y());
+            let (start, end) = (translate(start), translate(end));
             let bounds = BoundingBox::new(
                 Point::new(start.x().min(end.x()), start.y().min(end.y())),
                 Point::new(start.x().max(end.x()), start.y().max(end.y())),
             );
-            let first = object
-                .layers
-                .partition_point(|layer| layer.print_z < f64::from(lower));
-            let last = object
-                .layers
-                .partition_point(|layer| layer.print_z <= f64::from(upper) + 1e-4);
-            let layers = &object.layers[first..last];
-            let Some(mut object_bounds) =
-                layers
-                    .iter()
-                    .filter_map(|layer| layer.bounds)
-                    .reduce(|mut bounds, next| {
-                        bounds.merge_point(next.min());
-                        bounds.merge_point(next.max());
-                        bounds
-                    })
-            else {
-                return false;
-            };
-            object_bounds.offset(scale.checked_scale(1e-4).unwrap());
             if !overlaps(bounds, object_bounds) {
                 return false;
             }
             let travel = Polyline::new(vec![start, end]);
-            let min = object_bounds.min();
-            let max = object_bounds.max();
             let rectangle = Polygon::new(vec![
                 min,
                 Point::new(max.x(), min.y()),
                 max,
                 Point::new(min.x(), max.y()),
             ]);
-            if intersection_open_polylines(std::slice::from_ref(&travel), &[rectangle])
-                .expect("validated object bounds clip successfully")
-                .is_empty()
+            if intersection_open_polylines(
+                std::slice::from_ref(&travel),
+                std::slice::from_ref(&rectangle),
+            )
+            .expect("validated object bounds clip successfully")
+            .is_empty()
             {
                 return false;
             }

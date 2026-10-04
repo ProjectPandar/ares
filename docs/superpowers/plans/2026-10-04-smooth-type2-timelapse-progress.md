@@ -81,8 +81,7 @@ and tracks `(print object, local copy ordinal)` for external-planner handoff.
 The consuming island adapter clones additional copies and moves the last one;
 single-instance emission does not clone geometry. Original region/collection
 identities survive those replays. Purge allocation and tower emission remain
-pending; copy-aware brim/labels/obstacle geometry still need end-to-end audit.
-In particular, AutoLift still indexes a ModelInstance by transform-group index.
+pending; copy-aware brim/labels/external-planner geometry still need end-to-end audit.
 
 Validation for this dispatch slice:
 - 18 focused tests PASS: `/tmp/ares-pi-tower-copy-dispatch-final-unit.log`.
@@ -97,6 +96,18 @@ Validation for this dispatch slice:
 - Core/adapter WASM build, formatting and diff checks PASS:
   `/tmp/ares-pi-tower-copy-dispatch-wasm.log`.
 No generator/purge integration completion or REVIEW-REQUEST is implied.
+
+## Auto-lift instance ownership
+
+`Print.cpp:594–614` overhang queries now visit every real member shift rather
+than treating a transform-group index as a ModelInstance index. Detected layer
+geometry remains owned once per print object; only shifts are stored per copy.
+A travel through the second copy's overhang must hit, while a travel through
+the gap must not. RED E0560 and GREEN 14 tests are recorded in
+`/tmp/ares-pi-tower-copy-auto-lift-{red,green}.log`. Clippy remains 354 warnings.
+The existing native overhang-spiral witness passes against official and seeded
+binaries (`...-{official,seeded}.log`); this supplemental motion check is not a full Type2 parity
+claim. Copy-aware external boundaries, brim and labels remain to be audited.
 
 
 ## Copy ownership and full-output witness
