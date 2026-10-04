@@ -57,6 +57,19 @@ Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
 comparisons, Tier-1 verification and independent six-axis review. Historical
 modified-classic and sampled-domain summaries are not that exit evidence.
 
+### Sparse-anchoring reference follow-up (in progress)
+
+Rewrite `Layer::generate_sparse_infill_polylines_for_anchoring` bbox-center
+selection (`Fill.cpp:1398,1442`, `Print.hpp:347`) in the Rust
+`prepare_infill/bridge_over_infill/sparse_anchoring` compatibility shell.
+[Spec](superpowers/specs/2026-10-04-sparse-anchoring-reference.md),
+[plan](superpowers/plans/2026-10-04-sparse-anchoring-reference.md),
+[ARD](architecture/ard-sparse-anchoring-reference.md).
+Priority #10 before Qidi #9 and extra-overhang #11. Exit: strict16-case RED→GREEN
+assessment with all residuals retained,52+823 green controls, full68/official8
+receipts, workspace/fmt/Clippy/WASM and coordinator approval. Bridge math and
+extended box sizing remain deferred; this is not full matrix completion.
+
 ### Vendor stock fill-reference repair (in progress)
 
 Priority tracer: the60 Snapmaker cubic residuals, with8 Qidi grid controls.

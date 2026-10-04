@@ -15,34 +15,6 @@ pub(in crate::project_slice) fn materialized_flow(
     flow
 }
 
-/// The print-object center used to anchor infill grids
-/// (`Fill::_infill_direction`, `FillBase.cpp:288-290`).
-pub(in crate::project_slice) fn object_center(
-    object_slices: &[Vec<crate::geometry::ExPolygon>],
-) -> crate::geometry::Point {
-    let mut minimum_x = i64::MAX;
-    let mut minimum_y = i64::MAX;
-    let mut maximum_x = i64::MIN;
-    let mut maximum_y = i64::MIN;
-    for layer in object_slices {
-        for expolygon in layer {
-            for point in expolygon.contour().points() {
-                minimum_x = minimum_x.min(point.x());
-                minimum_y = minimum_y.min(point.y());
-                maximum_x = maximum_x.max(point.x());
-                maximum_y = maximum_y.max(point.y());
-            }
-        }
-    }
-    if minimum_x > maximum_x {
-        return crate::geometry::Point::new(0, 0);
-    }
-    crate::geometry::Point::new(
-        minimum_x + (maximum_x - minimum_x) / 2,
-        minimum_y + (maximum_y - minimum_y) / 2,
-    )
-}
-
 /// `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) applied
 /// to the object bounding box. The incoming `bounding_box` is the slice-contour
 /// extent (empirically this is what the oracle's grid anchors on — see
