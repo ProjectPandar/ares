@@ -14,9 +14,14 @@ pub(super) fn append(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64,
         } else {
             output.extend_from_slice(b"G17\n");
         }
+        let comment = if state.options.gcode_comments {
+            " ; spiral lift Z"
+        } else {
+            ""
+        };
         output.extend_from_slice(
             format!(
-                "G3 Z{} I{} J{} P1  F{}\n",
+                "G3 Z{} I{} J{} P1  F{}{comment}\n",
                 format_z(raised_z),
                 format_offset(i),
                 format_offset(j),

@@ -21,6 +21,17 @@ rounding, wipe exclusion, lookahead boundaries and duplicate suppression.
 Source-defined invalid-model handling retains static PA; no new unsupported
 guards or silent input exclusions are permitted.
 
+The public multi-tool tracer also exercises upstream comment forwarding:
+`GCodeWriter::{set_junction_deviation,_spiral_travel_to_z,travel_to_xyz}` and
+`GCode::{extrude_loop,_extrude}` (arc descriptions). Correct the existing
+machine-envelope, inward-move, lift and constant-path emit sites to forward
+these source comments under `gcode_comments`; never strip comments in the
+comparator or disable this option to hide residuals. These are source-owned
+text emission repairs, not changes to geometry, routing or lift policy.
+Calibration numeric prefixes follow `std::stod`; PA commands follow
+`GCodeWriter::set_pressure_advance`'s four-significant-digit `defaultfloat`,
+including notation selection after rounding.
+
 Tests use the user-requested public exported-3MF/full-G-code seam. Keep the
 existing generator-only comparator unchanged and retain each paired stream.
 Official CPU0 and separately identified seeded references must not share caches.

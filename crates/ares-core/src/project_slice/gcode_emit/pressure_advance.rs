@@ -59,11 +59,27 @@ fn format_pa(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();
     }
-    let magnitude = value.abs().log10().floor() as i32;
-    let decimals = (3 - magnitude).max(0) as usize;
+    if !value.is_finite() {
+        return value.to_string().to_ascii_lowercase();
+    }
+    // defaultfloat chooses notation using the exponent after rounding.
+    let scientific = format!("{value:.3e}");
+    let (mantissa, exponent) = scientific.split_once('e').expect("scientific notation");
+    let exponent: i32 = exponent.parse().expect("formatted exponent");
+    if !(-4..4).contains(&exponent) {
+        return format!(
+            "{}e{exponent:+03}",
+            mantissa.trim_end_matches('0').trim_end_matches('.')
+        );
+    }
+    let decimals = (3 - exponent) as usize;
     let formatted = format!("{value:.decimals$}");
-    formatted
-        .trim_end_matches('0')
-        .trim_end_matches('.')
-        .to_owned()
+    if decimals == 0 {
+        formatted
+    } else {
+        formatted
+            .trim_end_matches('0')
+            .trim_end_matches('.')
+            .to_owned()
+    }
 }

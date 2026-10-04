@@ -1,7 +1,7 @@
 use super::SOURCE_EPSILON_MM;
 use crate::project_slice::gcode_emit::motion::{
     EmitState, arc, extrusion, fan,
-    features::PathProperties,
+    features::{PathProperties, feature_description, is_bridge_feature},
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
 };
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
@@ -58,6 +58,16 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
             })
             .collect()
     };
+    let comment = if state.options.gcode_comments {
+        let bridge = if is_bridge_feature(properties.feature) {
+            " (bridge)"
+        } else {
+            ""
+        };
+        format!(" ; {}{bridge}", feature_description(properties.feature))
+    } else {
+        String::new()
+    };
     for segment in segments {
         match segment {
             arc::Segment::Line { end, length } if length >= SOURCE_EPSILON_MM => {
@@ -78,7 +88,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
                 let command = if arc_segment.clockwise { "G2" } else { "G3" };
                 output.extend_from_slice(
                     format!(
-                        "{command} X{} Y{} I{} J{} E{}\n",
+                        "{command} X{} Y{} I{} J{} E{}{comment}\n",
                         format_axis(arc_segment.end.x),
                         format_axis(arc_segment.end.y),
                         format_offset(arc_segment.center.x - arc_segment.start.x),

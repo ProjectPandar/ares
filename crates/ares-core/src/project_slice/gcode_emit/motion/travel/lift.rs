@@ -140,6 +140,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     target: arc::Point,
     dest_z: f64,
     state: &mut EmitState,
+    travel_comment: &str,
 ) -> Option<f64> {
     let mode = state.pending_lift.take()?;
     // `GCodeWriter.cpp:701-709`: the deferred lift raises from the LIVE
@@ -210,13 +211,9 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                 let slope_distance = rise / slope.tan();
                 let x = state.x + dx * slope_distance / travel_distance;
                 let y = state.y + dy * slope_distance / travel_distance;
-                // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:747`)
-                // trails the slope XYZ move under `gcode_comments`.
-                let comment = if state.options.gcode_comments {
-                    " ; normal lift Z"
-                } else {
-                    ""
-                };
+                // `travel_to_xyz` forwards the path comment on slope XYZ moves
+                // (`GCodeWriter.cpp:743`), unlike the standalone normal lift.
+                let comment = travel_comment;
                 output.extend_from_slice(
                     format!(
                         "G1 X{} Y{} Z{} F{}{comment}\n",

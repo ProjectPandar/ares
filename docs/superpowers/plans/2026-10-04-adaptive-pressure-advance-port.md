@@ -7,9 +7,14 @@
 3. Make the tracer GREEN, then add nonconstant, parser, cooling/overhang and
    lifecycle cases individually, preserving complete-output comparison.
 4. Verify official and seeded references separately, full workspace Nextest,
-   Clippy, rustfmt, WASM; review before committing and pushing this slice.
-5. Per the user's updated integration rule: fetch, rebase onto latest
-   `origin/main`, rerun workspace Nextest, Clippy, rustfmt and WASM, then
+   Clippy, rustfmt and WASM, then commit and push this slice's feature branch.
+5. Per the latest review rule, print `REVIEW-REQUEST <commit-hash> <summary>`
+   in the terminal and stop. External Codex/OpenCode review and external
+   completion-gate programs are no longer required or permitted. Await the
+   coordinator Claude's `APPROVED <same-hash>`; do not start another slice on
+   this branch while waiting.
+6. Only after approval: fetch and rebase onto latest `origin/main`, rerun
+   workspace Nextest, Clippy, rustfmt and WASM, then
    `git push origin HEAD:main` (fast-forward only). If rejected because main
    advanced, repeat rebase and all checks; never force-push.
 
@@ -154,3 +159,71 @@ Before main integration: repair and re-review the open source-owned cases,
 retain full official/seeded output, rerun workspace/lint/fmt/WASM on the rebased
 commit, and obey fast-forward-only publication. Checkpoint branch push does
 not imply permission to publish a known-RED implementation to main.
+
+## Resolution after checkpoint
+
+The numeric matrix is GREEN in the official CPU0 run
+`79077228-74ad-4072-a550-1873824ecee7` (13 cases, 14.104s;
+`/tmp/ares-pi-tower-pa-numeric-fix-official.log`). Hexadecimal prefixes now
+follow `std::stod`, retaining guard/sticky bits for binary rounding. The PA
+writer uses four significant digits and chooses notation from the rounded
+exponent without stripping integer zeroes.
+
+Official run `3217362c-c8f4-4807-96b5-964bd146f50c` passes all three tests
+(16 full-output cases: constant + 13 model cases + both two-tool activation
+combinations), 16.835s; `/tmp/ares-pi-tower-pa-tools-fix-official.log`.
+Multi-tool residuals were five comment-forwarding omissions at upstream
+`GCodeWriter::{set_junction_deviation,_spiral_travel_to_z,travel_to_xyz}` and
+`GCode::{extrude_loop,_extrude}`. Repair only their existing emission sites;
+no movement, comparator, reset scheduling or activation behavior is relaxed.
+Existing private travel test callers only receive the newly forwarded empty
+comment argument; no assertions or tests are removed.
+
+Final validation supersedes the checkpoint RED status above. The source snapshot
+is frozen after hoisting the arc comment outside the segment loop and removing
+a needless borrow, eliminating all newly introduced Clippy warnings.
+
+A first final workspace build failed in `rust-lld` with undefined hidden
+symbols (`/tmp/ares-pi-tower-pa-final-workspace.log`). The older overlapping
+validation runs were stopped, and only this target's ares-core incremental
+caches were moved to
+`/tmp/ares-pi-tower-core-incremental-quarantine.wbp1BI`. With **no source change**,
+the fresh build and entire sequential gate chain pass (session 60, exit 0).
+Interrupted `ready`/`release` runs are not completion evidence.
+
+| Final gate | Result | Log |
+| --- | --- | --- |
+| Workspace Nextest | 7592 PASS, 9 existing skips, 322.963s | `/tmp/ares-pi-tower-pa-rebuilt-workspace.log` |
+| Original official CPU0 | 3 tests / all 16 complete-output cases PASS, 36.788s | `/tmp/ares-pi-tower-pa-rebuilt-official.log` |
+| Seeded reference, seed 0 / CPU0 | 3 tests / all 16 complete-output cases PASS, 72.550s | `/tmp/ares-pi-tower-pa-rebuilt-seeded.log` |
+| `cargo clippy` | exit 0, 253 baseline warnings; no new warnings | `/tmp/ares-pi-tower-pa-rebuilt-clippy.log` |
+| `cargo fmt --check` | exit 0 | `/tmp/ares-pi-tower-pa-rebuilt-fmt.log` |
+| Core + adapter WASM build | exit 0, 20.06s | `/tmp/ares-pi-tower-pa-rebuilt-wasm.log` |
+
+Workspace run: `e2020d71-297a-4c0a-b3f6-ef0f5a798724`;
+official run: `1e6ec851-7bc1-44e3-9589-8e0ca9ba0834`;
+seeded run: `a4bcdca0-1661-466a-bd5f-64dd4f04ccdf`.
+Paired streams are in separate `pa-rebuilt-official` and `pa-rebuilt-seeded`
+artifact directories under `/tmp/ares-pi-tower-`.
+These are bounded, no-tower cases, not exhaustive calibration-input or
+printer/option coverage. No comparator changes, ignored tests or new rejection
+guards were added.
+
+Publication state: ready for feature-branch push and coordinator review, **not
+approved for main**. Latest reported main is `7ac55555`; after the coordinator's
+matching `APPROVED`, fetch/rebase the then-current main and rerun gates. Only
+documentation changed after the final code checks to record these outcomes.
+
+## Next-slice handoff (not part of Adaptive PA)
+
+After this slice is approved and integrated, reproduce the coordinator's stock
+BBL H2S / P1P / P1S non-0.4-nozzle discrepancy: after the first timelapse block
+and first object travel, upstream emits two `G1 Z.1` lines before unretraction;
+Ares emits one. Evidence:
+`/tmp/ares-pi-matrix-9a7b46fc.u9DXlq/stock/case-AHpvpi`, byte 44919 / line 1090.
+Investigate upstream `GCode::process_layer` timelapse and
+`GCodeWriter::travel_to_xyz` / Z-restatement state against the existing Rust
+layer/motion emit sites before changing behavior. This is an unverified
+handoff, not a diagnosed PA bug. Schedule it with smooth Type2 tower work,
+then finish the bridge-direction audit. No implementation of that next slice
+will begin while this branch awaits coordinator approval.

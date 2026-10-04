@@ -194,6 +194,7 @@ fn degenerate_slope_uses_the_raised_target_without_a_preliminary_move() {
         arc::Point { x: 1.0, y: 1.0 },
         state.layer_z,
         &mut state,
+        "",
     );
     assert_eq!(raised, Some(state.layer_z + state.options.z_hop));
     assert!(output.is_empty());
@@ -270,6 +271,7 @@ fn pending_spiral_lift_uses_resolution_based_linear_segments() {
             },
             state.layer_z,
             &mut state,
+            "",
         )
         .is_some()
     );

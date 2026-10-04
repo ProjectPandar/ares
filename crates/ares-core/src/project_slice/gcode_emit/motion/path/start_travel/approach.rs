@@ -245,6 +245,7 @@ pub(super) fn emit_needs_travel(
                 slope_start_z.unwrap_or(target_z)
             },
             state,
+            first_travel_comment,
         );
         None
     };

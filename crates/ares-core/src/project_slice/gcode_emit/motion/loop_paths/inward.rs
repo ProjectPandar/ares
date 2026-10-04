@@ -45,7 +45,14 @@ pub(super) fn append_inward_move(
     );
     let x = geometry.scale.unscale(point.x()) + state.origin.0 - state.extruder_offset.0;
     let y = geometry.scale.unscale(point.y()) + state.origin.1 - state.extruder_offset.1;
-    output.extend_from_slice(format!("G1 X{} Y{}\n", format_axis(x), format_axis(y)).as_bytes());
+    let comment = if state.options.gcode_comments {
+        " ; move inwards before travel"
+    } else {
+        ""
+    };
+    output.extend_from_slice(
+        format!("G1 X{} Y{}{comment}\n", format_axis(x), format_axis(y)).as_bytes(),
+    );
     state.x = x;
     state.y = y;
     // `GCode::extrude_loop` (GCode.cpp:6032) moves only the writer here;

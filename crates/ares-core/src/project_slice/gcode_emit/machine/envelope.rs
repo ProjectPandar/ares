@@ -98,7 +98,12 @@ pub(super) fn append_machine_envelope(
     }
     let junction_deviation = first(&machine.machine_max_junction_deviation);
     if flavor == crate::GCodeFlavor::MarlinFirmware && junction_deviation > 0.0 {
-        output.extend_from_slice(format!("M205 J{junction_deviation:.3}\n").as_bytes());
+        let comment = if traversal.resolved.views.full.process.print.gcode_comments.0 {
+            " ; Junction Deviation"
+        } else {
+            ""
+        };
+        output.extend_from_slice(format!("M205 J{junction_deviation:.3}{comment}\n").as_bytes());
     }
 
     // `GCode.cpp:3991-3998` — input-shaping override lines, inside the
