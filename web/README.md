@@ -28,6 +28,25 @@ npm run build        # library (packages/ares-wasm-js/dist) then app (app/dist)
 `app/dist/` is a static site; serve it with any static file server
 (`npm run preview -w ares-app` serves it on http://127.0.0.1:4174).
 
+### Bundle size
+
+Measured at `314b224c`:
+
+| Asset | Raw | gzip |
+| --- | --- | --- |
+| Initial JS: React, TanStack Router and app | 415 kB | 117 kB |
+| Viewport chunk: Three.js, lazily loaded | 590 kB | 147 kB |
+| `ares_wasm_bg.wasm`, loaded in the worker | 9.25 MB | 3.07 MB |
+
+`e2e/bundle.spec.ts` enforces the initial-JS budget.
+
+The WASM size comes from the Rust build settings, which belong to the Rust
+side and not to `web/`:
+- the workspace `[profile.release]`: `lto = true`, `codegen-units = 1`,
+  `opt-level = 3`, `strip = "symbols"`;
+- `scripts/build-wasm.mjs`: `cargo --release`, then `wasm-bindgen`, with no
+  `wasm-opt` pass.
+
 ## Develop
 
 ```sh
