@@ -95,3 +95,36 @@ The coordinator has frozen main for the lint G-code batch. Commit/push only
 the feature branch now; do not push main or issue REVIEW-REQUEST before the
 later lint rebase and repeated validation. Wait for explicit unfreeze before
 any main integration. No temporary probes or suppression attributes were added.
+
+### Lint handoff completed
+
+The coordinator explicitly unfroze main and requested fan revalidation after
+95e23008. The speed fix landed asf10c3b17; rebase a07dd972 onto that main.
+The RED/implementation commits become b85bf07b/bf7f17d4. The sole conflict
+was the FORCE_RESUME block in cooling/role_fans.rs: retain the lint-extracted
+resume_fan_commands helper and match-based auxiliary comment selection, adding
+ironing_speed to its arguments and its no-active-request condition. Do not
+restore the old nested block. Preserve the new region ironing_speed selection.
+
+Publish subsequent work on pi/ironing-fan-lint without force-rewriting the
+old candidate branch. Repeat both native references with both fan families,
+interlaced controls, filament-speed witnesses and ten ironing-related option
+domains. The two unbounded speed domains must stay INCOMPLETE. Then repeat
+all four quality gates and request coordinator approval; no unapproved merge.
+
+### Post-lint GREEN evidence
+
+`/tmp/ares-ironing-fan-lint-gates.1gpw70` freezes bf7f17d4 on f10c3b17.
+Both official and seeded references pass44 complete outputs each:17 public
+controls (6 ironing fan,6 support fan,3 interlaced and2 filament-speed)
+plus27 option comparisons. All10 option domains are exercised:8 bounded
+PASS and2 honestly INCOMPLETE speed domains,0 rejection or DIVERGENT.
+The option commands' exit100 is solely incomplete endpoint coverage.
+Workspace7597 PASS/9 existing skips (879.859s,8 threads), all-target Clippy,
+fmt and core/adapter WASM compilation all exit0. Lint counts remain at the
+new main baseline157 core-lib/158 core-test/21 parity; no suppression added.
+WASM evidence remains compile-only. All changed Rust files are at most400LOC.
+The tested source diff from f10c3b17 has SHA256
+`03c4f227579e07bcda7e029a285818b64744a3e387a00dcd0ac4ce9eb041c936`.
+Only documentation changes follow these gates. Request review of the new
+pi/ironing-fan-lint head; do not merge before matching coordinator approval.

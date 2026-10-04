@@ -1,6 +1,6 @@
 # Ironing fan requests: activated full-output rewrite slice
 
-Status: implemented; dual-reference and full gates GREEN; lint integration/review pending.
+Status: rebased after lint onto f10c3b17; combined validation GREEN, coordinator review pending.
 
 ## Source ownership and destination
 

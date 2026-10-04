@@ -182,7 +182,7 @@ Coordinator review and latest-main revalidation/integration remain pending. See
 [the specification](architecture/support-interface-fan.md) and
 [the plan](superpowers/plans/2026-10-04-support-interface-fan.md).
 
-### Ironing fan requests (2026-10-04, GREEN candidate; lint integration pending)
+### Ironing fan requests (2026-10-04, lint-integrated GREEN; review pending)
 
 Port `GCode.cpp::_extrude` ironing START/END and
 `GCode/CoolingBuffer.cpp::apply_layer_cooldown` request priority into
@@ -190,10 +190,11 @@ Port `GCode.cpp::_extrude` ironing START/END and
 option/state fields. Unlike support END, inactive ironing END is consumed
 and forces restoration even in closed layers. No geometry, tower or
 AdaptivePA changes are included; deferred markers remain only an internal
-transport around the upstream requests. Official/seeded CPU0 each pass38
-complete outputs, including8 option domains and both fan families' controls.
-Workspace7596 PASS/9 existing skips, Clippy/fmt and WASM compilation pass;
-commit/push precedes the later lint rebase, repeated gates and coordinator review. See [spec](architecture/ironing-fan.md) and
+transport around the upstream requests. After lint rebase onto f10c3b17,
+official/seeded CPU0 each pass44 complete outputs, including10 option domains
+(8 PASS,2 INCOMPLETE) and fan/speed controls. Workspace7597 PASS/9 existing
+skips, Clippy/fmt and WASM compilation pass; coordinator review remains
+pending. See [spec](architecture/ironing-fan.md) and
 [plan](superpowers/plans/2026-10-04-ironing-fan.md). This does not close the225
 INCOMPLETE domains or establish global parity.
 
