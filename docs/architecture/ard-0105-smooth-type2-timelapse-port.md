@@ -44,6 +44,14 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
   preserve their private Rust boundary, connect their consumers before a
   review request, and verify complete E2E output. Do not manufacture a public
   API or retain dead code merely to publish an isolated component.
+- Purge assignment retains original extrusion-collection identity across the
+  existing island flattening and tool buckets. `ToolOrdering.cpp:1620–1826`
+  assigns whole `LayerRegion::fills` / `perimeters` collections per object copy,
+  not independently flattened paths. Stable layer-local collection indices
+  replace C++ pointer identity; region ownership remains separate. Thin-fill
+  wrappers follow ordinary fill collections as in `Fill.cpp:1360–1369`.
+  Preserve these keys through ordering before implementing volume allocation;
+  do not merge different source collections because their roles coincide.
 - Tests use exported project bytes and complete output through the existing
   CLI parity harness. Keep official and seeded evidence separate.
 - Every green slice is pushed for coordinator Claude review. Stop after

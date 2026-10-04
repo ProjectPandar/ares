@@ -13,6 +13,20 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
         ("idex", "Snapmaker", "Snapmaker J1 (0.4 nozzle)", "0", "0"),
         ("semm", "Creality", "Creality Ender-3 0.4 nozzle", "1", "0"),
         (
+            "semm-asymmetric",
+            "Creality",
+            "Creality Ender-3 0.4 nozzle",
+            "1",
+            "0",
+        ),
+        (
+            "semm-infill",
+            "Creality",
+            "Creality Ender-3 0.4 nozzle",
+            "1",
+            "0",
+        ),
+        (
             "semm-priming",
             "Creality",
             "Creality Ender-3 0.4 nozzle",
@@ -46,6 +60,17 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             ("single_extruder_multi_material_priming", json!(priming)),
         ] {
             process.insert(key.into(), value);
+        }
+        let asymmetric = matches!(label, "semm-asymmetric" | "semm-infill");
+        let infill = if label == "semm-infill" { "1" } else { "0" };
+        if asymmetric {
+            machine.insert("purge_in_prime_tower".into(), json!("1"));
+            process.insert(
+                "flush_volumes_matrix".into(),
+                json!(["0", "200", "110", "0"]),
+            );
+            process.insert("flush_multiplier".into(), json!(["0.75"]));
+            process.insert("flush_into_infill".into(), json!(infill));
         }
         let mut filaments = vec![profiles.filament(&selection.filaments[0]).unwrap(); 2];
         crate::normalize_filament_defaults(&mut filaments);
@@ -82,6 +107,16 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
         ] {
             runner::application::verify_value(&exported.project, key, &value).unwrap();
         }
+        if asymmetric {
+            for (key, value) in [
+                ("purge_in_prime_tower", json!("1")),
+                ("flush_volumes_matrix", json!(["0", "200", "110", "0"])),
+                ("flush_multiplier", json!(["0.75"])),
+                ("flush_into_infill", json!(infill)),
+            ] {
+                runner::application::verify_value(&exported.project, key, &value).unwrap();
+            }
+        }
         let sliced = runner.slice_case(&exported).unwrap();
         let reference = std::str::from_utf8(&sliced.reference).unwrap();
         assert!(reference.contains(";TYPE:Prime tower\n"), "{label}");
@@ -98,6 +133,9 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
                 > 3,
             "{label}"
         );
+        if label == "semm-infill" {
+            assert!(reference.contains("; PURGING FINISHED\n"));
+        }
         let outcome = crate::compare_case(&sliced);
         if outcome.status != "PASS" {
             failures.push(format!("{label}: {} {}", outcome.status, outcome.detail));

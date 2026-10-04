@@ -26,7 +26,8 @@ pub(in crate::project_slice) enum IslandInfillEntity {
 
 #[derive(Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionIsland {
-    pub(in crate::project_slice) infills: Vec<(usize, IslandInfillEntity)>,
+    // Canonical region and original collection identity, before path flattening.
+    pub(in crate::project_slice) infills: Vec<(usize, usize, IslandInfillEntity)>,
     pub(in crate::project_slice) perimeters: Vec<(usize, ExtrusionEntityCollection)>,
 }
 
@@ -93,18 +94,24 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
         .collection_ranges
         .iter()
         .flat_map(|(region, range)| std::iter::repeat_n(*region, range.len()));
-    for (region, collection) in collection_regions.zip(std::mem::take(&mut layer.collections)) {
+    let collection_count = layer.collections.len();
+    for (source_order, (region, collection)) in collection_regions
+        .zip(std::mem::take(&mut layer.collections))
+        .enumerate()
+    {
         let island = island_index(collection.first_point(), slices, &bounds, &order);
         if collection.no_sort {
-            islands[island]
-                .infills
-                .push((region, IslandInfillEntity::FillCollection(collection)));
+            islands[island].infills.push((
+                region,
+                source_order,
+                IslandInfillEntity::FillCollection(collection),
+            ));
         } else {
             islands[island].infills.extend(
                 collection
                     .entities
                     .into_iter()
-                    .map(|entity| (region, IslandInfillEntity::Fill(entity))),
+                    .map(|entity| (region, source_order, IslandInfillEntity::Fill(entity))),
             );
         }
     }
@@ -125,11 +132,16 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
         .iter()
         .enumerate()
         .flat_map(|(region, range)| std::iter::repeat_n(region, range.len()));
-    for (region, thin) in thin_regions.zip(std::mem::take(&mut layer.thin_fills)) {
+    for (source_order, (region, thin)) in thin_regions
+        .zip(std::mem::take(&mut layer.thin_fills))
+        .enumerate()
+    {
         let island = island_index(thin_first_point(&thin), slices, &bounds, &order);
-        islands[island]
-            .infills
-            .push((region, IslandInfillEntity::Thin(thin)));
+        islands[island].infills.push((
+            region,
+            collection_count + source_order,
+            IslandInfillEntity::Thin(thin),
+        ));
     }
     LayerExtrusionIslands {
         islands,

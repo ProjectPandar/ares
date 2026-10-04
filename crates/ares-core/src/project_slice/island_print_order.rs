@@ -22,6 +22,7 @@ pub(in crate::project_slice) enum IslandPrintEntity {
 pub(in crate::project_slice) struct OrderedExtrusionIsland {
     pub(in crate::project_slice) entities: Vec<IslandPrintEntity>,
     pub(in crate::project_slice) infill_regions: Vec<usize>,
+    pub(in crate::project_slice) infill_collections: Vec<usize>,
     pub(in crate::project_slice) perimeter_regions: Vec<usize>,
 }
 
@@ -145,13 +146,18 @@ pub(in crate::project_slice) fn order_island(
     } = island;
     let (perimeter_regions, perimeters): (Vec<_>, Vec<_>) = perimeters.into_iter().unzip();
     let perimeters = perimeters.into_iter().map(IslandPrintEntity::Perimeter);
-    let (infill_regions, infills): (Vec<_>, Vec<_>) = infills.into_iter().unzip();
-    let infills = infills.into_iter().map(|entity| match entity {
-        IslandInfillEntity::Fill(entity) => IslandPrintEntity::Fill(entity),
-        IslandInfillEntity::FillCollection(collection) => {
-            IslandPrintEntity::FillCollection(collection)
+    let mut infill_regions = Vec::with_capacity(infills.len());
+    let mut infill_collections = Vec::with_capacity(infills.len());
+    let infills = infills.into_iter().map(|(region, collection, entity)| {
+        infill_regions.push(region);
+        infill_collections.push(collection);
+        match entity {
+            IslandInfillEntity::Fill(entity) => IslandPrintEntity::Fill(entity),
+            IslandInfillEntity::FillCollection(collection) => {
+                IslandPrintEntity::FillCollection(collection)
+            }
+            IslandInfillEntity::Thin(entity) => IslandPrintEntity::Thin(entity),
         }
-        IslandInfillEntity::Thin(entity) => IslandPrintEntity::Thin(entity),
     });
     let entities = if !first_layer && infill_first {
         infills.chain(perimeters).collect()
@@ -161,6 +167,7 @@ pub(in crate::project_slice) fn order_island(
     OrderedExtrusionIsland {
         entities,
         infill_regions,
+        infill_collections,
         perimeter_regions,
     }
 }

@@ -1,5 +1,8 @@
 //! `LayerTools::extruder` and `GCode.cpp:5074–5095` mixed wall splitting.
 
+#[cfg(test)]
+mod tests;
+
 use std::collections::BTreeMap;
 
 use crate::project_slice::{
@@ -22,16 +25,26 @@ pub(super) fn split<'a>(
     let mut buckets = BTreeMap::new();
     for (island_id, island) in layer.islands.iter_mut().enumerate() {
         let mut walls = std::mem::take(&mut island.perimeter_regions).into_iter();
-        let mut fills = std::mem::take(&mut island.infill_regions).into_iter();
+        let mut fills = std::mem::take(&mut island.infill_regions)
+            .into_iter()
+            .zip(std::mem::take(&mut island.infill_collections));
         for entity in std::mem::take(&mut island.entities) {
-            let region = if matches!(entity, IslandPrintEntity::Perimeter(_)) {
-                walls.next().expect("perimeter retains canonical region")
+            let (region, collection) = if let IslandPrintEntity::Perimeter(wall) = &entity {
+                (
+                    walls.next().expect("perimeter retains canonical region"),
+                    wall.source_order,
+                )
             } else {
-                fills.next().expect("fill retains canonical region")
+                fills.next().expect("fill retains canonical owner")
             };
             let options = region_options(region);
             for (tool, entity) in route(entity, options, tools).into_iter().flatten() {
-                append(&mut buckets, tool, (count, island_id, region), entity);
+                append(
+                    &mut buckets,
+                    tool,
+                    (count, island_id, region, collection),
+                    entity,
+                );
             }
         }
     }
@@ -57,10 +70,12 @@ pub(super) fn raft(
         tools,
     );
     for (index, island) in layer.islands.iter_mut().enumerate() {
-        let mut regions = std::mem::take(&mut island.infill_regions).into_iter();
+        let mut regions = std::mem::take(&mut island.infill_regions)
+            .into_iter()
+            .zip(std::mem::take(&mut island.infill_collections));
         for entity in std::mem::take(&mut island.entities) {
             let role = entity_kind(&entity).0;
-            let region = regions.next().expect("raft retains region");
+            let (region, collection) = regions.next().expect("raft retains owner");
             if let Some(&(tool, _)) = selectors.iter().find(|&&(_, selected)| {
                 role == selected
                     || (selected == ExtrusionRole::Mixed && role != ExtrusionRole::Ironing)
@@ -70,7 +85,12 @@ pub(super) fn raft(
                             ExtrusionRole::Mixed | ExtrusionRole::SupportMaterialInterface
                         ))
             }) {
-                append(&mut buckets, tool, (count, index, region), entity);
+                append(
+                    &mut buckets,
+                    tool,
+                    (count, index, region, collection),
+                    entity,
+                );
             }
         }
     }
@@ -155,10 +175,10 @@ fn split_walls(
 fn append(
     buckets: &mut BTreeMap<usize, OrderedExtrusionLayer>,
     tool: usize,
-    position: (usize, usize, usize),
+    position: (usize, usize, usize, usize),
     entity: IslandPrintEntity,
 ) {
-    let (count, island, region) = position;
+    let (count, island, region, collection) = position;
     let target = buckets
         .entry(tool)
         .or_insert_with(|| OrderedExtrusionLayer {
@@ -167,6 +187,7 @@ fn append(
                 .map(|_| OrderedExtrusionIsland {
                     entities: Vec::new(),
                     infill_regions: Vec::new(),
+                    infill_collections: Vec::new(),
                     perimeter_regions: Vec::new(),
                 })
                 .collect(),
@@ -176,6 +197,7 @@ fn append(
         target.perimeter_regions.push(region);
     } else {
         target.infill_regions.push(region);
+        target.infill_collections.push(collection);
     }
     target.entities.push(entity);
 }

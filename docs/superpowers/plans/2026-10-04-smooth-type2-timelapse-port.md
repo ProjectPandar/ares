@@ -251,10 +251,12 @@ this is not a green slice or review request.
 Coordinator approved A–G and requested the plan/RED checkpoint followed by
 incremental branch pushes. `dc7a848f` contains that initial checkpoint and is
 published on `pi/smooth-type2-timelapse-tower`; no main push or review request.
-Latest coordinator main notice: `7cfa0b33` sets the sparse-anchoring reference
-center to zero and removes `fill_entities::object_center`. Preserve those
-changes when rebasing before eventual integration. Main integration is frozen
-pending explicit coordinator release; elapsed time is not release permission.
+Latest coordinator main notice: `b64b1d90` contains behavior-preserving geometry
+lint refactors. Also preserve `7cfa0b33` (zero sparse-anchoring reference center
+and removal of `fill_entities::object_center`) when rebasing before integration.
+The coordinator explicitly released the main freeze. Type2 remains unapproved:
+only after final approval may it rebase, repeat gates and ff-integrate. If a
+concurrent push wins, rebase and repeat validation; never force-push.
 
 A's partition kernel is now connected to the existing `ToolOrdering::build`:
 partition counts propagate downward, tower flags retain wrapping/smooth rules,
@@ -306,3 +308,34 @@ The separate seeded run reproduces all five activated divergences and keeps
 the 29 regressions plus traditional control passing:
 `/tmp/ares-pi-tower-type2-A-final-seeded.log`. fmt/diff checks pass.
 No Type2 review request or integration is authorized by this checkpoint.
+The A checkpoint is published as `b308fa2b`.
+
+## B: Purge witnesses and collection ownership
+
+The asymmetric SEMM witness retains matrix `[0, 200, 110, 0]` and multiplier
+0.75 in exported bytes. Its paired infill-purge variant additionally verifies
+`flush_into_infill=1` and the actual reference `; PURGING FINISHED` marker
+(`GCode.cpp:5328`), not just a requested flag. Both reach full-output RED:
+748725/123618 and 752940/123618 expected/actual bytes respectively. Evidence:
+`/tmp/ares-pi-tower-type2-B-purge-red.log`, run
+`c7ffcbac-aceb-4766-ad35-d63ae4a8fbd0`.
+
+Source inspection confirms that `WipingExtrusions` assigns complete original
+collections, whereas the existing Rust island stage flattens sortable fill
+collections. Preserve layer-local collection IDs through this flattening,
+ordering and tool partitioning before allocating purge volume. Existing
+perimeter `source_order` already provides its corresponding identity;
+region IDs are not replacements for collection IDs. The ownership decision
+is recorded in ARD-0105. Volume allocation, depth simulation and generation
+remain pending; this ownership work is not completion of B or Type2.
+
+Ownership validation: 9 focused tests PASS (31.290s), including shared identity
+for flattened siblings and preservation through multi-region tool buckets.
+Clippy remains at 249 warnings; fmt and diff checks PASS. Original and seeded
+runs each retain the 29 BBL/PA cases and traditional control; all 7 activated
+Type2 cases remain full-output RED. Logs:
+`/tmp/ares-pi-tower-type2-B-identity-{unit,clippy-final,official,seeded}.log`.
+The five multi-tool Ares outputs are byte-identical before and after adding
+identity metadata (`/tmp/pi-unified-exec-178-37569fa2.log`); this is regression
+evidence, not parity GREEN. No full-workspace/WASM gate or review request is
+claimed for this partial B checkpoint.

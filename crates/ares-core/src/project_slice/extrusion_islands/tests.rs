@@ -72,7 +72,7 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
     assert_eq!(
         infills
             .iter()
-            .map(|(_, infill)| match infill {
+            .map(|(_, _, infill)| match infill {
                 IslandInfillEntity::Fill(
                     FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path),
                 ) => {
@@ -86,8 +86,19 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
         vec![Some(Point::new(-8, -8)), Some(Point::new(4, 8)), None]
     );
     assert!(matches!(
-        &infills[2].1,
+        &infills[2].2,
         IslandInfillEntity::FillCollection(collection)
             if collection.no_sort && collection.entities.len() == 1
     ));
+    assert_eq!(
+        infills.iter().map(|(_, id, _)| *id).collect::<Vec<_>>(),
+        [0, 0, 1]
+    );
+    let ordered = crate::project_slice::island_print_order::order_island(
+        assigned.islands.into_iter().next().unwrap(),
+        false,
+        true,
+    );
+    assert_eq!(ordered.infill_regions, [0, 0, 0]);
+    assert_eq!(ordered.infill_collections, [0, 0, 1]);
 }

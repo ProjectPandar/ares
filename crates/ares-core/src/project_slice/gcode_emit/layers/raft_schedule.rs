@@ -151,6 +151,7 @@ fn materialize_layer(
             tool_regions: Vec::new(),
             islands: vec![OrderedExtrusionIsland {
                 infill_regions: vec![0; entities.len()],
+                infill_collections: (0..entities.len()).collect(),
                 perimeter_regions: Vec::new(),
                 entities,
             }],
