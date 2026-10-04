@@ -1,5 +1,9 @@
+mod scene;
+
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;
+
+pub use scene::{SceneData, load_scene, scene_from_bytes};
 
 #[wasm_bindgen]
 pub async fn slice_stl(input: Vec<u8>, options_json: String) -> Result<Vec<u8>, JsValue> {
