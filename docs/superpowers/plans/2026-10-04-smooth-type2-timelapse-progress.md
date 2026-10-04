@@ -334,3 +334,19 @@ No Type2 approval or final review readiness is claimed.
   to `513a6fd2`; the center continuation has focused gates, not a new workspace
   result. Support/raft footprint fallback, support contribution to brim boxes,
   fake-tower brim/mesh consumers and lint debt still prevent final completion.
+
+### No-skirt hull fallback witness
+
+- Checkpoint `fd88910b` published the object-center fix. A test-only
+  continuation adds `skirt_height=0` with zero loops, exposing every one of
+  the native hull's **6 vertices**. The ordinary zero-loop case still has
+  skirt height 2 and **16 vertices**; the one-loop case has **18 vertices**.
+  The native `generate_skirt` condition at `Print.cpp:2981` must remain
+  distinct from zero loop count. No production change was needed for this
+  model-only fallback; support/raft fallback coverage is still outstanding.
+- The shape/option function now contains **14 variants**. Fresh unchanged
+  complete-output corpora pass **8/8 official and 8/8 seeded** in
+  `/tmp/ares-pi-tower-fallback-{official,seeded}.log`, with separate artifacts.
+  Formatting/diff checks pass; Clippy remains at 296 warnings in
+  `/tmp/ares-pi-tower-fallback-clippy.log`. Core production code is unchanged
+  from the center checkpoint's 323-test/WASM gates.

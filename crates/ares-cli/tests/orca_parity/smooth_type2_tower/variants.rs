@@ -47,6 +47,10 @@ fn orca_parity_smooth_type2_tower_shapes_and_sparse_layers() {
         ("rib-no-sparse", json!({"wipe_tower_no_sparse_layers": "1"})),
         ("rib-no-skirt", json!({"skirt_loops": "0"})),
         ("bounds-no-skirt", json!({"skirt_loops": "0"})),
+        (
+            "bounds-no-skirt-height",
+            json!({"skirt_loops": "0", "skirt_height": "0"}),
+        ),
         ("bounds-with-skirt", json!({"skirt_loops": "1"})),
         (
             "brim-near-tower",
@@ -70,11 +74,17 @@ fn orca_parity_smooth_type2_tower_shapes_and_sparse_layers() {
             json!({"single_extruder_multi_material_priming": "1"}),
         ),
     ] {
+        let hull_vertices = match label {
+            "bounds-no-skirt" => Some(16),
+            "bounds-no-skirt-height" => Some(6),
+            "bounds-with-skirt" => Some(18),
+            _ => None,
+        };
         let mut case_process = process.clone();
         let changes = changes.as_object().unwrap();
         case_process.extend(changes.clone());
         let mut case_machine = machine.clone();
-        if label.starts_with("bounds-") {
+        if let Some(vertices) = hull_vertices {
             let start = case_machine["machine_start_gcode"]
                 .as_str()
                 .unwrap()
@@ -86,7 +96,11 @@ fn orca_parity_smooth_type2_tower_shapes_and_sparse_layers() {
                 + "\n; MAX {first_layer_print_max[0]},{first_layer_print_max[1]}"
                 + "\n; CENTER {first_layer_center_no_wipe_tower[0]},{first_layer_center_no_wipe_tower[1]}"
                 + "\n; HULL_SIZE {size(first_layer_print_convex_hull)}";
-            let vertices = if label == "bounds-no-skirt" { 16 } else { 18 };
+            let vertices = if label.starts_with("bounds-no-skirt") {
+                16
+            } else {
+                18
+            };
             for index in 0..vertices {
                 write!(
                     start,
@@ -143,8 +157,7 @@ fn orca_parity_smooth_type2_tower_shapes_and_sparse_layers() {
         let sliced = runner.slice_case(&exported).unwrap();
         let reference = std::str::from_utf8(&sliced.reference).unwrap();
         assert!(reference.contains(";TYPE:Prime tower\n"), "{label}");
-        if label.starts_with("bounds-") {
-            let vertices = if label == "bounds-no-skirt" { 16 } else { 18 };
+        if let Some(vertices) = hull_vertices {
             assert!(
                 reference.contains(&format!("; HULL_SIZE {vertices}\n")),
                 "{label}"
