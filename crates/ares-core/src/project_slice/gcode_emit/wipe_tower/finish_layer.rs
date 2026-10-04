@@ -3,6 +3,7 @@ use super::{
     generator::Generator,
     geometry::{BoxCoordinates, ConeOptions, emit_wall, new_scale, unscaled},
     result::ToolChangeResult,
+    writer::Writer,
 };
 use crate::{
     ProcessWipeTowerWallType,
@@ -33,6 +34,7 @@ impl Generator<'_> {
             feedrate = feedrate.min(1200.0);
         }
         let layer = &self.plan.layers[self.layer_index];
+        let layer_height = layer.height;
         let perimeter = self.plan.perimeter_width;
         let current_depth = layer.depth - layer.changes_depth();
         let bounds = BoxCoordinates::new(
@@ -58,71 +60,8 @@ impl Generator<'_> {
         if writer.position[1] > bounds.lower[1] + 1e-4 {
             writer.travel([writer.position[0], bounds.lower[1]], 0.0);
         }
-        let dy = bounds.size()[1] - perimeter;
-        let mut left = bounds.lower[0] + 2.0 * perimeter;
-        let mut right = bounds.upper[0] - 2.0 * perimeter;
-        if dy > perimeter {
-            writer.travel([bounds.lower[0] + 2.0 * perimeter, bounds.lower[1]], 0.0);
-            writer
-                .gcode
-                .push_str(";--------------------\n; CP EMPTY GRID START\n");
-            writer
-                .gcode
-                .push_str(&format!("; layer #{}\n", self.layer_changes + 1));
-            let solid = first_layer
-                || self
-                    .plan
-                    .layers
-                    .get(self.layer_index + 1)
-                    .is_some_and(|next| {
-                        next.changes.iter().any(|c| {
-                            self.filaments[c.new_tool].soluble || self.filaments[c.old_tool].soluble
-                        })
-                    });
-            if solid {
-                let mut sparse_factor = 1.5;
-                if first_layer {
-                    left -= perimeter;
-                    right += perimeter;
-                    sparse_factor = 1.0;
-                }
-                let mut y = bounds.lower[1] + perimeter;
-                let count = (dy / (perimeter * sparse_factor)) as i32;
-                let spacing = (dy - perimeter) / (count - 1) as f32;
-                for index in 0..count {
-                    writer.extrude([writer.position[0], y], feedrate);
-                    writer.extrude([if index % 2 != 0 { left } else { right }, y], 0.0);
-                    y += spacing;
-                }
-                writer.extrude([writer.position[0], bounds.upper[1]], 0.0);
-            } else {
-                writer.extrude(
-                    [bounds.lower[0] + 2.0 * perimeter, bounds.upper[1]],
-                    feedrate,
-                );
-                let count = 1
-                    + ((right - left) / self.settings.process.print.wipe_tower_bridging.0 as f32)
-                        as i32;
-                let dx = (right - left) / count as f32;
-                for index in 1..=count {
-                    let x = left + dx * index as f32;
-                    writer.travel([x, writer.position[1]], 0.0);
-                    writer.extrude(
-                        [
-                            x,
-                            if index % 2 != 0 {
-                                bounds.lower[1]
-                            } else {
-                                bounds.upper[1]
-                            },
-                        ],
-                        0.0,
-                    );
-                }
-            }
-            writer
-                .gcode
-                .push_str("; CP EMPTY GRID END\n;------------------\n\n\n\n\n\n\n");
+        if bounds.size()[1] - perimeter > perimeter {
+            self.finish_grid(&mut writer, bounds, first_layer, feedrate);
         }
         let spacing = perimeter - self.layer_height * (1.0 - std::f64::consts::FRAC_PI_4) as f32;
         feedrate = if first_layer {
@@ -171,39 +110,7 @@ impl Generator<'_> {
             }
         };
         if first_layer {
-            writer.gcode.push_str("; WIPE_TOWER_BRIM_START\n");
-            let mut brim = self.settings.process.print.prime_tower_brim_width.0 as f32;
-            if brim < 0.0 {
-                brim = if self.plan.height < 100.0 {
-                    self.plan.height / 100.0 * 8.0
-                } else {
-                    8.0
-                };
-            }
-            let count = ((brim + spacing / 2.0) / spacing) as usize;
-            for _ in 0..count {
-                polygon = raw_offset_paths(
-                    std::slice::from_ref(&polygon),
-                    (f64::from(spacing) / self.scale.factor()) as f32,
-                    JoinType::Miter,
-                    3.0,
-                )?
-                .remove(0);
-                let start = closest(&polygon, writer.position, self.scale);
-                writer.travel(unscaled(polygon.points()[start], self.scale), 0.0);
-                for step in 1..=polygon.points().len() {
-                    writer.extrude(
-                        unscaled(
-                            polygon.points()[(start + step) % polygon.points().len()],
-                            self.scale,
-                        ),
-                        0.0,
-                    );
-                }
-            }
-            writer.gcode.push_str("; WIPE_TOWER_BRIM_END\n");
-            self.brim_width = count as f32 * spacing;
-            self.first_layer_bounds = crate::geometry::BoundingBox::from_polygon(&polygon);
+            polygon = self.finish_brim(&mut writer, polygon, spacing)?;
         }
         let closest = closest(&polygon, writer.position, self.scale);
         let previous = (closest + polygon.points().len() - 1) % polygon.points().len();
@@ -213,9 +120,122 @@ impl Generator<'_> {
             .push(writer.rotated(unscaled(polygon.points()[previous], self.scale)));
         if !self.plan.no_sparse || toolchanges_on_layer || first_layer {
             self.used_filament[self.current_tool] += writer.take_used_filament();
-            self.current_height += layer.height;
+            self.current_height += layer_height;
         }
         Ok(self.result(writer, old_tool, super::result::Kind::Finish))
+    }
+    fn finish_grid(
+        &self,
+        writer: &mut Writer,
+        bounds: BoxCoordinates,
+        first_layer: bool,
+        feedrate: f32,
+    ) {
+        let perimeter = self.plan.perimeter_width;
+        let dy = bounds.size()[1] - perimeter;
+        let mut left = bounds.lower[0] + 2.0 * perimeter;
+        let mut right = bounds.upper[0] - 2.0 * perimeter;
+        writer.travel([bounds.lower[0] + 2.0 * perimeter, bounds.lower[1]], 0.0);
+        writer
+            .gcode
+            .push_str(";--------------------\n; CP EMPTY GRID START\n");
+        writer
+            .gcode
+            .push_str(&format!("; layer #{}\n", self.layer_changes + 1));
+        let solid = first_layer
+            || self
+                .plan
+                .layers
+                .get(self.layer_index + 1)
+                .is_some_and(|next| {
+                    next.changes.iter().any(|c| {
+                        self.filaments[c.new_tool].soluble || self.filaments[c.old_tool].soluble
+                    })
+                });
+        if solid {
+            let mut sparse_factor = 1.5;
+            if first_layer {
+                left -= perimeter;
+                right += perimeter;
+                sparse_factor = 1.0;
+            }
+            let mut y = bounds.lower[1] + perimeter;
+            let count = (dy / (perimeter * sparse_factor)) as i32;
+            let spacing = (dy - perimeter) / (count - 1) as f32;
+            for index in 0..count {
+                writer.extrude([writer.position[0], y], feedrate);
+                let x = match index % 2 {
+                    0 => right,
+                    _ => left,
+                };
+                writer.extrude([x, y], 0.0);
+                y += spacing;
+            }
+            writer.extrude([writer.position[0], bounds.upper[1]], 0.0);
+        } else {
+            writer.extrude(
+                [bounds.lower[0] + 2.0 * perimeter, bounds.upper[1]],
+                feedrate,
+            );
+            let count = 1
+                + ((right - left) / self.settings.process.print.wipe_tower_bridging.0 as f32)
+                    as i32;
+            let dx = (right - left) / count as f32;
+            for index in 1..=count {
+                let x = left + dx * index as f32;
+                writer.travel([x, writer.position[1]], 0.0);
+                let y = match index % 2 {
+                    0 => bounds.upper[1],
+                    _ => bounds.lower[1],
+                };
+                writer.extrude([x, y], 0.0);
+            }
+        }
+        writer
+            .gcode
+            .push_str("; CP EMPTY GRID END\n;------------------\n\n\n\n\n\n\n");
+    }
+
+    fn finish_brim(
+        &mut self,
+        writer: &mut Writer,
+        mut polygon: Polygon,
+        spacing: f32,
+    ) -> Result<Polygon, ClipperError> {
+        writer.gcode.push_str("; WIPE_TOWER_BRIM_START\n");
+        let mut brim = self.settings.process.print.prime_tower_brim_width.0 as f32;
+        if brim < 0.0 {
+            brim = if self.plan.height < 100.0 {
+                self.plan.height / 100.0 * 8.0
+            } else {
+                8.0
+            };
+        }
+        let count = ((brim + spacing / 2.0) / spacing) as usize;
+        for _ in 0..count {
+            polygon = raw_offset_paths(
+                std::slice::from_ref(&polygon),
+                (f64::from(spacing) / self.scale.factor()) as f32,
+                JoinType::Miter,
+                3.0,
+            )?
+            .remove(0);
+            let start = closest(&polygon, writer.position, self.scale);
+            writer.travel(unscaled(polygon.points()[start], self.scale), 0.0);
+            for step in 1..=polygon.points().len() {
+                writer.extrude(
+                    unscaled(
+                        polygon.points()[(start + step) % polygon.points().len()],
+                        self.scale,
+                    ),
+                    0.0,
+                );
+            }
+        }
+        writer.gcode.push_str("; WIPE_TOWER_BRIM_END\n");
+        self.brim_width = count as f32 * spacing;
+        self.first_layer_bounds = crate::geometry::BoundingBox::from_polygon(&polygon);
+        Ok(polygon)
     }
 }
 

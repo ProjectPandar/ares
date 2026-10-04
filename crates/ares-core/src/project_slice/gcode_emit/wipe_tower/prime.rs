@@ -37,11 +37,11 @@ impl Generator<'_> {
                 writer.speed_override(100);
                 writer.set_initial_position([0.0; 2], [0.0; 2], 0.0);
                 writer.travel(bounds.lower, 7200.0);
-                if trimpot {
-                    writer.trimpot(750);
-                }
             } else {
                 writer.set_initial_position(results.last().unwrap().end, [0.0; 2], 0.0);
+            }
+            if index == 0 && trimpot {
+                writer.trimpot(750);
             }
             self.left_to_right = true;
             self.change(&mut writer, tool);
@@ -49,7 +49,7 @@ impl Generator<'_> {
             if index + 1 == tools.len() {
                 // No color transition exists for a single primed tool. The source
                 // indexes tools[-1] here; do not reproduce that out-of-bounds read.
-                let previous = if index == 0 { tool } else { tools[index - 1] };
+                let previous = tools[index.saturating_sub(1)];
                 self.wipe(
                     &mut writer,
                     bounds,
@@ -74,10 +74,10 @@ impl Generator<'_> {
             }
             self.tool_changes += 1;
             self.used_filament[self.current_tool] += writer.take_used_filament();
+            if index + 1 == tools.len() && trimpot {
+                writer.trimpot(550);
+            }
             if index + 1 == tools.len() {
-                if trimpot {
-                    writer.trimpot(550);
-                }
                 writer.speed_override_restore();
                 writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
                 writer

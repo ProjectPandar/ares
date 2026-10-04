@@ -3,6 +3,26 @@ use super::{
     generator::Generator, geometry::BoxCoordinates, plan::volume_to_length, writer::Writer,
 };
 
+fn edge_x([left, right]: [f32; 2], left_to_right: bool, inset: f32) -> f32 {
+    if left_to_right {
+        right - inset
+    } else {
+        left + inset
+    }
+}
+
+fn next_speed(speed: f32, target: f32) -> f32 {
+    if speed < 0.34 * target {
+        0.375 * target
+    } else if f64::from(speed) < 0.377 * f64::from(target) {
+        0.458 * target
+    } else if speed < 0.46 * target {
+        0.875 * target
+    } else {
+        target.min(speed + 50.0)
+    }
+}
+
 impl Generator<'_> {
     pub(super) fn wipe(
         &mut self,
@@ -38,11 +58,7 @@ impl Generator<'_> {
         if edge_distance < 2.5 * line_width {
             writer.travel(
                 [
-                    if self.left_to_right {
-                        xr - line_width
-                    } else {
-                        xl + line_width
-                    },
+                    edge_x([xl, xr], self.left_to_right, line_width),
                     writer.position[1] + dy,
                 ],
                 0.0,
@@ -61,30 +77,14 @@ impl Generator<'_> {
         let mut index = 0;
         loop {
             if index != 0 {
-                speed = if speed < 0.34 * target {
-                    0.375 * target
-                } else if f64::from(speed) < 0.377 * f64::from(target) {
-                    0.458 * target
-                } else if speed < 0.46 * target {
-                    0.875 * target
-                } else {
-                    target.min(speed + 50.0)
-                };
+                speed = next_speed(speed, target);
             }
             let previous_x = writer.position[0];
-            let x = if self.left_to_right {
-                xr - if index % 4 == 0 {
-                    0.0
-                } else {
-                    1.5 * line_width
-                }
-            } else {
-                xl + if index % 4 == 1 {
-                    0.0
-                } else {
-                    1.5 * line_width
-                }
+            let inset = match (self.left_to_right, index % 4) {
+                (true, 0) | (false, 1) => 0.0,
+                _ => 1.5 * line_width,
             };
+            let x = edge_x([xl, xr], self.left_to_right, inset);
             writer.extrude([x, writer.position[1]], speed);
             if index == 0 && ironing && ironing_area > 0.0 {
                 writer.travel(writer.position, 600.0);
@@ -102,11 +102,7 @@ impl Generator<'_> {
             if remaining < 1e-3 {
                 writer.travel(
                     [
-                        if self.left_to_right {
-                            xl + 1.5 * line_width
-                        } else {
-                            xr - 1.5 * line_width
-                        },
+                        edge_x([xl, xr], !self.left_to_right, 1.5 * line_width),
                         writer.position[1],
                     ],
                     7200.0,

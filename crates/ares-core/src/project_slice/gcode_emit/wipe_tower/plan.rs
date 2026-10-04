@@ -142,10 +142,13 @@ impl Plan {
             if depth > self.depth - self.perimeter_width {
                 self.depth = depth + self.perimeter_width;
             }
-            for lower in self.layers[..index].iter_mut().rev() {
-                if lower.depth - depth < 2.0 * self.perimeter_width {
-                    lower.depth = depth;
-                }
+            let transition_gap = 2.0 * self.perimeter_width;
+            for lower in self.layers[..index]
+                .iter_mut()
+                .rev()
+                .filter(|lower| lower.depth - depth < transition_gap)
+            {
+                lower.depth = depth;
             }
         }
     }

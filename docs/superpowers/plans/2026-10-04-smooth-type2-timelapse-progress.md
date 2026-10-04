@@ -373,3 +373,22 @@ No Type2 approval or final review readiness is claimed.
   outstanding. Remaining source-consumer audit is unchanged; no final
   REVIEW-REQUEST or main integration is claimed. Published feature history
   has not been force-updated after rebase.
+
+### Source-phase lint cleanup checkpoint
+
+- Coordinator approved publication to
+  `pi/smooth-type2-timelapse-tower-rebased-95e23008`; `20f4f3fe` was pushed
+  without force and this is now the local branch's upstream.
+- Flatten the source wipe edge/speed, grid/brim, per-layer generation and
+  last-wipe simulation phases; isolate coordinate stripping/prefix formatting
+  and preserve priming command order. No new public API, changed arithmetic
+  precision, comparator relaxation, or lint suppression is introduced.
+- Clippy **204 → 175 warnings**. Main's coordinator-reported baseline is 179;
+  being below that total does **not** establish zero introduced diagnostics.
+  Remaining source-consumer/unused-data and nesting diagnostics still need audit.
+- `/tmp/ares-pi-tower-lint-phases-green-*`: **323 focused PASS**, official
+  **8/8 PASS**, seeded **8/8 PASS**, WASM/fmt/diff PASS. The previous workspace
+  7640 run predates these production refactors and is not current-tree evidence.
+- Main has advanced to `b42edd5e` (web/wasm, no core changes per coordinator).
+  Rebase latest main and repeat final gates before integration; no final review
+  or main integration is claimed by this checkpoint.

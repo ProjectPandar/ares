@@ -33,67 +33,84 @@ pub(super) fn moves(
             } else {
                 false
             };
-            let bytes = line.as_bytes();
-            let mut stripped = Vec::with_capacity(bytes.len());
-            let mut index = 0;
-            while index < bytes.len() {
-                let ch = bytes[index];
-                index += 1;
-                if matches!(ch, b'X' | b'Y') {
-                    while index < bytes.len() && bytes[index].is_ascii_whitespace() {
-                        index += 1;
-                    }
-                    let start = index;
-                    while index < bytes.len()
-                        && (bytes[index].is_ascii_digit()
-                            || matches!(bytes[index], b'+' | b'-' | b'.' | b'e' | b'E'))
-                    {
-                        index += 1;
-                    }
-                    position[usize::from(ch == b'Y')] =
-                        line[start..index].parse().expect("tower writer coordinate");
-                } else {
-                    stripped.push(ch);
-                }
-            }
-            line = String::from_utf8(stripped).expect("removing ASCII coordinates preserves UTF-8");
+            line = strip_coordinates(&line, &mut position);
             transformed = transform(position, translation, angle);
             if transformed != old || never_skip {
-                use std::fmt::Write as _;
-                let mut replacement = command;
-                if transformed[0] != old[0] || never_skip {
-                    write!(replacement, " X{:.3}", transformed[0] - extruder_offset[0]).unwrap();
-                }
-                if transformed[1] != old[1] || never_skip {
-                    write!(replacement, " Y{:.3}", transformed[1] - extruder_offset[1]).unwrap();
-                }
-                replacement.push(' ');
+                let replacement =
+                    motion_prefix(command, transformed, old, extruder_offset, never_skip);
                 line.replace_range(..3, &replacement);
                 old = transformed;
             }
         }
         output.push_str(&line);
         output.push('\n');
-        if line == "[change_filament_gcode]" {
-            if !semm {
-                extruder_offset = offsets[result.new_tool];
-                if extruder_offset != offsets[result.initial_tool] {
-                    use std::fmt::Write as _;
-                    writeln!(
-                        output,
-                        "G1 X{:.3} Y{:.3}",
-                        transformed[0] - extruder_offset[0],
-                        transformed[1] - extruder_offset[1]
-                    )
-                    .unwrap();
-                }
-            }
-            old = [-1000.1; 2];
-            position = result.start;
-            transformed = transform(position, translation, angle);
+        if line != "[change_filament_gcode]" {
+            continue;
         }
+        if !semm {
+            extruder_offset = offsets[result.new_tool];
+            if extruder_offset != offsets[result.initial_tool] {
+                use std::fmt::Write as _;
+                writeln!(
+                    output,
+                    "G1 X{:.3} Y{:.3}",
+                    transformed[0] - extruder_offset[0],
+                    transformed[1] - extruder_offset[1]
+                )
+                .unwrap();
+            }
+        }
+        old = [-1000.1; 2];
+        position = result.start;
+        transformed = transform(position, translation, angle);
     }
     output
+}
+
+fn strip_coordinates(line: &str, position: &mut [f32; 2]) -> String {
+    let bytes = line.as_bytes();
+    let mut stripped = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        let ch = bytes[index];
+        index += 1;
+        if matches!(ch, b'X' | b'Y') {
+            while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+                index += 1;
+            }
+            let start = index;
+            while index < bytes.len()
+                && (bytes[index].is_ascii_digit()
+                    || matches!(bytes[index], b'+' | b'-' | b'.' | b'e' | b'E'))
+            {
+                index += 1;
+            }
+            position[usize::from(ch == b'Y')] =
+                line[start..index].parse().expect("tower writer coordinate");
+        } else {
+            stripped.push(ch);
+        }
+    }
+    String::from_utf8(stripped).expect("removing ASCII coordinates preserves UTF-8")
+}
+
+fn motion_prefix(
+    command: String,
+    transformed: [f32; 2],
+    old: [f32; 2],
+    extruder_offset: [f32; 2],
+    never_skip: bool,
+) -> String {
+    use std::fmt::Write as _;
+    let mut replacement = command;
+    if transformed[0] != old[0] || never_skip {
+        write!(replacement, " X{:.3}", transformed[0] - extruder_offset[0]).unwrap();
+    }
+    if transformed[1] != old[1] || never_skip {
+        write!(replacement, " Y{:.3}", transformed[1] - extruder_offset[1]).unwrap();
+    }
+    replacement.push(' ');
+    replacement
 }
 
 #[cfg(test)]
