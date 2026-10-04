@@ -3,3 +3,4 @@ dist/
 packages/ares-wasm-js/src/wasm/
 test-results/
 packages/ares-wasm-js/LICENSE
+packages/ares-profiles/LICENSE

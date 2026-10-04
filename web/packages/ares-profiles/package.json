@@ -1,0 +1,40 @@
+{
+  "name": "@ares-slicer/profiles",
+  "version": "0.1.0",
+  "description": "OrcaSlicer system printer, process and filament presets as lazily loaded per-vendor data for Ares.",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProjectPandar/ares.git",
+    "directory": "web/packages/ares-profiles"
+  },
+  "homepage": "https://github.com/ProjectPandar/ares/tree/main/web/packages/ares-profiles#readme",
+  "bugs": "https://github.com/ProjectPandar/ares/issues",
+  "keywords": [
+    "3d-printing",
+    "slicer",
+    "orcaslicer",
+    "presets",
+    "profiles"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node scripts/build-profiles.mjs",
+    "prepack": "npm run build && node -e \"require('node:fs').copyFileSync('../../../LICENSES/AGPL-3.0.txt', 'LICENSE')\""
+  }
+}
