@@ -57,6 +57,23 @@ Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
 comparisons, Tier-1 verification and independent six-axis review. Historical
 modified-classic and sampled-domain summaries are not that exit evidence.
 
+### Vendor stock fill-reference repair (in progress)
+
+Priority tracer: the60 Snapmaker cubic residuals, with8 Qidi grid controls.
+Port `PrintObject::bounding_box` → `Layer::make_fills` →
+`Fill::_infill_direction` centered reference into `fill_entities::generate_layer`;
+replace the slice-contour-center compatibility approximation at that boundary.
+[Spec](superpowers/specs/2026-10-04-print-object-fill-reference.md),
+[plan](superpowers/plans/2026-10-04-print-object-fill-reference.md),
+[ARD](architecture/ard-print-object-fill-reference.md), and
+[triage](superpowers/plans/2026-10-04-vendor-stock-residual-triage.md).
+Exit: the coordinator-approved52-case strict RED→GREEN slice (full68 retains
+16 failures:14 bridge handoffs and2 next-slice Qidi cases), green stock controls,
+fresh official representatives with remaining failures preserved, workspace
+Nextest/Clippy/fmt/WASM, coordinator approval before fast-forward main integration.
+Bridge sparse-anchoring and extended box sizing
+remain deferred; this is not full printer-matrix completion.
+
 ### Thin-tip support fill connection follow-up (feature gates passed)
 
 Rewrite `Fill/FillBase.cpp::mark_boundary_segments_overlapping_infill` in

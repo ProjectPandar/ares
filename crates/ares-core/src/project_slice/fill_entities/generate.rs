@@ -51,9 +51,9 @@ pub(in crate::project_slice) fn generate_layer(
         .expect("fill generation retains its resolved object");
     let object_options = &resolved_object.object;
     let mut output = LayerFillEntities::default();
-    // `Fill::_infill_direction` anchors the infill grid on the PRINT OBJECT
-    // bounding box center (FillBase.cpp:297-301), not the surface center.
-    let object_reference = super::object_center(object_slices);
+    // `PrintObject::bounding_box` (Print.hpp:347) is symmetric around zero;
+    // `Fill::_infill_direction` uses that center, not quantized slice bounds.
+    let object_reference = crate::geometry::Point::new(0, 0);
     // `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) — the
     // object bbox transpose-merged + sqrt(2)-scaled so the consistent-pattern
     // vertical-line grid is anchored object-wide, independent of rotation.
