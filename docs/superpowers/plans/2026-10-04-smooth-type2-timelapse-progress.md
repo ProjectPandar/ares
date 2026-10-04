@@ -350,3 +350,26 @@ No Type2 approval or final review readiness is claimed.
   Formatting/diff checks pass; Clippy remains at 296 warnings in
   `/tmp/ares-pi-tower-fallback-clippy.log`. Core production code is unchanged
   from the center checkpoint's 323-test/WASM gates.
+
+### Rebase onto the released main checkpoint
+
+- Coordinator released main at `95e23008` and explicitly requested rebase.
+  All 12 feature commits replayed without conflicts; range-diff marks every
+  patch identical in `/tmp/ares-pi-tower-rebase-95e23008-range-diff.log`.
+  Pre-rebase history is retained at `checkpoint/tower-before-main-95e23008`.
+  Rebased tip before the test cleanup is `0a547e32`; all specified protected
+  main commits (`931691eb`, `16ac907b`, `e865eb2a`, `b64b1d90`, `7cfa0b33`)
+  remain ancestors, as does `95e23008`.
+- Full compilation exposed a redundant local hull vertex-count binding in
+  the new fixture. Remove that shadow rather than suppressing the warning;
+  the fixture now emits exactly the known 6/16/18 vertices, without extra
+  out-of-range aliases. No production code or comparator change is involved.
+- Current-tree workspace: **7640 PASS, 9 skipped**, recorded in
+  `/tmp/ares-pi-tower-rebase-95e23008-workspace-current.log` after that cleanup.
+  Official and seeded full-output corpora each **8/8 PASS**, WASM PASS, and
+  fmt/diff checks PASS under `/tmp/ares-pi-tower-rebase-95e23008-*`.
+  Clippy completes with **204 warnings** (`...-clippy-current.log`), down from
+  296 after main's changes, but final introduced-warning clearance is still
+  outstanding. Remaining source-consumer audit is unchanged; no final
+  REVIEW-REQUEST or main integration is claimed. Published feature history
+  has not been force-updated after rebase.

@@ -96,11 +96,6 @@ fn orca_parity_smooth_type2_tower_shapes_and_sparse_layers() {
                 + "\n; MAX {first_layer_print_max[0]},{first_layer_print_max[1]}"
                 + "\n; CENTER {first_layer_center_no_wipe_tower[0]},{first_layer_center_no_wipe_tower[1]}"
                 + "\n; HULL_SIZE {size(first_layer_print_convex_hull)}";
-            let vertices = if label.starts_with("bounds-no-skirt") {
-                16
-            } else {
-                18
-            };
             for index in 0..vertices {
                 write!(
                     start,
