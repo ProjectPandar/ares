@@ -1,4 +1,10 @@
-use super::chain_instance_order;
+fn chain_instance_order(centers: &[(f64, f64)], seed: (i64, i64)) -> Vec<usize> {
+    let scaled = centers
+        .iter()
+        .map(|&(x, y)| ((x / 1e-6).round() as i64, (y / 1e-6).round() as i64))
+        .collect::<Vec<_>>();
+    super::chain_instance_order(&scaled, seed)
+}
 
 /// Upstream default seed (`GCode.cpp:5115`): the wipe-tower config values
 /// truncated into scaled integers — microns from the origin.

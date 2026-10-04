@@ -17,6 +17,7 @@ use crate::{
 
 pub(super) struct Entry {
     pub(super) source: LayerToPrint,
+    pub(super) instance: super::instances::Instance,
     pub(super) body: Option<OrderedExtrusionLayer>,
     pub(super) support_role: Option<ExtrusionRole>,
 }
@@ -24,6 +25,7 @@ pub(super) struct Entry {
 pub(super) struct Input<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) entries: &'a [LayerToPrint],
+    pub(super) instances: &'a [Vec<super::instances::Instance>],
     pub(super) tools: &'a [usize],
     pub(super) objects: &'a mut [Vec<OrderedExtrusionLayer>],
     pub(super) support: &'a [Vec<InstalledSupportLayer>],
@@ -32,7 +34,13 @@ pub(super) struct Input<'a> {
 
 pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
     let mut buckets = BTreeMap::<usize, BTreeMap<usize, Entry>>::new();
-    for (position, &source) in input.entries.iter().enumerate() {
+    for (source, instance) in input.entries.iter().flat_map(|&source| {
+        input.instances[source.object_index]
+            .iter()
+            .map(move |&instance| (source, instance))
+    }) {
+        let position = instance.position;
+        let replay = instance.copy + 1 < input.instances[source.object_index].len();
         let options =
             super::super::tool_ordering::object_options(input.traversal, source.object_index);
         if let Some(index) = source.support_layer {
@@ -51,6 +59,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
                     .entry(position)
                     .or_insert_with(|| Entry {
                         source,
+                        instance,
                         body: None,
                         support_role: None,
                     })
@@ -58,12 +67,15 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
             }
         }
         let bodies = if let Some(index) = source.raft_layer {
-            object::raft(
-                &mut input.raft[source.object_index][index],
-                options,
-                input.traversal,
-                input.tools,
-            )
+            let layer = &mut input.raft[source.object_index][index];
+            let mut repeated;
+            let layer = if replay {
+                repeated = layer.clone();
+                &mut repeated
+            } else {
+                layer
+            };
+            object::raft(layer, options, input.traversal, input.tools)
         } else if let Some(index) = source.object_layer {
             let regions = input.traversal.objects[source.object_index]
                 .predecessor
@@ -77,11 +89,17 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
                 .0
                 .as_parts()
                 .2;
-            object::split(
-                &mut input.objects[source.object_index][index],
-                input.tools,
-                |region| &regions[region].options,
-            )
+            let layer = &mut input.objects[source.object_index][index];
+            // The consuming adapter replays additional copies, moving the last
+            // one. A single instance retains its allocation-free move path.
+            let mut repeated;
+            let layer = if replay {
+                repeated = layer.clone();
+                &mut repeated
+            } else {
+                layer
+            };
+            object::split(layer, input.tools, |region| &regions[region].options)
         } else {
             BTreeMap::new()
         };
@@ -92,6 +110,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
                 .entry(position)
                 .or_insert_with(|| Entry {
                     source,
+                    instance,
                     body: None,
                     support_role: None,
                 })
@@ -102,9 +121,12 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
         .tools
         .iter()
         .filter_map(|&tool| {
-            buckets
-                .remove(&tool)
-                .map(|entries| (tool, entries.into_values().collect()))
+            buckets.remove(&tool).map(|entries| {
+                (
+                    tool,
+                    super::instances::order(entries.into_values().collect(), input.traversal),
+                )
+            })
         })
         .collect()
 }

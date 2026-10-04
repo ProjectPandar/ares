@@ -43,16 +43,6 @@ fn object_bounds(object: &ProjectObject) -> Option<(f64, f64, f64, f64)> {
     bounds
 }
 
-/// World-space center for layer scheduling, distinct from the integer
-/// print-instance origin used during emission.
-pub(super) fn object_center(
-    traversal: &PreparedPostClassicTraversal,
-    index: usize,
-) -> Option<(f64, f64)> {
-    let (min_x, min_y, max_x, max_y) = object_bounds(traversal.project.objects().get(index)?)?;
-    Some(((min_x + max_x) * 0.5, (min_y + max_y) * 0.5))
-}
-
 /// `PrintApply.cpp:150`, `PrintObject.cpp:110,130`: scale translation and
 /// raw model center separately, then add the integer instance shift.
 pub(super) fn object_origin(object: &ProjectObject, scale: CoordinateScale) -> (f64, f64) {

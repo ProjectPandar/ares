@@ -1,7 +1,7 @@
 //! Per-tool instance dispatch from GCode.cpp:5322–5560.
 
 use super::super::{
-    SliceError, brim::BrimPlan, footprint, motion, object::ObjectLabels, spiral_vase, timelapse,
+    SliceError, brim::BrimPlan, motion, object::ObjectLabels, spiral_vase, timelapse,
 };
 use super::{
     brim_emit, entry_builder::EntryBuilder, object_entry, raft_entry, support_entry, tool_buckets,
@@ -24,7 +24,7 @@ pub(super) struct Input<'a, 'b> {
     pub(super) traditional_timelapse: bool,
     pub(super) timelapse_context: timelapse::Context<'a>,
     pub(super) is_group_end: bool,
-    pub(super) last_object_copy: &'a mut Option<usize>,
+    pub(super) last_object_copy: &'a mut Option<(usize, usize)>,
     pub(super) entry_builder: &'a mut EntryBuilder<'b>,
     pub(super) chunk_slices: &'a [ExPolygon],
     pub(super) chunk_perimeter_spacing: f64,
@@ -75,11 +75,14 @@ pub(super) fn emit(
         .predecessor
         .object
         .identity();
-    let (center_x, center_y) = footprint::object_origin(
-        &traversal.project.objects()[source_object_index],
-        traversal.scale,
+    let shift = bucket.instance.shift;
+    motion::set_origin(
+        state,
+        (
+            traversal.scale.unscale(shift.x()),
+            traversal.scale.unscale(shift.y()),
+        ),
     );
-    motion::set_origin(state, (center_x, center_y));
     // Raft chunks emit the materialized raft layer; the motion
     // machinery (travel/Z/TYPE/wipe/retract) is identical to the
     // object path.
@@ -108,9 +111,10 @@ pub(super) fn emit(
     // `GCode.cpp:5380-5384`: when a new object copy starts, the
     // first travel uses the external motion planner
     // (`use_external_mp_once`).
-    if *last_object_copy != Some(object_index) {
+    let object_copy = (object_index, bucket.instance.copy);
+    if *last_object_copy != Some(object_copy) {
         state.use_external_mp_once = true;
-        *last_object_copy = Some(object_index);
+        *last_object_copy = Some(object_copy);
         // The `_retract` Hilbert suppression reads the
         // DESTINATION object's region config (`GCode.cpp:7670`,
         // `config()` is the current PrintRegionConfig) — refresh

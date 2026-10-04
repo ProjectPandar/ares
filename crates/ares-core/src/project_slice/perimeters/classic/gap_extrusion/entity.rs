@@ -1,6 +1,6 @@
 use super::super::materialize::ExtrusionPath;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) enum GapFillEntity {
     Path(ExtrusionPath),
     Loop(Vec<ExtrusionPath>),

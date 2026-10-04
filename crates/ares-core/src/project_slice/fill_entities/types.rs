@@ -7,7 +7,7 @@ use crate::{
     },
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct FillExtrusionPath {
     pub(in crate::project_slice) polyline: Polyline,
     pub(in crate::project_slice) fitting: Vec<FittedMove>,
@@ -16,7 +16,7 @@ pub(in crate::project_slice) struct FillExtrusionPath {
     pub(in crate::project_slice) width: f32,
     pub(in crate::project_slice) height: f32,
 }
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) enum FillExtrusionEntity {
     Path(FillExtrusionPath),
     /// `ExtrusionPathOriented` (`ExtrusionEntity.hpp:364-372`): never reversed.
@@ -24,7 +24,7 @@ pub(in crate::project_slice) enum FillExtrusionEntity {
     VariableWidth(GapFillEntity),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct FillExtrusionCollection {
     pub(in crate::project_slice) entities: Vec<FillExtrusionEntity>,
     pub(in crate::project_slice) no_sort: bool,

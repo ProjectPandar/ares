@@ -122,24 +122,12 @@ impl EquivalentChains {
 /// start_near)` does (`ShortestPath.cpp:2015-2036`) and returns the
 /// permutation of instance indices in chained path order. `seed` is the
 /// `start_near` point in scaled integer units.
-pub(super) fn chain_instance_order(centers: &[(f64, f64)], start_near: (i64, i64)) -> Vec<usize> {
+pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64)) -> Vec<usize> {
     let count = centers.len();
     if count <= 1 {
         return (0..count).collect();
     }
-    // Upstream chains in scaled integer coordinates; the squared-distance
-    // comparisons are scale-invariant, so only the seed keeps its raw
-    // scaled units (`GCode.cpp:5115` constructs `Point wt_pos(x_mm,
-    // y_mm)`, which truncates into coord_t — the configured millimetre
-    // values land a few microns from the origin).
-    let scaled = |point: (f64, f64)| -> (i64, i64) {
-        (
-            (point.0 / 1.0e-6).round() as i64,
-            (point.1 / 1.0e-6).round() as i64,
-        )
-    };
-    let scaled_centers: Vec<(i64, i64)> = centers.iter().map(|&center| scaled(center)).collect();
-    let position = |endpoint: usize| scaled_centers[endpoint >> 1];
+    let position = |endpoint: usize| centers[endpoint >> 1];
     let distance_sq = |a: usize, b: usize| {
         let (ax, ay) = position(a);
         let (bx, by) = position(b);

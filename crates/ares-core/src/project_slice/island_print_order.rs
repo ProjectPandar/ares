@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) enum IslandPrintEntity {
     Perimeter(ExtrusionEntityCollection),
     Fill(FillExtrusionEntity),
@@ -18,7 +18,7 @@ pub(in crate::project_slice) enum IslandPrintEntity {
     Thin(GapFillEntity),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct OrderedExtrusionIsland {
     pub(in crate::project_slice) entities: Vec<IslandPrintEntity>,
     pub(in crate::project_slice) infill_regions: Vec<usize>,
@@ -26,7 +26,7 @@ pub(in crate::project_slice) struct OrderedExtrusionIsland {
     pub(in crate::project_slice) perimeter_regions: Vec<usize>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct OrderedExtrusionLayer {
     pub(in crate::project_slice) islands: Vec<OrderedExtrusionIsland>,
     pub(in crate::project_slice) tool_regions: Vec<super::extrusion_islands::RegionToolUsage>,

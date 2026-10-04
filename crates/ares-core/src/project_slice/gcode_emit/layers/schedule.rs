@@ -1,6 +1,6 @@
 //! `GCode.cpp::collect_layers_to_print` object/support pairs and plate chunks.
 
-use super::{object::ObjectLabels, object_order, raft_schedule};
+use super::{object::ObjectLabels, raft_schedule};
 use crate::project_slice::{
     island_print_order::OrderedExtrusionLayer,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -24,6 +24,7 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(in crate::project_slice::gcode_emit) merged: Vec<(f64, LayerToPrint)>,
     pub(super) raft: Option<raft_schedule::RaftSchedule>,
     pub(super) print_position: Vec<usize>,
+    pub(super) instances: Vec<Vec<super::instances::Instance>>,
     pub(super) labels: Vec<Option<ObjectLabels>>,
     pub(super) object_layer_counts: Vec<usize>,
     pub(super) last_entry: Option<(usize, usize)>,
@@ -208,27 +209,17 @@ pub(in crate::project_slice::gcode_emit) fn build(
         }
         begin = end;
     }
-    let centers = traversal
-        .objects
+    let instances = super::instances::collect(traversal);
+    let print_position = instances
         .iter()
-        .map(|source| {
-            let source_index = source
-                .predecessor
-                .predecessor
-                .predecessor
-                .predecessor
-                .object
-                .identity()
-                .0;
-            super::footprint::object_center(traversal, source_index).unwrap_or((0.0, 0.0))
+        .map(|copies| {
+            copies
+                .iter()
+                .map(|copy| copy.position)
+                .min()
+                .expect("print object has printable instances")
         })
-        .collect::<Vec<_>>();
-    let mut print_order = object_order::chain_instance_order(&centers, (15, 220));
-    print_order.reverse();
-    let mut print_position = vec![0; object_count];
-    for (rank, &object_index) in print_order.iter().enumerate() {
-        print_position[object_index] = rank;
-    }
+        .collect();
     let labels = (0..object_count)
         .map(|index| ObjectLabels::from_traversal(traversal, index))
         .collect();
@@ -249,6 +240,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         merged,
         raft,
         print_position,
+        instances,
         labels,
         object_layer_counts,
         last_entry,

@@ -10,6 +10,7 @@ mod group;
 mod layer_end;
 
 pub(super) use context::Context;
+mod instances;
 mod object_entry;
 mod object_order;
 mod preamble;
@@ -30,8 +31,8 @@ pub(super) use schedule::Schedule;
 pub(super) use schedule::build as build_schedule;
 
 use super::{
-    GenerationMetadata, PreparedPostIslandPrintOrder, SliceError, cooling, fan_mover, footprint,
-    layer_gcode, motion, object, spiral_vase,
+    GenerationMetadata, PreparedPostIslandPrintOrder, SliceError, cooling, fan_mover, layer_gcode,
+    motion, object, spiral_vase,
 };
 
 pub(super) fn append(
@@ -111,6 +112,7 @@ pub(super) fn append(
         merged,
         mut raft,
         print_position,
+        instances,
         labels,
         object_layer_counts,
         last_entry,
@@ -129,7 +131,7 @@ pub(super) fn append(
 
     let mut group_start = 0;
     let mut first_group = true;
-    let mut last_object_copy: Option<usize> = None;
+    let mut last_object_copy: Option<(usize, usize)> = None;
     let mut previous_layer_z = 0.0;
     let mut chunk_index = 0;
     while group_start < merged.len() {
@@ -230,6 +232,7 @@ pub(super) fn append(
         let mut by_tool = tool_buckets::build(tool_buckets::Input {
             traversal,
             entries: &entries,
+            instances: &instances,
             tools: tool_ordering.tools_for_layer(group_z),
             objects,
             support: support_layers,

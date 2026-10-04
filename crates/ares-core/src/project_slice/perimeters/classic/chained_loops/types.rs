@@ -37,7 +37,7 @@ pub(in crate::project_slice) enum ExtrusionLoopRole {
     Hole,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionLoop {
     pub(in crate::project_slice) paths: Vec<ExtrusionPath>,
     pub(in crate::project_slice) role: ExtrusionLoopRole,

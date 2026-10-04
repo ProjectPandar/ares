@@ -25,7 +25,7 @@ pub(in crate::project_slice) struct PreparedEntityCollectionSurface {
     pub(in crate::project_slice) collection: ExtrusionEntityCollection,
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionEntityCollection {
     pub(in crate::project_slice) entities: Vec<ExtrusionEntity>,
     pub(in crate::project_slice) source_order: usize,
@@ -36,7 +36,7 @@ pub(in crate::project_slice) struct ExtrusionEntityCollection {
 /// (`PerimeterGenerator.cpp:270`) while arachne `traverse_extrusions`
 /// appends loops and open variable-width multi-paths into the same
 /// collection (`PerimeterGenerator.cpp:518-566`).
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) enum ExtrusionEntity {
     Loop(OrderedExtrusionLoop),
     MultiPath(ExtrusionMultiPath),
@@ -90,7 +90,7 @@ impl ExtrusionEntity {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct OrderedExtrusionLoop {
     pub(in crate::project_slice) extrusion_loop: ExtrusionLoop,
     pub(in crate::project_slice) inset_idx: i32,
@@ -101,7 +101,7 @@ pub(in crate::project_slice) struct OrderedExtrusionLoop {
 /// `ExtrusionEntity.hpp` `ExtrusionMultiPath`). Arachne's `traverse_extrusions`
 /// builds these from open wall lines whose per-junction widths clip into
 /// constant-width sub-paths (`PerimeterGenerator.cpp:553-566`).
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionMultiPath {
     pub(in crate::project_slice) paths: Vec<ExtrusionPath>,
 }

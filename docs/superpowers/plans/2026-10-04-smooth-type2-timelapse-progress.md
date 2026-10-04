@@ -11,7 +11,7 @@ in `project_slice::gcode_emit` and `project::effective_config`.
 Private `wipe_tower/` code now contains source-owned material projection,
 writer, rectangle/cone/rib walls, rounding, depth planning, the five last-wipe
 simulations, per-layer finish, priming, unloading/loading/ramming/cooling and
-wiping. These are still **uncommitted and not connected to production emission**.
+wiping. These were saved in checkpoint `3519d10d` but remain **not connected to production emission**.
 B's whole-collection purge assignment and E–G remain pending; the full-output
 RED evidence above is unchanged. Do not publish these modules as a completed
 Type2 implementation or infer parity from their unit tests.
@@ -42,7 +42,7 @@ Combined B/C/D kernel checks now pass 22 tests (including partial-axis SEMM rese
 `/tmp/ares-pi-tower-type2-BCD-placement-tests.log`. Clippy completed with 354
 warnings (`...-placement-clippy.log`), failing zero-new-warning (baseline 249).
 No suppressions were added. Consumers must be connected and warnings resolved
-before publication. These checks do not establish complete-output parity.
+before review. These checks do not establish complete-output parity.
 
 B's original collection-volume snapshot is now captured before island
 flattening and `path_simplification::apply`, following `Print.cpp:2425,2571`.
@@ -66,6 +66,38 @@ feature branch before continuing production integration. This checkpoint is
 not a completed B–G boundary or a REVIEW-REQUEST. Main's current Clippy baseline
 is approximately 219 warnings, not the older 249 count; the branch's 354 warnings
 must lose all introduced diagnostics before review, without suppressions.
+The checkpoint was pushed as `3519d10d03283e71862ea015fa8a4df7a35e5faf`;
+workspace `cargo check` and formatting passed before publication.
+
+## Object-island instance dispatch
+
+`layers/instances.rs` now resolves real printable members, caches their integer
+shifts once per print object, and supplies tool-bucket/copy dispatch. This ports
+`PrintApply.cpp:129–167`, `ShortestPath.cpp:2015–2036`, and `GCode.cpp:5106–5138,5380`.
+Tool-specific ordering chains only participating instances, in source object/copy
+order, using the configured raw-coordinate tower seed. No millimetre conversion
+is used for the integer chaining input. The emitter installs each actual shift
+and tracks `(print object, local copy ordinal)` for external-planner handoff.
+The consuming island adapter clones additional copies and moves the last one;
+single-instance emission does not clone geometry. Original region/collection
+identities survive those replays. Purge allocation and tower emission remain
+pending; copy-aware brim/labels/obstacle geometry still need end-to-end audit.
+In particular, AutoLift still indexes a ModelInstance by transform-group index.
+
+Validation for this dispatch slice:
+- 18 focused tests PASS: `/tmp/ares-pi-tower-copy-dispatch-final-unit.log`.
+- Clippy remains 354 warnings (no increase): `...-final-clippy.log`.
+- Official and seeded runs now assert positive Ares extrusion at both contours,
+  in addition to the existing native assertions and unchanged full comparator.
+  The two-copy Ares stream grows from 121630 to 200157 bytes, M73 R9 to R14;
+  native remains 831091 bytes, R69. Both full-output comparisons remain RED.
+  Evidence: `/tmp/ares-pi-tower-copy-dispatch-assert-{official,seeded}.log`.
+- All five BBL/PA control test functions pass in each reference run (official:
+  `...-final-official.log`; seeded: `...-assert-seeded.log`).
+- Core/adapter WASM build, formatting and diff checks PASS:
+  `/tmp/ares-pi-tower-copy-dispatch-wasm.log`.
+No generator/purge integration completion or REVIEW-REQUEST is implied.
+
 
 ## Copy ownership and full-output witness
 

@@ -6,7 +6,7 @@ use crate::project_slice::{
     perimeters::classic::gap_extrusion::GapFillEntity,
 };
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct RegionToolUsage {
     pub(in crate::project_slice) perimeters: bool,
     pub(in crate::project_slice) internal_solid: bool,
