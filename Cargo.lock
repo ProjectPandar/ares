@@ -127,6 +127,7 @@ name = "ares-wasm"
 version = "0.1.0"
 dependencies = [
  "ares-core",
+ "serde",
  "serde_json",
  "tokio",
  "wasm-bindgen",

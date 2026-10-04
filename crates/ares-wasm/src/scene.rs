@@ -1,9 +1,69 @@
 //! Scene data for the browser plater (`GLCanvas3D` volumes / `3DBed`):
 //! project or STL meshes as flat buffers plus JSON metadata.
 
-use ares_core::{Model, Point3d, Project, ProjectVolumeType, SliceError, Transform3d};
-use serde_json::{Value, json};
+use ares_core::{
+    FilamentOptions, Model, Point3d, PrinterOptions, ProcessOptions, Project,
+    ProjectRuntimeOptions, ProjectVolumeType, SliceError, Transform3d,
+};
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
+
+#[derive(Serialize)]
+struct SceneMetadata<'a> {
+    format: &'static str,
+    objects: Vec<SceneObject<'a>>,
+    plates: Vec<ScenePlate<'a>>,
+    settings: Option<SceneSettings<'a>>,
+}
+
+#[derive(Serialize)]
+struct SceneObject<'a> {
+    id: u32,
+    name: &'a str,
+    volumes: Vec<SceneVolume<'a>>,
+    instances: Vec<SceneInstance>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SceneVolume<'a> {
+    id: u32,
+    name: &'a str,
+    #[serde(rename = "type")]
+    volume_type: &'static str,
+    matrix: [f64; 16],
+    vertex_offset: usize,
+    vertex_count: usize,
+    index_offset: usize,
+    index_count: usize,
+}
+
+#[derive(Serialize)]
+struct SceneInstance {
+    id: [u32; 3],
+    printable: bool,
+    matrix: [f64; 16],
+}
+
+#[derive(Serialize)]
+struct ScenePlate<'a> {
+    id: u32,
+    instances: &'a [[u32; 3]],
+}
+
+#[derive(Serialize)]
+struct SceneSettings<'a> {
+    printer: &'a PrinterOptions,
+    process: &'a ProcessOptions,
+    filament: &'a FilamentOptions,
+    project: &'a ProjectRuntimeOptions,
+}
+
+impl SceneMetadata<'_> {
+    fn to_json(&self) -> String {
+        serde_json::to_string(self).expect("scene metadata serializes")
+    }
+}
 
 #[wasm_bindgen]
 pub struct SceneData {
@@ -50,69 +110,74 @@ fn project_scene(project: &Project) -> SceneData {
         .objects()
         .iter()
         .map(|object| {
-            let volumes = object
-                .volumes()
-                .iter()
-                .map(|volume| {
-                    let mesh = volume.mesh();
-                    let vertex_offset = positions.len() / 3;
-                    let index_offset = indices.len();
-                    positions.extend(
-                        mesh.vertices()
-                            .iter()
-                            .flat_map(|vertex| [vertex.x as f32, vertex.y as f32, vertex.z as f32]),
-                    );
-                    indices.extend(mesh.triangles().iter().flatten());
-                    json!({
-                        "id": volume.id(),
-                        "name": volume.name(),
-                        "type": volume_type_name(volume.volume_type()),
-                        "matrix": column_major(volume.transform()),
-                        "vertexOffset": vertex_offset,
-                        "vertexCount": mesh.vertices().len(),
-                        "indexOffset": index_offset,
-                        "indexCount": mesh.triangles().len() * 3,
+            let volumes =
+                object
+                    .volumes()
+                    .iter()
+                    .map(|volume| {
+                        let mesh = volume.mesh();
+                        let vertex_offset = positions.len() / 3;
+                        let index_offset = indices.len();
+                        positions.extend(mesh.vertices().iter().flat_map(|vertex| {
+                            [vertex.x as f32, vertex.y as f32, vertex.z as f32]
+                        }));
+                        indices.extend(mesh.triangles().iter().flatten());
+                        SceneVolume {
+                            id: volume.id(),
+                            name: volume.name(),
+                            volume_type: volume_type_name(volume.volume_type()),
+                            matrix: column_major(volume.transform()),
+                            vertex_offset,
+                            vertex_count: mesh.vertices().len(),
+                            index_offset,
+                            index_count: mesh.triangles().len() * 3,
+                        }
                     })
-                })
-                .collect::<Vec<_>>();
+                    .collect();
             let instances = object
                 .instances()
                 .iter()
-                .map(|instance| {
-                    json!({
-                        "id": [instance.object_id(), instance.instance_id(), instance.loaded_label_id()],
-                        "printable": instance.printable(),
-                        "matrix": column_major(instance.transform()),
-                    })
+                .map(|instance| SceneInstance {
+                    id: [
+                        instance.object_id(),
+                        instance.instance_id(),
+                        instance.loaded_label_id(),
+                    ],
+                    printable: instance.printable(),
+                    matrix: column_major(instance.transform()),
                 })
-                .collect::<Vec<_>>();
-            json!({
-                "id": object.id(),
-                "name": object.name(),
-                "volumes": volumes,
-                "instances": instances,
-            })
+                .collect();
+            SceneObject {
+                id: object.id(),
+                name: object.name(),
+                volumes,
+                instances,
+            }
         })
-        .collect::<Vec<_>>();
+        .collect();
     let plates = project
         .plates()
         .iter()
-        .map(|plate| json!({ "id": plate.id(), "instances": plate.instances() }))
-        .collect::<Vec<_>>();
+        .map(|plate| ScenePlate {
+            id: plate.id(),
+            instances: plate.instances(),
+        })
+        .collect();
     let settings = project.settings();
-    let metadata = json!({
-        "format": "3mf",
-        "objects": objects,
-        "plates": plates,
-        "settings": {
-            "printer": settings.printer,
-            "process": settings.process,
-            "filament": settings.filament,
-            "project": settings.project,
-        },
-    });
+    let metadata = SceneMetadata {
+        format: "3mf",
+        objects,
+        plates,
+        settings: Some(SceneSettings {
+            printer: &settings.printer,
+            process: &settings.process,
+            filament: &settings.filament,
+            project: &settings.project,
+        }),
+    }
+    .to_json();
     SceneData {
-        metadata: metadata.to_string(),
+        metadata,
         positions,
         indices,
     }
@@ -127,28 +192,33 @@ fn model_scene(model: &Model) -> SceneData {
         .collect::<Vec<_>>();
     let vertex_count = positions.len() / 3;
     let identity = column_major(Transform3d::IDENTITY);
-    let metadata = json!({
-        "format": "stl",
-        "objects": [{
-            "id": 1,
-            "name": "model",
-            "volumes": [{
-                "id": 0,
-                "name": "model",
-                "type": "ModelPart",
-                "matrix": identity,
-                "vertexOffset": 0,
-                "vertexCount": vertex_count,
-                "indexOffset": 0,
-                "indexCount": vertex_count,
+    let metadata = SceneMetadata {
+        format: "stl",
+        objects: vec![SceneObject {
+            id: 1,
+            name: "model",
+            volumes: vec![SceneVolume {
+                id: 0,
+                name: "model",
+                volume_type: volume_type_name(ProjectVolumeType::ModelPart),
+                matrix: identity,
+                vertex_offset: 0,
+                vertex_count,
+                index_offset: 0,
+                index_count: vertex_count,
             }],
-            "instances": [{ "id": [1, 0, 0], "printable": true, "matrix": identity }],
+            instances: vec![SceneInstance {
+                id: [1, 0, 0],
+                printable: true,
+                matrix: identity,
+            }],
         }],
-        "plates": [],
-        "settings": Value::Null,
-    });
+        plates: Vec::new(),
+        settings: None,
+    }
+    .to_json();
     SceneData {
-        metadata: metadata.to_string(),
+        metadata,
         positions,
         indices: (0..vertex_count as u32).collect(),
     }
