@@ -1,5 +1,11 @@
 # Type2 execution evidence (WIP)
 
+Current status: production activation is connected since `1985672b`; the earlier
+RED/disconnected entries below are historical checkpoints, not the current tree.
+Final completion still requires the remaining source-consumer audit, witnesses,
+and removal of introduced lint diagnostics. Main integration is frozen until
+explicit coordinator release; branch checkpoints are not final approval.
+
 Continuation of [the complete-activation plan](2026-10-04-smooth-type2-timelapse-port.md).
 The source boundary remains pinned libslic3r `WipeTower2.cpp`,
 `ToolOrdering.cpp::WipingExtrusions`, `GCode.cpp::WipeTowerIntegration`, and
@@ -251,3 +257,50 @@ No Type2 approval or final review readiness is claimed.
   final A–G completion: extend the remaining shape/occupancy/option witnesses,
   complete the source-consumer audit, remove introduced diagnostics and run
   the full workspace gates before requesting integrated review.
+
+### Shape/sparse and convex-hull placeholder continuation
+
+- The emission checkpoint workspace passed **7636 tests, 9 skipped** in
+  `/tmp/ares-pi-tower-emission-checkpoint-workspace.log`; this predates the
+  additional variant and placeholder tests below.
+- Ten shape/sparse/option cases first passed separately against official and
+  seeded references in `/tmp/ares-pi-tower-variants-red-official.log` and
+  `/tmp/ares-pi-tower-variants-seeded.log`: rectangle, cone, sharp rib,
+  automatic tower brim, thin layers, arc option, no-sparse layers, zero skirt
+  loops, rotated/offset tower, and singleton SEMM front-edge priming. The last
+  case supplies the previously missing native singleton-priming witness.
+- Adding bounds with/without skirt and a nearby explicit brim exposed missing
+  `first_layer_print_convex_hull` in
+  `/tmp/ares-pi-tower-occupancy-red-official.log`. The nearby-brim case already
+  passed; it is not evidence that the fake-tower brim mask has been ported.
+- `Print.cpp::finalize_first_layer_convex_hull` (3154–3164) supplies the new
+  hull boundary in `footprint/first_layer.rs`; cached brim/skirt outlines take
+  precedence over object contours before adding tower corners. The placeholder
+  follows `GCode.cpp:2925–2938`, `ConfigOptionPoints`, and `Point.hpp::to_string`.
+  A second RED exposed missing `PlaceholderParser.cpp:1687,2333::vector_size`
+  in `/tmp/ares-pi-tower-hull-official.log`. `size` now requires an unindexed
+  vector variable and returns an integer; numeric functions were moved to
+  `expression/functions.rs` to keep the parser under 400 lines.
+- All 16/18 hull vertices, not merely their bounding boxes or first vertices,
+  are now exposed by the two bounds fixtures. The unchanged full comparator
+  passes **8/8 functions per reference** in
+  `/tmp/ares-pi-tower-hull-full-{official,seeded}.log`, with separate artifact
+  roots. The new function contains 13 variants; the other seven functions
+  retain the original Type2 and BBL/PA coverage.
+- An additional scalar RED shows point formatting must use native ostream
+  general precision: `[-0.000001, 1]` versus `[-1e-06, 1e+06]` in
+  `/tmp/ares-pi-tower-hull-format-red.log`. The correction reuses the existing
+  `motion::format::ostream`.
+- Current checkpoint gates: **7639/7639 workspace PASS, 9 skipped** in
+  `/tmp/ares-pi-tower-hull-workspace.log`; official and seeded each **8/8 PASS**
+  in `/tmp/ares-pi-tower-hull-final-{official,seeded}.log`; core/adapter WASM
+  PASS in `/tmp/ares-pi-tower-hull-final-wasm.log`. Formatting and diff checks
+  pass. Clippy completes with the unchanged **296 warnings** in
+  `/tmp/ares-pi-tower-hull-final-clippy.log`; this remains above baseline and
+  does not satisfy the final zero-introduced-diagnostic gate.
+- Still pending: first-layer fallback support/raft geometry and actual
+  print-object membership, the source first-instance/brim semantics of the
+  object-only center, fake-tower brim exclusion and mesh-bottom consumers,
+  remaining A–G witnesses, and introduced lint diagnostics. Existing bounds
+  plumbing is still a temporary compatibility shell, not completed geometry
+  parity. No final review request or main integration is authorized here.

@@ -5,6 +5,8 @@ use serde_json::json;
 
 #[path = "smooth_type2_tower/tools.rs"]
 mod tools;
+#[path = "smooth_type2_tower/variants.rs"]
+mod variants;
 
 #[test]
 fn orca_parity_smooth_type2_tower_complete_output() {

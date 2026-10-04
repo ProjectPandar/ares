@@ -146,6 +146,12 @@ pub(super) fn emit(
     ));
     let mut state = motion::EmitState {
         template_rng: template_rng.clone(),
+        first_layer_hull: footprint::first_layer_convex_hull(
+            traversal,
+            skirt.as_ref(),
+            brim.as_ref(),
+            &tower_corners,
+        ),
         wipe_tower: schedule.tower.take().map(|data| {
             let settings = &traversal.resolved.views.full;
             let first_z = schedule.merged[0].0;

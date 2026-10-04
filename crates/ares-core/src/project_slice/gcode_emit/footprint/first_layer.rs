@@ -17,6 +17,75 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
 ) -> Option<FirstLayerBounds> {
     let scale = traversal.scale;
     let mut bounds = None;
+    visit_object_contours(traversal, |polygon, shift| {
+        include_polygon_bounds(polygon, shift, scale, &mut bounds);
+    });
+    if let Some(skirt) = skirt {
+        include_bounds(skirt.covered_bounds(scale), &mut bounds);
+    }
+    if let Some(brim) = brim {
+        let source =
+            &traversal.project.objects()[traversal.resolved.objects[0].source_object_index];
+        let (x, y) = object_origin(source, scale);
+        include_bounds(
+            brim.covered_bounds(scale)
+                .map(|(min_x, min_y, max_x, max_y)| (min_x + x, min_y + y, max_x + x, max_y + y)),
+            &mut bounds,
+        );
+    }
+    for point in tower_corners {
+        let x = scale.unscale(point.x());
+        let y = scale.unscale(point.y());
+        include_bounds(Some((x, y, x, y)), &mut bounds);
+    }
+    bounds.map(|(min_x, min_y, max_x, max_y)| (min_x, min_y, max_x - min_x, max_y - min_y))
+}
+
+/// Print.cpp:3154–3164: prefer printed brim/skirt outlines, otherwise islands;
+/// append the tower only after deciding whether object contours are needed.
+pub(in crate::project_slice::gcode_emit) fn first_layer_convex_hull(
+    traversal: &PreparedPostClassicTraversal,
+    skirt: Option<&SkirtPlan>,
+    brim: Option<&BrimPlan>,
+    tower_corners: &[Point],
+) -> Vec<Point> {
+    let mut points = Vec::new();
+    if let Some(brim) = brim {
+        let source =
+            &traversal.project.objects()[traversal.resolved.objects[0].source_object_index];
+        let (x, y) = object_origin(source, traversal.scale);
+        let shift = Point::new(
+            (x / traversal.scale.factor()).round() as i64,
+            (y / traversal.scale.factor()).round() as i64,
+        );
+        points.extend(
+            brim.covered_hull()
+                .iter()
+                .map(|p| Point::new(p.x() + shift.x(), p.y() + shift.y())),
+        );
+    }
+    if let Some(skirt) = skirt {
+        points.extend(skirt.covered_points());
+    }
+    if points.is_empty() {
+        visit_object_contours(traversal, |polygon, shift| {
+            points.extend(
+                polygon
+                    .points()
+                    .iter()
+                    .map(|p| Point::new(p.x() + shift.x(), p.y() + shift.y())),
+            );
+        });
+    }
+    points.extend_from_slice(tower_corners);
+    super::convex_hull(&points)
+}
+
+fn visit_object_contours(
+    traversal: &PreparedPostClassicTraversal,
+    mut visit: impl FnMut(&Polygon, Point),
+) {
+    let scale = traversal.scale;
     for (object, resolved) in traversal.objects.iter().zip(&traversal.resolved.objects) {
         let layers = object
             .predecessor
@@ -37,29 +106,10 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
         {
             let shift = instance_shift(instance, center, scale);
             for polygon in layers.iter().take(1).flatten() {
-                include_polygon_bounds(polygon.contour(), shift, scale, &mut bounds);
+                visit(polygon.contour(), shift);
             }
         }
     }
-    if let Some(skirt) = skirt {
-        include_bounds(skirt.covered_bounds(scale), &mut bounds);
-    }
-    if let Some(brim) = brim {
-        let source =
-            &traversal.project.objects()[traversal.resolved.objects[0].source_object_index];
-        let (x, y) = object_origin(source, scale);
-        include_bounds(
-            brim.covered_bounds(scale)
-                .map(|(min_x, min_y, max_x, max_y)| (min_x + x, min_y + y, max_x + x, max_y + y)),
-            &mut bounds,
-        );
-    }
-    for point in tower_corners {
-        let x = scale.unscale(point.x());
-        let y = scale.unscale(point.y());
-        include_bounds(Some((x, y, x, y)), &mut bounds);
-    }
-    bounds.map(|(min_x, min_y, max_x, max_y)| (min_x, min_y, max_x - min_x, max_y - min_y))
 }
 
 fn include_bounds(additional: Option<FirstLayerBounds>, bounds: &mut Option<FirstLayerBounds>) {

@@ -2,6 +2,29 @@ use super::*;
 use crate::project_slice::gcode_emit::value::Config;
 
 #[test]
+fn renderer_reads_vector_size_as_an_integer() {
+    use crate::project_slice::gcode_emit::value::Value;
+    let mut config = Config::default();
+    config.insert(
+        "points",
+        Value::List(vec![Value::String("[1, 2]".to_owned()); 3]),
+    );
+    config.insert("empty_points", Value::List(Vec::new()));
+    config.insert("scalar", Value::Integer(3));
+    assert_eq!(
+        render(
+            "{size(points)} {size(points) / 2} {size(empty_points)}",
+            &mut config
+        )
+        .unwrap(),
+        "3 1 0"
+    );
+    for template in ["{size(points[0])}", "{size(scalar)}", "{size((1, 2))}"] {
+        assert!(render(template, &mut config).is_err(), "{template}");
+    }
+}
+
+#[test]
 fn renderer_distinguishes_option_and_expression_booleans() {
     let mut config = Config::default();
     config.insert("enabled", super::super::value::Value::option_bool(true));

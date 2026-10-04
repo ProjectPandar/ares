@@ -189,9 +189,13 @@ impl SkirtPlan {
             .map(|points| (points.as_slice(), self.width))
     }
 
+    pub(super) fn covered_points(&self) -> impl Iterator<Item = Point> + '_ {
+        self.occupied_hull.iter().flat_map(Polygon::points).copied()
+    }
+
     pub(super) fn covered_bounds(&self, scale: CoordinateScale) -> Option<(f64, f64, f64, f64)> {
         let mut bounds = None::<(f64, f64, f64, f64)>;
-        for point in self.occupied_hull.iter().flat_map(Polygon::points) {
+        for point in self.covered_points() {
             let x = scale.unscale(point.x());
             let y = scale.unscale(point.y());
             bounds = Some(match bounds {
