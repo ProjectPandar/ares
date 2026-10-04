@@ -53,7 +53,7 @@ impl<'de> Deserialize<'de> for OrcaBool {
                 let first = sequence
                     .next_element::<OrcaBool>()?
                     .ok_or_else(|| A::Error::custom("expected Orca boolean 0 or 1"))?;
-                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                super::scalar::drain_sequence(&mut sequence)?;
                 Ok(first)
             }
         }

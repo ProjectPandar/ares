@@ -81,7 +81,7 @@ impl<'de> Deserialize<'de> for OrcaFloat {
                     .ok_or_else(|| A::Error::custom("expected a finite Orca float"))?;
                 // Orca's `ConfigOptionFloat` keeps element 0 and ignores any
                 // trailing entries in a scalar-as-array project value.
-                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                drain_sequence(&mut sequence)?;
                 Ok(first)
             }
         }
@@ -187,7 +187,7 @@ impl<'de> Deserialize<'de> for Percent {
                 let first = sequence
                     .next_element::<Percent>()?
                     .ok_or_else(|| A::Error::custom("expected a finite Orca percentage"))?;
-                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                drain_sequence(&mut sequence)?;
                 Ok(first)
             }
         }
@@ -272,13 +272,21 @@ impl<'de> Deserialize<'de> for FloatOrPercent {
                 let first = sequence
                     .next_element::<FloatOrPercent>()?
                     .ok_or_else(|| A::Error::custom("expected a finite float or percentage"))?;
-                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                drain_sequence(&mut sequence)?;
                 Ok(first)
             }
         }
 
         deserializer.deserialize_any(UnionVisitor)
     }
+}
+
+pub(super) fn drain_sequence<'de, A>(sequence: &mut A) -> Result<(), A::Error>
+where
+    A: SeqAccess<'de>,
+{
+    while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+    Ok(())
 }
 
 fn parse_float_or_percent<E>(value: &str) -> Result<FloatOrPercent, E>
