@@ -10,6 +10,15 @@ use reader::{axis, command, is_start};
 struct LineData {
     line: String,
     time: f32,
+    /// 1-based processor input line this output line exports; `0` for
+    /// inserted or synthesized lines (`m_gcode_lines_map`, `:754`).
+    source: usize,
+}
+
+/// Input line → 1-based exported line id, filled as lines are written.
+struct LineMap {
+    lines: Vec<u32>,
+    written: u32,
 }
 
 struct Backtrace {
@@ -29,6 +38,7 @@ pub(super) struct ExportLines<'a> {
     lines: VecDeque<LineData>,
     size: usize,
     output: Vec<u8>,
+    line_map: Option<LineMap>,
 }
 
 impl<'a> ExportLines<'a> {
@@ -37,6 +47,7 @@ impl<'a> ExportLines<'a> {
         flavor: GCodeFlavor,
         bbl: bool,
         capacity: usize,
+        source_lines: Option<usize>,
     ) -> Self {
         let print = &settings.process.print;
         let notes = &settings.printer.remaining.printer_notes.0;
@@ -66,6 +77,10 @@ impl<'a> ExportLines<'a> {
             lines: VecDeque::new(),
             size: 0,
             output: Vec::with_capacity(capacity),
+            line_map: source_lines.map(|count| LineMap {
+                lines: vec![0; count + 1],
+                written: 0,
+            }),
         }
     }
 
@@ -88,11 +103,17 @@ impl<'a> ExportLines<'a> {
     }
 
     pub(super) fn append(&mut self, line: String) {
+        self.append_from(line, 0);
+    }
+
+    /// Appends the export of processor input line `source` (1-based).
+    pub(super) fn append_from(&mut self, line: String, source: usize) {
         if !line.is_empty() {
             self.size += line.len();
             self.lines.push_back(LineData {
                 line,
                 time: self.time,
+                source,
             });
         }
     }
@@ -141,7 +162,14 @@ impl<'a> ExportLines<'a> {
                 let line = self.preheat(tool, physical, seconds);
                 distance = reverse + 1;
                 self.size += line.len();
-                self.lines.insert(index + 1, LineData { line, time });
+                self.lines.insert(
+                    index + 1,
+                    LineData {
+                        line,
+                        time,
+                        source: 0,
+                    },
+                );
             }
         }
     }
@@ -219,14 +247,21 @@ impl<'a> ExportLines<'a> {
     fn write_front(&mut self) {
         let line = self.lines.pop_front().expect("a buffered line exists");
         self.size -= line.line.len();
+        if let Some(map) = &mut self.line_map {
+            map.written += line.line.bytes().filter(|byte| *byte == b'\n').count() as u32;
+            if line.source != 0 {
+                map.lines[line.source] = map.written;
+            }
+        }
         self.output.extend_from_slice(line.line.as_bytes());
     }
 
-    pub(super) fn finish(mut self) -> Vec<u8> {
+    /// The exported G-code and, when tracked, the input → output line map.
+    pub(super) fn finish(mut self) -> (Vec<u8>, Option<Vec<u32>>) {
         while !self.lines.is_empty() {
             self.write_front();
         }
-        self.output
+        (self.output, self.line_map.map(|map| map.lines))
     }
 }
 

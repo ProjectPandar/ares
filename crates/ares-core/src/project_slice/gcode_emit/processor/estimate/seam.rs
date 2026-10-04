@@ -25,8 +25,10 @@ impl SeamDetector {
         }
     }
 
-    pub(super) fn associate(&mut self, extruding: bool, end: [f64; 3]) -> bool {
-        let mut seam_vertex = false;
+    /// Returns the `Seam` vertex position `0.5f * (new_pos + first_vertex)`
+    /// (`GCodeProcessor.cpp:4214-4216`) when the loop closes.
+    pub(super) fn associate(&mut self, extruding: bool, end: [f64; 3]) -> Option<[f32; 3]> {
+        let mut seam_vertex = None;
         if self.active {
             if extruding && self.external {
                 self.first_vertex.get_or_insert(self.last_vertex);
@@ -36,8 +38,9 @@ impl SeamDetector {
                 // Upstream tests the previous stored vertex, not this move's
                 // endpoint, after assigning the block's next-vertex index.
                 let delta = std::array::from_fn::<_, 3, _>(|i| self.last_vertex[i] - first[i]);
-                seam_vertex =
-                    delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2] < 0.0625_f32;
+                seam_vertex = (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]
+                    < 0.0625_f32)
+                    .then(|| std::array::from_fn(|i| 0.5 * (self.last_vertex[i] + first[i])));
                 self.active = false;
             }
         } else if extruding && self.external {

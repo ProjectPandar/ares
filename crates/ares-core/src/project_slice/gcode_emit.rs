@@ -41,13 +41,14 @@ mod tool_transition;
 #[cfg(test)]
 mod timelapse_tests;
 mod value;
-use crate::{GenerationMetadata, SliceError};
+use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 
 pub(super) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
+    record_moves: bool,
     context: &mut crate::SlicerContext,
-) -> Result<Vec<u8>, SliceError> {
+) -> Result<ProcessedGCode, SliceError> {
     let traversal = &prepared
         .predecessor
         .predecessor
@@ -295,7 +296,8 @@ pub(super) fn emit(
             .0,
         used_filament,
         processor::ProcessorLimits::from_traversal(traversal, state.tags.is_bbl())
-            .with_settings(&traversal.resolved.views.full),
+            .with_settings(&traversal.resolved.views.full)
+            .recording_moves(record_moves),
     ))
 }
 

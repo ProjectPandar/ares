@@ -1,3 +1,5 @@
+mod moves_csv;
+
 use std::error::Error;
 use std::fs;
 use std::io;
@@ -24,6 +26,9 @@ struct SliceArgs {
     /// 1-based plate number to slice for multi-plate 3MF projects
     #[arg(long)]
     plate: Option<u32>,
+    /// Write the G-code processor move vertices as CSV (3MF input only)
+    #[arg(long)]
+    dump_moves: Option<PathBuf>,
     #[arg(short = 'o')]
     output: PathBuf,
     input: PathBuf,
@@ -46,6 +51,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
+    if extension.as_deref() != Some("3mf") && args.dump_moves.is_some() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--dump-moves requires 3MF project input",
+        )
+        .into());
+    }
     if extension.as_deref() == Some("3mf") && args.options.is_some() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -56,13 +68,21 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
     let input = fs::read(args.input)?;
     let output = match extension {
         Some(extension) if extension == "3mf" => {
-            ares_core::slice_project_plate(
-                input,
-                ares_core::GenerationMetadata::default(),
-                args.plate,
-                ares_core::SlicerContext::new(0),
-            )
-            .await?
+            let metadata = ares_core::GenerationMetadata::default();
+            let context = ares_core::SlicerContext::new(0);
+            match &args.dump_moves {
+                Some(path) => {
+                    let processed = ares_core::slice_project_plate_processed(
+                        input, metadata, args.plate, context,
+                    )
+                    .await?;
+                    fs::write(path, moves_csv::format(&processed.result))?;
+                    processed.gcode
+                }
+                None => {
+                    ares_core::slice_project_plate(input, metadata, args.plate, context).await?
+                }
+            }
         }
         Some(extension) if extension == "stl" => {
             let options = args.options.ok_or_else(|| {

@@ -18,16 +18,17 @@ fn zero_acceleration_linear_move_has_one_second_total_and_complete_output() {
     // Two blocks: upstream `calculate_time` drops a lone trailing block.
     let input = "M73 P0 R0\nG1 Z10 F600\nG1 Z20 F600\nM73 P100 R0\n; estimated printing time (normal mode) = 0s\n";
     let lines = input.lines().map(str::to_owned).collect::<Vec<_>>();
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &zero_z_limits().with_settings(&Default::default()),
+        None,
     );
     // Upstream: both acceleration distances/times = 0; cruise = 10 / 10.
     assert!(estimate.total.is_finite());
     assert_eq!(estimate.total, 2.0);
     assert_eq!(
-        process(input.as_bytes().to_vec(), true, 0.0, 0.0, zero_z_limits().with_settings(&Default::default())),
+        process(input.as_bytes().to_vec(), true, 0.0, 0.0, zero_z_limits().with_settings(&Default::default())).gcode,
         b"M73 P0 R0\nG1 Z10 F600\nG1 Z20 F600\nM73 P50 R0\nM73 P100 R0\n; estimated printing time (normal mode) = 2s\n"
     );
 }
@@ -36,17 +37,18 @@ fn zero_acceleration_linear_move_has_one_second_total_and_complete_output() {
 fn zero_acceleration_linear_moves_emit_finite_remaining_time_and_halfway_progress() {
     let input = "M73 P0 R0\nG1 Z600 F600\nG1 Z1200\nM73 P100 R0\n; estimated printing time (normal mode) = 0s\n";
     let lines = input.lines().map(str::to_owned).collect::<Vec<_>>();
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &zero_z_limits().with_settings(&Default::default()),
+        None,
     );
     // Two 600 / 10 = 60s blocks. The existing cache exports the first at G1 #2.
     assert!(estimate.total.is_finite());
     assert_eq!(estimate.total, 120.0);
     assert_eq!(estimate.elapsed_at(3), Some(60.0));
     assert_eq!(
-        process(input.as_bytes().to_vec(), true, 0.0, 0.0, zero_z_limits().with_settings(&Default::default())),
+        process(input.as_bytes().to_vec(), true, 0.0, 0.0, zero_z_limits().with_settings(&Default::default())).gcode,
         b"M73 P0 R2\nG1 Z600 F600\nG1 Z1200\nM73 P50 R1\nM73 P100 R0\n; estimated printing time (normal mode) = 2m 0s\n"
     );
 }
@@ -128,10 +130,11 @@ fn zero_acceleration_helical_segments_have_cruise_only_times_and_complete_output
         "M73 P0 R0\n{command}\nM73 P100 R0\n; estimated printing time (normal mode) = 0s\n"
     );
     let lines = input.lines().map(str::to_owned).collect::<Vec<_>>();
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &zero_z_limits().with_settings(&Default::default()),
+        None,
     );
     assert!(estimate.total.is_finite());
     assert_eq!(estimate.total, times.iter().sum::<f64>());
@@ -139,7 +142,7 @@ fn zero_acceleration_helical_segments_have_cruise_only_times_and_complete_output
     // The arc line's own marker reads segment 15 of 16's cache entry
     // (`GCodeProcessor.cpp:1466`), so it carries ~94% progress.
     assert_eq!(
-        process(input.into_bytes(), true, 0.0, 0.0, zero_z_limits().with_settings(&Default::default())),
+        process(input.into_bytes(), true, 0.0, 0.0, zero_z_limits().with_settings(&Default::default())).gcode,
         b"M73 P0 R0\nG3 X10 Y10 Z100 I0 J10 F600\nM73 P93 R0\nM73 P100 R0\n; estimated printing time (normal mode) = 10s\n"
     );
 }

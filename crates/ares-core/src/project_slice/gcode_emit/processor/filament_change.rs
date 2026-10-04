@@ -29,7 +29,8 @@ impl<'a> FilamentChange<'a> {
         }
     }
 
-    pub(super) fn command(&mut self, code: &str) -> Option<f32> {
+    /// Returns the selected filament and the change's extra time.
+    pub(super) fn command(&mut self, code: &str) -> Option<(usize, f32)> {
         let command = code.split_whitespace().next()?;
         if unloads_filament(code) {
             // Upstream sets this before consulting its unload-time getter.
@@ -67,7 +68,7 @@ impl<'a> FilamentChange<'a> {
                 extra += self.change;
             }
         }
-        Some(extra)
+        Some((filament, extra))
     }
 
     fn unload_time(&self) -> f32 {

@@ -33,10 +33,11 @@ fn arc_traversal_time_is_attributed_to_the_arc_lines_own_marker() {
         MotionState::default().motions("G3 X0 Y2 I0 J1 F600").len(),
         10
     );
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
 
     let at_arc = estimate
@@ -84,10 +85,11 @@ fn arc_after_closed_wall_reads_the_seam_id_not_the_geometric_count() {
         MotionState::default().motions("G3 X0 Y2 I0 J1 F600").len(),
         10
     );
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
 
     // `elapsed_at(k)` reads `elapsed[k]`, the marker for source line `k-1`.
@@ -137,10 +139,11 @@ fn zero_block_arc_still_advances_the_slicer_id_not_the_retained_block_count() {
     .map(str::to_owned);
     // Must not panic (debug usize underflow) and must produce a marker for
     // the trailing G1 — the id accounting stayed positive.
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
     let _ = estimate.elapsed_at(4);
 }
@@ -159,10 +162,11 @@ fn degenerate_first_arc_segment_retains_upstream_hole_in_block_ids() {
         "G1 X1 F600",
     ]
     .map(str::to_owned);
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
     // The first retained arc block carries upstream id 3 (the dropped
     // zero-displacement first segment consumed id 2), not the compact id 2.

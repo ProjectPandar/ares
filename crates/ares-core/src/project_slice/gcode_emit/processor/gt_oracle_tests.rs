@@ -32,10 +32,11 @@ fn spiral_lift_arc_creates_all_segment_blocks() {
     .into_iter()
     .map(str::to_owned)
     .collect();
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
     // GT total for the same stream: 2.988959s (line 1 = 1.414634, arc
     // blocks ~0.0106+0.0066..., line 24 = 1.414213).
@@ -81,10 +82,11 @@ fn toolchange_tail_delays_match_gt_oracle() {
     .into_iter()
     .map(str::to_owned)
     .collect();
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
     // GT total: 5.621093s (1.441142 + 1.414142 + 2.800640 + 1.379311 -
     // overlapping block/additional split as measured by the oracle).
@@ -155,8 +157,12 @@ fn spiral_in_toolchange_context_matches_gt() {
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
     };
-    let estimate =
-        Estimate::from_lines(&lines, 0.0, &gt_defaults.with_settings(&Default::default()));
+    let estimate = Estimate::record(
+        &lines,
+        0.0,
+        &gt_defaults.with_settings(&Default::default()),
+        None,
+    );
     // GT (correctly-newlined file, v2 oracle): 34.409561s.
     let expected = 34.409_561;
     assert!(
@@ -215,7 +221,12 @@ fn wall_ramp_after_travel_matches_gt() {
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
     };
-    let estimate = Estimate::from_lines(&lines, 0.0, &limits.with_settings(&Default::default()));
+    let estimate = Estimate::record(
+        &lines,
+        0.0,
+        &limits.with_settings(&Default::default()),
+        None,
+    );
     let expected = 20.524_401;
     assert!(
         (estimate.total - expected).abs() < 0.001,
@@ -252,7 +263,12 @@ fn ksr_prefix_total() {
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
     };
-    let estimate = Estimate::from_lines(&lines, 29.0, &limits.with_settings(&Default::default()));
+    let estimate = Estimate::record(
+        &lines,
+        29.0,
+        &limits.with_settings(&Default::default()),
+        None,
+    );
     panic!("prefix-total {}", estimate.total);
 }
 
@@ -309,8 +325,12 @@ fn toolchange_ladder_totals() {
             retraction_feedrate: 0.0,
             deretraction_feedrate: 0.0,
         };
-        let estimate =
-            Estimate::from_lines(&lines, 0.0, &gt_defaults.with_settings(&Default::default()));
+        let estimate = Estimate::record(
+            &lines,
+            0.0,
+            &gt_defaults.with_settings(&Default::default()),
+            None,
+        );
         totals.push(format!("{name} {}", estimate.total));
     }
     panic!("{}", totals.join(" | "));
@@ -354,7 +374,12 @@ fn marlin_arc_segment_boundary_uses_f32_radius() {
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
     };
-    let estimate = Estimate::from_lines(&lines, 0.0, &limits.with_settings(&Default::default()));
+    let estimate = Estimate::record(
+        &lines,
+        0.0,
+        &limits.with_settings(&Default::default()),
+        None,
+    );
     // Pinned to the f32-radius behavior (9 internal segments); the
     // f64-radius variant of the same stream measures 2.989248s (8
     // internal segments) — the boundary is the assertion.

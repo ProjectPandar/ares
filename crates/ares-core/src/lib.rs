@@ -47,6 +47,7 @@ mod gcode_power_loss_recovery;
 mod gcode_pressure_advance;
 mod gcode_print_bed_placeholders;
 mod gcode_print_move;
+pub mod gcode_processor;
 mod gcode_reserved_tags;
 mod gcode_role_change;
 mod gcode_role_fan;
@@ -104,6 +105,7 @@ pub use extrusions::{
 };
 pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
 pub(crate) use gap_fills::{SolidSurfaceGapFillInput, append_solid_surface_gap_fills};
+pub use gcode_processor::{GCodeProcessorResult, MoveVertex, ProcessedGCode};
 pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailParseError,
     parse_thumbnail_definitions, thumbnail_error_string,
@@ -170,7 +172,7 @@ pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
     ProjectObject, ProjectVolume, ProjectVolumeType, Transform3d, load_project,
 };
-pub use project_slice::{slice_project, slice_project_plate};
+pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use slicer_context::SlicerContext;

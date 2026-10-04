@@ -6,12 +6,14 @@ mod export_lines;
 pub(super) mod filament_change;
 mod motion;
 mod motion_util;
+mod moves;
 mod schedule;
 mod stats;
 mod time;
 use crate::options::GCodeFlavor;
 use estimate::Estimate;
 use export_lines::ExportLines;
+use moves::MoveRecorder;
 pub(super) use stats::{PRINT_TIME_SEC_PLACEHOLDER, USED_FILAMENT_LENGTH_PLACEHOLDER};
 use time::{duration, minutes};
 
@@ -37,6 +39,8 @@ pub(super) struct ProcessorLimits {
 pub(super) struct ProcessorConfig<'a> {
     limits: ProcessorLimits,
     settings: &'a crate::ProjectSettings,
+    /// Also record `GCodeProcessorResult::moves` (`GCodeProcessor::process_file`).
+    record_moves: bool,
 }
 
 impl ProcessorLimits {
@@ -44,6 +48,16 @@ impl ProcessorLimits {
         ProcessorConfig {
             limits: self,
             settings,
+            record_moves: false,
+        }
+    }
+}
+
+impl ProcessorConfig<'_> {
+    pub(super) fn recording_moves(self, record_moves: bool) -> Self {
+        Self {
+            record_moves,
+            ..self
         }
     }
 }
@@ -75,16 +89,24 @@ pub(super) fn process(
     machine_load_filament_time: f64,
     used_filament: f64,
     config: ProcessorConfig<'_>,
-) -> Vec<u8> {
+) -> crate::ProcessedGCode {
     let limits = config.limits;
     let text = String::from_utf8(output).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
-    let estimate = Estimate::from_lines(&lines, machine_load_filament_time, &config);
+    let record_moves = config.record_moves;
+    let mut recorder = record_moves.then(|| MoveRecorder::new(&config));
+    let estimate = Estimate::record(
+        &lines,
+        machine_load_filament_time,
+        &config,
+        recorder.as_mut(),
+    );
     let mut result = ExportLines::new(
         config.settings,
         limits.gcode_flavor,
         limits.bbl_printer,
         text.len(),
+        record_moves.then_some(lines.len()),
     );
     let mut last_progress = None;
     let first_marker = lines
@@ -135,7 +157,7 @@ pub(super) fn process(
             ));
             continue;
         }
-        result.append(format!("{line}\n"));
+        result.append_from(format!("{line}\n"), index + 1);
         if index < first_marker || !emit_progress || !is_progress_motion(line) {
             continue;
         }
@@ -160,7 +182,14 @@ pub(super) fn process(
             result.append(format!("M73 P{percent} R{remaining}\n"));
         }
     }
-    result.finish()
+    let (gcode, line_map) = result.finish();
+    crate::ProcessedGCode {
+        gcode,
+        result: recorder
+            .zip(line_map)
+            .map(|(recorder, line_map)| recorder.finish(&line_map))
+            .unwrap_or_default(),
+    }
 }
 
 fn is_progress_motion(line: &str) -> bool {

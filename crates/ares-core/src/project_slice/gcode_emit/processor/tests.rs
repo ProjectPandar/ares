@@ -23,13 +23,16 @@ fn inserts_progress_and_rewrites_time_fields() {
     // Two motion blocks: upstream `calculate_time` drops a lone trailing
     // block (`blocks.size() < 2`), so a single move would not count.
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X500 F600\nG1 X1000 F600\nM73 P100 R0\n".to_vec();
-    let output = String::from_utf8(process(
-        output,
-        true,
-        0.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            0.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
     assert!(output.contains("total estimated time: 1m 40s"), "{output}");
     assert!(output.contains("M73 P0 R"));
@@ -42,13 +45,16 @@ fn rewrites_compatible_time_footer_for_non_bbl_printers() {
     let output = b"; estimated printing time (normal mode) = 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nG1 X500 F600\nG1 X1000 F600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        true,
-        0.0,
-        0.0,
-        nonbinding_axis_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            0.0,
+            0.0,
+            nonbinding_axis_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(
@@ -63,13 +69,16 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X500 F600\nG1 X1000 F600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        false,
-        0.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            false,
+            0.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(!output.lines().any(|line| line.starts_with("M73 P")));
@@ -80,13 +89,16 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
 fn progress_updates_follow_motion_lines_not_delay_commands() {
     let output = b"M73 P0 R0\nT0\nG1 X1 F60\nM73 P100 R0\n".to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        true,
-        120.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            120.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(output.contains("T0\nG1 X1 F60\nM73 P"), "{output}");
@@ -98,13 +110,16 @@ fn finalized_motion_time_is_exported_after_the_next_motion_command() {
         b"M73 P0 R0\nM204 S1000\nG1 X1 F60\nM400\nG1 X2 F60\nM622 J1\nG29 A1\nM73 P100 R0\n"
             .to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        true,
-        0.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            0.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(output.contains("G1 X2 F60\nM73 P99 R0\nM622"), "{output}");
@@ -114,13 +129,16 @@ fn non_bbl_g29_counts_the_bed_leveling_delay_without_m622_markers() {
     let output = b"M73 P0 R0\nG28\nG29 ;Auto bed leveling detecting\nM109 S220\nM204 S1000\nG1 X600 F3600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        true,
-        0.0,
-        0.0,
-        nonbinding_axis_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            0.0,
+            0.0,
+            nonbinding_axis_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(output.contains("M73 P0 R4\n"), "{output}");
@@ -131,21 +149,27 @@ fn bbl_g29_counts_the_bed_leveling_delay_only_inside_m622_j1() {
     let gated = b"M73 P0 R0\nM622 J1\nG29\nM623\nM204 S1000\nG1 X600 F3600\nM73 P100 R0\n".to_vec();
     let ungated = b"M73 P0 R0\nG29\nM204 S1000\nG1 X600 F3600\nM73 P100 R0\n".to_vec();
 
-    let measured = String::from_utf8(process(
-        gated.to_vec(),
-        true,
-        0.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let measured = String::from_utf8(
+        process(
+            gated.to_vec(),
+            true,
+            0.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
-    let skipped = String::from_utf8(process(
-        ungated,
-        true,
-        0.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let skipped = String::from_utf8(
+        process(
+            ungated,
+            true,
+            0.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(measured.contains("M73 P0 R4\n"), "{measured}");
@@ -171,15 +195,17 @@ fn g4_dwell_s_word_adds_seconds_to_the_total_time() {
         "G1 X1800 F3600",
     ]
     .map(str::to_owned);
-    let plain = Estimate::from_lines(
+    let plain = Estimate::record(
         &plain,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
-    let dwell = Estimate::from_lines(
+    let dwell = Estimate::record(
         &dwell,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
 
     // Upstream `calculate_time` drops a lone trailing block, so the last
@@ -211,15 +237,17 @@ fn g4_dwell_p_word_counts_milliseconds_and_s_takes_precedence() {
     ]
     .map(str::to_owned);
 
-    let p = Estimate::from_lines(
+    let p = Estimate::record(
         &p,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
-    let s_and_p = Estimate::from_lines(
+    let s_and_p = Estimate::record(
         &s_and_p,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
 
     // process_G4's has_value('S') || has_value('P') short-circuits, so a
@@ -238,13 +266,16 @@ fn g4_dwell_shifts_progress_markers_and_the_total_footer() {
     let output = b"; estimated printing time (normal mode) = 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X600 F3600\nG4 S10\nG1 X1200 F3600\nG1 X1800 F3600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        true,
-        0.0,
-        0.0,
-        nonbinding_axis_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            0.0,
+            0.0,
+            nonbinding_axis_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(output.contains("G1 X1200 F3600\nM73 P49 R0\n"), "{output}");
@@ -258,13 +289,16 @@ fn g4_dwell_shifts_progress_markers_and_the_total_footer() {
 fn preparation_time_ends_at_first_print_feature() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\n; FEATURE: Custom\nM204 S1000\nG1 X600 F3600\n; FEATURE: Inner wall\nG1 X1200 F3600\nM73 P100 R0\n".to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        false,
-        0.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            false,
+            0.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(
@@ -281,13 +315,16 @@ fn progress_skips_e_only_retract_lines() {
     // entry, so the retract's own cumulative time never reaches an M73.
     let output = b"M73 P0 R0\nG1 X100 F600\nG1 E-5 F300\nG1 Z.8 F600\nM73 P100 R0\n".to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        true,
-        0.0,
-        0.0,
-        nonbinding_axis_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            0.0,
+            0.0,
+            nonbinding_axis_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(output.contains("G1 E-5 F300\nM73 P"), "{output}");
@@ -303,13 +340,16 @@ fn progress_skips_e_only_retract_lines() {
 fn first_layer_time_trailer_prints_fractional_seconds() {
     let output = b"; estimated printing time (normal mode) = 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\n;TYPE:Custom\nG1 X5 F600\n;TYPE:Inner wall\nG1 X1000 F600\nM73 P100 R0\n".to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        true,
-        0.0,
-        0.0,
-        nonbinding_axis_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            true,
+            0.0,
+            0.0,
+            nonbinding_axis_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(

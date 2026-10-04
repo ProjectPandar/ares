@@ -43,7 +43,7 @@ fn zero_axis_acceleration_is_preserved_in_arc_segments() {
 fn sub_unit_axis_acceleration_is_preserved_in_arc_segments() {
     let code = "G3 X10 Y10 Z100 I0 J10 F600";
     let blocks = state(&[0.5]).motions(code);
-    let deltas = arc::deltas(
+    let targets = arc::targets(
         "G3",
         code,
         arc::ArcMotion {
@@ -56,14 +56,19 @@ fn sub_unit_axis_acceleration_is_preserved_in_arc_segments() {
         },
     )
     .unwrap();
+    let starts = std::iter::once([0.0; 4]).chain(targets.iter().copied());
+    let deltas = targets
+        .iter()
+        .zip(starts)
+        .map(|(end, start)| end[2] - start[2]);
     assert!(blocks.len() > 1);
-    assert_eq!(blocks.len(), deltas.len());
+    assert_eq!(blocks.len(), targets.len());
     for (block, delta) in blocks.into_iter().zip(deltas) {
         // GCodeProcessor.cpp:4069–4071 applies the axis limit against
         // displacement and inverse distance in the planner's `prepare`;
         // the blocks carry the limit plus the exact source deltas.
-        assert!(delta[2] > 0.0);
-        assert_eq!(block.delta[2], delta[2]);
+        assert!(delta > 0.0);
+        assert_eq!(block.delta[2], delta);
         assert_eq!(block.max_acceleration[2], 0.5);
     }
 }

@@ -13,7 +13,7 @@ mod limits;
 use super::motion_util::{MMMIN_TO_MMSEC, norm, word};
 use crate::options::GCodeFlavor;
 mod planner;
-pub(super) use planner::RollingPlanner;
+pub(super) use planner::{RollingPlanner, Trapezoid};
 use std::f64::consts::PI;
 
 pub(super) struct MotionState {
@@ -82,6 +82,13 @@ pub(super) enum MotionKind {
     ToolChange,
 }
 
+pub(super) struct IndexedMotion {
+    pub(super) index: usize,
+    pub(super) block: MotionBlock,
+    /// Absolute XYZE after the move (upstream `m_end_position`).
+    pub(super) end: [f64; 4],
+}
+
 pub(super) struct MotionBlock {
     pub(super) distance: f64,
     /// Raw axis deltas (upstream `AxisCoords delta_pos` doubles,
@@ -126,25 +133,33 @@ impl MotionState {
     pub(super) fn motions(&mut self, code: &str) -> Vec<MotionBlock> {
         self.motions_indexed(code)
             .into_iter()
-            .map(|(_, block)| block)
+            .map(|motion| motion.block)
             .collect()
     }
 
-    /// Each entry is `(discretization_index, block)`: `0` for linear moves,
-    /// the segment's position in `arc::deltas` for `G2`/`G3` — needed to
-    /// preserve the `m_g1_line_id` hole of dropped zero-displacement
-    /// segments (`GCodeProcessor.cpp:3868` fires before the :3891 drop).
-    pub(super) fn motions_indexed(&mut self, code: &str) -> Vec<(usize, MotionBlock)> {
+    /// `index` is `0` for linear moves and the segment's position in
+    /// `arc::targets` for `G2`/`G3` — needed to preserve the
+    /// `m_g1_line_id` hole of dropped zero-displacement segments
+    /// (`GCodeProcessor.cpp:3868` fires before the :3891 drop).
+    pub(super) fn motions_indexed(&mut self, code: &str) -> Vec<IndexedMotion> {
         let start = self.position;
         let start_e = self.e_position;
         let Some(block) = self.motion(code) else {
             return Vec::new();
         };
+        let linear = |state: &Self, block| {
+            let [x, y, z] = state.position;
+            vec![IndexedMotion {
+                index: 0,
+                block,
+                end: [x, y, z, state.e_position],
+            }]
+        };
         let command = code.split_whitespace().next().unwrap_or_default();
         if !matches!(command, "G2" | "G3") {
-            return vec![(0, block)];
+            return linear(self, block);
         }
-        let Some(deltas) = arc::deltas(
+        let Some(targets) = arc::targets(
             command,
             code,
             arc::ArcMotion {
@@ -156,19 +171,22 @@ impl MotionState {
                 gcode_flavor: self.gcode_flavor,
             },
         ) else {
-            return vec![(0, block)];
+            return linear(self, block);
         };
         // `internal_only_g1_line` → `process_G1` → `++m_g1_line_id` fires for
         // EVERY discretized segment (`GCodeProcessor.cpp:3868`), including
         // zero-displacement segments dropped at :3891 — so a retained
         // block's `g1_line_id` is its discretization position `base + index`,
-        // not a compact rank over the survivors. Carry the `deltas` index.
-        deltas
+        // not a compact rank over the survivors. Carry the `targets` index.
+        let mut previous = [start[0], start[1], start[2], start_e];
+        targets
             .into_iter()
             .enumerate()
-            .filter_map(|(segment_index, delta)| {
+            .filter_map(|(index, end)| {
+                let delta = std::array::from_fn(|axis| end[axis] - previous[axis]);
+                previous = end;
                 self.segment_block(delta)
-                    .map(|block| (segment_index, block))
+                    .map(|block| IndexedMotion { index, block, end })
             })
             .collect()
     }

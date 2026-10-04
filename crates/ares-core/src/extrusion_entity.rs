@@ -45,6 +45,32 @@ impl ExtrusionRole {
         }
     }
 
+    /// `ExtrusionEntity::string_to_role` (`ExtrusionEntity.cpp:611-652`).
+    pub fn from_name(name: &str) -> Self {
+        match name {
+            "Inner wall" => Self::Perimeter,
+            "Outer wall" => Self::ExternalPerimeter,
+            "Overhang wall" => Self::OverhangPerimeter,
+            "Sparse infill" => Self::InternalInfill,
+            "Internal solid infill" => Self::SolidInfill,
+            "Top surface" => Self::TopSolidInfill,
+            "Bottom surface" => Self::BottomSurface,
+            "Ironing" => Self::Ironing,
+            "Bridge" => Self::BridgeInfill,
+            "Internal Bridge" => Self::InternalBridgeInfill,
+            "Gap infill" => Self::GapFill,
+            "Skirt" => Self::Skirt,
+            "Brim" => Self::Brim,
+            "Support" => Self::SupportMaterial,
+            "Support interface" => Self::SupportMaterialInterface,
+            "Support transition" => Self::SupportTransition,
+            "Prime tower" => Self::WipeTower,
+            "Custom" => Self::Custom,
+            "Multiple" => Self::Mixed,
+            _ => Self::None,
+        }
+    }
+
     pub const fn is_perimeter(self) -> bool {
         matches!(
             self,

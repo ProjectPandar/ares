@@ -65,7 +65,8 @@ fn replay(name: &str, reference: &str) -> Vec<u8> {
         setting(reference, "machine_load_filament_time"),
         0.0,
         limits.with_settings(&Default::default()),
-    );
+    )
+    .gcode;
     if let Some(root) = std::env::var_os("ARES_ENVELOPE_OUTPUT") {
         let root = PathBuf::from(root);
         fs::create_dir_all(&root).unwrap();

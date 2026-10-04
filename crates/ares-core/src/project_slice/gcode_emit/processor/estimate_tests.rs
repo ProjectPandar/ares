@@ -57,13 +57,16 @@ fn machine_max_feedrate_limits_extrusion_time() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E30 F3600\nG1 E60 F3600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(
-        output,
-        false,
-        0.0,
-        0.0,
-        bbl_limits().with_settings(&Default::default()),
-    ))
+    let output = String::from_utf8(
+        process(
+            output,
+            false,
+            0.0,
+            0.0,
+            bbl_limits().with_settings(&Default::default()),
+        )
+        .gcode,
+    )
     .unwrap();
 
     assert!(output.contains("total estimated time: 3s"), "{output}");
@@ -197,10 +200,11 @@ fn single_block_synchronization_waits_for_next_motion() {
     ]
     .map(str::to_owned);
 
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
 
     assert!(
@@ -217,10 +221,11 @@ fn final_pass_drains_a_lone_block_with_buffered_delay() {
     // found fewer than two blocks, so the block and the delay both count.
     let lines = ["M204 S1000", "G1 X600 F3600", "G4 S5"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
 
     assert!(estimate.total > 15.0, "{}", estimate.total);
@@ -230,10 +235,11 @@ fn final_pass_drains_a_lone_block_with_buffered_delay() {
 fn initial_tool_selection_adds_machine_load_time_once() {
     let lines = ["T0 H-1", "T0 H-1"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         29.0,
         &ProcessorLimits::default().with_settings(&Default::default()),
+        None,
     );
 
     assert_eq!(estimate.total, 29.0);
@@ -275,10 +281,11 @@ fn homing_command_emits_motion_to_requested_axes() {
 fn homing_motion_contributes_to_total_estimate() {
     let lines = ["G1 X10 F600", "G28 X"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(
+    let estimate = Estimate::record(
         &lines,
         0.0,
         &nonbinding_axis_limits().with_settings(&Default::default()),
+        None,
     );
 
     assert!(

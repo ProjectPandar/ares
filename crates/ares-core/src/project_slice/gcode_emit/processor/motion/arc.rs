@@ -128,7 +128,9 @@ pub(in crate::project_slice::gcode_emit::processor) fn arc_discretization_steps(
     }
 }
 
-pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec<[f64; 4]>> {
+/// Absolute `arc_target` XYZE of every discretized segment; the last one is
+/// the commanded end (`GCodeProcessor.cpp:4741-4766,4809-4851`).
+pub(super) fn targets(command: &str, code: &str, motion: ArcMotion) -> Option<Vec<[f64; 4]>> {
     let ArcMotion {
         start,
         end,
@@ -159,9 +161,9 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
         sweep,
     };
     Some(if gcode_flavor == GCodeFlavor::MarlinFirmware {
-        marlin_deltas(arc)
+        marlin_targets(arc)
     } else {
-        legacy_deltas(arc)
+        legacy_targets(arc)
     })
 }
 
@@ -181,7 +183,7 @@ struct ArcGeometry {
     sweep: f64,
 }
 
-fn marlin_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
+fn marlin_targets(arc: ArcGeometry) -> Vec<[f64; 4]> {
     // `radius_mm = rel_center.norm()` (`GCodeProcessor.cpp:4723`): the
     // Marlin segment math runs on the Vec3f (f32) norm of the I/J
     // offsets — NOT the Vec3d `start_radius()` the legacy branch uses.
@@ -210,11 +212,10 @@ fn marlin_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
     // `arc_target[X/Y] = center + rvec` stores the double sum directly,
     // and `arc_target[Z/E] += float step` accumulates into the double
     // slots from `m_start_position[Z/E]` (`GCodeProcessor.cpp:4741-4756`).
-    // Deltas stay double; only the rotation runs in f32 (`Vec2f rvec`).
-    let mut previous = [arc.start[0], arc.start[1], arc.start[2], arc.start_e];
+    // Targets stay double; only the rotation runs in f32 (`Vec2f rvec`).
     let mut z = arc.start[2];
     let mut e = arc.start_e;
-    let mut deltas = Vec::with_capacity(segments);
+    let mut targets = Vec::with_capacity(segments);
 
     for segment in 1..segments {
         correction -= 1;
@@ -230,36 +231,23 @@ fn marlin_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
         }
         z += f64::from(z_step);
         e += f64::from(e_step);
-        let current = [
+        targets.push([
             arc.center[0] + f64::from(rvec[0]),
             arc.center[1] + f64::from(rvec[1]),
             z,
             e,
-        ];
-        deltas.push([
-            current[0] - previous[0],
-            current[1] - previous[1],
-            current[2] - previous[2],
-            current[3] - previous[3],
         ]);
-        previous = current;
     }
-    let current = [
+    targets.push([
         arc.end[0],
         arc.end[1],
         arc.end[2],
         arc.start_e + arc.e_delta,
-    ];
-    deltas.push([
-        current[0] - previous[0],
-        current[1] - previous[1],
-        current[2] - previous[2],
-        current[3] - previous[3],
     ]);
-    deltas
+    targets
 }
 
-fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
+fn legacy_targets(arc: ArcGeometry) -> Vec<[f64; 4]> {
     // `Arc::start_radius()` is Eigen's `.norm()` = the naive sqrt of the
     // squared sum — not the compensated `hypot` — and the discretization
     // ceil sees the exact double it produces (carried from the parse).
@@ -280,10 +268,9 @@ fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
     // the double Taylor chain accumulates `arc_target[Z/E]` from
     // `m_start_position[Z/E]` with double steps, and only the rotation's
     // `r_axisi` takes the float round trip (`GCodeProcessor.cpp:4809-4841`).
-    let mut previous = [arc.start[0], arc.start[1], arc.start[2], arc.start_e];
     let mut z = arc.start[2];
     let mut e = arc.start_e;
-    let mut deltas = Vec::with_capacity(segments);
+    let mut targets = Vec::with_capacity(segments);
 
     for segment in 1..segments {
         if correction == 0 {
@@ -308,25 +295,13 @@ fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
             z,
             e,
         ];
-        deltas.push([
-            current[0] - previous[0],
-            current[1] - previous[1],
-            current[2] - previous[2],
-            current[3] - previous[3],
-        ]);
-        previous = current;
+        targets.push(current);
     }
-    let current = [
+    targets.push([
         arc.end[0],
         arc.end[1],
         arc.end[2],
         arc.start_e + arc.e_delta,
-    ];
-    deltas.push([
-        current[0] - previous[0],
-        current[1] - previous[1],
-        current[2] - previous[2],
-        current[3] - previous[3],
     ]);
-    deltas
+    targets
 }

@@ -1,6 +1,6 @@
 //! `TimeBlock::calculate_trapezoid()` + `time()` port
 //! (GCodeProcessor.cpp:127-143, 255-274; GCodeProcessor.hpp:436-476).
-use super::PlannedBlock;
+use super::{PlannedBlock, Trapezoid};
 
 // `GCodeProcessor.cpp:128-142`: `speed_from_distance` clamps its radicand
 // so numerical error can never produce a negative square root.
@@ -24,7 +24,7 @@ fn acceleration_time_from_distance(initial_feedrate: f32, distance: f32, acceler
 // from an accel/decel DISTANCE, and a distance whose velocity difference
 // points the wrong way clamps to zero, so it contributes zero time, never a
 // negative one.
-pub(super) fn block_time(block: PlannedBlock) -> f32 {
+pub(super) fn block_time(block: PlannedBlock) -> (f32, Trapezoid) {
     let acceleration = block.acceleration;
     let accelerate_distance = if acceleration == 0.0 {
         0.0
@@ -60,7 +60,7 @@ pub(super) fn block_time(block: PlannedBlock) -> f32 {
             accelerate_distance + cruise_distance,
         )
     };
-    acceleration_time_from_distance(block.entry, accelerate_until, acceleration)
+    let time = acceleration_time_from_distance(block.entry, accelerate_until, acceleration)
         + if cruise_feedrate != 0.0 {
             (decelerate_after - accelerate_until) / cruise_feedrate
         } else {
@@ -70,5 +70,13 @@ pub(super) fn block_time(block: PlannedBlock) -> f32 {
             cruise_feedrate,
             block.distance - decelerate_after,
             -acceleration,
-        )
+        );
+    (
+        time,
+        Trapezoid {
+            distance: block.distance,
+            accelerate_until,
+            decelerate_after,
+        },
+    )
 }

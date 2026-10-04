@@ -1,5 +1,5 @@
 use crate::{
-    GenerationMetadata, Project, SliceError, geometry::CoordinateScale,
+    GenerationMetadata, ProcessedGCode, Project, SliceError, geometry::CoordinateScale,
     project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
@@ -84,7 +84,18 @@ pub async fn slice_project_plate(
     plate: Option<u32>,
     context: crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_project_sync(project, metadata, plate, context)
+    slice_project_sync(project, metadata, plate, false, context).map(|processed| processed.gcode)
+}
+
+/// Slices one plate and also returns the `GCodeProcessorResult` move
+/// vertices the processor pass records over the exported G-code.
+pub async fn slice_project_plate_processed(
+    project: impl AsRef<[u8]>,
+    metadata: GenerationMetadata,
+    plate: Option<u32>,
+    context: crate::SlicerContext,
+) -> Result<ProcessedGCode, SliceError> {
+    slice_project_sync(project, metadata, plate, true, context)
 }
 
 #[inline(never)]
@@ -92,8 +103,9 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
     plate: Option<u32>,
+    record_moves: bool,
     mut context: crate::SlicerContext,
-) -> Result<Vec<u8>, SliceError> {
+) -> Result<ProcessedGCode, SliceError> {
     let staged = prepare_infill::surface_type_detection::prepare(
         perimeters::prepare_post_layer_region_perimeters(
             ProjectSource {
@@ -143,7 +155,7 @@ fn slice_project_sync(
     ordered.support_layers = support_layers;
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
-    consume_post_island_print_order(ordered, metadata, &mut context)
+    consume_post_island_print_order(ordered, metadata, record_moves, &mut context)
 }
 
 fn extract_top_surfaces(
@@ -189,9 +201,10 @@ fn extract_top_surfaces(
 fn consume_post_island_print_order(
     mut prepared: island_print_order::PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
+    record_moves: bool,
     context: &mut crate::SlicerContext,
-) -> Result<Vec<u8>, SliceError> {
-    let output = gcode_emit::emit(&mut prepared, metadata, context)?;
+) -> Result<ProcessedGCode, SliceError> {
+    let output = gcode_emit::emit(&mut prepared, metadata, record_moves, context)?;
     island_print_order::dispose(prepared);
     Ok(output)
 }

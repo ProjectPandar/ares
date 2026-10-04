@@ -1,15 +1,18 @@
 //! `GCodeProcessor` motion accounting and exported progress-time lookup.
 
+mod elapsed;
 mod export_cache;
 mod seam;
+use elapsed::elapsed_snapshots;
 use seam::SeamDetector;
 
 use super::arc_accounting::arc_internal_g1_lines;
 use super::delays::command_delay;
 use super::filament_change::{FilamentChange, unloads_filament};
-use super::motion::{MotionBlock, MotionKind, MotionState};
+use super::motion::{IndexedMotion, MotionBlock, MotionKind, MotionState};
 use super::motion_util::word;
-use super::schedule::{DelayTarget, FlushEvent, PendingDelay, scheduled_times};
+use super::moves::{MoveRecorder, RecordedMotion};
+use super::schedule::{DelayTarget, FlushEvent, PendingDelay, Schedule, scheduled_times};
 use super::{ProcessorConfig, is_progress_motion};
 
 pub(super) struct Estimate {
@@ -21,10 +24,13 @@ pub(super) struct Estimate {
     pub(super) block_line_ids: Vec<usize>,
 }
 impl Estimate {
-    pub(super) fn from_lines(
+    /// Runs the time estimate and, with a `recorder`, records the
+    /// `GCodeProcessorResult::moves` of the same pass.
+    pub(super) fn record(
         lines: &[String],
         machine_load_filament_time: f64,
         config: &ProcessorConfig<'_>,
+        mut recorder: Option<&mut MoveRecorder>,
     ) -> Self {
         let limits = config.limits;
         let mut blocks = Vec::new();
@@ -37,6 +43,8 @@ impl Estimate {
         let mut filaments = FilamentChange::new(config, machine_load_filament_time);
         let mut g1_line_id = 0;
         let mut block_line_ids = Vec::new();
+        // `TimeBlock::move_id` of every block (`GCodeProcessor.cpp:4001`).
+        let mut block_moves = Vec::new();
         let mut remaining_internal = Vec::new();
         let mut cache_eligible = Vec::new();
         let mut seams = SeamDetector::default();
@@ -57,6 +65,15 @@ impl Estimate {
                 _ => {}
             }
             let code = line.split(';').next().unwrap_or_default().trim();
+            let line_start = [
+                state.position[0],
+                state.position[1],
+                state.position[2],
+                state.e_position,
+            ];
+            if let Some(recorder) = recorder.as_deref_mut() {
+                recorder.line(index + 1, line, g1_line_id, line_start);
+            }
             if code.starts_with("M622") && word(code, 'J').unwrap_or(0.0).round() == 1.0 {
                 measure_g29_time = true;
             } else if code.starts_with("M623") {
@@ -81,7 +98,11 @@ impl Estimate {
                     }),
                 });
             }
-            if let Some(extra_time) = filaments.command(code) {
+            if let Some((filament, extra_time)) = filaments.command(code) {
+                let move_id = recorder
+                    .as_deref_mut()
+                    .map(|recorder| recorder.tool_change(index + 1, filament, line_start));
+                block_moves.push(move_id.unwrap_or(0));
                 blocks.push(MotionBlock {
                     distance: 0.0,
                     delta: [0.0; 4],
@@ -115,6 +136,7 @@ impl Estimate {
             let arc_start = state.position;
             let mut seam_excluded = false;
             let motion_blocks = state.motions_indexed(code);
+            let mut seam_vertices = Vec::new();
             // Linear commands produce at most one block; only arcs subdivide.
             // `GCodeProcessor::process_G10/G11` calls `process_G1` after
             // `--m_g1_line_id` (`GCodeProcessor.cpp:4873-4893`), so the
@@ -122,7 +144,7 @@ impl Estimate {
             // lifecycle (`:4192-4234`) and can close a pending Outer wall
             // seam before the following travel.
             if matches!(command, "G0" | "G1" | "G28" | "G10" | "G11")
-                && let Some((_, block)) = motion_blocks.first()
+                && let Some(IndexedMotion { block, .. }) = motion_blocks.first()
             {
                 let extruding = !state.wiping
                     && block.delta[3] > 0.0
@@ -143,7 +165,8 @@ impl Estimate {
                 // `wiping || !e_only` exactly reproduces the eligibility
                 // set; the `G1 E4`/`G1 E-2.8` standalone retracts and the
                 // G10/G11 fake blocks stay out.
-                cache_eligible.push((!block.e_only || state.wiping) && !seam_vertex);
+                cache_eligible.push((!block.e_only || state.wiping) && seam_vertex.is_none());
+                seam_vertices.push(seam_vertex);
             } else if matches!(command, "G2" | "G3") && !motion_blocks.is_empty() {
                 // `G2`/`G3` arc: every discretized internal segment is a
                 // `process_G1` → `store_move_vertex`, so the seam lifecycle
@@ -154,24 +177,47 @@ impl Estimate {
                 // collapsing the `remaining` chain `ExportLines::update`
                 // walks (:790-800). `arc_start` is the position before
                 // `motions` advanced `state.position` to the arc end.
-                seam_excluded = arc_cache_eligibility(
+                seam_vertices = arc_seams(
                     &mut seams,
                     &motion_blocks,
                     arc_start,
                     state.wiping,
                     &mut cache_eligible,
                 );
+                seam_excluded = seam_vertices[0].is_some();
+            }
+            let arc = matches!(command, "G2" | "G3");
+            if let Some(recorder) = recorder.as_deref_mut()
+                && (matches!(command, "G10" | "G11") || word(code, 'F').is_some())
+            {
+                recorder.set_feedrate(state.feedrate, arc);
+            }
+            match recorder.as_deref_mut() {
+                Some(recorder) => block_moves.extend(record_motions(
+                    recorder,
+                    RecordedMotion {
+                        source: index + 1,
+                        start: line_start,
+                        end: line_start,
+                        wiping: state.wiping,
+                        linear: !arc,
+                        seam: None,
+                    },
+                    &motion_blocks,
+                    &seam_vertices,
+                )),
+                None => block_moves.extend(std::iter::repeat_n(0, motion_blocks.len())),
             }
             remaining_internal.extend(
                 motion_blocks
                     .iter()
-                    .map(|(segment, _)| arc_internal.map_or(0, |internal| internal - segment)),
+                    .map(|motion| arc_internal.map_or(0, |internal| internal - motion.index)),
             );
             match command {
                 "G0" | "G1" | "G28" => {
                     g1_line_id += 1;
                     let count = motion_blocks.len();
-                    blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
+                    blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
                 }
@@ -181,7 +227,7 @@ impl Estimate {
                 // alignment skips over it.
                 "G10" | "G11" => {
                     let count = motion_blocks.len();
-                    blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
+                    blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
                     // `cache_eligible` was already pushed by the shared
@@ -201,8 +247,8 @@ impl Estimate {
                     // internal-call count `1 + arc_internal` = `segments`.
                     g1_line_id += 1;
                     block_line_ids
-                        .extend(motion_blocks.iter().map(|(index, _)| g1_line_id + index));
-                    blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
+                        .extend(motion_blocks.iter().map(|motion| g1_line_id + motion.index));
+                    blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
                     g1_line_id += arc_internal.unwrap_or(0);
                 }
@@ -210,7 +256,14 @@ impl Estimate {
             }
             saw_motion_command |= is_progress_motion(code);
         }
-        let (times, trailing_delay) = scheduled_times(&blocks, &events);
+        let Schedule {
+            times,
+            trapezoids,
+            trailing_delay,
+        } = scheduled_times(&blocks, &events);
+        if let Some(recorder) = recorder {
+            recorder.apply_schedule(&block_moves, &times, &trapezoids);
+        }
         debug_assert_eq!(block_line_ids.len(), times.len());
         // Per-block signature dump (id, cumulative, distance, speed) for
         // sequence alignment against the GT oracle's ORCA_DUMP_TIMES — env
@@ -269,101 +322,49 @@ impl Estimate {
     }
 }
 
-fn arc_cache_eligibility(
+/// The `Seam` vertex each arc segment's `process_G1` stores, if any; a
+/// seam-carrying or non-cacheable segment stays out of `g1_times_cache`.
+fn arc_seams(
     seams: &mut SeamDetector,
-    motion_blocks: &[(usize, MotionBlock)],
+    motion_blocks: &[IndexedMotion],
     arc_start: [f64; 3],
     wiping: bool,
     cache_eligible: &mut Vec<bool>,
-) -> bool {
-    let mut seam_excluded = false;
+) -> Vec<Option<[f32; 3]>> {
     let mut position = arc_start;
-    for (segment_index, (_, block)) in motion_blocks.iter().enumerate() {
-        let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
-        let extruding =
-            !wiping && block.delta[3] > 0.0 && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
-        let seam_vertex = seams.associate(extruding, end);
-        seam_excluded |= seam_vertex && segment_index == 0;
-        cache_eligible.push((!block.e_only || wiping) && !seam_vertex);
-        position = end;
-    }
-    seam_excluded
+    motion_blocks
+        .iter()
+        .map(|IndexedMotion { block, .. }| {
+            let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
+            let extruding =
+                !wiping && block.delta[3] > 0.0 && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
+            position = end;
+            let seam = seams.associate(extruding, end);
+            cache_eligible.push((!block.e_only || wiping) && seam.is_none());
+            seam
+        })
+        .collect()
 }
 
-fn elapsed_snapshots(
-    lines: &[String],
-    cache: &[export_cache::Entry],
-    arc_segment_counts: &[usize],
-    arc_seam_excluded: &[bool],
-) -> Vec<Option<f64>> {
-    let mut elapsed = vec![None; lines.len() + 1];
-    let mut cache_index = 0;
-    let mut exported_g1_lines = 0;
-    for (index, line) in lines.iter().enumerate() {
-        let command = line
-            .split(';')
-            .next()
-            .unwrap_or_default()
-            .split_whitespace()
-            .next()
-            .unwrap_or_default();
-        let lookup_id = match command {
-            "G0" | "G1" => {
-                // `process_line_move(g1_lines_counter++)` (:1460) probes
-                // `g1_times_cache_it->id == g1_lines_counter` at the
-                // PRE-increment caller counter (:1246-1248) — the line
-                // reads the cumulative through the previous eligible
-                // cache entry.
-                let id = exported_g1_lines;
-                exported_g1_lines += 1;
-                Some(id)
-            }
-            "G2" | "G3" => {
-                // `ret` = `internal_g1_lines_counter` = the
-                // `remaining_internal_g1_lines > 0` walk count in
-                // `ExportLines::update` (:793-799): `arc_internal - 1`
-                // eligible internal entries for a fully-cached arc
-                // (the `it->id == counter` probe lands on the
-                // second-to-last internal segment), 0 when the first
-                // block was seam-excluded (`it->id > counter`).
-                // `process_line_move(g1_lines_counter + ret)` (:1466),
-                // `g1_lines_counter += 1 + ret` (:1467). The `it->id`
-                // probe is `exported + 1 + ret` (`++` at :778).
-                let internal = if arc_seam_excluded[index] {
-                    0
-                } else {
-                    arc_segment_counts[index]
-                };
-                // `process_line_move(g1_lines_counter + internal)` (:1466)
-                // probes `g1_times_cache_it->id == g1_lines_counter +
-                // internal` (:1246-1248) — `internal` is `update`'s
-                // `ret` = the `remaining>0` walk count = `arc_internal`
-                // for a fully-cached arc, 0 when the first block was
-                // seam-excluded. `g1_lines_counter += 1 + internal` (:1467).
-                let lookup = exported_g1_lines + internal;
-                exported_g1_lines += 1 + internal;
-                Some(lookup)
-            }
-            "G28" => {
-                exported_g1_lines += 1;
-                None
-            }
-            _ => None,
-        };
-        let Some(lookup_id) = lookup_id else {
-            continue;
-        };
-        while cache_index < cache.len() && cache[cache_index].id < lookup_id {
-            cache_index += 1;
-        }
-        let hit = cache
-            .get(cache_index)
-            .is_some_and(|entry| entry.id == lookup_id);
-        if hit {
-            elapsed[index + 1] = Some(f64::from(cache[cache_index].elapsed));
-        }
-    }
-    elapsed
+/// Records one command's `process_G1` vertices; each arc segment starts
+/// where the previous one ended. Returns the move id of every block.
+fn record_motions(
+    recorder: &mut MoveRecorder,
+    mut motion: RecordedMotion,
+    motions: &[IndexedMotion],
+    seams: &[Option<[f32; 3]>],
+) -> Vec<u32> {
+    motions
+        .iter()
+        .enumerate()
+        .map(|(index, indexed)| {
+            motion.end = indexed.end;
+            motion.seam = seams.get(index).copied().flatten();
+            let move_id = recorder.motion(motion);
+            motion.start = indexed.end;
+            move_id
+        })
+        .collect()
 }
 
 fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {
