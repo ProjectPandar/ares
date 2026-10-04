@@ -94,7 +94,7 @@ impl BrimPlan {
             .map_err(brim_geometry_error)?;
         let outer = offset_expolygons(&inner, brim_width, JoinType::Round, resolution)
             .map_err(brim_geometry_error)?;
-        let covered_hull = super::skirt::convex_hull(
+        let covered_hull = crate::geometry::convex_hull(
             &outer
                 .iter()
                 .flat_map(|expolygon| expolygon.contour().points().iter().copied())

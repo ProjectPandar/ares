@@ -4,6 +4,7 @@ mod bounding_box;
 mod bridge_direction;
 mod chain_points;
 mod clipper;
+mod convex_hull;
 mod coord;
 mod edge_grid;
 mod expolygon;
@@ -53,6 +54,7 @@ pub(crate) use clipper::{
     union_polygons_paths_pair, union_safety_offset_ex, union_safety_offset_expolygons,
     union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
 };
+pub(crate) use convex_hull::convex_hull;
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
 pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};

@@ -109,7 +109,7 @@ fn task22o15_multiple_surfaces_aggregate_in_source_order() {
             validated(-1, 1_000, 0.0, 0.0),
         ],
     };
-    let output = stage_record(&sources, &tops, &validated).unwrap();
+    let output = stage_record(&sources, &tops, &validated, None).unwrap();
     assert_eq!(
         surface_contours(&output.fill_surfaces),
         vec![

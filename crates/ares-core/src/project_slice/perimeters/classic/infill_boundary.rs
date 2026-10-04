@@ -75,12 +75,20 @@ fn stage(
                 .iter()
                 .zip(&top_split.records)
                 .zip(&validated.records)
+                .enumerate()
                 .map(
-                    |((source, top), validated)| match (source, top, validated) {
+                    |(index, ((source, top), validated))| match (source, top, validated) {
                         (None, None, None) => Ok(None),
                         (Some(source), Some(top), Some(validated)) => {
-                            geometry::stage_record(&source.surfaces, &top.surfaces, validated)
-                                .map(Some)
+                            let extra =
+                                super::extra_perimeters::context(prepared, traversal, index);
+                            geometry::stage_record(
+                                &source.surfaces,
+                                &top.surfaces,
+                                validated,
+                                extra.as_ref(),
+                            )
+                            .map(Some)
                         }
                         _ => panic!("O15 staged record alignment is invariant"),
                     },
@@ -109,10 +117,21 @@ fn move_object(
 }
 
 fn move_record(
-    source: PreparedGapExtrusionRecord,
+    mut source: PreparedGapExtrusionRecord,
     staged: StagedRecord,
 ) -> PreparedInfillBoundaryRecord {
     assert_eq!(source.surfaces.len(), staged.surface_count);
+    for (surface, mut extra) in source.surfaces.iter_mut().zip(staged.extra_perimeters) {
+        if !extra.is_empty() {
+            let collection = surface
+                .appended
+                .collections
+                .last_mut()
+                .expect("extra perimeters have an island collection");
+            extra.append(&mut collection.entities);
+            collection.entities = extra;
+        }
+    }
     PreparedInfillBoundaryRecord {
         surfaces: source.surfaces,
         fill_surfaces: staged.fill_surfaces,

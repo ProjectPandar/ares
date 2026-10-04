@@ -67,6 +67,7 @@ pub(super) struct StagedObject {
 }
 
 pub(super) struct StagedRecord {
+    pub(super) extra_perimeters: Vec<Vec<super::super::entity_collections::ExtrusionEntity>>,
     pub(super) surface_count: usize,
     pub(super) fill_surfaces: Vec<RegionSurface>,
     pub(super) fill_no_overlap: Vec<ExPolygon>,

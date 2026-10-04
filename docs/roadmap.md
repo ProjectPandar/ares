@@ -57,6 +57,20 @@ Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
 comparisons, Tier-1 verification and independent six-axis review. Historical
 modified-classic and sampled-domain summaries are not that exit evidence.
 
+### Classic extra-overhang perimeters (in progress)
+
+Port `PerimeterGenerator.cpp:677-1109` generation/reconnection/dependency ordering
+and classic `apply_extra_perimeters` call:1672 into `perimeters/classic/
+extra_perimeters` and the existing infill-boundary seam. Replace the inactive
+compatibility guard with real path insertion and covered-fill subtraction.
+[Spec](superpowers/specs/2026-10-04-extra-overhang-perimeters.md),
+[plan](superpowers/plans/2026-10-04-extra-overhang-perimeters.md),
+[ARD](architecture/ard-extra-overhang-perimeters.md).
+Coordinator authorized only the local BridgeDetector.hpp:122-126 adapter;
+shared bridge direction remains read-only. Exit:2stock and active on/off step
+full-output parity,68+823controls, four gates and coordinator review. Arachne and
+other perimeter features remain deferred; never delete the guard alone.
+
 ### Qidi Grid collection ordering (in progress)
 
 Port independent Grid ordering and non-reversal contracts (`FillBase.hpp:166`,

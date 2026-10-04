@@ -56,7 +56,7 @@ pub(super) fn insert_head_wrap_detect_zone(
             if points.len() < 3 {
                 continue;
             }
-            let hull = crate::project_slice::gcode_emit::skirt::convex_hull(&points);
+            let hull = crate::geometry::convex_hull(&points);
             if hull.len() < 3 {
                 continue;
             }

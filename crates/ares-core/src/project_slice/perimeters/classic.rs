@@ -3,6 +3,7 @@
 
 pub(in crate::project_slice) mod chained_loops;
 pub(in crate::project_slice) mod entity_collections;
+mod extra_perimeters;
 mod fuzzy_skin;
 pub(in crate::project_slice) mod gap_domain;
 pub(in crate::project_slice) mod gap_extrusion;

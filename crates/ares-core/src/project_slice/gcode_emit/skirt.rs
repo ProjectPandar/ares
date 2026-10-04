@@ -21,7 +21,7 @@ mod occupied;
 #[cfg(test)]
 mod tests;
 
-pub(in crate::project_slice::gcode_emit) use geometry::convex_hull;
+use crate::geometry::convex_hull;
 pub(in crate::project_slice::gcode_emit) use geometry::split_at_nearest;
 use geometry::{closed_length, find_start_point};
 

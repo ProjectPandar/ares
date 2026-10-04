@@ -1,8 +1,8 @@
 //! Per-instance object geometry for Klipper/Marlin object exclusion and
 //! first-layer/timelapse bounds helpers.
 
+use crate::geometry::convex_hull;
 use crate::geometry::{CoordinateScale, Point, douglas_peucker};
-use crate::project_slice::gcode_emit::skirt::convex_hull;
 use crate::project_slice::gcode_emit::{format_processor_float, tags::Tags};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::{Point3d, ProjectInstance, ProjectObject, ProjectVolumeType};

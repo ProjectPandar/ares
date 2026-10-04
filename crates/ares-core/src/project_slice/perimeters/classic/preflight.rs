@@ -102,15 +102,6 @@ fn validate_record(
     // `first_outer::thin_wall_offsets` (PerimeterGenerator.cpp:1251-1266),
     // materialized as `variable_width` external-perimeter `ExtrusionPath`s in
     // `traverse_loops` (:231-232).
-    if region.extra_perimeters_on_overhangs.0
-        && object.lower_slices(record).is_some()
-        && region.detect_overhang_wall.0
-        && region.wall_loops.0 > 0
-        && i32::try_from(record.layer_id).is_ok_and(|layer| layer > object_options.raft_layers.0)
-        && has_layer_overhang(object, record)
-    {
-        return Err(unsupported("extra_perimeters_on_overhangs"));
-    }
     if region.counterbore_hole_bridging != ProcessCounterboreHoleBridging::None
         && object
             .perimeter_surfaces(record)
@@ -163,25 +154,6 @@ fn validate_record(
         surface_simplify_resolution: simplify_resolution,
         support_nozzle_diameter,
     })
-}
-
-fn has_layer_overhang(
-    object: &PostPerimeterInputPrintObject,
-    record: &PerimeterInputRecord,
-) -> bool {
-    let Some(lower) = object.lower_slices(record) else {
-        return false;
-    };
-    let current = object
-        .perimeter_surfaces(record)
-        .iter()
-        .map(|surface| surface.as_parts().1)
-        .collect::<Vec<_>>();
-    current.len() != lower.len()
-        || current
-            .iter()
-            .zip(lower)
-            .any(|(current, lower)| *current != lower)
 }
 
 fn invalid(message: &str) -> SliceError {

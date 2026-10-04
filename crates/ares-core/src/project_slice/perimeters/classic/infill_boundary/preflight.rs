@@ -71,7 +71,7 @@ pub(super) fn validate(
                             Some(traversal_record),
                         ) => {
                             let options = input.region_options(input_record);
-                            validate_inactive_extra_perimeters(
+                            validate_extra_perimeters_guard(
                                 input_record,
                                 traversal_record,
                                 options,
@@ -247,7 +247,7 @@ fn checked_trunc(value: f64) -> Result<Coord, SliceError> {
     }
 }
 
-fn validate_inactive_extra_perimeters(
+fn validate_extra_perimeters_guard(
     input: &crate::project_slice::perimeters::types::PerimeterInputRecord,
     traversal: &ClassicTraversalRecord,
     options: &crate::RegionOptions,

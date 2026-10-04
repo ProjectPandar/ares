@@ -1,8 +1,8 @@
 use crate::{
     SliceError,
     geometry::{
-        ExPolygon, FillRule, JoinType, intersection_ex, offset_expolygons, offset2_ex,
-        simplify_expolygon_polygons, union_ex, union_expolygons,
+        ExPolygon, FillRule, JoinType, difference_ex_polygons, intersection_ex, offset_expolygons,
+        offset2_ex, simplify_expolygon_polygons, union_ex, union_expolygons,
     },
     project_slice::{
         perimeters::classic::{
@@ -38,17 +38,51 @@ pub(super) fn stage_record(
     source: &[PreparedGapExtrusionSurface],
     top: &[PreparedTopSplitSurface],
     validated: &ValidatedRecord,
+    extra: Option<&super::super::extra_perimeters::Context<'_>>,
 ) -> Result<StagedRecord, SliceError> {
     assert_eq!(source.len(), top.len());
     assert_eq!(source.len(), validated.surfaces.len());
     let mut fill_surfaces = Vec::new();
     let mut fill_no_overlap = Vec::new();
     let mut overlap = Vec::with_capacity(source.len());
+    let mut extra_perimeters = Vec::with_capacity(extra.map_or(0, |_| source.len()));
     for ((source, top), validated) in source.iter().zip(top).zip(&validated.surfaces) {
         assert_eq!(source.source_index, top.source_index);
         assert_eq!(source.source_index, validated.overlap.source_index);
         let staged = stage_surface(source, top, *validated)?;
+        let generated = extra
+            .map(|context| {
+                let infill = staged
+                    .fill_surfaces
+                    .iter()
+                    .map(|surface| surface.as_parts().1.clone())
+                    .collect::<Vec<_>>();
+                context.generate(&infill)
+            })
+            .transpose()?;
         fill_surfaces.extend(staged.fill_surfaces);
+        let mut paths = Vec::new();
+        if let Some(generated) = generated
+            && generated.has_regions
+        {
+            let mut remaining = Vec::new();
+            for surface in &fill_surfaces {
+                remaining.extend(
+                    difference_ex_polygons(
+                        std::slice::from_ref(surface.as_parts().1),
+                        &generated.filled,
+                    )
+                    .map_err(geometry_error)?
+                    .into_iter()
+                    .map(RegionSurface::internal),
+                );
+            }
+            fill_surfaces = remaining;
+            paths = extra.unwrap().materialize(generated.paths);
+        }
+        if extra.is_some() {
+            extra_perimeters.push(paths);
+        }
         fill_no_overlap.extend(staged.fill_no_overlap);
         overlap.push(validated.overlap);
     }
@@ -57,6 +91,7 @@ pub(super) fn stage_record(
         fill_surfaces,
         fill_no_overlap,
         overlap,
+        extra_perimeters,
     })
 }
 
@@ -113,7 +148,7 @@ pub(super) fn stage_surface(
     observe(GeometryStep::SurfaceAppend)?;
 
     observe(GeometryStep::ExtraPerimeterGuard)?;
-    observe_inactive_extra_perimeters_guard();
+    observe_extra_perimeters_guard();
     let ordinary_no_overlap = match validated.no_overlap {
         NoOverlapOffset::Two { first, second } => {
             observe(GeometryStep::NoOverlapTwo)?;
@@ -156,7 +191,7 @@ fn observe(step: GeometryStep) -> Result<(), SliceError> {
     Ok(())
 }
 
-fn observe_inactive_extra_perimeters_guard() {
+fn observe_extra_perimeters_guard() {
     #[cfg(test)]
     super::tests::observe_guard();
 }
