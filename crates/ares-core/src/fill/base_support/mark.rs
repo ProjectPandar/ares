@@ -52,23 +52,25 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
                     // Upstream `:1375` passes the CONTOUR segment as the
                     // `line` and the INFILL as the `segment` — the
                     // interval is measured along the CONTOUR segment.
-                    if let Some(interval) = rounded_thick_segment_collision(
+                    // Upstream's default-constructed interval remains (0, 0)
+                    // when the collision function returns false; it still tests len_out.
+                    let end = rounded_thick_segment_collision(
                         segment,
                         infill_line,
                         radius,
                         scaled_epsilon,
-                    ) {
-                        let len_out = closed_contour_distance_ccw(
-                            contour_params[point_index],
-                            contour_params[i],
-                            last(&contour_params),
-                        ) + interval.end;
-                        if len_out < not_taken_next {
-                            // The contour leaves the infill tube before
-                            // the arc ends: keep this segment.
-                            inside = false;
-                            break;
-                        }
+                    )
+                    .map_or(0.0, |interval| interval.end);
+                    let len_out = closed_contour_distance_ccw(
+                        contour_params[point_index],
+                        contour_params[i],
+                        last(&contour_params),
+                    ) + end;
+                    if len_out < not_taken_next {
+                        // The contour leaves the infill tube before
+                        // the arc ends: keep this segment.
+                        inside = false;
+                        break;
                     }
                 }
                 if closed_contour_distance_ccw(
@@ -108,21 +110,21 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
                 if distance >= radius * radius {
                     // Same argument order as the next arc (upstream
                     // `:1375`): the CONTOUR segment is the line.
-                    if let Some(interval) = rounded_thick_segment_collision(
+                    let end = rounded_thick_segment_collision(
                         segment,
                         infill_line,
                         radius,
                         scaled_epsilon,
-                    ) {
-                        let len_out = closed_contour_distance_cw(
-                            contour_params[point_index],
-                            contour_params[i],
-                            last(&contour_params),
-                        ) + interval.end;
-                        if len_out < not_taken_prev {
-                            inside = false;
-                            break;
-                        }
+                    )
+                    .map_or(0.0, |interval| interval.end);
+                    let len_out = closed_contour_distance_cw(
+                        contour_params[point_index],
+                        contour_params[i],
+                        last(&contour_params),
+                    ) + end;
+                    if len_out < not_taken_prev {
+                        inside = false;
+                        break;
                     }
                 }
                 if closed_contour_distance_cw(

@@ -32,6 +32,22 @@ Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
 comparisons, Tier-1 verification and independent six-axis review. Historical
 modified-classic and sampled-domain summaries are not that exit evidence.
 
+### Thin-tip support fill connection follow-up (feature gates passed)
+
+Rewrite `Fill/FillBase.cpp::mark_boundary_segments_overlapping_infill` in
+`ares-core::fill::base_support::mark`: preserve the default zero interval end
+when the collision helper returns false, then still test contour departure.
+Both retained tip0.1 raw-Grid/explicit-Organic complete-output assertions pass.
+See [spec](superpowers/specs/2026-10-04-thin-tip-support-fill.md),
+[plan](superpowers/plans/2026-10-04-thin-tip-support-fill.md) and
+[ARD](architecture/ard-thin-tip-support-fill.md). Fresh official full repeat and
+seeded each pass 28/28 complete pairs; workspace7618, Clippy, format and WASM
+compile pass. The official first run's separate Slim-model infill outlier is
+retained with unchanged-baseline and same-input native-instability evidence,
+not hidden or spliced into the passing repeat. Main integration requires the
+user's latest-main rebase and repeated four quality gates. Matrix cleanup,
+tower/AdaptivePA and Arachne remain separate; no global parity claim is made.
+
 ### Historical support bring-up notes (superseded by later checkpoints)
 
 Tree support (ARD-0086) is the blocking prerequisite for merging the current
