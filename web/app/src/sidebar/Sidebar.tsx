@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ObjectIcon, OrcaIcon } from "../shell/icons";
 import { useApp } from "../state/store";
 import { ObjectList } from "./ObjectList";
+import { PresetCombo } from "./PresetCombo";
 import { firstString, stringList } from "./options";
 import { ProcessSettings } from "./ProcessSettings";
 
@@ -21,21 +22,13 @@ function Section({ icon, title, children, extra }: {
   );
 }
 
-function PresetCombo({ value, placeholder }: { value?: string; placeholder: string }) {
-  return (
-    <div className={value ? "combo" : "combo empty"} title={value ?? placeholder}>
-      <span className="combo-text">{value ?? placeholder}</span>
-      <span className="combo-caret" />
-    </div>
-  );
-}
-
 function PrinterSection({ settings }: { settings: ProjectSettings | null }) {
   const nozzle = firstString(settings?.project, "nozzle_diameter");
   const bed = firstString(settings?.project, "curr_bed_type") ?? firstString(settings?.printer, "default_bed_type");
+  const printer = firstString(settings?.printer, "printer_settings_id") ?? firstString(settings?.project, "printer_settings_id");
   return (
     <Section icon={<OrcaIcon name="printer" />} title="Printer">
-      <PresetCombo value={firstString(settings?.printer, "printer_settings_id") ?? firstString(settings?.project, "printer_settings_id")}
+      <PresetCombo label="Printer preset" value={printer} presets={printer ? [{ name: printer }] : []}
         placeholder="No printer preset" />
       <div className="kv-row"><span>Plate type</span><span className="kv-value">{bed ?? "—"}</span></div>
       <div className="kv-row"><span>Nozzle</span><span className="kv-value">{nozzle ? `${nozzle} mm` : "—"}</span></div>
@@ -49,13 +42,18 @@ function FilamentSection({ settings }: { settings: ProjectSettings | null }) {
     : stringList(settings?.project, "filament_settings_id");
   const colours = stringList(settings?.filament, "filament_colour");
   const types = stringList(settings?.filament, "filament_type");
+  // Each preset once, drawn in the colour of its first slot.
+  const presets = names
+    .map((name, index) => ({ name, colour: colours[index] }))
+    .filter(({ name }, index) => names.indexOf(name) === index);
   return (
     <Section icon={<OrcaIcon name="filament" />} title="Filament" extra={names.length ? names.length : undefined}>
       {names.length === 0 && <div className="side-empty">No filament preset</div>}
       {names.map((name, index) => (
         <div className="filament-row" key={index}>
-          <span className="filament-swatch" style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
-          <PresetCombo value={name} placeholder="" />
+          <span className="filament-swatch" data-testid={`filament-swatch-${index + 1}`}
+            style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
+          <PresetCombo label={`Filament ${index + 1} preset`} value={name} presets={presets} placeholder="" />
           <span className="filament-type">{types[index]}</span>
         </div>
       ))}
@@ -66,6 +64,7 @@ function FilamentSection({ settings }: { settings: ProjectSettings | null }) {
 export function Sidebar() {
   const scene = useApp((state) => state.scene);
   const settings = scene?.settings ?? null;
+  const process = firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id");
   return (
     <aside className="sidebar" data-testid="sidebar">
       <PrinterSection settings={settings} />
@@ -74,7 +73,7 @@ export function Sidebar() {
         <ObjectList />
       </Section>
       <Section icon={<OrcaIcon name="process" />} title="Process">
-        <PresetCombo value={firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id")}
+        <PresetCombo label="Process preset" value={process} presets={process ? [{ name: process }] : []}
           placeholder="No process preset" />
         <ProcessSettings settings={settings} />
       </Section>

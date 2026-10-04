@@ -16,12 +16,27 @@
 }
 .side-section-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
 .side-empty { color: var(--text-faint); padding: 2px 0; }
+.combo-root { position: relative; display: flex; min-width: 0; flex: 1; }
 .combo {
-  display: flex; align-items: center; height: 26px; padding: 0 8px; background: var(--field);
-  border: 1px solid var(--border); border-radius: 4px; min-width: 0; flex: 1;
+  display: flex; align-items: center; gap: 6px; width: 100%; height: 26px; padding: 0 8px; background: var(--field);
+  border: 1px solid var(--border); border-radius: 4px; min-width: 0; color: var(--text); font: inherit; text-align: left;
+  cursor: pointer;
 }
 .combo.empty .combo-text { color: var(--text-faint); }
-.combo:hover { border-color: var(--accent); }
+.combo:not(:disabled):hover, .combo[aria-expanded="true"] { border-color: var(--accent); }
+.combo:disabled { cursor: default; }
+/* DropDown (Widgets/DropDown.cpp): bordered popup under the box, split-item group title. */
+.combo-popup {
+  position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 20; max-height: 320px; overflow-y: auto;
+  padding: 2px 0; background: var(--panel); border: 1px solid var(--accent); border-radius: 4px; box-shadow: var(--shadow);
+}
+.combo-group-title {
+  padding: 4px 8px 2px; color: var(--text-dim); font-size: 11px; border-bottom: 1px solid var(--separator);
+}
+.combo-option { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; cursor: pointer; }
+.combo-option:hover { background: var(--panel-raised); }
+.combo-option[aria-selected="true"] { background: var(--accent-checked); }
+.combo-option-swatch { width: 14px; height: 14px; border-radius: 2px; flex: none; border: 1px solid var(--border-strong); }
 .combo-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .combo-caret { width: 0; height: 0; border: 4px solid transparent; border-top-color: var(--text-dim); margin-top: 4px; }
 .kv-row { display: flex; justify-content: space-between; color: var(--label); }
