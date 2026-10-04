@@ -1,6 +1,9 @@
+diff --git a/src/OrcaSlicer.cpp b/src/OrcaSlicer.cpp
+index 271759b5e..e6003eee0 100644
 --- a/src/OrcaSlicer.cpp
 +++ b/src/OrcaSlicer.cpp
-@@ -7534,6 +7534,31 @@
+@@ -7533,6 +7533,50 @@ extern "C" {
+ #else /* _MSC_VER */
  int main(int argc, char **argv)
  {
 +    for (int i = 1; i < argc; ++i) {
@@ -25,10 +28,28 @@
 +                if (result.print_statistics.modes[(size_t)mode].time > 0.0f)
 +                    printf("TIME mode=%d total=%f\n", m, result.print_statistics.modes[(size_t)mode].time);
 +            }
++            // --dump-moves <csv>: GCodeProcessorResult::moves oracle for
++            // the Ares move recorder (M853). %.9g round-trips every f32.
++            for (int j = 1; j + 1 < argc; ++j) {
++                if (strcmp(argv[j], "--dump-moves") != 0)
++                    continue;
++                FILE* out = fopen(argv[j + 1], "w");
++                if (out == nullptr)
++                    return 1;
++                fprintf(out, "gcode_id,type,role,extruder_id,cp_color_id,x,y,z,delta_extruder,feedrate,width,height,"
++                             "mm3_per_mm,travel_dist,fan_speed,temperature,time0,layer_id,internal_only\n");
++                for (const auto& v : result.moves)
++                    fprintf(out, "%u,%d,%d,%d,%d,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%u,%d\n",
++                            v.gcode_id, static_cast<int>(v.type), static_cast<int>(v.extrusion_role),
++                            static_cast<int>(v.extruder_id), static_cast<int>(v.cp_color_id),
++                            v.position.x(), v.position.y(), v.position.z(), v.delta_extruder, v.feedrate,
++                            v.width, v.height, v.mm3_per_mm, v.travel_dist, v.fan_speed, v.temperature,
++                            v.time[0], v.layer_id, v.internal_only ? 1 : 0);
++                fclose(out);
++            }
 +            return 0;
 +        }
 +    }
  #ifndef _WIN32
      // Ignore SIGPIPE so a write to a closed socket (e.g. a dropped printer
      // network connection) returns EPIPE to the caller instead of terminating
-     // the whole process. Without this, losing the printer link kills
