@@ -89,6 +89,33 @@ fn support_only_tool_change_requires_a_tower() {
 }
 
 #[test]
+fn tower_gap_is_installed_in_the_first_objects_support_schedule() {
+    use super::super::{InstalledSupportLayer, ToolOrdering};
+    let mut settings = ProjectSettings::default();
+    settings.process.print.timelapse_type = crate::ProcessTimelapseType::Smooth;
+    let mut layers = vec![layer(0.2, &[2], false), layer(1.0, &[2], true)];
+    layers[0].has_support = true;
+    fill(&mut layers, &settings, 0.8, 0.3);
+    let mut ordering = ToolOrdering {
+        layers,
+        all_extruders: vec![2],
+        first_extruder: Some(2),
+        type2_tower: true,
+    };
+    let mut raft = InstalledSupportLayer::for_wipe_tower(0.2, 0.2);
+    raft.id = 0;
+    let mut support = vec![vec![raft], Vec::new()];
+    ordering.install_tower_support_layers(&mut support);
+    assert_eq!(support[0].len(), 2);
+    assert_eq!(support[0][1].id, usize::MAX);
+    assert_eq!(support[0][1].print_z, 0.6);
+    assert!((support[0][1].height - 0.4).abs() < 1e-12);
+    assert!(support[0][1].support_fills.is_empty());
+    assert!(support[1].is_empty());
+    assert!(ordering.layers[1].has_support);
+}
+
+#[test]
 fn selected_tower_filament_is_added_only_to_partitioned_layers() {
     let mut settings = ProjectSettings::default();
     settings.process.print.enable_prime_tower.0 = true;

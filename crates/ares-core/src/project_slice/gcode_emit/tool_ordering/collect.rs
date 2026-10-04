@@ -90,6 +90,7 @@ pub(super) fn support(
         );
         interface |= role == ExtrusionRole::SupportMaterialInterface;
     }
+    target.has_support |= base || interface;
     let base_id = options.support_filament.0 as usize;
     let interface_id = options.support_interface_filament.0 as usize;
     if base {

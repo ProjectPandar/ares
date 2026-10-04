@@ -92,7 +92,7 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
             .or_else(|| settings.filament.gcode.filament_is_support.0.first())
             .is_some_and(|value| value.0)
     };
-    let initial = ordering.ordered_tools().next().unwrap_or(0);
+    let initial = ordering.initial_extruder(settings);
     let has_non_support = ordering.all_extruders().iter().any(|&id| !is_support(id));
     let mut non_support = None;
     let mut found_first = 0;

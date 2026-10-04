@@ -41,6 +41,7 @@ mod tool_transition;
 #[cfg(test)]
 mod timelapse_tests;
 mod value;
+mod wipe_tower;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 
 pub(super) fn emit(
@@ -70,7 +71,7 @@ pub(super) fn emit(
     let schedule = layers::build_schedule(
         traversal,
         &prepared.objects,
-        &prepared.support_layers,
+        &mut prepared.support_layers,
         context,
     )?;
     let sliced_layer_count = schedule.layer_count();

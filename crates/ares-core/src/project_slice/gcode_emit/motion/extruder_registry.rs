@@ -43,10 +43,12 @@ impl Default for ExtruderRegistry {
 
 impl ExtruderRegistry {
     pub(in crate::project_slice::gcode_emit) fn new(
-        ids: Vec<usize>,
+        mut ids: Vec<usize>,
         config: &GCodeOptions,
         physical_count: usize,
     ) -> Self {
+        // `GCodeWriter::set_extruders` sorts its own copy, not the priming order.
+        ids.sort_unstable();
         let count = ids.last().map_or(1, |id| id + 1);
         let physical = (0..count)
             .map(|id| {

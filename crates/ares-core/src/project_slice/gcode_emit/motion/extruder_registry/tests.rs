@@ -29,6 +29,18 @@ fn assign(config: &mut Config, name: &str, id: usize, value: f64) {
 }
 
 #[test]
+fn priming_order_is_sorted_for_writer_registration() {
+    let registry = ExtruderRegistry::new(vec![2, 0, 1], &config(), 1);
+    assert_eq!(registry.ids(), [0, 1, 2]);
+    assert_eq!(registry.vector_size(), 3);
+    assert!(registry.multiple());
+    assert_eq!(
+        registry.read(2, &ExtruderState::default(), false).position,
+        0.0
+    );
+}
+
+#[test]
 fn template_writeback_preserves_inactive_tool_and_unused_holes() {
     let mut state = state();
     let mut config = Config::default();

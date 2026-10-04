@@ -40,7 +40,7 @@ impl Schedule {
 pub(in crate::project_slice::gcode_emit) fn build(
     traversal: &PreparedPostClassicTraversal,
     objects: &[Vec<OrderedExtrusionLayer>],
-    support: &[Vec<InstalledSupportLayer>],
+    support: &mut [Vec<InstalledSupportLayer>],
     context: &mut crate::SlicerContext,
 ) -> Result<Schedule, crate::SliceError> {
     let object_count = objects.len();
@@ -90,6 +90,9 @@ pub(in crate::project_slice::gcode_emit) fn build(
         traversal.scale,
         context,
     )?;
+    let mut tool_ordering =
+        super::super::tool_ordering::build(traversal, objects, support, raft.as_ref())?;
+    tool_ordering.install_tower_support_layers(support);
     let mut merged = Vec::new();
     let mut raw_zs = Vec::new();
     let mut skirt_layers = Vec::new();
@@ -205,8 +208,6 @@ pub(in crate::project_slice::gcode_emit) fn build(
         }
         begin = end;
     }
-    let tool_ordering =
-        super::super::tool_ordering::build(traversal, objects, support, raft.as_ref())?;
     let centers = traversal
         .objects
         .iter()

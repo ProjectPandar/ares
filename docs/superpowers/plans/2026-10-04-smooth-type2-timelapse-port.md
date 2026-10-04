@@ -9,9 +9,11 @@
    do not replay historical guards, region-zero assumptions or lint suppressions.
 4. Run workspace Nextest, Clippy (zero new warnings), fmt and WASM. All Cargo
    commands use `CARGO_TARGET_DIR=/tmp/ares-pi-tower-target`.
-5. Commit/push each independently green slice, print `REVIEW-REQUEST <hash>
-   <summary>`, and stop for coordinator review. After `APPROVED`, fetch/rebase
-   current main, rerun gates and ff-push main. Repeat on advancement; no force.
+5. Commit/push completed sub-boundaries (including authorized RED checkpoints).
+   Only after activated Type2 complete-output GREEN and full gates, print
+   `REVIEW-REQUEST <hash> <summary>` and stop for coordinator review. After
+   `APPROVED` and explicit release of any main-integration freeze, fetch/rebase
+   current main, rerun gates and ff-push main. No force-push.
 
 ## Complete-activation sub-boundaries (coordinator decision)
 
@@ -249,9 +251,10 @@ this is not a green slice or review request.
 Coordinator approved A–G and requested the plan/RED checkpoint followed by
 incremental branch pushes. `dc7a848f` contains that initial checkpoint and is
 published on `pi/smooth-type2-timelapse-tower`; no main push or review request.
-Latest coordinator main notice: `94a0a629` fixes the fill reference center.
-Fetch/rebase current main before eventual integration and rerun all gates;
-do not overwrite that fix.
+Latest coordinator main notice: `7cfa0b33` sets the sparse-anchoring reference
+center to zero and removes `fill_entities::object_center`. Preserve those
+changes when rebasing before eventual integration. Main integration is frozen
+pending explicit coordinator release; elapsed time is not release permission.
 
 A's partition kernel is now connected to the existing `ToolOrdering::build`:
 partition counts propagate downward, tower flags retain wrapping/smooth rules,
@@ -271,7 +274,35 @@ green: `/tmp/ares-pi-tower-type2-partitions-{official,seeded}.log`, 26.115s and
 inside the already non-tower sparse-layer loop; final checks are recorded in
 `/tmp/ares-pi-tower-type2-partitions-{clippy,green}-final.log`.
 
-A is not yet complete: source activation/priming ordering and materializing
-tower-only gap layers into the merged support/emission schedule remain. B–G
-are pending. The partition checkpoint is not an isolated writer/geometry
-completion claim and does not enable a same-tool-only generator.
+The subsequent A implementation connects source activation, priming statistics
+and first-tool selection, and materializes tower-only gap layers through the
+existing support/emission schedule. `GCodeWriter.cpp:63–79::set_extruders`
+requires sorting the writer's own tool list independently of priming order.
+The new activated fixture exposed an out-of-bounds registry access before this
+sort was ported; its regression verifies sorted IDs and inactive-tool access.
+The combined ordering/activation/registry selection passes 19 tests; Clippy
+retains 249 warnings. Logs: `/tmp/ares-pi-tower-type2-A-final-{unit,clippy}.log`.
+
+The raft fixture uses a valid 0.1-mm contact gap and verifies the reference's
+`Z=0.7` gap-layer marker. The earlier 0.5-mm input was rejected by Orca and is
+not parity evidence. Multi-tool witnesses use smooth mode: upstream
+`DynamicPrintConfig::normalize_fdm_2` counts model-used filaments before regional
+wall overrides and otherwise disables the tower for this single-volume model.
+IDEX placement uses X=70, inside the shared printable area; X=15 was rejected
+by the reference. SEMM fixtures explicitly set the source-default
+`filament_is_support` for both materials, as CLI flush-matrix construction
+requires its vector to match the color vector.
+
+The original-reference regression run retains all 29 BBL/PA cases and the
+traditional control. Activated smooth and raft outputs remain RED at M73;
+B–G are pending. The initial multi-tool run additionally exposed a reference
+preset-vector rejection, so it does not establish all multi-tool witnesses.
+Evidence: `/tmp/ares-pi-tower-type2-A-final-official.log`. After correcting
+the fixture vector, all three official multi-tool references activate the
+tower, verify priming on/off, and reach full-output RED (not reference errors):
+`/tmp/ares-pi-tower-type2-A-tools-supported.log`. Expected/actual byte counts:
+IDEX 809473/162228; SEMM 895321/123617; SEMM priming 902374/123887.
+The separate seeded run reproduces all five activated divergences and keeps
+the 29 regressions plus traditional control passing:
+`/tmp/ares-pi-tower-type2-A-final-seeded.log`. fmt/diff checks pass.
+No Type2 review request or integration is authorized by this checkpoint.

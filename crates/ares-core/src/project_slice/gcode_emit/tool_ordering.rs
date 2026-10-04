@@ -4,6 +4,7 @@ mod collect;
 mod first_layer;
 mod partitions;
 mod reorder;
+mod statistics;
 
 pub(super) use collect::object_options;
 pub(super) use partitions::max_layer_height;
@@ -21,6 +22,7 @@ pub(super) struct LayerTools {
     print_z: f64,
     extruders: Vec<usize>,
     has_object: bool,
+    has_support: bool,
     wipe_tower_partitions: usize,
     has_wipe_tower: bool,
     wipe_tower_layer_height: f64,
@@ -29,9 +31,65 @@ pub(super) struct LayerTools {
 pub(super) struct ToolOrdering {
     layers: Vec<LayerTools>,
     all_extruders: Vec<usize>,
+    first_extruder: Option<usize>,
+    type2_tower: bool,
 }
 
 impl ToolOrdering {
+    /// `Print.cpp:3409–3443`: install the first contiguous tower-only layer run.
+    pub(super) fn install_tower_support_layers(
+        &mut self,
+        support: &mut [Vec<InstalledSupportLayer>],
+    ) {
+        if !self.type2_tower {
+            return;
+        }
+        let tower_only =
+            |layer: &LayerTools| layer.has_wipe_tower && !layer.has_object && !layer.has_support;
+        let Some(begin) = self.layers.iter().position(tower_only) else {
+            return;
+        };
+        let end = begin
+            + self.layers[begin..]
+                .iter()
+                .take_while(|layer| tower_only(layer))
+                .count();
+        // Upstream deliberately installs these in Print::objects().front().
+        let first = support.first_mut().expect("active print has an object");
+        for index in begin..end {
+            let previous_z = if index == 0 {
+                0.0
+            } else {
+                self.layers[index - 1].print_z
+            };
+            let layer = &mut self.layers[index];
+            layer.has_support = true;
+            let insert = first.partition_point(|support| support.print_z < layer.print_z - 1e-4);
+            first.insert(
+                insert,
+                InstalledSupportLayer::for_wipe_tower(layer.print_z, layer.print_z - previous_z),
+            );
+        }
+    }
+
+    pub(super) fn initial_extruder(&self, settings: &crate::ProjectSettings) -> usize {
+        if settings.process.print.print_sequence == crate::ProcessPrintSequence::ByObject {
+            self.ordered_tools().next().unwrap_or(0)
+        } else if self.type2_tower
+            && !settings
+                .process
+                .gcode
+                .single_extruder_multi_material_priming
+                .0
+        {
+            *self
+                .all_extruders
+                .last()
+                .expect("active tower has a printing tool")
+        } else {
+            self.first_extruder.unwrap_or(0)
+        }
+    }
     /// `DoExport::total_toolchanges_from_ordering` (`GCode.cpp:2289–2300`).
     pub(super) fn total_toolchanges(&self) -> usize {
         let mut last = None;
@@ -136,15 +194,17 @@ pub(super) fn build(
         reorder::apply(&mut layers, traversal);
         partitions::fill(&mut layers, settings, object_bottom_z, max_height);
     }
-    let mut all_extruders = layers
-        .iter()
-        .flat_map(|layer| layer.extruders.iter().copied())
-        .collect::<Vec<_>>();
-    all_extruders.sort_unstable();
-    all_extruders.dedup();
+    let prime =
+        super::wipe_tower::type2_requested(settings, super::tags::Tags::of(traversal).is_bbl());
+    let (all_extruders, first_extruder) = statistics::collect(&layers, prime);
+    let type2_tower = prime
+        && first_extruder.is_some()
+        && layers.first().is_some_and(|layer| layer.has_wipe_tower);
     Ok(ToolOrdering {
         layers,
         all_extruders,
+        first_extruder,
+        type2_tower,
     })
 }
 

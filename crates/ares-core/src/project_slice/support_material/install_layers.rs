@@ -19,6 +19,22 @@ pub(in crate::project_slice) struct InstalledSupportLayer {
     pub(in crate::project_slice) support_fills: Vec<SupportExtrusionEntity>,
 }
 
+impl InstalledSupportLayer {
+    /// `Print::_make_wipe_tower`: synthetic support layer with source ID -1.
+    pub(in crate::project_slice) fn for_wipe_tower(print_z: f64, height: f64) -> Self {
+        Self {
+            id: usize::MAX,
+            interface_id: 0,
+            print_z,
+            height,
+            slices: Vec::new(),
+            support_islands: Vec::new(),
+            tree_base_areas: None,
+            support_fills: Vec::new(),
+        }
+    }
+}
+
 struct LayerView<'a> {
     print_z: &'a mut f64,
     height: f64,
