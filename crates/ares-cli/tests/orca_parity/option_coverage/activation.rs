@@ -242,9 +242,16 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         // `Print.cpp:575-585`: infinite skirts bypass the configured height.
         "skirt_height" => &[("skirt_loops", "1"), ("draft_shield", "disabled")],
         // Ironing sub-options only run when `ironing_type != "no ironing"`.
-        "ironing_flow" | "ironing_spacing" | "ironing_speed" | "ironing_pattern" => {
-            &[("ironing_type", "top")]
-        }
+        "ironing_flow"
+        | "ironing_spacing"
+        | "ironing_speed"
+        | "ironing_pattern"
+        | "ironing_inset"
+        | "ironing_angle"
+        | "ironing_angle_fixed"
+        | "filament_ironing_flow"
+        | "filament_ironing_spacing"
+        | "filament_ironing_inset" => &[("ironing_type", "top")],
         // Fuzzy-skin geometry params only run when `fuzzy_skin != "none"`.
         "fuzzy_skin_point_dist" | "fuzzy_skin_point_type" => &[("fuzzy_skin", "external")],
         "fuzzy_skin_first_layer"
