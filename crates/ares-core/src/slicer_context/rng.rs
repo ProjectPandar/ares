@@ -49,20 +49,18 @@ impl Mt19937 {
     /// libstdc++15 bits/uniform_int_dist.h:255-359, int32 over mt19937.
     pub(crate) fn integer(&mut self, minimum: i32, maximum: i32) -> i32 {
         let range = (maximum as u32).wrapping_sub(minimum as u32);
-        let offset = if range == u32::MAX {
-            self.next_u32()
-        } else {
-            let width = range + 1;
-            let mut product = u64::from(self.next_u32()) * u64::from(width);
-            if (product as u32) < width {
-                let threshold = width.wrapping_neg() % width;
-                while (product as u32) < threshold {
-                    product = u64::from(self.next_u32()) * u64::from(width);
-                }
+        if range == u32::MAX {
+            return (minimum as u32).wrapping_add(self.next_u32()) as i32;
+        }
+        let width = range + 1;
+        let mut product = u64::from(self.next_u32()) * u64::from(width);
+        if (product as u32) < width {
+            let threshold = width.wrapping_neg() % width;
+            while (product as u32) < threshold {
+                product = u64::from(self.next_u32()) * u64::from(width);
             }
-            (product >> 32) as u32
-        };
-        (minimum as u32).wrapping_add(offset) as i32
+        }
+        (minimum as u32).wrapping_add((product >> 32) as u32) as i32
     }
 
     pub(crate) fn unit(&mut self) -> f64 {

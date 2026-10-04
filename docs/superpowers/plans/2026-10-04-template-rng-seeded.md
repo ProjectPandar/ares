@@ -22,6 +22,8 @@ no new Ares-owned slicing design.
    Remove LCG. Keep modules below400 lines and no new Clippy warnings.
 6. GREEN seeds0/1, repeatability and isolation; workspace Nextest, fmt, Clippy,
    wasm32 core+wasm build; full official/seeded coordinator controls no new FAIL.
-7. Update coordinator control producer only after validated path exists. Push
-   exact candidate, REVIEW-REQUEST and stop for approval; latest-main rebase,
+7. Retain old/new full-output identity evidence for the existing397 controls.
+   Leave the canonical coordinator control script unchanged: the coordinator
+   switches its producer and notifies other workers after integration. Push
+   the exact candidate, REVIEW-REQUEST and stop for approval; latest-main rebase,
    revalidation and ff-only integration afterward.
