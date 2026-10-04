@@ -25,6 +25,8 @@ mod runner;
 mod smoke;
 #[path = "orca_parity/smoke_overrides.rs"]
 mod smoke_overrides;
+#[path = "orca_parity/smooth_type2_tower.rs"]
+mod smooth_type2_tower;
 #[path = "orca_parity/stock_presets.rs"]
 mod stock_presets;
 

@@ -21,9 +21,13 @@ Adaptive PA is approved and integrated into main at `56e4da53` after rebase,
 The next branch `pi/smooth-type2-timelapse-tower` follows
 [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md) and its
 [plan](superpowers/plans/2026-10-04-smooth-type2-timelapse-port.md), beginning
-with the stock BBL timelapse Z-restatement handoff. Type2 planning/emission
-and tower PA reset remain dependent work; old WIP unsupported-feature guards
-are not accepted. Bridge candidate traversal
+with the stock BBL timelapse Z-restatement handoff, approved and ff-integrated
+at `b1a5a84d` after all gates passed again. Type2 planning/emission and tower
+PA reset remain in progress. Coordinator selected complete Type2 activation:
+include multi-tool partitions, raft-gap layers and adjacent shapes before
+integrated E2E review; no standalone dead writer/geometry slice and no old WIP
+unsupported-feature guards. The plan lists source-owned sub-boundaries and
+required official/seeded complete-output witnesses. Bridge candidate traversal
 and slicing affine arithmetic are already represented by ARD-0075/0076 in main;
 revalidate rather than overwrite those implementations. Each slice requires
 fresh official complete-output RED/GREEN, separate seeded-reference checks,

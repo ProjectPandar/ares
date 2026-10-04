@@ -13,6 +13,142 @@
    <summary>`, and stop for coordinator review. After `APPROVED`, fetch/rebase
    current main, rerun gates and ff-push main. Repeat on advancement; no force.
 
+## Complete-activation sub-boundaries (coordinator decision)
+
+The coordinator selected **complete activated Type2 integration**, not an
+isolated writer/geometry publication. The pinned sources contain 2647 lines
+in `GCode/WipeTower2.cpp`, 382 in its header, and 1863 in `ToolOrdering.cpp`
+(only its owning dependencies are ported; existing Rust ordering is retained).
+`Print.cpp` and `GCode.cpp` add planning and integration dependencies. This is
+substantially larger than the historical same-tool WIP. The latter's
+single-object/single-filament/no-raft/rib rejection block cannot be removed
+and its same-tool algorithm then used as a general planner.
+
+All source paths below are under `OrcaSlicer/src/libslic3r`, at the ARD-0105
+pin. Destination paths are under `crates/ares-core/src/project_slice`.
+Existing preparation/emission remain temporary compatibility shells around
+these upstream owners, not a new Ares-owned tower pipeline.
+
+### A. Activation, ordered tools and tower layer partitions
+
+- Source: `Print.hpp::wipe_tower_type`; `Print.cpp:3290` `has_wipe_tower`,
+  `3385` `enable_timelapse_print`, `3390` `_make_wipe_tower`;
+  `GCode/ToolOrdering.cpp::{insert_wipe_tower_extruder,sort_and_build_data,
+  fill_wipe_tower_partitions,collect_extruder_statistics}` (partitions at
+  816–919); header `LayerTools`.
+- Destination: existing `gcode_emit/tool_ordering/` and `layers/schedule`,
+  `raft_schedule`, plus private `wipe_tower/plan` input assembly.
+- Include source activation (not merely smooth mode), logical-tool identity,
+  selected tower filament, downward partition propagation, tower-layer height,
+  empty/support-only layers and insertion of the raft separation-gap layer.
+  Do not build a second ordering from the first object's records or tool zero.
+- E2E witnesses: enabled/disabled and traditional/smooth controls; two used
+  tools, unused configured tools, multiple objects, support-only/raft-gap
+  layers. Verify exported settings and actual reference activation.
+
+### B. Purge allocation and layer-depth planning
+
+- Source: `Print.cpp:3572–3690` Type2 branch; `ToolOrdering.cpp`
+  `WipingExtrusions::{mark_wiping_extrusions,ensure_perimeters_infills_order}`
+  (1620, 1765); `WipeTower2.cpp::{extract_wipe_volumes,plan_toolchange,
+  plan_tower,save_on_last_wipe,first_toolchange_to_nonsoluble}` (2178–2363);
+  `WipeTower2.hpp::WipeTowerInfo::{ToolChange,toolchanges_depth}`.
+- Destination: `wipe_tower/plan/{volumes,layers,depth}`; wiping assignment
+  in existing tool-ordering/tool-bucket and ordered-extrusion ownership.
+- Include matrix/prime-volume selection, minimal purge, flush multiplier,
+  infill/object purge allocation, soluble ordering, ramming depth and last-wipe
+  volume savings. Preserve per-region entity ownership; never route through
+  `regions[0]` or reinterpret all entities as one material.
+- E2E witnesses: unequal tool-to-tool volumes, purge-in-tower on/off,
+  purge-into-infill/object, soluble transition and configured tower filament.
+  Unit checks supplement, not replace, full-output proof.
+
+### C. Writer, geometry and material parameters
+
+- Source: `WipeTower2.cpp` geometry helpers (37–559), `WipeTowerWriter2`
+  (561–1218), constructor / `set_extruder` (1248–1416),
+  `generate_{rib_polygon,support_rib_wall,support_cone_wall}` (2462–2647),
+  `get_wipe_tower_cone_base`; shared `WipeTower.hpp` result/box data.
+- Destination: private `wipe_tower/{writer,geometry,filament}` with focused
+  files below 400 LOC; reuse existing geometry/arc primitives where they
+  implement the cited operation without changing precision or ordering.
+- Include f32/f64 boundaries, volumetric limiting, rotated movement, arcs,
+  never-skip markers, rectangle/cone/rib and fillets/gaps, explicit accounting
+  and source vector lookup semantics. No blanket-index-zero material access;
+  retain an upstream first-element rule only where the source specifies it.
+- E2E witnesses: three shapes, fillet on/off, rotation and nonzero offsets,
+  brim/auto-brim, thin layers, volumetric limiting and arc fitting.
+
+### D. Priming, per-layer generation and material lifecycle
+
+- Source: `WipeTower2::{prime,tool_change,toolchange_Unload,
+  toolchange_Change,toolchange_Load,toolchange_Wipe,finish_layer,generate,
+  construct_tcr}`, cpp 1417–2160 / 2364–2447 / 1219;
+  header `set_layer`, `FilamentParameters` and used-filament data.
+- Destination: `wipe_tower/{generate,priming,toolchange,finish_layer}` and
+  subordinate unloading/cooling/ramming modules.
+- Include initial and later tower layers, sparse/no-sparse behavior, interface
+  features, soluble materials, SEMM and multi-tool loading/ramming/cooling,
+  final unload and per-tool statistics. A matching first tower block does not
+  satisfy this boundary. Historical unload arithmetic is reusable only after
+  comparison against current source state and logical-tool parameters.
+- E2E witnesses: priming on/off, SEMM and toolchanger transitions, enabled
+  ramming/cooling/parking, sparse layers, interface controls, one-layer final
+  purge and tower ending before/at the final object layer.
+
+### E. Occupancy, skirt and placeholders
+
+- Source: `Print::{first_layer_wipe_tower_corners,finalize_first_layer_convex_hull}`,
+  `Print.cpp:3020–3162`, `_make_skirt` using tower corners;
+  `WipeTower2::{get_bbx,get_rib_offset,get_brim_width,get_z_and_depth_pairs}`.
+- Destination: existing `gcode_emit/{footprint,skirt,placeholders}` consuming
+  the generated plan, not nominal first-object or rectangle-only guesses.
+- Include first-layer bounds with/without a skirt, object-center-without-tower,
+  plate placement/rotation and actual brim/rib/cone envelope.
+- E2E witnesses: no skirt, combined/per-object skirt, bounds placeholders,
+  multiple objects, rotation and placement. Preserve current support/raft
+  footprint behavior and object-local versus plate coordinates.
+
+### F. Live writer integration, PA and final accounting
+
+- Source: `GCode.cpp::WipeTowerIntegration::{append_tcr2,
+  post_process_wipe_tower_moves,prime,tool_change,finalize}` (1118–1596),
+  its layer-export call sites, `Print::_make_wipe_tower` final-purge selection,
+  and current upstream pressure-advance/statistics owners.
+- Destination: existing `gcode_emit/{layers,tool_transition,finish,
+  pressure_advance,adaptive_pa}`, private `wipe_tower/emit` and `motion/tower`.
+- Include source ordering of startup/skirt/tool/object actions, template and
+  tool-change substitution, offsets/never-skip handling, source travel/wipe
+  endpoint handoff, live Z/retraction state, final purge after cooling and
+  tower PA resets. Preserve per-tool extrusion ledgers and generation-time
+  PA reset events; do not parse arbitrary user PA commands to infer resets.
+- E2E witnesses: complete output including repeated commands/comments/M73,
+  mixed-tool lifecycle, nonzero offsets, PA on/off/models, final purge,
+  per-tool filament totals and footer. Rerun the 29 BBL/PA regression cases.
+
+### G. Integrated gate and delivery
+
+Dependency order: A → B; C supplies D; B + C → D; D supplies E and F;
+A–F together → G. Arithmetic reuse is not permission to copy old adapters.
+Several implementation commits are allowed, but unconnected writer/geometry
+is neither an E2E result nor a reviewable completed slice. No added public API
+or dead-code/lint suppression is permitted just to publish an intermediate.
+
+Before implementation, enumerate fixtures against A–F. For each case retain
+exported settings, model identity, reference identity, artifacts and the
+observed source branch. Capture RED then GREEN using the original full-output
+comparator, and independently repeat against seeded Orca. If a fixture exposes
+an activated dependency, complete its owning source slice; do not switch it
+off, ignore it or add an unsupported-feature guard. Type1 runtime/preview mesh
+and UI are deferred; shared Type2 dependencies and all activated Type2 branches
+above are included. Exhaustive printer/options coverage remains unclaimed.
+
+Only after integrated complete-output GREEN: workspace Nextest, Clippy with
+zero new warnings, fmt and core/adapter WASM; feature-branch commit/push;
+`REVIEW-REQUEST`, then stop for matching approval. Fetch/rebase, repeat gates
+and ff-only integration afterwards. Snapmaker bridge-direction residuals remain
+in the later bridge slice, not this tower change.
+
 ## Provenance and execution
 
 Adaptive PA was approved at `91cae8cf`; rebase onto `0d6dfe1f` preserved all
@@ -80,8 +216,27 @@ seeded run: `9eae1e45-62ef-4927-883e-4cde2651bf99`. Separate artifact roots:
 `/tmp/ares-pi-tower-bbl-z-final-seeded/`. Gate chain session 78 exits 0.
 Only documentation changes after these code checks to record their results.
 
-This independently green prerequisite is ready for feature-branch push and
-coordinator review. Stop for matching `APPROVED` before rebasing/revalidating
-and integrating. **Type2 tower production code is still untouched**; do not
-claim completion of that dependent port or start it on this branch while
-awaiting review.
+## Approved prerequisite integration
+
+Coordinator approved `b1a5a84d40b3bdea5d4f4442fbd03698633b9b3c` after checking
+`GCodeWriter.cpp:771`. Fetch/rebase found main still at `56e4da53`; repeated
+all gates: workspace 7594 PASS / 9 existing skips (267.783s), original 29
+cases PASS (31.626s), seeded 29 cases PASS (42.046s), Clippy 249 unchanged
+warnings, fmt and WASM PASS. Logs: `/tmp/ares-pi-tower-bbl-z-integration-*.log`.
+FF push `56e4da53 -> b1a5a84d` succeeded; evidence
+`/tmp/pi-unified-exec-86-f065366e.log`. Type2 work resumes only after this
+approved integration.
+
+## Type2 complete-output RED
+
+The public fixture `orca_parity_smooth_type2_tower_complete_output` exports
+Creality Ender-3 0.4 with an explicitly verified Type2 rib/filleted tower at
+(15, 150), enabled prime tower and traditional/smooth modes. It compares
+complete output, including M73, without disabling tower dependencies.
+Original CPU0 run `5a6af1f7-5bde-4d23-b18d-7024d25bd929`: traditional control
+PASS; smooth RED, expected 127844 bytes vs actual 100712 bytes, first
+difference line 18 (`M73 P0 R10` vs `M73 P0 R8`). The reference also proves
+the prime-tower role is present only in smooth mode. Evidence:
+`/tmp/ares-pi-tower-type2-red-official.log`, reference pair `case-LjY9Xj`.
+Production Type2 behavior remains unimplemented at this RED checkpoint;
+this is not a green slice or review request.

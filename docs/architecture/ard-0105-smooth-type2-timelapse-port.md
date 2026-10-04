@@ -31,9 +31,19 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
 - Tower activation, occupancy, placeholders, travel/wipe handoff, final unload
   and Adaptive PA reset integration belong to the cited upstream boundary.
   A matching first tower block alone is not completion.
-- Adjacent Type1/multi-tool algorithms are not proven by same-tool Type2
-  fixtures. Any activated source branch must be accounted for explicitly;
-  no new rejection guard, silent omission or legacy fallback may hide it.
+- Coordinator selected complete Type2 activation before integrated review.
+  Type2 multi-tool partitions, raft-gap tower layers and rectangle/cone/rib
+  branches are included, not deferred behind the historical same-tool plan.
+  Any activated source branch must be accounted for explicitly; no new
+  rejection guard, silent omission or legacy fallback may hide it.
+- Independent Type1 algorithms remain outside this slice. Shared upstream
+  `WipeTower.hpp` result/geometry data needed by Type2 are included. Preserve
+  source printer-type dispatch rather than introducing an Ares capability
+  filter. Same-tool fixtures alone cannot validate the integrated slice.
+- Writer/geometry commits are not independently reviewable completion:
+  preserve their private Rust boundary, connect their consumers before a
+  review request, and verify complete E2E output. Do not manufacture a public
+  API or retain dead code merely to publish an isolated component.
 - Tests use exported project bytes and complete output through the existing
   CLI parity harness. Keep official and seeded evidence separate.
 - Every green slice is pushed for coordinator Claude review. Stop after

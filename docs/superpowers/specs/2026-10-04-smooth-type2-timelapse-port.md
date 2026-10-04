@@ -10,17 +10,28 @@ Owning sources and destination decisions are in ARD-0105. Included work:
 1. Reproduce stock BBL H2S / P1P / P1S first-travel Z-restatement differences
    at the public complete-output seam; port the applicable `_extrude` /
    `GCodeWriter` state transition into existing Rust motion emission.
-2. Port Type2 smooth-timelapse planning/writer/geometry and integration from
-   the historical branch selectively: current layer/tool ownership, occupancy,
-   placeholders, first tower, final unload, statistics and Adaptive PA reset.
+2. Port the complete activated Type2 boundary from `WipeTower2.cpp/.hpp`,
+   `Print::_make_wipe_tower` and `ToolOrdering`, selectively reusing historical
+   arithmetic rather than its guarded single-object/single-tool planner.
+   Included: multi-tool partitions and purge assignment, priming, raft-gap
+   layers, rectangle/cone/rib geometry, sparse layers, unload/load/wipe,
+   occupancy/placeholders, travel/wipe handoff, statistics and Adaptive PA
+   reset. Preserve current object/region/logical-tool ownership.
 3. Verify source activation and full output, including tower-disabled controls,
-   no-skirt bounds, thin layers, PA, offsets and unloading configurations.
+   no-skirt bounds, thin layers, multiple objects/materials, raft, PA, offsets
+   and unloading configurations. The plan records source sub-boundaries and
+   their required E2E witnesses before production implementation.
 
-Deferred/unclaimed: arbitrary Type1 and multi-material tower parity, exhaustive
-printer/option coverage, hardware operation and native Windows/macOS runtime
-evidence. These exclusions do not permit guards or silent omission of active
-source behavior. Broaden the upstream port where an exercised dependency needs
-it rather than weakening the fixture or comparison.
+Coordinator explicitly selected complete activation before integrated review:
+no standalone unconnected writer/geometry completion claims. Several commits
+may implement the slice, but every REVIEW-REQUEST must cover a complete
+activated path with official and seeded full-output evidence and no new guard.
+
+Deferred/unclaimed: independent Type1 tower algorithms, exhaustive printer/
+option coverage, hardware operation and native Windows/macOS runtime evidence.
+Shared Type1-header data required by Type2 is included. These exclusions do not
+permit guards or silent omission of active Type2 source behavior; do not weaken
+fixtures or comparisons to make a partial generator appear complete.
 
 The BBL state repair may be reviewed as an independently green prerequisite;
 it must not be represented as completion of the Type2 tower port.
