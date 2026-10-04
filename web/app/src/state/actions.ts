@@ -72,7 +72,7 @@ export function gcodeFileName(): string {
 export function exportGcode() {
   const { slice } = useApp.getState();
   if (slice.status !== "done") return;
-  const url = URL.createObjectURL(new Blob([slice.gcode as BlobPart], { type: "text/x-gcode" }));
+  const url = URL.createObjectURL(new Blob([slice.gcode], { type: "text/x-gcode" }));
   const link = document.createElement("a");
   link.href = url;
   link.download = gcodeFileName();

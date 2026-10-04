@@ -1,10 +1,13 @@
 /// <reference lib="webworker" />
 import init, { loadScene, sliceProjectPlate, slice_stl } from "./wasm/ares_wasm.js";
-import type { WorkerRequest, WorkerResponse } from "./protocol";
-import type { SliceResult } from "./toolpaths";
-import type { Scene } from "./types";
+import type { WorkerRequest, WorkerResponse } from "./protocol.js";
+import type { SliceResult } from "./toolpaths.js";
+import type { Scene } from "./types.js";
 
 declare const self: DedicatedWorkerGlobalScope;
+
+// wasm-bindgen returns `Vec<u8>` as a `.slice()` copy out of wasm memory: always a fresh, transferable ArrayBuffer.
+const owned = (bytes: Uint8Array) => bytes as Uint8Array<ArrayBuffer>;
 
 async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]> {
   switch (request.kind) {
@@ -20,11 +23,11 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [scene, [positions.buffer, indices.buffer]];
     }
     case "sliceProject": {
-      const result: SliceResult = { gcode: await sliceProjectPlate(request.input, request.plate), toolpaths: null };
+      const result: SliceResult = { gcode: owned(await sliceProjectPlate(request.input, request.plate)), toolpaths: null };
       return [result, [result.gcode.buffer]];
     }
     case "sliceStl": {
-      const result: SliceResult = { gcode: await slice_stl(request.input, request.options), toolpaths: null };
+      const result: SliceResult = { gcode: owned(await slice_stl(request.input, request.options)), toolpaths: null };
       return [result, [result.gcode.buffer]];
     }
   }

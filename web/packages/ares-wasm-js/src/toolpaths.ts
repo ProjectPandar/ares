@@ -7,25 +7,25 @@
  */
 export interface Toolpaths {
   vertexCount: number;
-  positions: Float32Array;
-  widths: Float32Array;
-  heights: Float32Array;
-  feedrates: Float32Array;
-  fanSpeeds: Float32Array;
-  temperatures: Float32Array;
+  positions: Float32Array<ArrayBuffer>;
+  widths: Float32Array<ArrayBuffer>;
+  heights: Float32Array<ArrayBuffer>;
+  feedrates: Float32Array<ArrayBuffer>;
+  fanSpeeds: Float32Array<ArrayBuffer>;
+  temperatures: Float32Array<ArrayBuffer>;
   /** Normal-mode move time in seconds (`PathVertex::times[Normal]`). */
-  times: Float32Array;
+  times: Float32Array<ArrayBuffer>;
   /** `ExtrusionRoleId` per vertex. */
-  roles: Uint8Array;
+  roles: Uint8Array<ArrayBuffer>;
   /** `MoveTypeId` per vertex. */
-  moveTypes: Uint8Array;
-  extruderIds: Uint8Array;
-  colorIds: Uint8Array;
-  layerIds: Uint32Array;
+  moveTypes: Uint8Array<ArrayBuffer>;
+  extruderIds: Uint8Array<ArrayBuffer>;
+  colorIds: Uint8Array<ArrayBuffer>;
+  layerIds: Uint32Array<ArrayBuffer>;
   /** libvgcode `Layers`: z of each layer. */
-  layerZs: Float32Array;
+  layerZs: Float32Array<ArrayBuffer>;
   /** libvgcode `Layers`: `[first, last]` vertex id pair of each layer. */
-  layerRanges: Uint32Array;
+  layerRanges: Uint32Array<ArrayBuffer>;
   /** `GCodeInputData::tools_colors` as RGB bytes. */
   toolColors: [number, number, number][];
   /** `GCodeInputData::color_print_colors` as RGB bytes. */
@@ -83,7 +83,7 @@ export type OptionValue = string | number | boolean | (string | number | boolean
 export type ConfigOverrides = Record<string, OptionValue>;
 
 export interface SliceResult {
-  gcode: Uint8Array;
+  gcode: Uint8Array<ArrayBuffer>;
   /** `null` until ares-wasm exposes the GCodeProcessor move vertices. */
   toolpaths: Toolpaths | null;
 }

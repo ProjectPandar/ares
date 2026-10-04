@@ -2,3 +2,4 @@ node_modules/
 dist/
 packages/ares-wasm-js/src/wasm/
 test-results/
+packages/ares-wasm-js/LICENSE

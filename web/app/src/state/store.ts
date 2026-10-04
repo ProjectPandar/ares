@@ -6,7 +6,7 @@ export type Theme = "dark" | "light";
 export type SliceState =
   | { status: "idle" }
   | { status: "slicing"; startedAt: number }
-  | { status: "done"; gcode: Uint8Array; toolpaths: Toolpaths | null; elapsedMs: number }
+  | { status: "done"; gcode: Uint8Array<ArrayBuffer>; toolpaths: Toolpaths | null; elapsedMs: number }
   | { status: "error"; error: string };
 
 /** GCodeViewer visibility state: layer range, hidden roles and options. */

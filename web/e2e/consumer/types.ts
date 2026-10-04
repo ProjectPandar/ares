@@ -1,0 +1,57 @@
+// Every public type must resolve from the package root under both bundler and
+// nodenext resolution; each assertion fails to compile if a type drifts.
+import {
+  AresSlicer,
+  type AresSlicerOptions,
+  type ConfigOverrides,
+  EXTRUSION_ROLES,
+  type ExtrusionRole,
+  type ExtrusionRoleId,
+  type Matrix4,
+  MOVE_TYPES,
+  type MoveType,
+  type MoveTypeId,
+  type OptionMap,
+  type OptionValue,
+  type ProjectSettings,
+  type Scene,
+  type SceneInstance,
+  type SceneObject,
+  type ScenePlate,
+  type SceneVolume,
+  type SliceResult,
+  type Toolpaths,
+  type VolumeType,
+} from "@ares-slicer/wasm";
+
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+const assert = <T extends true>(): T => true as T;
+
+export const checks = [
+  assert<Equal<ReturnType<AresSlicer["loadScene"]>, Promise<Scene>>>(),
+  assert<Equal<Parameters<AresSlicer["sliceProject"]>, [Uint8Array, number?, ConfigOverrides?]>>(),
+  assert<Equal<ReturnType<AresSlicer["sliceProject"]>, Promise<SliceResult>>>(),
+  assert<Equal<ReturnType<AresSlicer["sliceStl"]>, Promise<SliceResult>>>(),
+  assert<Equal<ReturnType<AresSlicer["ready"]>, Promise<void>>>(),
+  assert<Equal<AresSlicerOptions, { worker: Worker; wasmUrl: string | URL }>>(),
+  assert<Equal<SliceResult, { gcode: Uint8Array<ArrayBuffer>; toolpaths: Toolpaths | null }>>(),
+  assert<Equal<Scene["format"], "3mf" | "stl">>(),
+  assert<Equal<Scene["positions"], Float32Array<ArrayBuffer>>>(),
+  assert<Equal<Scene["indices"], Uint32Array<ArrayBuffer>>>(),
+  assert<Equal<Scene["settings"], ProjectSettings | null>>(),
+  assert<Equal<Scene["objects"], SceneObject[]>>(),
+  assert<Equal<Scene["plates"], ScenePlate[]>>(),
+  assert<Equal<SceneObject["volumes"], SceneVolume[]>>(),
+  assert<Equal<SceneObject["instances"], SceneInstance[]>>(),
+  assert<Equal<SceneVolume["type"], VolumeType>>(),
+  assert<Equal<SceneVolume["matrix"], Matrix4>>(),
+  assert<Equal<SceneInstance["id"], [number, number, number]>>(),
+  assert<Equal<ProjectSettings["printer"], OptionMap>>(),
+  assert<Equal<ConfigOverrides[string], OptionValue>>(),
+  assert<Equal<Toolpaths["positions"], Float32Array<ArrayBuffer>>>(),
+  assert<Equal<Toolpaths["roles"], Uint8Array<ArrayBuffer>>>(),
+  assert<Equal<Toolpaths["layerRanges"], Uint32Array<ArrayBuffer>>>(),
+  assert<Equal<MoveType, (typeof MOVE_TYPES)[number]>>(),
+  assert<Equal<ExtrusionRole, (typeof EXTRUSION_ROLES)[number]>>(),
+  assert<Equal<MoveTypeId | ExtrusionRoleId, number>>(),
+];

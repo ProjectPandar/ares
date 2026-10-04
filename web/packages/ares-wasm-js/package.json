@@ -3,10 +3,28 @@
   "version": "0.1.0",
   "description": "Ares slicer (Rust rewrite of OrcaSlicer libslic3r) compiled to WebAssembly, with a Web Worker client.",
   "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProjectPandar/ares.git",
+    "directory": "web/packages/ares-wasm-js"
+  },
+  "homepage": "https://github.com/ProjectPandar/ares/tree/main/web/packages/ares-wasm-js#readme",
+  "bugs": "https://github.com/ProjectPandar/ares/issues",
+  "keywords": [
+    "3d-printing",
+    "slicer",
+    "gcode",
+    "orcaslicer",
+    "wasm",
+    "webassembly"
+  ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/worker.js"
+  ],
   "files": [
-    "dist"
+    "dist",
+    "!dist/wasm"
   ],
   "exports": {
     ".": {
@@ -17,12 +35,17 @@
       "types": "./dist/worker.d.ts",
       "import": "./dist/worker.js"
     },
-    "./ares_wasm_bg.wasm": "./dist/ares_wasm_bg.wasm"
+    "./ares_wasm_bg.wasm": "./dist/ares_wasm_bg.wasm",
+    "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build:wasm": "node scripts/build-wasm.mjs",
     "build": "vite build && tsc -p tsconfig.build.json",
+    "prepack": "npm run build && node -e \"require('node:fs').copyFileSync('../../../LICENSES/AGPL-3.0.txt', 'LICENSE')\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }

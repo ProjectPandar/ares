@@ -55,7 +55,7 @@ export interface Scene {
   plates: ScenePlate[];
   settings: ProjectSettings | null;
   /** xyz triples for every volume, addressed by `vertexOffset`. */
-  positions: Float32Array;
+  positions: Float32Array<ArrayBuffer>;
   /** Triangle indices relative to each volume's `vertexOffset`. */
-  indices: Uint32Array;
+  indices: Uint32Array<ArrayBuffer>;
 }

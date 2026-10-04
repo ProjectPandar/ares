@@ -1,9 +1,9 @@
-import type { WorkerRequest, WorkerResponse } from "./protocol";
-import type { ConfigOverrides, SliceResult } from "./toolpaths";
-import type { Scene } from "./types";
+import type { WorkerRequest, WorkerResponse } from "./protocol.js";
+import type { ConfigOverrides, SliceResult } from "./toolpaths.js";
+import type { Scene } from "./types.js";
 
-export * from "./toolpaths";
-export type * from "./types";
+export * from "./toolpaths.js";
+export type * from "./types.js";
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void };
 type RequestBody = WorkerRequest extends infer R ? (R extends unknown ? Omit<R, "id"> : never) : never;
