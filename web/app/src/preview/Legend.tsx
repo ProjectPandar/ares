@@ -1,7 +1,7 @@
 import type { ExtrusionRole } from "@ares-slicer/wasm";
 import { EXTRUSION_ROLES } from "@ares-slicer/wasm";
 import type { PreviewView } from "../state/store";
-import { ROLE_COLORS, TRAVEL_COLOR, WIPE_COLOR } from "../viewport/toolpathMesh";
+import { ROLE_COLORS, TRAVEL_COLOR, WIPE_COLOR } from "../viewport/roles";
 
 /** `ExtrusionEntity::role_to_string` (`ExtrusionEntity.cpp:583`). */
 const ROLE_LABELS: Record<ExtrusionRole, string> = {

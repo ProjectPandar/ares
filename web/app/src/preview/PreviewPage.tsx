@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { Sidebar } from "../sidebar/Sidebar";
 import { setPreview, slicePlate } from "../state/actions";
 import { useApp } from "../state/store";
-import { usedRoles } from "../viewport/toolpathMesh";
+import { usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
 import { GCodeText } from "./GCodeText";
 import { LayerSlider } from "./LayerSlider";

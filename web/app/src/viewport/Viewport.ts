@@ -2,7 +2,8 @@ import type { Scene, Toolpaths, VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { PreviewView } from "../state/store";
-import { buildBed, type BedShape } from "./bed";
+import { buildBed } from "./bed";
+import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { applyPreviewView, buildToolpathMesh } from "./toolpathMesh";
 

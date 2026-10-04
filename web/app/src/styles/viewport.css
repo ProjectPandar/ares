@@ -1,6 +1,6 @@
 /* Viewport (GLCanvas3D) */
 .viewport { position: relative; flex: 1; min-width: 0; }
-.viewport-canvas { position: absolute; inset: 0; }
+.viewport-canvas { position: absolute; inset: 0; background: var(--canvas-bg); }
 .viewport-canvas canvas { display: block; }
 .view-toolbar {
   position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px;

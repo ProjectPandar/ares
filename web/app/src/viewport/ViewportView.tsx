@@ -3,9 +3,12 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { selectObject } from "../state/actions";
 import { type PreviewView, useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
-import { bedFromSettings } from "./bed";
+import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
-import { Viewport, type ViewportColors } from "./Viewport";
+import type { Viewport, ViewportColors } from "./Viewport";
+
+// Three.js lives in this chunk; requesting it with the entry lets the shell render while it downloads.
+const viewportModule = import("./Viewport");
 
 function themeColors(): ViewportColors {
   const style = getComputedStyle(document.documentElement);
@@ -37,7 +40,7 @@ export function ViewportView({ toolpaths = null, view, fit = "plate", children }
   children?: ReactNode;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const viewport = useRef<Viewport | null>(null);
+  const [viewport, setViewport] = useState<Viewport | null>(null);
   const [active, setActive] = useState<ViewPreset | null>("plate");
   const theme = useApp((state) => state.theme);
   const scene = useApp((state) => state.scene);
@@ -50,48 +53,52 @@ export function ViewportView({ toolpaths = null, view, fit = "plate", children }
   }
 
   useEffect(() => {
-    const instance = new Viewport(host.current!, themeColors());
-    instance.onPick = selectObject;
-    instance.onOrbit = () => setActive(null);
-    viewport.current = instance;
+    let instance: Viewport | null = null;
     const onKey = (event: KeyboardEvent) => {
       const preset = VIEW_KEYS[event.key];
       if (!preset || event.ctrlKey || event.metaKey || event.altKey) return;
-      if ((event.target as HTMLElement).closest("input, textarea, select")) return;
+      if (!instance || (event.target as HTMLElement).closest("input, textarea, select")) return;
       instance.setView(preset);
       if (preset === "plate") instance.zoomTo("bed");
       setActive(preset);
     };
-    window.addEventListener("keydown", onKey);
+    let disposed = false;
+    void viewportModule.then(({ Viewport: ViewportClass }) => {
+      if (disposed) return;
+      instance = new ViewportClass(host.current!, themeColors());
+      instance.onPick = selectObject;
+      instance.onOrbit = () => setActive(null);
+      window.addEventListener("keydown", onKey);
+      setViewport(instance);
+    });
     return () => {
+      disposed = true;
       window.removeEventListener("keydown", onKey);
-      instance.dispose();
-      viewport.current = null;
+      instance?.dispose();
     };
   }, []);
 
   // `theme` switches the CSS variables that themeColors() reads.
   // oxlint-disable-next-line react/exhaustive-effect-dependencies
-  useEffect(() => viewport.current?.setColors(themeColors()), [theme]);
+  useEffect(() => viewport?.setColors(themeColors()), [viewport, theme]);
 
   useEffect(() => {
-    const instance = viewport.current!;
-    instance.setBed(bedFromSettings(scene?.settings ?? null));
-    instance.setScene(scene, firstString(scene?.settings?.filament, "filament_colour") ?? "#29b2a3");
-  }, [scene]);
+    viewport?.setBed(bedFromSettings(scene?.settings ?? null));
+    viewport?.setScene(scene, firstString(scene?.settings?.filament, "filament_colour") ?? "#29b2a3");
+  }, [viewport, scene]);
 
-  useEffect(() => viewport.current?.setSelected(selected), [selected]);
+  useEffect(() => viewport?.setSelected(selected), [viewport, selected]);
   // A new scene or slice result is re-framed: Prepare the plate, Preview the print.
   useEffect(() => {
-    const instance = viewport.current!;
-    instance.setToolpaths(toolpaths);
-    instance.setModelsVisible(!toolpaths);
-    instance.setView("plate");
-    instance.zoomTo(scene ? fit : "plate");
-  }, [scene, toolpaths, fit]);
+    if (!viewport) return;
+    viewport.setToolpaths(toolpaths);
+    viewport.setModelsVisible(!toolpaths);
+    viewport.setView("plate");
+    viewport.zoomTo(scene ? fit : "plate");
+  }, [viewport, scene, toolpaths, fit]);
   useEffect(() => {
-    if (view) viewport.current?.setPreviewView(view);
-  }, [view]);
+    if (view) viewport?.setPreviewView(view);
+  }, [viewport, view]);
 
   return (
     <div className="viewport">
@@ -100,7 +107,7 @@ export function ViewportView({ toolpaths = null, view, fit = "plate", children }
         {VIEWS.map(([preset, label]) => (
           <button key={preset} className="view-button" aria-pressed={active === preset}
             onClick={() => {
-              viewport.current?.setView(preset);
+              viewport?.setView(preset);
               setActive(preset);
             }}>
             {label}
@@ -109,12 +116,12 @@ export function ViewportView({ toolpaths = null, view, fit = "plate", children }
         <span className="view-separator" />
         <button className="view-button" aria-label="Fit to plate" title="Fit to plate"
           onClick={() => {
-            viewport.current?.setView("plate");
-            viewport.current?.zoomTo("plate");
+            viewport?.setView("plate");
+            viewport?.zoomTo("plate");
             setActive("plate");
           }}>Plate</button>
         <button className="view-button" aria-label="Fit to objects" title="Fit to objects" disabled={!scene}
-          onClick={() => viewport.current?.zoomTo("objects")}>Fit</button>
+          onClick={() => viewport?.zoomTo("objects")}>Fit</button>
       </div>
       {children}
     </div>
