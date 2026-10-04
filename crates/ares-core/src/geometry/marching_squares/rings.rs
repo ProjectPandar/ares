@@ -16,27 +16,7 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
                 break;
             }
             startidx = found;
-            let mut ring = Vec::new();
-            let mut idx = startidx;
-            let mut next = self.next_dir(idx, Dir::All);
-            // Guard: a well-formed grid always closes the ring back at
-            // startidx; bail on a degenerate/stuck direction to avoid a hang.
-            let max_steps = self.gridlen * 4 + 64;
-            for _ in 0..max_steps {
-                if next == Dir::None || next == Dir::All {
-                    break;
-                }
-                ring.push(Coord {
-                    r: idx as i64,
-                    c: next as i64,
-                });
-                self.clr_dirs(idx, next);
-                idx = self.stepidx(idx, next);
-                next = self.next_dir(idx, next);
-                if idx == startidx {
-                    break;
-                }
-            }
+            let ring = self.scan_ring(startidx);
             // Upstream does NOT clear residual direction bits on return
             // (`MarchingSquares.hpp:567` asserts `next == none|left|up`): a
             // second ambiguous direction is preserved for the next ring pass.
@@ -45,6 +25,31 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
             }
         }
         rings
+    }
+
+    fn scan_ring(&mut self, startidx: usize) -> Vec<Coord> {
+        let mut ring = Vec::new();
+        let mut idx = startidx;
+        let mut next = self.next_dir(idx, Dir::All);
+        // Guard: a well-formed grid always closes the ring back at
+        // startidx; bail on a degenerate/stuck direction to avoid a hang.
+        let max_steps = self.gridlen * 4 + 64;
+        for _ in 0..max_steps {
+            if next == Dir::None || next == Dir::All {
+                break;
+            }
+            ring.push(Coord {
+                r: idx as i64,
+                c: next as i64,
+            });
+            self.clr_dirs(idx, next);
+            idx = self.stepidx(idx, next);
+            next = self.next_dir(idx, next);
+            if idx == startidx {
+                break;
+            }
+        }
+        ring
     }
 
     // `tl`/`bl`/`br`/`tr` — the cell's four raster-coordinate corners.

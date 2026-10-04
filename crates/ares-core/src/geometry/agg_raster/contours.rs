@@ -1,6 +1,10 @@
 //! Static `contours_simplified` (`SupportMaterial.cpp:204-330`).
 
+use super::RasterGeometry;
 use crate::geometry::{Coord, Point, Polygon};
+
+type GridPoint = (i64, i64);
+type GridLine = (GridPoint, GridPoint);
 
 /// `contours_simplified` (`SupportMaterial.cpp:204-330`, the static AGG-raster
 /// version): walk the byte grid collecting boundary line segments, chain them
@@ -8,14 +12,17 @@ use crate::geometry::{Coord, Point, Polygon};
 /// drop collinear points. `fill_holes` runs the left/right + top/bottom
 /// empty-cell fill (`:210-222`).
 pub(crate) fn contours_simplified(
-    grid_w: usize,
-    grid_h: usize,
-    pixel_size: f64,
-    left_bottom: Point,
+    geometry: RasterGeometry,
     grid: &[u8],
     offset: Coord,
     fill_holes: bool,
 ) -> Vec<Polygon> {
+    let RasterGeometry {
+        width: grid_w,
+        height: grid_h,
+        pixel_size,
+        left_bottom,
+    } = geometry;
     // `cell_inside`: optionally hole-filled copy of the grid.
     let filled: Vec<u8>;
     let cell_inside: &[u8] = if fill_holes {
@@ -26,36 +33,7 @@ pub(crate) fn contours_simplified(
     };
 
     // 1) Collect boundary lines.
-    let mut lines: Vec<((i64, i64), (i64, i64))> = Vec::new();
-    // (start_point, line_index) sorted lookup.
-    let mut start_to_idx: Vec<((i64, i64), usize)> = Vec::new();
-    for r in 1..grid_h {
-        for c in 1..grid_w {
-            let addr = r * grid_w + c;
-            let left = cell_inside[addr - 1] != 0;
-            let top = cell_inside[addr - grid_w] != 0;
-            let current = cell_inside[addr] != 0;
-            if left != current {
-                let (a, b) = if left {
-                    ((c as i64, (r + 1) as i64), (c as i64, r as i64))
-                } else {
-                    ((c as i64, r as i64), (c as i64, (r + 1) as i64))
-                };
-                lines.push((a, b));
-                start_to_idx.push((a, lines.len() - 1));
-            }
-            if top != current {
-                let (a, b) = if top {
-                    ((c as i64, r as i64), ((c + 1) as i64, r as i64))
-                } else {
-                    (((c + 1) as i64, r as i64), (c as i64, r as i64))
-                };
-                lines.push((a, b));
-                start_to_idx.push((a, lines.len() - 1));
-            }
-        }
-    }
-    start_to_idx.sort_by_key(|&(p, _)| p);
+    let (lines, start_to_idx) = collect_boundary_lines(cell_inside, grid_w, grid_h);
 
     // 2) Chain the lines into contours.
     let mut processed = vec![false; lines.len()];
@@ -64,52 +42,12 @@ pub(crate) fn contours_simplified(
         if processed[i_candidate] {
             continue;
         }
-        let mut poly_pts: Vec<(i64, i64)> = Vec::new();
-        processed[i_candidate] = true;
-        poly_pts.push(lines[i_candidate].1);
-        let mut i_current = i_candidate;
-        loop {
-            // equal_range on start_to_idx for lines[i_current].b.
-            let target = lines[i_current].1;
-            let lo = start_to_idx.partition_point(|&(p, _)| p < target);
-            let hi = start_to_idx.partition_point(|&(p, _)| p <= target);
-            let mut i_next: i64 = -1;
-            let mut closed = false;
-            for entry in &start_to_idx[lo..hi] {
-                let idx = entry.1;
-                if idx == i_candidate {
-                    closed = true;
-                    break;
-                }
-                if processed[idx] {
-                    continue;
-                }
-                if i_next == -1 {
-                    i_next = idx as i64;
-                } else {
-                    // Corner: pick the line enclosing the smallest angle.
-                    let cur = lines[i_current];
-                    let nxt = lines[idx];
-                    let v1 = (cur.1.0 - cur.0.0, cur.1.1 - cur.0.1);
-                    let v2 = (nxt.1.0 - nxt.0.0, nxt.1.1 - nxt.0.1);
-                    let cross = v1.0 * v2.1 - v2.0 * v1.1;
-                    if cross > 0 {
-                        i_next = idx as i64;
-                        break;
-                    }
-                }
-            }
-            if closed {
-                break;
-            }
-            if i_next < 0 {
-                break;
-            }
-            processed[i_next as usize] = true;
-            i_current = i_next as usize;
-            poly_pts.push(lines[i_current].1);
-        }
-        out.push(poly_pts);
+        out.push(trace_contour(
+            i_candidate,
+            &lines,
+            &start_to_idx,
+            &mut processed,
+        ));
     }
 
     // 3) Scale back to world, shrink corners by `offset`, drop collinear.
@@ -127,6 +65,107 @@ pub(crate) fn contours_simplified(
         result.push(Polygon::new(shrink_corners(&pts, offset)));
     }
     result
+}
+
+fn collect_boundary_lines(
+    cell_inside: &[u8],
+    grid_w: usize,
+    grid_h: usize,
+) -> (Vec<GridLine>, Vec<(GridPoint, usize)>) {
+    let mut lines: Vec<GridLine> = Vec::new();
+    // (start_point, line_index) sorted lookup.
+    let mut start_to_idx: Vec<(GridPoint, usize)> = Vec::new();
+    for r in 1..grid_h {
+        for c in 1..grid_w {
+            let addr = r * grid_w + c;
+            let left = cell_inside[addr - 1] != 0;
+            let top = cell_inside[addr - grid_w] != 0;
+            let current = cell_inside[addr] != 0;
+            append_boundary_lines(&mut lines, &mut start_to_idx, (r, c), [left, top, current]);
+        }
+    }
+    start_to_idx.sort_by_key(|&(p, _)| p);
+    (lines, start_to_idx)
+}
+
+fn append_boundary_lines(
+    lines: &mut Vec<GridLine>,
+    start_to_idx: &mut Vec<(GridPoint, usize)>,
+    (r, c): (usize, usize),
+    [left, top, current]: [bool; 3],
+) {
+    if left != current {
+        let (a, b) = if left {
+            ((c as i64, (r + 1) as i64), (c as i64, r as i64))
+        } else {
+            ((c as i64, r as i64), (c as i64, (r + 1) as i64))
+        };
+        lines.push((a, b));
+        start_to_idx.push((a, lines.len() - 1));
+    }
+    if top != current {
+        let (a, b) = if top {
+            ((c as i64, r as i64), ((c + 1) as i64, r as i64))
+        } else {
+            (((c + 1) as i64, r as i64), (c as i64, r as i64))
+        };
+        lines.push((a, b));
+        start_to_idx.push((a, lines.len() - 1));
+    }
+}
+
+fn trace_contour(
+    i_candidate: usize,
+    lines: &[GridLine],
+    start_to_idx: &[(GridPoint, usize)],
+    processed: &mut [bool],
+) -> Vec<GridPoint> {
+    let mut poly_pts: Vec<(i64, i64)> = Vec::new();
+    processed[i_candidate] = true;
+    poly_pts.push(lines[i_candidate].1);
+    let mut i_current = i_candidate;
+    loop {
+        // equal_range on start_to_idx for lines[i_current].b.
+        let target = lines[i_current].1;
+        let lo = start_to_idx.partition_point(|&(p, _)| p < target);
+        let hi = start_to_idx.partition_point(|&(p, _)| p <= target);
+        let mut i_next: i64 = -1;
+        let mut closed = false;
+        for entry in &start_to_idx[lo..hi] {
+            let idx = entry.1;
+            if idx == i_candidate {
+                closed = true;
+                break;
+            }
+            if processed[idx] {
+                continue;
+            }
+            if i_next == -1 {
+                i_next = idx as i64;
+                continue;
+            }
+            // Corner: pick the line enclosing the smallest angle.
+            let cur = lines[i_current];
+            let nxt = lines[idx];
+            let v1 = (cur.1.0 - cur.0.0, cur.1.1 - cur.0.1);
+            let v2 = (nxt.1.0 - nxt.0.0, nxt.1.1 - nxt.0.1);
+            let cross = v1.0 * v2.1 - v2.0 * v1.1;
+            if cross > 0 {
+                i_next = idx as i64;
+                break;
+            }
+        }
+        if closed {
+            break;
+        }
+        if i_next < 0 {
+            break;
+        }
+        processed[i_next as usize] = true;
+        i_current = i_next as usize;
+        poly_pts.push(lines[i_current].1);
+    }
+    poly_pts
 }
 
 /// `cell_inside_data` fill (`:211-222`): mark an empty cell if both its

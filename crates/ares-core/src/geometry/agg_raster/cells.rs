@@ -41,7 +41,7 @@ impl Outline {
     }
 
     /// `render_hline` (`agg_rasterizer_cells_aa.h:212-289`).
-    fn render_hline(&mut self, ey: i32, x1: i32, y1: i32, x2: i32, y2: i32) {
+    fn render_hline(&mut self, ey: i32, (x1, y1): (i32, i32), (x2, y2): (i32, i32)) {
         let mut ex1 = x1 >> SUBPIXEL_SHIFT;
         let ex2 = x2 >> SUBPIXEL_SHIFT;
         let fx1 = x1 & SUBPIXEL_MASK;
@@ -99,17 +99,10 @@ impl Outline {
             };
             m -= dx;
             while ex1 != ex2 {
-                let mut delta = lift;
-                m += rem;
-                if m >= 0 {
-                    m -= dx;
-                    delta += 1;
-                }
-                {
-                    let c = self.cell_mut();
-                    c.cover += delta;
-                    c.area += (SUBPIXEL_SCALE as i64) * delta;
-                }
+                let delta = next_delta(&mut m, lift, rem, dx);
+                let c = self.cell_mut();
+                c.cover += delta;
+                c.area += (SUBPIXEL_SCALE as i64) * delta;
                 y1 += delta;
                 ex1 += incr;
                 self.set_curr_cell(ex1, ey);
@@ -145,7 +138,7 @@ impl Outline {
         self.set_curr_cell(ex1, ey1);
 
         if ey1 == ey2 {
-            self.render_hline(ey1, x1, fy1, x2, fy2);
+            self.render_hline(ey1, (x1, fy1), (x2, fy2));
             return;
         }
 
@@ -200,7 +193,7 @@ impl Outline {
             m += dy;
         }
         let mut x_from = x1 as i64 + delta;
-        self.render_hline(ey1, x1, fy1, x_from as i32, first);
+        self.render_hline(ey1, (x1, fy1), (x_from as i32, first));
         ey1 += incr;
         self.set_curr_cell((x_from >> SUBPIXEL_SHIFT as i64) as i32, ey1);
 
@@ -214,25 +207,28 @@ impl Outline {
             }
             m -= dy;
             while ey1 != ey2 {
-                let mut delta = lift;
-                m += rem;
-                if m >= 0 {
-                    m -= dy;
-                    delta += 1;
-                }
+                let delta = next_delta(&mut m, lift, rem, dy);
                 let x_to = x_from + delta;
                 self.render_hline(
                     ey1,
-                    x_from as i32,
-                    SUBPIXEL_SCALE - first,
-                    x_to as i32,
-                    first,
+                    (x_from as i32, SUBPIXEL_SCALE - first),
+                    (x_to as i32, first),
                 );
                 x_from = x_to;
                 ey1 += incr;
                 self.set_curr_cell((x_from >> SUBPIXEL_SHIFT as i64) as i32, ey1);
             }
         }
-        self.render_hline(ey1, x_from as i32, SUBPIXEL_SCALE - first, x2, fy2);
+        self.render_hline(ey1, (x_from as i32, SUBPIXEL_SCALE - first), (x2, fy2));
     }
+}
+
+fn next_delta(m: &mut i64, lift: i64, rem: i64, divisor: i64) -> i64 {
+    let mut delta = lift;
+    *m += rem;
+    if *m >= 0 {
+        *m -= divisor;
+        delta += 1;
+    }
+    delta
 }

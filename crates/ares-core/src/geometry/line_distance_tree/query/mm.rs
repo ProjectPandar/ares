@@ -6,6 +6,7 @@
 
 use crate::geometry::Line;
 
+use super::super::MmQuery;
 use super::{Bounds, Node, NodeKind};
 
 #[derive(Clone, Copy)]
@@ -23,7 +24,16 @@ pub(crate) fn nearest_mm(
         return None;
     }
     let mut winner = None;
-    visit_mm(lines, nodes, 0, origin, scale_factor, &mut winner);
+    visit_mm(
+        lines,
+        nodes,
+        0,
+        MmQuery {
+            point: origin,
+            scale: scale_factor,
+        },
+        &mut winner,
+    );
     winner
 }
 
@@ -35,10 +45,13 @@ fn visit_mm(
     lines: &[Line],
     nodes: &[Node],
     node_index: usize,
-    origin: [f64; 2],
-    scale_factor: f64,
+    query: MmQuery,
     winner: &mut Option<NearestMm>,
 ) {
+    let MmQuery {
+        point: origin,
+        scale: scale_factor,
+    } = query;
     let node = nodes[node_index];
     match node.kind {
         NodeKind::Unused => unreachable!("tree traversal only reaches valid nodes"),
@@ -62,10 +75,10 @@ fn visit_mm(
                 ((right_index, right_distance), (left_index, left_distance))
             };
             if first.1 < best(*winner) {
-                visit_mm(lines, nodes, first.0, origin, scale_factor, winner);
+                visit_mm(lines, nodes, first.0, query, winner);
             }
             if second.1 < best(*winner) {
-                visit_mm(lines, nodes, second.0, origin, scale_factor, winner);
+                visit_mm(lines, nodes, second.0, query, winner);
             }
         }
     }

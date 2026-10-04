@@ -23,13 +23,11 @@ pub(crate) fn dilate_trimming_region(trimming: &[u8], grid_w: usize, grid_h: usi
 /// `seed_fill_block` (`SupportMaterial.cpp:1001-1040`): propagate the
 /// rasterized support pixels over each `(oversampling x oversampling)` macro
 /// block up to the dilated trimming mask.
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn seed_fill_block(
     grid: &mut [u8],
     grid_w: usize,
     trimming: &[u8],
-    grid_blocks_x: usize,
-    grid_blocks_y: usize,
+    (grid_blocks_x, grid_blocks_y): (usize, usize),
     oversampling: usize,
 ) {
     let size = oversampling;
@@ -37,48 +35,43 @@ pub(crate) fn seed_fill_block(
     for block_r in 0..grid_blocks_y {
         for block_c in 0..grid_blocks_x {
             let base = block_c * size + 1 + (block_r * size + 1) * stride;
-            // Top to bottom propagation.
-            for r in 0..size {
-                if r > 0 {
-                    for c in 0..size {
-                        propagate(grid, trimming, base, r, c, stride, -(stride as isize));
-                    }
-                }
-                for c in 1..size {
-                    propagate(grid, trimming, base, r, c, stride, -1);
-                }
-                for c in (0..size - 1).rev() {
-                    propagate(grid, trimming, base, r, c, stride, 1);
-                }
+            fill_block(grid, trimming, base, stride, size);
+        }
+    }
+}
+
+fn fill_block(grid: &mut [u8], trimming: &[u8], base: usize, stride: usize, size: usize) {
+    // Top to bottom propagation.
+    for r in 0..size {
+        if r > 0 {
+            for c in 0..size {
+                propagate(grid, trimming, base + r * stride + c, -(stride as isize));
             }
-            // Bottom to top propagation.
-            for r in (0..size - 1).rev() {
-                for c in 0..size {
-                    propagate(grid, trimming, base, r, c, stride, stride as isize);
-                }
-                for c in 1..size {
-                    propagate(grid, trimming, base, r, c, stride, -1);
-                }
-                for c in (0..size - 1).rev() {
-                    propagate(grid, trimming, base, r, c, stride, 1);
-                }
-            }
+        }
+        for c in 1..size {
+            propagate(grid, trimming, base + r * stride + c, -1);
+        }
+        for c in (0..size - 1).rev() {
+            propagate(grid, trimming, base + r * stride + c, 1);
+        }
+    }
+    // Bottom to top propagation.
+    for r in (0..size - 1).rev() {
+        for c in 0..size {
+            propagate(grid, trimming, base + r * stride + c, stride as isize);
+        }
+        for c in 1..size {
+            propagate(grid, trimming, base + r * stride + c, -1);
+        }
+        for c in (0..size - 1).rev() {
+            propagate(grid, trimming, base + r * stride + c, 1);
         }
     }
 }
 
 /// `PROPAGATION_STEP` (`:1017-1023`): copy a filled neighbour cell into an
 /// un-filled, un-trimmed cell.
-fn propagate(
-    grid: &mut [u8],
-    trimming: &[u8],
-    base: usize,
-    r: usize,
-    c: usize,
-    stride: usize,
-    offset: isize,
-) {
-    let addr = base + r * stride + c;
+fn propagate(grid: &mut [u8], trimming: &[u8], addr: usize, offset: isize) {
     let addr2 = (addr as isize + offset) as usize;
     if grid[addr2] != 0 && trimming[addr] == 0 && trimming[addr2] == 0 {
         grid[addr] = 1;

@@ -19,6 +19,13 @@ use cells::Outline;
 pub(crate) use contours::contours_simplified;
 pub(crate) use grid_ops::{dilate_trimming_region, seed_fill_block};
 
+pub(crate) struct RasterGeometry {
+    pub(crate) width: usize,
+    pub(crate) height: usize,
+    pub(crate) pixel_size: f64,
+    pub(crate) left_bottom: Point,
+}
+
 pub(super) const SUBPIXEL_SHIFT: i32 = 8;
 pub(super) const SUBPIXEL_SCALE: i32 = 1 << SUBPIXEL_SHIFT;
 pub(super) const SUBPIXEL_MASK: i32 = SUBPIXEL_SCALE - 1;
@@ -97,44 +104,54 @@ pub(crate) fn rasterize_polygons(
             by_row.entry(y).or_default().push((x, c.area, c.cover));
         }
     }
-    for (y, mut cells) in by_row {
+    for (y, cells) in by_row {
         if y < 0 || y as usize >= grid_h {
             continue;
         }
-        cells.sort_by_key(|&(x, _, _)| x);
-        let mut cover: i64 = 0;
-        let mut i = 0;
-        while i < cells.len() {
-            let x = cells[i].0;
-            let mut area = cells[i].1;
+        sweep_scanline(
+            &mut data[y as usize * grid_w..(y as usize + 1) * grid_w],
+            cells,
+        );
+    }
+    data
+}
+
+fn sweep_scanline(row: &mut [u8], mut cells: Vec<(i32, i64, i64)>) {
+    let grid_w = row.len();
+    cells.sort_by_key(|&(x, _, _)| x);
+    let mut cover: i64 = 0;
+    let mut i = 0;
+    while i < cells.len() {
+        let x = cells[i].0;
+        let mut area = cells[i].1;
+        cover += cells[i].2;
+        i += 1;
+        // Accumulate all cells with the same X.
+        while i < cells.len() && cells[i].0 == x {
+            area += cells[i].1;
             cover += cells[i].2;
             i += 1;
-            // Accumulate all cells with the same X.
-            while i < cells.len() && cells[i].0 == x {
-                area += cells[i].1;
-                cover += cells[i].2;
-                i += 1;
+        }
+        // `x++` happens only inside `if(area)` (`agg_rasterizer_scanline_aa.h:241`).
+        let mut next_x = x;
+        if area != 0 {
+            let alpha = calculate_alpha((cover << (SUBPIXEL_SHIFT + 1)) - area);
+            if alpha > 0 && x >= 0 && (x as usize) < grid_w {
+                row[x as usize] = 1;
             }
-            // `x++` happens only inside `if(area)` (`agg_rasterizer_scanline_aa.h:241`).
-            let mut next_x = x;
-            if area != 0 {
-                let alpha = calculate_alpha((cover << (SUBPIXEL_SHIFT + 1)) - area);
-                if alpha > 0 && x >= 0 && (x as usize) < grid_w {
-                    data[y as usize * grid_w + x as usize] = 1;
-                }
-                next_x = x + 1;
-            }
-            if i < cells.len() && cells[i].0 > next_x {
-                let alpha = calculate_alpha(cover << (SUBPIXEL_SHIFT + 1));
-                if alpha > 0 {
-                    for cx in next_x..cells[i].0 {
-                        if cx >= 0 && (cx as usize) < grid_w {
-                            data[y as usize * grid_w + cx as usize] = 1;
-                        }
-                    }
-                }
+            next_x = x + 1;
+        }
+        if i >= cells.len() || cells[i].0 <= next_x {
+            continue;
+        }
+        let alpha = calculate_alpha(cover << (SUBPIXEL_SHIFT + 1));
+        if alpha <= 0 {
+            continue;
+        }
+        for cx in next_x..cells[i].0 {
+            if cx >= 0 && (cx as usize) < grid_w {
+                row[cx as usize] = 1;
             }
         }
     }
-    data
 }

@@ -23,6 +23,12 @@ pub(crate) struct LineDistanceTree<'a> {
 }
 
 #[derive(Clone, Copy)]
+struct MmQuery {
+    point: [f64; 2],
+    scale: f64,
+}
+
+#[derive(Clone, Copy)]
 pub(super) struct Bounds {
     pub(super) min: Point,
     pub(super) max: Point,

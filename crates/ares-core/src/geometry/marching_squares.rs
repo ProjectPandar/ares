@@ -218,14 +218,14 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
             if self.dirs[i] == 0 {
                 i += 1;
                 o = 0;
-            } else {
-                let mut m = 0b1111u32 << (o * 4);
-                while self.dirs[i] & m == 0 {
-                    m <<= 4;
-                    o += 1;
-                }
-                break;
+                continue;
             }
+            let mut m = 0b1111u32 << (o * 4);
+            while self.dirs[i] & m == 0 {
+                m <<= 4;
+                o += 1;
+            }
+            break;
         }
         i * 8 + o
     }

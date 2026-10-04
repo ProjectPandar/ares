@@ -1,6 +1,6 @@
 use crate::geometry::{Line, Point};
 
-use super::{Bounds, Node, NodeKind};
+use super::{Bounds, MmQuery, Node, NodeKind};
 
 pub(super) fn classify(lines: &[Line], nodes: &[Node], point: Point) -> i32 {
     if nodes.is_empty() {
@@ -152,22 +152,22 @@ fn ray_counts_mm(
     if nodes.is_empty() {
         return (0, 0);
     }
-    count_mm(lines, nodes, 0, point, coordinate, scale)
+    count_mm(lines, nodes, 0, MmQuery { point, scale }, coordinate)
 }
 
 fn count_mm(
     lines: &[Line],
     nodes: &[Node],
     node_index: usize,
-    point: [f64; 2],
+    query: MmQuery,
     coordinate: usize,
-    scale: f64,
 ) -> (i32, i32) {
+    let MmQuery { point, scale } = query;
     let node = nodes[node_index];
     match node.kind {
         NodeKind::Unused => unreachable!("tree traversal only reaches valid nodes"),
         NodeKind::Leaf(line_index) => leaf_counts_mm(lines[line_index], point, coordinate, scale),
-        NodeKind::Inner => inner_counts_mm(lines, nodes, node_index, point, coordinate, scale),
+        NodeKind::Inner => inner_counts_mm(lines, nodes, node_index, query, coordinate),
     }
 }
 
@@ -175,10 +175,10 @@ fn inner_counts_mm(
     lines: &[Line],
     nodes: &[Node],
     node_index: usize,
-    point: [f64; 2],
+    query: MmQuery,
     coordinate: usize,
-    scale: f64,
 ) -> (i32, i32) {
+    let MmQuery { point, scale } = query;
     let other_coordinate = (coordinate + 1) % 2;
     let left_index = node_index * 2 + 1;
     let right_index = left_index + 1;
@@ -191,7 +191,7 @@ fn inner_counts_mm(
         if value < minimum || value > maximum {
             continue;
         }
-        let child = count_mm(lines, nodes, child_index, point, coordinate, scale);
+        let child = count_mm(lines, nodes, child_index, query, coordinate);
         if child.0 < 0 || child.1 < 0 {
             return (-1, -1);
         }

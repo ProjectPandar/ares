@@ -154,8 +154,7 @@ impl SupportGridPattern {
             &mut grid2,
             grid_w,
             &dilated,
-            grid_blocks_x,
-            grid_blocks_y,
+            (grid_blocks_x, grid_blocks_y),
             oversampling,
         );
         Ok(Self {
@@ -183,10 +182,12 @@ impl SupportGridPattern {
             |(support, trimming)| (support.as_slice(), trimming.as_slice()),
         );
         let simplified = agg_raster::contours_simplified(
-            self.grid_w,
-            self.grid_h,
-            self.pixel_size,
-            self.left_bottom,
+            agg_raster::RasterGeometry {
+                width: self.grid_w,
+                height: self.grid_h,
+                pixel_size: self.pixel_size,
+                left_bottom: self.left_bottom,
+            },
             &self.grid2,
             offset_in_grid,
             fill_holes,

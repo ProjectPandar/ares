@@ -12,7 +12,7 @@
 use std::collections::HashMap;
 
 mod field;
-use field::{propagate_danielsson, propagate_signum, seed_segment_corners};
+use field::{SeedField, propagate_danielsson, propagate_signum, seed_segment_corners};
 
 use super::EdgeGrid;
 use crate::geometry::{Coord, Point, Polygon};
@@ -37,23 +37,18 @@ impl EdgeGrid {
         let search_radius = (resolution << 1) as f32;
         let mut field = vec![search_radius; corners];
 
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                let cell = self.cells[row * self.cols + col];
-                for index in cell.begin..cell.end {
-                    let edge = self.cell_data[index];
-                    seed_segment_corners(
-                        self,
-                        edge,
-                        row,
-                        col,
-                        corner_rows,
-                        corner_cols,
-                        &mut vectors,
-                        &mut signs,
-                        &mut field,
-                    );
-                }
+        let mut output = SeedField {
+            rows: corner_rows,
+            cols: corner_cols,
+            vectors: &mut vectors,
+            signs: &mut signs,
+            distances: &mut field,
+        };
+        for (row, col) in (0..self.rows).flat_map(|row| (0..self.cols).map(move |col| (row, col))) {
+            let cell = self.cells[row * self.cols + col];
+            for index in cell.begin..cell.end {
+                let edge = self.cell_data[index];
+                seed_segment_corners(self, edge, (row, col), &mut output);
             }
         }
 
@@ -108,44 +103,11 @@ impl EdgeGrid {
             }
         }
         if fill_holes {
-            let cell_inside2 = cell_inside.clone();
-            for row in 1..cell_rows - 1 {
-                for col in 1..cell_cols - 1 {
-                    let addr = row * cell_cols + col;
-                    if (cell_inside2[addr - 1] && cell_inside2[addr + 1])
-                        || (cell_inside2[addr - cell_cols] && cell_inside2[addr + cell_cols])
-                    {
-                        cell_inside[addr] = true;
-                    }
-                }
-            }
+            fill_cell_holes(&mut cell_inside, cell_rows, cell_cols);
         }
 
         // Collect the marching-squares boundary lines.
-        let mut lines = Vec::new();
-        for row in 0..=self.rows {
-            for col in 0..=self.cols {
-                let addr = (row + 1) * cell_cols + col + 1;
-                let left = cell_inside[addr - 1];
-                let top = cell_inside[addr - cell_cols];
-                let current = cell_inside[addr];
-                let grid_point = |col: usize, row: usize| Point::new(col as Coord, row as Coord);
-                if left != current {
-                    lines.push(if left {
-                        (grid_point(col, row + 1), grid_point(col, row))
-                    } else {
-                        (grid_point(col, row), grid_point(col, row + 1))
-                    });
-                }
-                if top != current {
-                    lines.push(if top {
-                        (grid_point(col, row), grid_point(col + 1, row))
-                    } else {
-                        (grid_point(col + 1, row), grid_point(col, row))
-                    });
-                }
-            }
-        }
+        let lines = collect_lines(&cell_inside, (self.rows, self.cols), cell_cols);
 
         // Chain the lines (`EdgeGrid.cpp:1342-1381`).
         let mut starts: HashMap<(Coord, Coord), Vec<usize>> = HashMap::new();
@@ -161,86 +123,146 @@ impl EdgeGrid {
             if processed[candidate] {
                 continue;
             }
-            processed[candidate] = true;
-            let mut points = vec![lines[candidate].1];
-            let mut current = candidate;
-            'walk: loop {
-                let end = lines[current].1;
-                let candidates = starts
-                    .get(&(end.x(), end.y()))
-                    .map(Vec::as_slice)
-                    .unwrap_or(&[]);
-                let mut next = usize::MAX;
-                for &index in candidates {
-                    if index == candidate {
-                        // Closing the loop.
-                        break 'walk;
-                    }
-                    if processed[index] {
-                        continue;
-                    }
-                    if next == usize::MAX {
-                        next = index;
-                    } else {
-                        // Corner where two lines meet exactly: pick the
-                        // one enclosing the smallest angle.
-                        let (v1x, v1y) = edge_vector(&lines[current]);
-                        let (v2x, v2y) = edge_vector(&lines[index]);
-                        let cross = v1x * v2y - v2x * v1y;
-                        if cross > 0 {
-                            // Convex right angle; no better next line.
-                            next = index;
-                            break;
-                        }
-                    }
-                }
-                if next == usize::MAX {
-                    break 'walk;
-                }
-                processed[next] = true;
-                current = next;
-                points.push(lines[current].1);
-            }
-            out.push(points);
+            out.push(trace_contour(candidate, &lines, &starts, &mut processed));
         }
 
         // Scale back into world, shrink corners, drop collinear points.
         out.iter()
-            .map(|points| {
-                Polygon::new(
-                    points
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(index, &point)| {
-                            let previous = if index == 0 {
-                                points.len() - 1
-                            } else {
-                                index - 1
-                            };
-                            let following = if index + 1 == points.len() {
-                                0
-                            } else {
-                                index + 1
-                            };
-                            let (vx, vy) = (
-                                points[following].x() - points[previous].x(),
-                                points[following].y() - points[previous].y(),
-                            );
-                            if vx != 0 && vy != 0 {
-                                let mut x = point.x() * self.resolution + self.bounds_min.x();
-                                let mut y = point.y() * self.resolution + self.bounds_min.y();
-                                y += if vx < 0 { -offset } else { offset };
-                                x += if vy > 0 { -offset } else { offset };
-                                Some(Point::new(x, y))
-                            } else {
-                                None
-                            }
-                        })
-                        .collect(),
-                )
-            })
+            .map(|points| shrink_contour(points, self.resolution, self.bounds_min, offset))
             .collect()
     }
+}
+
+fn fill_cell_holes(cell_inside: &mut [bool], cell_rows: usize, cell_cols: usize) {
+    let cell_inside2 = cell_inside.to_vec();
+    for row in 1..cell_rows - 1 {
+        for col in 1..cell_cols - 1 {
+            let addr = row * cell_cols + col;
+            if (cell_inside2[addr - 1] && cell_inside2[addr + 1])
+                || (cell_inside2[addr - cell_cols] && cell_inside2[addr + cell_cols])
+            {
+                cell_inside[addr] = true;
+            }
+        }
+    }
+}
+
+fn collect_lines(
+    cell_inside: &[bool],
+    (rows, cols): (usize, usize),
+    cell_cols: usize,
+) -> Vec<(Point, Point)> {
+    let mut lines = Vec::new();
+    for (row, col) in (0..=rows).flat_map(|row| (0..=cols).map(move |col| (row, col))) {
+        let addr = (row + 1) * cell_cols + col + 1;
+        let left = cell_inside[addr - 1];
+        let top = cell_inside[addr - cell_cols];
+        let current = cell_inside[addr];
+        let grid_point = |col: usize, row: usize| Point::new(col as Coord, row as Coord);
+        if left != current {
+            lines.push(if left {
+                (grid_point(col, row + 1), grid_point(col, row))
+            } else {
+                (grid_point(col, row), grid_point(col, row + 1))
+            });
+        }
+        if top != current {
+            lines.push(if top {
+                (grid_point(col, row), grid_point(col + 1, row))
+            } else {
+                (grid_point(col + 1, row), grid_point(col, row))
+            });
+        }
+    }
+    lines
+}
+
+fn trace_contour(
+    candidate: usize,
+    lines: &[(Point, Point)],
+    starts: &HashMap<(Coord, Coord), Vec<usize>>,
+    processed: &mut [bool],
+) -> Vec<Point> {
+    processed[candidate] = true;
+    let mut points = vec![lines[candidate].1];
+    let mut current = candidate;
+    'walk: loop {
+        let end = lines[current].1;
+        let candidates = starts
+            .get(&(end.x(), end.y()))
+            .map(Vec::as_slice)
+            .unwrap_or(&[]);
+        let mut next = usize::MAX;
+        for &index in candidates {
+            if index == candidate {
+                // Closing the loop.
+                break 'walk;
+            }
+            if processed[index] {
+                continue;
+            }
+            if next == usize::MAX {
+                next = index;
+                continue;
+            }
+            // Corner where two lines meet exactly: pick the
+            // one enclosing the smallest angle.
+            let (v1x, v1y) = edge_vector(&lines[current]);
+            let (v2x, v2y) = edge_vector(&lines[index]);
+            let cross = v1x * v2y - v2x * v1y;
+            if cross > 0 {
+                // Convex right angle; no better next line.
+                next = index;
+                break;
+            }
+        }
+        if next == usize::MAX {
+            break 'walk;
+        }
+        processed[next] = true;
+        current = next;
+        points.push(lines[current].1);
+    }
+    points
+}
+
+fn shrink_contour(
+    points: &[Point],
+    resolution: Coord,
+    bounds_min: Point,
+    offset: Coord,
+) -> Polygon {
+    Polygon::new(
+        points
+            .iter()
+            .enumerate()
+            .filter_map(|(index, &point)| {
+                let previous = if index == 0 {
+                    points.len() - 1
+                } else {
+                    index - 1
+                };
+                let following = if index + 1 == points.len() {
+                    0
+                } else {
+                    index + 1
+                };
+                let (vx, vy) = (
+                    points[following].x() - points[previous].x(),
+                    points[following].y() - points[previous].y(),
+                );
+                if vx != 0 && vy != 0 {
+                    let mut x = point.x() * resolution + bounds_min.x();
+                    let mut y = point.y() * resolution + bounds_min.y();
+                    y += if vx < 0 { -offset } else { offset };
+                    x += if vy > 0 { -offset } else { offset };
+                    Some(Point::new(x, y))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    )
 }
 
 fn edge_vector(line: &(Point, Point)) -> (Coord, Coord) {
