@@ -46,9 +46,20 @@ RepRap `M572 D... S0`; all G-code timing and filament statistics stay required.
 
 ## Integration status
 
-Published branch: `pi/smooth-type2-timelapse-tower-rebased-95e23008`, without force.
-Current base remains `95e23008`; rebase latest main before final integration.
-Coordinator announced `b42edd5e` and its known `no_unapproved_dynamic_values`
-failure in `ares-wasm/src/scene.rs`, owned by worker-web. Do not fix, skip or
-claim that failure passed; wait for its upstream repair before final rebase/gates.
-No final REVIEW-REQUEST, approval or main integration is claimed here.
+Published branch: `pi/smooth-type2-timelapse-tower-rebased-95e23008`, without force,
+through `3788024a`. After the coordinator's latest request, all 15 feature patches
+rebased without conflicts onto repaired main `944c0459`, producing `a6a54e4d`.
+Range-diff marks all patches identical:
+`/tmp/ares-pi-tower-rebase-944c0459-range-diff.log`. The prior history remains at
+`checkpoint/tower-before-main-944c0459`; all required main ancestors are retained.
+
+Fresh `/tmp/ares-pi-tower-rebase-944c0459-*` gates: **7640 workspace PASS,
+9 skipped**, official **8/8 PASS**, seeded **8/8 PASS**, WASM/fmt/diff PASS.
+Clippy completes with **160 warnings**; the six introduced sites above remain.
+The previously reported `no_unapproved_dynamic_values` failure is fixed upstream
+and that exact policy test passed in this workspace run; no local workaround.
+
+Latest rebased history has not been force-pushed over the approved remote branch.
+A new remote ref or local-only continuation needs confirmation, as does the
+unused result/GUI metadata boundary. No final REVIEW-REQUEST, approval or main
+integration is claimed here.
