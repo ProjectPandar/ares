@@ -18,7 +18,7 @@ pub(super) fn append(
     if source.is_empty() {
         return Ok(());
     }
-    let mut config = placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+    let mut config = placeholders::base_config(traversal, metadata, first_layer_bounds, None)?;
     config.insert(
         "print_time_sec",
         Value::String(processor::PRINT_TIME_SEC_PLACEHOLDER.to_owned()),

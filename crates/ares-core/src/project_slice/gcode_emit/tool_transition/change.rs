@@ -34,6 +34,7 @@ pub(super) fn append(
         context.traversal,
         context.metadata,
         context.first_layer_bounds,
+        Some(&state.template_rng),
     )?;
     dynamic::insert(&mut config, state, old, filament, context);
     let mut injected = Vec::new();

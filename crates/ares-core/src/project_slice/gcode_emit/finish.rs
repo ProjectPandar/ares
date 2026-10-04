@@ -21,7 +21,12 @@ pub(super) fn append(
     position: (f64, f64, f64),
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
-    let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+    let mut config = super::placeholders::base_config(
+        traversal,
+        metadata,
+        first_layer_bounds,
+        Some(&state.template_rng),
+    )?;
     // `ppi.update_from_gcodewriter(m_writer)` refreshes `position` and the
     // E counters before each template (`GCode.cpp:3896`).
     super::motion::refresh_writer_state(&mut config, state);

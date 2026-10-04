@@ -102,6 +102,7 @@ fn append_filament(
         context.traversal,
         context.metadata,
         context.first_layer_bounds,
+        Some(&state.template_rng),
     )?;
     motion::refresh_writer_state(&mut config, state);
     config.insert("layer_num", value::Value::Integer(context.layer_num));

@@ -294,6 +294,9 @@ fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, Stri
     if name == "interpolate_table" {
         return interpolate_table(&args);
     }
+    if name == "random" {
+        return config.random(&args);
+    }
     let numbers = args
         .iter()
         .map(|value| {
@@ -317,16 +320,6 @@ fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, Stri
         "round" if numbers.len() == 1 => Ok(Value::Number(numbers[0].round())),
         "floor" if numbers.len() == 1 => Ok(Value::Number(numbers[0].floor())),
         "ceil" if numbers.len() == 1 => Ok(Value::Number(numbers[0].ceil())),
-        "random" if numbers.len() == 2 && numbers[0] <= numbers[1] => {
-            let unit = config.random_unit();
-            let integer = numbers.iter().all(|number| number.fract() == 0.0);
-            let result = if integer {
-                numbers[0] + (unit * (numbers[1] - numbers[0] + 1.0)).floor()
-            } else {
-                numbers[0] + unit * (numbers[1] - numbers[0])
-            };
-            Ok(Value::Number(result))
-        }
         "digits" if matches!(numbers.len(), 2 | 3) => {
             let width = numbers[1].clamp(0.0, 64.0) as usize;
             let rendered = if let Some(decimals) = numbers.get(2) {

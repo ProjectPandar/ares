@@ -1,4 +1,9 @@
-use std::{cell::Cell, collections::HashMap};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
+mod random;
+
+// PlaceholderParser.hpp:16-26: config copies share the execution context.
+pub(super) type TemplateRng = Rc<RefCell<crate::slicer_context::Mt19937>>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) enum Value {
@@ -111,19 +116,10 @@ fn format_number(value: f64) -> String {
         .to_owned()
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(super) struct Config {
     values: HashMap<String, Value>,
-    random_state: Cell<u64>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            values: HashMap::new(),
-            random_state: Cell::new(5_489),
-        }
-    }
+    pub(super) random: Option<TemplateRng>,
 }
 
 impl Config {
@@ -181,15 +177,6 @@ impl Config {
 
     pub(super) fn get(&self, key: &str) -> Option<&Value> {
         self.values.get(key)
-    }
-
-    pub(super) fn random_unit(&self) -> f64 {
-        let current = self.random_state.get();
-        let next = current
-            .wrapping_mul(6_364_136_223_846_793_005)
-            .wrapping_add(1_442_695_040_888_963_407);
-        self.random_state.set(next);
-        (next >> 11) as f64 / (1_u64 << 53) as f64
     }
 }
 

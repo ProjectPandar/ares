@@ -15,7 +15,12 @@ pub(super) fn self_start_config(
     metadata: GenerationMetadata,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
 ) -> Result<value::Config, SliceError> {
-    let mut config = placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+    let mut config = placeholders::base_config(
+        traversal,
+        metadata,
+        first_layer_bounds,
+        Some(&state.template_rng),
+    )?;
     config.insert("next_extruder", value::Value::number(0.0));
     config.insert("next_hotend", value::Value::number(-1.0));
     config.insert(

@@ -68,7 +68,8 @@ fn expression_interpolates_piecewise_table_tuples() {
 
 #[test]
 fn expression_random_is_bounded_and_advances_state() {
-    let config = config();
+    let mut config = config();
+    config.random = Some(Default::default());
     let first = evaluate("random(-160, -152)", &config)
         .unwrap()
         .as_number()

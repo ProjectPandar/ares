@@ -125,7 +125,12 @@ pub(super) fn emit(
             .0
             .len(),
     );
+    // GCode.cpp:2707: independent PlaceholderParser context, not the fuzzy stream.
+    let template_rng = std::rc::Rc::new(std::cell::RefCell::new(
+        crate::slicer_context::Mt19937::new(context.seed()),
+    ));
     let mut state = motion::EmitState {
+        template_rng: template_rng.clone(),
         auto_lift: motion::auto_lift::AutoLift::prepare(traversal)
             .map_err(|error| SliceError::InvalidInput(format!("auto lift geometry: {error:?}")))?,
         extruders,
@@ -151,7 +156,14 @@ pub(super) fn emit(
                     .iter()
                     .any(|template| !template.is_empty());
             needed
-                .then(|| placeholders::base_config(traversal, metadata, first_layer_bounds))
+                .then(|| {
+                    placeholders::base_config(
+                        traversal,
+                        metadata,
+                        first_layer_bounds,
+                        Some(&template_rng),
+                    )
+                })
                 .transpose()?
         },
         ..Default::default()

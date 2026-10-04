@@ -5,6 +5,7 @@ pub(crate) use support_connection::SupportConnectionCosts;
 
 /// Execution-local state for one project slice.
 pub struct SlicerContext {
+    seed: u32,
     rng: Mt19937,
     support_connection_costs: Option<SupportConnectionCosts>,
 }
@@ -12,9 +13,14 @@ pub struct SlicerContext {
 impl SlicerContext {
     pub fn new(seed: u32) -> Self {
         Self {
+            seed,
             rng: Mt19937::new(seed),
             support_connection_costs: None,
         }
+    }
+
+    pub(crate) fn seed(&self) -> u32 {
+        self.seed
     }
 
     pub(crate) fn rng(&mut self) -> &mut Mt19937 {

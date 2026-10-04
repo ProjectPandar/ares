@@ -20,9 +20,11 @@ pub(super) fn base_config(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
+    rng: Option<&value::TemplateRng>,
 ) -> Result<value::Config, SliceError> {
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+    config.random = rng.cloned();
     timestamp::insert(&mut config, metadata);
     insert_runtime_placeholders(&mut config, traversal);
     config.insert("current_extruder", Value::number(0.0));

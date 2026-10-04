@@ -140,8 +140,15 @@ fn verify(fixture: &str, probe: bool) {
         &second.reference,
     )
     .unwrap();
-    crate::golden::compare_ordered_bytes_generator_only(&first.reference, &second.reference)
-        .unwrap();
+    let normalize = |bytes: &[u8]| {
+        crate::golden::normalize_one_generator_line(bytes, crate::golden::GeneratorKind::Orca)
+            .unwrap()
+    };
+    if let Some(difference) =
+        crate::golden::first_difference(&normalize(&first.reference), &normalize(&second.reference))
+    {
+        panic!("native repeat differs: {difference}");
+    }
     let actual = slice(&exported.project, seed);
     std::fs::write(runner.work.join("ares.gcode"), &actual).unwrap();
     let comparison = crate::golden::compare_ordered_bytes_generator_only(&first.reference, &actual);

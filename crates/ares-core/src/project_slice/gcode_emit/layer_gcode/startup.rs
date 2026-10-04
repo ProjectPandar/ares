@@ -65,8 +65,12 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
         // Machine-start's `position` assignment was already written back
         // into writer state by the caller (`gcode_emit.rs`), so the
         // refresh below seeds upstream's post-assignment `m_pos`.
-        let mut config =
-            super::super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+        let mut config = super::super::placeholders::base_config(
+            traversal,
+            metadata,
+            first_layer_bounds,
+            Some(&state.template_rng),
+        )?;
         super::super::motion::refresh_writer_state(&mut config, state);
         config.insert(
             "current_extruder",

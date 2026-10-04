@@ -51,8 +51,12 @@ pub(super) fn emit(
         .0;
     let mut rendered = String::new();
     if !source.is_empty() {
-        let mut config =
-            placeholders::base_config(traversal, context.metadata, context.first_layer_bounds)?;
+        let mut config = placeholders::base_config(
+            traversal,
+            context.metadata,
+            context.first_layer_bounds,
+            Some(&state.template_rng),
+        )?;
         motion::refresh_writer_state(&mut config, state);
         config.insert(
             "layer_num",

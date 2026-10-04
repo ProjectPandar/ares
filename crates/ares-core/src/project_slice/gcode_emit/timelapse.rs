@@ -111,7 +111,12 @@ fn append(
         return Ok(None);
     }
 
-    let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+    let mut config = super::placeholders::base_config(
+        traversal,
+        metadata,
+        first_layer_bounds,
+        Some(&state.template_rng),
+    )?;
     // `ppi.update_from_gcodewriter(m_writer)` refreshes writer state
     // before each template (`GCode.cpp:3896`).
     super::motion::refresh_writer_state(&mut config, state);
