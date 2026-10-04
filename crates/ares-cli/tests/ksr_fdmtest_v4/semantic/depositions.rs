@@ -61,28 +61,8 @@ pub(super) fn compare_deposition(
         || leftovers.len() > MAX_SAME_TARGET_UNMATCHED_COUNT
     {
         if std::env::var_os("SEMANTIC_DEBUG").is_some() {
-            let dump = |side: &str, list: &[&Deposition]| {
-                for d in list.iter().take(12) {
-                    eprintln!(
-                        "{side}: {} {} {} {} {} {} {} {} {} e={} f={} w={} a={}",
-                        d.feature,
-                        d.motion.command,
-                        d.motion.start.x,
-                        d.motion.start.y,
-                        d.motion.start.z,
-                        d.motion.end.x,
-                        d.motion.end.y,
-                        d.motion.end.z,
-                        d.extrusion,
-                        d.extrusion,
-                        d.feed,
-                        d.width,
-                        d.acceleration
-                    );
-                }
-            };
-            dump("expected", &unmatched_expected);
-            dump("actual", &leftovers);
+            dump_depositions("expected", &unmatched_expected);
+            dump_depositions("actual", &leftovers);
         }
         return Err(format!(
             "layer {layer} deposition 1 differs: {} unmatched expected, {} unmatched actual",
@@ -187,6 +167,27 @@ pub(super) fn compare_deposition(
         ));
     }
     Ok(())
+}
+
+fn dump_depositions(side: &str, list: &[&Deposition]) {
+    for d in list.iter().take(12) {
+        eprintln!(
+            "{side}: {} {} {} {} {} {} {} {} {} e={} f={} w={} a={}",
+            d.feature,
+            d.motion.command,
+            d.motion.start.x,
+            d.motion.start.y,
+            d.motion.start.z,
+            d.motion.end.x,
+            d.motion.end.y,
+            d.motion.end.z,
+            d.extrusion,
+            d.extrusion,
+            d.feed,
+            d.width,
+            d.acceleration
+        );
+    }
 }
 
 // Same-target tolerances: sub-µm Coord rounding drifts the last emitted

@@ -6,7 +6,7 @@ use super::SemanticGcode;
 pub(super) fn canonicalize_controls(parsed: &SemanticGcode) -> Vec<Vec<String>> {
     let mut fans = std::collections::BTreeMap::<String, String>::new();
     let mut plane_xy = false;
-    let mut seed = |line: &str| {
+    for line in &parsed.preamble {
         if line == "G17" {
             plane_xy = true;
         } else if line == "G18" || line == "G19" {
@@ -14,65 +14,62 @@ pub(super) fn canonicalize_controls(parsed: &SemanticGcode) -> Vec<Vec<String>> 
         } else if line.starts_with("M106 ") {
             apply_fan(&mut fans, line);
         } else if line == "M107" || line.starts_with("M107 ") {
-            let mut fan = "0".to_owned();
-            for token in line.split_ascii_whitespace().skip(1) {
-                if let Some(value) = token.strip_prefix('P') {
-                    fan = value.to_owned();
-                }
-            }
-            fans.insert(fan, "0".to_owned());
+            fans.insert(fan_target(line), "0".to_owned());
         }
-    };
-    for line in &parsed.preamble {
-        seed(line);
     }
     parsed
         .layers
         .iter()
         .map(|layer| {
-            let mut kept = Vec::new();
-            for line in &layer.controls {
-                if line == "G17" {
-                    if !plane_xy {
-                        plane_xy = true;
-                        kept.push(line.clone());
-                    }
-                    continue;
-                }
-                if line == "G18" || line == "G19" {
-                    plane_xy = false;
-                    kept.push(line.clone());
-                    continue;
-                }
-                if line.starts_with("M106 ") {
-                    if let Some((fan, speed)) = fan_assignment(line) {
-                        if fans.get(&fan) == Some(&speed) {
-                            continue;
-                        }
-                        fans.insert(fan, speed);
-                    }
-                    kept.push(line.clone());
-                    continue;
-                }
-                if line == "M107" || line.starts_with("M107 ") {
-                    let mut fan = "0".to_owned();
-                    for token in line.split_ascii_whitespace().skip(1) {
-                        if let Some(value) = token.strip_prefix('P') {
-                            fan = value.to_owned();
-                        }
-                    }
-                    if fans.get(&fan).is_some_and(|s| s == "0") {
-                        continue;
-                    }
-                    fans.insert(fan, "0".to_owned());
-                    kept.push(line.clone());
-                    continue;
-                }
-                kept.push(line.clone());
-            }
-            kept
+            layer
+                .controls
+                .iter()
+                .filter(|line| keep_control(line, &mut fans, &mut plane_xy))
+                .cloned()
+                .collect()
         })
         .collect()
+}
+
+fn keep_control(
+    line: &str,
+    fans: &mut std::collections::BTreeMap<String, String>,
+    plane_xy: &mut bool,
+) -> bool {
+    if line == "G17" {
+        return !std::mem::replace(plane_xy, true);
+    }
+    if line == "G18" || line == "G19" {
+        *plane_xy = false;
+        return true;
+    }
+    if line.starts_with("M106 ") {
+        if let Some((fan, speed)) = fan_assignment(line) {
+            if fans.get(&fan) == Some(&speed) {
+                return false;
+            }
+            fans.insert(fan, speed);
+        }
+        return true;
+    }
+    if line == "M107" || line.starts_with("M107 ") {
+        let fan = fan_target(line);
+        if fans.get(&fan).is_some_and(|s| s == "0") {
+            return false;
+        }
+        fans.insert(fan, "0".to_owned());
+    }
+    true
+}
+
+fn fan_target(line: &str) -> String {
+    let mut fan = "0".to_owned();
+    for token in line.split_ascii_whitespace().skip(1) {
+        if let Some(value) = token.strip_prefix('P') {
+            fan = value.to_owned();
+        }
+    }
+    fan
 }
 
 fn apply_fan(fans: &mut std::collections::BTreeMap<String, String>, line: &str) {

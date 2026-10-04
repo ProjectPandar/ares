@@ -206,10 +206,12 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             // M107 turns the (default) fan off: deposition fan snapshots
             // must see it, so update state like M106 S0.
             let mut fan = "0".to_owned();
-            for token in command_line.split_whitespace().skip(1) {
-                if let Some(value) = token.strip_prefix('P') {
-                    fan = canonical_number(value)?;
-                }
+            for value in command_line
+                .split_whitespace()
+                .skip(1)
+                .filter_map(|token| token.strip_prefix('P'))
+            {
+                fan = canonical_number(value)?;
             }
             state.fans.insert(fan, "0".to_owned());
             push_control(&mut output, command_line);

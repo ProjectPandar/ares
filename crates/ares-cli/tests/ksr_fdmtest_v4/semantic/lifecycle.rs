@@ -61,39 +61,7 @@ fn compare_layers(
                 && !pool.iter().any(|other| island_shape_matches(island, other))
         };
         if std::env::var_os("SEMANTIC_DEBUG").is_some() {
-            let dump = |side: &str, island: &[LifecycleEvent], pool: &[&Vec<LifecycleEvent>]| {
-                eprintln!(
-                    "{side}: infill_wipe={} shape_dup={} events={:?}",
-                    is_infill_wipe_island(island),
-                    pool.iter().any(|o| island_shape_matches(island, o)),
-                    island.len()
-                );
-            };
-            for island in &unmatched_expected {
-                dump("expected", island, &leftovers);
-                if let Some(other) = actual.iter().find(|o| island_shape_matches(island, o)) {
-                    eprintln!(
-                        "  shape-dup extrusions: {:?} vs {:?}",
-                        island
-                            .iter()
-                            .filter_map(|e| match e {
-                                LifecycleEvent::Wipe { extrusion, .. } => Some(extrusion.clone()),
-                                _ => None,
-                            })
-                            .collect::<Vec<_>>(),
-                        other
-                            .iter()
-                            .filter_map(|e| match e {
-                                LifecycleEvent::Wipe { extrusion, .. } => Some(extrusion.clone()),
-                                _ => None,
-                            })
-                            .collect::<Vec<_>>()
-                    );
-                }
-            }
-            for island in &leftovers {
-                dump("actual", island, &unmatched_expected);
-            }
+            dump_unmatched_islands(&unmatched_expected, &leftovers, actual);
         }
         // Per-island magnitude cap: real relocation islands carry a
         // canceling unretract/retract pair plus ≤0.5mm of wipe — never
@@ -153,6 +121,46 @@ fn compare_layers(
         }
     }
     Ok(())
+}
+
+fn dump_unmatched_islands(
+    unmatched_expected: &[&Vec<LifecycleEvent>],
+    leftovers: &[&Vec<LifecycleEvent>],
+    actual: &[Vec<LifecycleEvent>],
+) {
+    let dump = |side: &str, island: &[LifecycleEvent], pool: &[&Vec<LifecycleEvent>]| {
+        eprintln!(
+            "{side}: infill_wipe={} shape_dup={} events={:?}",
+            is_infill_wipe_island(island),
+            pool.iter().any(|o| island_shape_matches(island, o)),
+            island.len()
+        );
+    };
+    for island in unmatched_expected {
+        dump("expected", island, leftovers);
+        if let Some(other) = actual.iter().find(|o| island_shape_matches(island, o)) {
+            eprintln!(
+                "  shape-dup extrusions: {:?} vs {:?}",
+                island
+                    .iter()
+                    .filter_map(|e| match e {
+                        LifecycleEvent::Wipe { extrusion, .. } => Some(extrusion.clone()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
+                other
+                    .iter()
+                    .filter_map(|e| match e {
+                        LifecycleEvent::Wipe { extrusion, .. } => Some(extrusion.clone()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+    for island in leftovers {
+        dump("actual", island, unmatched_expected);
+    }
 }
 
 // Same event sequence and wipe positions (coordinate tolerance only) —

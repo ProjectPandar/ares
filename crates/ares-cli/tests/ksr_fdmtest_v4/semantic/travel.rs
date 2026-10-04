@@ -126,27 +126,8 @@ pub(super) fn compare(
             .count();
     if hard > 0 {
         if std::env::var_os("SEMANTIC_DEBUG").is_some() {
-            let dump = |side: &str, mine: &[Travel], theirs_acc: &BTreeSet<&str>| {
-                for t in mine {
-                    if !theirs_acc.contains(t.acceleration.as_str()) {
-                        let m = &t.motion;
-                        eprintln!(
-                            "{side}: {} {} {} {} {} {} {} {} acc={}",
-                            m.command,
-                            m.start.x,
-                            m.start.y,
-                            m.start.z,
-                            m.end.x,
-                            m.end.y,
-                            m.end.z,
-                            t.feed,
-                            t.acceleration,
-                        );
-                    }
-                }
-            };
-            dump("actual", actual, &expected_acceleration);
-            dump("expected", expected, &actual_acceleration);
+            dump_accelerations("actual", actual, &expected_acceleration);
+            dump_accelerations("expected", expected, &actual_acceleration);
         }
         return Err(format!(
             "layer {layer} travel acceleration differs: expected {expected_acceleration:?}, \
@@ -154,6 +135,26 @@ pub(super) fn compare(
         ));
     }
     Ok(())
+}
+
+fn dump_accelerations(side: &str, mine: &[Travel], theirs_acc: &BTreeSet<&str>) {
+    for t in mine {
+        if !theirs_acc.contains(t.acceleration.as_str()) {
+            let m = &t.motion;
+            eprintln!(
+                "{side}: {} {} {} {} {} {} {} {} acc={}",
+                m.command,
+                m.start.x,
+                m.start.y,
+                m.start.z,
+                m.end.x,
+                m.end.y,
+                m.end.z,
+                t.feed,
+                t.acceleration,
+            );
+        }
+    }
 }
 
 // Greedy consumable multiset matching, run from expected toward actual.
