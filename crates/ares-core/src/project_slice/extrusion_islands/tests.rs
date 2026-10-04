@@ -1,7 +1,7 @@
 use super::{IslandInfillEntity, assign_layer, contour_bounds, island_index};
 use crate::{
     ExtrusionRole,
-    geometry::{ExPolygon, Point, Polygon, Polyline},
+    geometry::{CoordinateScale, ExPolygon, Point, Polygon, Polyline},
     project_slice::fill_entities::{
         FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities,
     },
@@ -63,7 +63,29 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
         ..LayerFillEntities::default()
     };
 
-    let assigned = assign_layer(&mut layer, &[rectangle(-10, 10)]);
+    let assigned = assign_layer(
+        &mut layer,
+        &[rectangle(-10, 10)],
+        CoordinateScale::Normal,
+        true,
+    );
+    assert_eq!(assigned.wiping_volumes.infills.len(), 2);
+    assert_eq!(
+        assigned
+            .wiping_volumes
+            .infills
+            .iter()
+            .map(|volume| volume.id)
+            .collect::<Vec<_>>(),
+        [0, 1]
+    );
+    assert!(
+        assigned
+            .wiping_volumes
+            .infills
+            .iter()
+            .all(|volume| volume.volume > 0.0)
+    );
     assert_eq!(assigned.tool_regions.len(), 1);
     assert!(assigned.tool_regions[0].internal_solid);
     let infills = &assigned.islands[0].infills;
