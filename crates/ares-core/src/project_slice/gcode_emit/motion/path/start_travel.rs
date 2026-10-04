@@ -8,10 +8,42 @@ mod tests;
 
 use super::PathProperties;
 use crate::project_slice::gcode_emit::motion::{
-    EmitState, LayerGeometry, append_object_start,
+    EmitState, LayerGeometry, append_object_start, features,
     format::{axis as format_axis, z as format_z},
     travel,
 };
+
+/// `append_tcr2` calls `travel_to(erMixed)` without `_extrude`'s Z restatement.
+pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    first_scaled: (i64, i64),
+    geometry: LayerGeometry<'_>,
+) {
+    let first_x = geometry.scale.unscale(first_scaled.0) + state.offset.0;
+    let first_y = geometry.scale.unscale(first_scaled.1) + state.offset.1;
+    let comment = if state.options.gcode_comments {
+        " ; Travel to a Wipe Tower"
+    } else {
+        ""
+    };
+    let request = approach::Approach {
+        first_scaled,
+        first_x,
+        first_y,
+        feature: "Mixed",
+        is_perimeter: false,
+        comment,
+        geometry,
+        first_position: !state.positioned,
+        layer_change_travel: state.layer_change_travel_pending && state.positioned,
+        slope_start_z: None,
+        target_z: state.layer_z,
+        travel_distance: (first_x - state.x).hypot(first_y - state.y),
+    };
+    approach::emit_needs_travel(output, state, request);
+    state.layer_change_travel_pending = false;
+}
 
 pub(super) struct Request<'a> {
     pub(super) first_scaled: (i64, i64),
@@ -53,6 +85,19 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         first_position || state.last_scaled_position != Some(first_scaled) || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     let (mut travel_set_layer_z, eager_lifted_travel, unclear_position_travel) = if needs_travel {
+        let comment = if state.options.gcode_comments {
+            let bridge = if features::is_bridge_feature(properties.feature) {
+                " (bridge)"
+            } else {
+                ""
+            };
+            format!(
+                " ; move to first {}{bridge} point",
+                features::feature_description(properties.feature)
+            )
+        } else {
+            String::new()
+        };
         approach::emit_needs_travel(
             output,
             state,
@@ -60,7 +105,9 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 first_scaled,
                 first_x,
                 first_y,
-                properties,
+                feature: properties.feature,
+                is_perimeter: properties.is_perimeter,
+                comment: &comment,
                 geometry,
                 first_position,
                 layer_change_travel,

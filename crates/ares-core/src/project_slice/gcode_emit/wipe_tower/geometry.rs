@@ -1,6 +1,6 @@
 //! `WipeTower2.cpp` rib/rectangle geometry; shared `WipeTower::box_coordinates`.
 mod cone;
-pub(super) use cone::ConeOptions;
+pub(super) use cone::{ConeOptions, cone_base};
 mod rounding;
 #[cfg(test)]
 mod tests;
@@ -83,8 +83,8 @@ impl Shape {
                 let dy = (b.y() - a.y()) as f64;
                 let length = (dx * dx + dy * dy).sqrt();
                 let offset = [
-                    (f64::from(extra) * dx / length) as i64,
-                    (f64::from(extra) * dy / length) as i64,
+                    (f64::from(extra) * (dx / length)) as i64,
+                    (f64::from(extra) * (dy / length)) as i64,
                 ];
                 diagonal_rectangle(
                     Point::new(a.x() - offset[0], a.y() - offset[1] - shift),

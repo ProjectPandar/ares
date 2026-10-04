@@ -13,6 +13,7 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
     traversal: &PreparedPostClassicTraversal,
     skirt: Option<&SkirtPlan>,
     brim: Option<&BrimPlan>,
+    tower_corners: &[Point],
 ) -> Option<FirstLayerBounds> {
     let scale = traversal.scale;
     let mut bounds = None;
@@ -52,6 +53,11 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
                 .map(|(min_x, min_y, max_x, max_y)| (min_x + x, min_y + y, max_x + x, max_y + y)),
             &mut bounds,
         );
+    }
+    for point in tower_corners {
+        let x = scale.unscale(point.x());
+        let y = scale.unscale(point.y());
+        include_bounds(Some((x, y, x, y)), &mut bounds);
     }
     bounds.map(|(min_x, min_y, max_x, max_y)| (min_x, min_y, max_x - min_x, max_y - min_y))
 }

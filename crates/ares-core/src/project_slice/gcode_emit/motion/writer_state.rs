@@ -20,6 +20,9 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
     state: &EmitState,
 ) {
     state.initial_filaments.insert(config);
+    if let Some(tower) = &state.wipe_tower {
+        tower.insert_placeholders(config);
+    }
     if state.extruder_selected {
         crate::project_slice::gcode_emit::placeholders::refresh_filament_aliases(
             config,

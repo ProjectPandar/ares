@@ -27,6 +27,36 @@ pub(in crate::project_slice::gcode_emit) struct RaftSchedule {
         Vec<Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>>,
 }
 
+impl RaftSchedule {
+    pub(in crate::project_slice::gcode_emit) fn skirt_points(
+        &self,
+        object: usize,
+    ) -> impl Iterator<Item = crate::geometry::Point> + '_ {
+        use crate::project_slice::{
+            fill_entities::FillExtrusionEntity, island_print_order::IslandPrintEntity,
+        };
+        self.layers[object]
+            .iter()
+            .flat_map(|layer| &layer.islands)
+            .flat_map(|island| &island.entities)
+            .flat_map(|entity| match entity {
+                IslandPrintEntity::Fill(path) => std::slice::from_ref(path),
+                IslandPrintEntity::FillCollection(collection) => collection.entities.as_slice(),
+                IslandPrintEntity::Perimeter(_) | IslandPrintEntity::Thin(_) => {
+                    unreachable!("raft materialization emits support paths")
+                }
+            })
+            .flat_map(|entity| match entity {
+                FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
+                    path.polyline.points().iter().copied()
+                }
+                FillExtrusionEntity::VariableWidth(_) => {
+                    unreachable!("raft materialization emits constant-width paths")
+                }
+            })
+    }
+}
+
 #[expect(
     clippy::too_many_arguments,
     reason = "the raft inputs share one job-local support connection context"

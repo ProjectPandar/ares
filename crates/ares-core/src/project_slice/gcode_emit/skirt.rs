@@ -46,7 +46,8 @@ impl SkirtPlan {
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<crate::project_slice::support_material::InstalledSupportLayer>],
         brim: Option<&super::brim::BrimPlan>,
-        context: &mut crate::SlicerContext,
+        tower_corners: &[Point],
+        raft: Option<&super::layers::RaftSchedule>,
     ) -> Result<Option<Self>, SliceError> {
         let print = &traversal.resolved.views.full.process.print;
         let loops_count = usize::try_from(print.skirt_loops.0).unwrap_or(0);
@@ -69,7 +70,10 @@ impl SkirtPlan {
                 "skirt_type per-object".to_owned(),
             ));
         }
-        let hulls = occupied::hulls(traversal, support, brim, layer_limit, context);
+        let mut hulls = occupied::hulls(traversal, support, brim, layer_limit, raft);
+        if !tower_corners.is_empty() {
+            hulls.push(tower_corners.to_vec());
+        }
         let hull = convex_hull(&hulls.iter().flatten().copied().collect::<Vec<_>>());
         if hull.len() < 3 {
             return Ok(None);
@@ -177,6 +181,12 @@ impl SkirtPlan {
             start_angle_deg,
             single_loop_draft_shield: print.single_loop_draft_shield.0,
         }))
+    }
+
+    pub(super) fn extrusion_paths(&self) -> impl Iterator<Item = (&[Point], f32)> {
+        self.loops
+            .iter()
+            .map(|points| (points.as_slice(), self.width))
     }
 
     pub(super) fn covered_bounds(&self, scale: CoordinateScale) -> Option<(f64, f64, f64, f64)> {

@@ -13,6 +13,8 @@ pub(in crate::project_slice::gcode_emit) enum LiftMode {
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) template_rng: super::super::value::TemplateRng,
+    pub(in crate::project_slice::gcode_emit) wipe_tower:
+        Option<super::super::wipe_tower::Integration>,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_flow: Option<f64>,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_emitted: bool,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_last_flow: f64,

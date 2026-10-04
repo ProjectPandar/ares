@@ -129,28 +129,15 @@ pub(super) fn emit_approach_move(
             // + m_pos(2)` (`GCodeWriter.cpp:705-710`), which
             // `emit_pending` computed but did not emit as a Z move.
             let raised = pending_target.unwrap_or_else(|| state.writer_z.unwrap_or(state.layer_z));
-            if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
-                travel_emit::xyz_with_comment(
-                    output,
-                    state,
-                    travel_x,
-                    travel_y,
-                    raised,
-                    state.travel_feedrate,
-                    first_travel_comment,
-                );
-            } else {
-                output.extend_from_slice(
-                    format!(
-                        "G1 X{} Y{} Z{}{first_travel_comment}\n",
-                        format_axis(travel_x),
-                        format_axis(travel_y),
-                        format_z(raised)
-                    )
-                    .as_bytes(),
-                );
-                state.record_z(raised);
-            }
+            travel_emit::xyz_with_comment(
+                output,
+                state,
+                travel_x,
+                travel_y,
+                raised,
+                state.travel_feedrate,
+                first_travel_comment,
+            );
         }
     } else if layer_change_travel && state.extruder.retracted {
         // With a hop actually deferred, the earlier `state.lifted_amount > 0.0`

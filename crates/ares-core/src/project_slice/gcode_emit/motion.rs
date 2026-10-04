@@ -28,6 +28,7 @@ mod support;
 #[cfg(test)]
 mod tests;
 pub(super) mod tool_selection;
+pub(super) mod tower;
 mod travel;
 mod writer_state;
 

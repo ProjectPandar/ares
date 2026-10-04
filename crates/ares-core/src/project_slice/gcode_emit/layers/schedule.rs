@@ -22,10 +22,10 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(in crate::project_slice::gcode_emit) tool_ordering:
         super::super::tool_ordering::ToolOrdering,
     pub(in crate::project_slice::gcode_emit) merged: Vec<(f64, LayerToPrint)>,
-    pub(super) raft: Option<raft_schedule::RaftSchedule>,
+    pub(in crate::project_slice::gcode_emit) raft: Option<raft_schedule::RaftSchedule>,
     pub(super) print_position: Vec<usize>,
-    pub(super) instances: Vec<Vec<super::instances::Instance>>,
-    pub(super) tower: Option<super::super::wipe_tower::Planned>,
+    pub(in crate::project_slice::gcode_emit) instances: Vec<Vec<super::instances::Instance>>,
+    pub(in crate::project_slice::gcode_emit) tower: Option<super::super::wipe_tower::Data>,
     pub(super) labels: Vec<Option<ObjectLabels>>,
     pub(super) object_layer_counts: Vec<usize>,
     pub(super) last_entry: Option<(usize, usize)>,
@@ -237,7 +237,26 @@ pub(in crate::project_slice::gcode_emit) fn build(
             .fold(0.0, f64::max),
     );
     let skirt_schedule = super::skirt_schedule::SkirtSchedule::new(skirt_layers, max_layer_height);
-    let tower = super::super::wipe_tower::prepare(traversal, original, support, &mut tool_ordering);
+    let tower = super::super::wipe_tower::prepare(traversal, original, support, &mut tool_ordering)
+        .map(|planned| {
+            planned.generate(
+                settings,
+                traversal.scale,
+                tool_ordering.all_extruders(),
+                tool_ordering
+                    .layers
+                    .last()
+                    .expect("active tower retains its last layer"),
+                // Print.cpp owns final purge height in Print::objects().front().
+                super::super::tool_ordering::object_options(traversal, 0)
+                    .layer_height
+                    .0,
+            )
+        })
+        .transpose()
+        .map_err(|error| {
+            crate::SliceError::InvalidInput(format!("wipe tower geometry: {error:?}"))
+        })?;
     Ok(Schedule {
         tower,
         tool_ordering,

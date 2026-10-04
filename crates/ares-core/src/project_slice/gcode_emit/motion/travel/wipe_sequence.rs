@@ -22,7 +22,10 @@ pub(super) fn retract_sequence_due(state: &EmitState) -> bool {
     state.extruder.retracted_amount < effective_retraction_length(state) || wipe_eligible(state)
 }
 
-pub(super) fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
+pub(in crate::project_slice::gcode_emit::motion) fn retract_and_wipe(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
     retract_and_wipe_with(output, state, true);
 }
 

@@ -4,6 +4,7 @@ mod constant;
 mod retraction;
 pub(in crate::project_slice::gcode_emit) mod role_change;
 mod start_travel;
+pub(super) use start_travel::tower_travel;
 mod travel_emit;
 mod variable;
 
@@ -225,6 +226,8 @@ pub(super) fn emit(
     if properties.feature != "Gap infill" {
         state.last_notgapfill_feature = Some(properties.feature);
     }
+    // `GCode.cpp:6782–6802`: tower markers bypass the live width/height cache.
+    let last_was_tower = state.last_feature == Some("Prime tower");
     if state.last_feature != Some(properties.feature) {
         let feature = state.tags.feature(properties.feature) + "\n";
         output.extend_from_slice(feature.as_bytes());
@@ -235,7 +238,7 @@ pub(super) fn emit(
             state.avoid_crossing_disabled_once = true;
         }
     }
-    if state.last_width != Some(properties.width) {
+    if last_was_tower || state.last_width != Some(properties.width) {
         output.extend_from_slice(
             format!(
                 "{}\n",
@@ -249,9 +252,10 @@ pub(super) fn emit(
         );
         state.last_width = Some(properties.width);
     }
-    if state
-        .last_height
-        .is_none_or(|height| (height - properties.height).abs() > 0.000_1)
+    if last_was_tower
+        || state
+            .last_height
+            .is_none_or(|height| (height - properties.height).abs() > 0.000_1)
     {
         output.extend_from_slice(
             format!(

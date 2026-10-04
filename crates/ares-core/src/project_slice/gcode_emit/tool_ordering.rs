@@ -115,8 +115,8 @@ impl ToolOrdering {
             .flat_map(|layer| layer.extruders.iter().copied())
     }
 
-    pub(super) fn wiping_for_layer(&self, print_z: f64) -> &wiping::WipingExtrusions {
-        &self.layers[layer_index(&self.layers, print_z)].wiping
+    pub(super) fn for_layer(&self, print_z: f64) -> &LayerTools {
+        &self.layers[layer_index(&self.layers, print_z)]
     }
 
     pub(super) fn tools_for_layer(&self, print_z: f64) -> &[usize] {

@@ -159,13 +159,12 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
     input
         .tools
         .iter()
-        .filter_map(|&tool| {
-            buckets.remove(&tool).map(|entries| {
-                (
-                    tool,
-                    super::instances::order(entries.into_values().collect(), input.traversal),
-                )
-            })
+        .map(|&tool| {
+            let entries = buckets.remove(&tool).unwrap_or_default();
+            (
+                tool,
+                super::instances::order(entries.into_values().collect(), input.traversal),
+            )
         })
         .collect()
 }

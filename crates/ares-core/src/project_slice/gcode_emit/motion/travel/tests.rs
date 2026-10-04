@@ -22,6 +22,39 @@ fn internal_square() -> RegionSurface {
 }
 
 #[test]
+fn tower_writer_unlift_then_unretract_preserves_exact_commands() {
+    let mut state = EmitState {
+        writer_z: Some(0.8),
+        layer_z: 0.6,
+        lifted: true,
+        lifted_amount: 0.2,
+        pending_lift: Some(LiftMode::Normal),
+        options: MotionOptions {
+            gcode_comments: true,
+            use_relative_e_distances: true,
+            z_travel_feedrate: 600.0,
+            deretraction_feedrate: 1800.0,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+    state.extruder.retracted = true;
+    state.extruder.retracted_amount = 0.5;
+    state.extruder.restart_extra = 0.1;
+    let mut output = Vec::new();
+    super::unlift(&mut output, &mut state);
+    super::unretract(&mut output, &mut state);
+    assert_eq!(
+        output,
+        b"G1 Z.6 F600 ; restore layer Z\nG1 E.6 F1800 ;  ; unretract\n"
+    );
+    assert_eq!(state.extruder.retracted_amount, 0.0);
+    assert_eq!(state.extruder.restart_extra, 0.0);
+    assert_eq!(state.lifted_amount, 0.0);
+    assert!(state.pending_lift.is_none());
+}
+
+#[test]
 fn bottom_only_lift_does_not_lift_later_layers() {
     let mut state = EmitState {
         layer_chunk_index: 1,

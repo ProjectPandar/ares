@@ -80,7 +80,11 @@ pub(super) fn insert(
     );
     config.insert(
         "new_filament_temp",
-        Value::Integer(int(new_temps, filament)),
+        Value::Integer(
+            context
+                .temperature_override
+                .map_or_else(|| int(new_temps, filament), i64::from),
+        ),
     );
     let diameter = runtime
         .filament_diameter

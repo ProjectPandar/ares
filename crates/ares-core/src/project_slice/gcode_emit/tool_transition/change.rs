@@ -16,6 +16,7 @@ pub(super) struct Context<'a> {
     pub(super) layer_num: i64,
     pub(super) print_z: f64,
     pub(super) max_z: f64,
+    pub(super) temperature_override: Option<i32>,
 }
 
 pub(super) fn append(

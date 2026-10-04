@@ -1,7 +1,6 @@
 //! Local occupied hulls and instance shifts (`Print.cpp:2669-2696,2794-2803`).
 
 use crate::{
-    SlicerContext,
     geometry::Point,
     project_slice::{
         gcode_emit::{brim::BrimPlan, footprint},
@@ -15,7 +14,7 @@ pub(super) fn hulls(
     support: &[Vec<InstalledSupportLayer>],
     brim: Option<&BrimPlan>,
     layer_limit: usize,
-    context: &mut SlicerContext,
+    raft: Option<&super::super::layers::RaftSchedule>,
 ) -> Vec<Vec<Point>> {
     let skirt_height_z = traversal
         .objects
@@ -75,34 +74,9 @@ pub(super) fn hulls(
                 );
             });
         }
-        // Preserve the existing raft compatibility shell until every raft
-        // contributor is installed as source-owned support_fills.
         let resolved = &traversal.resolved.objects[object_index];
-        if resolved.object.raft_layers.0 > 0 && support[object_index].is_empty() {
-            let lslices = object.slices(0).unwrap_or(&[]).to_vec();
-            if let Ok(Some(stream)) = crate::project_slice::raft::bridge::build_project_raft(
-                &traversal.resolved.views.full,
-                &resolved.object,
-                object.slicing_parameters(),
-                &lslices,
-                scale,
-            ) {
-                for plan in &stream.plans {
-                    if let Ok(entities) = crate::project_slice::raft::fills::raft_layer_entities(
-                        &plan.polygons,
-                        plan.spec,
-                        scale,
-                        context,
-                    ) {
-                        for polyline in entities
-                            .iter()
-                            .flat_map(crate::project_slice::raft::fills::RaftEntity::polylines)
-                        {
-                            local.extend(polyline.points().iter().copied());
-                        }
-                    }
-                }
-            }
+        if let Some(raft) = raft {
+            local.extend(raft.skirt_points(object_index));
         }
         let local_hull = super::convex_hull(&local);
         let source = &traversal.project.objects()[resolved.source_object_index];

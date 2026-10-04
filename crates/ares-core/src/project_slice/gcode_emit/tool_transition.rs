@@ -25,6 +25,7 @@ pub(super) fn initial(
             layer_num: -1,
             print_z: 0.0,
             max_z: 0.0,
+            temperature_override: None,
         },
     )
 }
@@ -46,6 +47,41 @@ pub(super) fn emit(
             layer_num: context.layer.index as i64,
             print_z: context.layer.z,
             max_z: context.layer.max_z,
+            temperature_override: None,
+        },
+    )
+}
+
+pub(super) struct TowerChange {
+    pub(super) filament: usize,
+    pub(super) print_z: f64,
+    pub(super) priming: bool,
+    pub(super) temperature_override: Option<i32>,
+}
+
+/// `append_tcr2` invokes `set_extruder` at the result's Z, including priming.
+pub(super) fn tower(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    context: timelapse::Context<'_>,
+    change: TowerChange,
+) -> Result<(), SliceError> {
+    emit_inner(
+        output,
+        state,
+        change.filament,
+        change::Context {
+            traversal: context.traversal,
+            metadata: context.metadata,
+            first_layer_bounds: context.first_layer_bounds,
+            layer_num: if change.priming {
+                -1
+            } else {
+                context.layer.index as i64
+            },
+            print_z: change.print_z,
+            max_z: context.layer.max_z,
+            temperature_override: change.temperature_override,
         },
     )
 }
@@ -56,28 +92,24 @@ fn emit_inner(
     filament: usize,
     context: change::Context<'_>,
 ) -> Result<(), SliceError> {
-    if state.extruders.multiple() {
-        state.toolchange_count += 1;
-        motion::retract_for_toolchange(output, state);
+    if !state.extruders.multiple() {
+        append_filament(output, state, filament, true, context)?;
+        super::pressure_advance::append(output, state, context.traversal, filament);
+        motion::tool_selection::toolchange(output, state, context.traversal, filament, "");
+        return Ok(());
     }
-    if state.extruders.multiple() && state.extruder_selected {
+    state.toolchange_count += 1;
+    motion::retract_for_toolchange(output, state);
+    if state.extruder_selected {
         append_filament(output, state, state.extruders.active_id(), false, context)?;
         temperature::pre(output, state, context);
     }
-    let custom = if state.extruders.multiple() {
-        change::append(output, state, filament, context)?
-    } else {
-        String::new()
-    };
+    let custom = change::append(output, state, filament, context)?;
     motion::tool_selection::toolchange(output, state, context.traversal, filament, &custom);
     append_filament(output, state, filament, true, context)?;
-    if state.extruders.multiple() {
-        temperature::post(output, state, context);
-    }
+    temperature::post(output, state, context);
     super::pressure_advance::append(output, state, context.traversal, filament);
-    if state.extruders.multiple() {
-        state.last_scaled_position = None;
-    }
+    state.last_scaled_position = None;
     Ok(())
 }
 
@@ -105,6 +137,10 @@ fn append_filament(
         Some(&state.template_rng),
     )?;
     motion::refresh_writer_state(&mut config, state);
+    if start {
+        placeholders::refresh_filament_aliases(&mut config, filament);
+        config.insert("current_extruder", value::Value::Integer(filament as i64));
+    }
     config.insert("layer_num", value::Value::Integer(context.layer_num));
     config.insert(
         "layer_z",

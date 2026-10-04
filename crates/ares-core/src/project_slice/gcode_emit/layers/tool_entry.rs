@@ -201,6 +201,14 @@ pub(super) fn emit(
         chunk_perimeter_spacing,
     );
     let Some(layer) = body.as_mut() else {
+        // GCode.cpp:5348–5372,5478–5494 labels every selected instance,
+        // including an empty half of the wiping/normal two-pass traversal.
+        if support_role.is_none()
+            && let Some(labels) = &labels[object_index]
+        {
+            labels.queue_start(output, state, emit_labels);
+            labels.queue_stop(output, state, emit_labels, false);
+        }
         return Ok(());
     };
     object_entry::emit(

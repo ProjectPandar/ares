@@ -6,7 +6,7 @@ use super::{
 };
 use crate::{
     ProcessWipeTowerWallType,
-    geometry::{ClipperError, CoordinateScale, JoinType, Polygon, offset_paths},
+    geometry::{ClipperError, CoordinateScale, JoinType, Polygon, raw_offset_paths},
 };
 
 impl Generator<'_> {
@@ -182,8 +182,8 @@ impl Generator<'_> {
             }
             let count = ((brim + spacing / 2.0) / spacing) as usize;
             for _ in 0..count {
-                polygon = offset_paths(
-                    &[polygon],
+                polygon = raw_offset_paths(
+                    std::slice::from_ref(&polygon),
                     (f64::from(spacing) / self.scale.factor()) as f32,
                     JoinType::Miter,
                     3.0,

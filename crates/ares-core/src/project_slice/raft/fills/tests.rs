@@ -239,7 +239,10 @@ fn sheath_polylines(
     Ok(
         raft_layer_entities(polygons, spec, scale, &mut crate::SlicerContext::new(0))?
             .iter()
-            .flat_map(RaftEntity::polylines)
+            .flat_map(|entity| match entity {
+                RaftEntity::Path(path) | RaftEntity::Oriented(path) => std::slice::from_ref(path),
+                RaftEntity::NoSort(paths) => paths.as_slice(),
+            })
             .cloned()
             .collect(),
     )

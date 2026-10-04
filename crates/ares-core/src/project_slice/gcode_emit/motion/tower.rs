@@ -1,0 +1,189 @@
+//! `GCode.cpp::WipeTowerIntegration::append_tcr2` live writer operations.
+use super::format::{axis, z as format_z};
+use super::{EmitState, LayerGeometry, arc, path, travel};
+use crate::geometry::CoordinateScale;
+
+pub(in crate::project_slice::gcode_emit) fn unlift(output: &mut Vec<u8>, state: &mut EmitState) {
+    travel::unlift(output, state);
+}
+
+pub(in crate::project_slice::gcode_emit) fn retract(output: &mut Vec<u8>, state: &mut EmitState) {
+    travel::retract_and_wipe(output, state);
+    travel::schedule_normal(state);
+    state.extruder.retracted = true;
+}
+
+pub(in crate::project_slice::gcode_emit) fn travel_to(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    point: [f32; 2],
+    geometry: LayerGeometry<'_>,
+) {
+    retract(output, state);
+    state.use_external_mp_once = true;
+    let point = local(point, state.origin, geometry.scale);
+    path::tower_travel(output, state, point, geometry);
+    travel::unlift(output, state);
+    travel::unretract(output, state);
+}
+
+pub(in crate::project_slice::gcode_emit) fn change_z(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    z: f64,
+    comment: &str,
+) {
+    travel::plain_retract(output, state);
+    writer_z(output, state, z, comment, false);
+    travel::unretract(output, state);
+}
+
+pub(in crate::project_slice::gcode_emit) fn restore_z(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    z: f64,
+) {
+    writer_z(output, state, z, "Force restore layer Z", true);
+    state.record_z(z);
+    travel::unlift(output, state);
+    travel::unretract(output, state);
+}
+
+pub(in crate::project_slice::gcode_emit) fn writer_z(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    z: f64,
+    comment: &str,
+    force: bool,
+) {
+    let current = state.writer_z.unwrap_or(0.0);
+    let will_move = if state.lifted_amount > 0.0 {
+        z < current - state.lifted_amount || z > current
+    } else {
+        (z - current).abs() >= 1e-4
+    };
+    if !force && !will_move {
+        state.lifted_amount = current - z;
+        return;
+    }
+    let feedrate = travel::lift_z_feedrate(state);
+    let comment = if state.options.gcode_comments {
+        format!(" ; {comment}")
+    } else {
+        String::new()
+    };
+    output.extend_from_slice(
+        format!("G1 Z{} F{}{comment}\n", format_z(z), axis(feedrate)).as_bytes(),
+    );
+    state.record_z(z);
+    state.current_feedrate = feedrate;
+    state.lifted_amount = 0.0;
+    state.lifted = false;
+    state.template_lifted = false;
+}
+
+pub(in crate::project_slice::gcode_emit) fn finish(
+    state: &mut EmitState,
+    scale: CoordinateScale,
+    end: [f32; 2],
+    wipe: impl IntoIterator<Item = [f32; 2]>,
+) {
+    // The discarded writer XY move does not subtract nozzle offsets.
+    state.x = f64::from(end[0]);
+    state.y = f64::from(end[1]);
+    state.last_scaled_position = Some(local(end, state.origin, scale));
+    state.positioned = true;
+    state.wipe_path = wipe
+        .into_iter()
+        .map(|point| {
+            let point = local(point, state.origin, scale);
+            arc::Point {
+                x: scale.unscale(point.0),
+                y: scale.unscale(point.1),
+            }
+        })
+        .collect();
+    state.wipe_start = Some(arc::Point {
+        x: state.x,
+        y: state.y,
+    });
+    state.use_external_mp_once = true;
+}
+
+pub(in crate::project_slice::gcode_emit) fn change_layer(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    print_z: f64,
+) {
+    let z = print_z + state.options.z_offset;
+    let current = state.writer_z.unwrap_or(0.0);
+    let will_move = if state.lifted_amount > 0.0 {
+        z < current - state.lifted_amount || z > current
+    } else {
+        (z - current).abs() >= 1e-4
+    };
+    state.pending_layer_retract = false;
+    if state.options.retract_when_changing_layer && will_move {
+        travel::retract_and_wipe(output, state);
+        travel::defer_layer_change_lift(state);
+        state.extruder.retracted = true;
+    }
+    super::append_exclude_end(output, state);
+    state.layer_change_travel_pending = true;
+    state.layer_chunk_index += 1;
+    state.layer_z = z;
+    state.record_z(z);
+}
+
+fn local(point: [f32; 2], origin: (f64, f64), scale: CoordinateScale) -> (i64, i64) {
+    (
+        ((f64::from(point[0]) - origin.0) / scale.factor()).round() as i64,
+        ((f64::from(point[1]) - origin.1) / scale.factor()).round() as i64,
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::{LiftMode, MotionOptions};
+    use super::*;
+
+    #[test]
+    fn tower_retraction_and_layer_change_use_their_source_lift_modes() {
+        for (layer_change, expected) in [(false, LiftMode::Normal), (true, LiftMode::Spiral)] {
+            let mut state = EmitState {
+                writer_z: Some(1.0),
+                layer_z: 1.0,
+                options: MotionOptions {
+                    z_hop: 0.4,
+                    z_hop_type: crate::ZHopType::Auto,
+                    retraction_length: 0.8,
+                    retraction_feedrate: 1500.0,
+                    retract_when_changing_layer: true,
+                    ..MotionOptions::default()
+                },
+                ..EmitState::default()
+            };
+            let mut output = Vec::new();
+            if layer_change {
+                change_layer(&mut output, &mut state, 1.2);
+            } else {
+                retract(&mut output, &mut state);
+            }
+            assert_eq!(state.pending_lift, Some(expected));
+        }
+    }
+
+    #[test]
+    fn tower_points_use_the_rounding_point_constructor() {
+        // GCode.cpp:502–504 calls Point(double, double), not Point::new_scale.
+        for (scale, expected) in [
+            (CoordinateScale::Normal, (998_457, -998_457)),
+            (CoordinateScale::LargeBed, (99_846, -99_846)),
+        ] {
+            assert_eq!(
+                local([1.123_456_7, -1.123_456_7], (0.125, -0.125), scale),
+                expected
+            );
+        }
+    }
+}

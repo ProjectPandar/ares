@@ -3,8 +3,8 @@
 
 use super::super::travel_emit;
 use crate::project_slice::gcode_emit::motion::{
-    EmitState, extrusion,
-    format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
+    EmitState,
+    format::{axis as format_axis, z as format_z},
     travel,
 };
 
@@ -121,52 +121,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
             state.record_z(z);
             state.scarf_z = slope_start_z;
         }
-        // `Extruder::unretract()` restores the TRACKED `m_retracted`
-        // plus `m_restart_extra`; the is_zero emission gate tests the
-        // DELTA (`GCodeWriter.cpp:1063-1076`, `Extruder.cpp:98-103`) —
-        // `coordinate` returns the absolute counter, which can land on
-        // zero while the delta is real.
-        let delta = state.extruder.retracted_amount + state.extruder.restart_extra;
-        let unretract = extrusion::coordinate(state, delta);
-        // `Extruder::unretract()` zeroes `m_retracted`/`m_restart_extra`
-        // after the extrude (`Extruder.cpp:92-104`).
-        state.extruder.retracted_amount = 0.0;
-        state.extruder.restart_extra = 0.0;
-        // A zero-length retraction (retraction_length=0 with wipe)
-        // deretracts silently.
-        if delta.abs() >= 1e-6 {
-            if state.options.use_firmware_retraction {
-                // `GCodeWriter::unretract` with `use_firmware_retraction`:
-                // the bare `G11 ; unretract` (or `G23`) plus `reset_e()`
-                // (`GCodeWriter.cpp:1066-1070`).
-                output.extend_from_slice(
-                    if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
-                        b"G23 ; unretract\n"
-                    } else {
-                        b"G11 ; unretract\n"
-                    },
-                );
-                // `reset_e` after the marker is zero-counter-gated and
-                // flavor-excluded (`GCodeWriter.cpp:480-499,1064-1070`).
-                travel::reset_e(output, state);
-            } else {
-                let comment = if state.options.gcode_comments {
-                    " ;  ; unretract"
-                } else {
-                    ""
-                };
-                output.extend_from_slice(
-                    format!(
-                        "G1 E{} F{}{comment}\n",
-                        format_extrusion(unretract),
-                        format_axis(state.options.deretraction_feedrate)
-                    )
-                    .as_bytes(),
-                );
-                state.current_feedrate = state.options.deretraction_feedrate;
-            }
-        }
-        state.extruder.retracted = false;
+        travel::unretract(output, state);
         state.lifted = false;
         state.lifted_amount = 0.0;
         state.template_lifted = false;

@@ -38,8 +38,8 @@ pub(super) fn round_polygon(polygon: &Polygon, scale: CoordinateScale) -> Polygo
             -chord[1] / chord_length * sign,
             chord[0] / chord_length * sign,
         ];
-        // The unqualified C++ sin promotes the float angle to double.
-        let center_distance = f64::from(distance) / f64::from(half_angle).sin();
+        // libslic3r.h includes <math.h>, exposing sin(float) globally.
+        let center_distance = f64::from(distance / half_angle.sin());
         let center = [
             b[0] + direction[0] * center_distance,
             b[1] + direction[1] * center_distance,

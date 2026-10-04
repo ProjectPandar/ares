@@ -11,6 +11,7 @@ mod layer_end;
 
 pub(super) use context::Context;
 mod instances;
+pub(super) use instances::Instance;
 mod object_entry;
 mod object_order;
 mod preamble;
@@ -23,6 +24,7 @@ mod support_entry;
 mod timelapse;
 mod tool_buckets;
 mod tool_entry;
+mod tower;
 mod wrapping;
 
 use entry_builder::EntryBuilder;
@@ -40,7 +42,7 @@ pub(super) fn append(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     context: Context<'_>,
-) -> Result<(f64, Option<fan_mover::FanMover>), SliceError> {
+) -> Result<(f64, Option<fan_mover::FanMover>, usize), SliceError> {
     let Context {
         metadata,
         first_layer_bounds,
@@ -118,6 +120,7 @@ pub(super) fn append(
         last_entry,
         mut skirt_schedule,
         tool_ordering,
+        layer_count,
         ..
     } = schedule;
     let mut raft_layers = raft
@@ -134,6 +137,7 @@ pub(super) fn append(
     let mut last_object_copy: Option<(usize, usize)> = None;
     let mut previous_layer_z = 0.0;
     let mut chunk_index = 0;
+    let mut final_chunk = None;
     while group_start < merged.len() {
         let group_z = merged[group_start].0;
         let mut group_end = group_start;
@@ -168,6 +172,30 @@ pub(super) fn append(
         // filament-start g-code at the raft base, not the object base.
         if first_group {
             preamble::emit(output, state, traversal, metadata, first_layer_bounds)?;
+            tower::emit(
+                output,
+                state,
+                tower::Event::Initialize,
+                tower::Input {
+                    context: super::timelapse::Context {
+                        traversal,
+                        metadata,
+                        first_layer_bounds,
+                        layer: super::timelapse::TimelapseLayer {
+                            index: 0,
+                            z: 0.0,
+                            max_z: 0.0,
+                        },
+                    },
+                    entry: &entries[0],
+                    builder: &mut entry_builder,
+                    support: entries[0]
+                        .support_layer
+                        .map(|index| &support_layers[entries[0].object_index][index]),
+                    chunk_slices: &chunk_slices,
+                    spacing: chunk_perimeter_spacing,
+                },
+            )?;
             first_group = false;
         }
         // The cooling rewrite window opens after the preamble (the start
@@ -229,7 +257,12 @@ pub(super) fn append(
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
         // toolchange and every instance block (object skirt group, brim,
         // `; printing object` marker, content).
-        let wiping = tool_ordering.wiping_for_layer(group_z);
+        let layer_tools = tool_ordering.for_layer(group_z);
+        let has_tower = layer_tools.has_wipe_tower && state.wipe_tower.is_some();
+        if has_tower {
+            state.wipe_tower.as_mut().unwrap().next_layer();
+        }
+        let wiping = &layer_tools.wiping;
         let mut by_tool = tool_buckets::build(tool_buckets::Input {
             traversal,
             entries: &entries,
@@ -241,10 +274,34 @@ pub(super) fn append(
             raft: &mut raft_layers,
         });
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
+        let mut final_entry = entries[0];
         for (tool, tool_entries) in &mut by_tool {
             wrapping::emit(output, state, &timelapse_context)?;
-            if !state.extruder_selected || state.extruders.active_id() != *tool {
+            let needs_change = !state.extruder_selected || state.extruders.active_id() != *tool;
+            if has_tower {
+                tower::emit(
+                    output,
+                    state,
+                    tower::Event::Change {
+                        tool: *tool,
+                        finish_layer: Some(*tool) == last_tool,
+                    },
+                    tower::Input {
+                        context: timelapse_context,
+                        entry: &entries[0],
+                        builder: &mut entry_builder,
+                        support: entries[0]
+                            .support_layer
+                            .map(|index| &support_layers[entries[0].object_index][index]),
+                        chunk_slices: &chunk_slices,
+                        spacing: chunk_perimeter_spacing,
+                    },
+                )?;
+                state.last_feature = Some("Prime tower");
+            } else if needs_change {
                 super::tool_transition::emit(output, state, *tool, timelapse_context)?;
+            }
+            if needs_change {
                 last_object_copy = None;
             }
             let entry_count = tool_entries.len();
@@ -253,6 +310,7 @@ pub(super) fn append(
                 .filter(|pass| *pass == tool_buckets::Pass::Normal || wiping.has_overrides())
                 .flat_map(|pass| (0..entry_count).map(move |position| (pass, position)))
             {
+                final_entry = tool_entries[entry_position].source;
                 tool_entry::emit(
                     output,
                     state,
@@ -289,10 +347,40 @@ pub(super) fn append(
             }
         }
         cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
+        if state.wipe_tower.is_some() {
+            final_chunk = Some((final_entry, chunk_slices, chunk_perimeter_spacing));
+        }
         previous_layer_z = layer_z;
         chunk_index += 1;
         state.adaptive_pa_layer = chunk_index;
     }
     cooling.finish(output);
-    Ok((max_layer_z, fan_mover_handle))
+    let filtered_end = output.len();
+    if let Some((entry, slices, spacing)) = final_chunk {
+        tower::emit(
+            output,
+            state,
+            tower::Event::Finalize { layer_count },
+            tower::Input {
+                context: super::timelapse::Context {
+                    traversal,
+                    metadata,
+                    first_layer_bounds,
+                    layer: super::timelapse::TimelapseLayer {
+                        index: chunk_index - 1,
+                        z: previous_layer_z,
+                        max_z: max_layer_z,
+                    },
+                },
+                entry: &entry,
+                builder: &mut entry_builder,
+                support: entry
+                    .support_layer
+                    .map(|index| &support_layers[entry.object_index][index]),
+                chunk_slices: &slices,
+                spacing,
+            },
+        )?;
+    }
+    Ok((max_layer_z, fan_mover_handle, filtered_end))
 }

@@ -18,6 +18,54 @@ fn state() -> EmitState {
 }
 
 #[test]
+fn tower_travel_uses_native_comment_without_extrusion_z_restatement() {
+    use crate::{
+        geometry::CoordinateScale,
+        project_slice::gcode_emit::motion::{AvoidCrossingGeometry, LayerGeometry},
+    };
+    let mut state = EmitState {
+        positioned: true,
+        last_scaled_position: Some((0, 0)),
+        writer_z: Some(0.0),
+        layer_z: 0.2,
+        layer_change_travel_pending: true,
+        travel_feedrate: 1200.0,
+        options: MotionOptions {
+            gcode_comments: true,
+            retraction_length: 0.0,
+            retraction_minimum_travel: 1000.0,
+            travel_feedrate: 1200.0,
+            first_layer_travel_feedrate: 1200.0,
+            default_acceleration: 0,
+            default_jerk: 0.0,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+    let geometry = LayerGeometry {
+        nearest_seam_penalties: None,
+        staggered_inner: false,
+        internal_surfaces: &[],
+        support_islands: None,
+        scale: CoordinateScale::Normal,
+        previous_layer_boundary: None,
+        avoid_crossing: AvoidCrossingGeometry {
+            layer_slices: &[],
+            perimeter_spacing: 0.4,
+            external_perimeter_width: 0.4,
+            top_surfaces: &[],
+            chunk_slices: &[],
+            chunk_perimeter_spacing: 0.4,
+        },
+    };
+    let mut output = Vec::new();
+    super::tower_travel(&mut output, &mut state, (10_000_000, 20_000_000), geometry);
+    assert_eq!(output, b"G1 X10 Y20 Z.2 F1200 ; Travel to a Wipe Tower\n");
+    assert_eq!(state.last_scaled_position, Some((10_000_000, 20_000_000)));
+    assert!(!state.layer_change_travel_pending);
+}
+
+#[test]
 fn first_layer_hilbert_bottom_suppresses_writer_retract_and_extra() {
     let mut state = state();
     state.extruder.retracted = true;

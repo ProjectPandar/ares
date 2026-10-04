@@ -58,15 +58,23 @@ pub(super) fn emit(
         .predecessor
         .predecessor
         .predecessor;
-    let brim = brim::BrimPlan::generate(traversal)?;
-    let skirt =
-        skirt::SkirtPlan::generate(traversal, &prepared.support_layers, brim.as_ref(), context)?;
-    let schedule = layers::build_schedule(
+    let mut schedule = layers::build_schedule(
         traversal,
         &prepared.objects,
         &mut prepared.support_layers,
         &prepared.predecessor,
         context,
+    )?;
+    let brim = brim::BrimPlan::generate(traversal)?;
+    let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
+        tower.first_layer_corners(&traversal.resolved.views.full, traversal.scale)
+    });
+    let skirt = skirt::SkirtPlan::generate(
+        traversal,
+        &prepared.support_layers,
+        brim.as_ref(),
+        &tower_corners,
+        schedule.raft.as_ref(),
     )?;
     let process = &traversal.resolved.views.full.process;
     super::path_simplification::simplify_support_layers(
@@ -78,7 +86,7 @@ pub(super) fn emit(
     let sliced_layer_count = schedule.layer_count();
     let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
     let first_layer_bounds =
-        footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref());
+        footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref(), &tower_corners);
     let mut output = Vec::new();
     file_start::append(&mut output, traversal, metadata, first_layer_bounds)?;
     let tags = tags::Tags::of(traversal);
@@ -99,16 +107,20 @@ pub(super) fn emit(
     let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
     let options = motion::MotionOptions::from_traversal(traversal, 0);
     let small_area_flow = small_area::from_traversal(traversal)?;
-    let model_offset = traversal
-        .resolved
-        .objects
-        .first()
-        .map_or((0.0, 0.0), |object| {
-            footprint::object_origin(
-                &traversal.project.objects()[object.source_object_index],
-                traversal.scale,
-            )
-        });
+    let model_offset = if schedule.tower.is_some() {
+        (0.0, 0.0)
+    } else {
+        traversal
+            .resolved
+            .objects
+            .first()
+            .map_or((0.0, 0.0), |object| {
+                footprint::object_origin(
+                    &traversal.project.objects()[object.source_object_index],
+                    traversal.scale,
+                )
+            })
+    };
     let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
     let offset = (
         model_offset.0 - extruder_offset.0,
@@ -134,6 +146,31 @@ pub(super) fn emit(
     ));
     let mut state = motion::EmitState {
         template_rng: template_rng.clone(),
+        wipe_tower: schedule.tower.take().map(|data| {
+            let settings = &traversal.resolved.views.full;
+            let first_z = schedule.merged[0].0;
+            let second_z = schedule
+                .merged
+                .iter()
+                .map(|entry| entry.0)
+                .find(|&z| z > first_z)
+                .unwrap_or(first_z);
+            let overlap = settings
+                .process
+                .gcode
+                .single_extruder_multi_material_priming
+                .0
+                && data.priming_overlaps(wipe_tower::PrintExtents {
+                    traversal,
+                    objects: &prepared.objects,
+                    instances: &schedule.instances,
+                    skirt: skirt.as_ref(),
+                    max_print_z: second_z + 1e-4,
+                });
+            let center = footprint::first_layer_bounds(traversal, None, None, &[])
+                .map_or([0.0; 2], |(x, y, w, h)| [x + 0.5 * w, y + 0.5 * h]);
+            wipe_tower::Integration::new(data, settings, center, overlap)
+        }),
         auto_lift: motion::auto_lift::AutoLift::prepare(traversal)
             .map_err(|error| SliceError::InvalidInput(format!("auto lift geometry: {error:?}")))?,
         extruders,
@@ -143,7 +180,7 @@ pub(super) fn emit(
         extruder_offset,
         scale_factor: traversal.scale.factor(),
         travel_feedrate: options.first_layer_travel_feedrate,
-        extrusion_feedrate: options.initial_layer_speed * 60.0,
+        extrusion_feedrate: 3600.0,
         options,
         small_area_flow,
         tags: tags::Tags::of(traversal),
@@ -182,7 +219,7 @@ pub(super) fn emit(
         first_layer_bounds,
     )?;
     let fan_layers_start = output.len();
-    let (max_layer_z, mut fan_mover_handle) = layers::append(
+    let (max_layer_z, mut fan_mover_handle, fan_layers_end) = layers::append(
         prepared,
         &mut output,
         &mut state,
@@ -203,7 +240,6 @@ pub(super) fn emit(
         .predecessor
         .predecessor
         .predecessor;
-    let fan_layers_end = output.len();
     // The compatible tail's `; total layers count` prints `m_layer_count`
     // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
     // tag-based count the header placeholder carries.
@@ -245,7 +281,10 @@ pub(super) fn emit(
         traversal,
         (total_weight, total_cost),
         tail_layer_count,
-        state.initial_filaments.total_toolchanges(),
+        state.wipe_tower.as_ref().map_or_else(
+            || state.initial_filaments.total_toolchanges(),
+            wipe_tower::Integration::tool_changes,
+        ),
     );
     output.push(b'\n');
     // Upstream applies FanMover ONLY to layer-chunk output (the tbb

@@ -1,14 +1,12 @@
 //! First-travel approach emission — the `needs_travel` branch of
 //! `start_travel::emit` (`GCode.cpp:6378-7501`, `GCodeWriter.cpp:685-806`).
 
-use super::super::PathProperties;
 mod move_emit;
 mod waypoints;
 
 use super::dispatch;
 use super::retract;
 use super::route::{plan_route, polyline_length};
-use crate::project_slice::gcode_emit::motion::features::{feature_description, is_bridge_feature};
 use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, travel,
 };
@@ -17,7 +15,9 @@ pub(super) struct Approach<'a> {
     pub(super) first_scaled: (i64, i64),
     pub(super) first_x: f64,
     pub(super) first_y: f64,
-    pub(super) properties: PathProperties<'a>,
+    pub(super) feature: &'static str,
+    pub(super) is_perimeter: bool,
+    pub(super) comment: &'a str,
     pub(super) geometry: LayerGeometry<'a>,
     pub(super) first_position: bool,
     pub(super) layer_change_travel: bool,
@@ -36,7 +36,9 @@ pub(super) fn emit_needs_travel(
         first_scaled,
         first_x,
         first_y,
-        properties,
+        feature,
+        is_perimeter,
+        comment,
         geometry,
         first_position,
         layer_change_travel,
@@ -47,23 +49,10 @@ pub(super) fn emit_needs_travel(
     let mut travel_set_layer_z = false;
     let mut eager_lifted_travel = false;
     let mut unclear_position_travel = false;
-    begin_path_travel(output, state, properties.feature, travel_distance);
+    begin_path_travel(output, state, feature, travel_distance);
     // `GCode.cpp:6378`: the path's first travel carries
     // "move to first {description} point" under `gcode_comments`.
-    let first_travel_comment = if state.options.gcode_comments {
-        let bridge = if is_bridge_feature(properties.feature) {
-            " (bridge)"
-        } else {
-            ""
-        };
-        format!(
-            " ; move to first {}{bridge} point",
-            feature_description(properties.feature)
-        )
-    } else {
-        Default::default()
-    };
-    let first_travel_comment = first_travel_comment.as_str();
+    let first_travel_comment = comment;
     // Upstream's `travel` polyline anchors at `m_last_pos` — the last
     // EXTRUDED point (`GCode.cpp:7356`), not the head position left by a
     // clipped loop-tail / wipe move. `local_cursor` returns exactly that
@@ -88,7 +77,7 @@ pub(super) fn emit_needs_travel(
         state.options.reduce_infill_retraction,
         state.options.has_sparse_infill,
         state.last_feature,
-        properties.is_perimeter,
+        is_perimeter,
         inside_internal_surface,
     );
     // Orca decides the travel retraction on the routed polyline length
@@ -96,10 +85,10 @@ pub(super) fn emit_needs_travel(
     // `avoid_crossing_perimeters.travel_to`), so route first and then
     // decide; a wiping retract moves the head and the route is planned
     // again from the new position (`GCode.cpp:7436-7443`).
-    let mut route = plan_route(state, &geometry, properties.feature, first_x, first_y);
+    let mut route = plan_route(state, &geometry, feature, first_x, first_y);
     let skip_retraction = skip_retraction
         || (!matches!(state.last_feature, Some("Outer wall" | "Overhang wall"))
-            && matches!(properties.feature, "Support" | "Support transition")
+            && matches!(feature, "Support" | "Support transition")
             && geometry.support_islands.is_some_and(|islands| {
                 super::super::inside_support_islands(
                     islands,
@@ -148,7 +137,6 @@ pub(super) fn emit_needs_travel(
         && !skip_retraction;
     {
         let geometry_ref = geometry;
-        let feature = properties.feature;
         retract::decide(
             output,
             state,
@@ -170,7 +158,7 @@ pub(super) fn emit_needs_travel(
     // Consume the one-shot disable after the travel is planned
     // (`reset_once_modifiers`, `GCode.cpp:7431`) — only routed
     // travels consume it; the skirt's own travels keep it armed.
-    if !matches!(properties.feature, "Skirt" | "Brim") {
+    if !matches!(feature, "Skirt" | "Brim") {
         state.avoid_crossing_disabled_once = false;
         state.use_external_mp_once = false;
     }

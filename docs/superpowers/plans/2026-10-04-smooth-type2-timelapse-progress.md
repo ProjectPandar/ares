@@ -180,3 +180,74 @@ No Type2 approval or final review readiness is claimed.
   `/tmp/ares-pi-tower-copy-controls-{official,seeded}.log`.
 - No production copy emission, generator integration, final review request or
   main integration is claimed by these data-model and fixture changes.
+
+## Connected generation and emission — validation in progress
+
+- `Print::_make_wipe_tower`, `WipeTowerIntegration::{prime,tool_change,finalize}`
+  and `append_tcr2` now drive production generation and live output. Results
+  enter the layer schedule before skirt/brim construction; priming generation
+  remains unconditional, while its output follows the source setting. Final
+  purge follows the cooling flush rather than re-entering layer fan filtering.
+- The integration retains the writer/tool/template/PA lifecycle, transformed
+  endpoints and wipe paths, interface temperatures, first-layer occupancy,
+  priming collision pause and tower tool-change statistics. Tower travel shares
+  the existing motion writer without ordinary extrusion Z restatement.
+- `GCode.cpp:5348–5372,5478–5494` labels empty wiping-pass instances too. The
+  full infill/copy differences identified missing start/stop pairs; those
+  labels are now retained rather than removing them from the comparison.
+- Raft skirt occupancy uses the materialized `RaftSchedule` paths. Synthetic
+  tower support layers must not hide raft footprint reconstruction. Returning
+  from a tower restates native WIDTH/HEIGHT; lifted travel retains feedrate for
+  the downstream cooling parser to deduplicate.
+- Broad emission tests: 289 PASS in
+  `/tmp/ares-pi-tower-emission-all-unit.log`. Clippy completed with 297 warnings
+  and core/adapter WASM built successfully in
+  `/tmp/ares-pi-tower-emission-{clippy,wasm}.log`. These precede the subsequent
+  numerical/lift regressions and are not final gates for the current tree.
+- Official and seeded full comparisons each report 6/7 functions PASS in
+  `/tmp/ares-pi-tower-emission-corrections-{official,seeded}.log`. This includes
+  the complete-output single-tool Type2 activation/raft matrix and all five
+  BBL/PA controls. The tools/priming function still fails: symmetric SEMM and
+  priming have matching complete lengths (895321 and 902374 bytes), while
+  asymmetric SEMM differs in two retraction numbers. IDEX geometry/lift and
+  infill/copy label differences also remain. No full Type2 GREEN claim.
+- Numerical RED: `Point(double,double)` rounds in
+  `wipe_tower_point_to_object_point`, unlike `Point::new_scale` truncation.
+  `/tmp/ares-pi-tower-tower-point-rounding-red.log` observes 998456 instead of
+  998457; the corrected Normal/LargeBed regression passes in
+  `/tmp/ares-pi-tower-rib-rounding-red.log`.
+- Numerical RED: `libslic3r.h` includes `<math.h>`, exposing `sin(float)` in
+  the global namespace. `rounding_polygon` divides in float before assigning
+  double. The C++/Eigen/native-Clipper probe verifies that overload with a
+  static assertion; the Rust regression observes X34047251 instead of
+  X34047252 in `/tmp/ares-pi-tower-rib-rounding-red.log`. After correction, all
+  336 isolated rib-rounding points match the native scalar probe. Fresh Rust
+  and complete-output gates are still required.
+- Bridge direction remains assigned to pi-tip. This slice does not modify
+  `BridgeDetector` or `detect_bridging_direction`. No final review request,
+  approval, rebase or main integration is claimed.
+
+### Existing activation corpus GREEN
+
+- After the point-constructor and float-sine fixes, the default tower retract
+  uses the native fixed Normal lift, while `change_layer` preserves its
+  forced Spiral lift for Auto. The preceding lift RED observes Slope rather
+  than Normal in `/tmp/ares-pi-tower-tower-lift-mode-red.log`.
+- 302 emission/raft tests PASS:
+  `/tmp/ares-pi-tower-numeric-lift-green.log`. Clippy completes with 296 warnings
+  in `/tmp/ares-pi-tower-numeric-lift-clippy.log`; the introduced-warning debt
+  still fails final review readiness. Core/adapter WASM PASS:
+  `/tmp/ares-pi-tower-numeric-lift-wasm.log`.
+- Official **7/7 PASS**:
+  `/tmp/ares-pi-tower-numeric-lift-official.log`, separate artifacts under
+  `/tmp/ares-pi-tower-numeric-lift-official/`.
+- Seeded **7/7 PASS**:
+  `/tmp/ares-pi-tower-numeric-lift-seeded.log`, separate artifacts under
+  `/tmp/ares-pi-tower-numeric-lift-seeded/`.
+- The unchanged complete-output comparisons cover disabled/smooth/raft
+  activation, IDEX, SEMM, asymmetric purge, infill allocation, two positively
+  extruding copies and front-edge priming, alongside all five BBL/PA control
+  functions. This is the first GREEN live Type2 emission checkpoint, not the
+  final A–G completion: extend the remaining shape/occupancy/option witnesses,
+  complete the source-consumer audit, remove introduced diagnostics and run
+  the full workspace gates before requesting integrated review.

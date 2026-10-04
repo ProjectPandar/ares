@@ -70,16 +70,6 @@ pub(crate) enum RaftEntity {
     NoSort(Vec<Polyline>),
 }
 
-impl RaftEntity {
-    /// The entity's polylines in print order.
-    pub(crate) fn polylines(&self) -> &[Polyline] {
-        match self {
-            Self::Path(polyline) | Self::Oriented(polyline) => std::slice::from_ref(polyline),
-            Self::NoSort(polylines) => polylines,
-        }
-    }
-}
-
 /// The raft layer's `support_fills.entities` (`SupportCommon.cpp:1476-1520`):
 /// `fill_expolygons_with_sheath_generate_paths` (`:705-757`) with a sheath,
 /// otherwise the plain fill. `Print.cpp:2693` collects their points for

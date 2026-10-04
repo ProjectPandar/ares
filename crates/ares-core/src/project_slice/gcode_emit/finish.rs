@@ -177,12 +177,22 @@ pub(super) fn append_filament_stats(
     let mut weight_line = false;
     let mut cost_line = false;
     for &id in state.extruders.ids() {
-        let (_, weight) = state.extruders.statistics(
+        let (_, mut weight) = state.extruders.statistics(
             id,
             &state.extruder,
             (state.options.filament_area, state.options.filament_density),
             state.options.single_extruder_multi_material,
         );
+        if let Some(tower) = &state.wipe_tower {
+            let used = state.extruders.used_filament(
+                id,
+                &state.extruder,
+                state.options.single_extruder_multi_material,
+            ) + tower.used_filament(id);
+            let diameter = float_at(&filament.filament_diameter, id);
+            let volume = used * (diameter * diameter * std::f64::consts::PI / 4.0);
+            weight = volume * float_at(&filament.filament_density, id) * 0.001;
+        }
         if weight > 0.0 {
             weight_line = true;
             cost_line |= weight * float_at(&filament.filament_cost, id) * 0.001 > 0.0;

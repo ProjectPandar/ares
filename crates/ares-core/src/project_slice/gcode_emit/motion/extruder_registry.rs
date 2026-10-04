@@ -205,6 +205,20 @@ impl ExtruderRegistry {
         self.active_id = id;
     }
 
+    pub(in crate::project_slice::gcode_emit) fn used_filament(
+        &self,
+        id: usize,
+        active: &ExtruderState,
+        sharing: bool,
+    ) -> f64 {
+        let state = self.read(id, active, sharing);
+        if sharing {
+            state.absolute_e
+        } else {
+            state.absolute_e + state.retracted
+        }
+    }
+
     pub(in crate::project_slice::gcode_emit) fn statistics(
         &self,
         id: usize,
@@ -212,12 +226,7 @@ impl ExtruderRegistry {
         (active_area, active_density): (f64, f64),
         sharing: bool,
     ) -> (f64, f64) {
-        let state = self.read(id, active, sharing);
-        let used = if sharing {
-            state.absolute_e
-        } else {
-            state.absolute_e + state.retracted
-        };
+        let used = self.used_filament(id, active, sharing);
         let (area, density) = if id == self.active_id {
             (active_area, active_density)
         } else {

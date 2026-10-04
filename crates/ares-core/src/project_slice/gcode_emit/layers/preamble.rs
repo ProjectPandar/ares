@@ -46,7 +46,13 @@ pub(super) fn emit(
     if !Tags::of(traversal).is_bbl() {
         reset_writer(state);
     }
-    layer_gcode::append_print_preamble(output, state, traversal, metadata, first_layer_bounds)?;
+    if !state
+        .wipe_tower
+        .as_ref()
+        .is_some_and(|tower| tower.priming_enabled())
+    {
+        layer_gcode::append_print_preamble(output, state, traversal, metadata, first_layer_bounds)?;
+    }
     if Tags::of(traversal).is_bbl() {
         reset_writer(state);
     }

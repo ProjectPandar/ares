@@ -3,16 +3,19 @@
 
 mod lift;
 mod retract_core;
+mod unretract;
+pub(super) use unretract::{unlift, unretract};
 #[cfg(test)]
 mod tests;
 mod wipe_path;
 mod wipe_sequence;
 pub(super) use retract_core::plain_retract;
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::reset_e;
-use wipe_sequence::{retract_and_wipe, retract_and_wipe_with, retract_sequence_due, wipe_eligible};
+pub(super) use wipe_sequence::retract_and_wipe;
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::{
     retract_and_wipe_suppressed_tail, wipe_only_retract,
 };
+use wipe_sequence::{retract_and_wipe_with, retract_sequence_due, wipe_eligible};
 
 use super::{EmitState, arc};
 pub(super) use lift::{

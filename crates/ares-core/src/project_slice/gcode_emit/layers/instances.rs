@@ -3,9 +3,9 @@
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 #[derive(Clone, Copy)]
-pub(super) struct Instance {
+pub(in crate::project_slice::gcode_emit) struct Instance {
     pub(super) copy: usize,
-    pub(super) shift: crate::geometry::Point,
+    pub(in crate::project_slice::gcode_emit) shift: crate::geometry::Point,
     pub(super) position: usize,
 }
 
