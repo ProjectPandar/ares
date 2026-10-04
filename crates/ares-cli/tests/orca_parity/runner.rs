@@ -61,6 +61,9 @@ mod support_annotations;
 #[path = "runner/support_modifier.rs"]
 mod support_modifier;
 #[cfg(test)]
+#[path = "runner/template_rng.rs"]
+mod template_rng;
+#[cfg(test)]
 #[path = "runner/tests.rs"]
 mod tests;
 #[cfg(test)]

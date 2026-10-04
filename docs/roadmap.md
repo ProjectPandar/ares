@@ -425,6 +425,18 @@ final review approves this finite slice. Filled-case parity,
 parallel original replay, Arachne fuzzy and the older Point2/STL scaffold remain
 uncompleted adjacent source boundaries; no global parity completion is claimed.
 
+Template RNG continuation (2026-10-04,
+[ARD](architecture/ard-template-rng-seeded.md)) ports
+`PlaceholderParser::ContextData::rng`, `expr::random` and
+`GCode.cpp:2707` initialization into the existing Rust template evaluator.
+Replace the fixed LCG scaffold with a separate MT19937 stream and exact
+selected-libstdc++ integer/real distributions using the existing caller seed.
+Extend only the separately labelled seed-replay producer; official stays intact.
+Exit: six frozen vendor inputs plus type/distribution/context probes, public
+full-byte RED/GREEN, seeds0/1 and repeat/isolation evidence, four gates and full
+official/seeded controls without new FAIL. General parser/global-variable work
+and other stock residuals remain deferred. This slice is pending, not completed.
+
 Elephant-foot count range coverage (ARD-0067) follows `ConfigOptionInt` and
 `PrintObjectSlice` into Rust's compensation preflight. Count min 1 / INT_MAX /
 full-range seed must retain the original ramp denominator; only backup storage

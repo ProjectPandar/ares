@@ -10,3 +10,9 @@ index 11e2d081d..b4c66f2ca 100644
 -    // Hash thread ID for random number seed if no hardware rng seed is available
 -    thread_local std::mt19937 gen(rd.entropy() > 0 ? rd() : std::hash<std::thread::id>()(std::this_thread::get_id()));
 +    thread_local std::mt19937 gen(static_cast<uint32_t>(std::stoul(std::getenv("ORCA_REPLAY_SEED"))));
+diff --git a/src/libslic3r/GCode.cpp b/src/libslic3r/GCode.cpp
+--- a/src/libslic3r/GCode.cpp
++++ b/src/libslic3r/GCode.cpp
+@@ -2707 +2707 @@
+-    m_placeholder_parser_integration.context.rng = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count());
++    m_placeholder_parser_integration.context.rng = std::mt19937(static_cast<uint32_t>(std::stoul(std::getenv("ORCA_REPLAY_SEED"))));
