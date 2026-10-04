@@ -15,7 +15,8 @@ impl CoolingState {
         layer_index: usize,
     ) {
         let layer_open = layer_index >= self.part_fan_ramp.close_fan_first_layers() as usize;
-        let mut request_active = false;
+        let mut role_speed = None;
+        let mut support_speed = None;
         let mut cursor = layer_start;
         loop {
             let role = output[cursor..]
@@ -52,16 +53,31 @@ impl CoolingState {
                         format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed)).as_bytes(),
                     );
                 }
-                if !request_active {
+                if role_speed.is_none() && support_speed.is_none() {
                     replacement.extend_from_slice(&self.part_fan_command(self.physical_part_speed));
                 }
                 cursor = start + replacement.len();
                 output.splice(start..end, replacement);
                 continue;
             }
-            let (target, force) = if marker.contains("_BASE__") {
-                request_active = false;
-                (baseline, true)
+            let support_value = marker
+                .strip_prefix(";__ARES_ROLE_FAN_SUPPORT_INTERFACE_")
+                .and_then(|value| value.strip_suffix("__\n"));
+            if support_value == Some("END") && support_speed.is_none() {
+                // CoolingBuffer.cpp:875 leaves an inactive END as an ordinary line.
+                let retained = b";_SUPP_INTERFACE_FAN_END\n";
+                cursor = start + retained.len();
+                output.splice(start..end, retained.iter().copied());
+                continue;
+            }
+            let force = if let Some(value) = support_value {
+                let was_active = support_speed.is_some();
+                support_speed =
+                    (value != "END" && layer_open).then(|| value.parse::<u8>().unwrap());
+                was_active != support_speed.is_some()
+            } else if marker.contains("_BASE__") {
+                role_speed = None;
+                true
             } else if let Some(value) = marker
                 .strip_prefix(";__ARES_ROLE_FAN_CONDITIONAL_")
                 .and_then(|value| value.strip_suffix("__\n"))
@@ -73,24 +89,18 @@ impl CoolingState {
                     .part_fan_ramp
                     .role_speed_for_layer(layer_index, value.parse::<u8>().unwrap())
                     .unwrap_or(0);
-                request_active = requested > baseline;
-                (requested.max(baseline), force || requested > baseline)
+                role_speed = (requested > baseline).then_some(requested);
+                force || role_speed.is_some()
             } else {
                 let value = marker
                     .strip_prefix(";__ARES_ROLE_FAN_FIXED_")
                     .and_then(|value| value.strip_suffix("__\n"))
                     .unwrap();
                 let value = value.strip_prefix("FORCE_").unwrap_or(value);
-                request_active = layer_open;
-                (
-                    if layer_open {
-                        value.parse::<u8>().unwrap()
-                    } else {
-                        baseline
-                    },
-                    true,
-                )
+                role_speed = layer_open.then(|| value.parse::<u8>().unwrap());
+                true
             };
+            let target = role_speed.or(support_speed).unwrap_or(baseline);
             // An END requests emission even if the matching START was inactive.
             let replacement = if force
                 && (layer_open || marker.contains("_BASE__") || marker.contains("_FORCE_"))

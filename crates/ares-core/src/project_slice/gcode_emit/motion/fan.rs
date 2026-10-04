@@ -21,6 +21,7 @@ pub(super) fn update_for_constant_path(
         FanMarker::InternalBridge,
         markers_enabled && properties.feature == "Internal Bridge",
     );
+    update_support_interface(output, properties.feature, state);
 }
 
 pub(super) fn update_for_variable_segment(
@@ -49,6 +50,23 @@ pub(super) fn update_for_variable_segment(
         FanMarker::InternalBridge,
         markers_enabled && properties.feature == "Internal Bridge",
     );
+    update_support_interface(output, properties.feature, state);
+}
+
+fn update_support_interface(output: &mut Vec<u8>, feature: &str, state: &mut EmitState) {
+    let speed = (feature == "Support interface")
+        .then_some(state.options.support_interface_fan_speed)
+        .flatten();
+    let previous = state.support_interface_fan_marker_layer;
+    state.support_interface_fan_marker_layer = speed.map(|_| state.layer_chunk_index);
+    if (speed.is_some() && previous != Some(state.layer_chunk_index))
+        || (speed.is_none() && previous.is_some())
+    {
+        super::super::cooling::append_deferred_role_fan(
+            output,
+            super::super::cooling::DeferredRoleFan::SupportInterface(speed),
+        );
+    }
 }
 
 fn fan_enabled(feature: &str, overlap: f64, threshold: RawOverhangFanThreshold) -> bool {

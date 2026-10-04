@@ -19,6 +19,7 @@ pub(super) enum DeferredRoleFan {
     Baseline,
     Conditional { speed: u8, force: bool },
     Fixed { speed: u8, force: bool },
+    SupportInterface(Option<u8>),
 }
 
 pub(super) fn append_deferred_role_fan(output: &mut Vec<u8>, target: DeferredRoleFan) {
@@ -27,6 +28,10 @@ pub(super) fn append_deferred_role_fan(output: &mut Vec<u8>, target: DeferredRol
         DeferredRoleFan::Conditional { speed, force } => {
             let force = if force { "FORCE_" } else { "" };
             format!("{ROLE_FAN_MARKER_PREFIX}CONDITIONAL_{force}{speed}__\n")
+        }
+        DeferredRoleFan::SupportInterface(speed) => {
+            let value = speed.map_or_else(|| "END".to_owned(), |speed| speed.to_string());
+            format!("{ROLE_FAN_MARKER_PREFIX}SUPPORT_INTERFACE_{value}__\n")
         }
         DeferredRoleFan::Fixed { speed, force } => {
             let force = if force { "FORCE_" } else { "" };

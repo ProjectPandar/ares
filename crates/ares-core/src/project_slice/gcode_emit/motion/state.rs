@@ -120,6 +120,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) overhang_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_active: bool,
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_marker_layer: Option<usize>,
+    pub(in crate::project_slice::gcode_emit) support_interface_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) pending_object_start: Option<(u32, [u8; 12])>,
     pub(in crate::project_slice::gcode_emit) last_travel_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_start: Option<String>,

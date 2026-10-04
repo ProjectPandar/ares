@@ -116,6 +116,22 @@ not hidden or spliced into the passing repeat. Main integration requires the
 user's latest-main rebase and repeated four quality gates. Matrix cleanup,
 tower/AdaptivePA and Arachne remain separate; no global parity claim is made.
 
+### Support-interface fan requests (2026-10-04, coordinator review pending)
+
+Rewrite the support-interface START/END owner in `GCode.cpp::_extrude` and
+`GCode/CoolingBuffer.cpp::{parse_layer_gcode,apply_layer_cooldown}` through
+`project_slice/gcode_emit/{motion/fan,cooling/role_fans}.rs` and typed option
+assembly. The internal deferred marker format remains a temporary transport
+shell around those source requests. Fixed speed below baseline, explicit zero,
+independence from overhang-fan enablement, closed-layer behavior and native
+inactive-END comment retention are included. Ironing fan activation,
+multifilament fan lifecycle and global Option coverage remain deferred.
+Both official and seeded CPU0 references pass12 complete outputs each;
+workspace7593 PASS (9 existing skips), Clippy/fmt and WASM compilation pass.
+Coordinator review and latest-main revalidation/integration remain pending. See
+[the specification](architecture/support-interface-fan.md) and
+[the plan](superpowers/plans/2026-10-04-support-interface-fan.md).
+
 ### Historical support bring-up notes (superseded by later checkpoints)
 
 Tree support (ARD-0086) is the blocking prerequisite for merging the current

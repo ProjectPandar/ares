@@ -8,6 +8,8 @@ mod angle;
 mod cooling;
 #[path = "normal_support_output/dependencies.rs"]
 mod dependencies;
+#[path = "normal_support_output/interface_fan.rs"]
+mod interface_fan;
 #[path = "normal_support_output/style.rs"]
 mod style;
 
