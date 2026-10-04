@@ -95,7 +95,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             value.top_surface_speed.0
         }),
         ironing_speed: region.map_or(full.process.region.ironing_speed.0, |value| {
-            value.filament_ironing_speed.0
+            value.ironing_speed.0
         }),
         gap_infill_speed: region.map_or(full.process.region.gap_infill_speed.0, |value| {
             value.gap_infill_speed.0

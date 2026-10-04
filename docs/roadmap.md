@@ -152,6 +152,20 @@ not hidden or spliced into the passing repeat. Main integration requires the
 user's latest-main rebase and repeated four quality gates. Matrix cleanup,
 tower/AdaptivePA and Arachne remain separate; no global parity claim is made.
 
+### Filament ironing speed emission (2026-10-04, branch validation)
+
+`Fill/Fill.cpp::Layer::make_ironing` retains the filament speed parameter,
+but `GCode.cpp::_extrude` selects region/process `ironing_speed` for the
+emitted path. Follow that owner in
+`gcode_emit/motion/options/build/fields/assemble.rs`, retaining region data
+and grouping identity. Activate the previously inert filament-speed probes;
+do not invent a native behavior or change comparison/completeness rules.
+Official/seeded each pass2 public active-path outputs plus21 matrix outputs
+(6 bounded PASS domains,2 INCOMPLETE speed domains). Workspace7596 PASS/9
+existing skips, Clippy/fmt and WASM compilation pass. Branch review remains
+pending and main is frozen. The225-domain inventory is classified, not closed.
+See [analysis and plan](architecture/option-incomplete-coverage.md).
+
 ### Support-interface fan requests (2026-10-04, coordinator review pending)
 
 Rewrite the support-interface START/END owner in `GCode.cpp::_extrude` and

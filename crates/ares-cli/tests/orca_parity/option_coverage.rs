@@ -21,6 +21,10 @@ mod initialized_stitch_junction;
 mod initialized_bridge_direction;
 
 #[cfg(test)]
+#[path = "option_coverage/filament_ironing_speed.rs"]
+mod filament_ironing_speed;
+
+#[cfg(test)]
 #[path = "option_coverage/filament_stats_vectors.rs"]
 mod filament_stats_vectors;
 
