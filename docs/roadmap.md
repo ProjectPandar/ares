@@ -57,6 +57,17 @@ Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
 comparisons, Tier-1 verification and independent six-axis review. Historical
 modified-classic and sampled-domain summaries are not that exit evidence.
 
+### re3D common travel boundary (in progress)
+
+Port `AvoidCrossingPerimeters.cpp:190-216` end-first common-boundary selection
+into `gcode_emit/motion/path/avoid_crossing/router/closest_lines.rs`, replacing
+the first-start-only approximation. [Spec](superpowers/specs/2026-10-04-re3d-common-travel-boundary.md),
+[plan](superpowers/plans/2026-10-04-re3d-common-travel-boundary.md),
+[ARD](architecture/ard-re3d-common-travel-boundary.md).
+Exit: three re3D full-output targets and fresh official references,68+823 and
+extra-overhang controls, four gates and coordinator review. Other routing,
+geometry and timing changes are deferred; no independently designed planner.
+
 ### Classic extra-overhang perimeters (in progress)
 
 Port `PerimeterGenerator.cpp:677-1109` generation/reconnection/dependency ordering

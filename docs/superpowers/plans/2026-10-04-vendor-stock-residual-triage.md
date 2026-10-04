@@ -57,3 +57,24 @@ these are compatibility shells around those source concepts, not a new pipeline.
 After focused RED, compare equivalent boundaries to identify the exact owner,
 then author a bounded repair spec/ARD before changing production. Preserve
 all earlier green controls. No tests or production changes yet.
+
+## Coordinator continuation after extra-overhang integration
+
+Extra-overhang integrated at931691eb on16ac907b after approval and full revalidation.
+Next repair order: re3D travel/ordering3, Prusa XL0.25 terminal wipe1, then
+Creality SermoonV1 solid-infill cooling1. Six startup-template coordinate cases
+are explicitly deferred: record only, no RNG fix, filtering, normalization or
+change to their failing status. Frozen evidence remains read-only.
+
+| Deferred printer | Frozen case | First coordinate mismatch |
+| --- | --- | --- |
+| Flashforge Guider3 Ultra0.4 | case-nhVbMr | line31, Y-156 vs Y-153 |
+| Flashforge Guider3 Ultra0.6 | case-bKs3EZ | line30, Y-159 vs Y-153 |
+| Flashforge Guider3 Ultra0.8 | case-1jESfd | line30, Y-154 vs Y-153 |
+| Raise3D Pro3 Dual0.4 | case-TY2alA | line39, Y5 vs Y7 |
+| Raise3D Pro3 Left0.4 | case-HoYp3R | line41, Y3 vs Y7 |
+| Raise3D Pro3 Right0.4 | case-1Bg0jk | line41, Y2 vs Y7 |
+
+Case roots: `/tmp/ares-pi-matrix-9a7b46fc.u9DXlq/stock/`; full contexts remain
+`/tmp/ares-vendor-triage-clusters.json`. Coordinates are expected vs actual in
+the frozen baseline, not a claim of a current-main rerun or proven RNG cause.

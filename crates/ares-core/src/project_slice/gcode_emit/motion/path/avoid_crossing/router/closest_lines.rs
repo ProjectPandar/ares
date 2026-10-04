@@ -84,22 +84,24 @@ pub(super) fn extend_for_closest_lines(
         let contour = boundary.contour(line.contour);
         boundary.lengths(line.contour)[line.segment] + distance(line.point, contour[line.segment])
     };
-    // If both endpoints are close to the same boundary, the whole detour is
-    // on one contour.
+    // `endpoints_close_to_same_boundary` scans end candidates first and
+    // considers every start contour, not only the nearest start line.
     let mut new_intersections = intersections;
-    let start_shared = start_lines
-        .first()
-        .is_some_and(|line| end_lines.iter().any(|other| other.contour == line.contour));
-    if start_shared {
-        let start_line = start_lines.first().copied().expect("checked above");
-        let end_line = end_lines
+    let start_contours = start_lines
+        .iter()
+        .map(|line| line.contour)
+        .collect::<std::collections::HashSet<_>>();
+    if let Some(end_line) = end_lines
+        .iter()
+        .find(|line| start_contours.contains(&line.contour))
+    {
+        let start_line = start_lines
             .iter()
-            .find(|line| line.contour == start_line.contour)
-            .copied()
-            .expect("checked above");
+            .find(|line| line.contour == end_line.contour)
+            .expect("end contour is present among start candidates");
         return vec![
-            intersection_of(&start_line, distance_of),
-            intersection_of(&end_line, distance_of),
+            intersection_of(start_line, distance_of),
+            intersection_of(end_line, distance_of),
         ];
     }
     if !new_intersections.is_empty() && !start_lines.is_empty() {
