@@ -21,5 +21,11 @@ reference (seed 0 / CPU 0). Logs:
 `/tmp/ares-pi-tower-pa-bridge-final-official.log` and
 `/tmp/ares-pi-tower-pa-bridge-seeded.log`. Both seven-test runs have five PASS
 and two Adaptive PA failures; do not report either aggregate as all green.
-No bridge production changes are required by this audit. Full post-rebase
-checkpoint verification remains pending.
+No bridge production changes are required by this audit. After rebasing the
+checkpoint onto `9a7b46fc`, all four cases pass again in the two independent
+runs `/tmp/ares-pi-tower-checkpoint-official.log` and
+`/tmp/ares-pi-tower-checkpoint-seeded.log`. The same snapshot passes 7592
+workspace tests, Clippy (exit 0 with warnings), fmt and WASM build; detailed
+commands and logs are in the Adaptive PA checkpoint plan. Remaining Adaptive
+PA REDs are not bridge failures and still prohibit main integration of the
+combined checkpoint.

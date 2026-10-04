@@ -74,13 +74,15 @@ any live parity case remains RED.
   where upstream emits nothing. The checkpoint moves the existing negative
   suppression into the shared command formatter, preserving reset state.
   This repair still requires the fresh live GREEN run.
-- **Open parser RED candidate:** `std::stod` accepts hexadecimal calibration
-  prefixes; the port's decimal-only parser does not. Added public fixture,
-  not yet executed. Port source semantics, not a rejection or silent exclusion.
-- **Open formatter RED candidate:** four-significant-digit output must preserve
-  integer trailing zeroes and scientific notation. The old shared formatter
-  turns 10 into 1; the adaptive model now exposes it. Added integer/scientific
-  public fixtures, not yet executed. No expected-output relaxation is allowed.
+- **Open parser:** `std::stod` accepts hexadecimal calibration prefixes;
+  the port's decimal-only parser does not. The checkpoint adds a public
+  fixture; its post-rebase RED is recorded below. Port source semantics,
+  not a rejection or silent exclusion.
+- **Open formatter:** four-significant-digit output must preserve integer
+  trailing zeroes and scientific notation. The checkpoint adds integer and
+  scientific controls. The preliminary review's example claiming 10 becomes
+  1 was incorrect: the 10 control passes. The genuine high-value/scientific
+  failure is recorded below; no expected-output relaxation is allowed.
 - Independent preliminary Codex review:
   `/tmp/ares-pi-tower-pa-preliminary-review.md`, run
   `7be90eb6-86e0-4fc2-8164-02e6c81d7e8c`, verdict changes required.
@@ -98,6 +100,55 @@ interpolator `.cpp` files exactly matches their blobs at pinned upstream
 `8500fcdccaa10b5099ac20d252af3a7c560046f1` (command log
 `/tmp/pi-unified-exec-28-93aa8b1f.log`). This closes the preliminary review's
 local-source provenance uncertainty without altering the reference binary.
+
+## Rebased checkpoint `81a7a66c`
+
+Coordinator-authorized checkpoint `cc5cc244` rebased cleanly onto
+`origin/main=9a7b46fc`, producing `81a7a66c`. Main's test removals are preserved;
+no deleted unit tests are restored. There are no tower or unrelated geometry
+changes in this commit.
+
+Fresh official CPU0 and seeded CPU0 runs both execute seven tests with five
+PASS and two FAIL. Full logs and paired streams:
+
+- `/tmp/ares-pi-tower-checkpoint-official.log`, artifacts in
+  `/tmp/ares-pi-tower-checkpoint-official/`, run
+  `02d9319b-cb12-43a6-a833-8ba16bb5cae9` (45.884s).
+- `/tmp/ares-pi-tower-checkpoint-seeded.log`, artifacts in
+  `/tmp/ares-pi-tower-checkpoint-seeded/`, run
+  `2416929d-06a1-4778-b2b0-acf0a071e47e` (101.973s).
+
+The constant tracer and all four bridge/affine tests pass. The model matrix
+completes all 13 cases: 11 pass, including negative-default and the integer-10
+control. Two cases remain strictly RED in both references:
+
+1. Hexadecimal model: expected `M900 K0.031`, actual `M900 K0` at line 69.
+   Official pair `case-RnDqVr`, seeded pair `case-oFuJEe`.
+2. Scientific model: expected `M900 K1e+05`, actual `M900 K1` at line 69.
+   Official pair `case-RmjvSZ`, seeded pair `case-2Ygs2S`.
+
+The multi-tool panic is gone. Its complete comparison is still RED, first at
+line 23: source `M205 J0.010 ; Junction Deviation` versus Ares `M205 J0.010`.
+Official pair `case-Otc9u6`, seeded pair `case-z8MDJn`. This is a startup-comment
+mismatch, not evidence that PA reset is its cause; later differences require
+inspection. The test stops on this failed all-enabled case, so the subsequent
+mixed-activation case remains unexecuted and unclaimed.
+
+Post-rebase gates on this exact code snapshot pass:
+
+| Gate | Result | Log |
+| --- | --- | --- |
+| `cargo nextest run --workspace` | 7592/7592 PASS, 9 existing skips, 467.685s | `/tmp/ares-pi-tower-checkpoint-workspace.log` |
+| `cargo clippy` | exit 0 (253 warnings), 33.99s | `/tmp/ares-pi-tower-checkpoint-clippy.log` |
+| `cargo fmt --check` | exit 0 | `/tmp/ares-pi-tower-checkpoint-fmt.log` |
+| `cargo build -p ares-core -p ares-wasm --target wasm32-unknown-unknown` | exit 0, 1m12s | `/tmp/ares-pi-tower-checkpoint-wasm.log` |
+
+Every Cargo command uses `CARGO_TARGET_DIR=/tmp/ares-pi-tower-target`.
+Summary: `/tmp/ares-pi-tower-checkpoint-validation.txt`. The ordinary workspace
+run is **not** a substitute for the explicit live runs above. Only documentation
+is changed after these checks to record their outcomes. Branch checkpoint
+publication is separately authorized; main integration remains forbidden while
+these complete-output REDs are open.
 
 Before main integration: repair and re-review the open source-owned cases,
 retain full official/seeded output, rerun workspace/lint/fmt/WASM on the rebased
