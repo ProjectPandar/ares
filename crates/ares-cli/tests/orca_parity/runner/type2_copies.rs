@@ -57,10 +57,11 @@ pub(crate) fn second_copy(mut exported: ExportedCase) -> ExportedCase {
             .transform_point(ares_core::Point3d::new(0.0, 0.0, 0.0));
         assert_eq!((origin.x, origin.y), (expected_x, 110.0));
     }
-    exported.project_path = exported.project_path.with_file_name("type2-two-copies.3mf");
-    exported.output_dir = exported
-        .output_dir
-        .with_file_name("type2-two-copies-native");
+    let stem = exported.project_path.file_stem().unwrap().to_string_lossy();
+    exported.project_path = exported
+        .project_path
+        .with_file_name(format!("{stem}-two-copies.3mf"));
+    exported.output_dir = exported.output_dir.join("two-copies");
     std::fs::create_dir_all(&exported.output_dir).unwrap();
     std::fs::write(&exported.project_path, &project).unwrap();
     exported.project = project;

@@ -304,3 +304,33 @@ No Type2 approval or final review readiness is claimed.
   remaining A–G witnesses, and introduced lint diagnostics. Existing bounds
   plumbing is still a temporary compatibility shell, not completed geometry
   parity. No final review request or main integration is authorized here.
+
+### Object-only center and independent copy fixtures
+
+- Checkpoint `513a6fd2` published the hull continuation above. The next
+  activated-tower center slice follows `PrintObject::get_first_layer_bbox`
+  (`Print.cpp:2126–2148`), `PrintObject::has_brim` (`Print.hpp:362`),
+  `Brim.cpp:908–934`, and `GCode.cpp:2999–3006` in
+  `footprint/first_layer.rs::first_layer_object_center`.
+- Preserve the source distinction: without brim, the center uses the first
+  actual PrintInstance of each print object. Auto brim qualifies even with
+  width zero and its object box includes all copies. Thus the two-copy
+  fixture returns X95 for explicit no-brim but X110 for auto brim. Cached
+  instance shifts retain original membership; both copies still positively
+  extrude and their full output remains compared.
+- Adding the second copy variant exposed shared filenames/output directories
+  in the test helper. These now retain each exported case's unique path so
+  the no-brim case cannot reuse the auto-brim native result. The earlier
+  `/tmp/ares-pi-tower-center-{red,no-brim-red}-official.log` failures were
+  fixture assumptions/isolation errors, not production regression evidence.
+- The valid isolated RED is
+  `/tmp/ares-pi-tower-center-isolated-red-official.log`: native
+  `; COPY_CENTER 95,110`, Ares `; COPY_CENTER 110,110`. After correction,
+  official and seeded full corpora each pass **8/8**, including both copy
+  variants, in `/tmp/ares-pi-tower-center-green-{official,seeded}.log`.
+- **323 emission/raft tests PASS**, WASM build, formatting and diff checks
+  PASS: `/tmp/ares-pi-tower-center-{unit,wasm}.log`. Clippy remains **296
+  warnings** (`...-center-clippy.log`). The 7639-test workspace result belongs
+  to `513a6fd2`; the center continuation has focused gates, not a new workspace
+  result. Support/raft footprint fallback, support contribution to brim boxes,
+  fake-tower brim/mesh consumers and lint debt still prevent final completion.

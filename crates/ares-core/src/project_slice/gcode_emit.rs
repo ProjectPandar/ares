@@ -173,8 +173,8 @@ pub(super) fn emit(
                     skirt: skirt.as_ref(),
                     max_print_z: second_z + 1e-4,
                 });
-            let center = footprint::first_layer_bounds(traversal, None, None, &[])
-                .map_or([0.0; 2], |(x, y, w, h)| [x + 0.5 * w, y + 0.5 * h]);
+            let center =
+                footprint::first_layer_object_center(traversal, &schedule.instances, brim.as_ref());
             wipe_tower::Integration::new(data, settings, center, overlap)
         }),
         auto_lift: motion::auto_lift::AutoLift::prepare(traversal)

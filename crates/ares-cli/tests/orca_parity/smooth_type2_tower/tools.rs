@@ -34,6 +34,13 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             "0",
         ),
         (
+            "semm-infill-copies-no-brim",
+            "Creality",
+            "Creality Ender-3 0.4 nozzle",
+            "1",
+            "0",
+        ),
+        (
             "semm-priming",
             "Creality",
             "Creality Ender-3 0.4 nozzle",
@@ -41,6 +48,7 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             "1",
         ),
     ] {
+        let copies = label.starts_with("semm-infill-copies");
         let profiles = VendorProfiles::load(
             &runner::repo_root().join("OrcaSlicer/resources/profiles"),
             vendor,
@@ -53,8 +61,18 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
         machine.insert("filament_map_mode".into(), json!("Manual"));
         let map = if semm == "1" { ["1", "1"] } else { ["1", "2"] };
         machine.insert("filament_map".into(), json!(map));
+        if copies {
+            let start = format!(
+                "{}\n; COPY_CENTER {{first_layer_center_no_wipe_tower[0]}},{{first_layer_center_no_wipe_tower[1]}}",
+                machine["machine_start_gcode"].as_str().unwrap(),
+            );
+            machine.insert("machine_start_gcode".into(), json!(start));
+        }
         let mut process = profiles.process(&selection.process).unwrap();
         crate::normalize_process_defaults(&machine, &mut process);
+        if label == "semm-infill-copies-no-brim" {
+            process.insert("brim_type".into(), json!("no_brim"));
+        }
         for (key, value) in [
             ("enable_prime_tower", json!("1")),
             ("timelapse_type", json!("1")),
@@ -68,10 +86,7 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
         ] {
             process.insert(key.into(), value);
         }
-        let asymmetric = matches!(
-            label,
-            "semm-asymmetric" | "semm-infill" | "semm-infill-copies"
-        );
+        let asymmetric = label == "semm-asymmetric" || label.starts_with("semm-infill");
         let infill = if label.starts_with("semm-infill") {
             "1"
         } else {
@@ -121,6 +136,10 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
         ] {
             runner::application::verify_value(&exported.project, key, &value).unwrap();
         }
+        if label == "semm-infill-copies-no-brim" {
+            runner::application::verify_value(&exported.project, "brim_type", &json!("no_brim"))
+                .unwrap();
+        }
         if asymmetric {
             for (key, value) in [
                 ("purge_in_prime_tower", json!("1")),
@@ -131,18 +150,20 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
                 runner::application::verify_value(&exported.project, key, &value).unwrap();
             }
         }
-        let exported = if label == "semm-infill-copies" {
+        let exported = if copies {
             runner::type2_copies::second_copy(exported)
         } else {
             exported
         };
         let sliced = runner.slice_case(&exported).unwrap();
         let reference = std::str::from_utf8(&sliced.reference).unwrap();
-        if label == "semm-infill-copies" {
+        if copies {
             // This reference labels both instances "copy 0". Verify actual
             // extrusion at both translated cube contours, not that label.
             assert!(reference.contains("G1 X90.31 Y114.69 E."));
             assert!(reference.contains("G1 X120.31 Y114.69 E."));
+            let center_x = if label.ends_with("no-brim") { 95 } else { 110 };
+            assert!(reference.contains(&format!("; COPY_CENTER {center_x},110\n")));
         }
         assert!(reference.contains(";TYPE:Prime tower\n"), "{label}");
         assert_eq!(
@@ -171,7 +192,7 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
                 reference.matches("; PURGING FINISHED\n").count(),
                 "{label}: real wiping/normal passes"
             );
-            if label == "semm-infill-copies" {
+            if copies {
                 assert!(actual.contains("G1 X90.31 Y114.69 E."));
                 assert!(actual.contains("G1 X120.31 Y114.69 E."));
             }

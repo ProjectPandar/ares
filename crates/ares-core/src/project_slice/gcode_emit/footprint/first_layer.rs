@@ -81,6 +81,60 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_convex_hull(
     super::convex_hull(&points)
 }
 
+/// `PrintObject::get_first_layer_bbox` (Print.cpp:2126–2148) uses only
+/// the first PrintInstance without brim; the brim bbox covers all copies
+/// (Brim.cpp:908–934). GCode.cpp:2999–3006 merges those object boxes.
+pub(in crate::project_slice::gcode_emit) fn first_layer_object_center(
+    traversal: &PreparedPostClassicTraversal,
+    instances: &[Vec<super::super::layers::Instance>],
+    brim: Option<&BrimPlan>,
+) -> [f64; 2] {
+    let scale = traversal.scale;
+    let mut bounds = None;
+    for (prepared, copies) in traversal.objects.iter().zip(instances) {
+        let object = &prepared
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .object;
+        let (source_index, _) = object.identity();
+        let config = &traversal
+            .resolved
+            .objects
+            .iter()
+            .find(|object| object.source_object_index == source_index)
+            .expect("print object retains its resolved configuration")
+            .object;
+        let has_brim = config.raft_layers.0 <= 0
+            && (config.brim_type == crate::ProcessBrimType::AutoBrim
+                || (config.brim_type != crate::ProcessBrimType::NoBrim
+                    && config.brim_width.0 > 0.0));
+        let count = if has_brim { copies.len() } else { 1 };
+        for copy in copies.iter().take(count) {
+            for polygon in object.object.as_parts().1.iter().take(1).flatten() {
+                include_polygon_bounds(polygon.contour(), copy.shift, scale, &mut bounds);
+            }
+        }
+    }
+    if let Some(brim) = brim
+        && traversal.resolved.objects[0].object.raft_layers.0 <= 0
+        && let Some((min_x, min_y, max_x, max_y)) = brim.covered_bounds(scale)
+    {
+        for copy in &instances[0] {
+            let x = scale.unscale(copy.shift.x());
+            let y = scale.unscale(copy.shift.y());
+            include_bounds(
+                Some((min_x + x, min_y + y, max_x + x, max_y + y)),
+                &mut bounds,
+            );
+        }
+    }
+    bounds.map_or([0.0; 2], |(min_x, min_y, max_x, max_y)| {
+        [(min_x + max_x) / 2.0, (min_y + max_y) / 2.0]
+    })
+}
+
 fn visit_object_contours(
     traversal: &PreparedPostClassicTraversal,
     mut visit: impl FnMut(&Polygon, Point),
