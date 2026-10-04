@@ -3,6 +3,12 @@
 use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::json;
 
+#[path = "smooth_type2_tower/chamber.rs"]
+mod chamber;
+#[path = "smooth_type2_tower/conflict.rs"]
+mod conflict;
+#[path = "smooth_type2_tower/islands.rs"]
+mod islands;
 #[path = "smooth_type2_tower/tools.rs"]
 mod tools;
 #[path = "smooth_type2_tower/variants.rs"]
@@ -40,15 +46,33 @@ fn orca_parity_smooth_type2_tower_complete_output() {
         .collect::<Vec<_>>();
     crate::normalize_filament_defaults(&mut filaments);
     let mut failures = Vec::new();
-    for (mode, raft) in [("0", "0"), ("1", "0"), ("1", "2")] {
+    for (mode, raft, footprint) in [
+        ("0", "0", false),
+        ("1", "0", false),
+        ("1", "2", false),
+        ("1", "2", true),
+    ] {
         process.insert("timelapse_type".into(), json!(mode));
         process.insert("raft_layers".into(), json!(raft));
         process.insert("raft_contact_distance".into(), json!("0.1"));
+        let mut case_machine = machine.clone();
+        if footprint {
+            process.insert("skirt_height".into(), json!("0"));
+            process.insert("skirt_loops".into(), json!("0"));
+            let start = case_machine["machine_start_gcode"]
+                .as_str()
+                .unwrap()
+                .to_owned()
+                + "\n; RAFT_MIN {first_layer_print_min[0]},{first_layer_print_min[1]}"
+                + "\n; RAFT_MAX {first_layer_print_max[0]},{first_layer_print_max[1]}"
+                + "\n; RAFT_HULL {size(first_layer_print_convex_hull)}";
+            case_machine.insert("machine_start_gcode".into(), json!(start));
+        }
         let exported = runner
             .export_case(
                 &CaseInputs {
-                    label: &format!("smooth-type2/mode-{mode}-raft-{raft}"),
-                    machine: &machine,
+                    label: &format!("smooth-type2/mode-{mode}-raft-{raft}-footprint-{footprint}"),
+                    machine: &case_machine,
                     process: &process,
                     filaments: &filaments,
                 },
@@ -69,6 +93,11 @@ fn orca_parity_smooth_type2_tower_complete_output() {
         ] {
             runner::application::verify_value(&exported.project, key, &value).unwrap();
         }
+        if footprint {
+            for key in ["skirt_height", "skirt_loops"] {
+                runner::application::verify_value(&exported.project, key, &json!("0")).unwrap();
+            }
+        }
         let sliced = runner.slice_case(&exported).unwrap();
         let reference = std::str::from_utf8(&sliced.reference).unwrap();
         assert_eq!(reference.contains(";TYPE:Prime tower\n"), mode == "1");
@@ -81,7 +110,7 @@ fn orca_parity_smooth_type2_tower_complete_output() {
         let outcome = crate::compare_case(&sliced);
         if outcome.status != "PASS" {
             failures.push(format!(
-                "mode-{mode}-raft-{raft}: {} {}",
+                "mode-{mode}-raft-{raft}-footprint-{footprint}: {} {}",
                 outcome.status, outcome.detail
             ));
         }

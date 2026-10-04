@@ -3,6 +3,7 @@
 mod data;
 mod emit;
 mod extents;
+mod fake;
 pub(super) use data::Data;
 pub(super) use extents::Print as PrintExtents;
 mod filament;

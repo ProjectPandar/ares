@@ -1,4 +1,5 @@
 //! `WipeTower2.cpp` rib/rectangle geometry; shared `WipeTower::box_coordinates`.
+mod bottom;
 mod cone;
 pub(super) use cone::{ConeOptions, cone_base};
 mod rounding;

@@ -38,5 +38,12 @@ included. These exclusions do not
 permit guards or silent omission of active Type2 source behavior; do not weaken
 fixtures or comparisons to make a partial generator appear complete.
 
+The coordinator separately assigned multi-transform PrintObject preparation
+and `PrintObject.cpp:85–114` centering to pi-tip after RNG integration. This
+is a general Print/PrintApply prerequisite, not part of the tower slice.
+`raw_intersections.rs:290–305` stays unchanged. Its native-accepted RED witness
+is handed off, not part of the tower suite; see ARD-0105 for retained evidence.
+Same-transform actual-copy ownership remains included.
+
 The BBL state repair may be reviewed as an independently green prerequisite;
 it must not be represented as completion of the Type2 tower port.

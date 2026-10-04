@@ -34,6 +34,16 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
 }
 
 impl Schedule {
+    // PrintObject::simplify_support_extrusion_path precedes conflict checking.
+    pub(in crate::project_slice::gcode_emit) fn simplify_raft(
+        &mut self,
+        traversal: &PreparedPostClassicTraversal,
+    ) {
+        if let Some(raft) = &mut self.raft {
+            raft_schedule::simplify_layers(traversal, &mut raft.layers);
+        }
+    }
+
     pub(in crate::project_slice::gcode_emit) fn layer_count(&self) -> usize {
         self.layer_count
     }

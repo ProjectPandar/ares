@@ -9,6 +9,10 @@ use crate::{Point3d, ProjectInstance, ProjectObject, ProjectVolumeType};
 
 pub(super) type FirstLayerBounds = (f64, f64, f64, f64);
 
+mod coverage;
+pub(super) use coverage::covered_by_spacing;
+mod islands;
+pub(super) use islands::FirstLayerIslands;
 mod first_layer;
 pub(super) use first_layer::{
     first_layer_bounds, first_layer_convex_hull, first_layer_object_center,

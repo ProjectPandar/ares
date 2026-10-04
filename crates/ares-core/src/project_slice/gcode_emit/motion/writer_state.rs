@@ -21,6 +21,10 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
 ) {
     state.initial_filaments.insert(config);
     config.insert(
+        "hold_chamber_temp_for_flat_print",
+        Value::option_bool(state.hold_chamber_temp_for_flat_print),
+    );
+    config.insert(
         "first_layer_print_convex_hull",
         Value::List(
             state

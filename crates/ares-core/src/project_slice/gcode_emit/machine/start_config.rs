@@ -29,10 +29,6 @@ pub(super) fn self_start_config(
             traversal,
         ))),
     );
-    config.insert(
-        "hold_chamber_temp_for_flat_print",
-        value::Value::option_bool(false),
-    );
     let max_z = traversal
         .objects
         .first()

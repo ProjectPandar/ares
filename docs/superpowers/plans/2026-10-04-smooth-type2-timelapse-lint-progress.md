@@ -83,3 +83,74 @@ main `f10c3b17` (region ironing speed). Before integration, rebase the then-late
 `origin/main` and revalidate; the 944-based gates above are not final integration
 evidence. Never force-push the published ref. No final REVIEW-REQUEST, approval
 or main integration is claimed here.
+
+## f10c3b17 rebase and active geometry worktree (not GREEN)
+
+Rebased all 18 commits without conflicts onto `f10c3b17`, yielding
+`58bbbe7a47b68c397e2e0425106c05b37479e203`. Range-diff is identical throughout:
+`/tmp/ares-pi-tower-rebase-f10c3b17-range-diff.log`; required main ancestors
+remain reachable. Backup: `checkpoint/tower-before-main-f10c3b17`. No force push.
+The new implementation and witnesses below are uncommitted.
+
+- Chamber RED: `/tmp/ares-pi-tower-chamber-red-official.log`, expected
+  `; FLAT_CHAMBER true`, actual `false`; disabled control passed. Ported the
+  `construct_mesh` bottom and chamber-area consumer. Rectangle/rib and disabled
+  controls, including the end-template flag, pass full output in
+  `/tmp/ares-pi-tower-chamber-matrix-official.log`.
+- Conflict witness first failed because `StageError::Display` omits native
+  stdout. This fixture failure is not the behavioral RED. The corrected witness
+  verifies native `CLI_GCODE_PATH_CONFLICTS=-101` (Unix exit155), preserves native
+  captures and Ares output, and fails because Ares accepts the input:
+  `/tmp/ares-pi-tower-conflict-red-confirmed-official.log`, artifact
+  `/tmp/ares-pi-tower-conflict-red-confirmed-official/tower-conflict-YyC4w3`.
+- Connected Type2 fake layers and depth profile to source conflict checking.
+  The initial `E0282` closure annotation failure is retained in
+  `/tmp/ares-pi-tower-conflict-clippy.log`; it is not a behavioral RED.
+  `/tmp/ares-pi-tower-conflict-green-official.log`: all five then-existing Type2
+  tests pass, including both new consumers. Clippy reports 154 warnings in
+  `/tmp/ares-pi-tower-conflict-fixed-clippy.log`; the tracked geometry-field
+  diagnostic is gone, but a fresh main diagnostic-identity comparison is due.
+- Added a further membership witness: one source object, two actual instances,
+  second instance scaled 2x in X. Official output proves positive extrusion at
+  both copies and source center `112.5,110`. Ares rejects it at the pre-existing
+  `raw_intersections::validate_centering` gate before tower generation:
+  `/tmp/ares-pi-tower-membership-red-official.log`, native/output evidence
+  `/tmp/ares-pi-tower-membership-red-official/case-FBHkaL`.
+
+Current membership RED is retained, not ignored or weakened. ARD-0105 records
+`PrintObject.cpp:85–114` as the shared centering prerequisite; merely deleting
+its current guard is not acceptable. Support/raft fallback and brim ownership
+remain unfinished, as do complete seeded/workspace/WASM gates and final lint
+identity comparison on this tree. No final REVIEW-REQUEST is warranted.
+
+## Coordinator scope decision and first-layer fallback checkpoint
+
+Coordinator assigned general multi-transform Print/PrintApply centering to
+pi-tip after RNG integration. The membership case and its helper changes have
+been removed from the tower suite as explicitly directed, with the original
+RED, helper patch, source and artifact references handed off at
+`/tmp/ares-tower-to-tip-centering/`. ARD-0105 records the deferred dependency;
+`raw_intersections::validate_centering` is unchanged.
+
+- No-skirt raft public-output RED:
+  `/tmp/ares-pi-tower-raft-hull-red-official.log`. Native bounds are
+  `RAFT_MIN 11.7993,100.871` / `RAFT_MAX 119.129,153.824`; old Ares used body-only
+  `11.7993,105` / `115,153.824`.
+- Ported `Print::first_layer_islands` normal spacing/tree contour/raft coverage
+  and qualifying-brim support bounds. Source float spacing, scaled epsilon and
+  original-copy shifts are retained. The full four-case matrix is GREEN in
+  `/tmp/ares-pi-tower-raft-hull-green-official.log`.
+- The initial private-import `E0603` failure is retained in
+  `/tmp/ares-pi-tower-islands-clippy.log`; it is not a behavioral RED.
+- Extra complete-output normal/tree support witnesses pass in
+  `/tmp/ares-pi-tower-islands-official.log`. Focused core/raft tests: 327 pass in
+  `/tmp/ares-pi-tower-geometry-unit.log`, including ownership, support threshold,
+  endpoint and negative-grid conflict regressions.
+- First exact f10c3b17 diagnostic audit: 157 base / 154 branch, 152 inherited,
+  five removed, **two introduced** at `extrusion_islands::prepare`. They have
+  been replaced with equivalent lazy `bool::then` capture, not suppressed.
+  Fresh final-baseline comparison is still required; lower totals were not used
+  as clearance. Evidence: `/tmp/ares-pi-tower-f10c3b17-diagnostic-identities.json`.
+
+Coordinator then advanced main to `7ec6cd05`; fetched full ref
+`7ec6cd0541a9c05c6551a5120478b532971ac08a`. Final rebase and complete gates follow.

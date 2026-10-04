@@ -72,20 +72,25 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
   `REVIEW-REQUEST`; only a matching approval permits rebase/revalidation and
   fast-forward integration. No external review programs.
 
-## Remaining consumer audit (not completion evidence)
+## Consumer audit and source gates
 
 - `WipeTowerWriter2::add_wipe_point` (cpp 964–974), called by
   `toolchange_Wipe` (1988–1990) and `finish_layer` (2146–2147), owns the
-  rotation before wipe-path insertion. Rust's equivalent method must be used
-  by those callers rather than leaving an unused duplicate implementation.
+  rotation before wipe-path insertion. Rust's equivalent method is called by
+  both owners; it is not an unused duplicate implementation.
 - `WipeTowerData::construct_mesh` (`Print.cpp:5225–5254`) supplies a bottom
   polygon consumed by print-clearance checking (`Print.cpp:1029–1030`) and
   the chamber-hold placeholder (`GCode.cpp:3107–3113`). Width/rib/depth-profile
   state also feeds fake-tower geometry (`Print.cpp:3675–3688`, `Print.hpp`).
   These are real source consumers, not justification for deleting the fields.
-  Rust's hard-coded `hold_chamber_temp_for_flat_print=false` remains an audit
-  gap. The source threshold uses `40000 * 1.0e10` scaled area and height <0.3;
+  The former hard-coded `hold_chamber_temp_for_flat_print=false` is replaced
+  by the chamber consumer below. The source threshold uses `40000 * 1.0e10`
+  scaled area and height <0.3;
   preserve that arithmetic rather than substituting the comment's units.
+  The mesh-based clearance branch requires cached `psWipeTower` completion
+  (`Print.cpp:1017–1034`). Fresh CLI validation precedes `process`
+  (`OrcaSlicer.cpp:6063,6146–6161`); it uses the nominal pre-process branch,
+  not the generated bottom. A reused GUI Print cache is not this byte-input API.
 - Fake-tower consumers have distinct source gates. `Print.cpp:3675–3688`
   initializes Type2's depth profile but not `outer_wall`; the latter is assigned
   in the Type1 branch at 3571. `Brim.cpp:651–656` requires nonempty `outer_wall`,
@@ -93,6 +98,44 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
   Type2 brim mask. In contrast, `Print.cpp:5177–5191` supplies Type2 fake paths
   to `ConflictChecker.cpp:234`, and `Print.cpp:2590–2605` runs that consumer
   when checks are enabled. The CLI rejects its conflicts (`OrcaSlicer.cpp:6165–6169`).
+
+## Active geometry and deferred general Print prerequisite
+
+The implementation connects `construct_mesh`'s bottom polygon (including
+`WipeTower.cpp::rib_section`) to `GCode.cpp` chamber-area accounting. The flag
+is retained through writer/template refresh. Rendering triangle meshes remain
+outside this byte-output slice. `Print.hpp` fake Type2 paths now feed the
+`ConflictChecker.cpp/.hpp` grid/intersection and bucket traversal, including
+actual-copy identities, support thresholds and source depth-profile selection.
+This is source path-conflict rejection, not an unsupported-feature guard.
+
+`Print.cpp:2995–3017::first_layer_islands` is projected into private
+`footprint/islands.rs`: object contours, normal support spacing coverage with
+`SCALED_EPSILON`, tree support contours, and standalone raft fills. Plate-space
+copies use the actual scheduled instances. `ExtrusionEntity.cpp:75–84` spacing
+coverage preserves float spacing, integer truncation, square joins and round
+open-path caps. Zero-epsilon support coverage also feeds the qualifying-brim
+first-layer object bounding boxes (`Brim.cpp:918–924`); the existing generated
+brim bounds remain part of that center. Existing general brim generation is a
+compatibility shell, not a new Type2 exclusion algorithm. Native full-output
+witnesses cover no-skirt raft, normal support and tree support placeholders.
+
+A new transform-membership witness is accepted by the official native binary
+and positively extrudes both differently scaled instances. Ares instead rejects
+it before reaching tower/footprint generation at
+`raw_intersections.rs:290–305::validate_centering` (`print_object_centering`).
+That pre-existing gate restricts each ModelObject to one PrintObject transform
+and matches it against the first ModelInstance. Removing it alone is not a port:
+`PrintObject.cpp:85–114` owns first-instance raw bounds and Z-rotation correction
+of the centering offset, which must be retained through slicing, support, seam,
+copy placement and first-layer geometry. The coordinator assigned this general
+Print/PrintApply prerequisite to pi-tip after RNG integration, explicitly outside
+this tower slice. Keep `raw_intersections.rs:290–305` unchanged. The membership
+witness was removed from the tower suite, not ignored; its source, helper patch,
+RED log and native artifact references are handed off at
+`/tmp/ares-tower-to-tip-centering/`. Multi-transform PrintObject preparation and
+its centering correction remain a documented deferred dependency, not claimed
+Type2 coverage. Same-transform actual-copy ownership remains included.
 
 ## Coordinator-approved deferred metadata
 

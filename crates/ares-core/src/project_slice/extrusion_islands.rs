@@ -82,11 +82,9 @@ pub(in crate::project_slice) fn prepare(
                     .zip(layer_slices)
                     .map(|(layer, slices)| {
                         // Print.cpp plans wiping before simplify_extrusion_path.
-                        let wiping_volumes = if capture_wiping {
-                            volume::collect(layer, traversal.scale)
-                        } else {
-                            volume::LayerVolumes::default()
-                        };
+                        let wiping_volumes = capture_wiping
+                            .then(|| volume::collect(layer, traversal.scale))
+                            .unwrap_or_default();
                         LayerExtrusionIslands {
                             wiping_volumes,
                             ..assign_layer(layer, slices)

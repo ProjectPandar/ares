@@ -1,8 +1,8 @@
 //! Plate-frame bounds (`Print::first_layer_islands`, `GCode.cpp:2930-2939`).
 
-use super::{FirstLayerBounds, instance_shift, object_origin};
+use super::{FirstLayerBounds, object_origin};
 use crate::{
-    geometry::{CoordinateScale, Point, Polygon},
+    geometry::{CoordinateScale, Point},
     project_slice::{
         gcode_emit::{brim::BrimPlan, skirt::SkirtPlan},
         perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -14,12 +14,11 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
     skirt: Option<&SkirtPlan>,
     brim: Option<&BrimPlan>,
     tower_corners: &[Point],
+    islands: &[Point],
 ) -> Option<FirstLayerBounds> {
     let scale = traversal.scale;
     let mut bounds = None;
-    visit_object_contours(traversal, |polygon, shift| {
-        include_polygon_bounds(polygon, shift, scale, &mut bounds);
-    });
+    include_points(islands, Point::new(0, 0), scale, &mut bounds);
     if let Some(skirt) = skirt {
         include_bounds(skirt.covered_bounds(scale), &mut bounds);
     }
@@ -48,6 +47,7 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_convex_hull(
     skirt: Option<&SkirtPlan>,
     brim: Option<&BrimPlan>,
     tower_corners: &[Point],
+    islands: &[Point],
 ) -> Vec<Point> {
     let mut points = Vec::new();
     if let Some(brim) = brim {
@@ -68,14 +68,7 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_convex_hull(
         points.extend(skirt.covered_points());
     }
     if points.is_empty() {
-        visit_object_contours(traversal, |polygon, shift| {
-            points.extend(
-                polygon
-                    .points()
-                    .iter()
-                    .map(|p| Point::new(p.x() + shift.x(), p.y() + shift.y())),
-            );
-        });
+        points.extend_from_slice(islands);
     }
     points.extend_from_slice(tower_corners);
     super::convex_hull(&points)
@@ -88,10 +81,11 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_object_center(
     traversal: &PreparedPostClassicTraversal,
     instances: &[Vec<super::super::layers::Instance>],
     brim: Option<&BrimPlan>,
+    support_spacing: &[Vec<Point>],
 ) -> [f64; 2] {
     let scale = traversal.scale;
     let mut bounds = None;
-    for (prepared, copies) in traversal.objects.iter().zip(instances) {
+    for (index, (prepared, copies)) in traversal.objects.iter().zip(instances).enumerate() {
         let object = &prepared
             .predecessor
             .predecessor
@@ -113,7 +107,10 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_object_center(
         let count = if has_brim { copies.len() } else { 1 };
         for copy in copies.iter().take(count) {
             for polygon in object.object.as_parts().1.iter().take(1).flatten() {
-                include_polygon_bounds(polygon.contour(), copy.shift, scale, &mut bounds);
+                include_points(polygon.contour().points(), copy.shift, scale, &mut bounds);
+            }
+            if has_brim {
+                include_points(&support_spacing[index], copy.shift, scale, &mut bounds);
             }
         }
     }
@@ -135,37 +132,6 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_object_center(
     })
 }
 
-fn visit_object_contours(
-    traversal: &PreparedPostClassicTraversal,
-    mut visit: impl FnMut(&Polygon, Point),
-) {
-    let scale = traversal.scale;
-    for (object, resolved) in traversal.objects.iter().zip(&traversal.resolved.objects) {
-        let layers = object
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .object
-            .object
-            .as_parts()
-            .1;
-        let source = &traversal.project.objects()[resolved.source_object_index];
-        let center = crate::project_slice::raw_intersections::raw_center(source, scale)
-            .expect("sliced object has validated raw bounds");
-        for instance in source
-            .instances()
-            .iter()
-            .filter(|instance| instance.printable())
-        {
-            let shift = instance_shift(instance, center, scale);
-            for polygon in layers.iter().take(1).flatten() {
-                visit(polygon.contour(), shift);
-            }
-        }
-    }
-}
-
 fn include_bounds(additional: Option<FirstLayerBounds>, bounds: &mut Option<FirstLayerBounds>) {
     let Some((min_x, min_y, max_x, max_y)) = additional else {
         return;
@@ -181,13 +147,13 @@ fn include_bounds(additional: Option<FirstLayerBounds>, bounds: &mut Option<Firs
     });
 }
 
-fn include_polygon_bounds(
-    polygon: &Polygon,
+fn include_points(
+    points: &[Point],
     shift: Point,
     scale: CoordinateScale,
     bounds: &mut Option<FirstLayerBounds>,
 ) {
-    for point in polygon.points() {
+    for point in points {
         let x = scale.unscale(point.x() + shift.x());
         let y = scale.unscale(point.y() + shift.y());
         *bounds = Some(match *bounds {

@@ -5,6 +5,8 @@ use crate::project_slice::{
 
 mod adaptive_pa;
 mod brim;
+mod chamber;
+mod conflict;
 mod emit_helpers;
 use emit_helpers::{append_layer_end_timelapse, layer_boundary_slices_rc, trailing_gcode_xy};
 mod cooling;
@@ -76,6 +78,8 @@ pub(super) fn emit(
         &tower_corners,
         schedule.raft.as_ref(),
     )?;
+    let islands =
+        footprint::FirstLayerIslands::collect(traversal, &prepared.support_layers, &schedule)?;
     let process = &traversal.resolved.views.full.process;
     super::path_simplification::simplify_support_layers(
         &mut prepared.support_layers,
@@ -83,10 +87,22 @@ pub(super) fn emit(
         process.print.resolution.0,
         process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0,
     );
+    schedule.simplify_raft(traversal);
+    conflict::check(
+        traversal,
+        &prepared.objects,
+        &prepared.support_layers,
+        &schedule,
+    )?;
     let sliced_layer_count = schedule.layer_count();
     let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
-    let first_layer_bounds =
-        footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref(), &tower_corners);
+    let first_layer_bounds = footprint::first_layer_bounds(
+        traversal,
+        skirt.as_ref(),
+        brim.as_ref(),
+        &tower_corners,
+        &islands.plate,
+    );
     let mut output = Vec::new();
     file_start::append(&mut output, traversal, metadata, first_layer_bounds)?;
     let tags = tags::Tags::of(traversal);
@@ -151,7 +167,14 @@ pub(super) fn emit(
             skirt.as_ref(),
             brim.as_ref(),
             &tower_corners,
+            &islands.plate,
         ),
+        hold_chamber_temp_for_flat_print: chamber::hold_temperature(
+            traversal,
+            &prepared.support_layers,
+            &schedule,
+            brim.as_ref(),
+        )?,
         wipe_tower: schedule.tower.take().map(|data| {
             let settings = &traversal.resolved.views.full;
             let first_z = schedule.merged[0].0;
@@ -173,8 +196,12 @@ pub(super) fn emit(
                     skirt: skirt.as_ref(),
                     max_print_z: second_z + 1e-4,
                 });
-            let center =
-                footprint::first_layer_object_center(traversal, &schedule.instances, brim.as_ref());
+            let center = footprint::first_layer_object_center(
+                traversal,
+                &schedule.instances,
+                brim.as_ref(),
+                &islands.support_spacing,
+            );
             wipe_tower::Integration::new(data, settings, center, overlap)
         }),
         auto_lift: motion::auto_lift::AutoLift::prepare(traversal)
