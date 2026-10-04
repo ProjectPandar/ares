@@ -115,24 +115,7 @@ impl Shape {
             let (point, kind) = points[(start + step) % points.len()];
             writer.extrude(point, feedrate);
             if kind == Kind::End && !paths.is_empty() {
-                let mirror = f64::from(point[1] - center[1])
-                    * (scale.unscale(paths[0].points()[0].y()) - f64::from(center[1]))
-                    < 0.0;
-                for path in &paths {
-                    let transform = |p| {
-                        let p = unscaled(p, scale);
-                        let sign = if mirror { 1.0 } else { -1.0 };
-                        [
-                            center[0] - sign * (p[0] - center[0]),
-                            center[1] - sign * (p[1] - center[1]),
-                        ]
-                    };
-                    writer.travel(transform(path.points()[0]), 0.0);
-                    for &p in path.points() {
-                        writer.extrude(transform(p), 0.0);
-                    }
-                }
-                writer.travel(point, 0.0);
+                emit_cone_infill(writer, &paths, center, point, scale);
             }
         }
         writer.extrude(points[start].0, feedrate);
@@ -147,6 +130,33 @@ pub(in super::super) struct ConeOptions {
     pub(in super::super) infill: bool,
     pub(in super::super) feedrate: f32,
     pub(in super::super) scale: CoordinateScale,
+}
+
+fn emit_cone_infill(
+    writer: &mut Writer,
+    paths: &[Polyline],
+    center: [f32; 2],
+    point: [f32; 2],
+    scale: CoordinateScale,
+) {
+    let mirror = f64::from(point[1] - center[1])
+        * (scale.unscale(paths[0].points()[0].y()) - f64::from(center[1]))
+        < 0.0;
+    for path in paths {
+        let transform = |p| {
+            let p = unscaled(p, scale);
+            let sign = if mirror { 1.0 } else { -1.0 };
+            [
+                center[0] - sign * (p[0] - center[0]),
+                center[1] - sign * (p[1] - center[1]),
+            ]
+        };
+        writer.travel(transform(path.points()[0]), 0.0);
+        for &p in path.points() {
+            writer.extrude(transform(p), 0.0);
+        }
+    }
+    writer.travel(point, 0.0);
 }
 
 fn cone_infill(

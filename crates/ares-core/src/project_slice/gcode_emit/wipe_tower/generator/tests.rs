@@ -63,7 +63,7 @@ fn production_generation_retains_priming_and_final_purge_lifecycle() {
         last.print_z = last_z;
         last.wipe_tower_partitions = partitions;
         let tower = planned
-            .generate(&settings, CoordinateScale::Normal, &[1, 0], &last, 0.2)
+            .generate(&settings, CoordinateScale::Normal, (&[1, 0], &last), 0.2)
             .unwrap();
         assert_eq!(tower.priming.len(), 2);
         assert_eq!(tower.priming[0].new_tool, 1);

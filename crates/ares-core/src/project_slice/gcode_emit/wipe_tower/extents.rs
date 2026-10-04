@@ -79,19 +79,7 @@ impl Extents {
         match entity {
             IslandPrintEntity::Perimeter(collection) => {
                 for entity in &collection.entities {
-                    match entity {
-                        ExtrusionEntity::Loop(loop_) => {
-                            for path in &loop_.extrusion_loop.paths {
-                                self.path3(path, scale);
-                            }
-                        }
-                        ExtrusionEntity::MultiPath(multi) => {
-                            for path in &multi.paths {
-                                self.path3(path, scale);
-                            }
-                        }
-                        ExtrusionEntity::Path(path) => self.path3(path, scale),
-                    }
+                    self.perimeter(entity, scale);
                 }
             }
             IslandPrintEntity::Fill(fill) => self.fill(fill, scale),
@@ -101,6 +89,34 @@ impl Extents {
                 }
             }
             IslandPrintEntity::Thin(gap) => self.gap(gap, scale),
+        }
+    }
+    fn perimeter(&mut self, entity: &ExtrusionEntity, scale: CoordinateScale) {
+        match entity {
+            ExtrusionEntity::Loop(loop_) => {
+                for path in &loop_.extrusion_loop.paths {
+                    self.path3(path, scale);
+                }
+            }
+            ExtrusionEntity::MultiPath(multi) => {
+                for path in &multi.paths {
+                    self.path3(path, scale);
+                }
+            }
+            ExtrusionEntity::Path(path) => self.path3(path, scale),
+        }
+    }
+    fn merge_copies(&mut self, local: Self, copies: &[Instance], scale: CoordinateScale) {
+        let Some(bounds) = local.0 else {
+            return;
+        };
+        for copy in copies {
+            for [x, y] in bounds {
+                self.point([
+                    x + scale.unscale(copy.shift.x()),
+                    y + scale.unscale(copy.shift.y()),
+                ]);
+            }
         }
     }
     fn tower(
@@ -143,25 +159,16 @@ impl Data {
             .zip(print.instances)
         {
             let mut local = Extents::default();
-            for (layer, _) in layers
+            for entity in layers
                 .iter()
                 .zip(object.physical_layers())
                 .take_while(|(_, physical)| physical.print_z <= print.max_print_z)
+                .flat_map(|(layer, _)| &layer.islands)
+                .flat_map(|island| &island.entities)
             {
-                for entity in layer.islands.iter().flat_map(|island| &island.entities) {
-                    local.entity(entity, scale);
-                }
+                local.entity(entity, scale);
             }
-            if let Some(bounds) = local.0 {
-                for copy in copies {
-                    for [x, y] in bounds {
-                        occupied.point([
-                            x + scale.unscale(copy.shift.x()),
-                            y + scale.unscale(copy.shift.y()),
-                        ]);
-                    }
-                }
-            }
+            occupied.merge_copies(local, copies, scale);
         }
         let settings = &print.traversal.resolved.views.full;
         let (sin, cos) =

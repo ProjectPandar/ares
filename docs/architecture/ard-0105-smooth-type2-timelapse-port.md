@@ -71,3 +71,31 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
 - Every green slice is pushed for coordinator Claude review. Stop after
   `REVIEW-REQUEST`; only a matching approval permits rebase/revalidation and
   fast-forward integration. No external review programs.
+
+## Remaining consumer audit (not completion evidence)
+
+- `WipeTowerWriter2::add_wipe_point` (cpp 964–974), called by
+  `toolchange_Wipe` (1988–1990) and `finish_layer` (2146–2147), owns the
+  rotation before wipe-path insertion. Rust's equivalent method must be used
+  by those callers rather than leaving an unused duplicate implementation.
+- `WipeTowerData::construct_mesh` (`Print.cpp:5225–5254`) supplies a bottom
+  polygon consumed by print-clearance checking (`Print.cpp:1029–1030`) and
+  the chamber-hold placeholder (`GCode.cpp:3107–3113`). Width/rib/depth-profile
+  state also feeds fake-tower geometry (`Print.cpp:3675–3688`, `Print.hpp`).
+  These are real source consumers, not justification for deleting the fields.
+  Rust's hard-coded `hold_chamber_temp_for_flat_print=false` remains an audit
+  gap. The source threshold uses `40000 * 1.0e10` scaled area and height <0.3;
+  preserve that arithmetic rather than substituting the comment's units.
+- Shared `ToolChangeResult::is_finish_first` is read by Type1 `append_tcr`
+  (`GCode.cpp:755`), not Type2 `append_tcr2` (1118 onward). Type2's
+  `force_travel` merge behavior remains required independently.
+- `ToolChangeResult::elapsed_time` is populated at `WipeTower2.cpp:1231`, but
+  no downstream source read was found; `merge_tcr` (2342–2359) copies the first
+  result without summing it. Do not invent a time-statistics consumer to quiet
+  a lint: final timing belongs to G-code processing.
+- `Extrusion::tool` is read by the GUI preview adapter
+  `slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp:500–527`. This is distinct from
+  `Writer::tool`, which the Rust writer needs for RepRap `M572 D... S0`.
+  No deletion of either result metadata or preview color metadata has yet been
+  made; confirm the byte-output versus preview-data boundary before changing
+  that scope. Do not manufacture public APIs or dummy reads as lint fixes.

@@ -242,11 +242,13 @@ pub(in crate::project_slice::gcode_emit) fn build(
             planned.generate(
                 settings,
                 traversal.scale,
-                tool_ordering.all_extruders(),
-                tool_ordering
-                    .layers
-                    .last()
-                    .expect("active tower retains its last layer"),
+                (
+                    tool_ordering.all_extruders(),
+                    tool_ordering
+                        .layers
+                        .last()
+                        .expect("active tower retains its last layer"),
+                ),
                 // Print.cpp owns final purge height in Print::objects().front().
                 super::super::tool_ordering::object_options(traversal, 0)
                     .layer_height

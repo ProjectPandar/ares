@@ -114,10 +114,8 @@ impl Generator<'_> {
         }
         let closest = closest(&polygon, writer.position, self.scale);
         let previous = (closest + polygon.points().len() - 1) % polygon.points().len();
-        writer.wipe_path.push(writer.rotated(writer.position));
-        writer
-            .wipe_path
-            .push(writer.rotated(unscaled(polygon.points()[previous], self.scale)));
+        writer.add_wipe_point(writer.position);
+        writer.add_wipe_point(unscaled(polygon.points()[previous], self.scale));
         if !self.plan.no_sparse || toolchanges_on_layer || first_layer {
             self.used_filament[self.current_tool] += writer.take_used_filament();
             self.current_height += layer_height;

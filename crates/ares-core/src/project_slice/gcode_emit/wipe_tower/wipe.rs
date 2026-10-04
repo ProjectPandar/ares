@@ -138,7 +138,7 @@ impl Generator<'_> {
                 writer.position[1] - dy,
             ],
         ] {
-            writer.wipe_path.push(writer.rotated(point));
+            writer.add_wipe_point(point);
         }
         if let Some(layer) = self.plan.layers.get(self.layer_index)
             && self.current_tool != layer.changes.last().unwrap().new_tool

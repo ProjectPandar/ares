@@ -392,3 +392,6 @@ No Type2 approval or final review readiness is claimed.
 - Main has advanced to `b42edd5e` (web/wasm, no core changes per coordinator).
   Rebase latest main and repeat final gates before integration; no final review
   or main integration is claimed by this checkpoint.
+
+Further lint and source-consumer evidence continues in
+[the lint/audit record](2026-10-04-smooth-type2-timelapse-lint-progress.md).

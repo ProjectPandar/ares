@@ -88,31 +88,31 @@ impl Generator<'_> {
                 .print
                 .enable_tower_interface_cooldown_during_tower
                 .0;
-            if interface {
-                if interface_temp > 0 && interface_temp != temperature {
-                    writer.set_temperature(interface_temp, true);
-                    if cooldown {
-                        writer.set_temperature(temperature, false);
-                    }
-                }
-                if filament.interface_distance > 0.0 && filament.interface_length > 0.0 {
-                    writer.extrude_explicit(
-                        [
-                            (writer.position[0] + filament.interface_distance)
-                                .clamp(bounds.lower[0], bounds.upper[0]),
-                            writer.position[1],
-                        ],
-                        Extrude {
-                            amount: filament.interface_length,
-                            feedrate: 600.0,
-                            record: false,
-                            limit: true,
-                        },
-                    );
-                }
+            let change_interface_temperature =
+                interface && interface_temp > 0 && interface_temp != temperature;
+            if change_interface_temperature {
+                writer.set_temperature(interface_temp, true);
+            }
+            if change_interface_temperature && cooldown {
+                writer.set_temperature(temperature, false);
+            }
+            if interface && filament.interface_distance > 0.0 && filament.interface_length > 0.0 {
+                writer.extrude_explicit(
+                    [
+                        (writer.position[0] + filament.interface_distance)
+                            .clamp(bounds.lower[0], bounds.upper[0]),
+                        writer.position[1],
+                    ],
+                    Extrude {
+                        amount: filament.interface_length,
+                        feedrate: 600.0,
+                        record: false,
+                        limit: true,
+                    },
+                );
             }
             self.wipe(&mut writer, bounds, volume, interface);
-            if interface && !cooldown && interface_temp > 0 && interface_temp != temperature {
+            if change_interface_temperature && !cooldown {
                 writer.set_temperature(temperature, false);
             }
             writer.gcode.push_str("; WIPE_TOWER_END\n");

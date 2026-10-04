@@ -59,25 +59,18 @@ pub(in crate::project_slice::gcode_emit) struct WipingExtrusions {
 impl WipingExtrusions {
     pub(in crate::project_slice::gcode_emit) fn new(layer: &Layer<'_>) -> Self {
         let something_overridable = layer.objects.iter().any(|object| {
-            object.regions.as_ref().is_some_and(|regions| {
-                regions.iter().any(|region| {
-                    region
-                        .infills
+            object
+                .regions
+                .iter()
+                .flatten()
+                .flat_map(|region| region.infills.iter().chain(&region.perimeters))
+                .any(|collection| overridable(collection, object, layer))
+                || object.flush_support
+                    && object
+                        .support
                         .iter()
-                        .chain(&region.perimeters)
-                        .any(|collection| overridable(collection, object, layer))
-                })
-            }) || object.flush_support
-                && object.support.as_ref().is_some_and(|support| {
-                    support.iter().any(|&(role, _)| match role {
-                        ExtrusionRole::Mixed => object.support_tools.contains(&0),
-                        ExtrusionRole::SupportMaterial | ExtrusionRole::SupportTransition => {
-                            object.support_tools[0] == 0
-                        }
-                        ExtrusionRole::SupportMaterialInterface => object.support_tools[1] == 0,
-                        _ => false,
-                    })
-                })
+                        .flatten()
+                        .any(|&(role, _)| support_overridable(role, object.support_tools))
         });
         Self {
             something_overridable,
@@ -139,51 +132,71 @@ impl WipingExtrusions {
             .rfind(eligible)
             .copied()
             .unwrap_or(usize::MAX);
-        for object in layer.objects {
-            let Some(regions) = &object.regions else {
+        for object in layer
+            .objects
+            .iter()
+            .filter(|object| object.flush_infill || object.flush_objects)
+        {
+            if object.regions.is_none() {
                 continue;
-            };
+            }
             for copy in 0..object.copies {
-                for region in regions {
-                    if !object.flush_infill && !object.flush_objects {
-                        continue;
-                    }
-                    for collection in &region.infills {
-                        if !overridable(collection, object, layer)
-                            || self.entity(object.id, collection.id, copy).is_some()
-                        {
-                            continue;
-                        }
-                        // Preserve the source parentheses: the second argument of
-                        // is_extruder_order is this boolean converted to a tool ID.
-                        let order_tool =
-                            usize::from(last != 0 || !layer.tools.contains(&region.sparse_tool));
-                        if region.infill_first || ordered(layer.tools, region.wall_tool, order_tool)
-                        {
-                            self.assign(
-                                object,
-                                collection.id,
-                                copy,
-                                if region.infill_first { first } else { last },
-                            );
-                        }
-                    }
-                    for collection in &region.perimeters {
-                        if overridable(collection, object, layer)
-                            && self.entity(object.id, collection.id, copy).is_none()
-                        {
-                            self.assign(
-                                object,
-                                collection.id,
-                                copy,
-                                if region.infill_first { last } else { first },
-                            );
-                        }
-                    }
-                }
+                self.ensure_copy_order(layer, object, copy, [first, last]);
             }
         }
     }
+    fn ensure_copy_order(
+        &mut self,
+        layer: &Layer<'_>,
+        object: &Object,
+        copy: usize,
+        tools: [usize; 2],
+    ) {
+        let regions = object.regions.as_ref().unwrap();
+        for (collection, tool) in regions
+            .iter()
+            .flat_map(|region| normal_tools(region, layer, tools))
+        {
+            if overridable(collection, object, layer)
+                && self.entity(object.id, collection.id, copy).is_none()
+            {
+                self.assign(object, collection.id, copy, tool);
+            }
+        }
+    }
+}
+
+fn support_overridable(role: ExtrusionRole, tools: [usize; 2]) -> bool {
+    match role {
+        ExtrusionRole::Mixed => tools.contains(&0),
+        ExtrusionRole::SupportMaterial | ExtrusionRole::SupportTransition => tools[0] == 0,
+        ExtrusionRole::SupportMaterialInterface => tools[1] == 0,
+        _ => false,
+    }
+}
+
+fn normal_tools<'a>(
+    region: &'a Region,
+    layer: &Layer<'_>,
+    [first, last]: [usize; 2],
+) -> impl Iterator<Item = (&'a Collection, usize)> {
+    // Preserve the source parentheses: the second argument of
+    // is_extruder_order is this boolean converted to a tool ID.
+    let order_tool = usize::from(last != 0 || !layer.tools.contains(&region.sparse_tool));
+    let infill = region.infill_first || ordered(layer.tools, region.wall_tool, order_tool);
+    let infill_tool = if region.infill_first { first } else { last };
+    let perimeter_tool = if region.infill_first { last } else { first };
+    region
+        .infills
+        .iter()
+        .filter(move |_| infill)
+        .map(move |collection| (collection, infill_tool))
+        .chain(
+            region
+                .perimeters
+                .iter()
+                .map(move |collection| (collection, perimeter_tool)),
+        )
 }
 
 fn overridable(collection: &Collection, object: &Object, layer: &Layer<'_>) -> bool {

@@ -27,8 +27,7 @@ impl Planned {
         self,
         settings: &ProjectSettings,
         scale: CoordinateScale,
-        tools: &[usize],
-        last: &LayerTools,
+        (tools, last): (&[usize], &LayerTools),
         normal_height: f64,
     ) -> Result<Data, ClipperError> {
         let mut generator = Generator::new(
