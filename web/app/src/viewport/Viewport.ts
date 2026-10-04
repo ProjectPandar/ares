@@ -3,11 +3,10 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { PreviewView } from "../state/store";
 import { buildBed, type BedShape } from "./bed";
+import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { applyPreviewView, buildToolpathMesh } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
-
-export type ViewPreset = "iso" | "top" | "front" | "left";
 
 export interface ViewportColors {
   background: number;
@@ -48,6 +47,8 @@ export class Viewport {
   #selected: number | null = null;
   #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
+  /** The user started orbiting/panning/zooming away from a preset view. */
+  onOrbit?: () => void;
 
   constructor(readonly container: HTMLElement, colors: ViewportColors) {
     this.#colors = colors;
@@ -57,6 +58,8 @@ export class Viewport {
     this.#controls = new OrbitControls(this.#camera, this.#renderer.domElement);
     this.#controls.enableDamping = false;
     this.#controls.addEventListener("change", () => this.render());
+    this.#controls.addEventListener("start", () => this.onOrbit?.());
+    this.#camera.position.set(0, -500, 500);
 
     const hemisphere = new THREE.HemisphereLight(0xffffff, 0x404048, 1.6);
     const key = new THREE.DirectionalLight(0xffffff, 1.6);
@@ -78,9 +81,8 @@ export class Viewport {
 
     this.#resize = new ResizeObserver(() => this.#fitCanvas());
     this.#resize.observe(container);
+    this.#fitCanvas();
     this.setColors(colors);
-    this.setBed(this.#bedShape);
-    this.setView("iso");
   }
 
   setColors(colors: ViewportColors) {
@@ -183,19 +185,21 @@ export class Viewport {
   }
 
   setView(preset: ViewPreset) {
-    const box = new THREE.Box3().setFromObject(this.#bed);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const radius = Math.max(size.x, size.y, this.#bedShape.height * 0.5) * 0.85;
-    const distance = radius / Math.tan(THREE.MathUtils.degToRad(this.#camera.fov / 2));
-    const direction = {
-      iso: new THREE.Vector3(0.0, -1, 0.9),
-      top: new THREE.Vector3(0, -0.0001, 1),
-      front: new THREE.Vector3(0, -1, 0.12),
-      left: new THREE.Vector3(-1, 0, 0.12),
-    }[preset].normalize();
-    center.z = preset === "top" ? 0 : this.#bedShape.height * 0.1;
-    this.#camera.position.copy(center).addScaledVector(direction, distance);
+    selectView(this.#camera, this.#controls.target, preset);
+    this.#controls.update();
+    this.render();
+  }
+
+  /** GLCanvas3D::zoom_to_volumes / zoom_to_plate / zoom_to_bed. */
+  zoomTo(target: ZoomTarget) {
+    const box = new THREE.Box3();
+    if (target === "objects") {
+      box.setFromObject(this.#models);
+      if (this.#toolpaths) box.union(this.#toolpaths.geometry.boundingBox!);
+    }
+    else for (const [x, y] of this.#bedShape.polygon) box.expandByPoint(new THREE.Vector3(x, y, 0));
+    const center = zoomToBox(this.#camera, box, target);
+    if (!center) return;
     this.#controls.target.copy(center);
     this.#controls.update();
     this.render();

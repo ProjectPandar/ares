@@ -7,20 +7,23 @@
   padding: 3px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow);
 }
 .view-button { padding: 3px 10px; color: var(--text-dim); }
-.view-button:hover { color: var(--text); background: var(--panel-raised); }
+.view-button:not(:disabled):hover { color: var(--text); background: var(--panel-raised); }
+.view-button[aria-pressed="true"] { color: var(--accent-text); background: var(--accent); }
+.view-button:disabled { opacity: 0.4; }
+.view-separator { width: 1px; margin: 3px 2px; background: var(--separator); }
 .canvas-hint {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center;
   pointer-events: none; color: var(--text-dim);
 }
 .canvas-hint-title { font-size: 15px; font-weight: 500; color: var(--text); }
 .drop-overlay {
-  position: absolute; inset: 12px; border: 2px dashed var(--accent); border-radius: 10px;
+  position: absolute; inset: 12px; z-index: 10; border: 2px dashed var(--accent); border-radius: 10px;
   display: grid; place-items: center; background: var(--accent-soft); font-size: 15px; pointer-events: none;
 }
 
 /* Preview */
 .preview-card {
-  position: absolute; top: 10px; left: 10px; width: 250px; background: var(--panel);
+  position: absolute; top: 56px; left: 10px; width: 250px; background: var(--panel);
   border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); padding: 10px;
 }
 .preview-card-title { font-weight: 600; margin-bottom: 6px; }

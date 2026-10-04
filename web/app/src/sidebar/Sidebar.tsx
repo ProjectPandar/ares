@@ -70,7 +70,7 @@ export function Sidebar() {
     <aside className="sidebar" data-testid="sidebar">
       <PrinterSection settings={settings} />
       <FilamentSection settings={settings} />
-      <Section icon={<ObjectIcon />} title="Objects" extra={scene ? scene.objects.length : undefined}>
+      <Section icon={<ObjectIcon />} title="Objects" extra={scene ? <span data-testid="object-count">{scene.objects.length}</span> : undefined}>
         <ObjectList />
       </Section>
       <Section icon={<OrcaIcon name="process" />} title="Process">

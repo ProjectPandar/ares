@@ -35,13 +35,21 @@
 .filament-type { color: var(--text-dim); width: 40px; text-align: right; flex: none; }
 
 .object-list { border: 1px solid var(--border); border-radius: 4px; background: var(--panel-sunken); max-height: 180px; overflow-y: auto; }
-.object-list-head { display: flex; justify-content: space-between; padding: 3px 8px; color: var(--text-faint); border-bottom: 1px solid var(--border); font-size: 11px; }
 .object-row { display: flex; align-items: center; gap: 6px; padding: 3px 8px; cursor: pointer; }
 .object-row:hover { background: var(--panel-raised); }
 .object-row.selected { background: var(--accent-checked); color: var(--text); }
 .object-row svg { color: var(--text-dim); flex: none; }
 .object-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.object-count { color: var(--text-faint); }
+.object-count { color: var(--text-dim); }
+.object-row.unprintable .object-name { color: var(--text-faint); }
+.object-part { padding-left: 40px; }
+.object-expander {
+  flex: none; width: 0; height: 0; margin: 0 2px; padding: 0; border: none; background: none; cursor: pointer;
+  border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--text-dim);
+  transform: rotate(-90deg); transition: transform 0.1s;
+}
+.object-row[aria-expanded="true"] .object-expander { transform: none; }
+.object-expander.hidden { visibility: hidden; }
 
 .process-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--separator); margin: 2px -10px 0; padding: 0 6px; }
 .process-tab {

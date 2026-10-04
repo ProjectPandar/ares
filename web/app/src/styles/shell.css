@@ -17,7 +17,7 @@ a { color: var(--accent); }
 .orca-icon { flex: none; display: block; }
 
 .shell { display: grid; grid-template-rows: 32px 40px 1fr 22px; height: 100%; }
-.workspace { min-height: 0; }
+.workspace { position: relative; min-height: 0; }
 
 /* BBLTopbar: file actions, centred title */
 .titlebar {

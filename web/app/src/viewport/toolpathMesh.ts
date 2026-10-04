@@ -19,6 +19,7 @@ export const WIPE_COLOR: Rgb = [255, 255, 0];
 const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
 const TRAVEL = MOVE_TYPES.indexOf("Travel");
 const WIPE = MOVE_TYPES.indexOf("Wipe");
+const CUSTOM = EXTRUSION_ROLES.indexOf("Custom");
 /** `aKind` values above the role ids. */
 const KIND_TRAVEL = 254;
 const KIND_WIPE = 255;
@@ -94,6 +95,9 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   const color = new Uint8Array(vertexCount * 3);
   const layer = new Float32Array(vertexCount);
   const kind = new Uint8Array(vertexCount);
+  // GCodeViewer::load paths box: every extrusion role except Custom (prime lines).
+  const bounds = new THREE.Box3();
+  const point = new THREE.Vector3();
   let count = 0;
   for (let i = 1; i < vertexCount; i++) {
     const type = moveTypes[i];
@@ -106,6 +110,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     start.set(positions.subarray(a, a + 3), count * 3);
     end.set(positions.subarray(b, b + 3), count * 3);
     const extrude = type === EXTRUDE;
+    if (extrude && roles[i] !== CUSTOM) bounds.expandByPoint(point.fromArray(positions, a)).expandByPoint(point.fromArray(positions, b));
     size[count * 2] = extrude ? widths[i] : OPTION_SIZE;
     size[count * 2 + 1] = extrude ? heights[i] : OPTION_SIZE;
     const id = extrude ? roles[i] : type === TRAVEL ? KIND_TRAVEL : KIND_WIPE;
@@ -128,6 +133,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   geometry.setAttribute("aLayer", new THREE.InstancedBufferAttribute(layer.subarray(0, count), 1));
   geometry.setAttribute("aKind", new THREE.InstancedBufferAttribute(kind.subarray(0, count), 1));
   geometry.instanceCount = count;
+  geometry.boundingBox = bounds;
 
   const material = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3,

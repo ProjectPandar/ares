@@ -18,7 +18,7 @@ export function PreviewPage() {
   return (
     <div className="page">
       <Sidebar />
-      <ViewportView toolpaths={toolpaths} view={view}>
+      <ViewportView toolpaths={toolpaths} view={view} fit="objects">
         <div className="preview-card" data-testid="slice-summary">
           <div className="preview-card-title">Slice result</div>
           {slice.status === "done" ? (

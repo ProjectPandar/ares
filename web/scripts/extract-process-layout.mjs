@@ -42,8 +42,12 @@ const used = new Set(pages.flatMap((page) => page.groups.flatMap((group) => grou
 const optionLabels = Object.fromEntries(
   [...used].sort().map((key) => [key, labels[key] ?? { label: key }]),
 );
-// Plater sidebar titles (printer/filament/process) and MainFrame tabs.
-const SHELL_ICONS = ["printer", "filament", "process", "tab_3d_active", "tab_preview_active", "topbar_open"];
+// Plater sidebar titles (printer/filament/process), MainFrame tabs and topbar.
+const SHELL_ICONS = [
+  "printer", "filament", "process", "tab_3d_active", "tab_preview_active", "topbar_open",
+  // MenuFactory ADD_VOLUME_MENU_ITEMS: ObjectList volume icons.
+  "menu_add_part", "menu_add_negative", "menu_add_modifier", "menu_support_blocker", "menu_support_enforcer",
+];
 const icons = new Set([...SHELL_ICONS, ...pages.flatMap((page) => page.groups.map((group) => group.icon))]);
 icons.delete(undefined);
 const iconDir = fileURLToPath(new URL("../app/src/assets/orca/", import.meta.url));

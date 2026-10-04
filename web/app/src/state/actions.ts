@@ -12,7 +12,17 @@ export function setTheme(theme: Theme) {
   useApp.setState({ theme });
 }
 
+/** Plater::load_files entry for a drop: one model file per project for now. */
+export function importFiles(files: File[]) {
+  if (files.length !== 1) useApp.setState({ loadError: "drop one 3MF or STL file at a time" });
+  else void importFile(files[0]);
+}
+
 export async function importFile(file: File) {
+  if (!/\.(3mf|stl)$/i.test(file.name)) {
+    useApp.setState({ loadError: `${file.name} is not a 3MF or STL file` });
+    return;
+  }
   const bytes = new Uint8Array(await file.arrayBuffer());
   useApp.setState({ loadingFile: true, loadError: undefined });
   try {
