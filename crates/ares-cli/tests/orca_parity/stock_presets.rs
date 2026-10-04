@@ -9,6 +9,8 @@ use serde_json::Map;
 mod sweep;
 #[path = "stock_presets/tests.rs"]
 mod tests;
+#[path = "stock_presets/timelapse.rs"]
+mod timelapse;
 
 fn export(
     runner: &OrcaRunner,

@@ -81,8 +81,12 @@ pub(super) fn emit_approach_move(
     // lands one ulp above the nominal z (0.6 - 0.4 > 0.2), which
     // legitimately merges a lift+descend pair that an epsilon-based
     // check would leave split.
-    let cancelled_lift =
-        pending_target.is_none() && state.lifted_amount > 0.0 && travel_will_move_z(state, leg_z);
+    // `travel_to_xyz` bypasses the lifted dead-band when force_z is set
+    // (GCodeWriter.cpp:771). This flag also applies to an unclear position
+    // after timelapse; the approach-shape flag excludes that case.
+    let cancelled_lift = pending_target.is_none()
+        && state.lifted_amount > 0.0
+        && (state.layer_change_travel_pending || travel_will_move_z(state, leg_z));
     if cancelled_lift {
         state.lifted = false;
         state.lifted_amount = 0.0;

@@ -16,12 +16,20 @@ and the `GCode.cpp` marker/filter call sites; see
 [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md) and
 [plan](superpowers/plans/2026-10-04-adaptive-pressure-advance-port.md).
 The current region/tool emitter is preserved as a temporary compatibility shell.
-Type2 smooth tower planning/emission and its PA reset remain dependent work;
-old WIP unsupported-feature guards are not accepted. Bridge candidate traversal
+Adaptive PA is approved and integrated into main at `56e4da53` after rebase,
+7592 workspace tests and both live references passed; Clippy/fmt/WASM passed.
+The next branch `pi/smooth-type2-timelapse-tower` follows
+[ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md) and its
+[plan](superpowers/plans/2026-10-04-smooth-type2-timelapse-port.md), beginning
+with the stock BBL timelapse Z-restatement handoff. Type2 planning/emission
+and tower PA reset remain dependent work; old WIP unsupported-feature guards
+are not accepted. Bridge candidate traversal
 and slicing affine arithmetic are already represented by ARD-0075/0076 in main;
 revalidate rather than overwrite those implementations. Each slice requires
 fresh official complete-output RED/GREEN, separate seeded-reference checks,
 workspace Nextest, Clippy, rustfmt and WASM compilation before commit/push.
+Then request coordinator Claude review and stop for matching approval before
+rebase/revalidation and ff-only main integration; no external review gate.
 No all-printer/option or completed-tower claim is made by this planned port.
 
 ### Current acceptance priorities (2026-10-04)
