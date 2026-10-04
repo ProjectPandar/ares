@@ -3,7 +3,7 @@ use super::{Layer, WipingExtrusions, ordered, overridable};
 use crate::ExtrusionRole;
 
 impl WipingExtrusions {
-    pub(in super::super) fn mark(
+    pub(in crate::project_slice::gcode_emit) fn mark(
         &mut self,
         layer: &Layer<'_>,
         (old, new): (usize, usize),

@@ -25,6 +25,7 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(super) raft: Option<raft_schedule::RaftSchedule>,
     pub(super) print_position: Vec<usize>,
     pub(super) instances: Vec<Vec<super::instances::Instance>>,
+    pub(super) tower: Option<super::super::wipe_tower::Planned>,
     pub(super) labels: Vec<Option<ObjectLabels>>,
     pub(super) object_layer_counts: Vec<usize>,
     pub(super) last_entry: Option<(usize, usize)>,
@@ -42,6 +43,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
     traversal: &PreparedPostClassicTraversal,
     objects: &[Vec<OrderedExtrusionLayer>],
     support: &mut [Vec<InstalledSupportLayer>],
+    original: &crate::project_slice::extrusion_islands::PreparedPostExtrusionIslands,
     context: &mut crate::SlicerContext,
 ) -> Result<Schedule, crate::SliceError> {
     let object_count = objects.len();
@@ -235,7 +237,9 @@ pub(in crate::project_slice::gcode_emit) fn build(
             .fold(0.0, f64::max),
     );
     let skirt_schedule = super::skirt_schedule::SkirtSchedule::new(skirt_layers, max_layer_height);
+    let tower = super::super::wipe_tower::prepare(traversal, original, support, &mut tool_ordering);
     Ok(Schedule {
+        tower,
         tool_ordering,
         merged,
         raft,

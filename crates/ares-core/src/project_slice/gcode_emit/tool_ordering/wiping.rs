@@ -3,6 +3,8 @@ use crate::ExtrusionRole;
 use std::collections::HashMap;
 
 mod assign;
+mod source;
+pub(in crate::project_slice::gcode_emit) use source::objects;
 #[cfg(test)]
 mod tests;
 
@@ -27,7 +29,7 @@ pub(super) struct Region {
     pub(super) perimeters: Vec<Collection>,
 }
 
-pub(super) struct Object {
+pub(in crate::project_slice::gcode_emit) struct Object {
     pub(super) id: usize,
     pub(super) copies: usize,
     pub(super) flush_objects: bool,
@@ -39,11 +41,11 @@ pub(super) struct Object {
     pub(super) support: Option<Vec<(ExtrusionRole, f64)>>,
 }
 
-pub(super) struct Layer<'a> {
-    pub(super) objects: &'a [Object],
-    pub(super) tools: &'a [usize],
-    pub(super) soluble: &'a [bool],
-    pub(super) support_filaments: &'a [bool],
+pub(in crate::project_slice::gcode_emit) struct Layer<'a> {
+    pub(in crate::project_slice::gcode_emit) objects: &'a [Object],
+    pub(in crate::project_slice::gcode_emit) tools: &'a [usize],
+    pub(in crate::project_slice::gcode_emit) soluble: &'a [bool],
+    pub(in crate::project_slice::gcode_emit) support_filaments: &'a [bool],
 }
 
 #[derive(Default)]
@@ -55,7 +57,7 @@ pub(in crate::project_slice::gcode_emit) struct WipingExtrusions {
 }
 
 impl WipingExtrusions {
-    pub(super) fn new(layer: &Layer<'_>) -> Self {
+    pub(in crate::project_slice::gcode_emit) fn new(layer: &Layer<'_>) -> Self {
         let something_overridable = layer.objects.iter().any(|object| {
             object.regions.as_ref().is_some_and(|regions| {
                 regions.iter().any(|region| {
@@ -83,6 +85,10 @@ impl WipingExtrusions {
         }
     }
 
+    pub(in crate::project_slice::gcode_emit) fn has_overrides(&self) -> bool {
+        !self.entities.is_empty() || !self.support.is_empty() || !self.interface.is_empty()
+    }
+
     pub(in crate::project_slice::gcode_emit) fn entity(
         &self,
         object: usize,
@@ -108,12 +114,14 @@ impl WipingExtrusions {
     }
 
     fn assign(&mut self, object: &Object, collection: CollectionId, copy: usize, tool: usize) {
+        // Native unsigned(-1) becomes the signed -1 "print normally" sentinel.
         self.entities
             .entry((object.id, collection))
-            .or_insert_with(|| vec![None; object.copies])[copy] = Some(tool);
+            .or_insert_with(|| vec![None; object.copies])[copy] =
+            (tool != usize::MAX).then_some(tool);
     }
 
-    pub(super) fn ensure_order(&mut self, layer: &Layer<'_>) {
+    pub(in crate::project_slice::gcode_emit) fn ensure_order(&mut self, layer: &Layer<'_>) {
         if !self.something_overridable {
             return;
         }

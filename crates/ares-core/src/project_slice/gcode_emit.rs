@@ -61,6 +61,13 @@ pub(super) fn emit(
     let brim = brim::BrimPlan::generate(traversal)?;
     let skirt =
         skirt::SkirtPlan::generate(traversal, &prepared.support_layers, brim.as_ref(), context)?;
+    let schedule = layers::build_schedule(
+        traversal,
+        &prepared.objects,
+        &mut prepared.support_layers,
+        &prepared.predecessor,
+        context,
+    )?;
     let process = &traversal.resolved.views.full.process;
     super::path_simplification::simplify_support_layers(
         &mut prepared.support_layers,
@@ -68,12 +75,6 @@ pub(super) fn emit(
         process.print.resolution.0,
         process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0,
     );
-    let schedule = layers::build_schedule(
-        traversal,
-        &prepared.objects,
-        &mut prepared.support_layers,
-        context,
-    )?;
     let sliced_layer_count = schedule.layer_count();
     let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
     let first_layer_bounds =

@@ -3,7 +3,7 @@
 use crate::ExtrusionRole;
 use crate::project_slice::{
     fill_entities::{FillExtrusionEntity, LayerFillEntities},
-    perimeters::classic::gap_extrusion::GapFillEntity,
+    perimeters::classic::{entity_collections::ExtrusionEntity, gap_extrusion::GapFillEntity},
 };
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -26,6 +26,24 @@ impl RegionToolUsage {
         } else if role != ExtrusionRole::None {
             self.infill = true;
         }
+    }
+}
+
+pub(in crate::project_slice) fn wall_role(entity: &ExtrusionEntity) -> ExtrusionRole {
+    let role = match entity {
+        ExtrusionEntity::Loop(entity) => entity.extrusion_loop.paths[0].role,
+        ExtrusionEntity::MultiPath(entity) => entity.paths[0].role,
+        ExtrusionEntity::Path(entity) => entity.role,
+    };
+    use crate::project_slice::perimeters::classic::materialize::ExtrusionRole as WallRole;
+    match role {
+        WallRole::ExternalPerimeter => ExtrusionRole::ExternalPerimeter,
+        WallRole::Perimeter => ExtrusionRole::Perimeter,
+        WallRole::OverhangPerimeter => ExtrusionRole::OverhangPerimeter,
+        WallRole::GapFill => ExtrusionRole::GapFill,
+        WallRole::SolidInfill => ExtrusionRole::SolidInfill,
+        WallRole::TopSolidInfill => ExtrusionRole::TopSolidInfill,
+        WallRole::BottomSurface => ExtrusionRole::BottomSurface,
     }
 }
 

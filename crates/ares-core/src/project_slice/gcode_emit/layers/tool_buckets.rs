@@ -15,11 +15,32 @@ use crate::{
     },
 };
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Pass {
+    Wiping,
+    Normal,
+}
+
 pub(super) struct Entry {
     pub(super) source: LayerToPrint,
     pub(super) instance: super::instances::Instance,
     pub(super) body: Option<OrderedExtrusionLayer>,
+    pub(super) wipe_body: Option<OrderedExtrusionLayer>,
     pub(super) support_role: Option<ExtrusionRole>,
+    pub(super) support_wiping: bool,
+}
+
+impl Entry {
+    fn new(source: LayerToPrint, instance: super::instances::Instance) -> Self {
+        Self {
+            source,
+            instance,
+            body: None,
+            wipe_body: None,
+            support_role: None,
+            support_wiping: false,
+        }
+    }
 }
 
 pub(super) struct Input<'a> {
@@ -27,6 +48,7 @@ pub(super) struct Input<'a> {
     pub(super) entries: &'a [LayerToPrint],
     pub(super) instances: &'a [Vec<super::instances::Instance>],
     pub(super) tools: &'a [usize],
+    pub(super) wiping: &'a super::super::tool_ordering::wiping::WipingExtrusions,
     pub(super) objects: &'a mut [Vec<OrderedExtrusionLayer>],
     pub(super) support: &'a [Vec<InstalledSupportLayer>],
     pub(super) raft: &'a mut [Vec<OrderedExtrusionLayer>],
@@ -52,18 +74,24 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
                 options,
                 input.traversal,
                 input.tools,
+                [
+                    input.wiping.support_tool(source.object_index, false),
+                    input.wiping.support_tool(source.object_index, true),
+                ],
             ) {
-                buckets
+                let entry = buckets
                     .entry(tool)
                     .or_default()
                     .entry(position)
-                    .or_insert_with(|| Entry {
-                        source,
-                        instance,
-                        body: None,
-                        support_role: None,
-                    })
-                    .support_role = Some(role);
+                    .or_insert_with(|| Entry::new(source, instance));
+                entry.support_role = Some(role);
+                entry.support_wiping = input
+                    .wiping
+                    .support_tool(
+                        source.object_index,
+                        role == ExtrusionRole::SupportMaterialInterface,
+                    )
+                    .is_some();
             }
         }
         let bodies = if let Some(index) = source.raft_layer {
@@ -76,6 +104,9 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
                 layer
             };
             object::raft(layer, options, input.traversal, input.tools)
+                .into_iter()
+                .map(|(tool, layer)| ((tool, false), layer))
+                .collect()
         } else if let Some(index) = source.object_layer {
             let regions = input.traversal.objects[source.object_index]
                 .predecessor
@@ -99,22 +130,30 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
             } else {
                 layer
             };
-            object::split(layer, input.tools, |region| &regions[region].options)
+            object::split(
+                layer,
+                input.tools,
+                |region| &regions[region].options,
+                |collection| {
+                    input
+                        .wiping
+                        .entity(source.object_index, collection, instance.copy)
+                },
+            )
         } else {
             BTreeMap::new()
         };
-        for (tool, body) in bodies {
-            buckets
+        for ((tool, wiping), body) in bodies {
+            let entry = buckets
                 .entry(tool)
                 .or_default()
                 .entry(position)
-                .or_insert_with(|| Entry {
-                    source,
-                    instance,
-                    body: None,
-                    support_role: None,
-                })
-                .body = Some(body);
+                .or_insert_with(|| Entry::new(source, instance));
+            if wiping {
+                entry.wipe_body = Some(body);
+            } else {
+                entry.body = Some(body);
+            }
         }
     }
     input

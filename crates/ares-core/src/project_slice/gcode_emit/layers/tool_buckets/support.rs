@@ -1,4 +1,4 @@
-//! Support selectors in `GCode.cpp:4870–4967` (without wipe overrides).
+//! Support selectors in `GCode.cpp:4870–4967`, including wipe overrides.
 
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::{ExtrusionRole, ObjectOptions};
@@ -8,6 +8,7 @@ pub(super) fn selectors(
     options: &ObjectOptions,
     traversal: &PreparedPostClassicTraversal,
     tools: &[usize],
+    overrides: [Option<usize>; 2],
 ) -> Vec<(usize, ExtrusionRole)> {
     let role = roles.fold(ExtrusionRole::None, |current, next| {
         if current == ExtrusionRole::None || current == next {
@@ -27,10 +28,18 @@ pub(super) fn selectors(
         role,
         ExtrusionRole::Mixed | ExtrusionRole::SupportMaterialInterface
     );
-    let base_dontcare = options.support_filament.0 == 0;
-    let interface_dontcare = options.support_interface_filament.0 == 0;
+    let mut base_dontcare = options.support_filament.0 == 0;
+    let mut interface_dontcare = options.support_interface_filament.0 == 0;
     let mut base = (options.support_filament.0 - 1) as usize;
     let mut interface = (options.support_interface_filament.0 - 1) as usize;
+    if base_dontcare && let Some(tool) = overrides[0] {
+        base = tool;
+        base_dontcare = false;
+    }
+    if interface_dontcare && let Some(tool) = overrides[1] {
+        interface = tool;
+        interface_dontcare = false;
+    }
     let runtime = &traversal.resolved.views.runtime_gcode;
     let soluble = |id: usize| {
         runtime

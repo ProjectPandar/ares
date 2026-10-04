@@ -162,12 +162,19 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             assert!(reference.contains("; PURGING FINISHED\n"));
         }
         let outcome = crate::compare_case(&sliced);
-        if label == "semm-infill-copies" {
+        if label.starts_with("semm-infill") {
             let actual =
                 std::fs::read_to_string(outcome.artifacts.as_ref().unwrap().join("ares.gcode"))
                     .unwrap();
-            assert!(actual.contains("G1 X90.31 Y114.69 E."));
-            assert!(actual.contains("G1 X120.31 Y114.69 E."));
+            assert_eq!(
+                actual.matches("; PURGING FINISHED\n").count(),
+                reference.matches("; PURGING FINISHED\n").count(),
+                "{label}: real wiping/normal passes"
+            );
+            if label == "semm-infill-copies" {
+                assert!(actual.contains("G1 X90.31 Y114.69 E."));
+                assert!(actual.contains("G1 X120.31 Y114.69 E."));
+            }
         }
         if outcome.status != "PASS" {
             failures.push(format!("{label}: {} {}", outcome.status, outcome.detail));

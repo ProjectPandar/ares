@@ -3,16 +3,14 @@
 #[cfg(test)]
 mod tests;
 
+use crate::project_slice::gcode_emit::tool_ordering::wiping::CollectionId;
 use std::collections::BTreeMap;
 
 use crate::project_slice::{
-    extrusion_islands::{fill_role, gap_role},
+    extrusion_islands::{fill_role, gap_role, wall_role},
     island_print_order::{IslandPrintEntity, OrderedExtrusionIsland, OrderedExtrusionLayer},
+    perimeters::classic::entity_collections::ExtrusionEntityCollection,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
-    perimeters::classic::{
-        entity_collections::{ExtrusionEntity, ExtrusionEntityCollection},
-        materialize::ExtrusionRole as WallRole,
-    },
 };
 use crate::{ExtrusionRole, ObjectOptions, RegionOptions};
 
@@ -20,7 +18,8 @@ pub(super) fn split<'a>(
     layer: &mut OrderedExtrusionLayer,
     tools: &[usize],
     region_options: impl Fn(usize) -> &'a RegionOptions,
-) -> BTreeMap<usize, OrderedExtrusionLayer> {
+    override_tool: impl Fn(CollectionId) -> Option<usize>,
+) -> BTreeMap<(usize, bool), OrderedExtrusionLayer> {
     let count = layer.islands.len();
     let mut buckets = BTreeMap::new();
     for (island_id, island) in layer.islands.iter_mut().enumerate() {
@@ -37,11 +36,25 @@ pub(super) fn split<'a>(
             } else {
                 fills.next().expect("fill retains canonical owner")
             };
+            let id = if matches!(entity, IslandPrintEntity::Perimeter(_)) {
+                CollectionId::Perimeter(collection)
+            } else {
+                CollectionId::Infill(collection)
+            };
+            if let Some(tool) = override_tool(id) {
+                append(
+                    &mut buckets,
+                    (tool, true),
+                    (count, island_id, region, collection),
+                    entity,
+                );
+                continue;
+            }
             let options = region_options(region);
             for (tool, entity) in route(entity, options, tools).into_iter().flatten() {
                 append(
                     &mut buckets,
-                    tool,
+                    (tool, false),
                     (count, island_id, region, collection),
                     entity,
                 );
@@ -68,6 +81,7 @@ pub(super) fn raft(
         options,
         traversal,
         tools,
+        [None; 2],
     );
     for (index, island) in layer.islands.iter_mut().enumerate() {
         let mut regions = std::mem::take(&mut island.infill_regions)
@@ -172,9 +186,9 @@ fn split_walls(
     })
 }
 
-fn append(
-    buckets: &mut BTreeMap<usize, OrderedExtrusionLayer>,
-    tool: usize,
+fn append<K: Ord>(
+    buckets: &mut BTreeMap<K, OrderedExtrusionLayer>,
+    tool: K,
     position: (usize, usize, usize, usize),
     entity: IslandPrintEntity,
 ) {
@@ -252,21 +266,4 @@ fn entity_kind(entity: &IslandPrintEntity) -> (ExtrusionRole, bool, bool) {
         IslandPrintEntity::Perimeter(_) => unreachable!("wall dispatch uses collection roles"),
     };
     (role, role.is_infill(), role.is_solid_infill())
-}
-
-fn wall_role(entity: &ExtrusionEntity) -> ExtrusionRole {
-    let role = match entity {
-        ExtrusionEntity::Loop(entity) => entity.extrusion_loop.paths[0].role,
-        ExtrusionEntity::MultiPath(entity) => entity.paths[0].role,
-        ExtrusionEntity::Path(entity) => entity.role,
-    };
-    match role {
-        WallRole::ExternalPerimeter => ExtrusionRole::ExternalPerimeter,
-        WallRole::Perimeter => ExtrusionRole::Perimeter,
-        WallRole::OverhangPerimeter => ExtrusionRole::OverhangPerimeter,
-        WallRole::GapFill => ExtrusionRole::GapFill,
-        WallRole::SolidInfill => ExtrusionRole::SolidInfill,
-        WallRole::TopSolidInfill => ExtrusionRole::TopSolidInfill,
-        WallRole::BottomSurface => ExtrusionRole::BottomSurface,
-    }
 }

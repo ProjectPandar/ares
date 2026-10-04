@@ -1,4 +1,5 @@
 use super::*;
+use crate::project_slice::gcode_emit::tool_ordering::wiping::CollectionId;
 use crate::{
     OrcaInt,
     geometry::{Point, Polyline},
@@ -36,10 +37,23 @@ fn tool_buckets_preserve_source_collection_identity_and_region() {
             infill_collections: vec![2, 2, 7, 9],
         }],
     };
-    let buckets = split(&mut layer, &[0, 1], |region| &regions[region]);
-    assert_eq!(buckets[&0].islands[0].infill_regions, [0]);
-    assert_eq!(buckets[&0].islands[0].infill_collections, [7]);
-    assert_eq!(buckets[&1].islands[0].infill_regions, [1, 1, 1]);
-    assert_eq!(buckets[&1].islands[0].infill_collections, [2, 2, 9]);
-    assert_eq!(buckets[&1].islands[0].entities.len(), 3);
+    let mut other_copy = layer.clone();
+    let wiped = split(
+        &mut other_copy,
+        &[0, 1],
+        |region| &regions[region],
+        |id| matches!(id, CollectionId::Infill(7 | 2)).then_some(0),
+    );
+    assert_eq!(wiped[&(0, true)].islands[0].infill_collections, [2, 2, 7]);
+    assert_eq!(wiped[&(0, true)].islands[0].infill_regions, [1, 1, 0]);
+    assert_eq!(wiped[&(1, false)].islands[0].infill_collections, [9]);
+    let buckets = split(&mut layer, &[0, 1], |region| &regions[region], |_| None);
+    assert_eq!(buckets[&(0, false)].islands[0].infill_regions, [0]);
+    assert_eq!(buckets[&(0, false)].islands[0].infill_collections, [7]);
+    assert_eq!(buckets[&(1, false)].islands[0].infill_regions, [1, 1, 1]);
+    assert_eq!(
+        buckets[&(1, false)].islands[0].infill_collections,
+        [2, 2, 9]
+    );
+    assert_eq!(buckets[&(1, false)].islands[0].entities.len(), 3);
 }

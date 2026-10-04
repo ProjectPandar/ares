@@ -16,6 +16,8 @@ use crate::{
 
 pub(super) struct Input<'a, 'b> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) pass: tool_buckets::Pass,
+    pub(super) purging_finished: bool,
     pub(super) support_layers: &'a mut [Vec<InstalledSupportLayer>],
     pub(super) raft: &'a Option<super::RaftSchedule>,
     pub(super) labels: &'a [Option<ObjectLabels>],
@@ -45,6 +47,8 @@ pub(super) fn emit(
 ) -> Result<(), SliceError> {
     let Input {
         traversal,
+        pass,
+        purging_finished,
         support_layers,
         raft,
         labels,
@@ -65,6 +69,16 @@ pub(super) fn emit(
         last_entry,
         layer_output_start,
     } = input;
+    if purging_finished {
+        output.extend_from_slice(b"; PURGING FINISHED\n");
+    }
+    let body = match pass {
+        tool_buckets::Pass::Wiping => &mut bucket.wipe_body,
+        tool_buckets::Pass::Normal => &mut bucket.body,
+    };
+    let support_role = bucket
+        .support_role
+        .filter(|_| bucket.support_wiping == (pass == tool_buckets::Pass::Wiping));
     let entry = &bucket.source;
     let object_index = entry.object_index;
     let raft_index = entry.raft_layer;
@@ -87,10 +101,13 @@ pub(super) fn emit(
     // machinery (travel/Z/TYPE/wipe/retract) is identical to the
     // object path.
     if let Some(raft_index) = raft_index {
+        let Some(body) = body.as_mut() else {
+            return Ok(());
+        };
         raft_entry::emit(
             output,
             state,
-            bucket.body.as_mut().expect("raft tool bucket retains body"),
+            body,
             raft,
             traversal,
             object_index,
@@ -140,7 +157,7 @@ pub(super) fn emit(
                 region.top_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
         }
     }
-    if let Some(selected_role) = bucket.support_role {
+    if let Some(selected_role) = support_role {
         let support_index = entry.support_layer.expect("support bucket retains layer");
         support_entry::emit(
             output,
@@ -155,7 +172,7 @@ pub(super) fn emit(
             chunk_perimeter_spacing,
             labels,
             emit_labels,
-            bucket.body.is_none(),
+            body.is_none(),
             is_group_end,
             traditional_timelapse,
             timelapse_context,
@@ -183,7 +200,7 @@ pub(super) fn emit(
         chunk_slices,
         chunk_perimeter_spacing,
     );
-    let Some(layer) = bucket.body.as_mut() else {
+    let Some(layer) = body.as_mut() else {
         return Ok(());
     };
     object_entry::emit(
@@ -195,7 +212,7 @@ pub(super) fn emit(
         traversal,
         object_index,
         layer_index,
-        bucket.support_role.is_some(),
+        support_role.is_some(),
         chunk_slices,
         chunk_perimeter_spacing,
         labels,

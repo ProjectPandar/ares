@@ -6,6 +6,8 @@ mod generate;
 mod generator;
 mod geometry;
 mod plan;
+mod planning;
+pub(super) use planning::{Planned, prepare};
 mod postprocess;
 mod prime;
 mod result;

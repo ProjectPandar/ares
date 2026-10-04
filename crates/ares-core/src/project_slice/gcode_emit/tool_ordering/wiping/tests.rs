@@ -105,6 +105,31 @@ fn dedicated_objects_take_perimeters_before_other_objects_infill() {
 }
 
 #[test]
+fn absent_nonsupport_tool_preserves_native_negative_one_normal_sentinel() {
+    let mut object = object();
+    object
+        .regions
+        .as_mut()
+        .unwrap()
+        .first_mut()
+        .unwrap()
+        .infill_first = true;
+    let objects = [object];
+    let layer = Layer {
+        objects: &objects,
+        tools: &[0],
+        soluble: &[false],
+        support_filaments: &[true],
+    };
+    let mut wiping = WipingExtrusions::new(&layer);
+    wiping.ensure_order(&layer);
+    // C++ converts unsigned(-1) to the signed "print normally" sentinel.
+    assert!(wiping.has_overrides());
+    assert_eq!(wiping.entity(7, CollectionId::Infill(0), 0), None);
+    assert_eq!(wiping.entity(7, CollectionId::Infill(0), 1), None);
+}
+
+#[test]
 fn ordering_preserves_the_source_boolean_tool_argument() {
     let objects = [object()];
     let layer = Layer {

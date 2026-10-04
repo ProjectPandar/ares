@@ -229,11 +229,13 @@ pub(super) fn append(
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
         // toolchange and every instance block (object skirt group, brim,
         // `; printing object` marker, content).
+        let wiping = tool_ordering.wiping_for_layer(group_z);
         let mut by_tool = tool_buckets::build(tool_buckets::Input {
             traversal,
             entries: &entries,
             instances: &instances,
             tools: tool_ordering.tools_for_layer(group_z),
+            wiping,
             objects,
             support: support_layers,
             raft: &mut raft_layers,
@@ -246,13 +248,21 @@ pub(super) fn append(
                 last_object_copy = None;
             }
             let entry_count = tool_entries.len();
-            for (entry_position, bucket) in tool_entries.iter_mut().enumerate() {
+            for (pass, entry_position) in [tool_buckets::Pass::Wiping, tool_buckets::Pass::Normal]
+                .into_iter()
+                .filter(|pass| *pass == tool_buckets::Pass::Normal || wiping.has_overrides())
+                .flat_map(|pass| (0..entry_count).map(move |position| (pass, position)))
+            {
                 tool_entry::emit(
                     output,
                     state,
-                    bucket,
+                    &mut tool_entries[entry_position],
                     tool_entry::Input {
                         traversal,
+                        pass,
+                        purging_finished: pass == tool_buckets::Pass::Normal
+                            && entry_position == 0
+                            && wiping.has_overrides(),
                         support_layers,
                         raft: &raft,
                         labels: &labels,
@@ -260,7 +270,9 @@ pub(super) fn append(
                         traditional_interlude,
                         traditional_timelapse: timelapse_gate.traditional_timelapse,
                         timelapse_context,
-                        is_group_end: entry_position + 1 == entry_count && Some(*tool) == last_tool,
+                        is_group_end: pass == tool_buckets::Pass::Normal
+                            && entry_position + 1 == entry_count
+                            && Some(*tool) == last_tool,
                         last_object_copy: &mut last_object_copy,
                         entry_builder: &mut entry_builder,
                         chunk_slices: &chunk_slices,

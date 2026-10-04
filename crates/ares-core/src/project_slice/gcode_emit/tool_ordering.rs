@@ -20,20 +20,21 @@ use crate::project_slice::{
 
 #[derive(Default)]
 pub(super) struct LayerTools {
-    print_z: f64,
-    extruders: Vec<usize>,
+    pub(super) print_z: f64,
+    pub(super) extruders: Vec<usize>,
     has_object: bool,
     has_support: bool,
-    wipe_tower_partitions: usize,
-    has_wipe_tower: bool,
-    wipe_tower_layer_height: f64,
+    pub(super) wipe_tower_partitions: usize,
+    pub(super) has_wipe_tower: bool,
+    pub(super) wipe_tower_layer_height: f64,
+    pub(super) wiping: wiping::WipingExtrusions,
 }
 
 pub(super) struct ToolOrdering {
-    layers: Vec<LayerTools>,
+    pub(super) layers: Vec<LayerTools>,
     all_extruders: Vec<usize>,
-    first_extruder: Option<usize>,
-    type2_tower: bool,
+    pub(super) first_extruder: Option<usize>,
+    pub(super) type2_tower: bool,
 }
 
 impl ToolOrdering {
@@ -112,6 +113,10 @@ impl ToolOrdering {
         self.layers
             .iter()
             .flat_map(|layer| layer.extruders.iter().copied())
+    }
+
+    pub(super) fn wiping_for_layer(&self, print_z: f64) -> &wiping::WipingExtrusions {
+        &self.layers[layer_index(&self.layers, print_z)].wiping
     }
 
     pub(super) fn tools_for_layer(&self, print_z: f64) -> &[usize] {

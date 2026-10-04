@@ -3,7 +3,7 @@
 
 mod tool_regions;
 mod volume;
-pub(in crate::project_slice) use tool_regions::{RegionToolUsage, fill_role, gap_role};
+pub(in crate::project_slice) use tool_regions::{RegionToolUsage, fill_role, gap_role, wall_role};
 
 use crate::{
     geometry::{Coord, ExPolygon, Point, fixed_gcc_sort_by},

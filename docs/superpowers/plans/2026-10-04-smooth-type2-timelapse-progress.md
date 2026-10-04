@@ -12,8 +12,9 @@ Private `wipe_tower/` code now contains source-owned material projection,
 writer, rectangle/cone/rib walls, rounding, depth planning, the five last-wipe
 simulations, per-layer finish, priming, unloading/loading/ramming/cooling and
 wiping. These were saved in checkpoint `3519d10d` but remain **not connected to production emission**.
-B's whole-collection purge assignment and E–G remain pending; the full-output
-RED evidence above is unchanged. Do not publish these modules as a completed
+At that checkpoint B's whole-collection purge assignment and E–G were pending.
+The production-dispatch continuation below does not change the full-output RED
+status. Do not publish these modules as a completed
 Type2 implementation or infer parity from their unit tests.
 
 Precision regression: `scaled(Vec2f)` divides in float precision, whereas
@@ -109,6 +110,45 @@ The existing native overhang-spiral witness passes against official and seeded
 binaries (`...-{official,seeded}.log`); this supplemental motion check is not a full Type2 parity
 claim. Copy-aware external boundaries, brim and labels remain to be audited.
 
+
+## Whole-collection purge production dispatch
+
+`Print.cpp:3572–3654` now supplies the real layer allocator and depth-plan input.
+Original collection snapshots retain region, role, infill/solid classification
+and local collection identity before flattening/simplification. Support volume
+is read from original 3D polylines before support simplification. Metadata is
+built only for eligible flush targets, in linear collection/region work.
+`GCode.cpp:4870–4967,5328–5421` consumers now route whole collections per local
+copy ordinal, apply object-scoped support/interface overrides, and emit wiping
+before normal passes with the native `; PURGING FINISHED` boundary. Same-tool
+assignments are still wiping assignments. The source signed -1 normal sentinel
+is retained even when the unsigned lookup returns its maximum value; it must
+not become a nonexistent tool bucket that loses object paths.
+
+Evidence for this connected sub-boundary:
+- Routing API RED: `/tmp/ares-pi-tower-wiping-routing-red.log`.
+- Sentinel RED observed `Some(18446744073709551615)` instead of `None`:
+  `/tmp/ares-pi-tower-wiping-sentinel-red.log`; regression now passes.
+- 32 focused tests PASS: `/tmp/ares-pi-tower-wiping-routing-all-unit.log`.
+  Whole-collection routing also preserves the fixture's original `[2,2,7]`
+  order/region ownership and leaves the second copy's nominal ownership intact.
+- Official and seeded tests assert equal positive purge-boundary counts in
+  both single-copy and two-copy infill cases; both translated Ares contours
+  remain asserted. All five BBL/PA control functions PASS per reference.
+  Evidence: `/tmp/ares-pi-tower-wiping-routing-final-official.log` and
+  `/tmp/ares-pi-tower-wiping-routing-seeded.log`.
+- Full comparisons remain RED: infill 752940/126156 bytes, two-copy
+  831091/203384 bytes (reference/Ares). The comparator is unchanged. Generator
+  results, placement, labels/brim/support-copy lifecycle audit and E–G remain
+  unfinished; retaining a production plan does not emit a tower.
+- Clippy completes with 341 warnings, down from 354; four new nesting
+  diagnostics were removed, without suppression. This still fails the final
+  zero-introduced-warning gate against main's approximately 219 baseline.
+  `/tmp/ares-pi-tower-wiping-routing-final-clippy.log`.
+- Core/adapter WASM build PASS:
+  `/tmp/ares-pi-tower-wiping-routing-final-wasm.log`; fmt/diff checks clean.
+
+No Type2 approval or final review readiness is claimed.
 
 ## Copy ownership and full-output witness
 
