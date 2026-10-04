@@ -1,8 +1,9 @@
 // Regenerates app/src/sidebar/processLayout.ts from an OrcaSlicer checkout:
 // page/group/option order from `TabPrint::build` (src/slic3r/GUI/Tab.cpp) and
-// label/sidetext from `PrintConfigDef` (src/libslic3r/PrintConfig.cpp).
+// label/sidetext from `PrintConfigDef` (src/libslic3r/PrintConfig.cpp), and
+// copies the optgroup and sidebar/tab icons from resources/images.
 // Usage: node scripts/extract-process-layout.mjs <OrcaSlicer dir>
-import { readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,11 +17,11 @@ const body = tab.slice(tab.indexOf("void TabPrint::build()"));
 const build = body.slice(0, body.search(/\n}\n/));
 const pages = [];
 for (const match of build.matchAll(
-  /add_options_page\(L\("([^"]+)"|new_optgroup\(L\("([^"]+)"|append_single_option_line\("([a-z0-9_]+)"/g,
+  /add_options_page\(L\("([^"]+)"|new_optgroup\(L\("([^"]+)"\)(?:,\s*L"([a-z0-9_]+)")?|append_single_option_line\("([a-z0-9_]+)"/g,
 )) {
-  const [, page, group, key] = match;
+  const [, page, group, icon, key] = match;
   if (page) pages.push({ title: page, groups: [] });
-  else if (group) pages.at(-1).groups.push({ title: group, keys: [] });
+  else if (group) pages.at(-1).groups.push({ title: group, icon, keys: [] });
   else pages.at(-1).groups.at(-1)?.keys.push(key);
 }
 
@@ -41,6 +42,14 @@ const used = new Set(pages.flatMap((page) => page.groups.flatMap((group) => grou
 const optionLabels = Object.fromEntries(
   [...used].sort().map((key) => [key, labels[key] ?? { label: key }]),
 );
+// Plater sidebar titles (printer/filament/process) and MainFrame tabs.
+const SHELL_ICONS = ["printer", "filament", "process", "tab_3d_active", "tab_preview_active", "topbar_open"];
+const icons = new Set([...SHELL_ICONS, ...pages.flatMap((page) => page.groups.map((group) => group.icon))]);
+icons.delete(undefined);
+const iconDir = fileURLToPath(new URL("../app/src/assets/orca/", import.meta.url));
+mkdirSync(iconDir, { recursive: true });
+for (const icon of icons) copyFileSync(join(orca, "resources/images", `${icon}.svg`), join(iconDir, `${icon}.svg`));
+
 const output = fileURLToPath(new URL("../app/src/sidebar/processLayout.ts", import.meta.url));
 writeFileSync(
   output,
@@ -48,7 +57,7 @@ writeFileSync(
     `// TabPrint::build (src/slic3r/GUI/Tab.cpp) and PrintConfigDef labels\n` +
     `// (src/libslic3r/PrintConfig.cpp). Do not edit by hand.\n\n` +
     `export interface OptionLabel {\n  label?: string;\n  sidetext?: string;\n}\n\n` +
-    `export const PROCESS_PAGES: { title: string; groups: { title: string; keys: string[] }[] }[] = ${JSON.stringify(pages, null, 2)};\n\n` +
+    `export const PROCESS_PAGES: { title: string; groups: { title: string; icon?: string; keys: string[] }[] }[] = ${JSON.stringify(pages, null, 2)};\n\n` +
     `export const OPTION_LABELS: Record<string, OptionLabel> = ${JSON.stringify(optionLabels, null, 2)};\n`,
 );
-console.log(`wrote ${output}: ${pages.length} pages, ${used.size} options`);
+console.log(`wrote ${output}: ${pages.length} pages, ${used.size} options, ${icons.size} icons`);

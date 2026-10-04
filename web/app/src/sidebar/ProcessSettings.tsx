@@ -2,6 +2,7 @@ import type { ProjectSettings } from "@ares-slicer/wasm";
 import { useState } from "react";
 import { resetOverrides } from "../state/actions";
 import { useApp } from "../state/store";
+import { OrcaIcon } from "../shell/icons";
 import { OptionField } from "./OptionField";
 import { OPTION_LABELS, PROCESS_PAGES } from "./processLayout";
 
@@ -34,7 +35,7 @@ export function ProcessSettings({ settings }: { settings: ProjectSettings | null
         if (keys.length === 0) return null;
         return (
           <div className="optgroup" key={group.title}>
-            <div className="optgroup-title">{group.title}</div>
+            <div className="optgroup-title">{group.icon && <OrcaIcon name={group.icon} size={18} />}{group.title}</div>
             {keys.map((key) => (
               <OptionField key={key} optionKey={key} label={OPTION_LABELS[key]} original={values[key]} edited={overrides[key]} />
             ))}

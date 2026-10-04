@@ -1,0 +1,86 @@
+/*
+ * Light/dark pairs from OrcaSlicer: the StateColor.cpp dark-mode map,
+ * GUI_App::update_label_colours (#F1754E modified label), GLCanvas3D
+ * DEFAULT_BG_LIGHT_COLOR(_DARK), Bed3D::DEFAULT_MODEL_COLOR(_DARK) x0.8
+ * (render_default) and PartPlate::LINE_TOP_SEL(_DARK)_COLOR.
+ */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --topbar: #3b4446;
+  --topbar-hover: #6b6b6b;
+  --topbar-text: #fefefe;
+  --title-top: #f8f8f8;
+  --title-bottom: #f1f1f1;
+  --panel: #ffffff;
+  --panel-raised: #f1f1f1;
+  --panel-sunken: #f8f8f8;
+  --field: #ffffff;
+  --field-disabled: #f0f0f1;
+  --border: #dbdbdb;
+  --separator: #eeeeee;
+  --border-strong: #acacac;
+  --text: #262e30;
+  --label: #363636;
+  --text-dim: #6b6b6a;
+  --text-faint: #acacac;
+  --button: #dfdfdf;
+  --button-hover: #d4d4d4;
+  --accent: #009688;
+  --accent-hover: #26a69a;
+  --accent-pressed: #00897b;
+  --accent-text: #fefefe;
+  --accent-soft: #e5f0ee;
+  --accent-checked: #bfe1de;
+  --disabled-bg: #6b6b6b;
+  --disabled-text: #acacac;
+  --danger: #d01b1b;
+  --modified: #f1754e;
+  --canvas-bg: #e7e7e7;
+  --bed: #434545;
+  --bed-grid: #878b88;
+  --bed-grid-major: #878b88;
+  --bed-outline: #e5e5e5;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #2d2d31;
+  --topbar: #2d2d30;
+  --topbar-hover: #4d4d54;
+  --topbar-text: #fefefe;
+  --title-top: #36363c;
+  --title-bottom: #36363b;
+  --panel: #2d2d31;
+  --panel-raised: #36363b;
+  --panel-sunken: #333337;
+  --field: #2d2d31;
+  --field-disabled: #333337;
+  --border: #4a4a51;
+  --separator: #4c4c55;
+  --border-strong: #65656a;
+  --text: #efeff0;
+  --label: #b2b3b5;
+  --text-dim: #b3b3b5;
+  --text-faint: #818183;
+  --button: #3e3e45;
+  --button-hover: #4d4d54;
+  --accent: #009688;
+  --accent-hover: #26a69a;
+  --accent-pressed: #00897b;
+  --accent-text: #fefefe;
+  --accent-soft: #283232;
+  --accent-checked: #223c3c;
+  --disabled-bg: #6b6b6b;
+  --disabled-text: #acacac;
+  --danger: #bb2a3a;
+  --modified: #f1754e;
+  --canvas-bg: #54545a;
+  --bed: #343439;
+  --bed-grid: #4c4c55;
+  --bed-grid-major: #4c4c55;
+  --bed-outline: #e5e5e5;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}

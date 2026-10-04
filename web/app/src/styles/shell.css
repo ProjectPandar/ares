@@ -1,0 +1,94 @@
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 12px/1.4 "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+button { font: inherit; color: inherit; }
+button:disabled { cursor: default; }
+a { color: var(--accent); }
+.orca-icon { flex: none; display: block; }
+
+.shell { display: grid; grid-template-rows: 32px 40px 1fr 22px; height: 100%; }
+.workspace { min-height: 0; }
+
+/* BBLTopbar: file actions, centred title */
+.titlebar {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 6px;
+  background: var(--topbar); color: var(--topbar-text);
+}
+.titlebar-left, .titlebar-right { display: flex; align-items: center; gap: 2px; }
+.titlebar-right { justify-content: flex-end; }
+.titlebar-title { font-size: 12px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; margin: 0 10px 0 4px; }
+.brand-mark {
+  display: grid; place-items: center; width: 20px; height: 20px; border-radius: 4px;
+  background: var(--accent); color: var(--accent-text); font-size: 12px; font-weight: 700;
+}
+.bar-button {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px; border: none;
+  border-radius: 4px; background: transparent; color: var(--topbar-text); cursor: pointer;
+}
+.bar-button:not(:disabled):hover { background: var(--topbar-hover); }
+.bar-button:disabled { opacity: 0.4; }
+
+/* MainFrame Notebook: tabs on the left, SideButtons on the right */
+.tabbar {
+  display: flex; align-items: stretch; justify-content: space-between; padding: 0 8px 0 0;
+  background: var(--topbar); border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.tabbar-tabs { display: flex; }
+.tab {
+  display: flex; align-items: center; gap: 8px; padding: 0 20px; min-width: 120px; justify-content: center;
+  color: var(--topbar-text); text-decoration: none; font-size: 13px;
+}
+.tab:hover { background: var(--topbar-hover); }
+.tab.active { background: var(--accent); }
+.tabbar-actions { display: flex; align-items: center; gap: 8px; }
+.side-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; min-width: 110px;
+  padding: 0 14px; border: 1px solid var(--accent); border-radius: 4px; background: var(--accent);
+  color: var(--accent-text); font-size: 13px; cursor: pointer;
+}
+.side-button:not(:disabled):hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.side-button:not(:disabled):active { background: var(--accent-pressed); border-color: var(--accent-pressed); }
+.side-button:disabled { background: var(--disabled-bg); border-color: var(--disabled-bg); color: var(--disabled-text); }
+
+.tool-button, .icon-button, .view-button, .link-button {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent;
+  background: transparent; border-radius: 4px; padding: 4px 8px; cursor: pointer;
+}
+.tool-button:not(:disabled):hover, .icon-button:hover { background: var(--panel-raised); border-color: var(--border); }
+.icon-button { padding: 5px; }
+.link-button { padding: 0; color: var(--accent); }
+
+/* Pages */
+.page { display: flex; height: 100%; min-height: 0; }
+
+/* Status line */
+.statusbar {
+  display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
+  background: var(--bg); border-top: 1px solid var(--separator); color: var(--text-dim); font-size: 11px;
+}
+.status-message { display: flex; align-items: center; gap: 6px; }
+.status-message.error { color: var(--danger); }
+.status-right { display: flex; align-items: center; gap: 8px; }
+.engine-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
+.engine-dot.ready { background: var(--accent); }
+.engine-dot.error { background: var(--danger); }
+.spinner {
+  width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent); animation: spin 0.8s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }

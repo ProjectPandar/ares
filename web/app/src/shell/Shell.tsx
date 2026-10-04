@@ -2,7 +2,7 @@ import { Outlet } from "@tanstack/react-router";
 import { useLayoutEffect } from "react";
 import { useApp } from "../state/store";
 import { StatusBar } from "./StatusBar";
-import { TopBar } from "./TopBar";
+import { TabBar, TitleBar } from "./TopBar";
 
 export function Shell() {
   const theme = useApp((state) => state.theme);
@@ -12,7 +12,8 @@ export function Shell() {
   }, [theme]);
   return (
     <div className="shell">
-      <TopBar />
+      <TitleBar />
+      <TabBar />
       <main className="workspace">
         <Outlet />
       </main>

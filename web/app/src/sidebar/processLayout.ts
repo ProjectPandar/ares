@@ -7,12 +7,13 @@ export interface OptionLabel {
   sidetext?: string;
 }
 
-export const PROCESS_PAGES: { title: string; groups: { title: string; keys: string[] }[] }[] = [
+export const PROCESS_PAGES: { title: string; groups: { title: string; icon?: string; keys: string[] }[] }[] = [
   {
     "title": "Quality",
     "groups": [
       {
         "title": "Layer height",
+        "icon": "param_layer_height",
         "keys": [
           "layer_height",
           "initial_layer_print_height"
@@ -20,6 +21,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Line width",
+        "icon": "param_line_width",
         "keys": [
           "line_width",
           "initial_layer_line_width",
@@ -34,6 +36,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Seam",
+        "icon": "param_seam",
         "keys": [
           "seam_position",
           "staggered_inner_seams",
@@ -57,6 +60,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Precision",
+        "icon": "param_precision",
         "keys": [
           "slice_closing_radius",
           "resolution",
@@ -75,6 +79,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Ironing",
+        "icon": "param_ironing",
         "keys": [
           "ironing_type",
           "ironing_pattern",
@@ -87,6 +92,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Z contouring",
+        "icon": "param_advanced",
         "keys": [
           "zaa_enabled",
           "zaa_minimize_perimeter_height",
@@ -97,6 +103,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Wall generator",
+        "icon": "param_wall_generator",
         "keys": [
           "wall_generator",
           "wall_transition_angle",
@@ -113,6 +120,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Walls and surfaces",
+        "icon": "param_wall_surface",
         "keys": [
           "wall_sequence",
           "is_infill_first",
@@ -140,6 +148,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Bridging",
+        "icon": "param_bridge",
         "keys": [
           "bridge_flow",
           "internal_bridge_flow",
@@ -154,6 +163,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Overhangs",
+        "icon": "param_overhang",
         "keys": [
           "detect_overhang_wall",
           "make_overhang_printable",
@@ -172,6 +182,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
     "groups": [
       {
         "title": "Walls",
+        "icon": "param_wall",
         "keys": [
           "wall_loops",
           "alternate_extra_wall",
@@ -180,6 +191,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Top/bottom shells",
+        "icon": "param_shell",
         "keys": [
           "top_shell_layers",
           "top_shell_thickness",
@@ -194,6 +206,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Infill",
+        "icon": "param_infill",
         "keys": [
           "sparse_infill_density",
           "fill_multiline",
@@ -227,6 +240,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Advanced",
+        "icon": "param_advanced",
         "keys": [
           "align_infill_direction_to_model",
           "extra_solid_infills",
@@ -247,6 +261,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
     "groups": [
       {
         "title": "First layer speed",
+        "icon": "param_speed_first",
         "keys": [
           "initial_layer_speed",
           "initial_layer_infill_speed",
@@ -256,6 +271,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Other layers speed",
+        "icon": "param_speed",
         "keys": [
           "outer_wall_speed",
           "inner_wall_speed",
@@ -272,6 +288,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Overhang speed",
+        "icon": "param_overhang_speed",
         "keys": [
           "enable_overhang_speed",
           "slowdown_for_curled_perimeters"
@@ -279,12 +296,14 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Travel speed",
+        "icon": "param_travel_speed",
         "keys": [
           "travel_speed"
         ]
       },
       {
         "title": "Acceleration",
+        "icon": "param_acceleration",
         "keys": [
           "default_acceleration",
           "outer_wall_acceleration",
@@ -302,12 +321,14 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Junction Deviation",
+        "icon": "param_junction_deviation",
         "keys": [
           "default_junction_deviation"
         ]
       },
       {
         "title": "Jerk(XY)",
+        "icon": "param_jerk",
         "keys": [
           "default_jerk",
           "outer_wall_jerk",
@@ -321,6 +342,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Advanced",
+        "icon": "param_advanced",
         "keys": [
           "max_volumetric_extrusion_rate_slope",
           "max_volumetric_extrusion_rate_slope_segment_length",
@@ -334,6 +356,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
     "groups": [
       {
         "title": "Support",
+        "icon": "param_support",
         "keys": [
           "enable_support",
           "support_type",
@@ -350,6 +373,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Raft",
+        "icon": "param_raft",
         "keys": [
           "raft_layers",
           "raft_contact_distance"
@@ -357,6 +381,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Support filament",
+        "icon": "param_support_filament",
         "keys": [
           "support_filament",
           "support_interface_filament",
@@ -365,6 +390,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Support ironing",
+        "icon": "param_ironing",
         "keys": [
           "support_ironing",
           "support_ironing_pattern",
@@ -378,6 +404,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Advanced",
+        "icon": "param_advanced",
         "keys": [
           "support_top_z_distance",
           "support_bottom_z_distance",
@@ -401,6 +428,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Tree supports",
+        "icon": "param_support_tree",
         "keys": [
           "tree_support_tip_diameter",
           "tree_support_branch_distance",
@@ -423,6 +451,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
     "groups": [
       {
         "title": "Prime tower",
+        "icon": "param_tower",
         "keys": [
           "enable_prime_tower",
           "prime_tower_skip_points",
@@ -449,6 +478,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Filament for Features",
+        "icon": "param_filament_for_features",
         "keys": [
           "outer_wall_filament_id",
           "inner_wall_filament_id",
@@ -461,6 +491,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Ooze prevention",
+        "icon": "param_ooze_prevention",
         "keys": [
           "ooze_prevention",
           "standby_temperature_delta",
@@ -470,6 +501,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Flush options",
+        "icon": "param_flush",
         "keys": [
           "flush_into_infill",
           "flush_into_objects",
@@ -478,6 +510,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Advanced",
+        "icon": "advanced",
         "keys": [
           "interlocking_beam",
           "interface_shells",
@@ -497,6 +530,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
     "groups": [
       {
         "title": "Skirt",
+        "icon": "param_skirt",
         "keys": [
           "skirt_loops",
           "skirt_type",
@@ -511,6 +545,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Brim",
+        "icon": "param_adhension",
         "keys": [
           "brim_type",
           "brim_width",
@@ -524,6 +559,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Special mode",
+        "icon": "param_special",
         "keys": [
           "slicing_mode",
           "print_sequence",
@@ -539,6 +575,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Fuzzy Skin",
+        "icon": "fuzzy_skin",
         "keys": [
           "fuzzy_skin",
           "fuzzy_skin_mode",
@@ -556,6 +593,7 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "G-code output",
+        "icon": "param_gcode",
         "keys": [
           "reduce_infill_retraction",
           "gcode_add_line_number",
@@ -566,10 +604,12 @@ export const PROCESS_PAGES: { title: string; groups: { title: string; keys: stri
       },
       {
         "title": "Change extrusion role G-code",
+        "icon": "param_gcode",
         "keys": []
       },
       {
         "title": "Post-processing Scripts",
+        "icon": "param_gcode",
         "keys": []
       },
       {

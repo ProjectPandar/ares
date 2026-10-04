@@ -2,48 +2,64 @@ import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 import { exportGcode, importFile, setTheme, slicePlate } from "../state/actions";
 import { useApp } from "../state/store";
-import { ExportIcon, ImportIcon, MoonIcon, SliceIcon, SunIcon } from "./icons";
+import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
-export function TopBar() {
+/** BBLTopbar: file actions and the project title. */
+export function TitleBar() {
   const input = useRef<HTMLInputElement>(null);
-  const { theme, engine, scene, slice, loadingFile } = useApp();
-  const slicing = slice.status === "slicing";
+  const { theme, engine, file, loadingFile } = useApp();
   return (
-    <header className="topbar">
-      <div className="topbar-left">
+    <header className="titlebar">
+      <div className="titlebar-left">
         <span className="brand" aria-label="Ares">
           <span className="brand-mark">A</span>
           Ares
         </span>
-        <button className="tool-button" title="Import 3MF/STL (Ctrl+I)" onClick={() => input.current?.click()}
+        <button className="bar-button" title="Import 3MF/STL" onClick={() => input.current?.click()}
           disabled={engine !== "ready" || loadingFile}>
-          <ImportIcon /> <span>Import</span>
-        </button>
-        <button className="tool-button" title="Export G-code" onClick={exportGcode}
-          disabled={slice.status !== "done"}>
-          <ExportIcon /> <span>Export G-code</span>
+          <OrcaIcon name="topbar_open" /> <span>Import</span>
         </button>
         <input ref={input} type="file" accept=".3mf,.stl" hidden data-testid="import-input"
           onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void importFile(file);
+            const picked = event.target.files?.[0];
+            if (picked) void importFile(picked);
             event.target.value = "";
           }} />
       </div>
-      <nav className="topbar-tabs">
-        <Link to="/prepare" className="tab" activeProps={{ className: "tab active" }}>Prepare</Link>
-        <Link to="/preview" className="tab" activeProps={{ className: "tab active" }}>Preview</Link>
-      </nav>
-      <div className="topbar-right">
-        <button className="icon-button" title={theme === "dark" ? "Light theme" : "Dark theme"}
+      <span className="titlebar-title">{file ? `${file.name} - Ares` : "Ares"}</span>
+      <div className="titlebar-right">
+        <button className="bar-button" title={theme === "dark" ? "Light theme" : "Dark theme"}
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
-        <button className="primary-button" onClick={() => void slicePlate()}
-          disabled={!scene || slicing || engine !== "ready"}>
-          <SliceIcon /> {slicing ? "Slicing…" : "Slice plate"}
-        </button>
       </div>
     </header>
+  );
+}
+
+/** MainFrame notebook: Prepare/Preview tabs, slice and export SideButtons. */
+export function TabBar() {
+  const { engine, scene, slice } = useApp();
+  const slicing = slice.status === "slicing";
+  return (
+    <nav className="tabbar">
+      <div className="tabbar-tabs">
+        <Link to="/prepare" className="tab" activeProps={{ className: "tab active" }}>
+          <OrcaIcon name="tab_3d_active" size={20} /> Prepare
+        </Link>
+        <Link to="/preview" className="tab" activeProps={{ className: "tab active" }}>
+          <OrcaIcon name="tab_preview_active" size={20} /> Preview
+        </Link>
+      </div>
+      <div className="tabbar-actions">
+        <button className="side-button" onClick={() => void slicePlate()}
+          disabled={!scene || slicing || engine !== "ready"}>
+          {slicing ? "Slicing…" : "Slice plate"}
+        </button>
+        <button className="side-button" onClick={exportGcode} disabled={slice.status !== "done"}>
+          Export G-code file
+        </button>
+      </div>
+    </nav>
   );
 }

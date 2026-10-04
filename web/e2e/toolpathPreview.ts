@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
-import { oracleToolpaths } from "./oracleToolpaths";
+import { type OracleToolpaths, oracleToolpaths } from "./oracleToolpaths";
 
 /** Hash of the downscaled viewport canvas, to detect view changes. */
 function canvasDigest(page: Page) {
@@ -15,17 +15,9 @@ function canvasDigest(page: Page) {
   }).then((pixels) => createHash("sha256").update(pixels).digest("hex"));
 }
 
-/**
- * Feeds upstream GCodeProcessor moves for the sliced G-code into the preview
- * and drives the layer slider and legend against them.
- */
-export async function checkToolpathPreview(page: Page, oracle: string, gcodePath: string, artifacts: string, errors: string[]) {
-  const toolpaths = oracleToolpaths(oracle, gcodePath, artifacts);
-  const layers = toolpaths.layerZs.length;
-  const extrudeRoles = new Set(toolpaths.roles.filter((_, index) => toolpaths.moveTypes[index] === 10));
-  expect(layers).toBe(50);
-
-  await page.evaluate((data) => {
+/** Shows oracle toolpaths through the E2E-only `window.aresE2E` hook. */
+export function injectToolpaths(page: Page, toolpaths: OracleToolpaths) {
+  return page.evaluate((data) => {
     const typed = {
       vertexCount: data.vertexCount,
       positions: Float32Array.from(data.positions),
@@ -48,6 +40,19 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
     };
     (window as unknown as { aresE2E: { showToolpaths(value: unknown): void } }).aresE2E.showToolpaths(typed);
   }, toolpaths);
+}
+
+/**
+ * Feeds upstream GCodeProcessor moves for the sliced G-code into the preview
+ * and drives the layer slider and legend against them.
+ */
+export async function checkToolpathPreview(page: Page, oracle: string, gcodePath: string, artifacts: string, errors: string[]) {
+  const toolpaths = oracleToolpaths(oracle, gcodePath, artifacts);
+  const layers = toolpaths.layerZs.length;
+  const extrudeRoles = new Set(toolpaths.roles.filter((_, index) => toolpaths.moveTypes[index] === 10));
+  expect(layers).toBe(50);
+
+  await injectToolpaths(page, toolpaths);
 
   await expect(page.getByTestId("layer-count")).toHaveText(String(layers));
   const legend = page.getByTestId("legend");
