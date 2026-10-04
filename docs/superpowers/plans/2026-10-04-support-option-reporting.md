@@ -62,3 +62,10 @@ Native/Ares movement already differs at the first travel:95.987/100.314 versus
 93.746/99.414, followed by different skirt polygons/extrusion. This is a real
 reproducible geometry gap, not an M73-only explanation or reference waiver.
 No comparator normalization was changed by this diagnostic.
+
+Subsequent execution-domain correction (ARD0102): the above reproducible
+native/native output and differing Ares geometry do not by themselves prove
+an algorithm gap. Ares ran on the unrestricted host while Orca ran on CPU0;
+Organic merges consume worker count. Same saved pair with Ares also on CPU0
+passes complete comparison. Reporting behavior remains verified and unchanged;
+the earlier algorithm-gap interpretation is superseded, not its raw evidence.

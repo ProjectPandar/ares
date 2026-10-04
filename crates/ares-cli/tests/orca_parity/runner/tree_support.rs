@@ -14,6 +14,16 @@ fn orca_parity_default_tree_auto_overhang_preserves_complete_output() {
 }
 
 #[test]
+fn orca_parity_grid_tree_auto_normalizes_style_and_preserves_complete_output() {
+    compare_overhang("tree-support/auto/grid/overhang", "grid", &[]);
+}
+
+#[test]
+fn orca_parity_snug_tree_auto_normalizes_style_and_preserves_complete_output() {
+    compare_overhang("tree-support/auto/snug/overhang", "snug", &[]);
+}
+
+#[test]
 fn orca_parity_organic_zero_branch_angle_preserves_complete_output() {
     compare_overhang(
         "tree-support/auto/organic/zero-branch-angle",
