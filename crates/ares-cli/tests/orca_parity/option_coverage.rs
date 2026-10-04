@@ -99,6 +99,10 @@ mod completion_tests;
 mod support_report_tests;
 
 #[cfg(test)]
+#[path = "option_coverage/tree_activation.rs"]
+mod tree_activation;
+
+#[cfg(test)]
 #[path = "option_coverage/pressure_advance.rs"]
 mod pressure_advance;
 

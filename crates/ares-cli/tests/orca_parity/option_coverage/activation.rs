@@ -6,6 +6,9 @@ use serde_json::{Map, Value};
 
 use super::domains;
 
+#[path = "activation/support.rs"]
+mod support;
+
 pub(crate) fn inject_case(
     plan: &domains::OptionPlan,
     case: &domains::OptionCase,
@@ -63,6 +66,7 @@ fn normalize_case_dependencies(
     filaments: &mut [Map<String, Value>],
 ) {
     super::preset_identity::activate(plan, case, machine, process, filaments);
+    support::activate(&plan.key, case.value.as_ref(), process);
     if matches!(
         plan.key.as_str(),
         "support_chamber_temp_control"
@@ -341,21 +345,6 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         | "raft_expansion"
         | "raft_first_layer_density"
         | "raft_first_layer_expansion" => &[("raft_layers", "2")],
-        // Tree-support params only apply when the tree generator is
-        // selected (`support_type` default is `normal(auto)`).
-        "tree_support_angle_slow"
-        | "tree_support_auto_brim"
-        | "tree_support_branch_angle"
-        | "tree_support_branch_angle_organic"
-        | "tree_support_branch_diameter"
-        | "tree_support_branch_diameter_angle"
-        | "tree_support_branch_diameter_organic"
-        | "tree_support_branch_distance"
-        | "tree_support_branch_distance_organic"
-        | "tree_support_brim_width"
-        | "tree_support_tip_diameter"
-        | "tree_support_top_rate"
-        | "tree_support_wall_count" => &[("enable_support", "1"), ("support_type", "tree(auto)")],
         // Gap-fill params only run when gap filling is enabled.
         "gap_fill_target" => &[("gap_infill_type", "everywhere")],
         // Wrapping templates and their exclude area only emit when
