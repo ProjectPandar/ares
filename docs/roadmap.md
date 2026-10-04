@@ -8964,3 +8964,18 @@ lint, Tier1 compilation and real browser evidence. Native process-static and
 parallel first-arrival semantics remain explicitly unresolved. This slice
 does not close modifier perimeter/fill/support ownership or relax the Tree
 merge gate, original KSR test, or global printer/option acceptance.
+
+## Web preview and editing upstream slices (ARD-0106 follow-up)
+
+The web frontend (ARD-0106, M1 merged) is unblocked by two source-cited
+slices. Each slice gets its own REVIEW-REQUEST:
+
+1. [M853](milestones/m853-gcode-processor-move-vertices.md):
+   `GCodeProcessorResult::moves` and `LibVGCodeWrapper::convert` →
+   ares-core / ares-vgcode, for toolpath preview.
+2. [M854](milestones/m854-print-config-user-overrides.md):
+   `ConfigBase::set_deserialize` user overrides at the project slice
+   boundary, for settings editing and re-slice.
+
+M853 lands first because Preview is the larger user-visible gap. M854 is
+independent and can follow on the same branch.
