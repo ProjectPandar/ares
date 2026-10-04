@@ -1,0 +1,229 @@
+import type { Scene, VolumeType } from "@ares-slicer/wasm";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { buildBed, type BedShape } from "./bed";
+
+THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+
+export type ViewPreset = "iso" | "top" | "front" | "left";
+
+export interface ViewportColors {
+  background: number;
+  bed: number;
+  gridMinor: number;
+  gridMajor: number;
+  outline: number;
+}
+
+const SELECTED = new THREE.Color(0xffa040);
+
+// GLVolume::render colours for non-part volumes (3DScene.cpp).
+const VOLUME_STYLE: Record<Exclude<VolumeType, "ModelPart">, [number, number]> = {
+  NegativeVolume: [0x606060, 0.45],
+  ParameterModifier: [0xffff00, 0.25],
+  SupportEnforcer: [0x4d80ff, 0.45],
+  SupportBlocker: [0xff4d4d, 0.45],
+};
+
+/**
+ * Three.js plater canvas: bed (3DBed) plus object instances (GLVolumes),
+ * orbit camera, picking. Renders on demand.
+ */
+export class Viewport {
+  readonly #renderer: THREE.WebGLRenderer;
+  readonly #scene = new THREE.Scene();
+  readonly #camera = new THREE.PerspectiveCamera(35, 1, 0.5, 20000);
+  readonly #controls: OrbitControls;
+  readonly #resize: ResizeObserver;
+  readonly #models = new THREE.Group();
+  readonly #raycaster = new THREE.Raycaster();
+  #bed = new THREE.Group();
+  #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
+  #colors: ViewportColors;
+  #frame = 0;
+  #selected: number | null = null;
+  #pointerDown: { x: number; y: number } | null = null;
+  onPick?: (objectId: number | null) => void;
+
+  constructor(readonly container: HTMLElement, colors: ViewportColors) {
+    this.#colors = colors;
+    this.#renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    this.#renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(this.#renderer.domElement);
+    this.#controls = new OrbitControls(this.#camera, this.#renderer.domElement);
+    this.#controls.enableDamping = false;
+    this.#controls.addEventListener("change", () => this.render());
+
+    const hemisphere = new THREE.HemisphereLight(0xffffff, 0x404048, 1.6);
+    const key = new THREE.DirectionalLight(0xffffff, 1.6);
+    key.position.set(-0.6, -1, 1.4);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.5);
+    fill.position.set(1, 0.8, 0.6);
+    this.#scene.add(hemisphere, key, fill, this.#models, this.#bed);
+
+    const canvas = this.#renderer.domElement;
+    canvas.addEventListener("pointerdown", (event) => {
+      this.#pointerDown = { x: event.clientX, y: event.clientY };
+    });
+    canvas.addEventListener("pointerup", (event) => {
+      const start = this.#pointerDown;
+      this.#pointerDown = null;
+      if (event.button !== 0 || !start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) return;
+      this.onPick?.(this.#pick(event));
+    });
+
+    this.#resize = new ResizeObserver(() => this.#fitCanvas());
+    this.#resize.observe(container);
+    this.setColors(colors);
+    this.setBed(this.#bedShape);
+    this.setView("iso");
+  }
+
+  setColors(colors: ViewportColors) {
+    this.#colors = colors;
+    this.#scene.background = new THREE.Color(colors.background);
+    this.setBed(this.#bedShape);
+  }
+
+  setBed(shape: BedShape) {
+    this.#bedShape = shape;
+    this.#scene.remove(this.#bed);
+    disposeTree(this.#bed);
+    this.#bed = buildBed(shape, this.#colors);
+    this.#scene.add(this.#bed);
+    this.render();
+  }
+
+  setScene(scene: Scene | null, filamentColour: string) {
+    disposeTree(this.#models);
+    this.#models.clear();
+    if (scene) {
+      for (const object of scene.objects) {
+        const geometries = object.volumes.map((volume) => {
+          const geometry = new THREE.BufferGeometry();
+          const start = volume.vertexOffset * 3;
+          geometry.setAttribute(
+            "position",
+            new THREE.BufferAttribute(scene.positions.subarray(start, start + volume.vertexCount * 3), 3),
+          );
+          geometry.setIndex(new THREE.BufferAttribute(
+            scene.indices.subarray(volume.indexOffset, volume.indexOffset + volume.indexCount), 1,
+          ));
+          return { volume, geometry };
+        });
+        for (const instance of object.instances) {
+          const group = new THREE.Group();
+          group.matrixAutoUpdate = false;
+          group.matrix.fromArray(instance.matrix);
+          group.userData.objectId = object.id;
+          for (const { volume, geometry } of geometries) {
+            const [color, opacity] = volume.type === "ModelPart"
+              ? [new THREE.Color(filamentColour).getHex(), 1]
+              : VOLUME_STYLE[volume.type];
+            const material = new THREE.MeshStandardMaterial({
+              color,
+              opacity,
+              transparent: opacity < 1,
+              depthWrite: opacity === 1,
+              flatShading: true,
+              roughness: 0.75,
+              metalness: 0.05,
+              side: THREE.DoubleSide,
+            });
+            material.userData.baseColor = color;
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.matrixAutoUpdate = false;
+            mesh.matrix.fromArray(volume.matrix);
+            mesh.userData.objectId = object.id;
+            group.add(mesh);
+          }
+          this.#models.add(group);
+        }
+      }
+    }
+    this.#models.updateMatrixWorld(true);
+    this.setSelected(this.#selected);
+  }
+
+  setSelected(objectId: number | null) {
+    this.#selected = objectId;
+    this.#models.traverse((node) => {
+      if (!(node instanceof THREE.Mesh)) return;
+      const material = node.material as THREE.MeshStandardMaterial;
+      const base = new THREE.Color(material.userData.baseColor as number);
+      material.color.copy(node.userData.objectId === objectId ? base.lerp(SELECTED, 0.65) : base);
+    });
+    this.render();
+  }
+
+  setModelsVisible(visible: boolean) {
+    this.#models.visible = visible;
+    this.render();
+  }
+
+  setView(preset: ViewPreset) {
+    const box = new THREE.Box3().setFromObject(this.#bed);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const radius = Math.max(size.x, size.y, this.#bedShape.height * 0.5) * 0.85;
+    const distance = radius / Math.tan(THREE.MathUtils.degToRad(this.#camera.fov / 2));
+    const direction = {
+      iso: new THREE.Vector3(0.0, -1, 0.9),
+      top: new THREE.Vector3(0, -0.0001, 1),
+      front: new THREE.Vector3(0, -1, 0.12),
+      left: new THREE.Vector3(-1, 0, 0.12),
+    }[preset].normalize();
+    center.z = preset === "top" ? 0 : this.#bedShape.height * 0.1;
+    this.#camera.position.copy(center).addScaledVector(direction, distance);
+    this.#controls.target.copy(center);
+    this.#controls.update();
+    this.render();
+  }
+
+  render() {
+    if (this.#frame) return;
+    this.#frame = requestAnimationFrame(() => {
+      this.#frame = 0;
+      this.#renderer.render(this.#scene, this.#camera);
+    });
+  }
+
+  dispose() {
+    cancelAnimationFrame(this.#frame);
+    this.#resize.disconnect();
+    this.#controls.dispose();
+    disposeTree(this.#models);
+    disposeTree(this.#bed);
+    this.#renderer.dispose();
+    this.#renderer.domElement.remove();
+  }
+
+  #fitCanvas() {
+    const { clientWidth: width, clientHeight: height } = this.container;
+    if (width === 0 || height === 0) return;
+    this.#renderer.setSize(width, height);
+    this.#camera.aspect = width / height;
+    this.#camera.updateProjectionMatrix();
+    this.render();
+  }
+
+  #pick(event: PointerEvent): number | null {
+    const rect = this.#renderer.domElement.getBoundingClientRect();
+    const pointer = new THREE.Vector2(
+      ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      -((event.clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    this.#raycaster.setFromCamera(pointer, this.#camera);
+    const hit = this.#raycaster.intersectObject(this.#models, true)[0];
+    return (hit?.object.userData.objectId as number | undefined) ?? null;
+  }
+}
+
+function disposeTree(root: THREE.Object3D) {
+  root.traverse((node) => {
+    if (node instanceof THREE.Mesh || node instanceof THREE.LineSegments || node instanceof THREE.Line) {
+      node.geometry.dispose();
+      (Array.isArray(node.material) ? node.material : [node.material]).forEach((material) => material.dispose());
+    }
+  });
+}
