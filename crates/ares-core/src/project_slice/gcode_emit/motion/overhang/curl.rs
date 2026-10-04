@@ -14,6 +14,7 @@ mod geometry;
 #[cfg(test)]
 mod tests;
 
+use super::super::LayerGeometry;
 use crate::geometry::{CoordinateScale, LineDistanceTree};
 
 pub(super) use geometry::artificial_distance;
@@ -75,11 +76,11 @@ impl CurlTracker {
         &mut self,
         layer_index: usize,
         points: &[(f64, f64)],
-        width: f32,
-        height: f32,
-        boundary: Option<&LineDistanceTree<'_>>,
-        scale: CoordinateScale,
+        (width, height): (f32, f32),
+        geometry: &LayerGeometry<'_>,
     ) {
+        let boundary = geometry.previous_layer_boundary;
+        let scale = geometry.scale;
         self.roll_over(layer_index);
         if points.len() < 2 {
             return;
@@ -103,14 +104,7 @@ impl CurlTracker {
                 f64::from((a.1 as f32 + b.1 as f32) * 0.5),
             );
             let (distance, bottom_height) = self.nearest_previous(middle);
-            let sign = boundary.map_or(1.0_f64, |tree| {
-                let signed = signed_distance(tree, scale, middle);
-                if signed + f64::from(0.5_f32 * width) < 0.0 {
-                    -1.0
-                } else {
-                    1.0
-                }
-            });
+            let sign = boundary.map_or(1.0_f64, |tree| boundary_sign(tree, scale, middle, width));
             // Upstream `ExtrusionLine` queries are float-precision —
             // `middle_distance` is already narrowed to float by the
             // distancer, and the boundary `sign` check happens in f64
@@ -155,5 +149,19 @@ impl CurlTracker {
             }
         }
         best
+    }
+}
+
+fn boundary_sign(
+    tree: &LineDistanceTree<'_>,
+    scale: CoordinateScale,
+    middle: (f64, f64),
+    width: f32,
+) -> f64 {
+    let signed = signed_distance(tree, scale, middle);
+    if signed + f64::from(0.5_f32 * width) < 0.0 {
+        -1.0
+    } else {
+        1.0
     }
 }

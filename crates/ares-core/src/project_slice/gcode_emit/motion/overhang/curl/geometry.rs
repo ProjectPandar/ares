@@ -50,8 +50,7 @@ pub(super) fn estimate_curled_up_height(
 /// box.
 pub(crate) fn artificial_distance(
     curled: &[CurledLine],
-    current: (f64, f64),
-    next: (f64, f64),
+    [current, next]: [(f64, f64); 2],
     width: f32,
     height: f32,
     scale: CoordinateScale,
@@ -151,12 +150,11 @@ fn projected_length_sum(
         let (u1, v1) = to_local((line.x1, line.y1));
         let mut t_enter = 0.0_f64;
         let mut t_exit = 1.0_f64;
-        let clipped = clip_axis(u0, u1 - u0, 0.0, length, &mut t_enter, &mut t_exit)
+        let clipped = clip_axis(u0, u1 - u0, (0.0, length), &mut t_enter, &mut t_exit)
             && clip_axis(
                 v0,
                 v1 - v0,
-                -dist_limit,
-                dist_limit,
+                (-dist_limit, dist_limit),
                 &mut t_enter,
                 &mut t_exit,
             )
@@ -174,8 +172,7 @@ fn projected_length_sum(
 fn clip_axis(
     origin: f64,
     delta: f64,
-    low: f64,
-    high: f64,
+    (low, high): (f64, f64),
     t_enter: &mut f64,
     t_exit: &mut f64,
 ) -> bool {
@@ -217,16 +214,14 @@ pub(super) fn curvatures(points: &[(f64, f64)]) -> Vec<f32> {
     for &window in CURVATURE_WINDOWS.iter() {
         for index in 0..count {
             let back = walk(
-                points,
-                &predecessor_length,
+                (points, &predecessor_length),
                 index,
                 window * 0.5,
                 true,
                 looped,
             );
             let front = walk(
-                points,
-                &predecessor_length,
+                (points, &predecessor_length),
                 index,
                 window * 0.5,
                 false,
@@ -253,8 +248,7 @@ pub(super) fn curvatures(points: &[(f64, f64)]) -> Vec<f32> {
 /// on the back walk and `[front]` on the front walk) while interpolating
 /// along the traversed direction — replicated verbatim.
 fn walk(
-    points: &[(f64, f64)],
-    predecessor_length: &[f64],
+    (points, predecessor_length): (&[(f64, f64)], &[f64]),
     start: usize,
     half_window: f64,
     backwards: bool,

@@ -100,20 +100,7 @@ impl PressureEqualizerPass {
             idx_end_current_extrusion = idx_begin_current_extrusion;
 
             // Extend the extrusion segment over small travel moves.
-            while idx_end_current_extrusion < self.lines.len() {
-                let just_after_end = self.lines[idx_end_current_extrusion..]
-                    .iter()
-                    .position(|line| !line.extruding())
-                    .map(|offset| idx_end_current_extrusion + offset)
-                    .unwrap_or(self.lines.len());
-                idx_end_current_extrusion = just_after_end.saturating_sub(1);
-                let continuation = self.advance_segment_beyond_small_gap(idx_end_current_extrusion);
-                if continuation > idx_end_current_extrusion {
-                    idx_end_current_extrusion = continuation;
-                } else {
-                    break;
-                }
-            }
+            idx_end_current_extrusion = self.segment_end(idx_end_current_extrusion);
 
             // Steamroller: sliding-window rate limiting across the segment.
             for i in idx_begin_current_extrusion..idx_end_current_extrusion {
@@ -129,6 +116,24 @@ impl PressureEqualizerPass {
             }
             idx_end_current_extrusion += 1;
         }
+    }
+
+    fn segment_end(&self, mut idx_end_current_extrusion: usize) -> usize {
+        while idx_end_current_extrusion < self.lines.len() {
+            let just_after_end = self.lines[idx_end_current_extrusion..]
+                .iter()
+                .position(|line| !line.extruding())
+                .map(|offset| idx_end_current_extrusion + offset)
+                .unwrap_or(self.lines.len());
+            idx_end_current_extrusion = just_after_end.saturating_sub(1);
+            let continuation = self.advance_segment_beyond_small_gap(idx_end_current_extrusion);
+            if continuation > idx_end_current_extrusion {
+                idx_end_current_extrusion = continuation;
+            } else {
+                break;
+            }
+        }
+        idx_end_current_extrusion
     }
 
     /// `advance_segment_beyond_small_gap` (`PressureEqualizer.cpp:136-152`).

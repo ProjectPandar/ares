@@ -154,17 +154,13 @@ impl Estimate {
                 // collapsing the `remaining` chain `ExportLines::update`
                 // walks (:790-800). `arc_start` is the position before
                 // `motions` advanced `state.position` to the arc end.
-                let mut position = arc_start;
-                for (segment_index, (_, block)) in motion_blocks.iter().enumerate() {
-                    let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
-                    let extruding = !state.wiping
-                        && block.delta[3] > 0.0
-                        && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
-                    let seam_vertex = seams.associate(extruding, end);
-                    seam_excluded |= seam_vertex && segment_index == 0;
-                    cache_eligible.push((!block.e_only || state.wiping) && !seam_vertex);
-                    position = end;
-                }
+                seam_excluded = arc_cache_eligibility(
+                    &mut seams,
+                    &motion_blocks,
+                    arc_start,
+                    state.wiping,
+                    &mut cache_eligible,
+                );
             }
             remaining_internal.extend(
                 motion_blocks
@@ -245,73 +241,7 @@ impl Estimate {
             })
             .collect::<Vec<_>>();
         let export_elapsed = export_cache::snapshots(lines, &cache);
-        let mut elapsed = vec![None; lines.len() + 1];
-        let mut cache_index = 0;
-        let mut exported_g1_lines = 0;
-        for (index, line) in lines.iter().enumerate() {
-            let command = line
-                .split(';')
-                .next()
-                .unwrap_or_default()
-                .split_whitespace()
-                .next()
-                .unwrap_or_default();
-            let lookup_id = match command {
-                "G0" | "G1" => {
-                    // `process_line_move(g1_lines_counter++)` (:1460) probes
-                    // `g1_times_cache_it->id == g1_lines_counter` at the
-                    // PRE-increment caller counter (:1246-1248) — the line
-                    // reads the cumulative through the previous eligible
-                    // cache entry.
-                    let id = exported_g1_lines;
-                    exported_g1_lines += 1;
-                    Some(id)
-                }
-                "G2" | "G3" => {
-                    // `ret` = `internal_g1_lines_counter` = the
-                    // `remaining_internal_g1_lines > 0` walk count in
-                    // `ExportLines::update` (:793-799): `arc_internal - 1`
-                    // eligible internal entries for a fully-cached arc
-                    // (the `it->id == counter` probe lands on the
-                    // second-to-last internal segment), 0 when the first
-                    // block was seam-excluded (`it->id > counter`).
-                    // `process_line_move(g1_lines_counter + ret)` (:1466),
-                    // `g1_lines_counter += 1 + ret` (:1467). The `it->id`
-                    // probe is `exported + 1 + ret` (`++` at :778).
-                    let internal = if arc_seam_excluded[index] {
-                        0
-                    } else {
-                        arc_segment_counts[index]
-                    };
-                    // `process_line_move(g1_lines_counter + internal)` (:1466)
-                    // probes `g1_times_cache_it->id == g1_lines_counter +
-                    // internal` (:1246-1248) — `internal` is `update`'s
-                    // `ret` = the `remaining>0` walk count = `arc_internal`
-                    // for a fully-cached arc, 0 when the first block was
-                    // seam-excluded. `g1_lines_counter += 1 + internal` (:1467).
-                    let lookup = exported_g1_lines + internal;
-                    exported_g1_lines += 1 + internal;
-                    Some(lookup)
-                }
-                "G28" => {
-                    exported_g1_lines += 1;
-                    None
-                }
-                _ => None,
-            };
-            let Some(lookup_id) = lookup_id else {
-                continue;
-            };
-            while cache_index < cache.len() && cache[cache_index].id < lookup_id {
-                cache_index += 1;
-            }
-            let hit = cache
-                .get(cache_index)
-                .is_some_and(|entry| entry.id == lookup_id);
-            if hit {
-                elapsed[index + 1] = Some(f64::from(cache[cache_index].elapsed));
-            }
-        }
+        let elapsed = elapsed_snapshots(lines, &cache, &arc_segment_counts, &arc_seam_excluded);
         // `prepare_time += block_time` accumulates in f32
         // (`GCodeProcessor.cpp:475-476`), so the exported trailer matches
         // upstream's float rounding at the sixth decimal.
@@ -337,6 +267,103 @@ impl Estimate {
     pub(super) fn export_elapsed_at(&self, line: usize) -> Option<f32> {
         self.export_elapsed[line]
     }
+}
+
+fn arc_cache_eligibility(
+    seams: &mut SeamDetector,
+    motion_blocks: &[(usize, MotionBlock)],
+    arc_start: [f64; 3],
+    wiping: bool,
+    cache_eligible: &mut Vec<bool>,
+) -> bool {
+    let mut seam_excluded = false;
+    let mut position = arc_start;
+    for (segment_index, (_, block)) in motion_blocks.iter().enumerate() {
+        let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
+        let extruding =
+            !wiping && block.delta[3] > 0.0 && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
+        let seam_vertex = seams.associate(extruding, end);
+        seam_excluded |= seam_vertex && segment_index == 0;
+        cache_eligible.push((!block.e_only || wiping) && !seam_vertex);
+        position = end;
+    }
+    seam_excluded
+}
+
+fn elapsed_snapshots(
+    lines: &[String],
+    cache: &[export_cache::Entry],
+    arc_segment_counts: &[usize],
+    arc_seam_excluded: &[bool],
+) -> Vec<Option<f64>> {
+    let mut elapsed = vec![None; lines.len() + 1];
+    let mut cache_index = 0;
+    let mut exported_g1_lines = 0;
+    for (index, line) in lines.iter().enumerate() {
+        let command = line
+            .split(';')
+            .next()
+            .unwrap_or_default()
+            .split_whitespace()
+            .next()
+            .unwrap_or_default();
+        let lookup_id = match command {
+            "G0" | "G1" => {
+                // `process_line_move(g1_lines_counter++)` (:1460) probes
+                // `g1_times_cache_it->id == g1_lines_counter` at the
+                // PRE-increment caller counter (:1246-1248) — the line
+                // reads the cumulative through the previous eligible
+                // cache entry.
+                let id = exported_g1_lines;
+                exported_g1_lines += 1;
+                Some(id)
+            }
+            "G2" | "G3" => {
+                // `ret` = `internal_g1_lines_counter` = the
+                // `remaining_internal_g1_lines > 0` walk count in
+                // `ExportLines::update` (:793-799): `arc_internal - 1`
+                // eligible internal entries for a fully-cached arc
+                // (the `it->id == counter` probe lands on the
+                // second-to-last internal segment), 0 when the first
+                // block was seam-excluded (`it->id > counter`).
+                // `process_line_move(g1_lines_counter + ret)` (:1466),
+                // `g1_lines_counter += 1 + ret` (:1467). The `it->id`
+                // probe is `exported + 1 + ret` (`++` at :778).
+                let internal = if arc_seam_excluded[index] {
+                    0
+                } else {
+                    arc_segment_counts[index]
+                };
+                // `process_line_move(g1_lines_counter + internal)` (:1466)
+                // probes `g1_times_cache_it->id == g1_lines_counter +
+                // internal` (:1246-1248) — `internal` is `update`'s
+                // `ret` = the `remaining>0` walk count = `arc_internal`
+                // for a fully-cached arc, 0 when the first block was
+                // seam-excluded. `g1_lines_counter += 1 + internal` (:1467).
+                let lookup = exported_g1_lines + internal;
+                exported_g1_lines += 1 + internal;
+                Some(lookup)
+            }
+            "G28" => {
+                exported_g1_lines += 1;
+                None
+            }
+            _ => None,
+        };
+        let Some(lookup_id) = lookup_id else {
+            continue;
+        };
+        while cache_index < cache.len() && cache[cache_index].id < lookup_id {
+            cache_index += 1;
+        }
+        let hit = cache
+            .get(cache_index)
+            .is_some_and(|entry| entry.id == lookup_id);
+        if hit {
+            elapsed[index + 1] = Some(f64::from(cache[cache_index].elapsed));
+        }
+    }
+    elapsed
 }
 
 fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {

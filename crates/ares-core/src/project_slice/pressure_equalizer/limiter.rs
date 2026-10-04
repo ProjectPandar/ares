@@ -111,17 +111,7 @@ pub(crate) fn adjust_volumetric_rate(
                 rate_end = line.volumetric_extrusion_rate_end;
             }
 
-            if line.adjustable_flow {
-                let rate_start = (rate_end * rate_end
-                    + 2.0 * line.volumetric_extrusion_rate * line.dist_xyz() * rate_slope
-                        / line.feedrate())
-                .sqrt();
-                if rate_start < line.volumetric_extrusion_rate_start {
-                    line.volumetric_extrusion_rate_start = rate_start;
-                    line.max_volumetric_extrusion_rate_slope_negative = rate_slope;
-                    line.modified = true;
-                }
-            }
+            limit_start_from_end(line, rate_end, rate_slope);
             let line = &lines[line_idx];
             if line.extrusion_role != ExtrusionRole::Ironing {
                 feedrate_per_role[i_role] = line.volumetric_extrusion_rate_start;
@@ -172,22 +162,40 @@ pub(crate) fn adjust_volumetric_rate(
                 rate_start = line.volumetric_extrusion_rate_start;
             }
 
-            if line.adjustable_flow {
-                let rate_end = (rate_start * rate_start
-                    + 2.0 * line.volumetric_extrusion_rate * line.dist_xyz() * rate_slope
-                        / line.feedrate())
-                .sqrt();
-                if rate_end < line.volumetric_extrusion_rate_end {
-                    line.volumetric_extrusion_rate_end = rate_end;
-                    line.max_volumetric_extrusion_rate_slope_positive = rate_slope;
-                    line.modified = true;
-                }
-            }
+            limit_end_from_start(line, rate_start, rate_slope);
             let line = &lines[line_idx];
             if line.extrusion_role != ExtrusionRole::Ironing {
                 feedrate_per_role[i_role] = line.volumetric_extrusion_rate_end;
             }
         }
+    }
+}
+
+fn limit_start_from_end(line: &mut GCodeLine, rate_end: f32, rate_slope: f32) {
+    if !line.adjustable_flow {
+        return;
+    }
+    let rate_start = (rate_end * rate_end
+        + 2.0 * line.volumetric_extrusion_rate * line.dist_xyz() * rate_slope / line.feedrate())
+    .sqrt();
+    if rate_start < line.volumetric_extrusion_rate_start {
+        line.volumetric_extrusion_rate_start = rate_start;
+        line.max_volumetric_extrusion_rate_slope_negative = rate_slope;
+        line.modified = true;
+    }
+}
+
+fn limit_end_from_start(line: &mut GCodeLine, rate_start: f32, rate_slope: f32) {
+    if !line.adjustable_flow {
+        return;
+    }
+    let rate_end = (rate_start * rate_start
+        + 2.0 * line.volumetric_extrusion_rate * line.dist_xyz() * rate_slope / line.feedrate())
+    .sqrt();
+    if rate_end < line.volumetric_extrusion_rate_end {
+        line.volumetric_extrusion_rate_end = rate_end;
+        line.max_volumetric_extrusion_rate_slope_positive = rate_slope;
+        line.modified = true;
     }
 }
 

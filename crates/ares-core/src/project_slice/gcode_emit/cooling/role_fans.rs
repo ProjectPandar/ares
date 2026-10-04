@@ -35,27 +35,7 @@ impl CoolingState {
                 .map_or(output.len(), |offset| start + offset + 1);
             let marker = std::str::from_utf8(&output[start..end]).unwrap();
             if marker == FORCE_RESUME_FAN {
-                let mut replacement = Vec::new();
-                // CoolingBuffer.cpp:890–898 sends auxiliary before the part fan.
-                if self.auxiliary_fan
-                    && let Some(speed) = self.additional_speed
-                {
-                    let comment = if self.gcode_comments {
-                        if speed == 0 {
-                            " ; disable additional fan "
-                        } else {
-                            " ; enable additional fan "
-                        }
-                    } else {
-                        ""
-                    };
-                    replacement.extend_from_slice(
-                        format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed)).as_bytes(),
-                    );
-                }
-                if role_speed.is_none() && support_speed.is_none() {
-                    replacement.extend_from_slice(&self.part_fan_command(self.physical_part_speed));
-                }
+                let replacement = self.resume_fan_commands(role_speed, support_speed);
                 cursor = start + replacement.len();
                 output.splice(start..end, replacement);
                 continue;
@@ -113,6 +93,27 @@ impl CoolingState {
             cursor = start + replacement.len();
             output.splice(start..end, replacement);
         }
+    }
+
+    fn resume_fan_commands(&self, role_speed: Option<u8>, support_speed: Option<u8>) -> Vec<u8> {
+        let mut replacement = Vec::new();
+        // CoolingBuffer.cpp:890–898 sends auxiliary before the part fan.
+        if self.auxiliary_fan
+            && let Some(speed) = self.additional_speed
+        {
+            let comment = match (self.gcode_comments, speed == 0) {
+                (false, _) => "",
+                (true, true) => " ; disable additional fan ",
+                (true, false) => " ; enable additional fan ",
+            };
+            replacement.extend_from_slice(
+                format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed)).as_bytes(),
+            );
+        }
+        if role_speed.is_none() && support_speed.is_none() {
+            replacement.extend_from_slice(&self.part_fan_command(self.physical_part_speed));
+        }
+        replacement
     }
 
     fn part_fan_command(&self, target: u8) -> Vec<u8> {

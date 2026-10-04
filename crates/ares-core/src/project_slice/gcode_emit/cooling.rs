@@ -259,14 +259,10 @@ impl CoolingState {
             .unwrap_or(0);
         let mut replacement = if self.part_speed != Some(part_speed) {
             let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
-            let comment = if self.gcode_comments {
-                if speed == 0 {
-                    " ; disable fan"
-                } else {
-                    " ; enable fan"
-                }
-            } else {
-                ""
+            let comment = match (self.gcode_comments, speed == 0) {
+                (false, _) => "",
+                (true, true) => " ; disable fan",
+                (true, false) => " ; enable fan",
             };
             format!("M106 S{}{comment}\n", part_fan_pwm(speed)).into_bytes()
         } else {
@@ -298,14 +294,10 @@ impl CoolingState {
         };
         if self.auxiliary_fan && self.additional_speed != Some(additional_speed) {
             self.additional_speed = Some(additional_speed);
-            let comment = if self.gcode_comments {
-                if additional_speed == 0 {
-                    " ; disable additional fan "
-                } else {
-                    " ; enable additional fan "
-                }
-            } else {
-                ""
+            let comment = match (self.gcode_comments, additional_speed == 0) {
+                (false, _) => "",
+                (true, true) => " ; disable additional fan ",
+                (true, false) => " ; enable additional fan ",
             };
             replacement.extend_from_slice(
                 format!(

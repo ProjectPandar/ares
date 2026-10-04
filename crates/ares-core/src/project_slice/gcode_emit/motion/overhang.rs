@@ -53,10 +53,8 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         request.curl.collect(
             request.layer_index,
             request.points,
-            request.properties.width,
-            request.properties.height,
-            request.geometry.previous_layer_boundary,
-            request.geometry.scale,
+            (request.properties.width, request.properties.height),
+            &request.geometry,
         );
     }
     let boundary = request.geometry.previous_layer_boundary?;
@@ -136,8 +134,7 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         if let Some(curled) = curled_lines {
             let artificial = curl::artificial_distance(
                 curled,
-                (current.x, current.y),
-                (next.x, next.y),
+                [(current.x, current.y), (next.x, next.y)],
                 request.properties.width,
                 request.properties.height,
                 request.geometry.scale,

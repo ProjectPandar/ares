@@ -39,8 +39,7 @@ fn artificial_distance_uses_the_coincident_curled_line() {
     }];
     let distance = artificial_distance(
         &curled,
-        (0.0, 0.0),
-        (9.55, 0.0),
+        [(0.0, 0.0), (9.55, 0.0)],
         0.45,
         0.2,
         crate::geometry::CoordinateScale::Normal,
@@ -64,8 +63,7 @@ fn artificial_distance_rejects_perpendicular_influence() {
     }];
     let distance = artificial_distance(
         &curled,
-        (0.0, 0.0),
-        (9.55, 0.0),
+        [(0.0, 0.0), (9.55, 0.0)],
         0.45,
         0.2,
         crate::geometry::CoordinateScale::Normal,

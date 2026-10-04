@@ -219,16 +219,11 @@ pub(super) fn chain_instance_order(centers: &[(f64, f64)], start_near: (i64, i64
             end_points[end_point2].distance_out = end_points[end_point1].distance_out;
             let chain1 = chains.class_of(end_points[end_point1 ^ 1].chain_id);
             let chain2 = chains.class_of(end_points[end_point2 ^ 1].chain_id);
-            let chain_id = if chain1 == 0 {
-                if chain2 == 0 {
-                    chains.new_chain()
-                } else {
-                    chain2
-                }
-            } else if chain2 == 0 || chain1 == chain2 {
-                chain1
-            } else {
-                chains.merge(chain1, chain2)
+            let chain_id = match (chain1, chain2) {
+                (0, 0) => chains.new_chain(),
+                (0, chain2) => chain2,
+                (chain1, chain2) if chain2 == 0 || chain1 == chain2 => chain1,
+                (chain1, chain2) => chains.merge(chain1, chain2),
             };
             end_points[end_point1].chain_id = chain_id;
             end_points[end_point2].chain_id = chain_id;
@@ -243,43 +238,13 @@ pub(super) fn chain_instance_order(centers: &[(f64, f64)], start_near: (i64, i64
         } else {
             // Update the neighbor to the closest still-valid end point
             // (`ShortestPath.cpp:339-366`).
-            let mut best: Option<(usize, f64)> = None;
-            for candidate in 0..count * 2 {
-                if (candidate ^ end_point1) <= 1 || end_points[candidate].chain_id != 0 {
-                    continue;
-                }
-                let chain1 = chains.class_of(end_points[end_point1 ^ 1].chain_id);
-                let chain2 = chains.class_of(end_points[candidate ^ 1].chain_id);
-                if chain1 != chain2 || chain1 == 0 {
-                    let distance = distance_sq(end_point1, candidate) as f64;
-                    if best.is_none_or(|(_, best_distance)| distance < best_distance) {
-                        best = Some((candidate, distance));
-                    }
-                }
-            }
-            match best {
-                Some((candidate, distance)) => {
-                    end_points[end_point1].edge_out = Some(candidate);
-                    end_points[end_point1].distance_out = distance;
-                    queue.push(end_point1);
-                    let mut node = queue.len() - 1;
-                    while node > 0 {
-                        let parent = (node - 1) / 2;
-                        if queue_key(&end_points, queue[node])
-                            < queue_key(&end_points, queue[parent])
-                        {
-                            queue.swap(node, parent);
-                            node = parent;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                None => {
-                    end_points[end_point1].edge_out = None;
-                    end_points[end_point1].distance_out = f64::INFINITY;
-                }
-            }
+            update_neighbor(
+                &mut end_points,
+                &mut queue,
+                &mut chains,
+                end_point1,
+                distance_sq,
+            );
         }
     }
     let Some(mut walker) = first_point else {
@@ -294,6 +259,50 @@ pub(super) fn chain_instance_order(centers: &[(f64, f64)], start_near: (i64, i64
         walker = next;
     }
     order
+}
+
+fn update_neighbor(
+    end_points: &mut [EndPoint],
+    queue: &mut Vec<usize>,
+    chains: &mut EquivalentChains,
+    end_point1: usize,
+    distance_sq: impl Fn(usize, usize) -> i64,
+) {
+    let mut best: Option<(usize, f64)> = None;
+    for candidate in 0..end_points.len() {
+        if (candidate ^ end_point1) <= 1 || end_points[candidate].chain_id != 0 {
+            continue;
+        }
+        let chain1 = chains.class_of(end_points[end_point1 ^ 1].chain_id);
+        let chain2 = chains.class_of(end_points[candidate ^ 1].chain_id);
+        if chain1 != chain2 || chain1 == 0 {
+            let distance = distance_sq(end_point1, candidate) as f64;
+            if best.is_none_or(|(_, best_distance)| distance < best_distance) {
+                best = Some((candidate, distance));
+            }
+        }
+    }
+    match best {
+        Some((candidate, distance)) => {
+            end_points[end_point1].edge_out = Some(candidate);
+            end_points[end_point1].distance_out = distance;
+            queue.push(end_point1);
+            let mut node = queue.len() - 1;
+            while node > 0 {
+                let parent = (node - 1) / 2;
+                if queue_key(end_points, queue[node]) < queue_key(end_points, queue[parent]) {
+                    queue.swap(node, parent);
+                    node = parent;
+                } else {
+                    break;
+                }
+            }
+        }
+        None => {
+            end_points[end_point1].edge_out = None;
+            end_points[end_point1].distance_out = f64::INFINITY;
+        }
+    }
 }
 
 #[cfg(test)]

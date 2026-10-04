@@ -16,69 +16,20 @@ impl FanMover {
             && (!self.only_overhangs || self.current_role == ExtrusionRole::OverhangPerimeter)
         {
             *time = -1.0;
-            if self.kickstart > 0.0 && fan_speed > self.front_buffer_fan_speed {
-                self.current_kickstart = None;
-                self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
-                self.remove_slow_fan(255, self.kickstart);
-                if !self.buffer.is_empty()
-                    && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
-                {
-                    self.print_in_middle(
-                        0,
-                        self.buffer_time_size - self.nb_seconds_delay,
-                        &set_fan_line(100),
-                    );
-                } else {
-                    self.output.push_str(&set_fan_line(100));
-                }
-                let kickstart_duration =
-                    self.kickstart * f32::from(fan_speed - self.front_buffer_fan_speed) / 100.0;
-                let mut time_count = kickstart_duration;
-                let mut index = 0;
-                while index < self.buffer.len() && time_count > 0.0 {
-                    time_count -= self.buffer[index].time;
-                    if time_count < 0.0 {
-                        let data = BufferData::new(raw.to_owned(), 0.0, fan_speed, true);
-                        self.put_in_middle(index, self.buffer[index].time + time_count, data);
-                        break;
-                    }
-                    index += 1;
-                }
-                if time_count > 0.0 {
-                    self.current_kickstart = Some(Kickstart {
-                        fan_speed,
-                        time: time_count,
-                    });
-                    self.current_kickstart_raw = raw.to_owned();
-                }
-                self.front_buffer_fan_speed = fan_speed;
-            } else {
-                self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
-                if !self.buffer.is_empty()
-                    && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
-                {
-                    self.print_in_middle(0, self.buffer_time_size - self.nb_seconds_delay, raw);
-                } else {
-                    self.output.push_str(raw);
-                    self.output.push('\n');
-                }
-                self.front_buffer_fan_speed = fan_speed;
-            }
+            self.process_delayed_fan(raw, fan_speed);
         } else if self.kickstart <= 0.0 {
             // Nothing to do — printed in the buffer as other lines are.
-        } else if self.current_kickstart.is_some() {
-            if let Some(kick) = &mut self.current_kickstart {
-                if self.back_buffer_fan_speed >= fan_speed {
-                    self.current_kickstart = None;
-                } else {
-                    let kickstart_duration =
-                        self.kickstart * f32::from(fan_speed - self.back_buffer_fan_speed) / 100.0;
-                    kick.fan_speed = fan_speed;
-                    kick.time += kickstart_duration;
-                    self.current_kickstart = Some(*kick);
-                    self.current_kickstart_raw = raw.to_owned();
-                    *time = -1.0;
-                }
+        } else if let Some(kick) = &mut self.current_kickstart {
+            if self.back_buffer_fan_speed >= fan_speed {
+                self.current_kickstart = None;
+            } else {
+                let kickstart_duration =
+                    self.kickstart * f32::from(fan_speed - self.back_buffer_fan_speed) / 100.0;
+                kick.fan_speed = fan_speed;
+                kick.time += kickstart_duration;
+                self.current_kickstart = Some(*kick);
+                self.current_kickstart_raw = raw.to_owned();
+                *time = -1.0;
             }
         } else if self.back_buffer_fan_speed < fan_speed - 10 {
             *time = -1.0;
@@ -93,6 +44,61 @@ impl FanMover {
             self.current_kickstart = Some(Kickstart {
                 fan_speed,
                 time: kickstart_duration,
+            });
+            self.current_kickstart_raw = raw.to_owned();
+        }
+    }
+
+    fn process_delayed_fan(&mut self, raw: &str, fan_speed: i16) {
+        if self.kickstart > 0.0 && fan_speed > self.front_buffer_fan_speed {
+            self.current_kickstart = None;
+            self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
+            self.remove_slow_fan(255, self.kickstart);
+            if !self.buffer.is_empty()
+                && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
+            {
+                self.print_in_middle(
+                    0,
+                    self.buffer_time_size - self.nb_seconds_delay,
+                    &set_fan_line(100),
+                );
+            } else {
+                self.output.push_str(&set_fan_line(100));
+            }
+            let kickstart_duration =
+                self.kickstart * f32::from(fan_speed - self.front_buffer_fan_speed) / 100.0;
+            self.schedule_delayed_target(raw, fan_speed, kickstart_duration);
+            self.front_buffer_fan_speed = fan_speed;
+        } else {
+            self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
+            if !self.buffer.is_empty()
+                && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
+            {
+                self.print_in_middle(0, self.buffer_time_size - self.nb_seconds_delay, raw);
+            } else {
+                self.output.push_str(raw);
+                self.output.push('\n');
+            }
+            self.front_buffer_fan_speed = fan_speed;
+        }
+    }
+
+    fn schedule_delayed_target(&mut self, raw: &str, fan_speed: i16, kickstart_duration: f32) {
+        let mut time_count = kickstart_duration;
+        let mut index = 0;
+        while index < self.buffer.len() && time_count > 0.0 {
+            time_count -= self.buffer[index].time;
+            if time_count < 0.0 {
+                let data = BufferData::new(raw.to_owned(), 0.0, fan_speed, true);
+                self.put_in_middle(index, self.buffer[index].time + time_count, data);
+                break;
+            }
+            index += 1;
+        }
+        if time_count > 0.0 {
+            self.current_kickstart = Some(Kickstart {
+                fan_speed,
+                time: time_count,
             });
             self.current_kickstart_raw = raw.to_owned();
         }

@@ -124,13 +124,13 @@ impl BrimPlan {
                 expolygon.douglas_peucker(resolution);
             }
             append_loops(&mut loops, &area);
-            area = offset_expolygons(&area, -1.3f32 * spacing, JoinType::Round, resolution)
-                .and_then(|mut area| {
-                    for expolygon in &mut area {
-                        expolygon.douglas_peucker(resolution);
-                    }
-                    offset_expolygons(&area, 0.3f32 * spacing, JoinType::Round, resolution)
-                })
+            let mut next_area =
+                offset_expolygons(&area, -1.3f32 * spacing, JoinType::Round, resolution)
+                    .map_err(brim_geometry_error)?;
+            for expolygon in &mut next_area {
+                expolygon.douglas_peucker(resolution);
+            }
+            area = offset_expolygons(&next_area, 0.3f32 * spacing, JoinType::Round, resolution)
                 .map_err(brim_geometry_error)?;
         }
         // `makeBrimInfillImpl` (Brim.cpp:839): union_pt_chained_outside_in
@@ -158,57 +158,7 @@ impl BrimPlan {
         // connector does not cross brim centerlines (an EdgeGrid check;
         // approximated here by the gap test alone for the single-object
         // brim whose rings are concentric and connector-safe).
-        let mut previous_end: Option<Point> = None;
-        let mut connected: Vec<Vec<Point>> = Vec::new();
-        for mut points in loops {
-            // `connect_brim_lines` (Brim.cpp:775-797) joins two successive
-            // polylines only when BOTH are open (`! prev.is_closed() &&
-            // ! next.is_closed()`); closed rings are never merged — keep
-            // the closing point and skip the reversal for closed rings
-            // (`optimize_polylines_by_reversing` finds equal endpoint
-            // distances and never flips a closed ring).
-            // Clipper's closed output contours carry the duplicated
-            // closing point (`node->Contour`), so upstream's brim ring
-            // polylines are closed — `to_polylines` keeps the duplicate.
-            // Close each ring the same way; the `is_closed` guard below
-            // then mirrors `connect_brim_lines`'s no-merge rule.
-            if points.len() > 1 && points.first() != points.last() {
-                let first = points[0];
-                points.push(first);
-            }
-            let is_closed = points.len() > 1 && points.first() == points.last();
-            if !is_closed && let Some(end) = previous_end {
-                let distance = |point: &Point| {
-                    let dx = (point.x() - end.x()) as f64;
-                    let dy = (point.y() - end.y()) as f64;
-                    dx * dx + dy * dy
-                };
-                let first = points[0];
-                let last = points[points.len() - 1];
-                if distance(&last) < distance(&first) {
-                    points.reverse();
-                }
-            }
-            let spacing_squared = f64::from(spacing) * f64::from(spacing) * 4.0;
-            let previous_closed = connected
-                .last()
-                .is_some_and(|tail: &Vec<Point>| tail.len() > 1 && tail.first() == tail.last());
-            let gap_ok = !is_closed
-                && !previous_closed
-                && previous_end.is_some_and(|end| {
-                    let start = points[0];
-                    let dx = (start.x() - end.x()) as f64;
-                    let dy = (start.y() - end.y()) as f64;
-                    dx.mul_add(dx, dy * dy) <= spacing_squared
-                });
-            if gap_ok {
-                let tail = connected.last_mut().expect("gap_ok implies a tail");
-                tail.extend_from_slice(&points);
-            } else {
-                connected.push(points);
-            }
-            previous_end = connected.last().and_then(|points| points.last().copied());
-        }
+        let connected = connect_brim_lines(loops, spacing);
         // Re-close each connected path for emission.
         let paths = connected
             .into_iter()
@@ -231,6 +181,61 @@ impl BrimPlan {
             mm3_per_mm: flow.mm3_per_mm * options.brim_flow_ratio.0,
         }))
     }
+}
+
+fn connect_brim_lines(loops: Vec<Vec<Point>>, spacing: f32) -> Vec<Vec<Point>> {
+    let mut previous_end: Option<Point> = None;
+    let mut connected: Vec<Vec<Point>> = Vec::new();
+    for mut points in loops {
+        // `connect_brim_lines` (Brim.cpp:775-797) joins two successive
+        // polylines only when BOTH are open (`! prev.is_closed() &&
+        // ! next.is_closed()`); closed rings are never merged — keep
+        // the closing point and skip the reversal for closed rings
+        // (`optimize_polylines_by_reversing` finds equal endpoint
+        // distances and never flips a closed ring).
+        // Clipper's closed output contours carry the duplicated
+        // closing point (`node->Contour`), so upstream's brim ring
+        // polylines are closed — `to_polylines` keeps the duplicate.
+        // Close each ring the same way; the `is_closed` guard below
+        // then mirrors `connect_brim_lines`'s no-merge rule.
+        if points.len() > 1 && points.first() != points.last() {
+            let first = points[0];
+            points.push(first);
+        }
+        let is_closed = points.len() > 1 && points.first() == points.last();
+        if !is_closed && let Some(end) = previous_end {
+            let distance = |point: &Point| {
+                let dx = (point.x() - end.x()) as f64;
+                let dy = (point.y() - end.y()) as f64;
+                dx * dx + dy * dy
+            };
+            let first = points[0];
+            let last = points[points.len() - 1];
+            if distance(&last) < distance(&first) {
+                points.reverse();
+            }
+        }
+        let spacing_squared = f64::from(spacing) * f64::from(spacing) * 4.0;
+        let previous_closed = connected
+            .last()
+            .is_some_and(|tail: &Vec<Point>| tail.len() > 1 && tail.first() == tail.last());
+        let gap_ok = !is_closed
+            && !previous_closed
+            && previous_end.is_some_and(|end| {
+                let start = points[0];
+                let dx = (start.x() - end.x()) as f64;
+                let dy = (start.y() - end.y()) as f64;
+                dx.mul_add(dx, dy * dy) <= spacing_squared
+            });
+        if gap_ok {
+            let tail = connected.last_mut().expect("gap_ok implies a tail");
+            tail.extend_from_slice(&points);
+        } else {
+            connected.push(points);
+        }
+        previous_end = connected.last().and_then(|points| points.last().copied());
+    }
+    connected
 }
 
 pub(super) fn append_loops(output: &mut Vec<Vec<Point>>, area: &[ExPolygon]) {

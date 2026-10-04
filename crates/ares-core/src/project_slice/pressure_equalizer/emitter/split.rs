@@ -4,14 +4,25 @@
 use super::{NON_TRIVIAL_RATE_DELTA, OutputBuffer, push_line_to_output};
 use crate::project_slice::pressure_equalizer::line::{F, GCodeLine};
 
+#[derive(Clone, Copy)]
+pub(super) struct SplitParameters<'a> {
+    pub(super) length: f32,
+    pub(super) max_segment_length: f32,
+    pub(super) use_relative_e_distances: bool,
+    pub(super) comment: Option<&'a str>,
+}
+
 pub(super) fn emit_accel_then_decel(
     buffer: &mut OutputBuffer,
     line: &mut GCodeLine,
-    length: f32,
-    max_segment_length: f32,
-    use_relative_e_distances: bool,
-    comment: Option<&str>,
+    parameters: SplitParameters<'_>,
 ) -> bool {
+    let SplitParameters {
+        length,
+        max_segment_length,
+        use_relative_e_distances,
+        comment,
+    } = parameters;
     let original_feedrate = f64::from(line.pos_end[F] * line.volumetric_extrusion_rate)
         / f64::from(line.volumetric_extrusion_rate_end.max(f32::EPSILON));
     // total extrusion amount of the original line
@@ -129,12 +140,15 @@ pub(super) fn emit_accel_then_decel(
 pub(super) fn emit_single_slope(
     buffer: &mut OutputBuffer,
     line: &mut GCodeLine,
-    length: f32,
-    max_segment_length: f32,
+    parameters: SplitParameters<'_>,
     mut segments: usize,
-    use_relative_e_distances: bool,
-    comment: Option<&str>,
 ) {
+    let SplitParameters {
+        length,
+        max_segment_length,
+        use_relative_e_distances,
+        comment,
+    } = parameters;
     let accelerating = line.volumetric_extrusion_rate_start < line.volumetric_extrusion_rate_end;
     let feed_avg = 0.5 * (line.pos_start[F] + line.pos_end[F]);
     let slope = if accelerating {

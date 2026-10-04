@@ -5,6 +5,7 @@
 
 mod fan;
 mod helpers;
+mod motion;
 
 use crate::{ExtrusionRole, GCodeFlavor};
 
@@ -126,14 +127,7 @@ impl FanMover {
             self.process_line(line);
         }
         if flush {
-            while let Some(front) = self.buffer.first().cloned() {
-                if front.fan_speed >= 0 {
-                    self.front_buffer_fan_speed = front.fan_speed;
-                }
-                self.output.push_str(&front.raw);
-                self.output.push('\n');
-                self.buffer.remove(0);
-            }
+            self.flush_remaining();
         }
         std::mem::take(&mut self.output)
     }
@@ -161,60 +155,8 @@ impl FanMover {
             }
             match command.as_bytes()[0] {
                 b'T' => need_flush = true,
-                b'G' => {
-                    let number: i32 = command[1..].parse().unwrap_or(-1);
-                    if number == 0 || number == 1 {
-                        let (dx, dy, dz) = (
-                            motion.x.map_or(0.0, |value| {
-                                if self.relative_xyz {
-                                    value
-                                } else {
-                                    value - self.position[0]
-                                }
-                            }),
-                            motion.y.map_or(0.0, |value| {
-                                if self.relative_xyz {
-                                    value
-                                } else {
-                                    value - self.position[1]
-                                }
-                            }),
-                            motion.z.map_or(0.0, |value| {
-                                if self.relative_xyz {
-                                    value
-                                } else {
-                                    value - self.position[2]
-                                }
-                            }),
-                        );
-                        motion.dx = dx;
-                        motion.dy = dy;
-                        motion.dz = dz;
-                        let dist_sq = dx * dx + dy * dy + dz * dz;
-                        if dist_sq > 0.0 {
-                            motion.dist = dist_sq.sqrt();
-                            if self.current_speed > 0.0 {
-                                time = motion.dist / self.current_speed;
-                            }
-                        }
-                    } else if number == 90 {
-                        self.relative_xyz = false;
-                    } else if number == 91 {
-                        self.relative_xyz = true;
-                    }
-                }
-                b'M' => {
-                    fan_speed = read_fan_speed(raw, self.flavor);
-                    if fan_speed >= 0 {
-                        self.current_kickstart = None;
-                        if !self.is_custom_gcode {
-                            self.process_fan_command(raw, fan_speed, &mut time);
-                        } else {
-                            need_flush = true;
-                        }
-                        self.back_buffer_fan_speed = fan_speed;
-                    }
-                }
+                b'G' => time = self.process_g_command(command, &mut motion),
+                b'M' => (fan_speed, need_flush) = self.process_m_command(raw, &mut time),
                 _ => {}
             }
         } else if let Some(comment) = raw.strip_prefix(';') {
@@ -229,61 +171,14 @@ impl FanMover {
         if time >= 0.0 {
             let start = self.position;
             let e_start = self.e_position;
-            if let Some(x) = motion.x {
-                self.position[0] = if self.relative_xyz {
-                    self.position[0] + x
-                } else {
-                    x
-                };
-            }
-            if let Some(y) = motion.y {
-                self.position[1] = if self.relative_xyz {
-                    self.position[1] + y
-                } else {
-                    y
-                };
-            }
-            if let Some(z) = motion.z {
-                self.position[2] = if self.relative_xyz {
-                    self.position[2] + z
-                } else {
-                    z
-                };
-            }
-            if let Some(e) = motion.e {
-                motion.de = if self.relative_e {
-                    e
-                } else {
-                    e - self.e_position
-                };
-                self.e_position = if self.relative_e {
-                    self.e_position + e
-                } else {
-                    e
-                };
-            }
+            self.track_motion(&mut motion);
             self.push_buffer(
                 BufferData::new(raw.to_owned(), time, fan_speed, false),
                 &motion,
                 start,
                 e_start,
             );
-            if let Some(mut kick) = self.current_kickstart
-                && time > 0.0
-            {
-                kick.time -= time;
-                if kick.time < 0.0 {
-                    let split = time + kick.time;
-                    let data = BufferData::new(
-                        std::mem::take(&mut self.current_kickstart_raw),
-                        0.0,
-                        kick.fan_speed,
-                        true,
-                    );
-                    self.put_in_middle(self.buffer.len() - 1, split, data);
-                }
-                self.current_kickstart = (kick.time >= 0.0).then_some(kick);
-            }
+            self.advance_kickstart(time);
         }
 
         while !self.buffer.is_empty()
@@ -294,21 +189,71 @@ impl FanMover {
         {
             let front = self.buffer.remove(0);
             self.buffer_time_size -= front.time;
-            if front.fan_speed < 0
-                || front.fan_speed != self.front_buffer_fan_speed
-                || front.is_kickstart
-            {
-                if front.is_kickstart && front.fan_speed < self.front_buffer_fan_speed {
-                    self.output
-                        .push_str(&format!("M106 S{}\n", fan_pwm(front.fan_speed)));
-                    self.front_buffer_fan_speed = front.fan_speed;
-                } else {
-                    self.output.push_str(&front.raw);
-                    self.output.push('\n');
-                    if front.fan_speed >= 0 {
-                        self.front_buffer_fan_speed = front.fan_speed;
-                    }
-                }
+            self.emit_front(front);
+        }
+    }
+
+    fn flush_remaining(&mut self) {
+        while let Some(front) = self.buffer.first().cloned() {
+            if front.fan_speed >= 0 {
+                self.front_buffer_fan_speed = front.fan_speed;
+            }
+            self.output.push_str(&front.raw);
+            self.output.push('\n');
+            self.buffer.remove(0);
+        }
+    }
+
+    fn process_m_command(&mut self, raw: &str, time: &mut f32) -> (i16, bool) {
+        let mut need_flush = false;
+        let fan_speed = read_fan_speed(raw, self.flavor);
+        if fan_speed >= 0 {
+            self.current_kickstart = None;
+            if !self.is_custom_gcode {
+                self.process_fan_command(raw, fan_speed, time);
+            } else {
+                need_flush = true;
+            }
+            self.back_buffer_fan_speed = fan_speed;
+        }
+        (fan_speed, need_flush)
+    }
+
+    fn advance_kickstart(&mut self, time: f32) {
+        if let Some(mut kick) = self.current_kickstart
+            && time > 0.0
+        {
+            kick.time -= time;
+            if kick.time < 0.0 {
+                let split = time + kick.time;
+                let data = BufferData::new(
+                    std::mem::take(&mut self.current_kickstart_raw),
+                    0.0,
+                    kick.fan_speed,
+                    true,
+                );
+                self.put_in_middle(self.buffer.len() - 1, split, data);
+            }
+            self.current_kickstart = (kick.time >= 0.0).then_some(kick);
+        }
+    }
+
+    fn emit_front(&mut self, front: BufferData) {
+        if front.fan_speed >= 0
+            && front.fan_speed == self.front_buffer_fan_speed
+            && !front.is_kickstart
+        {
+            return;
+        }
+        if front.is_kickstart && front.fan_speed < self.front_buffer_fan_speed {
+            self.output
+                .push_str(&format!("M106 S{}\n", fan_pwm(front.fan_speed)));
+            self.front_buffer_fan_speed = front.fan_speed;
+        } else {
+            self.output.push_str(&front.raw);
+            self.output.push('\n');
+            if front.fan_speed >= 0 {
+                self.front_buffer_fan_speed = front.fan_speed;
             }
         }
     }

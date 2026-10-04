@@ -205,29 +205,20 @@ pub(crate) fn output_gcode_line(
     line.pos_end[F] =
         line.volumetric_extrusion_rate_end * line.pos_end[F] / line.volumetric_extrusion_rate;
 
+    let parameters = SplitParameters {
+        length,
+        max_segment_length,
+        use_relative_e_distances,
+        comment: comment.as_deref(),
+    };
     if line.volumetric_extrusion_rate > line.volumetric_extrusion_rate_start
         && line.volumetric_extrusion_rate > line.volumetric_extrusion_rate_end
-        && emit_accel_then_decel(
-            buffer,
-            line,
-            length,
-            max_segment_length,
-            use_relative_e_distances,
-            comment.as_deref(),
-        )
+        && emit_accel_then_decel(buffer, line, parameters)
     {
         return;
     }
 
-    emit_single_slope(
-        buffer,
-        line,
-        length,
-        max_segment_length,
-        segments,
-        use_relative_e_distances,
-        comment.as_deref(),
-    );
+    emit_single_slope(buffer, line, parameters, segments);
     let _ = original_feedrate;
 }
 
@@ -236,7 +227,7 @@ pub(crate) fn output_gcode_line(
 #[allow(clippy::too_many_lines)]
 mod split;
 
-use split::{emit_accel_then_decel, emit_single_slope};
+use split::{SplitParameters, emit_accel_then_decel, emit_single_slope};
 
 #[cfg(test)]
 mod tests;
