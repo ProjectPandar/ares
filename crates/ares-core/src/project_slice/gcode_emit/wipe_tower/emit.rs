@@ -129,6 +129,7 @@ pub(super) fn append(
         context.traversal,
         context.metadata,
         context.first_layer_bounds,
+        Some(&state.template_rng),
     )?;
     motion::refresh_writer_state(&mut config, state);
     config.insert("change_filament_gcode", Value::String(change));
