@@ -51,6 +51,21 @@ fn committed_project_resolves_one_bounded_final_configuration() {
     assert!(!second_early.wipe_enable_prime_tower);
 }
 
+#[test]
+fn resolved_print_object_retains_translated_copies() {
+    let mut parts = ProjectParts::valid();
+    parts.replace("3D/root.model", "</build>", r#"<item objectid="2" transform="1 0 0 0 1 0 0 0 1 40 50 30" printable="1" auto_drop="1"/></build>"#);
+    parts.replace("Metadata/model_settings.config", "</plate>", r#"<model_instance><metadata key="object_id" value="2"/><metadata key="instance_id" value="1"/><metadata key="identify_id" value="134"/></model_instance></plate>"#);
+    parts.replace("Metadata/model_settings.config", "</assemble>", r#"<assemble_item object_id="2" instance_id="1" transform="1 0 0 0 1 0 0 0 1 0 0 30" offset="0 0 0"/></assemble>"#);
+    let project = load_project(parts.bytes()).unwrap();
+    let resolved = resolve_bounded_project_config(&project).unwrap();
+    assert_eq!(resolved.print_object_count, 1);
+    assert_eq!(
+        resolved.objects[0].print_objects[0].instance_indices,
+        [0, 1]
+    );
+}
+
 fn assert_fixture_shape(resolved: &BoundedResolvedProjectConfig) {
     assert_eq!(resolved.logical_filament_count, 2);
     assert_eq!(resolved.print_object_count, 1);

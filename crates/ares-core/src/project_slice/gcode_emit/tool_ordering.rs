@@ -5,6 +5,7 @@ mod first_layer;
 mod partitions;
 mod reorder;
 mod statistics;
+pub(super) mod wiping;
 
 pub(super) use collect::object_options;
 pub(super) use partitions::max_layer_height;

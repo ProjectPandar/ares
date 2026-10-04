@@ -52,6 +52,20 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
   wrappers follow ordinary fill collections as in `Fill.cpp:1360–1369`.
   Preserve these keys through ordering before implementing volume allocation;
   do not merge different source collections because their roles coincide.
+- `PrintApply.cpp:129–167::print_objects_from_model_object` retains printable
+  `PrintInstance` members in source-instance order within each transform group.
+  `project::effective_config::ResolvedPrintObjectConfig` must retain those source
+  instance indices alongside its transform; a transform group is not one copy.
+  Member lookup uses the existing fixed-order transform comparator before Z
+  shrinkage projection. Actual copy emission remains a separate integration
+  obligation; retaining metadata alone does not establish per-copy parity.
+- Geometry conversions preserve the source scalar type: `scaled(Vec2f)`
+  divides as float; `Point::new_scale` uses the double `scale_` macro
+  (`Point.hpp:204–206,647–704`). They are not interchangeable rounding helpers.
+- Preserve reachable source behavior rather than enabling dormant branches:
+  `WipeTowerWriter2` leaves its arc flag false (cpp 578), and the wall gap caller
+  supplies an empty skip vector (cpp 2526–2528). Configured arc fitting must
+  still be exercised by reference witnesses; it must not invent Type2 arcs.
 - Tests use exported project bytes and complete output through the existing
   CLI parity harness. Keep official and seeded evidence separate.
 - Every green slice is pushed for coordinator Claude review. Stop after

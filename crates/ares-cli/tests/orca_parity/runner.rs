@@ -6,6 +6,9 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
 
+#[path = "runner/type2_copies.rs"]
+pub(crate) mod type2_copies;
+
 #[path = "runner/application.rs"]
 pub(crate) mod application;
 #[cfg(test)]

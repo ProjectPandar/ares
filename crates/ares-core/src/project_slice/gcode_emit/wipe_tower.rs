@@ -1,5 +1,19 @@
 //! `Print::has_wipe_tower` and `Print::wipe_tower_type` activation.
 
+mod filament;
+mod finish_layer;
+mod generate;
+mod generator;
+mod geometry;
+mod plan;
+mod postprocess;
+mod prime;
+mod result;
+mod tool_change;
+mod unload;
+mod wipe;
+mod writer;
+
 pub(super) fn type2_requested(settings: &crate::ProjectSettings, bbl: bool) -> bool {
     let print = &settings.process.print;
     !bbl && settings.printer.gcode.wipe_tower_type == crate::WipeTowerType::Type2

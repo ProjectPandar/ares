@@ -27,6 +27,13 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             "0",
         ),
         (
+            "semm-infill-copies",
+            "Creality",
+            "Creality Ender-3 0.4 nozzle",
+            "1",
+            "0",
+        ),
+        (
             "semm-priming",
             "Creality",
             "Creality Ender-3 0.4 nozzle",
@@ -61,8 +68,15 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
         ] {
             process.insert(key.into(), value);
         }
-        let asymmetric = matches!(label, "semm-asymmetric" | "semm-infill");
-        let infill = if label == "semm-infill" { "1" } else { "0" };
+        let asymmetric = matches!(
+            label,
+            "semm-asymmetric" | "semm-infill" | "semm-infill-copies"
+        );
+        let infill = if label.starts_with("semm-infill") {
+            "1"
+        } else {
+            "0"
+        };
         if asymmetric {
             machine.insert("purge_in_prime_tower".into(), json!("1"));
             process.insert(
@@ -117,8 +131,19 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
                 runner::application::verify_value(&exported.project, key, &value).unwrap();
             }
         }
+        let exported = if label == "semm-infill-copies" {
+            runner::type2_copies::second_copy(exported)
+        } else {
+            exported
+        };
         let sliced = runner.slice_case(&exported).unwrap();
         let reference = std::str::from_utf8(&sliced.reference).unwrap();
+        if label == "semm-infill-copies" {
+            // This reference labels both instances "copy 0". Verify actual
+            // extrusion at both translated cube contours, not that label.
+            assert!(reference.contains("G1 X90.31 Y114.69 E."));
+            assert!(reference.contains("G1 X120.31 Y114.69 E."));
+        }
         assert!(reference.contains(";TYPE:Prime tower\n"), "{label}");
         assert_eq!(
             reference.contains("; CP PRIMING START\n"),
@@ -133,7 +158,7 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
                 > 3,
             "{label}"
         );
-        if label == "semm-infill" {
+        if label.starts_with("semm-infill") {
             assert!(reference.contains("; PURGING FINISHED\n"));
         }
         let outcome = crate::compare_case(&sliced);

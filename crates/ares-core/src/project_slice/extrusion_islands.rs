@@ -2,6 +2,7 @@
 // island membership and sortable collection flattening.
 
 mod tool_regions;
+mod volume;
 pub(in crate::project_slice) use tool_regions::{RegionToolUsage, fill_role, gap_role};
 
 use crate::{
@@ -35,6 +36,7 @@ pub(in crate::project_slice) struct ExtrusionIsland {
 pub(in crate::project_slice) struct LayerExtrusionIslands {
     pub(in crate::project_slice) islands: Vec<ExtrusionIsland>,
     pub(in crate::project_slice) tool_regions: Vec<RegionToolUsage>,
+    pub(in crate::project_slice) wiping_volumes: volume::LayerVolumes,
 }
 
 pub(in crate::project_slice) struct PreparedPostExtrusionIslands {
@@ -63,12 +65,33 @@ pub(in crate::project_slice) fn prepare(
                     .predecessor
                     .predecessor
                     .object;
+                let source_index = prelude.identity().0;
+                let object_options = &traversal
+                    .resolved
+                    .objects
+                    .iter()
+                    .find(|object| object.source_object_index == source_index)
+                    .expect("prepared object retains resolved owner")
+                    .object;
+                let capture_wiping =
+                    object_options.flush_into_infill.0 || object_options.flush_into_objects.0;
                 let (compensated, _) = prelude.as_parts();
                 let (_, layer_slices) = compensated.as_parts();
                 layers
                     .iter_mut()
                     .zip(layer_slices)
-                    .map(|(layer, slices)| assign_layer(layer, slices))
+                    .map(|(layer, slices)| {
+                        // Print.cpp plans wiping before simplify_extrusion_path.
+                        let wiping_volumes = if capture_wiping {
+                            volume::collect(layer, traversal.scale)
+                        } else {
+                            volume::LayerVolumes::default()
+                        };
+                        LayerExtrusionIslands {
+                            wiping_volumes,
+                            ..assign_layer(layer, slices)
+                        }
+                    })
                     .collect()
             })
             .collect()
@@ -146,6 +169,7 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
     LayerExtrusionIslands {
         islands,
         tool_regions,
+        wiping_volumes: volume::LayerVolumes::default(),
     }
 }
 

@@ -82,6 +82,7 @@ fn resolved_object(object: ObjectOptions, regions: Vec<RegionOptions>) -> Resolv
         object,
         print_objects: vec![ResolvedPrintObjectConfig {
             transform: Transform3d::IDENTITY,
+            instance_indices: vec![0],
         }],
         layer_candidates: vec![ResolvedLayerCandidate {
             min_z: 0.0,

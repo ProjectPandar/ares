@@ -37,6 +37,28 @@ fn xy_translation_collapses_while_z_rotation_and_scale_remain_distinct() {
 }
 
 #[test]
+fn grouped_members_keep_source_copy_order_and_exclude_unprintable_instances() {
+    let identity = Transform3d::IDENTITY;
+    let translated = transform_3mf("1 0 0 0 1 0 0 0 1 10 20 0");
+    let scaled = transform_3mf("2 0 0 0 1 0 0 0 1 0 0 0");
+    let objects = [project_object(
+        7,
+        vec![
+            (true, scaled),
+            (true, identity),
+            (false, translated),
+            (true, translated),
+            (true, scaled),
+        ],
+    )];
+    let grouped = group_print_object_transforms(&objects);
+    assert_eq!(
+        grouped.by_object[0].instance_indices(&objects[0]),
+        vec![vec![1, 3], vec![0, 4]]
+    );
+}
+
+#[test]
 fn reversed_input_is_sorted_in_eigen_column_major_order() {
     let column_major_first = row_major([
         1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,

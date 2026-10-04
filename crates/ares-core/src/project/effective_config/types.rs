@@ -26,6 +26,7 @@ pub(crate) struct BoundedProjectUsage {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ResolvedPrintObjectConfig {
     pub(crate) transform: Transform3d,
+    pub(crate) instance_indices: Vec<usize>,
 }
 
 #[derive(Clone, Debug, PartialEq)]

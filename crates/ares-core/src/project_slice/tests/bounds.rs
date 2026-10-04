@@ -240,7 +240,11 @@ fn resolved(source_object_index: usize, transforms: &[Transform3d]) -> ResolvedP
         print_objects: transforms
             .iter()
             .copied()
-            .map(|transform| ResolvedPrintObjectConfig { transform })
+            .enumerate()
+            .map(|(index, transform)| ResolvedPrintObjectConfig {
+                transform,
+                instance_indices: vec![index],
+            })
             .collect(),
         layer_candidates: Vec::new(),
     }

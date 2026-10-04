@@ -240,6 +240,7 @@ fn task22a_layer_budget_spans_objects_and_groups() {
     objects[0].print_objects.clear();
     objects[2].print_objects.push(ResolvedPrintObjectConfig {
         transform: Transform3d::IDENTITY,
+        instance_indices: vec![1],
     });
     let calls: [Cell<usize>; 10] = std::array::from_fn(|_| Cell::new(0));
     let plans = plan_resolved_objects(&objects, |_, object| {
@@ -273,6 +274,7 @@ fn task22a_layer_budget_spans_objects_and_groups() {
 
     objects[2].print_objects.push(ResolvedPrintObjectConfig {
         transform: Transform3d::IDENTITY,
+        instance_indices: vec![2],
     });
     objects.push(resolved(12, object_options(), Vec::new()));
     assert_invalid(

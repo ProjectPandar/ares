@@ -40,8 +40,10 @@ pub(crate) fn resolve_project_objects(
                     .transforms
                     .iter()
                     .copied()
-                    .map(|transform| ResolvedPrintObjectConfig {
+                    .zip(groups.instance_indices(object))
+                    .map(|(transform, instance_indices)| ResolvedPrintObjectConfig {
                         transform: transform.with_z_shrinkage_compensation(z_compensation),
+                        instance_indices,
                     })
                     .collect(),
                 layer_candidates: Vec::new(),

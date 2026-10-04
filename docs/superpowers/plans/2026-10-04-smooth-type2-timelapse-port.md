@@ -251,9 +251,15 @@ this is not a green slice or review request.
 Coordinator approved A–G and requested the plan/RED checkpoint followed by
 incremental branch pushes. `dc7a848f` contains that initial checkpoint and is
 published on `pi/smooth-type2-timelapse-tower`; no main push or review request.
-Latest coordinator main notice: `b64b1d90` contains behavior-preserving geometry
-lint refactors. Also preserve `7cfa0b33` (zero sparse-anchoring reference center
-and removal of `fill_entities::object_center`) when rebasing before integration.
+Latest coordinator main notice: `931691eb` adds classic extra overhang perimeters
+and moves skirt's convex hull to `geometry/convex_hull`; preserve both on the
+approved integration rebase, along with `16ac907b` support-interface fan request
+lifecycle in `gcode_emit/cooling/role_fans` and `motion/fan`.
+`e865eb2a` changes Grid paths to `Oriented`
+while keeping their collections sortable. Preserve non-reversal and sortable
+semantics, `b64b1d90` behavior-preserving geometry lint refactors, and
+`7cfa0b33` (zero sparse-anchoring reference center and removal of
+`fill_entities::object_center`) when rebasing before integration.
 The coordinator explicitly released the main freeze. Type2 remains unapproved:
 only after final approval may it rebase, repeat gates and ff-integrate. If a
 concurrent push wins, rebase and repeat validation; never force-push.
@@ -338,4 +344,10 @@ Type2 cases remain full-output RED. Logs:
 The five multi-tool Ares outputs are byte-identical before and after adding
 identity metadata (`/tmp/pi-unified-exec-178-37569fa2.log`); this is regression
 evidence, not parity GREEN. No full-workspace/WASM gate or review request is
-claimed for this partial B checkpoint.
+claimed for this partial B checkpoint. It is published as `f31df169`.
+
+## Continuing B–G execution evidence
+
+See [the Type2 progress record](2026-10-04-smooth-type2-timelapse-progress.md)
+for private kernel checks, copy ownership, official/seeded RED witnesses, and
+remaining integration obligations. This is not a completed integration boundary.

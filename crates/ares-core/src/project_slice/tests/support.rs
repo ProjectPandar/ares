@@ -197,7 +197,11 @@ pub(super) fn resolved_object(
         print_objects: transforms
             .iter()
             .copied()
-            .map(|transform| ResolvedPrintObjectConfig { transform })
+            .enumerate()
+            .map(|(index, transform)| ResolvedPrintObjectConfig {
+                transform,
+                instance_indices: vec![index],
+            })
             .collect(),
         layer_candidates: vec![ResolvedLayerCandidate {
             min_z: 0.0,
@@ -271,6 +275,7 @@ pub(super) fn resolved(
         object,
         print_objects: vec![ResolvedPrintObjectConfig {
             transform: Transform3d::IDENTITY,
+            instance_indices: vec![0],
         }],
         layer_candidates: vec![ResolvedLayerCandidate {
             min_z: 0.0,
