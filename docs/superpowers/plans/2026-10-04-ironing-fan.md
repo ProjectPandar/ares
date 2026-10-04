@@ -6,16 +6,19 @@ Source boundary and non-negotiable decisions:
 1. Activate the existing public option domain and add saved3MF/native
    witnesses for real ironing extrusion and subsequent role exits. Run both
    references against the unchanged production emitter and retain RED.
-2. After the overlapping lint slice lands, fetch/rebase current main. Port
-   only the cited producer/request consumer behavior; retain separate ironing
-   request state and its distinct inactive-END semantics. No legacy fallback.
+2. Per updated coordinator instruction, implement now on current main, before
+   the overlapping lint slice lands. Port only the cited producer/request
+   consumer behavior; retain separate ironing request state and its distinct
+   inactive-END semantics. No legacy fallback.
 3. Run both reference suites serially at CPU0, including prior support fan
    controls. Keep new artifacts separate from historical stock/matrix runs.
 4. Run full workspace Nextest, Clippy, fmt and core/WASM compilation. Keep
    Cargo build jobs bounded and record exact revisions and exit statuses.
-5. Commit/push the feature branch, print `REVIEW-REQUEST <hash> <summary>` and
-   stop. Only after matching approval, while main is unfrozen, rebase latest
-   main, repeat gates and fast-forward push. Never force a rejected push.
+5. Commit/push GREEN on the feature branch without requesting review yet.
+   After lint lands, rebase, resolve role_fans.rs conflicts and repeat gates;
+   then print `REVIEW-REQUEST <hash> <summary>` and stop. Only after matching
+   approval, while main is unfrozen, rebase latest main, repeat gates and
+   fast-forward push. Never force a rejected push.
 
 ## Preceding matrix progress
 
@@ -58,3 +61,37 @@ is not a green release gate. The coordinator explicitly requested a RED-only
 checkpoint commit/push before lint handoff; this is not a merge-ready review
 request. Keep this branch for resuming ironing implementation after notification.
 Meanwhile investigate a separate non-cooling option group from latest main.
+
+### Implementation authorization update
+
+The coordinator now authorizes implementation before lint handoff. The original
+RED checkpoint8b55b910 remains on its remote branch. It was rebased onto
+be2a2990 as8ac40fbe; the sole activation conflict was resolved by retaining
+all six geometry enablers and the ironing fan enabler. Work continues on
+`pi/ironing-fan-port`, avoiding a force push of the published RED branch.
+Refresh RED at this baseline, then implement; no REVIEW-REQUEST until the
+later lint rebase and revalidation. After commit/push, group the225 remaining
+INCOMPLETE domains by cause and prioritize genuine activation coverage.
+
+### GREEN candidate and freeze
+
+Fresh RED on8ac40fbe: `/tmp/ares-pi-ironing-current-red.70DGH7`, both references
+exit100 with the same missing START and closed-layer END commands. The
+implementation adds an ironing producer marker/state and a separate cooling
+request, preserving source priority and unconditional ironing-END restoration.
+
+Final candidate evidence: `/tmp/ares-pi-ironing-green.yUDlI2`.
+Official and seeded each38/38 complete outputs PASS (4 test functions each):
+23 option cases across8 domains,6 ironing controls,6 support controls and3
+interlaced cooling/equalizer controls. No case rejection or comparator change.
+Workspace7596 PASS/9 existing skips (1186.404s,8 threads); all-target Clippy,
+fmt check and core/adapter WASM compilation exit0. Clippy retains219 core-lib,
+220 core-test and21 parity warnings, with no added lint warning. Changed Rust
+files remain below400LOC. The tested tracked Rust diff SHA256 is
+`71e481aeb67f1e04e686510a949b9165631c66fed8548460af4e12455e8bbcf7`.
+WASM verification is compile-only, not a browser-runtime claim.
+
+The coordinator has frozen main for the lint G-code batch. Commit/push only
+the feature branch now; do not push main or issue REVIEW-REQUEST before the
+later lint rebase and repeated validation. Wait for explicit unfreeze before
+any main integration. No temporary probes or suppression attributes were added.

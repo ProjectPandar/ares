@@ -1,6 +1,6 @@
 # Ironing fan requests: activated full-output rewrite slice
 
-Status: source analysis and public RED tests; production work pending lint handoff.
+Status: implemented; dual-reference and full gates GREEN; lint integration/review pending.
 
 ## Source ownership and destination
 
@@ -56,7 +56,8 @@ workspace Nextest, Clippy, rustfmt and core/adapter WASM compilation.
 No new ironing geometry, filament ironing overrides, overhang/bridge policy,
 AdaptivePA, timelapse, tower or SLA implementation is included.
 The lint owner is changing `role_fans.rs` after the landed fan commit16ac907b.
-This phase changes only tests/activation/docs. Fetch/rebase the lint result
-before production edits, preserving its structural cleanup rather than
-reintroducing the old file layout. Coordinator review is required for this
-new slice; the earlier support-interface approval does not cover it.
+The coordinator subsequently authorized production work now: reach GREEN and
+commit/push first, then rebase the landed lint result and resolve conflicts
+while preserving both behaviors. Repeat gates before REVIEW-REQUEST.
+Coordinator review is required for this new slice; the earlier support-interface
+approval does not cover it.

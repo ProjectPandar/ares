@@ -201,6 +201,14 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
                     .first()
             })
             .and_then(|value| (value.0 >= 0).then_some(value.0 as u8)),
+        ironing_fan_speed: full
+            .filament
+            .print
+            .ironing_fan_speed
+            .0
+            .get(filament)
+            .or_else(|| full.filament.print.ironing_fan_speed.0.first())
+            .and_then(|value| (value.0 >= 0).then_some(value.0 as u8)),
         initial_layer_acceleration: acceleration(
             object.map(|value| &value.object),
             full.process.object.initial_layer_acceleration.0,

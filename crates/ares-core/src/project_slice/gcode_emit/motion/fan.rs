@@ -22,6 +22,7 @@ pub(super) fn update_for_constant_path(
         markers_enabled && properties.feature == "Internal Bridge",
     );
     update_support_interface(output, properties.feature, state);
+    update_ironing(output, properties.feature, state);
 }
 
 pub(super) fn update_for_variable_segment(
@@ -51,6 +52,7 @@ pub(super) fn update_for_variable_segment(
         markers_enabled && properties.feature == "Internal Bridge",
     );
     update_support_interface(output, properties.feature, state);
+    update_ironing(output, properties.feature, state);
 }
 
 fn update_support_interface(output: &mut Vec<u8>, feature: &str, state: &mut EmitState) {
@@ -65,6 +67,22 @@ fn update_support_interface(output: &mut Vec<u8>, feature: &str, state: &mut Emi
         super::super::cooling::append_deferred_role_fan(
             output,
             super::super::cooling::DeferredRoleFan::SupportInterface(speed),
+        );
+    }
+}
+
+fn update_ironing(output: &mut Vec<u8>, feature: &str, state: &mut EmitState) {
+    let speed = (feature == "Ironing")
+        .then_some(state.options.ironing_fan_speed)
+        .flatten();
+    let previous = state.ironing_fan_marker_layer;
+    state.ironing_fan_marker_layer = speed.map(|_| state.layer_chunk_index);
+    if (speed.is_some() && previous != Some(state.layer_chunk_index))
+        || (speed.is_none() && previous.is_some())
+    {
+        super::super::cooling::append_deferred_role_fan(
+            output,
+            super::super::cooling::DeferredRoleFan::Ironing(speed),
         );
     }
 }

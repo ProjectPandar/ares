@@ -17,6 +17,7 @@ impl CoolingState {
         let layer_open = layer_index >= self.part_fan_ramp.close_fan_first_layers() as usize;
         let mut role_speed = None;
         let mut support_speed = None;
+        let mut ironing_speed = None;
         let mut cursor = layer_start;
         loop {
             let role = output[cursor..]
@@ -35,7 +36,8 @@ impl CoolingState {
                 .map_or(output.len(), |offset| start + offset + 1);
             let marker = std::str::from_utf8(&output[start..end]).unwrap();
             if marker == FORCE_RESUME_FAN {
-                let replacement = self.resume_fan_commands(role_speed, support_speed);
+                let replacement =
+                    self.resume_fan_commands(role_speed, support_speed, ironing_speed);
                 cursor = start + replacement.len();
                 output.splice(start..end, replacement);
                 continue;
@@ -50,7 +52,16 @@ impl CoolingState {
                 output.splice(start..end, retained.iter().copied());
                 continue;
             }
-            let force = if let Some(value) = support_value {
+            let ironing_value = marker
+                .strip_prefix(";__ARES_ROLE_FAN_IRONING_")
+                .and_then(|value| value.strip_suffix("__\n"));
+            // CoolingBuffer.cpp:885 consumes even an inactive ironing END.
+            let ironing_end = ironing_value == Some("END");
+            let force = if let Some(value) = ironing_value {
+                let was_active = ironing_speed.is_some();
+                ironing_speed = (!ironing_end && layer_open).then(|| value.parse::<u8>().unwrap());
+                ironing_end || (!was_active && ironing_speed.is_some())
+            } else if let Some(value) = support_value {
                 let was_active = support_speed.is_some();
                 support_speed =
                     (value != "END" && layer_open).then(|| value.parse::<u8>().unwrap());
@@ -80,10 +91,16 @@ impl CoolingState {
                 role_speed = layer_open.then(|| value.parse::<u8>().unwrap());
                 true
             };
-            let target = role_speed.or(support_speed).unwrap_or(baseline);
+            let target = role_speed
+                .or(support_speed)
+                .or(ironing_speed)
+                .unwrap_or(baseline);
             // An END requests emission even if the matching START was inactive.
             let replacement = if force
-                && (layer_open || marker.contains("_BASE__") || marker.contains("_FORCE_"))
+                && (layer_open
+                    || ironing_end
+                    || marker.contains("_BASE__")
+                    || marker.contains("_FORCE_"))
             {
                 self.physical_part_speed = target;
                 self.part_fan_command(target)
@@ -95,7 +112,12 @@ impl CoolingState {
         }
     }
 
-    fn resume_fan_commands(&self, role_speed: Option<u8>, support_speed: Option<u8>) -> Vec<u8> {
+    fn resume_fan_commands(
+        &self,
+        role_speed: Option<u8>,
+        support_speed: Option<u8>,
+        ironing_speed: Option<u8>,
+    ) -> Vec<u8> {
         let mut replacement = Vec::new();
         // CoolingBuffer.cpp:890–898 sends auxiliary before the part fan.
         if self.auxiliary_fan
@@ -110,7 +132,7 @@ impl CoolingState {
                 format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed)).as_bytes(),
             );
         }
-        if role_speed.is_none() && support_speed.is_none() {
+        if role_speed.is_none() && support_speed.is_none() && ironing_speed.is_none() {
             replacement.extend_from_slice(&self.part_fan_command(self.physical_part_speed));
         }
         replacement

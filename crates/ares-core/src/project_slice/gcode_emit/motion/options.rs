@@ -76,6 +76,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) role_change_filament: String,
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_speed: InternalBridgeFanSpeed,
     pub(in crate::project_slice::gcode_emit) support_interface_fan_speed: Option<u8>,
+    pub(in crate::project_slice::gcode_emit) ironing_fan_speed: Option<u8>,
     pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
