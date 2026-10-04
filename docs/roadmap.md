@@ -57,6 +57,19 @@ Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
 comparisons, Tier-1 verification and independent six-axis review. Historical
 modified-classic and sampled-domain summaries are not that exit evidence.
 
+### Qidi Grid collection ordering (in progress)
+
+Port independent Grid ordering and non-reversal contracts (`FillBase.hpp:166`,
+`Fill.cpp:1325`, `FillBase.cpp:164,183-185`) into `fill_entities/grid.rs::append`
+using existing Oriented paths in a sortable collection; leave geometry,
+odd-layer generation reversal, bridge/cooling/M73 behavior unchanged.
+[Spec](superpowers/specs/2026-10-04-grid-collection-ordering.md),
+[plan](superpowers/plans/2026-10-04-grid-collection-ordering.md),
+[ARD](architecture/ard-grid-collection-ordering.md).
+Exit:2/2 Qidi RED→GREEN,68/68 full inventory subset,823/823controls,8/8 official
+references and workspace/fmt/Clippy/WASM, then coordinator review. This bounded
+slice does not declare full printer inventory completion.
+
 ### Sparse-anchoring reference follow-up (in progress)
 
 Rewrite `Layer::generate_sparse_infill_polylines_for_anchoring` bbox-center

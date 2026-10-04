@@ -1,6 +1,7 @@
 //! Grid sparse infill — `FillGrid::fill_surface` (`FillRectilinear.cpp:3422-
 //! 3446`): two scanline families at 0° and 90° with the density split
 //! between them, one connector pass, and polylines reversed on odd layers.
+//! `Fill.cpp:1325` disables later path reversal, not collection sorting.
 
 use crate::{
     SliceError,
@@ -45,7 +46,7 @@ pub(super) fn append(
         entities: polylines
             .into_iter()
             .map(|polyline| {
-                FillExtrusionEntity::Path(FillExtrusionPath {
+                FillExtrusionEntity::Oriented(FillExtrusionPath {
                     polyline,
                     fitting: Vec::new(),
                     role: fill.params.extrusion_role,
@@ -55,7 +56,7 @@ pub(super) fn append(
                 })
             })
             .collect(),
-        no_sort: true,
+        no_sort: false,
     });
     Ok(())
 }
