@@ -41,6 +41,10 @@ This rewrite-gate requirement applies to the continuing `PrintConfig.hpp` and `P
 编写路线图、排列优先级、撰写里程碑退出标准，将该内容存放在 roadmap.md 中.
 
 ## 项目测试
+- Never write unit tests after you write code.
+- Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
+- If you must test a system in isolation, first write down all the ways it could fail, then write the code.
+
 遵循 Test Driven Development 进行代码的编写，需要使用原 OrcaSlicer 来做 End to end (E2E) 测试。
 使用 `cargo nextest run` 运行 Rust 测试；全量测试使用 `cargo nextest run --workspace`，不要用 `cargo test` 作为默认测试入口。Nextest 并行度由 `.config/nextest.toml` 配置为 `test-threads = "num-cpus"`。
 

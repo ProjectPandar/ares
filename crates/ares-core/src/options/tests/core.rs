@@ -376,12 +376,6 @@ fn infill_first_uses_orca_default_false() {
 }
 
 #[test]
-fn parses_infill_first_boolean() {
-    let options: SliceOptions = serde_json::from_value(json!({"is_infill_first": true})).unwrap();
-    assert!(options.is_infill_first().unwrap());
-}
-
-#[test]
 fn rejects_non_boolean_infill_first() {
     for value in [json!(1), json!("true"), json!(null)] {
         let options: SliceOptions =

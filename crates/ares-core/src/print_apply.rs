@@ -298,7 +298,7 @@ mod verify_update_region_state;
 #[cfg_attr(not(test), expect(dead_code, reason = "M293 staged before wiring"))]
 mod verify_update_config_state;
 
-#[cfg_attr(not(test), expect(dead_code, reason = "M275 staged before wiring"))]
+#[expect(dead_code, reason = "M275 staged before wiring")]
 mod model_object_status_state;
 
 #[cfg_attr(not(test), expect(dead_code, reason = "M277 stages PrintObjectStatus"))]

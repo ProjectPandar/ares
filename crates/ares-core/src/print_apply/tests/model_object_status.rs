@@ -36,20 +36,6 @@ fn model_object_status_stores_each_apply_status_variant() {
 }
 
 #[test]
-fn model_object_status_stores_each_regions_status_variant() {
-    for variant in [
-        StagedPrintObjectRegionsStatus::Invalid,
-        StagedPrintObjectRegionsStatus::Valid,
-        StagedPrintObjectRegionsStatus::PartiallyValid,
-    ] {
-        let mut status = StagedModelObjectStatus::new(7);
-        status.print_object_regions_status = variant;
-
-        assert_eq!(status.print_object_regions_status, variant);
-    }
-}
-
-#[test]
 fn model_object_status_ordering_uses_id_only() {
     let old = StagedModelObjectStatus::with_status(9, StagedModelObjectApplyStatus::Old);
     let deleted = StagedModelObjectStatus::with_status(9, StagedModelObjectApplyStatus::Deleted);

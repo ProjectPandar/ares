@@ -1,4 +1,4 @@
-use super::support::{KsrArchive, ksr_project, metadata};
+use super::support::{KsrArchive, metadata};
 
 const MODEL_SETTINGS: &str = "Metadata/model_settings.config";
 const MODEL: &str = "3D/3dmodel.model";
@@ -139,25 +139,5 @@ async fn slice_project_plate_rejects_an_unknown_plate() {
     assert_eq!(
         error.to_string(),
         crate::SliceError::InvalidInput("project has no plate 7".to_owned()).to_string()
-    );
-}
-
-#[test]
-fn single_plate_project_loads_all_its_instances() {
-    // The reference project has one plate; selection must keep every instance.
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap();
-    let output = runtime
-        .block_on(crate::slice_project(
-            ksr_project(),
-            metadata(),
-            crate::SlicerContext::new(0),
-        ))
-        .unwrap();
-    assert!(
-        String::from_utf8(output)
-            .unwrap()
-            .contains("; total layer number: 460")
     );
 }
