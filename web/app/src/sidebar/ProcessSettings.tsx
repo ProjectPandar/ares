@@ -1,16 +1,24 @@
 import type { ProjectSettings } from "@ares-slicer/wasm";
 import { useState } from "react";
-import { formatOption, isBoolean } from "./options";
+import { resetOverrides } from "../state/actions";
+import { useApp } from "../state/store";
+import { OptionField } from "./OptionField";
 import { OPTION_LABELS, PROCESS_PAGES } from "./processLayout";
-
-const READ_ONLY_HINT = "Read-only: editing needs an ares-core option override API";
 
 export function ProcessSettings({ settings }: { settings: ProjectSettings | null }) {
   const [page, setPage] = useState(PROCESS_PAGES[0].title);
+  const overrides = useApp((state) => state.overrides);
   const values = { ...settings?.project, ...settings?.process };
   const current = PROCESS_PAGES.find((candidate) => candidate.title === page) ?? PROCESS_PAGES[0];
+  const editedCount = Object.keys(overrides).length;
   return (
     <div className="process">
+      {editedCount > 0 && (
+        <div className="process-edited" data-testid="process-edited">
+          <span>{editedCount} modified {editedCount === 1 ? "option" : "options"}</span>
+          <button className="link-button" onClick={resetOverrides}>Reset all</button>
+        </div>
+      )}
       <div className="process-tabs" role="tablist">
         {PROCESS_PAGES.map((candidate) => (
           <button key={candidate.title} role="tab" aria-selected={candidate.title === page}
@@ -27,23 +35,9 @@ export function ProcessSettings({ settings }: { settings: ProjectSettings | null
         return (
           <div className="optgroup" key={group.title}>
             <div className="optgroup-title">{group.title}</div>
-            {keys.map((key) => {
-              const label = OPTION_LABELS[key];
-              const value = values[key];
-              return (
-                <div className="option-row" key={key} title={`${key}\n${READ_ONLY_HINT}`}>
-                  <span className="option-label">{label?.label ?? key}</span>
-                  {isBoolean(value) ? (
-                    <input type="checkbox" checked={value} readOnly className="option-check" />
-                  ) : (
-                    <span className="option-value">
-                      <span className="option-field">{formatOption(value)}</span>
-                      {label?.sidetext && <span className="option-unit">{label.sidetext}</span>}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+            {keys.map((key) => (
+              <OptionField key={key} optionKey={key} label={OPTION_LABELS[key]} original={values[key]} edited={overrides[key]} />
+            ))}
           </div>
         );
       })}

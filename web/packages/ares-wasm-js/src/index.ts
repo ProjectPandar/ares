@@ -1,6 +1,8 @@
 import type { WorkerRequest, WorkerResponse } from "./protocol";
+import type { ConfigOverrides, SliceResult } from "./toolpaths";
 import type { Scene } from "./types";
 
+export * from "./toolpaths";
 export type * from "./types";
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void };
@@ -52,20 +54,28 @@ export class AresSlicer {
     return (await this.#call({ kind: "loadScene", input: input.slice() })) as Scene;
   }
 
-  /** Slices one plate of a 3MF project (first plate when omitted) to G-code bytes. */
-  async sliceProject(input: Uint8Array, plate?: number): Promise<Uint8Array> {
+  /**
+   * Slices one plate of a 3MF project (first plate when omitted). `overrides`
+   * edit the project config before slicing; they are rejected until ares-core
+   * ships its option override API (M854).
+   */
+  async sliceProject(input: Uint8Array, plate?: number, overrides: ConfigOverrides = {}): Promise<SliceResult> {
+    const edited = Object.keys(overrides);
+    if (edited.length > 0) {
+      throw new Error(`Option overrides are not supported by this Ares build yet (edited: ${edited.join(", ")})`);
+    }
     await this.#ready;
-    return (await this.#call({ kind: "sliceProject", input: input.slice(), plate })) as Uint8Array;
+    return (await this.#call({ kind: "sliceProject", input: input.slice(), plate })) as SliceResult;
   }
 
-  /** Slices an STL model with Ares slice options to G-code bytes. */
-  async sliceStl(input: Uint8Array, options: Record<string, unknown> = {}): Promise<Uint8Array> {
+  /** Slices an STL model with Ares slice options. */
+  async sliceStl(input: Uint8Array, options: Record<string, unknown> = {}): Promise<SliceResult> {
     await this.#ready;
     return (await this.#call({
       kind: "sliceStl",
       input: input.slice(),
       options: JSON.stringify(options),
-    })) as Uint8Array;
+    })) as SliceResult;
   }
 
   terminate(): void {

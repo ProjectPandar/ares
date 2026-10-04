@@ -22,8 +22,14 @@ import wasmUrl from "@ares-slicer/wasm/ares_wasm_bg.wasm?url";
 
 const slicer = new AresSlicer({ worker: new AresWorker(), wasmUrl });
 const scene = await slicer.loadScene(projectBytes);   // meshes + settings
-const gcode = await slicer.sliceProject(projectBytes); // Uint8Array
+const { gcode, toolpaths } = await slicer.sliceProject(projectBytes);
+// gcode: Uint8Array. toolpaths: per-field typed arrays of libvgcode
+// PathVertex data (see `Toolpaths`), null until ares-wasm exports moves.
 ```
+
+`sliceProject(input, plate, overrides)` accepts `ConfigOverrides`, but any
+non-empty overrides are rejected until ares-core ships its option override
+API.
 
 Other bundlers: construct a module worker from `@ares-slicer/wasm/worker`
 and pass the URL of the shipped `ares_wasm_bg.wasm`.

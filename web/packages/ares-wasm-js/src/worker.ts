@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import init, { loadScene, sliceProjectPlate, slice_stl } from "./wasm/ares_wasm.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol";
+import type { SliceResult } from "./toolpaths";
 import type { Scene } from "./types";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -19,12 +20,12 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [scene, [positions.buffer, indices.buffer]];
     }
     case "sliceProject": {
-      const gcode = await sliceProjectPlate(request.input, request.plate);
-      return [gcode, [gcode.buffer]];
+      const result: SliceResult = { gcode: await sliceProjectPlate(request.input, request.plate), toolpaths: null };
+      return [result, [result.gcode.buffer]];
     }
     case "sliceStl": {
-      const gcode = await slice_stl(request.input, request.options);
-      return [gcode, [gcode.buffer]];
+      const result: SliceResult = { gcode: await slice_stl(request.input, request.options), toolpaths: null };
+      return [result, [result.gcode.buffer]];
     }
   }
 }

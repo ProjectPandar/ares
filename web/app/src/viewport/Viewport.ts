@@ -1,7 +1,9 @@
-import type { Scene, VolumeType } from "@ares-slicer/wasm";
+import type { Scene, Toolpaths, VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import type { PreviewView } from "../state/store";
 import { buildBed, type BedShape } from "./bed";
+import { applyPreviewView, buildToolpathMesh } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -38,6 +40,8 @@ export class Viewport {
   readonly #models = new THREE.Group();
   readonly #raycaster = new THREE.Raycaster();
   #bed = new THREE.Group();
+  #toolpaths: THREE.Mesh | null = null;
+  #previewView: PreviewView | null = null;
   #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
   #colors: ViewportColors;
   #frame = 0;
@@ -156,6 +160,23 @@ export class Viewport {
     this.render();
   }
 
+  setToolpaths(toolpaths: Toolpaths | null) {
+    if (this.#toolpaths) {
+      this.#scene.remove(this.#toolpaths);
+      disposeTree(this.#toolpaths);
+    }
+    this.#toolpaths = toolpaths && buildToolpathMesh(toolpaths);
+    if (this.#toolpaths) this.#scene.add(this.#toolpaths);
+    if (this.#previewView) this.setPreviewView(this.#previewView);
+    else this.render();
+  }
+
+  setPreviewView(view: PreviewView) {
+    this.#previewView = view;
+    if (this.#toolpaths) applyPreviewView(this.#toolpaths, view);
+    this.render();
+  }
+
   setModelsVisible(visible: boolean) {
     this.#models.visible = visible;
     this.render();
@@ -194,6 +215,7 @@ export class Viewport {
     this.#controls.dispose();
     disposeTree(this.#models);
     disposeTree(this.#bed);
+    if (this.#toolpaths) disposeTree(this.#toolpaths);
     this.#renderer.dispose();
     this.#renderer.domElement.remove();
   }

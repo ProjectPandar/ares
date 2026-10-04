@@ -1,5 +1,6 @@
+import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { slicer } from "./slicer";
-import { type Theme, useApp } from "./store";
+import { DEFAULT_PREVIEW, type PreviewView, type Theme, useApp } from "./store";
 
 slicer.ready().then(
   () => useApp.setState({ engine: "ready" }),
@@ -20,6 +21,7 @@ export async function importFile(file: File) {
       file: { name: file.name, bytes },
       scene,
       selectedObject: null,
+      overrides: {},
       slice: { status: "idle" },
     });
   } catch (error) {
@@ -35,17 +37,17 @@ export function selectObject(id: number | null) {
 
 /** Slices the first plate (BackgroundSlicingProcess::start in the worker). */
 export async function slicePlate() {
-  const { file, scene, slice } = useApp.getState();
+  const { file, scene, slice, overrides } = useApp.getState();
   if (!file || !scene || slice.status === "slicing") return;
   const startedAt = performance.now();
   useApp.setState({ slice: { status: "slicing", startedAt } });
   try {
-    const gcode =
+    const result =
       scene.format === "3mf"
-        ? await slicer.sliceProject(file.bytes, scene.plates[0]?.id)
+        ? await slicer.sliceProject(file.bytes, scene.plates[0]?.id, overrides)
         : await slicer.sliceStl(file.bytes);
     if (useApp.getState().file !== file) return;
-    useApp.setState({ slice: { status: "done", gcode, elapsedMs: performance.now() - startedAt } });
+    setSliceResult(result, performance.now() - startedAt);
   } catch (error) {
     useApp.setState({ slice: { status: "error", error: (error as Error).message } });
   }
@@ -66,4 +68,35 @@ export function exportGcode() {
   link.download = gcodeFileName();
   link.click();
   URL.revokeObjectURL(url);
+}
+
+/** Shows a slice result and resets the preview to every layer (GCodeViewer::load). */
+export function setSliceResult({ gcode, toolpaths }: SliceResult, elapsedMs: number) {
+  const top = Math.max(0, (toolpaths?.layerZs.length ?? 1) - 1);
+  useApp.setState({
+    slice: { status: "done", gcode, toolpaths, elapsedMs },
+    preview: { ...DEFAULT_PREVIEW, layers: [0, top] },
+  });
+}
+
+export function setPreview(patch: Partial<PreviewView>) {
+  useApp.setState(({ preview }) => ({ preview: { ...preview, ...patch } }));
+}
+
+/**
+ * Edits one process option; `undefined` or the project value drops the edit.
+ * Any edit invalidates the current slice, as a config change does in
+ * `Plater::on_config_change`.
+ */
+export function setOverride(key: string, value: OptionValue | undefined, original: unknown) {
+  useApp.setState(({ overrides, slice }) => {
+    const next = { ...overrides };
+    if (value === undefined || JSON.stringify(value) === JSON.stringify(original)) delete next[key];
+    else next[key] = value;
+    return { overrides: next, slice: slice.status === "slicing" ? slice : { status: "idle" } };
+  });
+}
+
+export function resetOverrides() {
+  useApp.setState(({ slice }) => ({ overrides: {}, slice: slice.status === "slicing" ? slice : { status: "idle" } }));
 }

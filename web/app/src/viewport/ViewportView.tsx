@@ -1,6 +1,7 @@
+import type { Toolpaths } from "@ares-slicer/wasm";
 import { type ReactNode, useEffect, useRef } from "react";
 import { selectObject } from "../state/actions";
-import { useApp } from "../state/store";
+import { type PreviewView, useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bed";
 import { type ViewPreset, Viewport, type ViewportColors } from "./Viewport";
@@ -19,7 +20,11 @@ function themeColors(): ViewportColors {
 
 const VIEWS: [ViewPreset, string][] = [["iso", "Iso"], ["top", "Top"], ["front", "Front"], ["left", "Left"]];
 
-export function ViewportView({ showModels = true, children }: { showModels?: boolean; children?: ReactNode }) {
+export function ViewportView({ toolpaths = null, view, children }: {
+  toolpaths?: Toolpaths | null;
+  view?: PreviewView;
+  children?: ReactNode;
+}) {
   const host = useRef<HTMLDivElement>(null);
   const viewport = useRef<Viewport | null>(null);
   const theme = useApp((state) => state.theme);
@@ -41,14 +46,20 @@ export function ViewportView({ showModels = true, children }: { showModels?: boo
   useEffect(() => viewport.current?.setColors(themeColors()), [theme]);
 
   useEffect(() => {
-    const view = viewport.current!;
-    view.setBed(bedFromSettings(scene?.settings ?? null));
-    view.setScene(scene, firstString(scene?.settings?.filament, "filament_colour") ?? "#29b2a3");
-    view.setView("iso");
+    const instance = viewport.current!;
+    instance.setBed(bedFromSettings(scene?.settings ?? null));
+    instance.setScene(scene, firstString(scene?.settings?.filament, "filament_colour") ?? "#29b2a3");
+    instance.setView("iso");
   }, [scene]);
 
   useEffect(() => viewport.current?.setSelected(selected), [selected]);
-  useEffect(() => viewport.current?.setModelsVisible(showModels), [showModels]);
+  useEffect(() => {
+    viewport.current?.setToolpaths(toolpaths);
+    viewport.current?.setModelsVisible(!toolpaths);
+  }, [toolpaths]);
+  useEffect(() => {
+    if (view) viewport.current?.setPreviewView(view);
+  }, [view]);
 
   return (
     <div className="viewport">
