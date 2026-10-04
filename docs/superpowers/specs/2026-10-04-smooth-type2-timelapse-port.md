@@ -29,7 +29,12 @@ activated path with official and seeded full-output evidence and no new guard.
 
 Deferred/unclaimed: independent Type1 tower algorithms, exhaustive printer/
 option coverage, hardware operation and native Windows/macOS runtime evidence.
-Shared Type1-header data required by Type2 is included. These exclusions do not
+Shared Type1-header data required by Type2 is included. Coordinator-approved
+exceptions are recorded with source consumers in ARD-0105: the Type1-only finish
+flag, GUI extrusion color tag, and unread result/writer timing bookkeeping are
+deferred until their consumers are ported. Command tool identity (including
+RepRap M572), geometry, filament accounting and processed G-code timing remain
+included. These exclusions do not
 permit guards or silent omission of active Type2 source behavior; do not weaken
 fixtures or comparisons to make a partial generator appear complete.
 

@@ -18,11 +18,7 @@ fn priming_initializes_tool_order_and_resets_remembered_temperature() {
     );
     let output = generator.prime(0.2, &[1, 0]);
     assert_eq!(output.len(), 2);
-    assert!(
-        output
-            .iter()
-            .all(|result| result.priming && result.finish_first)
-    );
+    assert!(output.iter().all(|result| result.priming));
     assert!(output[0].gcode.contains("; CP PRIMING START\n"));
     assert!(output[1].gcode.contains("; CP PRIMING END\n"));
     assert_eq!(output[0].new_tool, 1);
@@ -136,7 +132,6 @@ fn activated_two_tool_layers_generate_all_source_wall_shapes() {
             .add((0.6, 0.2), (1, 0), 110.0, &generator.filaments);
         let output = generator.generate().unwrap();
         assert_eq!(output.len(), 3);
-        assert!(output[0][0].finish_first);
         assert!(output[0][0].gcode.contains("; WIPE_TOWER_BRIM_START\n"));
         assert_eq!(output[1][0].initial_tool, 0);
         assert_eq!(output[1][0].new_tool, 1);

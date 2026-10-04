@@ -146,10 +146,10 @@ impl<'a> Generator<'a> {
         old_tool: usize,
         kind: super::result::Kind,
     ) -> ToolChangeResult {
-        let (priming, finish_first, contact) = match kind {
-            super::result::Kind::Priming => (true, true, false),
-            super::result::Kind::Finish => (false, true, false),
-            super::result::Kind::Change { contact } => (false, false, contact),
+        let (priming, contact) = match kind {
+            super::result::Kind::Priming => (true, false),
+            super::result::Kind::Finish => (false, false),
+            super::result::Kind::Change { contact } => (false, contact),
         };
         let end = if priming {
             writer.position
@@ -162,13 +162,11 @@ impl<'a> Generator<'a> {
             new_tool: self.current_tool,
             print_z: self.z,
             layer_height: self.layer_height,
-            elapsed_time: writer.elapsed_time,
             start: writer.start,
             end,
             gcode: writer.gcode,
             extrusions: writer.extrusions,
             wipe_path: writer.wipe_path,
-            finish_first,
             contact,
             force_travel: false,
         }

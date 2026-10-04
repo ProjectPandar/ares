@@ -124,14 +124,12 @@ mod tests {
             new_tool: 2,
             print_z: 0.2,
             layer_height: 0.2,
-            elapsed_time: 0.0,
             start: [0.0; 2],
             end: [3.0, 4.0],
             gcode: "G1 X1.000 Y2.000 E0.1000\n[change_filament_gcode]\nG1 X3.000 Y4.000 E0.2000\n"
                 .into(),
             extrusions: Vec::new(),
             wipe_path: Vec::new(),
-            finish_first: false,
             contact: false,
             force_travel: false,
         };

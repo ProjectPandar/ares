@@ -1,6 +1,19 @@
 use super::*;
 
 #[test]
+fn pressure_reset_preserves_selected_reprap_tool() {
+    for flavor in [GCodeFlavor::RepRapSprinter, GCodeFlavor::RepRapFirmware] {
+        let mut writer = Writer::new(0.2, 0.5, flavor, 2.0);
+        writer.set_tool(2, 0.5);
+        writer.disable_linear_advance();
+        assert!(writer.gcode.ends_with("M572 D2 S0\n"));
+        writer.set_tool(1, 0.5);
+        writer.disable_linear_advance();
+        assert!(writer.gcode.ends_with("M572 D2 S0\nM572 D1 S0\n"));
+    }
+}
+
+#[test]
 fn source_writer_limits_selected_tool_and_keeps_preview_area_owner() {
     let mut writer = Writer::new(0.2, 0.5, GCodeFlavor::MarlinLegacy, 2.0);
     writer.set_initial_position([0.0, 0.0], [0.0; 2], 0.0);
@@ -9,9 +22,7 @@ fn source_writer_limits_selected_tool_and_keeps_preview_area_owner() {
     writer.extrude([10.0, 0.0], 600.0);
     assert!(writer.gcode.ends_with("G1 X10.000 E1.0000 F300\n"));
     assert_eq!(writer.used_filament, 1.0);
-    assert_eq!(writer.elapsed_time, 2.0);
     assert_eq!(writer.extrusions.len(), 2);
-    assert_eq!(writer.extrusions[1].tool, 2);
     assert_eq!(
         writer.extrusions[1].width,
         1.0 + 0.2 * (1.0 - std::f64::consts::FRAC_PI_4) as f32

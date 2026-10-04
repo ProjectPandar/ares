@@ -14,13 +14,11 @@ pub(super) struct ToolChangeResult {
     pub(super) new_tool: usize,
     pub(super) print_z: f32,
     pub(super) layer_height: f32,
-    pub(super) elapsed_time: f32,
     pub(super) start: [f32; 2],
     pub(super) end: [f32; 2],
     pub(super) gcode: String,
     pub(super) extrusions: Vec<Extrusion>,
     pub(super) wipe_path: Vec<[f32; 2]>,
-    pub(super) finish_first: bool,
     pub(super) contact: bool,
     pub(super) force_travel: bool,
 }

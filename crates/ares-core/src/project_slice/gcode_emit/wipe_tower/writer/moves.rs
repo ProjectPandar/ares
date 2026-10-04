@@ -63,13 +63,11 @@ impl Writer {
                 self.extrusions.push(Extrusion {
                     position: start,
                     width: 0.0,
-                    tool: self.tool,
                 });
             }
             self.extrusions.push(Extrusion {
                 position: end,
                 width,
-                tool: self.tool,
             });
         }
         let begin = self.gcode.len();
@@ -96,7 +94,6 @@ impl Writer {
             self.gcode.push('\n');
         }
         self.position = point;
-        self.elapsed_time += distance / self.feedrate * 60.0;
     }
 
     pub(in super::super) fn rectangle(&mut self, lower: [f32; 2], size: [f32; 2], feedrate: f32) {

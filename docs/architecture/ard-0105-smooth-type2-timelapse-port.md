@@ -86,16 +86,36 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
   Rust's hard-coded `hold_chamber_temp_for_flat_print=false` remains an audit
   gap. The source threshold uses `40000 * 1.0e10` scaled area and height <0.3;
   preserve that arithmetic rather than substituting the comment's units.
+- Fake-tower consumers have distinct source gates. `Print.cpp:3675–3688`
+  initializes Type2's depth profile but not `outer_wall`; the latter is assigned
+  in the Type1 branch at 3571. `Brim.cpp:651–656` requires nonempty `outer_wall`,
+  so its exclusion mask is inactive for this fresh Type2 path. Do not invent a
+  Type2 brim mask. In contrast, `Print.cpp:5177–5191` supplies Type2 fake paths
+  to `ConflictChecker.cpp:234`, and `Print.cpp:2590–2605` runs that consumer
+  when checks are enabled. The CLI rejects its conflicts (`OrcaSlicer.cpp:6165–6169`).
+
+## Coordinator-approved deferred metadata
+
+These fields and their pure bookkeeping are deferred from this byte-output
+rewrite slice. Port them with their consumers when required, not through dummy
+reads or a new public API solely to silence diagnostics. The coordinator approved
+this boundary after the `944c0459` rebase; full G-code comparisons stay unchanged.
+
 - Shared `ToolChangeResult::is_finish_first` is read by Type1 `append_tcr`
-  (`GCode.cpp:755`), not Type2 `append_tcr2` (1118 onward). Type2's
-  `force_travel` merge behavior remains required independently.
+  (`GCode.cpp:755`), not Type2 `append_tcr2` (1118 onward). Defer the shared
+  result flag and its metadata assertions. Type2's `force_travel` merge behavior
+  remains included and unchanged.
 - `ToolChangeResult::elapsed_time` is populated at `WipeTower2.cpp:1231`, but
   no downstream source read was found; `merge_tcr` (2342–2359) copies the first
-  result without summing it. Do not invent a time-statistics consumer to quiet
-  a lint: final timing belongs to G-code processing.
+  result without summing it. Defer that result field and `WipeTowerWriter2`'s
+  timing-only counter (`WipeTower2.cpp:576,661,722,1071,1162`) with its metadata
+  assertion. Motion distances used for volumetric feedrate limits remain live;
+  final timing continues to come from G-code processing.
 - `Extrusion::tool` is read by the GUI preview adapter
   `slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp:500–527`. This is distinct from
   `Writer::tool`, which the Rust writer needs for RepRap `M572 D... S0`.
-  No deletion of either result metadata or preview color metadata has yet been
-  made; confirm the byte-output versus preview-data boundary before changing
-  that scope. Do not manufacture public APIs or dummy reads as lint fixes.
+  Defer only the extrusion color/tool tag and its metadata assertion. Retain
+  extrusion positions/widths for purge-length and collision consumers, and
+  retain `Writer::tool` for actual commands. A regression verifies selected-tool
+  `M572` output for both RepRap flavors. Active geometry, copy/tool ownership,
+  filament accounting and all complete-output comparisons remain in scope.

@@ -13,7 +13,6 @@ use crate::GCodeFlavor;
 pub(super) struct Extrusion {
     pub(super) position: [f32; 2],
     pub(super) width: f32,
-    pub(super) tool: usize,
 }
 
 pub(super) struct Writer {
@@ -22,7 +21,6 @@ pub(super) struct Writer {
     pub(super) start: [f32; 2],
     pub(super) tool: usize,
     pub(super) used_filament: f32,
-    pub(super) elapsed_time: f32,
     pub(super) extrusions: Vec<Extrusion>,
     pub(super) wipe_path: Vec<[f32; 2]>,
     pub(super) suppress_preview: bool,
@@ -54,7 +52,6 @@ impl Writer {
             start: [0.0; 2],
             tool: 0,
             used_filament: 0.0,
-            elapsed_time: 0.0,
             extrusions: Vec::new(),
             wipe_path: Vec::new(),
             suppress_preview: false,
