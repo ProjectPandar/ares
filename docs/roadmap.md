@@ -57,6 +57,17 @@ Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
 comparisons, Tier-1 verification and independent six-axis review. Historical
 modified-classic and sampled-domain summaries are not that exit evidence.
 
+### Prusa terminal wipe segments (in progress)
+
+Port `GCode.cpp:440-488 Wipe::wipe` and `Polyline.cpp:22-31` line retention
+into `motion/travel/wipe_path.rs`, replacing the zero-length segment filter.
+[Spec](superpowers/specs/2026-10-04-wipe-zero-length-segments.md),
+[plan](superpowers/plans/2026-10-04-wipe-zero-length-segments.md),
+[ARD](architecture/ard-wipe-zero-length-segments.md).
+Exit: Prusa target/fresh original equality,68+823/re3D/extra-overhang controls,
+four gates and coordinator review. Other clipping, writer and wipe-tower changes
+are deferred; retain source junction dedup and denominator floor.
+
 ### re3D common travel boundary (in progress)
 
 Port `AvoidCrossingPerimeters.cpp:190-216` end-first common-boundary selection

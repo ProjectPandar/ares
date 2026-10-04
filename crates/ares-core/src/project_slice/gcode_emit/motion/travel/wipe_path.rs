@@ -41,12 +41,19 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
     // lives in scaled space); our mm round-trip must recover exactly
     // those ints — round-to-nearest, since `int * 1e-6 / 1e-6` can land
     // one ulp below the integer.
-    points.extend(state.wipe_path.iter().skip(1).map(|&point| {
+    let mut tail = state.wipe_path.iter().skip(1).map(|&point| {
         (
             (point.x / state.scale_factor).round() as i64,
             (point.y / state.scale_factor).round() as i64,
         )
-    }));
+    });
+    // `Polyline::append(begin, end)` skips only a shared junction point.
+    if let Some(point) = tail.next()
+        && point != points[0]
+    {
+        points.push(point);
+    }
+    points.extend(tail);
     let total_length = points
         .windows(2)
         .map(|segment| scaled_distance(segment[0], segment[1]))
@@ -88,22 +95,22 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
     }
     let segments = points
         .windows(2)
-        .filter_map(|segment| {
+        .map(|segment| {
             let length = scaled_distance(segment[0], segment[1]);
-            (length > f64::EPSILON)
-                .then(|| (unscaled_position(segment[1], clip_origin, state), length))
+            (unscaled_position(segment[1], clip_origin, state), length)
         })
         .collect::<Vec<_>>();
     // Upstream `Wipe::wipe` (`GCode.cpp:456-462`): `wipe_dist` stays the
     // CONFIGURED scaled value when the clipped path is at least as long
     // (`if (wipe_path.length() < wipe_dist) wipe_dist = …`); the dE
     // denominator is the exact config value, not the clipped float sum.
-    let distribution_distance =
-        if segments.iter().map(|(_, length)| length).sum::<f64>() < configured_distance {
-            segments.iter().map(|(_, length)| length).sum::<f64>()
-        } else {
-            configured_distance
-        };
+    let clipped_distance = segments.iter().map(|(_, length)| length).sum::<f64>();
+    let distribution_distance = if clipped_distance < configured_distance {
+        // `GCode.cpp:463`: EPSILON is in the already-scaled denominator.
+        clipped_distance.max(1e-4)
+    } else {
+        configured_distance
+    };
     WipePath {
         segments,
         retraction_distance,
