@@ -252,7 +252,8 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         | "filament_ironing_flow"
         | "filament_ironing_speed"
         | "filament_ironing_spacing"
-        | "filament_ironing_inset" => &[("ironing_type", "top")],
+        | "filament_ironing_inset"
+        | "ironing_fan_speed" => &[("ironing_type", "top")],
         // Fuzzy-skin geometry params only run when `fuzzy_skin != "none"`.
         "fuzzy_skin_point_dist" | "fuzzy_skin_point_type" => &[("fuzzy_skin", "external")],
         "fuzzy_skin_first_layer"
