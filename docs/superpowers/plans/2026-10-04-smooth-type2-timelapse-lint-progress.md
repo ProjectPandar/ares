@@ -154,3 +154,55 @@ RED, helper patch, source and artifact references handed off at
 
 Coordinator then advanced main to `7ec6cd05`; fetched full ref
 `7ec6cd0541a9c05c6551a5120478b532971ac08a`. Final rebase and complete gates follow.
+
+## Final review evidence on 7dc1f67f
+
+The 20-patch slice was rebased successively onto `7ec6cd05`, `096416ba`,
+`d7557ab3`, and `7dc1f67fe7cbfaba9fdc7b1ad3129d465680800e`. Each range-diff
+is identical; logs `/tmp/ares-pi-tower-rebase-{7ec6cd05,096416ba,d7557ab3,7dc1f67f}-range-diff.log`.
+Backups `checkpoint/tower-before-main-*` retain the prior histories. No published
+ref was rewritten. Validated implementation HEAD:
+`9565197439a573f42fa2bd1dd83f8d2b7931cc1c` (this evidence update is docs-only).
+Required ancestors `931691eb`, `16ac907b`, `e865eb2a`, `b64b1d90`, `7cfa0b33`
+remain reachable; centering guard is unchanged.
+
+Final gates all ran after the 7dc1f67f rebase. Log/artifact prefix:
+`/tmp/ares-pi-tower-final-7dc1f67f`:
+
+- `-workspace.log`: **7649 passed, 9 skipped**.
+- `-official.log`: **11 passed**; separate official artifact directory.
+- `-seeded.log`: **11 passed**; separate seed0/CPU0 artifact directory.
+- `-wasm.log`: core + wasm adapter build PASS.
+- `-fmt.log`, `-diff.log`: PASS; `-result.log`: ALL GATES PASS.
+- `-diagnostic-identities.json`: **132 baseline / 127 branch; 127 inherited,
+  zero introduced, five removed**. Identity includes path, enclosing function,
+  diagnostic code, exact message and full normalized primary-span source;
+  multiplicity retained, every source-span line freshness-checked.
+
+Baseline Clippy was rebuilt from clean ares-core artifacts on `096416ba` in the
+lane-owned detached worktree `/tmp/ares-pi-tower-f10c3b17-lint`; JSON is
+`/tmp/ares-pi-tower-final-096416ba-main-clippy.jsonl`. Rust crates, Cargo manifests,
+lockfile and Cargo/Nextest configuration are identical from that base through
+7dc1f67f (`-identity.log`). The newer changes are web and chain-probe only;
+reference binaries are unchanged. Final branch Clippy was rerun after rebase.
+Comparator: `/tmp/ares-pi-tower-compare-clippy.cjs`.
+
+An earlier shared-target warning replay had stale main source spans and was
+rejected, not counted as evidence; files retained in
+`/tmp/ares-pi-tower-final-096416ba-cache-invalid/`. Fresh rebuild exposed
+`obfuscated_if_else` on the lazy capture attempted above. Volume capture was
+moved into the existing `assign_layer` boundary **before** collection flattening,
+with original collection IDs/positive volume assertions. No suppression or new
+public API. Initial test-import E0433 is preserved in
+`/tmp/ares-pi-tower-final-096416ba-workspace-import-compile-failure.log`; corrected
+before all final gates. Both 096416ba and d7557ab3 complete gate runs also passed,
+but the 7dc1f67f run is the final review evidence.
+
+Scope: connected chamber mesh-bottom, fake-tower depth-profile conflict checks,
+normal/tree/raft first-layer coverage and support bounds. General multi-transform
+PrintObject centering remains explicitly coordinator-deferred to pi-tip; original
+witness, input/native output/error and helper patch are at
+`/tmp/ares-tower-to-tip-centering/`. No Type2 exclusion mask is invented where
+native `outer_wall` is empty. No final approval or main integration is claimed.
+The existing authorized 944c0459 remote is preserved; the rebased review commit
+is available in the shared local repository pending a new publication ref.
