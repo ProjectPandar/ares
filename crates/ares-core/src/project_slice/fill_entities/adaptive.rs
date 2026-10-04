@@ -174,8 +174,10 @@ fn build_object_octree(
         })
         .collect();
     Ok(octree::build_octree(
-        &rotated,
-        &triangles,
+        octree::OctreeMesh {
+            vertices: &rotated,
+            triangles: &triangles,
+        },
         &[],
         line_spacing,
         false,

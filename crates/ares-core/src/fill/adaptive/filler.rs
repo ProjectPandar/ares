@@ -216,7 +216,6 @@ pub(crate) fn fill_surface(
                 (f64::from(anchor_length_max) / scale.factor()).min(i64::MAX as f64);
             all_polylines = crate::fill::adaptive::hooks::connect_lines_using_hooks(
                 all_polylines,
-                surface,
                 scaled_spacing,
                 hook_length,
                 hook_length_max,

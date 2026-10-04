@@ -105,6 +105,29 @@ fn polygon_bbox(polygon: &Polygon) -> BoundingBox {
     })
 }
 
+fn append_hexagon_column(
+    pts: &mut Vec<Point>,
+    ax: [i64; 2],
+    bb: BoundingBox,
+    (y_short, hex_side, y_offset): (i64, i64, i64),
+) {
+    let mut y = bb.min().y();
+    while y <= bb.max().y() {
+        pts.push(Point::new(ax[1], y + y_offset));
+        pts.push(Point::new(ax[0], y + y_short - y_offset));
+        pts.push(Point::new(ax[0], y + y_short + hex_side + y_offset));
+        pts.push(Point::new(
+            ax[1],
+            y + y_short + hex_side + y_short - y_offset,
+        ));
+        pts.push(Point::new(
+            ax[1],
+            y + y_short + hex_side + y_short + hex_side + y_offset,
+        ));
+        y += y_short + hex_side + y_short + hex_side;
+    }
+}
+
 /// `FillHoneycomb::_fill_surface_single` (`FillHoneycomb.cpp:9`). Upstream
 /// rotates the bounding-box polygon and output polylines about `hex_center`
 /// (the pattern cell anchor), NOT the object center.
@@ -164,21 +187,7 @@ pub(crate) fn fill_honeycomb(
             let mut pts: Vec<Point> = Vec::new();
             for _ in 0..2 {
                 pts.reverse(); // turn first half upside down
-                let mut y = bb.min().y();
-                while y <= bb.max().y() {
-                    pts.push(Point::new(ax[1], y + y_offset));
-                    pts.push(Point::new(ax[0], y + y_short - y_offset));
-                    pts.push(Point::new(ax[0], y + y_short + hex_side + y_offset));
-                    pts.push(Point::new(
-                        ax[1],
-                        y + y_short + hex_side + y_short - y_offset,
-                    ));
-                    pts.push(Point::new(
-                        ax[1],
-                        y + y_short + hex_side + y_short + hex_side + y_offset,
-                    ));
-                    y += y_short + hex_side + y_short + hex_side;
-                }
+                append_hexagon_column(&mut pts, ax, bb, (y_short, hex_side, y_offset));
                 ax[0] += distance;
                 ax[1] += distance;
                 ax.swap(0, 1);

@@ -113,11 +113,15 @@ pub(crate) fn make_cubes_properties(
     cubes_properties
 }
 
+pub(crate) struct OctreeMesh<'a> {
+    pub(crate) vertices: &'a [[f64; 3]],
+    pub(crate) triangles: &'a [[u32; 3]],
+}
+
 /// `FillAdaptive.cpp:1483-1531` — mesh already rotated into octree
 /// coordinates by the caller (`PrintObject.cpp:994-996`).
 pub(crate) fn build_octree(
-    mesh_vertices: &[[f64; 3]],
-    mesh_triangles: &[[u32; 3]],
+    mesh: OctreeMesh<'_>,
     overhang_triangles: &[[f64; 3]],
     line_spacing: f64,
     support_overhangs_only: bool,
@@ -126,6 +130,10 @@ pub(crate) fn build_octree(
     // PrintObject.cpp:110); added back to the rotated cube centers.
     world_offset: [f64; 3],
 ) -> Octree {
+    let OctreeMesh {
+        vertices: mesh_vertices,
+        triangles: mesh_triangles,
+    } = mesh;
     let mut bbox_min = [f64::INFINITY; 3];
     let mut bbox_max = [f64::NEG_INFINITY; 3];
     for v in mesh_vertices {
@@ -179,9 +187,7 @@ pub(crate) fn build_octree(
             if !support_overhangs_only || is_overhang_triangle(a, b, c, up_vector) {
                 insert_triangle(
                     &octree.cubes_properties,
-                    a,
-                    b,
-                    c,
+                    [a, b, c],
                     &mut octree.root_cube,
                     root_bbox,
                     max_depth,
@@ -191,9 +197,7 @@ pub(crate) fn build_octree(
         for chunk in overhang_triangles.chunks_exact(3) {
             insert_triangle(
                 &octree.cubes_properties,
-                chunk[0],
-                chunk[1],
-                chunk[2],
+                [chunk[0], chunk[1], chunk[2]],
                 &mut octree.root_cube,
                 root_bbox,
                 max_depth,
@@ -229,9 +233,7 @@ fn transform_center(cube: &mut Cube, rot: Matrix3, offset: [f64; 3]) {
 /// child bbox (±EPSILON) and the SAT triangle-AABB test are upstream.
 fn insert_triangle(
     properties: &[CubeProperties],
-    a: [f64; 3],
-    b: [f64; 3],
-    c: [f64; 3],
+    [a, b, c]: [[f64; 3]; 3],
     current_cube: &mut Cube,
     current_bbox: ([f64; 3], [f64; 3]),
     depth: i32,
@@ -259,7 +261,7 @@ fn insert_triangle(
             let child =
                 current_cube.children[i].get_or_insert_with(|| Box::new(Cube::new(child_center)));
             if depth > 0 {
-                insert_triangle(properties, a, b, c, child, bbox, depth);
+                insert_triangle(properties, [a, b, c], child, bbox, depth);
             }
         }
     }

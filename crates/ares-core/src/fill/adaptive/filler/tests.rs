@@ -45,8 +45,16 @@ fn cube_mesh(half: f64) -> (Vec<[f64; 3]>, Vec<[u32; 3]>) {
 fn generates_lines_on_midplane() {
     let scale = CoordinateScale::Normal;
     let (vertices, triangles) = cube_mesh(5.0);
-    let octree =
-        super::super::octree::build_octree(&vertices, &triangles, &[], 5.0, false, [0.0; 3]);
+    let octree = super::super::octree::build_octree(
+        super::super::octree::OctreeMesh {
+            vertices: &vertices,
+            triangles: &triangles,
+        },
+        &[],
+        5.0,
+        false,
+        [0.0; 3],
+    );
     let surface = square_surface(scale, 6.0);
     let polylines = fill_surface(&octree, &surface, 5.0, 5.0, 1, 1.0, 1.0, false, scale).unwrap();
     assert!(
@@ -61,7 +69,16 @@ fn generates_lines_on_midplane() {
 #[test]
 fn generated_endpoints_truncate_scaled_coordinates_toward_zero() {
     let (vertices, _) = cube_mesh(5.0);
-    let octree = super::super::octree::build_octree(&vertices, &[], &[], 5.0, false, [0.0; 3]);
+    let octree = super::super::octree::build_octree(
+        super::super::octree::OctreeMesh {
+            vertices: &vertices,
+            triangles: &[],
+        },
+        &[],
+        5.0,
+        false,
+        [0.0; 3],
+    );
     let center = octree.root().center();
     let properties = [super::super::octree::CubeProperties {
         edge_length: 2.0,
@@ -98,8 +115,16 @@ fn generated_endpoints_truncate_scaled_coordinates_toward_zero() {
 fn empty_above_the_octree() {
     let scale = CoordinateScale::Normal;
     let (vertices, triangles) = cube_mesh(5.0);
-    let octree =
-        super::super::octree::build_octree(&vertices, &triangles, &[], 0.5, false, [0.0; 3]);
+    let octree = super::super::octree::build_octree(
+        super::super::octree::OctreeMesh {
+            vertices: &vertices,
+            triangles: &triangles,
+        },
+        &[],
+        0.5,
+        false,
+        [0.0; 3],
+    );
     let surface = square_surface(scale, 6.0);
     let polylines = fill_surface(&octree, &surface, 500.0, 0.5, 1, 1.0, 1.0, false, scale).unwrap();
     assert!(

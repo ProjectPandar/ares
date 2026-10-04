@@ -68,8 +68,10 @@ pub(crate) fn fill_tpmsd_surface(
         // Upstream `ceil(bb.size()(0) / distance) + 1.` divides coord_t by
         // coord_t — integer division, `ceil` a no-op → `size/distance + 1`
         // (floor), not float-ceil (FillTpmsD.cpp:120-121).
-        ((max.x() - min.x()) / distance + 1) as f64,
-        ((max.y() - min.y()) / distance + 1) as f64,
+        [
+            ((max.x() - min.x()) / distance + 1) as f64,
+            ((max.y() - min.y()) / distance + 1) as f64,
+        ],
         scale,
     )?;
     translate(&mut polylines, min)?;
@@ -104,8 +106,7 @@ fn make_waves(
     grid_z: f64,
     density_adjusted: f64,
     line_spacing: f64,
-    width: f64,
-    height: f64,
+    [width, height]: [f64; 2],
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     // `scaleFactor = scale_(line_spacing)/density_adjusted` — the scaled
@@ -153,21 +154,32 @@ fn make_waves(
     let mut v_shift = scaled_floor(min_v, 2.0 * std::f64::consts::PI);
     while v_shift < max_v + 2.0 * std::f64::consts::PI {
         for forward_root in [false, true] {
-            let mut points = Vec::new();
-            for &(u, vv) in &wave {
-                let v = (if forward_root { vv } else { -vv }) + v_shift;
-                let x = (u + v) / 2.0;
-                let y = (v - u) / 2.0 * if swap_uv { -1.0 } else { 1.0 };
-                points.push(Point::new(
-                    (x * scale_factor).round() as i64,
-                    (y * scale_factor).round() as i64,
-                ));
-            }
+            let points = wave_points(&wave, v_shift, forward_root, swap_uv, scale_factor);
             result.push(Polyline::new(points));
         }
         v_shift += 2.0 * std::f64::consts::PI;
     }
     Ok(result)
+}
+
+fn wave_points(
+    wave: &[(f64, f64)],
+    v_shift: f64,
+    forward_root: bool,
+    swap_uv: bool,
+    scale_factor: f64,
+) -> Vec<Point> {
+    let mut points = Vec::new();
+    for &(u, vv) in wave {
+        let v = (if forward_root { vv } else { -vv }) + v_shift;
+        let x = (u + v) / 2.0;
+        let y = (v - u) / 2.0 * if swap_uv { -1.0 } else { 1.0 };
+        points.push(Point::new(
+            (x * scale_factor).round() as i64,
+            (y * scale_factor).round() as i64,
+        ));
+    }
+    points
 }
 
 fn scaled_floor(x: f64, scale: f64) -> f64 {

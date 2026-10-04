@@ -111,67 +111,9 @@ fn line_intersections(polygons: &[Polygon], x: Coord) -> Vec<Intersection> {
             continue;
         }
         for segment in 0..points.len() {
-            let previous = if segment == 0 {
-                points.len() - 1
-            } else {
-                segment - 1
-            };
-            let p1 = points[previous];
-            let p2 = points[segment];
-            let (left, right) = if p1.x() <= p2.x() {
-                (p1.x(), p2.x())
-            } else {
-                (p2.x(), p1.x())
-            };
-            if !(left <= x && x <= right) {
-                continue;
+            if let Some(intersection) = segment_intersection(points, segment, contour_index, x) {
+                intersections.push(intersection);
             }
-            let (pos_p, mut pos_q) = if p1.x() == x {
-                if p2.x() == x {
-                    // Strictly vertical segments are ignored.
-                    continue;
-                }
-                let p0 = points[if previous == 0 {
-                    points.len() - 1
-                } else {
-                    previous - 1
-                }];
-                if (p0.x() - p1.x()) * (p2.x() - p1.x()) > 0 {
-                    // Contour touches the line from one side.
-                    continue;
-                }
-                (p1.y(), 1u64)
-            } else if p2.x() == x {
-                let p3 = points[(segment + 1) % points.len()];
-                if (p3.x() - p2.x()) * (p1.x() - p2.x()) > 0 {
-                    continue;
-                }
-                (p2.y(), 1u64)
-            } else {
-                // General position: the rational parameter t in (0, 1) with a
-                // positive denominator, then pos = t * (p2.y - p1.y) + p1.y.
-                let (numerator, denominator) = if p2.x() > p1.x() {
-                    (x - p1.x(), p2.x() - p1.x())
-                } else {
-                    (p1.x() - x, p1.x() - p2.x())
-                };
-                (
-                    numerator
-                        .saturating_mul(p2.y() - p1.y())
-                        .saturating_add(p1.y() * denominator),
-                    denominator as u64,
-                )
-            };
-            if pos_q == 0 {
-                pos_q = 1;
-            }
-            intersections.push(Intersection {
-                pos_p,
-                pos_q: pos_q as u32,
-                low: p2.x() > p1.x(),
-                contour: contour_index,
-                segment,
-            });
         }
     }
     intersections
@@ -182,32 +124,11 @@ fn line_intersections(polygons: &[Polygon], x: Coord) -> Vec<Intersection> {
 fn remove_tangential(intersections: &mut Vec<Intersection>, polygons: &[Polygon]) {
     let mut kept = 0;
     for index in 0..intersections.len() {
-        let mut take = true;
-        if kept > 0 {
-            let candidate = intersections[index];
-            let last = intersections[kept - 1];
-            if candidate.contour == last.contour && candidate.pos_q == 1 && last.pos_q == 1 {
-                let points = polygons[candidate.contour].points();
-                let previous = if candidate.segment == 0 {
-                    points.len() - 1
-                } else {
-                    candidate.segment - 1
-                };
-                if last.pos_p == candidate.pos_p {
-                    // Successive same-direction segments meeting on the line.
-                    let _ = previous;
-                    take = false;
-                } else if candidate.low == last.low {
-                    // Z shaped path with the center segment on the line.
-                    if !candidate.low {
-                        intersections[kept - 1] = candidate;
-                    }
-                    take = false;
-                }
-            }
-        }
+        let candidate = intersections[index];
+        let take =
+            kept == 0 || keep_intersection(&mut intersections[kept - 1], candidate, polygons);
         if take {
-            intersections[kept] = intersections[index];
+            intersections[kept] = candidate;
             kept += 1;
         }
     }
@@ -243,17 +164,119 @@ pub(crate) fn sample_grid_pattern(
         while i + 1 < intersections.len() {
             let a = intersections[i].pos();
             let b = intersections[i + 1].pos();
-            let mut y = a - (a % spacing) - spacing;
-            while y < b {
-                if y > a {
-                    out.push(Point::new(x, y));
-                }
-                y += spacing;
-            }
+            append_span_samples(&mut out, x, a, b, spacing);
             i += 2;
         }
     }
     out
 }
+
+fn segment_intersection(
+    points: &[Point],
+    segment: usize,
+    contour_index: usize,
+    x: Coord,
+) -> Option<Intersection> {
+    let previous = if segment == 0 {
+        points.len() - 1
+    } else {
+        segment - 1
+    };
+    let p1 = points[previous];
+    let p2 = points[segment];
+    let (left, right) = if p1.x() <= p2.x() {
+        (p1.x(), p2.x())
+    } else {
+        (p2.x(), p1.x())
+    };
+    if !(left <= x && x <= right) {
+        return None;
+    }
+    let (pos_p, mut pos_q) = if p1.x() == x {
+        if p2.x() == x {
+            // Strictly vertical segments are ignored.
+            return None;
+        }
+        let p0 = points[if previous == 0 {
+            points.len() - 1
+        } else {
+            previous - 1
+        }];
+        if (p0.x() - p1.x()) * (p2.x() - p1.x()) > 0 {
+            // Contour touches the line from one side.
+            return None;
+        }
+        (p1.y(), 1u64)
+    } else if p2.x() == x {
+        let p3 = points[(segment + 1) % points.len()];
+        if (p3.x() - p2.x()) * (p1.x() - p2.x()) > 0 {
+            return None;
+        }
+        (p2.y(), 1u64)
+    } else {
+        // General position: the rational parameter t in (0, 1) with a
+        // positive denominator, then pos = t * (p2.y - p1.y) + p1.y.
+        let (numerator, denominator) = if p2.x() > p1.x() {
+            (x - p1.x(), p2.x() - p1.x())
+        } else {
+            (p1.x() - x, p1.x() - p2.x())
+        };
+        (
+            numerator
+                .saturating_mul(p2.y() - p1.y())
+                .saturating_add(p1.y() * denominator),
+            denominator as u64,
+        )
+    };
+    if pos_q == 0 {
+        pos_q = 1;
+    }
+    Some(Intersection {
+        pos_p,
+        pos_q: pos_q as u32,
+        low: p2.x() > p1.x(),
+        contour: contour_index,
+        segment,
+    })
+}
+
+fn keep_intersection(
+    last: &mut Intersection,
+    candidate: Intersection,
+    polygons: &[Polygon],
+) -> bool {
+    let mut take = true;
+    if candidate.contour == last.contour && candidate.pos_q == 1 && last.pos_q == 1 {
+        let points = polygons[candidate.contour].points();
+        let previous = if candidate.segment == 0 {
+            points.len() - 1
+        } else {
+            candidate.segment - 1
+        };
+        if last.pos_p == candidate.pos_p {
+            // Successive same-direction segments meeting on the line.
+            let _ = previous;
+            take = false;
+        } else if candidate.low == last.low {
+            // Z shaped path with the center segment on the line.
+            if !candidate.low {
+                *last = candidate;
+            }
+            take = false;
+        }
+    }
+    take
+}
+
+fn append_span_samples(out: &mut Vec<Point>, x: Coord, a: Coord, b: Coord, spacing: Coord) {
+    let mut y = a - (a % spacing) - spacing;
+    while y < b {
+        if y > a {
+            out.push(Point::new(x, y));
+        }
+        y += spacing;
+    }
+}
+
 #[cfg(test)]
 mod tests;

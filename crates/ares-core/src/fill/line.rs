@@ -206,32 +206,34 @@ fn fill_surface_single(
         crate::project_slice::chain_polylines(&mut ordered, scale);
         let mut first = true;
         for polyline in ordered {
-            if !first {
-                let last_point = polylines_out.last().and_then(|p| p.back()).unwrap();
-                let first_point = polyline.points()[0];
-                let dx = (last_point.x() - first_point.x()).abs();
-                let dy = (last_point.y() - first_point.y()).abs();
-                let can_connect = dx >= (line_spacing - line_oscillation) - tolerance
-                    && dx <= (line_spacing + line_oscillation) + tolerance
-                    && dy <= diagonal_distance;
-                let contained = match &expolygon_off {
-                    Some(off) => difference_open_polylines(
-                        &[Polyline::new(vec![last_point, first_point])],
-                        &expolygon_to_polygons(off),
-                    )?
-                    .is_empty(),
-                    None => false,
-                };
-                if can_connect
-                    && contained
-                    && let Some(back) = polylines_out.last_mut()
-                {
-                    back.append_points(polyline.points().iter().copied());
-                    continue;
-                }
+            if first {
+                polylines_out.push(polyline);
+                first = false;
+                continue;
+            }
+            let last_point = polylines_out.last().and_then(|p| p.back()).unwrap();
+            let first_point = polyline.points()[0];
+            let dx = (last_point.x() - first_point.x()).abs();
+            let dy = (last_point.y() - first_point.y()).abs();
+            let can_connect = dx >= (line_spacing - line_oscillation) - tolerance
+                && dx <= (line_spacing + line_oscillation) + tolerance
+                && dy <= diagonal_distance;
+            let contained = match &expolygon_off {
+                Some(off) => difference_open_polylines(
+                    &[Polyline::new(vec![last_point, first_point])],
+                    &expolygon_to_polygons(off),
+                )?
+                .is_empty(),
+                None => false,
+            };
+            if can_connect
+                && contained
+                && let Some(back) = polylines_out.last_mut()
+            {
+                back.append_points(polyline.points().iter().copied());
+                continue;
             }
             polylines_out.push(polyline);
-            first = false;
         }
     }
 

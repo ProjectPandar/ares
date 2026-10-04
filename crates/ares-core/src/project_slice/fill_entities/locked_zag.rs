@@ -55,9 +55,10 @@ pub(super) fn append(
             &expolygon,
             &base,
             &lock_param,
-            scale,
-            params.skin_infill_depth as i64,
-            params.infill_lock_depth as i64,
+            locked_zag::LockedZagDepths {
+                skin_infill: params.skin_infill_depth as i64,
+                infill_lock: params.infill_lock_depth as i64,
+            },
             |exp, density, horiz_move, locked_zag| {
                 let mut sub = base;
                 // The skin pass clears `params.locked_zag`

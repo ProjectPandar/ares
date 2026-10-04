@@ -11,7 +11,7 @@ mod trim;
 #[cfg(test)]
 mod tests;
 
-use crate::geometry::{ExPolygon, Line, Point, Polyline};
+use crate::geometry::{Line, Point, Polyline};
 use geometry::{
     Thresholds, candidate_dir, distance_point_to_segment_squared, dot, left_of, line_dir,
     normalize, projects_interior, ray_segment_hit, segment_line_intersection,
@@ -66,7 +66,6 @@ pub(super) fn create_offset_line(a: Point, b: Point, left: bool, offset: f64) ->
 /// `FillAdaptive.cpp:801-1262`.
 pub(crate) fn connect_lines_using_hooks(
     lines: Vec<Polyline>,
-    _boundary: &ExPolygon,
     spacing: f64,
     hook_length: f64,
     hook_length_max: f64,
@@ -119,24 +118,9 @@ pub(crate) fn connect_lines_using_hooks(
             // `:966-969`: a very short line connected to another infill
             // line is dropped outright.
             working[index].clear();
-        } else if anchor {
-            for (tjoint, front) in [(tjoint_front, true), (tjoint_back, false)] {
-                if let Some(closest) = tjoint {
-                    joints.push(Joint {
-                        closest_line: closest,
-                        intersect_line: index,
-                        intersect_pl: index,
-                        intersect_point: if front { line.a } else { line.b },
-                        front,
-                        left: left_of(
-                            candidate_dir(source[closest]),
-                            line_dir(source[index], front),
-                        ),
-                        used: false,
-                    });
-                }
-            }
-        } else {
+            continue;
+        }
+        if !anchor {
             // Trim (`:993-1000`): pull each joint endpoint inward by
             // `1.155·trim` along the current line direction. The front is
             // trimmed first; the back then uses the trimmed front point
@@ -153,6 +137,24 @@ pub(crate) fn connect_lines_using_hooks(
                 tjoint_back.is_some(),
                 scaled_trim_distance,
             );
+            continue;
+        }
+        for (tjoint, front) in [(tjoint_front, true), (tjoint_back, false)] {
+            let Some(closest) = tjoint else {
+                continue;
+            };
+            joints.push(Joint {
+                closest_line: closest,
+                intersect_line: index,
+                intersect_pl: index,
+                intersect_point: if front { line.a } else { line.b },
+                front,
+                left: left_of(
+                    candidate_dir(source[closest]),
+                    line_dir(source[index], front),
+                ),
+                used: false,
+            });
         }
     }
     // `:1001-1008`: remove intersections pointing at a dropped line.
@@ -342,11 +344,12 @@ fn add_hook(
             if index == joint.closest_line {
                 continue;
             }
-            if let Some(t) = ray_segment_hit(start, (-dir_x, -dir_y), candidate) {
-                let t = t - shift_from_thick_line(-dir_x, -dir_y, candidate, scaled_trim_distance);
-                if t < backward {
-                    backward = t;
-                }
+            let Some(t) = ray_segment_hit(start, (-dir_x, -dir_y), candidate) else {
+                continue;
+            };
+            let t = t - shift_from_thick_line(-dir_x, -dir_y, candidate, scaled_trim_distance);
+            if t < backward {
+                backward = t;
             }
         }
     }

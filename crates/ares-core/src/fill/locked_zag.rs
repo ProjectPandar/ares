@@ -11,9 +11,8 @@
 //! skeleton density and by its skin / skeleton `Flow`.
 
 use crate::geometry::{
-    ClipperError, CoordinateScale, ExPolygon, JoinType, Polygon, Polyline, difference_ex,
-    intersection_ex, intersection_open_polylines, offset_expolygons,
-    union_safety_offset_expolygons,
+    ClipperError, ExPolygon, JoinType, Polygon, Polyline, difference_ex, intersection_ex,
+    intersection_open_polylines, offset_expolygons, union_safety_offset_expolygons,
 };
 
 use super::rectilinear::MonotonicFillParams;
@@ -39,6 +38,11 @@ pub(crate) struct LockRegionParam<F> {
     pub(crate) skeleton_flow_params: Vec<LockFlowParam<F>>,
 }
 
+pub(crate) struct LockedZagDepths {
+    pub(crate) skin_infill: i64,
+    pub(crate) infill_lock: i64,
+}
+
 /// `fill_surface_locked_zag` — returns `(polyline, flow)` pairs; `F` is the
 /// caller's flow type, cloned into each emitted entity.
 ///
@@ -51,15 +55,17 @@ pub(crate) fn fill_surface_locked_zag<F, G>(
     expolygon: &ExPolygon,
     params: &MonotonicFillParams,
     lock: &LockRegionParam<F>,
-    scale: CoordinateScale,
-    skin_infill_depth: i64,
-    infill_lock_depth: i64,
+    depths: LockedZagDepths,
     mut fill_sub: G,
 ) -> Result<Vec<(Polyline, F)>, ClipperError>
 where
     F: Clone,
     G: FnMut(&ExPolygon, f32, f32, bool) -> Result<Vec<Polyline>, ClipperError>,
 {
+    let LockedZagDepths {
+        skin_infill: skin_infill_depth,
+        infill_lock: infill_lock_depth,
+    } = depths;
     // `zig_expas` = inner skeleton region (expolygon shrunk by skin depth);
     // `cross_expas` = the skin ring between the two (`diff_ex`).
     let zig_expas = offset_expolygons(
@@ -118,7 +124,6 @@ where
             out.push((polyline, flow_param.flow.clone()));
         }
     }
-    let _ = scale;
     Ok(out)
 }
 

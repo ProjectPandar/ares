@@ -3,7 +3,7 @@
 ## Non-negotiable boundaries
 
 - Preserve existing runtime behavior, comparator thresholds, mutation rejection and every test assertion. This is lint remediation, not a new slicing milestone or upstream-behavior change.
-- Batch subsequent work by owning module, targeting 60–120 diagnostics per slice rather than repeating full gates and review for a handful of warnings.
+- Batch by owning module. The coordinator initially requested 60–120 diagnostics per slice; after G-code integration, prefer smaller, frequently integrated fill slices.
 - Fix excessive nesting and argument lists at their owning module boundaries; do not raise lint thresholds or blanket-suppress warnings.
 - Work in an isolated worktree. Keep concurrent support-tip, Arachne-outline and tower/AdaptivePA/bridge work out of the current slice.
 - For each slice: run full workspace nextest, clippy, fmt and WASM compilation; push the topic branch, print `REVIEW-REQUEST <commit-hash> <summary>` in the terminal, and stop for coordinator Claude's `APPROVED <hash>` or revision requests. Do not invoke external reviewers or start new changes on the same branch while waiting. Only after approval: fetch/rebase latest `origin/main`, rerun the gates, and fast-forward main without force pushing.
@@ -41,6 +41,16 @@ Included work is limited to extracting existing algorithm stages, expressing coo
 Validation retains every existing test and comparator. Full workspace gates cover the test-only EdgeGrid implementation; production-only clippy is insufficient to verify its 15 diagnostics. Existing gyroid/TPMSFK, support-grid, signed-distance and tree-query fixtures provide regression coverage, not a claim of exhaustive new upstream parity.
 
 Geometry results: all 7,589 workspace tests passed (nine unchanged skips); ordinary all-target/all-feature clippy, fmt and core/WASM compilation passed. Geometry diagnostics fell from 43 to zero in the full workspace log. Core library warnings fell from 249 to 221; core test warnings from 265 to 222 (221 duplicates); CLI parity retains 20 warnings. All changed Rust files remain below 400 lines. No test or comparator source changed. Reproducible gate logs for this run are `/tmp/ares-lint-geometry-{nextest,clippy,wasm}.log`; main integration remains governed by coordinator approval and rebase-time revalidation.
+
+## Fill engines small slice
+
+Branch `pi/lint-fill-batch` is based on integrated `95e23008`. Following the coordinator's updated small-slice cadence, this slice targets 25 diagnostic locations: adaptive hooks/octree (5), multiline vertical rasterization (12), TPMS-D (5), honeycomb (1), line (1), and locked-zag (1). Lightning WIP is saved separately for a later slice. Exclude cooling, Grid path ordering, FillBase support-connect, and bridge-owned signatures; adjacent fill-entity edits only adapt the changed APIs.
+
+Upstream boundaries are `Fill/FillTpmsD.cpp::make_waves`, `Fill/FillHoneycomb.cpp::_fill_surface_single`, `Fill/FillLine.cpp`, `Fill/FillRectilinear.cpp` vertical rasterization and locked-zag fill, and `Fill/FillAdaptive.cpp` hooks/octree. Destinations remain the existing `ares-core/src/fill` engines and their `project_slice/fill_entities` callers. Include only structural extraction, borrowed mesh/triangle grouping, removal of unused inputs, and equivalent guards. Defer all new upstream functionality; no compatibility scaffold grows into a new pipeline. Preserve integer division, unary negation, floating expressions/casts, traversal/tie order, error ordering and every assertion. Existing full-workspace and complete-output controls from `95e23008` provide the pre-edit baseline. The initial extraction passed 907 existing fill-matching tests; the final slice must rerun complete gates and controls before publication.
+
+Known upstream gap: `OrcaSlicer/src/libslic3r/Fill/FillAdaptive.cpp:1033–1046` inserts boundary segments into the R-tree so hooks do not cross the boundary. Ares had not implemented this boundary-collision logic: `connect_lines_using_hooks` accepted `_boundary` but never read it. Removing that unused parameter does not change current behavior or close the parity gap. When this upstream behavior is ported, restore the boundary input and implement the boundary insertion/collision checks.
+
+Validation on `944c0459`: all 25 owned diagnostics are gone; 133 unique core locations remain (154 workspace locations, including 21 CLI-owned locations). Full workspace nextest passed 7,595 tests with nine unchanged skips, and ordinary workspace/all-targets/all-features clippy, fmt and core/WASM compilation passed. Complete CPU0 controls matched the `95e23008` baseline exactly: official 389 PASS / eight existing replay-environment FAIL; seeded 397/397 PASS. All Ares output hash multisets matched across 389 official and 400 seeded artifact labels. Evidence: `/tmp/ares-lint-fill-small.NAq7c8/`. The intervening frontend/scene commits changed neither core nor CLI source. These are review receipts, not a claim of validation against subsequent ironing commits; latest-main rebase and revalidation are still required before integration.
 
 ## G-code post-processing and adjacent geometry batch
 
