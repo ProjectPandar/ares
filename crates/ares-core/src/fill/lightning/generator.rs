@@ -11,7 +11,8 @@ use crate::geometry::{
 };
 
 use super::layer::Layer;
-use super::tree_node::Node;
+use super::layer_geom::GroundingContext;
+use super::tree_node::{Node, PropagationSettings};
 
 #[cfg(test)]
 mod tests;
@@ -210,22 +211,15 @@ impl Generator {
             // `tree_roots` so `std::find` inside `reconnectRoots` locates them.
             let to_be_reconnected = self.lightning_layers[layer_id].tree_roots.clone();
             let overhang = self.overhang_per_layer[layer_id].clone();
-            self.lightning_layers[layer_id].generate_new_trees(
-                &overhang,
-                current_outlines,
-                current_bbox,
-                &outlines_locator,
-                self.supporting_radius,
-                self.wall_supporting_radius,
-            )?;
-            self.lightning_layers[layer_id].reconnect_roots(
-                to_be_reconnected,
-                current_outlines,
-                current_bbox,
-                &outlines_locator,
-                self.supporting_radius,
-                self.wall_supporting_radius,
-            );
+            let context = GroundingContext {
+                outlines: current_outlines,
+                bbox: current_bbox,
+                locator: &outlines_locator,
+                supporting_radius: self.supporting_radius,
+                wall_supporting_radius: self.wall_supporting_radius,
+            };
+            self.lightning_layers[layer_id].generate_new_trees(&overhang, &context)?;
+            self.lightning_layers[layer_id].reconnect_roots(to_be_reconnected, &context);
 
             if layer_id == 0 {
                 return Ok(());
@@ -249,15 +243,18 @@ impl Generator {
 
             let trees = self.lightning_layers[layer_id].tree_roots.clone();
             let mut lower_trees = Vec::new();
+            let settings = PropagationSettings {
+                prune_distance: self.prune_length,
+                smooth_magnitude: self.straightening_max_distance,
+                max_remove_colinear_dist: self.locator_cell_size / 2,
+            };
             for tree in &trees {
                 Node::propagate_to_next_layer(
                     tree,
                     &mut lower_trees,
                     below_outlines,
                     &outlines_locator,
-                    self.prune_length,
-                    self.straightening_max_distance,
-                    self.locator_cell_size / 2,
+                    &settings,
                 );
             }
             self.lightning_layers[layer_id - 1].tree_roots = lower_trees;

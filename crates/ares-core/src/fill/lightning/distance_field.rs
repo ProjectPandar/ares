@@ -7,7 +7,8 @@
 
 use crate::fill::multiline::vline::sample_grid_pattern;
 use crate::geometry::{
-    BoundingBox, ClipperError, Coord, FillRule, JoinType, Point, Polygon, offset2_ex, union_ex,
+    BoundingBox, ClipperError, Coord, ExPolygon, FillRule, JoinType, Point, Polygon, offset2_ex,
+    union_ex,
 };
 
 /// `radius_per_cell_size` — cell size = supporting radius / 6 (DistanceField.cpp:14).
@@ -176,19 +177,7 @@ impl DistanceField {
                 sample_grid_pattern(&all, cell_size, (overhang_bbox.min(), overhang_bbox.max()));
             for sp in sampled {
                 // Min squared distance to this expolygon's boundary.
-                let mut d2 = f64::MAX;
-                let mut polys: Vec<&Polygon> = vec![expoly.contour()];
-                polys.extend(expoly.holes().iter());
-                for contour in polys {
-                    let pts = contour.points();
-                    if pts.len() > 2 {
-                        let mut prev = *pts.last().unwrap();
-                        for &p2 in pts {
-                            d2 = d2.min(segment_distance_squared(sp, prev, p2));
-                            prev = p2;
-                        }
-                    }
-                }
+                let d2 = boundary_distance_squared(expoly, sp);
                 unsupported_points.push(UnsupportedCell {
                     loc: sp,
                     dist_to_boundary: d2.sqrt() as Coord,
@@ -301,39 +290,60 @@ impl DistanceField {
         let gmin = self.to_grid_point(grid_min);
         let gmax = self.to_grid_point(grid_max);
 
-        for gy in gmin.y()..=gmax.y() {
-            for gx in gmin.x()..=gmax.x() {
-                let grid_addr = Point::new(gx, gy);
-                let grid_loc = self.from_grid_point(grid_addr);
-                let inside_circle = {
-                    let dx = grid_loc.x() - added_leaf.x();
-                    let dy = grid_loc.y() - added_leaf.y();
-                    dx * dx + dy * dy <= self.supporting_radius2
-                };
-                if !inside_circle {
-                    // Rotated-rectangle test.
-                    let vxx = (grid_loc.x() - to_node.x()) as f64;
-                    let vyy = (grid_loc.y() - to_node.y()) as f64;
-                    let d = vx * vxx + vy * vyy;
-                    let de = ex * vxx + ey * vyy;
-                    // Outside `[0, l2]` falls through to the erase check.
-                    if (0.0..=l2).contains(&d) && (de < -1.0 || de > 1.0) {
-                        continue;
-                    }
-                }
-                let cell_idx = self.unsupported_points_grid.find_cell_idx(grid_addr);
-                if cell_idx != UnsupportedPointsGrid::NONE {
-                    let cell = self.unsupported_points[cell_idx];
-                    let dx = cell.loc.x() - added_leaf.x();
-                    let dy = cell.loc.y() - added_leaf.y();
-                    if dx * dx + dy * dy <= self.supporting_radius2 {
-                        self.unsupported_points_erased[cell_idx] = true;
-                        self.unsupported_points_grid.mark_erased(grid_addr);
-                    }
-                }
+        for (gy, gx) in
+            (gmin.y()..=gmax.y()).flat_map(|gy| (gmin.x()..=gmax.x()).map(move |gx| (gy, gx)))
+        {
+            let grid_addr = Point::new(gx, gy);
+            let grid_loc = self.from_grid_point(grid_addr);
+            let inside_circle = {
+                let dx = grid_loc.x() - added_leaf.x();
+                let dy = grid_loc.y() - added_leaf.y();
+                dx * dx + dy * dy <= self.supporting_radius2
+            };
+            let reject_grid_corner = if !inside_circle {
+                // Rotated-rectangle test.
+                let vxx = (grid_loc.x() - to_node.x()) as f64;
+                let vyy = (grid_loc.y() - to_node.y()) as f64;
+                let d = vx * vxx + vy * vyy;
+                let de = ex * vxx + ey * vyy;
+                // Outside `[0, l2]` falls through to the erase check.
+                (0.0..=l2).contains(&d) && (de < -1.0 || de > 1.0)
+            } else {
+                false
+            };
+            if reject_grid_corner {
+                continue;
+            }
+            let cell_idx = self.unsupported_points_grid.find_cell_idx(grid_addr);
+            if cell_idx == UnsupportedPointsGrid::NONE {
+                continue;
+            }
+            let cell = self.unsupported_points[cell_idx];
+            let dx = cell.loc.x() - added_leaf.x();
+            let dy = cell.loc.y() - added_leaf.y();
+            if dx * dx + dy * dy <= self.supporting_radius2 {
+                self.unsupported_points_erased[cell_idx] = true;
+                self.unsupported_points_grid.mark_erased(grid_addr);
             }
         }
     }
+}
+
+fn boundary_distance_squared(expoly: &ExPolygon, sp: Point) -> f64 {
+    let mut d2 = f64::MAX;
+    let mut polys: Vec<&Polygon> = vec![expoly.contour()];
+    polys.extend(expoly.holes().iter());
+    for contour in polys {
+        let pts = contour.points();
+        if pts.len() > 2 {
+            let mut prev = *pts.last().unwrap();
+            for &p2 in pts {
+                d2 = d2.min(segment_distance_squared(sp, prev, p2));
+                prev = p2;
+            }
+        }
+    }
+    d2
 }
 
 #[cfg(test)]

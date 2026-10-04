@@ -60,30 +60,7 @@ impl Node {
                 result_lines.swap_remove(i);
                 continue;
             }
-            let mut to_be_reduced = reduction;
-            let pts = result_lines[i].points().to_vec();
-            let mut a = *pts.last().unwrap();
-            let mut new_pts = pts.clone();
-            let mut idx = pts.len() as i64 - 2;
-            while idx >= 0 {
-                let b = pts[idx as usize];
-                let ab_len = dist(a, b);
-                if ab_len >= to_be_reduced {
-                    // move the tail point toward `b` by the remaining reduction
-                    let (ax, ay) = (a.x() as f64, a.y() as f64);
-                    let (bx, by) = (b.x() as f64, b.y() as f64);
-                    let (dx, dy) = (bx - ax, by - ay);
-                    let t = to_be_reduced as f64 / ab_len as f64;
-                    *new_pts.last_mut().unwrap() =
-                        Point::new(a.x() + (dx * t) as Coord, a.y() + (dy * t) as Coord);
-                    break;
-                } else {
-                    to_be_reduced -= ab_len;
-                    new_pts.pop();
-                }
-                a = b;
-                idx -= 1;
-            }
+            let new_pts = trim_junction_tail(&result_lines[i], reduction);
             if new_pts.len() <= 1 {
                 result_lines.swap_remove(i);
             } else {
@@ -92,6 +69,34 @@ impl Node {
             }
         }
     }
+}
+
+fn trim_junction_tail(polyline: &Polyline, reduction: Coord) -> Vec<Point> {
+    let mut to_be_reduced = reduction;
+    let pts = polyline.points().to_vec();
+    let mut a = *pts.last().unwrap();
+    let mut new_pts = pts.clone();
+    let mut idx = pts.len() as i64 - 2;
+    while idx >= 0 {
+        let b = pts[idx as usize];
+        let ab_len = dist(a, b);
+        if ab_len >= to_be_reduced {
+            // move the tail point toward `b` by the remaining reduction
+            let (ax, ay) = (a.x() as f64, a.y() as f64);
+            let (bx, by) = (b.x() as f64, b.y() as f64);
+            let (dx, dy) = (bx - ax, by - ay);
+            let t = to_be_reduced as f64 / ab_len as f64;
+            *new_pts.last_mut().unwrap() =
+                Point::new(a.x() + (dx * t) as Coord, a.y() + (dy * t) as Coord);
+            break;
+        } else {
+            to_be_reduced -= ab_len;
+            new_pts.pop();
+        }
+        a = b;
+        idx -= 1;
+    }
+    new_pts
 }
 
 /// `lineSegmentPolygonsIntersection` (TreeNode.cpp) — walk the outline locator
@@ -109,18 +114,19 @@ pub(super) fn line_segment_polygons_intersection(
         for &edge in edges {
             let (s1, s2) = outline_locator.segment(edge);
             // TreeNode.cpp supplies second endpoints as v1/v2, not differences.
-            if let Some(ip) = seg_seg_intersection(
+            let Some(ip) = seg_seg_intersection(
                 (s1.x() as f64, s1.y() as f64),
                 (s2.x() as f64, s2.y() as f64),
                 (a.x() as f64, a.y() as f64),
                 (b.x() as f64, b.y() as f64),
-            ) {
-                // TreeNode.cpp:166 tests the previous intersection, then saves ip.
-                let d = (result.0 - b.x() as f64).powi(2) + (result.1 - b.y() as f64).powi(2);
-                if d < d2min {
-                    d2min = d;
-                    result = ip;
-                }
+            ) else {
+                continue;
+            };
+            // TreeNode.cpp:166 tests the previous intersection, then saves ip.
+            let d = (result.0 - b.x() as f64).powi(2) + (result.1 - b.y() as f64).powi(2);
+            if d < d2min {
+                d2min = d;
+                result = ip;
             }
         }
         true

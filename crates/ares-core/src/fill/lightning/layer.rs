@@ -9,12 +9,12 @@ use std::collections::HashMap;
 use std::rc::{Rc, Weak};
 
 use crate::geometry::{
-    BoundingBox, ClipperError, Coord, EdgeGrid, Point, Polygon, Polyline,
-    intersection_open_polylines,
+    BoundingBox, ClipperError, Coord, Point, Polygon, Polyline, intersection_open_polylines,
 };
 
 use super::distance_field::DistanceField;
 use super::glibc_rand::GlibcRand;
+use super::layer_geom::{GroundingContext, get_best_grounding_location};
 use super::tree_node::{Node, NodeSPtr};
 
 /// `locator_cell_size` — `scaled<coord_t>(4.)` (`TreeNode.hpp:21`), derived
@@ -112,12 +112,13 @@ impl Layer {
     pub(super) fn generate_new_trees(
         &mut self,
         current_overhang: &[Polygon],
-        current_outlines: &[Polygon],
-        current_outlines_bbox: BoundingBox,
-        outlines_locator: &EdgeGrid,
-        supporting_radius: Coord,
-        wall_supporting_radius: Coord,
+        context: &GroundingContext<'_>,
     ) -> Result<(), ClipperError> {
+        let &GroundingContext {
+            bbox: current_outlines_bbox,
+            supporting_radius,
+            ..
+        } = context;
         let mut distance_field =
             DistanceField::new(supporting_radius, current_outlines_bbox, current_overhang)?;
 
@@ -129,15 +130,12 @@ impl Layer {
             distance_field.try_get_next_point(unsupported_cell_idx)
         {
             unsupported_cell_idx = cell_idx;
-            let grounding = self.get_best_grounding_location(
+            let grounding = get_best_grounding_location(
                 unsupported_location,
-                current_outlines,
-                current_outlines_bbox,
-                outlines_locator,
-                supporting_radius,
-                wall_supporting_radius,
+                context,
                 &tree_node_locator,
                 None,
+                self.locator_cell_size,
             );
             let (new_child, new_parent) = self.attach(unsupported_location, &grounding);
             tree_node_locator.insert(

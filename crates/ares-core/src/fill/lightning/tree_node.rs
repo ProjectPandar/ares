@@ -13,6 +13,12 @@ use super::tree_geom::dist;
 
 pub(super) type NodeSPtr = Rc<RefCell<Node>>;
 
+pub(super) struct PropagationSettings {
+    pub(super) prune_distance: Coord,
+    pub(super) smooth_magnitude: Coord,
+    pub(super) max_remove_colinear_dist: Coord,
+}
+
 /// `FillLightning::Node`.
 pub(super) struct Node {
     pub p: Point,
@@ -163,10 +169,13 @@ impl Node {
         next_trees: &mut Vec<NodeSPtr>,
         next_outlines: &[Polygon],
         outline_locator: &EdgeGrid,
-        prune_distance: Coord,
-        smooth_magnitude: Coord,
-        max_remove_colinear_dist: Coord,
+        settings: &PropagationSettings,
     ) {
+        let &PropagationSettings {
+            prune_distance,
+            smooth_magnitude,
+            max_remove_colinear_dist,
+        } = settings;
         let tree_below = Self::deep_copy(this);
         Self::prune(&tree_below, prune_distance);
         Self::straighten(&tree_below, smooth_magnitude, max_remove_colinear_dist);
@@ -199,40 +208,40 @@ impl Node {
             if dist_pruned_child >= pruning_distance {
                 max_pruned = max_pruned.max(dist_pruned_child);
                 keep.push(child.clone());
-            } else {
-                let a = this.borrow().p;
-                let b = child.borrow().p;
-                let ab_len = dist(a, b);
-                if dist_pruned_child + ab_len <= pruning_distance {
-                    // prune the whole child
-                    max_pruned = max_pruned.max(dist_pruned_child + ab_len);
-                    // don't keep
-                } else {
-                    // prune part-way: n = b + normalize(a-b)*remain (move the
-                    // leaf toward the parent by the remaining distance).
-                    let remain = pruning_distance - dist_pruned_child;
-                    let (bx, by) = (b.x() as f64, b.y() as f64);
-                    let (ax, ay) = (a.x() as f64, a.y() as f64);
-                    let (dx, dy) = (ax - bx, ay - by); // ba = a - b
-                    let nlen = (dx * dx + dy * dy).sqrt();
-                    let n = if nlen == 0.0 {
-                        b
-                    } else {
-                        // `n = b + (ba.normalized()*remain).cast<coord_t>()`
-                        // (TreeNode.cpp:338): the displacement vector is
-                        // componentwise-truncated, THEN added to `b` — not
-                        // `b + disp` rounded.
-                        // `b + (disp.cast<coord_t>())` — coord_t add.
-                        Point::new(
-                            b.x() + (dx / nlen * remain as f64) as Coord,
-                            b.y() + (dy / nlen * remain as f64) as Coord,
-                        )
-                    };
-                    child.borrow_mut().p = n;
-                    max_pruned = max_pruned.max(pruning_distance);
-                    keep.push(child.clone());
-                }
+                continue;
             }
+            let a = this.borrow().p;
+            let b = child.borrow().p;
+            let ab_len = dist(a, b);
+            if dist_pruned_child + ab_len <= pruning_distance {
+                // prune the whole child
+                max_pruned = max_pruned.max(dist_pruned_child + ab_len);
+                // don't keep
+                continue;
+            }
+            // prune part-way: n = b + normalize(a-b)*remain (move the
+            // leaf toward the parent by the remaining distance).
+            let remain = pruning_distance - dist_pruned_child;
+            let (bx, by) = (b.x() as f64, b.y() as f64);
+            let (ax, ay) = (a.x() as f64, a.y() as f64);
+            let (dx, dy) = (ax - bx, ay - by); // ba = a - b
+            let nlen = (dx * dx + dy * dy).sqrt();
+            let n = if nlen == 0.0 {
+                b
+            } else {
+                // `n = b + (ba.normalized()*remain).cast<coord_t>()`
+                // (TreeNode.cpp:338): the displacement vector is
+                // componentwise-truncated, THEN added to `b` — not
+                // `b + disp` rounded.
+                // `b + (disp.cast<coord_t>())` — coord_t add.
+                Point::new(
+                    b.x() + (dx / nlen * remain as f64) as Coord,
+                    b.y() + (dy / nlen * remain as f64) as Coord,
+                )
+            };
+            child.borrow_mut().p = n;
+            max_pruned = max_pruned.max(pruning_distance);
+            keep.push(child.clone());
         }
         this.borrow_mut().children = keep;
         max_pruned
