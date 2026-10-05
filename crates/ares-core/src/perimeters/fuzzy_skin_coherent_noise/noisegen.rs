@@ -16,7 +16,7 @@ const SHIFT_NOISE_GEN: i32 = 8;
 
 /// `noisegen.cpp:GradientNoise3D` — `QUALITY_STD` path is inlined by the
 /// caller through `gradient_coherent_noise3d` below.
-fn gradient_noise_3d(fx: f64, fy: f64, fz: f64, ix: i32, iy: i32, iz: i32, seed: i32) -> f64 {
+fn gradient_noise_3d([fx, fy, fz]: [f64; 3], [ix, iy, iz]: [i32; 3], seed: i32) -> f64 {
     // Upstream arithmetic is `int` (32-bit, wrapping) then masked to 0xff.
     let mut vector_index = (X_NOISE_GEN
         .wrapping_mul(ix)
@@ -51,19 +51,19 @@ fn gradient_coherent_noise_3d(x: f64, y: f64, z: f64, seed: i32) -> f64 {
     let ys = scurve3(y - y0 as f64);
     let zs = scurve3(z - z0 as f64);
 
-    let mut n0 = gradient_noise_3d(x, y, z, x0, y0, z0, seed);
-    let mut n1 = gradient_noise_3d(x, y, z, x1, y0, z0, seed);
+    let mut n0 = gradient_noise_3d([x, y, z], [x0, y0, z0], seed);
+    let mut n1 = gradient_noise_3d([x, y, z], [x1, y0, z0], seed);
     let ix0 = lerp(n0, n1, xs);
-    n0 = gradient_noise_3d(x, y, z, x0, y1, z0, seed);
-    n1 = gradient_noise_3d(x, y, z, x1, y1, z0, seed);
+    n0 = gradient_noise_3d([x, y, z], [x0, y1, z0], seed);
+    n1 = gradient_noise_3d([x, y, z], [x1, y1, z0], seed);
     let ix1 = lerp(n0, n1, xs);
     let iy0 = lerp(ix0, ix1, ys);
 
-    n0 = gradient_noise_3d(x, y, z, x0, y0, z1, seed);
-    n1 = gradient_noise_3d(x, y, z, x1, y0, z1, seed);
+    n0 = gradient_noise_3d([x, y, z], [x0, y0, z1], seed);
+    n1 = gradient_noise_3d([x, y, z], [x1, y0, z1], seed);
     let ix0 = lerp(n0, n1, xs);
-    n0 = gradient_noise_3d(x, y, z, x0, y1, z1, seed);
-    n1 = gradient_noise_3d(x, y, z, x1, y1, z1, seed);
+    n0 = gradient_noise_3d([x, y, z], [x0, y1, z1], seed);
+    n1 = gradient_noise_3d([x, y, z], [x1, y1, z1], seed);
     let ix1 = lerp(n0, n1, xs);
     let iy1 = lerp(ix0, ix1, ys);
 
@@ -96,9 +96,7 @@ fn value_noise_3d(x: i32, y: i32, z: i32, seed: i32) -> f64 {
 /// `module/perlin.cpp::Perlin::GetValue` — defaults: lacunarity 2.0,
 /// `QUALITY_STD`, seed 0 (`perlin.h:44-59`).
 pub(super) fn perlin(
-    mut x: f64,
-    mut y: f64,
-    mut z: f64,
+    [mut x, mut y, mut z]: [f64; 3],
     frequency: f64,
     octave_count: usize,
     persistence: f64,
@@ -126,9 +124,7 @@ pub(super) fn perlin(
 /// `module/billow.cpp::Billow::GetValue` — same octave loop as Perlin with
 /// `2*|signal| - 1` shaping and the `+0.5` tail bias.
 pub(super) fn billow(
-    mut x: f64,
-    mut y: f64,
-    mut z: f64,
+    [mut x, mut y, mut z]: [f64; 3],
     frequency: f64,
     octave_count: usize,
     persistence: f64,
@@ -218,22 +214,22 @@ pub(super) fn voronoi(
     let mut x_candidate = 0.0;
     let mut y_candidate = 0.0;
     let mut z_candidate = 0.0;
-    for z_cur in (z_int - 2)..=(z_int + 2) {
-        for y_cur in (y_int - 2)..=(y_int + 2) {
-            for x_cur in (x_int - 2)..=(x_int + 2) {
-                let x_pos = x_cur as f64 + value_noise_3d(x_cur, y_cur, z_cur, 0);
-                let y_pos = y_cur as f64 + value_noise_3d(x_cur, y_cur, z_cur, 1);
-                let z_pos = z_cur as f64 + value_noise_3d(x_cur, y_cur, z_cur, 2);
-                let x_dist = x_pos - x;
-                let y_dist = y_pos - y;
-                let z_dist = z_pos - z;
-                let dist = x_dist * x_dist + y_dist * y_dist + z_dist * z_dist;
-                if dist < min_dist {
-                    min_dist = dist;
-                    x_candidate = x_pos;
-                    y_candidate = y_pos;
-                    z_candidate = z_pos;
-                }
+    for (z_cur, y_cur) in ((z_int - 2)..=(z_int + 2))
+        .flat_map(|z_cur| ((y_int - 2)..=(y_int + 2)).map(move |y_cur| (z_cur, y_cur)))
+    {
+        for x_cur in (x_int - 2)..=(x_int + 2) {
+            let x_pos = x_cur as f64 + value_noise_3d(x_cur, y_cur, z_cur, 0);
+            let y_pos = y_cur as f64 + value_noise_3d(x_cur, y_cur, z_cur, 1);
+            let z_pos = z_cur as f64 + value_noise_3d(x_cur, y_cur, z_cur, 2);
+            let x_dist = x_pos - x;
+            let y_dist = y_pos - y;
+            let z_dist = z_pos - z;
+            let dist = x_dist * x_dist + y_dist * y_dist + z_dist * z_dist;
+            if dist < min_dist {
+                min_dist = dist;
+                x_candidate = x_pos;
+                y_candidate = y_pos;
+                z_candidate = z_pos;
             }
         }
     }

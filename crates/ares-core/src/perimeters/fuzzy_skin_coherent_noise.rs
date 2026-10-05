@@ -48,17 +48,13 @@ pub(super) fn coherent_value(
 ) -> f64 {
     match noise_type {
         FuzzySkinNoiseType::Perlin => noisegen::perlin(
-            sample.x(),
-            sample.y(),
-            print_z,
+            [sample.x(), sample.y(), print_z],
             1.0 / config.scale_mm,
             config.octaves,
             config.persistence,
         ),
         FuzzySkinNoiseType::Billow => noisegen::billow(
-            sample.x(),
-            sample.y(),
-            print_z,
+            [sample.x(), sample.y(), print_z],
             1.0 / config.scale_mm,
             config.octaves,
             config.persistence,
