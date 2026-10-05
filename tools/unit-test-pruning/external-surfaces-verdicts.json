@@ -1,0 +1,603 @@
+{
+ "module": "project_slice/prepare_infill/external_surfaces",
+ "generated": "2026-10-05",
+ "method": "per-test llvm-cov region coverage vs seeded-E2E covered-region set; semantic filter per coordinator rule; per-case attribution via greedy set-cover over /tmp/e2e-per-test-regions.jsonl (506 cases)",
+ "total": 68,
+ "deleted": 12,
+ "kept": 56,
+ "keep_reasons": {
+  "uncovered-regions": "test executes error/panic/edge regions E2E does not reach",
+  "invariant": "asserts non-mutation, ordering, forest structure, expanded_into flags, commit order, determinism",
+  "numeric-internals": "bit-exact/epsilon assertions",
+  "empty-or-short-circuit": "empty input / early return paths",
+  "boundary-value": "equality/extremum boundary comparisons cannot be proven covered by region coverage"
+ },
+ "tests": [
+  {
+   "test": "task22o39_nonconsecutive_duplicate_boundary_is_processed_in_supplied_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: ordering invariant (supplied-order processing)"
+  },
+  {
+   "test": "task22o39_empty_zone_assertion_precedes_zero_bridges_and_invalid_anchor_geometry",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: panic path (should_panic)"
+  },
+  {
+   "test": "task22o39_forward_cursor_continues_to_later_source_and_preserves_error_commit_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "detect_bridge_directions.rs:66"
+   ],
+   "reason": "executes regions not E2E-covered: detect_bridge_directions.rs:66"
+  },
+  {
+   "test": "task22o39_repeated_boundaries_ignore_seed_paths_and_extract_contour_then_hole",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: asserts input non-mutation + pointer identity invariants"
+  },
+  {
+   "test": "task22o39_later_open_difference_error_keeps_prior_commit_and_failing_later_angles",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "detect_bridge_directions.rs:67"
+   ],
+   "reason": "executes regions not E2E-covered: detect_bridge_directions.rs:67"
+  },
+  {
+   "test": "task22o39_multiple_bridges_rebase_global_boundaries_through_leading_empty_zones",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE",
+   "covering_e2e": [
+    "orca::option_coverage::initialized_bridge_direction::rehash::orca_parity_initialized_compressed_bridge_matches_complete_output"
+   ],
+   "output_to_gcode": "bridge angle -> bridge infill extrusion direction (G1 paths)"
+  },
+  {
+   "test": "task22o39_forward_cursor_does_not_sort_search_ahead_or_restart_for_earlier_sources",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: ordering invariant (no-sort / forward cursor)"
+  },
+  {
+   "test": "task22o39_supplied_order_does_not_sort_later_invalid_earlier_source",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: ordering + no-mutation invariant"
+  },
+  {
+   "test": "task22o39_nonempty_zone_with_zero_bridges_does_not_consume_anchors",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: empty-input/short-circuit + non-mutation"
+  },
+  {
+   "test": "task22o39_trusted_signed_boundary_cast_and_wrapping_local_index_may_panic",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: panic path (catch_unwind)"
+  },
+  {
+   "test": "task22o39_empty_anchors_preserve_complete_contour_hole_line_order_and_angle_bits",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: empty-input + pinned fragment/line topology internals"
+  },
+  {
+   "test": "task22o35_first_zone_discovery_error_follows_source_extraction",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_merge.rs:31"
+   ],
+   "reason": "executes regions not E2E-covered: expand_merge.rs:31"
+  },
+  {
+   "test": "task22o39_non_recombining_open_difference_retains_pinned_fragment_and_line_topology",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: pinned fragment/line topology internals"
+  },
+  {
+   "test": "task22o39_offset_error_is_direct_and_first_bridge_retains_all_owned_and_borrowed_state",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "detect_bridge_directions.rs:66"
+   ],
+   "reason": "executes regions not E2E-covered: detect_bridge_directions.rs:66"
+  },
+  {
+   "test": "task22o35_closing_coordinate_error_escapes_after_no_zone_merge",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_merge.rs:44"
+   ],
+   "reason": "executes regions not E2E-covered: expand_merge.rs:44"
+  },
+  {
+   "test": "task22o39_normal_and_large_bed_freeze_f64_to_f32_epsilon_and_forward_scale",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: numeric internals (f64->f32 epsilon, bit-exact)"
+  },
+  {
+   "test": "task22o41_preserves_nonmatching_surfaces_while_moving_bridge_geometry",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: non-mutation invariant of nonmatching surfaces"
+  },
+  {
+   "test": "task22o41_expands_and_orients_a_bottom_bridge",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output surface contract; zone flags incidental)",
+   "covering_e2e": [
+    "orca::adaptive_pressure_advance::orca_parity_adaptive_pa_models_and_activation"
+   ],
+   "output_to_gcode": "produced BottomBridge surfaces -> bridge infill regions/paths"
+  },
+  {
+   "test": "task22o35_invalid_radius_panics_after_nonempty_source_extraction",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_merge.rs:47"
+   ],
+   "reason": "executes regions not E2E-covered: expand_merge.rs:47"
+  },
+  {
+   "test": "task22o35_later_zone_error_preserves_the_earlier_flag_without_trimming",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_merge.rs:31"
+   ],
+   "reason": "executes regions not E2E-covered: expand_merge.rs:31"
+  },
+  {
+   "test": "task22o41_first_expansion_error_follows_bridge_extraction",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_bridges_detect_orientations.rs:26",
+    "expand_expolygons.rs:19"
+   ],
+   "reason": "executes regions not E2E-covered: expand_bridges_detect_orientations.rs:26, expand_expolygons.rs:19"
+  },
+  {
+   "test": "task22o41_later_expansion_error_keeps_prior_flag_without_final_trim",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_bridges_detect_orientations.rs:26",
+    "expand_expolygons.rs:19"
+   ],
+   "reason": "executes regions not E2E-covered: expand_bridges_detect_orientations.rs:26, expand_expolygons.rs:19"
+  },
+  {
+   "test": "task22o41_without_bottom_bridges_is_an_exact_noop",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: no-op/empty-output edge + input non-mutation"
+  },
+  {
+   "test": "task22o41_sorts_zone_major_results_before_direction_and_merge",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: ordering invariant + expanded_into flag equality"
+  },
+  {
+   "test": "task22o36_both_scales_match_the_explicit_sorted_pipeline",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output equality vs explicit pipeline)",
+   "covering_e2e": [
+    "orca::adaptive_pressure_advance::orca_parity_adaptive_pa_models_and_activation"
+   ],
+   "output_to_gcode": "expanded surfaces -> external surface geometry feeding perimeters/infill"
+  },
+  {
+   "test": "task22o36_discovery_errors_preserve_failing_and_later_flags",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_expolygons.rs:19"
+   ],
+   "reason": "executes regions not E2E-covered: expand_expolygons.rs:19"
+  },
+  {
+   "test": "task22o36_ordered_zones_rebase_complete_pinned_oracle",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: asserts expanded_into flag vector (internal invariant)"
+  },
+  {
+   "test": "task22o36_zero_zones_do_not_access_source_and_empty_source_visits_zones",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_expolygons.rs:21"
+   ],
+   "reason": "executes regions not E2E-covered: expand_expolygons.rs:21"
+  },
+  {
+   "test": "task22o36_one_natural_zone_preserves_complete_anchor_and_expansion",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: asserts expanded_into flag (internal invariant)"
+  },
+  {
+   "test": "task22o37_group_id_follows_parent_chain_without_full_compression",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: forest structure internal invariant"
+  },
+  {
+   "test": "task22o37_initializes_empty_and_preserves_source_geometry",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: empty-input + output contract mixed -> keep (invariant)"
+  },
+  {
+   "test": "task22o37_invalid_paths_short_circuit_for_equal_source_and_disjoint_bbox",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: short-circuit path"
+  },
+  {
+   "test": "task22o37_matches_pinned_multiple_boundary_oracle_in_source_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "group_bridges.rs:38"
+   ],
+   "reason": "executes regions not E2E-covered: group_bridges.rs:38 | but asserts: ordering invariant (source order) + group assignment"
+  },
+  {
+   "test": "task22o37_propagates_first_and_later_coordinate_failures_without_input_mutation",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "group_bridges.rs:31",
+    "group_bridges.rs:89"
+   ],
+   "reason": "executes regions not E2E-covered: group_bridges.rs:31, group_bridges.rs:89"
+  },
+  {
+   "test": "task22o37_preserves_raw_parent_forest_and_does_not_regroup_windows",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "group_bridges.rs:38"
+   ],
+   "reason": "executes regions not E2E-covered: group_bridges.rs:38 | but asserts: forest/window invariant"
+  },
+  {
+   "test": "task22o37_same_source_disjoint_and_separate_windows_stay_roots",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: group assignment output -> DELETE? borderline"
+  },
+  {
+   "test": "task22o37_trusts_nonempty_expansion_contours",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "group_bridges.rs:89"
+   ],
+   "reason": "executes regions not E2E-covered: group_bridges.rs:89"
+  },
+  {
+   "test": "task22o37_trusts_source_ids_when_overlap_reaches_root_resolution",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "group_bridges.rs:38",
+    "group_bridges.rs:89"
+   ],
+   "reason": "executes regions not E2E-covered: group_bridges.rs:38, group_bridges.rs:89"
+  },
+  {
+   "test": "task22o36_propagation_errors_commit_only_prior_zone_flags",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "expand_expolygons.rs:21"
+   ],
+   "reason": "executes regions not E2E-covered: expand_expolygons.rs:21"
+  },
+  {
+   "test": "task22o37_uses_expansion_contours_and_ignores_holes",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: group assignment + hole handling semantics -> DELETE? borderline"
+  },
+  {
+   "test": "task22o40_closes_groups_independently_with_contours_and_holes",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output surfaces geometry+angles)",
+   "covering_e2e": [
+    "orca::adaptive_pressure_advance::orca_parity_adaptive_pa_models_and_activation"
+   ],
+   "output_to_gcode": "merged bridge surfaces (closed contours+holes, angle) -> bridge infill paths",
+   "note": "covering_e2e covers most regions; 2 regions (group_id while-loop compression 8:30-11:6, merge_bridges non-root continue 51:13-51:21) are covered in merged E2E profile (counts 78/50) but not attributable to a single per-case run"
+  },
+  {
+   "test": "task22o40_expansions_stay_with_their_sources",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output bounds/holes/angles)",
+   "covering_e2e": [
+    "orca::option_coverage::initialized_bridge_direction::orca_parity_initialized_equal_cost_bridge_matches_complete_output"
+   ],
+   "output_to_gcode": "merged bridge surface geometry+angle -> bridge infill paths"
+  },
+  {
+   "test": "task22o40_empty_input_does_not_reach_closing",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: empty-input short-circuit"
+  },
+  {
+   "test": "task22o40_disconnected_group_output_is_deterministic",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: determinism invariant"
+  },
+  {
+   "test": "task22o40_group_members_and_expansion_use_the_root_angle",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output bounds+angle)",
+   "covering_e2e": [
+    "orca::adaptive_pressure_advance::orca_parity_adaptive_pa_models_and_activation"
+   ],
+   "output_to_gcode": "merged bridge surface bounds+angle -> bridge infill paths",
+   "note": "covering_e2e covers most regions; 2 regions (group_id while-loop compression 8:30-11:6, merge_bridges non-root continue 51:13-51:21) are covered in merged E2E profile (counts 78/50) but not attributable to a single per-case run"
+  },
+  {
+   "test": "task22o40_propagates_clipper_coordinate_errors",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "merge_bridges.rs:54"
+   ],
+   "reason": "executes regions not E2E-covered: merge_bridges.rs:54"
+  },
+  {
+   "test": "task22o40_same_group_narrow_gap_is_closed",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output snapshot+angle)",
+   "covering_e2e": [
+    "orca::adaptive_pressure_advance::orca_parity_adaptive_pa_models_and_activation"
+   ],
+   "output_to_gcode": "merged bridge surface contour+angle -> bridge infill paths",
+   "note": "covering_e2e covers most regions; 2 regions (group_id while-loop compression 8:30-11:6, merge_bridges non-root continue 51:13-51:21) are covered in merged E2E profile (counts 78/50) but not attributable to a single per-case run"
+  },
+  {
+   "test": "task22o40_single_bridge_with_hole_emits_exact_defaults_and_root_angle",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output snapshot+fields)",
+   "covering_e2e": [
+    "orca::adaptive_pressure_advance::orca_parity_adaptive_pa_models_and_activation"
+   ],
+   "output_to_gcode": "merged bridge surface snapshot+fields -> bridge infill paths"
+  },
+  {
+   "test": "task22o35_selected_geometry_moves_and_output_uses_exact_metadata_defaults",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: non-mutation/pointer + moved-out-geometry invariant"
+  },
+  {
+   "test": "task22o35_zero_selected_sources_short_circuit_without_mutation",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: empty-input/short-circuit + non-mutation"
+  },
+  {
+   "test": "task22o35_multiple_ordered_zones_match_the_complete_explicit_pipeline",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: asserts expanded_into + zone geometry equality (internal)"
+  },
+  {
+   "test": "task22o35_multiple_sources_and_boundaries_preserve_complete_topology_and_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: ordering/topology invariant + expanded_into"
+  },
+  {
+   "test": "task22o35_normal_and_large_bed_vectors_match_their_explicit_pipelines",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE? compares outputs across scales vs explicit pipeline; asserts expanded_into equality inside helper -> mixed",
+   "covering_e2e": [
+    "orca::option_coverage::initialized_bridge_direction::orca_parity_initialized_equal_cost_bridge_matches_complete_output"
+   ],
+   "output_to_gcode": "expanded surface geometry (both coord scales) -> perimeters/infill paths"
+  },
+  {
+   "test": "task22o42_rebuilds_external_surfaces_in_upstream_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: ordering invariant (upstream order) + field defaults"
+  },
+  {
+   "test": "task22o42_absolute_custom_bridge_angle_includes_model_rotation",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "process.rs:45",
+    "process.rs:46",
+    "process.rs:47",
+    "process.rs:48",
+    "process.rs:49",
+    "process.rs:50",
+    "process.rs:51",
+    "process.rs:52",
+    "process.rs:62"
+   ],
+   "reason": "executes regions not E2E-covered: process.rs:45, process.rs:46, process.rs:47, process.rs:48, process.rs:49, process.rs:50, process.rs:51, process.rs:52, process.rs:62"
+  },
+  {
+   "test": "task22o42_zero_bridge_angle_uses_auto_orientation_without_model_rotation",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE? asserts output angle bits equal across configs (numeric output) | conservative: bit-exact/empty-output edge -> keep"
+  },
+  {
+   "test": "task22o42_record_without_zone_sources_discards_unhandled_surfaces",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE (output: surfaces emptied) | conservative: bit-exact/empty-output edge -> keep"
+  },
+  {
+   "test": "task22o42_relative_custom_bridge_angle_adds_to_auto_but_not_model_rotation",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "process.rs:45",
+    "process.rs:62",
+    "process.rs:63",
+    "process.rs:64",
+    "process.rs:65",
+    "process.rs:66"
+   ],
+   "reason": "executes regions not E2E-covered: process.rs:45, process.rs:62, process.rs:63, process.rs:64, process.rs:65, process.rs:66"
+  },
+  {
+   "test": "task22o42_derives_exact_ksr_first_layer_parameters",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: numeric internals (bit-exact parameters)"
+  },
+  {
+   "test": "task22o42_derives_exact_ksr_later_layer_parameters",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: numeric internals (bit-exact parameters)"
+  },
+  {
+   "test": "task22o42_scales_step_and_minimum_sparse_area_twice",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: numeric internals (bit-exact parameters)"
+  },
+  {
+   "test": "task22o42_derives_exact_nonzero_wall_large_bed_parameters",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: numeric internals (bit-exact parameters)"
+  },
+  {
+   "test": "task22o42_zero_walls_use_scale_specific_epsilon_expansion",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | but asserts: numeric internals (epsilon)"
+  },
+  {
+   "test": "task22o42_first_union_error_leaves_only_extracted_solid_geometry_moved",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "process.rs:22"
+   ],
+   "reason": "executes regions not E2E-covered: process.rs:22"
+  },
+  {
+   "test": "task22o42_sparse_area_above_threshold_remains_sparse",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE? output kind",
+   "covering_e2e": [
+    "orca::adaptive_pressure_advance::orca_parity_adaptive_pa_constant_model"
+   ],
+   "output_to_gcode": "surface kind (Internal vs InternalSolid) -> sparse vs solid infill G-code"
+  },
+  {
+   "test": "task22o42_sparse_area_equal_to_threshold_promotes_to_solid",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "boundary value: area exactly equal to promotion threshold (>= vs >); coverage cannot prove E2E hits exact equality"
+  },
+  {
+   "test": "task22o42_spiral_mode_disables_small_area_promotion",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE? output kind",
+   "covering_e2e": [
+    "orca::option_coverage::seeded_context::orca_parity_seeded_context_matches_coherent_random_spacing"
+   ],
+   "output_to_gcode": "surface kind under spiral -> sparse infill G-code"
+  },
+  {
+   "test": "task22o42_zero_sparse_density_disables_small_area_promotion",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "all executed regions E2E-covered | output contract: DELETE? output kind",
+   "covering_e2e": [
+    "orca::option_coverage::seeded_context::orca_parity_seeded_context_matches_coherent_random_spacing"
+   ],
+   "output_to_gcode": "surface kind under zero density -> sparse infill G-code"
+  }
+ ]
+}

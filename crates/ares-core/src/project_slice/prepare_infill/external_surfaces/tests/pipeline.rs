@@ -1,8 +1,5 @@
 use super::{expand_merge_surfaces, helpers::*};
-use crate::{
-    geometry::{CoordinateScale, RegionExpansionParameters},
-    project_slice::region_slices::RegionSurfaceKind,
-};
+use crate::{geometry::CoordinateScale, project_slice::region_slices::RegionSurfaceKind};
 
 fn run_pipeline_case(
     sources: Vec<crate::geometry::ExPolygon>,
@@ -85,48 +82,4 @@ fn task22o35_multiple_sources_and_boundaries_preserve_complete_topology_and_orde
         CoordinateScale::Normal,
     );
     assert!(actual_zones[0].expanded_into);
-}
-
-fn dual_scale_case(scale: CoordinateScale) -> Vec<ExPolygonSnapshot> {
-    let params = RegionExpansionParameters::build(100_000.0, 10_000.0, 5, scale);
-    let mut actual_zones = vec![super::super::ExpansionZone::new(
-        vec![square(0, 1_000_000)],
-        params,
-    )];
-    let mut expected_zones = vec![super::super::ExpansionZone::new(
-        vec![square(0, 1_000_000)],
-        params,
-    )];
-    let sources = vec![square(200_000, 300_000)];
-    let expected =
-        explicit_pipeline(sources.clone(), &mut expected_zones, 10_000.0, scale).unwrap();
-    let mut surfaces = vec![surface(
-        RegionSurfaceKind::Top,
-        sources.into_iter().next().unwrap(),
-        (0.2, 1, -1.0, 0),
-    )];
-    let actual = expand_merge_surfaces(
-        &mut surfaces,
-        RegionSurfaceKind::Top,
-        &mut actual_zones,
-        10_000.0,
-        -1.0,
-        scale,
-    )
-    .unwrap();
-    assert_eq!(surface_snapshots(&actual), snapshots(&expected));
-    assert_eq!(
-        snapshots(&actual_zones[0].expolygons),
-        snapshots(&expected_zones[0].expolygons)
-    );
-    surface_snapshots(&actual)
-}
-
-#[test]
-fn task22o35_normal_and_large_bed_vectors_match_their_explicit_pipelines() {
-    let normal = dual_scale_case(CoordinateScale::Normal);
-    let large_bed = dual_scale_case(CoordinateScale::LargeBed);
-    assert!(!normal.is_empty());
-    assert!(!large_bed.is_empty());
-    assert_ne!(normal, large_bed);
 }

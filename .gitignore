@@ -12,3 +12,4 @@ result.json
 /*.o
 /*.cpp
 target-parity/
+*.profraw

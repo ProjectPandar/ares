@@ -88,62 +88,6 @@ fn task22o39_repeated_boundaries_ignore_seed_paths_and_extract_contour_then_hole
 }
 
 #[test]
-fn task22o39_multiple_bridges_rebase_global_boundaries_through_leading_empty_zones() {
-    let geometries = vec![
-        rectangle(0, 0, 1000, 1000),
-        rectangle(2000, 0, 3000, 1000),
-        rectangle(4000, 0, 5000, 1000),
-    ];
-    let area_a = rectangle(400, -200, 600, 200);
-    let area_b = rectangle(2200, -200, 2400, 200);
-    let area_c = rectangle(2600, -200, 2800, 200);
-    let manual_expected = vec![
-        manual(
-            &geometries[0],
-            std::slice::from_ref(area_a.contour()),
-            CoordinateScale::Normal,
-        )
-        .unwrap()
-        .angle
-        .to_bits(),
-        manual(
-            &geometries[1],
-            std::slice::from_ref(area_c.contour()),
-            CoordinateScale::Normal,
-        )
-        .unwrap()
-        .angle
-        .to_bits(),
-        manual(&geometries[2], &[], CoordinateScale::Normal)
-            .unwrap()
-            .angle
-            .to_bits(),
-    ];
-    let anchors = vec![
-        seed(0, 0, &[(1, 1)]),
-        seed(0, 99, &[(2, 2)]),
-        seed(1, 2, &[(3, 3)]),
-    ];
-    let zones = vec![
-        zone(Vec::new()),
-        zone(vec![area_a]),
-        zone(vec![area_b, area_c]),
-    ];
-    let mut bridges = geometries
-        .into_iter()
-        .enumerate()
-        .map(|(index, geometry)| bridge(geometry, Some(-(index as f64) - 1.0)))
-        .collect::<Vec<_>>();
-
-    detect_bridge_directions(&anchors, &mut bridges, &zones, CoordinateScale::Normal).unwrap();
-
-    assert_eq!(
-        angles(&bridges),
-        manual_expected.into_iter().map(Some).collect::<Vec<_>>()
-    );
-}
-
-#[test]
 fn task22o39_forward_cursor_does_not_sort_search_ahead_or_restart_for_earlier_sources() {
     let first_geometry = rectangle(0, 0, 1000, 1000);
     let second_geometry = rectangle(2000, 0, 3000, 1000);

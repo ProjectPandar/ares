@@ -63,36 +63,6 @@ fn explicit_sorted_pipeline(
 }
 
 #[test]
-fn task22o41_expands_and_orients_a_bottom_bridge() {
-    let mut surfaces = vec![surface(
-        RegionSurfaceKind::BottomBridge,
-        square(20, 30),
-        (0.2, 1, -1.0, 0),
-    )];
-    let untouched = square(200, 300);
-    let mut zones = vec![zone(vec![square(0, 100)]), zone(vec![untouched.clone()])];
-
-    let output =
-        expand_bridges_detect_orientations(&mut surfaces, &mut zones, 1.0, CoordinateScale::Normal)
-            .unwrap();
-
-    assert!(!output.is_empty());
-    assert!(output.iter().all(|surface| {
-        let (kind, _, thickness, thickness_layers, bridge_angle, extra_perimeters) =
-            surface.as_parts();
-        kind == RegionSurfaceKind::BottomBridge
-            && thickness == -1.0
-            && thickness_layers == 1
-            && bridge_angle >= 0.0
-            && extra_perimeters == 0
-    }));
-    assert!(surface_snapshots(&surfaces)[0].0.is_empty());
-    assert!(zones[0].expanded_into);
-    assert!(!zones[1].expanded_into);
-    assert_eq!(snapshots(&zones[1].expolygons), snapshots(&[untouched]));
-}
-
-#[test]
 fn task22o41_without_bottom_bridges_is_an_exact_noop() {
     let original = square(20, 30);
     let boundary = square(0, 100);

@@ -58,38 +58,6 @@ fn expansion_snapshots(expansions: &[RegionExpansionEx]) -> Vec<ExpansionSnapsho
         .collect()
 }
 
-fn explicit_pipeline(
-    sources: &[ExPolygon],
-    zones: &mut [super::super::ExpansionZone],
-    scale: CoordinateScale,
-) -> Result<(Vec<WaveSeed>, Vec<RegionExpansionEx>), ClipperError> {
-    let mut anchors = Vec::new();
-    let mut expansions = Vec::new();
-    let mut processed = 0_u32;
-    for zone in zones {
-        let mut zone_anchors = wave_seeds(
-            sources,
-            &zone.expolygons,
-            zone.parameters.tiny_expansion,
-            true,
-            scale,
-        )?;
-        let mut zone_expansions =
-            propagate_waves_ex(&zone_anchors, &zone.expolygons, &zone.parameters)?;
-        for anchor in &mut zone_anchors {
-            anchor.boundary = anchor.boundary.wrapping_add(processed);
-        }
-        for expansion in &mut zone_expansions {
-            expansion.boundary_id = expansion.boundary_id.wrapping_add(processed);
-        }
-        zone.expanded_into = !zone_expansions.is_empty();
-        anchors.append(&mut zone_anchors);
-        expansions.append(&mut zone_expansions);
-        processed = processed.wrapping_add(zone.expolygons.len() as u32);
-    }
-    Ok((anchors, expansions))
-}
-
 fn assert_o30_error(sources: &[ExPolygon], zone: &super::super::ExpansionZone) {
     let seeds = wave_seeds(
         sources,
@@ -180,33 +148,6 @@ fn task22o36_ordered_zones_rebase_complete_pinned_oracle() {
             .collect::<Vec<_>>(),
         vec![false, true, true]
     );
-}
-
-#[test]
-fn task22o36_both_scales_match_the_explicit_sorted_pipeline() {
-    let sources = [square(200_000, 300_000)];
-    let mut scale_outputs = Vec::new();
-    for scale in [CoordinateScale::Normal, CoordinateScale::LargeBed] {
-        let parameters = RegionExpansionParameters::build(100_000.0, 10_000.0, 5, scale);
-        let mut actual_zones = vec![super::super::ExpansionZone::new(
-            vec![square(0, 1_000_000)],
-            parameters,
-        )];
-        let mut expected_zones = vec![super::super::ExpansionZone::new(
-            vec![square(0, 1_000_000)],
-            parameters,
-        )];
-        let actual = expand_expolygons(&sources, &mut actual_zones, scale).unwrap();
-        let expected = explicit_pipeline(&sources, &mut expected_zones, scale).unwrap();
-        assert_eq!(actual.anchors, expected.0);
-        assert_eq!(actual.expansions, expected.1);
-        assert_eq!(
-            actual_zones[0].expanded_into,
-            expected_zones[0].expanded_into
-        );
-        scale_outputs.push(expansion_snapshots(&actual.expansions));
-    }
-    assert_ne!(scale_outputs[0], scale_outputs[1]);
 }
 
 #[test]

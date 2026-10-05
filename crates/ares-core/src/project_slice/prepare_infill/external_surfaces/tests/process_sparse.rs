@@ -52,33 +52,6 @@ fn task22o42_sparse_area_equal_to_threshold_promotes_to_solid() {
 }
 
 #[test]
-fn task22o42_sparse_area_above_threshold_remains_sparse() {
-    assert_eq!(
-        process_kind(1_000_001, config()),
-        RegionSurfaceKind::Internal
-    );
-}
-
-#[test]
-fn task22o42_zero_sparse_density_disables_small_area_promotion() {
-    let mut disabled = config();
-    disabled.sparse_infill_density_percent = 0.0;
-
-    assert_eq!(
-        process_kind(1_000_000, disabled),
-        RegionSurfaceKind::Internal
-    );
-}
-
-#[test]
-fn task22o42_spiral_mode_disables_small_area_promotion() {
-    let mut spiral = config();
-    spiral.spiral_mode = true;
-
-    assert_eq!(process_kind(1_000_000, spiral), RegionSurfaceKind::Internal);
-}
-
-#[test]
 fn task22o42_first_union_error_leaves_only_extracted_solid_geometry_moved() {
     let invalid = expolygon(
         &[
