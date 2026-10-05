@@ -219,12 +219,14 @@ pub(super) fn append(
                 metadata,
                 first_layer_bounds,
             },
-            chunk_index,
-            object_layer_over_raft,
-            layer_z,
-            layer_height,
-            &mut second_layer_done,
-            bed_cache,
+            boundary::LayerBoundary {
+                layer_index: chunk_index,
+                object_layer_over_raft,
+                layer_z,
+                layer_height,
+                second_layer_done: &mut second_layer_done,
+                bed_cache,
+            },
         )?;
         let timelapse_context = boundary.timelapse_context;
         state.layer_index = cooling_layer_index;
@@ -237,16 +239,18 @@ pub(super) fn append(
         skirt_emit::emit(
             output,
             state,
-            &entries,
-            support_layers,
-            skirt,
-            &raft,
-            layer_z,
-            &mut skirt_schedule,
-            &mut entry_builder,
-            traversal,
-            &chunk_slices,
-            chunk_perimeter_spacing,
+            skirt_emit::SkirtEmission {
+                entries: &entries,
+                support: support_layers,
+                skirt,
+                raft: &raft,
+                print_z: layer_z,
+                schedule: &mut skirt_schedule,
+                entry_builder: &mut entry_builder,
+                traversal,
+                chunk_slices: &chunk_slices,
+                chunk_perimeter_spacing,
+            },
         );
         // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
         // template insert fire once per layer inside the per-extruder loop

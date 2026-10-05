@@ -104,9 +104,11 @@ pub(super) fn emit_retracted_first_travel(
             travel_emit::xyz_with_comment(
                 output,
                 state,
-                travel_x,
-                travel_y,
-                raised_z,
+                crate::Point3d {
+                    x: travel_x,
+                    y: travel_y,
+                    z: raised_z,
+                },
                 state.travel_feedrate,
                 first_travel_comment,
             );

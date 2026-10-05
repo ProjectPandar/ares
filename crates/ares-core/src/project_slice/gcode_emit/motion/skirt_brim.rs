@@ -96,16 +96,21 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
     state.adaptive_pa_emitted = false;
 }
 
-pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
-    output: &mut Vec<u8>,
-    points: impl Iterator<Item = (i64, i64)>,
-    flow: SkirtLoopFlow,
-    geometry: LayerGeometry<'_>,
-    state: &mut EmitState,
+/// Flow and clipping state for the skirt loop (`GCode.cpp:5804`, `Flow.hpp::Flow`).
+pub(in crate::project_slice::gcode_emit) struct SkirtLoopParameters {
+    pub(in crate::project_slice::gcode_emit) flow: SkirtLoopFlow,
     // The skirt seam gap is clipped by the caller on the plate-frame
     // polyline (`GCode.cpp:5804`); `preclipped` suppresses the local-frame
     // `end_clip` inside `path::emit`.
-    preclipped: bool,
+    pub(in crate::project_slice::gcode_emit) preclipped: bool,
+}
+
+pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    SkirtLoopParameters { flow, preclipped }: SkirtLoopParameters,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
 ) {
     state.adaptive_pa_flow = Some(flow.mm3_per_mm);
     state.adaptive_pa_emitted = false;

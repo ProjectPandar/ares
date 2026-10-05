@@ -52,8 +52,10 @@ fn wipe_before_external_uses_the_source_rotated_inner_point() {
 
     append_wipe_before_external(
         &mut output,
-        &paths,
-        ExtrusionLoopRole::Default,
+        &crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop {
+            paths,
+            role: ExtrusionLoopRole::Default,
+        },
         LayerGeometry {
             nearest_seam_penalties: None,
             staggered_inner: false,

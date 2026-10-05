@@ -34,14 +34,7 @@ pub(super) fn append_untracked(
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
-    append(
-        output,
-        state,
-        context.traversal,
-        context.layer,
-        context.metadata,
-        context.first_layer_bounds,
-    )?;
+    append(output, state, context)?;
     Ok(())
 }
 
@@ -53,14 +46,7 @@ pub(super) fn append_and_track(
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
-    if let Some(last_z) = append(
-        output,
-        state,
-        context.traversal,
-        context.layer,
-        context.metadata,
-        context.first_layer_bounds,
-    )? {
+    if let Some(last_z) = append(output, state, context)? {
         if let Some(z) = last_z {
             // `GCode.cpp:5173-5178`: the template's last Z is ADOPTED into
             // `m_pos(2)` — subsequent eager lifts target writer-domain
@@ -100,10 +86,12 @@ pub(super) fn append_traditional(
 fn append(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
-    traversal: &PreparedPostClassicTraversal,
-    layer: TimelapseLayer,
-    metadata: GenerationMetadata,
-    first_layer_bounds: Option<footprint::FirstLayerBounds>,
+    Context {
+        traversal,
+        layer,
+        metadata,
+        first_layer_bounds,
+    }: Context<'_>,
 ) -> Result<Option<Option<f64>>, SliceError> {
     let runtime = &traversal.resolved.views.runtime_gcode;
     let source = &runtime.time_lapse_gcode.0;

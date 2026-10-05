@@ -11,14 +11,23 @@ pub(super) use accounting::account_volumes;
 #[cfg(test)]
 mod tests;
 
+/// Print-end placeholder inputs (`GCode.cpp:3470-3493`).
+pub(super) struct FinishContext {
+    pub(super) metadata: GenerationMetadata,
+    pub(super) first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
+    pub(super) position: (f64, f64, f64),
+}
+
 pub(super) fn append(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     max_layer_z: f64,
-    metadata: GenerationMetadata,
-    first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
-    position: (f64, f64, f64),
+    FinishContext {
+        metadata,
+        first_layer_bounds,
+        position,
+    }: FinishContext,
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
     let mut config = super::placeholders::base_config(

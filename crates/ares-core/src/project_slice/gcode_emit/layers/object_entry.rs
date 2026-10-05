@@ -105,8 +105,10 @@ pub(super) fn emit(
             output,
             state,
             labels[object_index].as_ref(),
-            timelapse_inserted,
-            traditional_timelapse,
+            layer_end::LayerTimelapse {
+                timelapse_inserted,
+                traditional_timelapse,
+            },
             timelapse_context,
         )?;
     }

@@ -15,6 +15,13 @@ pub(super) struct Boundary<'a> {
     pub first_layer_bounds: Option<footprint::FirstLayerBounds>,
 }
 
+/// Precise source and writer print-Z inputs to `GCode.cpp::change_layer`
+/// (`GCode.cpp:5692`, `Layer.hpp::Layer::print_z`).
+pub(super) struct LayerHeights {
+    pub(super) precise_layer_z: f64,
+    pub(super) layer_z: f64,
+}
+
 /// Advances the emission state into the new layer. `change_layer`
 /// increments `m_layer_index` BEFORE its change-layer retract
 /// (`GCode.cpp:5690-5696`), so the deferred hop's
@@ -22,8 +29,10 @@ pub(super) struct Boundary<'a> {
 /// index — the index advance strictly precedes the deferral.
 pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     state: &mut motion::EmitState,
-    precise_layer_z: f64,
-    layer_z: f64,
+    LayerHeights {
+        precise_layer_z,
+        layer_z,
+    }: LayerHeights,
     layer_index: usize,
     object_layer_over_raft: bool,
     layer_retract_pending: bool,
@@ -52,6 +61,16 @@ pub(super) struct BoundaryAdvance<'a> {
     pub timelapse_context: timelapse::Context<'a>,
 }
 
+/// Per-layer inputs to `GCode.cpp::change_layer`.
+pub(super) struct LayerBoundary<'a> {
+    pub(super) layer_index: usize,
+    pub(super) object_layer_over_raft: bool,
+    pub(super) layer_z: f64,
+    pub(super) layer_height: f64,
+    pub(super) second_layer_done: &'a mut bool,
+    pub(super) bed_cache: i32,
+}
+
 /// Emits the `change_layer` block for `layer_index` (`GCode.cpp:5685-5718`
 /// and its callers): Z/HEIGHT headers, the before-layer-change template,
 /// the deferred change-layer retract, and the per-state layer advance.
@@ -65,12 +84,14 @@ pub(super) fn append<'a>(
         metadata,
         first_layer_bounds,
     }: Boundary<'a>,
-    layer_index: usize,
-    object_layer_over_raft: bool,
-    layer_z: f64,
-    layer_height: f64,
-    second_layer_done: &mut bool,
-    bed_cache: i32,
+    LayerBoundary {
+        layer_index,
+        object_layer_over_raft,
+        layer_z,
+        layer_height,
+        second_layer_done,
+        bed_cache,
+    }: LayerBoundary<'_>,
 ) -> Result<BoundaryAdvance<'a>, SliceError> {
     state.physical_fan_speed = state.part_fan_speed;
     let tags = state.tags;
@@ -198,8 +219,10 @@ pub(super) fn append<'a>(
     let live_writer_z = state.writer_z.unwrap_or(state.layer_z);
     advance_for_layer(
         state,
-        layer_z,
-        layer_z,
+        LayerHeights {
+            precise_layer_z: layer_z,
+            layer_z,
+        },
         layer_index,
         object_layer_over_raft,
         layer_retract_pending,

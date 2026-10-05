@@ -252,7 +252,16 @@ impl SkirtPlan {
             // truncates toward zero (`Polyline.cpp:52-72` `.cast`), which
             // differs from clipping after the local-frame translate.
             motion::clip::clip_end(&mut split, state.options.seam_gap / geometry.scale.factor());
-            motion::emit_skirt_loop(output, split.into_iter(), flow, geometry, state, true);
+            motion::emit_skirt_loop(
+                output,
+                split.into_iter(),
+                motion::SkirtLoopParameters {
+                    flow,
+                    preclipped: true,
+                },
+                geometry,
+                state,
+            );
             if let Some(last) = state.last_scaled_position {
                 seam_target = Point::new(last.0, last.1);
             }

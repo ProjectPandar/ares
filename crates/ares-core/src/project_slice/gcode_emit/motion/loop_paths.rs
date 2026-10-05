@@ -15,12 +15,13 @@ use crate::project_slice::perimeters::classic::{
 
 pub(super) fn emit(
     output: &mut Vec<u8>,
-    paths: &[ExtrusionPath],
-    loop_role: ExtrusionLoopRole,
+    loop_: &crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     region_perimeters: &[Vec<(i64, i64)>],
 ) {
+    let paths = &loop_.paths;
+    let loop_role = loop_.role;
     if !state.spiral_vase
         && let Some(scarf) = super::scarf::build(
             paths,
@@ -30,7 +31,7 @@ pub(super) fn emit(
             state.layer_index,
         )
     {
-        append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
+        append_wipe_before_external(output, loop_, geometry, state, region_perimeters);
         begin_adaptive_loop(state, paths, 0.0, geometry);
         for path in &scarf.paths {
             super::materialized::emit(
@@ -77,7 +78,7 @@ pub(super) fn emit(
     if path_count == 0 {
         return;
     }
-    append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
+    append_wipe_before_external(output, loop_, geometry, state, region_perimeters);
     begin_adaptive_loop(
         state,
         paths,
@@ -150,12 +151,13 @@ fn wipe_points(paths: &[ExtrusionPath], geometry: LayerGeometry<'_>) -> Vec<supe
 
 fn append_wipe_before_external(
     output: &mut Vec<u8>,
-    paths: &[ExtrusionPath],
-    loop_role: ExtrusionLoopRole,
+    loop_: &crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     region_perimeters: &[Vec<(i64, i64)>],
 ) {
+    let paths = &loop_.paths;
+    let loop_role = loop_.role;
     let Some(first) = paths.first() else {
         return;
     };

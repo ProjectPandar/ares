@@ -13,19 +13,35 @@ use crate::geometry::ExPolygon;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 use crate::project_slice::support_material::InstalledSupportLayer;
 
+/// Inputs to the per-chunk skirt loop (`GCode.cpp:4388+`).
+pub(super) struct SkirtEmission<'a, 'b> {
+    pub(super) entries: &'a [LayerToPrint],
+    pub(super) support: &'a [Vec<InstalledSupportLayer>],
+    pub(super) skirt: &'a Option<skirt::SkirtPlan>,
+    pub(super) raft: &'a Option<RaftSchedule>,
+    pub(super) print_z: f64,
+    pub(super) schedule: &'a mut super::skirt_schedule::SkirtSchedule,
+    pub(super) entry_builder: &'a mut EntryBuilder<'b>,
+    pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) chunk_slices: &'a [ExPolygon],
+    pub(super) chunk_perimeter_spacing: f64,
+}
+
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    entries: &[LayerToPrint],
-    support: &[Vec<InstalledSupportLayer>],
-    skirt: &Option<skirt::SkirtPlan>,
-    raft: &Option<RaftSchedule>,
-    print_z: f64,
-    schedule: &mut super::skirt_schedule::SkirtSchedule,
-    entry_builder: &mut EntryBuilder<'_>,
-    traversal: &PreparedPostClassicTraversal,
-    chunk_slices: &[ExPolygon],
-    chunk_perimeter_spacing: f64,
+    SkirtEmission {
+        entries,
+        support,
+        skirt,
+        raft,
+        print_z,
+        schedule,
+        entry_builder,
+        traversal,
+        chunk_slices,
+        chunk_perimeter_spacing,
+    }: SkirtEmission<'_, '_>,
 ) {
     if let (Some(entry), Some(plan)) = (entries.first(), skirt) {
         let object = entry.object_index;

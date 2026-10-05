@@ -17,12 +17,12 @@ pub(super) fn xy_with_comment(output: &mut Vec<u8>, x: f64, y: f64, feedrate: f6
     );
 }
 
+/// Writer-domain XYZ from `GCodeWriter.cpp::travel_to_xyz` (`Vec3d`),
+/// represented by the existing double-coordinate `Point3d`.
 pub(super) fn xyz_with_comment(
     output: &mut Vec<u8>,
     state: &mut super::super::EmitState,
-    x: f64,
-    y: f64,
-    z: f64,
+    crate::Point3d { x, y, z }: crate::Point3d,
     feedrate: f64,
     comment: &str,
 ) {

@@ -5,12 +5,21 @@ use super::super::{
     SliceError, append_layer_end_timelapse, motion, object::ObjectLabels, timelapse,
 };
 
+/// Start-insert result and traditional-mode gate for the layer-end
+/// `insert_timelapse_gcode` path (`GCode.cpp:5171-5178`).
+pub(super) struct LayerTimelapse {
+    pub(super) timelapse_inserted: bool,
+    pub(super) traditional_timelapse: bool,
+}
+
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     object_labels: Option<&ObjectLabels>,
-    timelapse_inserted: bool,
-    traditional_timelapse: bool,
+    LayerTimelapse {
+        timelapse_inserted,
+        traditional_timelapse,
+    }: LayerTimelapse,
     timelapse_context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
     // The layer-end timelapse sequence closes every layer chunk

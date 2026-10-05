@@ -100,9 +100,11 @@ pub(super) fn emit_approach_move(
         travel_emit::xyz_with_comment(
             output,
             state,
-            travel_x,
-            travel_y,
-            state.layer_z,
+            crate::Point3d {
+                x: travel_x,
+                y: travel_y,
+                z: state.layer_z,
+            },
             state.travel_feedrate,
             first_travel_comment,
         );
@@ -132,9 +134,11 @@ pub(super) fn emit_approach_move(
             travel_emit::xyz_with_comment(
                 output,
                 state,
-                travel_x,
-                travel_y,
-                raised,
+                crate::Point3d {
+                    x: travel_x,
+                    y: travel_y,
+                    z: raised,
+                },
                 state.travel_feedrate,
                 first_travel_comment,
             );
@@ -148,9 +152,11 @@ pub(super) fn emit_approach_move(
         travel_emit::xyz_with_comment(
             output,
             state,
-            travel_x,
-            travel_y,
-            leg_z,
+            crate::Point3d {
+                x: travel_x,
+                y: travel_y,
+                z: leg_z,
+            },
             state.travel_feedrate,
             first_travel_comment,
         );
@@ -163,9 +169,11 @@ pub(super) fn emit_approach_move(
         travel_emit::xyz_with_comment(
             output,
             state,
-            travel_x,
-            travel_y,
-            leg_z,
+            crate::Point3d {
+                x: travel_x,
+                y: travel_y,
+                z: leg_z,
+            },
             state.travel_feedrate,
             first_travel_comment,
         );
@@ -230,9 +238,11 @@ pub(super) fn emit_approach_move(
             travel_emit::xyz_with_comment(
                 output,
                 state,
-                travel_x,
-                travel_y,
-                leg_z,
+                crate::Point3d {
+                    x: travel_x,
+                    y: travel_y,
+                    z: leg_z,
+                },
                 state.options.travel_feedrate,
                 first_travel_comment,
             );
@@ -248,9 +258,11 @@ pub(super) fn emit_approach_move(
         travel_emit::xyz_with_comment(
             output,
             state,
-            travel_x,
-            travel_y,
-            z,
+            crate::Point3d {
+                x: travel_x,
+                y: travel_y,
+                z,
+            },
             state.travel_feedrate,
             first_travel_comment,
         );
@@ -293,9 +305,11 @@ pub(super) fn emit_approach_move(
             travel_emit::xyz_with_comment(
                 output,
                 state,
-                travel_x,
-                travel_y,
-                leg_z,
+                crate::Point3d {
+                    x: travel_x,
+                    y: travel_y,
+                    z: leg_z,
+                },
                 state.travel_feedrate,
                 first_travel_comment,
             );

@@ -291,9 +291,11 @@ pub(super) fn emit(
         &mut state,
         traversal,
         max_layer_z,
-        metadata,
-        first_layer_bounds,
-        end_position,
+        finish::FinishContext {
+            metadata,
+            first_layer_bounds,
+            position: end_position,
+        },
     )?;
     machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");

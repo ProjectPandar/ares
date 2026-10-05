@@ -97,8 +97,7 @@ pub(super) fn emit_perimeter(
         }
         loop_paths::emit(
             output,
-            &loop_.extrusion_loop.paths,
-            loop_.extrusion_loop.role,
+            &loop_.extrusion_loop,
             geometry,
             state,
             &region_perimeters,
