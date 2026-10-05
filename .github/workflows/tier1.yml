@@ -48,6 +48,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.99.0
         with:
           targets: wasm32-unknown-unknown
+          components: rustfmt
       - uses: taiki-e/install-action@nextest
       - run: cargo nextest --version
       - uses: actions/checkout@v4
