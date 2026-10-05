@@ -9,28 +9,21 @@ pub(super) fn load_with_profile(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
+    let selected = SelectedProfile {
+        settings: profile.composed.settings(),
+        profile_raw: profile.raw,
+        filament_raws: profile.filament_raws,
+    };
     match crate::InputFormat::detect(project.bytes) {
         crate::InputFormat::ThreeMf => {
-            let profile = SelectedProfile {
-                settings: profile.composed.settings(),
-                profile_raw: profile.raw,
-                filament_raws: profile.filament_raws,
-            };
-            Project::from_3mf_with_profiles(project.bytes, profile, project.overrides)
+            Project::from_3mf_with_profiles(project.bytes, selected, project.overrides)
         }
-        _ => {
-            let selected = SelectedProfile {
-                settings: profile.composed.settings(),
-                profile_raw: profile.raw,
-                filament_raws: profile.filament_raws,
-            };
-            Project::from_stl_with_profiles(
-                project.bytes,
-                profile.filename,
-                selected,
-                project.overrides,
-            )
-        }
+        _ => Project::from_stl_with_profiles(
+            project.bytes,
+            profile.filename,
+            selected,
+            project.overrides,
+        ),
     }
 }
 
