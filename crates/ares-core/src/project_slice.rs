@@ -44,6 +44,7 @@ mod pre_closing_unions;
 mod prepare_infill;
 mod pressure_equalizer;
 mod profile;
+mod profile_entry;
 mod raw_intersections;
 mod region_slices;
 #[cfg_attr(
@@ -259,32 +260,7 @@ fn prepare_post_closing(project: ProjectSource<'_>) -> Result<PreparedPostClosin
         scale,
         intersected_objects,
     } = if let Some(profile) = project.profile {
-        // `OrcaSlicer.cpp:1624-1640`: `.3mf` inputs load model and embedded
-        // config; other inputs stay on the STL import path.
-        let loaded = match crate::InputFormat::detect(project.bytes) {
-            crate::InputFormat::ThreeMf => {
-                let profile = crate::project::SelectedProfile {
-                    settings: profile.composed.settings(),
-                    profile_raw: profile.raw,
-                    filament_raws: profile.filament_raws,
-                };
-                Project::from_3mf_with_profiles(project.bytes, profile, project.overrides)?
-            }
-            _ => {
-                let selected = crate::project::SelectedProfile {
-                    settings: profile.composed.settings(),
-                    profile_raw: profile.raw,
-                    filament_raws: profile.filament_raws,
-                };
-                Project::from_stl_with_profiles(
-                    project.bytes,
-                    profile.filename,
-                    selected,
-                    project.overrides,
-                )?
-            }
-        };
-        state::prepare_loaded_project_slice(loaded, project.plate)?
+        profile_entry::prepare_profile_slice(&project, profile)?
     } else {
         state::prepare_project_slice(project.bytes, project.plate, project.overrides)?
     };
