@@ -50,9 +50,16 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@nextest
       - run: cargo nextest --version
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # v2.4.2
+          path: OrcaSlicer
+          sparse-checkout: src/libslic3r
       - name: Verify generated PrintConfigDef metadata is in sync with upstream
         run: |
           node scripts/gen-configdef.mjs --check
+          mkdir -p target
           cargo run -p ares-core --release --example print_config_def > target/print-config-def.json
           node scripts/verify-configdef.mjs target/print-config-def.json --report target/configdef-verification.json
       - run: cargo check -p ares-core --target wasm32-unknown-unknown

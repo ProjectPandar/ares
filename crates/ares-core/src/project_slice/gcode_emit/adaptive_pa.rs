@@ -67,7 +67,10 @@ pub(super) fn process(
             .map(|tool| {
                 (
                     tool,
-                    model::Model::parse(at(&filament.adaptive_pressure_advance_model.0, tool)),
+                    model::Model::parse(at::<String>(
+                        &filament.adaptive_pressure_advance_model.0,
+                        tool,
+                    )),
                 )
             })
             .collect(),
