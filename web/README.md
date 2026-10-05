@@ -84,7 +84,14 @@ Artifacts are written to `target/web-e2e/`:
   (`browser.gcode`), the native OrcaSlicer `--load-settings` oracle run (`native/`),
   and `result.json` with catalog load and slice timings, with and without the BBL vendor.
   It needs `ORCA_APPDIR` set to an official OrcaSlicer 2.4.2 AppImage extraction
-  (see `scripts/orca-parity.sh`); without it the test is skipped.
+  (see `scripts/orca-parity.sh`).
+
+The oracles are external binaries named by environment variables: `ORCA_APPDIR`
+above, and `ARES_PROCGCODE_BIN` for the OrcaSlicer `GCodeProcessor` build
+(`tools/chain-probe/procgcode.nix`) that checks the toolpath preview. A variable
+set to a missing path fails the test. An unset variable fails it too, except
+under `CI`, which does not provision the oracles and reports the check as
+skipped.
 
 If Playwright's bundled Chromium cannot run on the host (for example on NixOS),
 set `ARES_E2E_CHROME` to a system Chrome/Chromium binary.

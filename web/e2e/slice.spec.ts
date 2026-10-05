@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
+import { oraclePath } from "./oracleEnv";
 import { checkToolpathPreview } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -55,6 +56,8 @@ async function sliceTimings(page: Page, runs = 20) {
 }
 
 test("import 3MF, slice in the WASM worker, export and preview G-code", async ({ page }) => {
+  // GCodeProcessor oracle (tools/chain-probe/procgcode.nix) of the toolpath preview.
+  const oracle = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -107,11 +110,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   await page.screenshot({ path: `${artifacts}preview.png` });
   await expect(page.getByTestId("toolpaths-pending")).toHaveCount(0);
 
-  // GCodeProcessor oracle (tools/chain-probe/procgcode.nix); skipped like the
-  // cargo oracle tests when unset.
-  const oracle = process.env.ARES_PROCGCODE_BIN;
   if (oracle) await checkToolpathPreview(page, oracle, gcodePath, artifacts, errors);
-  else test.info().annotations.push({ type: "skip", description: "ARES_PROCGCODE_BIN unset: toolpath preview not checked" });
 
   // Process edits live in UI state; the library rejects them until ares-core
   // ships option overrides (M854).
