@@ -1,10 +1,7 @@
 use crate::{SliceError, geometry::CoordinateScale};
 
 use super::{
-    super::traversal::{
-        ClassicTraversalRecord, PostClassicTraversalPrintObject, PreparedTraversalSurface,
-        TraversalSeed,
-    },
+    super::traversal::{PostClassicTraversalPrintObject, PreparedTraversalSurface, TraversalSeed},
     path::materialize_seed,
     types::{PreparedRawPathSurface, RawPathNode},
 };
@@ -16,8 +13,10 @@ enum Frame<'a> {
 
 pub(super) fn materialize_surface(
     object: &PostClassicTraversalPrintObject,
-    record_index: usize,
-    record: &ClassicTraversalRecord,
+    super::RecordContext {
+        record_index,
+        record,
+    }: super::RecordContext<'_>,
     surface: &PreparedTraversalSurface,
     scale: CoordinateScale,
     context: &mut crate::SlicerContext,
@@ -34,15 +33,23 @@ pub(super) fn materialize_surface(
             Frame::Finish(seed) => {
                 let child_start = completed.len() - seed.children.len();
                 let children = completed.split_off(child_start);
-                let paths =
-                    match materialize_seed(object, record_index, record, seed, scale, context) {
-                        Ok(paths) => paths,
-                        Err(error) => {
-                            consume_nodes(children);
-                            consume_nodes(completed);
-                            return Err(error);
-                        }
-                    };
+                let paths = match materialize_seed(
+                    object,
+                    crate::project_slice::perimeters::classic::materialize::RecordContext {
+                        record_index,
+                        record,
+                    },
+                    seed,
+                    scale,
+                    context,
+                ) {
+                    Ok(paths) => paths,
+                    Err(error) => {
+                        consume_nodes(children);
+                        consume_nodes(completed);
+                        return Err(error);
+                    }
+                };
                 completed.push(RawPathNode { paths, children });
             }
         }

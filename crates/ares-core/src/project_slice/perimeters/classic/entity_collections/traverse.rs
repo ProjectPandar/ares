@@ -193,12 +193,20 @@ impl<'a> GroupFrame<'a> {
     }
 }
 
+/// Inputs from `PerimeterGenerator.cpp::traverse_loops and VariableWidth.cpp::variable_width`.
+pub(in crate::project_slice) struct ThinWallExtrusion<'a> {
+    pub(in crate::project_slice) thin_walls: &'a [crate::geometry::ThickPolyline],
+    pub(in crate::project_slice) ext_perimeter_flow: crate::project_slice::perimeters::types::Flow,
+}
+
 pub(super) fn traverse_loops(
     roots: Vec<ChainedLoopNode>,
     seeds: &[TraversalSeed],
     wall_direction: ProcessWallDirection,
-    thin_walls: &[crate::geometry::ThickPolyline],
-    ext_perimeter_flow: crate::project_slice::perimeters::types::Flow,
+    ThinWallExtrusion {
+        thin_walls,
+        ext_perimeter_flow,
+    }: ThinWallExtrusion<'_>,
     scale: crate::geometry::CoordinateScale,
 ) -> ExtrusionEntityCollection {
     // `variable_width(thin_walls, erExternalPerimeter, ext_perimeter_flow,

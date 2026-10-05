@@ -1,26 +1,20 @@
 //! Final `organic_draw_branches` outward smoothing, subtraction and allocation.
 
-use super::super::{
-    TreeSettings,
-    interface_placer::{GeneratorLayer, LayerType, RoofLayers, layer_z},
-};
+use super::super::interface_placer::{GeneratorLayer, LayerType, RoofLayers, layer_z};
 use super::Slice;
-use crate::{
-    geometry::{
-        ClipperError, CoordinateScale, difference_polygons_paths, mutable_polygon::smooth_outward,
-        simplification::polygons_simplify_with_mode, union_polygons_paths,
-    },
-    project_slice::parameters::SlicingParameters,
+use crate::geometry::{
+    ClipperError, CoordinateScale, difference_polygons_paths, mutable_polygon::smooth_outward,
+    simplification::polygons_simplify_with_mode, union_polygons_paths,
 };
 
 pub(in super::super) fn allocate_layers(
     slices: Vec<Slice>,
     graph_layers: usize,
     roofs: &mut RoofLayers,
-    config: &TreeSettings,
-    slicing: &SlicingParameters,
+    layer_context: &super::OrganicLayerContext<'_>,
     scale: CoordinateScale,
 ) -> Result<(), ClipperError> {
+    let config = layer_context.config;
     for (layer, slice) in slices.into_iter().take(graph_layers).enumerate() {
         debug_assert!(roofs.intermediate_layers[layer].is_none());
         let mut base = if slice.polygons.is_empty() {
@@ -66,14 +60,13 @@ pub(in super::super) fn allocate_layers(
                 LayerType::BottomContact,
                 bottom,
                 layer,
-                config,
-                slicing,
+                layer_context,
             );
             roofs.bottom_contacts[layer] = Some(index);
         }
         if !base.is_empty() {
             let base = union_polygons_paths(&base)?;
-            let index = allocate(roofs, LayerType::Base, base, layer, config, slicing);
+            let index = allocate(roofs, LayerType::Base, base, layer, layer_context);
             roofs.intermediate_layers[layer] = Some(index);
         }
     }
@@ -85,9 +78,10 @@ fn allocate(
     kind: LayerType,
     polygons: Vec<crate::geometry::Polygon>,
     layer: usize,
-    config: &TreeSettings,
-    slicing: &SlicingParameters,
+    layer_context: &super::OrganicLayerContext<'_>,
 ) -> usize {
+    let config = layer_context.config;
+    let slicing = layer_context.slicing;
     let print_z = layer_z(slicing, config, layer);
     let bottom_z = if layer > 0 {
         layer_z(slicing, config, layer - 1)

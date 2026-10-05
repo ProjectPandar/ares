@@ -9,7 +9,6 @@
 
 use crate::{
     SliceError,
-    geometry::CoordinateScale,
     project_slice::perimeters::{
         classic::{ClassicPreludeRecord, PreparedPostClassicPrelude},
         layer_region::PreparedLayerRegionPerimeterRecord,
@@ -75,10 +74,12 @@ pub(in crate::project_slice) fn finish(
                             input,
                             prelude_record,
                             object_options,
-                            enable_arc_fitting,
-                            resolution,
-                            nozzle_diameters,
-                            prelude.scale,
+                            config::PrintParameters {
+                                enable_arc_fitting,
+                                resolution,
+                                nozzle_diameters,
+                                scale: prelude.scale,
+                            },
                         )
                         .map(Some)
                     }
@@ -96,10 +97,12 @@ fn materialize_record(
     input: &PerimeterInputRecord,
     prelude_record: &ClassicPreludeRecord,
     object_options: &crate::ObjectOptions,
-    enable_arc_fitting: bool,
-    resolution: f64,
-    nozzle_diameters: &crate::OrcaFloats,
-    scale: CoordinateScale,
+    config::PrintParameters {
+        enable_arc_fitting,
+        resolution,
+        nozzle_diameters,
+        scale,
+    }: config::PrintParameters<'_>,
 ) -> Result<PreparedLayerRegionPerimeterRecord, SliceError> {
     let region = object.region_options(input);
     let config = config::validate_record(
@@ -107,18 +110,18 @@ fn materialize_record(
         object_options,
         input.layer_id,
         input.upper_layer_index,
-        enable_arc_fitting,
-        resolution,
-        nozzle_diameters,
-        scale,
+        crate::project_slice::perimeters::arachne::config::PrintParameters {
+            enable_arc_fitting,
+            resolution,
+            nozzle_diameters,
+            scale,
+        },
     )?;
     let spacings = ArachneSpacings::new(
         scale,
-        input.perimeter_flow.spacing,
-        input.perimeter_flow.width,
-        input.ext_perimeter_flow.width,
-        input.ext_perimeter_flow.spacing,
-        input.solid_infill_flow.spacing,
+        &input.perimeter_flow,
+        &input.ext_perimeter_flow,
+        &input.solid_infill_flow,
     )?;
     // `min_width_top_surface.get_abs_value(unscale_(perimeter_width))`
     // (`PerimeterGenerator.cpp:2210`): resolve the percent over the
@@ -155,9 +158,11 @@ fn materialize_record(
             surface,
             &config,
             &spacings,
-            region.wall_loops.0,
-            input.layer_height,
-            scale,
+            crate::project_slice::perimeters::arachne::walls::SurfaceWallParameters {
+                wall_loops: region.wall_loops.0,
+                layer_height: input.layer_height,
+                scale,
+            },
             top_surface.as_ref(),
         )?;
         // `loop_number = int(perimeters.size()) - 1`
@@ -220,12 +225,16 @@ fn materialize_record(
         }
         let boundary = walls::surface_infill_boundary(
             generated.infill_contour,
-            generated.toolpaths.len(),
-            loop_number,
+            crate::project_slice::perimeters::arachne::walls::WallCounts {
+                wall_count: generated.toolpaths.len(),
+                loop_number,
+            },
             &spacings,
             prelude_record.surface_simplify_resolution,
-            overlaps,
-            config.is_bottom_layer || config.is_topmost_layer,
+            crate::project_slice::perimeters::arachne::walls::BoundaryOverlap {
+                overlaps,
+                top_or_bottom: config.is_bottom_layer || config.is_topmost_layer,
+            },
         )?;
         fill_surfaces.extend(boundary.fill_surfaces);
         fill_no_overlap.extend(boundary.fill_no_overlap);

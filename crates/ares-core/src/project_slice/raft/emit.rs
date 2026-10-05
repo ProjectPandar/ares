@@ -143,17 +143,32 @@ pub(crate) fn raft_layer_plans(
     plans
 }
 
+/// Inputs from `SupportCommon.cpp:1440-1523 flow dimensions and Slicing.cpp:232-236 Z shift`.
+pub(crate) struct RaftDimensions {
+    pub(crate) object_print_z_min: f64,
+    pub(crate) line_width_mm: f64,
+    pub(crate) interface_line_width_mm: f64,
+    pub(crate) layer_height_mm: f64,
+}
+
+/// Inputs from `SupportCommon.cpp:1440-1523 raft fill reference and coordinate adapter`.
+pub(crate) struct RaftCoordinateFrame {
+    pub(crate) reference: Point,
+    pub(crate) scale: CoordinateScale,
+}
+
 /// Convert the plans to `LayerPrintPaths` and shift the object layers.
 #[expect(dead_code, reason = "wired by the pipeline integration slice")]
 pub(crate) fn apply_raft_to_stream(
     plans: &[RaftLayerPlan],
     object_layers: Vec<LayerPrintPaths>,
-    object_print_z_min: f64,
-    line_width_mm: f64,
-    interface_line_width_mm: f64,
-    layer_height_mm: f64,
-    reference: Point,
-    scale: CoordinateScale,
+    RaftDimensions {
+        object_print_z_min,
+        line_width_mm,
+        interface_line_width_mm,
+        layer_height_mm,
+    }: RaftDimensions,
+    RaftCoordinateFrame { reference, scale }: RaftCoordinateFrame,
     context: &mut crate::SlicerContext,
 ) -> Result<Vec<LayerPrintPaths>, crate::geometry::ClipperError> {
     let raft_count = plans.len();

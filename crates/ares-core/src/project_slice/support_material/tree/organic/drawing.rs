@@ -26,6 +26,12 @@ pub(super) use aggregation::Slice;
 pub(super) use finalize::allocate_layers;
 use traversal::{Branch, Node};
 
+/// Layer-Z inputs to `TreeSupport3D.cpp::organic_draw_branches`.
+pub(super) struct OrganicLayerContext<'a> {
+    pub(super) config: &'a TreeSettings,
+    pub(super) slicing: &'a crate::project_slice::parameters::SlicingParameters,
+}
+
 struct Drawing<'a, 'v> {
     graph: &'a [VecDeque<SupportElement>],
     volumes: &'a mut TreeModelVolumes<'v>,

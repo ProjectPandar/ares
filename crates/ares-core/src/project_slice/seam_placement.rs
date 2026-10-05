@@ -92,19 +92,29 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     apply_objects(
         &mut prepared.objects,
         traversal,
-        &placements,
-        &visibilities,
+        SeamObjectSettings {
+            placements: &placements,
+            visibilities: &visibilities,
+        },
         nozzle_diameter,
         &mut nearest_seam_plans,
     );
     prepared.nearest_seam_plans = nearest_seam_plans;
 }
 
+/// Inputs from `SeamPlacer.cpp::SeamPlacer::init object choices and visibility`.
+struct SeamObjectSettings<'a> {
+    placements: &'a [Option<ProcessSeamPosition>],
+    visibilities: &'a [Option<visibility::GlobalVisibility>],
+}
+
 fn apply_objects(
     objects: &mut [Vec<OrderedExtrusionLayer>],
     traversal: &PreparedPostClassicTraversal,
-    placements: &[Option<ProcessSeamPosition>],
-    visibilities: &[Option<visibility::GlobalVisibility>],
+    SeamObjectSettings {
+        placements,
+        visibilities,
+    }: SeamObjectSettings<'_>,
     nozzle_diameter: f32,
     nearest_plans: &mut [Vec<NearestSeamLayer>],
 ) {

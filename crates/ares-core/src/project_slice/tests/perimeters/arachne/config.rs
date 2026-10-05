@@ -27,10 +27,12 @@ fn validate(
         &object(),
         layer_id,
         upper,
-        false,
-        0.012,
-        &nozzles(),
-        SCALE,
+        crate::project_slice::perimeters::arachne::config::PrintParameters {
+            enable_arc_fitting: false,
+            resolution: 0.012,
+            nozzle_diameters: &nozzles(),
+            scale: SCALE,
+        },
     )
 }
 
@@ -69,10 +71,12 @@ fn task22w8_arc_fitting_reduces_the_surface_simplify_resolution() {
         &object(),
         3,
         Some(4),
-        true,
-        0.012,
-        &nozzles(),
-        SCALE,
+        crate::project_slice::perimeters::arachne::config::PrintParameters {
+            enable_arc_fitting: true,
+            resolution: 0.012,
+            nozzle_diameters: &nozzles(),
+            scale: SCALE,
+        },
     )
     .unwrap();
     // `PerimeterGenerator.cpp:2119-2122`: the resolution is scaled.

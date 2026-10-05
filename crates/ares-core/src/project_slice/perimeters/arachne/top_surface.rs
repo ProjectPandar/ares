@@ -36,6 +36,17 @@ pub(in crate::project_slice) struct TopSurfaceInputs<'a> {
     pub(in crate::project_slice) perimeter_width: i64,
 }
 
+/// Wall regeneration inputs (`PerimeterGenerator.cpp:2177-2247`).
+pub(in crate::project_slice) struct Regeneration<'a> {
+    pub(in crate::project_slice) spacings: &'a ArachneSpacings,
+    pub(in crate::project_slice) last: &'a [ExPolygon],
+    pub(in crate::project_slice) wall_0_inset: i64,
+    pub(in crate::project_slice) layer_height: f64,
+    pub(in crate::project_slice) params: ArachneWallParams,
+    pub(in crate::project_slice) scale: CoordinateScale,
+    pub(in crate::project_slice) inner_loop_number: i32,
+}
+
 /// The regeneration pass (`PerimeterGenerator.cpp:2177-2247`). Takes the
 /// main-pass single-wall output and regrows the inner walls on the not-top
 /// areas (or regenerates fully when no top surface exists on this island).
@@ -44,13 +55,15 @@ pub(in crate::project_slice) fn regenerate(
     infill_contour: Vec<ExPolygon>,
     ts: &TopSurfaceInputs<'_>,
     config: &ArachneRecordConfig,
-    spacings: &ArachneSpacings,
-    last: &[ExPolygon],
-    wall_0_inset: i64,
-    layer_height: f64,
-    params: ArachneWallParams,
-    scale: CoordinateScale,
-    inner_loop_number: i32,
+    Regeneration {
+        spacings,
+        last,
+        wall_0_inset,
+        layer_height,
+        params,
+        scale,
+        inner_loop_number,
+    }: Regeneration<'_>,
 ) -> Result<GeneratedSurfaceWalls, SliceError> {
     let mut bounds = BoundingBox::from_expolygons(&infill_contour);
     if let Some(bounds) = bounds.as_mut() {

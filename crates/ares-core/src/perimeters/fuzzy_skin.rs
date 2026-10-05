@@ -41,6 +41,13 @@ pub(crate) struct FuzzySkinConfig {
     first_layer: bool,
 }
 
+/// Layer identity and Z inputs to fuzzy skin (`Layer.hpp::Layer`,
+/// `PerimeterGenerator.cpp::fuzzy_skin`).
+pub(crate) struct FuzzySkinLayer {
+    pub(crate) layer_id: usize,
+    pub(crate) print_z: f64,
+}
+
 impl FuzzySkinConfig {
     pub(crate) const fn disabled() -> Self {
         Self {
@@ -157,8 +164,7 @@ impl FuzzySkinConfig {
     pub(crate) fn fuzzified_scaled_points(
         self,
         points: Vec<Point>,
-        layer_id: usize,
-        print_z: f64,
+        FuzzySkinLayer { layer_id, print_z }: FuzzySkinLayer,
         scale: CoordinateScale,
         context: &mut crate::SlicerContext,
     ) -> Vec<Point> {

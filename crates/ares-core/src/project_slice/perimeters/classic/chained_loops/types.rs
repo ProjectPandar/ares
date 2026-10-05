@@ -37,6 +37,7 @@ pub(in crate::project_slice) enum ExtrusionLoopRole {
     Hole,
 }
 
+/// Paths and loop role from `libslic3r/ExtrusionEntity.hpp::ExtrusionLoop`.
 #[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionLoop {
     pub(in crate::project_slice) paths: Vec<ExtrusionPath>,

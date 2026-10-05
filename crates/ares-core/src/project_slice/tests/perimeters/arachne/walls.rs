@@ -59,16 +59,40 @@ fn config_with(
         &ObjectOptions::from_base(&crate::ProjectSettings::default().process.object),
         layer_id,
         upper,
-        false,
-        0.012,
-        &nozzles(),
-        SCALE,
+        crate::project_slice::perimeters::arachne::config::PrintParameters {
+            enable_arc_fitting: false,
+            resolution: 0.012,
+            nozzle_diameters: &nozzles(),
+            scale: SCALE,
+        },
     )
     .unwrap()
 }
 
 fn spacings() -> ArachneSpacings {
-    ArachneSpacings::new(SCALE, 0.385, 0.42, 0.42, 0.39, 0.42).unwrap()
+    let solid_infill_flow = crate::project_slice::perimeters::types::Flow {
+        width: 0.42,
+        height: 0.16,
+        spacing: 0.42,
+        nozzle_diameter: 0.4,
+        bridge: false,
+        mm3_per_mm: 0.05,
+    };
+    let perimeter_flow = crate::project_slice::perimeters::types::Flow {
+        spacing: 0.385,
+        ..solid_infill_flow
+    };
+    let external_perimeter_flow = crate::project_slice::perimeters::types::Flow {
+        spacing: 0.39,
+        ..solid_infill_flow
+    };
+    ArachneSpacings::new(
+        SCALE,
+        &perimeter_flow,
+        &external_perimeter_flow,
+        &solid_infill_flow,
+    )
+    .unwrap()
 }
 
 #[test]
@@ -78,9 +102,11 @@ fn task22w12_generates_real_variable_width_walls_for_one_island() {
         &surface(20),
         &config,
         &spacings(),
-        3,
-        0.16,
-        SCALE,
+        crate::project_slice::perimeters::arachne::walls::SurfaceWallParameters {
+            wall_loops: 3,
+            layer_height: 0.16,
+            scale: SCALE,
+        },
         None,
     )
     .unwrap();
@@ -102,9 +128,11 @@ fn task22w13_bottom_layer_single_wall_rule_resets_the_loop_count() {
         &surface(20),
         &config,
         &spacings(),
-        3,
-        0.16,
-        SCALE,
+        crate::project_slice::perimeters::arachne::walls::SurfaceWallParameters {
+            wall_loops: 3,
+            layer_height: 0.16,
+            scale: SCALE,
+        },
         None,
     )
     .unwrap();
@@ -121,9 +149,11 @@ fn task22w14_topmost_layer_single_wall_rule_resets_the_loop_count() {
         &surface(20),
         &config,
         &spacings(),
-        3,
-        0.16,
-        SCALE,
+        crate::project_slice::perimeters::arachne::walls::SurfaceWallParameters {
+            wall_loops: 3,
+            layer_height: 0.16,
+            scale: SCALE,
+        },
         None,
     )
     .unwrap();
@@ -146,23 +176,29 @@ fn task22w16_infill_boundary_applies_the_wall_overlap_percent() {
         &surface(20),
         &config(1, Some(2)),
         &spacings(),
-        3,
-        0.16,
-        SCALE,
+        crate::project_slice::perimeters::arachne::walls::SurfaceWallParameters {
+            wall_loops: 3,
+            layer_height: 0.16,
+            scale: SCALE,
+        },
         None,
     )
     .unwrap();
     let boundary = crate::project_slice::perimeters::arachne::walls::surface_infill_boundary(
         generated.infill_contour,
-        generated.toolpaths.len(),
-        generated.toolpaths.len() as i32 - 1,
+        crate::project_slice::perimeters::arachne::walls::WallCounts {
+            wall_count: generated.toolpaths.len(),
+            loop_number: generated.toolpaths.len() as i32 - 1,
+        },
         &spacings(),
         0.012,
-        InfillOverlapPercents {
-            infill_wall_overlap: 20.0,
-            top_bottom_infill_wall_overlap: 25.0,
+        crate::project_slice::perimeters::arachne::walls::BoundaryOverlap {
+            overlaps: InfillOverlapPercents {
+                infill_wall_overlap: 20.0,
+                top_bottom_infill_wall_overlap: 25.0,
+            },
+            top_or_bottom: false,
         },
-        false,
     )
     .unwrap();
 
@@ -203,15 +239,19 @@ fn task22w17_infill_boundary_truncates_offsets_before_halving() {
     };
     let boundary = crate::project_slice::perimeters::arachne::walls::surface_infill_boundary(
         inner_contour,
-        3,
-        2,
+        crate::project_slice::perimeters::arachne::walls::WallCounts {
+            wall_count: 3,
+            loop_number: 2,
+        },
         &spacings,
         12500.0,
-        InfillOverlapPercents {
-            infill_wall_overlap: 15.0,
-            top_bottom_infill_wall_overlap: 15.0,
+        crate::project_slice::perimeters::arachne::walls::BoundaryOverlap {
+            overlaps: InfillOverlapPercents {
+                infill_wall_overlap: 15.0,
+                top_bottom_infill_wall_overlap: 15.0,
+            },
+            top_or_bottom: false,
         },
-        false,
     )
     .unwrap();
 

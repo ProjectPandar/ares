@@ -128,8 +128,10 @@ pub(in crate::project_slice::support_material) fn generate(
             slices,
             graph.len(),
             interface.roofs,
-            &config,
-            input.slicing,
+            &drawing::OrganicLayerContext {
+                config: &config,
+                slicing: input.slicing,
+            },
             input.scale,
         )
         .map_err(error)?;

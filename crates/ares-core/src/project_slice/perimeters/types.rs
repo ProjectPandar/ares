@@ -2,6 +2,7 @@ use crate::geometry::{CoordinateScale, ExPolygon};
 
 use super::super::{compensation::PostCompensationPrintObject, region_slices::RegionSurface};
 
+/// Extrusion dimensions and volume from `libslic3r/Flow.hpp::Flow`.
 #[derive(Clone, Copy, Debug)]
 pub(in crate::project_slice) struct Flow {
     pub(in crate::project_slice) width: f32,

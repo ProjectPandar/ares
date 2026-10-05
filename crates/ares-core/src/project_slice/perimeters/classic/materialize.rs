@@ -18,6 +18,13 @@ use crate::{SliceError, project_slice::incomplete_sink};
 
 use super::traversal::PreparedPostClassicTraversal;
 
+/// Layer-region traversal identity for `PerimeterGenerator.cpp:153-222`.
+/// The index retains the Ares record slot around that upstream materialization boundary.
+pub(super) struct RecordContext<'a> {
+    pub(super) record_index: usize,
+    pub(super) record: &'a super::traversal::ClassicTraversalRecord,
+}
+
 pub(in crate::project_slice) fn finish(
     prepared: Box<PreparedPostClassicTraversal>,
     context: &mut crate::SlicerContext,
@@ -95,7 +102,16 @@ fn prepare_record(
 ) -> Result<PreparedRawPathRecord, SliceError> {
     let mut surfaces = Vec::with_capacity(record.surfaces.len());
     for surface in &record.surfaces {
-        match tree::materialize_surface(object, record_index, record, surface, scale, context) {
+        match tree::materialize_surface(
+            object,
+            crate::project_slice::perimeters::classic::materialize::RecordContext {
+                record_index,
+                record,
+            },
+            surface,
+            scale,
+            context,
+        ) {
             Ok(surface) => surfaces.push(surface),
             Err(error) => {
                 consume_surfaces(surfaces);

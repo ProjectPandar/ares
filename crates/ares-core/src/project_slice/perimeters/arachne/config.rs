@@ -39,15 +39,25 @@ pub(in crate::project_slice) struct ArachneRecordConfig {
     pub(in crate::project_slice) outer_wall_first: bool,
 }
 
+/// Print-level inputs to `PerimeterGenerator::process_arachne`.
+pub(in crate::project_slice) struct PrintParameters<'a> {
+    pub(in crate::project_slice) enable_arc_fitting: bool,
+    pub(in crate::project_slice) resolution: f64,
+    pub(in crate::project_slice) nozzle_diameters: &'a OrcaFloats,
+    pub(in crate::project_slice) scale: CoordinateScale,
+}
+
 pub(in crate::project_slice) fn validate_record(
     region: &RegionOptions,
     object: &ObjectOptions,
     layer_id: usize,
     upper_layer_index: Option<usize>,
-    enable_arc_fitting: bool,
-    resolution: f64,
-    nozzle_diameters: &OrcaFloats,
-    scale: CoordinateScale,
+    PrintParameters {
+        enable_arc_fitting,
+        resolution,
+        nozzle_diameters,
+        scale,
+    }: PrintParameters<'_>,
 ) -> Result<ArachneRecordConfig, SliceError> {
     // Scope gates for deferred upstream behavior: typed rejections, never a
     // classic fallback. Each names the upstream slice that lands it.

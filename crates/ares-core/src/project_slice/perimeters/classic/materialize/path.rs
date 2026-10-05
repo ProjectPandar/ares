@@ -18,8 +18,10 @@ const EPSILON_MM: f64 = 1e-4;
 
 pub(super) fn materialize_seed(
     object: &PostClassicTraversalPrintObject,
-    record_index: usize,
-    record: &ClassicTraversalRecord,
+    super::RecordContext {
+        record_index,
+        record,
+    }: super::RecordContext<'_>,
     seed: &TraversalSeed,
     scale: CoordinateScale,
     context: &mut crate::SlicerContext,
@@ -33,16 +35,25 @@ pub(super) fn materialize_seed(
                 record.layer_height,
             ))
         }
-        PendingPathBranch::OverhangClipping { .. } => {
-            materialize_overhang(object, record_index, record, seed, scale, context)
-        }
+        PendingPathBranch::OverhangClipping { .. } => materialize_overhang(
+            object,
+            crate::project_slice::perimeters::classic::materialize::RecordContext {
+                record_index,
+                record,
+            },
+            seed,
+            scale,
+            context,
+        ),
     }
 }
 
 fn materialize_overhang(
     object: &PostClassicTraversalPrintObject,
-    record_index: usize,
-    record: &ClassicTraversalRecord,
+    super::RecordContext {
+        record_index,
+        record,
+    }: super::RecordContext<'_>,
     seed: &TraversalSeed,
     scale: CoordinateScale,
     context: &mut crate::SlicerContext,

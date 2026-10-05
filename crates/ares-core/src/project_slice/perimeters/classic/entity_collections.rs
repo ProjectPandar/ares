@@ -93,12 +93,14 @@ fn transform_surface(
     PreparedEntityCollectionSurface {
         source_index: loops.source_index,
         collection: traverse::traverse_loops(
-            loops.roots,
-            &seeds.roots,
-            wall_direction,
-            &loops.thin_walls,
-            record.ext_perimeter_flow,
-            record.scale,
-        ),
+loops.roots,
+&seeds.roots,
+wall_direction,
+crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
+thin_walls: &loops.thin_walls,
+ext_perimeter_flow: record.ext_perimeter_flow,
+ },
+record.scale,
+),
     }
 }

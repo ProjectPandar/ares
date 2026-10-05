@@ -44,12 +44,15 @@ pub(in crate::project_slice) struct ArachneSpacings {
 impl ArachneSpacings {
     pub(in crate::project_slice) fn new(
         scale: CoordinateScale,
-        perimeter_spacing_mm: f32,
-        perimeter_width_mm: f32,
-        ext_width_mm: f32,
-        ext_spacing_mm: f32,
-        solid_infill_spacing_mm: f32,
+        perimeter_flow: &crate::project_slice::perimeters::types::Flow,
+        external_perimeter_flow: &crate::project_slice::perimeters::types::Flow,
+        solid_infill_flow: &crate::project_slice::perimeters::types::Flow,
     ) -> Result<Self, SliceError> {
+        let perimeter_spacing_mm = perimeter_flow.spacing;
+        let perimeter_width_mm = perimeter_flow.width;
+        let ext_width_mm = external_perimeter_flow.width;
+        let ext_spacing_mm = external_perimeter_flow.spacing;
+        let solid_infill_spacing_mm = solid_infill_flow.spacing;
         let scaled = |value: f32| -> Result<i64, SliceError> {
             scale.checked_scale(f64::from(value)).ok_or_else(|| {
                 SliceError::InvalidInput(
@@ -78,14 +81,23 @@ impl ArachneSpacings {
     }
 }
 
+/// Inputs from `PerimeterGenerator.cpp:2111-2248`.
+pub(in crate::project_slice) struct SurfaceWallParameters {
+    pub(in crate::project_slice) wall_loops: i32,
+    pub(in crate::project_slice) layer_height: f64,
+    pub(in crate::project_slice) scale: CoordinateScale,
+}
+
 /// Generate one island's walls (`PerimeterGenerator.cpp:2111-2248`).
 pub(in crate::project_slice) fn generate_surface_walls(
     surface: &RegionSurface,
     config: &ArachneRecordConfig,
     spacings: &ArachneSpacings,
-    wall_loops: i32,
-    layer_height: f64,
-    scale: CoordinateScale,
+    SurfaceWallParameters {
+        wall_loops,
+        layer_height,
+        scale,
+    }: SurfaceWallParameters,
     top_surface: Option<&super::top_surface::TopSurfaceInputs<'_>>,
 ) -> Result<GeneratedSurfaceWalls, SliceError> {
     let (_, expolygon, _, _, _, extra_perimeters) = surface.as_parts();
@@ -173,13 +185,15 @@ pub(in crate::project_slice) fn generate_surface_walls(
         infill_contour,
         top_surface.expect("inner_loop_number >= 0 implies top surface"),
         config,
-        spacings,
-        &last,
-        wall_0_inset,
-        layer_height,
-        params,
-        scale,
-        inner_loop_number,
+        super::top_surface::Regeneration {
+            spacings,
+            last: &last,
+            wall_0_inset,
+            layer_height,
+            params,
+            scale,
+            inner_loop_number,
+        },
     )
 }
 
@@ -196,14 +210,30 @@ pub(in crate::project_slice) struct InfillOverlapPercents {
     pub(in crate::project_slice) top_bottom_infill_wall_overlap: f64,
 }
 
+/// Inputs from `PerimeterGenerator.cpp:2475-2478 emitted-wall filter`.
+pub(in crate::project_slice) struct WallCounts {
+    pub(in crate::project_slice) wall_count: usize,
+    pub(in crate::project_slice) loop_number: i32,
+}
+
+/// Inputs from `PerimeterGenerator.cpp:2475-2519 overlap selection`.
+pub(in crate::project_slice) struct BoundaryOverlap {
+    pub(in crate::project_slice) overlaps: InfillOverlapPercents,
+    pub(in crate::project_slice) top_or_bottom: bool,
+}
+
 pub(in crate::project_slice) fn surface_infill_boundary(
     infill_contour: Vec<ExPolygon>,
-    wall_count: usize,
-    loop_number: i32,
+    WallCounts {
+        wall_count,
+        loop_number,
+    }: WallCounts,
     spacings: &ArachneSpacings,
     scaled_resolution: f64,
-    overlaps: InfillOverlapPercents,
-    top_or_bottom: bool,
+    BoundaryOverlap {
+        overlaps,
+        top_or_bottom,
+    }: BoundaryOverlap,
 ) -> Result<SurfaceInfillBoundary, SliceError> {
     // `PerimeterGenerator.cpp:2475-2478`: the too-small infill filter uses
     // the single-wall external spacing average.

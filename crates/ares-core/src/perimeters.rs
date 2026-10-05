@@ -13,7 +13,7 @@ mod simplification;
 mod thin_walls;
 mod wall_loops;
 
-pub(crate) use fuzzy_skin::FuzzySkinConfig;
+pub(crate) use fuzzy_skin::{FuzzySkinConfig, FuzzySkinLayer};
 pub use options::{PerimeterOptions, SeamPosition, WallDirection, WallGenerator, WallSequence};
 
 use self::wall_loops::{loop_shrink, order_wall_sequence, resolve_wall_loops};

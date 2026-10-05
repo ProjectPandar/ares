@@ -34,8 +34,10 @@ pub(super) fn apply(
 
     Ok(Polygon::new(input.config.fuzzified_scaled_points(
         polygon.points().to_vec(),
-        input.layer_id,
-        input.slice_z,
+        crate::perimeters::FuzzySkinLayer {
+            layer_id: input.layer_id,
+            print_z: input.slice_z,
+        },
         input.scale,
         context,
     )))
