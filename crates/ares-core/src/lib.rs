@@ -115,10 +115,11 @@ pub use infills::{InfillPath, InfillRole, LayerInfills, generate_infills};
 pub use model::{Model, Point3, Triangle, ZBounds};
 pub use moves::{LayerToolpathMoves, ToolpathMove, ToolpathMoveKind, generate_toolpath_moves};
 pub use options::registry::{
-    OptionDefinition, OptionValueKind, extruder_option_keys, extruder_retract_keys,
-    filament_option_keys, filament_options_with_variant, filament_retract_keys, option_definition,
-    option_definitions, print_options_with_variant, printer_extruder_options,
-    printer_options_with_variant_1, printer_options_with_variant_2,
+    OptionDefinition, OptionGuiType, OptionMetadata, OptionMode, OptionValueKind,
+    extruder_option_keys, extruder_retract_keys, filament_option_keys,
+    filament_options_with_variant, filament_retract_keys, option_definition, option_definitions,
+    option_metadata, option_metadata_table, print_config_def_json, print_options_with_variant,
+    printer_extruder_options, printer_options_with_variant_1, printer_options_with_variant_2,
 };
 pub use options::{
     AmsCounts, AuthorizationType, BedTemperatureFormula, CsvTable, DefaultBedType,

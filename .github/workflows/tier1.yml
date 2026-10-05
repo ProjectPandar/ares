@@ -52,6 +52,11 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@nextest
       - run: cargo nextest --version
+      - name: Verify generated PrintConfigDef metadata is in sync with upstream
+        run: |
+          node scripts/gen-configdef.mjs --check
+          cargo run -p ares-core --release --example print_config_def > target/print-config-def.json
+          node scripts/verify-configdef.mjs target/print-config-def.json --report target/configdef-verification.json
       - run: cargo check -p ares-core --target wasm32-unknown-unknown
       - run: cargo check -p ares-wasm --target wasm32-unknown-unknown
       - run: cargo install --locked wasm-bindgen-cli --version 0.2.121

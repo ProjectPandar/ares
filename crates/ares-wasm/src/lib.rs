@@ -44,5 +44,12 @@ fn parse_options(options_json: &str) -> Result<SliceOptions, String> {
     serde_json::from_str(options_json).map_err(|error| format!("invalid options JSON: {error}"))
 }
 
+/// Serialized `PrintConfigDef` metadata (UTF-8 JSON bytes) for the settings UI.
+/// Generated from upstream `PrintConfig.cpp`; see scripts/gen-configdef.mjs.
+#[wasm_bindgen(js_name = printConfigDef)]
+pub fn print_config_def() -> Vec<u8> {
+    ares_core::print_config_def_json().to_vec()
+}
+
 #[cfg(test)]
 mod tests;
