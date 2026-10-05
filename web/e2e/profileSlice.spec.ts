@@ -69,6 +69,7 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
     expect(normalize(lh.gcode, "Ares") === native, "browser G-code equals native --load-settings G-code").toBe(true);
     expect(bbl.gcode).toBe(lh.gcode);
   } finally {
-    await new Promise((resolve) => server.httpServer.close(resolve));
+    // PreviewServer.close destroys open sockets; httpServer.close waits on a browser preconnect forever.
+    await server.close();
   }
 });

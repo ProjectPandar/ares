@@ -92,7 +92,8 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
     expect(scripts[1]).toMatch(/\/Snapmaker-[\w-]+\.js$/);
     await page.screenshot({ path: `${artifacts}consumer.png` });
   } finally {
-    await new Promise((resolve) => server.httpServer.close(resolve));
+    // PreviewServer.close destroys open sockets; httpServer.close waits on a browser preconnect forever.
+    await server.close();
   }
 
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({

@@ -74,6 +74,7 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
     writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ tarball: packed.filename, files: PACKED_FILES, browser, native }, null, 2)}\n`);
     expect(browser).toEqual({ objects: 3, bytes: readFileSync(`${artifacts}native.gcode`).length, sha256: native });
   } finally {
-    await new Promise((resolve) => server.httpServer.close(resolve));
+    // PreviewServer.close destroys open sockets; httpServer.close waits on a browser preconnect forever.
+    await server.close();
   }
 });

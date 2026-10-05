@@ -31,6 +31,7 @@ test("decodeConfigValues then encodeConfigValues in the browser returns the orig
     writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ values: values.length, failed: failures.length, failures }, null, 2)}\n`);
     expect(failures).toEqual([]);
   } finally {
-    await new Promise((resolve) => server.httpServer.close(resolve));
+    // PreviewServer.close destroys open sockets; httpServer.close waits on a browser preconnect forever.
+    await server.close();
   }
 });
