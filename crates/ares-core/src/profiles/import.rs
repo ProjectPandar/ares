@@ -12,29 +12,32 @@ use serde::Serialize;
 use zip::ZipArchive;
 
 use crate::SliceError;
+use crate::project::raw_settings::RawConfigValue;
 
 const BUNDLE_STRUCTURE_JSON: &str = "bundle_structure.json";
 
-#[derive(Serialize)]
-struct ParsedBundle {
-    profiles: Vec<BTreeMap<String, serde_json::Value>>,
+/// Import result serialized by the WASM adapter into the transport envelope
+/// that `catalog_json.imports` consumes.
+#[derive(Debug, Serialize)]
+pub struct ParsedPresetBundle {
+    profiles: Vec<BTreeMap<String, RawConfigValue>>,
     bundle: Option<BundleMetadata>,
 }
 
 /// `BundleMetadata::load_from_json` (`PresetBundle.cpp:5717-5750`): every
 /// field is optional; absent `name` falls back to `bundle_id`, absent
 /// `description` to `bundle_type` (backwards compatibility).
-#[derive(Default, Serialize)]
-struct BundleMetadata {
-    #[serde(skip_serializing_if = "String::is_empty")]
+#[derive(Debug, Default, serde::Deserialize, Serialize)]
+pub struct BundleMetadata {
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     id: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     name: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     version: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     description: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     author: String,
     #[serde(default)]
     imported_time: i64,
@@ -43,14 +46,16 @@ struct BundleMetadata {
 }
 
 /// Parse a preset JSON file or an `.orca_printer` / `.orca_filament` /
-/// `.orca_bundle` / `.zip` archive into the transport envelope that
-/// `catalog_json.imports` consumes.
-pub fn parse_preset_bundle(input: impl AsRef<[u8]>, filename: &str) -> Result<String, SliceError> {
+/// `.orca_bundle` / `.zip` archive into the typed import envelope.
+pub fn parse_preset_bundle(
+    input: impl AsRef<[u8]>,
+    filename: &str,
+) -> Result<ParsedPresetBundle, SliceError> {
     let input = input.as_ref();
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
     }
-    let mut bundle = ParsedBundle {
+    let mut bundle = ParsedPresetBundle {
         profiles: Vec::new(),
         bundle: None,
     };
@@ -59,44 +64,38 @@ pub fn parse_preset_bundle(input: impl AsRef<[u8]>, filename: &str) -> Result<St
     } else {
         import_json(input, &mut bundle.profiles)?;
     }
-    serde_json::to_string(&bundle).map_err(|error| {
-        SliceError::InvalidInput(format!("preset bundle result cannot serialize: {error}"))
-    })
+    Ok(bundle)
 }
 
 fn is_archive(input: &[u8], filename: &str) -> bool {
-    // PresetBundle.cpp:1320 dispatches on the extension; a bare JSON check
-    // follows. The byte API additionally accepts ZIP magic so callers do not
-    // have to normalize extensions.
+    // PresetBundle.cpp:1320 dispatches on the extension; the byte API
+    // additionally accepts ZIP magic so callers do not have to normalize
+    // extensions.
     input.starts_with(b"PK\x03\x04")
         || [".orca_printer", ".orca_filament", ".orca_bundle", ".zip"]
             .iter()
             .any(|suffix| filename.to_lowercase().ends_with(suffix))
 }
 
-fn import_archive(input: &[u8], bundle: &mut ParsedBundle) -> Result<(), SliceError> {
+fn import_archive(input: &[u8], bundle: &mut ParsedPresetBundle) -> Result<(), SliceError> {
     let mut archive = ZipArchive::new(Cursor::new(input))
         .map_err(|error| invalid(format!("preset archive is malformed: {error}")))?;
-    let mut members: Vec<String> = (0..archive.len())
+    let names: Vec<String> = (0..archive.len())
         .filter_map(|index| {
-            archive
-                .by_index_raw(index)
-                .ok()
-                .and_then(|file| file.name().rsplit('/').next().map(str::to_owned))
+            archive.by_index_raw(index).ok().and_then(|file| {
+                let name = file.name();
+                name.rsplit('/').next().map(str::to_owned)
+            })
         })
         .collect();
-    // Upstream extracts in ZIP order; index_raw order equals central order.
-    members = members.into_iter().collect();
-    for (index, name) in members.iter().enumerate() {
+    for (index, name) in names.iter().enumerate() {
         if name == BUNDLE_STRUCTURE_JSON {
             let bytes = read_member(&mut archive, index)?;
             bundle.bundle = Some(parse_bundle_metadata(&bytes)?);
             continue;
         }
         // PresetBundle.cpp:1390-1406 feeds every non-structure member to the
-        // JSON importer; non-JSON payloads are skipped there. Only `.json`
-        // members are preset records; skip the rest without copying the
-        // upstream soft-failure into the byte API.
+        // JSON importer; only `.json` members carry preset records.
         if !name.to_lowercase().ends_with(".json") {
             continue;
         }
@@ -106,7 +105,7 @@ fn import_archive(input: &[u8], bundle: &mut ParsedBundle) -> Result<(), SliceEr
     Ok(())
 }
 
-/// `mz_zip_reader_extract_file_to_file`-equivalent bounded read.
+/// Bounded member expansion (`mz_zip_reader_extract_to_mem`-equivalent).
 fn read_member(
     archive: &mut ZipArchive<Cursor<&[u8]>>,
     index: usize,
@@ -123,46 +122,43 @@ fn read_member(
 }
 
 fn parse_bundle_metadata(input: &[u8]) -> Result<BundleMetadata, SliceError> {
-    let raw: serde_json::Value =
+    // Deserialize directly; the `name`/`description` fallbacks run after.
+    #[derive(Default, serde::Deserialize)]
+    struct Raw {
+        id: Option<String>,
+        name: Option<String>,
+        bundle_id: Option<String>,
+        version: Option<String>,
+        description: Option<String>,
+        bundle_type: Option<String>,
+        author: Option<String>,
+        imported_time: Option<i64>,
+        updated_time: Option<i64>,
+    }
+    let raw: Raw =
         serde_json::from_slice(input).map_err(|error| invalid_json("bundle metadata", error))?;
-    let get = |key: &str| raw.get(key).and_then(serde_json::Value::as_str);
     Ok(BundleMetadata {
-        id: get("id").unwrap_or_default().to_owned(),
-        name: get("name")
-            .or_else(|| get("bundle_id"))
-            .unwrap_or_default()
-            .to_owned(),
-        version: get("version").unwrap_or_default().to_owned(),
-        description: get("description")
-            .or_else(|| get("bundle_type"))
-            .unwrap_or_default()
-            .to_owned(),
-        author: get("author").unwrap_or_default().to_owned(),
-        imported_time: raw
-            .get("imported_time")
-            .and_then(serde_json::Value::as_i64)
-            .unwrap_or_default(),
-        updated_time: raw
-            .get("updated_time")
-            .and_then(serde_json::Value::as_i64)
-            .unwrap_or_default(),
+        id: raw.id.unwrap_or_default(),
+        name: raw.name.or(raw.bundle_id).unwrap_or_default(),
+        version: raw.version.unwrap_or_default(),
+        description: raw.description.or(raw.bundle_type).unwrap_or_default(),
+        author: raw.author.unwrap_or_default(),
+        imported_time: raw.imported_time.unwrap_or_default(),
+        updated_time: raw.updated_time.unwrap_or_default(),
     })
 }
 
 /// `import_json_presets` (`PresetBundle.cpp:1450-1549`) reduced to the
 /// byte-oriented contract: parse one record, derive its kind from the
-/// settings-ID keys (`:1469-1482`), keep its `inherits` reference and skip
+/// settings-ID keys (`:1469-1482`), keep its `inherits` reference, and skip
 /// records without a parseable `version` or any settings-ID (`:1466-1483`).
 fn import_json(
     input: &[u8],
-    profiles: &mut Vec<BTreeMap<String, serde_json::Value>>,
+    profiles: &mut Vec<BTreeMap<String, RawConfigValue>>,
 ) -> Result<(), SliceError> {
-    let mut object: BTreeMap<String, serde_json::Value> =
+    let mut object: BTreeMap<String, RawConfigValue> =
         serde_json::from_slice(input).map_err(|error| invalid_json("preset", error))?;
-    let version = object
-        .get("version")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or_default();
+    let version = object.get("version").and_then(raw_text).unwrap_or_default();
     if version.is_empty() {
         // Upstream `Semver::parse` failure skips the record.
         return Ok(());
@@ -176,7 +172,7 @@ fn import_json(
     } else {
         object
             .get("type")
-            .and_then(serde_json::Value::as_str)
+            .and_then(raw_text)
             .filter(|kind| matches!(*kind, "machine" | "process" | "filament"))
     };
     let Some(kind) = kind else {
@@ -184,13 +180,17 @@ fn import_json(
         return Ok(());
     };
     if !object.contains_key("type") {
-        object.insert(
-            "type".to_owned(),
-            serde_json::Value::String(kind.to_owned()),
-        );
+        object.insert("type".to_owned(), RawConfigValue::Text(kind.to_owned()));
     }
     profiles.push(object);
     Ok(())
+}
+
+fn raw_text(value: &RawConfigValue) -> Option<&str> {
+    match value {
+        RawConfigValue::Text(text) => Some(text),
+        _ => None,
+    }
 }
 
 fn invalid_json(context: &str, error: serde_json::Error) -> SliceError {

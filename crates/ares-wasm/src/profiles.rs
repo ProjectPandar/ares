@@ -8,7 +8,9 @@ pub fn parse_preset_bundle(input: Vec<u8>, filename: String) -> Result<String, J
 }
 
 pub fn parse_preset_bundle_json(input: &[u8], filename: &str) -> Result<String, String> {
-    ares_core::parse_preset_bundle(input, filename).map_err(|error| error.to_string())
+    let bundle = ares_core::parse_preset_bundle(input, filename).map_err(|e| e.to_string())?;
+    serde_json::to_string(&bundle)
+        .map_err(|error| format!("preset bundle result cannot serialize: {error}"))
 }
 
 #[wasm_bindgen(js_name = filterCompatiblePresets)]
@@ -26,8 +28,10 @@ pub fn filter_compatible_presets_json(
     printer: &str,
     process: Option<&str>,
 ) -> Result<String, String> {
-    ares_core::filter_compatible_presets(catalog_json, printer, process)
-        .map_err(|error| error.to_string())
+    let filtered = ares_core::filter_compatible_presets(catalog_json, printer, process)
+        .map_err(|error| error.to_string())?;
+    serde_json::to_string(&filtered)
+        .map_err(|error| format!("compatible preset result cannot serialize: {error}"))
 }
 
 #[derive(Deserialize)]

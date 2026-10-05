@@ -24,15 +24,19 @@ use crate::project_slice::gcode_emit::{
 
 pub(in crate::profiles) const ORCA_FILAMENT_LIBRARY: &str = "OrcaFilamentLibrary";
 
-#[derive(Serialize)]
-struct FilteredPresets {
+/// Filtering result serialized by the WASM adapter into the transport
+/// envelope `{processes, filaments, diagnostics}`.
+#[derive(Debug, Serialize)]
+pub struct FilteredPresets {
     processes: Vec<String>,
     filaments: Vec<String>,
     diagnostics: Vec<CompatibilityDiagnostic>,
 }
 
-#[derive(Serialize)]
-struct CompatibilityDiagnostic {
+/// Source-defined diagnostic for `Preset.cpp:781-787,830-836`: an expression
+/// that fails to evaluate keeps the preset compatible and reports here.
+#[derive(Debug, Serialize)]
+pub struct CompatibilityDiagnostic {
     kind: &'static str,
     name: String,
     message: String,
@@ -45,7 +49,7 @@ pub fn filter_compatible_presets(
     catalog_json: &str,
     printer: &str,
     process: Option<&str>,
-) -> Result<String, SliceError> {
+) -> Result<FilteredPresets, SliceError> {
     let catalog = Catalog::from_json(catalog_json)?;
     let printer_position = catalog
         .selectable_position(ProfileKind::Machine, printer)
@@ -95,11 +99,7 @@ pub fn filter_compatible_presets(
             result.filaments.push(candidate.name);
         }
     }
-    serde_json::to_string(&result).map_err(|error| {
-        SliceError::InvalidInput(format!(
-            "compatible preset result cannot serialize: {error}"
-        ))
-    })
+    Ok(result)
 }
 
 struct ActivePrinter {

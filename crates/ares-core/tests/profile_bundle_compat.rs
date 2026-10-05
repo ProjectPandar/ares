@@ -195,8 +195,8 @@ fn catalog_json() -> String {
     .to_string()
 }
 
-fn filtered(result: &str) -> Value {
-    serde_json::from_str(result).unwrap()
+fn filtered(result: &ares_core::FilteredPresets) -> Value {
+    serde_json::to_value(result).unwrap()
 }
 
 #[test]
@@ -301,8 +301,8 @@ fn parse_preset_bundle_accepts_single_json() {
         "version": "1.9.0.0",
         "layer_height": "0.2"
     });
-    let parsed = ares_core::parse_preset_bundle(&preset.to_string(), "preset.json").unwrap();
-    let parsed: Value = serde_json::from_str(&parsed).unwrap();
+    let parsed = ares_core::parse_preset_bundle(preset.to_string(), "preset.json").unwrap();
+    let parsed: Value = serde_json::to_value(parsed).unwrap();
 
     assert_eq!(parsed["bundle"], Value::Null);
     let profiles = parsed["profiles"].as_array().unwrap();
@@ -339,7 +339,7 @@ fn parse_preset_bundle_reads_zip_members() {
     ]);
 
     let parsed = ares_core::parse_preset_bundle(&zip, "test.orca_filament").unwrap();
-    let parsed: Value = serde_json::from_str(&parsed).unwrap();
+    let parsed: Value = serde_json::to_value(parsed).unwrap();
 
     assert_eq!(parsed["bundle"]["id"], "bundle-1");
     assert_eq!(parsed["bundle"]["name"], "Test Bundle");

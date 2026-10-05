@@ -51,7 +51,7 @@ impl ProjectSettingsRaw {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, serde::Serialize)]
 #[serde(untagged)]
 pub(crate) enum RawConfigValue {
     Text(String),
