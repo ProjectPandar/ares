@@ -180,22 +180,24 @@ pub(super) fn emit_approach_move(
         dispatch::emit_retracted_first_travel(
             output,
             state,
-            travel_x,
-            travel_y,
-            first_travel_comment,
-            lift,
-            // `is_current_position_clear` decides the XY+Z-restate vs
-            // combined-XYZ shape (`GCodeWriter.cpp:748-777`) — a
-            // machine-start `position` write-back seeds the cursor
-            // (`m_last_pos`) but leaves the position unclear
-            // (`GCode.cpp:3139-3140`), so track `state.positioned`, not
-            // `never_positioned`.
-            !state.positioned,
-            // The upstream lift compares against this leg's travel
-            // destination: the NOMINAL layer z on a detour first leg,
-            // the scarf slope start on the direct leg
-            // (`GCode.cpp:7481-7498`).
-            if route_len > 1 { state.layer_z } else { leg_z },
+            dispatch::FirstTravel {
+                travel_x,
+                travel_y,
+                comment: first_travel_comment,
+                lift,
+                // `is_current_position_clear` decides the XY+Z-restate vs
+                // combined-XYZ shape (`GCodeWriter.cpp:748-777`) — a
+                // machine-start `position` write-back seeds the cursor
+                // (`m_last_pos`) but leaves the position unclear
+                // (`GCode.cpp:3139-3140`), so track `state.positioned`, not
+                // `never_positioned`.
+                never_positioned: !state.positioned,
+                // The upstream lift compares against this leg's travel
+                // destination: the NOMINAL layer z on a detour first leg,
+                // the scarf slope start on the direct leg
+                // (`GCode.cpp:7481-7498`).
+                dest_z: if route_len > 1 { state.layer_z } else { leg_z },
+            },
         );
     } else if layer_change_travel {
         // The sloped split only applies when a lift actually exists

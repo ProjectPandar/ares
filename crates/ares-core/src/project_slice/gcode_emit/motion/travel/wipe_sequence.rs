@@ -149,21 +149,8 @@ pub(super) fn retract_and_wipe_impl(
         // `_retract` emits only when `!is_zero(dE)` (`GCodeWriter.cpp:
         // 1035`, `libslic3r.h:294` — 1e-6).
         let retract = extrusion::coordinate(state, -before);
-        let comment = if state.options.gcode_comments {
-            retract_comment
-        } else {
-            ""
-        };
         if before >= 1e-6 {
-            output.extend_from_slice(
-                format!(
-                    "G1 E{} F{}{comment}\n",
-                    format_extrusion(retract),
-                    format_axis(state.options.retraction_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = state.options.retraction_feedrate;
+            emit_retract_e(output, state, retract, retract_comment);
         }
     }
     if has_wipe {
@@ -187,11 +174,7 @@ pub(super) fn retract_and_wipe_impl(
             // distribute during the wipe).
             let line = if retraction > f64::EPSILON {
                 let retract = extrusion::coordinate(state, -retraction);
-                let comment = if state.options.gcode_comments {
-                    " ; wipe and retract"
-                } else {
-                    ""
-                };
+                let comment = gcode_comment(state, " ; wipe and retract");
                 format!(
                     "G1 X{} Y{} E{}{comment}\n",
                     format_axis(point.x),
@@ -244,24 +227,40 @@ pub(super) fn retract_and_wipe_impl(
             // `coordinate` applies the counter update for both cases.
             let retract = extrusion::coordinate(state, -topup);
             if topup >= 1e-6 {
-                let comment = if state.options.gcode_comments {
-                    retract_comment
-                } else {
-                    ""
-                };
-                output.extend_from_slice(
-                    format!(
-                        "G1 E{} F{}{comment}\n",
-                        format_extrusion(retract),
-                        format_axis(state.options.retraction_feedrate)
-                    )
-                    .as_bytes(),
-                );
-                state.current_feedrate = state.options.retraction_feedrate;
+                emit_retract_e(output, state, retract, retract_comment);
             }
         }
     }
     reset_e(output, state);
+}
+
+/// `GCodeWriter::_retract` comment gating: the feature comment is
+/// appended only under `gcode_comments` (`GCodeWriter.cpp:1035-1042`).
+pub(in crate::project_slice::gcode_emit) fn gcode_comment<'a>(
+    state: &EmitState,
+    comment: &'a str,
+) -> &'a str {
+    if state.options.gcode_comments {
+        comment
+    } else {
+        ""
+    }
+}
+
+/// Emits the `G1 E<retract> F<feed>` retraction line and latches the
+/// feedrate (`GCodeWriter.cpp:1035-1042`). The caller decides whether
+/// the delta clears `is_zero` (1e-6) before invoking.
+fn emit_retract_e(output: &mut Vec<u8>, state: &mut EmitState, d_e: f64, comment: &str) {
+    let comment = gcode_comment(state, comment);
+    output.extend_from_slice(
+        format!(
+            "G1 E{} F{}{comment}\n",
+            format_extrusion(d_e),
+            format_axis(state.options.retraction_feedrate)
+        )
+        .as_bytes(),
+    );
+    state.current_feedrate = state.options.retraction_feedrate;
 }
 
 /// `GCodeWriter::reset_e` (`GCodeWriter.cpp:480-499`): emits
@@ -278,11 +277,7 @@ pub(in crate::project_slice::gcode_emit) fn reset_e(output: &mut Vec<u8>, state:
         )
         && state.extruder.e_position.abs() >= 1e-6
     {
-        let comment = if state.options.gcode_comments {
-            " ; reset extrusion distance"
-        } else {
-            ""
-        };
+        let comment = gcode_comment(state, " ; reset extrusion distance");
         output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
         state.extruder.e_position = 0.0;
     }

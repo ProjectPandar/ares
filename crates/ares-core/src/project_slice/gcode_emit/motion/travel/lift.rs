@@ -41,6 +41,14 @@ pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f
     state.pending_lift = Some(mode_for(state, layer_change));
 }
 
+/// The `GCode::_retract` lazy-lift tail (`GCode.cpp:7678-7681`):
+/// schedules the deferred hop when a retraction is configured and the
+/// writer sits inside the lift band, evaluated at the live writer z.
+/// Shares `schedule`'s `m_lifted == 0 && m_to_lift == 0` gate.
+pub(in crate::project_slice::gcode_emit) fn schedule_retract_tail(state: &mut EmitState) {
+    schedule_at(state, false, state.writer_z.unwrap_or(state.layer_z));
+}
+
 /// `lazy_lift(NormalLift)` — the fixed lift type used by scan/
 /// timelapse/wrapping retract calls (`GCode.hpp:254` default
 /// `LiftType::NormalLift`; `auto_lift_type` is NormalLift outside

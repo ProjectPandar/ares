@@ -2,7 +2,7 @@
 //! already-retracted `restart_extra` assignment (`GCode.cpp:7667-7672`,
 //! `Extruder.cpp:77`).
 
-use super::retract::decide;
+use super::retract::{RetractContext, decide};
 use crate::project_slice::gcode_emit::motion::{EmitState, MotionOptions};
 
 fn state() -> EmitState {
@@ -78,10 +78,12 @@ fn first_layer_hilbert_bottom_suppresses_writer_retract_and_extra() {
     decide(
         &mut output,
         &mut state,
-        true,
-        10.0,
-        false,
-        "Internal infill",
+        RetractContext {
+            retract: true,
+            routed_length: 10.0,
+            skip_retraction: false,
+            destination_feature: "Internal infill",
+        },
         &mut |_| {},
     );
     assert_eq!(state.extruder.restart_extra, 0.5);
@@ -101,10 +103,12 @@ fn hilbert_suppression_still_emits_reset_e_in_absolute_mode() {
     decide(
         &mut output,
         &mut state,
-        true,
-        10.0,
-        false,
-        "Internal infill",
+        RetractContext {
+            retract: true,
+            routed_length: 10.0,
+            skip_retraction: false,
+            destination_feature: "Internal infill",
+        },
         &mut |_| {},
     );
     assert_eq!(output, b"G92 E0\n");
@@ -127,10 +131,12 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
     decide(
         &mut output,
         &mut state,
-        true,
-        10.0,
-        false,
-        "Top surface",
+        RetractContext {
+            retract: true,
+            routed_length: 10.0,
+            skip_retraction: false,
+            destination_feature: "Top surface",
+        },
         &mut |_| {},
     );
     assert_eq!(state.extruder.restart_extra, 0.5);
@@ -138,10 +144,12 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
     decide(
         &mut output,
         &mut state,
-        false,
-        10.0,
-        false,
-        "Internal infill",
+        RetractContext {
+            retract: false,
+            routed_length: 10.0,
+            skip_retraction: false,
+            destination_feature: "Internal infill",
+        },
         &mut |_| {},
     );
     assert_eq!(
@@ -163,10 +171,12 @@ fn non_hilbert_already_retracted_travel_assigns_restart_extra() {
     decide(
         &mut output,
         &mut state,
-        false,
-        10.0,
-        false,
-        "Internal infill",
+        RetractContext {
+            retract: false,
+            routed_length: 10.0,
+            skip_retraction: false,
+            destination_feature: "Internal infill",
+        },
         &mut |_| {},
     );
     assert_eq!(state.extruder.restart_extra, 0.0);

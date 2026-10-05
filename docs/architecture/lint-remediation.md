@@ -105,3 +105,15 @@ Preserve numerical expression/cast order, invalid-command partial state, exact c
 G-code batch results against `b64b1d90`: all 64 owned diagnostics are gone, leaving **179 unique primary diagnostic locations** across workspace targets (243 before). Ordinary clippy reports core library 157, core tests 158 including 157 duplicates, and CLI parity 21. Full workspace nextest passed 7,594 tests with nine unchanged skips; fmt and core/WASM compilation passed. Every changed Rust file remains below 400 lines. The only test edits group the same endpoint arguments at two curl call sites; all assertions and comparator sources remain unchanged.
 
 Complete CPU0 controls retain exactly the baseline status sets: official 388 PASS / eight existing replay-environment FAIL (`ORCA_REPLAY_*` absent), seeded 396/396 PASS. The eight official failures are not semantic passes. Actual Ares G-code SHA-256 multisets also match the baseline for all artifact labels: 383 labels with output in official mode and 394 in seeded mode. Gate logs, source hashes, complete-output artifacts, `lint-counts.json`, `comparison.json`, and `actual-hash-comparison.json` are in `/tmp/ares-lint-gcode-controls.6tcgfM/`. These are pre-review receipts; approval, latest-main rebase and revalidation remain required before integration.
+
+## travel retract/lift helpers (slice)
+
+- `start_travel::retract::decide` duplicated the `G92 E0` reset, the
+  `GCode.cpp:7678-7681` lazy-lift gate, and the wipe-then-replan
+  sequence (`GCode.cpp:7436-7443`) across its Hilbert branches.
+- Extracted `travel::reset_e` reuse, `lift::schedule_retract_tail`
+  (shared `schedule_at` gate), `wipe_sequence::emit_retract_e` /
+  `gcode_comment`, and `emit_z_restate` in `restate.rs`; bundled the
+  >5-arg signatures into `RetractContext` / `FirstTravel` structs.
+- Behavior-preserving: identical predicates and emit order; verified by
+  the ares-core suite and the orca_parity control set.

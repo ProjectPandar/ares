@@ -8,6 +8,23 @@ use crate::project_slice::gcode_emit::motion::{
     travel,
 };
 
+/// `GCodeWriter::_travel_to_z` emission for the re-state lines
+/// (`GCodeWriter.cpp:824` callers): emits `G1 Z<z> F<lift feed>` plus
+/// the comment, latches the feedrate, and records the writer z.
+fn emit_z_restate(output: &mut Vec<u8>, state: &mut EmitState, z: f64, comment: &str) {
+    let z_feedrate = travel::lift_z_feedrate(state);
+    output.extend_from_slice(
+        format!(
+            "G1 Z{} F{}{comment}\n",
+            format_z(z),
+            format_axis(z_feedrate)
+        )
+        .as_bytes(),
+    );
+    state.current_feedrate = z_feedrate;
+    state.record_z(z);
+}
+
 pub(super) struct RestateContext {
     pub(super) slope_start_z: Option<f64>,
     pub(super) never_positioned: bool,
@@ -41,22 +58,8 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         && !suppressed
         && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
     {
-        let z_feedrate = travel::lift_z_feedrate(state);
-        let reset_comment = if state.options.gcode_comments {
-            " ; reset Z after contouring"
-        } else {
-            ""
-        };
-        output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}{reset_comment}\n",
-                format_z(state.layer_z),
-                format_axis(z_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = z_feedrate;
-        state.record_z(state.layer_z);
+        let reset_comment = travel::gcode_comment(state, " ; reset Z after contouring");
+        emit_z_restate(output, state, state.layer_z, reset_comment);
         // `travel_to_z` cancels `m_lifted` (`GCodeWriter.cpp:824`) — a
         // template-assigned lift is equally cleared since the writer Z is
         // authoritative again.
@@ -66,22 +69,8 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     }
     let needs_z_restate = never_positioned && (eager_lifted_travel || unclear_position_travel);
     if needs_z_restate && !travel_set_layer_z {
-        let z_feedrate = travel::lift_z_feedrate(state);
-        let z_comment = if state.options.gcode_comments {
-            " ; ensure Z matches planned layer height"
-        } else {
-            ""
-        };
-        output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}{z_comment}\n",
-                format_z(state.layer_z),
-                format_axis(z_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = z_feedrate;
-        state.record_z(state.layer_z);
+        let z_comment = travel::gcode_comment(state, " ; ensure Z matches planned layer height");
+        emit_z_restate(output, state, state.layer_z, z_comment);
         // Forced travel_to_z cancels the lift (GCodeWriter.cpp:824).
         state.lifted = false;
         state.lifted_amount = 0.0;
@@ -95,30 +84,17 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     {
         if state.lifted_amount > 0.0 && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
-            let z_feedrate = travel::lift_z_feedrate(state);
             // `_extrude` re-states Z: on the print's first extrusion
             // (`_last_pos_undefined`) the comment is "ensure Z matches planned
             // layer height" (`GCode.cpp:6382`); otherwise the post-contour
             // reset uses "reset Z after contouring" (`GCode.cpp:6399`).
-            let reset_comment = if state.options.gcode_comments {
-                if never_positioned {
-                    " ; ensure Z matches planned layer height"
-                } else {
-                    " ; reset Z after contouring"
-                }
+            let reset_comment = if never_positioned {
+                " ; ensure Z matches planned layer height"
             } else {
-                ""
+                " ; reset Z after contouring"
             };
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}{reset_comment}\n",
-                    format_z(z),
-                    format_axis(z_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = z_feedrate;
-            state.record_z(z);
+            let reset_comment = travel::gcode_comment(state, reset_comment);
+            emit_z_restate(output, state, z, reset_comment);
             state.scarf_z = slope_start_z;
         }
         travel::unretract(output, state);

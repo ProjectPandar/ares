@@ -8,6 +8,19 @@ use crate::project_slice::gcode_emit::motion::{
     travel,
 };
 
+/// The lifted first-travel description shared by the dispatch branch
+/// (`GCodeWriter.cpp:748-777`): XY destination and comment, the
+/// scheduled lift mode, whether the source position is genuinely
+/// unknown, and the travel's destination z.
+pub(super) struct FirstTravel<'a> {
+    pub(super) travel_x: f64,
+    pub(super) travel_y: f64,
+    pub(super) comment: &'a str,
+    pub(super) lift: Option<LiftMode>,
+    pub(super) never_positioned: bool,
+    pub(super) dest_z: f64,
+}
+
 /// `state.extruder.retracted && first_position && z_hop > 0` branch of
 /// `emit_needs_travel`: emit the Z lift, then the approach move whose
 /// shape depends on whether the source position is genuinely unknown
@@ -15,13 +28,16 @@ use crate::project_slice::gcode_emit::motion::{
 pub(super) fn emit_retracted_first_travel(
     output: &mut Vec<u8>,
     state: &mut EmitState,
-    travel_x: f64,
-    travel_y: f64,
-    first_travel_comment: &str,
-    first_travel_lift: Option<LiftMode>,
-    never_positioned: bool,
-    dest_z: f64,
+    travel: FirstTravel<'_>,
 ) {
+    let FirstTravel {
+        travel_x,
+        travel_y,
+        comment: first_travel_comment,
+        lift: first_travel_lift,
+        never_positioned,
+        dest_z,
+    } = travel;
     // The lift target is `m_pos.z() + m_to_lift` (`GCodeWriter.cpp:
     // 701-709`) — the LIVE writer z (template `position[2]` write-back
     // can move it off the nominal layer z), but only while it exceeds

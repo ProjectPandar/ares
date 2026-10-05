@@ -10,6 +10,7 @@ mod tests;
 mod wipe_path;
 mod wipe_sequence;
 pub(super) use retract_core::plain_retract;
+pub(in crate::project_slice::gcode_emit) use wipe_sequence::gcode_comment;
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::reset_e;
 pub(super) use wipe_sequence::retract_and_wipe;
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::{
@@ -18,6 +19,7 @@ pub(in crate::project_slice::gcode_emit) use wipe_sequence::{
 use wipe_sequence::{retract_and_wipe_with, retract_sequence_due, wipe_eligible};
 
 use super::{EmitState, arc};
+pub(in crate::project_slice::gcode_emit) use lift::schedule_retract_tail;
 pub(super) use lift::{
     emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
     mode_for as lift_mode_for, schedule_normal, z_feedrate as lift_z_feedrate,
