@@ -84,10 +84,12 @@ impl ChainEntity for SupportExtrusionEntity {
         match self {
             Self::Path(path) | Self::Loop(path) => path.reverse(),
             Self::NoSort(entities) => {
-                for entity in &mut *entities {
-                    if !matches!(entity, Self::Loop(_)) {
-                        entity.reverse();
-                    }
+                // `ExtrusionEntityCollection.cpp::reverse`: preserve loop winding.
+                for entity in entities
+                    .iter_mut()
+                    .filter(|entity| !matches!(entity, Self::Loop(_)))
+                {
+                    entity.reverse();
                 }
                 entities.reverse();
             }
