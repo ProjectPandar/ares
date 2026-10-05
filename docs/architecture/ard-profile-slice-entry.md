@@ -293,6 +293,28 @@ Propose retaining that exact upstream result with a returned diagnostic, rather
 than inventing strict-false behavior or hiding the error. Missing parents, cycles,
 invalid JSON and invalid selections remain errors, not this source-defined case.
 
+## Model placement (2026-10-06, `placement` option)
+
+`options_json` gains `placement: "none" | "center"` (default `none`).
+`center` ports the CLI `--center` transform: `Model.cpp:704-722`
+`center_instances_around_point` (world-bbox center over model-part volumes,
+`EPSILON = 1e-4` no-op guard from `libslic3r.h:52`) followed by the Z ground
+drop (`OrcaSlicer.cpp:4382-4392`), at `BuildVolume::bed_center()`
+(`BuildVolume.hpp:83`, the printable-area bbox center). The native oracle
+cannot exercise `--center` directly — the option is commented out in this
+Orca build (`PrintConfig.cpp:10775`) — so the E2E compares against a
+pre-positioned reference cube (bbox center at bed center, grounded) sliced
+through the proven pipeline; identical world geometry must give identical
+G-code.
+
+**Known deviation:** upstream STL inputs default to full libnest2d arrange
+(`need_arrange` starts true, `OrcaSlicer.cpp:1438`; non-3MF inputs re-set it,
+`:1797`; the arrange block runs at `:4890`; the `--arrange` flag's own default
+of 0 (`PrintConfig.cpp:10780-10786`) only applies when passed explicitly,
+`:7190-7195`). Ares defaults to `none` (model keeps its own coordinates) until
+the arrange slice ports the packing; the `placement` API is the seam that
+slice will use to converge the default.
+
 ## Model/config behavior
 
 - Existing `sliceProject` / `sliceProjectPlate` retain embedded-3MF behavior.

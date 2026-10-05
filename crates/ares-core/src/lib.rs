@@ -169,6 +169,7 @@ pub use print_paths::{
 pub(crate) use print_paths::{
     finalize_print_paths_with_layer_contours, generate_print_paths_with_bridge_policy,
 };
+pub use profiles::Placement;
 pub use profiles::{
     ComposedProfile, FilteredPresets, MergedProfile, MergedProfileMetadata, MissingParent,
     ParsedPresetBundle, PresetCatalogHandle, ProfileFragment, ProfileGroupMetadata, ProfileKind,

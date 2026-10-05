@@ -18,6 +18,7 @@ pub(crate) struct ProfileInput<'a> {
     pub(crate) raw: &'a ProjectSettingsRaw,
     /// Merged raw per selected filament (`OrcaSlicer.cpp:3301` slot overlay).
     pub(crate) filament_raws: &'a [ProjectSettingsRaw],
+    pub(crate) placement: crate::profiles::Placement,
 }
 
 impl AsRef<[u8]> for ProjectSource<'_> {

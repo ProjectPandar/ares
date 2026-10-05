@@ -56,6 +56,7 @@ fn request<'a>(
         selection_json: selection,
         plate: None,
         overrides,
+        placement: ares_core::Placement::None,
     }
 }
 

@@ -51,16 +51,30 @@ struct ProfileSliceOptions {
     /// every entry (shared with `ConfigOverrides::from_json`).
     #[serde(default)]
     overrides: Option<ares_core::ConfigOverrides>,
+    /// Model placement (`--center` transform); "none" by default.
+    #[serde(default)]
+    placement: Option<String>,
 }
 
 impl ProfileSliceOptions {
     fn parse(options_json: &str) -> Result<Self, String> {
-        serde_json::from_str(options_json)
-            .map_err(|error| format!("invalid profile slice options JSON: {error}"))
+        let options: ProfileSliceOptions = serde_json::from_str(options_json)
+            .map_err(|error| format!("invalid profile slice options JSON: {error}"))?;
+        if let Some(placement) = &options.placement {
+            ares_core::Placement::parse(placement).map_err(|error| error.to_string())?;
+        }
+        Ok(options)
     }
 
     fn overrides(&self) -> ares_core::ConfigOverrides {
         self.overrides.clone().unwrap_or_default()
+    }
+
+    fn placement(&self) -> ares_core::Placement {
+        self.placement
+            .as_deref()
+            .and_then(|value| ares_core::Placement::parse(value).ok())
+            .unwrap_or(ares_core::Placement::None)
     }
 }
 
@@ -69,6 +83,13 @@ pub(crate) fn parse_profile_slice_overrides_for_test(
     options_json: &str,
 ) -> Result<ares_core::ConfigOverrides, String> {
     Ok(ProfileSliceOptions::parse(options_json)?.overrides())
+}
+
+#[cfg(test)]
+pub(crate) fn parse_profile_slice_options_for_test(
+    options_json: &str,
+) -> Result<ares_core::Placement, String> {
+    Ok(ProfileSliceOptions::parse(options_json)?.placement())
 }
 
 #[wasm_bindgen(js_name = sliceWithProfiles)]
@@ -107,6 +128,7 @@ pub async fn slice_with_profiles_bytes(
             selection_json,
             plate: options.plate,
             overrides: &overrides,
+            placement: options.placement(),
         },
         GenerationMetadata::default(),
         SlicerContext::new(options.seed),
@@ -254,6 +276,7 @@ pub async fn slice_with_profiles_processed_bytes(
             selection_json,
             plate: options.plate,
             overrides: &overrides,
+            placement: options.placement(),
         },
         ares_core::GenerationMetadata::default(),
         ares_core::SlicerContext::new(options.seed),

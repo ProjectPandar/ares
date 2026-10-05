@@ -5,6 +5,29 @@ use crate::{
 
 use super::catalog::{Catalog, selection};
 
+/// Model placement before slicing. `Center` mirrors the CLI `--center`
+/// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the
+/// Z ground drop. The default keeps the model's own coordinates; upstream
+/// CLI STL inputs default to full libnest2d arrange (`:1438,:1797,:4890`),
+/// a known deviation deferred to the arrange slice.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Placement {
+    None,
+    Center,
+}
+
+impl Placement {
+    pub fn parse(value: &str) -> Result<Self, SliceError> {
+        match value {
+            "none" => Ok(Self::None),
+            "center" => Ok(Self::Center),
+            other => Err(SliceError::InvalidInput(format!(
+                "invalid placement: {other}"
+            ))),
+        }
+    }
+}
+
 /// Model identity and selected-profile JSON supplied by the caller.
 #[derive(Clone, Copy, Debug)]
 pub struct ProfileSliceRequest<'a> {
@@ -15,6 +38,8 @@ pub struct ProfileSliceRequest<'a> {
     /// M854 user edits; applied last over the selected profiles (GUI edit
     /// order, `Config.cpp:461`).
     pub overrides: &'a crate::ConfigOverrides,
+    /// Model placement before slicing (`--center` transform).
+    pub placement: Placement,
 }
 
 /// Compose selected Orca profiles and slice through the project Print lifecycle.
@@ -52,6 +77,7 @@ fn slice_profile_source(
         selection_json,
         plate,
         overrides,
+        placement,
     } = request;
     if filename.is_empty() {
         return Err(SliceError::InvalidInput(
@@ -70,6 +96,7 @@ fn slice_profile_source(
                 composed: &composed.profile,
                 raw: &composed.raw,
                 filament_raws: &composed.filament_raws,
+                placement,
             }),
             overrides,
         },

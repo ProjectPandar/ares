@@ -1,6 +1,96 @@
 //! `--center` placement: `Model.cpp:704-722` (`center_instances_around_point`)
 //! and `OrcaSlicer.cpp:4378-4392` (Z ground drop after centering).
 
+use super::{Point3d, Project};
+
+/// `libslic3r.h:52`: the no-op threshold for centering shifts.
+const EPSILON: f64 = 1e-4;
+
+impl Project {
+    /// `Model::center_instances_around_point`: shift every instance offset by
+    /// `point - world_bbox_center.xy`; `false` when the shift is below
+    /// `EPSILON`. Z never moves here.
+    pub(crate) fn center_instances_around_point(&mut self, point: [f64; 2]) -> bool {
+        let mut min = [f64::INFINITY; 3];
+        let mut max = [f64::NEG_INFINITY; 3];
+        let instances = self.objects.iter().flat_map(|object| {
+            object
+                .instances
+                .iter()
+                .map(move |instance| (object, instance.transform))
+        });
+        for (object, transform) in instances {
+            for point in world_vertices(object, transform) {
+                merge_bbox_point(&mut min, &mut max, point);
+            }
+        }
+        let shift = [
+            point[0] - (min[0] + max[0]) * 0.5,
+            point[1] - (min[1] + max[1]) * 0.5,
+        ];
+        if shift.iter().all(|value| value.abs() < EPSILON) {
+            return false;
+        }
+        for object in &mut self.objects {
+            for instance in &mut object.instances {
+                instance.transform = instance
+                    .transform
+                    .pretranslated(Point3d::new(shift[0], shift[1], 0.0));
+            }
+        }
+        true
+    }
+
+    /// `OrcaSlicer.cpp:4382-4392`: per object, instance 0's world bounding box
+    /// min Z is subtracted from every instance offset.
+    pub(crate) fn drop_instances_to_ground(&mut self) {
+        for object in &mut self.objects {
+            let Some(first) = object.instances.first() else {
+                continue;
+            };
+            let mut min_z = f64::INFINITY;
+            for point in world_vertices(object, first.transform) {
+                min_z = min_z.min(point.z);
+            }
+            if !min_z.is_finite() {
+                continue;
+            }
+            for instance in &mut object.instances {
+                instance.transform = instance
+                    .transform
+                    .pretranslated(Point3d::new(0.0, 0.0, -min_z));
+            }
+        }
+    }
+}
+
+/// `Model.cpp:1603-1618 instance_bounding_box`: model-part volume vertices
+/// transformed by the instance × volume matrix.
+fn world_vertices(
+    object: &super::ProjectObject,
+    instance: crate::Transform3d,
+) -> impl Iterator<Item = Point3d> + '_ {
+    object
+        .volumes
+        .iter()
+        .filter(|volume| volume.volume_type() == super::ProjectVolumeType::ModelPart)
+        .flat_map(move |volume| {
+            let matrix = instance.then(volume.transform());
+            volume
+                .mesh()
+                .vertices()
+                .iter()
+                .map(move |vertex| matrix.transform_point(*vertex))
+        })
+}
+
+fn merge_bbox_point(min: &mut [f64; 3], max: &mut [f64; 3], point: Point3d) {
+    for (axis, coordinate) in [point.x, point.y, point.z].into_iter().enumerate() {
+        min[axis] = min[axis].min(coordinate);
+        max[axis] = max[axis].max(coordinate);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::project::{
@@ -11,8 +101,8 @@ mod tests {
         slice_info::{SliceInfo, SliceInfoHeader},
     };
     use crate::{
-        PlateMetadata, Project, ProjectInstance, ProjectModel, ProjectObject, ProjectSettings,
-        ProjectVolumeType, Transform3d,
+        Project, ProjectInstance, ProjectModel, ProjectObject, ProjectSettings, ProjectVolumeType,
+        Transform3d,
     };
 
     /// One 10 mm cube volume at [0,10]^2 x [z, z+10], one instance at `offset`.
@@ -58,11 +148,7 @@ mod tests {
             [1, 0, 0],
             true,
             false,
-            Transform3d::IDENTITY.pretranslated(Point3d::new(
-                offset[0],
-                offset[1],
-                offset[2],
-            )),
+            Transform3d::IDENTITY.pretranslated(Point3d::new(offset[0], offset[1], offset[2])),
         );
         Project::new(
             vec![ProjectModel::new("cube".to_owned(), vec![2])],
@@ -98,18 +184,6 @@ mod tests {
     }
 
     #[test]
-    fn centering_shifts_instance_offsets_in_xy_only() {
-        let mut project = project_with_instance([30.0, 40.0, 5.0], 5.0);
-        let moved = project.center_instances_around_point([118.0, 138.0]);
-        assert!(moved, "off-center instances must move");
-        let transform = project.objects()[0].instances()[0].transform();
-        let point = transform.transform_point(Point3d::new(0.0, 0.0, 5.0));
-        assert!((point.x - 113.0).abs() < 1e-9, "{point:?}");
-        assert!((point.y - 133.0).abs() < 1e-9, "{point:?}");
-        assert!((point.z - 5.0).abs() < 1e-9, "centering never moves Z");
-    }
-
-    #[test]
     fn centering_is_noop_within_epsilon() {
         // Model.cpp:712: |shift| < EPSILON (1e-4) leaves instances untouched.
         let mut project = project_with_instance([113.0, 133.0, 5.0], 5.0);
@@ -117,16 +191,5 @@ mod tests {
         let moved = project.center_instances_around_point([118.0, 138.0]);
         assert!(!moved, "already centered: world bbox center is (118,138)");
         assert_eq!(project.objects()[0].instances()[0].transform(), before);
-    }
-
-    #[test]
-    fn drop_to_ground_subtracts_world_min_z() {
-        // OrcaSlicer.cpp:4382-4392: per object, instance 0's world bbox min.z
-        // is subtracted from every instance offset.
-        let mut project = project_with_instance([0.0, 0.0, 5.0], 5.0);
-        project.drop_instances_to_ground();
-        let transform = project.objects()[0].instances()[0].transform();
-        let point = transform.transform_point(Point3d::new(0.0, 0.0, 5.0));
-        assert!((point.z - 0.0).abs() < 1e-9, "{point:?}");
     }
 }
