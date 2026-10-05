@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import init, {
+  PresetCatalog,
   decodeConfigValue,
   encodeConfigValue,
   filterCompatiblePresets,
@@ -27,6 +28,8 @@ const replaceViewer = (next?: VertexBuffers) => {
   viewer?.free();
   viewer = next;
 };
+
+const catalogs = new Map<number, PresetCatalog>();
 
 async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]> {
   switch (request.kind) {
@@ -78,6 +81,21 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [JSON.parse(parsePresetBundle(request.input, request.filename)), []];
     case "filterCompatiblePresets":
       return [JSON.parse(filterCompatiblePresets(request.catalog, request.printer, request.process)), []];
+    case "catalogCreate":
+      catalogs.set(request.catalogId, new PresetCatalog());
+      return [undefined, []];
+    case "catalogAddVendor":
+      catalogs.get(request.catalogId)!.addVendor(request.input);
+      return [undefined, []];
+    case "catalogAddImport":
+      catalogs.get(request.catalogId)!.addImport(request.input, request.filename);
+      return [undefined, []];
+    case "catalogFilter":
+      return [JSON.parse(catalogs.get(request.catalogId)!.filterCompatible(request.printer, request.process)), []];
+    case "catalogFree":
+      catalogs.get(request.catalogId)!.free();
+      catalogs.delete(request.catalogId);
+      return [undefined, []];
     case "decodeConfigValues":
       return [request.entries.map(([key, serialized]) => {
         try {

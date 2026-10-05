@@ -1,7 +1,8 @@
 //! Native expectations for the browser preset-import E2E
-//! (`web/e2e/presetImport.spec.ts`): the same `.orca_printer` bundle and the
-//! same OrcaSlicer vendor files the browser loads from `@ares-slicer/profiles`
-//! go through `parse_preset_bundle_json` / `filter_compatible_presets_json`.
+//! (`web/e2e/presetImport.spec.ts`): the same `.orca_printer` bundle, user
+//! filament preset and OrcaSlicer vendor files the browser loads from
+//! `@ares-slicer/profiles` go through the `PresetCatalog` handle, built as the
+//! app builds it: vendors in load order, then the imports.
 //! The E2E proves the browser wiring; upstream parity of the compatibility
 //! decision is covered by the ares-core profile tests.
 
@@ -11,6 +12,8 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 
 const BUNDLE: &str = "My X1C 0.4 nozzle.orca_printer";
+/// Inherits a Creality system filament; the Creality vendor stays uninstalled.
+const FILAMENT: &str = "My Creality PLA.json";
 const PRINTER: &str = "My X1C 0.4 nozzle";
 const PROCESS: &str = "0.20mm Standard @BBL X1C - Mine";
 
@@ -61,26 +64,37 @@ fn vendor_json(id: &str) -> String {
 
 #[test]
 fn browser_compatible_presets_expectations() {
-    let bundle = fs::read(repo_root().join("tests/presets").join(BUNDLE)).unwrap();
-    let imports = format!(
-        "[{}]",
-        ares_wasm::parse_preset_bundle_json(&bundle, BUNDLE).unwrap()
-    );
-    let library = vendor_json("OrcaFilamentLibrary");
-    let catalog = |vendors: &str| format!(r#"{{"vendors":[{vendors}],"imports":{imports}}}"#);
+    let presets = repo_root().join("tests/presets");
+    let imports = [BUNDLE, FILAMENT].map(|name| (fs::read(presets.join(name)).unwrap(), name));
+    // PresetBundle.cpp:2216-2234: OrcaFilamentLibrary loads before the other vendors.
+    let catalog = |vendors: &[&str]| {
+        let mut catalog = ares_wasm::PresetCatalog::new();
+        for id in vendors {
+            catalog.add_vendor_json(vendor_json(id).as_bytes()).unwrap();
+        }
+        for (bytes, name) in &imports {
+            catalog.add_import_json(bytes, name).unwrap();
+        }
+        catalog
+    };
 
     // Without the BBL vendor installed the imported printer's parent is missing.
-    let missing =
-        ares_wasm::filter_compatible_presets_json(&catalog(&library), PRINTER, None).unwrap_err();
+    let missing = catalog(&["OrcaFilamentLibrary"])
+        .filter_compatible_json(PRINTER, None)
+        .unwrap_err();
     assert!(missing.contains("is missing parent"), "{missing}");
 
-    // PresetBundle.cpp:2216-2234: OrcaFilamentLibrary loads before the other vendors.
-    let installed = catalog(&format!("{library},{}", vendor_json("BBL")));
-    let without_process =
-        ares_wasm::filter_compatible_presets_json(&installed, PRINTER, None).unwrap();
-    let with_process =
-        ares_wasm::filter_compatible_presets_json(&installed, PRINTER, Some(PROCESS)).unwrap();
+    let installed = catalog(&["OrcaFilamentLibrary", "BBL"]);
+    let without_process = installed.filter_compatible_json(PRINTER, None).unwrap();
+    let with_process = installed
+        .filter_compatible_json(PRINTER, Some(PROCESS))
+        .unwrap();
     assert!(without_process.contains(PROCESS), "{without_process}");
+    // Preset.cpp:1685-1691: the Creality-based user filament is skipped, not filtered.
+    assert!(
+        with_process.contains(r#""missing_parents":[{"kind":"filament","name":"My Creality PLA","parent":"Creality Generic PLA"}]"#),
+        "{with_process}"
+    );
     assert!(
         with_process.contains("Bambu PLA Basic @BBL X1C - Mine"),
         "{with_process}"
@@ -91,8 +105,9 @@ fn browser_compatible_presets_expectations() {
     fs::write(
         artifacts.join("expected-compatible.json"),
         format!(
-            r#"{{"bundle":{},"printer":{},"process":{},"missingVendorError":{},"withoutProcess":{without_process},"withProcess":{with_process}}}"#,
+            r#"{{"bundle":{},"filament":{},"printer":{},"process":{},"missingVendorError":{},"withoutProcess":{without_process},"withProcess":{with_process}}}"#,
             serde_json::to_string(BUNDLE).unwrap(),
+            serde_json::to_string(FILAMENT).unwrap(),
             serde_json::to_string(PRINTER).unwrap(),
             serde_json::to_string(PROCESS).unwrap(),
             serde_json::to_string(&missing).unwrap(),

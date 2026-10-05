@@ -9,11 +9,13 @@ interface Compatible {
   processes: string[];
   filaments: string[];
   diagnostics: { kind: string; name: string; message: string }[];
+  missing_parents: { kind: string; name: string; parent: string }[];
 }
 
-/** Native `filter_compatible_presets_json` on the same bundle and OrcaSlicer vendor files (ares-wasm `compatible_presets` test). */
+/** Native `PresetCatalog` filtering of the same imports and OrcaSlicer vendor files (ares-wasm `compatible_presets` test). */
 interface Expected {
   bundle: string;
+  filament: string;
   printer: string;
   process: string;
   missingVendorError: string;
@@ -65,7 +67,9 @@ test("imported printer presets list the compatible processes and filaments", asy
   await expect(sliceButton).toBeEnabled();
 
   // MainFrame::load_config_file: File > Import > Import Configs.
-  await page.getByTestId("preset-import-input").setInputFiles(`${repositoryRoot}tests/presets/${expected.bundle}`);
+  await page.getByTestId("preset-import-input").setInputFiles(
+    [expected.bundle, expected.filament].map((name) => `${repositoryRoot}tests/presets/${name}`),
+  );
   expect(await groupOptions(page, "Printer preset", "User presets")).toEqual([expected.printer]);
   expect(await groupOptions(page, "Printer preset", "Project presets")).toEqual([projectPrinter]);
 
@@ -91,6 +95,13 @@ test("imported printer presets list the compatible processes and filaments", asy
   ];
   expect(processes.sort()).toEqual([...expected.withoutProcess.processes].sort());
   await expect(page.getByTestId("preset-diagnostics")).toHaveCount(expected.withoutProcess.diagnostics.length ? 1 : 0);
+  // Preset.cpp:1685-1691: presets whose parent is not loaded are skipped; the engine lists them.
+  const missingParents = page.getByTestId("preset-missing-parents");
+  await missingParents.locator("summary").click();
+  await expect(missingParents.getByRole("listitem")).toHaveText(
+    expected.withoutProcess.missing_parents.map(({ kind, name, parent }) => `${name} (${kind}): parent preset "${parent}" is not loaded`),
+  );
+  await page.screenshot({ path: `${artifacts}missing-parents.png` });
   await expect(sliceButton).toBeDisabled();
   await expect(sliceButton).toHaveAttribute("title", /project presets/);
   await page.getByRole("button", { name: "Process preset", exact: true }).click();
@@ -114,18 +125,21 @@ test("imported printer presets list the compatible processes and filaments", asy
   await expect(sliceButton).toBeEnabled();
 
   const measures = await timings(page);
-  const stringify = measures.filter((entry) => entry.name === "ares:catalog-stringify");
+  const build = measures.filter((entry) => entry.name === "ares:catalog-build");
   const filter = measures.filter((entry) => entry.name === "ares:filter-compatible-presets");
-  // One catalog per vendor/import change (without and with BBL); filtered without BBL, then without and with a process.
-  expect(stringify).toHaveLength(2);
+  // One catalog handle per vendor change (without and with BBL); filtered without BBL, then without and with a process.
+  // Filtering never serializes the whole catalog: that is only for slicing.
+  expect(build).toHaveLength(2);
   expect(filter).toHaveLength(3);
+  expect(measures.filter((entry) => entry.name === "ares:catalog-stringify")).toHaveLength(0);
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
     vendors: ["BBL", "OrcaFilamentLibrary"],
     printer: expected.printer,
     processes: processes.length,
     filaments: filaments.length,
+    missingParents: expected.withoutProcess.missing_parents,
     // Without BBL, with BBL; and the filters without BBL, with BBL, with BBL and a process.
-    catalogStringifyMs: stringify.map((entry) => entry.duration),
+    catalogBuildMs: build.map((entry) => entry.duration),
     filterMs: filter.map((entry) => entry.duration),
   }, null, 2)}\n`);
   expect(errors).toEqual([]);

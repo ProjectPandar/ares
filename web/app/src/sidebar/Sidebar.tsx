@@ -56,13 +56,24 @@ function compatibleGroups(compatible: CompatibleState | null, names: "processes"
 function CompatibleStatus({ compatible }: { compatible: CompatibleState | null }) {
   if (compatible?.status === "filtering") return <div className="side-empty" data-testid="preset-filtering">Filtering compatible presets…</div>;
   if (compatible?.status === "error") return <div className="preset-error" role="alert" data-testid="preset-error">{compatible.error}</div>;
-  const diagnostics = compatible?.status === "done" ? compatible.presets.diagnostics : [];
-  if (diagnostics.length === 0) return null;
+  if (compatible?.status !== "done") return null;
+  const { diagnostics, missing_parents: missingParents } = compatible.presets;
   return (
-    <details className="preset-diagnostics" data-testid="preset-diagnostics">
-      <summary>{diagnostics.length} compatibility condition(s) could not be evaluated</summary>
-      <ul>{diagnostics.map((item) => <li key={`${item.kind}:${item.name}`}>{item.name}: {item.message}</li>)}</ul>
-    </details>
+    <>
+      {missingParents.length > 0 && (
+        // Preset.cpp:1685-1691, PresetBundle.cpp:1521-1525: presets with an unloaded parent are skipped.
+        <details className="preset-diagnostics" data-testid="preset-missing-parents">
+          <summary>{missingParents.length} preset(s) skipped: parent preset not loaded</summary>
+          <ul>{missingParents.map(({ kind, name, parent }) => <li key={`${kind}:${name}`}>{name} ({kind}): parent preset &quot;{parent}&quot; is not loaded</li>)}</ul>
+        </details>
+      )}
+      {diagnostics.length > 0 && (
+        <details className="preset-diagnostics" data-testid="preset-diagnostics">
+          <summary>{diagnostics.length} compatibility condition(s) could not be evaluated</summary>
+          <ul>{diagnostics.map((item) => <li key={`${item.kind}:${item.name}`}>{item.name}: {item.message}</li>)}</ul>
+        </details>
+      )}
+    </>
   );
 }
 

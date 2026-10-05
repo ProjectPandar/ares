@@ -1,4 +1,4 @@
-import type { ParsedPresetBundle } from "@ares-slicer/wasm";
+import type { ParsedPresetBundle, PresetCatalog } from "@ares-slicer/wasm";
 import { slicer } from "./slicer";
 import { type PresetSelection, useApp } from "./store";
 
@@ -8,23 +8,40 @@ import { type PresetSelection, useApp } from "./store";
  */
 export const FILAMENT_LIBRARY = "OrcaFilamentLibrary";
 
-let catalog: { vendors: readonly string[]; imports: readonly ParsedPresetBundle[]; json: string } | null = null;
+/** Imported preset files, in import order, for the engine catalog. */
+const importFiles: { input: Uint8Array; filename: string }[] = [];
+
+let synced: { vendors: readonly string[]; imports: number; catalog: PresetCatalog } | null = null;
+let syncing: Promise<unknown> = Promise.resolve();
 
 /**
- * The engine catalog of the installed vendors and imported presets, rebuilt
- * only when either changes: stringifying a large vendor costs more than the
- * filter itself.
+ * The engine catalog (PresetBundle) of the installed vendors and imported
+ * presets: rebuilt when the vendors change, imports added as they arrive.
+ * Syncs run one at a time.
  */
-async function catalogJson(): Promise<string> {
-  const { vendors, presetImports } = useApp.getState();
-  if (catalog?.vendors === vendors && catalog.imports === presetImports) return catalog.json;
-  const { loadVendor } = await import("@ares-slicer/profiles");
-  const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
-  const start = performance.now();
-  const json = JSON.stringify({ vendors: loaded, imports: presetImports });
-  performance.measure("ares:catalog-stringify", { start });
-  catalog = { vendors, imports: presetImports, json };
-  return json;
+function presetCatalog(): Promise<PresetCatalog> {
+  const next = syncing.then(syncCatalog);
+  syncing = next.catch(() => undefined);
+  return next;
+}
+
+async function syncCatalog(): Promise<PresetCatalog> {
+  const { vendors } = useApp.getState();
+  if (synced?.vendors !== vendors) {
+    const start = performance.now();
+    void synced?.catalog.free();
+    synced = null;
+    const { loadVendor } = await import("@ares-slicer/profiles");
+    const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
+    const catalog = await slicer.createPresetCatalog();
+    const encoder = new TextEncoder();
+    for (const vendor of loaded) await catalog.addVendor(encoder.encode(JSON.stringify(vendor)));
+    performance.measure("ares:catalog-build", { start });
+    synced = { vendors, imports: 0, catalog };
+  }
+  for (const { input, filename } of importFiles.slice(synced.imports)) await synced.catalog.addImport(input, filename);
+  synced.imports = importFiles.length;
+  return synced.catalog;
 }
 
 /** PresetBundle::update_compatible for the selected printer and process. */
@@ -36,10 +53,10 @@ async function updateCompatible() {
   }
   useApp.setState({ compatible: { status: "filtering" } });
   try {
-    const json = await catalogJson();
+    const catalog = await presetCatalog();
     const start = performance.now();
-    const presets = await slicer
-      .filterCompatiblePresets(json, selection.printer, selection.process)
+    const presets = await catalog
+      .filterCompatible(selection.printer, selection.process)
       .finally(() => performance.measure("ares:filter-compatible-presets", { start }));
     if (useApp.getState().presetSelection === selection) useApp.setState({ compatible: { status: "done", presets } });
   } catch (error) {
@@ -52,9 +69,9 @@ async function updateCompatible() {
 /** MainFrame::load_config_file: adds the files' presets as user presets. */
 export async function importPresetFiles(files: File[]) {
   try {
-    const parsed = await Promise.all(
-      files.map(async (file) => slicer.parsePresetBundle(new Uint8Array(await file.arrayBuffer()), file.name)),
-    );
+    const inputs = await Promise.all(files.map(async (file) => new Uint8Array(await file.arrayBuffer())));
+    const parsed = await Promise.all(files.map((file, index) => slicer.parsePresetBundle(inputs[index], file.name)));
+    importFiles.push(...files.map((file, index) => ({ input: inputs[index], filename: file.name })));
     useApp.setState(({ presetImports }) => ({ presetImports: [...presetImports, ...parsed], loadError: undefined }));
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });

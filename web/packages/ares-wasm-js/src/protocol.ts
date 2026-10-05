@@ -9,9 +9,17 @@ export type WorkerRequest =
   | { id: number; kind: "sliceStl"; input: Uint8Array; options: string }
   | { id: number; kind: "parsePresetBundle"; input: Uint8Array; filename: string }
   | { id: number; kind: "filterCompatiblePresets"; catalog: string; printer: string; process: string | undefined }
+  | { id: number; kind: "catalogCreate"; catalogId: number }
+  | { id: number; kind: "catalogAddVendor"; catalogId: number; input: Uint8Array }
+  | { id: number; kind: "catalogAddImport"; catalogId: number; input: Uint8Array; filename: string }
+  | { id: number; kind: "catalogFilter"; catalogId: number; printer: string; process: string | undefined }
+  | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "decodeConfigValues"; entries: [string, string][] }
   | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number };
+
+/** A request before the client assigns its `id`. */
+export type RequestBody = WorkerRequest extends infer R ? (R extends unknown ? Omit<R, "id"> : never) : never;
 
 export type WorkerResponse =
   | { id: number; ok: true; value: unknown }

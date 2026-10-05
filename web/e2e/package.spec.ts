@@ -18,6 +18,7 @@ const PACKED_FILES = [
   "dist/configDef.d.ts",
   "dist/index.d.ts",
   "dist/index.js",
+  "dist/presetCatalog.d.ts",
   "dist/protocol.d.ts",
   "dist/toolpaths.d.ts",
   "dist/types.d.ts",

@@ -1,14 +1,15 @@
 import type { PrintConfigDef } from "./configDef.js";
-import type { WorkerRequest, WorkerResponse } from "./protocol.js";
+import { PresetCatalog } from "./presetCatalog.js";
+import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ConfigOverrides, SliceResult, ViewRange } from "./toolpaths.js";
 import type { CompatiblePresets, ConfigValue, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
+export { PresetCatalog } from "./presetCatalog.js";
 export type * from "./configDef.js";
 export type * from "./types.js";
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void };
-type RequestBody = WorkerRequest extends infer R ? (R extends unknown ? Omit<R, "id"> : never) : never;
 
 export interface AresSlicerOptions {
   /** A module worker running `@ares-slicer/wasm/worker`. */
@@ -28,6 +29,7 @@ export class AresSlicer {
   readonly #pending = new Map<number, Pending>();
   readonly #ready: Promise<void>;
   #nextId = 0;
+  #nextCatalogId = 0;
 
   constructor({ worker, wasmUrl }: AresSlicerOptions) {
     this.#worker = worker;
@@ -109,6 +111,14 @@ export class AresSlicer {
   async parsePresetBundle(input: Uint8Array, filename: string): Promise<ParsedPresetBundle> {
     await this.#ready;
     return (await this.#call({ kind: "parsePresetBundle", input: input.slice(), filename })) as ParsedPresetBundle;
+  }
+
+  /** An empty preset catalog in the worker; add vendors and imports, then filter. */
+  async createPresetCatalog(): Promise<PresetCatalog> {
+    await this.#ready;
+    const catalogId = this.#nextCatalogId++;
+    await this.#call({ kind: "catalogCreate", catalogId });
+    return new PresetCatalog((body) => this.#call(body), catalogId);
   }
 
   /**

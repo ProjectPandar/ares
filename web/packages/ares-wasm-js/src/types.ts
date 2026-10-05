@@ -118,4 +118,12 @@ export interface CompatiblePresets {
   processes: string[];
   filaments: string[];
   diagnostics: PresetDiagnostic[];
+  /** Presets left out because their `inherits` parent is not loaded (`Preset.cpp:1685-1691`). */
+  missing_parents: MissingParent[];
+}
+
+export interface MissingParent {
+  kind: "machine" | "process" | "filament";
+  name: string;
+  parent: string;
 }
