@@ -40,3 +40,31 @@ Historical WIP evidence is provenance, not verification of the port.
 This supersedes WIP ARD-0037 for this worktree. Tower planning/reset integration
 is a dependent slice, not proven by the no-tower tracer. Calibration modes,
 hardware operation and exhaustive printer/option coverage remain unclaimed.
+
+## Deferred upstream boundaries (explicitly verified present, not yet ported)
+
+The following upstream sites exist in the pinned 2.4.2 source but are deferred
+for later slices; none is silently omitted from the port's accounting:
+
+- `GCode.cpp:5895-5960` and `GCode.cpp:6040-6070`: the multipath/loop average
+  `m_multi_flow_segment_path_average_mm3_per_mm` and `m_multi_flow_segment_path_pa_set`
+  suppression after the first multipath extrusion, including the sloped-seam
+  (`seam_slope_*`) variant. The Rust `loop_paths/adaptive_pa.rs` mean and state
+  fields exist; the seam-slope suppression interaction and the multi-path
+  suppression inside `GCode::_extrude`/`extrude_loop` emission order are not
+  yet exercised end-to-end.
+- `GCode.cpp:6720-6745` and `GCode.cpp:6925-6975`, `7155-7205`: adaptive PA
+  evaluation gating inside `_extrude`/`extrude_loop`, including the
+  `is_pa_calib` exemption and the overhang override activation point.
+- `GCode.cpp:1085-1095`, `1369-1376`, `3155-3162`: `resetPreviousPA` calls at
+  tool-change, second toolchange site and initial-filament PA restore; the Rust
+  side carries `state.adaptive_pa_resets`, but the upstream sequencing of each
+  reset site is deferred to the tower/toolchange-dependent slice.
+- `AdaptivePAProcessor.cpp:106-140`: the lookahead window that continues
+  consuming feedrate changes until a feature change or wipe boundary; retained
+  semantically in `adaptive_pa/scan.rs` but the upstream stream-position
+  bookkeeping is not a line-for-line port.
+
+Calibration modes (`CalibMode::Calib_PA_*` at `GCode.cpp:2915`, `3072`, `3246`,
+`4692`), hardware-operation M900 diagnostics and exhaustive printer/option
+coverage remain unclaimed.
