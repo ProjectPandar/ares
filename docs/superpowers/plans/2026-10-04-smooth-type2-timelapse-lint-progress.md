@@ -203,6 +203,32 @@ normal/tree/raft first-layer coverage and support bounds. General multi-transfor
 PrintObject centering remains explicitly coordinator-deferred to pi-tip; original
 witness, input/native output/error and helper patch are at
 `/tmp/ares-tower-to-tip-centering/`. No Type2 exclusion mask is invented where
-native `outer_wall` is empty. No final approval or main integration is claimed.
-The existing authorized 944c0459 remote is preserved; the rebased review commit
-is available in the shared local repository pending a new publication ref.
+native `outer_wall` is empty. The existing authorized 944c0459 remote is
+preserved; the approved commit was published without force as
+`pi/smooth-type2-tower-final-d29468ed`.
+
+## Conditional approval and full control-set clearance
+
+Coordinator conditionally approved `d29468ed`, requiring full candidate and
+same-main official/seeded control sets before ff-only integration. Old runs at
+`/tmp/ares-pi-tower-controls-d29468ed` were rejected as evidence: the detached
+baseline lacked the untracked `OrcaSlicer` resources and its seeded reference
+changed mid-run. All invalid logs remain; no result was relabeled.
+
+After the RNG rebase to `314b224c`, valid controls ran at
+`/tmp/ares-pi-tower-controls-rng`. Public 407-case official had one PASS→FAIL
+difference: `tree_activation...classic_tree_dependencies...`, the exact
+X113.388/Y113.135 versus X113.244/Y113.297 receipt signature. The candidate and
+main Ares raw outputs are byte-identical; every decompressed input ZIP entry is
+identical; two independent official reruns on the same ZIP restore the complete
+baseline stream. The original FAIL remains in its log, not relabeled. Evidence
+`/tmp/ares-pi-tower-controls-rng/tree-receipt/report.json`. Seeded common-case
+PASS/FAIL was identical; the six Type2 tests only exist on the candidate and
+passed both references.
+
+After M853 processor integration `92d12470`, controls were rerun at
+`/tmp/ares-pi-tower-controls-92d12470`: main official 399+8, candidate official
+405+8; both seeded runs all pass. Exact PASS/FAIL sets have zero changed or
+missing tests; the six Type2 additions pass both references. Workspace 7660/9
+skipped passed. Rebased onto `65b533df`; final post-rebase gates are recorded
+below. The old seeded binary/script was never used as this new-main baseline.

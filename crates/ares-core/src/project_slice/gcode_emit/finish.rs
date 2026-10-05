@@ -86,8 +86,7 @@ pub(super) fn append(
             state,
             filament_end,
             &mut config,
-            "filament-end",
-            "filament_end_gcode",
+            EndTemplate::Filament,
         )?;
         // The machine-end template reseeds from the post-assignment
         // writer state (`GCode.cpp:3896` refresh per process call).
@@ -98,8 +97,7 @@ pub(super) fn append(
         state,
         &gcode.machine_end_gcode.0,
         &mut config,
-        "machine-end",
-        "machine_end_gcode",
+        EndTemplate::Machine,
     )?;
     Ok(())
 }
@@ -219,14 +217,37 @@ fn float_at(values: &crate::OrcaFloats, index: usize) -> f64 {
     values.0.get(index).unwrap_or(&values.0[0]).0
 }
 
+#[derive(Clone, Copy)]
+enum EndTemplate {
+    Filament,
+    Machine,
+}
+
+impl EndTemplate {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Filament => "filament-end",
+            Self::Machine => "machine-end",
+        }
+    }
+
+    fn template_name(self) -> &'static str {
+        match self {
+            Self::Filament => "filament_end_gcode",
+            Self::Machine => "machine_end_gcode",
+        }
+    }
+}
+
 fn append_template(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
     source: &str,
     config: &mut value::Config,
-    name: &str,
-    template_name: &str,
+    template: EndTemplate,
 ) -> Result<(), SliceError> {
+    let name = template.name();
+    let template_name = template.template_name();
     if source.is_empty() {
         return Ok(());
     }
