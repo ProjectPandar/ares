@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { useRef } from "react";
+import type { RefObject } from "react";
 import { exportGcode, importFile, setTheme, slicePlate } from "../state/actions";
 import { useApp } from "../state/store";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
 /** BBLTopbar: file actions and the project title. */
-export function TitleBar() {
-  const input = useRef<HTMLInputElement>(null);
+export function TitleBar({ importInput: input, onShortcuts }: {
+  importInput: RefObject<HTMLInputElement | null>;
+  onShortcuts: () => void;
+}) {
   const { theme, engine, file, loadingFile } = useApp();
   return (
     <header className="titlebar">
@@ -28,6 +30,8 @@ export function TitleBar() {
       </div>
       <span className="titlebar-title">{file ? `${file.name} - Ares` : "Ares"}</span>
       <div className="titlebar-right">
+        <button className="bar-button" title="Keyboard Shortcuts (?)" aria-label="Keyboard Shortcuts"
+          onClick={onShortcuts}>?</button>
         <button className="bar-button" title={theme === "dark" ? "Light theme" : "Dark theme"}
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}

@@ -93,13 +93,13 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   const fitCoverage = await modelCoverage(page);
   await page.screenshot({ path: `${artifacts}prepare-fit.png` });
 
-  // GLCanvas3D::on_char view keys: 1 top, 3 front, 0 plate.
-  await page.keyboard.press("1");
+  // GLCanvas3D::on_char Ctrl+digit view keys: 1 top, 3 front, 0 plate.
+  await page.keyboard.press("ControlOrMeta+1");
   await expect(page.getByTestId("view-toolbar").getByRole("button", { name: "Top", pressed: true })).toBeVisible();
   await page.screenshot({ path: `${artifacts}prepare-top.png` });
   await page.getByRole("button", { name: "Front" }).click();
   await expect(page.getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true })).toBeVisible();
-  await page.keyboard.press("0");
+  await page.keyboard.press("ControlOrMeta+0");
   await expect.poll(() => modelCoverage(page)).toBeLessThan(fitCoverage / 4);
 
   // Selecting in the list highlights the object and its row.

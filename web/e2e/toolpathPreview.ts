@@ -4,7 +4,7 @@ import { expect, type Page } from "@playwright/test";
 import { type OracleToolpaths, oracleToolpaths } from "./oracleToolpaths";
 
 /** Hash of the downscaled viewport canvas, to detect view changes. */
-function canvasDigest(page: Page) {
+export function canvasDigest(page: Page) {
   return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     probe.width = 256;

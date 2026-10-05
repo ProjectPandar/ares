@@ -1,6 +1,7 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
+import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { slicer } from "./slicer";
-import { DEFAULT_PREVIEW, type PreviewView, type Theme, useApp } from "./store";
+import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp } from "./store";
 
 slicer.ready().then(
   () => useApp.setState({ engine: "ready" }),
@@ -85,8 +86,42 @@ export function setSliceResult({ gcode, toolpaths }: SliceResult, elapsedMs: num
   const top = Math.max(0, (toolpaths?.layerZs.length ?? 1) - 1);
   useApp.setState({
     slice: { status: "done", gcode, toolpaths, elapsedMs },
-    preview: { ...DEFAULT_PREVIEW, layers: [0, top] },
+    // IMSlider::SetSelectionSpan resets the saved one layer to the middle.
+    preview: { ...DEFAULT_PREVIEW, layers: [0, top], oneLayerValue: Math.floor(top / 2) },
   });
+}
+
+function lastLayer() {
+  const { slice } = useApp.getState();
+  return slice.status === "done" && slice.toolpaths ? slice.toolpaths.layerZs.length - 1 : 0;
+}
+
+/** Moves a layer slider thumb and makes it the active one. */
+export function moveLayerThumb(thumb: Thumb, layer: number) {
+  useApp.setState(({ preview }) => ({ preview: { ...moveThumb(preview, thumb, layer, lastLayer()), selection: thumb } }));
+}
+
+/**
+ * Moves the active thumb by `delta` layers: canvas arrows (GLCanvas3D::on_key)
+ * and the wheel (IMSlider::on_mouse_wheel, which also saves the one layer).
+ */
+export function stepLayers(delta: number, wheel: boolean) {
+  useApp.setState(({ preview }) => {
+    const thumb = preview.oneLayer ? 1 : preview.selection;
+    const next = moveThumb(preview, thumb, preview.layers[thumb] + delta, lastLayer());
+    return { preview: wheel && preview.oneLayer ? { ...next, oneLayerValue: next.layers[1] } : next };
+  });
+}
+
+export function toggleOneLayer() {
+  useApp.setState(({ preview }) => ({ preview: switchOneLayer(preview, lastLayer()) }));
+}
+
+/** GUI_App::toggle_show_gcode_window, persisted like `show_gcode_window`. */
+export function toggleGcodeWindow() {
+  const gcodeWindow = !useApp.getState().gcodeWindow;
+  localStorage.setItem("ares.gcodeWindow", String(gcodeWindow));
+  useApp.setState({ gcodeWindow });
 }
 
 export function setPreview(patch: Partial<PreviewView>) {

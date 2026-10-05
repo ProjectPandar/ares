@@ -1,7 +1,9 @@
-import { Outlet } from "@tanstack/react-router";
-import { type DragEvent, useLayoutEffect, useState } from "react";
-import { importFiles } from "../state/actions";
+import { Outlet, useRouter } from "@tanstack/react-router";
+import { type DragEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { exportGcode, importFiles, selectObject, slicePlate } from "../state/actions";
 import { useApp } from "../state/store";
+import { cmdDown, isShortcut } from "./keys";
+import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
 import { TabBar, TitleBar } from "./TopBar";
 
@@ -11,13 +13,45 @@ export function Shell() {
   const theme = useApp((state) => state.theme);
   const engine = useApp((state) => state.engine);
   const [dragging, setDragging] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const importInput = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   // Layout effect: CSS theme variables must be live before the viewport reads them.
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  // MainFrame key handler (Ctrl+I/R/G) and plater keys: ? list, Esc deselect, Tab switches tabs.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!isShortcut(event) || event.altKey) return;
+      const { engine: status, loadingFile, scene } = useApp.getState();
+      if (cmdDown(event)) {
+        const key = event.key.toLowerCase();
+        if (event.shiftKey || !["i", "r", "g"].includes(key)) return;
+        event.preventDefault();
+        if (key === "i" && status === "ready" && !loadingFile) importInput.current!.click();
+        else if (key === "r" && status === "ready" && scene) {
+          void slicePlate();
+          void router.navigate({ to: "/preview" });
+        }
+        else if (key === "g") exportGcode();
+      }
+      else if (event.key === "?") setShortcutsOpen(true);
+      else if (event.key === "Escape") selectObject(null);
+      // GLCanvas3D::on_key: plain Tab on the canvas, i.e. while no control has focus.
+      else if (event.key === "Tab" && !event.shiftKey && event.target === document.body) {
+        event.preventDefault();
+        void router.navigate({ to: router.state.location.pathname === "/preview" ? "/prepare" : "/preview" });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
+
   return (
     <div className="shell">
-      <TitleBar />
+      <TitleBar importInput={importInput} onShortcuts={() => setShortcutsOpen(true)} />
       <TabBar />
       <main className="workspace" data-testid="workspace"
         onDragOver={(event) => {
@@ -38,6 +72,7 @@ export function Shell() {
         {dragging && <div className="drop-overlay" data-testid="drop-overlay">Drop a 3MF project or STL model to import</div>}
       </main>
       <StatusBar />
+      <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Toolpaths } from "@ares-slicer/wasm";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { cmdDown, isShortcut } from "../shell/keys";
 import { selectObject } from "../state/actions";
 import { type PreviewView, useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
@@ -27,7 +28,7 @@ const VIEWS: [ViewPreset, string][] = [
   ["rear", "Rear"], ["left", "Left"], ["right", "Right"],
 ];
 
-/** GLCanvas3D::on_char: 0 plate + zoom_to_bed, 1-6 axis views. */
+/** GLCanvas3D::on_char with Ctrl/Cmd: 0 plate + zoom_to_bed, 1-6 axis views. */
 const VIEW_KEYS: Record<string, ViewPreset> = {
   "0": "plate", "1": "top", "2": "bottom", "3": "front", "4": "rear", "5": "left", "6": "right",
 };
@@ -55,9 +56,16 @@ export function ViewportView({ toolpaths = null, view, fit = "plate", children }
   useEffect(() => {
     let instance: Viewport | null = null;
     const onKey = (event: KeyboardEvent) => {
+      if (!instance || !isShortcut(event) || event.altKey) return;
+      const key = event.key.toLowerCase();
+      // GLCanvas3D::on_char without Ctrl: I / O zoom in / out.
+      if (!cmdDown(event) && (key === "i" || key === "o")) {
+        instance.zoomBy(key === "i" ? 1 : -1);
+        return;
+      }
       const preset = VIEW_KEYS[event.key];
-      if (!preset || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (!instance || (event.target as HTMLElement).closest("input, textarea, select")) return;
+      if (!preset || !cmdDown(event)) return;
+      event.preventDefault();
       instance.setView(preset);
       if (preset === "plate") instance.zoomTo("bed");
       setActive(preset);

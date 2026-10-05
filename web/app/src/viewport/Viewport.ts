@@ -191,6 +191,15 @@ export class Viewport {
     this.render();
   }
 
+  /** Camera::update_zoom: each step scales the zoom by 1 / (1 - 0.1 * delta), delta clamped to ±4. */
+  zoomBy(delta: number) {
+    const target = this.#controls.target;
+    const scale = 1 - Math.max(-4, Math.min(4, delta)) * 0.1;
+    this.#camera.position.sub(target).multiplyScalar(scale).add(target);
+    this.#controls.update();
+    this.render();
+  }
+
   /** GLCanvas3D::zoom_to_volumes / zoom_to_plate / zoom_to_bed. */
   zoomTo(target: ZoomTarget) {
     const box = new THREE.Box3();

@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Sidebar } from "../sidebar/Sidebar";
-import { setPreview, slicePlate } from "../state/actions";
+import { cmdDown, isShortcut } from "../shell/keys";
+import { setPreview, slicePlate, stepLayers, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
 import { useApp } from "../state/store";
 import { usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
@@ -9,11 +10,38 @@ import { GCodeText } from "./GCodeText";
 import { LayerSlider } from "./LayerSlider";
 import { Legend } from "./Legend";
 
+/**
+ * Preview keys: C toggles the G-code window (GLCanvas3D::on_char), L one layer
+ * mode (Preview::update_layers_slider_from_canvas, no modifiers), Up/Down move
+ * the active layer thumb, x5 with Shift or Ctrl/Cmd (GLCanvas3D::on_key).
+ */
+function onPreviewKey(event: KeyboardEvent) {
+  if (!isShortcut(event) || event.altKey) return;
+  const key = event.key.toLowerCase();
+  if (key === "c" && !cmdDown(event)) {
+    toggleGcodeWindow();
+    return;
+  }
+  const { slice } = useApp.getState();
+  if (slice.status !== "done" || !slice.toolpaths) return;
+  if (key === "l" && !cmdDown(event) && !event.shiftKey) toggleOneLayer();
+  else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+    event.preventDefault();
+    const step = cmdDown(event) || event.shiftKey ? 5 : 1;
+    stepLayers(event.key === "ArrowUp" ? step : -step, false);
+  }
+}
+
 export function PreviewPage() {
   const scene = useApp((state) => state.scene);
   const slice = useApp((state) => state.slice);
   const view = useApp((state) => state.preview);
   const toolpaths = slice.status === "done" ? slice.toolpaths : null;
+  const gcodeWindow = useApp((state) => state.gcodeWindow);
+  useEffect(() => {
+    window.addEventListener("keydown", onPreviewKey);
+    return () => window.removeEventListener("keydown", onPreviewKey);
+  }, []);
   const roles = useMemo(() => (toolpaths ? usedRoles(toolpaths) : []), [toolpaths]);
   return (
     <div className="page">
@@ -45,10 +73,10 @@ export function PreviewPage() {
         </div>
         {toolpaths && <Legend roles={roles} view={view} onChange={setPreview} />}
         {toolpaths && toolpaths.layerZs.length > 0 && (
-          <LayerSlider zs={toolpaths.layerZs} value={view.layers} onChange={(layers) => setPreview({ layers })} />
+          <LayerSlider zs={toolpaths.layerZs} view={view} />
         )}
       </ViewportView>
-      {slice.status === "done" && <GCodeText gcode={slice.gcode} />}
+      {slice.status === "done" && gcodeWindow && <GCodeText gcode={slice.gcode} />}
     </div>
   );
 }
