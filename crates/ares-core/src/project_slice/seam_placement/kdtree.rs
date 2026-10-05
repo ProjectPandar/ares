@@ -30,7 +30,7 @@ impl KdTree {
         let mut tree = Self {
             nodes: vec![NPOS; capacity],
         };
-        tree.build_recursive(&mut input, 0, 0, 0, n - 1, &coordinate);
+        tree.build_recursive(&mut input, (0, 0), (0, n - 1), &coordinate);
         tree
     }
 
@@ -40,10 +40,8 @@ impl KdTree {
     fn build_recursive(
         &mut self,
         input: &mut [usize],
-        node: usize,
-        dimension: usize,
-        left: usize,
-        right: usize,
+        (node, dimension): (usize, usize),
+        (left, right): (usize, usize),
         coordinate: &dyn Fn(usize, usize) -> f32,
     ) {
         if left > right || node >= self.nodes.len() {
@@ -54,16 +52,14 @@ impl KdTree {
             return;
         }
         let center = (left + right) / 2;
-        partition_input(input, dimension, left, right, center, coordinate);
+        partition_input(input, dimension, (left, right), center, coordinate);
         self.nodes[node] = input[center];
         let next_dimension = (dimension + 1) % DIMS;
         if center > left {
             self.build_recursive(
                 input,
-                node * 2 + 1,
-                next_dimension,
-                left,
-                center - 1,
+                (node * 2 + 1, next_dimension),
+                (left, center - 1),
                 coordinate,
             );
         }
@@ -72,10 +68,8 @@ impl KdTree {
         // median and could loop on duplicates.
         self.build_recursive(
             input,
-            node * 2 + 2,
-            next_dimension,
-            center + 1,
-            right,
+            (node * 2 + 2, next_dimension),
+            (center + 1, right),
             coordinate,
         );
     }
@@ -90,7 +84,7 @@ impl KdTree {
         coordinate: &dyn Fn(usize, usize) -> f32,
     ) -> Option<usize> {
         let mut best: (usize, f32) = (NPOS, f32::MAX);
-        self.visit_recursive(0, 0, point, coordinate, &mut best);
+        self.visit_recursive((0, 0), point, coordinate, &mut best);
         (best.0 != NPOS).then_some(best.0)
     }
 
@@ -99,8 +93,7 @@ impl KdTree {
     /// (`libslic3r.h:52`) widens the descent sphere radius.
     fn visit_recursive(
         &self,
-        node: usize,
-        dimension: usize,
+        (node, dimension): (usize, usize),
         point: [f32; 3],
         coordinate: &dyn Fn(usize, usize) -> f32,
         best: &mut (usize, f32),
@@ -131,10 +124,10 @@ impl KdTree {
         };
         let next_dimension = (dimension + 1) % DIMS;
         if go_left {
-            self.visit_recursive(node * 2 + 1, next_dimension, point, coordinate, best);
+            self.visit_recursive((node * 2 + 1, next_dimension), point, coordinate, best);
         }
         if go_right {
-            self.visit_recursive(node * 2 + 2, next_dimension, point, coordinate, best);
+            self.visit_recursive((node * 2 + 2, next_dimension), point, coordinate, best);
         }
     }
 }
@@ -144,8 +137,7 @@ impl KdTree {
 fn partition_input(
     input: &mut [usize],
     dimension: usize,
-    mut left: usize,
-    mut right: usize,
+    (mut left, mut right): (usize, usize),
     k: usize,
     coordinate: &dyn Fn(usize, usize) -> f32,
 ) {

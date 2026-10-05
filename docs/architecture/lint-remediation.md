@@ -78,6 +78,12 @@ Source boundary: `libslic3r/Feature/FuzzySkin/FuzzySkin.cpp::get_noise_module` u
 
 Review evidence: `/tmp/ares-lint-noise.C2E3HA/`. Pre-edit focused tests: 33 PASS. Candidate workspace: 7,608 PASS / nine existing skips; ordinary workspace/all-targets/all-features clippy, fmt and core/WASM compilation pass. Four unique diagnostics removed, leaving core 93 / workspace 114. Candidate official controls: 399 PASS / the same eight replay-environment FAIL. Candidate new-seeded controls: 407/407 PASS; all 402 Ares artifact-label hash multisets match the retained sandwich candidate receipts in `/tmp/ares-lint-sandwich.zep3ne/`. That reused seeded baseline predates M853, while this candidate includes M853; this is a cross-revision output-equality check, not a fresh run of the immediate parent. No official baseline/candidate hash comparison is claimed. Both changed Rust files remain below 400 lines; latest candidate-branch file checks still show no overlap. Rebase latest main and rerun full gates after approval.
 
+## Seam KD-tree small slice (in progress)
+
+Baseline `65b533df`. Scope: three argument-count diagnostics in `project_slice/seam_placement/kdtree.rs`. Before editing, compare `origin/main...pi/smooth-type2-timelapse-tower` (`1487dac7`), `...pi/m853-wasm-moves` (`0f7a5cd7`), and `...pi/profile-slice-entry` (`b94cb34c`) using `--name-only`; no seam-placement file overlaps. Existing seam tests run before editing. Exclude all currently assigned motion/tower/tool-ordering, processor/vgcode/wasm and profiles/config boundaries.
+
+Source boundary: `libslic3r/KDTreeIndirect.hpp::build_recursive` (`:81–108`), `partition_input` (`:111–160`), and `visit_recursive`/nearest visitor (`:169–190,200–251,266–271`), used by `SeamPlacer.hpp`'s candidate tree. Include only tuple grouping of node/axis and inclusive left/right indices in private function parameters/call sites. Preserve median arithmetic, partition comparisons/swaps, recursion order, distance arithmetic and last-visited equal-distance selection. No new upstream behavior, pipeline, compatibility shell, assertion or threshold changes.
+
 ## G-code post-processing and adjacent geometry batch
 
 Baseline: `b64b1d90`. Remaining diagnostics are counted once per primary file/line/column across all workspace targets: 243 locations, led by `gcode_emit` (86), `fill` (73), and adjacent `pressure_equalizer` (12). This batch targets 64 locations: FanMover26, cooling9, pressure equalizer12, brim3, processor3, object ordering5 and curl6.
