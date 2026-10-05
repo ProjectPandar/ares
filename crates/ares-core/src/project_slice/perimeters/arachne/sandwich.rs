@@ -130,12 +130,12 @@ fn reorder_perimeters_by_proximity(
         }
         reordered.push(entities[reference_index].clone());
         included[reference_index] = true;
-        for index in &first_level_touching {
-            if !included[*index] {
-                reordered.push(entities[*index].clone());
-                included[*index] = true;
-            }
-        }
+        append_unincluded(
+            entities,
+            &first_level_touching,
+            &mut included,
+            &mut reordered,
+        );
         // Levels 2+ (`:2006-2040`): each level searches from the previous
         // level's members; already-included perimeters drop out and an
         // empty unfiltered result ends the walk.
@@ -161,13 +161,12 @@ fn reorder_perimeters_by_proximity(
                 let max_position = largest_perimeter_position(entities, &current_level_touching);
                 current_level_touching.swap(max_position, 0);
             }
-            for index in &current_level_touching {
-                if included[*index] {
-                    continue;
-                }
-                reordered.push(entities[*index].clone());
-                included[*index] = true;
-            }
+            append_unincluded(
+                entities,
+                &current_level_touching,
+                &mut included,
+                &mut reordered,
+            );
             first_level_touching = current_level_touching;
             current_inset_index += 1;
         }
@@ -179,6 +178,20 @@ fn reorder_perimeters_by_proximity(
         }
     }
     reordered
+}
+
+fn append_unincluded(
+    entities: &[PerimeterGeneratorArachneExtrusion],
+    touching: &[usize],
+    included: &mut [bool],
+    reordered: &mut Vec<PerimeterGeneratorArachneExtrusion>,
+) {
+    for index in touching {
+        if !included[*index] {
+            reordered.push(entities[*index].clone());
+            included[*index] = true;
+        }
+    }
 }
 
 fn largest_perimeter_position(
