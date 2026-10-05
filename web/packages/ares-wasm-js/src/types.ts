@@ -73,3 +73,42 @@ export interface ProfileSliceOptions {
   /** Seed of the per-slice random streams (fuzzy skin, templates); the caller chooses it. */
   seed: number;
 }
+
+/** One preset record of an imported file: `type` is derived by the engine, other values are as exported. */
+export interface ImportedPreset {
+  type: "machine" | "process" | "filament";
+  [key: string]: unknown;
+}
+
+/** `bundle_structure.json` metadata (`BundleMetadata`). */
+export interface PresetBundleMetadata {
+  id?: string;
+  name?: string;
+  version?: string;
+  description?: string;
+  author?: string;
+  imported_time: number;
+  updated_time: number;
+}
+
+/** `parsePresetBundle` result: one entry of the catalog's `imports`. */
+export interface ParsedPresetBundle {
+  profiles: ImportedPreset[];
+  /** Set for `.orca_printer` / `.orca_filament` / `.orca_bundle` archives with `bundle_structure.json`. */
+  bundle: PresetBundleMetadata | null;
+}
+
+/** A compatibility condition that failed to evaluate; the preset stays compatible, as upstream. */
+export interface PresetDiagnostic {
+  /** Kind of the preset whose condition failed. */
+  kind: "machine" | "process" | "filament";
+  name: string;
+  message: string;
+}
+
+/** `filterCompatiblePresets` result: selectable compatible preset names. */
+export interface CompatiblePresets {
+  processes: string[];
+  filaments: string[];
+  diagnostics: PresetDiagnostic[];
+}

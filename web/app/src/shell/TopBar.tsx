@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import type { RefObject } from "react";
+import { type RefObject, useRef } from "react";
 import { exportGcode, importFile, setTheme, slicePlate } from "../state/actions";
+import { importPresetFiles } from "../state/presets";
 import { useApp } from "../state/store";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
@@ -10,6 +11,7 @@ export function TitleBar({ importInput: input, onShortcuts }: {
   onShortcuts: () => void;
 }) {
   const { theme, engine, file, loadingFile } = useApp();
+  const presetInput = useRef<HTMLInputElement>(null);
   return (
     <header className="titlebar">
       <div className="titlebar-left">
@@ -25,6 +27,17 @@ export function TitleBar({ importInput: input, onShortcuts }: {
           onChange={(event) => {
             const picked = event.target.files?.[0];
             if (picked) void importFile(picked);
+            event.target.value = "";
+          }} />
+        {/* MainFrame::load_config_file (File > Import > Import Configs). */}
+        <button className="bar-button" title="Import Configs" onClick={() => presetInput.current?.click()}
+          disabled={engine !== "ready"}>
+          <span>Import Configs</span>
+        </button>
+        <input ref={presetInput} type="file" accept=".json,.zip,.orca_printer,.orca_bundle,.orca_filament" multiple hidden
+          data-testid="preset-import-input" onChange={(event) => {
+            const picked = [...(event.target.files ?? [])];
+            if (picked.length) void importPresetFiles(picked);
             event.target.value = "";
           }} />
       </div>
@@ -43,7 +56,7 @@ export function TitleBar({ importInput: input, onShortcuts }: {
 
 /** MainFrame notebook: Prepare/Preview tabs, slice and export SideButtons. */
 export function TabBar() {
-  const { engine, scene, slice } = useApp();
+  const { engine, scene, slice, presetSelection } = useApp();
   const slicing = slice.status === "slicing";
   return (
     <nav className="tabbar">
@@ -57,7 +70,8 @@ export function TabBar() {
       </div>
       <div className="tabbar-actions">
         <button className="side-button" onClick={() => void slicePlate()}
-          disabled={!scene || slicing || engine !== "ready"}>
+          disabled={!scene || slicing || engine !== "ready" || presetSelection !== null}
+          title={presetSelection ? "Slicing uses the project presets: select the project printer preset to slice" : undefined}>
           {slicing ? "Slicing…" : "Slice plate"}
         </button>
         <button className="side-button" onClick={exportGcode} disabled={slice.status !== "done"}>

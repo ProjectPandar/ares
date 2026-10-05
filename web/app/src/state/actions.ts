@@ -57,8 +57,8 @@ export function selectObject(id: number | null) {
 
 /** Slices the first plate (BackgroundSlicingProcess::start in the worker). */
 export async function slicePlate() {
-  const { file, scene, slice, overrides } = useApp.getState();
-  if (!file || !scene || slice.status === "slicing") return;
+  const { file, scene, slice, overrides, presetSelection } = useApp.getState();
+  if (!file || !scene || slice.status === "slicing" || presetSelection) return;
   const startedAt = performance.now();
   useApp.setState({ slice: { status: "slicing", startedAt } });
   try {

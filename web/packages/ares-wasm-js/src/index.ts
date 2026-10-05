@@ -1,8 +1,7 @@
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ConfigOverrides, SliceResult, ViewRange } from "./toolpaths.js";
-import type { ProfileSelection, ProfileSliceOptions } from "./types.js";
-import type { Scene } from "./types.js";
+import type { CompatiblePresets, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
 export type * from "./configDef.js";
@@ -100,6 +99,28 @@ export class AresSlicer {
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
     })) as SliceResult;
+  }
+
+  /**
+   * Reads the presets of an OrcaSlicer preset JSON or an `.orca_printer` /
+   * `.orca_filament` / `.orca_bundle` archive (`PresetBundle::import_presets`).
+   * Add the result to the catalog's `imports`.
+   */
+  async parsePresetBundle(input: Uint8Array, filename: string): Promise<ParsedPresetBundle> {
+    await this.#ready;
+    return (await this.#call({ kind: "parsePresetBundle", input: input.slice(), filename })) as ParsedPresetBundle;
+  }
+
+  /**
+   * Selectable processes and filaments of the catalog compatible with the
+   * `printer` preset, and filaments also with the `process` preset when given
+   * (`Preset::is_compatible_with_printer` / `is_compatible_with_print`).
+   * `catalogJson` is the same catalog string `sliceWithProfiles` takes.
+   * Rejects when a selected preset or one of its parents is not in the catalog.
+   */
+  async filterCompatiblePresets(catalogJson: string, printer: string, process?: string): Promise<CompatiblePresets> {
+    await this.#ready;
+    return (await this.#call({ kind: "filterCompatiblePresets", catalog: catalogJson, printer, process })) as CompatiblePresets;
   }
 
   /** Slices an STL model with Ares slice options. */

@@ -1,9 +1,10 @@
 import type { ProjectSettings } from "@ares-slicer/wasm";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { ObjectIcon, OrcaIcon } from "../shell/icons";
-import { useApp } from "../state/store";
+import { importedNames, selectFilament, selectPrinter, selectProcess } from "../state/presets";
+import { type CompatibleState, useApp } from "../state/store";
 import { ObjectList } from "./ObjectList";
-import { PresetCombo } from "./PresetCombo";
+import { type PresetGroup, PresetCombo } from "./PresetCombo";
 import { firstString, stringList } from "./options";
 import { ModeSwitch } from "./ModeSwitch";
 import { ProcessSettings } from "./ProcessSettings";
@@ -11,6 +12,7 @@ import type { SettingsTab } from "./SettingsDialog";
 
 // Printer/filament tab layouts are only fetched when a preset edit button is used.
 const SettingsDialog = lazy(() => import("./SettingsDialog").then((module) => ({ default: module.SettingsDialog })));
+const VendorDialog = lazy(() => import("./VendorDialog").then((module) => ({ default: module.VendorDialog })));
 
 type OpenTab = (tab: SettingsTab) => void;
 
@@ -39,24 +41,61 @@ function Section({ icon, title, children, extra, action }: {
   );
 }
 
+const project = (name: string | undefined): PresetGroup => ({ title: "Project presets", presets: name ? [{ name }] : [] });
+
+/** Compatible names of one kind, imported ones under "User presets" and the rest under "System presets". */
+function compatibleGroups(compatible: CompatibleState | null, names: "processes" | "filaments", user: Set<string>): PresetGroup[] {
+  if (compatible?.status !== "done") return [];
+  const all = compatible.presets[names];
+  return [
+    { title: "User presets", presets: all.filter((name) => user.has(name)).map((name) => ({ name })) },
+    { title: "System presets", presets: all.filter((name) => !user.has(name)).map((name) => ({ name })) },
+  ];
+}
+
+function CompatibleStatus({ compatible }: { compatible: CompatibleState | null }) {
+  if (compatible?.status === "filtering") return <div className="side-empty" data-testid="preset-filtering">Filtering compatible presets…</div>;
+  if (compatible?.status === "error") return <div className="preset-error" role="alert" data-testid="preset-error">{compatible.error}</div>;
+  const diagnostics = compatible?.status === "done" ? compatible.presets.diagnostics : [];
+  if (diagnostics.length === 0) return null;
+  return (
+    <details className="preset-diagnostics" data-testid="preset-diagnostics">
+      <summary>{diagnostics.length} compatibility condition(s) could not be evaluated</summary>
+      <ul>{diagnostics.map((item) => <li key={`${item.kind}:${item.name}`}>{item.name}: {item.message}</li>)}</ul>
+    </details>
+  );
+}
+
 function PrinterSection({ settings, openTab }: { settings: ProjectSettings | null; openTab: OpenTab }) {
+  const imports = useApp((state) => state.presetImports);
+  const selection = useApp((state) => state.presetSelection);
+  const compatible = useApp((state) => state.compatible);
+  const [wizard, setWizard] = useState(false);
   const nozzle = firstString(settings?.project, "nozzle_diameter");
   const bed = firstString(settings?.project, "curr_bed_type") ?? firstString(settings?.printer, "default_bed_type");
   const printer = firstString(settings?.printer, "printer_settings_id") ?? firstString(settings?.project, "printer_settings_id");
+  const user = [...importedNames(imports, "machine")].map((name) => ({ name }));
   return (
     <Section icon={<OrcaIcon name="printer" />} title="Printer">
       <div className="preset-row">
-        <PresetCombo label="Printer preset" value={printer} presets={printer ? [{ name: printer }] : []}
-          placeholder="No printer preset" />
+        <PresetCombo label="Printer preset" value={selection?.printer ?? printer}
+          groups={[project(printer), { title: "User presets", presets: user }]} placeholder="No printer preset"
+          onSelect={(name, group) => void selectPrinter(group === "Project presets" ? null : name)}
+          actions={[{ label: "Select/Remove printers (system presets)", run: () => setWizard(true) }]} />
         {settings && <EditButton label="Edit printer settings" onClick={() => openTab({ kind: "printer" })} />}
       </div>
+      <CompatibleStatus compatible={compatible} />
       <div className="kv-row"><span>Plate type</span><span className="kv-value">{bed ?? "—"}</span></div>
       <div className="kv-row"><span>Nozzle</span><span className="kv-value">{nozzle ? `${nozzle} mm` : "—"}</span></div>
+      {wizard && <Suspense><VendorDialog onClose={() => setWizard(false)} /></Suspense>}
     </Section>
   );
 }
 
 function FilamentSection({ settings, openTab }: { settings: ProjectSettings | null; openTab: OpenTab }) {
+  const imports = useApp((state) => state.presetImports);
+  const selection = useApp((state) => state.presetSelection);
+  const compatible = useApp((state) => state.compatible);
   const names = stringList(settings?.filament, "filament_settings_id").length
     ? stringList(settings?.filament, "filament_settings_id")
     : stringList(settings?.project, "filament_settings_id");
@@ -66,6 +105,9 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
   const presets = names
     .map((name, index) => ({ name, colour: colours[index] }))
     .filter(({ name }, index) => names.indexOf(name) === index);
+  const groups = selection
+    ? compatibleGroups(compatible, "filaments", importedNames(imports, "filament"))
+    : [{ title: "Project presets" as const, presets }];
   return (
     <Section icon={<OrcaIcon name="filament" />} title="Filament" extra={names.length ? names.length : undefined}>
       {names.length === 0 && <div className="side-empty">No filament preset</div>}
@@ -73,7 +115,8 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
         <div className="filament-row" key={index}>
           <span className="filament-swatch" data-testid={`filament-swatch-${index + 1}`}
             style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
-          <PresetCombo label={`Filament ${index + 1} preset`} value={name} presets={presets} placeholder="" />
+          <PresetCombo label={`Filament ${index + 1} preset`} value={selection?.filaments[index] ?? name} groups={groups}
+            placeholder="" onSelect={(filament) => selection && selectFilament(index, filament)} />
           <span className="filament-type">{types[index]}</span>
           <EditButton label={`Edit filament ${index + 1} settings`} onClick={() => openTab({ kind: "filament", slot: index })} />
         </div>
@@ -82,10 +125,34 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
   );
 }
 
+function ProcessSection({ settings }: { settings: ProjectSettings | null }) {
+  const imports = useApp((state) => state.presetImports);
+  const selection = useApp((state) => state.presetSelection);
+  const compatible = useApp((state) => state.compatible);
+  const process = firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id");
+  return (
+    // ParamsPanel top panel: the process tab's ModeSwitchButton (ParamsPanel.cpp:281).
+    <Section icon={<OrcaIcon name="process" />} title="Process" action={<ModeSwitch />}>
+      {selection ? (
+        <>
+          <PresetCombo label="Process preset" value={selection.process} placeholder="Select a process preset"
+            groups={compatibleGroups(compatible, "processes", importedNames(imports, "process"))}
+            onSelect={(name) => void selectProcess(name)} />
+          <div className="side-empty">Slicing uses the project presets: select the project printer preset to slice.</div>
+        </>
+      ) : (
+        <>
+          <PresetCombo label="Process preset" value={process} groups={[project(process)]} placeholder="No process preset" />
+          <ProcessSettings settings={settings} />
+        </>
+      )}
+    </Section>
+  );
+}
+
 export function Sidebar() {
   const scene = useApp((state) => state.scene);
   const settings = scene?.settings ?? null;
-  const process = firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id");
   const [tab, setTab] = useState<SettingsTab | null>(null);
   return (
     <aside className="sidebar" data-testid="sidebar">
@@ -94,12 +161,7 @@ export function Sidebar() {
       <Section icon={<ObjectIcon />} title="Objects" extra={scene ? <span data-testid="object-count">{scene.objects.length}</span> : undefined}>
         <ObjectList />
       </Section>
-      {/* ParamsPanel top panel: the process tab's ModeSwitchButton (ParamsPanel.cpp:281). */}
-      <Section icon={<OrcaIcon name="process" />} title="Process" action={<ModeSwitch />}>
-        <PresetCombo label="Process preset" value={process} presets={process ? [{ name: process }] : []}
-          placeholder="No process preset" />
-        <ProcessSettings settings={settings} />
-      </Section>
+      <ProcessSection settings={settings} />
       {tab && settings && (
         <Suspense>
           <SettingsDialog tab={tab} settings={settings} onClose={() => setTab(null)} />

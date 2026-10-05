@@ -5,6 +5,8 @@ export type WorkerRequest =
   | { id: number; kind: "sliceProject"; input: Uint8Array; plate: number | undefined }
   | { id: number; kind: "sliceWithProfiles"; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
   | { id: number; kind: "sliceStl"; input: Uint8Array; options: string }
+  | { id: number; kind: "parsePresetBundle"; input: Uint8Array; filename: string }
+  | { id: number; kind: "filterCompatiblePresets"; catalog: string; printer: string; process: string | undefined }
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number };
 
 export type WorkerResponse =

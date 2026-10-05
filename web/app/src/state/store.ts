@@ -1,4 +1,4 @@
-import type { ConfigOptionDef, ConfigOverrides, Scene, Toolpaths } from "@ares-slicer/wasm";
+import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, Scene, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 
 export type Theme = "dark" | "light";
@@ -30,6 +30,19 @@ export interface PreviewView {
   wipe: boolean;
 }
 
+/** Presets picked outside the project's embedded ones (PresetBundle selections). */
+export interface PresetSelection {
+  printer: string;
+  process?: string;
+  /** Filament preset by slot; unset slots keep the project's. */
+  filaments: string[];
+}
+
+export type CompatibleState =
+  | { status: "filtering" }
+  | { status: "done"; presets: CompatiblePresets }
+  | { status: "error"; error: string };
+
 export interface AppState {
   theme: Theme;
   engine: "loading" | "ready" | "error";
@@ -48,6 +61,13 @@ export interface AppState {
   /** Process option edits on top of the project config. */
   overrides: ConfigOverrides;
   slice: SliceState;
+  /** Installed system vendors (ConfigWizard), `@ares-slicer/profiles` ids. */
+  vendors: readonly string[];
+  /** Imported user preset files (MainFrame::load_config_file). */
+  presetImports: readonly ParsedPresetBundle[];
+  presetSelection: PresetSelection | null;
+  /** Compatible processes and filaments of `presetSelection`. */
+  compatible: CompatibleState | null;
   preview: PreviewView;
   /** G-code window visibility (GUI_App `show_gcode_window`). */
   gcodeWindow: boolean;
@@ -76,6 +96,10 @@ export const useApp = create<AppState>(() => ({
   selectedObject: null,
   overrides: {},
   slice: { status: "idle" },
+  vendors: JSON.parse(localStorage.getItem("ares.vendors") ?? "[]") as string[],
+  presetImports: [],
+  presetSelection: null,
+  compatible: null,
   preview: DEFAULT_PREVIEW,
   gcodeWindow: localStorage.getItem("ares.gcodeWindow") !== "false",
 }));

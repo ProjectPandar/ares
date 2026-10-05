@@ -1,6 +1,8 @@
 /// <reference lib="webworker" />
 import init, {
+  filterCompatiblePresets,
   loadScene,
+  parsePresetBundle,
   printConfigDef,
   sliceProjectPlateProcessed,
   sliceWithProfiles,
@@ -70,6 +72,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const result: SliceResult = { gcode: owned(await slice_stl(request.input, request.options)), toolpaths: null };
       return [result, [result.gcode.buffer]];
     }
+    case "parsePresetBundle":
+      return [JSON.parse(parsePresetBundle(request.input, request.filename)), []];
+    case "filterCompatiblePresets":
+      return [JSON.parse(filterCompatiblePresets(request.catalog, request.printer, request.process)), []];
     case "viewRange": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { layers, visibleRoles, visibleOptions } = request;
