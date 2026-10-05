@@ -38,15 +38,11 @@ pub(in crate::project_slice) fn apply_inner_outer_inner(
         while arr_i < size {
             let inset = reordered[arr_i as usize].extrusion.inset_index;
             match inset {
-                0 => {
-                    if outer == -1 {
-                        outer = arr_i;
-                    }
+                0 if outer == -1 => {
+                    outer = arr_i;
                 }
-                1 => {
-                    if first_internal == -1 && arr_i > outer && outer != -1 {
-                        first_internal = arr_i;
-                    }
+                1 if first_internal == -1 && arr_i > outer && outer != -1 => {
+                    first_internal = arr_i;
                 }
                 2 if second_internal == -1 && arr_i > first_internal && outer != -1 => {
                     second_internal = arr_i;
@@ -66,37 +62,36 @@ pub(in crate::project_slice) fn apply_inner_outer_inner(
             }
             arr_i += 1;
         }
-        if outer > -1 && first_internal > -1 && second_internal > -1 {
-            let mut inner_outer: Vec<Option<PerimeterGeneratorArachneExtrusion>> =
-                vec![None; (max_internal - position + 1) as usize];
-            // Inside out: the deep internals from `max_internal` down to
-            // `second_internal` fill the front of the block (`:2439-2444`).
-            let mut arr_j: i64 = max_internal;
-            while arr_j >= position {
-                if arr_j >= second_internal {
-                    inner_outer[(max_internal - arr_j) as usize] =
-                        Some(reordered[arr_j as usize].clone());
-                    current_perimeter += 1;
-                }
-                arr_j -= 1;
-            }
-            // Outside in: the external and first-internal walls keep their
-            // order after the deep internals (`:2446-2449`).
-            arr_j = position;
-            while arr_j < second_internal {
-                current_perimeter += 1;
-                inner_outer[current_perimeter as usize] = Some(reordered[arr_j as usize].clone());
-                arr_j += 1;
-            }
-            arr_j = position;
-            while arr_j <= max_internal {
-                result[arr_j as usize] = inner_outer[(arr_j - position) as usize]
-                    .clone()
-                    .expect("sandwich block fully assigned");
-                arr_j += 1;
-            }
-        } else {
+        if !(outer > -1 && first_internal > -1 && second_internal > -1) {
             break;
+        }
+        let mut inner_outer: Vec<Option<PerimeterGeneratorArachneExtrusion>> =
+            vec![None; (max_internal - position + 1) as usize];
+        // Inside out: the deep internals from `max_internal` down to
+        // `second_internal` fill the front of the block (`:2439-2444`).
+        let mut arr_j: i64 = max_internal;
+        while arr_j >= position {
+            if arr_j >= second_internal {
+                inner_outer[(max_internal - arr_j) as usize] =
+                    Some(reordered[arr_j as usize].clone());
+                current_perimeter += 1;
+            }
+            arr_j -= 1;
+        }
+        // Outside in: the external and first-internal walls keep their
+        // order after the deep internals (`:2446-2449`).
+        arr_j = position;
+        while arr_j < second_internal {
+            current_perimeter += 1;
+            inner_outer[current_perimeter as usize] = Some(reordered[arr_j as usize].clone());
+            arr_j += 1;
+        }
+        arr_j = position;
+        while arr_j <= max_internal {
+            result[arr_j as usize] = inner_outer[(arr_j - position) as usize]
+                .clone()
+                .expect("sandwich block fully assigned");
+            arr_j += 1;
         }
         position = arr_i + 1;
     }
@@ -129,16 +124,7 @@ fn reorder_perimeters_by_proximity(
         // Bring the largest first-level perimeter to the end
         // (`:1998-2003`): `iter_swap(maxIt, end() - 1)`.
         if !first_level_touching.is_empty() {
-            let mut max_position = 0;
-            for (position, index) in first_level_touching.iter().enumerate() {
-                if entities[*index].extrusion.length()
-                    > entities[first_level_touching[max_position]]
-                        .extrusion
-                        .length()
-                {
-                    max_position = position;
-                }
-            }
+            let max_position = largest_perimeter_position(entities, &first_level_touching);
             let last = first_level_touching.len() - 1;
             first_level_touching.swap(max_position, last);
         }
@@ -172,23 +158,15 @@ fn reorder_perimeters_by_proximity(
             // Bring the largest current-level perimeter to the front
             // (`:2024-2029`): `iter_swap(maxIt, begin())`.
             if !current_level_touching.is_empty() {
-                let mut max_position = 0;
-                for (position, index) in current_level_touching.iter().enumerate() {
-                    if entities[*index].extrusion.length()
-                        > entities[current_level_touching[max_position]]
-                            .extrusion
-                            .length()
-                    {
-                        max_position = position;
-                    }
-                }
+                let max_position = largest_perimeter_position(entities, &current_level_touching);
                 current_level_touching.swap(max_position, 0);
             }
             for index in &current_level_touching {
-                if !included[*index] {
-                    reordered.push(entities[*index].clone());
-                    included[*index] = true;
+                if included[*index] {
+                    continue;
                 }
+                reordered.push(entities[*index].clone());
+                included[*index] = true;
             }
             first_level_touching = current_level_touching;
             current_inset_index += 1;
@@ -201,6 +179,20 @@ fn reorder_perimeters_by_proximity(
         }
     }
     reordered
+}
+
+fn largest_perimeter_position(
+    entities: &[PerimeterGeneratorArachneExtrusion],
+    touching: &[usize],
+) -> usize {
+    let mut max_position = 0;
+    for (position, index) in touching.iter().enumerate() {
+        if entities[*index].extrusion.length() > entities[touching[max_position]].extrusion.length()
+        {
+            max_position = position;
+        }
+    }
+    max_position
 }
 
 /// `findAllTouchingPerimeters` (`PerimeterGenerator.cpp:1943-1973`): for

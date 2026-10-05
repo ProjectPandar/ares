@@ -62,6 +62,12 @@ Review validation against `096416ba`: 30 unique locations removed, leaving core 
 
 These controls use the pre-RNG seeded replay version preserved in that evidence directory's `control-set.sh`. Main subsequently integrated template RNG changes and a new seeded Orca replay binary. This evidence is not acceptance against the new main: after approval, rebase latest main, rerun gates, and rerun baseline/candidate seeded controls using the new script and the same new-main baseline.
 
+## Arachne sandwich small slice (in progress)
+
+Branch `pi/lint-sandwich` starts at integrated `89d8c236`. Scope is six diagnostic locations in `project_slice/perimeters/arachne/sandwich.rs` only. Before editing, `git diff origin/main...<branch> --name-only` was checked for `pi/smooth-type2-timelapse-tower`, `pi/m853-moves`, `pi/profile-slice-entry` and `pi/template-rng-seeded`; none touches this file. All motion, processor and vgcode files remain excluded, as do the tower candidate's classic-perimeter and raft files.
+
+Upstream boundaries: `PerimeterGenerator.cpp:1987–2061` proximity ordering and `:2398–2456` sandwich resequencing. Include only equivalent match/loop guards and extraction of the repeated strict-largest-position scan. Defer new upstream behavior; no Ares-owned pipeline or compatibility shell is added. Preserve first-wins ties, length evaluation order, stable partitioning, sentinel/index arithmetic, clone order, assertions and all output bytes. Existing integrated workspace and new-seeded controls are the pre-edit baseline; do not add or weaken tests or comparator thresholds.
+
 ## G-code post-processing and adjacent geometry batch
 
 Baseline: `b64b1d90`. Remaining diagnostics are counted once per primary file/line/column across all workspace targets: 243 locations, led by `gcode_emit` (86), `fill` (73), and adjacent `pressure_equalizer` (12). This batch targets 64 locations: FanMover26, cooling9, pressure equalizer12, brim3, processor3, object ordering5 and curl6.
