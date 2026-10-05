@@ -11,8 +11,9 @@ use super::{
     composition::compose_resolved_profiles, merge_profile_fragments,
 };
 use crate::{
-    FilteredPresets, SliceError, options::ProjectRuntimeOptionsBuilder,
-    project::raw_settings::ProjectSettingsRaw,
+    FilteredPresets, SliceError,
+    options::ProjectRuntimeOptionsBuilder,
+    project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
 pub(super) use document::ProfileDocument;
@@ -390,6 +391,25 @@ pub(super) struct MissingParentLink {
     pub(super) parent: String,
 }
 
+/// One selectable printer for the listing API: `PresetComboBoxes.cpp:1170-1186`
+/// shows name grouped by vendor; the model/variant columns come from the
+/// preset's own config (`ConfigWizard` grouping), read here so TS never
+/// parses preset bodies.
+#[derive(Debug, serde::Serialize)]
+pub struct SelectablePrinter {
+    pub vendor: String,
+    pub name: String,
+    pub printer_model: String,
+    pub printer_variant: String,
+}
+
+fn document_text(document: &ProfileDocument, key: &str) -> String {
+    match document.fields.get(key) {
+        Some(RawConfigValue::Text(value)) => value.clone(),
+        _ => String::new(),
+    }
+}
+
 /// Stateful preset catalog (`PresetBundle` holding semantics:
 /// `PresetCollection::load_presets` keeps loaded vendors in the collection;
 /// `import_json_presets` adds user imports). Filtering reuses the loaded
@@ -420,6 +440,36 @@ impl PresetCatalogHandle {
             self.catalog.push_import(document)?;
         }
         Ok(())
+    }
+
+    /// Selectable printers in collection order (`Preset.cpp:3355`), grouped
+    /// by their owning vendor. `PresetComboBoxes.cpp:1170-1186` skips presets
+    /// that are not visible: load-time visibility is
+    /// `instantiation != "false"` (`Preset.cpp:1663`), and printers with
+    /// unresolvable parents never enter the collection (`Preset.cpp:1685-1691`).
+    /// The GUI's per-model/variant install matrix (`Preset.cpp:851-864`,
+    /// AppConfig state) has no Ares counterpart: the caller's `add_vendor`
+    /// set is the installed set, matching the CLI which does not filter
+    /// visibility.
+    pub fn printers(&self) -> Vec<SelectablePrinter> {
+        self.catalog
+            .selectable_positions(ProfileKind::Machine)
+            .into_iter()
+            .filter(|position| self.catalog.missing_parent(*position).is_none())
+            .map(|position| {
+                let document = self.catalog.document(position);
+                SelectablePrinter {
+                    vendor: if self.catalog.is_user_scope(position) {
+                        "user".to_owned()
+                    } else {
+                        self.catalog.vendor_name(position).to_owned()
+                    },
+                    name: document.name.clone(),
+                    printer_model: document_text(document, "printer_model"),
+                    printer_variant: document_text(document, "printer_variant"),
+                }
+            })
+            .collect()
     }
 
     pub fn filter_compatible(

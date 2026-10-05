@@ -169,8 +169,9 @@ pub(crate) use print_paths::{
 pub use profiles::{
     ComposedProfile, FilteredPresets, MergedProfile, MergedProfileMetadata, MissingParent,
     ParsedPresetBundle, PresetCatalogHandle, ProfileFragment, ProfileGroupMetadata, ProfileKind,
-    ProfileSelection, ProfileSliceRequest, compose_profile_fragments, filter_compatible_presets,
-    merge_profile_fragments, parse_preset_bundle, slice_with_profiles,
+    ProfileSelection, ProfileSliceRequest, SelectablePrinter, compose_profile_fragments,
+    filter_compatible_presets, merge_profile_fragments, parse_preset_bundle, slice_with_profiles,
+    slice_with_profiles_processed,
 };
 pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,

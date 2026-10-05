@@ -85,3 +85,35 @@ fn preset_catalog_handle_matches_one_shot_filtering() {
             .any(|name| name == "User PETG")
     );
 }
+
+#[test]
+fn preset_catalog_printers_json_lists_vendor_and_model() {
+    let vendor = serde_json::json!({
+        "index": {
+            "name": "Acme",
+            "machine_list": [{"sub_path": "machine.json"}]
+        },
+        "files": {
+            "machine.json": {
+                "type": "machine", "name": "Acme A1 0.4 nozzle",
+                "instantiation": "true", "printer_model": "A1",
+                "printer_variant": "0.4"
+            }
+        }
+    });
+    let mut catalog = super::PresetCatalog::new();
+    catalog
+        .add_vendor_json(vendor.to_string().as_bytes())
+        .unwrap();
+    let printers: serde_json::Value =
+        serde_json::from_str(&catalog.printers_json().unwrap()).unwrap();
+    assert_eq!(
+        printers,
+        serde_json::json!([{
+            "vendor": "Acme",
+            "name": "Acme A1 0.4 nozzle",
+            "printer_model": "A1",
+            "printer_variant": "0.4"
+        }])
+    );
+}

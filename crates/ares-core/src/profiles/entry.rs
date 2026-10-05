@@ -21,6 +21,28 @@ pub async fn slice_with_profiles(
     metadata: GenerationMetadata,
     context: SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
+    slice_profile_source(input, request, metadata, false, context).map(|processed| processed.gcode)
+}
+
+/// The `slice_with_profiles` entry with processor move recording, mirroring
+/// `slice_project_plate_processed`: the G-code is identical to the plain
+/// entry and `ProcessedGCode::result` carries the toolpath moves.
+pub async fn slice_with_profiles_processed(
+    input: impl AsRef<[u8]>,
+    request: ProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext,
+) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
+    slice_profile_source(input, request, metadata, true, context)
+}
+
+fn slice_profile_source(
+    input: impl AsRef<[u8]>,
+    request: ProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    record_moves: bool,
+    context: SlicerContext,
+) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     let ProfileSliceRequest {
         filename,
         catalog_json,
@@ -50,8 +72,7 @@ pub async fn slice_with_profiles(
             overrides: &overrides,
         },
         metadata,
-        false,
+        record_moves,
         context,
     )
-    .map(|processed| processed.gcode)
 }

@@ -39,6 +39,13 @@ pub fn filter_compatible_presets_json(
 struct ProfileSliceOptions {
     plate: Option<u32>,
     seed: u32,
+    /// Display palettes for the processed export (`sliceProjectPlateProcessed`
+    /// keeps them as arguments; the arity limit folds them into the options
+    /// document here).
+    #[serde(default)]
+    tool_colors: Option<Vec<String>>,
+    #[serde(default)]
+    color_print_colors: Option<Vec<String>>,
 }
 
 #[wasm_bindgen(js_name = sliceWithProfiles)]
@@ -129,9 +136,22 @@ impl PresetCatalog {
         self.filter_compatible_json(&printer, process.as_deref())
             .map_err(|error| JsValue::from_str(&error))
     }
+
+    /// Selectable printers grouped by vendor, as JSON
+    /// `[{vendor, name, printer_model, printer_variant}]`.
+    #[wasm_bindgen(js_name = printers)]
+    pub fn printers(&self) -> Result<String, JsValue> {
+        self.printers_json()
+            .map_err(|error| JsValue::from_str(&error))
+    }
 }
 
 impl PresetCatalog {
+    pub fn printers_json(&self) -> Result<String, String> {
+        serde_json::to_string(&self.handle.printers())
+            .map_err(|error| format!("printer listing cannot serialize: {error}"))
+    }
+
     pub fn add_vendor_json(&mut self, vendor_json: &[u8]) -> Result<(), String> {
         self.handle
             .add_vendor(vendor_json)
@@ -156,4 +176,64 @@ impl PresetCatalog {
         serde_json::to_string(&filtered)
             .map_err(|error| format!("compatible preset result cannot serialize: {error}"))
     }
+}
+
+#[wasm_bindgen(js_name = sliceWithProfilesProcessed)]
+pub async fn slice_with_profiles_processed(
+    input: Vec<u8>,
+    filename: String,
+    catalog_json: String,
+    selection_json: String,
+    options_json: String,
+) -> Result<crate::SliceOutput, JsValue> {
+    let (output, tool_colors, color_print_colors) = slice_with_profiles_processed_bytes(
+        input,
+        &filename,
+        &catalog_json,
+        &selection_json,
+        &options_json,
+    )
+    .await
+    .map_err(|error| JsValue::from_str(&error))?;
+    Ok(crate::SliceOutput::from_processed(
+        output,
+        &tool_colors,
+        &color_print_colors,
+    ))
+}
+
+/// Returns the processed output plus the palette lists the options document
+/// carried (empty defaults match `sliceProjectPlateProcessed`).
+pub async fn slice_with_profiles_processed_bytes(
+    input: Vec<u8>,
+    filename: &str,
+    catalog_json: &str,
+    selection_json: &str,
+    options_json: &str,
+) -> Result<
+    (
+        ares_core::gcode_processor::ProcessedGCode,
+        Vec<String>,
+        Vec<String>,
+    ),
+    String,
+> {
+    let options: ProfileSliceOptions = serde_json::from_str(options_json)
+        .map_err(|error| format!("invalid profile slice options JSON: {error}"))?;
+    let tool_colors = options.tool_colors.clone().unwrap_or_default();
+    let color_print_colors = options.color_print_colors.clone().unwrap_or_default();
+    ares_core::slice_with_profiles_processed(
+        input,
+        ares_core::ProfileSliceRequest {
+            filename,
+            catalog_json,
+            selection_json,
+            plate: options.plate,
+        },
+        ares_core::GenerationMetadata::default(),
+        ares_core::SlicerContext::new(options.seed),
+    )
+    .await
+    .map_err(|error| error.to_string())
+    .map(|output| (output, tool_colors, color_print_colors))
 }

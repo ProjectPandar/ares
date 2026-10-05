@@ -3,6 +3,34 @@
 Status: **STL entry + bundle import + compatibility merged; 3MF overlay entry
 in review (branch `pi/profile-3mf-entry`)**.
 
+## Printer listing and the processed profile entry (2026-10-06)
+
+`PresetCatalogHandle::printers()` lists selectable machine presets as
+`SelectablePrinter {vendor, name, printer_model, printer_variant}` in
+collection order (`Preset.cpp:3355`), grouped by their owning vendor
+(user imports last, vendor `"user"`). Filtering follows the upstream
+visibility rules the CLI observes: load-time visibility is
+`instantiation != "false"` (`Preset.cpp:1663`) and printers with
+unresolvable parents stay out (`Preset.cpp:1685-1691`).
+
+**Install-matrix correspondence:** the GUI derives per-model/variant
+visibility from the AppConfig install matrix
+(`Preset::set_visible_from_appconfig`, `Preset.cpp:851-864`), and the preset
+combo skips invisible entries (`PresetComboBoxes.cpp:1170-1186`). Ares has no
+AppConfig; the caller's `add_vendor` set is the installed set and no
+per-model/variant filtering is applied. This is a deliberate simplification
+of GUI state: the CLI itself performs no visibility filtering
+(`OrcaSlicer.cpp` slicing never consults `is_visible`), so the Ares entry
+matches the CLI path it ports. `printer_model`/`printer_variant` are read
+from each preset's parsed config here so TS never parses preset bodies
+(ConfigWizard-style grouping stays client-side on returned data).
+
+`slice_with_profiles_processed` mirrors `slice_project_plate_processed`:
+the shared `slice_source(record_moves)` path returns `ProcessedGCode` with
+byte-identical G-code to the plain entry; on a 3MF whose embedded config
+equals the selected profiles the recorded moves equal
+`slice_project_plate_processed` on the same archive.
+
 ## 3MF selected-profile overlay entry (2026-10-05)
 
 Upstream semantics (verified in `OrcaSlicer.cpp` at `8500fcdc`):

@@ -85,7 +85,9 @@ fn printers_lists_selectable_machines_grouped_by_vendor() {
     handle
         .add_vendor(acme_vendor().to_string().as_bytes())
         .unwrap();
-    handle.add_vendor(bbl_vendor().to_string().as_bytes()).unwrap();
+    handle
+        .add_vendor(bbl_vendor().to_string().as_bytes())
+        .unwrap();
     let import = json!({
         "type": "machine", "name": "My A1", "inherits": "Acme A1 0.4 nozzle",
         "from": "User", "instantiation": "true", "version": "1.9.0.0",
@@ -135,7 +137,9 @@ fn printers_do_not_resolve_vendor_parents_from_user_imports() {
     // user import cannot satisfy a system machine's parent, so the orphan
     // stays out of the listing.
     let mut handle = ares_core::PresetCatalogHandle::new();
-    handle.add_vendor(acme_vendor().to_string().as_bytes()).unwrap();
+    handle
+        .add_vendor(acme_vendor().to_string().as_bytes())
+        .unwrap();
     let parent = json!({
         "type": "machine", "name": "fdm_missing_base", "instantiation": "false",
         "version": "1.9.0.0"
