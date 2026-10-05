@@ -138,6 +138,7 @@ fn orca_parity_profile_entry_3mf_load_settings() {
                 catalog_json: &catalog.to_string(),
                 selection_json: &selection.to_string(),
                 plate: None,
+                overrides: &ares_core::ConfigOverrides::default(),
             },
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),
@@ -277,10 +278,8 @@ fn orca_parity_profile_entry_3mf_override_parity() {
                 catalog_json: &catalog.to_string(),
                 selection_json: &selection.to_string(),
                 plate: None,
-                overrides: &ares_core::ConfigOverrides::from_json(
-                    br#"{"layer_height":"0.3"}"#,
-                )
-                .unwrap(),
+                overrides: &ares_core::ConfigOverrides::from_json(br#"{"layer_height":"0.3"}"#)
+                    .unwrap(),
             },
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),

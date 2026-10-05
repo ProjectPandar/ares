@@ -137,12 +137,17 @@ fn project_3mf() -> Vec<u8> {
     buffer.into_inner()
 }
 
-fn request<'a>(catalog: &'a str, selection: &'a str) -> ares_core::ProfileSliceRequest<'a> {
+fn request<'a>(
+    catalog: &'a str,
+    selection: &'a str,
+    overrides: &'a ares_core::ConfigOverrides,
+) -> ares_core::ProfileSliceRequest<'a> {
     ares_core::ProfileSliceRequest {
         filename: "cube.3mf",
         catalog_json: catalog,
         selection_json: selection,
         plate: None,
+        overrides,
     }
 }
 
@@ -152,10 +157,11 @@ async fn processed_profile_entry_matches_plain_and_project_processed() {
     let catalog_json = catalog.to_string();
     let selection_json = selection.to_string();
     let input = project_3mf();
+    let overrides = ares_core::ConfigOverrides::default();
 
     let plain = ares_core::slice_with_profiles(
         &input,
-        request(&catalog_json, &selection_json),
+        request(&catalog_json, &selection_json, &overrides),
         ares_core::GenerationMetadata::default(),
         ares_core::SlicerContext::new(0),
     )
@@ -163,7 +169,7 @@ async fn processed_profile_entry_matches_plain_and_project_processed() {
     .unwrap();
     let processed = ares_core::slice_with_profiles_processed(
         &input,
-        request(&catalog_json, &selection_json),
+        request(&catalog_json, &selection_json, &overrides),
         ares_core::GenerationMetadata::default(),
         ares_core::SlicerContext::new(0),
     )

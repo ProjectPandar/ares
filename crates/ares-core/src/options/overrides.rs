@@ -58,6 +58,10 @@ impl ConfigOverrides {
             serde_json::from_slice(json).map_err(|error| {
                 SliceError::InvalidInput(format!("invalid overrides JSON: {error}"))
             })?;
+        Self::from_entries(entries)
+    }
+
+    fn from_entries(entries: BTreeMap<String, OverrideEntry>) -> Result<Self, SliceError> {
         let mut values = BTreeMap::new();
         for (key, entry) in entries {
             let tokens = match entry {
@@ -224,4 +228,15 @@ const fn is_scalar(kind: OptionValueKind) -> bool {
 
 fn invalid(key: &str, reason: &str) -> SliceError {
     SliceError::InvalidInput(format!("invalid override for Orca option {key}: {reason}"))
+}
+
+impl<'de> serde::Deserialize<'de> for ConfigOverrides {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let entries: BTreeMap<String, OverrideEntry> =
+            serde::Deserialize::deserialize(deserializer)?;
+        Self::from_entries(entries).map_err(serde::de::Error::custom)
+    }
 }

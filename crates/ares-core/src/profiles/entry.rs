@@ -12,6 +12,9 @@ pub struct ProfileSliceRequest<'a> {
     pub catalog_json: &'a str,
     pub selection_json: &'a str,
     pub plate: Option<u32>,
+    /// M854 user edits; applied last over the selected profiles (GUI edit
+    /// order, `Config.cpp:461`).
+    pub overrides: &'a crate::ConfigOverrides,
 }
 
 /// Compose selected Orca profiles and slice through the project Print lifecycle.
@@ -48,6 +51,7 @@ fn slice_profile_source(
         catalog_json,
         selection_json,
         plate,
+        overrides,
     } = request;
     if filename.is_empty() {
         return Err(SliceError::InvalidInput(
@@ -57,8 +61,6 @@ fn slice_profile_source(
     let catalog = Catalog::from_json(catalog_json)?;
     let selection = selection(selection_json)?;
     let composed = catalog.compose(&selection)?;
-    // Profile-sourced slices carry no user overrides (M854).
-    let overrides = crate::ConfigOverrides::default();
     slice_source(
         ProjectSource {
             bytes: input.as_ref(),
@@ -69,7 +71,7 @@ fn slice_profile_source(
                 raw: &composed.raw,
                 filament_raws: &composed.filament_raws,
             }),
-            overrides: &overrides,
+            overrides,
         },
         metadata,
         record_moves,

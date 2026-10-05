@@ -12,6 +12,8 @@ use crate::{
     options::{ObjectOptionOverrides, RegionOptionOverrides},
 };
 
+pub(crate) use profile_input::SelectedProfile;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point3d {
     pub x: f64,

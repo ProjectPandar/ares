@@ -46,6 +46,29 @@ struct ProfileSliceOptions {
     tool_colors: Option<Vec<String>>,
     #[serde(default)]
     color_print_colors: Option<Vec<String>>,
+    /// M854 user edits in the same `{key: token}` shape as
+    /// `sliceProjectPlate`'s `overridesJson`; deserialization validates
+    /// every entry (shared with `ConfigOverrides::from_json`).
+    #[serde(default)]
+    overrides: Option<ares_core::ConfigOverrides>,
+}
+
+impl ProfileSliceOptions {
+    fn parse(options_json: &str) -> Result<Self, String> {
+        serde_json::from_str(options_json)
+            .map_err(|error| format!("invalid profile slice options JSON: {error}"))
+    }
+
+    fn overrides(&self) -> ares_core::ConfigOverrides {
+        self.overrides.clone().unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn parse_profile_slice_overrides_for_test(
+    options_json: &str,
+) -> Result<ares_core::ConfigOverrides, String> {
+    Ok(ProfileSliceOptions::parse(options_json)?.overrides())
 }
 
 #[wasm_bindgen(js_name = sliceWithProfiles)]
@@ -74,8 +97,8 @@ pub async fn slice_with_profiles_bytes(
     selection_json: &str,
     options_json: &str,
 ) -> Result<Vec<u8>, String> {
-    let options: ProfileSliceOptions = serde_json::from_str(options_json)
-        .map_err(|error| format!("invalid profile slice options JSON: {error}"))?;
+    let options = ProfileSliceOptions::parse(options_json)?;
+    let overrides = options.overrides();
     ares_core::slice_with_profiles(
         input,
         ProfileSliceRequest {
@@ -83,6 +106,7 @@ pub async fn slice_with_profiles_bytes(
             catalog_json,
             selection_json,
             plate: options.plate,
+            overrides: &overrides,
         },
         GenerationMetadata::default(),
         SlicerContext::new(options.seed),
@@ -218,8 +242,8 @@ pub async fn slice_with_profiles_processed_bytes(
     ),
     String,
 > {
-    let options: ProfileSliceOptions = serde_json::from_str(options_json)
-        .map_err(|error| format!("invalid profile slice options JSON: {error}"))?;
+    let options = ProfileSliceOptions::parse(options_json)?;
+    let overrides = options.overrides();
     let tool_colors = options.tool_colors.clone().unwrap_or_default();
     let color_print_colors = options.color_print_colors.clone().unwrap_or_default();
     ares_core::slice_with_profiles_processed(
@@ -229,6 +253,7 @@ pub async fn slice_with_profiles_processed_bytes(
             catalog_json,
             selection_json,
             plate: options.plate,
+            overrides: &overrides,
         },
         ares_core::GenerationMetadata::default(),
         ares_core::SlicerContext::new(options.seed),

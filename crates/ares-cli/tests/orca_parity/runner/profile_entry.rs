@@ -119,6 +119,7 @@ fn run_profile_entry(overrides: &[(&str, &str, Value)]) {
                 catalog_json: &catalog.to_string(),
                 selection_json: &selection.to_string(),
                 plate: None,
+                overrides: &ares_core::ConfigOverrides::default(),
             },
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),
