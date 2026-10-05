@@ -186,26 +186,30 @@ fn normalize_case_dependencies(
     if plan.key == "use_relative_e_distances" && active == "0" {
         for key in ["before_layer_change_gcode", "layer_change_gcode"] {
             for preset in [&mut *machine, &mut *process] {
-                if let Some(text) = preset.get(key).and_then(Value::as_str).map(str::to_owned)
-                    && text.contains("G92 E0")
-                {
-                    // Replace the absolute-mode-incompatible reset with a
-                    // neutral comment, keeping any other lines.
-                    let normalized = text
-                        .lines()
-                        .map(|line| {
-                            if line.trim_start().starts_with("G92 E0") {
-                                "; absolute-mode case: reset removed"
-                            } else {
-                                line
-                            }
-                        })
-                        .collect::<Vec<_>>()
-                        .join("\n");
-                    preset.insert(key.to_owned(), Value::String(normalized));
-                }
+                remove_absolute_reset(preset, key);
             }
         }
+    }
+}
+
+fn remove_absolute_reset(preset: &mut serde_json::Map<String, Value>, key: &str) {
+    if let Some(text) = preset.get(key).and_then(Value::as_str).map(str::to_owned)
+        && text.contains("G92 E0")
+    {
+        // Replace the absolute-mode-incompatible reset with a
+        // neutral comment, keeping any other lines.
+        let normalized = text
+            .lines()
+            .map(|line| {
+                if line.trim_start().starts_with("G92 E0") {
+                    "; absolute-mode case: reset removed"
+                } else {
+                    line
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        preset.insert(key.to_owned(), Value::String(normalized));
     }
 }
 

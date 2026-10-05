@@ -4,7 +4,13 @@ use serde_json::json;
 
 #[test]
 fn orca_parity_wide_solid_fill_preserves_complete_output() {
-    compare("fill-grid/wide-solid", None, false, 0.4, 0, "1.75", true);
+    compare(
+        "fill-grid/wide-solid",
+        None,
+        false,
+        (0.4, 0),
+        ("1.75", true),
+    );
 }
 
 #[test]
@@ -14,10 +20,8 @@ fn orca_parity_signed_cross_zag_shifts_preserve_complete_output() {
             &format!("fill-grid/cross-zag-{step}"),
             Some(step),
             false,
-            2.4,
-            4,
-            "1.75",
-            true,
+            (2.4, 4),
+            ("1.75", true),
         );
     }
 }
@@ -28,10 +32,8 @@ fn orca_parity_locked_zag_shifts_preserve_complete_output() {
         "fill-grid/locked-zag",
         Some("0.731272"),
         true,
-        2.4,
-        4,
-        "1.75",
-        true,
+        (2.4, 4),
+        ("1.75", true),
     );
 }
 
@@ -41,10 +43,8 @@ fn orca_parity_accumulated_cross_zag_phase_preserves_complete_output() {
         "fill-grid/accumulated-cross-zag",
         Some("0.0655373"),
         false,
-        22.4,
-        110,
-        "1.75",
-        true,
+        (22.4, 110),
+        ("1.75", true),
     );
 }
 
@@ -54,10 +54,8 @@ fn orca_parity_nondefault_filament_diameter_preserves_complete_output() {
         "fill-grid/diameter-2.85",
         Some("0.0655373"),
         false,
-        22.4,
-        110,
-        "2.85",
-        true,
+        (22.4, 110),
+        ("2.85", true),
     );
 }
 
@@ -67,10 +65,8 @@ fn orca_parity_absolute_extrusion_preserves_complete_output() {
         "fill-grid/absolute-e",
         Some("0.0655373"),
         false,
-        22.4,
-        110,
-        "1.75",
-        false,
+        (22.4, 110),
+        ("1.75", false),
     );
 }
 
@@ -78,10 +74,8 @@ fn compare(
     label: &str,
     shift: Option<&str>,
     locked: bool,
-    height: f64,
-    minimum_sparse_layers: usize,
-    diameter: &str,
-    relative: bool,
+    (height, minimum_sparse_layers): (f64, usize),
+    (diameter, relative): (&str, bool),
 ) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -161,51 +155,10 @@ fn compare(
     )
     .unwrap();
     if shift.is_some() {
-        let mut sparse = false;
-        let mut relative_extrusion = false;
-        let mut counted_layer = false;
-        let mut sparse_layers = 0;
-        let mut e_position = 0.0;
-        for line in std::str::from_utf8(&sliced.reference).unwrap().lines() {
-            let command = line.split_whitespace().next();
-            let e = line
-                .split_whitespace()
-                .find_map(|word| word.strip_prefix('E'))
-                .and_then(|value| value.parse::<f64>().ok());
-            let mut delta_e = 0.0;
-            if let Some(e) = e {
-                if command == Some("G92") {
-                    e_position = e;
-                } else if matches!(command, Some("G0" | "G1" | "G2" | "G3")) {
-                    delta_e = if relative_extrusion {
-                        e
-                    } else {
-                        e - e_position
-                    };
-                    e_position += delta_e;
-                }
-            }
-            if line.split_whitespace().next() == Some("M83") {
-                relative_extrusion = true;
-            } else if line.split_whitespace().next() == Some("M82") {
-                relative_extrusion = false;
-            } else if line == ";LAYER_CHANGE" {
-                counted_layer = false;
-            } else if let Some(role) = line.strip_prefix(";TYPE:") {
-                sparse = role == "Sparse infill";
-            } else if sparse
-                && !counted_layer
-                && (line.starts_with("G1 X") || line.starts_with("G1 Y"))
-                && delta_e > 0.0
-            {
-                assert_eq!(relative_extrusion, relative, "fixture extrusion mode");
-                sparse_layers += 1;
-                counted_layer = true;
-            }
-        }
-        assert!(
-            sparse_layers >= minimum_sparse_layers,
-            "expected multiple signed-shift layers, got {sparse_layers}"
+        check_sparse_layers(
+            std::str::from_utf8(&sliced.reference).unwrap(),
+            minimum_sparse_layers,
+            relative,
         );
     }
     assert!(
@@ -215,6 +168,57 @@ fn compare(
     );
     let outcome = parity::compare_case(&sliced);
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+}
+
+fn check_sparse_layers(reference: &str, minimum_sparse_layers: usize, relative: bool) {
+    let mut sparse = false;
+    let mut relative_extrusion = false;
+    let mut counted_layer = false;
+    let mut sparse_layers = 0;
+    let mut e_position = 0.0;
+    for line in reference.lines() {
+        let command = line.split_whitespace().next();
+        let e = line
+            .split_whitespace()
+            .find_map(|word| word.strip_prefix('E'))
+            .and_then(|value| value.parse::<f64>().ok());
+        let mut delta_e = 0.0;
+        if let Some(e) = e
+            && command == Some("G92")
+        {
+            e_position = e;
+        } else if let Some(e) = e
+            && matches!(command, Some("G0" | "G1" | "G2" | "G3"))
+        {
+            delta_e = if relative_extrusion {
+                e
+            } else {
+                e - e_position
+            };
+            e_position += delta_e;
+        }
+        if line.split_whitespace().next() == Some("M83") {
+            relative_extrusion = true;
+        } else if line.split_whitespace().next() == Some("M82") {
+            relative_extrusion = false;
+        } else if line == ";LAYER_CHANGE" {
+            counted_layer = false;
+        } else if let Some(role) = line.strip_prefix(";TYPE:") {
+            sparse = role == "Sparse infill";
+        } else if sparse
+            && !counted_layer
+            && (line.starts_with("G1 X") || line.starts_with("G1 Y"))
+            && delta_e > 0.0
+        {
+            assert_eq!(relative_extrusion, relative, "fixture extrusion mode");
+            sparse_layers += 1;
+            counted_layer = true;
+        }
+    }
+    assert!(
+        sparse_layers >= minimum_sparse_layers,
+        "expected multiple signed-shift layers, got {sparse_layers}"
+    );
 }
 
 fn slab(height: f64) -> String {

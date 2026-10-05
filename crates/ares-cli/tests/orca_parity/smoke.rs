@@ -53,31 +53,7 @@ fn orca_parity_nearest_cluster_check() {
             Ok(selection) => {
                 if std::env::var("CLUSTER_DUMP").is_ok() {
                     let case = parity::build_selection_case(&runner, &profiles, &selection, &model)
-                        .map(|case| {
-                            let dir = std::path::Path::new("/tmp/kobra2");
-                            std::fs::create_dir_all(dir).unwrap();
-                            std::fs::write(dir.join("case.3mf"), &case.project).unwrap();
-                            std::fs::write(dir.join("ref.gcode"), &case.reference).unwrap();
-                            let runtime = tokio::runtime::Builder::new_current_thread()
-                                .build()
-                                .expect("tokio runtime");
-                            match runtime.block_on(async {
-                                ares_core::slice_project(
-                                    &case.project,
-                                    ares_core::GenerationMetadata::deterministic(
-                                        2026, 8, 27, 0, 0, 0,
-                                    ),
-                                    ares_core::SlicerContext::new(0),
-                                )
-                                .await
-                            }) {
-                                Ok(gcode) => {
-                                    let _ = std::fs::write(dir.join("inproc.gcode"), &gcode);
-                                    eprintln!("INPROC {} bytes", gcode.len());
-                                }
-                                Err(error) => eprintln!("INPROC failed: {error}"),
-                            }
-                        })
+                        .map(dump_cluster_case)
                         .map_err(|error| error.to_string());
                     eprintln!("DUMP: {case:?}");
                     assert!(case.is_ok());
@@ -94,6 +70,30 @@ fn orca_parity_nearest_cluster_check() {
             "CLUSTER {} {} | {}",
             outcome.status, outcome.label, outcome.detail
         );
+    }
+}
+
+fn dump_cluster_case(case: parity::ParityCase) {
+    let dir = std::path::Path::new("/tmp/kobra2");
+    std::fs::create_dir_all(dir).unwrap();
+    std::fs::write(dir.join("case.3mf"), &case.project).unwrap();
+    std::fs::write(dir.join("ref.gcode"), &case.reference).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .expect("tokio runtime");
+    match runtime.block_on(async {
+        ares_core::slice_project(
+            &case.project,
+            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            ares_core::SlicerContext::new(0),
+        )
+        .await
+    }) {
+        Ok(gcode) => {
+            let _ = std::fs::write(dir.join("inproc.gcode"), &gcode);
+            eprintln!("INPROC {} bytes", gcode.len());
+        }
+        Err(error) => eprintln!("INPROC failed: {error}"),
     }
 }
 

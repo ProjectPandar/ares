@@ -7,8 +7,10 @@ use serde_json::json;
 fn orca_parity_support_blocker_volume_preserves_complete_output() {
     verify_annotation(
         "normal(auto)",
-        "support_blocker",
-        ares_core::ProjectVolumeType::SupportBlocker,
+        (
+            "support_blocker",
+            ares_core::ProjectVolumeType::SupportBlocker,
+        ),
         false,
         &[(1.0, 0.0)],
         false,
@@ -19,8 +21,10 @@ fn orca_parity_support_blocker_volume_preserves_complete_output() {
 fn orca_parity_manual_support_enforcer_volume_preserves_complete_output() {
     verify_annotation(
         "normal(manual)",
-        "support_enforcer",
-        ares_core::ProjectVolumeType::SupportEnforcer,
+        (
+            "support_enforcer",
+            ares_core::ProjectVolumeType::SupportEnforcer,
+        ),
         true,
         &[(1.0, 0.0)],
         false,
@@ -31,8 +35,10 @@ fn orca_parity_manual_support_enforcer_volume_preserves_complete_output() {
 fn orca_parity_mirrored_support_blocker_preserves_complete_output() {
     verify_annotation(
         "normal(auto)",
-        "support_blocker",
-        ares_core::ProjectVolumeType::SupportBlocker,
+        (
+            "support_blocker",
+            ares_core::ProjectVolumeType::SupportBlocker,
+        ),
         false,
         &[(-1.0, 0.0)],
         false,
@@ -43,8 +49,10 @@ fn orca_parity_mirrored_support_blocker_preserves_complete_output() {
 fn orca_parity_overlapping_support_blockers_preserve_complete_output() {
     verify_annotation(
         "normal(auto)",
-        "support_blocker",
-        ares_core::ProjectVolumeType::SupportBlocker,
+        (
+            "support_blocker",
+            ares_core::ProjectVolumeType::SupportBlocker,
+        ),
         false,
         &[(0.6, -6.0), (0.6, 6.0)],
         false,
@@ -55,8 +63,10 @@ fn orca_parity_overlapping_support_blockers_preserve_complete_output() {
 fn orca_parity_annotation_custom_end_layer_tags_preserve_complete_output() {
     verify_annotation(
         "normal(manual)",
-        "support_enforcer",
-        ares_core::ProjectVolumeType::SupportEnforcer,
+        (
+            "support_enforcer",
+            ares_core::ProjectVolumeType::SupportEnforcer,
+        ),
         true,
         &[(1.0, 0.0)],
         true,
@@ -65,8 +75,7 @@ fn orca_parity_annotation_custom_end_layer_tags_preserve_complete_output() {
 
 fn verify_annotation(
     support_type: &str,
-    subtype: &str,
-    kind: ares_core::ProjectVolumeType,
+    (subtype, kind): (&str, ares_core::ProjectVolumeType),
     support: bool,
     transforms: &[(f64, f64)],
     custom_end_tags: bool,
