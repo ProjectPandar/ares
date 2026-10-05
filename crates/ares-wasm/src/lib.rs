@@ -114,5 +114,14 @@ pub fn decode_config_value(key: &str, serialized: &str) -> Result<String, JsValu
         .map_err(|error| JsValue::from_str(&error))
 }
 
+/// Encodes typed JSON text (the shape `decodeConfigValue` returns) for
+/// option `key` into its `ConfigOption::serialize()` string. Throws on unknown
+/// key or a value of the wrong shape.
+#[wasm_bindgen(js_name = encodeConfigValue)]
+pub fn encode_config_value(key: &str, typed_json: &str) -> Result<String, JsValue> {
+    ares_core::encode_config_value_by_key(key, typed_json)
+        .map_err(|error| JsValue::from_str(&error))
+}
+
 #[cfg(test)]
 mod tests;

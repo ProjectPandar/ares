@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import init, {
   decodeConfigValue,
+  encodeConfigValue,
   filterCompatiblePresets,
   loadScene,
   parsePresetBundle,
@@ -83,6 +84,15 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
           return JSON.parse(decodeConfigValue(key, serialized));
         } catch (error) {
           throw new Error(`${key} = ${JSON.stringify(serialized)}: ${String(error)}`, { cause: error });
+        }
+      }), []];
+    case "encodeConfigValues":
+      return [request.entries.map(([key, value]) => {
+        const typed = JSON.stringify(value);
+        try {
+          return encodeConfigValue(key, typed);
+        } catch (error) {
+          throw new Error(`${key} = ${typed}: ${String(error)}`, { cause: error });
         }
       }), []];
     case "viewRange": {

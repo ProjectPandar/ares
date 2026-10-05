@@ -134,6 +134,16 @@ export class AresSlicer {
     return (await this.#call({ kind: "decodeConfigValues", entries: entries.map(([key, value]) => [key, value]) })) as ConfigValue[];
   }
 
+  /**
+   * The inverse of {@link decodeConfigValues}: encodes `[key, value]` entries, typed values in the
+   * shape `decodeConfigValues` returns, into `ConfigOption::serialize()` strings in one round trip.
+   * Rejects on an unknown key or a value of the wrong shape, naming the entry.
+   */
+  async encodeConfigValues(entries: readonly (readonly [key: string, value: ConfigValue])[]): Promise<string[]> {
+    await this.#ready;
+    return (await this.#call({ kind: "encodeConfigValues", entries: entries.map(([key, value]) => [key, value]) })) as string[];
+  }
+
   /** Slices an STL model with Ares slice options. */
   async sliceStl(input: Uint8Array, options: Record<string, unknown> = {}): Promise<SliceResult> {
     await this.#ready;

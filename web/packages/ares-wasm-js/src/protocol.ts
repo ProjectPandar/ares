@@ -1,3 +1,5 @@
+import type { ConfigValue } from "./types.js";
+
 export type WorkerRequest =
   | { id: number; kind: "init"; wasmUrl: string }
   | { id: number; kind: "printConfigDef" }
@@ -8,6 +10,7 @@ export type WorkerRequest =
   | { id: number; kind: "parsePresetBundle"; input: Uint8Array; filename: string }
   | { id: number; kind: "filterCompatiblePresets"; catalog: string; printer: string; process: string | undefined }
   | { id: number; kind: "decodeConfigValues"; entries: [string, string][] }
+  | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number };
 
 export type WorkerResponse =

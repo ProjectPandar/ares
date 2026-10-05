@@ -58,6 +58,8 @@ export const checks = [
   assert<Equal<ReturnType<AresSlicer["filterCompatiblePresets"]>, Promise<CompatiblePresets>>>(),
   assert<Equal<Parameters<AresSlicer["decodeConfigValues"]>, [readonly (readonly [key: string, serialized: string])[]]>>(),
   assert<Equal<ReturnType<AresSlicer["decodeConfigValues"]>, Promise<ConfigValue[]>>>(),
+  assert<Equal<Parameters<AresSlicer["encodeConfigValues"]>, [readonly (readonly [key: string, value: ConfigValue])[]]>>(),
+  assert<Equal<ReturnType<AresSlicer["encodeConfigValues"]>, Promise<string[]>>>(),
   assert<Equal<CompatiblePresets["diagnostics"][number]["kind"], "machine" | "process" | "filament">>(),
   assert<Equal<ReturnType<AresSlicer["ready"]>, Promise<void>>>(),
   assert<Equal<AresSlicerOptions, { worker: Worker; wasmUrl: string | URL }>>(),

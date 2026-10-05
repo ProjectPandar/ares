@@ -42,6 +42,7 @@ option_modules!(
 #[rustfmt::skip]
 option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type);
 mod decode;
+mod encode;
 mod machine_limits;
 mod model_config_deserialize;
 #[rustfmt::skip]
@@ -94,6 +95,7 @@ pub(crate) use bed_temperature::{FirstLayerBedTemperature, first_layer_bed_tempe
 pub(crate) use config_types::format_number;
 pub use decode::{decode_config_value, decode_config_value_by_key};
 use defaults::*;
+pub use encode::{encode_config_value, encode_config_value_by_key};
 pub(crate) use fan_speedup::FanSpeedupControl;
 pub(crate) use gap_fill::GapFillTarget;
 #[cfg(test)]
