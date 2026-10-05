@@ -137,4 +137,23 @@ fn profile_slice_options_reject_unknown_override_keys() {
     )
     .unwrap_err();
     assert!(error.contains("unknown Orca option key"), "{error}");
+
+fn slice_with_profiles_options_reject_unknown_placement() {
+    let error = super::profiles::parse_profile_slice_options_for_test(
+        r#"{"seed":0,"placement":"diagonal"}"#,
+    )
+    .unwrap_err();
+    assert_eq!(error, "invalid placement: diagonal");
+}
+
+#[test]
+fn slice_with_profiles_options_accept_center_placement() {
+    let options = super::profiles::parse_profile_slice_options_for_test(
+        r#"{"seed":0,"placement":"center"}"#,
+    )
+    .unwrap();
+    assert!(matches!(
+        options,
+        ares_core::Placement::Center
+    ));
 }

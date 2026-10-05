@@ -1,4 +1,5 @@
 mod documents;
+mod placement;
 mod profile_input;
 mod volume_offsets;
 

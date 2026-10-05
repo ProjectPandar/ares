@@ -221,3 +221,112 @@ pub(super) fn vendor(root: &Path, name: &str) -> Value {
 pub(super) fn write_json(path: &Path, value: &Value) {
     std::fs::write(path, serde_json::to_vec_pretty(value).unwrap()).unwrap();
 }
+
+/// `--center` placement parity: the raw (unpositioned) cube goes through the
+/// native CLI's explicit `--center <bed center> --arrange 0` while the Rust
+/// entry requests `Placement::Center` (`OrcaSlicer.cpp:4376-4392`,
+/// `Model.cpp:704-722`).
+#[test]
+fn orca_parity_profile_entry_stl_center_placement() {
+    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+        return;
+    }
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("native profile oracle");
+    let root = super::repo_root();
+    let profiles_root = root.join("OrcaSlicer/resources/profiles");
+    let profiles = crate::presets::VendorProfiles::load(&profiles_root, "LH").unwrap();
+    let machine_name = "LH Stinger 0.4 nozzle";
+    let process_name = profiles.compatible_process(machine_name).unwrap();
+    let filament_name = profiles.compatible_filament(machine_name).unwrap();
+    let catalog = json!({
+        "vendors": [vendor(&profiles_root, "OrcaFilamentLibrary"), vendor(&profiles_root, "LH")],
+        "imports": [],
+    });
+    let selection = json!({
+        "machine": machine_name, "process": process_name, "filaments": [filament_name],
+    });
+    for (kind, fields) in [
+        ("machine", profiles.machine(machine_name).unwrap()),
+        ("process", profiles.process(&process_name).unwrap()),
+        ("filament", profiles.filament(&filament_name).unwrap()),
+    ] {
+        let mut preset = fields;
+        preset.insert("type".to_owned(), json!(kind));
+        preset.insert("from".to_owned(), json!("system"));
+        preset.insert("instantiation".to_owned(), json!("true"));
+        write_json(&runner.work.join(format!("center-{kind}.json")), &Value::Object(preset));
+    }
+    // Raw cube10 stays at its own coordinates; both slicers place it.
+    let raw = std::fs::read(root.join("tests/parity/cube10.stl")).unwrap();
+    std::fs::write(runner.work.join("raw-cube10.stl"), &raw).unwrap();
+
+    let settings = super::join_paths(
+        [
+            runner.work.join("center-machine.json"),
+            runner.work.join("center-process.json"),
+        ]
+        .iter(),
+    );
+    let output = runner.work.join("center-reference");
+    std::fs::create_dir(&output).unwrap();
+    stages::run(
+        &runner.bin,
+        [
+            "--load-settings".to_owned(),
+            settings,
+            "--load-filaments".to_owned(),
+            runner
+                .work
+                .join("center-filament.json")
+                .to_str()
+                .unwrap()
+                .to_owned(),
+            "--arrange".to_owned(),
+            "0".to_owned(),
+            "--center".to_owned(),
+            "118,138".to_owned(),
+            "--slice".to_owned(),
+            "0".to_owned(),
+            "--outputdir".to_owned(),
+            output.to_str().unwrap().to_owned(),
+            runner
+                .work
+                .join("raw-cube10.stl")
+                .to_str()
+                .unwrap()
+                .to_owned(),
+        ],
+        stages::Stage::Slice,
+        &runner.work,
+    )
+    .unwrap();
+    let reference = std::fs::read(output.join("plate_1.gcode")).unwrap();
+
+    let actual = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(ares_core::slice_with_profiles(
+            &raw,
+            ares_core::ProfileSliceRequest {
+                filename: "raw-cube10.stl",
+                catalog_json: &catalog.to_string(),
+                selection_json: &selection.to_string(),
+                plate: None,
+                placement: ares_core::Placement::Center,
+            },
+            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            ares_core::SlicerContext::new(0),
+        ))
+        .unwrap();
+    crate::golden::compare_ordered_bytes_generator_only(
+        &reference,
+        &crate::golden::normalize_one_generator_line(
+            &actual,
+            crate::golden::GeneratorKind::Orca,
+        )
+        .unwrap_or(actual.clone()),
+    )
+    .unwrap();
+}
