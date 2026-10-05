@@ -6,8 +6,8 @@ use super::RaftFillSpec;
 use super::geom::clip_polyline_end;
 use super::sheath::{SheathFlow, draw_perimeters};
 use crate::geometry::{
-    ClipperError, CoordinateScale, JoinType, Point, Polygon, Polyline, ZTaggedPath, offset2_ex,
-    shrink_expolygon_with_contour_idx,
+    ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polygon, Polyline, ZTaggedPath,
+    offset2_ex, shrink_expolygon_with_contour_idx,
 };
 
 /// `EPSILON` (`libslic3r.h:48`).
@@ -43,45 +43,7 @@ pub(super) fn tree_supports_generate_paths(
             collection = Some(entities);
         }
         for region in &regions {
-            // A second loop one width inside supplies the anchor candidates,
-            // all oriented CW (`:614-620`).
-            let mut anchors = shrink_expolygon_with_contour_idx(
-                region,
-                flow.scaled_width as f32,
-                JoinType::Miter,
-                1.2,
-            )?;
-            for path in &mut anchors {
-                if signed_area(path) > 0.0 {
-                    path.reverse();
-                }
-            }
-            let loops = std::iter::once(region.contour()).chain(region.holes());
-            let mut polylines = Vec::with_capacity(region.holes().len() + 1);
-            for (index, polygon) in loops.enumerate() {
-                let mut points = polygon.points().to_vec();
-                // Orient every loop CW so the anchor extends its end.
-                if index == 0 {
-                    points.reverse();
-                }
-                points.push(points[0]);
-                let mut polyline = Polyline::new(points);
-                clip_polyline_end(&mut polyline, clip_length);
-                if !polyline.is_valid() {
-                    continue;
-                }
-                let mut points = polyline.into_points();
-                let anchor = Anchor {
-                    paths: &anchors,
-                    loop_index: index as i64,
-                    max_distance: flow.scaled_width * 3.0,
-                    length: anchor_length,
-                };
-                anchor.extend(&mut points);
-                // Start with the anchor.
-                points.reverse();
-                polylines.push(Polyline::new(points));
-            }
+            let polylines = anchored_loops(region, &flow, clip_length, anchor_length)?;
             match &mut collection {
                 Some(entities) => entities.extend(polylines),
                 None => out.extend(polylines.into_iter().map(RaftEntity::Oriented)),
@@ -95,6 +57,51 @@ pub(super) fn tree_supports_generate_paths(
         }
     }
     Ok(out)
+}
+
+/// Region sheath loops and their anchors (`SupportCommon.cpp:614-693`).
+fn anchored_loops(
+    region: &ExPolygon,
+    flow: &SheathFlow,
+    clip_length: f64,
+    anchor_length: f64,
+) -> Result<Vec<Polyline>, ClipperError> {
+    // A second loop one width inside supplies the anchor candidates,
+    // all oriented CW (`:614-620`).
+    let mut anchors =
+        shrink_expolygon_with_contour_idx(region, flow.scaled_width as f32, JoinType::Miter, 1.2)?;
+    for path in &mut anchors {
+        if signed_area(path) > 0.0 {
+            path.reverse();
+        }
+    }
+    let loops = std::iter::once(region.contour()).chain(region.holes());
+    let mut polylines = Vec::with_capacity(region.holes().len() + 1);
+    for (index, polygon) in loops.enumerate() {
+        let mut points = polygon.points().to_vec();
+        // Orient every loop CW so the anchor extends its end.
+        if index == 0 {
+            points.reverse();
+        }
+        points.push(points[0]);
+        let mut polyline = Polyline::new(points);
+        clip_polyline_end(&mut polyline, clip_length);
+        if !polyline.is_valid() {
+            continue;
+        }
+        let mut points = polyline.into_points();
+        let anchor = Anchor {
+            paths: &anchors,
+            loop_index: index as i64,
+            max_distance: flow.scaled_width * 3.0,
+            length: anchor_length,
+        };
+        anchor.extend(&mut points);
+        // Start with the anchor.
+        points.reverse();
+        polylines.push(Polyline::new(points));
+    }
+    Ok(polylines)
 }
 
 /// `ClipperLib_Z::Area`: shoelace over the XY of a closed path.
@@ -174,36 +181,54 @@ impl Anchor<'_> {
     fn closest(&self, seam: [f64; 2]) -> Option<Closest> {
         let mut best = None;
         let mut d2min = f64::MAX;
-        for (path_index, path) in self.paths.iter().enumerate() {
-            for i in 0..path.len() {
-                let j = next_index(i, path);
-                let (on_i, on_j) = (path[i].2 == self.loop_index, path[j].2 == self.loop_index);
-                if !(on_i || on_j) {
-                    continue;
-                }
-                let pi = vertex(path, i);
-                let v = sub(vertex(path, j), pi);
-                let w = sub(seam, pi);
-                let l2 = dot(v, v);
-                let t = if l2 == 0.0 { 0.0 } else { dot(v, w) / l2 }.clamp(0.0, 1.0);
-                if (on_i || t > EPSILON) && (on_j || t < 1.0 - EPSILON) {
-                    let point = add(pi, scale2(v, t));
-                    let d = sub(point, seam);
-                    let d2 = dot(d, d);
-                    if d2 < d2min {
-                        d2min = d2;
-                        best = Some(Closest {
-                            path: path_index,
-                            index: i,
-                            point,
-                            t,
-                            distance2: d2,
-                        });
-                    }
-                }
+        let segments = self
+            .paths
+            .iter()
+            .enumerate()
+            .flat_map(|(path_index, path)| (0..path.len()).map(move |i| (path_index, path, i)));
+        for (path_index, path, i) in segments {
+            if let Some(candidate) = self.segment_candidate(path_index, path, i, seam)
+                && candidate.distance2 < d2min
+            {
+                d2min = candidate.distance2;
+                best = Some(candidate);
             }
         }
         best
+    }
+
+    /// Seam projection onto one eligible anchor segment
+    /// (`SupportCommon.cpp:631-657`), before the strict nearest-point test.
+    fn segment_candidate(
+        &self,
+        path_index: usize,
+        path: &ZTaggedPath,
+        i: usize,
+        seam: [f64; 2],
+    ) -> Option<Closest> {
+        let j = next_index(i, path);
+        let (on_i, on_j) = (path[i].2 == self.loop_index, path[j].2 == self.loop_index);
+        if !(on_i || on_j) {
+            return None;
+        }
+        let pi = vertex(path, i);
+        let v = sub(vertex(path, j), pi);
+        let w = sub(seam, pi);
+        let l2 = dot(v, v);
+        let t = if l2 == 0.0 { 0.0 } else { dot(v, w) / l2 }.clamp(0.0, 1.0);
+        if !((on_i || t > EPSILON) && (on_j || t < 1.0 - EPSILON)) {
+            return None;
+        }
+        let point = add(pi, scale2(v, t));
+        let d = sub(point, seam);
+        let d2 = dot(d, d);
+        Some(Closest {
+            path: path_index,
+            index: i,
+            point,
+            t,
+            distance2: d2,
+        })
     }
 }
 
