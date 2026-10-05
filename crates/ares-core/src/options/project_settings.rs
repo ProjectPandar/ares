@@ -94,13 +94,29 @@ impl ProjectSettingsBuilder {
             })
     }
 
-    pub(crate) fn resolve(mut self) -> ProjectSettings {
+    pub(crate) fn into_profile_parts(
+        mut self,
+    ) -> (
+        PrinterOptionsBuilder,
+        ProcessOptionsBuilder,
+        FilamentOptionsBuilder,
+        ProjectRuntimeOptionsBuilder,
+    ) {
+        self.apply_json_effects();
+        (self.printer, self.process, self.filament, self.project)
+    }
+
+    fn apply_json_effects(&mut self) {
         if self.derived_support_style {
             self.process.apply_derived_support_style();
         }
         if self.derived_is_infill_first {
             self.process.apply_derived_is_infill_first();
         }
+    }
+
+    pub(crate) fn resolve(mut self) -> ProjectSettings {
+        self.apply_json_effects();
         ProjectSettings {
             printer: self.printer.resolve(),
             process: self.process.resolve(),

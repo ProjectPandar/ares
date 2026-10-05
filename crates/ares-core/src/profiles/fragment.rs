@@ -1,9 +1,14 @@
 pub(super) mod metadata;
 pub(super) mod payload;
 
-use std::fmt;
+use std::{collections::BTreeMap, fmt};
 
-use crate::SliceError;
+use serde::Deserialize;
+
+use crate::{
+    SliceError,
+    options::{ProjectRuntimeOptionsBuilder, ProjectSettingsBuilder},
+};
 
 use self::{
     metadata::{ProfileConfigMetadataPatch, ProfilePresetMetadata},
@@ -49,6 +54,32 @@ impl ProfileFragment {
             config: parsed.config,
             payload,
         })
+    }
+
+    pub(super) fn from_catalog_values(
+        input: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
+    ) -> Result<(Self, ProjectRuntimeOptionsBuilder), SliceError> {
+        let input = crate::project::raw_settings::RawConfigValue::Object(input);
+        let parsed = metadata::parse_values(input.clone())?;
+        // Config.cpp's preset loader uses the same typed legacy normalization as
+        // project loading, before parent/child overlay; keep absence as absence.
+        let builder = ProjectSettingsBuilder::deserialize(input).map_err(|error| {
+            SliceError::InvalidInput(format!("profile option JSON is invalid: {error}"))
+        })?;
+        let (printer, process, filament, runtime) = builder.into_profile_parts();
+        let payload = match parsed.preset.kind {
+            ProfileKind::Machine => ProfilePayload::Machine(Box::new(printer)),
+            ProfileKind::Process => ProfilePayload::Process(Box::new(process)),
+            ProfileKind::Filament => ProfilePayload::Filament(Box::new(filament)),
+        };
+        Ok((
+            Self {
+                preset: parsed.preset,
+                config: parsed.config,
+                payload,
+            },
+            runtime,
+        ))
     }
 
     pub const fn kind(&self) -> ProfileKind {

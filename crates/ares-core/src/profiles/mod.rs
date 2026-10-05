@@ -1,4 +1,8 @@
+mod catalog;
 mod composition;
+mod entry;
+
+pub use entry::{ProfileSliceRequest, slice_with_profiles};
 mod fragment;
 mod inheritance;
 

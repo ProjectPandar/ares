@@ -5,4 +5,6 @@ fn split_key_set_preserves_boundary_membership() {
     assert!(super::contains("make_overhang_printable"));
     assert!(super::contains("z_hop"));
     assert!(!super::contains("not_an_orca_key"));
+    // PrintConfig.hpp does not put this dynamic preset option in FullPrintConfig.
+    assert!(!super::contains("upward_compatible_machine"));
 }

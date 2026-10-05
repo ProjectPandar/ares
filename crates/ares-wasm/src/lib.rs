@@ -1,8 +1,10 @@
+mod profiles;
 mod scene;
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;
 
+pub use profiles::{slice_with_profiles, slice_with_profiles_bytes};
 pub use scene::{SceneData, load_scene, scene_from_bytes};
 
 #[wasm_bindgen]

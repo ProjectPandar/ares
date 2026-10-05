@@ -53,6 +53,9 @@ mod overhang_reverse;
 #[path = "runner/path_tests.rs"]
 mod path_tests;
 #[cfg(test)]
+#[path = "runner/profile_entry.rs"]
+mod profile_entry;
+#[cfg(test)]
 #[path = "runner/stage_tests.rs"]
 mod stage_tests;
 #[path = "runner/stages.rs"]

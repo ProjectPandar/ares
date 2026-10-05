@@ -1,4 +1,5 @@
 mod documents;
+mod profile_input;
 mod volume_offsets;
 
 pub use documents::PlateMetadata;

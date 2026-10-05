@@ -7,6 +7,20 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Profile-based slicing entry (2026-10-05, interface approved)
+
+Port PresetBundle loading/inheritance/full_fff_config and Preset compatibility into
+`ares-core::profiles`, with byte/JSON WASM adapters and STL filename semantics.
+[ARD](architecture/ard-profile-slice-entry.md),
+[spec](superpowers/specs/2026-10-05-profile-slice-entry.md),
+[plan](superpowers/plans/2026-10-05-profile-slice-entry.md).
+Native `--load-settings` complete-output RED precedes production changes. Exit:
+full-output native E2E, preserved embedded-3MF behavior, Rust compatibility/import,
+web filename callers updated, one real BBL filter timing recorded, four platform/
+lint/test gates and full official/seeded controls. No caching or TS config logic.
+This precedes multi-transform membership/shared centering; it is not a completed
+stock inventory or an Ares-owned pipeline milestone.
+
 ### Selective WIP port: timelapse tower / adaptive PA / bridge (2026-10-04)
 
 Branch `pi/timelapse-tower-adaptive-pa` ports WIP `a53bc00c` in independent,

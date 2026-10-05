@@ -106,6 +106,23 @@ pub enum MergedProfile {
     },
 }
 
+impl MergedProfile {
+    pub(super) fn apply_system_metadata(&mut self, filament_id: Option<String>) {
+        let metadata = match self {
+            Self::Machine { metadata, .. }
+            | Self::Process { metadata, .. }
+            | Self::Filament { metadata, .. } => metadata,
+        };
+        // System loading consumes inherits as a loader key, not a config key
+        // (PresetBundle.cpp:4862, Config.cpp:919-920). Filament IDs inherit only
+        // when absent on the child (PresetBundle.cpp:4898-4910).
+        metadata.inherits = None;
+        if metadata.kind == ProfileKind::Filament {
+            metadata.filament_id = filament_id;
+        }
+    }
+}
+
 pub fn merge_profile_fragments(
     fragments: &[ProfileFragment],
     target_kind: ProfileKind,

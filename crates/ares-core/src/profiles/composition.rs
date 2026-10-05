@@ -98,27 +98,48 @@ pub fn compose_profile_fragments(
     fragments: &[ProfileFragment],
     selection: &ProfileSelection,
 ) -> Result<ComposedProfile, SliceError> {
+    let machine = merge_profile_fragments(fragments, ProfileKind::Machine, selection.machine())?;
+    let process = merge_profile_fragments(fragments, ProfileKind::Process, selection.process())?;
+    let filaments = selection
+        .filaments()
+        .iter()
+        .map(|name| merge_profile_fragments(fragments, ProfileKind::Filament, name))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(compose_resolved_profiles(
+        selection,
+        machine,
+        process,
+        filaments,
+        ProjectRuntimeOptions::default(),
+    ))
+}
+
+pub(super) fn compose_resolved_profiles(
+    selection: &ProfileSelection,
+    machine: MergedProfile,
+    process: MergedProfile,
+    filaments: Vec<MergedProfile>,
+    runtime: ProjectRuntimeOptions,
+) -> ComposedProfile {
     let MergedProfile::Machine {
         metadata: machine_metadata,
         options: printer,
-    } = merge_profile_fragments(fragments, ProfileKind::Machine, selection.machine())?
+    } = machine
     else {
         unreachable!("machine merge changed profile kind")
     };
     let MergedProfile::Process {
         metadata: process_metadata,
         options: process,
-    } = merge_profile_fragments(fragments, ProfileKind::Process, selection.process())?
+    } = process
     else {
         unreachable!("process merge changed profile kind")
     };
 
-    let mut filament_metadata = Vec::with_capacity(selection.filaments().len());
-    let mut filament_options = Vec::with_capacity(selection.filaments().len());
-    for name in selection.filaments() {
-        let MergedProfile::Filament { metadata, options } =
-            merge_profile_fragments(fragments, ProfileKind::Filament, name)?
-        else {
+    let mut filament_metadata = Vec::with_capacity(filaments.len());
+    let mut filament_options = Vec::with_capacity(filaments.len());
+    for filament in filaments {
+        let MergedProfile::Filament { metadata, options } = filament else {
             unreachable!("filament merge changed profile kind")
         };
         filament_metadata.push(metadata);
@@ -136,9 +157,10 @@ pub fn compose_profile_fragments(
         &process_metadata,
         &filament_metadata,
         variant_cardinalities,
+        runtime,
     );
 
-    Ok(ComposedProfile {
+    ComposedProfile {
         settings: ProjectSettings {
             printer,
             process,
@@ -150,7 +172,7 @@ pub fn compose_profile_fragments(
         process: selection.process().to_owned(),
         machine: selection.machine().to_owned(),
         filaments: selection.filaments().to_vec(),
-    })
+    }
 }
 
 fn project_options(
@@ -158,8 +180,8 @@ fn project_options(
     process: &MergedProfileMetadata,
     filaments: &[MergedProfileMetadata],
     variant_cardinalities: Vec<usize>,
+    mut project: ProjectRuntimeOptions,
 ) -> ProjectRuntimeOptions {
-    let mut project = ProjectRuntimeOptions::default();
     project.preset.print_settings_id = OrcaString(selection.process().to_owned());
     project.preset.printer_settings_id = OrcaString(selection.machine().to_owned());
     project.preset.filament_settings_id = OrcaStrings(selection.filaments().to_vec());

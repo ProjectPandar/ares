@@ -261,7 +261,6 @@ pub(super) const KEYS: &[&str] = &[
     "tree_support_tip_diameter",
     "tree_support_top_rate",
     "tree_support_wall_count",
-    "upward_compatible_machine",
     "use_3mf",
     "use_firmware_retraction",
     "use_relative_e_distances",

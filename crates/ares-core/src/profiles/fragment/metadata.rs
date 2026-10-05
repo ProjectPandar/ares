@@ -78,6 +78,14 @@ pub(super) fn parse(input: &[u8]) -> Result<ParsedMetadata, SliceError> {
     raw.finish()
 }
 
+pub(super) fn parse_values(
+    input: crate::project::raw_settings::RawConfigValue,
+) -> Result<ParsedMetadata, SliceError> {
+    RawMetadata::deserialize(input)
+        .map_err(invalid_profile)?
+        .finish()
+}
+
 fn invalid_profile(error: serde_json::Error) -> SliceError {
     SliceError::InvalidInput(format!("profile JSON is invalid: {error}"))
 }

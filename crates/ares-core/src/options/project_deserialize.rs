@@ -12,6 +12,15 @@ impl<'de> Deserialize<'de> for ProjectSettings {
     where
         D: Deserializer<'de>,
     {
+        ProjectSettingsBuilder::deserialize(deserializer).map(ProjectSettingsBuilder::resolve)
+    }
+}
+
+impl<'de> Deserialize<'de> for ProjectSettingsBuilder {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         deserializer.deserialize_map(ProjectSettingsVisitor)
     }
 }
@@ -19,7 +28,7 @@ impl<'de> Deserialize<'de> for ProjectSettings {
 struct ProjectSettingsVisitor;
 
 impl<'de> Visitor<'de> for ProjectSettingsVisitor {
-    type Value = ProjectSettings;
+    type Value = ProjectSettingsBuilder;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("Orca project settings")
@@ -45,6 +54,6 @@ impl<'de> Visitor<'de> for ProjectSettingsVisitor {
         }
 
         builder.apply_thumbnail_composite::<A::Error>()?;
-        Ok(builder.resolve())
+        Ok(builder)
     }
 }

@@ -5,6 +5,7 @@ mod wire;
 
 use std::fmt;
 
+use super::option_group::OverlayOptionGroup;
 use serde::{Deserialize, Deserializer, de::Visitor};
 
 pub(crate) use gcode_source::ProjectGCodeSourceOptionsBuilder;
@@ -69,6 +70,12 @@ pub(crate) struct ProjectRuntimeOptionsBuilder {
 }
 
 impl ProjectRuntimeOptionsBuilder {
+    pub(crate) fn overlay(&mut self, child: Self) {
+        self.gcode.overlay(child.gcode);
+        self.print.overlay(child.print);
+        self.preset.overlay(child.preset);
+    }
+
     pub(crate) fn is_known_field(key: &str) -> bool {
         ProjectGCodeSourceOptionsBuilder::is_known_field(key)
             || ProjectPrintSourceOptionsBuilder::is_known_field(key)

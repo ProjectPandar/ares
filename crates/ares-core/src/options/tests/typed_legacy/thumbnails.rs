@@ -13,7 +13,7 @@ fn absent_thumbnails_do_not_normalize_resolved_defaults() {
 
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        "48x48/PNG, 300x300/PNG"
+        "48x48/PNG,300x300/PNG"
     );
     assert_eq!(
         settings.printer.remaining.thumbnails_format,

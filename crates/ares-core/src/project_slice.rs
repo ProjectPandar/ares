@@ -55,7 +55,10 @@ mod seam_placement;
 mod simplification;
 mod slice_ordering;
 mod slicing_mode_intersections;
+mod source;
 mod state;
+use source::ProjectBytes;
+pub(crate) use source::{ProfileInput, ProjectSource};
 mod support_material;
 #[cfg(test)]
 mod test_consumers;
@@ -84,7 +87,17 @@ pub async fn slice_project_plate(
     plate: Option<u32>,
     context: crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_project_sync(project, metadata, plate, false, context).map(|processed| processed.gcode)
+    slice_source(
+        ProjectSource {
+            bytes: project.as_ref(),
+            plate,
+            profile: None,
+        },
+        metadata,
+        false,
+        context,
+    )
+    .map(|processed| processed.gcode)
 }
 
 /// Slices one plate and also returns the `GCodeProcessorResult` move
@@ -95,25 +108,27 @@ pub async fn slice_project_plate_processed(
     plate: Option<u32>,
     context: crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
-    slice_project_sync(project, metadata, plate, true, context)
+    slice_source(
+        ProjectSource {
+            bytes: project.as_ref(),
+            plate,
+            profile: None,
+        },
+        metadata,
+        true,
+        context,
+    )
 }
 
 #[inline(never)]
-fn slice_project_sync(
-    project: impl AsRef<[u8]>,
+pub(crate) fn slice_source(
+    project: ProjectSource<'_>,
     metadata: GenerationMetadata,
-    plate: Option<u32>,
     record_moves: bool,
     mut context: crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
     let staged = prepare_infill::surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(
-            ProjectSource {
-                bytes: project.as_ref(),
-                plate,
-            },
-            &mut context,
-        )?,
+        perimeters::prepare_post_layer_region_perimeters(project, &mut context)?,
     )?;
     // The avoid-crossing boundary subtracts the layer's top surfaces
     // (`get_boundary`, `AvoidCrossingPerimeters.cpp:1122-1132`); the
@@ -217,47 +232,6 @@ struct PreparedPostClosing {
     objects: Vec<closing::PostClosingPrintObject>,
 }
 
-/// Byte input plus the plate to slice. Implements `AsRef<[u8]>` so the
-/// byte-threading pipeline forwards it transparently; only the state seam
-/// that loads the project reads the plate selection.
-#[derive(Clone, Copy)]
-pub(crate) struct ProjectSource<'a> {
-    bytes: &'a [u8],
-    plate: Option<u32>,
-}
-
-impl AsRef<[u8]> for ProjectSource<'_> {
-    fn as_ref(&self) -> &[u8] {
-        self.bytes
-    }
-}
-
-/// Accepts borrowed byte sources as well as an explicit [`ProjectSource`].
-trait ProjectBytes<'a> {
-    fn into_source(self) -> ProjectSource<'a>;
-}
-
-impl<'a> ProjectBytes<'a> for ProjectSource<'a> {
-    fn into_source(self) -> ProjectSource<'a> {
-        self
-    }
-}
-
-impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
-    fn into_source(self) -> ProjectSource<'a> {
-        ProjectSource {
-            bytes: self.as_ref(),
-            plate: None,
-        }
-    }
-}
-
-impl<'a> From<&'a [u8]> for ProjectSource<'a> {
-    fn from(bytes: &'a [u8]) -> Self {
-        Self { bytes, plate: None }
-    }
-}
-
 struct PreparedPostRegions {
     project: Project,
     resolved: BoundedResolvedProjectConfig,
@@ -273,7 +247,17 @@ fn prepare_post_closing(project: ProjectSource<'_>) -> Result<PreparedPostClosin
         config_block,
         scale,
         intersected_objects,
-    } = state::prepare_project_slice(project.bytes, project.plate)?;
+    } = if let Some(profile) = project.profile {
+        let loaded = Project::from_stl_with_profiles(
+            project.bytes,
+            profile.filename,
+            profile.settings.clone(),
+            profile.raw.clone(),
+        )?;
+        state::prepare_loaded_project_slice(loaded, project.plate)?
+    } else {
+        state::prepare_project_slice(project.bytes, project.plate)?
+    };
     let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
     let max_gap_scaled = scale
         .checked_scale(2.0)

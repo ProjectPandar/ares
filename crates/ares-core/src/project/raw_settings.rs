@@ -7,6 +7,8 @@
 //! into a typed tree and render tokens on demand without production code
 //! holding dynamic JSON.
 
+mod deserialize;
+
 use std::collections::BTreeMap;
 
 use serde::Deserialize;
@@ -18,6 +20,18 @@ use serde::Deserialize;
 pub(crate) struct ProjectSettingsRaw(BTreeMap<String, RawConfigValue>);
 
 impl ProjectSettingsRaw {
+    pub(crate) fn extend(&mut self, values: impl IntoIterator<Item = (String, RawConfigValue)>) {
+        self.0.extend(values);
+    }
+
+    pub(crate) fn insert_strings(&mut self, key: &str, values: &[String]) {
+        let strings = crate::OrcaStrings(values.to_vec());
+        let value = crate::options::serialize_config_value(&strings)
+            .expect("profile string vectors serialize");
+        self.0
+            .insert(key.to_owned(), RawConfigValue::Text(value.token));
+    }
+
     pub(crate) fn contains_key(&self, key: &str) -> bool {
         self.0.contains_key(key)
     }
@@ -39,7 +53,7 @@ impl ProjectSettingsRaw {
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(untagged)]
-enum RawConfigValue {
+pub(crate) enum RawConfigValue {
     Text(String),
     Number(serde_json::Number),
     Flag(bool),

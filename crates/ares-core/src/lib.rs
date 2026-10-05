@@ -167,7 +167,8 @@ pub(crate) use print_paths::{
 };
 pub use profiles::{
     ComposedProfile, MergedProfile, MergedProfileMetadata, ProfileFragment, ProfileGroupMetadata,
-    ProfileKind, ProfileSelection, compose_profile_fragments, merge_profile_fragments,
+    ProfileKind, ProfileSelection, ProfileSliceRequest, compose_profile_fragments,
+    merge_profile_fragments, slice_with_profiles,
 };
 pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,

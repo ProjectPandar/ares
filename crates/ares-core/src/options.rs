@@ -8,7 +8,8 @@ mod acceleration;
 option_modules!(adaptive_bed_mesh, bed_excluded_area, defaults, different_extruders, draft_shield, extruder_count, extruder_index, extruder_variant, fdm_normalization);
 mod brim;
 mod config_export;
-pub(crate) use config_export::write_config_block;
+pub(crate) use config_export::{serialize_config_value, write_config_block};
+pub(crate) use typed_legacy::OBSOLETE_INPUTS;
 mod config_types;
 mod gcode_fields;
 mod gcode_options;
@@ -55,7 +56,11 @@ mod preset_metadata;
 mod pressure_advance;
 mod printer_options;
 mod process_options;
-pub(crate) use {printer_options::PrinterOptionsBuilder, process_options::ProcessOptionsBuilder};
+pub(crate) use {
+    printer_options::PrinterOptionsBuilder, process_options::ProcessOptionsBuilder,
+    project_runtime_options::ProjectRuntimeOptionsBuilder,
+    project_settings::ProjectSettingsBuilder,
+};
 pub(crate) mod project_config_views;
 mod project_deserialize;
 pub(crate) mod project_fdm_normalization;
