@@ -17,7 +17,7 @@ The package is ESM-only and ships three entry points:
 
 | Export | Contents |
 | --- | --- |
-| `@ares-slicer/wasm` | `AresSlicer` client, types, `MOVE_TYPES`, `EXTRUSION_ROLES` |
+| `@ares-slicer/wasm` | `AresSlicer` client, types, `MOVE_TYPES`, `EXTRUSION_ROLES`, `OPTION_TYPES`, `VERTEX_VALUES` |
 | `@ares-slicer/wasm/worker` | Module worker script that hosts the WebAssembly module |
 | `@ares-slicer/wasm/ares_wasm_bg.wasm` | The WebAssembly binary (about 9 MB, 3 MB gzip) |
 
@@ -64,6 +64,7 @@ If the worker crashes, every pending call is rejected.
 | `loadScene(input)` | `Promise<Scene>` | Parses a 3MF project or a binary/ASCII STL into plater scene data. |
 | `printConfigDef()` | `Promise<PrintConfigDef>` | OrcaSlicer `PrintConfigDef` option metadata: label, tooltip, unit (`sidetext`), type, enum values and labels, `min`/`max`, mode and GUI type of every config key, in upstream definition order. Strings are untranslated English. |
 | `sliceProject(input, plate?, overrides?)` | `Promise<SliceResult>` | Slices one plate of a 3MF project with the settings it contains. `plate` is the 3MF `plater_id` (default: the first plate). `overrides` is reserved: any non-empty object is rejected until the core option override API ships. |
+| `viewRange(layers, visibleRoles, visibleOptions)` | `Promise<ViewRange>` | View range of the latest `sliceProject` toolpaths, computed by the engine like OrcaSlicer's G-code viewer (libvgcode `ViewerImpl`). Shows the extrusion roles with bit `i` of `visibleRoles` set (`EXTRUSION_ROLES` order) and the options with bit `i` of `visibleOptions` set (`OPTION_TYPES` order), then sets the inclusive 0-based `layers` range. Returns vertex indices `[first, last, current]`; the G-code window marks the line of `current` (`ids[2 * current]`). Rejects before a project has been sliced. |
 | `sliceWithProfiles(input, filename, catalogJson, selection, options)` | `Promise<SliceResult>` | Slices an STL with selected OrcaSlicer presets, like the OrcaSlicer CLI's `--load-settings` / `--load-filaments`. `filename` is the file name (`File.name`) and names the object. `catalogJson` is a JSON string `{"vendors": [...], "imports": []}`, where each vendor is a `loadVendor()` result from `@ares-slicer/profiles`; include the vendors that parent presets come from (e.g. `OrcaFilamentLibrary`). `selection` is `{machine, process, filaments}` by preset name. `options` is `{seed, plate?}`; `seed` is required. The engine resolves inheritance and composes the config. The model is sliced where it is placed: no arrangement. 3MF input is not supported yet. |
 | `sliceStl(input, options?)` | `Promise<SliceResult>` | Slices an STL with Ares slice options (see `ares_core::SliceOptions`). |
 | `terminate()` | `void` | Stops the worker. Calls still in flight never settle. |
@@ -92,15 +93,24 @@ column-major 4×4 matrices, the order Three.js `Matrix4.fromArray` expects.
 | Field | Type | Description |
 | --- | --- | --- |
 | `gcode` | `Uint8Array` | The exported G-code file. |
-| `toolpaths` | `Toolpaths \| null` | Toolpath preview data. Currently always `null`; it will be filled once the engine exports G-code processor moves. |
+| `toolpaths` | `Toolpaths \| null` | Toolpath preview data from `sliceProject`. `null` from `sliceStl` and `sliceWithProfiles`, which do not record moves yet. |
 
-`Toolpaths` follows libvgcode's `GCodeInputData` / `PathVertex`, with one
-typed array per field. Index `i` in each per-vertex array refers to vertex
-`i`. `roles` and `moveTypes` hold indices into `EXTRUSION_ROLES` and
-`MOVE_TYPES`, which follow libvgcode's `Types.hpp` order.
+`Toolpaths` holds libvgcode `PathVertex` vertices, converted by the engine
+the way OrcaSlicer's `LibVGCodeWrapper` `convert` does, in three packed
+arrays. Vertex `i` owns:
+
+- `values[16 * i ...]`: floats in `VERTEX_VALUES` order (position, height,
+  width, feedrate, ...);
+- `ids[2 * i ...]`: `[gcodeLine, layer]`, where `gcodeLine` is the 1-based
+  G-code line of the move;
+- `tags[4 * i ...]`: `[role, moveType, extruder, color]`. `role` and
+  `moveType` index `EXTRUSION_ROLES` and `MOVE_TYPES`, which follow
+  libvgcode's `Types.hpp` order.
+
+`layerZs` is the z of each layer, from libvgcode's `Layers`.
 
 All typed arrays returned by the client are backed by their own
-`ArrayBuffer`. They have the type `Uint8Array<ArrayBuffer>`, so you can pass
+`ArrayBuffer` (for example `Uint8Array<ArrayBuffer>`), so you can pass
 them to `Blob` or `crypto.subtle` without a cast.
 
 ## Building from source

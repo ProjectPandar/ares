@@ -1,5 +1,7 @@
 use ares_core::{ProcessedGCode, gcode_processor::MoveVertex};
-use ares_vgcode::{GCodeInputData, convert::from_processor_result};
+use ares_vgcode::{
+    GCodeExtrusionRole, GCodeInputData, OptionType, ViewerImpl, convert::from_processor_result,
+};
 use wasm_bindgen::prelude::*;
 
 /// Owned result of one core processed slice. Take methods empty their buffers.
@@ -114,30 +116,47 @@ impl MoveBuffers {
 }
 
 /// Converted libvgcode vertices and palettes; no G-code parsing in the adapter.
+/// Keeps the vertices loaded in libvgcode `ViewerImpl` for `viewRange`.
 #[wasm_bindgen]
 #[derive(Default)]
 pub struct VertexBuffers {
     count: usize,
     spiral_vase_mode: bool,
+    viewer: ViewerImpl,
     values: Vec<f32>,
     ids: Vec<u32>,
     tags: Vec<u8>,
     tool_colors: Vec<u8>,
     color_print_colors: Vec<u8>,
+    layer_zs: Vec<f32>,
 }
 
 impl VertexBuffers {
-    fn pack(data: GCodeInputData) -> Self {
+    fn pack(mut data: GCodeInputData) -> Self {
+        let count = data.vertices.len();
+        let tool_colors = std::mem::take(&mut data.tools_colors)
+            .into_iter()
+            .flatten()
+            .collect();
+        let color_print_colors = std::mem::take(&mut data.color_print_colors)
+            .into_iter()
+            .flatten()
+            .collect();
+        let spiral_vase_mode = data.spiral_vase_mode;
+        let mut viewer = ViewerImpl::default();
+        viewer.load(data);
         let mut out = Self {
-            count: data.vertices.len(),
-            spiral_vase_mode: data.spiral_vase_mode,
-            values: Vec::with_capacity(16 * data.vertices.len()),
-            ids: Vec::with_capacity(2 * data.vertices.len()),
-            tags: Vec::with_capacity(4 * data.vertices.len()),
-            tool_colors: data.tools_colors.into_iter().flatten().collect(),
-            color_print_colors: data.color_print_colors.into_iter().flatten().collect(),
+            count,
+            spiral_vase_mode,
+            values: Vec::with_capacity(16 * count),
+            ids: Vec::with_capacity(2 * count),
+            tags: Vec::with_capacity(4 * count),
+            tool_colors,
+            color_print_colors,
+            layer_zs: viewer.layers().get_zs(),
+            viewer: ViewerImpl::default(),
         };
-        for v in data.vertices {
+        for v in viewer.vertices() {
             out.values.extend_from_slice(&[
                 v.position[0],
                 v.position[1],
@@ -164,6 +183,7 @@ impl VertexBuffers {
                 v.color_id,
             ]);
         }
+        out.viewer = viewer;
         out
     }
 }
@@ -203,5 +223,41 @@ impl VertexBuffers {
     #[wasm_bindgen(js_name = takeColorPrintColors)]
     pub fn take_color_print_colors(&mut self) -> Vec<u8> {
         std::mem::take(&mut self.color_print_colors)
+    }
+    /// libvgcode `ViewerImpl` view range after showing extrusion roles with
+    /// bit `i` of `visible_roles` set (`EGCodeExtrusionRole` order) and options
+    /// with bit `i` of `visible_options` set (`EOptionType` order), then
+    /// `set_layers_view_range(min_layer, max_layer)`, as GCodeViewer toggles the
+    /// legend and moves the layer slider. Returns the visible range and the
+    /// current vertex: `[first, last, current]`.
+    #[wasm_bindgen(js_name = viewRange)]
+    pub fn view_range(
+        &mut self,
+        min_layer: u32,
+        max_layer: u32,
+        visible_roles: u32,
+        visible_options: u16,
+    ) -> Vec<u32> {
+        let viewer = &mut self.viewer;
+        for role in GCodeExtrusionRole::ALL {
+            if viewer.is_extrusion_role_visible(role) != (visible_roles >> role.index() & 1 == 1) {
+                viewer.toggle_extrusion_role_visibility(role);
+            }
+        }
+        for option in OptionType::ALL {
+            if viewer.is_option_visible(option) != (visible_options >> option.index() & 1 == 1) {
+                viewer.toggle_option_visibility(option);
+            }
+        }
+        viewer.set_layers_view_range(min_layer as usize, max_layer as usize);
+        let [first, last] = viewer.get_view_visible_range();
+        [first, last, viewer.get_current_vertex_id()]
+            .map(|id| id as u32)
+            .to_vec()
+    }
+    /// Float32Array: libvgcode `Layers::get_zs`, one z per layer.
+    #[wasm_bindgen(js_name = takeLayerZs)]
+    pub fn take_layer_zs(&mut self) -> Vec<f32> {
+        std::mem::take(&mut self.layer_zs)
     }
 }

@@ -17,8 +17,8 @@ export const WIPE_COLOR: Rgb = [255, 255, 0];
 const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
 
 /** Role ids with at least one extrusion, in `EXTRUSION_ROLES` order (legend rows). */
-export function usedRoles({ roles, moveTypes, vertexCount }: Toolpaths): number[] {
+export function usedRoles({ tags, vertexCount }: Toolpaths): number[] {
   const used = new Array<boolean>(EXTRUSION_ROLES.length).fill(false);
-  for (let i = 0; i < vertexCount; i++) if (moveTypes[i] === EXTRUDE) used[roles[i]] = true;
+  for (let i = 0; i < vertexCount; i++) if (tags[4 * i + 1] === EXTRUDE) used[tags[4 * i]] = true;
   return used.flatMap((present, id) => (present ? [id] : []));
 }

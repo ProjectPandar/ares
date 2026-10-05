@@ -96,6 +96,28 @@ pub enum GCodeExtrusionRole {
 
 impl GCodeExtrusionRole {
     pub const COUNT: usize = 20;
+    pub const ALL: [Self; Self::COUNT] = [
+        Self::None,
+        Self::Perimeter,
+        Self::ExternalPerimeter,
+        Self::OverhangPerimeter,
+        Self::InternalInfill,
+        Self::SolidInfill,
+        Self::TopSolidInfill,
+        Self::Ironing,
+        Self::BridgeInfill,
+        Self::GapFill,
+        Self::Skirt,
+        Self::SupportMaterial,
+        Self::SupportMaterialInterface,
+        Self::WipeTower,
+        Self::Custom,
+        Self::BottomSurface,
+        Self::InternalBridgeInfill,
+        Self::Brim,
+        Self::SupportTransition,
+        Self::Mixed,
+    ];
 
     pub const fn index(self) -> usize {
         self as usize
@@ -118,6 +140,17 @@ pub enum OptionType {
 
 impl OptionType {
     pub const COUNT: usize = 9;
+    pub const ALL: [Self; Self::COUNT] = [
+        Self::Travels,
+        Self::Wipes,
+        Self::Retractions,
+        Self::Unretractions,
+        Self::Seams,
+        Self::ToolChanges,
+        Self::ColorChanges,
+        Self::PausePrints,
+        Self::CustomGCodes,
+    ];
 
     pub const fn index(self) -> usize {
         self as usize

@@ -66,14 +66,18 @@
   background: var(--panel); border: 3px solid var(--accent); box-shadow: var(--shadow);
 }
 .layer-slider-thumb:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
-.gcode-panel { width: 380px; flex: none; display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--border); }
-.gcode-panel-header { display: flex; justify-content: space-between; align-items: center; height: 30px; padding: 0 10px; background: var(--panel-raised); font-weight: 600; }
-.gcode-panel-count { color: var(--text-dim); font-weight: 400; }
-.gcode-scroll { flex: 1; overflow: auto; background: var(--panel-sunken); user-select: text; }
-.gcode-line {
-  position: absolute; left: 0; right: 0; height: 18px; line-height: 18px; white-space: pre;
-  font: 11px/18px "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace; padding-right: 8px;
+/* GCodeWindow::render: right of the layer slider, below the legend, COL_WINDOW_BACKGROUND at 0.8 alpha. */
+.gcode-panel {
+  position: absolute; right: 86px; top: 56px; bottom: 40px; width: max-content; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; border-radius: 8px; background: rgba(26, 26, 26, 0.8);
+  font: 11px/18px "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace; pointer-events: none;
 }
-.gcode-ln { color: var(--text-faint); padding: 0 8px; margin-right: 6px; border-right: 1px solid var(--border); }
-.gcode-comment { color: var(--text-faint); }
+.gcode-lines { padding: 8px 10px; }
+.gcode-line { height: 18px; white-space: pre; padding: 0 4px; }
+/* COL_ORANGE_DARK selection rect, COL_ORANGE_LIGHT line numbers. */
+.gcode-line.current { outline: 1px solid rgb(193, 103, 55); outline-offset: -1px; }
+.gcode-ln { color: rgb(235, 129, 67); margin-right: 8px; }
+.gcode-cmd { color: rgb(204, 204, 0); }
+.gcode-params { color: #fff; }
+.gcode-comment { color: rgb(179, 179, 179); }
 

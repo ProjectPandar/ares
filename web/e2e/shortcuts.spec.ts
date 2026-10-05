@@ -1,8 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
-import { oracleToolpaths } from "./oracleToolpaths";
-import { canvasDigest, injectToolpaths } from "./toolpathPreview";
+import { canvasDigest } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/shortcuts/", import.meta.url));
@@ -14,12 +13,18 @@ const pressed = (page: Page, view: string) =>
     .toHaveAttribute("aria-pressed", "true");
 
 /** Preview shortcuts (KBShortcutsDialog "Preview"): layer slider keys, wheel, one-layer mode. */
-async function checkSliderShortcuts(page: Page, gcodePath: string, oracle: string) {
-  await injectToolpaths(page, oracleToolpaths(oracle, gcodePath, artifacts));
+async function checkSliderShortcuts(page: Page) {
   const top = page.getByRole("slider", { name: "Top layer" });
   const bottom = page.getByRole("slider", { name: "Bottom layer" });
   await expect(top).toHaveAttribute("aria-valuenow", "50");
   await blur(page);
+
+  // C: G-code window on/off (shown once there is a current move).
+  await expect(page.getByTestId("gcode-panel")).toBeVisible();
+  await page.keyboard.press("c");
+  await expect(page.getByTestId("gcode-panel")).toHaveCount(0);
+  await page.keyboard.press("c");
+  await expect(page.getByTestId("gcode-panel")).toBeVisible();
 
   // GLCanvas3D::on_key: Up/Down move the active (upper) thumb, x5 with Shift or Ctrl.
   await page.keyboard.press("ArrowDown");
@@ -135,18 +140,9 @@ test("OrcaSlicer keyboard shortcuts drive import, camera, slicing, export and pr
   const gcodePath = `${artifacts}${download.suggestedFilename()}`;
   await download.saveAs(gcodePath);
 
-  // C: G-code window on/off.
-  await blur(page);
-  await page.keyboard.press("c");
-  await expect(page.getByTestId("gcode-panel")).toHaveCount(0);
-  await page.keyboard.press("c");
-  await expect(page.getByTestId("gcode-panel")).toBeVisible();
-
-  const oracle = process.env.ARES_PROCGCODE_BIN;
-  if (oracle) await checkSliderShortcuts(page, gcodePath, oracle);
-  else test.info().annotations.push({ type: "skip", description: "ARES_PROCGCODE_BIN unset: slider shortcuts not checked" });
+  await checkSliderShortcuts(page);
 
   await page.screenshot({ path: `${artifacts}preview.png` });
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ gcode: download.suggestedFilename(), slider: Boolean(oracle) }, null, 2)}\n`);
+  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ gcode: download.suggestedFilename(), slider: true }, null, 2)}\n`);
   expect(errors).toEqual([]);
 });

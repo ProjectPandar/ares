@@ -1,6 +1,6 @@
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { ConfigOverrides, SliceResult } from "./toolpaths.js";
+import type { ConfigOverrides, SliceResult, ViewRange } from "./toolpaths.js";
 import type { ProfileSelection, ProfileSliceOptions } from "./types.js";
 import type { Scene } from "./types.js";
 
@@ -110,6 +110,20 @@ export class AresSlicer {
       input: input.slice(),
       options: JSON.stringify(options),
     })) as SliceResult;
+  }
+
+  /**
+   * libvgcode `ViewerImpl` view range of the latest `sliceProject` toolpaths,
+   * as GCodeViewer computes it for the legend and layer slider: shows the
+   * extrusion roles with bit `i` of `visibleRoles` set (`EXTRUSION_ROLES`
+   * order) and the options with bit `i` of `visibleOptions` set
+   * (`OPTION_TYPES` order), then sets the inclusive 0-based `layers` range.
+   * Returns vertex indices `[first, last, current]`; `current` is the vertex
+   * whose G-code line the G-code window marks.
+   */
+  async viewRange(layers: [number, number], visibleRoles: number, visibleOptions: number): Promise<ViewRange> {
+    await this.#ready;
+    return (await this.#call({ kind: "viewRange", layers, visibleRoles, visibleOptions })) as ViewRange;
   }
 
   terminate(): void {

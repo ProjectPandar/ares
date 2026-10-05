@@ -1,8 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
-import { oracleToolpaths } from "./oracleToolpaths";
-import { injectToolpaths } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const label = process.env.ARES_VISUAL_LABEL ?? "current";
@@ -27,16 +25,8 @@ test("visual snapshots", async ({ page }) => {
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: /Export G-code/ }).click(),
-  ]);
-  const gcodePath = `${artifacts}plate_1.gcode`;
-  await download.saveAs(gcodePath);
-
-  const oracle = process.env.ARES_PROCGCODE_BIN;
   await page.getByRole("link", { name: "Preview" }).click();
-  if (oracle) await injectToolpaths(page, oracleToolpaths(oracle, gcodePath, artifacts));
+  await expect(page.getByTestId("layer-count")).toHaveText("50");
 
   for (const theme of ["dark", "light"] as const) {
     await setTheme(page, theme);

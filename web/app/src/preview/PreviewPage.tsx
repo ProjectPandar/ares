@@ -1,14 +1,16 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { Sidebar } from "../sidebar/Sidebar";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { setPreview, slicePlate, stepLayers, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
 import { useApp } from "../state/store";
 import { usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
-import { GCodeText } from "./GCodeText";
 import { LayerSlider } from "./LayerSlider";
 import { Legend } from "./Legend";
+
+// Fetched once a slice has move vertices to show.
+const GCodeWindow = lazy(() => import("./GCodeWindow").then((module) => ({ default: module.GCodeWindow })));
 
 /**
  * Preview keys: C toggles the G-code window (GLCanvas3D::on_char), L one layer
@@ -75,8 +77,12 @@ export function PreviewPage() {
         {toolpaths && toolpaths.layerZs.length > 0 && (
           <LayerSlider zs={toolpaths.layerZs} view={view} />
         )}
+        {slice.status === "done" && gcodeWindow && toolpaths && (
+          <Suspense>
+            <GCodeWindow gcode={slice.gcode} toolpaths={toolpaths} view={view} />
+          </Suspense>
+        )}
       </ViewportView>
-      {slice.status === "done" && gcodeWindow && <GCodeText gcode={slice.gcode} />}
     </div>
   );
 }

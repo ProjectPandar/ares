@@ -1,4 +1,4 @@
-import { EXTRUSION_ROLES, MOVE_TYPES, type Toolpaths } from "@ares-slicer/wasm";
+import { EXTRUSION_ROLES, MOVE_TYPES, type Toolpaths, VERTEX_VALUES } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import type { PreviewView } from "../state/store";
 import { ROLE_COLORS, TRAVEL_COLOR, WIPE_COLOR } from "./roles";
@@ -7,6 +7,9 @@ const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
 const TRAVEL = MOVE_TYPES.indexOf("Travel");
 const WIPE = MOVE_TYPES.indexOf("Wipe");
 const CUSTOM = EXTRUSION_ROLES.indexOf("Custom");
+const STRIDE = VERTEX_VALUES.length;
+const HEIGHT = VERTEX_VALUES.indexOf("height");
+const WIDTH = VERTEX_VALUES.indexOf("width");
 /** `aKind` values above the role ids. */
 const KIND_TRAVEL = 254;
 const KIND_WIPE = 255;
@@ -75,7 +78,7 @@ void main() {
  * update uniforms.
  */
 export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
-  const { positions, widths, heights, roles, moveTypes, layerIds, vertexCount } = toolpaths;
+  const { values, ids, tags, vertexCount } = toolpaths;
   const start = new Float32Array(vertexCount * 3);
   const end = new Float32Array(vertexCount * 3);
   const size = new Float32Array(vertexCount * 2);
@@ -87,22 +90,21 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   const point = new THREE.Vector3();
   let count = 0;
   for (let i = 1; i < vertexCount; i++) {
-    const type = moveTypes[i];
+    const type = tags[4 * i + 1];
     if (type !== EXTRUDE && type !== TRAVEL && type !== WIPE) continue;
-    const a = (i - 1) * 3;
-    const b = i * 3;
-    if (positions[a] === positions[b] && positions[a + 1] === positions[b + 1] && positions[a + 2] === positions[b + 2]) {
-      continue;
-    }
-    start.set(positions.subarray(a, a + 3), count * 3);
-    end.set(positions.subarray(b, b + 3), count * 3);
+    const a = (i - 1) * STRIDE;
+    const b = i * STRIDE;
+    if (values[a] === values[b] && values[a + 1] === values[b + 1] && values[a + 2] === values[b + 2]) continue;
+    start.set(values.subarray(a, a + 3), count * 3);
+    end.set(values.subarray(b, b + 3), count * 3);
     const extrude = type === EXTRUDE;
-    if (extrude && roles[i] !== CUSTOM) bounds.expandByPoint(point.fromArray(positions, a)).expandByPoint(point.fromArray(positions, b));
-    size[count * 2] = extrude ? widths[i] : OPTION_SIZE;
-    size[count * 2 + 1] = extrude ? heights[i] : OPTION_SIZE;
-    const id = extrude ? roles[i] : type === TRAVEL ? KIND_TRAVEL : KIND_WIPE;
+    const role = tags[4 * i];
+    if (extrude && role !== CUSTOM) bounds.expandByPoint(point.fromArray(values, a)).expandByPoint(point.fromArray(values, b));
+    size[count * 2] = extrude ? values[b + WIDTH] : OPTION_SIZE;
+    size[count * 2 + 1] = extrude ? values[b + HEIGHT] : OPTION_SIZE;
+    const id = extrude ? role : type === TRAVEL ? KIND_TRAVEL : KIND_WIPE;
     color.set(extrude ? ROLE_COLORS[id] : id === KIND_TRAVEL ? TRAVEL_COLOR : WIPE_COLOR, count * 3);
-    layer[count] = layerIds[i];
+    layer[count] = ids[2 * i + 1];
     kind[count] = id;
     count++;
   }

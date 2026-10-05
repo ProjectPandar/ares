@@ -1,14 +1,28 @@
 /// <reference lib="webworker" />
-import init, { loadScene, printConfigDef, sliceProjectPlate, sliceWithProfiles, slice_stl } from "./wasm/ares_wasm.js";
+import init, {
+  loadScene,
+  printConfigDef,
+  sliceProjectPlateProcessed,
+  sliceWithProfiles,
+  slice_stl,
+  type VertexBuffers,
+} from "./wasm/ares_wasm.js";
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { SliceResult } from "./toolpaths.js";
+import type { SliceResult, Toolpaths } from "./toolpaths.js";
 import type { Scene } from "./types.js";
 
 declare const self: DedicatedWorkerGlobalScope;
 
 // wasm-bindgen returns `Vec<u8>` as a `.slice()` copy out of wasm memory: always a fresh, transferable ArrayBuffer.
 const owned = (bytes: Uint8Array) => bytes as Uint8Array<ArrayBuffer>;
+
+/** Vertices of the latest `sliceProject`, loaded in libvgcode `ViewerImpl` for `viewRange`. */
+let viewer: VertexBuffers | undefined;
+const replaceViewer = (next?: VertexBuffers) => {
+  viewer?.free();
+  viewer = next;
+};
 
 async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]> {
   switch (request.kind) {
@@ -28,17 +42,38 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [scene, [positions.buffer, indices.buffer]];
     }
     case "sliceProject": {
-      const result: SliceResult = { gcode: owned(await sliceProjectPlate(request.input, request.plate)), toolpaths: null };
-      return [result, [result.gcode.buffer]];
+      // No palettes: the preview colors by feature type, and raw moves stay in wasm memory.
+      const output = await sliceProjectPlateProcessed(request.input, request.plate, [], []);
+      const gcode = owned(output.takeGcode());
+      const vertices = output.takeVertices();
+      output.free();
+      const toolpaths: Toolpaths = {
+        vertexCount: vertices.count,
+        values: vertices.takeValues() as Float32Array<ArrayBuffer>,
+        ids: vertices.takeIds() as Uint32Array<ArrayBuffer>,
+        tags: owned(vertices.takeTags()),
+        layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
+        spiralVaseMode: vertices.spiralVaseMode,
+      };
+      replaceViewer(vertices);
+      const { values, ids, tags, layerZs } = toolpaths;
+      return [{ gcode, toolpaths } satisfies SliceResult, [gcode.buffer, values.buffer, ids.buffer, tags.buffer, layerZs.buffer]];
     }
     case "sliceWithProfiles": {
+      replaceViewer();
       const { input, filename, catalog, selection, options } = request;
       const result: SliceResult = { gcode: owned(await sliceWithProfiles(input, filename, catalog, selection, options)), toolpaths: null };
       return [result, [result.gcode.buffer]];
     }
     case "sliceStl": {
+      replaceViewer();
       const result: SliceResult = { gcode: owned(await slice_stl(request.input, request.options)), toolpaths: null };
       return [result, [result.gcode.buffer]];
+    }
+    case "viewRange": {
+      if (!viewer) throw new Error("No toolpaths: slice a project first");
+      const { layers, visibleRoles, visibleOptions } = request;
+      return [[...viewer.viewRange(layers[0], layers[1], visibleRoles, visibleOptions)], []];
     }
   }
 }

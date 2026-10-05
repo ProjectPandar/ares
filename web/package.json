@@ -12,7 +12,7 @@
     "dev": "npm run build -w @ares-slicer/wasm && npm run dev -w ares-app",
     "lint": "oxlint packages app e2e",
     "typecheck": "npm run typecheck -w @ares-slicer/wasm && npm run typecheck -w ares-app && tsc -p tsconfig.json",
-    "test:e2e": "cargo build --release -p ares-cli && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && VITE_ARES_E2E=1 npm run build && playwright test"
+    "test:e2e": "cargo build --release -p ares-cli && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build && playwright test"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

@@ -1,37 +1,48 @@
 /**
- * Toolpath preview data: libvgcode `GCodeInputData` / `PathVertex`
- * (`src/libvgcode/include/PathVertex.hpp`) as built by
- * `LibVGCodeWrapper.cpp convert(GCodeProcessorResult, ...)`, laid out as one
- * typed array per field. Index `i` of every per-vertex array describes
- * vertex `i`; `positions` holds xyz triples.
+ * Toolpath preview data: libvgcode `GCodeInputData` vertices
+ * (`src/libvgcode/include/PathVertex.hpp`) as converted by ares-vgcode from
+ * `LibVGCodeWrapper.cpp convert(GCodeProcessorResult, ...)`, in the packed
+ * layout of ares-wasm `VertexBuffers` (docs/architecture/m853-wasm-moves.md).
+ * Vertex `i` owns `values[i * VERTEX_VALUES.length ...]`, `ids[2 * i ...]`
+ * and `tags[4 * i ...]`.
  */
 export interface Toolpaths {
   vertexCount: number;
-  positions: Float32Array<ArrayBuffer>;
-  widths: Float32Array<ArrayBuffer>;
-  heights: Float32Array<ArrayBuffer>;
-  feedrates: Float32Array<ArrayBuffer>;
-  fanSpeeds: Float32Array<ArrayBuffer>;
-  temperatures: Float32Array<ArrayBuffer>;
-  /** Normal-mode move time in seconds (`PathVertex::times[Normal]`). */
-  times: Float32Array<ArrayBuffer>;
-  /** `ExtrusionRoleId` per vertex. */
-  roles: Uint8Array<ArrayBuffer>;
-  /** `MoveTypeId` per vertex. */
-  moveTypes: Uint8Array<ArrayBuffer>;
-  extruderIds: Uint8Array<ArrayBuffer>;
-  colorIds: Uint8Array<ArrayBuffer>;
-  layerIds: Uint32Array<ArrayBuffer>;
-  /** libvgcode `Layers`: z of each layer. */
+  /** Per-vertex floats in `VERTEX_VALUES` order. */
+  values: Float32Array<ArrayBuffer>;
+  /** Per-vertex `[gcode_id, layer_id]`; `gcode_id` is the 1-based G-code line of the move. */
+  ids: Uint32Array<ArrayBuffer>;
+  /** Per-vertex `[ExtrusionRoleId, MoveTypeId, extruder_id, color_id]`. */
+  tags: Uint8Array<ArrayBuffer>;
+  /** libvgcode `Layers::get_zs`: z of each layer. */
   layerZs: Float32Array<ArrayBuffer>;
-  /** libvgcode `Layers`: `[first, last]` vertex id pair of each layer. */
-  layerRanges: Uint32Array<ArrayBuffer>;
-  /** `GCodeInputData::tools_colors` as RGB bytes. */
-  toolColors: [number, number, number][];
-  /** `GCodeInputData::color_print_colors` as RGB bytes. */
-  colorPrintColors: [number, number, number][];
   spiralVaseMode: boolean;
 }
+
+/**
+ * `PathVertex` float fields in `Toolpaths.values` order. `actualFeedrate`,
+ * `timeStealth`, `layerDuration`, `pressureAdvance`, `acceleration` and
+ * `jerk` are 0 until the engine records them.
+ */
+export const VERTEX_VALUES = [
+  "x",
+  "y",
+  "z",
+  "height",
+  "width",
+  "feedrate",
+  "actualFeedrate",
+  "mm3PerMm",
+  "fanSpeed",
+  "temperature",
+  "timeNormal",
+  "timeStealth",
+  "layerDuration",
+  "pressureAdvance",
+  "acceleration",
+  "jerk",
+] as const;
+export type VertexValue = (typeof VERTEX_VALUES)[number];
 
 /** libvgcode `EMoveType` order (`Types.hpp`). */
 export const MOVE_TYPES = [
@@ -76,6 +87,23 @@ export const EXTRUSION_ROLES = [
 export type ExtrusionRole = (typeof EXTRUSION_ROLES)[number];
 export type ExtrusionRoleId = number;
 
+/** libvgcode `EOptionType` order (`Types.hpp`): bits of `viewRange` `visibleOptions`. */
+export const OPTION_TYPES = [
+  "Travels",
+  "Wipes",
+  "Retractions",
+  "Unretractions",
+  "Seams",
+  "ToolChanges",
+  "ColorChanges",
+  "PausePrints",
+  "CustomGCodes",
+] as const;
+export type OptionType = (typeof OPTION_TYPES)[number];
+
+/** Vertex indices `[first, last, current]` of the visible view range. */
+export type ViewRange = [first: number, last: number, current: number];
+
 /** One OrcaSlicer option value as ares-core serializes it. */
 export type OptionValue = string | number | boolean | (string | number | boolean)[];
 
@@ -84,6 +112,6 @@ export type ConfigOverrides = Record<string, OptionValue>;
 
 export interface SliceResult {
   gcode: Uint8Array<ArrayBuffer>;
-  /** `null` until ares-wasm exposes the GCodeProcessor move vertices. */
+  /** Preview data; `null` for slicing entry points the engine does not record moves for yet. */
   toolpaths: Toolpaths | null;
 }

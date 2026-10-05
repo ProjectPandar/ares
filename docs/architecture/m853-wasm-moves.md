@@ -69,6 +69,8 @@ corresponding buffer, so consumers take once and call `free()` on handles.
 | VertexBuffers | takeIds | Uint32Array,2: gcode_id,layer_id |
 | VertexBuffers | takeTags | Uint8Array,4: libvgcode role,move type,extruder_id,color_id |
 | VertexBuffers | takeToolColors / takeColorPrintColors | Uint8Array RGB triples |
+| VertexBuffers | takeLayerZs | Float32Array, one z per layer: libvgcode `Layers::get_zs` after `ViewerImpl::load` (ViewerImpl.cpp:1002-1005) updates `Layers` with every vertex |
+| VertexBuffers | viewRange(minLayer, maxLayer, visibleRoles, visibleOptions) | Uint32Array `[first, last, current]`: ares-vgcode `ViewerImpl` (port of ViewerImpl.cpp `is_visible` :1713, `update_view_full_range` :1728-1815, `set_layers_view_range` :1329, `get_current_vertex_id` ViewerImpl.hpp:132) after toggling role / option visibility to the given bits. The vertices stay loaded in the `VertexBuffers` object until it is freed |
 
 Both handles expose count; VertexBuffers also exposes spiralVaseMode.
 Raw and libvgcode role ordinals differ (notably BottomSurface, Ironing,
