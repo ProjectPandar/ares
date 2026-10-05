@@ -151,23 +151,32 @@ fn place_loop(
         // loop points from the projected position (SeamPlacer.cpp:1607-1620),
         // not a separate re-split pass.
         if staggered {
-            let mut point = projection;
-            depth = loop_.paths[point.path].width.max(depth);
-            while depth > 0.0 {
-                let mut next = next_loop_point(loop_, &point);
-                let a = (point.x, point.y);
-                let b = (next.x, next.y);
-                let dist = scale.unscale(a.0 - b.0).hypot(scale.unscale(a.1 - b.1)) as f32;
-                if dist > depth {
-                    let ratio = depth / dist;
-                    next.x = (a.0 as f64 + f64::from(ratio) * (b.0 - a.0) as f64) as i64;
-                    next.y = (a.1 as f64 + f64::from(ratio) * (b.1 - a.1) as f64) as i64;
-                }
-                depth -= dist;
-                point = next;
-            }
-            seam = (point.x, point.y);
+            seam = staggered_seam(loop_, projection, depth, scale);
         }
     }
     split_at(loop_, seam, scale);
+}
+
+/// Advance the projected seam along the loop (`SeamPlacer.cpp:1607-1620`).
+fn staggered_seam(
+    loop_: &ExtrusionLoop,
+    mut point: super::split::Projection,
+    mut depth: f32,
+    scale: CoordinateScale,
+) -> (i64, i64) {
+    depth = loop_.paths[point.path].width.max(depth);
+    while depth > 0.0 {
+        let mut next = next_loop_point(loop_, &point);
+        let a = (point.x, point.y);
+        let b = (next.x, next.y);
+        let dist = scale.unscale(a.0 - b.0).hypot(scale.unscale(a.1 - b.1)) as f32;
+        if dist > depth {
+            let ratio = depth / dist;
+            next.x = (a.0 as f64 + f64::from(ratio) * (b.0 - a.0) as f64) as i64;
+            next.y = (a.1 as f64 + f64::from(ratio) * (b.1 - a.1) as f64) as i64;
+        }
+        depth -= dist;
+        point = next;
+    }
+    (point.x, point.y)
 }

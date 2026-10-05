@@ -1,8 +1,7 @@
 use super::*;
 
 fn raft_parameters(
-    base_layers: usize,
-    interface_layers: usize,
+    (base_layers, interface_layers): (usize, usize),
     base_height: f64,
     interface_height: f64,
     contact_height: f64,
@@ -54,7 +53,7 @@ fn raft_parameters(
 /// split: base=50, interface=50).
 #[test]
 fn grid_matches_oracle_raft_layers_100() {
-    let parameters = raft_parameters(50, 50, 0.3, 0.3, 0.3, 0.2);
+    let parameters = raft_parameters((50, 50), 0.3, 0.3, 0.3, 0.2);
     let grid = raft_layer_grid(&parameters).unwrap();
 
     assert_eq!(grid.len(), 100);
@@ -96,7 +95,7 @@ fn round6(value: f64) -> f64 {
 /// layer at `initial_layer_print_height` (`Slicing.cpp:208-211`).
 #[test]
 fn single_raft_layer_is_contact_only() {
-    let parameters = raft_parameters(0, 1, 0.3, 0.3, 0.2, 0.2);
+    let parameters = raft_parameters((0, 1), 0.3, 0.3, 0.2, 0.2);
     let grid = raft_layer_grid(&parameters).unwrap();
 
     assert_eq!(grid.len(), 1);
@@ -107,7 +106,7 @@ fn single_raft_layer_is_contact_only() {
 
 #[test]
 fn no_raft_yields_empty_grid() {
-    let parameters = raft_parameters(0, 0, 0.0, 0.0, 0.0, 0.2);
+    let parameters = raft_parameters((0, 0), 0.0, 0.0, 0.0, 0.2);
     assert!(raft_layer_grid(&parameters).unwrap().is_empty());
 }
 
@@ -117,7 +116,7 @@ fn no_raft_yields_empty_grid() {
 /// extruder differs.
 #[test]
 fn mixed_heights_step_per_kind() {
-    let parameters = raft_parameters(2, 2, 0.3, 0.24, 0.24, 0.2);
+    let parameters = raft_parameters((2, 2), 0.3, 0.24, 0.24, 0.2);
     let grid = raft_layer_grid(&parameters).unwrap();
 
     assert_eq!(grid.len(), 4);

@@ -227,32 +227,34 @@ pub(in crate::project_slice) fn generate_layer(
                 pattern @ (ProcessInfillPattern::HilbertCurve
                 | ProcessInfillPattern::ArchimedeanChords
                 | ProcessInfillPattern::OctagramSpiral),
-            ) => {
-                if matches!(
-                    fill.params.extrusion_role,
-                    ExtrusionRole::TopSolidInfill
-                        | ExtrusionRole::BottomSurface
-                        | ExtrusionRole::SolidInfill
-                        // Sparse infill (sparse_infill_pattern=hilbertcurve/
-                        // archimedeanchords/octagramspiral) is InternalInfill
-                        // and must still emit the plane-path fill.
-                        | ExtrusionRole::InternalInfill
-                ) {
-                    let Some(object_bounding_box) = plane_path_object_bounding_box(object_slices)
-                    else {
-                        continue;
-                    };
-                    super::plane_path::append(
-                        &mut output,
-                        fill,
-                        pattern,
-                        object_bounding_box,
-                        traversal.resolved.views.full.process.print.resolution.0,
-                        object_options.calib_flowrate_topinfill_special_order.0,
-                        traversal.scale,
-                    )?;
-                }
+            ) if matches!(
+                fill.params.extrusion_role,
+                ExtrusionRole::TopSolidInfill
+                    | ExtrusionRole::BottomSurface
+                    | ExtrusionRole::SolidInfill
+                    // Sparse plane-path fills still emit InternalInfill.
+                    | ExtrusionRole::InternalInfill
+            ) =>
+            {
+                let Some(object_bounding_box) = plane_path_object_bounding_box(object_slices)
+                else {
+                    continue;
+                };
+                super::plane_path::append(
+                    &mut output,
+                    fill,
+                    pattern,
+                    object_bounding_box,
+                    traversal.resolved.views.full.process.print.resolution.0,
+                    object_options.calib_flowrate_topinfill_special_order.0,
+                    traversal.scale,
+                )?;
             }
+            SurfaceFillPattern::Configured(
+                ProcessInfillPattern::HilbertCurve
+                | ProcessInfillPattern::ArchimedeanChords
+                | ProcessInfillPattern::OctagramSpiral,
+            ) => {}
             SurfaceFillPattern::ConcentricInternal => {
                 super::concentric::append(
                     &mut output,

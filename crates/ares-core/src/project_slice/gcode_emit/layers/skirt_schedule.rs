@@ -49,29 +49,7 @@ impl SkirtSchedule {
             layers[index].has_extrusions |= layer.has_extrusions;
         }
         if layers.first().is_some_and(|layer| layer.has_extrusions) {
-            let mut i = 0;
-            loop {
-                layers[i].has_skirt = true;
-                let Some(j) = (i + 1..layers.len()).find(|&j| layers[j].has_object) else {
-                    break;
-                };
-                let mut last_z = layers[i].print_z;
-                let mut k = i + 1;
-                while k < j {
-                    if layers[k + 1].print_z - last_z > max_layer_height + EPSILON {
-                        while !layers[k].has_extrusions {
-                            k -= 1;
-                        }
-                        if layers[k].has_skirt {
-                            break;
-                        }
-                        layers[k].has_skirt = true;
-                        last_z = layers[k].print_z;
-                    }
-                    k += 1;
-                }
-                i = j;
-            }
+            mark_skirt_layers(&mut layers, max_layer_height);
         }
         Self {
             layers,
@@ -93,6 +71,39 @@ impl SkirtSchedule {
         self.done += 1;
         self.last_z = layer.print_z;
         Some(result)
+    }
+}
+
+/// `ToolOrdering.cpp::mark_skirt_layers`: mark object layers and intervening
+/// extrusion layers needed to keep the skirt within the layer-height limit.
+fn mark_skirt_layers(layers: &mut [Layer], max_layer_height: f64) {
+    let mut i = 0;
+    loop {
+        layers[i].has_skirt = true;
+        let Some(j) = (i + 1..layers.len()).find(|&j| layers[j].has_object) else {
+            break;
+        };
+        mark_skirt_gap(layers, i, j, max_layer_height);
+        i = j;
+    }
+}
+
+/// The intervening extrusion-layer walk within `mark_skirt_layers`.
+fn mark_skirt_gap(layers: &mut [Layer], i: usize, j: usize, max_layer_height: f64) {
+    let mut last_z = layers[i].print_z;
+    let mut k = i + 1;
+    while k < j {
+        if layers[k + 1].print_z - last_z > max_layer_height + EPSILON {
+            while !layers[k].has_extrusions {
+                k -= 1;
+            }
+            if layers[k].has_skirt {
+                break;
+            }
+            layers[k].has_skirt = true;
+            last_z = layers[k].print_z;
+        }
+        k += 1;
     }
 }
 

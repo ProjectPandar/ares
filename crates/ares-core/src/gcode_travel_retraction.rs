@@ -26,6 +26,13 @@ struct RetractionSplitInput<'a> {
     path: &'a [Point2],
 }
 
+/// Distributed wipe retraction (`GCode.cpp::Wipe::wipe`, :444-475).
+struct WipeRetraction {
+    wipe_distance: f64,
+    during_wipe: f64,
+    feedrate: f64,
+}
+
 pub(crate) struct TravelRetractionCommand<'a> {
     pub(crate) writer: &'a mut GCodeWriter,
     pub(crate) use_firmware: bool,
@@ -170,9 +177,11 @@ impl TravelRetractionState {
                 writer,
                 path,
                 Point2::new(current.0, current.1),
-                wipe_distance,
-                during_wipe,
-                feedrate,
+                WipeRetraction {
+                    wipe_distance,
+                    during_wipe,
+                    feedrate,
+                },
             );
             gcode.push_str(&wipe_gcode);
         }
@@ -271,10 +280,13 @@ impl TravelRetractionState {
         writer: &mut GCodeWriter,
         path: &WipePath,
         current: Point2,
-        wipe_distance: f64,
-        during_wipe: f64,
-        feedrate: f64,
+        command: WipeRetraction,
     ) -> String {
+        let WipeRetraction {
+            wipe_distance,
+            during_wipe,
+            feedrate,
+        } = command;
         // `Wipe::wipe` `:450-462`: substitute the current position for the
         // first point, clip to the trailing `wipe_dist`, and distribute
         // the during-wipe retraction proportionally per segment `:473-475`.
