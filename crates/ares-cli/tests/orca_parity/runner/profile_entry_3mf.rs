@@ -45,7 +45,10 @@ fn orca_parity_profile_entry_3mf_load_settings() {
         preset.insert("type".to_owned(), json!(kind));
         preset.insert("from".to_owned(), json!("system"));
         preset.insert("instantiation".to_owned(), json!("true"));
-        write_json(&runner.work.join(format!("{kind}.json")), &Value::Object(preset));
+        write_json(
+            &runner.work.join(format!("{kind}.json")),
+            &Value::Object(preset),
+        );
     }
 
     let stl = placed_cube(&std::fs::read(root.join("tests/parity/cube10.stl")).unwrap());
@@ -74,7 +77,7 @@ fn orca_parity_profile_entry_3mf_load_settings() {
                 .unwrap()
                 .to_owned(),
             "--arrange".to_owned(),
-            "0".to_owned(),
+            "1".to_owned(),
             "--export-3mf".to_owned(),
             project_path.to_str().unwrap().to_owned(),
             runner.work.join("cube10.stl").to_str().unwrap().to_owned(),

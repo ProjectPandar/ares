@@ -15,7 +15,7 @@ use serde::Deserialize;
 
 /// Raw project settings keyed for the config block; `None` tokens keep the
 /// key known (`nil`, `null`, and object placeholders) without an export value.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, serde::Serialize)]
 #[serde(transparent)]
 pub(crate) struct ProjectSettingsRaw(BTreeMap<String, RawConfigValue>);
 
@@ -34,6 +34,34 @@ impl ProjectSettingsRaw {
 
     pub(crate) fn contains_key(&self, key: &str) -> bool {
         self.0.contains_key(key)
+    }
+
+    pub(crate) fn get(&self, key: &str) -> Option<&RawConfigValue> {
+        self.0.get(key)
+    }
+
+    pub(crate) fn insert(&mut self, key: String, value: RawConfigValue) {
+        self.0.insert(key, value);
+    }
+
+    pub(crate) fn entries(&self) -> impl Iterator<Item = (&String, &RawConfigValue)> {
+        self.0.iter()
+    }
+
+    /// Consumes the raw view into its typed tree (`RawConfigValue::Object`),
+    /// a serde `Deserializer` for the typed builders.
+    pub(crate) fn into_object(self) -> RawConfigValue {
+        RawConfigValue::Object(self.0)
+    }
+
+    /// Extends with another raw view; later keys win (`extend` semantics).
+    pub(crate) fn extend_raw(&mut self, other: &Self) {
+        self.0.extend(
+            other
+                .0
+                .iter()
+                .map(|(key, value)| (key.clone(), value.clone())),
+        );
     }
 
     pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, Option<String>)> {
@@ -63,6 +91,24 @@ pub(crate) enum RawConfigValue {
 }
 
 impl RawConfigValue {
+    /// `ConfigOptionVector::get_at(index)` equivalent: lists return their
+    /// element, scalars return themselves at index 0 only.
+    pub(crate) fn element(&self, index: usize) -> Option<&RawConfigValue> {
+        match self {
+            Self::List(values) => values.get(index),
+            value if index == 0 => Some(value),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        match self {
+            Self::List(values) => values.len(),
+            Self::Null => 0,
+            _ => 1,
+        }
+    }
+
     /// Renders the export token; `nil` strings, `null`, and object
     /// placeholders stay without a value and lists join their renderable
     /// items with `;`.

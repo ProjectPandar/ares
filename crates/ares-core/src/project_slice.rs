@@ -248,12 +248,22 @@ fn prepare_post_closing(project: ProjectSource<'_>) -> Result<PreparedPostClosin
         scale,
         intersected_objects,
     } = if let Some(profile) = project.profile {
-        let loaded = Project::from_stl_with_profiles(
-            project.bytes,
-            profile.filename,
-            profile.settings.clone(),
-            profile.raw.clone(),
-        )?;
+        // `OrcaSlicer.cpp:1624-1640`: `.3mf` inputs load model and embedded
+        // config; other inputs stay on the STL import path.
+        let loaded = match crate::InputFormat::detect(project.bytes) {
+            crate::InputFormat::ThreeMf => Project::from_3mf_with_profiles(
+                project.bytes,
+                profile.composed.settings(),
+                profile.raw,
+                profile.filament_raws,
+            )?,
+            _ => Project::from_stl_with_profiles(
+                project.bytes,
+                profile.filename,
+                profile.composed.settings().clone(),
+                profile.raw.clone(),
+            )?,
+        };
         state::prepare_loaded_project_slice(loaded, project.plate)?
     } else {
         state::prepare_project_slice(project.bytes, project.plate)?

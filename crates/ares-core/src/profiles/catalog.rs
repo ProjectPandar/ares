@@ -16,6 +16,15 @@ use crate::{
 
 use document::{CatalogInput, ProfileDocument, VendorInput};
 
+/// `Catalog::compose` result: the fully resolved profile, the merged raw
+/// presence view, and per-filament raw views for the 3MF slot overlay.
+pub(super) struct ComposedSelection {
+    pub(super) profile: ComposedProfile,
+    pub(super) raw: ProjectSettingsRaw,
+    /// One merged raw per selected filament (chain fields only).
+    pub(super) filament_raws: Vec<ProjectSettingsRaw>,
+}
+
 pub(super) struct Catalog {
     records: Vec<Record>,
     index: BTreeMap<(usize, ProfileKind, String), usize>,
@@ -111,7 +120,7 @@ impl Catalog {
     pub(super) fn compose(
         &self,
         selection: &ProfileSelection,
-    ) -> Result<(ComposedProfile, ProjectSettingsRaw), SliceError> {
+    ) -> Result<ComposedSelection, SliceError> {
         let mut raw = ProjectSettingsRaw::default();
         let mut runtime = ProjectRuntimeOptionsBuilder::default();
         // OrcaSlicer.cpp:2849-2867,2993-3011 applies machine, then process.
@@ -127,18 +136,32 @@ impl Catalog {
             &mut raw,
             &mut runtime,
         )?;
+        // Each filament keeps its own merged raw for the 3MF per-slot overlay
+        // (`OrcaSlicer.cpp:3301` set_at per loaded filament index).
+        let mut filament_raws = Vec::with_capacity(selection.filaments().len());
         let filaments = selection
             .filaments()
             .iter()
-            .map(|name| self.merge(ProfileKind::Filament, name, &mut raw, &mut runtime))
-            .collect::<Result<Vec<_>, _>>()?;
+            .map(|name| {
+                let mut filament_raw = ProjectSettingsRaw::default();
+                let merged =
+                    self.merge(ProfileKind::Filament, name, &mut filament_raw, &mut runtime)?;
+                raw.extend_raw(&filament_raw);
+                filament_raws.push(filament_raw);
+                Ok(merged)
+            })
+            .collect::<Result<Vec<_>, SliceError>>()?;
         cli_metadata::filament_conditions(&mut raw, &filaments);
         let composed =
             compose_resolved_profiles(selection, machine, process, filaments, runtime.resolve());
         if let Some(group) = composed.metadata().inherits_group() {
             raw.insert_strings("inherits_group", group);
         }
-        Ok((composed, raw))
+        Ok(ComposedSelection {
+            profile: composed,
+            raw,
+            filament_raws,
+        })
     }
 
     fn merge(

@@ -34,15 +34,16 @@ pub async fn slice_with_profiles(
     }
     let catalog = Catalog::from_json(catalog_json)?;
     let selection = selection(selection_json)?;
-    let (composed, raw) = catalog.compose(&selection)?;
+    let composed = catalog.compose(&selection)?;
     slice_source(
         ProjectSource {
             bytes: input.as_ref(),
             plate,
             profile: Some(ProfileInput {
                 filename,
-                settings: composed.settings(),
-                raw: &raw,
+                composed: &composed.profile,
+                raw: &composed.raw,
+                filament_raws: &composed.filament_raws,
             }),
         },
         metadata,

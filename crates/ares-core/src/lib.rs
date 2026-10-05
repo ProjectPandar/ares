@@ -194,7 +194,7 @@ pub enum InputFormat {
 }
 
 impl InputFormat {
-    fn detect(input: &[u8]) -> Self {
+    pub(crate) fn detect(input: &[u8]) -> Self {
         if input.starts_with(b"PK\x03\x04") {
             Self::ThreeMf
         } else if input.trim_ascii_start().starts_with(b"solid") {

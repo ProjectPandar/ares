@@ -1,4 +1,4 @@
-use crate::{ProjectSettings, project::raw_settings::ProjectSettingsRaw};
+use crate::project::raw_settings::ProjectSettingsRaw;
 
 /// Input bytes and caller-selected plate/config. Loading occurs only at the
 /// existing project-state seam; no intermediate archive is serialized.
@@ -12,8 +12,10 @@ pub(crate) struct ProjectSource<'a> {
 #[derive(Clone, Copy)]
 pub(crate) struct ProfileInput<'a> {
     pub(crate) filename: &'a str,
-    pub(crate) settings: &'a ProjectSettings,
+    pub(crate) composed: &'a crate::profiles::ComposedProfile,
     pub(crate) raw: &'a ProjectSettingsRaw,
+    /// Merged raw per selected filament (`OrcaSlicer.cpp:3301` slot overlay).
+    pub(crate) filament_raws: &'a [ProjectSettingsRaw],
 }
 
 impl AsRef<[u8]> for ProjectSource<'_> {

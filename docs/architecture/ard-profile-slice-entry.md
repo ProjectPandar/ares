@@ -1,5 +1,57 @@
 # ARD draft: profile-based slicing interface
 
+Status: **STL entry + bundle import + compatibility merged; 3MF overlay entry
+in review (branch `pi/profile-3mf-entry`)**.
+
+## 3MF selected-profile overlay entry (2026-10-05)
+
+Upstream semantics (verified in `OrcaSlicer.cpp` at `8500fcdc`):
+
+- `:1624-1640` — a `.3mf` first input loads the embedded config as the
+  full-config base (`LoadModel|LoadConfig|AddDefaultInstances|LoadAuxiliary`).
+- `:2750-2812 update_full_config` — every key the loaded presets supply
+  overwrites the embedded value; keys no preset supplies keep the embedded
+  value. Machine applies first (`:2849-2867`), then process (`:2993-3011`),
+  then filaments per loaded index (`:3115-3337`, `set_at(src, i-1, 0)` at
+  `:3301`; growth fills with `values.front()`, `Config.hpp:427-447`).
+- Metadata exclusions (`:2798-2804`): `compatible_print(s)`, `model_id`,
+  `inherits`, `dev_model_name`, `name`, `from`, `type`, `version`,
+  `setting_id`, `instantiation` never copy; embedded preset metadata stays.
+- Settings IDs do copy: `printer_settings_id`/`print_settings_id` become the
+  loaded names (`:2048,:2088`); `filament_settings_id` is written per loaded
+  slot, tail slots keep embedded entries, and the loaded preset's own entry is
+  erased (`:3155-3158`).
+- `different_settings_to_system` clears the process slot, loaded filament
+  slots and machine slot when all three kinds are loaded (`:2838,:2978,:3161`);
+  group vectors are `filament_count + 2` (`:2817-2818`).
+- `inherits_group` records per-slot system parents (loaded slots only).
+- `print_compatible_printers` is overwritten unconditionally with the loaded
+  process's `compatible_printers`, including absent → empty (`:2980-2984`).
+- `:2275,:3680-3699` — a 3MF whose loaded filaments all map to one preset
+  name disables the prime tower (smooth timelapse reverts) and records
+  `enable_prime_tower` in the process slot of `different_settings_to_system`.
+- Count mismatch: upstream `different_settings[filament_index]` writes past
+  the `filament_count + 2` vector when more filaments are loaded than
+  embedded (undefined behavior); Ares rejects that input explicitly.
+
+Ares implementation: `Project::from_3mf_with_profiles`
+(`crates/ares-core/src/project/domain/profile_input.rs`) loads the project
+normally, overlays preset keys per the rules above in the raw presence view,
+re-resolves `ProjectSettings` through the presence-aware
+`ProjectSettingsBuilder`, and re-enters the existing `prepare_loaded_project_slice`
+lifecycle. `Catalog::compose` additionally returns one merged raw per selected
+filament for the per-slot overlay. STL behavior is unchanged;
+`sliceWithProfiles` accepts 3MF bytes without a new export. Multi-variant
+filament migration (`set_with_restore_2`) is deferred: selections whose
+filament variant groups differ from the embedded groups are not supported.
+The slice entry performs no machine-switch compatibility check, matching the
+CLI, whose `--load-settings` path does not gate on it; compatibility stays
+with `filterCompatiblePresets`. E2E: `orca_parity_profile_entry_3mf_load_settings`
+exports a native 3MF and compares full ordered output against the native
+`3mf --load-settings/--load-filaments` slice; unit tests pin retention,
+per-slot tail preservation, count rejection, unconditional
+`print_compatible_printers`, and the single-preset prime-tower rule.
+
 Status: **interface approved (2026-10-05); native RED before implementation**.
 Coordinator confirmed source-defined expression error=true with diagnostics and
 required loadScene filename. Update web callers in the same candidate. Record a
