@@ -45,13 +45,42 @@ TypeScript only renders data returned by `crates/ares-wasm`.
   `cargo build -p ares-wasm --target wasm32-unknown-unknown --release` and
   `wasm-bindgen --target web` into the git-ignored
   `web/packages/ares-wasm-js/wasm/`; the library builds to its `dist/`, and
-  the app builds a static SPA in `web/app/dist/`.
+  the app builds a static SPA in `web/app/dist/`. There is no `wasm-opt`
+  pass: binaryen does not shrink the transferred module (see below), so WASM
+  size work belongs on the Rust side, starting from an analysis of where the
+  code size comes from.
 - **Look:** dense desktop layout with CSS custom-property theme tokens
   (dark/light), Orca teal accent, no UI framework.
 - **E2E:** Playwright under `web/e2e/` drives the built SPA: import a
   sample 3MF, slice through the worker, assert G-code markers, screenshot
   Prepare and Preview, and write `target/web-e2e/` artifacts
   (screenshots + G-code SHA-256).
+
+## wasm-opt evaluation (2026-10-05)
+
+binaryen 132 `wasm-opt` on the same `ares_wasm_bg.wasm` (rustc 1.96.0,
+wasm-bindgen 0.2.121, workspace `[profile.release]` with `lto`,
+`codegen-units = 1`, `opt-level = 3`). Sizes are bytes with `gzip -9` and
+brotli 11. Times come from `web/e2e/slice.spec.ts` in Chrome on
+`tests/parity/orca_cli_ender3.3mf`, the mean of five separate runs: engine
+ready, the first slice as the status bar reports it, and the median of 20
+repeat slices.
+
+| wasm-opt | Raw | gzip | brotli | Engine ready | First slice | Repeat slice | wasm-opt time |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| none | 9,267,490 | 3,074,493 | 2,029,353 | 1.49 s | 0.39 s | 123.1 ms | — |
+| `-O1` | 9,002,761 | 3,043,860 | 2,017,965 | 1.51 s | 0.40 s | 123.4 ms | 53 s |
+| `-O3` | 8,807,611 | 3,090,939 | 2,116,517 | 1.46 s | 0.77 s | 129.2 ms | 399 s |
+| `-Os` | 8,798,033 | 3,090,352 | — | — | — | — | 368 s |
+| `-Oz` | 8,635,680 | 3,089,317 | 2,116,198 | 1.48 s | 0.76 s | 124.3 ms | 417 s |
+
+The G-code sha256 is identical at every level. `-O3`, `-Os` and `-Oz` grow
+the gzip and brotli transfer and `-O3`/`-Oz` double the first slice; `-O1`
+saves only about 1% gzip at the cost of a binaryen dependency, 53 s per
+build and a hand-kept feature list (Rust emits no `target_features`
+section). Decision: no `wasm-opt`; WASM size reduction goes back to the
+Rust side. `slice.spec.ts` keeps writing `engineReadyMs`, `firstSliceS` and
+`sliceMedianMs` to `target/web-e2e/result.json` as the performance baseline.
 
 ## Included / deferred
 

@@ -35,6 +35,25 @@ async function canvasHasContent(page: Page) {
   });
 }
 
+/** Re-slices the plate `runs` times; each sample is Slice plate click to "Slice complete" in ms. */
+async function sliceTimings(page: Page, runs = 20) {
+  const samples: number[] = [];
+  for (let run = 0; run < runs; run++) {
+    samples.push(await page.evaluate(() => new Promise<number>((resolve) => {
+      const status = document.querySelector("[data-testid=status]")!;
+      const observer = new MutationObserver(() => {
+        if (!status.textContent!.startsWith("Slice complete")) return;
+        observer.disconnect();
+        resolve(Math.round((performance.now() - started) * 10) / 10);
+      });
+      observer.observe(status, { childList: true, subtree: true, characterData: true });
+      const started = performance.now();
+      [...document.querySelectorAll("button")].find((button) => button.textContent === "Slice plate")!.click();
+    })));
+  }
+  return samples;
+}
+
 test("import 3MF, slice in the WASM worker, export and preview G-code", async ({ page }) => {
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
@@ -43,9 +62,11 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
     if (message.type() === "error") errors.push(`${message.text()} (${message.location().url})`);
   });
 
+  const loadStarted = Date.now();
   await page.goto("/");
   await expect(page).toHaveURL(/#\/prepare$/);
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+  const engineReadyMs = Date.now() - loadStarted;
 
   await page.getByTestId("import-input").setInputFiles(fixture);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
@@ -56,6 +77,9 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
 
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
+  // First slice as the status bar reports it (worker round trip, cold), then warm re-slices.
+  const firstSliceS = Number(/in ([\d.]+) s$/.exec((await page.getByTestId("status").textContent())!)![1]);
+  const sliceMs = await sliceTimings(page);
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -105,7 +129,10 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
 
   writeFileSync(
     `${artifacts}result.json`,
-    `${JSON.stringify({ fixture: "tests/parity/orca_cli_ender3.3mf", bytes: gcode.length, sha256: sha256(gcode) }, null, 2)}\n`,
+    `${JSON.stringify({
+      fixture: "tests/parity/orca_cli_ender3.3mf", bytes: gcode.length, sha256: sha256(gcode),
+      engineReadyMs, firstSliceS, sliceMs, sliceMedianMs: [...sliceMs].sort((a, b) => a - b)[sliceMs.length >> 1],
+    }, null, 2)}\n`,
   );
   writeFileSync(`${artifacts}gcode.sha256`, `${sha256(gcode)}  ${download.suggestedFilename()}\n`);
   expect(errors).toEqual([]);
