@@ -11,3 +11,4 @@ result.json
 /*.band
 /*.o
 /*.cpp
+target-parity/

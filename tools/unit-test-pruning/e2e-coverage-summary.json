@@ -1,0 +1,5621 @@
+{
+ "generated_from": "cargo llvm-cov report (E2E only)",
+ "toolchain": {
+  "rustc": "1.99.0 (LLVM 23.1.1)",
+  "llvmTools": "nix llvm 23.1.0-rc1"
+ },
+ "e2e": [
+  "orca_parity(seed replay seed=0)",
+  "ksr_fdmtest_v4"
+ ],
+ "files": {
+  "crates/ares-cli/src/main.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-cli/src/moves_csv.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/beading/base.rs": {
+   "covered": 1476,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/beading/distributed.rs": {
+   "covered": 651,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/beading/factory.rs": {
+   "covered": 1159,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/beading/limited.rs": {
+   "covered": 302,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/beading/outer_inset.rs": {
+   "covered": 1226,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/beading/redistribute.rs": {
+   "covered": 1018,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/beading/widening.rs": {
+   "covered": 472,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/extrusion_line.rs": {
+   "covered": 770,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/skeletal/graph.rs": {
+   "covered": 1223,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/skeletal/operations.rs": {
+   "covered": 687,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/skeletal/payload.rs": {
+   "covered": 367,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/builder.rs": {
+   "covered": 159,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/discretize.rs": {
+   "covered": 988,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/filtering.rs": {
+   "covered": 1479,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/index.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions.rs": {
+   "covered": 421,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/apply.rs": {
+   "covered": 217,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/ends.rs": {
+   "covered": 281,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/filtering.rs": {
+   "covered": 2086,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/ribs.rs": {
+   "covered": 1490,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/segments.rs": {
+   "covered": 1638,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/segments/junctions.rs": {
+   "covered": 775,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/segments/junctions/beading.rs": {
+   "covered": 202,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/segments/junctions/domains.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/segments/local_maxima.rs": {
+   "covered": 34,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/transitions/segments/toolpaths.rs": {
+   "covered": 495,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/trapezoidation/voronoi.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/wall_toolpaths.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/wall_toolpaths/outline.rs": {
+   "covered": 28,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/wall_toolpaths/postprocess.rs": {
+   "covered": 1167,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/wall_toolpaths/region_order.rs": {
+   "covered": 1253,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/arachne/wall_toolpaths/stitch.rs": {
+   "covered": 1604,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/bridge_support.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/bridges.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/brims.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/brims/combine.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/brims/ears.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/brims/efc_outline.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/contours.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/contours/overhang_printable.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/extrusion_entity.rs": {
+   "covered": 478,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/extrusions.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/extrusions/options.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/extrusions/options/accessors.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/extrusions/options/hardware.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/extrusions/small_area.rs": {
+   "covered": 823,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/filler.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/hooks.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/hooks/geometry.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/hooks/pair.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/hooks/trim.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/mod.rs": {
+   "covered": 398,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/octree.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/adaptive/octree/frame.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/arches.rs": {
+   "covered": 724,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/caps.rs": {
+   "covered": 1167,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/connect.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/extend.rs": {
+   "covered": 1885,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/link.rs": {
+   "covered": 1286,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/mark.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/mod.rs": {
+   "covered": 1584,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/base_support/take.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/checked_rotate.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/concentric_sparse.rs": {
+   "covered": 1844,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect/apply.rs": {
+   "covered": 1950,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect/collision.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect/contour.rs": {
+   "covered": 1739,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect/graph.rs": {
+   "covered": 83,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect/scale.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect/touching.rs": {
+   "covered": 866,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/connect/types.rs": {
+   "covered": 1353,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/cross_hatch.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/cross_hatch/pattern.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/cross_hatch/transform.rs": {
+   "covered": 516,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/gyroid.rs": {
+   "covered": 2015,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/gyroid/waves.rs": {
+   "covered": 1523,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/gyroid_field.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/honeycomb.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning.rs": {
+   "covered": 1640,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/distance_field.rs": {
+   "covered": 1986,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/generator.rs": {
+   "covered": 111,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/glibc_rand.rs": {
+   "covered": 589,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/layer.rs": {
+   "covered": 748,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/layer_geom.rs": {
+   "covered": 2011,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/layer_geom/geometry.rs": {
+   "covered": 1020,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/tree_geom.rs": {
+   "covered": 523,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/tree_node.rs": {
+   "covered": 1692,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/lightning/tree_ops.rs": {
+   "covered": 2051,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/line.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/locked_zag.rs": {
+   "covered": 1031,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/multiline.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/multiline/sweeps.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/multiline/vline.rs": {
+   "covered": 1524,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/multiline_offset.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/multiline_offset/round.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/plane_path.rs": {
+   "covered": 1665,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/plane_path/bounds.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/plane_path/generate.rs": {
+   "covered": 749,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/plane_path/ordering.rs": {
+   "covered": 4,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/plane_path/output.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/chain.rs": {
+   "covered": 1506,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/costs.rs": {
+   "covered": 1160,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/emit.rs": {
+   "covered": 780,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/links.rs": {
+   "covered": 625,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/neighbors.rs": {
+   "covered": 1833,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/path_matrix.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/perimeter.rs": {
+   "covered": 141,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/pinch.rs": {
+   "covered": 1543,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/regions.rs": {
+   "covered": 968,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/rng.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/segments.rs": {
+   "covered": 800,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/segments/cleanup.rs": {
+   "covered": 157,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/surface.rs": {
+   "covered": 1737,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/traverse/links.rs": {
+   "covered": 2027,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/rectilinear/traverse/mod.rs": {
+   "covered": 1789,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/three_d_honeycomb.rs": {
+   "covered": 1490,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/tpms_d.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/fill/tpms_fk.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gap_fills/mod.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gap_fills/solid_surface.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gap_fills/wall.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode/context.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode/descriptions.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode/tail.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_adaptive_bed_mesh.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_auxiliary_fan.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_config_header.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_filament_stats.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_file_start.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_finish.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_first_layer_print_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_format.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_head_wrap_detect_zone.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_header.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_input_shaping.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_junction_deviation.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_layer_change_retraction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_layer_custom.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_layer_diagnostics.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_layer_fan.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_layer_markers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_lift.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_line_numbers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_m73.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_machine_limits.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_machine_start_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_machine_start_runtime_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_machine_start_stat_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_move_buffer.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_move_emit.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_object_labels.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_power_loss_recovery.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_pressure_advance.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_print_bed_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_print_move.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_processor.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_role_change.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_role_fan.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_runtime_options.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_scan_first_layer.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_spiral_vase.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_spiral_vase/geometry.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_spiral_vase/project.rs": {
+   "covered": 1760,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_spiral_vase/project/smoothing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_spiral_vase_transition.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_start_custom.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_startup.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_stat_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_temperature_transition.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_thumbnails.rs": {
+   "covered": 116,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_travel_retraction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_travel_retraction/wipe.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_wipe_before_external_loop.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_wipe_on_loops.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_wrapping_detection.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_writer.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_writer/acceleration.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_writer/junction_deviation.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_writer/retraction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_writer/travel.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/gcode_writer_setup.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/generation.rs": {
+   "covered": 354,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/agg_raster/cells.rs": {
+   "covered": 1072,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/agg_raster/contours.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/agg_raster/grid_ops.rs": {
+   "covered": 1202,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/agg_raster/mod.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/bbox_clip.rs": {
+   "covered": 528,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/bounding_box.rs": {
+   "covered": 1644,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/bridge_direction.rs": {
+   "covered": 1166,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/bridge_direction/principal_components.rs": {
+   "covered": 375,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/chain_points.rs": {
+   "covered": 1860,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/chain_points/kd_tree.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/chain_points/priority_queue.rs": {
+   "covered": 1323,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/active_edges.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/boolean_ex.rs": {
+   "covered": 1327,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/boolean_paths.rs": {
+   "covered": 549,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/bounds.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/engine.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/horizontals.rs": {
+   "covered": 1199,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/input.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/input/bounds.rs": {
+   "covered": 147,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/input/path.rs": {
+   "covered": 1036,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/intersections.rs": {
+   "covered": 397,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/intersections/open.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/intersections/top.rs": {
+   "covered": 845,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/minima.rs": {
+   "covered": 1945,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/offset.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/offset/execute.rs": {
+   "covered": 1640,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/offset/expolygon.rs": {
+   "covered": 1682,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/offset/generate.rs": {
+   "covered": 490,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/offset/generate/lines.rs": {
+   "covered": 531,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/offset/input.rs": {
+   "covered": 548,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/offset/opening.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/ordering.rs": {
+   "covered": 1023,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/ordering/gcc.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/ordering/heap.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/ordering/stable.rs": {
+   "covered": 495,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/append.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/fixup.rs": {
+   "covered": 1227,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/join_points.rs": {
+   "covered": 2297,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/joins.rs": {
+   "covered": 1796,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/open_fixup.rs": {
+   "covered": 13,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/ownership.rs": {
+   "covered": 1802,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/rings.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/output/simple.rs": {
+   "covered": 296,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/point_in_polygon.rs": {
+   "covered": 1306,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/polyline.rs": {
+   "covered": 943,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/polytree.rs": {
+   "covered": 1802,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/polytree/z_paths.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/predicates.rs": {
+   "covered": 1868,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/simplify.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/strictly_simple.rs": {
+   "covered": 1487,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/types.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/variable_offset.rs": {
+   "covered": 713,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/winding.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/z.rs": {
+   "covered": 1792,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/clipper/z_clip.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/convex_hull.rs": {
+   "covered": 1663,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/coord.rs": {
+   "covered": 1655,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/edge_grid.rs": {
+   "covered": 481,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/edge_grid/query.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/edge_grid/raster.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/expolygon.rs": {
+   "covered": 1940,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/build.rs": {
+   "covered": 1758,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/floating.rs": {
+   "covered": 624,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/floating/build.rs": {
+   "covered": 1951,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/floating/query.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/intersections.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/intersections_mm.rs": {
+   "covered": 1555,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/outside.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/query.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/query/mm.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/line_distance_tree/segment.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/marching_squares.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/marching_squares/rings.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/medial_axis.rs": {
+   "covered": 1380,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/medial_axis/annotate.rs": {
+   "covered": 1332,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/medial_axis/annotate/propagate.rs": {
+   "covered": 887,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/medial_axis/chaining.rs": {
+   "covered": 307,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/medial_axis/diagram.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/medial_axis/validate.rs": {
+   "covered": 1974,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/mutable_polygon.rs": {
+   "covered": 1356,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/mutable_polygon/narrow.rs": {
+   "covered": 1831,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/mutable_polygon/ring.rs": {
+   "covered": 507,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/point_hash_map.rs": {
+   "covered": 1496,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/polygon.rs": {
+   "covered": 317,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/polyline.rs": {
+   "covered": 1090,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/region_expansion/merge.rs": {
+   "covered": 1093,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/region_expansion/propagate.rs": {
+   "covered": 2039,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/region_expansion/types.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/region_expansion/wave_seeds.rs": {
+   "covered": 1773,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/region_expansion/wave_seeds/aabb.rs": {
+   "covered": 1010,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/region_expansion/wave_seeds/splits.rs": {
+   "covered": 2020,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/simplification.rs": {
+   "covered": 1801,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/geometry/support_grid.rs": {
+   "covered": 2140,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/area.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/calibration.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/combination.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/concentric.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/elephant_foot.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/internal_bridge.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/multiline.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/narrow_internal.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/overlap.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/rotation.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/scanline.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/spacing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/spiral_vase.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/symmetry.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/infills/top_surface.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/lib.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/chaining.rs": {
+   "covered": 747,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/chaining/exact.rs": {
+   "covered": 1867,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/chaining/gaps.rs": {
+   "covered": 671,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/chaining/gaps/spatial.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/intersection.rs": {
+   "covered": 1692,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/slabs.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/slabs/facet.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/slicing_mode.rs": {
+   "covered": 211,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/mesh_slicer/topology.rs": {
+   "covered": 548,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/model.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/model_shrinkage.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/moves.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/acceleration.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/adaptive_bed_mesh.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/auxiliary_fan.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/bed_excluded_area.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/bed_temperature.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/brim.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/chamber_temperature.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/collector.rs": {
+   "covered": 1657,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/orca_block_keys.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/transform.rs": {
+   "covered": 414,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/value.rs": {
+   "covered": 216,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/value/raw_string.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/value/sequence.rs": {
+   "covered": 369,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/value/strings.rs": {
+   "covered": 382,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_export/writer.rs": {
+   "covered": 1629,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_types/opaque.rs": {
+   "covered": 807,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_types/point.rs": {
+   "covered": 1648,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_types/scalar.rs": {
+   "covered": 1097,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_types/scalar_bool_int.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_types/scalar_nullable.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/config_types/semantic.rs": {
+   "covered": 1653,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/custom_gcode.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/decode.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/different_extruders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/draft_shield.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/exhaust_fan.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/extruder_count.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/extruder_index.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/extruder_variant.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/fan_speedup.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/fdm_normalization.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_change.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_config_export.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_config_export/serialization.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_cooling_before_tower.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_count.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_map_recommend.rs": {
+   "covered": 403,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options.rs": {
+   "covered": 1548,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/gcode_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/gcode_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/print_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/print_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/region_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/region_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/retract_overrides.rs": {
+   "covered": 834,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/retract_overrides/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/wire.rs": {
+   "covered": 409,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/wire/early.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/wire/late.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_options/wire/middle.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/filament_type.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/flow_ratios.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/flush_placeholders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/gap_fill.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/gcode_flavor.rs": {
+   "covered": 797,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/gcode_options.rs": {
+   "covered": 359,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/gcode_output.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/hardware.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/extra_solid.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/internal_bridge_filter.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/layer_role.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/overlap.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/parse.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/patterns.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/scalars.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/infill/top_surface.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/initial_layer_print_height.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/input_shaping.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/ironing_flow.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/ironing_type.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/layer_change_retraction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/layer_change_retraction/config.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/layer_change_retraction/lift_type.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/layer_change_retraction/parsing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/legacy.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/legacy/sla.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/legacy/thumbnails.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/legacy/wiping_volumes.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/machine_limits.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/model_config_deserialize.rs": {
+   "covered": 456,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/model_config_deserialize/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/nozzle_temperature.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/object_distance.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/object_fields.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/object_options.rs": {
+   "covered": 1646,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/object_options/overrides.rs": {
+   "covered": 438,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/option_group.rs": {
+   "covered": 570,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/overhang_reverse.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/overhang_speed.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/parameter_size.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/parsing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/part_cooling_fan.rs": {
+   "covered": 1958,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/part_cooling_fan/parsing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/part_cooling_fan/role.rs": {
+   "covered": 824,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/pellet.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/physical_extruder_map.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/power_loss_recovery.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/preheat.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/preset_metadata.rs": {
+   "covered": 1649,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/pressure_advance.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options.rs": {
+   "covered": 738,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/gcode_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/gcode_source/enums.rs": {
+   "covered": 817,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/gcode_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/machine_envelope.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/remaining.rs": {
+   "covered": 1675,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/remaining/structured.rs": {
+   "covered": 827,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/remaining/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/printer_options/wire.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options.rs": {
+   "covered": 665,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/gcode_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/gcode_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/object_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/object_source/enums.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/object_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/print_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/print_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/region_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/region_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/wire.rs": {
+   "covered": 409,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/wire/early.rs": {
+   "covered": 414,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/wire/late.rs": {
+   "covered": 414,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/process_options/wire/middle.rs": {
+   "covered": 414,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_config_views.rs": {
+   "covered": 406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_config_views/retract.rs": {
+   "covered": 407,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_deserialize.rs": {
+   "covered": 1744,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_fdm_normalization.rs": {
+   "covered": 1644,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_fdm_normalization/stage1.rs": {
+   "covered": 415,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_fdm_normalization/stage2.rs": {
+   "covered": 1669,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options.rs": {
+   "covered": 1622,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options/gcode_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options/gcode_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options/preset_source.rs": {
+   "covered": 1714,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options/preset_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options/print_source.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options/print_source/wire.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_runtime_options/wire.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_settings.rs": {
+   "covered": 1707,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_variants.rs": {
+   "covered": 825,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_variants/filament.rs": {
+   "covered": 14,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_variants/filament_select.rs": {
+   "covered": 1295,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_variants/index.rs": {
+   "covered": 907,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_variants/printer.rs": {
+   "covered": 14,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/project_variants/select.rs": {
+   "covered": 1666,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/raft.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/region_fields.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/region_options.rs": {
+   "covered": 1204,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/region_options/merge.rs": {
+   "covered": 1240,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/region_options/metadata.rs": {
+   "covered": 447,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/region_options/normalization.rs": {
+   "covered": 1251,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/region_options/overrides.rs": {
+   "covered": 459,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/registry.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/registry/definitions/table.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/registry/key_lists.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/registry/print_config_def.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/relative_e.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/shell_layers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/skirt_type.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/slow_down_layers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/small_area_infill_flow.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/small_perimeter.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/speed.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_different_extruders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_enable.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_interface_not_for_body.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_ironing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_object_skip_flush.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_placement.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_style.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_threshold.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_type.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/support_z_distance.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/temperature_vector.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/temperature_vitrification.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/timelapse_type.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/tree_support_options.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/typed_legacy/actions.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/typed_legacy/convert.rs": {
+   "covered": 1642,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/typed_legacy/convert/obsolete.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/typed_legacy/project.rs": {
+   "covered": 842,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/typed_legacy/project/lexical.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/typed_legacy/thumbnails.rs": {
+   "covered": 937,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_multi_to_multi.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_multi_to_multi/float_or_percent.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_multi_to_multi/multi_to_single_2.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_multi_to_multi/second.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_non_diff_values_to_base_config.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_non_diff_values_to_base_config/restore_vectors.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/bools.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/enums.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/float_or_percent.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/multiple_filament.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/multiple_filament_bool.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/multiple_filament_enum.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/multiple_filament_float_or_percent.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_printer_extruders/numbers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/update_single_to_multi.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/aggregate.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/basic.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/dimensions.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/dispatch.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/extrusion_width.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/firmware_retraction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/flow.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/gcode_flavor.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/helpers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/infill_pattern.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/range.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/validation/spiral_vase.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/vector_resize.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/volumetric_speed.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/wall_direction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/options/wall_sequence.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/fuzzy_skin.rs": {
+   "covered": 1561,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/fuzzy_skin_coherent_noise.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/fuzzy_skin_coherent_noise/noisegen.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/fuzzy_skin_noise.rs": {
+   "covered": 698,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/fuzzy_skin_seeded.rs": {
+   "covered": 798,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/options.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/options/arachne.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/overhang.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/overhang_reverse.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/rectangles.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/seams.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/simplification.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/thin_walls.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/perimeters/wall_loops.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/pipeline.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/pipeline/diagnostics.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/planning.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_auto_filament_map_diff_prune_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_extruder_count_change_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_filament_map_auto_mode_gate_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_filament_map_extraction_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_filament_map_mode_guard_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_full_config_placeholder_entry_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_manual_filament_map_same_map_prune_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_manual_filament_map_setup_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_print_diff_config_invalidation_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_print_diff_set_reassign_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_scarf_joint_seam_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_status_initial_diff_update_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/apply_support_used_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/fuzzy_painted_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_fuzzy_painted_region_sort_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_fuzzy_painted_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_fuzzy_volume_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_model_part_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_modifier_changed_config_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_modifier_parent_scan_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_modifier_unchanged_fallback_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_painted_region_sort_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_painted_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/generate_regions_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/instance_sync_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/mesh_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/model_object_status_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/model_volume_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/painted_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/print_object_status_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/print_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/region_merge_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/transform_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/verify_update_config_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/verify_update_region_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_apply/volume_cache_state.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/gap_fill_filter.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/generate.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/ironing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/ironing_scanlines.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/shell_layers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_angle.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_base_pattern_spacing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_critical_regions_only.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_interface.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_interface_spacing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_ironing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_object_xy_distance.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_on_build_plate_only.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_rectangle.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_remove_small_overhang.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_style_snug.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_threshold_contacts.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/print_paths/support_tree_brim.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/printable_height.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/catalog.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/catalog/cli_metadata.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/catalog/document.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/catalog/raw.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/compatible.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/composition.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/composition/filament.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/composition/metadata.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/entry.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/fragment.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/fragment/metadata.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/fragment/payload.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/import.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/profiles/inheritance.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/archive.rs": {
+   "covered": 908,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/archive/bytes.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/archive/central.rs": {
+   "covered": 439,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/archive/local.rs": {
+   "covered": 227,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/archive/path.rs": {
+   "covered": 426,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/content_types.rs": {
+   "covered": 1357,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/domain.rs": {
+   "covered": 2046,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/domain/documents.rs": {
+   "covered": 1754,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/domain/profile_input.rs": {
+   "covered": 396,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/domain/volume_offsets.rs": {
+   "covered": 1376,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config.rs": {
+   "covered": 815,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/candidates.rs": {
+   "covered": 1656,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/cardinality.rs": {
+   "covered": 836,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/grouping.rs": {
+   "covered": 1659,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/layers.rs": {
+   "covered": 1243,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/occupancy.rs": {
+   "covered": 1248,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/phases.rs": {
+   "covered": 1654,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/selector_validation.rs": {
+   "covered": 1656,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/effective_config/usage.rs": {
+   "covered": 1655,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/facets_annotation.rs": {
+   "covered": 410,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/facets_annotation/selector.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/facets_annotation/selector/neighbors.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/facets_annotation/selector/split.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/facets_annotation/selector/strict.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/filament_sequence.rs": {
+   "covered": 453,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/layer_config_ranges.rs": {
+   "covered": 384,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/load.rs": {
+   "covered": 1820,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/load/assemble.rs": {
+   "covered": 1858,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/load/colors.rs": {
+   "covered": 938,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/load/graph.rs": {
+   "covered": 1860,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/load/mesh_prepare.rs": {
+   "covered": 466,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/load/metadata.rs": {
+   "covered": 1851,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/load/volume_metadata.rs": {
+   "covered": 1850,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/model_settings.rs": {
+   "covered": 1859,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/model_settings/object_metadata.rs": {
+   "covered": 928,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/model_settings/part_metadata.rs": {
+   "covered": 455,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/model_xml.rs": {
+   "covered": 929,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/plate_config.rs": {
+   "covered": 1660,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/raw_settings.rs": {
+   "covered": 1228,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/raw_settings/deserialize.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/region_graph.rs": {
+   "covered": 1648,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/region_graph/bounds.rs": {
+   "covered": 1631,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/relationships.rs": {
+   "covered": 1825,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/transform.rs": {
+   "covered": 1891,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/xml.rs": {
+   "covered": 1839,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/xml/attribute.rs": {
+   "covered": 1848,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/xml/element.rs": {
+   "covered": 1372,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/xml/model.rs": {
+   "covered": 1845,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/xml/role.rs": {
+   "covered": 911,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project/xml_characters.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice.rs": {
+   "covered": 576,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/bounds.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/capabilities.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/chained_intersections.rs": {
+   "covered": 403,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/closing.rs": {
+   "covered": 765,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/compensation.rs": {
+   "covered": 618,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/compensation/multi_region.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/compensation/preflight.rs": {
+   "covered": 474,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/compensation/xy.rs": {
+   "covered": 638,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/conical_overhang.rs": {
+   "covered": 377,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/conical_overhang/geometry.rs": {
+   "covered": 392,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/elephant_foot.rs": {
+   "covered": 946,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/elephant_foot/distance.rs": {
+   "covered": 691,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/elephant_foot/profile.rs": {
+   "covered": 1552,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/extruders.rs": {
+   "covered": 647,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/extrusion_islands.rs": {
+   "covered": 372,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/extrusion_islands/tool_regions.rs": {
+   "covered": 510,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/extrusion_islands/volume.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities.rs": {
+   "covered": 1935,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/adaptive.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/concentric.rs": {
+   "covered": 349,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/concentric/finalize.rs": {
+   "covered": 9,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/concentric/generate.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/crosshatch.rs": {
+   "covered": 41,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/cubic.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/flow.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/gap_residual.rs": {
+   "covered": 1932,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/generate.rs": {
+   "covered": 1810,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/grid.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/gyroid.rs": {
+   "covered": 143,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/honeycomb.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/ironing.rs": {
+   "covered": 205,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/lateral_honeycomb.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/lateral_lattice.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/lightning.rs": {
+   "covered": 19,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/line.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/locked_zag.rs": {
+   "covered": 1610,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/monotonic.rs": {
+   "covered": 495,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/plane_path.rs": {
+   "covered": 230,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/quartercubic.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/simplify.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/stars.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/three_d_honeycomb.rs": {
+   "covered": 43,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/tpms_d.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/tpms_fk.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/triangles.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/fill_entities/types.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit.rs": {
+   "covered": 371,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/adaptive_pa.rs": {
+   "covered": 1255,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/adaptive_pa/model.rs": {
+   "covered": 1138,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/adaptive_pa/number.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/adaptive_pa/pchip.rs": {
+   "covered": 1153,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/adaptive_pa/scan.rs": {
+   "covered": 103,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/brim.rs": {
+   "covered": 396,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/brim/emit.rs": {
+   "covered": 1958,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/chamber.rs": {
+   "covered": 1996,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/conflict.rs": {
+   "covered": 2075,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/conflict/collect.rs": {
+   "covered": 1779,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/conflict/intersect.rs": {
+   "covered": 1065,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling.rs": {
+   "covered": 1978,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/feedrate.rs": {
+   "covered": 373,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/feedrate/adjustment.rs": {
+   "covered": 863,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/feedrate/parse.rs": {
+   "covered": 446,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/feedrate/range.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/feedrate/rewrite.rs": {
+   "covered": 1926,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/feedrate/slowdown.rs": {
+   "covered": 913,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/markers.rs": {
+   "covered": 1687,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/cooling/role_fans.rs": {
+   "covered": 1986,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/emit_helpers.rs": {
+   "covered": 852,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/expression.rs": {
+   "covered": 2143,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/expression/functions.rs": {
+   "covered": 1858,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/fan_chunks.rs": {
+   "covered": 1594,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/fan_mover.rs": {
+   "covered": 1548,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/fan_mover/fan.rs": {
+   "covered": 317,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/fan_mover/helpers.rs": {
+   "covered": 1357,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/fan_mover/motion.rs": {
+   "covered": 889,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/file_start.rs": {
+   "covered": 408,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/finish.rs": {
+   "covered": 1281,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/finish/accounting.rs": {
+   "covered": 919,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/footprint.rs": {
+   "covered": 1724,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/footprint/coverage.rs": {
+   "covered": 598,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/footprint/first_layer.rs": {
+   "covered": 1330,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/footprint/islands.rs": {
+   "covered": 675,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/header.rs": {
+   "covered": 2164,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layer_gcode.rs": {
+   "covered": 1679,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layer_gcode/startup.rs": {
+   "covered": 408,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers.rs": {
+   "covered": 1042,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/boundary.rs": {
+   "covered": 1598,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/brim_emit.rs": {
+   "covered": 391,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/cooling_result.rs": {
+   "covered": 1421,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/entry.rs": {
+   "covered": 1437,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/entry_builder.rs": {
+   "covered": 398,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/fan_setup.rs": {
+   "covered": 411,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/group.rs": {
+   "covered": 1407,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/instances.rs": {
+   "covered": 407,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/layer_end.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/object_entry.rs": {
+   "covered": 827,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/object_order.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/preamble.rs": {
+   "covered": 408,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/raft_entry.rs": {
+   "covered": 578,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/raft_schedule.rs": {
+   "covered": 377,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/schedule.rs": {
+   "covered": 1264,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/skirt_emit.rs": {
+   "covered": 972,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/skirt_schedule.rs": {
+   "covered": 1406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/support_entry.rs": {
+   "covered": 1244,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/timelapse.rs": {
+   "covered": 407,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/tool_buckets.rs": {
+   "covered": 1185,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/tool_buckets/object.rs": {
+   "covered": 406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/tool_buckets/support.rs": {
+   "covered": 1977,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/tool_entry.rs": {
+   "covered": 2064,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/tower.rs": {
+   "covered": 1498,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/layers/wrapping.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/lexer.rs": {
+   "covered": 2064,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/machine.rs": {
+   "covered": 402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/machine/envelope.rs": {
+   "covered": 402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/machine/exhaust_fan.rs": {
+   "covered": 406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/machine/first_filaments.rs": {
+   "covered": 1727,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/machine/start_config.rs": {
+   "covered": 394,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/machine/temperature.rs": {
+   "covered": 2071,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion.rs": {
+   "covered": 829,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/acceleration.rs": {
+   "covered": 1992,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/arc.rs": {
+   "covered": 1910,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/arc/retained.rs": {
+   "covered": 785,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/arc/simplify.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/auto_lift.rs": {
+   "covered": 1906,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/auto_lift/detect.rs": {
+   "covered": 748,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/clip.rs": {
+   "covered": 1107,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/extruder_registry.rs": {
+   "covered": 803,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/extrusion.rs": {
+   "covered": 103,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/fan.rs": {
+   "covered": 1992,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/features.rs": {
+   "covered": 2072,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/format.rs": {
+   "covered": 1660,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/jerk.rs": {
+   "covered": 994,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/layer.rs": {
+   "covered": 35,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/loop_paths.rs": {
+   "covered": 1513,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/loop_paths/adaptive_pa.rs": {
+   "covered": 1259,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/loop_paths/inward.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/materialized.rs": {
+   "covered": 736,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build.rs": {
+   "covered": 821,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/context.rs": {
+   "covered": 800,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/crossing.rs": {
+   "covered": 829,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/fields/assemble.rs": {
+   "covered": 822,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/fields/hilbert.rs": {
+   "covered": 1664,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/fields/retraction.rs": {
+   "covered": 820,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/fields/wipe.rs": {
+   "covered": 818,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/region.rs": {
+   "covered": 821,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/retraction.rs": {
+   "covered": 834,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/build/scarf.rs": {
+   "covered": 831,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/options/helpers.rs": {
+   "covered": 1646,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/origin.rs": {
+   "covered": 396,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/overhang.rs": {
+   "covered": 688,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/overhang/curl.rs": {
+   "covered": 730,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/overhang/curl/geometry.rs": {
+   "covered": 1119,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/overhang/sections.rs": {
+   "covered": 766,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path.rs": {
+   "covered": 1910,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/adaptive_pa.rs": {
+   "covered": 195,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing.rs": {
+   "covered": 1667,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing/boundary.rs": {
+   "covered": 1636,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing/boundary/resample.rs": {
+   "covered": 752,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing/rectangle.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing/router.rs": {
+   "covered": 1982,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing/router/closest_lines.rs": {
+   "covered": 877,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing/router/path_shape.rs": {
+   "covered": 2036,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing/safe_zone.rs": {
+   "covered": 842,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/constant.rs": {
+   "covered": 939,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/retraction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/role_change.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel.rs": {
+   "covered": 952,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel/approach.rs": {
+   "covered": 1988,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel/approach/move_emit.rs": {
+   "covered": 2033,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel/approach/waypoints.rs": {
+   "covered": 966,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel/dispatch.rs": {
+   "covered": 372,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel/restate.rs": {
+   "covered": 1877,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel/retract.rs": {
+   "covered": 18,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/start_travel/route.rs": {
+   "covered": 824,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/travel_emit.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/path/variable.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/perimeter.rs": {
+   "covered": 196,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/perimeter/multi_path.rs": {
+   "covered": 196,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/scan.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/scarf.rs": {
+   "covered": 794,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/scarf/emit.rs": {
+   "covered": 328,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/skirt_brim.rs": {
+   "covered": 1998,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/state.rs": {
+   "covered": 2050,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/support.rs": {
+   "covered": 1876,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/tool_selection.rs": {
+   "covered": 412,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/tower.rs": {
+   "covered": 38,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/travel.rs": {
+   "covered": 1353,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/travel/lift.rs": {
+   "covered": 1732,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/travel/lift/spiral.rs": {
+   "covered": 1045,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/travel/retract_core.rs": {
+   "covered": 385,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/travel/unretract.rs": {
+   "covered": 294,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/travel/wipe_path.rs": {
+   "covered": 204,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/travel/wipe_sequence.rs": {
+   "covered": 1051,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/motion/writer_state.rs": {
+   "covered": 1167,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/object.rs": {
+   "covered": 1642,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/offset.rs": {
+   "covered": 830,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/placeholders.rs": {
+   "covered": 1970,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/placeholders/bounds.rs": {
+   "covered": 806,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/placeholders/cut_retraction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/placeholders/timestamp.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/pressure_advance.rs": {
+   "covered": 612,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor.rs": {
+   "covered": 371,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/arc_accounting.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/delays.rs": {
+   "covered": 650,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/envelope.rs": {
+   "covered": 412,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/estimate.rs": {
+   "covered": 1691,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/estimate/elapsed.rs": {
+   "covered": 433,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/estimate/export_cache.rs": {
+   "covered": 407,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/estimate/seam.rs": {
+   "covered": 1210,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/export_lines.rs": {
+   "covered": 373,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/export_lines/reader.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/export_lines/reader/number.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/filament_change.rs": {
+   "covered": 400,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion.rs": {
+   "covered": 1572,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/arc.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/config_commands.rs": {
+   "covered": 1641,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/firmware.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/homing.rs": {
+   "covered": 1308,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/limits.rs": {
+   "covered": 910,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/planner/junction.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/planner/mod.rs": {
+   "covered": 541,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/planner/trapezoid.rs": {
+   "covered": 13,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion/segment.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/motion_util.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/moves.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/moves/actual_speed.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/moves/tags.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/schedule.rs": {
+   "covered": 557,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/stats.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/processor/time.rs": {
+   "covered": 847,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/skirt.rs": {
+   "covered": 1883,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/skirt/geometry.rs": {
+   "covered": 1975,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/skirt/groups.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/skirt/occupied.rs": {
+   "covered": 1439,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/small_area.rs": {
+   "covered": 412,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/spiral_vase.rs": {
+   "covered": 392,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tags.rs": {
+   "covered": 1754,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/temperature.rs": {
+   "covered": 8,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/template.rs": {
+   "covered": 787,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/timelapse.rs": {
+   "covered": 1713,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/timelapse_pos.rs": {
+   "covered": 1698,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering.rs": {
+   "covered": 1244,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/collect.rs": {
+   "covered": 1984,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/first_layer.rs": {
+   "covered": 1400,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/partitions.rs": {
+   "covered": 832,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/reorder.rs": {
+   "covered": 422,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/reorder/groups.rs": {
+   "covered": 824,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/reorder/solve.rs": {
+   "covered": 829,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/statistics.rs": {
+   "covered": 414,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/wiping.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/wiping/assign.rs": {
+   "covered": 10,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_ordering/wiping/source.rs": {
+   "covered": 580,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_transition.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_transition/change.rs": {
+   "covered": 341,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_transition/change/dynamic.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/tool_transition/temperature.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/value.rs": {
+   "covered": 927,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/value/random.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower.rs": {
+   "covered": 388,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/data.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/emit.rs": {
+   "covered": 28,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/extents.rs": {
+   "covered": 1793,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/fake.rs": {
+   "covered": 1507,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/filament.rs": {
+   "covered": 626,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/finish_layer.rs": {
+   "covered": 8,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/generate.rs": {
+   "covered": 96,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/generator.rs": {
+   "covered": 138,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/geometry.rs": {
+   "covered": 318,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/geometry/bottom.rs": {
+   "covered": 240,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/geometry/cone.rs": {
+   "covered": 24,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/geometry/rounding.rs": {
+   "covered": 1898,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/integration.rs": {
+   "covered": 1198,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/interface_temperature.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/occupancy.rs": {
+   "covered": 877,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/plan.rs": {
+   "covered": 306,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/planning.rs": {
+   "covered": 396,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/postprocess.rs": {
+   "covered": 873,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/prime.rs": {
+   "covered": 17,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/result.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/runtime.rs": {
+   "covered": 1073,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/tool_change.rs": {
+   "covered": 12,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/unload.rs": {
+   "covered": 285,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/wipe.rs": {
+   "covered": 37,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/writer.rs": {
+   "covered": 50,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/writer/commands.rs": {
+   "covered": 907,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/writer/moves.rs": {
+   "covered": 944,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/gcode_emit/wipe_tower/writer/path.rs": {
+   "covered": 13,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/coalesce.rs": {
+   "covered": 1571,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/narrow.rs": {
+   "covered": 598,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/narrow/filter.rs": {
+   "covered": 85,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/narrow/split.rs": {
+   "covered": 20,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/narrow/trace.rs": {
+   "covered": 1189,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/params.rs": {
+   "covered": 420,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/params/locked.rs": {
+   "covered": 1071,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/params/projection.rs": {
+   "covered": 732,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/params/projection/rotation.rs": {
+   "covered": 150,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/params/projection/sticky.rs": {
+   "covered": 1089,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/priority.rs": {
+   "covered": 1368,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/group_fills/types.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/incomplete_sink.rs": {
+   "covered": 401,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/incomplete_sink/layer_region.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/incomplete_sink/project_context.rs": {
+   "covered": 415,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/incomplete_sink/surface_type_detection.rs": {
+   "covered": 413,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/island_print_order.rs": {
+   "covered": 335,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/largest_contours.rs": {
+   "covered": 414,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/layers.rs": {
+   "covered": 366,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/looped_intersections.rs": {
+   "covered": 402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/parameters.rs": {
+   "covered": 1125,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/path_simplification.rs": {
+   "covered": 416,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters.rs": {
+   "covered": 389,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/config.rs": {
+   "covered": 1107,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/materialize.rs": {
+   "covered": 1153,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/order.rs": {
+   "covered": 1175,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/sandwich.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/steep_overhang.rs": {
+   "covered": 637,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/top_surface.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/traverse.rs": {
+   "covered": 1162,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/traverse/overhang.rs": {
+   "covered": 1437,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/variable_width.rs": {
+   "covered": 1169,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/arachne/walls.rs": {
+   "covered": 1146,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic.rs": {
+   "covered": 369,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/chained_loops.rs": {
+   "covered": 398,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/chained_loops/tree.rs": {
+   "covered": 1214,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/chained_loops/types.rs": {
+   "covered": 215,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/entity_collections.rs": {
+   "covered": 391,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/entity_collections/orientation.rs": {
+   "covered": 1379,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/entity_collections/traverse.rs": {
+   "covered": 1029,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/entity_collections/types.rs": {
+   "covered": 992,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/extra_perimeters/apply.rs": {
+   "covered": 67,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/extra_perimeters/mod.rs": {
+   "covered": 75,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/extra_perimeters/ordering.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/fuzzy_skin.rs": {
+   "covered": 366,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/gap_domain.rs": {
+   "covered": 388,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/gap_extrusion.rs": {
+   "covered": 1397,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/gap_extrusion/coverage.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/gap_extrusion/preflight.rs": {
+   "covered": 404,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/gap_extrusion/variable_width.rs": {
+   "covered": 879,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/hierarchy.rs": {
+   "covered": 407,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/hierarchy/materialize.rs": {
+   "covered": 1266,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/hierarchy/nest.rs": {
+   "covered": 1268,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/hierarchy/types.rs": {
+   "covered": 374,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/infill_boundary.rs": {
+   "covered": 391,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/infill_boundary/geometry.rs": {
+   "covered": 52,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/infill_boundary/preflight.rs": {
+   "covered": 750,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/materialize.rs": {
+   "covered": 398,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/materialize/path.rs": {
+   "covered": 776,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/materialize/tree.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/materialize/types.rs": {
+   "covered": 13,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/medial_gap.rs": {
+   "covered": 384,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/onion.rs": {
+   "covered": 405,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/onion/config.rs": {
+   "covered": 405,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/onion/iterate.rs": {
+   "covered": 717,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/onion/types.rs": {
+   "covered": 372,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/perimeter_append.rs": {
+   "covered": 1017,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/perimeter_append/reorient.rs": {
+   "covered": 526,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/preflight.rs": {
+   "covered": 1955,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/prelude.rs": {
+   "covered": 1444,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/chain.rs": {
+   "covered": 2101,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/chain/coords.rs": {
+   "covered": 1526,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/chain/reorder.rs": {
+   "covered": 862,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/chain/search.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/entity_chain.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/kd_tree.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/polyline_chain.rs": {
+   "covered": 1062,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/polyline_chain/advanced.rs": {
+   "covered": 2069,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/polyline_chain/advanced/queue.rs": {
+   "covered": 2009,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/polyline_chain/advanced/types.rs": {
+   "covered": 976,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/polyline_chain/two_exchange.rs": {
+   "covered": 1495,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/shortest_path/priority_queue.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/top_split.rs": {
+   "covered": 735,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/top_split/config.rs": {
+   "covered": 402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/top_split/first_outer.rs": {
+   "covered": 871,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/top_split/split.rs": {
+   "covered": 245,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/top_split/types.rs": {
+   "covered": 354,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/traversal.rs": {
+   "covered": 1163,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/traversal/classify.rs": {
+   "covered": 1220,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/traversal/types.rs": {
+   "covered": 614,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/classic/types.rs": {
+   "covered": 359,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/context.rs": {
+   "covered": 1136,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/flow.rs": {
+   "covered": 2151,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/flow/fill.rs": {
+   "covered": 1250,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/flow/support.rs": {
+   "covered": 231,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/groups.rs": {
+   "covered": 397,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/groups/compatibility.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/groups/redistribute.rs": {
+   "covered": 410,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/layer_region.rs": {
+   "covered": 1112,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/layer_region/types.rs": {
+   "covered": 383,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/preflight.rs": {
+   "covered": 2075,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/perimeters/types.rs": {
+   "covered": 1111,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/planning.rs": {
+   "covered": 411,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pre_closing_unions.rs": {
+   "covered": 378,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill.rs": {
+   "covered": 376,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/anchored_polygon.rs": {
+   "covered": 1008,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/anchored_polygon/sections.rs": {
+   "covered": 1004,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/anchored_polygon/tracing.rs": {
+   "covered": 1196,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/automatic_bridge_angle.rs": {
+   "covered": 2097,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/bridge_rewrite_areas.rs": {
+   "covered": 802,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_anchored_bridge.rs": {
+   "covered": 470,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_boundary_polylines.rs": {
+   "covered": 919,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_bridge_angle.rs": {
+   "covered": 441,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_bridge_area.rs": {
+   "covered": 484,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_bridge_commit.rs": {
+   "covered": 457,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_bridge_postprocessing.rs": {
+   "covered": 439,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_collision_reconstruction.rs": {
+   "covered": 439,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidate_ordering.rs": {
+   "covered": 476,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/candidates.rs": {
+   "covered": 468,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/current_layer_context.rs": {
+   "covered": 1455,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/deep_sparse_area.rs": {
+   "covered": 900,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/internal_bridge_angle.rs": {
+   "covered": 462,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/internal_bridge_surfaces.rs": {
+   "covered": 825,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/internal_infill_rebuild.rs": {
+   "covered": 1574,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/internal_solid_recomposition.rs": {
+   "covered": 1572,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/layer_clustering.rs": {
+   "covered": 467,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/lightning_expansion.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/lower_cluster_subtraction.rs": {
+   "covered": 408,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/region_bridge_ensuring_areas.rs": {
+   "covered": 1561,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/region_bridge_surface_commit.rs": {
+   "covered": 1577,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/arms.rs": {
+   "covered": 543,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/arms_tail.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/arms_tail/lightning.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/mod.rs": {
+   "covered": 431,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/projected.rs": {
+   "covered": 827,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/stage.rs": {
+   "covered": 399,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/transaction.rs": {
+   "covered": 390,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/transaction/anchor_projection.rs": {
+   "covered": 788,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/transaction/candidate_expansion.rs": {
+   "covered": 395,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/transaction/candidate_expansion/layers.rs": {
+   "covered": 431,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/transaction/extra_bridge.rs": {
+   "covered": 391,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/bridge_over_infill/transaction/surface_rewrite.rs": {
+   "covered": 806,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/combine_infill.rs": {
+   "covered": 404,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/combine_infill/process.rs": {
+   "covered": 378,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces.rs": {
+   "covered": 391,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/detect_bridge_directions.rs": {
+   "covered": 935,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/expand_bridges_detect_orientations.rs": {
+   "covered": 535,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/expand_expolygons.rs": {
+   "covered": 555,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/expand_merge.rs": {
+   "covered": 1734,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/group_bridges.rs": {
+   "covered": 660,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/merge_bridges.rs": {
+   "covered": 521,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/parameters.rs": {
+   "covered": 536,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/process.rs": {
+   "covered": 458,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/stage.rs": {
+   "covered": 404,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/external_surfaces/types.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/fill_surfaces.rs": {
+   "covered": 394,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_promotion.rs": {
+   "covered": 385,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_promotion/cleanup.rs": {
+   "covered": 412,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_promotion/promote.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_promotion/stage.rs": {
+   "covered": 401,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation.rs": {
+   "covered": 388,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/cleanup.rs": {
+   "covered": 412,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/gather.rs": {
+   "covered": 296,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/geometry.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/hooks.rs": {
+   "covered": 274,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/propagate.rs": {
+   "covered": 406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/rebuild.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/stage.rs": {
+   "covered": 402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/types.rs": {
+   "covered": 106,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/horizontal_shell_propagation/window.rs": {
+   "covered": 118,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/surface_type_detection.rs": {
+   "covered": 393,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/surface_type_detection/cracks.rs": {
+   "covered": 1196,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/surface_type_detection/extra_bridge.rs": {
+   "covered": 395,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/surface_type_detection/geometry.rs": {
+   "covered": 127,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/surface_type_detection/preflight.rs": {
+   "covered": 411,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/surface_type_detection/stage.rs": {
+   "covered": 395,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/surface_type_detection/types.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_assignment.rs": {
+   "covered": 387,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_assignment/assign.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_assignment/cleanup.rs": {
+   "covered": 412,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_assignment/stage.rs": {
+   "covered": 402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_filtering.rs": {
+   "covered": 386,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_filtering/cleanup.rs": {
+   "covered": 406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_filtering/filter.rs": {
+   "covered": 463,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_filtering/stage.rs": {
+   "covered": 410,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_projection.rs": {
+   "covered": 386,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_projection/cleanup.rs": {
+   "covered": 406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_projection/gather.rs": {
+   "covered": 700,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_projection/stage.rs": {
+   "covered": 410,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_regularization.rs": {
+   "covered": 390,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_regularization/cleanup.rs": {
+   "covered": 406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_regularization/regularize.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_regularization/stage.rs": {
+   "covered": 410,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_trimming.rs": {
+   "covered": 389,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_trimming/cleanup.rs": {
+   "covered": 408,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_trimming/stage.rs": {
+   "covered": 410,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shell_trimming/trim.rs": {
+   "covered": 72,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shells.rs": {
+   "covered": 395,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shells/cache.rs": {
+   "covered": 23,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shells/cleanup.rs": {
+   "covered": 398,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shells/physical_cache.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/prepare_infill/vertical_shells/stage.rs": {
+   "covered": 412,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pressure_equalizer/emitter.rs": {
+   "covered": 1452,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pressure_equalizer/emitter/split.rs": {
+   "covered": 137,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pressure_equalizer/limiter.rs": {
+   "covered": 1817,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pressure_equalizer/line.rs": {
+   "covered": 484,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pressure_equalizer/line/commands.rs": {
+   "covered": 2025,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pressure_equalizer/line/lex.rs": {
+   "covered": 809,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/pressure_equalizer/pass.rs": {
+   "covered": 1232,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/profile.rs": {
+   "covered": 1662,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/bridge.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/bridge/project.rs": {
+   "covered": 55,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/emit.rs": {
+   "covered": 103,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fill_params.rs": {
+   "covered": 1512,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fills.rs": {
+   "covered": 1466,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fills/geom.rs": {
+   "covered": 905,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fills/patterns.rs": {
+   "covered": 71,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fills/patterns/concentric.rs": {
+   "covered": 170,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fills/sheath.rs": {
+   "covered": 1565,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fills/support_base.rs": {
+   "covered": 950,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/fills/tree.rs": {
+   "covered": 482,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/grid.rs": {
+   "covered": 70,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raft/polygons.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/raw_intersections.rs": {
+   "covered": 2079,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/region_slices.rs": {
+   "covered": 1672,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/region_slices/complex.rs": {
+   "covered": 404,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_candidates.rs": {
+   "covered": 759,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement.rs": {
+   "covered": 770,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/alignment.rs": {
+   "covered": 1769,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/alignment/context.rs": {
+   "covered": 414,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/alignment/preparation.rs": {
+   "covered": 1700,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/alignment/random.rs": {
+   "covered": 490,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/fitting.rs": {
+   "covered": 2044,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/kdtree.rs": {
+   "covered": 1880,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/mesh.rs": {
+   "covered": 258,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/placement.rs": {
+   "covered": 1722,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/runtime.rs": {
+   "covered": 400,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/runtime/nearest.rs": {
+   "covered": 484,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/sampling.rs": {
+   "covered": 402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/spatial.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/spatial/bvh.rs": {
+   "covered": 316,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/spline.rs": {
+   "covered": 598,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/spline/qr.rs": {
+   "covered": 2253,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/split.rs": {
+   "covered": 1656,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/split/vertex.rs": {
+   "covered": 308,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/seam_placement/visibility.rs": {
+   "covered": 411,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/simplification.rs": {
+   "covered": 409,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/slice_ordering.rs": {
+   "covered": 501,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/slicing_mode_intersections.rs": {
+   "covered": 376,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/source.rs": {
+   "covered": 1223,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/state.rs": {
+   "covered": 393,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/adhesion.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/base_layers.rs": {
+   "covered": 697,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/bottom_contacts.rs": {
+   "covered": 1243,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/bottom_projection.rs": {
+   "covered": 1929,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/bridging_perimeters.rs": {
+   "covered": 126,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/contact_layer.rs": {
+   "covered": 10,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/contact_placement.rs": {
+   "covered": 30,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/contact_polygons.rs": {
+   "covered": 27,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/detect_contacts.rs": {
+   "covered": 1989,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/extruded_layer.rs": {
+   "covered": 1523,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/extrusion_path.rs": {
+   "covered": 1989,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/extrusion_path/chain.rs": {
+   "covered": 185,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/extrusion_path/loop_split.rs": {
+   "covered": 1488,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/facet_projection.rs": {
+   "covered": 116,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/first_layer.rs": {
+   "covered": 137,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/grid_generation.rs": {
+   "covered": 1873,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/install_layers.rs": {
+   "covered": 1460,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/interface_counts.rs": {
+   "covered": 121,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/interface_grid.rs": {
+   "covered": 681,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/interface_grid/projection.rs": {
+   "covered": 823,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/interface_loops.rs": {
+   "covered": 220,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/interface_loops/centers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/interface_loops/extrude.rs": {
+   "covered": 43,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/interface_loops/stitch.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/intermediate_heights.rs": {
+   "covered": 132,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/intermediate_heights/independent.rs": {
+   "covered": 624,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/intermediate_heights/synchronized.rs": {
+   "covered": 29,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/ironing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/layer_index.rs": {
+   "covered": 1522,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/layer_input.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/overhang_clusters.rs": {
+   "covered": 54,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/overhangs.rs": {
+   "covered": 2042,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/overlap_modulation.rs": {
+   "covered": 1419,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/overlap_modulation/chaining.rs": {
+   "covered": 86,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/overlap_modulation/lookup.rs": {
+   "covered": 418,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/pattern.rs": {
+   "covered": 1332,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/project.rs": {
+   "covered": 2144,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/project/annotations.rs": {
+   "covered": 115,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/project/bed.rs": {
+   "covered": 183,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/project/region.rs": {
+   "covered": 303,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/project/tree_input.rs": {
+   "covered": 1909,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/remove_bridges.rs": {
+   "covered": 208,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/sharp_tail_propagation.rs": {
+   "covered": 2040,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/style.rs": {
+   "covered": 951,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/support_projection.rs": {
+   "covered": 1264,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpath_cache.rs": {
+   "covered": 1504,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpath_cache/base.rs": {
+   "covered": 1421,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpath_cache/contacts.rs": {
+   "covered": 1402,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpath_cache/interfaces.rs": {
+   "covered": 1382,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpath_cache/ordering.rs": {
+   "covered": 1529,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpath_parameters.rs": {
+   "covered": 653,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpaths.rs": {
+   "covered": 1405,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/toolpaths/raft.rs": {
+   "covered": 22,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/top_contacts.rs": {
+   "covered": 1992,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes.rs": {
+   "covered": 1083,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/avoidance.rs": {
+   "covered": 362,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/avoidance/movement.rs": {
+   "covered": 181,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/avoidance/propagation.rs": {
+   "covered": 188,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/cache.rs": {
+   "covered": 685,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/collision.rs": {
+   "covered": 651,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/holefree.rs": {
+   "covered": 908,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/placeable.rs": {
+   "covered": 1734,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/precalculate.rs": {
+   "covered": 689,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/radius.rs": {
+   "covered": 974,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/model_volumes/wall.rs": {
+   "covered": 1718,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/contacts.rs": {
+   "covered": 1848,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/data.rs": {
+   "covered": 1990,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing.rs": {
+   "covered": 1875,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/areas.rs": {
+   "covered": 1706,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/bottom_interfaces.rs": {
+   "covered": 1722,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/collision.rs": {
+   "covered": 745,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/contour_intersection.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/groups.rs": {
+   "covered": 1938,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/hole_propagation.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/hybrid_expansion.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/lightning.rs": {
+   "covered": 32,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/node_shapes.rs": {
+   "covered": 1139,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drawing/trimming.rs": {
+   "covered": 1879,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drop_nodes.rs": {
+   "covered": 1508,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/drop_settings.rs": {
+   "covered": 9,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/dropping.rs": {
+   "covered": 1804,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/generation.rs": {
+   "covered": 1896,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/grouping.rs": {
+   "covered": 1482,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/heights.rs": {
+   "covered": 1915,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/line_cut.rs": {
+   "covered": 737,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/merging.rs": {
+   "covered": 1476,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/movement.rs": {
+   "covered": 1746,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/neighbor_movement.rs": {
+   "covered": 1384,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/nodes.rs": {
+   "covered": 343,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/pruning.rs": {
+   "covered": 743,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/raft_layers.rs": {
+   "covered": 21,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/sampling.rs": {
+   "covered": 2018,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/smoothing.rs": {
+   "covered": 1803,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/spanning_tree.rs": {
+   "covered": 1489,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/toolpaths.rs": {
+   "covered": 1965,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/toolpaths/base.rs": {
+   "covered": 1728,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/toolpaths/fill.rs": {
+   "covered": 1825,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/toolpaths/interfaces.rs": {
+   "covered": 171,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/toolpaths/loops.rs": {
+   "covered": 1826,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/toolpaths/perimeter.rs": {
+   "covered": 1690,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/non_organic/toolpaths/raft.rs": {
+   "covered": 8,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/area_growth.rs": {
+   "covered": 422,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/branch_mesh.rs": {
+   "covered": 30,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/branch_mesh/caps.rs": {
+   "covered": 227,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/branch_mesh/circle.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/branch_mesh/triangulation.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/branch_mesh/vector.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/drawing.rs": {
+   "covered": 15,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/drawing/aggregation.rs": {
+   "covered": 1209,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/drawing/clipping.rs": {
+   "covered": 65,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/drawing/contacts.rs": {
+   "covered": 75,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/drawing/finalize.rs": {
+   "covered": 631,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/drawing/mesh_slices.rs": {
+   "covered": 2003,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/drawing/traversal.rs": {
+   "covered": 2013,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/generation.rs": {
+   "covered": 1035,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/infill_lines.rs": {
+   "covered": 24,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/initial_areas.rs": {
+   "covered": 9,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/initial_areas/generation.rs": {
+   "covered": 957,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/initial_areas/raft_contact.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/interface_placer.rs": {
+   "covered": 7,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/interfaces.rs": {
+   "covered": 1278,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/layer_growth.rs": {
+   "covered": 607,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/layer_growth/movement.rs": {
+   "covered": 1406,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/layer_growth/settings_order.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/layer_index.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/merge_areas.rs": {
+   "covered": 1878,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/merge_areas/compaction.rs": {
+   "covered": 1031,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/merge_areas/ordering.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/mesh_settings.rs": {
+   "covered": 122,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/move_inside.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/nodes.rs": {
+   "covered": 658,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/nodes/compaction.rs": {
+   "covered": 681,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/nodes/model_contact.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/output.rs": {
+   "covered": 606,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/pair_merge.rs": {
+   "covered": 2019,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/pair_merge/state.rs": {
+   "covered": 2000,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/pathing.rs": {
+   "covered": 2018,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/raft.rs": {
+   "covered": 6,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/rich_interface_placer.rs": {
+   "covered": 2072,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/roof_sampler.rs": {
+   "covered": 36,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/roof_sampler/roof_stack.rs": {
+   "covered": 80,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/settings.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/single_area.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/single_area/radius.rs": {
+   "covered": 1149,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/smoothing.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/smoothing/cache.rs": {
+   "covered": 637,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/smoothing/constraints.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/smoothing/links.rs": {
+   "covered": 663,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/smoothing/movement.rs": {
+   "covered": 1518,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/smoothing/spheres.rs": {
+   "covered": 57,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/support_element.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/tip_lines.rs": {
+   "covered": 9,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/tip_sampling.rs": {
+   "covered": 2064,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/organic/tip_sampling/next_point.rs": {
+   "covered": 1227,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/overhangs.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/overhangs/clusters.rs": {
+   "covered": 355,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/overhangs/finalize.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/overhangs/first_pass.rs": {
+   "covered": 894,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/overhangs/propagation.rs": {
+   "covered": 25,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/tree/remove_bridges.rs": {
+   "covered": 100,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/trim_object.rs": {
+   "covered": 1858,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/support_material/trim_top_contacts.rs": {
+   "covered": 44,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/top_empty_layers.rs": {
+   "covered": 416,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/volume_bounds.rs": {
+   "covered": 819,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/project_slice/volume_regions.rs": {
+   "covered": 394,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/segments.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/skirts/brim_envelope.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/skirts/min_length.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/skirts/mod.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/skirts/per_object.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/slicer_context.rs": {
+   "covered": 405,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/slicer_context/rng.rs": {
+   "covered": 1242,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/slicer_context/support_connection.rs": {
+   "covered": 67,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/config.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/config/accessors.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/config/overhang.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/kinematics.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/layer_time.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/resonance_avoidance.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/slow_down_layers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/small_perimeter.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/speeds/volumetric.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/stl.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-core/src/surface.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-vgcode/src/convert.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-vgcode/src/input_data.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-vgcode/src/layers.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-vgcode/src/path_vertex.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-vgcode/src/range.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  },
+  "crates/ares-vgcode/src/types.rs": {
+   "covered": 0,
+   "uncoveredRanges": []
+  }
+ }
+}
