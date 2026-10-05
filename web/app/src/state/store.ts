@@ -1,7 +1,10 @@
-import type { ConfigOverrides, Scene, Toolpaths } from "@ares-slicer/wasm";
+import type { ConfigOptionDef, ConfigOverrides, Scene, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 
 export type Theme = "dark" | "light";
+
+/** Settings visibility of ModeSwitchButton (`comSimple`..`comExpert`). */
+export type ViewMode = "simple" | "advanced" | "expert";
 
 export type SliceState =
   | { status: "idle" }
@@ -31,6 +34,12 @@ export interface AppState {
   theme: Theme;
   engine: "loading" | "ready" | "error";
   engineError?: string;
+  /** `PrintConfigDef` by key, loaded with the engine. */
+  configDefs: ReadonlyMap<string, ConfigOptionDef>;
+  /** Settings mode (GUI_App `get_mode` / `save_mode`). */
+  mode: ViewMode;
+  /** Last `Field::show_error` message, at the field that raised it. */
+  fieldError: { key: string; message: string } | null;
   file: { name: string; bytes: Uint8Array } | null;
   scene: Scene | null;
   loadingFile: boolean;
@@ -57,6 +66,10 @@ export const DEFAULT_PREVIEW: PreviewView = {
 export const useApp = create<AppState>(() => ({
   theme: (localStorage.getItem("ares.theme") as Theme | null) ?? "dark",
   engine: "loading",
+  configDefs: new Map(),
+  // OrcaSlicer starts in simple mode (GUI_App::get_saved_mode).
+  mode: (localStorage.getItem("ares.mode") as ViewMode | null) ?? "simple",
+  fieldError: null,
   file: null,
   scene: null,
   loadingFile: false,

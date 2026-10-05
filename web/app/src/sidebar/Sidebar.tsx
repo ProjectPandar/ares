@@ -5,6 +5,7 @@ import { useApp } from "../state/store";
 import { ObjectList } from "./ObjectList";
 import { PresetCombo } from "./PresetCombo";
 import { firstString, stringList } from "./options";
+import { ModeSwitch } from "./ModeSwitch";
 import { ProcessSettings } from "./ProcessSettings";
 import type { SettingsTab } from "./SettingsDialog";
 
@@ -22,8 +23,8 @@ function EditButton({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-function Section({ icon, title, children, extra }: {
-  icon: ReactNode; title: string; children: ReactNode; extra?: ReactNode;
+function Section({ icon, title, children, extra, action }: {
+  icon: ReactNode; title: string; children: ReactNode; extra?: ReactNode; action?: ReactNode;
 }) {
   return (
     <section className="side-section">
@@ -31,6 +32,7 @@ function Section({ icon, title, children, extra }: {
         {icon}
         <span>{title}</span>
         {extra && <span className="side-section-extra">{extra}</span>}
+        {action && <span className="side-section-action">{action}</span>}
       </header>
       <div className="side-section-body">{children}</div>
     </section>
@@ -92,7 +94,8 @@ export function Sidebar() {
       <Section icon={<ObjectIcon />} title="Objects" extra={scene ? <span data-testid="object-count">{scene.objects.length}</span> : undefined}>
         <ObjectList />
       </Section>
-      <Section icon={<OrcaIcon name="process" />} title="Process">
+      {/* ParamsPanel top panel: the process tab's ModeSwitchButton (ParamsPanel.cpp:281). */}
+      <Section icon={<OrcaIcon name="process" />} title="Process" action={<ModeSwitch />}>
         <PresetCombo label="Process preset" value={process} presets={process ? [{ name: process }] : []}
           placeholder="No process preset" />
         <ProcessSettings settings={settings} />

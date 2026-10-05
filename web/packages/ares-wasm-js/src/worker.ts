@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
-import init, { loadScene, sliceProjectPlate, slice_stl } from "./wasm/ares_wasm.js";
+import init, { loadScene, printConfigDef, sliceProjectPlate, slice_stl } from "./wasm/ares_wasm.js";
+import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
 import type { Scene } from "./types.js";
@@ -14,6 +15,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "init":
       await init({ module_or_path: request.wasmUrl });
       return [undefined, []];
+    case "printConfigDef": {
+      const definition: PrintConfigDef = JSON.parse(new TextDecoder().decode(printConfigDef()));
+      return [definition, []];
+    }
     case "loadScene": {
       const data = loadScene(request.input);
       const positions = data.takePositions();

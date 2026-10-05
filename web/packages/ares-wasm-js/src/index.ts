@@ -1,8 +1,10 @@
+import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ConfigOverrides, SliceResult } from "./toolpaths.js";
 import type { Scene } from "./types.js";
 
 export * from "./toolpaths.js";
+export type * from "./configDef.js";
 export type * from "./types.js";
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void };
@@ -46,6 +48,12 @@ export class AresSlicer {
   /** Resolves once the WebAssembly module is instantiated in the worker. */
   ready(): Promise<void> {
     return this.#ready;
+  }
+
+  /** `PrintConfigDef` option metadata (labels, units, enums, ranges, modes) for settings UIs. */
+  async printConfigDef(): Promise<PrintConfigDef> {
+    await this.#ready;
+    return (await this.#call({ kind: "printConfigDef" })) as PrintConfigDef;
   }
 
   /** Loads a 3MF project or STL model into plater scene data. */

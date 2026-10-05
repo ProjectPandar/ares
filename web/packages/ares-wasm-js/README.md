@@ -62,6 +62,7 @@ If the worker crashes, every pending call is rejected.
 | --- | --- | --- |
 | `ready()` | `Promise<void>` | Resolves once the WebAssembly module is instantiated. Rejects if it fails to load. |
 | `loadScene(input)` | `Promise<Scene>` | Parses a 3MF project or a binary/ASCII STL into plater scene data. |
+| `printConfigDef()` | `Promise<PrintConfigDef>` | OrcaSlicer `PrintConfigDef` option metadata: label, tooltip, unit (`sidetext`), type, enum values and labels, `min`/`max`, mode and GUI type of every config key, in upstream definition order. Strings are untranslated English. |
 | `sliceProject(input, plate?, overrides?)` | `Promise<SliceResult>` | Slices one plate of a 3MF project with the settings it contains. `plate` is the 3MF `plater_id` (default: the first plate). `overrides` is reserved: any non-empty object is rejected until the core option override API ships. |
 | `sliceStl(input, options?)` | `Promise<SliceResult>` | Slices an STL with Ares slice options (see `ares_core::SliceOptions`). |
 | `terminate()` | `void` | Stops the worker. Calls still in flight never settle. |

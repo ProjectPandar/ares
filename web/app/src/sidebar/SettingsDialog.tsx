@@ -1,6 +1,7 @@
 import type { OptionMap, ProjectSettings } from "@ares-slicer/wasm";
 import { useEffect, useRef } from "react";
 import type { LayoutGroup, LayoutPage } from "./layoutTypes";
+import { ModeSwitch } from "./ModeSwitch";
 import { SettingsPages } from "./SettingsPages";
 import { FILAMENT_PAGES, PRINTER_PAGES } from "./presetLayout";
 
@@ -44,6 +45,7 @@ export function SettingsDialog({ tab, settings, onClose }: { tab: SettingsTab; s
       <header className="shortcuts-header">
         <h2 id="settings-title">{title}</h2>
         <span className="settings-preset">{name ? String(name) : ""}</span>
+        <ModeSwitch />
         <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>{"\u2715"}</button>
       </header>
       <div className="settings-body process">

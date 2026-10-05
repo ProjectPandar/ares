@@ -3,6 +3,8 @@
 import {
   AresSlicer,
   type AresSlicerOptions,
+  type ConfigOptionDef,
+  type ConfigOptionMode,
   type ConfigOverrides,
   EXTRUSION_ROLES,
   type ExtrusionRole,
@@ -13,6 +15,7 @@ import {
   type MoveTypeId,
   type OptionMap,
   type OptionValue,
+  type PrintConfigDef,
   type ProjectSettings,
   type Scene,
   type SceneInstance,
@@ -29,6 +32,9 @@ const assert = <T extends true>(): T => true as T;
 
 export const checks = [
   assert<Equal<ReturnType<AresSlicer["loadScene"]>, Promise<Scene>>>(),
+  assert<Equal<ReturnType<AresSlicer["printConfigDef"]>, Promise<PrintConfigDef>>>(),
+  assert<Equal<PrintConfigDef["options"], ConfigOptionDef[]>>(),
+  assert<Equal<ConfigOptionDef["mode"], ConfigOptionMode>>(),
   assert<Equal<Parameters<AresSlicer["sliceProject"]>, [Uint8Array, number?, ConfigOverrides?]>>(),
   assert<Equal<ReturnType<AresSlicer["sliceProject"]>, Promise<SliceResult>>>(),
   assert<Equal<ReturnType<AresSlicer["sliceStl"]>, Promise<SliceResult>>>(),

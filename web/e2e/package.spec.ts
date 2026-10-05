@@ -15,6 +15,7 @@ const PACKED_FILES = [
   "LICENSE",
   "README.md",
   "dist/ares_wasm_bg.wasm",
+  "dist/configDef.d.ts",
   "dist/index.d.ts",
   "dist/index.js",
   "dist/protocol.d.ts",

@@ -1,16 +1,25 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { slicer } from "./slicer";
-import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp } from "./store";
+import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp, type ViewMode } from "./store";
 
-slicer.ready().then(
-  () => useApp.setState({ engine: "ready" }),
+slicer.printConfigDef().then(
+  ({ options }) => useApp.setState({ engine: "ready", configDefs: new Map(options.map((def) => [def.key, def])) }),
   (error: Error) => useApp.setState({ engine: "error", engineError: error.message }),
 );
 
 export function setTheme(theme: Theme) {
   localStorage.setItem("ares.theme", theme);
   useApp.setState({ theme });
+}
+
+export function setMode(mode: ViewMode) {
+  localStorage.setItem("ares.mode", mode);
+  useApp.setState({ mode });
+}
+
+export function showFieldError(fieldError: { key: string; message: string } | null) {
+  useApp.setState({ fieldError });
 }
 
 /** Plater::load_files entry for a drop: one model file per project for now. */

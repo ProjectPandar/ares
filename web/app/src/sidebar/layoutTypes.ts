@@ -2,9 +2,8 @@
 export interface LayoutOption {
   key: string;
   index?: number;
-  /** `opt.label` override, else `ConfigOptionDef::label`. */
-  label: string;
-  sidetext?: string;
+  /** Tab.cpp `opt.label` override of `ConfigOptionDef::label`. */
+  label?: string;
 }
 
 /** A row of a `ConfigOptionsGroup` (`OptionsGroup::append_line` / `append_separator`). */
