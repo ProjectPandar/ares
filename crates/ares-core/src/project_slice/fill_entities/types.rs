@@ -1,3 +1,11 @@
+/// Coordinate adapter for `Fill::extended_object_bounding_box`
+/// (`FillBase.cpp:1569-1578`) and its X bounds in `FillRectilinear.cpp:2785`.
+pub(super) struct ObjectFillGeometry {
+    pub(super) scale: crate::geometry::CoordinateScale,
+    pub(super) extended_object_min_x: i64,
+    pub(super) extended_object_max_x: i64,
+}
+
 use crate::{
     ExtrusionRole,
     geometry::Polyline,

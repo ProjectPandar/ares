@@ -15,11 +15,12 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    print_z: f64,
-    layer_id: usize,
+    layer: &crate::project_slice::layers::PlannedLayer,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
+    let layer_id = layer.id;
+    let print_z = layer.print_z;
     let sweeps = crate::fill::multiline::lateral_lattice_sweeps(
         fill.params.lateral_lattice_angle_1,
         fill.params.lateral_lattice_angle_2,

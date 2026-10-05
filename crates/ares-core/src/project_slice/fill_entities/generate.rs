@@ -62,22 +62,28 @@ pub(in crate::project_slice) fn generate_layer(
     // derives the bbox from the mesh `m_size`, never requiring contours).
     let mut extended_object_bounds_x: Option<(i64, i64)> = None;
     let mut extended_object_bounds = || {
-        *extended_object_bounds_x.get_or_insert_with(|| {
-            // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) reads
-            // `PrintObject::bounding_box()` (`Print.hpp:347`), the centered mesh
-            // `m_size`. Empirically the ORACLE's grid anchor matches the
-            // slice-contour extent, not the raw mesh `m_size` — on the
-            // uncompensated cube the raw-mesh `m_size` (10mm) produced a
-            // narrower grid (-7.07mm) than the oracle's actual anchor
-            // (-8.14mm, = contour extent). So `bounding_box` for a fill is
-            // anchored on the compensated slice contours in practice (the
-            // perimeter/slice that was actually generated), which we reproduce
-            // here via `plane_path_object_bounding_box` centered on the
-            // origin. See the residual map for the divergence analysis.
-            plane_path_object_bounding_box(object_slices)
-                .map(super::extended_object_bounding_box_x)
-                .unwrap_or((0, 0))
-        })
+        let (extended_object_min_x, extended_object_max_x) = *extended_object_bounds_x
+            .get_or_insert_with(|| {
+                // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) reads
+                // `PrintObject::bounding_box()` (`Print.hpp:347`), the centered mesh
+                // `m_size`. Empirically the ORACLE's grid anchor matches the
+                // slice-contour extent, not the raw mesh `m_size` — on the
+                // uncompensated cube the raw-mesh `m_size` (10mm) produced a
+                // narrower grid (-7.07mm) than the oracle's actual anchor
+                // (-8.14mm, = contour extent). So `bounding_box` for a fill is
+                // anchored on the compensated slice contours in practice (the
+                // perimeter/slice that was actually generated), which we reproduce
+                // here via `plane_path_object_bounding_box` centered on the
+                // origin. See the residual map for the divergence analysis.
+                plane_path_object_bounding_box(object_slices)
+                    .map(super::extended_object_bounding_box_x)
+                    .unwrap_or((0, 0))
+            });
+        super::types::ObjectFillGeometry {
+            scale: traversal.scale,
+            extended_object_min_x,
+            extended_object_max_x,
+        }
     };
     // `FillLockedZag::set_lock_region_param` (`Fill.cpp:1309`) — the skin/
     // skeleton density+flow maps, built per-layer in `group_fills`.
@@ -132,8 +138,10 @@ pub(in crate::project_slice) fn generate_layer(
                     &mut output,
                     fill,
                     layer.print_z,
-                    traversal,
-                    object_index,
+                    super::adaptive::AdaptiveObject {
+                        traversal,
+                        object_index,
+                    },
                     traversal.scale,
                 )?;
             }
@@ -170,7 +178,6 @@ pub(in crate::project_slice) fn generate_layer(
                     fill,
                     pattern,
                     layer.id,
-                    traversal.scale,
                     extended_object_bounds(),
                 )?;
             }
@@ -188,8 +195,7 @@ pub(in crate::project_slice) fn generate_layer(
                 super::lateral_lattice::append(
                     &mut output,
                     fill,
-                    layer.print_z,
-                    layer.id,
+                    layer,
                     traversal.scale,
                     object_reference,
                 )?;
@@ -198,8 +204,7 @@ pub(in crate::project_slice) fn generate_layer(
                 super::lateral_honeycomb::append(
                     &mut output,
                     fill,
-                    layer.print_z,
-                    layer.id,
+                    layer,
                     traversal.scale,
                     object_reference,
                 )?;
@@ -219,7 +224,6 @@ pub(in crate::project_slice) fn generate_layer(
                     fill,
                     &lock_region_param,
                     layer.id,
-                    traversal.scale,
                     extended_object_bounds(),
                 )?;
             }

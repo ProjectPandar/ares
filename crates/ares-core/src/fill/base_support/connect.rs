@@ -18,15 +18,26 @@ use super::mark::mark_boundary_segments_overlapping_infill;
 use crate::fill::connect::graph::build_working_graph;
 use crate::geometry::{BoundingBox, Point, Polyline};
 
+/// Boundary and coordinate adapter for `FillBase.hpp::Fill::connect_base_support`
+/// (`FillBase.cpp:2247-2697`); upstream supplies the polygons and bounding box separately.
+pub(crate) struct BaseSupportGeometry<'a> {
+    pub(crate) boundary_source: &'a [crate::geometry::Polygon],
+    pub(crate) bounding_box: BoundingBox,
+    pub(crate) scale: crate::geometry::CoordinateScale,
+}
+
 pub(crate) fn connect_base_support(
     infill_ordered: Vec<Polyline>,
-    boundary_source: &[crate::geometry::Polygon],
-    bbox: BoundingBox,
+    BaseSupportGeometry {
+        boundary_source,
+        bounding_box: bbox,
+        scale,
+    }: BaseSupportGeometry<'_>,
     spacing: f64,
-    density: f32,
-    scale: crate::geometry::CoordinateScale,
+    params: &crate::fill::FillParams,
     context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, crate::geometry::ClipperError> {
+    let density = params.density;
     let scaled_spacing = spacing / scale.factor();
     let scaled_epsilon = scale.scaled_delta(0.0001);
     let graph = build_working_graph(infill_ordered, boundary_source, bbox, spacing, scale)?;

@@ -18,16 +18,18 @@ fn lightning_clips_to_fill_surface_offset_before_anchoring() {
     let scale = CoordinateScale::Normal;
     let generator = Generator::new(
         vec![vec![polygon.clone()]; 43],
-        0.2,
-        0.45,
-        0.45,
-        0.4,
-        1,
-        15.0,
-        45.0,
-        45.0,
-        45.0,
-        scale,
+        crate::fill::lightning::generator::InfillSettings {
+            layer_height: 0.2,
+            infill_line_width: 0.45,
+            line_width: 0.45,
+            nozzle_diameter: 0.4,
+            multiline: 1,
+            density_percent: 15.0,
+            overhang_angle_deg: 45.0,
+            prune_angle_deg: 45.0,
+            straightening_angle_deg: 45.0,
+            scale,
+        },
     )
     .unwrap();
     let domain = ExPolygon::new(polygon, Vec::new());

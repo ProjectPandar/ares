@@ -10,7 +10,7 @@
 use crate::geometry::{Coord, Point, Polyline};
 
 mod arches;
-pub(crate) use connect::connect_base_support;
+pub(crate) use connect::{BaseSupportGeometry, connect_base_support};
 mod caps;
 mod connect;
 mod extend;

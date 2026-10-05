@@ -44,6 +44,20 @@ pub(crate) struct Generator {
     rng: std::cell::RefCell<super::glibc_rand::GlibcRand>,
 }
 
+/// Infill constructor inputs from `Generator.cpp:66-99`.
+pub(crate) struct InfillSettings {
+    pub(crate) layer_height: f64,
+    pub(crate) infill_line_width: f64,
+    pub(crate) line_width: f64,
+    pub(crate) nozzle_diameter: f64,
+    pub(crate) multiline: i32,
+    pub(crate) density_percent: f64,
+    pub(crate) overhang_angle_deg: f64,
+    pub(crate) prune_angle_deg: f64,
+    pub(crate) straightening_angle_deg: f64,
+    pub(crate) scale: CoordinateScale,
+}
+
 pub(crate) struct SupportSettings {
     pub(crate) layer_height: f64,
     pub(crate) infill_line_width: f64,
@@ -96,16 +110,18 @@ impl Generator {
     /// from `layer_height * tan(angle)`.
     pub(crate) fn new(
         layer_internal_outlines: Vec<Vec<Polygon>>,
-        layer_height: f64,
-        infill_line_width: f64,
-        line_width: f64,
-        nozzle_diameter: f64,
-        multiline: i32,
-        density_percent: f64,
-        overhang_angle_deg: f64,
-        prune_angle_deg: f64,
-        straightening_angle_deg: f64,
-        scale: CoordinateScale,
+        InfillSettings {
+            layer_height,
+            infill_line_width,
+            line_width,
+            nozzle_diameter,
+            multiline,
+            density_percent,
+            overhang_angle_deg,
+            prune_angle_deg,
+            straightening_angle_deg,
+            scale,
+        }: InfillSettings,
     ) -> Result<Self, ClipperError> {
         // `m_infill_extrusion_width = scaled<float>(sparse.get_abs_value(nozzle))`
         // (Generator.cpp:79) — scale-domain FLOAT. `float(mm*1e6)` rounds

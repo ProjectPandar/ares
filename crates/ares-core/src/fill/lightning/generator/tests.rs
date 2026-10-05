@@ -9,16 +9,18 @@ fn fractional_heights_and_coordinate_scales_follow_double_radius_calculation() {
     ] {
         let generator = Generator::new(
             Vec::new(),
-            height,
-            0.45,
-            0.45,
-            0.4,
-            1,
-            15.0,
-            0.0,
-            45.0,
-            45.0,
-            scale,
+            crate::fill::lightning::generator::InfillSettings {
+                layer_height: height,
+                infill_line_width: 0.45,
+                line_width: 0.45,
+                nozzle_diameter: 0.4,
+                multiline: 1,
+                density_percent: 15.0,
+                overhang_angle_deg: 0.0,
+                prune_angle_deg: 45.0,
+                straightening_angle_deg: 45.0,
+                scale,
+            },
         )
         .unwrap();
         assert_eq!(generator.wall_supporting_radius, 0);
@@ -31,16 +33,18 @@ fn fractional_heights_and_coordinate_scales_follow_double_radius_calculation() {
 fn radii_keep_scaled_layer_height_fraction_until_final_cast() {
     let generator = Generator::new(
         Vec::new(),
-        0.2,
-        0.45,
-        0.45,
-        0.4,
-        1,
-        15.0,
-        45.0,
-        45.0,
-        45.0,
-        CoordinateScale::Normal,
+        crate::fill::lightning::generator::InfillSettings {
+            layer_height: 0.2,
+            infill_line_width: 0.45,
+            line_width: 0.45,
+            nozzle_diameter: 0.4,
+            multiline: 1,
+            density_percent: 15.0,
+            overhang_angle_deg: 45.0,
+            prune_angle_deg: 45.0,
+            straightening_angle_deg: 45.0,
+            scale: CoordinateScale::Normal,
+        },
     )
     .unwrap();
     assert_eq!(generator.supporting_radius, 3_000_000);

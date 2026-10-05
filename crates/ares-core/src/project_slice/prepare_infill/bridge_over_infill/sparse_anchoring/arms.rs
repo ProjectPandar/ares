@@ -305,12 +305,13 @@ pub(super) fn dispatch(
                     crate::fill::concentric_sparse::fill_concentric_sparse(
                         &expolygon,
                         fill.params.spacing,
-                        // upstream `params.density` is a 0..1 fraction; the
-                        // SurfaceFill param is a percent.
-                        0.01 * fill.params.density,
-                        fill.params.multiline,
+                        &crate::fill::FillParams { density: // upstream `params.density` is a 0..1 fraction; the
+                            // SurfaceFill param is a percent.
+                            0.01 * fill.params.density,
+ multiline: fill.params.multiline,
+ dont_adjust: false,
+ },
                         fill.params.loop_clipping,
-                        false,
                         traversal.scale,
                     )
                     .map_err(super::super::transaction::geometry_error)?,

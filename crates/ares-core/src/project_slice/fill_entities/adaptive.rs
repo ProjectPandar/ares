@@ -11,12 +11,21 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
+/// Object inputs for the adaptive octree (`FillAdaptive.cpp:1483`,
+/// `PrintObject.cpp:275-356,984`).
+pub(super) struct AdaptiveObject<'a> {
+    pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) object_index: usize,
+}
+
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
     print_z: f64,
-    traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
+    AdaptiveObject {
+        traversal,
+        object_index,
+    }: AdaptiveObject<'_>,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     // `adaptive_fill_line_spacing` (`FillAdaptive.cpp:337-354`):

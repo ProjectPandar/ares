@@ -91,9 +91,11 @@ pub(super) fn prepare_object(
             horizontal,
             regions,
             prelude,
-            nozzles,
-            object_options,
-            view.scale,
+            LightningConfiguration {
+                nozzles,
+                object_options,
+                scale: view.scale,
+            },
         )?;
     }
     if candidates.surfaces_by_layer.is_empty() {
@@ -233,6 +235,14 @@ pub(super) fn populate_lightning_expanded_surfaces(
 }
 
 /// `prepare_lightning_infill_data` on the expanded surfaces — build the
+/// Configuration read by `FillLightning::Generator::Generator`
+/// (`Fill/Lightning/Generator.cpp:66-99`), resolved for one print object.
+pub(super) struct LightningConfiguration<'a> {
+    pub(super) nozzles: &'a OrcaFloats,
+    pub(super) object_options: &'a crate::ObjectOptions,
+    pub(super) scale: CoordinateScale,
+}
+
 /// per-object `FillLightning::Generator`. `layer_internal_outlines` = the
 /// `stInternal`/`stInternalVoid` expolygons of every region's fill surfaces.
 /// Expanded surfaces replace only their matching canonical region/layer slot.
@@ -241,9 +251,11 @@ pub(super) fn build_lightning_generator(
     horizontal: &PreparedSurfaceTypeObject,
     regions: &[crate::project_slice::region_slices::PostRegion],
     prelude: &PostPerimeterInputPrintObject,
-    nozzles: &OrcaFloats,
-    object_options: &crate::ObjectOptions,
-    scale: CoordinateScale,
+    LightningConfiguration {
+        nozzles,
+        object_options,
+        scale,
+    }: LightningConfiguration<'_>,
 ) -> Result<Option<std::rc::Rc<crate::fill::lightning::generator::Generator>>, SliceError> {
     use crate::project_slice::region_slices::RegionSurfaceKind;
     let (post_regions, _) = prelude.object.as_parts();
@@ -315,16 +327,18 @@ pub(super) fn build_lightning_generator(
         .collect();
     crate::fill::lightning::generator::Generator::new(
         layer_internal_outlines,
-        layer_height,
-        sparse_width,
-        line_width,
-        nozzle,
-        options.fill_multiline.0,
-        options.sparse_infill_density.0,
-        options.lightning_overhang_angle.0,
-        options.lightning_prune_angle.0,
-        options.lightning_straightening_angle.0,
-        scale,
+        crate::fill::lightning::generator::InfillSettings {
+            layer_height,
+            infill_line_width: sparse_width,
+            line_width,
+            nozzle_diameter: nozzle,
+            multiline: options.fill_multiline.0,
+            density_percent: options.sparse_infill_density.0,
+            overhang_angle_deg: options.lightning_overhang_angle.0,
+            prune_angle_deg: options.lightning_prune_angle.0,
+            straightening_angle_deg: options.lightning_straightening_angle.0,
+            scale,
+        },
     )
     .map(|g| Some(std::rc::Rc::new(g)))
     .map_err(|e| SliceError::InvalidInput(format!("lightning generator: {e:?}")))

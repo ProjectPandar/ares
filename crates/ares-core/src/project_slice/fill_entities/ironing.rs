@@ -87,10 +87,12 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                     crate::fill::concentric_sparse::fill_concentric_sparse(
                         &domain,
                         spacing,
-                        1.0,
-                        1,
+                        &crate::fill::FillParams {
+                            density: 1.0,
+                            multiline: 1,
+                            dont_adjust: true,
+                        },
                         0,
-                        true,
                         input.scale,
                     )
                     .map_err(geometry_error)?,

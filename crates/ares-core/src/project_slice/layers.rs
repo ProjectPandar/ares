@@ -13,6 +13,8 @@ pub(super) struct LayerPair {
     pub(super) hi: f64,
 }
 
+/// Layer identity and height coordinates from `libslic3r/Layer.hpp::Layer`
+/// (`id`, `height`, `print_z`, `slice_z`).
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct PlannedLayer {
     pub(super) id: usize,

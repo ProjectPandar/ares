@@ -107,16 +107,18 @@ fn lightning_sparse_dispatch_connects_clipped_boundary_endpoints() {
     let fill = fill(ProcessInfillPattern::Lightning);
     let generator = Generator::new(
         vec![vec![fill.expolygons[0].contour().clone()]; 43],
-        0.2,
-        0.45,
-        0.45,
-        0.4,
-        1,
-        15.0,
-        45.0,
-        45.0,
-        45.0,
-        CoordinateScale::Normal,
+        crate::fill::lightning::generator::InfillSettings {
+            layer_height: 0.2,
+            infill_line_width: 0.45,
+            line_width: 0.45,
+            nozzle_diameter: 0.4,
+            multiline: 1,
+            density_percent: 15.0,
+            overhang_angle_deg: 45.0,
+            prune_angle_deg: 45.0,
+            straightening_angle_deg: 45.0,
+            scale: CoordinateScale::Normal,
+        },
     )
     .unwrap();
     let input = std::fs::read(

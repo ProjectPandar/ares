@@ -2,7 +2,7 @@ use crate::{
     SliceError,
     fill::locked_zag::{self, LockDensityParam, LockFlowParam, LockRegionParam},
     fill::rectilinear::{MonotonicFillParams, fill_rectilinear_surface},
-    geometry::{CoordinateScale, Point},
+    geometry::Point,
     project_slice::group_fills::{LockRegionParam as GroupLock, SurfaceFill},
 };
 
@@ -19,8 +19,11 @@ pub(super) fn append(
     fill: SurfaceFill,
     lock: &GroupLock,
     layer_id: usize,
-    scale: CoordinateScale,
-    extended_object_bounds_x: (i64, i64),
+    super::types::ObjectFillGeometry {
+        scale,
+        extended_object_min_x,
+        extended_object_max_x,
+    }: super::types::ObjectFillGeometry,
 ) -> Result<(), SliceError> {
     let params = fill.params;
     let kind = fill.representative.kind;
@@ -40,8 +43,8 @@ pub(super) fn append(
         link_max_length: 0.0,
         consistent_pattern: true,
         horiz_move: params.horiz_move,
-        extended_object_min_x: Some(extended_object_bounds_x.0),
-        extended_object_max_x: Some(extended_object_bounds_x.1),
+        extended_object_min_x: Some(extended_object_min_x),
+        extended_object_max_x: Some(extended_object_max_x),
         locked_zag: false,
     };
     let lock_param = LockRegionParam {

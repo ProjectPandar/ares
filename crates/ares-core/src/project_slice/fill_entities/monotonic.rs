@@ -1,7 +1,7 @@
 use crate::{
     ProcessInfillPattern, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
-    geometry::{CoordinateScale, Point},
+    geometry::Point,
     project_slice::group_fills::SurfaceFill,
 };
 
@@ -35,8 +35,11 @@ pub(super) fn append(
     // `fill_surface_by_lines` (`FillRectilinear.cpp:3386-3419`).
     pattern: ProcessInfillPattern,
     layer_id: usize,
-    scale: CoordinateScale,
-    extended_object_bounds_x: (i64, i64),
+    super::types::ObjectFillGeometry {
+        scale,
+        extended_object_min_x,
+        extended_object_max_x,
+    }: super::types::ObjectFillGeometry,
 ) -> Result<(), SliceError> {
     let (horiz_move, symmetric) = runtime_controls(
         pattern,
@@ -68,10 +71,10 @@ pub(super) fn append(
         // `consistent_pattern` (`FillRectilinear.cpp:2785` gates the swap).
         extended_object_min_x: pattern
             .has_consistent_pattern()
-            .then_some(extended_object_bounds_x.0),
+            .then_some(extended_object_min_x),
         extended_object_max_x: pattern
             .has_consistent_pattern()
-            .then_some(extended_object_bounds_x.1),
+            .then_some(extended_object_max_x),
         // Keep the upstream f32 shift in scaled coordinate units.
         horiz_move,
         locked_zag: false,
@@ -85,7 +88,7 @@ pub(super) fn append(
     // surface (`Fill.cpp:1328` intersects before the mirror). The output
     // polylines are mirrored back by `FillRectilinear.cpp:2905`.
     let symmetric_y_axis = if symmetric {
-        Some((extended_object_bounds_x.0 + extended_object_bounds_x.1) / 2)
+        Some((extended_object_min_x + extended_object_max_x) / 2)
     } else {
         None
     };

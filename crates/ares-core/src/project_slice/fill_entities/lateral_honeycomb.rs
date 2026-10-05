@@ -17,11 +17,12 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    print_z: f64,
-    layer_id: usize,
+    layer: &crate::project_slice::layers::PlannedLayer,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
+    let layer_id = layer.id;
+    let print_z = layer.print_z;
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
     let (sweeps, sweep_density) = crate::fill::multiline::lateral_honeycomb_sweeps(
         fill.params.spacing,

@@ -1,3 +1,12 @@
+/// The density, multiline and spacing-adjustment fields of
+/// `libslic3r/Fill/FillBase.hpp::FillParams`; other fields remain in
+/// the pattern-specific rewrite slices. Spacing belongs to `Fill`, not `FillParams`.
+pub(crate) struct FillParams {
+    pub(crate) density: f32,
+    pub(crate) multiline: i32,
+    pub(crate) dont_adjust: bool,
+}
+
 pub(crate) mod adaptive;
 pub(crate) mod base_support;
 pub(crate) mod checked_rotate;

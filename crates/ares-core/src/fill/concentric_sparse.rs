@@ -48,12 +48,13 @@ pub(crate) fn nearest_point_index(last_pos: Point, points: &[Point]) -> usize {
 pub(crate) fn fill_concentric_sparse(
     expolygon: &ExPolygon,
     spacing: f64,
-    density: f32,
-    multiline: i32,
+    params: &super::FillParams,
     loop_clipping: i64,
-    dont_adjust: bool,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
+    let density = params.density;
+    let multiline = params.multiline;
+    let dont_adjust = params.dont_adjust;
     // All of `min_spacing`, `distance`, `contract` are already in scaled coord
     // units (spacing is divided by scale.factor() once here).
     let scaled_spacing = spacing / scale.factor();

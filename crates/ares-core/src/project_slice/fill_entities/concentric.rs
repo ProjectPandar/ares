@@ -115,10 +115,12 @@ pub(super) fn append_configured(
                 let polylines = crate::fill::concentric_sparse::fill_concentric_sparse(
                     &domain,
                     params.spacing,
-                    density_fraction,
-                    params.multiline,
+                    &crate::fill::FillParams {
+                        density: density_fraction,
+                        multiline: params.multiline,
+                        dont_adjust: false,
+                    },
                     params.loop_clipping,
-                    false,
                     scale,
                 )
                 .map_err(geometry_error)?;

@@ -65,11 +65,17 @@ pub(in crate::project_slice) fn fill_surface(
     let (cos_a, sin_a) = (f64::from(rotate_back.cos()), f64::from(rotate_back.sin()));
     let connected = connect_base_support(
         fill_lines,
-        &boundary,
-        bbox,
+        crate::fill::base_support::BaseSupportGeometry {
+            boundary_source: &boundary,
+            bounding_box: bbox,
+            scale,
+        },
         params.spacing,
-        params.density,
-        scale,
+        &crate::fill::FillParams {
+            density: params.density,
+            multiline: 1,
+            dont_adjust: true,
+        },
         context,
     )?;
     Ok(connected
