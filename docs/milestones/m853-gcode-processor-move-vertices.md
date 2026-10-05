@@ -11,5 +11,5 @@ Governed by `docs/architecture/ard-0020-future-milestone-rewrite-gate.md`. No Ar
 - Move vertex count and fields match the patched `--process-gcode` oracle dump on `orca_cli_ender3.3mf` and `ksr_fdmtest_v4` (f32 tolerance), with a CSV diff artifact.
 - `ares-vgcode` converts moves to `GCodeInputData` following `LibVGCodeWrapper::convert`.
 - Web Preview renders toolpaths by role with a layer slider and legend; Playwright screenshot artifact.
-- Deferred: `actual_feedrate` move splitting (`:5951-6000`), stealth times, `layer_duration`, PA/accel/jerk fields, Seam vertices, foreign G-code loading.
+- Included: actual-speed split vertices and Seam vertices. Deferred: actual_feedrate values, stealth times, layer_duration, PA/accel/jerk fields, object_label_id/print_z, foreign G-code loading.
 - fmt, workspace clippy (no new warnings), workspace nextest, wasm32 build, official + seeded control set with no new FAIL.

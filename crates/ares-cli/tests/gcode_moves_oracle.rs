@@ -27,6 +27,8 @@ enum Rule {
     /// Integer fields and values upstream copies verbatim from a G-code word
     /// or a single f32 product (`m_feedrate`, `m_fan_speed`,
     /// `m_extruder_temps`): bit-identical.
+    Integer,
+    /// Verbatim f32 values must have identical bits.
     Exact,
     /// One f32 rounding step: values upstream derives from f64 state narrowed
     /// to f32 (`Vec3f` position, `delta_extruder`, `m_travel_dist`) or from a
@@ -38,11 +40,11 @@ enum Rule {
 }
 
 const RULES: [(&str, Rule); 19] = [
-    ("gcode_id", Rule::Exact),
-    ("type", Rule::Exact),
-    ("role", Rule::Exact),
-    ("extruder_id", Rule::Exact),
-    ("cp_color_id", Rule::Exact),
+    ("gcode_id", Rule::Integer),
+    ("type", Rule::Integer),
+    ("role", Rule::Integer),
+    ("extruder_id", Rule::Integer),
+    ("cp_color_id", Rule::Integer),
     ("x", Rule::Ulp1),
     ("y", Rule::Ulp1),
     ("z", Rule::Ulp1),
@@ -55,8 +57,8 @@ const RULES: [(&str, Rule); 19] = [
     ("fan_speed", Rule::Exact),
     ("temperature", Rule::Exact),
     ("time0", Rule::Ulp2),
-    ("layer_id", Rule::Exact),
-    ("internal_only", Rule::Exact),
+    ("layer_id", Rule::Integer),
+    ("internal_only", Rule::Integer),
 ];
 
 fn workspace_path(relative: &str) -> PathBuf {
@@ -168,6 +170,12 @@ struct Report {
 
 fn check(rule: &Rule, oracle: &str, ares: &str) -> (bool, String) {
     let bound = match rule {
+        Rule::Integer => {
+            return (
+                oracle.parse::<u32>().unwrap() == ares.parse::<u32>().unwrap(),
+                String::new(),
+            );
+        }
         Rule::Exact => return (oracle == ares || f32_eq(oracle, ares), String::new()),
         Rule::Ulp1 => 1,
         Rule::Ulp2 => 2,
@@ -194,6 +202,15 @@ fn compare(expected: &[Vec<String>], actual: &[Vec<String>]) -> Report {
         writeln!(diff, "-,move_count,{},{},", expected.len(), actual.len()).unwrap();
     }
     Report { mismatches, diff }
+}
+
+#[test]
+fn exact_move_ids_do_not_round_through_f32() {
+    let mut expected = vec![vec!["0".to_owned(); RULES.len()]];
+    expected[0][0] = "16777216".into();
+    let mut actual = expected.clone();
+    actual[0][0] = "16777217".into();
+    assert_eq!(compare(&expected, &actual).mismatches, 1);
 }
 
 fn parse(value: &str) -> f32 {

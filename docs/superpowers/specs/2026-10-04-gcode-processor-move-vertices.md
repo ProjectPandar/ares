@@ -45,9 +45,13 @@ recorded in that same pass, over the same lines and the same motion state.
   `cp_color_id`, `position` (with extruder offset; plate offset is 0 for a
   single-plate export), `delta_extruder`, `feedrate`, `width`, `height`,
   `mm3_per_mm`, `travel_dist`, `fan_speed`, `temperature`,
-  `time[Normal]`, `layer_id`, `internal_only`, `object_label_id`, `print_z`.
-- Move types: Retract, Unretract, Tool_change, Color_change, Pause_Print,
+  `time[Normal]`, `layer_id`, `internal_only`.
+- Move types: Retract, Unretract, Seam, Tool_change, Color_change, Pause_Print,
   Custom_GCode, Travel, Wipe, Extrude.
+- Actual-speed split vertex positions/interpolated attributes from
+  `TimeMachine::calculate_time` and `GCodeProcessor::calculate_time`
+  (`:458–547`, `:5962–5997`), including internal_only and zero split time.
+  Preserve Eigen Vec3f reduction order x²+(y²+z²) for endpoint exclusion.
 - `spiral_vase_mode`.
 - A public entry point that returns the G-code bytes and the result:
   `slice_project_plate_processed(...) -> ProcessedGCode { gcode, result }`.
@@ -63,12 +67,12 @@ recorded in that same pass, over the same lines and the same motion state.
 
 ## Deferred (adjacent upstream behavior)
 
-- `actual_feedrate`, and the trapezoid move splitting in
-  `GCodeProcessor::calculate_time` `:5951-6000`. Upstream inserts extra moves
-  there, so Ares vertex counts match upstream before that split, not after.
+- The `actual_feedrate` value itself is deferred; split vertices are included
+  and vertex counts are compared after upstream splitting.
 - Stealth time mode (`time[1]`), `layer_duration`, `pressure_advance`,
   `acceleration` and `jerk` visualization fields. They stay at `0.0`.
-- `Seam` vertices (`m_seams_detector` → `EMoveType::Seam`).
+- `object_label_id` and `print_z` are not exposed by this first move record.
+  Seam vertices are included through the existing seam detector.
 - Producer detection for foreign G-code, and `Plater::load_gcode` (previewing
   external `.gcode`). These need a config-from-G-code loader.
 - Wipe tower / `m_wipe_tower` per-move flags and used-filament caches. The
@@ -118,6 +122,40 @@ recorded in that same pass, over the same lines and the same motion state.
 - Web E2E: Preview canvas shows the toolpaths. The layer slider changes the
   visible layer count. Screenshot artifact in `target/web-e2e/`.
 - Gates: fmt, workspace clippy with no new warnings, wasm32 build.
+
+## First Rust slice review (handoff continuation)
+
+This request covers only move recording and its CLI CSV oracle adapter.
+`ares-vgcode::convert`, thin WASM buffers and M854 remain separate slices;
+the handoff convert WIP is preserved on pi/m853-m854-rust, not included here.
+
+Candidate validation is on16c2dc90 (template RNG included). Workspace7608
+PASS/9 existing skips; Clippy132 core-lib/133 core-test/21 parity warnings,
+unchanged from this baseline; fmt and core/adapter WASM compile pass.
+Evidence: `/tmp/ares-m853-rng-gates.F6xjis`.
+
+New seeded reference controls407/407 PASS; official399 PASS/8 known failures,
+with exact failure-name equality against the accepted template-RNG baseline.
+No new official failure names. Evidence:
+`/tmp/ares-m853-rng-controls.9kn3aT/failure-comparison.json` and adjacent logs.
+The old official manual Slim failure is retained separately: main/candidate
+input and Ares bytes are identical, only native bytes differ. Coordinator
+accepted this reference fluctuation; proof `/tmp/ares-m853-slim-identity.json`,
+tracked externally in `/tmp/ares-parity-gaps.md`. Do not erase that old failure
+or substitute its outputs into the fresh control run.
+
+Moves oracle rerun on the RNG base: Ender3 5564 moves, KSR635147 moves,
+zero out-of-tolerance fields,3/3 tests PASS (including integer comparator
+regression), evidence `/tmp/ares-m853-rng-moves.6uOG9F`. The comparator now
+checks integer IDs as integers rather than lossy f32; RED/GREEN logs are
+`/tmp/ares-m853-integer-comparator-{red,green}.log`. Floating bounds remain
+unchanged: exact copied f32 fields,1ULP derived values,2ULP normal time.
+
+Oracle build identity: `/tmp/ares-m853-oracle-build.L4a7nd`, source8500fcdcc,
+existing procgcode patch, output41b3inibhqsvbidsfkzmh9dw0ilplinl. No repeat
+oracle build after coordinator handoff. New seeded producer is1k0p5nlb…;
+old jqfsg42… baseline evidence is historical only. Latest main must be
+rebased and revalidated after approval before fast-forward integration.
 
 ## Risk
 
