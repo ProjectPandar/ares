@@ -1,10 +1,10 @@
 //! Repeatable acceptance artifact for `decodeConfigValue` (ARD-0108).
 //!
-//! Decodes every registry-known key/value pair found in
-//!   - `tests/**/*.3mf`        `Metadata/project_settings.config` entries
-//!   - `OrcaSlicer/resources/profiles/**/*.json`  vendor preset fields
-//! and emits a JSON report on stdout:
-//!   { files, entries, decoded, unknown_key, failed, failures[] }
+//! Decodes every registry-known key/value pair found in `tests/**/*.3mf`
+//! (`Metadata/project_settings.config` entries) and
+//! `OrcaSlicer/resources/profiles/**/*.json` (vendor preset fields), and
+//! emits a JSON report on stdout:
+//! `{ files, entries, decoded, unknown_key, failed, failures[] }`
 
 use std::fs;
 use std::io::{Cursor, Read};

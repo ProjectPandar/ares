@@ -41,8 +41,10 @@ fn task22o19_ksr_cache_is_full_structure_repeatable() {
     assert_eq!(events.len(), 920);
     assert!(
         events
-            .chunks_exact(2)
-            .all(|events| { events == [GeometryStep::Top, GeometryStep::Bottom] })
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .all(|events| { events == &[GeometryStep::Top, GeometryStep::Bottom] })
     );
     vertical_shells::reset_geometry_hooks();
     let second = fixture::prepare(KsrArchive::new().bytes());

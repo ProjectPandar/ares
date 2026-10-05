@@ -246,10 +246,7 @@ impl DistanceField {
 
     /// `DistanceField::update` — mark cells supported by the new branch
     /// (circle at `added_leaf` ∪ rotated rectangle `to_node`→`added_leaf`).
-    #[expect(
-        clippy::manual_range_contains,
-        reason = "upstream `d < -1 || d > 1` is false for a NaN extent; `contains` is not"
-    )]
+    /// Upstream `d < -1 || d > 1` is false for a NaN extent; `contains` is not.
     pub(super) fn update(&mut self, to_node: Point, added_leaf: Point) {
         let (vx, vy) = (
             (added_leaf.x() - to_node.x()) as f64,

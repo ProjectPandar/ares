@@ -101,7 +101,7 @@ fn project() -> Vec<u8> {
         .unwrap();
     }
     model.push_str("</vertices><triangles>");
-    for triangle in indices.chunks_exact(3) {
+    for triangle in indices.as_chunks::<3>().0 {
         write!(
             model,
             r#"<triangle v1="{}" v2="{}" v3="{}"/>"#,

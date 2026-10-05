@@ -44,8 +44,8 @@ fn orca_parity_smooth_type2_tower_flat_chamber() {
     let directory = tempfile::tempdir().unwrap();
     let mesh = directory.path().join("flat-cube.stl");
     let mut bytes = std::fs::read(runner::repo_root().join("tests/parity/cube10.stl")).unwrap();
-    for triangle in bytes[84..].chunks_exact_mut(50) {
-        for vertex in triangle[12..48].chunks_exact_mut(12) {
+    for triangle in bytes[84..].as_chunks_mut::<50>().0 {
+        for vertex in triangle[12..48].as_chunks_mut::<12>().0 {
             let z = f32::from_le_bytes(vertex[8..12].try_into().unwrap()) * 0.02;
             vertex[8..12].copy_from_slice(&z.to_le_bytes());
         }

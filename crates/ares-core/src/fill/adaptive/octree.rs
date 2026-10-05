@@ -194,7 +194,7 @@ pub(crate) fn build_octree(
                 );
             }
         }
-        for chunk in overhang_triangles.chunks_exact(3) {
+        for chunk in overhang_triangles.as_chunks::<3>().0 {
             insert_triangle(
                 &octree.cubes_properties,
                 [chunk[0], chunk[1], chunk[2]],

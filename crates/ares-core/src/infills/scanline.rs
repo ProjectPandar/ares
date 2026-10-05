@@ -41,7 +41,7 @@ pub(super) fn clip_contours(
             .flat_map(|contour| edge_intersections(contour, scanline))
             .collect::<Vec<_>>();
         intersections.sort_by(f64::total_cmp);
-        for pair in intersections.chunks_exact(2) {
+        for pair in intersections.as_chunks::<2>().0 {
             let start = to_point(scanline, pair[0], basis);
             let end = to_point(scanline, pair[1], basis);
             let (start, end) = if normalize_segments {

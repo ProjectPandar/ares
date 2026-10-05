@@ -27,16 +27,17 @@ pub(super) fn normalize(settings: &mut ProjectSettings) {
     }
 
     if settings.process.print.spiral_mode.0 {
-        for value in &mut settings.project.print.retract_when_changing_layer.0 {
-            *value = OrcaBool(false);
-        }
-        for value in &mut settings
+        settings
+            .project
+            .print
+            .retract_when_changing_layer
+            .0
+            .fill(OrcaBool(false));
+        settings
             .filament
             .retract_overrides
             .filament_retract_when_changing_layer
-        {
-            *value = Nullable::Value(OrcaBool(false));
-        }
+            .fill(Nullable::Value(OrcaBool(false)));
 
         settings.process.region.wall_loops = OrcaInt(1);
         settings.process.region.alternate_extra_wall = OrcaBool(false);

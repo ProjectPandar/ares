@@ -144,10 +144,15 @@ pub(super) fn placed_cube(source: &[u8]) -> Vec<u8> {
     // Both slicers receive the identical pre-positioned STL; arrangement is
     // outside the profile-entry contract. LH's bed center is (118, 138).
     let mut bytes = source.to_vec();
-    for facet in bytes[84..].chunks_exact_mut(50) {
-        for vertex in facet[12..48].chunks_exact_mut(12) {
-            for (coordinate, shift) in vertex.chunks_exact_mut(4).zip([118.0_f32, 138.0, 5.0]) {
-                let value = f32::from_le_bytes(coordinate.try_into().unwrap());
+    for facet in bytes[84..].as_chunks_mut::<50>().0 {
+        for vertex in facet[12..48].as_chunks_mut::<12>().0 {
+            for (coordinate, shift) in vertex
+                .as_chunks_mut::<4>()
+                .0
+                .iter_mut()
+                .zip([118.0_f32, 138.0, 5.0])
+            {
+                let value = f32::from_le_bytes(*coordinate);
                 coordinate.copy_from_slice(&(value + shift).to_le_bytes());
             }
         }
