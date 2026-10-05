@@ -41,52 +41,26 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
         if intersections[index].could_take_next(scaled_epsilon) {
             let Some(next) = next else { continue };
             let next_point_index = intersections[next].point_index;
-            let mut inside = true;
-            let mut i = point_index;
-            while i != next_point_index {
-                let j = next_index_modulo(i, contour.len());
-                let segment = F64Segment::from_points(contour[i], contour[j]);
-                let distance = point_line_distance_squared(&infill_line, contour[j]);
-                if distance >= radius * radius {
-                    // Not fully inside the tube: is it colliding?
-                    // Upstream `:1375` passes the CONTOUR segment as the
-                    // `line` and the INFILL as the `segment` — the
-                    // interval is measured along the CONTOUR segment.
-                    // Upstream's default-constructed interval remains (0, 0)
-                    // when the collision function returns false; it still tests len_out.
-                    let end = rounded_thick_segment_collision(
-                        segment,
-                        infill_line,
-                        radius,
-                        scaled_epsilon,
-                    )
-                    .map_or(0.0, |interval| interval.end);
-                    let len_out = closed_contour_distance_ccw(
-                        contour_params[point_index],
-                        contour_params[i],
-                        last(&contour_params),
-                    ) + end;
-                    if len_out < not_taken_next {
-                        // The contour leaves the infill tube before
-                        // the arc ends: keep this segment.
-                        inside = false;
-                        break;
-                    }
-                }
-                if closed_contour_distance_ccw(
-                    contour_params[point_index],
-                    contour_params[j],
-                    last(&contour_params),
-                ) >= not_taken_next
-                {
-                    break;
-                }
-                i = j;
+            let inside = arc_inside_tube(
+                ArcWalk {
+                    contour: &contour,
+                    contour_params: &contour_params,
+                    point_index,
+                    target_point_index: next_point_index,
+                    not_taken: not_taken_next,
+                },
+                &infill_line,
+                radius,
+                scaled_epsilon,
+                Direction {
+                    step: next_index_modulo,
+                    arc_distance: closed_contour_distance_ccw,
+                },
+            );
+            if inside && !intersections[next].prev_trimmed {
+                intersections[next].trim_prev(0.0);
             }
             if inside {
-                if !intersections[next].prev_trimmed {
-                    intersections[next].trim_prev(0.0);
-                }
                 intersections[index].trim_next(0.0);
             }
         } else {
@@ -101,52 +75,103 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
         if intersections[index].could_take_prev(scaled_epsilon) {
             let Some(prev) = prev else { continue };
             let prev_point_index = intersections[prev].point_index;
-            let mut inside = true;
-            let mut i = point_index;
-            while i != prev_point_index {
-                let j = prev_index_modulo(i, contour.len());
-                let segment = F64Segment::from_points(contour[i], contour[j]);
-                let distance = point_line_distance_squared(&infill_line, contour[j]);
-                if distance >= radius * radius {
-                    // Same argument order as the next arc (upstream
-                    // `:1375`): the CONTOUR segment is the line.
-                    let end = rounded_thick_segment_collision(
-                        segment,
-                        infill_line,
-                        radius,
-                        scaled_epsilon,
-                    )
-                    .map_or(0.0, |interval| interval.end);
-                    let len_out = closed_contour_distance_cw(
-                        contour_params[point_index],
-                        contour_params[i],
-                        last(&contour_params),
-                    ) + end;
-                    if len_out < not_taken_prev {
-                        inside = false;
-                        break;
-                    }
-                }
-                if closed_contour_distance_cw(
-                    contour_params[point_index],
-                    contour_params[j],
-                    last(&contour_params),
-                ) >= not_taken_prev
-                {
-                    break;
-                }
-                i = j;
+            let inside = arc_inside_tube(
+                ArcWalk {
+                    contour: &contour,
+                    contour_params: &contour_params,
+                    point_index,
+                    target_point_index: prev_point_index,
+                    not_taken: not_taken_prev,
+                },
+                &infill_line,
+                radius,
+                scaled_epsilon,
+                Direction {
+                    step: prev_index_modulo,
+                    arc_distance: closed_contour_distance_cw,
+                },
+            );
+            if inside && !intersections[prev].next_trimmed {
+                intersections[prev].trim_next(0.0);
             }
             if inside {
-                if !intersections[prev].next_trimmed {
-                    intersections[prev].trim_next(0.0);
-                }
                 intersections[index].trim_prev(0.0);
             }
         } else {
             intersections[index].trim_prev(0.0);
         }
     }
+}
+
+struct Direction {
+    step: fn(usize, usize) -> usize,
+    arc_distance: fn(f64, f64, f64) -> f64,
+}
+
+struct ArcWalk<'a> {
+    contour: &'a [Point],
+    contour_params: &'a [f64],
+    point_index: usize,
+    target_point_index: usize,
+    not_taken: f64,
+}
+
+/// Walks the contour arc from `point_index` toward `target_point_index`.
+/// Returns `false` when a segment leaves the `radius` tube of
+/// `infill_line` before `not_taken` arc length is consumed
+/// (`FillBase.cpp:1362-1420`). `step` is `next_index_modulo` (ccw) or
+/// `prev_index_modulo` (cw); `arc_distance` is the matching
+/// `closed_contour_distance_*`.
+fn arc_inside_tube(
+    walk: ArcWalk<'_>,
+    infill_line: &F64Segment,
+    radius: f64,
+    scaled_epsilon: f64,
+    direction: Direction,
+) -> bool {
+    let step = direction.step;
+    let arc_distance = direction.arc_distance;
+    let contour = walk.contour;
+    let contour_params = walk.contour_params;
+    let point_index = walk.point_index;
+    let not_taken = walk.not_taken;
+    let mut i = point_index;
+    while i != walk.target_point_index {
+        let j = step(i, contour.len());
+        let segment = F64Segment::from_points(contour[i], contour[j]);
+        let distance = point_line_distance_squared(infill_line, contour[j]);
+        if distance >= radius * radius {
+            // Not fully inside the tube: is it colliding?
+            // Upstream `:1375` passes the CONTOUR segment as the
+            // `line` and the INFILL as the `segment` — the
+            // interval is measured along the CONTOUR segment.
+            // Upstream's default-constructed interval remains (0, 0)
+            // when the collision function returns false; it still tests len_out.
+            let end =
+                rounded_thick_segment_collision(segment, *infill_line, radius, scaled_epsilon)
+                    .map_or(0.0, |interval| interval.end);
+            let len_out = arc_distance(
+                contour_params[point_index],
+                contour_params[i],
+                last(contour_params),
+            ) + end;
+            if len_out < not_taken {
+                // The contour leaves the infill tube before
+                // the arc ends: keep this segment.
+                return false;
+            }
+        }
+        if arc_distance(
+            contour_params[point_index],
+            contour_params[j],
+            last(contour_params),
+        ) >= not_taken
+        {
+            break;
+        }
+        i = j;
+    }
+    true
 }
 
 fn last(params: &[f64]) -> f64 {

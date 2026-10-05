@@ -78,6 +78,14 @@ Source boundary: `libslic3r/Feature/FuzzySkin/FuzzySkin.cpp::get_noise_module` u
 
 Review evidence: `/tmp/ares-lint-noise.C2E3HA/`. Pre-edit focused tests: 33 PASS. Candidate workspace: 7,608 PASS / nine existing skips; ordinary workspace/all-targets/all-features clippy, fmt and core/WASM compilation pass. Four unique diagnostics removed, leaving core 93 / workspace 114. Candidate official controls: 399 PASS / the same eight replay-environment FAIL. Candidate new-seeded controls: 407/407 PASS; all 402 Ares artifact-label hash multisets match the retained sandwich candidate receipts in `/tmp/ares-lint-sandwich.zep3ne/`. That reused seeded baseline predates M853, while this candidate includes M853; this is a cross-revision output-equality check, not a fresh run of the immediate parent. No official baseline/candidate hash comparison is claimed. Both changed Rust files remain below 400 lines; latest candidate-branch file checks still show no overlap. Rebase latest main and rerun full gates after approval.
 
+## Fill base_support small slice (in progress)
+
+Branch `pi/lint-base-support` on main `2085e432`. Scope: 15 diagnostics in `fill/base_support/{extend,mark,take,mod}.rs`; `connect.rs` remains excluded (pi-tip support-tip connect ownership). Overlap check against `pi/decode-config-value` (`60c33e82`), `pi/m853-wasm-moves` (`d7264455`), `pi/smooth-type2-timelapse-tower` (`1c59763d`), and `pi/thin-tip-support-fill` showed zero file intersections.
+
+Upstream boundary: `Fill/FillBase.cpp` — `base_support_extend_infill_lines` (`:1834–1948`), `mark_boundary_segments_overlapping_infill` (`:1352–1435`), `take_limited` arc consuming (`:578–670`, `:2364–2432`), and the in/out split logic in the mod scanner. Include only symmetric-side helper extraction (`probe_extension_side`/`ProbeTarget`/`SideProbe`, `arc_inside_tube`/`ArcWalk`/`Direction`, `finish_arc`/`FinishArc`, `trim_neighbor`) and equivalent guards. Preserve arc direction (ccw/cw), first-endpoint sign flip, trim order, float comparisons, and traversal order; no assertion or threshold changes. `connect.rs` untouched; no new suppressions (the pre-existing `#[expect]` stays).
+
+Policy note: any main advance touching slicing/G-code paths (like be483a21) requires fresh baseline+candidate controls on the new base before integration; docs/metadata-only main bumps only need the four gates.
+
 ## Seam KD-tree small slice
 
 Baseline `65b533df`. Scope: three argument-count diagnostics in `project_slice/seam_placement/kdtree.rs`. Before editing, compare `origin/main...pi/smooth-type2-timelapse-tower` (`1487dac7`), `...pi/m853-wasm-moves` (`0f7a5cd7`), and `...pi/profile-slice-entry` (`b94cb34c`) using `--name-only`; no seam-placement file overlaps. Existing seam tests run before editing. Exclude all currently assigned motion/tower/tool-ordering, processor/vgcode/wasm and profiles/config boundaries.

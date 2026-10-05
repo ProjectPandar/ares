@@ -28,78 +28,45 @@ pub(super) fn base_support_extend_infill_lines(
         let point = boundary[contour_index].points[point_index];
         let first = index % 2 == 0;
 
-        let mut extend_next = None;
-        let mut extend_prev = None;
-        let mut dist_y_next = 0i64;
-        let mut dist_y_prev = 0i64;
+        // Next (ccw) side then prev (cw) side: each skips when the
+        // neighbor endpoint shares the same vertical infill line
+        // (`FillBase.cpp:1861`). The two probes differ only in step
+        // direction and in which `arc_fits_ccw` argument order is used.
+        let target = ProbeTarget {
+            contour: &boundary[contour_index],
+            point,
+            point_index,
+            first,
+        };
+        let (mut extend_next, dist_y_next) = probe_extension_side(
+            target,
+            intersections[index]
+                .next
+                .map(|next| intersections[next].point_index),
+            (dist_max_x, dist_min_y),
+            SideProbe {
+                step: next_index_modulo,
+                arc_fits: &|contour, i| {
+                    arc_fits_ccw(contour, point_index, i, intersections[index].not_taken_next)
+                },
+            },
+        );
+        let (mut extend_prev, dist_y_prev) = probe_extension_side(
+            target,
+            intersections[index]
+                .prev
+                .map(|prev| intersections[prev].point_index),
+            (dist_max_x, dist_min_y),
+            SideProbe {
+                step: prev_index_modulo,
+                arc_fits: &|contour, i| {
+                    arc_fits_ccw(contour, i, point_index, intersections[index].not_taken_prev)
+                },
+            },
+        );
         let mut arc_len_next = 0f64;
         let mut arc_len_prev = 0f64;
         let _ = (&mut arc_len_next, &mut arc_len_prev);
-
-        // Next (ccw) side: skip when the neighbor endpoint shares the
-        // same vertical infill line (`FillBase.cpp:1861`).
-        let next = intersections[index].next;
-        let next_point_index = next.map(|next| intersections[next].point_index);
-        let next_vertical = next_point_index
-            .is_some_and(|other| boundary[contour_index].points[other].x() == point.x());
-        if !next_vertical {
-            let contour = &boundary[contour_index];
-            let mut i = point_index;
-            let mut j = next_index_modulo(i, contour.points.len());
-            while Some(j) != next_point_index {
-                if (contour.points[j].x() - point.x()).abs() > dist_max_x {
-                    break;
-                }
-                i = j;
-                j = next_index_modulo(j, contour.points.len());
-            }
-            if i != point_index {
-                let mut dist_y = contour.points[i].y() - point.y();
-                if first {
-                    dist_y = -dist_y;
-                }
-                if dist_y > dist_min_y {
-                    let length =
-                        arc_fits_ccw(contour, point_index, i, intersections[index].not_taken_next);
-                    if length {
-                        extend_next = Some(i);
-                        dist_y_next = dist_y;
-                    }
-                }
-            }
-        }
-
-        // Prev (cw) side.
-        let prev = intersections[index].prev;
-        let prev_point_index = prev.map(|prev| intersections[prev].point_index);
-        let prev_vertical = prev_point_index
-            .is_some_and(|other| boundary[contour_index].points[other].x() == point.x());
-        if !prev_vertical {
-            let contour = &boundary[contour_index];
-            let mut i = point_index;
-            let mut j = prev_index_modulo(i, contour.points.len());
-            while Some(j) != prev_point_index {
-                if (contour.points[j].x() - point.x()).abs() > dist_max_x {
-                    break;
-                }
-                i = j;
-                j = prev_index_modulo(j, contour.points.len());
-            }
-            if i != point_index {
-                let mut dist_y = contour.points[i].y() - point.y();
-                if first {
-                    dist_y = -dist_y;
-                }
-                if dist_y > dist_min_y {
-                    let length =
-                        arc_fits_ccw(contour, i, point_index, intersections[index].not_taken_prev);
-                    if length {
-                        extend_prev = Some(i);
-                        dist_y_prev = dist_y;
-                    }
-                }
-            }
-        }
 
         // Drop the shorter side (`:1925`: the ternary assigns −1 to
         // the variable with the smaller dist_y).
@@ -189,6 +156,63 @@ pub(super) fn base_support_extend_infill_lines(
             }
         }
     }
+}
+
+/// Probe one side (`FillBase.cpp:1864-1914`): walk the contour from
+/// `point_index` toward the neighbor's point index while horizontal
+/// drift stays within `dist_max_x`, then accept the endpoint when its
+/// vertical rise (sign-flipped for a polyline's first endpoint)
+/// exceeds `dist_min_y` and the arc fits `arc_fits`.
+/// Returns `(extend_index, dist_y)`.
+fn probe_extension_side(
+    target: ProbeTarget<'_>,
+    neighbor_point_index: Option<usize>,
+    (dist_max_x, dist_min_y): (i64, i64),
+    side: SideProbe<'_>,
+) -> (Option<usize>, i64) {
+    let contour = target.contour;
+    let point = target.point;
+    let point_index = target.point_index;
+    let step = side.step;
+    let neighbor_vertical =
+        neighbor_point_index.is_some_and(|other| contour.points[other].x() == point.x());
+    if neighbor_vertical {
+        return (None, 0);
+    }
+    let mut i = point_index;
+    let mut j = step(i, contour.points.len());
+    while Some(j) != neighbor_point_index {
+        if (contour.points[j].x() - point.x()).abs() > dist_max_x {
+            break;
+        }
+        i = j;
+        j = step(j, contour.points.len());
+    }
+    if i == point_index {
+        return (None, 0);
+    }
+    let mut dist_y = contour.points[i].y() - point.y();
+    if target.first {
+        dist_y = -dist_y;
+    }
+    if dist_y > dist_min_y && (side.arc_fits)(contour, i) {
+        (Some(i), dist_y)
+    } else {
+        (None, 0)
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ProbeTarget<'a> {
+    contour: &'a BoundaryContour,
+    point: crate::geometry::Point,
+    point_index: usize,
+    first: bool,
+}
+
+struct SideProbe<'a> {
+    step: fn(usize, usize) -> usize,
+    arc_fits: &'a dyn Fn(&BoundaryContour, usize) -> bool,
 }
 
 /// ccw arc from `point_index` to `extend_index` fits within `limit`.

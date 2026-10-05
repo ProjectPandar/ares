@@ -234,20 +234,19 @@ impl<'a> BandState<'a> {
                 self.polyline.push(point);
             }
             InOut::Entering => {
-                if self.polyline_end > 0 {
-                    if (self.side1 == Side::Left) == (y - self.polyline[self.polyline_end].y() < 0)
-                    {
-                        // Emit the vertical segment: remove the split point.
-                        self.polyline.remove(self.polyline_end);
-                    } else {
-                        // Don't emit the vertical segment; split the contour.
-                        self.finalize();
-                        self.polyline.push(point);
-                    }
-                    self.polyline_end = 0;
+                if self.polyline_end == 0 {
+                    self.polyline.push(point);
+                    return;
+                }
+                if (self.side1 == Side::Left) == (y - self.polyline[self.polyline_end].y() < 0) {
+                    // Emit the vertical segment: remove the split point.
+                    self.polyline.remove(self.polyline_end);
                 } else {
+                    // Don't emit the vertical segment; split the contour.
+                    self.finalize();
                     self.polyline.push(point);
                 }
+                self.polyline_end = 0;
             }
         }
     }

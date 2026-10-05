@@ -135,6 +135,48 @@ pub(super) fn take_next(
     }
 }
 
+struct FinishArc<'a> {
+    target: &'a mut Vec<Point>,
+    contour: &'a crate::fill::connect::types::BoundaryContour,
+    intersections: &'a mut [Intersection],
+    cp: usize,
+    neighbor: usize,
+    clockwise: bool,
+}
+
+fn finish_arc(fa: FinishArc<'_>, l: f64, length_to_go: f64, scaled_epsilon: f64) {
+    if length_to_go > scaled_epsilon {
+        trim_neighbor(
+            fa.intersections,
+            fa.neighbor,
+            fa.clockwise,
+            l - length_to_go,
+        );
+        append_limited(
+            fa.target,
+            fa.contour,
+            fa.intersections[fa.cp].point_index,
+            fa.intersections[fa.neighbor].point_index,
+            fa.clockwise,
+            length_to_go,
+            scaled_epsilon,
+        );
+    }
+}
+
+fn trim_neighbor(
+    intersections: &mut [Intersection],
+    neighbor: usize,
+    clockwise: bool,
+    length: f64,
+) {
+    if clockwise {
+        intersections[neighbor].trim_next(length);
+    } else {
+        intersections[neighbor].trim_prev(length);
+    }
+}
+
 pub(super) fn resolve_merged(merged_with: &[usize], index: usize) -> usize {
     let mut last = WorkingGraph::path_index_for_intersection(index);
     loop {
@@ -241,29 +283,22 @@ fn take_limited(
                 intersections[cp].consume_next();
             }
             if l >= length_to_go {
-                if length_to_go > scaled_epsilon {
-                    if clockwise {
-                        intersections[neighbor].trim_next(l - length_to_go);
-                    } else {
-                        intersections[neighbor].trim_prev(l - length_to_go);
-                    }
-                    append_limited(
+                finish_arc(
+                    FinishArc {
                         target,
                         contour,
-                        intersections[cp].point_index,
-                        intersections[neighbor].point_index,
+                        intersections,
+                        cp,
+                        neighbor,
                         clockwise,
-                        length_to_go,
-                        scaled_epsilon,
-                    );
-                }
+                    },
+                    l,
+                    length_to_go,
+                    scaled_epsilon,
+                );
                 break;
             }
-            if clockwise {
-                intersections[neighbor].trim_next(0.0);
-            } else {
-                intersections[neighbor].trim_prev(0.0);
-            }
+            trim_neighbor(intersections, neighbor, clockwise, 0.0);
             append_full(
                 target,
                 &contour.points,
