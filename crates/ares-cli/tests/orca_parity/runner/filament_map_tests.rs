@@ -8,6 +8,7 @@ fn filament_map_storage_failure_is_io_not_a_value_mismatch() {
     let runner = super::OrcaRunner {
         bin: "unused".into(),
         work: work.path().to_owned(),
+        cache: work.path().to_owned(),
     };
     let exported = super::ExportedCase {
         label: "storage-failure".to_owned(),

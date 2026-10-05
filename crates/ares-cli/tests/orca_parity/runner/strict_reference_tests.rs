@@ -116,6 +116,7 @@ fn reordered_reference_child() {
     let runner = OrcaRunner {
         bin,
         work: root.clone(),
+        cache: root.clone(),
     };
     let outcome = crate::compare_exported_for(&runner, &exported, None);
     assert_eq!(
