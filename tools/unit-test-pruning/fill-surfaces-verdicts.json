@@ -1,0 +1,40 @@
+{
+ "module": "project_slice/prepare_infill/fill_surfaces",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 5,
+ "deleted": 0,
+ "kept": 5,
+ "tests": [
+  {
+   "test": "task22o18_retags_in_place_without_touching_geometry_order_or_metadata",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "executes retag() branches (density==100 promotion / bottom_shell_layers==0) never reached by E2E corpus"
+  },
+  {
+   "test": "task22o18_density_comparison_is_strict_and_uses_source_epsilon",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "executes retag() branches (density==100 promotion / bottom_shell_layers==0) never reached by E2E corpus"
+  },
+  {
+   "test": "task22o18_each_pass_changes_only_its_literal_source_kinds",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "executes retag() branches (density==100 promotion / bottom_shell_layers==0) never reached by E2E corpus"
+  },
+  {
+   "test": "task22o18_spiral_guards_skip_first_and_third_but_not_second",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "executes retag() branches (density==100 promotion / bottom_shell_layers==0) never reached by E2E corpus"
+  },
+  {
+   "test": "task22o18_three_passes_are_sequential_and_source_literal",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "executes retag() branches (density==100 promotion / bottom_shell_layers==0) never reached by E2E corpus"
+  }
+ ]
+}
