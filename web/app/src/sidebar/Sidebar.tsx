@@ -1,11 +1,26 @@
 import type { ProjectSettings } from "@ares-slicer/wasm";
-import type { ReactNode } from "react";
+import { lazy, type ReactNode, Suspense, useState } from "react";
 import { ObjectIcon, OrcaIcon } from "../shell/icons";
 import { useApp } from "../state/store";
 import { ObjectList } from "./ObjectList";
 import { PresetCombo } from "./PresetCombo";
 import { firstString, stringList } from "./options";
 import { ProcessSettings } from "./ProcessSettings";
+import type { SettingsTab } from "./SettingsDialog";
+
+// Printer/filament tab layouts are only fetched when a preset edit button is used.
+const SettingsDialog = lazy(() => import("./SettingsDialog").then((module) => ({ default: module.SettingsDialog })));
+
+type OpenTab = (tab: SettingsTab) => void;
+
+/** Plater preset edit button (Plater.cpp `btn_edit_printer` / filament `edit_btn`). */
+function EditButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button className="preset-edit" aria-label={label} title={label} onClick={onClick}>
+      <OrcaIcon name="edit" />
+    </button>
+  );
+}
 
 function Section({ icon, title, children, extra }: {
   icon: ReactNode; title: string; children: ReactNode; extra?: ReactNode;
@@ -22,21 +37,24 @@ function Section({ icon, title, children, extra }: {
   );
 }
 
-function PrinterSection({ settings }: { settings: ProjectSettings | null }) {
+function PrinterSection({ settings, openTab }: { settings: ProjectSettings | null; openTab: OpenTab }) {
   const nozzle = firstString(settings?.project, "nozzle_diameter");
   const bed = firstString(settings?.project, "curr_bed_type") ?? firstString(settings?.printer, "default_bed_type");
   const printer = firstString(settings?.printer, "printer_settings_id") ?? firstString(settings?.project, "printer_settings_id");
   return (
     <Section icon={<OrcaIcon name="printer" />} title="Printer">
-      <PresetCombo label="Printer preset" value={printer} presets={printer ? [{ name: printer }] : []}
-        placeholder="No printer preset" />
+      <div className="preset-row">
+        <PresetCombo label="Printer preset" value={printer} presets={printer ? [{ name: printer }] : []}
+          placeholder="No printer preset" />
+        {settings && <EditButton label="Edit printer settings" onClick={() => openTab({ kind: "printer" })} />}
+      </div>
       <div className="kv-row"><span>Plate type</span><span className="kv-value">{bed ?? "—"}</span></div>
       <div className="kv-row"><span>Nozzle</span><span className="kv-value">{nozzle ? `${nozzle} mm` : "—"}</span></div>
     </Section>
   );
 }
 
-function FilamentSection({ settings }: { settings: ProjectSettings | null }) {
+function FilamentSection({ settings, openTab }: { settings: ProjectSettings | null; openTab: OpenTab }) {
   const names = stringList(settings?.filament, "filament_settings_id").length
     ? stringList(settings?.filament, "filament_settings_id")
     : stringList(settings?.project, "filament_settings_id");
@@ -55,6 +73,7 @@ function FilamentSection({ settings }: { settings: ProjectSettings | null }) {
             style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
           <PresetCombo label={`Filament ${index + 1} preset`} value={name} presets={presets} placeholder="" />
           <span className="filament-type">{types[index]}</span>
+          <EditButton label={`Edit filament ${index + 1} settings`} onClick={() => openTab({ kind: "filament", slot: index })} />
         </div>
       ))}
     </Section>
@@ -65,10 +84,11 @@ export function Sidebar() {
   const scene = useApp((state) => state.scene);
   const settings = scene?.settings ?? null;
   const process = firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id");
+  const [tab, setTab] = useState<SettingsTab | null>(null);
   return (
     <aside className="sidebar" data-testid="sidebar">
-      <PrinterSection settings={settings} />
-      <FilamentSection settings={settings} />
+      <PrinterSection settings={settings} openTab={setTab} />
+      <FilamentSection settings={settings} openTab={setTab} />
       <Section icon={<ObjectIcon />} title="Objects" extra={scene ? <span data-testid="object-count">{scene.objects.length}</span> : undefined}>
         <ObjectList />
       </Section>
@@ -77,6 +97,11 @@ export function Sidebar() {
           placeholder="No process preset" />
         <ProcessSettings settings={settings} />
       </Section>
+      {tab && settings && (
+        <Suspense>
+          <SettingsDialog tab={tab} settings={settings} onClose={() => setTab(null)} />
+        </Suspense>
+      )}
     </aside>
   );
 }

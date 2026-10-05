@@ -55,8 +55,9 @@ npm run lint         # oxlint
 npm run typecheck    # tsc --noEmit for library, app and e2e
 ```
 
-Regenerate `app/src/sidebar/processLayout.ts` (option pages, groups and labels from
-OrcaSlicer `Tab.cpp` / `PrintConfig.cpp`) with:
+Regenerate `app/src/sidebar/processLayout.ts` and `presetLayout.ts` (process, filament
+and printer tab pages, groups, lines and labels from OrcaSlicer `Tab.cpp` /
+`PrintConfig.cpp`) with:
 
 ```sh
 node scripts/extract-process-layout.mjs /path/to/OrcaSlicer
@@ -77,6 +78,8 @@ Artifacts are written to `target/web-e2e/`:
 - `prepare.png`, `preview.png`: screenshots
 - `orca_cli_ender3_plate_1.gcode`, `native.gcode`: browser and native G-code
 - `gcode.sha256`, `result.json`: size and digest of the browser G-code
+- `settings/`: one screenshot per process / printer / filament settings page, and
+  `result.json` with the per-page field coverage and the unedited slice digest
 
 If Playwright's bundled Chromium cannot run on the host (for example on NixOS),
 set `ARES_E2E_CHROME` to a system Chrome/Chromium binary.
