@@ -1,6 +1,6 @@
 use crate::{
-    GenerationMetadata, ProcessedGCode, Project, SliceError, geometry::CoordinateScale,
-    project::effective_config::types::BoundedResolvedProjectConfig,
+    ConfigOverrides, GenerationMetadata, ProcessedGCode, Project, SliceError,
+    geometry::CoordinateScale, project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
 #[cfg(all(test, windows))]
@@ -76,7 +76,14 @@ pub async fn slice_project(
     metadata: GenerationMetadata,
     context: crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_project_plate(project, metadata, None, context).await
+    slice_project_plate(
+        project,
+        metadata,
+        None,
+        &ConfigOverrides::default(),
+        context,
+    )
+    .await
 }
 
 /// Slices one plate of a multi-plate 3MF project. `plate` selects the plate
@@ -85,6 +92,7 @@ pub async fn slice_project_plate(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
     plate: Option<u32>,
+    overrides: &ConfigOverrides,
     context: crate::SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
     slice_source(
@@ -92,6 +100,7 @@ pub async fn slice_project_plate(
             bytes: project.as_ref(),
             plate,
             profile: None,
+            overrides,
         },
         metadata,
         false,
@@ -106,6 +115,7 @@ pub async fn slice_project_plate_processed(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
     plate: Option<u32>,
+    overrides: &ConfigOverrides,
     context: crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
     slice_source(
@@ -113,6 +123,7 @@ pub async fn slice_project_plate_processed(
             bytes: project.as_ref(),
             plate,
             profile: None,
+            overrides,
         },
         metadata,
         true,
@@ -266,7 +277,7 @@ fn prepare_post_closing(project: ProjectSource<'_>) -> Result<PreparedPostClosin
         };
         state::prepare_loaded_project_slice(loaded, project.plate)?
     } else {
-        state::prepare_project_slice(project.bytes, project.plate)?
+        state::prepare_project_slice(project.bytes, project.plate, project.overrides)?
     };
     let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
     let max_gap_scaled = scale

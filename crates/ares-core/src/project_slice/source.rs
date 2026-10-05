@@ -1,4 +1,4 @@
-use crate::project::raw_settings::ProjectSettingsRaw;
+use crate::{ConfigOverrides, project::raw_settings::ProjectSettingsRaw};
 
 /// Input bytes and caller-selected plate/config. Loading occurs only at the
 /// existing project-state seam; no intermediate archive is serialized.
@@ -7,6 +7,8 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) bytes: &'a [u8],
     pub(crate) plate: Option<u32>,
     pub(crate) profile: Option<ProfileInput<'a>>,
+    /// User option overrides (M854); empty for the unedited document.
+    pub(crate) overrides: &'a ConfigOverrides,
 }
 
 #[derive(Clone, Copy)]
@@ -40,9 +42,12 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             bytes: self.as_ref(),
             plate: None,
             profile: None,
+            overrides: &EMPTY_OVERRIDES,
         }
     }
 }
+
+static EMPTY_OVERRIDES: ConfigOverrides = ConfigOverrides::empty();
 
 impl<'a> From<&'a [u8]> for ProjectSource<'a> {
     fn from(bytes: &'a [u8]) -> Self {
@@ -50,6 +55,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             bytes,
             plate: None,
             profile: None,
+            overrides: &EMPTY_OVERRIDES,
         }
     }
 }

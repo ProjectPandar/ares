@@ -98,6 +98,7 @@ async fn slice_project_plate_selects_instances_of_the_requested_plate() {
         bytes.as_slice(),
         metadata(),
         Some(2),
+        &crate::ConfigOverrides::default(),
         crate::SlicerContext::new(0),
     )
     .await
@@ -115,6 +116,7 @@ async fn slice_project_plate_selects_instances_of_the_requested_plate() {
         bytes.as_slice(),
         metadata(),
         Some(1),
+        &crate::ConfigOverrides::default(),
         crate::SlicerContext::new(0),
     )
     .await
@@ -132,6 +134,7 @@ async fn slice_project_plate_rejects_an_unknown_plate() {
         two_plate_archive().bytes(),
         metadata(),
         Some(7),
+        &crate::ConfigOverrides::default(),
         crate::SlicerContext::new(0),
     )
     .await

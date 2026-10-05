@@ -28,16 +28,25 @@ pub async fn slice_stl_bytes(input: Vec<u8>, options_json: &str) -> Result<Vec<u
 }
 
 #[wasm_bindgen(js_name = sliceProject)]
-pub async fn slice_project(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
-    slice_project_plate(input, None).await
+pub async fn slice_project(
+    input: Vec<u8>,
+    overrides_json: Option<String>,
+) -> Result<Vec<u8>, JsValue> {
+    slice_project_plate(input, None, overrides_json).await
 }
 
 #[wasm_bindgen(js_name = sliceProjectPlate)]
-pub async fn slice_project_plate(input: Vec<u8>, plate: Option<u32>) -> Result<Vec<u8>, JsValue> {
+pub async fn slice_project_plate(
+    input: Vec<u8>,
+    plate: Option<u32>,
+    overrides_json: Option<String>,
+) -> Result<Vec<u8>, JsValue> {
+    let overrides = parse_overrides(overrides_json)?;
     ares_core::slice_project_plate(
         input,
         GenerationMetadata::default(),
         plate,
+        &overrides,
         ares_core::SlicerContext::new(0),
     )
     .await
@@ -52,11 +61,14 @@ pub async fn slice_project_plate_processed(
     plate: Option<u32>,
     tool_colors: Vec<String>,
     color_print_colors: Vec<String>,
+    overrides_json: Option<String>,
 ) -> Result<SliceOutput, JsValue> {
+    let overrides = parse_overrides(overrides_json)?;
     let output = ares_core::slice_project_plate_processed(
         input,
         GenerationMetadata::default(),
         plate,
+        &overrides,
         ares_core::SlicerContext::new(0),
     )
     .await
@@ -70,6 +82,16 @@ pub async fn slice_project_plate_processed(
 
 fn slice_error_js(error: SliceError) -> JsValue {
     JsValue::from_str(&error.to_string())
+}
+
+/// `{key: string|string[]}` → validated `ConfigOverrides` (M854; absent or
+/// `undefined` means no overrides).
+fn parse_overrides(overrides_json: Option<String>) -> Result<ares_core::ConfigOverrides, JsValue> {
+    match overrides_json {
+        None => Ok(ares_core::ConfigOverrides::default()),
+        Some(json) => ares_core::ConfigOverrides::from_json(json.as_bytes())
+            .map_err(|error| JsValue::from_str(&error.to_string())),
+    }
 }
 
 fn parse_options(options_json: &str) -> Result<SliceOptions, String> {

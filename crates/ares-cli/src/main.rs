@@ -29,6 +29,10 @@ struct SliceArgs {
     /// Write the G-code processor move vertices as CSV (3MF input only)
     #[arg(long)]
     dump_moves: Option<PathBuf>,
+    /// JSON object of user option overrides `{key: string|string[]}`
+    /// applied on the project-settings layer (3MF input only; M854)
+    #[arg(long)]
+    overrides: Option<String>,
     #[arg(short = 'o')]
     output: PathBuf,
     input: PathBuf,
@@ -58,6 +62,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
         )
         .into());
     }
+    if args.overrides.is_some() && extension.as_deref() != Some("3mf") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--overrides requires 3MF project input",
+        )
+        .into());
+    }
     if extension.as_deref() == Some("3mf") && args.options.is_some() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -65,6 +76,11 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
         )
         .into());
     }
+    let overrides = match &args.overrides {
+        None => ares_core::ConfigOverrides::default(),
+        Some(json) => ares_core::ConfigOverrides::from_json(json.as_bytes())
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error.to_string()))?,
+    };
     let input = fs::read(args.input)?;
     let output = match extension {
         Some(extension) if extension == "3mf" => {
@@ -73,14 +89,15 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
             match &args.dump_moves {
                 Some(path) => {
                     let processed = ares_core::slice_project_plate_processed(
-                        input, metadata, args.plate, context,
+                        input, metadata, args.plate, &overrides, context,
                     )
                     .await?;
                     fs::write(path, moves_csv::format(&processed.result))?;
                     processed.gcode
                 }
                 None => {
-                    ares_core::slice_project_plate(input, metadata, args.plate, context).await?
+                    ares_core::slice_project_plate(input, metadata, args.plate, &overrides, context)
+                        .await?
                 }
             }
         }

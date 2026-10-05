@@ -49,6 +49,7 @@ option_modules!(layer_change_retraction, legacy, initial_layer_print_height, obj
 mod object_fields;
 mod object_options;
 pub(crate) mod option_group;
+mod overrides;
 pub(crate) mod parsing;
 mod pellet;
 mod physical_extruder_map;
@@ -106,6 +107,7 @@ pub(crate) use model_config_deserialize::{
     deserialize_object_model_field, deserialize_region_model_field,
 };
 pub(crate) use object_options::ObjectOptionOverrides;
+pub use overrides::ConfigOverrides;
 use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{
     InternalBridgeFanSpeed, LayerRoleFanControl, PartCoolingFanRamp, PartCoolingFanRampConfig,

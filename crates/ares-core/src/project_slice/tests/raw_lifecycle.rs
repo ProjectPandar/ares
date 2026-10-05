@@ -151,7 +151,12 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
         "Bambu Lab X2D",
         "Generic FFF",
     );
-    let non_bambu_state = prepare_project_slice(non_bambu.clone().bytes(), None).unwrap();
+    let non_bambu_state = prepare_project_slice(
+        non_bambu.clone().bytes(),
+        None,
+        &crate::ConfigOverrides::default(),
+    )
+    .unwrap();
     assert!(non_bambu_state.config_block.is_some());
     assert_eq!(non_bambu_state.intersected_objects.len(), 1);
     assert_eq!(non_bambu_state.intersected_objects[0].volumes().len(), 1);

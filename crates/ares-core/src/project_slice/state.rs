@@ -1,7 +1,6 @@
 use crate::{
     Project, SliceError,
     geometry::CoordinateScale,
-    load_project,
     options::write_config_block,
     project::effective_config::{
         resolve_bounded_project_config, types::BoundedResolvedProjectConfig,
@@ -35,8 +34,9 @@ fn first_plate_id(project: &Project) -> u32 {
 pub(super) fn prepare_project_slice(
     project: impl AsRef<[u8]>,
     plate: Option<u32>,
+    overrides: &crate::ConfigOverrides,
 ) -> Result<ProjectSliceState, SliceError> {
-    let mut project = load_project(project)?;
+    let mut project = crate::project::load_project_with(project, overrides)?;
     project.initialize_cli_loaded_project_config();
     prepare_loaded_project_slice(project, plate)
 }

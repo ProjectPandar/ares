@@ -122,7 +122,7 @@ pub use options::registry::{
     printer_extruder_options, printer_options_with_variant_1, printer_options_with_variant_2,
 };
 pub use options::{
-    AmsCounts, AuthorizationType, BedTemperatureFormula, CsvTable, DefaultBedType,
+    AmsCounts, AuthorizationType, BedTemperatureFormula, ConfigOverrides, CsvTable, DefaultBedType,
     DifferentExtrudersSupport, ExtruderIndexIdMapLookup, ExtruderType, ExtruderTypes,
     ExtruderVariantLists, FilamentGCodeSourceOptions, FilamentOptions, FilamentPrintSourceOptions,
     FilamentRegionSourceOptions, FilamentRetractOverrideOptions, FilamentTypeDisplay, FlatMatrix,

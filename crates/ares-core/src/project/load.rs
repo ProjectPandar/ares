@@ -39,6 +39,16 @@ const PROJECT_SETTINGS_PATH: &str = "Metadata/project_settings.config";
 const LAYER_HEIGHT_PROFILE_PATH: &str = "Metadata/layer_heights_profile.txt";
 
 pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
+    load_project_with(input, &crate::ConfigOverrides::default())
+}
+
+/// `load_project` with user option overrides applied on the
+/// project-settings layer (`ConfigBase::apply_only`, `Config.cpp:461`:
+/// last write wins). See `crate::ConfigOverrides` (M854).
+pub fn load_project_with(
+    input: impl AsRef<[u8]>,
+    overrides: &crate::ConfigOverrides,
+) -> Result<Project, SliceError> {
     let input = input.as_ref();
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
@@ -98,15 +108,26 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
             plate_documents.push(document);
         }
     }
-    let settings: ProjectSettings = read_json(
-        &mut archive,
-        PROJECT_SETTINGS_PATH,
-        JsonRole::ProjectSettings,
-    )?;
-    let project_settings_raw: ProjectSettingsRaw =
-        serde_json::from_slice(&read(&mut archive, PROJECT_SETTINGS_PATH)?).map_err(|error| {
-            SliceError::InvalidInput(format!("invalid {PROJECT_SETTINGS_PATH}: {error}"))
+    let settings_bytes = read(&mut archive, PROJECT_SETTINGS_PATH)?;
+    // The strict typed load keeps the document's duplicate-key rejection;
+    // overrides then win over those values (`apply_only`, `Config.cpp:461`).
+    let settings: ProjectSettings = deserialize_json(&settings_bytes, JsonRole::ProjectSettings)?;
+    let mut project_settings_raw: ProjectSettingsRaw = serde_json::from_slice(&settings_bytes)
+        .map_err(|error| {
+            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    let settings = if overrides.is_empty() {
+        settings
+    } else {
+        overrides.apply(&mut project_settings_raw);
+        <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
+            project_settings_raw.clone().into_object(),
+        )
+        .map_err(|error| {
+            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
+        })?
+        .resolve()
+    };
 
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::normalize_volume_offsets(&mut objects);

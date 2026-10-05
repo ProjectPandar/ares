@@ -1,5 +1,7 @@
 pub(crate) mod wire;
 
+pub(crate) use wire::WireValue;
+
 use serde::de::value::{Error as ValueError, SeqDeserializer, StringDeserializer};
 
 use super::{
@@ -11,8 +13,6 @@ use super::{
     },
 };
 use crate::SliceError;
-
-use wire::WireValue;
 
 pub(crate) fn deserialize_object_model_field(
     key: String,
@@ -129,6 +129,10 @@ pub(crate) fn validate_model_config_value(
     validate_registry_only(key, definition.kind, value)
         .map_err(|reason| invalid_value(key, value, &reason))?;
     Ok(ModelConfigValueDestination::RegistryOnly)
+}
+
+pub(crate) fn decode_wire(kind: OptionValueKind, value: &str) -> Result<WireValue, String> {
+    wire::decode(kind, value)
 }
 
 fn deserialize_project_value(

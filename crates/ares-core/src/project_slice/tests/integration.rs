@@ -129,7 +129,12 @@ fn task22a_private_state_owns_single_project_config_block_and_plans() {
         config_block,
         scale,
         intersected_objects,
-    } = prepare_project_slice(KsrArchive::new().bytes(), None).unwrap();
+    } = prepare_project_slice(
+        KsrArchive::new().bytes(),
+        None,
+        &crate::ConfigOverrides::default(),
+    )
+    .unwrap();
 
     assert_eq!(project.objects().len(), 1);
     assert_eq!(resolved.objects.len(), 1);

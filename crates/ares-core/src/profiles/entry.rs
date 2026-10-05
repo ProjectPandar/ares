@@ -35,6 +35,8 @@ pub async fn slice_with_profiles(
     let catalog = Catalog::from_json(catalog_json)?;
     let selection = selection(selection_json)?;
     let composed = catalog.compose(&selection)?;
+    // Profile-sourced slices carry no user overrides (M854).
+    let overrides = crate::ConfigOverrides::default();
     slice_source(
         ProjectSource {
             bytes: input.as_ref(),
@@ -45,6 +47,7 @@ pub async fn slice_with_profiles(
                 raw: &composed.raw,
                 filament_raws: &composed.filament_raws,
             }),
+            overrides: &overrides,
         },
         metadata,
         false,
