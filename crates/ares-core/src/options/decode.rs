@@ -25,8 +25,9 @@ where
 /// `std::istringstream >> double` semantics: parse the longest valid leading
 /// numeric token and ignore the rest (`"0.4;0.6"` decodes to `0.4`, matching
 /// how upstream presets carry `;`-joined values through `deserialize`).
-/// Fails only when no numeric prefix exists, mirroring `iss.fail()`.
-fn cxx_float(value: &str) -> Result<f64, String> {
+/// Returns `(value, extracted)` — since C++11 `[facet.num.get.virtuals]`
+/// Stage 3 sets the target to `0` when conversion fails.
+fn cxx_float_prefix(value: &str) -> (f64, bool) {
     let value = value.trim();
     let bytes = value.as_bytes();
     let mut end = 0;
@@ -59,15 +60,15 @@ fn cxx_float(value: &str) -> Result<f64, String> {
         }
     }
     if !seen_digit {
-        return Err(format!("expected Orca float prefix, got {value:?}"));
+        return (0.0, false);
     }
-    value[..end]
-        .parse::<f64>()
-        .map_err(|error| format!("invalid Orca float {value:?}: {error}"))
+    (value[..end].parse::<f64>().unwrap_or(0.0), true)
 }
 
 /// `std::istringstream >> int` semantics: leading signed digits only.
-fn cxx_int(value: &str) -> Result<i32, String> {
+/// Returns `(value, extracted)` — on extraction failure C++11
+/// `[facet.num.get.virtuals]` Stage 3 writes `0`.
+fn cxx_int_prefix(value: &str) -> (i32, bool) {
     let value = value.trim();
     let bytes = value.as_bytes();
     let mut end = usize::from(matches!(bytes.first(), Some(b'+' | b'-')));
@@ -76,16 +77,45 @@ fn cxx_int(value: &str) -> Result<i32, String> {
         end += 1;
     }
     if end == digits {
-        return Err(format!("expected Orca integer prefix, got {value:?}"));
+        return (0, false);
     }
-    value[..end]
-        .parse::<i32>()
-        .map_err(|error| format!("invalid Orca int {value:?}: {error}"))
+    (value[..end].parse::<i32>().unwrap_or(0), true)
+}
+
+/// Numeric vector elements (`ConfigOptionFloatsTempl`, `ConfigOptionIntsTempl`,
+/// `ConfigOptionPercentsTempl`) ignore `iss.fail()`: upstream pushes whatever
+/// `>>` wrote, which since C++11 is `0` on conversion failure.
+fn float_element(value: &str) -> f64 {
+    cxx_float_prefix(value).0
+}
+
+fn int_element(value: &str) -> i32 {
+    cxx_int_prefix(value).0
+}
+
+fn percent_vector_element(value: &str) -> f64 {
+    cxx_float_prefix(value.trim_end_matches('%').trim_end()).0
+}
+
+/// Scalar `ConfigOptionSingle` types return `!iss.fail()` — a failed
+/// extraction reports `false` instead of silently storing `0`.
+fn scalar_float(value: &str) -> Result<f64, String> {
+    let (number, extracted) = cxx_float_prefix(value);
+    extracted
+        .then_some(number)
+        .ok_or_else(|| format!("expected Orca float, got {value:?}"))
+}
+
+fn scalar_int(value: &str) -> Result<i32, String> {
+    let (number, extracted) = cxx_int_prefix(value);
+    extracted
+        .then_some(number)
+        .ok_or_else(|| format!("expected Orca integer, got {value:?}"))
 }
 
 /// `ConfigOptionPercent::deserialize` accepts a trailing '%'.
-fn percent_element(value: &str) -> Result<f64, String> {
-    cxx_float(value.trim_end_matches('%').trim_end())
+fn scalar_percent(value: &str) -> Result<f64, String> {
+    scalar_float(value.trim_end_matches('%').trim_end())
 }
 
 fn sequence<T>(elements: &[String]) -> Result<T, String>
@@ -186,13 +216,15 @@ pub fn decode_config_value(kind: OptionValueKind, serialized: &str) -> Result<St
         (OptionValueKind::Bool, WireValue::Scalar(value)) => {
             bool_element(&value).map(str::to_owned)
         }
-        (OptionValueKind::Int, WireValue::Scalar(value)) => cxx_int(&value).map(|v| v.to_string()),
-        (OptionValueKind::Float, WireValue::Scalar(value)) => cxx_float(&value).map(number),
-        (OptionValueKind::Percent, WireValue::Scalar(value)) => percent_element(&value).map(number),
+        (OptionValueKind::Int, WireValue::Scalar(value)) => {
+            scalar_int(&value).map(|v| v.to_string())
+        }
+        (OptionValueKind::Float, WireValue::Scalar(value)) => scalar_float(&value).map(number),
+        (OptionValueKind::Percent, WireValue::Scalar(value)) => scalar_percent(&value).map(number),
         (OptionValueKind::FloatOrPercent, WireValue::Scalar(value)) => {
             // `ConfigOptionFloatOrPercent::deserialize` streams a double
             // prefix and flags percent when the whole input contains '%'.
-            cxx_float(&value).map(|v| {
+            scalar_float(&value).map(|v| {
                 if value.contains('%') {
                     float_or_percent_json(FloatOrPercent::Percent(Percent(v)))
                 } else {
@@ -216,27 +248,29 @@ pub fn decode_config_value(kind: OptionValueKind, serialized: &str) -> Result<St
             })
         }
         (OptionValueKind::Ints, WireValue::Sequence(elements)) => {
-            join_elements(&elements, |element| cxx_int(element).map(|v| v.to_string()))
+            join_elements(&elements, |element| Ok(int_element(element).to_string()))
         }
         (OptionValueKind::IntsNullable, WireValue::Sequence(elements)) => {
             join_elements(&elements, |element| {
-                nullable(element, |e| cxx_int(e).map(|v| v.to_string()))
+                nullable(element, |e| Ok(int_element(e).to_string()))
             })
         }
         (OptionValueKind::Floats, WireValue::Sequence(elements)) => {
-            join_elements(&elements, |element| cxx_float(element).map(number))
+            join_elements(&elements, |element| Ok(number(float_element(element))))
         }
         (OptionValueKind::Percents, WireValue::Sequence(elements)) => {
-            join_elements(&elements, |element| percent_element(element).map(number))
+            join_elements(&elements, |element| {
+                Ok(number(percent_vector_element(element)))
+            })
         }
         (OptionValueKind::FloatsNullable, WireValue::Sequence(elements)) => {
             join_elements(&elements, |element| {
-                nullable(element, |e| cxx_float(e).map(number))
+                nullable(element, |e| Ok(number(float_element(e))))
             })
         }
         (OptionValueKind::PercentsNullable, WireValue::Sequence(elements)) => {
             join_elements(&elements, |element| {
-                nullable(element, |e| percent_element(e).map(number))
+                nullable(element, |e| Ok(number(percent_vector_element(e))))
             })
         }
         (OptionValueKind::Enums, WireValue::Sequence(elements))
@@ -254,9 +288,9 @@ pub fn decode_config_value(kind: OptionValueKind, serialized: &str) -> Result<St
             // `istringstream >> double` (missing coordinate -> 0).
             join_elements(&elements, |element| {
                 let mut coordinates = element.split('x');
-                let x = cxx_float(coordinates.next().unwrap_or_default())?;
+                let x = cxx_float_prefix(coordinates.next().unwrap_or_default()).0;
                 let y = match coordinates.next() {
-                    Some(rest) => cxx_float(rest)?,
+                    Some(rest) => cxx_float_prefix(rest).0,
                     None => 0.0,
                 };
                 Ok(format!("[{},{}]", number(x), number(y)))
@@ -319,6 +353,20 @@ mod tests {
         assert_eq!(decode_by_kind(OptionValueKind::Float, "0.4"), json!(0.4));
         assert_eq!(decode_by_kind(OptionValueKind::Percent, "50%"), json!(50.0));
         assert_eq!(decode_by_kind(OptionValueKind::Percent, "50"), json!(50.0));
+        // Scalar numeric extraction failure reports `!iss.fail()` upstream.
+        assert!(decode_config_value(OptionValueKind::Float, "V").is_err());
+        assert!(decode_config_value(OptionValueKind::Int, "V").is_err());
+        assert!(decode_config_value(OptionValueKind::FloatOrPercent, "V").is_err());
+        // Prefix semantics: upstream `iss >> double` stops at the first
+        // non-numeric character and succeeds.
+        assert_eq!(
+            decode_by_kind(OptionValueKind::Float, "0.4;0.6"),
+            json!(0.4)
+        );
+        assert_eq!(
+            decode_by_kind(OptionValueKind::FloatOrPercent, "0,0"),
+            json!({ "value": 0.0, "percent": false })
+        );
         assert_eq!(
             decode_by_kind(OptionValueKind::FloatOrPercent, "12%"),
             json!({ "value": 12.0, "percent": true })
@@ -347,6 +395,11 @@ mod tests {
         );
         // Upstream empty Floats decode yields [0].
         assert_eq!(decode_by_kind(OptionValueKind::Floats, ""), json!([0.0]));
+        // Vector elements without a numeric prefix decode to 0 — upstream
+        // `iss >> v` writes 0 on conversion failure since C++11 and the
+        // vector deserializers never check `iss.fail()`.
+        assert_eq!(decode_by_kind(OptionValueKind::Ints, "V,3"), json!([0, 3]));
+        assert_eq!(decode_by_kind(OptionValueKind::Floats, ","), json!([0.0]));
         assert_eq!(
             decode_by_kind(OptionValueKind::Percents, "10%,20"),
             json!([10.0, 20.0])

@@ -107,20 +107,12 @@ fn main() {
             match ares_core::decode_config_value_by_key(&key, &serialized) {
                 Ok(_) => decoded += 1,
                 Err(error) if error.contains("unknown config option key") => unknown_key += 1,
-                Err(error) => {
-                    // Upstream `istringstream >>` extraction ignores failure
-                    // for numeric vector elements and pushes uninitialized
-                    // garbage, so a missing numeric prefix is an upstream
-                    // success-with-garbage case, not an upstream failure.
-                    let upstream_also_fails = !error.contains("prefix");
-                    failures.push(json!({
-                        "source": source,
-                        "key": key,
-                        "serialized": serialized,
-                        "error": error,
-                        "upstream_also_fails": upstream_also_fails,
-                    }))
-                }
+                Err(error) => failures.push(json!({
+                    "source": source,
+                    "key": key,
+                    "serialized": serialized,
+                    "error": error,
+                })),
             }
         }
     };
@@ -144,10 +136,6 @@ fn main() {
         run_source(&profile.to_string_lossy(), pairs);
     }
 
-    let upstream_also_fails = failures
-        .iter()
-        .filter(|failure| failure["upstream_also_fails"] == true)
-        .count();
     println!(
         "{}",
         serde_json::to_string_pretty(&json!({
@@ -156,13 +144,11 @@ fn main() {
             "decoded": decoded,
             "unknown_key": unknown_key,
             "failed": failures.len(),
-            "upstream_also_fails": upstream_also_fails,
-            "upstream_lenient_accepts_garbage": failures.len() - upstream_also_fails,
             "failures": failures,
             "notes": [
                 "unknown_key: keys absent from the option registry (printer metadata fields, sla-only keys, etc.); decode was not attempted",
-                "upstream_also_fails: inputs where upstream ConfigOption*::deserialize also fails (bad bool token, unterminated quoted string, malformed point)",
-                "upstream_lenient_accepts_garbage: inputs where upstream `istringstream >>` ignores extraction failure and stores uninitialized/garbage values; this decoder reports an error instead of fabricating data"
+                "failures must only be inputs where upstream ConfigOption*::deserialize also fails (bad bool token, unterminated quoted string, malformed point)",
+                "numeric vector elements follow C++11 [facet.num.get.virtuals] Stage 3: a failed `>>` extraction writes 0, matching upstream (e.g. 'V' or ',' decode to 0)",
             ],
         }))
         .unwrap()
