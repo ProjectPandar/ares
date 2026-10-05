@@ -24,6 +24,19 @@ function inRange(def: ConfigOptionDef, value: number) {
 
 const clamp = (def: ConfigOptionDef, value: number) => Math.min(Math.max(value, def.min ?? -FLT_MAX), def.max ?? FLT_MAX);
 
+/**
+ * Text of a decoded number (`get_config_value`, OptionsGroup.cpp:941-1065): TextCtrls show
+ * `double_to_string`, a nullable nil "N/A"; SpinCtrls the integer, nil empty.
+ */
+export const typedText = (textCtrl: boolean, value: number | null) =>
+  value === null ? (textCtrl ? "N/A" : "") : textCtrl ? doubleToString(value) : String(value);
+
+/** `PointCtrl::set_value` (Field.cpp:2235-2245): whole numbers as `%i`, others with two decimals. */
+export const coordinateText = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2));
+
+/** `get_thumbnails_string` (Field.cpp:78-86): `%ix%i` points joined by ", ". */
+export const thumbnailsText = (points: [number, number][]) => points.map(([x, y]) => `${Math.trunc(x)}x${Math.trunc(y)}`).join(", ");
+
 /** Text a `TextCtrl` shows for a serialized value (`get_config_value`, OptionsGroup.cpp:1013-1015). */
 export const displayText = (def: ConfigOptionDef, value: string) => (def.type === "percent" ? value.replace(/%$/, "") : value);
 

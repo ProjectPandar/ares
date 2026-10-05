@@ -13,11 +13,16 @@ interface RowContext {
   slot?: number;
 }
 
-/** Value of `key` at the slot a Tab.cpp `Option` binds (`get_option(key, idx)`). */
-function slotValue({ values, slot }: RowContext, key: string, index?: number) {
-  const value = values[key];
-  const at = index ?? slot;
-  return at !== undefined && Array.isArray(value) ? value[at] : value;
+/**
+ * Value of `key` at the slot a Tab.cpp `Option` binds (`get_option(key, idx)`): its index, the
+ * filament slot, else element 0 (`get_config_value` idx, OptionsGroup.cpp:941-943). A point is one
+ * value; strings and `bed_exclude_area` points without a slot show every element.
+ */
+function slotValue({ values, slot }: RowContext, def: ConfigOptionDef, index?: number) {
+  const value = values[def.key];
+  if (!Array.isArray(value) || def.type === "point" || def.type === "points_groups") return value;
+  const at = index ?? slot ?? (def.type === "strings" || def.type === "points" ? undefined : 0);
+  return at === undefined ? value : value[at];
 }
 
 function Row({ row, context, defs }: { row: LayoutRow; context: RowContext; defs: ReadonlyMap<string, ConfigOptionDef> }) {
@@ -37,7 +42,7 @@ function Row({ row, context, defs }: { row: LayoutRow; context: RowContext; defs
               return (
                 <span className="option-subfield" key={key}>
                   <span className="option-sublabel">{text}</span>
-                  <OptionControl def={def} index={index} label={text} original={slotValue(context, key, index)}
+                  <OptionControl def={def} index={index} label={text} original={slotValue(context, def, index)}
                     edited={context.overrides?.[key]} readOnly={readOnly} />
                 </span>
               );
@@ -50,7 +55,7 @@ function Row({ row, context, defs }: { row: LayoutRow; context: RowContext; defs
       const def = defs.get(row.key)!;
       return (
         <OptionField def={def} index={row.index} label={row.label ?? def.label ?? ""}
-          original={slotValue(context, row.key, row.index)} edited={context.overrides?.[row.key]}
+          original={slotValue(context, def, row.index)} edited={context.overrides?.[row.key]}
           readOnly={readOnly || row.kind === "widget"} code={row.kind === "option" && row.code}
           full={row.kind === "option" && row.full} />
       );

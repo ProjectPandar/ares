@@ -106,6 +106,13 @@ export interface PresetDiagnostic {
   message: string;
 }
 
+/**
+ * A config value decoded from its `ConfigOption::serialize()` text: bools, numbers (percents
+ * without "%"), enum names and strings, `[x, y]` points, `{value, percent}` float-or-percents,
+ * arrays for vectors with `null` for a nullable `nil` element.
+ */
+export type ConfigValue = boolean | number | string | null | { value: number; percent: boolean } | ConfigValue[];
+
 /** `filterCompatiblePresets` result: selectable compatible preset names. */
 export interface CompatiblePresets {
   processes: string[];

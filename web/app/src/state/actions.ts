@@ -1,10 +1,12 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { slicer } from "./slicer";
+import { decodeSettings } from "./typedSettings";
 import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp, type ViewMode } from "./store";
 
-slicer.printConfigDef().then(
-  ({ options }) => useApp.setState({ engine: "ready", configDefs: new Map(options.map((def) => [def.key, def])) }),
+const configDefs = slicer.printConfigDef().then(({ options }) => new Map(options.map((def) => [def.key, def])));
+configDefs.then(
+  (defs) => useApp.setState({ engine: "ready", configDefs: defs }),
   (error: Error) => useApp.setState({ engine: "error", engineError: error.message }),
 );
 
@@ -37,9 +39,11 @@ export async function importFile(file: File) {
   useApp.setState({ loadingFile: true, loadError: undefined });
   try {
     const scene = await slicer.loadScene(bytes);
+    const typedSettings = scene.settings && (await decodeSettings(await configDefs, scene.settings));
     useApp.setState({
       file: { name: file.name, bytes },
       scene,
+      typedSettings,
       selectedObject: null,
       overrides: {},
       slice: { status: "idle" },

@@ -1,6 +1,8 @@
 import type { OptionMap, ProjectSettings } from "@ares-slicer/wasm";
 import { useEffect, useRef } from "react";
 import type { LayoutGroup, LayoutPage } from "./layoutTypes";
+import { useApp } from "../state/store";
+import { tabValues } from "../state/typedSettings";
 import { ModeSwitch } from "./ModeSwitch";
 import { SettingsPages } from "./SettingsPages";
 import { FILAMENT_PAGES, PRINTER_PAGES } from "./presetLayout";
@@ -35,7 +37,8 @@ export function SettingsDialog({ tab, settings, onClose }: { tab: SettingsTab; s
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => dialog.current!.showModal(), []);
   const printer = tab.kind === "printer";
-  const values = { ...settings.project, ...(printer ? settings.printer : settings.filament) };
+  const typed = useApp((state) => state.typedSettings)!;
+  const values = tabValues(settings, typed, printer ? "printer" : "filament");
   const title = printer ? "Printer settings" : "Filament settings";
   const presetKey = printer ? "printer_settings_id" : "filament_settings_id";
   const preset = values[presetKey];

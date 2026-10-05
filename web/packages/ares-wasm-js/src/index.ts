@@ -1,7 +1,7 @@
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ConfigOverrides, SliceResult, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
+import type { CompatiblePresets, ConfigValue, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
 export type * from "./configDef.js";
@@ -121,6 +121,17 @@ export class AresSlicer {
   async filterCompatiblePresets(catalogJson: string, printer: string, process?: string): Promise<CompatiblePresets> {
     await this.#ready;
     return (await this.#call({ kind: "filterCompatiblePresets", catalog: catalogJson, printer, process })) as CompatiblePresets;
+  }
+
+  /**
+   * Decodes `[key, serialized]` entries, each a value in `ConfigOption::serialize()` form as
+   * 3MF projects and presets store it (e.g. `"1"` for a bool, `"0x0"` for a point), into typed
+   * values in one round trip. A vector key decodes its comma-joined elements to an array.
+   * Rejects on an unknown key or a malformed value, naming the entry.
+   */
+  async decodeConfigValues(entries: readonly (readonly [key: string, serialized: string])[]): Promise<ConfigValue[]> {
+    await this.#ready;
+    return (await this.#call({ kind: "decodeConfigValues", entries: entries.map(([key, value]) => [key, value]) })) as ConfigValue[];
   }
 
   /** Slices an STL model with Ares slice options. */

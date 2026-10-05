@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import type { ConfigOptionDef, ConfigOptionMode } from "@ares-slicer/wasm";
 import type { LayoutOption, LayoutPage, LayoutRow } from "../app/src/sidebar/layoutTypes";
 
@@ -23,9 +24,19 @@ export function projectConfig(fixture: string): Record<string, string | string[]
   return JSON.parse(execFileSync("unzip", ["-p", fixture, "Metadata/project_settings.config"], { maxBuffer: 1 << 24 }).toString());
 }
 
+/**
+ * Typed values of the fixture's `loadScene` settings, decoded natively per stored element by
+ * `decode_config_value_by_key` (crates/ares-wasm/tests/decoded_settings.rs) for the option types
+ * the fields show typed: bools, int/enum/float/percent vectors and points.
+ */
+export type Decoded = Record<string, unknown>;
+export function decodedSettings(repositoryRoot: string): Record<"printer" | "process" | "filament" | "project", Decoded> {
+  return JSON.parse(readFileSync(`${repositoryRoot}target/web-e2e/expected-decoded.json`, "utf8"));
+}
+
 export interface ExpectedField {
   key: string;
-  control: "choice" | "combo" | "spin" | "text" | "code";
+  control: "choice" | "combo" | "spin" | "text" | "code" | "checkbox" | "point";
   label: string;
   unit: string | null;
   tooltip: string;
@@ -55,26 +66,68 @@ const tooltipOf = (def: ConfigOptionDef, index?: number) =>
   `${def.tooltip ? `${def.tooltip}\n\n` : ""}parameter name: ${def.key}${index === undefined ? "" : `[${index}]`}`;
 
 /**
- * `OptionsGroup::build_field` (OptionsGroup.cpp:36-91): Choice for enums and open enums,
- * SpinCtrl for ints, TextCtrl otherwise (multi-line for `multiline` and Tab.cpp `is_code`).
- * Bools (CheckBox), vectors and points stay text fields until typed values are decoded in
- * Rust (`decodeConfigValue`).
+ * `OptionsGroup::build_field` (OptionsGroup.cpp:36-91): open enums are Choices, other GUI types
+ * TextCtrls; then bools are CheckBoxes, ints SpinCtrls, enums Choices and points PointCtrls, scalar
+ * or vector alike; the rest TextCtrls (multi-line for `multiline` and Tab.cpp `is_code`).
+ * `float_or_percent` and points groups stay text.
  */
-function controlOf(def: ConfigOptionDef, code?: boolean): ExpectedField["control"] {
+function controlOf(def: ConfigOptionDef, code?: boolean, index?: number): ExpectedField["control"] {
   if (code || def.multiline) return "code";
-  if (/s$|_nullable$/.test(def.type)) return "text";
   if (["select_open", "i_enum_open", "f_enum_open"].includes(def.gui_type)) return "combo";
   if (def.gui_type !== "undefined") return "text";
-  return def.type === "int" ? "spin" : def.type === "enum" ? "choice" : "text";
+  const type = def.type.replace(/_nullable$/, "").replace(/s$/, "");
+  if (type === "bool") return "checkbox";
+  if (type === "int") return "spin";
+  if (type === "enum") return "choice";
+  // A points option without an index shows all points as text (OptionsGroup.cpp:1086-1091).
+  if (def.type === "point" || (def.type === "points" && index !== undefined)) return "point";
+  return "text";
 }
 
-function expectedField(def: ConfigOptionDef, option: LayoutOption & { code?: boolean }, value: string | string[] | undefined): ExpectedField {
-  const control = controlOf(def, option.code);
+/** `double_to_string` (Field.cpp:42-70): four decimals at most, trailing zeroes dropped. */
+const doubleToString = (value: number) => String(Number(value.toFixed(4)));
+/** `PointCtrl::set_value` (Field.cpp:2235-2245): whole numbers as `%i`, others with two decimals. */
+const coordinate = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2));
+
+/**
+ * The text a field shows for a typed value (`get_config_value`, OptionsGroup.cpp:941-1120):
+ * nullable nil floats/percents are "N/A" and an unchecked CheckBox (Field.cpp:1097-1113).
+ */
+function typedText(def: ConfigOptionDef, control: ExpectedField["control"], value: unknown) {
+  if (control === "checkbox") return String(value === true);
+  if (control === "point") return (value as number[]).map(coordinate).join(",");
+  // `get_thumbnails_string` (Field.cpp:78-86).
+  if (def.type === "points") return (value as number[][]).map(([x, y]) => `${Math.trunc(x)}x${Math.trunc(y)}`).join(", ");
+  if (value === null) return control === "text" ? "N/A" : "";
+  return typeof value === "number" && control === "text" ? doubleToString(value) : String(value);
+}
+
+/**
+ * The value a vector option binds: `opt_index`, the filament slot, else element 0
+ * (`get_config_value` idx). `bed_exclude_area` shows all points (OptionsGroup.cpp:1088-1091).
+ */
+function bound(def: ConfigOptionDef, option: LayoutOption, value: unknown, slot?: number) {
+  if (!Array.isArray(value) || /^point$|^points_groups$/.test(def.type)) return value;
+  if (def.type === "points" && option.index === undefined) return value;
+  if (def.type === "strings" && option.index === undefined && slot === undefined) return undefined;
+  return value[option.index ?? slot ?? 0];
+}
+
+function expectedField(def: ConfigOptionDef, option: LayoutOption & { code?: boolean }, stored: unknown, typed: unknown, slot?: number): ExpectedField {
+  const control = controlOf(def, option.code, option.index);
+  const raw = bound(def, option, stored, slot);
+  const value = typeof raw === "string" ? raw : undefined;
   const texts = def.enum_labels.length ? def.enum_labels : def.enum_values;
   const field: ExpectedField = {
     key: def.key, control, label: option.label ?? def.label ?? "", unit: def.sidetext, tooltip: tooltipOf(def, option.index),
   };
-  const scalar = typeof value === "string" ? value : undefined;
+  if (typed !== undefined && def.gui_type === "undefined") {
+    field.value = typedText(def, control, bound(def, option, typed, slot));
+    if (control === "spin") Object.assign(field, { min: String(def.min ?? 0), max: String(def.max ?? 2147483647) });
+    if (control === "choice") field.options = def.enum_values.map((item, at) => ({ value: item, text: texts[at] }));
+    return field;
+  }
+  const scalar = value;
   if (control === "choice") Object.assign(field, { options: def.enum_values.map((item, at) => ({ value: item, text: texts[at] })), value: scalar });
   // Choice::set_value (Field.cpp:1599-1616): a listed value shows its label, anything else its text.
   if (control === "combo") Object.assign(field, { options: texts.map((text) => ({ value: text, text })), value: texts[def.enum_values.indexOf(scalar!)] ?? scalar });
@@ -93,15 +146,20 @@ function expectedField(def: ConfigOptionDef, option: LayoutOption & { code?: boo
  */
 const NOT_IN_SCENE = new Set(["compatible_printers", "compatible_printers_condition", "compatible_prints", "compatible_prints_condition"]);
 
-/** Groups and fields a page shows in `mode`; values are checked where the 3MF stores them. */
-export function expectedPage(defs: Map<string, ConfigOptionDef>, page: LayoutPage, mode: ViewMode, config: Record<string, string | string[]>) {
+/**
+ * Groups and fields a page shows in `mode`; values are checked where the scene stores them,
+ * typed ones against the native decode.
+ */
+export function expectedPage(
+  defs: Map<string, ConfigOptionDef>, page: LayoutPage, mode: ViewMode, config: Record<string, unknown>, typed: Decoded, slot?: number,
+) {
   const groups: string[] = [];
   const fields: ExpectedField[] = [];
   const shown = ({ key }: LayoutOption) => !NOT_IN_SCENE.has(key);
   for (const group of page.groups) {
     const rows = group.rows.filter((row) => lineVisible(defs, row, mode) && rowOptions(row).some(shown));
     if (rows.length) groups.push(group.title);
-    for (const option of rows.flatMap(rowOptions).filter(shown)) fields.push(expectedField(defs.get(option.key)!, option, config[option.key]));
+    for (const option of rows.flatMap(rowOptions).filter(shown)) fields.push(expectedField(defs.get(option.key)!, option, config[option.key], typed[option.key], slot));
   }
   return { groups, fields };
 }

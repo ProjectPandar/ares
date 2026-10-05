@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import init, {
+  decodeConfigValue,
   filterCompatiblePresets,
   loadScene,
   parsePresetBundle,
@@ -76,6 +77,14 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [JSON.parse(parsePresetBundle(request.input, request.filename)), []];
     case "filterCompatiblePresets":
       return [JSON.parse(filterCompatiblePresets(request.catalog, request.printer, request.process)), []];
+    case "decodeConfigValues":
+      return [request.entries.map(([key, serialized]) => {
+        try {
+          return JSON.parse(decodeConfigValue(key, serialized));
+        } catch (error) {
+          throw new Error(`${key} = ${JSON.stringify(serialized)}: ${String(error)}`, { cause: error });
+        }
+      }), []];
     case "viewRange": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { layers, visibleRoles, visibleOptions } = request;

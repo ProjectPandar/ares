@@ -1,5 +1,6 @@
 import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, Scene, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
+import type { TypedSettings } from "./typedSettings";
 
 export type Theme = "dark" | "light";
 
@@ -55,6 +56,8 @@ export interface AppState {
   fieldError: { key: string; message: string } | null;
   file: { name: string; bytes: Uint8Array } | null;
   scene: Scene | null;
+  /** `scene.settings` options decoded for typed fields. */
+  typedSettings: TypedSettings | null;
   loadingFile: boolean;
   loadError?: string;
   selectedObject: number | null;
@@ -92,6 +95,7 @@ export const useApp = create<AppState>(() => ({
   fieldError: null,
   file: null,
   scene: null,
+  typedSettings: null,
   loadingFile: false,
   selectedObject: null,
   overrides: {},

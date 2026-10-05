@@ -6,7 +6,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { FILAMENT_PAGES, PRINTER_PAGES } from "../app/src/sidebar/presetLayout";
 import { PROCESS_PAGES } from "../app/src/sidebar/processLayout";
 import type { LayoutPage } from "../app/src/sidebar/layoutTypes";
-import { expectedPage, MODE_NAMES, MODES, nativeConfigDef, pageVisible, projectConfig } from "./settingsOracle";
+import { decodedSettings, type Decoded, expectedPage, MODE_NAMES, MODES, nativeConfigDef, pageVisible, projectConfig } from "./settingsOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/settings/", import.meta.url));
@@ -16,6 +16,13 @@ const slug = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
 const defs = nativeConfigDef(repositoryRoot);
 const config = projectConfig(fixture);
+const decoded = decodedSettings(repositoryRoot);
+/** Typed values per tab: the project settings under each preset's own (as the app merges them). */
+const TYPED: Record<keyof typeof EXPERT_TITLES, Decoded> = {
+  process: { ...decoded.project, ...decoded.process },
+  printer: { ...decoded.project, ...decoded.printer },
+  filament: { ...decoded.project, ...decoded.filament },
+};
 
 // Expert-mode page order of OrcaSlicer src/slic3r/GUI/Tab.cpp (pin 8500fcdc):
 // TabPrint::build 2311-2800, TabFilament::build 3892-4243 (+ add_filament_overrides_page 3620),
@@ -40,8 +47,19 @@ async function fullShot(page: Page, target: Locator, scroller: Locator, path: st
 /** Every rendered option of the active page: its control kind and the metadata it displays. */
 const renderedFields = (scope: Locator) =>
   scope.locator("[data-option]").evaluateAll((elements) => elements.map((element) => {
+    // PointCtrl (Field.cpp:2123): an x and a y TextInput.
+    if (element.classList.contains("option-point")) {
+      const inputs = [...element.querySelectorAll("input")];
+      const label = element.closest(".option-subfield")?.querySelector(".option-sublabel") ?? element.closest(".option-row")!.querySelector(".option-label");
+      return {
+        key: element.getAttribute("data-option"), control: "point", label: label!.textContent,
+        unit: element.parentElement!.querySelector(".option-unit")?.textContent ?? null,
+        tooltip: element.getAttribute("title"), value: inputs.map((input) => input.value).join(","),
+      };
+    }
     const control = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
     const kind = control instanceof HTMLSelectElement ? "choice"
+      : control.type === "checkbox" ? "checkbox"
       : control instanceof HTMLTextAreaElement ? "code"
       : control.list ? "combo"
       : control.type === "number" ? "spin" : "text";
@@ -53,10 +71,10 @@ const renderedFields = (scope: Locator) =>
       unit: element.parentElement!.querySelector(".option-unit")?.textContent ?? null,
       tooltip: element.getAttribute("title"),
     };
-    if (control instanceof HTMLSelectElement) field.options = [...control.options].map(({ value, text }) => ({ value, text }));
+    if (control instanceof HTMLSelectElement) field.options = [...control.options].filter((option) => !option.hidden).map(({ value, text }) => ({ value, text }));
     if (control instanceof HTMLInputElement && control.list) field.options = [...control.list.options].map(({ value, text }) => ({ value, text: text || value }));
     if (kind === "spin") Object.assign(field, { min: control.getAttribute("min"), max: control.getAttribute("max") });
-    field.value = control.value;
+    field.value = control.type === "checkbox" ? String((control as HTMLInputElement).checked) : control.value;
     return field;
   }));
 
@@ -73,10 +91,10 @@ async function checkTab(page: Page, scope: Locator, scroller: Locator, name: key
     for (const [index, layout] of pages.entries()) {
       await scope.getByRole("tab", { name: layout.title, exact: true }).click();
       await expect(scope.getByRole("tab", { name: layout.title, exact: true })).toHaveAttribute("aria-selected", "true");
-      const expected = expectedPage(defs, layout, mode, config);
+      const expected = expectedPage(defs, layout, mode, config, TYPED[name], name === "filament" ? 0 : undefined);
       await expect(scope.locator(".optgroup-title")).toHaveText(expected.groups);
       const fields = await renderedFields(scope);
-      // Value checks only where the project holds a scalar (vector decoding is the next Rust slice).
+      // Values are checked where the oracle knows them (all but untyped whole-vector texts).
       const comparable = fields.map((field, at) => (expected.fields[at]?.value === undefined ? { ...field, value: undefined } : field));
       expect(comparable, `${name} / ${mode} / ${layout.title}`).toEqual(expected.fields.map((field) => ({ value: undefined, ...field })));
       coverage[mode][layout.title] = fields.length;
@@ -148,7 +166,12 @@ test("OrcaSlicer settings tabs render PrintConfigDef metadata per mode; unedited
   await commit(anchor, "1000 (unlimited)");
   await expect(anchor).toHaveValue("1000 (unlimited)");
   await expect(process.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByTestId("process-edited")).toContainText("5 modified options");
+  // CheckBox (Field.cpp:1059-1088): toggling commits the bool.
+  const thinWalls = process.getByRole("checkbox", { name: "detect_thin_wall", exact: true });
+  await expect(thinWalls).toBeChecked();
+  await thinWalls.click();
+  await expect(thinWalls).not.toBeChecked();
+  await expect(page.getByTestId("process-edited")).toContainText("6 modified options");
   await anchor.scrollIntoViewIfNeeded();
   await sidebar.screenshot({ path: `${artifacts}process-validation.png` });
   await page.getByTestId("process-edited").getByRole("button", { name: "Reset all" }).click();

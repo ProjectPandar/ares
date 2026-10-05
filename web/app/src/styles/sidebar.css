@@ -115,7 +115,8 @@
 .option-value:has(.option-error) { flex-wrap: wrap; }
 .option-error { flex-basis: 100%; color: var(--danger); font-size: 11px; }
 .option-unit { color: var(--text-dim); width: 52px; flex: none; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.option-check { accent-color: var(--accent); margin: 0; }
+.option-check { accent-color: var(--accent); margin: 0 auto 0 0; }
+.option-point { flex: 1; display: flex; gap: 4px; min-width: 0; }
 .option-row.edited .option-label { color: var(--modified); }
 .option-reset { flex: none; background: none; border: none; cursor: pointer; padding: 0 2px; color: var(--modified); font-size: 13px; line-height: 1; }
 .process-edited {
