@@ -117,3 +117,24 @@ fn preset_catalog_printers_json_lists_vendor_and_model() {
         }])
     );
 }
+
+#[test]
+fn profile_slice_options_carry_overrides() {
+    let options = super::profiles::parse_profile_slice_overrides_for_test(
+        r#"{"seed":0,"overrides":{"layer_height":"0.3"}}"#,
+    )
+    .unwrap();
+    assert_eq!(
+        options,
+        ares_core::ConfigOverrides::from_json(br#"{"layer_height":"0.3"}"#).unwrap()
+    );
+}
+
+#[test]
+fn profile_slice_options_reject_unknown_override_keys() {
+    let error = super::profiles::parse_profile_slice_overrides_for_test(
+        r#"{"seed":0,"overrides":{"no_such_option":"1"}}"#,
+    )
+    .unwrap_err();
+    assert!(error.contains("unknown Orca option key"), "{error}");
+}
