@@ -140,7 +140,7 @@ fn run_profile_entry(overrides: &[(&str, &str, Value)]) {
     comparison.unwrap();
 }
 
-fn placed_cube(source: &[u8]) -> Vec<u8> {
+pub(super) fn placed_cube(source: &[u8]) -> Vec<u8> {
     // Both slicers receive the identical pre-positioned STL; arrangement is
     // outside the profile-entry contract. LH's bed center is (118, 138).
     let mut bytes = source.to_vec();
@@ -191,7 +191,7 @@ fn native(runner: &OrcaRunner, output: &str) -> Vec<u8> {
     std::fs::read(output.join("plate_1.gcode")).unwrap()
 }
 
-fn vendor(root: &Path, name: &str) -> Value {
+pub(super) fn vendor(root: &Path, name: &str) -> Value {
     let index: Value =
         serde_json::from_slice(&std::fs::read(root.join(format!("{name}.json"))).unwrap()).unwrap();
     let files = [
@@ -212,6 +212,6 @@ fn vendor(root: &Path, name: &str) -> Value {
     json!({"index": index, "files": files})
 }
 
-fn write_json(path: &Path, value: &Value) {
+pub(super) fn write_json(path: &Path, value: &Value) {
     std::fs::write(path, serde_json::to_vec_pretty(value).unwrap()).unwrap();
 }
