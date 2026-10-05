@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import init, { loadScene, printConfigDef, sliceProjectPlate, slice_stl } from "./wasm/ares_wasm.js";
+import init, { loadScene, printConfigDef, sliceProjectPlate, sliceWithProfiles, slice_stl } from "./wasm/ares_wasm.js";
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
@@ -29,6 +29,11 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "sliceProject": {
       const result: SliceResult = { gcode: owned(await sliceProjectPlate(request.input, request.plate)), toolpaths: null };
+      return [result, [result.gcode.buffer]];
+    }
+    case "sliceWithProfiles": {
+      const { input, filename, catalog, selection, options } = request;
+      const result: SliceResult = { gcode: owned(await sliceWithProfiles(input, filename, catalog, selection, options)), toolpaths: null };
       return [result, [result.gcode.buffer]];
     }
     case "sliceStl": {

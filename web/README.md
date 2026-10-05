@@ -80,6 +80,11 @@ Artifacts are written to `target/web-e2e/`:
 - `gcode.sha256`, `result.json`: size and digest of the browser G-code
 - `settings/`: one screenshot per process / printer / filament settings page, and
   `result.json` with the per-page field coverage and the unedited slice digest
+- `profile-slice/`: `sliceWithProfiles` on `@ares-slicer/profiles` system presets
+  (`browser.gcode`), the native OrcaSlicer `--load-settings` oracle run (`native/`),
+  and `result.json` with catalog load and slice timings, with and without the BBL vendor.
+  It needs `ORCA_APPDIR` set to an official OrcaSlicer 2.4.2 AppImage extraction
+  (see `scripts/orca-parity.sh`); without it the test is skipped.
 
 If Playwright's bundled Chromium cannot run on the host (for example on NixOS),
 set `ARES_E2E_CHROME` to a system Chrome/Chromium binary.

@@ -1,6 +1,7 @@
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ConfigOverrides, SliceResult } from "./toolpaths.js";
+import type { ProfileSelection, ProfileSliceOptions } from "./types.js";
 import type { Scene } from "./types.js";
 
 export * from "./toolpaths.js";
@@ -74,6 +75,31 @@ export class AresSlicer {
     }
     await this.#ready;
     return (await this.#call({ kind: "sliceProject", input: input.slice(), plate })) as SliceResult;
+  }
+
+  /**
+   * Slices a model with selected OrcaSlicer presets, like the OrcaSlicer CLI's
+   * `--load-settings` / `--load-filaments`. `filename` is the model's file name
+   * (`File.name`); it names STL objects. `catalogJson` is the preset catalog
+   * `{"vendors": [...], "imports": [...]}`; the engine resolves inheritance and
+   * composes the config. Serialize a large catalog once and reuse the string.
+   */
+  async sliceWithProfiles(
+    input: Uint8Array,
+    filename: string,
+    catalogJson: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<SliceResult> {
+    await this.#ready;
+    return (await this.#call({
+      kind: "sliceWithProfiles",
+      input: input.slice(),
+      filename,
+      catalog: catalogJson,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
+    })) as SliceResult;
   }
 
   /** Slices an STL model with Ares slice options. */

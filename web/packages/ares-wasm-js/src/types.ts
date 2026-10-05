@@ -59,3 +59,17 @@ export interface Scene {
   /** Triangle indices relative to each volume's `vertexOffset`. */
   indices: Uint32Array<ArrayBuffer>;
 }
+
+/** Selected preset names (`ProfileSelection`); filament order is the extruder order. */
+export interface ProfileSelection {
+  machine: string;
+  process: string;
+  filaments: string[];
+}
+
+export interface ProfileSliceOptions {
+  /** 3MF `plater_id`; STL input has no plates. */
+  plate?: number;
+  /** Seed of the per-slice random streams (fuzzy skin, templates); the caller chooses it. */
+  seed: number;
+}
