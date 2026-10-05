@@ -112,6 +112,6 @@ export type ConfigOverrides = Record<string, OptionValue>;
 
 export interface SliceResult {
   gcode: Uint8Array<ArrayBuffer>;
-  /** Preview data; `null` for slicing entry points the engine does not record moves for yet. */
+  /** Preview data; `null` for `sliceStl`, which the engine does not record moves for yet. */
   toolpaths: Toolpaths | null;
 }

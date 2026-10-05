@@ -1,5 +1,5 @@
 import type { RequestBody } from "./protocol.js";
-import type { CompatiblePresets } from "./types.js";
+import type { CompatiblePresets, SelectablePrinter } from "./types.js";
 
 type Call = (body: RequestBody) => Promise<unknown>;
 
@@ -43,6 +43,16 @@ export class PresetCatalog {
    */
   async filterCompatible(printer: string, process?: string): Promise<CompatiblePresets> {
     return (await this.#call({ kind: "catalogFilter", catalogId: this.#catalogId, printer, process })) as CompatiblePresets;
+  }
+
+  /**
+   * Printers a printer combo lists, in collection order with the vendors'
+   * printers first and imported ones (`vendor` "user") last. Printers with
+   * `instantiation` "false" or an unloaded parent are left out
+   * (`PresetComboBoxes.cpp:1170-1186`).
+   */
+  async printers(): Promise<SelectablePrinter[]> {
+    return (await this.#call({ kind: "catalogPrinters", catalogId: this.#catalogId })) as SelectablePrinter[];
   }
 
   /** Releases the worker's catalog. */

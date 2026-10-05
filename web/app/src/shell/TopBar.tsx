@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { type RefObject, useRef } from "react";
 import { exportGcode, importFile, setTheme, slicePlate } from "../state/actions";
-import { importPresetFiles } from "../state/presets";
+import { importPresetFiles, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
@@ -58,6 +58,7 @@ export function TitleBar({ importInput: input, onShortcuts }: {
 export function TabBar() {
   const { engine, scene, slice, presetSelection } = useApp();
   const slicing = slice.status === "slicing";
+  const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
   return (
     <nav className="tabbar">
       <div className="tabbar-tabs">
@@ -70,8 +71,8 @@ export function TabBar() {
       </div>
       <div className="tabbar-actions">
         <button className="side-button" onClick={() => void slicePlate()}
-          disabled={!scene || slicing || engine !== "ready" || presetSelection !== null}
-          title={presetSelection ? "Slicing uses the project presets: select the project printer preset to slice" : undefined}>
+          disabled={!scene || slicing || engine !== "ready" || blocker !== null}
+          title={blocker ?? undefined}>
           {slicing ? "Slicing…" : "Slice plate"}
         </button>
         <button className="side-button" onClick={exportGcode} disabled={slice.status !== "done"}>

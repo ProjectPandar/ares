@@ -122,6 +122,15 @@ export interface CompatiblePresets {
   missing_parents: MissingParent[];
 }
 
+/** `PresetCatalog.printers` entry. */
+export interface SelectablePrinter {
+  /** Owning vendor id, or "user" for imported printers. */
+  vendor: string;
+  name: string;
+  printer_model: string;
+  printer_variant: string;
+}
+
 export interface MissingParent {
   kind: "machine" | "process" | "filament";
   name: string;

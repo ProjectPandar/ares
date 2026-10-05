@@ -13,6 +13,7 @@ export type WorkerRequest =
   | { id: number; kind: "catalogAddVendor"; catalogId: number; input: Uint8Array }
   | { id: number; kind: "catalogAddImport"; catalogId: number; input: Uint8Array; filename: string }
   | { id: number; kind: "catalogFilter"; catalogId: number; printer: string; process: string | undefined }
+  | { id: number; kind: "catalogPrinters"; catalogId: number }
   | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "decodeConfigValues"; entries: [string, string][] }
   | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }

@@ -103,7 +103,8 @@ test("imported printer presets list the compatible processes and filaments", asy
   );
   await page.screenshot({ path: `${artifacts}missing-parents.png` });
   await expect(sliceButton).toBeDisabled();
-  await expect(sliceButton).toHaveAttribute("title", /project presets/);
+  await expect(sliceButton).toHaveAttribute("title", "Select a process preset to slice");
+  await expect(page.getByTestId("preset-slice-blocker")).toHaveText("Select a process preset to slice.");
   await page.getByRole("button", { name: "Process preset", exact: true }).click();
   await page.screenshot({ path: `${artifacts}processes.png` });
   await page.keyboard.press("Escape");
@@ -115,7 +116,11 @@ test("imported printer presets list the compatible processes and filaments", asy
     ...await groupOptions(page, "Filament 1 preset", "System presets"),
   ];
   expect(filaments.sort()).toEqual([...expected.withProcess.filaments].sort());
+  await expect(sliceButton).toHaveAttribute("title", "Select a filament preset for every filament to slice");
   await choose(page, "Filament 1 preset", expected.withProcess.filaments[0]);
+  // A 3MF with every preset selected slices through sliceWithProfiles.
+  await expect(sliceButton).toBeEnabled();
+  await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await page.getByRole("button", { name: "Filament 1 preset", exact: true }).click();
   await page.screenshot({ path: `${artifacts}filaments.png` });
   await page.keyboard.press("Escape");

@@ -1,4 +1,4 @@
-import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, Scene, Toolpaths } from "@ares-slicer/wasm";
+import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 import type { TypedSettings } from "./typedSettings";
 
@@ -66,6 +66,8 @@ export interface AppState {
   slice: SliceState;
   /** Installed system vendors (ConfigWizard), `@ares-slicer/profiles` ids. */
   vendors: readonly string[];
+  /** Selectable printers of the installed vendors (`PresetCatalog.printers`). */
+  systemPrinters: readonly SelectablePrinter[];
   /** Imported user preset files (MainFrame::load_config_file). */
   presetImports: readonly ParsedPresetBundle[];
   presetSelection: PresetSelection | null;
@@ -101,6 +103,7 @@ export const useApp = create<AppState>(() => ({
   overrides: {},
   slice: { status: "idle" },
   vendors: JSON.parse(localStorage.getItem("ares.vendors") ?? "[]") as string[],
+  systemPrinters: [],
   presetImports: [],
   presetSelection: null,
   compatible: null,

@@ -1,11 +1,11 @@
 import type { ProjectSettings } from "@ares-slicer/wasm";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { ObjectIcon, OrcaIcon } from "../shell/icons";
-import { importedNames, selectFilament, selectPrinter, selectProcess } from "../state/presets";
+import { importedNames, presetSliceBlocker, selectFilament, selectPrinter, selectProcess } from "../state/presets";
 import { type CompatibleState, useApp } from "../state/store";
 import { ObjectList } from "./ObjectList";
 import { type PresetGroup, PresetCombo } from "./PresetCombo";
-import { firstString, stringList } from "./options";
+import { filamentNames, firstString, stringList } from "./options";
 import { ModeSwitch } from "./ModeSwitch";
 import { ProcessSettings } from "./ProcessSettings";
 import type { SettingsTab } from "./SettingsDialog";
@@ -81,16 +81,19 @@ function PrinterSection({ settings, openTab }: { settings: ProjectSettings | nul
   const imports = useApp((state) => state.presetImports);
   const selection = useApp((state) => state.presetSelection);
   const compatible = useApp((state) => state.compatible);
+  const systemPrinters = useApp((state) => state.systemPrinters);
   const [wizard, setWizard] = useState(false);
   const nozzle = firstString(settings?.project, "nozzle_diameter");
   const bed = firstString(settings?.project, "curr_bed_type") ?? firstString(settings?.printer, "default_bed_type");
   const printer = firstString(settings?.printer, "printer_settings_id") ?? firstString(settings?.project, "printer_settings_id");
   const user = [...importedNames(imports, "machine")].map((name) => ({ name }));
+  // TabPresetComboBox::update (PresetComboBoxes.cpp:1773, 1807): user presets, then system preset names.
+  const system = systemPrinters.map(({ name }) => ({ name }));
   return (
     <Section icon={<OrcaIcon name="printer" />} title="Printer">
       <div className="preset-row">
         <PresetCombo label="Printer preset" value={selection?.printer ?? printer}
-          groups={[project(printer), { title: "User presets", presets: user }]} placeholder="No printer preset"
+          groups={[project(printer), { title: "User presets", presets: user }, { title: "System presets", presets: system }]} placeholder="No printer preset"
           onSelect={(name, group) => void selectPrinter(group === "Project presets" ? null : name)}
           actions={[{ label: "Select/Remove printers (system presets)", run: () => setWizard(true) }]} />
         {settings && <EditButton label="Edit printer settings" onClick={() => openTab({ kind: "printer" })} />}
@@ -107,9 +110,7 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
   const imports = useApp((state) => state.presetImports);
   const selection = useApp((state) => state.presetSelection);
   const compatible = useApp((state) => state.compatible);
-  const names = stringList(settings?.filament, "filament_settings_id").length
-    ? stringList(settings?.filament, "filament_settings_id")
-    : stringList(settings?.project, "filament_settings_id");
+  const names = filamentNames(settings);
   const colours = stringList(settings?.filament, "filament_colour");
   const types = stringList(settings?.filament, "filament_type");
   // Each preset once, drawn in the colour of its first slot.
@@ -137,6 +138,7 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
 }
 
 function ProcessSection({ settings }: { settings: ProjectSettings | null }) {
+  const scene = useApp((state) => state.scene);
   const imports = useApp((state) => state.presetImports);
   const selection = useApp((state) => state.presetSelection);
   const compatible = useApp((state) => state.compatible);
@@ -149,7 +151,9 @@ function ProcessSection({ settings }: { settings: ProjectSettings | null }) {
           <PresetCombo label="Process preset" value={selection.process} placeholder="Select a process preset"
             groups={compatibleGroups(compatible, "processes", importedNames(imports, "process"))}
             onSelect={(name) => void selectProcess(name)} />
-          <div className="side-empty">Slicing uses the project presets: select the project printer preset to slice.</div>
+          {scene && presetSliceBlocker(selection, scene) && (
+            <div className="side-empty" data-testid="preset-slice-blocker">{presetSliceBlocker(selection, scene)}.</div>
+          )}
         </>
       ) : (
         <>

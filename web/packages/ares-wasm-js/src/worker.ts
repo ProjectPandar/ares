@@ -8,7 +8,8 @@ import init, {
   parsePresetBundle,
   printConfigDef,
   sliceProjectPlateProcessed,
-  sliceWithProfiles,
+  sliceWithProfilesProcessed,
+  type SliceOutput,
   slice_stl,
   type VertexBuffers,
 } from "./wasm/ares_wasm.js";
@@ -31,6 +32,24 @@ const replaceViewer = (next?: VertexBuffers) => {
 
 const catalogs = new Map<number, PresetCatalog>();
 
+/** G-code and libvgcode toolpaths of a processed slice; its vertices stay loaded for `viewRange`. */
+function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
+  const gcode = owned(output.takeGcode());
+  const vertices = output.takeVertices();
+  output.free();
+  const toolpaths: Toolpaths = {
+    vertexCount: vertices.count,
+    values: vertices.takeValues() as Float32Array<ArrayBuffer>,
+    ids: vertices.takeIds() as Uint32Array<ArrayBuffer>,
+    tags: owned(vertices.takeTags()),
+    layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
+    spiralVaseMode: vertices.spiralVaseMode,
+  };
+  replaceViewer(vertices);
+  const { values, ids, tags, layerZs } = toolpaths;
+  return [{ gcode, toolpaths }, [gcode.buffer, values.buffer, ids.buffer, tags.buffer, layerZs.buffer]];
+}
+
 async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]> {
   switch (request.kind) {
     case "init":
@@ -48,29 +67,12 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       data.free();
       return [scene, [positions.buffer, indices.buffer]];
     }
-    case "sliceProject": {
+    case "sliceProject":
       // No palettes: the preview colors by feature type, and raw moves stay in wasm memory.
-      const output = await sliceProjectPlateProcessed(request.input, request.plate, [], []);
-      const gcode = owned(output.takeGcode());
-      const vertices = output.takeVertices();
-      output.free();
-      const toolpaths: Toolpaths = {
-        vertexCount: vertices.count,
-        values: vertices.takeValues() as Float32Array<ArrayBuffer>,
-        ids: vertices.takeIds() as Uint32Array<ArrayBuffer>,
-        tags: owned(vertices.takeTags()),
-        layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
-        spiralVaseMode: vertices.spiralVaseMode,
-      };
-      replaceViewer(vertices);
-      const { values, ids, tags, layerZs } = toolpaths;
-      return [{ gcode, toolpaths } satisfies SliceResult, [gcode.buffer, values.buffer, ids.buffer, tags.buffer, layerZs.buffer]];
-    }
+      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, [], []));
     case "sliceWithProfiles": {
-      replaceViewer();
       const { input, filename, catalog, selection, options } = request;
-      const result: SliceResult = { gcode: owned(await sliceWithProfiles(input, filename, catalog, selection, options)), toolpaths: null };
-      return [result, [result.gcode.buffer]];
+      return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));
     }
     case "sliceStl": {
       replaceViewer();
@@ -92,6 +94,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [undefined, []];
     case "catalogFilter":
       return [JSON.parse(catalogs.get(request.catalogId)!.filterCompatible(request.printer, request.process)), []];
+    case "catalogPrinters":
+      return [JSON.parse(catalogs.get(request.catalogId)!.printers()), []];
     case "catalogFree":
       catalogs.get(request.catalogId)!.free();
       catalogs.delete(request.catalogId);

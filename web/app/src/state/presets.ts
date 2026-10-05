@@ -1,4 +1,5 @@
-import type { ParsedPresetBundle, PresetCatalog } from "@ares-slicer/wasm";
+import type { ParsedPresetBundle, PresetCatalog, Scene, SliceResult } from "@ares-slicer/wasm";
+import { filamentNames } from "../sidebar/options";
 import { slicer } from "./slicer";
 import { type PresetSelection, useApp } from "./store";
 
@@ -44,6 +45,21 @@ async function syncCatalog(): Promise<PresetCatalog> {
   return synced.catalog;
 }
 
+/** The installed vendors' printers for the printer combo's "System presets" group. */
+async function updateSystemPrinters() {
+  const { vendors } = useApp.getState();
+  try {
+    const printers = await (await presetCatalog()).printers();
+    if (useApp.getState().vendors === vendors) {
+      useApp.setState({ systemPrinters: printers.filter((printer) => printer.vendor !== "user") });
+    }
+  } catch (error) {
+    useApp.setState({ loadError: (error as Error).message });
+  }
+}
+
+if (useApp.getState().vendors.length > 0) void updateSystemPrinters();
+
 /** PresetBundle::update_compatible for the selected printer and process. */
 async function updateCompatible() {
   const selection = useApp.getState().presetSelection;
@@ -84,7 +100,7 @@ export async function importPresetFiles(files: File[]) {
 export async function setVendors(vendors: string[]) {
   localStorage.setItem("ares.vendors", JSON.stringify(vendors));
   useApp.setState({ vendors });
-  await updateCompatible();
+  await Promise.all([updateSystemPrinters(), updateCompatible()]);
 }
 
 /** Selects a user or system printer; `null` returns to the project's presets. */
@@ -105,6 +121,36 @@ export function selectFilament(slot: number, filament: string) {
   const filaments = [...selection.filaments];
   filaments[slot] = filament;
   useApp.setState({ presetSelection: { ...selection, filaments } });
+}
+
+/**
+ * Why the plate cannot be sliced with the selected presets, or null. An STL
+ * is placed by arrange before a preset slice (the CLI's `--arrange`), which
+ * is not ported yet.
+ */
+export function presetSliceBlocker(selection: PresetSelection, scene: Scene): string | null {
+  if (scene.format !== "3mf") return "Slicing an STL with selected presets needs arrange, which is not ported yet";
+  if (!selection.process) return "Select a process preset to slice";
+  if (filamentNames(scene.settings).some((_, slot) => !selection.filaments[slot])) {
+    return "Select a filament preset for every filament to slice";
+  }
+  return null;
+}
+
+/**
+ * Slices a 3MF plate with the selected presets over its project config, like
+ * the OrcaSlicer CLI's `--load-settings` / `--load-filaments` on a 3MF.
+ */
+export async function sliceWithPresets(
+  file: { name: string; bytes: Uint8Array },
+  plate: number | undefined,
+  { printer, process, filaments }: PresetSelection,
+): Promise<SliceResult> {
+  const { vendors, presetImports } = useApp.getState();
+  const { loadVendor } = await import("@ares-slicer/profiles");
+  const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
+  const catalog = JSON.stringify({ vendors: loaded, imports: presetImports });
+  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, { machine: printer, process: process!, filaments }, { plate, seed: 0 });
 }
 
 /** Names of the imported presets of one `type`, for the "User presets" group. */

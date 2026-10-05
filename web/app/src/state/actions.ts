@@ -1,5 +1,6 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
+import { presetSliceBlocker, sliceWithPresets } from "./presets";
 import { slicer } from "./slicer";
 import { decodeSettings } from "./typedSettings";
 import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp, type ViewMode } from "./store";
@@ -62,12 +63,14 @@ export function selectObject(id: number | null) {
 /** Slices the first plate (BackgroundSlicingProcess::start in the worker). */
 export async function slicePlate() {
   const { file, scene, slice, overrides, presetSelection } = useApp.getState();
-  if (!file || !scene || slice.status === "slicing" || presetSelection) return;
+  if (!file || !scene || slice.status === "slicing") return;
+  if (presetSelection && presetSliceBlocker(presetSelection, scene)) return;
   const startedAt = performance.now();
   useApp.setState({ slice: { status: "slicing", startedAt } });
   try {
-    const result =
-      scene.format === "3mf"
+    const result = presetSelection
+      ? await sliceWithPresets(file, scene.plates[0]?.id, presetSelection)
+      : scene.format === "3mf"
         ? await slicer.sliceProject(file.bytes, scene.plates[0]?.id, overrides)
         : await slicer.sliceStl(file.bytes);
     if (useApp.getState().file !== file) return;
