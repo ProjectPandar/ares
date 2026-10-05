@@ -88,6 +88,9 @@ mod command;
 #[path = "runner/strict_reference_tests.rs"]
 mod strict_reference_tests;
 
+#[path = "runner/user_overrides.rs"]
+mod user_overrides;
+
 #[cfg(test)]
 #[path = "runner/wrapper_tests.rs"]
 mod wrapper_tests;
