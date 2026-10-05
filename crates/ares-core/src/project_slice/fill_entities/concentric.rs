@@ -129,16 +129,7 @@ pub(super) fn append_configured(
                     + params.flow.height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
                 let mut flow = params.flow.with_width(width)?;
                 flow.mm3_per_mm *= params.flow_ratio;
-                entities.extend(polylines.into_iter().map(|polyline| {
-                    FillExtrusionEntity::Path(super::FillExtrusionPath {
-                        polyline,
-                        fitting: Vec::new(),
-                        role: params.extrusion_role,
-                        mm3_per_mm: flow.mm3_per_mm,
-                        width: flow.width,
-                        height: flow.height,
-                    })
-                }));
+                append_sparse_paths(&mut entities, polylines, params.extrusion_role, flow);
             }
             if entities.is_empty() {
                 continue;
@@ -208,6 +199,25 @@ pub(super) fn append_configured(
         }
     }
     Ok(())
+}
+
+/// Fixed-width sparse runs (`FillConcentric.cpp:141-145`, `VariableWidth.cpp:205`).
+fn append_sparse_paths(
+    entities: &mut Vec<FillExtrusionEntity>,
+    polylines: Vec<crate::geometry::Polyline>,
+    role: crate::ExtrusionRole,
+    flow: crate::project_slice::perimeters::types::Flow,
+) {
+    entities.extend(polylines.into_iter().map(|polyline| {
+        FillExtrusionEntity::Path(super::FillExtrusionPath {
+            polyline,
+            fitting: Vec::new(),
+            role,
+            mm3_per_mm: flow.mm3_per_mm,
+            width: flow.width,
+            height: flow.height,
+        })
+    }));
 }
 
 fn intersect_no_overlap_domains(

@@ -104,10 +104,12 @@ pub(super) fn append(
         }
         let mut generated = generate(&fill_expolygon, params, scale).map_err(geometry_error)?;
         if let Some(axis) = symmetric_y_axis {
-            for polyline in &mut generated.polylines {
-                for point in polyline.points_mut() {
-                    *point = point.symmetric_y(axis);
-                }
+            for point in generated
+                .polylines
+                .iter_mut()
+                .flat_map(|polyline| polyline.points_mut())
+            {
+                *point = point.symmetric_y(axis);
             }
         }
         if generated.polylines.is_empty() {

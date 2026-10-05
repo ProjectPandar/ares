@@ -107,30 +107,35 @@ fn pick_pos_internal(current: Point, safe_areas: &[ExPolygon]) -> Option<(i64, i
         rings.push(area.contour().clone());
         rings.extend(area.holes().iter().cloned());
         for ring in rings {
-            let points = ring.points();
-            for index in 0..points.len() {
-                let start = points[index];
-                let end = points[(index + 1) % points.len()];
-                let delta_x = end.x() - start.x();
-                let delta_y = end.y() - start.y();
-                let length_l1 = (delta_x.abs() + delta_y.abs()) as f64;
-                if length_l1 < segment {
-                    consider(start);
-                    continue;
-                }
-                let steps = (length_l1 / segment) as i64;
-                let step_x = (delta_x as f64 * segment / length_l1) as i64;
-                let step_y = (delta_y as f64 * segment / length_l1) as i64;
-                for step in 0..=steps {
-                    consider(Point::new(
-                        start.x() + step_x * step,
-                        start.y() + step_y * step,
-                    ));
-                }
-            }
+            consider_ring(&ring, segment, &mut consider);
         }
     }
     best.map(|(_, point)| (unscale(point.x()), unscale(point.y())))
+}
+
+/// Boundary candidates from one ring (`TimelapsePosPicker.cpp::pick_pos_internal`).
+fn consider_ring(ring: &Polygon, segment: f64, consider: &mut impl FnMut(Point)) {
+    let points = ring.points();
+    for index in 0..points.len() {
+        let start = points[index];
+        let end = points[(index + 1) % points.len()];
+        let delta_x = end.x() - start.x();
+        let delta_y = end.y() - start.y();
+        let length_l1 = (delta_x.abs() + delta_y.abs()) as f64;
+        if length_l1 < segment {
+            consider(start);
+            continue;
+        }
+        let steps = (length_l1 / segment) as i64;
+        let step_x = (delta_x as f64 * segment / length_l1) as i64;
+        let step_y = (delta_y as f64 * segment / length_l1) as i64;
+        for step in 0..=steps {
+            consider(Point::new(
+                start.x() + step_x * step,
+                start.y() + step_y * step,
+            ));
+        }
+    }
 }
 
 /// The picture-extruder safe-area position for a by-layer print; `None`

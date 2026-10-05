@@ -282,15 +282,9 @@ fn sandwich_reorder(entities: &mut Vec<ExtrusionEntity>) {
         while arr_i < reordered_idx.len() {
             let cur = inset(reordered_idx[arr_i]);
             match cur {
-                0 => {
-                    if outer == -1 {
-                        outer = arr_i as isize;
-                    }
-                }
-                1 => {
-                    if first_internal == -1 && (arr_i as isize) > outer && outer != -1 {
-                        first_internal = arr_i as isize;
-                    }
+                0 if outer == -1 => outer = arr_i as isize,
+                1 if first_internal == -1 && (arr_i as isize) > outer && outer != -1 => {
+                    first_internal = arr_i as isize;
                 }
                 2 if second_internal == -1 && (arr_i as isize) > first_internal && outer != -1 => {
                     second_internal = arr_i as isize;
@@ -310,13 +304,12 @@ fn sandwich_reorder(entities: &mut Vec<ExtrusionEntity>) {
             // outside-in head [position..second_internal) — written into
             // `order[position..=max_internal]`.
             let mut island: Vec<usize> = Vec::new();
-            let mut arr_j = max_internal;
-            while arr_j >= position as isize {
-                if arr_j >= second_internal {
-                    island.push(arr_j as usize);
-                }
-                arr_j -= 1;
-            }
+            island.extend(
+                (position as isize..=max_internal)
+                    .rev()
+                    .filter(|&arr_j| arr_j >= second_internal)
+                    .map(|arr_j| arr_j as usize),
+            );
             let mut arr_j = position;
             while (arr_j as isize) < second_internal {
                 island.push(arr_j);
