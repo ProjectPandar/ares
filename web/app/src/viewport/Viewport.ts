@@ -29,7 +29,7 @@ const VOLUME_STYLE: Record<Exclude<VolumeType, "ModelPart">, [number, number]> =
 
 /**
  * Three.js plater canvas: bed (3DBed) plus object instances (GLVolumes),
- * orbit camera, picking. Renders on demand.
+ * orbit camera, picking. Renders on demand, after the task that changed it.
  */
 export class Viewport {
   readonly #renderer: THREE.WebGLRenderer;
@@ -44,7 +44,9 @@ export class Viewport {
   #previewView: PreviewView | null = null;
   #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
   #colors: ViewportColors;
-  #frame = 0;
+  /** Delivers the render after the requesting task; `#dirty` while one is queued. */
+  readonly #renderTask = new MessageChannel();
+  #dirty = false;
   #selected: number | null = null;
   #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
@@ -56,6 +58,10 @@ export class Viewport {
     this.#renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     this.#renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(this.#renderer.domElement);
+    this.#renderTask.port1.onmessage = () => {
+      this.#dirty = false;
+      this.#renderer.render(this.#scene, this.#camera);
+    };
     this.#controls = new OrbitControls(this.#camera, this.#renderer.domElement);
     this.#controls.enableDamping = false;
     this.#controls.addEventListener("change", () => this.render());
@@ -215,16 +221,19 @@ export class Viewport {
     this.render();
   }
 
+  /**
+   * GLCanvas3D renders a changed canvas immediately, not on a display frame
+   * (GLCanvas3D.cpp:4810-4811): the requests of one task, e.g. one input
+   * event, draw once when it ends.
+   */
   render() {
-    if (this.#frame) return;
-    this.#frame = requestAnimationFrame(() => {
-      this.#frame = 0;
-      this.#renderer.render(this.#scene, this.#camera);
-    });
+    if (this.#dirty) return;
+    this.#dirty = true;
+    this.#renderTask.port2.postMessage(null);
   }
 
   dispose() {
-    cancelAnimationFrame(this.#frame);
+    this.#renderTask.port1.close();
     this.#resize.disconnect();
     this.#controls.dispose();
     disposeTree(this.#models);
