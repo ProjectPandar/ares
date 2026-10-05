@@ -41,6 +41,7 @@ option_modules!(
 
 #[rustfmt::skip]
 option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type);
+mod decode;
 mod machine_limits;
 mod model_config_deserialize;
 #[rustfmt::skip]
@@ -90,6 +91,7 @@ mod vector_resize;
 pub(crate) use acceleration::AccelToDecelConfig;
 pub(crate) use bed_temperature::{FirstLayerBedTemperature, first_layer_bed_temperature_key_for};
 pub(crate) use config_types::format_number;
+pub use decode::{decode_config_value, decode_config_value_by_key};
 use defaults::*;
 pub(crate) use fan_speedup::FanSpeedupControl;
 pub(crate) use gap_fill::GapFillTarget;

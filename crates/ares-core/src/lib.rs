@@ -149,6 +149,7 @@ pub use options::{
     RetractLiftEnforces, SliceOptions, SpaceTuple, ThumbnailDefinitions, VariantStride,
     WipeTowerType, ZHopType, ZHopTypes,
 };
+pub use options::{decode_config_value, decode_config_value_by_key};
 pub use perimeters::{
     LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,
     WallGenerator, WallSequence, generate_perimeters,

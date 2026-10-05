@@ -11,12 +11,13 @@ use super::super::{
 };
 use super::OptionValueKind;
 
-pub(super) enum WireValue {
+#[derive(Debug)]
+pub(crate) enum WireValue {
     Scalar(String),
     Sequence(Vec<String>),
 }
 
-pub(super) fn decode(kind: OptionValueKind, value: &str) -> Result<WireValue, String> {
+pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<WireValue, String> {
     match kind {
         OptionValueKind::String => decode_scalar_string(value).map(WireValue::Scalar),
         OptionValueKind::Strings => decode_string_vector(value).map(WireValue::Sequence),
@@ -61,7 +62,7 @@ fn split_groups(value: &str) -> Vec<String> {
         .collect()
 }
 
-pub(super) fn decode_scalar_string(value: &str) -> Result<String, String> {
+pub(crate) fn decode_scalar_string(value: &str) -> Result<String, String> {
     let mut input = value.chars();
     let mut output = String::with_capacity(value.len());
     while let Some(character) = input.next() {
@@ -149,7 +150,7 @@ fn unescape_character(character: char) -> char {
     }
 }
 
-pub(super) fn deserialize_scalar<T>(value: &str) -> Result<(), String>
+pub(crate) fn deserialize_scalar<T>(value: &str) -> Result<(), String>
 where
     T: DeserializeOwned,
 {
@@ -158,7 +159,7 @@ where
         .map_err(|error| error.to_string())
 }
 
-pub(super) fn deserialize_sequence<T>(kind: OptionValueKind, value: &str) -> Result<(), String>
+pub(crate) fn deserialize_sequence<T>(kind: OptionValueKind, value: &str) -> Result<(), String>
 where
     T: DeserializeOwned,
 {
@@ -170,7 +171,7 @@ where
         .map_err(|error| error.to_string())
 }
 
-pub(super) fn validate_lexical(kind: OptionValueKind, value: &str) -> Result<(), String> {
+pub(crate) fn validate_lexical(kind: OptionValueKind, value: &str) -> Result<(), String> {
     match kind {
         OptionValueKind::Float => deserialize_scalar::<OrcaFloat>(value),
         OptionValueKind::FloatOrPercent => deserialize_scalar::<FloatOrPercent>(value),

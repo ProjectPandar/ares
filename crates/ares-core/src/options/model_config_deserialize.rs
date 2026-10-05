@@ -1,4 +1,4 @@
-mod wire;
+pub(crate) mod wire;
 
 use serde::de::value::{Error as ValueError, SeqDeserializer, StringDeserializer};
 

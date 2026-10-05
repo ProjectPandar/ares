@@ -80,5 +80,14 @@ pub fn print_config_def() -> Vec<u8> {
     ares_core::print_config_def_json().to_vec()
 }
 
+/// Decodes a `ConfigOption::serialize()`-form string (as stored in 3MF /
+/// presets) for option `key` into typed JSON text. Nullable `nil` elements
+/// decode to `null`. Throws on unknown key or a malformed value.
+#[wasm_bindgen(js_name = decodeConfigValue)]
+pub fn decode_config_value(key: &str, serialized: &str) -> Result<String, JsValue> {
+    ares_core::decode_config_value_by_key(key, serialized)
+        .map_err(|error| JsValue::from_str(&error))
+}
+
 #[cfg(test)]
 mod tests;
