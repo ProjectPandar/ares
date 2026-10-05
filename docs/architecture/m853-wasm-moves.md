@@ -100,5 +100,19 @@ ARES_PROCGCODE_BIN=/absolute/orca-slicer \
 ARES_E2E_CHROME=/absolute/chrome node web/e2e/wasmMoves.mjs
 ```
 
-Full workspace and dual-reference control gates are still required before
-review. Browser rendering UI integration remains worker-web-owned.
+Full workspace validation `/tmp/ares-m853-wasm-gates.52EY0P`:7612 PASS,
+9 existing skips; Clippy/fmt/WASM check exit0. Clippy reports102 core-lib/103
+core-test/21 parity warnings, all in existing code, with no binding warnings. Full controls `/tmp/ares-m853-wasm-controls.iyzkqM`:seeded407/407
+PASS; official399 PASS/8 accepted existing failures. Exact failure-name
+comparison adds/removes no names (`failure-comparison.json`). This is not
+an all-green official claim; no assertions or comparator bounds were relaxed.
+
+The current native processor and browser expose every converted vertex's
+gcode_id as u32 in takeIds(), including phantom vertices copied from curr.
+The large16777217 unit case and both browser oracle projections explicitly
+exercise lossless IDs. No web temporary conversion code was deleted.
+
+Browser rendering UI integration remains worker-web-owned. After coordinator
+approval, rebase latest main and revalidate before ordinary fast-forward
+integration. Notify coordinator only after that integration so web can remove
+its temporary conversion. M854 remains a separate next slice.
