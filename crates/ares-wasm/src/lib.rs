@@ -8,7 +8,7 @@ use ares_core::{GenerationMetadata, SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;
 
 pub use profiles::{
-    filter_compatible_presets, filter_compatible_presets_json, parse_preset_bundle,
+    PresetCatalog, filter_compatible_presets, filter_compatible_presets_json, parse_preset_bundle,
     parse_preset_bundle_json, slice_with_profiles, slice_with_profiles_bytes,
 };
 pub use scene::{SceneData, load_scene, scene_from_bytes};

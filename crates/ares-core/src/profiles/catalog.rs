@@ -11,10 +11,12 @@ use super::{
     composition::compose_resolved_profiles, merge_profile_fragments,
 };
 use crate::{
-    SliceError, options::ProjectRuntimeOptionsBuilder, project::raw_settings::ProjectSettingsRaw,
+    FilteredPresets, SliceError, options::ProjectRuntimeOptionsBuilder,
+    project::raw_settings::ProjectSettingsRaw,
 };
 
-use document::{CatalogInput, ProfileDocument, VendorInput};
+pub(super) use document::ProfileDocument;
+use document::{CatalogInput, VendorInput};
 
 /// `Catalog::compose` result: the fully resolved profile, the merged raw
 /// presence view, and per-filament raw views for the 3MF slot overlay.
@@ -25,18 +27,25 @@ pub(super) struct ComposedSelection {
     pub(super) filament_raws: Vec<ProjectSettingsRaw>,
 }
 
+/// Record ownership: a vendor scope per loaded vendor, plus the user scope
+/// for imported presets (the trailing empty vendor name in the one-shot
+/// transport).
+#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
+pub(super) enum Scope {
+    Vendor(usize),
+    User,
+}
+
 pub(super) struct Catalog {
     records: Vec<Record>,
-    index: BTreeMap<(usize, ProfileKind, String), usize>,
+    index: BTreeMap<(Scope, ProfileKind, String), usize>,
     selectable: BTreeMap<(ProfileKind, String), usize>,
-    /// Vendor index name per scope (`VendorProfile::name`); the user scope is
-    /// the trailing entry with an empty name.
+    /// Vendor index name per vendor scope (`VendorProfile::name`).
     vendor_names: Vec<String>,
-    user_scope: usize,
 }
 
 struct Record {
-    scope: usize,
+    scope: Scope,
     kind: ProfileKind,
     document: ProfileDocument,
 }
@@ -44,29 +53,47 @@ struct Record {
 impl Catalog {
     pub(super) fn from_json(input: &str) -> Result<Self, SliceError> {
         let input: CatalogInput = serde_json::from_str(input).map_err(invalid_json)?;
-        let user_scope = input.vendors.len();
-        let mut catalog = Self {
-            records: Vec::new(),
-            index: BTreeMap::new(),
-            selectable: BTreeMap::new(),
-            vendor_names: Vec::new(),
-            user_scope,
-        };
-        for (scope, vendor) in input.vendors.into_iter().enumerate() {
-            catalog.vendor_names.push(vendor.index.name.clone());
-            catalog.insert_vendor(scope, vendor)?;
+        let mut catalog = Self::empty();
+        for vendor in input.vendors {
+            catalog.push_vendor(vendor)?;
         }
-        catalog.vendor_names.push(String::new());
         for package in input.imports {
             for document in package.profiles {
-                let kind = ProfileKind::parse(&document.kind)?;
-                catalog.insert(user_scope, kind, document)?;
+                catalog.push_document(Scope::User, document)?;
             }
         }
         Ok(catalog)
     }
 
-    fn insert_vendor(&mut self, scope: usize, mut vendor: VendorInput) -> Result<(), SliceError> {
+    pub(super) fn empty() -> Self {
+        Self {
+            records: Vec::new(),
+            index: BTreeMap::new(),
+            selectable: BTreeMap::new(),
+            vendor_names: Vec::new(),
+        }
+    }
+
+    /// `PresetBundle::load_presets` holding semantics: one vendor scope per
+    /// load, appended in load order.
+    pub(super) fn push_vendor(&mut self, vendor: VendorInput) -> Result<(), SliceError> {
+        let scope = Scope::Vendor(self.vendor_names.len());
+        self.vendor_names.push(vendor.index.name.clone());
+        self.insert_vendor(scope, vendor)
+    }
+
+    /// `PresetBundle::import_json_presets` holding semantics: imports join
+    /// the user scope.
+    pub(super) fn push_import(&mut self, document: ProfileDocument) -> Result<(), SliceError> {
+        self.push_document(Scope::User, document)
+    }
+
+    fn push_document(&mut self, scope: Scope, document: ProfileDocument) -> Result<(), SliceError> {
+        let kind = ProfileKind::parse(&document.kind)?;
+        self.insert(scope, kind, document)
+    }
+
+    fn insert_vendor(&mut self, scope: Scope, mut vendor: VendorInput) -> Result<(), SliceError> {
         let entries = [
             (ProfileKind::Machine, vendor.index.machine_list),
             (ProfileKind::Process, vendor.index.process_list),
@@ -85,7 +112,7 @@ impl Catalog {
 
     fn insert(
         &mut self,
-        scope: usize,
+        scope: Scope,
         kind: ProfileKind,
         document: ProfileDocument,
     ) -> Result<(), SliceError> {
@@ -194,7 +221,7 @@ impl Catalog {
             );
         }
         let mut merged = merge_profile_fragments(&fragments, kind, name)?;
-        if self.records[position].scope != self.user_scope {
+        if !self.is_user_scope(position) {
             let filament_id = fragments
                 .iter()
                 .rev()
@@ -212,15 +239,20 @@ impl Catalog {
         if let Some(position) = self.index.get(&key) {
             return Some(*position);
         }
-        if record.scope == self.user_scope {
-            return self
+        if record.scope == Scope::User {
+            // `find_preset` searches the whole collection, including
+            // non-instantiable library templates.
+            if let Some(position) = self
                 .selectable
                 .get(&(record.kind, parent.to_owned()))
-                .copied();
+                .copied()
+            {
+                return Some(position);
+            }
         }
         self.library_scope().and_then(|scope| {
             self.index
-                .get(&(scope, record.kind, parent.to_owned()))
+                .get(&(Scope::Vendor(scope), record.kind, parent.to_owned()))
                 .copied()
         })
     }
@@ -250,7 +282,7 @@ impl Catalog {
     }
 
     pub(super) fn is_user_scope(&self, position: usize) -> bool {
-        self.records[position].scope == self.user_scope
+        self.records[position].scope == Scope::User
     }
 
     /// The record's own `inherits` value (`Preset::inherits` reads the stored
@@ -265,11 +297,51 @@ impl Catalog {
     }
 
     pub(super) fn vendor_name(&self, position: usize) -> &str {
-        &self.vendor_names[self.records[position].scope]
+        match self.records[position].scope {
+            Scope::Vendor(index) => &self.vendor_names[index],
+            Scope::User => "",
+        }
     }
 
     pub(super) fn document(&self, position: usize) -> &ProfileDocument {
         &self.records[position].document
+    }
+
+    /// The first unresolvable `inherits` link on the preset's chain, reported
+    /// as (holder kind, holder name, missing parent). Upstream skips such
+    /// presets at load (`Preset.cpp:1685-1691`, `PresetBundle.cpp:1521-1525`);
+    /// the handle keeps them but they stay invisible to filtering until the
+    /// parent arrives.
+    pub(super) fn missing_parent(&self, position: usize) -> Option<MissingParentLink> {
+        let mut position = position;
+        let mut steps = self.records.len() + 1;
+        loop {
+            // Cycle guard: `collect_positions` reports inheritance cycles as
+            // errors; this walk only needs the first missing link.
+            steps = steps.saturating_sub(1);
+            if steps == 0 {
+                return None;
+            }
+            let record = &self.records[position];
+            let Some(parent) = record
+                .document
+                .inherits
+                .as_deref()
+                .filter(|name| !name.is_empty())
+            else {
+                return None;
+            };
+            match self.parent_position(record, parent) {
+                Some(next) => position = next,
+                None => {
+                    return Some(MissingParentLink {
+                        kind: record.kind,
+                        name: record.document.name.clone(),
+                        parent: parent.to_owned(),
+                    });
+                }
+            }
+        }
     }
 
     /// Parent-first record positions for the preset at `position`.
@@ -313,6 +385,59 @@ struct SelectionInput {
     machine: String,
     process: String,
     filaments: Vec<String>,
+}
+
+pub(super) struct MissingParentLink {
+    pub(super) kind: ProfileKind,
+    pub(super) name: String,
+    pub(super) parent: String,
+}
+
+/// Stateful preset catalog (`PresetBundle` holding semantics:
+/// `PresetCollection::load_presets` keeps loaded vendors in the collection;
+/// `import_json_presets` adds user imports). Filtering reuses the loaded
+/// records without re-parsing vendor data per call.
+pub struct PresetCatalogHandle {
+    catalog: Catalog,
+}
+
+impl PresetCatalogHandle {
+    pub fn new() -> Self {
+        Self {
+            catalog: Catalog::empty(),
+        }
+    }
+
+    /// One vendor envelope `{index, files}` as JSON bytes, exactly the
+    /// one-shot transport's `vendors[]` element.
+    pub fn add_vendor(&mut self, vendor_json: &[u8]) -> Result<(), SliceError> {
+        let vendor: VendorInput = serde_json::from_slice(vendor_json)
+            .map_err(|error| invalid(format!("invalid vendor profile JSON: {error}")))?;
+        self.catalog.push_vendor(vendor)
+    }
+
+    /// An Orca preset JSON or `.orca_*`/`.zip` import, reusing the bundle
+    /// importer (`PresetBundle.cpp:1304-1549`).
+    pub fn add_import(&mut self, input: &[u8], filename: &str) -> Result<(), SliceError> {
+        for document in super::import::parse_import_documents(input, filename)? {
+            self.catalog.push_import(document)?;
+        }
+        Ok(())
+    }
+
+    pub fn filter_compatible(
+        &self,
+        printer: &str,
+        process: Option<&str>,
+    ) -> Result<FilteredPresets, SliceError> {
+        super::compatible::filter_with_catalog(&self.catalog, printer, process)
+    }
+}
+
+impl Default for PresetCatalogHandle {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub(super) fn selection(input: &str) -> Result<ProfileSelection, SliceError> {

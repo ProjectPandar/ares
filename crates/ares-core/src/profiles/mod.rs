@@ -10,7 +10,8 @@ mod inheritance;
 #[cfg(test)]
 mod tests;
 
-pub use compatible::{FilteredPresets, filter_compatible_presets};
+pub use catalog::PresetCatalogHandle;
+pub use compatible::{FilteredPresets, MissingParent, filter_compatible_presets};
 pub use composition::{
     ComposedProfile, ProfileGroupMetadata, ProfileSelection, compose_profile_fragments,
 };

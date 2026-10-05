@@ -77,7 +77,9 @@ fn to_value(result: ares_core::FilteredPresets) -> Value {
 #[test]
 fn handle_matches_one_shot_catalog_filtering() {
     let mut handle = PresetCatalogHandle::new();
-    handle.add_vendor(library_vendor().to_string().as_bytes()).unwrap();
+    handle
+        .add_vendor(library_vendor().to_string().as_bytes())
+        .unwrap();
     handle
         .add_vendor(acme_vendor().to_string().as_bytes())
         .unwrap();
@@ -92,8 +94,12 @@ fn handle_matches_one_shot_catalog_filtering() {
         "imports": [],
     });
     let via_one_shot = to_value(
-        filter_compatible_presets(&catalog.to_string(), "AcmeM1", Some("0.20mm Standard @AcmeM1"))
-            .unwrap(),
+        filter_compatible_presets(
+            &catalog.to_string(),
+            "AcmeM1",
+            Some("0.20mm Standard @AcmeM1"),
+        )
+        .unwrap(),
     );
 
     assert_eq!(via_handle, via_one_shot);
@@ -117,7 +123,9 @@ fn handle_reports_missing_parents_and_hides_unresolvable_presets() {
     // which the missing library vendor would supply; the child stays
     // invisible to filtering until the parent arrives.
     let mut handle = PresetCatalogHandle::new();
-    handle.add_vendor(acme_vendor().to_string().as_bytes()).unwrap();
+    handle
+        .add_vendor(acme_vendor().to_string().as_bytes())
+        .unwrap();
     let filtered = to_value(handle.filter_compatible("AcmeM1", None).unwrap());
     assert!(
         !filtered["filaments"]
@@ -140,10 +148,7 @@ fn handle_reports_missing_parents_and_hides_unresolvable_presets() {
         .unwrap();
     let resolved = to_value(handle.filter_compatible("AcmeM1", None).unwrap());
     assert!(
-        resolved["missing_parents"]
-            .as_array()
-            .unwrap()
-            .is_empty(),
+        resolved["missing_parents"].as_array().unwrap().is_empty(),
         "{resolved}"
     );
     assert!(
@@ -162,7 +167,8 @@ fn one_shot_filtering_reports_missing_parents_instead_of_failing() {
         "vendors": [acme_vendor()],
         "imports": [],
     });
-    let filtered = to_value(filter_compatible_presets(&catalog.to_string(), "AcmeM1", None).unwrap());
+    let filtered =
+        to_value(filter_compatible_presets(&catalog.to_string(), "AcmeM1", None).unwrap());
     assert_eq!(
         filtered["missing_parents"],
         json!([{ "kind": "filament", "name": "Acme PLA", "parent": "fdm_filament_common" }]),
@@ -176,7 +182,9 @@ fn handle_imports_bundles_into_the_user_scope() {
     handle
         .add_vendor(library_vendor().to_string().as_bytes())
         .unwrap();
-    handle.add_vendor(acme_vendor().to_string().as_bytes()).unwrap();
+    handle
+        .add_vendor(acme_vendor().to_string().as_bytes())
+        .unwrap();
 
     let bundle = json!({
         "type": "filament", "name": "User PETG", "inherits": "fdm_filament_common",

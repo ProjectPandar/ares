@@ -72,7 +72,7 @@ fn browser_compatible_presets_expectations() {
     // Without the BBL vendor installed the imported printer's parent is missing.
     let missing =
         ares_wasm::filter_compatible_presets_json(&catalog(&library), PRINTER, None).unwrap_err();
-    assert!(missing.contains("parent profile"), "{missing}");
+    assert!(missing.contains("is missing parent"), "{missing}");
 
     // PresetBundle.cpp:2216-2234: OrcaFilamentLibrary loads before the other vendors.
     let installed = catalog(&format!("{library},{}", vendor_json("BBL")));

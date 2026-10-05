@@ -67,6 +67,33 @@ pub fn parse_preset_bundle(
     Ok(bundle)
 }
 
+/// Catalog-handle import path: the importer's normalized records converted
+/// to catalog documents (the one-shot transport feeds the same records from
+/// `ParsedPresetBundle`).
+pub(super) fn parse_import_documents(
+    input: &[u8],
+    filename: &str,
+) -> Result<Vec<super::catalog::ProfileDocument>, SliceError> {
+    let bundle = parse_preset_bundle(input, filename)?;
+    Ok(bundle
+        .profiles
+        .into_iter()
+        .map(|mut fields| {
+            let mut text = |key: &str| match fields.remove(key) {
+                Some(RawConfigValue::Text(value)) => Some(value),
+                _ => None,
+            };
+            super::catalog::ProfileDocument {
+                kind: text("type").unwrap_or_default(),
+                name: text("name").unwrap_or_default(),
+                inherits: text("inherits"),
+                instantiation: text("instantiation"),
+                fields,
+            }
+        })
+        .collect())
+}
+
 fn is_archive(input: &[u8], filename: &str) -> bool {
     // PresetBundle.cpp:1320 dispatches on the extension; the byte API
     // additionally accepts ZIP magic so callers do not have to normalize

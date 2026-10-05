@@ -194,6 +194,27 @@ needed for filament-library exclusions. Callers supply dependency vendors too
 (e.g. OrcaFilamentLibrary); Rust reports missing parents instead of guessing.
 No global mutable preset registry or WASM object-handle lifecycle.
 
+**Decision revision (2026-10-06, stateful `PresetCatalog` handle):** the
+no-handle rule above applied to the stateless transport design, where every
+call re-sent the catalog. With real vendor envelopes (multi-megabyte) the
+per-call stringify/parse cost is unworkable for filtering interactions, so
+ares-wasm now exposes a per-page `PresetCatalog` class
+(`new`/`addVendor(bytes)`/`addImport(bytes, filename)`/`filterCompatible`)
+wrapping `ares_core::PresetCatalogHandle`. This is still not a global
+registry: each instance is independent, owned by the caller, and garbage
+collected with it. Upstream boundary: `PresetCollection::load_presets`
+(`Preset.cpp:1573+`) holds loaded vendors in the collection and
+`PresetBundle::import_json_presets` (`PresetBundle.cpp:1450+`) adds user
+imports; filtering reuses the held records. A preset whose non-empty
+`inherits` cannot be resolved is skipped at load upstream
+(`Preset.cpp:1685-1691`, `PresetBundle.cpp:1521-1525`, `Preset.cpp:2300-2305`),
+so it never enters filtering results; the handle keeps the record and reports
+it in the structured `missing_parents` list instead, and it re-enters once
+the parent is added (incremental loads may arrive after children, which
+upstream avoids by dependency-ordered loading). One-shot
+`filterCompatiblePresets` shares this semantics through the same catalog
+code. `sliceWithProfiles` remains stateless (deferred).
+
 `parsePresetBundle` accepts an Orca preset JSON or `.orca_printer` / `.orca_filament`
 archive. Proposed `ParsedPresetBundle` result:
 

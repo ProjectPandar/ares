@@ -83,3 +83,77 @@ pub async fn slice_with_profiles_bytes(
     .await
     .map_err(|error| error.to_string())
 }
+
+/// Stateful preset catalog (`PresetBundle` holding semantics): vendor data is
+/// parsed once per `addVendor` and filtering reuses the loaded records.
+#[wasm_bindgen]
+pub struct PresetCatalog {
+    handle: ares_core::PresetCatalogHandle,
+}
+
+impl Default for PresetCatalog {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+impl PresetCatalog {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            handle: ares_core::PresetCatalogHandle::new(),
+        }
+    }
+
+    /// One vendor envelope `{index, files}` (Uint8Array JSON bytes).
+    #[wasm_bindgen(js_name = addVendor)]
+    pub fn add_vendor(&mut self, vendor_json: Vec<u8>) -> Result<(), JsValue> {
+        self.add_vendor_json(&vendor_json)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    /// An Orca preset JSON or `.orca_*`/`.zip` import.
+    #[wasm_bindgen(js_name = addImport)]
+    pub fn add_import(&mut self, input: Vec<u8>, filename: String) -> Result<(), JsValue> {
+        self.add_import_json(&input, &filename)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    #[wasm_bindgen(js_name = filterCompatible)]
+    pub fn filter_compatible(
+        &self,
+        printer: String,
+        process: Option<String>,
+    ) -> Result<String, JsValue> {
+        self.filter_compatible_json(&printer, process.as_deref())
+            .map_err(|error| JsValue::from_str(&error))
+    }
+}
+
+impl PresetCatalog {
+    pub fn add_vendor_json(&mut self, vendor_json: &[u8]) -> Result<(), String> {
+        self.handle
+            .add_vendor(vendor_json)
+            .map_err(|e| e.to_string())
+    }
+
+    pub fn add_import_json(&mut self, input: &[u8], filename: &str) -> Result<(), String> {
+        self.handle
+            .add_import(input, filename)
+            .map_err(|e| e.to_string())
+    }
+
+    pub fn filter_compatible_json(
+        &self,
+        printer: &str,
+        process: Option<&str>,
+    ) -> Result<String, String> {
+        let filtered = self
+            .handle
+            .filter_compatible(printer, process)
+            .map_err(|error| error.to_string())?;
+        serde_json::to_string(&filtered)
+            .map_err(|error| format!("compatible preset result cannot serialize: {error}"))
+    }
+}

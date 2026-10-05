@@ -78,12 +78,7 @@ fn preset_catalog_handle_matches_one_shot_filtering() {
         ]
     });
     let via_one_shot: serde_json::Value = serde_json::from_str(
-        &super::filter_compatible_presets_json(
-            &one_shot_catalog.to_string(),
-            "M1",
-            None,
-        )
-        .unwrap(),
+        &super::filter_compatible_presets_json(&one_shot_catalog.to_string(), "M1", None).unwrap(),
     )
     .unwrap();
 
