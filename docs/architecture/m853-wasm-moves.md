@@ -1,0 +1,104 @@
+# M853 second Rust slice: convert and thin WASM move exposure
+
+Base92d12470. Source owner: OrcaSlicer8500fcdcc,
+`src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp::convert`191–268,
+role/type conversions70–145, color conversion55–67; destination
+`ares-vgcode::convert`. This is the rendering-neutral mapping into upstream
+libvgcode GCodeInputData/PathVertex, not a new slicing or preview pipeline.
+
+## Decisions
+
+- Keep existing byte-returning WASM slicing entry points unchanged. Add
+  sliceProjectPlateProcessed returning SliceOutput. Web integration and
+  deletion of temporary TS conversion belong to worker-web after this lands.
+- Core's existing processed slice API is the only slicing/recording owner.
+- Convert skips initial dummy move and inserts upstream phantom path starts
+  at previous position with zero time when type/role/flow changes.
+- Accept explicit tool/color-print palette strings as upstream convert does.
+  Caller supplies project/preset filament_colour (the GUI owner), not empty
+  processor extruder_colors. Empty color-print palette uses tool palette.
+- WASM exposes raw move buffers for lossless consumer/oracle verification,
+  plus converted vertex buffers. IDs remain u32, role/type/tool/color u8,
+  numeric fields f32; no JSON numeric roundtrip or precision loss.
+- Buffer packing is adapter-only. No duplicate G-code parser in WASM or TS.
+  Take methods transfer owned Vec data; callers can avoid copying raw moves
+  when only converted vertices are needed. Each buffer's layout is documented.
+- Deferred fields from first slice remain deferred: actual_feedrate values,
+  stealth times, layer_duration, PA/accel/jerk, object labels/print_z.
+  No rendering implementation or M854 override API in this slice.
+
+## Test-first plan
+
+1. Add tests for no moves/dummy, move/role/flow path boundaries, phantom
+   coordinates and times, scalar metadata, palettes and color parsing.
+   Capture missing convert API RED, then port the retained handoff WIP and
+   reconcile against the exact upstream code (including invalid colors).
+2. Add thin SliceOutput/move/vertex buffer bindings with packing tests and
+   public processed entry. Expose settings through existing core API only.
+3. Browser E2E calls actual compiled WASM with Ender3 and KSR projects.
+   Use returned G-code with the existing --process-gcode --dump-moves oracle.
+   Compare all19 raw fields using approved exact integers/copied f32,
+   1ULP derived fields and2ULP time; preserve full CSV/diff artifacts.
+   Verify phantom mapping independently against oracle records as well.
+   Missing oracle is not passing browser evidence.
+4. Run workspace Nextest, Clippy(no added warnings), fmt, WASM compile,
+   browser E2E and official/new-seeded controls. Known8 official failures
+   remain visible and name-compared, never omitted or called PASS.
+5. Commit/push and REVIEW-REQUEST; latest-main checks/ff only after approval.
+   Notify coordinator on integration; TS conversion stays until then.
+
+## Implemented binding contract
+
+`sliceProjectPlateProcessed(input: Uint8Array, plate: number | undefined,
+ toolColors: string[], colorPrintColors: string[]) -> Promise<SliceOutput>`.
+Palettes are explicit, like upstream convert's arguments. Empty color-print
+colors use tool colors. The old `sliceProjectPlate` still returns G-code only.
+This lets worker-web migrate deliberately after approval; no legacy fallback
+or alternate conversion lives in the Rust adapter.
+
+`SliceOutput.takeGcode()` returns Uint8Array. `takeMoves()` and
+`takeVertices()` return owned buffer handles; their take methods empty the
+corresponding buffer, so consumers take once and call `free()` on handles.
+
+| Handle | Method | Typed array and per-record stride/order |
+|---|---|---|
+| MoveBuffers | takeValues | Float32Array,12: xyz,deltaE,feedrate,width,height,mm3_per_mm,travel_dist,fan,temp,time_normal |
+| MoveBuffers | takeIds | Uint32Array,2: gcode_id,layer_id |
+| MoveBuffers | takeTags | Uint8Array,5: core move type,core extrusion role,extruder_id,color_id,internal_only |
+| VertexBuffers | takeValues | Float32Array,16: xyz,height,width,feedrate,actual_feedrate,mm3_per_mm,fan,temp,time_normal,time_stealth,layer_duration,PA,acceleration,jerk |
+| VertexBuffers | takeIds | Uint32Array,2: gcode_id,layer_id |
+| VertexBuffers | takeTags | Uint8Array,4: libvgcode role,move type,extruder_id,color_id |
+| VertexBuffers | takeToolColors / takeColorPrintColors | Uint8Array RGB triples |
+
+Both handles expose count; VertexBuffers also exposes spiralVaseMode.
+Raw and libvgcode role ordinals differ (notably BottomSurface, Ironing,
+InternalBridge, Brim), so callers must use the vocabulary of each handle.
+Raw records include dummy/internal-only/Seam records. Converted vertices
+exclude dummy and include phantom boundaries; counts are intentionally different.
+
+## Test evidence so far
+
+API-missing RED logs: `/tmp/ares-m853-convert-red.log` and
+`/tmp/ares-m853-wasm-buffers-red.log`. After implementation,23 vgcode/WASM
+tests pass (`/tmp/ares-m853-bindings-green.log`); targeted Clippy adds no
+warnings. Existing handoff color conversion matches Color.cpp332–367,
+including invalid hex pairs remaining black before minimum-brightness clamp.
+
+Real Chrome151 E2E: `/tmp/ares-m853-browser.sCQLYR/artifacts/result.json`.
+Ender3:5564 moves/7347 vertices; KSR:635147 moves/823716 vertices; zero
+mismatches. Native oracle actually ran on the browser's emitted G-code,
+not on a native replacement slice. Full raw typed buffers, native CSV,
+stdout and diff.csv remain in each fixture directory. E2E requires explicit
+oracle and WASM package paths; it cannot silently pass without them.
+
+Reproduce after building release ares-wasm and running wasm-bindgen --target web:
+
+```
+ARES_WASM_PKG=/absolute/bindgen/output \
+ARES_MOVES_ARTIFACTS=/new/evidence/directory \
+ARES_PROCGCODE_BIN=/absolute/orca-slicer \
+ARES_E2E_CHROME=/absolute/chrome node web/e2e/wasmMoves.mjs
+```
+
+Full workspace and dual-reference control gates are still required before
+review. Browser rendering UI integration remains worker-web-owned.

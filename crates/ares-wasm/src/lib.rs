@@ -1,5 +1,8 @@
+mod moves;
 mod profiles;
 mod scene;
+
+pub use moves::{MoveBuffers, SliceOutput, VertexBuffers};
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;
@@ -36,6 +39,30 @@ pub async fn slice_project_plate(input: Vec<u8>, plate: Option<u32>) -> Result<V
     )
     .await
     .map_err(slice_error_js)
+}
+
+/// Palettes follow LibVGCodeWrapper::convert: tool colors come from the caller's
+/// filament_colour configuration; an empty color-print palette uses tool colors.
+#[wasm_bindgen(js_name = sliceProjectPlateProcessed)]
+pub async fn slice_project_plate_processed(
+    input: Vec<u8>,
+    plate: Option<u32>,
+    tool_colors: Vec<String>,
+    color_print_colors: Vec<String>,
+) -> Result<SliceOutput, JsValue> {
+    let output = ares_core::slice_project_plate_processed(
+        input,
+        GenerationMetadata::default(),
+        plate,
+        ares_core::SlicerContext::new(0),
+    )
+    .await
+    .map_err(slice_error_js)?;
+    Ok(SliceOutput::from_processed(
+        output,
+        &tool_colors,
+        &color_print_colors,
+    ))
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {

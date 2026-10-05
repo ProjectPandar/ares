@@ -1,5 +1,6 @@
 //! Rendering-neutral data ported from AGPL-licensed OrcaSlicer `src/libvgcode` sources.
 
+pub mod convert;
 mod input_data;
 mod layers;
 mod path_vertex;
