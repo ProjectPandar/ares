@@ -10,7 +10,7 @@ mod conflict;
 mod emit_helpers;
 use emit_helpers::{append_layer_end_timelapse, layer_boundary_slices_rc, trailing_gcode_xy};
 mod cooling;
-mod expression;
+pub(crate) mod expression;
 mod fan_chunks;
 mod fan_mover;
 mod file_start;
@@ -19,7 +19,7 @@ pub(super) mod footprint;
 mod header;
 mod layer_gcode;
 mod layers;
-mod lexer;
+pub(crate) mod lexer;
 mod machine;
 pub(in crate::project_slice) mod motion;
 mod object;
@@ -42,7 +42,7 @@ mod tool_transition;
 
 #[cfg(test)]
 mod timelapse_tests;
-mod value;
+pub(crate) mod value;
 mod wipe_tower;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 

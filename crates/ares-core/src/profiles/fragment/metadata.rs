@@ -28,8 +28,8 @@ pub(super) fn is_metadata_key(key: &str) -> bool {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(in crate::profiles) struct ProfilePresetMetadata {
-    pub(super) kind: ProfileKind,
-    pub(super) name: String,
+    pub(in crate::profiles) kind: ProfileKind,
+    pub(in crate::profiles) name: String,
     pub(super) from: Option<String>,
     pub(super) version: Option<String>,
     pub(super) setting_id: Option<String>,
@@ -66,9 +66,9 @@ impl ProfileConfigMetadataPatch {
     }
 }
 
-pub(super) struct ParsedMetadata {
-    pub(super) preset: ProfilePresetMetadata,
-    pub(super) config: ProfileConfigMetadataPatch,
+pub(in crate::profiles) struct ParsedMetadata {
+    pub(in crate::profiles) preset: ProfilePresetMetadata,
+    pub(in crate::profiles) config: ProfileConfigMetadataPatch,
 }
 
 pub(super) fn parse(input: &[u8]) -> Result<ParsedMetadata, SliceError> {
@@ -78,7 +78,7 @@ pub(super) fn parse(input: &[u8]) -> Result<ParsedMetadata, SliceError> {
     raw.finish()
 }
 
-pub(super) fn parse_values(
+pub(in crate::profiles) fn parse_values(
     input: crate::project::raw_settings::RawConfigValue,
 ) -> Result<ParsedMetadata, SliceError> {
     RawMetadata::deserialize(input)

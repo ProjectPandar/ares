@@ -1,5 +1,5 @@
 #[derive(Clone, Debug, PartialEq)]
-pub(super) enum Token {
+pub(crate) enum Token {
     Integer(i64),
     Number(f64),
     Bool(bool),
@@ -31,7 +31,7 @@ pub(super) enum Token {
     Colon,
 }
 
-pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
+pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let mut chars = input.chars().peekable();
     while let Some(&character) = chars.peek() {

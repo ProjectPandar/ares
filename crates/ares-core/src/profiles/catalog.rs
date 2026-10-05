@@ -20,7 +20,9 @@ pub(super) struct Catalog {
     records: Vec<Record>,
     index: BTreeMap<(usize, ProfileKind, String), usize>,
     selectable: BTreeMap<(ProfileKind, String), usize>,
-    library: Option<usize>,
+    /// Vendor index name per scope (`VendorProfile::name`); the user scope is
+    /// the trailing entry with an empty name.
+    vendor_names: Vec<String>,
     user_scope: usize,
 }
 
@@ -38,12 +40,14 @@ impl Catalog {
             records: Vec::new(),
             index: BTreeMap::new(),
             selectable: BTreeMap::new(),
-            library: None,
+            vendor_names: Vec::new(),
             user_scope,
         };
         for (scope, vendor) in input.vendors.into_iter().enumerate() {
+            catalog.vendor_names.push(vendor.index.name.clone());
             catalog.insert_vendor(scope, vendor)?;
         }
+        catalog.vendor_names.push(String::new());
         for package in input.imports {
             for document in package.profiles {
                 let kind = ProfileKind::parse(&document.kind)?;
@@ -54,9 +58,6 @@ impl Catalog {
     }
 
     fn insert_vendor(&mut self, scope: usize, mut vendor: VendorInput) -> Result<(), SliceError> {
-        if vendor.index.name == "OrcaFilamentLibrary" {
-            self.library = Some(scope);
-        }
         let entries = [
             (ProfileKind::Machine, vendor.index.machine_list),
             (ProfileKind::Process, vendor.index.process_list),
@@ -152,9 +153,10 @@ impl Catalog {
             .get(&(kind, name.to_owned()))
             .ok_or_else(|| invalid(format!("selectable profile '{name}' was not found")))?;
         let mut chain = Vec::new();
-        self.collect(position, &mut BTreeSet::new(), &mut chain)?;
+        self.collect_positions(position, &mut BTreeSet::new(), &mut chain)?;
         let mut fragments = Vec::with_capacity(chain.len());
-        for record in chain {
+        for position in chain {
+            let record = &self.records[position];
             let (fragment, project) =
                 ProfileFragment::from_catalog_values(record.document.values())?;
             fragments.push(fragment);
@@ -181,11 +183,84 @@ impl Catalog {
         Ok(merged)
     }
 
-    fn collect<'a>(
-        &'a self,
+    fn parent_position(&self, record: &Record, parent: &str) -> Option<usize> {
+        // PresetBundle.cpp:4885-4918: local templates precede the base library.
+        let key = (record.scope, record.kind, parent.to_owned());
+        if let Some(position) = self.index.get(&key) {
+            return Some(*position);
+        }
+        if record.scope == self.user_scope {
+            return self
+                .selectable
+                .get(&(record.kind, parent.to_owned()))
+                .copied();
+        }
+        self.library_scope().and_then(|scope| {
+            self.index
+                .get(&(scope, record.kind, parent.to_owned()))
+                .copied()
+        })
+    }
+
+    fn library_scope(&self) -> Option<usize> {
+        self.vendor_names
+            .iter()
+            .position(|name| name == super::compatible::ORCA_FILAMENT_LIBRARY)
+    }
+
+    pub(super) fn selectable_position(&self, kind: ProfileKind, name: &str) -> Option<usize> {
+        self.selectable.get(&(kind, name.to_owned())).copied()
+    }
+
+    pub(super) fn selectable_positions(&self, kind: ProfileKind) -> Vec<usize> {
+        // Upstream iterates `m_presets` in load order (`Preset.cpp:3355`); the
+        // record vector preserves vendor-then-index insertion order.
+        self.records
+            .iter()
+            .enumerate()
+            .filter(|(position, record)| {
+                record.kind == kind
+                    && self.selectable.get(&(kind, record.document.name.clone())) == Some(position)
+            })
+            .map(|(position, _)| position)
+            .collect()
+    }
+
+    pub(super) fn is_user_scope(&self, position: usize) -> bool {
+        self.records[position].scope == self.user_scope
+    }
+
+    /// The record's own `inherits` value (`Preset::inherits` reads the stored
+    /// option; `Preset.hpp:320-321`).
+    pub(super) fn leaf_inherits(&self, position: usize) -> Option<String> {
+        self.records[position]
+            .document
+            .inherits
+            .as_deref()
+            .filter(|value| !value.is_empty())
+            .map(str::to_owned)
+    }
+
+    pub(super) fn vendor_name(&self, position: usize) -> &str {
+        &self.vendor_names[self.records[position].scope]
+    }
+
+    pub(super) fn document(&self, position: usize) -> &ProfileDocument {
+        &self.records[position].document
+    }
+
+    /// Parent-first record positions for the preset at `position`.
+    pub(super) fn chain_positions(&self, position: usize) -> Result<Vec<usize>, SliceError> {
+        let mut chain = Vec::new();
+        self.collect_positions(position, &mut BTreeSet::new(), &mut chain)?;
+        Ok(chain)
+    }
+
+    fn collect_positions(
+        &self,
         position: usize,
         visiting: &mut BTreeSet<usize>,
-        chain: &mut Vec<&'a Record>,
+        chain: &mut Vec<usize>,
     ) -> Result<(), SliceError> {
         if !visiting.insert(position) {
             return Err(invalid("profile inheritance cycle"));
@@ -203,29 +278,10 @@ impl Catalog {
                     record.document.name
                 ))
             })?;
-            self.collect(parent_position, visiting, chain)?;
+            self.collect_positions(parent_position, visiting, chain)?;
         }
-        chain.push(record);
+        chain.push(position);
         Ok(())
-    }
-
-    fn parent_position(&self, record: &Record, parent: &str) -> Option<usize> {
-        // PresetBundle.cpp:4885-4918: local templates precede the base library.
-        let key = (record.scope, record.kind, parent.to_owned());
-        if let Some(position) = self.index.get(&key) {
-            return Some(*position);
-        }
-        if record.scope == self.user_scope {
-            return self
-                .selectable
-                .get(&(record.kind, parent.to_owned()))
-                .copied();
-        }
-        self.library.and_then(|scope| {
-            self.index
-                .get(&(scope, record.kind, parent.to_owned()))
-                .copied()
-        })
     }
 }
 

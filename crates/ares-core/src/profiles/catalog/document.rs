@@ -5,7 +5,7 @@ use serde::Deserialize;
 use crate::project::raw_settings::RawConfigValue;
 
 #[derive(Deserialize)]
-pub(super) struct CatalogInput {
+pub(in crate::profiles) struct CatalogInput {
     pub vendors: Vec<VendorInput>,
     pub imports: Vec<ImportedProfiles>,
 }
@@ -41,7 +41,7 @@ pub(super) struct ImportedProfiles {
 /// interpretation; retaining these values also supplies config-export key/nil
 /// provenance without introducing dynamic serde_json values in production.
 #[derive(Deserialize)]
-pub(super) struct ProfileDocument {
+pub(in crate::profiles) struct ProfileDocument {
     #[serde(rename = "type", default)]
     pub kind: String,
     pub name: String,
@@ -54,7 +54,7 @@ pub(super) struct ProfileDocument {
 }
 
 impl ProfileDocument {
-    pub(super) fn values(&self) -> BTreeMap<String, RawConfigValue> {
+    pub(in crate::profiles) fn values(&self) -> BTreeMap<String, RawConfigValue> {
         let mut values = self.fields.clone();
         values.insert("type".to_owned(), RawConfigValue::Text(self.kind.clone()));
         values.insert("name".to_owned(), RawConfigValue::Text(self.name.clone()));

@@ -2,6 +2,34 @@ use ares_core::{GenerationMetadata, ProfileSliceRequest, SlicerContext};
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
+#[wasm_bindgen(js_name = parsePresetBundle)]
+pub fn parse_preset_bundle(input: Vec<u8>, filename: String) -> Result<String, JsValue> {
+    parse_preset_bundle_json(&input, &filename).map_err(|error| JsValue::from_str(&error))
+}
+
+pub fn parse_preset_bundle_json(input: &[u8], filename: &str) -> Result<String, String> {
+    ares_core::parse_preset_bundle(input, filename).map_err(|error| error.to_string())
+}
+
+#[wasm_bindgen(js_name = filterCompatiblePresets)]
+pub fn filter_compatible_presets(
+    catalog_json: String,
+    printer: String,
+    process: Option<String>,
+) -> Result<String, JsValue> {
+    filter_compatible_presets_json(&catalog_json, &printer, process.as_deref())
+        .map_err(|error| JsValue::from_str(&error))
+}
+
+pub fn filter_compatible_presets_json(
+    catalog_json: &str,
+    printer: &str,
+    process: Option<&str>,
+) -> Result<String, String> {
+    ares_core::filter_compatible_presets(catalog_json, printer, process)
+        .map_err(|error| error.to_string())
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ProfileSliceOptions {

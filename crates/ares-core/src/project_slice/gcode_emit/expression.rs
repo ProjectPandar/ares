@@ -9,7 +9,7 @@ mod tests;
 
 use functions::function;
 
-pub(super) fn evaluate(input: &str, config: &Config) -> Result<Value, String> {
+pub(crate) fn evaluate(input: &str, config: &Config) -> Result<Value, String> {
     let mut parser = Parser {
         tokens: tokenize(input)?,
         index: 0,

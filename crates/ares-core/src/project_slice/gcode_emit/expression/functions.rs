@@ -1,6 +1,6 @@
 use super::{Config, Value};
 
-pub(super) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, String> {
+pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, String> {
     if name == "interpolate_table" {
         return interpolate_table(&args);
     }

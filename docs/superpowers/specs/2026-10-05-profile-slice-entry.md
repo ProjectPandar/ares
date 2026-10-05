@@ -40,6 +40,51 @@ passing identical bytes to both engines, then uses `--arrange 0`; GUI arrangemen
 is not part of this libslic3r slice. Root template names are vendor-scoped, with
 local-before-library parent lookup; selectable-name ambiguity is a separate error.
 
+## Bundle/compatibility slice contract
+
+This candidate lands `parsePresetBundle` and `filterCompatiblePresets`.
+
+`filterCompatiblePresets(catalog_json, printer, process?)` resolves the named
+active printer (and optional process) inside the existing `Catalog`, merges its
+inherits chain, then tests every selectable process and filament preset exactly
+as `Preset.cpp:771-851`:
+
+- `is_compatible_with_printer`: OrcaFilamentLibrary filament `m_excluded_from`
+  (alias-matched concrete-vendor `compatible_printers` lists per
+  `PresetCollection::update_library_profile_excluded_from`,
+  `Preset.cpp:3705-3736`) reject first; an explicit non-empty
+  `compatible_printers` list outranks any condition; otherwise a non-empty
+  `compatible_printers_condition` is evaluated with
+  `PlaceholderParser::evaluate_boolean_expression` against the merged active
+  printer config plus `printer_preset`/`num_extruders`
+  (`Preset.cpp:843-850`); a parse/eval error returns `true` with a diagnostic
+  (`Preset.cpp:830-836`); fallthrough accepts `is_default`, empty active name,
+  empty list, exact active-name match, or — for a non-system active printer —
+  its immediate `inherits` parent match (`Preset.cpp:799-806,840`).
+- `is_compatible_with_print` additionally gates filaments when a process is
+  selected: same list-vs-condition structure, but the condition evaluates
+  against the merged active *process* config (`Preset.cpp:771-792`),
+  error→true with diagnostic.
+- Returns `{processes, filaments, diagnostics}`; diagnostics carry kind, name
+  and the upstream message for error→true cases only. Non-instantiable
+  (`instantiation == "false"`) presets are excluded from both lists but stay
+  resolvable as inheritance parents. Unknown printer/process names are errors.
+
+`parsePresetBundle(input, filename)` ports `PresetBundle.cpp:1304-1549`
+byte-oriented: a `.json` input parses one preset record; a ZIP input
+(`.orca_printer`/`.orca_filament`/`.orca_bundle`/`.zip`, magic `PK\x03\x04`)
+reads `bundle_structure.json` metadata plus each member `.json` record
+in-memory — no temp dirs, overwrite prompts or persistence. Each record keeps
+its original option values and `inherits`; kind is inferred from
+`printer_settings_id`/`print_settings_id`/`filament_settings_id` presence
+(`PresetBundle.cpp:1469-1482`), falling back to the record `type` for
+plain-JSON presets. The result is `{profiles:[...], bundle:{...}|null}`; it
+does not flatten inheritance and does not require external parents to be in
+the same input. Malformed JSON/ZIP are errors.
+
+`loadScene` filename, web caller migration, the real BBL filtering E2E timing
+receipt and selected-profile 3MF remain task24 remainder items after this slice.
+
 ## Agreed public test seams and failure inventory
 
 1. Core profile slicing / WASM sliceWithProfiles: same STL or 3MF and selected

@@ -18,7 +18,7 @@ mod elephant_foot;
 mod extruders;
 mod extrusion_islands;
 mod fill_entities;
-mod gcode_emit;
+pub(crate) mod gcode_emit;
 #[cfg_attr(
     not(test),
     expect(

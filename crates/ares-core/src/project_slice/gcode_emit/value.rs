@@ -3,10 +3,10 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 mod random;
 
 // PlaceholderParser.hpp:16-26: config copies share the execution context.
-pub(super) type TemplateRng = Rc<RefCell<crate::slicer_context::Mt19937>>;
+pub(crate) type TemplateRng = Rc<RefCell<crate::slicer_context::Mt19937>>;
 
 #[derive(Clone, Debug, PartialEq)]
-pub(super) enum Value {
+pub(crate) enum Value {
     Integer(i64),
     Number(f64),
     String(String),
@@ -16,15 +16,15 @@ pub(super) enum Value {
 }
 
 impl Value {
-    pub(super) fn number(value: f64) -> Self {
+    pub(crate) fn number(value: f64) -> Self {
         Self::Number(value)
     }
 
-    pub(super) fn option_bool(value: bool) -> Self {
+    pub(crate) fn option_bool(value: bool) -> Self {
         Self::OptionBool(value)
     }
 
-    pub(super) fn scalar(&self) -> &Self {
+    pub(crate) fn scalar(&self) -> &Self {
         match self {
             Self::List(values) if !values.is_empty() => &values[0],
             _ => self,
@@ -34,14 +34,14 @@ impl Value {
     /// Upstream `ConfigOptionVector::get_at` never fails for a non-empty
     /// option: an out-of-range index falls back to the first value, and a
     /// scalar behaves as a one-element vector (`Config.hpp:624-628`).
-    pub(super) fn index(&self, index: usize) -> Option<&Self> {
+    pub(crate) fn index(&self, index: usize) -> Option<&Self> {
         match self {
             Self::List(values) => values.get(index).or_else(|| values.first()),
             scalar => Some(scalar),
         }
     }
 
-    pub(super) fn iter_list(&self) -> std::slice::Iter<'_, Self> {
+    pub(crate) fn iter_list(&self) -> std::slice::Iter<'_, Self> {
         match self {
             Self::List(values) => values.iter(),
             scalar @ (Self::Integer(_)
@@ -52,7 +52,7 @@ impl Value {
         }
     }
 
-    pub(super) fn as_number(&self) -> Option<f64> {
+    pub(crate) fn as_number(&self) -> Option<f64> {
         match self.scalar() {
             Self::Integer(value) => Some(*value as f64),
             Self::Number(value) => Some(*value),
@@ -62,7 +62,7 @@ impl Value {
         }
     }
 
-    pub(super) fn as_integer(&self) -> Option<i64> {
+    pub(crate) fn as_integer(&self) -> Option<i64> {
         match self.scalar() {
             Self::Integer(value) => Some(*value),
             Self::OptionBool(value) | Self::Bool(value) => Some(i64::from(*value)),
@@ -70,7 +70,7 @@ impl Value {
         }
     }
 
-    pub(super) fn as_bool(&self) -> bool {
+    pub(crate) fn as_bool(&self) -> bool {
         match self.scalar() {
             Self::OptionBool(value) | Self::Bool(value) => *value,
             Self::Integer(value) => *value != 0,
@@ -80,7 +80,7 @@ impl Value {
         }
     }
 
-    pub(super) fn as_string(&self) -> String {
+    pub(crate) fn as_string(&self) -> String {
         match self.scalar() {
             Self::Integer(value) => value.to_string(),
             Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
@@ -95,7 +95,7 @@ impl Value {
         }
     }
 
-    pub(super) fn as_legacy_string(&self) -> String {
+    pub(crate) fn as_legacy_string(&self) -> String {
         match self.scalar() {
             Self::OptionBool(value) => i64::from(*value).to_string(),
             value => value.as_string(),
@@ -117,13 +117,13 @@ fn format_number(value: f64) -> String {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(super) struct Config {
+pub(crate) struct Config {
     values: HashMap<String, Value>,
-    pub(super) random: Option<TemplateRng>,
+    pub(crate) random: Option<TemplateRng>,
 }
 
 impl Config {
-    pub(super) fn from_block(block: &[u8]) -> Self {
+    pub(crate) fn from_block(block: &[u8]) -> Self {
         let mut config = Self::default();
         for line in String::from_utf8_lossy(block).lines() {
             let Some(line) = line.strip_prefix("; ") else {
@@ -145,7 +145,7 @@ impl Config {
         config
     }
 
-    pub(super) fn insert(&mut self, key: impl Into<String>, value: Value) {
+    pub(crate) fn insert(&mut self, key: impl Into<String>, value: Value) {
         let key = key.into();
         if let Value::List(values) = &value {
             for (index, item) in values.iter().enumerate() {
@@ -157,7 +157,7 @@ impl Config {
 
     /// Stores an assignment target (`{var[idx] = value}`): lists grow with
     /// zero padding like the upstream per-extruder vectors.
-    pub(super) fn assign(&mut self, name: &str, index: Option<usize>, value: Value) {
+    pub(crate) fn assign(&mut self, name: &str, index: Option<usize>, value: Value) {
         match index {
             None => self.insert(name, value),
             Some(index) => {
@@ -175,7 +175,7 @@ impl Config {
         }
     }
 
-    pub(super) fn get(&self, key: &str) -> Option<&Value> {
+    pub(crate) fn get(&self, key: &str) -> Option<&Value> {
         self.values.get(key)
     }
 }

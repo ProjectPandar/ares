@@ -83,7 +83,7 @@ mod print_paths;
 mod printable_height;
 mod profiles;
 mod project;
-mod project_slice;
+pub(crate) mod project_slice;
 mod segments;
 mod skirts;
 mod slicer_context;
@@ -169,7 +169,7 @@ pub(crate) use print_paths::{
 pub use profiles::{
     ComposedProfile, MergedProfile, MergedProfileMetadata, ProfileFragment, ProfileGroupMetadata,
     ProfileKind, ProfileSelection, ProfileSliceRequest, compose_profile_fragments,
-    merge_profile_fragments, slice_with_profiles,
+    filter_compatible_presets, merge_profile_fragments, parse_preset_bundle, slice_with_profiles,
 };
 pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
