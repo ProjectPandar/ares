@@ -57,17 +57,7 @@ fn orca_parity_option_coverage() {
     if let Some(values) = &only_values {
         for plan in &mut plans {
             let before = plan.cases.len();
-            plan.cases.retain(|case| {
-                case.value.as_ref().is_none_or(|v| {
-                    let label = v
-                        .as_str()
-                        .map(str::to_owned)
-                        .unwrap_or_else(|| v.to_string());
-                    values
-                        .iter()
-                        .any(|want| want.trim_matches('"') == label.trim_matches('"'))
-                })
-            });
+            plan.cases.retain(|case| selected_value(case, values));
             // A value-filtered run no longer executes the plan's full legal
             // domain — clear `provably_legal` so the summary can't report a
             // partial (single-value) run as a complete domain.
@@ -82,6 +72,18 @@ fn orca_parity_option_coverage() {
         .collect::<Vec<_>>();
     write_summary(&outcomes);
     require_complete(&outcomes).unwrap_or_else(|error| panic!("{error}"));
+}
+
+fn selected_value(case: &domains::OptionCase, values: &std::collections::BTreeSet<String>) -> bool {
+    case.value.as_ref().is_none_or(|v| {
+        let label = v
+            .as_str()
+            .map(str::to_owned)
+            .unwrap_or_else(|| v.to_string());
+        values
+            .iter()
+            .any(|want| want.trim_matches('"') == label.trim_matches('"'))
+    })
 }
 
 pub(super) fn require_complete(outcomes: &[OptionOutcome]) -> Result<(), String> {

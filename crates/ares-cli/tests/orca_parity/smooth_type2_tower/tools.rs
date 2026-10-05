@@ -148,9 +148,11 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
                 machine.insert((*key).into(), value.clone());
             }
             for filament in &mut filaments {
-                for (key, value) in &ramming_filament {
-                    filament.insert((*key).into(), value.clone());
-                }
+                filament.extend(
+                    ramming_filament
+                        .iter()
+                        .map(|(key, value)| ((*key).into(), value.clone())),
+                );
             }
         }
         let exported = runner

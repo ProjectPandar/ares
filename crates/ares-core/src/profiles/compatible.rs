@@ -72,7 +72,7 @@ pub(super) fn filter_with_catalog(
 ) -> Result<FilteredPresets, SliceError> {
     let printer_position =
         selectable_without_missing_parent(catalog, ProfileKind::Machine, printer)?;
-    let mut printer_config = expression_config(&catalog, printer_position)?;
+    let mut printer_config = expression_config(catalog, printer_position)?;
     // Preset.cpp:843-850: printer_preset plus the extruder count derived from
     // the active printer's own merged nozzle_diameter list.
     printer_config.insert("printer_preset", Value::String(printer.to_owned()));
@@ -90,12 +90,12 @@ pub(super) fn filter_with_catalog(
             let position = selectable_without_missing_parent(catalog, ProfileKind::Process, name)?;
             Ok(ActivePrint {
                 name: name.to_owned(),
-                config: expression_config(&catalog, position)?,
+                config: expression_config(catalog, position)?,
             })
         })
         .transpose()?;
 
-    let excluded = library_exclusions(&catalog);
+    let excluded = library_exclusions(catalog);
     let mut result = FilteredPresets {
         processes: Vec::new(),
         filaments: Vec::new(),
@@ -109,7 +109,7 @@ pub(super) fn filter_with_catalog(
             push_missing_parent(&mut result.missing_parents, &link);
             continue;
         }
-        let candidate = Candidate::load(&catalog, position)?;
+        let candidate = Candidate::load(catalog, position)?;
         if compatible_with_printer(&candidate, &printer, &excluded, &mut result.diagnostics) {
             result.processes.push(candidate.name);
         }
@@ -119,7 +119,7 @@ pub(super) fn filter_with_catalog(
             push_missing_parent(&mut result.missing_parents, &link);
             continue;
         }
-        let candidate = Candidate::load(&catalog, position)?;
+        let candidate = Candidate::load(catalog, position)?;
         if compatible_with_printer(&candidate, &printer, &excluded, &mut result.diagnostics)
             && compatible_with_print(&candidate, process.as_ref(), &mut result.diagnostics)
         {

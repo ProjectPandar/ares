@@ -33,15 +33,9 @@ fn square_ascii_stl() -> Vec<u8> {
 
 #[test]
 fn preset_catalog_handle_matches_one_shot_filtering() {
-    let machine = format!(
-        "{{\"type\":\"machine\",\"name\":\"M1\",\"from\":\"system\",\"instantiation\":\"true\",\"nozzle_diameter\":[0.4]}}"
-    );
-    let process = format!(
-        "{{\"type\":\"process\",\"name\":\"0.2\",\"from\":\"system\",\"instantiation\":\"true\",\"layer_height\":\"0.2\"}}"
-    );
-    let filament = format!(
-        "{{\"type\":\"filament\",\"name\":\"PLA\",\"from\":\"system\",\"instantiation\":\"true\",\"filament_diameter\":[1.75]}}"
-    );
+    let machine = r#"{"type":"machine","name":"M1","from":"system","instantiation":"true","nozzle_diameter":[0.4]}"#;
+    let process = r#"{"type":"process","name":"0.2","from":"system","instantiation":"true","layer_height":"0.2"}"#;
+    let filament = r#"{"type":"filament","name":"PLA","from":"system","instantiation":"true","filament_diameter":[1.75]}"#;
     let vendor = serde_json::json!({
         "index": {
             "name": "Acme",
@@ -50,9 +44,9 @@ fn preset_catalog_handle_matches_one_shot_filtering() {
             "filament_list": [{"sub_path": "filament.json"}]
         },
         "files": {
-            "machine.json": serde_json::from_str::<serde_json::Value>(&machine).unwrap(),
-            "process.json": serde_json::from_str::<serde_json::Value>(&process).unwrap(),
-            "filament.json": serde_json::from_str::<serde_json::Value>(&filament).unwrap()
+            "machine.json": serde_json::from_str::<serde_json::Value>(machine).unwrap(),
+            "process.json": serde_json::from_str::<serde_json::Value>(process).unwrap(),
+            "filament.json": serde_json::from_str::<serde_json::Value>(filament).unwrap()
         }
     });
     let import = serde_json::json!({

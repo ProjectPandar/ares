@@ -76,7 +76,7 @@ impl Catalog {
 
     /// `PresetBundle::load_presets` holding semantics: one vendor scope per
     /// load, appended in load order.
-    pub(super) fn push_vendor(&mut self, vendor: VendorInput) -> Result<(), SliceError> {
+    fn push_vendor(&mut self, vendor: VendorInput) -> Result<(), SliceError> {
         let scope = Scope::Vendor(self.vendor_names.len());
         self.vendor_names.push(vendor.index.name.clone());
         self.insert_vendor(scope, vendor)
@@ -323,14 +323,11 @@ impl Catalog {
                 return None;
             }
             let record = &self.records[position];
-            let Some(parent) = record
+            let parent = record
                 .document
                 .inherits
                 .as_deref()
-                .filter(|name| !name.is_empty())
-            else {
-                return None;
-            };
+                .filter(|name| !name.is_empty())?;
             match self.parent_position(record, parent) {
                 Some(next) => position = next,
                 None => {

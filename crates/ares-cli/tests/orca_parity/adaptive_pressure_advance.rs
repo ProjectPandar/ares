@@ -60,11 +60,13 @@ fn orca_parity_adaptive_pa_constant_model() {
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
 }
 
-fn settings() -> (
+type PresetSettings = (
     Map<String, Value>,
     Map<String, Value>,
     Vec<Map<String, Value>>,
-) {
+);
+
+fn settings() -> PresetSettings {
     let profiles = VendorProfiles::load(
         &runner::repo_root().join("OrcaSlicer/resources/profiles"),
         "Creality",

@@ -2,6 +2,18 @@ use super::*;
 use crate::runner::CaseInputs;
 use std::io::{Cursor, Read, Write};
 
+fn configure_different_settings(settings: &mut Value, supplied: bool) {
+    if supplied {
+        settings["different_settings_to_system"] =
+            serde_json::json!(["outer_wall_speed", "", "", ""]);
+    } else {
+        settings
+            .as_object_mut()
+            .unwrap()
+            .remove("different_settings_to_system");
+    }
+}
+
 #[test]
 fn orca_parity_bookkeeping_matches_complete_configured_filament_output() {
     if std::env::var("ARES_PARITY_BOOKKEEPING_REFERENCE").as_deref() != Ok("1") {
@@ -64,15 +76,7 @@ fn orca_parity_bookkeeping_matches_complete_configured_filament_output() {
             file.read_to_end(&mut bytes).unwrap();
             if file.name() == "Metadata/project_settings.config" {
                 let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
-                if supplied {
-                    settings["different_settings_to_system"] =
-                        serde_json::json!(["outer_wall_speed", "", "", ""]);
-                } else {
-                    settings
-                        .as_object_mut()
-                        .unwrap()
-                        .remove("different_settings_to_system");
-                }
+                configure_different_settings(&mut settings, supplied);
                 bytes = serde_json::to_vec(&settings).unwrap();
             }
             output
