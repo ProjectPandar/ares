@@ -1,5 +1,6 @@
-//! `Print.cpp:1524-1556,1627-1671,1695-1749::Print::validate` (OrcaSlicer
-//! v2.4.2): applied nozzle height/width bounds precede extruder-addressing checks.
+//! `Print.cpp:1524-1556,1627-1781::Print::validate` (OrcaSlicer v2.4.2):
+//! applied height/width bounds, extruder addressing, then bed compatibility.
+mod bed_filament;
 mod extrusion_width;
 mod identity;
 
@@ -18,11 +19,12 @@ use crate::{
     },
 };
 
-/// The O4 and O1 slices of `Print.hpp:935::Print::validate`, separate from processing.
+/// Applied nozzle, extruder-addressing and bed slices of `Print.hpp:935::Print::validate`.
 /// Returns the exact upstream diagnostic in `SliceError::InvalidInput`.
 pub fn validate_print(settings: &ProjectSettings, bbl_printer: bool) -> Result<(), SliceError> {
-    extrusion_width::flat(settings)?;
-    validate_layer_templates(settings, bbl_printer)
+    let usage = extrusion_width::flat(settings)?;
+    validate_layer_templates(settings, bbl_printer)?;
+    bed_filament::validate(settings, bbl_printer, &usage.supported_used_filaments, 1)
 }
 
 fn validate_layer_templates(
@@ -87,6 +89,17 @@ pub(crate) fn validate_stl_options(options: &SliceOptions) -> Result<(), SliceEr
                     | "top_surface_filament_id"
                     | "bottom_surface_filament_id"
                     | "filament_map"
+                    | "filament_diameter"
+                    | "enable_prime_tower"
+                    | "wipe_tower_filament"
+                    | "support_multi_bed_types"
+                    | "curr_bed_type"
+                    | "supertack_plate_temp"
+                    | "cool_plate_temp"
+                    | "textured_cool_plate_temp"
+                    | "eng_plate_temp"
+                    | "hot_plate_temp"
+                    | "textured_plate_temp"
             )
         })
         .map(|(key, value)| (key.as_str(), value));
@@ -101,7 +114,7 @@ pub(crate) fn validate_stl_options(options: &SliceOptions) -> Result<(), SliceEr
             .map(OrcaFloat)
             .collect(),
     );
-    extrusion_width::flat(&settings)?;
+    let usage = extrusion_width::flat(&settings)?;
     let identity = |key: &str| -> Result<&str, SliceError> {
         match options.values().get(key) {
             None => Ok(""),
@@ -120,7 +133,8 @@ pub(crate) fn validate_stl_options(options: &SliceOptions) -> Result<(), SliceEr
         bbl,
         options.before_layer_change_gcode()?,
         options.layer_change_gcode()?,
-    )
+    )?;
+    bed_filament::validate(&settings, bbl, &usage.supported_used_filaments, 1)
 }
 
 /// Apply project configuration and validate before an independent processing call.
@@ -165,7 +179,13 @@ pub(crate) fn validate_applied_project(
         &project.documents().project_settings_raw,
         selected_printer,
     )?;
-    validate_layer_templates(settings, bbl)
+    validate_layer_templates(settings, bbl)?;
+    bed_filament::validate(
+        settings,
+        bbl,
+        &resolved.usage.supported_used_filaments,
+        project.plates()[0].id(),
+    )
 }
 
 const MISSING_RESET: &str = "Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode.";

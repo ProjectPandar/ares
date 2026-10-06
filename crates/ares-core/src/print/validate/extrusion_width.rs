@@ -1,5 +1,8 @@
 //! Print.cpp:1524-1556,1627-1692: nozzle-dependent height/width bounds.
-use crate::project::effective_config::{types::BoundedResolvedProjectConfig, usage};
+use crate::project::effective_config::{
+    types::{BoundedProjectUsage, BoundedResolvedProjectConfig},
+    usage,
+};
 use crate::{FloatOrPercent, ObjectOptions, OrcaInts, ProjectSettings, RegionOptions, SliceError};
 
 macro_rules! region_widths {
@@ -45,7 +48,7 @@ pub(super) fn applied(resolved: &BoundedResolvedProjectConfig) -> Result<(), Sli
     Ok(())
 }
 
-pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
+pub(super) fn flat(settings: &ProjectSettings) -> Result<BoundedProjectUsage, SliceError> {
     let object = ObjectOptions::from_base(&settings.process.object);
     let region = RegionOptions::from_base(&settings.process.region);
     let used = usage::collect_usage(
@@ -69,7 +72,8 @@ pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
     for value in region_widths!(region) {
         width(value, object.layer_height.0, nozzles)?;
     }
-    bridge_widths(settings, &object, std::slice::from_ref(&region))
+    bridge_widths(settings, &object, std::slice::from_ref(&region))?;
+    Ok(used)
 }
 
 fn nozzle_bounds(
