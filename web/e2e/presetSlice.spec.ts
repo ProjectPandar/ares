@@ -128,9 +128,11 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await page.getByRole("link", { name: "Prepare" }).click();
   const field = page.getByRole("textbox", { name: EDIT.key, exact: true });
   await expect(field, "process settings stay editable with presets selected").toBeVisible();
+  await expect(field, "the field shows the selected process preset value").toHaveValue(String(processPreset[EDIT.key]));
   await field.fill(EDIT.value);
   await field.press("Enter");
   await expect(page.getByTestId("process-edited")).toContainText("1 modified option");
+  await page.getByTestId("sidebar").screenshot({ path: `${artifacts}edited/sidebar.png` });
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const editedPath = await exportGcode(page, `${artifacts}edited/`);

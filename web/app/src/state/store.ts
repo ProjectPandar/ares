@@ -34,6 +34,8 @@ export interface PreviewView {
 }
 
 /** Presets picked outside the project's embedded ones (PresetBundle selections). */
+export type ModelFile = { name: string; bytes: Uint8Array };
+
 export interface PresetSelection {
   printer: string;
   process?: string;
@@ -56,7 +58,7 @@ export interface AppState {
   mode: ViewMode;
   /** Last `Field::show_error` message, at the field that raised it. */
   fieldError: { key: string; message: string } | null;
-  file: { name: string; bytes: Uint8Array } | null;
+  file: ModelFile | null;
   scene: Scene | null;
   /** `scene.settings` options decoded for typed fields. */
   typedSettings: TypedSettings | null;

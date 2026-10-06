@@ -13,27 +13,31 @@ const TYPED = /^(?:bool|int|float|percent|enum)s(?:_nullable)?$|^bool$|^points?$
 const typed = (def: ConfigOptionDef | undefined) => def !== undefined && def.gui_type === "undefined" && TYPED.test(def.type);
 
 /**
- * Decodes the typed options of the scene settings in the engine (`decodeConfigValues`), one
+ * Decodes the typed options of stored settings in the engine (`decodeConfigValues`), one
  * stored element at a time: a stored element is itself the text of a one-element vector.
  */
-export async function decodeSettings(defs: ReadonlyMap<string, ConfigOptionDef>, settings: ProjectSettings): Promise<TypedSettings> {
+export async function decodeOptions(defs: ReadonlyMap<string, ConfigOptionDef>, settings: OptionMap): Promise<Record<string, ConfigValue>> {
   const entries: [string, string][] = [];
-  const slots: [section: keyof ProjectSettings, key: string, count: number | undefined][] = [];
-  for (const section of SECTIONS) {
-    for (const [key, value] of Object.entries(settings[section])) {
-      if (!typed(defs.get(key))) continue;
-      const stored = Array.isArray(value) ? value : [value];
-      for (const element of stored) entries.push([key, String(element)]);
-      slots.push([section, key, Array.isArray(value) ? value.length : undefined]);
-    }
+  const slots: [key: string, count: number | undefined][] = [];
+  for (const [key, value] of Object.entries(settings)) {
+    if (!typed(defs.get(key))) continue;
+    const stored = Array.isArray(value) ? value : [value];
+    for (const element of stored) entries.push([key, String(element)]);
+    slots.push([key, Array.isArray(value) ? value.length : undefined]);
   }
   const values = await slicer.decodeConfigValues(entries);
-  const result: TypedSettings = { printer: {}, process: {}, filament: {}, project: {} };
+  const result: Record<string, ConfigValue> = {};
   let at = 0;
-  for (const [section, key, count] of slots) {
-    result[section][key] = count === undefined ? values[at++] : values.slice(at, (at += count)).map((one) => (one as ConfigValue[])[0]);
+  for (const [key, count] of slots) {
+    result[key] = count === undefined ? values[at++] : values.slice(at, (at += count)).map((one) => (one as ConfigValue[])[0]);
   }
   return result;
+}
+
+/** {@link decodeOptions} of each section of the scene settings. */
+export async function decodeSettings(defs: ReadonlyMap<string, ConfigOptionDef>, settings: ProjectSettings): Promise<TypedSettings> {
+  const [printer, process, filament, project] = await Promise.all(SECTIONS.map((section) => decodeOptions(defs, settings[section])));
+  return { printer, process, filament, project };
 }
 
 /** One settings tab's values: the project settings under the preset's own, typed where decoded. */

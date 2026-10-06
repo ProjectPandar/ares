@@ -53,6 +53,8 @@ export const checks = [
   assert<Equal<ReturnType<AresSlicer["sliceProject"]>, Promise<SliceResult>>>(),
   assert<Equal<Parameters<AresSlicer["sliceWithProfiles"]>, [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]>>(),
   assert<Equal<ReturnType<AresSlicer["sliceWithProfiles"]>, Promise<SliceResult>>>(),
+  assert<Equal<Parameters<AresSlicer["profileSettings"]>, [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]>>(),
+  assert<Equal<ReturnType<AresSlicer["profileSettings"]>, Promise<OptionMap>>>(),
   assert<Equal<ProfileSelection, { machine: string; process: string; filaments: string[] }>>(),
   assert<Equal<ProfileSliceOptions, { plate?: number; seed: number; overrides?: Record<string, string | string[]>; placement?: "none" | "center" }>>(),
   assert<Equal<ReturnType<AresSlicer["sliceStl"]>, Promise<SliceResult>>>(),

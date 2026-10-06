@@ -2,7 +2,7 @@ import type { PrintConfigDef } from "./configDef.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ConfigOverrides, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
+import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PresetCatalog } from "./presetCatalog.js";
@@ -101,6 +101,31 @@ export class AresSlicer {
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
     })) as SliceResult;
+  }
+
+  /**
+   * The config `sliceWithProfiles` slices with for the same arguments: the
+   * selected presets composed over the input (`PresetBundle::full_config`) with
+   * `options.overrides` applied, as one option map in the stored form of
+   * `Scene.settings`. Rejects as `sliceWithProfiles` does on a bad catalog,
+   * selection or override.
+   */
+  async profileSettings(
+    input: Uint8Array,
+    filename: string,
+    catalogJson: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<OptionMap> {
+    await this.#ready;
+    return (await this.#call({
+      kind: "profileSettings",
+      input: input.slice(),
+      filename,
+      catalog: catalogJson,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
+    })) as OptionMap;
   }
 
   /**

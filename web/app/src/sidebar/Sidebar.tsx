@@ -2,12 +2,13 @@ import type { ProjectSettings } from "@ares-slicer/wasm";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { ObjectIcon, OrcaIcon } from "../shell/icons";
 import { importedNames, presetSliceBlocker, selectFilament, selectPrinter, selectProcess } from "../state/presets";
-import { type CompatibleState, useApp } from "../state/store";
+import { type CompatibleState, type PresetSelection, useApp } from "../state/store";
+import { tabValues } from "../state/typedSettings";
 import { ObjectList } from "./ObjectList";
 import { type PresetGroup, PresetCombo } from "./PresetCombo";
 import { filamentNames, firstString, stringList } from "./options";
 import { ModeSwitch } from "./ModeSwitch";
-import { ProcessSettings } from "./ProcessSettings";
+import { ProcessSettings, usePresetValues } from "./ProcessSettings";
 import type { SettingsTab } from "./SettingsDialog";
 
 // Printer/filament tab layouts are only fetched when a preset edit button is used.
@@ -137,11 +138,18 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
   );
 }
 
+/** Process tab of the selected presets, editable like the project's (Tab::update after a preset select). */
+function PresetProcessSettings({ selection }: { selection: PresetSelection }) {
+  const { values, error } = usePresetValues(selection);
+  return <ProcessSettings values={values} empty={error ?? "Settings appear once the presets are selected"} />;
+}
+
 function ProcessSection({ settings }: { settings: ProjectSettings | null }) {
   const scene = useApp((state) => state.scene);
   const imports = useApp((state) => state.presetImports);
   const selection = useApp((state) => state.presetSelection);
   const compatible = useApp((state) => state.compatible);
+  const typed = useApp((state) => state.typedSettings);
   const process = firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id");
   return (
     // ParamsPanel top panel: the process tab's ModeSwitchButton (ParamsPanel.cpp:281).
@@ -154,11 +162,13 @@ function ProcessSection({ settings }: { settings: ProjectSettings | null }) {
           {scene && presetSliceBlocker(selection, scene) && (
             <div className="side-empty" data-testid="preset-slice-blocker">{presetSliceBlocker(selection, scene)}.</div>
           )}
+          <PresetProcessSettings selection={selection} />
         </>
       ) : (
         <>
           <PresetCombo label="Process preset" value={process} groups={[project(process)]} placeholder="No process preset" />
-          <ProcessSettings settings={settings} />
+          <ProcessSettings values={settings && typed && tabValues(settings, typed, "process")}
+            empty="Settings appear after importing a 3MF project" />
         </>
       )}
     </Section>

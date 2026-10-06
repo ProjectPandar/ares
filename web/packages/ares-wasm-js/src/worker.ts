@@ -9,6 +9,7 @@ import init, {
   optionTypes,
   parsePresetBundle,
   printConfigDef,
+  profileSettings,
   roleColors,
   sliceProjectPlateProcessed,
   sliceWithProfilesProcessed,
@@ -89,6 +90,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "sliceWithProfiles": {
       const { input, filename, catalog, selection, options } = request;
       return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));
+    }
+    case "profileSettings": {
+      const { input, filename, catalog, selection, options } = request;
+      return [JSON.parse(await profileSettings(input, filename, catalog, selection, options)), []];
     }
     case "sliceStl": {
       replaceViewer();

@@ -1,7 +1,8 @@
-import type { ParsedPresetBundle, PresetCatalog, Scene, SliceResult } from "@ares-slicer/wasm";
+import type { ConfigOverrides, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
 import { filamentNames } from "../sidebar/options";
 import { slicer } from "./slicer";
-import { type PresetSelection, useApp } from "./store";
+import { type ModelFile, type PresetSelection, useApp } from "./store";
+import { decodeOptions } from "./typedSettings";
 
 /**
  * PresetBundle::ORCA_FILAMENT_LIBRARY: always installed and loaded before the
@@ -141,26 +142,58 @@ export function presetSliceBlocker(selection: PresetSelection, scene: Scene): st
   return null;
 }
 
+/** Installed vendors and imported presets of the engine catalog. */
+export type CatalogSources = { vendors: readonly string[]; presetImports: readonly ParsedPresetBundle[] };
+
+/** The `sliceWithProfiles` / `profileSettings` arguments of a complete selection. */
+async function profileRequest(scene: Scene, { printer, process, filaments }: PresetSelection, { vendors, presetImports }: CatalogSources) {
+  const { loadVendor } = await import("@ares-slicer/profiles");
+  const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
+  const catalog = JSON.stringify({ vendors: loaded, imports: presetImports });
+  const options: ProfileSliceOptions = {
+    plate: scene.plates[0]?.id,
+    seed: 0,
+    placement: scene.format === "stl" ? "center" : "none",
+  };
+  return { catalog, selection: { machine: printer, process: process!, filaments }, options };
+}
+
+/**
+ * Sidebar edits as engine override tokens: text edits already hold the option's
+ * `serialize()` text (the Field.cpp commit), typed values are encoded by the engine.
+ */
+async function overrideTokens(overrides: ConfigOverrides): Promise<Record<string, string | string[]>> {
+  const isText = (value: OptionValue): value is string | string[] =>
+    typeof value === "string" || (Array.isArray(value) && value.every((element) => typeof element === "string"));
+  const edits = Object.entries(overrides);
+  const typed = edits.filter(([, value]) => !isText(value));
+  const encoded = await slicer.encodeConfigValues(typed);
+  return Object.fromEntries([
+    ...edits.filter((edit): edit is [string, string | string[]] => isText(edit[1])),
+    ...typed.map(([key], at) => [key, encoded[at]]),
+  ]);
+}
+
 /**
  * Slices with the selected presets, like the OrcaSlicer CLI's `--load-settings` /
  * `--load-filaments`: a 3MF plate over its project config, or an STL centered on
  * the bed as Plater::priv::load_model_objects places a model loaded on an empty
- * plate (Plater.cpp:7056-7058, 7111-7112, 7149-7160).
+ * plate (Plater.cpp:7056-7058, 7111-7112, 7149-7160). Sidebar edits apply after
+ * the presets, as an edit of the selected preset in a settings tab does.
  */
-export async function sliceWithPresets(
-  file: { name: string; bytes: Uint8Array },
-  scene: Scene,
-  { printer, process, filaments }: PresetSelection,
-): Promise<SliceResult> {
-  const { vendors, presetImports } = useApp.getState();
-  const { loadVendor } = await import("@ares-slicer/profiles");
-  const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
-  const catalog = JSON.stringify({ vendors: loaded, imports: presetImports });
-  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, { machine: printer, process: process!, filaments }, {
-    plate: scene.plates[0]?.id,
-    seed: 0,
-    placement: scene.format === "stl" ? "center" : "none",
-  });
+export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides): Promise<SliceResult> {
+  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState());
+  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, { ...options, overrides: await overrideTokens(overrides) });
+}
+
+/**
+ * Values of the selected presets as the preset slice composes them (`PresetBundle::full_config`),
+ * typed where decoded, for the process tab to show and edit.
+ */
+export async function presetValues(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<OptionMap> {
+  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
+  const settings = await slicer.profileSettings(file.bytes, file.name, catalog, profiles, options);
+  return { ...settings, ...(await decodeOptions(useApp.getState().configDefs!, settings)) };
 }
 
 /** Names of the imported presets of one `type`, for the "User presets" group. */
