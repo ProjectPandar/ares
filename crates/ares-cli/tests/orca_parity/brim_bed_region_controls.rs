@@ -112,20 +112,18 @@ fn overlay(input: &[u8], changes: &[(&str, Option<Value>)]) -> Vec<u8> {
         if entry.name() == "Metadata/project_settings.config" {
             let mut settings = serde_json::from_slice::<Value>(&bytes).unwrap();
             let mut original = settings.clone();
-            for (key, value) in changes {
+            for (key, _) in changes {
                 original.as_object_mut().unwrap().remove(*key);
-                match value {
-                    Some(value) => {
-                        settings
-                            .as_object_mut()
-                            .unwrap()
-                            .insert((*key).to_owned(), value.clone());
-                    }
-                    None => {
-                        settings.as_object_mut().unwrap().remove(*key);
-                    }
-                }
+                settings.as_object_mut().unwrap().remove(*key);
             }
+            settings
+                .as_object_mut()
+                .unwrap()
+                .extend(changes.iter().filter_map(|(key, value)| {
+                    value
+                        .as_ref()
+                        .map(|value| ((*key).to_owned(), value.clone()))
+                }));
             let mut unchanged = settings.clone();
             for (key, _) in changes {
                 unchanged.as_object_mut().unwrap().remove(*key);

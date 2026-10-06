@@ -94,13 +94,24 @@ impl BrimPlan {
             .map_err(brim_geometry_error)?;
         let outer = offset_expolygons(&inner, brim_width, JoinType::Round, resolution)
             .map_err(brim_geometry_error)?;
+        let brim_area = difference_ex(&outer, &inner).map_err(brim_geometry_error)?;
+        let brim_area = bed_area::clip(
+            traversal,
+            resolved.source_object_index,
+            region.outer_wall_filament_id.0 as usize - 1,
+            (brim_area, inner),
+            resolution,
+        )?;
+        if brim_area.is_empty() {
+            return Ok(None);
+        }
         let covered_hull = crate::geometry::convex_hull(
-            &outer
+            &brim_area
                 .iter()
                 .flat_map(|expolygon| expolygon.contour().points().iter().copied())
                 .collect::<Vec<_>>(),
         );
-        let brim_area = difference_ex(&outer, &inner).map_err(brim_geometry_error)?;
+
         // `Brim.cpp:824-832` — every stage of the loop stepping runs a
         // douglas_peucker pass with `resolution` (0.0125 mm) between the
         // offsets: on the input area, after the −0.5 spacing opening, and
@@ -264,6 +275,7 @@ pub(super) fn brim_geometry_error(_: crate::geometry::ClipperError) -> SliceErro
     SliceError::InvalidInput("brim generation failed".to_owned())
 }
 
+mod bed_area;
 mod emit;
 
 #[cfg(test)]

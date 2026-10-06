@@ -8,6 +8,7 @@ use crate::{
 };
 
 mod print_volume;
+pub(crate) use print_volume::global_bed_points;
 
 use super::{
     planning::plan_project,

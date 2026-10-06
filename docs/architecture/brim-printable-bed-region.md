@@ -28,6 +28,10 @@ The destination is `crates/ares-core/src/project_slice/gcode_emit/brim.rs::BrimP
 7. Covered-area footprint data must come from the clipped brim region consumed by the source footprint/hull path. An unmasked outer offset is not the same region.
 8. Empty brim geometry is not a new object-volume validation failure. Preserve inactive brim behavior and existing eligibility. Native undefined empty first-polygon accesses are not permission to add a legacy fallback or a new processing-time validation policy.
 
+The print-volume gate owns the shared `PartPlate::set_shape` point transform (`PartPlate.cpp:3179–3187`), exposed internally as `project_slice::state::global_bed_points`. Brim uses it for fallback bed, exclusion groups and configured tool areas; it has no separate plate-origin arithmetic.
+
+The separately approved closed-loop seam integration is owned by `ExtrusionEntity.cpp:265–312::ExtrusionLoop::split_at` and `Polyline.cpp:757–885::Polyline3::split_at_index/split_at`. Its Rust destination is only `gcode_emit/skirt/geometry.rs`: a repeated terminal vertex represents closure, not another cyclic vertex. The shared skirt caller remains subject to zero-byte-change full official/seeded controls. Wipe, Flow and ring connection behavior are not part of this correction.
+
 ## Included and deferred behavior
 
 Included: supported explicit-outer single-object brim bed-region construction, mapped slot selection, final subtraction, source coordinate-frame composition and corresponding footprint consumption. Reuse the current downstream loop algorithms; this is not a Flow, connection or ordering rewrite.

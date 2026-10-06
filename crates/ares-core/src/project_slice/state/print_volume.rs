@@ -46,6 +46,18 @@ pub(crate) struct PrintVolume {
     max_z: f64,
 }
 
+/// `PartPlate::set_shape` (PartPlate.cpp:3179–3187): shared global bed frame.
+pub(crate) fn global_bed_points(
+    project: &Project,
+    points: &[crate::Point2d],
+) -> impl Iterator<Item = crate::Point2d> {
+    let (origin_x, origin_y) = project.plate_origin();
+    points.iter().map(move |point| crate::Point2d {
+        x: point.x + origin_x,
+        y: point.y + origin_y,
+    })
+}
+
 impl PrintVolume {
     /// `BuildVolume.cpp:28-89`: classifies the bed polygon. Rectangle
     /// requires 4 axis-aligned corners matching the bbox; Circle fits a
@@ -60,14 +72,7 @@ impl PrintVolume {
         // the gate (`PartPlate.cpp:3179-3187` `set_shape` adds the position
         // to every point) so the still-global instance coordinates are
         // tested against the equally-global shape.
-        let (origin_x, origin_y) = project.plate_origin();
-        let translated = area
-            .iter()
-            .map(|p| crate::Point2d {
-                x: p.x + origin_x,
-                y: p.y + origin_y,
-            })
-            .collect::<Vec<_>>();
+        let translated = global_bed_points(project, area).collect::<Vec<_>>();
         let area = &translated;
         let shape = if area.len() == 4 && is_axis_aligned_rectangle(area) {
             BedShape::Rectangle {
