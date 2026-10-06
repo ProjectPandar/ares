@@ -1,7 +1,8 @@
 use ares_core::{ProcessedGCode, gcode_processor::MoveVertex};
 use ares_vgcode::{
-    GCodeExtrusionRole, GCodeInputData, MoveType, OptionType, ViewerImpl,
-    convert::from_processor_result, move_type_to_option,
+    GCodeExtrusionRole, GCodeInputData, OptionType, ViewerImpl,
+    convert::{from_processor_result, move_type_counts},
+    move_type_to_option,
 };
 use wasm_bindgen::prelude::*;
 
@@ -21,11 +22,7 @@ impl SliceOutput {
     ) -> Self {
         let data = from_processor_result(&output.result, tool_colors, color_print_colors);
         let mut vertices = VertexBuffers::pack(data);
-        // GCodeViewer::load_as_preview `m_move_type_counts` (GCodeViewer.cpp:1318-1324).
-        vertices.move_type_counts = vec![0; MoveType::COUNT];
-        for m in output.result.moves.iter().filter(|m| !m.internal_only) {
-            vertices.move_type_counts[m.move_type as usize] += 1;
-        }
+        vertices.move_type_counts = move_type_counts(&output.result.moves).to_vec();
         Self {
             gcode: output.gcode,
             moves: MoveBuffers::pack(&output.result.moves),

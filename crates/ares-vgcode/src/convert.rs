@@ -82,6 +82,16 @@ fn vertex(curr: &MoveVertex, move_type: MoveType) -> PathVertex {
     }
 }
 
+/// GCodeViewer::load_as_preview `m_move_type_counts` (`GCodeViewer.cpp:1318-1324`):
+/// processed moves by `MoveType` index, internal split moves skipped.
+pub fn move_type_counts(moves: &[MoveVertex]) -> [u32; MoveType::COUNT] {
+    let mut counts = [0; MoveType::COUNT];
+    for m in moves.iter().filter(|m| !m.internal_only) {
+        counts[move_type(m.move_type).index()] += 1;
+    }
+    counts
+}
+
 const fn move_type(move_type: EMoveType) -> MoveType {
     match move_type {
         EMoveType::Noop => MoveType::Noop,
