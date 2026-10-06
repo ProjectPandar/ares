@@ -48,9 +48,17 @@ fn verify(label: &str, input: &[u8], hash: &str) {
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
     assert_eq!(actual_hash, hash);
+    compare_native(label, input, true);
+}
+
+pub(super) fn compare_native(label: &str, input: &[u8], expect_brim: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
+    let hash = Sha256::digest(input)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
     let root = crate::artifacts::root_from_env().unwrap();
     let directory = tempfile::Builder::new()
         .prefix("brim-bed-native-")
@@ -77,11 +85,10 @@ fn verify(label: &str, input: &[u8], hash: &str) {
     )
     .unwrap();
     let reference = fs::read(output.join("plate_1.gcode")).unwrap();
-    assert!(
-        reference
-            .windows(b";TYPE:Brim\n".len())
-            .any(|w| w == b";TYPE:Brim\n")
-    );
+    let has_brim = reference
+        .windows(b";TYPE:Brim\n".len())
+        .any(|w| w == b";TYPE:Brim\n");
+    assert_eq!(has_brim, expect_brim, "{label}: Native brim activation");
     let outcome = crate::artifacts::compare(
         &root,
         label,
