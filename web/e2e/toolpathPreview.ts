@@ -42,6 +42,8 @@ const MARKER_TYPES: Record<string, number> = {
 };
 
 type Move = RangeMove & { gcodeId: number; z: number; internalOnly: boolean };
+/** GCodeProcessor `EMoveType::Noop` / `Travel` / `Wipe`: with `Extrude`, the moves libvgcode draws as paths. */
+const PATH_TYPES = new Set([0, 8, 9, EXTRUDE]);
 
 /**
  * Upstream GCodeProcessor moves of the browser's G-code, from the procgcode oracle
@@ -90,6 +92,79 @@ function currentLine(moves: Move[], top: number) {
     if (move.type === EXTRUDE || move.type === SEAM) id = move.gcodeId;
   }
   return id;
+}
+
+/**
+ * Moves slider stops (G-code line ids) with layers `[0, top]` shown, every
+ * extrusion role and only seams among the options (`Settings.hpp:33-42`), and
+ * the `seq_top_layer_only` default (`AppConfig.cpp:202-203`,
+ * `GCodeViewer.cpp:1128-1131`).
+ */
+function movesSliderStops(moves: Move[], top: number) {
+  // libvgcode::convert (LibVGCodeWrapper.cpp:209-240): a path move whose type, role or
+  // mm3/mm differs from the previous move gets a phantom vertex first, with its own ids.
+  const vertices: Move[] = [];
+  for (let i = 1; i < moves.length; i++) {
+    const [prev, curr] = [moves[i - 1], moves[i]];
+    if (PATH_TYPES.has(curr.type) && (vertices.length === 0 || prev.type !== curr.type || prev.role !== curr.role || prev.mm3PerMm !== curr.mm3PerMm)) vertices.push(curr);
+    vertices.push(curr);
+  }
+  // ViewerImpl::is_visible (ViewerImpl.cpp:1713-1726) with only extrusions and seams shown.
+  const visible = (v: Move) => v.type === EXTRUDE || v.type === SEAM;
+  // update_view_full_range (ViewerImpl.cpp:1758-1789): last vertex up to the top layer, trailing
+  // hidden ones dropped (hidden travels are not extended over).
+  let last = vertices.findIndex((v) => v.layer > top);
+  last = (last < 0 ? vertices.length : last) - 1;
+  while (!visible(vertices[last])) last--;
+  // update_view_full_range (ViewerImpl.cpp:1734-1745): the first visible vertex, one step back for an extrusion.
+  let first = vertices.findIndex(visible);
+  if (first > 0 && vertices[first].type === EXTRUDE) first--;
+  // Top layer only (ViewerImpl.cpp:1794-1803): one step before the first visible vertex of the top layer.
+  let shortened = false;
+  while (vertices[first].layer < top || !visible(vertices[first])) {
+    first++;
+    shortened = true;
+  }
+  if (shortened) first--;
+  // GCodeViewer::update_moves_slider (GCodeViewer.cpp:1790-1807): one stop per run of equal gcode ids.
+  const stops: number[] = [];
+  for (let i = first; i <= last; i++) if (stops.at(-1) !== vertices[i].gcodeId) stops.push(vertices[i].gcodeId);
+  return stops;
+}
+
+/** `GCodeWindow::render`: the framed line is `id`, cut to 52 characters plus "..." past 55. */
+async function expectMarkedLine(page: Page, gcode: string[], id: number) {
+  const line = gcode[id - 1];
+  const current = page.getByTestId("gcode-panel").locator(".gcode-line.current");
+  await expect(current.locator(".gcode-ln")).toHaveText(String(id));
+  await expect(current).toContainText(line.length > 55 ? `${line.slice(0, 52)}...` : line);
+}
+
+/**
+ * Horizontal moves slider (GCodeViewer `m_moves_slider`): one stop per G-code
+ * line of the top layer's enabled range. A stop shows the moves up to it and
+ * frames its line in the G-code window (`GLCanvas3D.cpp:8263-8266`,
+ * `GCodeViewer::update_sequential_view_current`); the layers below turn grey
+ * (`ViewerImpl::update_colors_texture`).
+ */
+async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top: number, artifacts: string) {
+  const stops = movesSliderStops(moves, top);
+  const slider = page.getByRole("slider", { name: "Moves" });
+  await expect(slider).toHaveAttribute("aria-valuemax", String(stops.length - 1));
+  await expect(slider).toHaveValue(String(stops.length - 1));
+  await expectMarkedLine(page, gcode, stops.at(-1)!);
+  const full = await canvasDigest(page);
+  const middle = Math.floor(stops.length / 2);
+  await slider.fill(String(middle));
+  await expectMarkedLine(page, gcode, stops[middle]);
+  await expect.poll(() => canvasDigest(page), { message: "a middle stop must hide later moves" }).not.toBe(full);
+  await page.screenshot({ path: `${artifacts}preview-moves-middle.png` });
+  await slider.fill("0");
+  await expectMarkedLine(page, gcode, stops[0]);
+  await slider.fill(String(stops.length - 1));
+  await expectMarkedLine(page, gcode, stops.at(-1)!);
+  await expect.poll(() => canvasDigest(page)).toBe(full);
+  return { stops: stops.length, first: stops[0], middle: stops[middle], last: stops.at(-1) };
 }
 
 /** libvgcode `Layers::update`: a layer's z is that of its last non-custom extrusion. */
@@ -190,6 +265,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expect(page.getByTestId("layer-slider")).toContainText(layerZ(moves, 0).toFixed(2));
   await expectCurrentLine(page, gcode, moves, 0);
   await expect.poll(() => canvasDigest(page), { message: "first layer only must differ from all layers" }).not.toBe(full);
+  const movesSlider = { 1: await checkMovesSlider(page, gcode, moves, 0, artifacts) };
   await page.keyboard.press("PageUp");
   await page.keyboard.press("PageUp");
   await expect(top).toHaveAttribute("aria-valuenow", "21");
@@ -198,6 +274,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await page.keyboard.press("End");
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   await expect.poll(() => canvasDigest(page)).toBe(full);
+  Object.assign(movesSlider, { [layers]: await checkMovesSlider(page, gcode, moves, layers - 1, artifacts) });
 
   const outerWall = legend.getByRole("button", { name: "Outer wall" });
   await outerWall.click();
@@ -211,7 +288,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges,
+      moves: moves.length, layers, movesSlider, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,
