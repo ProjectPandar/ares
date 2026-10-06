@@ -34,18 +34,19 @@ impl MovesSlider {
         let mut last_gcode_id = vertices[range[0]].gcode_id;
         for (i, v) in (range[0]..).zip(&vertices[range[0]..=range[1]]) {
             // skip consecutive moves with same gcode id (resulting from processing G2 and G3 lines)
-            if i > range[0] && last_gcode_id == v.gcode_id {
-                *slider.values.last_mut().expect("first stop pushed") = i + 1;
-                continue;
-            }
-            last_gcode_id = v.gcode_id;
-            let counter = slider.values.len();
-            slider.values.push(i + 1);
-            slider.alternate_values.push(v.gcode_id);
-            if v.gcode_id == gcode_id_min {
-                visible_range_min_id = Some(counter);
-            } else if v.gcode_id == gcode_id_max {
-                visible_range_max_id = Some(counter);
+            match slider.values.last_mut() {
+                Some(last) if last_gcode_id == v.gcode_id => *last = i + 1,
+                _ => {
+                    last_gcode_id = v.gcode_id;
+                    let counter = Some(slider.values.len());
+                    slider.values.push(i + 1);
+                    slider.alternate_values.push(v.gcode_id);
+                    match v.gcode_id {
+                        id if id == gcode_id_min => visible_range_min_id = counter,
+                        id if id == gcode_id_max => visible_range_max_id = counter,
+                        _ => (),
+                    }
+                }
             }
         }
         slider.span = [
