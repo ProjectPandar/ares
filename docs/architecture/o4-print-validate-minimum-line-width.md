@@ -12,6 +12,8 @@ Owner 是 `crates/ares-core/src/print/validate/extrusion_width.rs`，不是 conf
 
 现有 `options/validation/extrusion_width.rs::validate_extrusion_width_options` 是宽度 > 5×max nozzle 上界；`options/validation/range.rs::validate_line_width_range_options` 是 raw value 的定义域检查。两者均不是 absolute width 与 layer_height 的下界比较；当前 `print/validate.rs` 只拥有 O1，不能把 range/上界规则改名冒充 O4，也不改其 API/错误文本。新增 slice 仅 port 上述 upstream lower-width predicate 与 object/region 调用，不修改 width resolution、auto/default、模板、profiles 或 geometry 算法。
 
+上游 lambda 的上界与 options 层规则**不整体等价，也不是彼此的子集**：在相同已解析宽度、相同最大 nozzle、共同字段且下界通过时，`absolute width > 5×max nozzle` 数值谓词等价；但 Print 使用实际 extruders 的最大 nozzle、逐对象/region 配置并检查 `line_width`，support 有条件且不检查 `initial_layer_line_width`，options 则从 SliceOptions.nozzle_diameters 取最大值，检查平坦字段（含 initial-layer、无 general line_width），support 无条件且汇总带键诊断。Print 还先检查下界并返回精确首错 `Too large line width`。实际 nozzle 集、对象/region 覆盖、字段/条件及生命周期/first-error 的差异列为后续 Print 上界 rewrite 缺口，不能把现有 options 规则当成该缺口已关闭。
+
 ## 包含、延后与退出条件
 
 包含 zero-auto、FloatOrPercent、等号拒绝、对象/region 调用顺序及 support/raft 条件，保持 O2/config loading 在 Print 前、O4 在 O1 前；GUI settings/placed-scene 不门控。不引入默认 profile 豁免或字段修复。上游同 lambda 的 `Too large line width` 上界、layer-height/nozzle 错误、support-tree 检查，以及 `Print.cpp:1673-1689` 独立 bridge-width/薄桥条件虽相邻/部分同文本，均延后；不声称完整 Print::validate parity。
