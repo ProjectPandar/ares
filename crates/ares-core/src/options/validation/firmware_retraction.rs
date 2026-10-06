@@ -12,17 +12,6 @@ const FIRMWARE_RETRACTION_WIPE_MESSAGE: &str =
     "--use-firmware-retraction is not compatible with --wipe";
 
 impl SliceOptions {
-    pub(crate) fn validate_loaded_firmware_retraction(&self) -> Result<(), SliceError> {
-        if let Some((key, message)) = self
-            .validate_firmware_retraction_options()?
-            .into_iter()
-            .next()
-        {
-            return Err(SliceError::InvalidInput(format!("{key}: {message}")));
-        }
-        Ok(())
-    }
-
     pub fn validate_firmware_retraction_options(
         &self,
     ) -> Result<BTreeMap<String, String>, SliceError> {
@@ -48,7 +37,12 @@ impl SliceOptions {
 
 // DynamicPrintConfig::validate / Slic3r::validate (PrintConfig.cpp:8866-8878,10391-10394).
 impl ProjectSettings {
-    pub(crate) fn validate_loaded_firmware_retraction(&self) -> Result<(), SliceError> {
+    /// The O2 rule's contribution to the shared `Slic3r::validate`
+    /// `std::map` (keyed like the other loaded-config diagnostics).
+    pub(crate) fn validate_loaded_retraction_map(
+        &self,
+    ) -> Result<BTreeMap<String, String>, SliceError> {
+        let mut errors = BTreeMap::new();
         let unsupported =
             is_known_unsupported_firmware_retraction_flavor(self.printer.gcode.gcode_flavor);
         if let Some(message) = rejection_message(
@@ -56,11 +50,9 @@ impl ProjectSettings {
             unsupported,
             self.project.print.wipe.0.iter().map(|value| value.0),
         ) {
-            return Err(SliceError::InvalidInput(format!(
-                "{FIRMWARE_RETRACTION_KEY}: {message}"
-            )));
+            errors.insert(FIRMWARE_RETRACTION_KEY.to_owned(), message.to_owned());
         }
-        Ok(())
+        Ok(errors)
     }
 }
 

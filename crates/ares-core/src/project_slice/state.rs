@@ -52,7 +52,9 @@ pub(super) fn prepare_project_source(
     if source.validate_print {
         super::validated::validate_post_process(&project)?;
     }
-    project.settings().validate_loaded_firmware_retraction()?;
+    project
+        .settings()
+        .validate_loaded_config(&project.documents().project_settings_raw)?;
     project.initialize_cli_loaded_project_config();
     prepare_loaded_project_slice_with_validation(project, source.plate, None, source.validate_print)
 }

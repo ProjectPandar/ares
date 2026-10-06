@@ -18,21 +18,24 @@ fn stepped_archives_load_project_overhang_options() {
 
 #[tokio::test]
 async fn task22l_stepped_invalid_options_fail_before_disabled_gate() {
+    // O3 (`PrintConfig.cpp:10519-10559`): `is_value_valid` over the loaded
+    // config rejects the out-of-range values with the `key: <serialize()>
+    // not in range [min,max]` text before the disabled-overhang gate runs.
     let cases = [
         (
             ANGLE_45,
             r#""make_overhang_printable_angle": "-0.1""#,
-            "invalid Orca option make_overhang_printable_angle",
+            "make_overhang_printable_angle: -0.1 not in range [0.000000,90.000000]",
         ),
         (
             ANGLE_45,
             r#""make_overhang_printable_angle": "90.1""#,
-            "invalid Orca option make_overhang_printable_angle",
+            "make_overhang_printable_angle: 90.1 not in range [0.000000,90.000000]",
         ),
         (
             r#""make_overhang_printable_hole_size": "0""#,
             r#""make_overhang_printable_hole_size": "-0.1""#,
-            "invalid Orca option make_overhang_printable_hole_size",
+            "make_overhang_printable_hole_size: -0.1 not in range [0.000000,340282346638528859811704183484516925440.000000]",
         ),
     ];
     for (from, to, message) in cases {

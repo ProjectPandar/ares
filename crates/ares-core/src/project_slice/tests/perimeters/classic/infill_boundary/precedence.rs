@@ -45,11 +45,12 @@ fn assert_conversion_precedence(key: &str, old: &str, new: &str) {
         &format!("\"{key}\": \"{old}\""),
         &format!("\"{key}\": \"{new}\""),
     );
-    let source = prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap();
-    assert_numeric_precedence(&source);
+    // `1e308%` overflows the float bound, so `is_value_valid` reports the key
+    // out of `[-FLT_MAX, FLT_MAX]` during `prepare_post_classic_gap_extrusion`.
     assert!(matches!(
-        infill_boundary::finish(source),
-        Err(SliceError::InvalidInput(message)) if message == RANGE_ERROR
+        prepare_post_classic_gap_extrusion(&archive.bytes()),
+        Err(SliceError::InvalidInput(message)) if message
+            == format!("{key}: 1e+308% not in range [-340282346638528859811704183484516925440.000000,340282346638528859811704183484516925440.000000]")
     ));
 }
 

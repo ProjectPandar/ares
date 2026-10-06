@@ -8,11 +8,15 @@ use super::super::SliceOptions;
 use super::helpers::registry_default;
 
 const MAX_LINE_WIDTH_MULTIPLIER: f64 = 5.0;
+/// Upstream `widths[]` at PrintConfig.cpp:10497-10506 — same order as the
+/// source array. `bridge_line_width` shares this loop but with a
+/// `min_nozzle_diameter` bound, not `MAX_LINE_WIDTH_MULTIPLIER`.
 const WIDTH_KEYS: &[&str] = &[
     "outer_wall_line_width",
     "inner_wall_line_width",
     "sparse_infill_line_width",
     "internal_solid_infill_line_width",
+    "bridge_line_width",
     "top_surface_line_width",
     "support_line_width",
     "initial_layer_line_width",
@@ -29,21 +33,40 @@ struct FloatOrPercent {
 impl SliceOptions {
     pub fn validate_extrusion_width_options(&self) -> Result<BTreeMap<String, String>, SliceError> {
         let mut errors = BTreeMap::new();
-        let max_nozzle_diameter = self.nozzle_diameters()?.into_iter().fold(0.0_f64, f64::max);
-        let limit = MAX_LINE_WIDTH_MULTIPLIER * max_nozzle_diameter;
+        let nozzle_diameters = self.nozzle_diameters()?;
+        let max_nozzle_diameter = nozzle_diameters.iter().fold(0.0_f64, |a, b| a.max(*b));
+        let min_nozzle_diameter = nozzle_diameters
+            .iter()
+            .fold(f64::INFINITY, |a, b| a.min(*b));
 
         for key in WIDTH_KEYS {
+            // PrintConfig.cpp:10510: bridge uses min_nozzle_diameter, the
+            // rest use MAX_LINE_WIDTH_MULTIPLIER * max_nozzle_diameter.
+            let allowed_max = if *key == "bridge_line_width" {
+                min_nozzle_diameter
+            } else {
+                MAX_LINE_WIDTH_MULTIPLIER * max_nozzle_diameter
+            };
             let width = self.float_or_percent_or_default(key)?;
             let predicate_value = width.absolute_value(max_nozzle_diameter);
-            if predicate_value <= limit {
+            if predicate_value <= allowed_max {
                 continue;
             }
             let message_value =
                 self.line_width_message_value(key, width, max_nozzle_diameter, predicate_value)?;
-            errors.insert(
-                (*key).to_owned(),
-                format!("too large line width {message_value:.6}"),
-            );
+            if *key == "bridge_line_width" {
+                errors.insert(
+                    (*key).to_owned(),
+                    format!(
+                        "Bridge line width must not exceed nozzle diameter: {message_value:.6}"
+                    ),
+                );
+            } else {
+                errors.insert(
+                    (*key).to_owned(),
+                    format!("too large line width {message_value:.6}"),
+                );
+            }
         }
 
         Ok(errors)

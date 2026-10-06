@@ -13,7 +13,9 @@ pub(crate) fn validate_profile_source(
     profile: ProfileInput<'_>,
 ) -> Result<(), SliceError> {
     let project = load_with_profile(source, profile)?;
-    project.settings().validate_loaded_firmware_retraction()?;
+    project
+        .settings()
+        .validate_loaded_config(&project.documents().project_settings_raw)?;
     crate::print::validate::validate_loaded_project(
         project,
         source.plate,
@@ -77,7 +79,9 @@ pub(super) fn prepare_profile_slice(
     profile: ProfileInput<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
     let loaded = load_and_place(project, profile)?;
-    loaded.settings().validate_loaded_firmware_retraction()?;
+    loaded
+        .settings()
+        .validate_loaded_config(&loaded.documents().project_settings_raw)?;
     state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,

@@ -139,7 +139,7 @@ fn run_slicing_pipeline_with_validation(
     options.tree_support_options()?.consume_runtime();
     let model = crate::model_shrinkage::apply(load_model(input)?, &options)?;
     if validate_print {
-        options.validate_loaded_firmware_retraction()?;
+        options.validate_loaded_config()?;
         crate::print::validate::validate_stl_options(&options)?;
     }
     options.validate_model_bed_excluded_area(&model)?;

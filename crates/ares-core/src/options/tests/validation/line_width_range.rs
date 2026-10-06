@@ -1,5 +1,15 @@
-use crate::{SliceError, SliceOptions};
+use crate::{SliceError, SliceOptions, options::format_number};
 use serde_json::json;
+
+/// The upstream `ConfigOption::serialize` token for one numeric element:
+/// `ss << value` (`%g`-style six significant digits) with `%` re-appended.
+fn serialize_token(value: f64, percent: bool) -> String {
+    let mut token = format_number(value);
+    if percent {
+        token.push('%');
+    }
+    token
+}
 
 const LINE_WIDTH_KEYS: &[&str] = &[
     "line_width",
@@ -24,7 +34,7 @@ fn min_only_range_message(value: &str) -> String {
 fn default_line_width_ranges_are_valid() {
     let options: SliceOptions = serde_json::from_value(json!({})).unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert!(errors.is_empty());
 }
@@ -43,9 +53,12 @@ fn negative_line_width_values_are_reported() {
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
-    assert_eq!(errors["line_width"], range_message("-0.00001"));
+    assert_eq!(
+        errors["line_width"],
+        range_message(&serialize_token(-0.00001, false))
+    );
     assert_eq!(errors["outer_wall_line_width"], range_message("-1%"));
     assert_eq!(errors["inner_wall_line_width"], range_message("-2"));
     assert_eq!(errors["sparse_infill_line_width"], range_message("-3"));
@@ -73,9 +86,12 @@ fn over_max_line_width_values_are_reported() {
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
-    assert_eq!(errors["line_width"], range_message("1000.0002"));
+    assert_eq!(
+        errors["line_width"],
+        range_message(&serialize_token(1000.0002, false))
+    );
     assert_eq!(errors["outer_wall_line_width"], range_message("1001%"));
     assert_eq!(errors["inner_wall_line_width"], range_message("1002"));
     assert_eq!(errors["sparse_infill_line_width"], range_message("1003"));
@@ -98,10 +114,13 @@ fn percent_line_width_values_are_range_checked_by_raw_value() {
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert!(!errors.contains_key("outer_wall_line_width"));
-    assert_eq!(errors["inner_wall_line_width"], range_message("1000.0002%"));
+    assert_eq!(
+        errors["inner_wall_line_width"],
+        range_message(&serialize_token(1000.0002, true))
+    );
     assert_eq!(errors.len(), 1);
 }
 
@@ -119,7 +138,7 @@ fn line_width_range_boundaries_are_inclusive() {
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert!(errors.is_empty());
 }
@@ -137,19 +156,19 @@ fn line_width_range_uses_source_boundary_epsilon() {
     }))
     .unwrap();
 
-    let near_errors = near_boundary.validate_line_width_range_options().unwrap();
+    let near_errors = near_boundary.validate_loaded_range_options().unwrap();
     let outside_errors = outside_boundary
-        .validate_line_width_range_options()
+        .validate_loaded_range_options()
         .unwrap();
 
     assert!(near_errors.is_empty());
     assert_eq!(
         outside_errors["outer_wall_line_width"],
-        range_message("1000.00021")
+        range_message(&serialize_token(1000.00021, false))
     );
     assert_eq!(
         outside_errors["inner_wall_line_width"],
-        range_message("1000.0002%")
+        range_message(&serialize_token(1000.0002, true))
     );
 }
 
@@ -170,7 +189,7 @@ fn invalid_line_width_range_values_return_invalid_input() {
         }))
         .unwrap();
 
-        let error = options.validate_line_width_range_options().unwrap_err();
+        let error = options.validate_loaded_range_options().unwrap_err();
 
         assert!(matches!(error, SliceError::InvalidInput(_)), "{key}");
     }
@@ -185,7 +204,7 @@ fn existing_validation_apis_remain_intact_after_line_width_range_validation() {
     }))
     .unwrap();
 
-    let range_errors = options.validate_line_width_range_options().unwrap();
+    let range_errors = options.validate_loaded_range_options().unwrap();
     let width_errors = options.validate_extrusion_width_options().unwrap();
 
     assert_eq!(range_errors["line_width"], range_message("-0.1"));
@@ -199,7 +218,7 @@ fn existing_validation_apis_remain_intact_after_line_width_range_validation() {
 fn min_only_line_width_defaults_are_valid() {
     let options: SliceOptions = serde_json::from_value(json!({})).unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert!(!errors.contains_key("skin_infill_line_width"));
     assert!(!errors.contains_key("skeleton_infill_line_width"));
@@ -213,11 +232,11 @@ fn min_only_line_width_negative_values_are_reported() {
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert_eq!(
         errors["skin_infill_line_width"],
-        min_only_range_message("-0.00001")
+        min_only_range_message(&serialize_token(-0.00001, false))
     );
     assert_eq!(
         errors["skeleton_infill_line_width"],
@@ -230,15 +249,15 @@ fn min_only_line_width_negative_values_are_reported() {
 fn min_only_line_width_over_flt_max_values_are_reported() {
     let over_flt_max = (f32::MAX as f64) * 2.0;
     let over_flt_max_json = json!(over_flt_max);
-    let over_flt_max_serialized = over_flt_max_json.as_number().unwrap().to_string();
-    let over_flt_max_percent = format!("{}%", (f32::MAX as f64) * 3.0);
+    let over_flt_max_serialized = serialize_token(over_flt_max, false);
+    let over_flt_max_percent = serialize_token((f32::MAX as f64) * 3.0, true);
     let options: SliceOptions = serde_json::from_value(json!({
         "skin_infill_line_width": over_flt_max_json,
         "skeleton_infill_line_width": over_flt_max_percent,
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert_eq!(
         errors["skin_infill_line_width"],
@@ -255,6 +274,7 @@ fn min_only_line_width_over_flt_max_values_are_reported() {
 fn min_only_line_width_percent_values_use_raw_range() {
     let max_percent = format!("{}%", f32::MAX as f64);
     let over_percent = format!("{}%", (f32::MAX as f64) * 2.0);
+    let over_percent_serialized = serialize_token((f32::MAX as f64) * 2.0, true);
     let options: SliceOptions = serde_json::from_value(json!({
         "nozzle_diameter": 0.4,
         "skin_infill_line_width": max_percent,
@@ -262,12 +282,12 @@ fn min_only_line_width_percent_values_use_raw_range() {
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert!(!errors.contains_key("skin_infill_line_width"));
     assert_eq!(
         errors["skeleton_infill_line_width"],
-        min_only_range_message(&over_percent)
+        min_only_range_message(&over_percent_serialized)
     );
     assert_eq!(errors.len(), 1);
 }
@@ -276,14 +296,14 @@ fn min_only_line_width_percent_values_use_raw_range() {
 fn min_only_line_width_uses_source_boundary_epsilon() {
     let next_after_max = f64::from_bits((f32::MAX as f64).to_bits() + 1);
     let next_after_max_json = json!(next_after_max);
-    let next_after_max_serialized = next_after_max_json.as_number().unwrap().to_string();
+    let next_after_max_serialized = serialize_token(next_after_max, false);
     let options: SliceOptions = serde_json::from_value(json!({
         "skin_infill_line_width": f32::MAX as f64,
         "skeleton_infill_line_width": next_after_max_json,
     }))
     .unwrap();
 
-    let errors = options.validate_line_width_range_options().unwrap();
+    let errors = options.validate_loaded_range_options().unwrap();
 
     assert!(!errors.contains_key("skin_infill_line_width"));
     assert_eq!(
@@ -304,7 +324,7 @@ fn invalid_min_only_line_width_values_return_invalid_input() {
         }))
         .unwrap();
 
-        let error = options.validate_line_width_range_options().unwrap_err();
+        let error = options.validate_loaded_range_options().unwrap_err();
 
         assert!(matches!(error, SliceError::InvalidInput(_)), "{key}");
     }

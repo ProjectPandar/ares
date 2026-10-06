@@ -28,7 +28,14 @@ fn max_nozzle_diameter_controls_extrusion_width_limit() {
         errors["inner_wall_line_width"],
         "too large line width 3.000001"
     );
-    assert_eq!(errors.len(), 1);
+    // bridge_line_width defaults to 100% resolved against max_nozzle 0.6,
+    // which exceeds the separate min_nozzle 0.25 bound (upstream uses a
+    // distinct `allowed_max` for bridge).
+    assert_eq!(
+        errors["bridge_line_width"],
+        "Bridge line width must not exceed nozzle diameter: 0.600000"
+    );
+    assert_eq!(errors.len(), 2);
 }
 
 #[test]
@@ -142,7 +149,13 @@ fn over_limit_percent_extrusion_widths_use_documented_message_deviation() {
         errors["skeleton_infill_line_width"],
         "too large line width 3.480000"
     );
-    assert_eq!(errors.len(), 9);
+    // bridge_line_width defaults to 100% resolved against max_nozzle 0.6,
+    // which exceeds the separate min_nozzle 0.25 bound.
+    assert_eq!(
+        errors["bridge_line_width"],
+        "Bridge line width must not exceed nozzle diameter: 0.600000"
+    );
+    assert_eq!(errors.len(), 10);
 }
 
 #[test]

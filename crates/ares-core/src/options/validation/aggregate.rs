@@ -22,7 +22,7 @@ impl SliceOptions {
             merge_first(&mut errors, self.validate_spiral_vase_cli_options()?);
         }
         merge_first(&mut errors, self.validate_extrusion_width_options()?);
-        merge_first(&mut errors, self.validate_line_width_range_options()?);
+        merge_first(&mut errors, self.validate_loaded_range_options()?);
 
         Ok(errors)
     }

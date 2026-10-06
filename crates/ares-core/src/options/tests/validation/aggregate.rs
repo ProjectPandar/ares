@@ -122,7 +122,7 @@ fn standalone_validation_apis_remain_callable_after_aggregate_addition() {
 
     let basic_errors = options.validate_basic_fdm_options().unwrap();
     let width_errors = options.validate_extrusion_width_options().unwrap();
-    let range_errors = options.validate_line_width_range_options().unwrap();
+    let range_errors = options.validate_loaded_range_options().unwrap();
 
     assert_eq!(basic_errors["layer_height"], "invalid value -0.2");
     assert_eq!(
