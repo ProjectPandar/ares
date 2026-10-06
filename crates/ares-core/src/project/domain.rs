@@ -110,11 +110,17 @@ impl Project {
             .filter_map(|object| {
                 let mut instances = object.instances().to_vec();
                 instances.retain(|instance| {
-                    identity.contains(&[
-                        instance.object_id(),
-                        instance.instance_id(),
-                        instance.loaded_label_id(),
-                    ])
+                    // Unassigned instances (no plate metadata) stay for the
+                    // geometric print-volume gate; assigned instances match
+                    // the plate's identity set.
+                    match instance.loaded_label_id() {
+                        Some(label) => identity.contains(&[
+                            instance.object_id(),
+                            instance.instance_id(),
+                            label,
+                        ]),
+                        None => true,
+                    }
                 });
                 (!instances.is_empty()).then(|| {
                     let mut object = object.clone();
@@ -354,7 +360,10 @@ impl ProjectVolume {
 pub struct ProjectInstance {
     object_id: u32,
     instance_id: u32,
-    loaded_label_id: u32,
+    /// Plate identity from `model_settings.config`; `None` when the build
+    /// instance has no plate assignment (`ModelInstancePVS` loading keeps
+    /// the instance for the geometric print-volume gate).
+    loaded_label_id: Option<u32>,
     printable: bool,
     auto_drop: bool,
     transform: Transform3d,
@@ -370,7 +379,24 @@ impl ProjectInstance {
         Self {
             object_id: identity[0],
             instance_id: identity[1],
-            loaded_label_id: identity[2],
+            loaded_label_id: Some(identity[2]),
+            printable,
+            auto_drop,
+            transform,
+        }
+    }
+
+    pub(crate) fn unassigned(
+        object_id: u32,
+        instance_id: u32,
+        printable: bool,
+        auto_drop: bool,
+        transform: Transform3d,
+    ) -> Self {
+        Self {
+            object_id,
+            instance_id,
+            loaded_label_id: None,
             printable,
             auto_drop,
             transform,
@@ -385,7 +411,7 @@ impl ProjectInstance {
         self.instance_id
     }
 
-    pub fn loaded_label_id(&self) -> u32 {
+    pub fn loaded_label_id(&self) -> Option<u32> {
         self.loaded_label_id
     }
 

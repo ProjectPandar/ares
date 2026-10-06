@@ -35,7 +35,7 @@ fn single_volume_offset_moves_to_every_instance_without_changing_linear_geometry
         object.instances()[1].transform().transform_point(origin),
         Point3d::new(34.0, 66.0, 65.0)
     );
-    assert_eq!(object.instances()[1].loaded_label_id(), 902);
+    assert_eq!(object.instances()[1].loaded_label_id(), Some(902));
     assert_eq!(volume.source_transform().transform_point(origin), origin);
     for (instance, expected) in object.instances().iter().zip([
         [

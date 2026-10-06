@@ -54,8 +54,14 @@ fn project_import_groups_multiple_instances_only_for_the_same_path_identity() {
     assert_eq!(project.objects().len(), 1);
     assert_eq!(project.objects()[0].source_model_path(), "3D/root.model");
     assert_eq!(project.objects()[0].instances().len(), 2);
-    assert_eq!(project.objects()[0].instances()[0].loaded_label_id(), 133);
-    assert_eq!(project.objects()[0].instances()[1].loaded_label_id(), 902);
+    assert_eq!(
+        project.objects()[0].instances()[0].loaded_label_id(),
+        Some(133)
+    );
+    assert_eq!(
+        project.objects()[0].instances()[1].loaded_label_id(),
+        Some(902)
+    );
 }
 
 #[test]
@@ -79,7 +85,7 @@ fn project_import_loads_fixture_identity_transforms_and_world_bounds() {
     let instance = &object.instances()[0];
     assert_eq!(instance.object_id(), 2);
     assert_eq!(instance.instance_id(), 0);
-    assert_eq!(instance.loaded_label_id(), 133);
+    assert_eq!(instance.loaded_label_id(), Some(133));
     assert!(instance.printable());
     assert!(instance.auto_drop());
 
@@ -173,7 +179,7 @@ fn project_import_preserves_loaded_label_and_false_instance_flags() {
     let project = load_project(parts.bytes()).unwrap();
     let instance = &project.objects()[0].instances()[0];
 
-    assert_eq!(instance.loaded_label_id(), 901);
+    assert_eq!(instance.loaded_label_id(), Some(901));
     assert!(!instance.printable());
     assert!(!instance.auto_drop());
 }

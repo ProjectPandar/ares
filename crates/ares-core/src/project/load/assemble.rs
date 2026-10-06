@@ -118,15 +118,7 @@ fn project_domain_with_budget(
         let instance_id = builders
             .get(&identity)
             .map_or(0, |builder| builder.instances.len() as u32);
-        let loaded_label_id = *metadata
-            .loaded_labels
-            .get(&(item.object_id, instance_id))
-            .ok_or_else(|| {
-                invalid(format!(
-                    "build instance ({}, {instance_id}) has no loaded plate identity",
-                    item.object_id
-                ))
-            })?;
+        let loaded_label_id = metadata.loaded_labels.get(&(item.object_id, instance_id));
 
         if let std::collections::btree_map::Entry::Vacant(entry) = builders.entry(identity.clone())
         {
@@ -155,25 +147,37 @@ fn project_domain_with_budget(
             });
             order.push(identity.clone());
         }
+        let instance = match loaded_label_id {
+            Some(&label) => ProjectInstance::new(
+                [item.object_id, instance_id, label],
+                item.printable,
+                item.auto_drop,
+                item.transform,
+            ),
+            None => ProjectInstance::unassigned(
+                item.object_id,
+                instance_id,
+                item.printable,
+                item.auto_drop,
+                item.transform,
+            ),
+        };
         builders
             .get_mut(&identity)
             .unwrap()
             .instances
-            .push(ProjectInstance::new(
-                [item.object_id, instance_id, loaded_label_id],
-                item.printable,
-                item.auto_drop,
-                item.transform,
-            ));
+            .push(instance);
         loaded_instances.insert((item.object_id, instance_id));
     }
 
-    if metadata
+    // Plate metadata must not reference build-absent instances (phantom
+    // entries), but build instances without plate metadata are allowed
+    // (kept for the geometric print-volume gate, upstream
+    // `ModelInstancePVS` loading).
+    if !metadata
         .loaded_labels
         .keys()
-        .copied()
-        .collect::<BTreeSet<_>>()
-        != loaded_instances
+        .all(|key| loaded_instances.contains(key))
     {
         return Err(invalid(
             "plate metadata references an object or instance absent from the build",

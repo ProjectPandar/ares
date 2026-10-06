@@ -24,7 +24,7 @@ pub(super) fn append_header(
         .objects()
         .first()
         .and_then(|object| object.instances().first())
-        .map_or(0, |instance| instance.loaded_label_id());
+        .map_or(0, |instance| instance.loaded_label_id().unwrap_or(0));
     let density = format_values(
         &traversal
             .resolved

@@ -145,7 +145,7 @@ fn project_scene(project: &Project) -> SceneData {
                     id: [
                         instance.object_id(),
                         instance.instance_id(),
-                        instance.loaded_label_id(),
+                        instance.loaded_label_id().unwrap_or(0),
                     ],
                     printable: instance.printable(),
                     matrix: column_major(instance.transform()),

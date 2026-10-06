@@ -40,11 +40,13 @@ impl ObjectLabels {
             .objects()
             .iter()
             .flat_map(|object| object.instances())
-            .map(|instance| instance.loaded_label_id())
+            .map(|instance| instance.loaded_label_id().unwrap_or(0))
             .collect::<Vec<_>>();
         labels.sort_unstable();
         labels.dedup();
-        let position = labels.binary_search(&instance.loaded_label_id()).ok()?;
+        let position = labels
+            .binary_search(&instance.loaded_label_id().unwrap_or(0))
+            .ok()?;
         let bitset = 1_u64.checked_shl(position as u32)?;
         let (exclude_start, exclude_end) =
             super::footprint::in_print_labels(traversal, object_index);
@@ -61,7 +63,7 @@ impl ObjectLabels {
             name: object.name().to_owned(),
             object_id: if ids_assigned { object_index as u32 } else { 0 },
             copy_id: instance.instance_id(),
-            label_id: instance.loaded_label_id(),
+            label_id: instance.loaded_label_id().unwrap_or(0),
             encoded_labels: encode_base64(bitset.to_le_bytes()),
             exclude_start,
             exclude_end,
