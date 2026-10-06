@@ -12,13 +12,94 @@ const INVALID_SPACING: &str =
 
 #[test]
 fn s1plus_pure_processing_returns_spacing_invalid_argument() {
+    verify_error("flow-s1plus-red-", b"{}", INVALID_SPACING);
+}
+
+#[test]
+fn narrow_width_returns_negative_spacing() {
+    verify_error(
+        "flow-negative-spacing-",
+        br#"{"inner_wall_line_width":"0.01"}"#,
+        "Flow::spacing() produced negative spacing. Did you set some extrusion width too small?",
+    );
+}
+
+#[test]
+fn zero_bridge_ratio_returns_negative_flow() {
+    verify_error(
+        "flow-negative-volume-",
+        br#"{"bridge_flow":"0","thick_bridges":"0"}"#,
+        "Flow::mm3_per_mm() produced negative flow. Did you set some extrusion width too small?",
+    );
+}
+
+#[test]
+fn positive_spacing_and_flow_generate_complete_gcode() {
+    let overrides = ConfigOverrides::from_json(
+        br#"{
+        "line_width":"0.4", "inner_wall_line_width":"0.4", "outer_wall_line_width":"0.4",
+        "sparse_infill_line_width":"0.4", "internal_solid_infill_line_width":"0.4",
+        "top_surface_line_width":"0.4", "skin_infill_line_width":"0.4",
+        "skeleton_infill_line_width":"0.4", "bridge_flow":"1", "thick_bridges":"0"
+    }"#,
+    )
+    .unwrap();
+    let directory = tempfile::Builder::new()
+        .prefix("flow-positive-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let processed = runtime
+        .block_on(ares_core::slice_project_plate_processed(
+            INPUT,
+            GenerationMetadata::default(),
+            None,
+            &overrides,
+            SlicerContext::new(0),
+        ))
+        .unwrap();
+    fs::write(directory.join("ares.gcode"), &processed.gcode).unwrap();
+    assert!(!processed.gcode.is_empty());
+    assert!(processed.gcode.ends_with(b"; CONFIG_BLOCK_END\n\n\n"));
+    fs::write(
+        directory.join("result.json"),
+        serde_json::to_vec_pretty(&json!({
+            "input_sha256": HASH, "status": "GENERATED", "bytes": processed.gcode.len()
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+}
+
+#[test]
+fn validated_s1plus_keeps_o4_first_error() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let result = runtime.block_on(ares_core::slice_project_plate_validated(
+        INPUT,
+        GenerationMetadata::default(),
+        None,
+        &ConfigOverrides::default(),
+        SlicerContext::new(0),
+    ));
+    assert!(
+        matches!(result, Err(SliceError::InvalidInput(ref message)) if message == "Too small line width")
+    );
+}
+
+fn verify_error(prefix: &str, overrides_json: &[u8], expected: &str) {
+    let overrides = ConfigOverrides::from_json(overrides_json).unwrap();
     let hash = Sha256::digest(INPUT)
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
     assert_eq!(hash, HASH);
     let directory = tempfile::Builder::new()
-        .prefix("flow-s1plus-red-")
+        .prefix(prefix)
         .tempdir()
         .unwrap()
         .keep();
@@ -28,9 +109,8 @@ fn s1plus_pure_processing_returns_spacing_invalid_argument() {
         serde_json::to_vec_pretty(&json!({
             "input_sha256": hash,
             "api": "slice_project_plate_processed",
-            "overrides": {},
-            "expected_source_type": "Slic3r::InvalidArgument",
-            "expected_error": INVALID_SPACING,
+            "overrides": serde_json::from_slice::<serde_json::Value>(overrides_json).unwrap(),
+            "expected_error": expected,
         }))
         .unwrap(),
     )
@@ -42,7 +122,7 @@ fn s1plus_pure_processing_returns_spacing_invalid_argument() {
         INPUT,
         GenerationMetadata::default(),
         None,
-        &ConfigOverrides::default(),
+        &overrides,
         SlicerContext::new(0),
     ));
     let outcome = match &result {
@@ -58,7 +138,7 @@ fn s1plus_pure_processing_returns_spacing_invalid_argument() {
     )
     .unwrap();
     assert!(
-        matches!(result, Err(SliceError::InvalidInput(ref message)) if message == INVALID_SPACING),
+        matches!(result, Err(SliceError::InvalidInput(ref message)) if message == expected),
         "pure processing must return the source Flow exception; evidence: {}",
         directory.display()
     );

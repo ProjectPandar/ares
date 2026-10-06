@@ -32,6 +32,14 @@ bridge 分支保留 `gap = old_spacing - old_width`、`new_diameter = new_spacin
 
 延后 `FlowErrorMissingVariable` / placeholder extrusion-width 解析、`new_from_config_width(height <= 0)` 的独立 `Invalid flow height supplied to new_from_config_width()` InvalidArgument、其余 cross-section 算法与未移植的角色解析/bridge 特殊算法、完整 Flow 类 parity，以及 O4 上界和其他 Print validation。若已有 cross-section/ratio 调用链为传播这三种错误而需要 Result，只改必要的传播与来源 accessor，不扩展算法。本 slice 不声称涵盖所有 InvalidArgument 或所有 FlowError。
 
+## 调用点可达性与简单签名
+
+三种失败均有公开 `slice_project_plate_processed` 输入路径：原 S1 Plus 无 overrides 的几何调整 spacing 路径；`inner_wall_line_width=0.01` / 0.2 layer 的非正 rounded spacing；`bridge_flow=0, thick_bridges=0` 经 cross-section 零面积后的非正体积。后两例是独立边界控制配置，不修补原始 RED。它们不需要隔离方法 oracle，本 slice 不建立 `tools/flow-oracle/` harness。
+
+`group_fills/params/projection.rs::project_surface` 对 solid / bridge 将 `params.spacing` 精确保存为 `f64::from(params.flow.spacing)`，非 solid 则使用 nominal sparse spacing。固定 spacing 的 materialized 调用在 sparse non-bridge InternalInfill 分支不调用 `with_spacing`，其余 solid / bridge 分支 cast 回 f32 是原 spacing。依赖原生旧 Flow invariant 的这些调用不能触发**新 width 变化**导致的 InvalidArgument；保留 `materialized_flow` 简单 Flow 签名，只在共享方法的 Result 提取处标明内部 invariant，不把它们的调用者改成逐层防御。保持 bridge gap 的源浮点运算，不以数学 no-op 为由直接复用旧 Flow 缓存。
+
+`fill_entities/monotonic.rs::append` 传入 `generated.spacing`，几何生成可调整 spacing，故该路径使用可失败的 materialization 并传播 `?`。`concentric.rs::append` 只接收 `group_fills/narrow.rs` 的 InternalSolid → ConcentricInternal，故是上述原 spacing invariant，保留简单调用边界。`append_configured` 不同：full-density **sparse** Concentric 仍可能使用 nominal sparse spacing 与实际层 flow 的不同 height，Arachne 的 `with_spacing` 不因 InternalInfill 而跳过；该处不能冒称不可达，必须传播 `?`，即使 solid/bridge 子路径本身是 invariant-backed。`with_flow_ratio` 的纯 cross-section 算法仍保持简单签名，零面积的 NegativeFlow 由原本已 fallible 的体积消费处返回，不让 ratio 运算到所有调用者重新防御。真正违反旧 Flow invariant 的内部 bug 不用这次新 width 的可恢复错误掩盖。
+
 ## Test-first 计划与验收
 
 先批准 spec，再提交 RED/正反控制测试，最后写产品代码。首先用字节未改的 `tests/parity/validation/o4-ender3s1plus-0.2.3mf`（SHA256 `edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110`）记录 **纯处理** 路径的完整结果。基线 panic 或 release 错误/接受的实际结果均如实保留，不预设二者相同；GREEN 要求精确 with_spacing InvalidArgument 文本且无 G-code。独立 Print 和 validated 路径仍须 O4 精确拒绝，编辑/placement 不新增 gate。
