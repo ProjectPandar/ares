@@ -1,0 +1,2226 @@
+{
+ "module": "project_slice/prepare_infill/bridge_over_infill",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 199,
+ "deleted": 1,
+ "kept": 198,
+ "tests": [
+  {
+   "test": "task22o53_flow_scaling_uses_f32_value_f64_division_and_truncation",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "anchored_polygon.rs:80:1:80:84",
+    "anchored_polygon.rs:81:5:81:22",
+    "anchored_polygon.rs:81:23:81:28",
+    "anchored_polygon.rs:81:30:81:35",
+    "anchored_polygon.rs:82:1:82:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_rotation_rounds_positive_and_negative_half_ties_away_from_zero",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "anchored_polygon.rs:85:1:85:83",
+    "anchored_polygon.rs:86:5:86:17",
+    "anchored_polygon.rs:86:18:86:23",
+    "anchored_polygon.rs:86:25:86:31",
+    "anchored_polygon.rs:86:33:86:37",
+    "anchored_polygon.rs:87:1:87:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_axis_aligned_and_large_bed_outputs_match_pinned_oracle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:78:5:78:6",
+    "sections.rs:87:5:87:6"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_complete_rotated_oracle_is_ordered_repeatable_and_nonmutating",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:78:5:78:6",
+    "sections.rs:87:5:87:6"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_final_safety_union_error_is_atomic",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:78:5:78:6",
+    "anchored_polygon.rs:39:61:39:62"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_flat_paths_preserve_hole_and_component_order",
+   "verdict": "KEEP",
+   "coverage": "no-production-regions",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o53_flat_paths_safety_union_matches_pinned_topology_and_order",
+   "verdict": "KEEP",
+   "coverage": "no-production-regions",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o53_multiple_sections_preserve_two_path_output_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:59:48:59:49",
+    "sections.rs:60:9:60:22",
+    "sections.rs:60:26:60:50",
+    "sections.rs:60:26:60:32",
+    "sections.rs:60:33:60:34",
+    "sections.rs:61:5:61:6",
+    "sections.rs:111:1:111:78",
+    "sections.rs:112:6:112:20",
+    "sections.rs:113:13:113:28",
+    "sections.rs:114:13:114:27"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_valid_narrow_area_has_empty_output",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o53_anchor_bounds_skip_equal_endpoints_and_use_mixed_width_arithmetic",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:87:5:87:6",
+    "sections.rs:192:1:196:2",
+    "sections.rs:197:5:197:22",
+    "sections.rs:197:23:197:30",
+    "sections.rs:197:32:197:39",
+    "sections.rs:197:41:197:46",
+    "sections.rs:198:1:198:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_inclusive_overlap_merges_once_removes_zero_and_keeps_source_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:59:48:59:49",
+    "sections.rs:60:9:60:22",
+    "sections.rs:60:26:60:50",
+    "sections.rs:60:26:60:32",
+    "sections.rs:60:33:60:34",
+    "sections.rs:61:5:61:6",
+    "sections.rs:111:1:111:78",
+    "sections.rs:112:6:112:20",
+    "sections.rs:112:24:112:39",
+    "sections.rs:113:13:113:28"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_midpoint_adds_in_integer_space_before_division",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:176:1:176:68",
+    "sections.rs:177:5:177:13",
+    "sections.rs:177:14:177:18",
+    "sections.rs:177:20:177:25",
+    "sections.rs:178:1:178:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_scanlines_use_area_x_anchor_y_and_center_expression_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:181:1:187:15",
+    "sections.rs:188:5:188:19",
+    "sections.rs:188:20:188:25",
+    "sections.rs:188:27:188:32",
+    "sections.rs:188:34:188:58",
+    "sections.rs:188:60:188:67",
+    "sections.rs:189:1:189:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_structural_fixed_msvc_comparator_freezes_large_permutation",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:59:48:59:49",
+    "sections.rs:60:9:60:22",
+    "sections.rs:60:26:60:50",
+    "sections.rs:60:26:60:32",
+    "sections.rs:60:33:60:34",
+    "sections.rs:61:5:61:6",
+    "sections.rs:170:1:170:75",
+    "sections.rs:171:5:171:18",
+    "sections.rs:171:19:171:32",
+    "sections.rs:172:5:172:13"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_structural_hit_stream_visits_every_adjacent_window",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:164:32:164:37",
+    "sections.rs:164:39:164:44",
+    "sections.rs:159:1:159:76",
+    "sections.rs:160:9:160:13",
+    "sections.rs:160:16:160:22",
+    "sections.rs:161:10:161:14",
+    "sections.rs:162:10:162:16",
+    "sections.rs:163:10:163:19",
+    "sections.rs:164:10:164:13",
+    "sections.rs:165:10:165:17"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_one_trace_splits_and_seeds_the_unused_segment",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "topology invariant: one trace splits and seeds the unused segment"
+  },
+  {
+   "test": "task22o53_trace_bounds_exclude_low_equality_and_include_high_equality",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "tracing.rs:102:1:102:98",
+    "tracing.rs:103:5:103:20",
+    "tracing.rs:103:21:103:26",
+    "tracing.rs:103:28:103:31",
+    "tracing.rs:103:33:103:37",
+    "tracing.rs:104:1:104:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_trace_connection_is_strict_and_uses_integer_half_spacing",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "tracing.rs:112:1:116:16",
+    "tracing.rs:117:9:117:19",
+    "tracing.rs:117:22:117:26",
+    "tracing.rs:117:27:117:35",
+    "tracing.rs:118:5:118:21",
+    "tracing.rs:118:22:118:33",
+    "tracing.rs:118:35:118:44",
+    "tracing.rs:118:46:118:53",
+    "tracing.rs:119:5:119:11",
+    "tracing.rs:120:1:120:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o53_unmatched_and_final_traces_have_distinct_closing_points",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "topology invariant: unmatched and final traces produce distinct closing points"
+  },
+  {
+   "test": "task22o53_used_segment_identity_closes_the_second_competing_trace",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "topology invariant: used-segment identity selects which competing trace closes"
+  },
+  {
+   "test": "task22o51_empty_fallback_precedes_pattern_adjustments",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:174:47:174:56",
+    "automatic_bridge_angle.rs:175:49:175:66",
+    "automatic_bridge_angle.rs:25:21:27:6"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_every_ordinary_typed_pattern_preserves_the_same_angle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:25:21:27:6"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_orientation_fold_boundary_and_post_adjustment_do_not_normalize",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:174:47:174:56",
+    "automatic_bridge_angle.rs:175:49:175:66"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_closed_window_endpoints_and_strict_score_ties_match_oracle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:236:24:236:36",
+    "automatic_bridge_angle.rs:236:37:236:44",
+    "automatic_bridge_angle.rs:236:48:236:60",
+    "automatic_bridge_angle.rs:228:1:228:94",
+    "automatic_bridge_angle.rs:229:9:229:20",
+    "automatic_bridge_angle.rs:229:23:229:31",
+    "automatic_bridge_angle.rs:230:11:230:16",
+    "automatic_bridge_angle.rs:230:18:230:23",
+    "automatic_bridge_angle.rs:230:28:230:38",
+    "automatic_bridge_angle.rs:230:39:232:6"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_lower_and_synthetic_upper_periodic_wraps_match_oracle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:236:24:236:36",
+    "automatic_bridge_angle.rs:236:37:236:44",
+    "automatic_bridge_angle.rs:236:48:236:60",
+    "automatic_bridge_angle.rs:163:30:163:42",
+    "automatic_bridge_angle.rs:163:46:163:57",
+    "automatic_bridge_angle.rs:160:13:160:24",
+    "automatic_bridge_angle.rs:160:27:160:50",
+    "automatic_bridge_angle.rs:161:13:161:19",
+    "automatic_bridge_angle.rs:161:23:161:33",
+    "automatic_bridge_angle.rs:162:14:162:18"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_numeric_key_equivalence_coalesces_signed_zero",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:236:24:236:36",
+    "automatic_bridge_angle.rs:236:37:236:44",
+    "automatic_bridge_angle.rs:236:48:236:60",
+    "automatic_bridge_angle.rs:228:1:228:94",
+    "automatic_bridge_angle.rs:229:9:229:20",
+    "automatic_bridge_angle.rs:229:23:229:31",
+    "automatic_bridge_angle.rs:230:11:230:16",
+    "automatic_bridge_angle.rs:230:18:230:23",
+    "automatic_bridge_angle.rs:230:28:230:38",
+    "automatic_bridge_angle.rs:230:39:232:6"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_eigen_normalization_f32_step_and_nearest_ownership_match_oracle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:223:24:223:36",
+    "automatic_bridge_angle.rs:223:37:223:44",
+    "automatic_bridge_angle.rs:223:48:223:60",
+    "automatic_bridge_angle.rs:211:50:211:56",
+    "automatic_bridge_angle.rs:211:57:211:61",
+    "automatic_bridge_angle.rs:211:62:211:67",
+    "automatic_bridge_angle.rs:206:1:209:16",
+    "automatic_bridge_angle.rs:210:9:210:19",
+    "automatic_bridge_angle.rs:210:22:210:30",
+    "automatic_bridge_angle.rs:211:5:211:20"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_integer_scaled_threshold_is_strict_at_both_scales",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:211:50:211:56",
+    "automatic_bridge_angle.rs:211:57:211:61",
+    "automatic_bridge_angle.rs:211:62:211:67",
+    "automatic_bridge_angle.rs:206:1:209:16",
+    "automatic_bridge_angle.rs:210:9:210:19",
+    "automatic_bridge_angle.rs:210:22:210:30",
+    "automatic_bridge_angle.rs:211:5:211:20",
+    "automatic_bridge_angle.rs:211:21:211:33",
+    "automatic_bridge_angle.rs:211:35:211:40",
+    "automatic_bridge_angle.rs:212:5:212:11"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o51_polygon_scope_reset_remainder_and_missing_closing_edge_match_source",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:211:50:211:56",
+    "automatic_bridge_angle.rs:211:57:211:61",
+    "automatic_bridge_angle.rs:211:62:211:67",
+    "automatic_bridge_angle.rs:206:1:209:16",
+    "automatic_bridge_angle.rs:210:9:210:19",
+    "automatic_bridge_angle.rs:210:22:210:30",
+    "automatic_bridge_angle.rs:211:5:211:20",
+    "automatic_bridge_angle.rs:211:21:211:33",
+    "automatic_bridge_angle.rs:211:35:211:40",
+    "automatic_bridge_angle.rs:212:5:212:11"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o65_current_only_clones_flat_order_without_geometry_or_validation",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o65_distinguishes_all_absent_and_present_empty_key_combinations",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o65_empty_upper_candidate_still_runs_shrink_then_difference",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o65_injected_errors_stop_without_reaching_later_candidates",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "bridge_rewrite_areas.rs:61:83:61:84",
+    "bridge_rewrite_areas.rs:62:90:62:91"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o65_uses_each_flow_and_runs_whole_set_shrink_then_difference_in_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o65_complete_erosion_returns_the_original_area",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "degenerate boundary: complete erosion returns original area; E2E unlikely to hit this branch reliably"
+  },
+  {
+   "test": "task22o65_natural_offset_range_error_is_atomic",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "bridge_rewrite_areas.rs:61:83:61:84"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o65_real_empty_upper_candidate_is_an_empty_success",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o65_real_shrink_and_difference_preserve_ring_topology_and_input",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o61_each_injected_error_stops_at_its_source_ordinal",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_anchored_bridge.rs:93:23:93:77",
+    "candidate_anchored_bridge.rs:93:23:93:42",
+    "candidate_anchored_bridge.rs:93:77:93:78",
+    "candidate_anchored_bridge.rs:93:13:93:20",
+    "candidate_anchored_bridge.rs:94:12:94:31",
+    "candidate_anchored_bridge.rs:95:17:95:22",
+    "candidate_anchored_bridge.rs:95:25:95:59",
+    "candidate_anchored_bridge.rs:96:33:96:65",
+    "candidate_anchored_bridge.rs:96:33:96:39",
+    "candidate_anchored_bridge.rs:96:65:96:66"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o61_empty_lightning_appends_anchors_then_calls_construct_once",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o61_empty_overlap_skips_expand_and_open_clip_but_keeps_appended_lines",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_anchored_bridge.rs:93:13:93:20",
+    "candidate_anchored_bridge.rs:93:23:93:77",
+    "candidate_anchored_bridge.rs:93:23:93:42",
+    "candidate_anchored_bridge.rs:94:12:94:31",
+    "candidate_anchored_bridge.rs:98:9:98:10"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o61_injected_empty_area_and_outer_boundaries_reach_construct_in_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o61_lightning_overlap_expands_original_area_and_replaces_boundaries",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_anchored_bridge.rs:93:13:93:20",
+    "candidate_anchored_bridge.rs:93:23:93:77",
+    "candidate_anchored_bridge.rs:93:23:93:42",
+    "candidate_anchored_bridge.rs:94:12:94:31",
+    "candidate_anchored_bridge.rs:95:17:95:22",
+    "candidate_anchored_bridge.rs:95:25:95:59",
+    "candidate_anchored_bridge.rs:96:17:96:30",
+    "candidate_anchored_bridge.rs:96:33:96:65",
+    "candidate_anchored_bridge.rs:96:33:96:39",
+    "candidate_anchored_bridge.rs:97:13:97:31"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o61_real_lightning_gate_uses_no_safety_offset",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_anchored_bridge.rs:93:13:93:20",
+    "candidate_anchored_bridge.rs:93:23:93:77",
+    "candidate_anchored_bridge.rs:93:23:93:42",
+    "candidate_anchored_bridge.rs:94:12:94:31",
+    "candidate_anchored_bridge.rs:98:9:98:10"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o61_real_lightning_path_freezes_closed_expand_and_open_kernels",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_anchored_bridge.rs:93:13:93:20",
+    "candidate_anchored_bridge.rs:93:23:93:77",
+    "candidate_anchored_bridge.rs:93:23:93:42",
+    "candidate_anchored_bridge.rs:94:12:94:31",
+    "candidate_anchored_bridge.rs:95:17:95:22",
+    "candidate_anchored_bridge.rs:95:25:95:59",
+    "candidate_anchored_bridge.rs:96:17:96:30",
+    "candidate_anchored_bridge.rs:96:33:96:65",
+    "candidate_anchored_bridge.rs:96:33:96:39",
+    "candidate_anchored_bridge.rs:97:13:97:31"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o61_real_o53_composition_matches_ordered_axis_aligned_oracle",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_preserves_f64_multiplier_promotion_and_direct_f32_casts",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_injected_competing_errors_keep_total_before_limiting",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_boundary_polylines.rs:52:64:52:65",
+    "candidate_boundary_polylines.rs:57:84:57:85"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o59_natural_offset_errors_preserve_source_precedence",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_boundary_polylines.rs:52:64:52:65",
+    "candidate_boundary_polylines.rs:57:84:57:85"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o59_empty_survivor_gate_ignores_scalars_geometry_and_engine",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_gate_uses_survivors_not_limiting_or_total_emptiness",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_calls_total_then_limiting_once_and_appends_without_reordering",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_each_offset_polygon_gets_exactly_one_closure_duplicate",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_actual_source_ordered_boundaries_match_exact_literals",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_default_miter_three_matches_acute_source_oracle",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o59_repeat_calls_preserve_complete_borrowed_inputs",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o60_anchor_dispatch_forwards_exact_inputs_lines_and_sparse_pattern",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o60_detector_output_is_not_changed_before_override",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o60_empty_anchors_use_ordered_boundaries_and_neutral_line_pattern",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o60_nonempty_one_point_anchors_own_dispatch_before_flattening",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o60_fallback_neutral_pattern_ignores_sparse_pattern_adjustment",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:25:21:27:6"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o60_real_o51_then_o49_composition_preserves_inputs_and_exact_bits",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "automatic_bridge_angle.rs:174:47:174:56",
+    "automatic_bridge_angle.rs:25:21:27:6",
+    "internal_bridge_angle.rs:12:13:12:29",
+    "internal_bridge_angle.rs:12:32:12:93",
+    "internal_bridge_angle.rs:13:12:13:42",
+    "internal_bridge_angle.rs:14:13:14:46"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_errors_are_atomic_and_all_borrowed_allocations_are_unchanged",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:68:81:68:82"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_natural_errors_preserve_engine_call_precedence",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:64:69:64:70",
+    "candidate_bridge_area.rs:65:61:65:62",
+    "candidate_bridge_area.rs:68:81:68:82",
+    "candidate_bridge_area.rs:75:44:75:45"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_repeat_calls_are_identical_and_preserve_inputs",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o58_deep_intersection_can_split_one_candidate_and_filter_each_piece",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:70:9:70:10"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_empty_survivors_still_normalize_expansion_area",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o58_empty_unsupported_area_filters_every_intersection_polygon",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:70:9:70:10"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_expands_intersects_filters_and_unions_in_source_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:70:9:70:10"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_injected_competing_errors_preserve_every_stage_ordinal",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:64:69:64:70",
+    "candidate_bridge_area.rs:65:61:65:62",
+    "candidate_bridge_area.rs:68:81:68:82",
+    "candidate_bridge_area.rs:75:44:75:45"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_injected_later_predicate_error_short_circuits_before_union",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:68:81:68:82"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o58_preserves_roles_predicate_order_original_survivors_and_union_input",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_area.rs:70:9:70:10"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o64_appends_every_call_in_order_and_moves_owned_allocations",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o64_empty_final_bridge_still_appends_and_returns_expansion",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o64_independent_owned_inputs_are_repeatable",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o64_empty_completed_vector_clears_original_layer_and_keeps_allocation",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o64_replacement_touches_only_the_supplied_vector",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o64_replaces_original_layer_with_completed_allocation_and_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o63_forwards_exact_arithmetic_operands_order_and_owned_state",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o63_injected_errors_stop_at_each_source_operation",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_postprocessing.rs:88:63:88:64",
+    "candidate_bridge_postprocessing.rs:89:63:89:64",
+    "candidate_bridge_postprocessing.rs:90:68:90:69",
+    "candidate_bridge_postprocessing.rs:91:70:91:71",
+    "candidate_bridge_postprocessing.rs:92:67:92:68",
+    "candidate_bridge_postprocessing.rs:93:69:93:70"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o63_truncates_scaled_spacing_before_f64_opening_multiply",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o63_real_default_intersection_has_no_safety_offset",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o63_real_morphology_and_booleans_keep_literal_ordered_output",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o63_real_range_error_is_atomic_and_preserves_borrowed_inputs",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_bridge_postprocessing.rs:90:68:90:69"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o63_empty_clips_run_complete_pipeline_and_preserve_angle",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o62_empty_history_expands_exact_initial_area_and_preserves_allocations",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o62_first_collision_owns_angle_breaks_and_forwards_exact_source_operands",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_collision_reconstruction.rs:87:13:87:56",
+    "candidate_collision_reconstruction.rs:88:13:88:18",
+    "candidate_collision_reconstruction.rs:92:55:92:69",
+    "candidate_collision_reconstruction.rs:93:13:93:18",
+    "candidate_collision_reconstruction.rs:93:21:93:29",
+    "candidate_collision_reconstruction.rs:93:30:93:49",
+    "candidate_collision_reconstruction.rs:95:13:101:14",
+    "candidate_collision_reconstruction.rs:95:13:95:22",
+    "candidate_collision_reconstruction.rs:96:17:96:34",
+    "candidate_collision_reconstruction.rs:97:17:97:23"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o62_injected_competing_errors_preserve_expand_intersection_construct_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_collision_reconstruction.rs:82:54:82:55",
+    "candidate_collision_reconstruction.rs:86:64:86:65",
+    "candidate_collision_reconstruction.rs:87:13:87:56",
+    "candidate_collision_reconstruction.rs:88:13:88:18",
+    "candidate_collision_reconstruction.rs:92:55:92:69",
+    "candidate_collision_reconstruction.rs:93:13:93:18",
+    "candidate_collision_reconstruction.rs:93:21:93:29",
+    "candidate_collision_reconstruction.rs:93:30:93:49",
+    "candidate_collision_reconstruction.rs:95:13:101:14",
+    "candidate_collision_reconstruction.rs:95:13:95:22"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o62_natural_range_errors_follow_expand_intersection_then_o53",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:78:5:78:6",
+    "anchored_polygon.rs:39:61:39:62",
+    "candidate_collision_reconstruction.rs:86:64:86:65",
+    "candidate_collision_reconstruction.rs:87:13:87:56",
+    "candidate_collision_reconstruction.rs:88:13:88:18",
+    "candidate_collision_reconstruction.rs:92:55:92:69",
+    "candidate_collision_reconstruction.rs:93:13:93:18",
+    "candidate_collision_reconstruction.rs:93:21:93:29",
+    "candidate_collision_reconstruction.rs:93:30:93:49",
+    "candidate_collision_reconstruction.rs:95:13:101:14"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o62_real_collision_reruns_o53_with_first_completed_angle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_collision_reconstruction.rs:87:13:87:56",
+    "candidate_collision_reconstruction.rs:88:13:88:18",
+    "candidate_collision_reconstruction.rs:92:55:92:69",
+    "candidate_collision_reconstruction.rs:93:13:93:18",
+    "candidate_collision_reconstruction.rs:93:21:93:29",
+    "candidate_collision_reconstruction.rs:93:30:93:49",
+    "candidate_collision_reconstruction.rs:95:13:101:14",
+    "candidate_collision_reconstruction.rs:95:13:95:22",
+    "candidate_collision_reconstruction.rs:96:17:96:34",
+    "candidate_collision_reconstruction.rs:97:17:97:23"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o62_real_empty_initial_geometry_is_successful_and_keeps_angle",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o62_real_miter_expansion_reaches_the_square_corner_collision",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_collision_reconstruction.rs:87:13:87:56",
+    "candidate_collision_reconstruction.rs:88:13:88:18",
+    "candidate_collision_reconstruction.rs:92:55:92:69",
+    "candidate_collision_reconstruction.rs:93:13:93:18",
+    "candidate_collision_reconstruction.rs:93:21:93:29",
+    "candidate_collision_reconstruction.rs:93:30:93:49",
+    "candidate_collision_reconstruction.rs:95:13:101:14",
+    "candidate_collision_reconstruction.rs:95:13:95:22",
+    "candidate_collision_reconstruction.rs:96:17:96:34",
+    "candidate_collision_reconstruction.rs:97:17:97:23"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o62_real_no_collision_preserves_initial_allocations_and_uses_no_safety_intersection",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o55_empty_single_and_two_candidates_use_minimum_x_then_y",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:24:67:24:91"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_extent_definition_requires_positive_x_and_y",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o55_source_extent_definition_replaces_or_ignores_boxes_exactly",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:62:16:62:37",
+    "candidate_ordering.rs:65:9:65:16",
+    "candidate_ordering.rs:66:13:66:17",
+    "candidate_ordering.rs:66:20:66:34",
+    "candidate_ordering.rs:66:35:66:42",
+    "candidate_ordering.rs:67:12:67:24",
+    "candidate_ordering.rs:68:16:68:30",
+    "candidate_ordering.rs:68:31:73:14",
+    "candidate_ordering.rs:69:17:69:60",
+    "candidate_ordering.rs:69:32:69:44"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_equal_distance_tail_keeps_first_sort_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:28:13:28:18",
+    "candidate_ordering.rs:28:21:28:37",
+    "candidate_ordering.rs:28:21:28:27",
+    "candidate_ordering.rs:29:13:29:19",
+    "candidate_ordering.rs:29:22:29:62",
+    "candidate_ordering.rs:30:9:30:19",
+    "candidate_ordering.rs:30:20:30:27",
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:30:42:30:43",
+    "candidate_ordering.rs:31:17:31:21"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_fixed_msvc_equal_key_ninther_permutation_is_preserved_by_stable_tail",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:28:13:28:18",
+    "candidate_ordering.rs:28:21:28:37",
+    "candidate_ordering.rs:28:21:28:27",
+    "candidate_ordering.rs:29:13:29:19",
+    "candidate_ordering.rs:29:22:29:62",
+    "candidate_ordering.rs:30:9:30:19",
+    "candidate_ordering.rs:30:20:30:27",
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:24:67:24:91",
+    "candidate_ordering.rs:30:42:30:43"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_fixed_msvc_mixed_ninther_permutation_feeds_stable_tail",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:28:13:28:18",
+    "candidate_ordering.rs:28:21:28:37",
+    "candidate_ordering.rs:28:21:28:27",
+    "candidate_ordering.rs:29:13:29:19",
+    "candidate_ordering.rs:29:22:29:62",
+    "candidate_ordering.rs:30:9:30:19",
+    "candidate_ordering.rs:30:20:30:27",
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:24:67:24:91",
+    "candidate_ordering.rs:30:42:30:43"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_high_coordinates_cast_before_subtraction_and_square_components",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:28:13:28:18",
+    "candidate_ordering.rs:28:21:28:37",
+    "candidate_ordering.rs:28:21:28:27",
+    "candidate_ordering.rs:29:13:29:19",
+    "candidate_ordering.rs:29:22:29:62",
+    "candidate_ordering.rs:30:9:30:19",
+    "candidate_ordering.rs:30:20:30:27",
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:30:42:30:43",
+    "candidate_ordering.rs:31:17:31:21"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_separate_products_differ_from_mul_add_rounding",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:28:13:28:18",
+    "candidate_ordering.rs:28:21:28:37",
+    "candidate_ordering.rs:28:21:28:27",
+    "candidate_ordering.rs:29:13:29:19",
+    "candidate_ordering.rs:29:22:29:62",
+    "candidate_ordering.rs:30:9:30:19",
+    "candidate_ordering.rs:30:20:30:27",
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:30:42:30:43",
+    "candidate_ordering.rs:31:17:31:21"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_squared_distance_differs_from_sum_square",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:28:13:28:18",
+    "candidate_ordering.rs:28:21:28:37",
+    "candidate_ordering.rs:28:21:28:27",
+    "candidate_ordering.rs:29:13:29:19",
+    "candidate_ordering.rs:29:22:29:62",
+    "candidate_ordering.rs:30:9:30:19",
+    "candidate_ordering.rs:30:20:30:27",
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:30:42:30:43",
+    "candidate_ordering.rs:31:17:31:21"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_two_skips_distance_sort_and_three_uses_front_max_origin_on_tail_only",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:28:13:28:18",
+    "candidate_ordering.rs:28:21:28:37",
+    "candidate_ordering.rs:28:21:28:27",
+    "candidate_ordering.rs:29:13:29:19",
+    "candidate_ordering.rs:29:22:29:62",
+    "candidate_ordering.rs:30:9:30:19",
+    "candidate_ordering.rs:30:20:30:27",
+    "candidate_ordering.rs:24:38:24:63",
+    "candidate_ordering.rs:30:42:30:43",
+    "candidate_ordering.rs:31:17:31:21"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_independently_identical_owned_inputs_are_repeatable",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:65:9:65:16",
+    "candidate_ordering.rs:66:13:66:17",
+    "candidate_ordering.rs:66:20:66:34",
+    "candidate_ordering.rs:66:35:66:42",
+    "candidate_ordering.rs:67:12:67:24",
+    "candidate_ordering.rs:68:16:68:30",
+    "candidate_ordering.rs:68:31:73:14",
+    "candidate_ordering.rs:69:17:69:60",
+    "candidate_ordering.rs:69:32:69:44",
+    "candidate_ordering.rs:70:17:70:60"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o55_moves_every_candidate_with_fields_and_polygon_allocations_intact",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidate_ordering.rs:65:9:65:16",
+    "candidate_ordering.rs:66:13:66:17",
+    "candidate_ordering.rs:66:20:66:34",
+    "candidate_ordering.rs:66:35:66:42",
+    "candidate_ordering.rs:67:12:67:24",
+    "candidate_ordering.rs:68:16:68:30",
+    "candidate_ordering.rs:68:31:73:14",
+    "candidate_ordering.rs:69:17:69:60",
+    "candidate_ordering.rs:69:32:69:44",
+    "candidate_ordering.rs:70:17:70:60"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o57_closed_range_error_is_first_and_inputs_are_unchanged",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "current_layer_context.rs:46:6:46:7"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o57_open_range_error_is_atomic_after_closed_geometry_succeeds",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "current_layer_context.rs:82:75:82:76"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o57_repeat_calls_are_identical_and_preserve_all_borrowed_allocations",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "current_layer_context.rs:67:35:69:14",
+    "current_layer_context.rs:68:17:68:29"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o57_empty_regions_and_lines_still_normalize_deep_geometry",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_flattens_selected_surface_contours_before_holes",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "current_layer_context.rs:58:43:58:55",
+    "current_layer_context.rs:58:56:58:65",
+    "current_layer_context.rs:58:67:58:86",
+    "current_layer_context.rs:67:35:69:14",
+    "current_layer_context.rs:68:17:68:29"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o57_gathers_exact_kind_membership_and_region_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "current_layer_context.rs:58:43:58:55",
+    "current_layer_context.rs:58:56:58:65",
+    "current_layer_context.rs:58:67:58:86",
+    "current_layer_context.rs:65:54:65:56",
+    "current_layer_context.rs:67:35:69:14",
+    "current_layer_context.rs:68:17:68:29"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o57_non_lightning_internal_does_not_enter_lightning_area",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_closes_before_deep_intersection_and_shrinks_before_anchor_clip",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_large_bed_epsilon_closes_gap_19_but_not_21",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_matches_pinned_actual_source_ordered_context",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "current_layer_context.rs:58:43:58:55",
+    "current_layer_context.rs:58:56:58:65",
+    "current_layer_context.rs:58:67:58:86"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o57_normal_disjoint_closing_matches_pinned_flat_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_normal_epsilon_closes_gap_199_but_not_201",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_preserves_spacing_promotion_before_multiplication_and_cast",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_passes_all_lower_lines_to_one_intersection_in_source_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o57_passes_expansion_as_subject_and_deep_area_as_clip",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o47_always_includes_immediate_lower_layer_below_depth_threshold",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o47_empty_and_fully_subtracted_sparse_geometry_are_empty_success",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o47_multiplies_target_height_in_f32_before_promoting_to_f64",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o47_preserves_source_depth_arithmetic_and_stops_before_deeper_layers",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o47_returns_first_range_error_and_preserves_all_borrowed_input",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "deep_sparse_area.rs:67:48:67:49"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o47_scaled_epsilon_closes_exact_thresholds_at_both_coordinate_scales",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o47_unions_and_closes_sparse_geometry_before_subtracting_solids",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o47_uses_each_lower_layer_density_and_internal_void_classification",
+   "verdict": "DELETE",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "covering_e2e": [
+    "orca::smoke::nozzle::orca_parity_nozzle_ceiling_seams"
+   ],
+   "output_to_gcode": "gathered deep-sparse bounds -> sparse infill region extents -> G1 sparse-infill paths"
+  },
+  {
+   "test": "task22o49_absolute_alignment_replaces_detected_and_does_not_normalize",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_angle.rs:12:13:12:29",
+    "internal_bridge_angle.rs:12:32:12:93",
+    "internal_bridge_angle.rs:13:12:13:42",
+    "internal_bridge_angle.rs:14:13:14:46",
+    "internal_bridge_angle.rs:15:19:15:59",
+    "internal_bridge_angle.rs:16:13:16:50"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o49_nonfinite_arithmetic_obeys_branch_ownership",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_angle.rs:12:13:12:29",
+    "internal_bridge_angle.rs:12:32:12:93",
+    "internal_bridge_angle.rs:13:12:13:42",
+    "internal_bridge_angle.rs:14:13:14:46",
+    "internal_bridge_angle.rs:15:19:15:59",
+    "internal_bridge_angle.rs:16:13:16:50",
+    "internal_bridge_angle.rs:18:13:18:29"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o49_nonpositive_and_nan_override_return_detected_bits_without_arithmetic",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o49_positive_override_preserves_source_degree_to_radian_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_angle.rs:12:13:12:29",
+    "internal_bridge_angle.rs:12:32:12:93",
+    "internal_bridge_angle.rs:13:12:13:42",
+    "internal_bridge_angle.rs:15:19:15:59",
+    "internal_bridge_angle.rs:18:13:18:29"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o49_relative_adds_detected_angle_and_ignores_alignment_rotation",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_angle.rs:12:13:12:29",
+    "internal_bridge_angle.rs:12:32:12:93",
+    "internal_bridge_angle.rs:13:12:13:42",
+    "internal_bridge_angle.rs:14:13:14:46"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o68_first_union_error_stops_candidate_order_and_preserves_input",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_surfaces.rs:40:56:40:57"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o68_matched_candidate_empty_union_emits_nothing_and_preserves_input",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o68_matches_source_indices_preserves_metadata_angle_and_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_surfaces.rs:32:13:32:21"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o68_multiple_union_outputs_keep_engine_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o68_real_union_preserves_topology_and_range_error",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_surfaces.rs:40:56:40:57"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o68_unmatched_and_wrong_kind_candidates_emit_nothing",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_bridge_surfaces.rs:32:13:32:21",
+    "internal_bridge_surfaces.rs:35:13:35:21",
+    "internal_bridge_surfaces.rs:38:13:38:21"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o67_empty_inputs_still_run_both_operations",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o67_filters_internal_in_source_order_then_runs_two_differences",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o67_first_error_stops_before_later_work",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_infill_rebuild.rs:39:54:39:55",
+    "internal_infill_rebuild.rs:40:58:40:59"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o67_complete_first_erosion_still_returns_empty_after_second_difference",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o67_natural_first_subject_first_clip_and_second_clip_errors_are_exact",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_infill_rebuild.rs:39:54:39:55",
+    "internal_infill_rebuild.rs:40:58:40:59"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o67_real_two_step_geometry_is_repeatable_and_resets_metadata",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o69_difference_error_precedes_union_and_union_error_precedes_output",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_solid_recomposition.rs:43:65:43:66",
+    "internal_solid_recomposition.rs:44:44:44:45"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o69_empty_inputs_still_call_difference_then_union_once",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o69_exact_operands_order_flattening_metadata_and_nonmutation",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o69_expolygon_safety_union_preserves_holes_and_disconnected_components",
+   "verdict": "KEEP",
+   "coverage": "no-production-regions",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o69_natural_difference_range_error_is_atomic",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "internal_solid_recomposition.rs:43:65:43:66"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o69_real_geometry_is_repeatable_and_preserves_inputs",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o54_edge_touch_is_empty_and_only_previous_tail_coverage_is_consulted",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:44:20:44:47",
+    "layer_clustering.rs:45:21:45:53",
+    "layer_clustering.rs:46:21:46:49",
+    "layer_clustering.rs:48:18:48:26",
+    "layer_clustering.rs:52:16:57:10",
+    "layer_clustering.rs:53:13:55:70",
+    "layer_clustering.rs:53:13:54:28"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_empty_single_and_overlapping_layers_keep_ascending_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:44:20:44:47",
+    "layer_clustering.rs:45:21:45:53",
+    "layer_clustering.rs:46:21:46:49",
+    "layer_clustering.rs:48:18:48:26",
+    "layer_clustering.rs:52:16:57:10",
+    "layer_clustering.rs:53:13:55:70",
+    "layer_clustering.rs:53:13:54:28"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_production_composition_preserves_flow_and_geometry_errors",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:142:1:142:53",
+    "layer_clustering.rs:143:11:143:16",
+    "layer_clustering.rs:144:47:146:10",
+    "layer_clustering.rs:151:1:151:2",
+    "layer_clustering.rs:90:51:90:52",
+    "layer_clustering.rs:31:71:31:72",
+    "layer_clustering.rs:69:99:69:100"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_production_composition_selects_region_zero_o48_flow",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:44:20:44:47",
+    "layer_clustering.rs:45:21:45:53",
+    "layer_clustering.rs:46:21:46:49",
+    "layer_clustering.rs:48:18:48:26",
+    "layer_clustering.rs:52:16:57:10",
+    "layer_clustering.rs:53:13:55:70",
+    "layer_clustering.rs:53:13:54:28"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_strict_z_boundary_uses_f32_factor_then_f64_epsilon",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:44:20:44:47",
+    "layer_clustering.rs:45:21:45:53",
+    "layer_clustering.rs:46:21:46:49",
+    "layer_clustering.rs:48:18:48:26",
+    "layer_clustering.rs:52:16:57:10",
+    "layer_clustering.rs:53:13:55:70",
+    "layer_clustering.rs:53:13:54:28"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_disjoint_candidate_boxes_are_not_replaced_by_one_combined_box",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:44:20:44:47",
+    "layer_clustering.rs:45:21:45:53",
+    "layer_clustering.rs:46:21:46:49",
+    "layer_clustering.rs:48:18:48:26"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_empty_and_degenerate_first_polygons_keep_bounding_box_semantics",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:101:9:101:16",
+    "layer_clustering.rs:102:13:102:17",
+    "layer_clustering.rs:102:20:102:34",
+    "layer_clustering.rs:102:35:102:42",
+    "layer_clustering.rs:103:12:103:18",
+    "layer_clustering.rs:104:16:104:24",
+    "layer_clustering.rs:109:20:111:14",
+    "layer_clustering.rs:112:9:112:10"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_empty_candidate_has_exact_zero_box_coverage",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o54_first_closed_path_range_error_is_atomic_and_inputs_are_unchanged",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "layer_clustering.rs:90:51:90:52",
+    "layer_clustering.rs:31:71:31:72"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o54_inflated_aabb_preserves_source_rounding_point_order_and_scales",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o54_sequential_coverage_freezes_flat_order_and_differs_from_one_shot_union",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o56_candidate_and_polygon_order_freeze_flat_path_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_flattens_reverse_layers_candidates_and_polygons_in_source_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_includes_exact_bottom_z_and_above_but_excludes_one_ulp_below",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:22:13:22:18",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_independent_calls_are_repeatable_and_leave_inputs_unchanged",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_one_call_flattening_differs_from_repeated_per_layer_difference",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_preserves_flat_hole_and_component_topology",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_preserves_promoted_f32_product_and_epsilon_subtraction_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:22:13:22:18"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_range_error_is_atomic_and_borrowed_allocations_are_unchanged",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_reverse_walk_breaks_at_first_below_layer",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:22:13:22:18",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o56_unconditionally_executes_difference_for_empty_inputs_and_clips",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lower_cluster_subtraction.rs:20:9:20:14",
+    "lower_cluster_subtraction.rs:21:12:21:36",
+    "lower_cluster_subtraction.rs:23:9:23:10",
+    "lower_cluster_subtraction.rs:24:13:24:22",
+    "lower_cluster_subtraction.rs:24:26:24:42",
+    "lower_cluster_subtraction.rs:24:43:26:10",
+    "lower_cluster_subtraction.rs:25:13:25:34",
+    "lower_cluster_subtraction.rs:25:35:25:41"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o66_empty_inputs_still_run_all_operations",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o66_first_error_stops_the_operation_transaction",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "region_bridge_ensuring_areas.rs:87:40:87:41",
+    "region_bridge_ensuring_areas.rs:90:69:90:70",
+    "region_bridge_ensuring_areas.rs:91:65:91:66",
+    "region_bridge_ensuring_areas.rs:92:88:92:89"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o66_flatten_expolygons_preserves_component_contour_hole_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o66_flattens_every_kind_and_hole_then_runs_exact_operations",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o66_forwards_exact_miter_three_to_the_shrink_kernel",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "region_bridge_ensuring_areas.rs:49:1:49:54",
+    "region_bridge_ensuring_areas.rs:50:5:50:25",
+    "region_bridge_ensuring_areas.rs:51:1:51:2"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o66_output_keeps_difference_and_intersection_engine_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o66_miter_probe",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o66_natural_union_and_intersection_range_errors_preserve_inputs",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "region_bridge_ensuring_areas.rs:87:40:87:41",
+    "region_bridge_ensuring_areas.rs:92:88:92:89"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o66_real_empty_inputs_return_empty_success",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o66_real_geometry_builds_near_ring_and_clips_ensuring_topology",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "task22o70_empty_original_new_only_original_only_and_duplicates_are_exact",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "region_bridge_surface_commit.rs:11:10:11:18"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o70_repeatability_matches_complete_surface_snapshot",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "region_bridge_surface_commit.rs:11:10:11:18"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "task22o70_stably_removes_old_internal_kinds_and_copy_appends_rebuilt_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "region_bridge_surface_commit.rs:11:10:11:18"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "lightning_sparse_dispatch_connects_clipped_boundary_endpoints",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "asserts ordering/numeric/boundary/mode/invariant (not pure output contract)"
+  },
+  {
+   "test": "tpmsfk_sparse_dispatch_clips_to_the_half_spacing_inset",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "arms_tail.rs:137:17:137:23",
+    "arms_tail.rs:137:26:146:14",
+    "arms_tail.rs:138:26:138:45",
+    "arms_tail.rs:139:26:139:76",
+    "arms_tail.rs:140:24:140:41",
+    "arms_tail.rs:141:26:141:27",
+    "arms_tail.rs:142:28:142:49",
+    "arms_tail.rs:149:17:149:22",
+    "arms_tail.rs:149:25:149:82",
+    "arms_tail.rs:149:26:149:47"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "absent_front_region_retains_later_region_bridge_and_its_configured_angle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidates.rs:173:66:173:67",
+    "candidates.rs:174:13:174:17",
+    "candidates.rs:174:20:174:27",
+    "candidates.rs:174:28:174:32",
+    "candidates.rs:175:9:175:37",
+    "candidates.rs:175:41:175:69",
+    "candidates.rs:176:5:176:6",
+    "stage.rs:36:1:36:80",
+    "stage.rs:37:5:37:31",
+    "stage.rs:37:32:37:52"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "unchanged_lower_geometry_in_later_region_preserves_expanded_bridges",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:59:48:59:49",
+    "sections.rs:60:9:60:22",
+    "sections.rs:60:26:60:50",
+    "sections.rs:60:26:60:32",
+    "sections.rs:60:33:60:34",
+    "sections.rs:61:5:61:6",
+    "sections.rs:111:1:111:78",
+    "sections.rs:112:6:112:20",
+    "sections.rs:113:13:113:28",
+    "sections.rs:114:13:114:27"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "later_lower_lightning_geometry_preserves_expanded_generator_lines",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lightning_expansion.rs:51:27:51:28",
+    "lightning_expansion.rs:52:21:52:26",
+    "lightning_expansion.rs:52:29:52:33",
+    "lightning_expansion.rs:52:34:52:45",
+    "lightning_expansion.rs:52:46:52:51",
+    "lightning_expansion.rs:53:17:53:18",
+    "lightning_expansion.rs:53:19:53:25",
+    "lightning_expansion.rs:53:26:53:35",
+    "lightning_expansion.rs:53:36:53:40",
+    "lightning_expansion.rs:53:43:53:49"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "empty_front_internal_stops_later_region_bridge_expansion",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidates.rs:173:66:173:67",
+    "candidates.rs:174:13:174:17",
+    "candidates.rs:174:20:174:27",
+    "candidates.rs:174:28:174:32",
+    "candidates.rs:175:9:175:37",
+    "candidates.rs:175:41:175:69",
+    "candidates.rs:176:5:176:6",
+    "stage.rs:36:1:36:80",
+    "stage.rs:37:5:37:31",
+    "stage.rs:37:32:37:52"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "later_region_bridge_extent_does_not_expand_front_region_generator_lines",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lightning_expansion.rs:26:1:30:46",
+    "lightning_expansion.rs:31:9:31:24",
+    "lightning_expansion.rs:31:26:31:44",
+    "lightning_expansion.rs:31:47:31:55",
+    "lightning_expansion.rs:32:9:32:26",
+    "lightning_expansion.rs:32:28:32:42",
+    "lightning_expansion.rs:32:45:32:53",
+    "lightning_expansion.rs:33:9:33:25",
+    "lightning_expansion.rs:33:27:33:41",
+    "lightning_expansion.rs:33:44:33:52"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "later_region_own_bridge_extent_changes_its_generator_lines",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "lightning_expansion.rs:51:27:51:28",
+    "lightning_expansion.rs:52:21:52:26",
+    "lightning_expansion.rs:52:29:52:33",
+    "lightning_expansion.rs:52:34:52:45",
+    "lightning_expansion.rs:52:46:52:51",
+    "lightning_expansion.rs:53:17:53:18",
+    "lightning_expansion.rs:53:19:53:25",
+    "lightning_expansion.rs:53:26:53:35",
+    "lightning_expansion.rs:53:36:53:40",
+    "lightning_expansion.rs:53:43:53:49"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "later_lower_region_uses_its_density_with_empty_front_lower_region",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "sections.rs:59:48:59:49",
+    "sections.rs:60:9:60:22",
+    "sections.rs:60:26:60:50",
+    "sections.rs:60:26:60:32",
+    "sections.rs:60:33:60:34",
+    "sections.rs:61:5:61:6",
+    "sections.rs:111:1:111:78",
+    "sections.rs:112:6:112:20",
+    "sections.rs:113:13:113:28",
+    "sections.rs:114:13:114:27"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "empty_later_lightning_regions_width_does_not_change_generated_tree_lines",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidates.rs:173:66:173:67",
+    "candidates.rs:174:13:174:17",
+    "candidates.rs:174:20:174:27",
+    "candidates.rs:174:28:174:32",
+    "candidates.rs:175:9:175:37",
+    "candidates.rs:175:41:175:69",
+    "candidates.rs:176:5:176:6",
+    "stage.rs:36:1:36:80",
+    "stage.rs:37:5:37:31",
+    "stage.rs:37:32:37:52"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "moving_internal_geometry_to_later_region_preserves_generated_tree_lines",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidates.rs:173:66:173:67",
+    "candidates.rs:174:13:174:17",
+    "candidates.rs:174:20:174:27",
+    "candidates.rs:174:28:174:32",
+    "candidates.rs:175:9:175:37",
+    "candidates.rs:175:41:175:69",
+    "candidates.rs:176:5:176:6",
+    "stage.rs:36:1:36:80",
+    "stage.rs:37:5:37:31",
+    "stage.rs:37:32:37:52"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "zero_density_later_lightning_region_does_not_activate_generator",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidates.rs:173:66:173:67",
+    "candidates.rs:174:13:174:17",
+    "candidates.rs:174:20:174:27",
+    "candidates.rs:174:28:174:32",
+    "candidates.rs:175:9:175:37",
+    "candidates.rs:175:41:175:69",
+    "candidates.rs:176:5:176:6",
+    "stage.rs:36:1:36:80",
+    "stage.rs:37:5:37:31",
+    "stage.rs:37:32:37:52"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "source_internal_second_bridge_splits_overlap_and_rotates_angle",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "extra_bridge.rs:148:34:148:41",
+    "extra_bridge.rs:148:42:148:62",
+    "extra_bridge.rs:148:63:148:72"
+   ],
+   "reason": "executes regions not E2E-covered"
+  },
+  {
+   "test": "later_region_bridge_uses_its_flow_and_rewrites_all_physical_layer_regions",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "candidates.rs:173:66:173:67",
+    "candidates.rs:174:13:174:17",
+    "candidates.rs:174:20:174:27",
+    "candidates.rs:174:28:174:32",
+    "candidates.rs:175:9:175:37",
+    "candidates.rs:175:41:175:69",
+    "candidates.rs:176:5:176:6",
+    "stage.rs:36:1:36:80",
+    "stage.rs:37:5:37:31",
+    "stage.rs:37:32:37:52"
+   ],
+   "reason": "executes regions not E2E-covered"
+  }
+ ],
+ "keep_reasons": {
+  "degenerate-boundary": "degenerate/complete-erosion boundary unreachable reliably in E2E",
+  "topology-invariant": "trace algorithm topology not asserted by byte-compare even when regions execute"
+ }
+}

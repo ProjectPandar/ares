@@ -51,32 +51,6 @@ fn task22o47_always_includes_immediate_lower_layer_below_depth_threshold() {
 }
 
 #[test]
-fn task22o47_uses_each_lower_layer_density_and_internal_void_classification() {
-    let fixture = Fixture::new(vec![
-        layer(
-            1,
-            0.60,
-            vec![
-                internal(rect(0, 0, 30, 20)),
-                surface(RegionSurfaceKind::InternalVoid, rect(40, 0, 50, 10)),
-                surface(RegionSurfaceKind::InternalSolid, rect(10, 0, 20, 20)),
-                surface(RegionSurfaceKind::Top, rect(40, 0, 45, 10)),
-            ],
-            15.0,
-        ),
-        layer(2, 0.80, vec![internal(rect(60, 0, 70, 10))], 100.0),
-        layer(3, 1.00, vec![internal(rect(80, 0, 90, 10))], 15.0),
-    ]);
-
-    let output = gather(&fixture, 2, 0.6).unwrap();
-
-    assert_eq!(
-        bounds(&output),
-        vec![(0, 0, 10, 20), (20, 0, 30, 20), (45, 0, 50, 10)]
-    );
-}
-
-#[test]
 fn task22o47_unions_and_closes_sparse_geometry_before_subtracting_solids() {
     let mut hole = rect(10, 10, 20, 20).contour().clone();
     hole.reverse();
