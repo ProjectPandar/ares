@@ -197,3 +197,36 @@ async fn profile_settings_json_exposes_merged_values() {
     let view: serde_json::Value = serde_json::from_str(&json).unwrap();
     assert_eq!(view["layer_height"], serde_json::json!("0.2"), "{view}");
 }
+
+#[test]
+fn preset_catalog_printer_models_and_similar_json() {
+    let vendor = serde_json::json!({
+        "index": {
+            "name": "Acme",
+            "machine_list": [
+                {"sub_path": "a.json"}, {"sub_path": "b.json"}
+            ]
+        },
+        "files": {
+            "a.json": {
+                "type": "machine", "name": "A1 0.4 nozzle", "from": "system",
+                "instantiation": "true", "printer_model": "A1",
+                "printer_variant": "0.4", "nozzle_diameter": [0.4]
+            },
+            "b.json": {
+                "type": "machine", "name": "A1 0.6 nozzle", "from": "system",
+                "instantiation": "true", "printer_model": "A1",
+                "printer_variant": "0.6", "nozzle_diameter": [0.6]
+            }
+        }
+    });
+    let mut catalog = super::PresetCatalog::new();
+    catalog
+        .add_vendor_json(vendor.to_string().as_bytes())
+        .unwrap();
+    let models: serde_json::Value =
+        serde_json::from_str(&catalog.printer_models_json().unwrap()).unwrap();
+    assert_eq!(models, serde_json::json!([{"model": "A1"}]));
+    let similar = catalog.similar_printer_preset_json("A1", "0.6", "A1 0.4 nozzle");
+    assert_eq!(similar, serde_json::json!("A1 0.6 nozzle").to_string());
+}
