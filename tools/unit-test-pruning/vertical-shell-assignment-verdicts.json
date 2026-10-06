@@ -1,0 +1,40 @@
+{
+ "module": "project_slice/prepare_infill/vertical_shell_assignment",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 5,
+ "deleted": 0,
+ "kept": 5,
+ "tests": [
+  {
+   "test": "task22o24_assignment_keeps_externals_then_appends_exact_internal_groups",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "assign/stage retag-and-difference internals never reached by E2E"
+  },
+  {
+   "test": "task22o24_empty_filter_is_an_allocation_exact_noop",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "assign/stage retag-and-difference internals never reached by E2E"
+  },
+  {
+   "test": "task22o24_nonempty_filter_runs_empty_subjects_and_freezes_failures",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "assign/stage retag-and-difference internals never reached by E2E"
+  },
+  {
+   "test": "task22o24_differences_preserve_multiple_holed_nested_subjects",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "assign/stage retag-and-difference internals never reached by E2E"
+  },
+  {
+   "test": "task22o24_full_cover_moves_all_internal_topology_to_solid",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "assign/stage retag-and-difference internals never reached by E2E"
+  }
+ ]
+}

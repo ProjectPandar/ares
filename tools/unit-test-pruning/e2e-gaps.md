@@ -50,3 +50,14 @@ coordinator can add E2E oracle cases after pruning finishes.
   (`PrintObject.cpp`). Trigger: `extra_solid_infills` option set to a
   non-empty schedule (e.g. `1` or `0,2,4`) on a project; all 6 tests
   exercise regions unreachable without it.
+
+## project_slice/prepare_infill/vertical_shell_assignment
+
+- `vertical_shell_assignment.rs:47-55, 72-100` — assign/stage retag +
+  difference path: Internal→InternalSolid promotion where the vertical
+  shell fully covers an internal surface, and the empty-filter / alloc
+  exact no-op short-circuit. Upstream: `PrintObject::prepare_infill`
+  vertical-shell assignment (`PrintObject.cpp`). Trigger: a model whose
+  top/bottom shell boundary crosses internal sparse infill so the
+  assignment loop has nonzero work; seeded corpus never reaches the
+  uncovered regions, so no E2E case exercises assignment.
