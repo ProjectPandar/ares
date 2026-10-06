@@ -9,6 +9,8 @@
 mod adaptive_pressure_advance;
 #[path = "orca_parity/artifacts.rs"]
 mod artifacts;
+#[path = "orca_parity/curled_perimeter_slowdown.rs"]
+mod curled_perimeter_slowdown;
 #[path = "orca_parity/honeycomb_multiline.rs"]
 mod honeycomb_multiline;
 #[path = "orca_parity/option_coverage.rs"]
