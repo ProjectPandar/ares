@@ -131,15 +131,17 @@ export type ViewRange = [first: number, last: number, current: number];
 
 /** Moves slider of the shown layers (GCodeViewer `update_moves_slider`): one stop per G-code line. */
 export interface MovesSlider {
-  /** Stops of the visible range (`SetSelectionSpan`). */
-  span: [low: number, high: number];
+  /** Stops of the lower and higher thumbs (`IMSlider` `m_lower_value`, `m_higher_value`). */
+  thumbs: [lower: number, higher: number];
   /** 1-based G-code line of each stop. */
   gcodeIds: Uint32Array<ArrayBuffer>;
 }
 
-/** The view with the moves slider thumbs at two stops. */
+/** The view between the moves slider thumbs. */
 export interface MovesView {
   range: ViewRange;
+  /** Stops of the lower and higher thumbs. */
+  thumbs: [lower: number, higher: number];
   /** Vertex ids `i` of the enabled segments `i` to `i + 1` (libvgcode `update_enabled_entities`). */
   segments: Uint32Array<ArrayBuffer>;
   /** Vertex ids of the enabled option markers. */

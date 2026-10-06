@@ -166,17 +166,20 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "movesSlider": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");
-      const { layers, visibleRoles, visibleOptions } = request;
+      const { layers, visibleRoles, visibleOptions, higher } = request;
+      if (higher !== undefined) viewer.setMovesHigher(higher);
       const slider = viewer.movesSlider(layers[0], layers[1], visibleRoles, visibleOptions) as Uint32Array<ArrayBuffer>;
-      const value: MovesSlider = { span: [slider[0], slider[1]], gcodeIds: slider.slice(2) };
+      const value: MovesSlider = { thumbs: [slider[0], slider[1]], gcodeIds: slider.slice(2) };
       return [value, [value.gcodeIds.buffer]];
     }
-    case "movesRange": {
+    case "movesHigher": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");
-      const { stops, viewType, visibleRoles, visibleOptions } = request;
-      const range = [...viewer.setMovesRange(stops[0], stops[1])] as ViewRange;
+      const { higher, viewType, visibleRoles, visibleOptions } = request;
+      const [lower, high] = viewer.setMovesHigher(higher);
+      const range = [...viewer.setMovesRange()] as ViewRange;
       const value: MovesView = {
         range,
+        thumbs: [lower, high],
         segments: viewer.enabledSegments() as Uint32Array<ArrayBuffer>,
         options: viewer.enabledOptions() as Uint32Array<ArrayBuffer>,
         colors: owned(viewer.vertexColors(viewType, visibleRoles, visibleOptions)),

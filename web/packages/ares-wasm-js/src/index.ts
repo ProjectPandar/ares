@@ -239,25 +239,29 @@ export class AresSlicer {
 
   /**
    * Moves slider of the latest `sliceProject` toolpaths (GCodeViewer
-   * `update_moves_slider` after `set_layers_z_range`): sets the view as
-   * `viewRange` does, then returns one stop per G-code line of the top layer's
-   * moves and the stops of the visible range. `movesRange` uses these stops.
+   * `update_moves_slider`): sets the view as `viewRange` does, then returns
+   * one stop per G-code line of the top layer's moves and the thumbs. With
+   * `higher`, the higher thumb moves there first (`movesHigher`). A changed
+   * layer range (`set_layers_z_range`) puts the higher thumb at the first
+   * stop when it was there, else at the last; otherwise both thumbs span the
+   * visible range.
    */
-  async movesSlider(layers: [number, number], visibleRoles: number, visibleOptions: number): Promise<MovesSlider> {
+  async movesSlider(layers: [number, number], visibleRoles: number, visibleOptions: number, higher?: number): Promise<MovesSlider> {
     await this.#ready;
-    return (await this.#call({ kind: "movesSlider", layers, visibleRoles, visibleOptions })) as MovesSlider;
+    return (await this.#call({ kind: "movesSlider", layers, visibleRoles, visibleOptions, higher })) as MovesSlider;
   }
 
   /**
-   * Shows the moves between the latest `movesSlider` stops `low` and `high`
-   * (libvgcode `set_view_visible_range`). Returns the view range, the enabled
-   * segments and option markers, and the `viewType` colors with the layers
-   * below the top one grayed while `high` is not the last stop. Rejects for
-   * stops outside the slider.
+   * Moves the higher thumb of the latest `movesSlider` to stop `higher`,
+   * clamped to the stops (`IMSlider::SetHigherValue`), and shows the moves
+   * between the thumbs (libvgcode `set_view_visible_range`). Returns the view
+   * range, the thumbs, the enabled segments and option markers, and the
+   * `viewType` colors with the layers below the top one grayed while the
+   * higher thumb is not at the last stop.
    */
-  async movesRange(stops: [low: number, high: number], viewType: string, visibleRoles: number, visibleOptions: number): Promise<MovesView> {
+  async movesHigher(higher: number, viewType: string, visibleRoles: number, visibleOptions: number): Promise<MovesView> {
     await this.#ready;
-    return (await this.#call({ kind: "movesRange", stops, viewType, visibleRoles, visibleOptions })) as MovesView;
+    return (await this.#call({ kind: "movesHigher", higher, viewType, visibleRoles, visibleOptions })) as MovesView;
   }
 
   terminate(): void {

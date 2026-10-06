@@ -13,23 +13,26 @@ Source-cited rewrite slice of AGPL-licensed OrcaSlicer `src/libvgcode` and the r
 | `ViewerImpl.cpp:1342-1347` `toggle_top_layer_only_view_range` with `GCodeViewer::load_as_gcode` (`GCodeViewer.cpp:1128-1131`) applying the `seq_top_layer_only` app config default `1` (`AppConfig.cpp:202-203`) | already in `viewer.rs`; called once by the wasm `VertexBuffers` loader |
 | `GCodeViewer::update_moves_slider` (`GCodeViewer.cpp:1765-1821`): slider values over the enabled range, consecutive vertices with the same `gcode_id` (G2/G3 splits) merged into the last one, alternate values = G-code line ids, selection span from the visible range | new `crates/ares-vgcode/src/moves_slider.rs` (`MovesSlider`) |
 | `GLCanvas3D::_render_gcode` (`GLCanvas3D.cpp:8263-8266`): slider thumbs to the visible range, `values[thumb] - 1` | `MovesSlider::vertex_range` |
+| Persistent `IMSlider` thumbs (`IMSlider.cpp:134-148`, min value 0 from `GCodeViewer.cpp:977`): `SetSelectionSpan` (`:193-204`), `SetHigherValue` / `correct_higher_value` (`:186-191, 1675-1683`); `update_moves_slider(set_to_max)` keeping the higher thumb at the min when it was there (`GCodeViewer.cpp:1813-1820`), `set_layers_z_range` passing `set_to_max` (`:1864-1868`), higher thumb at the max after load (`GLCanvas3D.cpp:3098`) | `MovesSlider::{new, set_layers_z_range, set_higher_value}` |
 
 ## wasm: thin bindings only (`crates/ares-wasm/src/moves.rs`)
 
 - The loader turns on the top-layer-only view range, as above.
-- `VertexBuffers.movesSlider(minLayer, maxLayer, visibleRoles, visibleOptions) -> Uint32Array`: visibility and layer range as `viewRange` does (`GCodeViewer::set_layers_z_range` then `update_moves_slider(true)`, `GCodeViewer.cpp:1864-1868`), keeps the `MovesSlider`, and returns `[spanMin, spanMax, ...gcodeIds]`.
-- `VertexBuffers.setMovesRange(low, high) -> Uint32Array`: `set_view_visible_range(vertex_range(low, high))`, returns `[first, last, current]` like `viewRange`.
+- `VertexBuffers.movesSlider(minLayer, maxLayer, visibleRoles, visibleOptions) -> Uint32Array`: visibility as `viewRange` sets it, then `MovesSlider::set_layers_z_range` (`set_to_max` when the layer range changed, as `set_layers_z_range`; otherwise the legend toggle refresh `update_moves_slider()`); returns `[lower, higher, ...gcodeIds]`.
+- `VertexBuffers.setMovesHigher(value) -> Uint32Array`: `MovesSlider::set_higher_value`, returns `[lower, higher]`.
+- `VertexBuffers.setMovesRange() -> Uint32Array`: `set_view_visible_range(vertex_range())`, returns `[first, last, current]` like `viewRange`.
 - `VertexBuffers.enabledSegments()` / `enabledOptions()` -> `Uint32Array`.
 - `vertexColors` returns `texture_colors` (`update_colors` ends with `update_colors_texture`, `ViewerImpl.cpp:1285`).
 
 ## Library and app
 
-- `AresSlicer.movesSlider(layers, roles, options)` and `AresSlicer.movesRange([low, high], viewType, roles, options)`, the latter returning the view range, enabled segment / option ids and the vertex colors.
-- A horizontal moves slider under the preview canvas (`<input type=range>`, the higher thumb). It resets to its maximum when the layer range or a legend toggle changes. The toolpath mesh and option markers draw only the enabled entities; the G-code window follows the current vertex. TS only maps slider position to the call and an id list to instance flags.
+- `AresSlicer.movesSlider(layers, roles, options, higher?)` returning `{thumbs, gcodeIds}` and `AresSlicer.movesHigher(higher, viewType, roles, options)`, the latter returning the view range, the clamped thumbs, enabled segment / option ids and the vertex colors. (Contract change of the keyboard slice: `span` became `thumbs`, `movesRange([low, high], …)` became `movesHigher(higher, …)`.)
+- A horizontal moves slider under the preview canvas (`<input type=range>`, the higher thumb, the only one a horizontal `IMSlider` draws, `IMSlider.cpp:1241-1248`). The engine places it on rebuilds: the max (or the min when it was there) for a new layer range, the visible span after a legend toggle.
+- Canvas keys (`GLCanvas3D.cpp:3844-3885`, in the lazy `MovesSlider` chunk): Up/Down move the active layer thumb, presetting the moves thumb to its max for the upper one; Left/Right step the moves thumb, past its ends the upper layer thumb with the moves thumb at the other end; Home/End jump to the ends; x5 with Shift or Ctrl/Cmd. TS maps keys to requested stops; the engine clamps them and decides the rebuild position. The toolpath mesh and option markers draw only the enabled entities; the G-code window follows the current vertex. TS only maps slider position to the call and an id list to instance flags.
 
 ## Deferred
 
-- The lower thumb, the slider's alternate value labels (`SetSliderAlternateValues`) and `IMSlider` keyboard details. Recorded in `web/README.md` "Known differences from OrcaSlicer".
+- The slider's alternate value labels (`SetSliderAlternateValues`). Recorded in `web/README.md` "Known differences from OrcaSlicer".
 - The tool marker and its estimated-time label (`ViewerImpl::get_estimated_time_at`).
 
 ## Tests (RED first)

@@ -75,10 +75,11 @@ node scripts/extract-process-layout.mjs /path/to/OrcaSlicer
   composes the full selection. OrcaSlicer updates the bed as soon as the
   printer changes (`Plater::priv::on_select_preset` -> `on_config_change` ->
   `set_bed_shape`, `Plater.cpp:9576-9580, 16754-16755`).
-- The Preview moves slider has only its higher thumb, labelled with the G-code
-  line of the stop. OrcaSlicer's `IMSlider` also has a lower thumb, shows the
-  estimated time or distance of a stop (`alternate_values`), and draws the tool
-  position marker at the current move (`GCodeViewer::SequentialView::Marker`).
+- The Preview moves slider labels its thumb (the higher one, the only one a
+  horizontal `IMSlider` draws, `IMSlider.cpp:1241-1248`) with the G-code line
+  of the stop. OrcaSlicer also shows the estimated time or distance of a stop
+  (`alternate_values`) and draws the tool position marker at the current move
+  (`GCodeViewer::SequentialView::Marker`).
 
 ## End-to-end test
 

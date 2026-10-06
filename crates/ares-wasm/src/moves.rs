@@ -184,7 +184,7 @@ impl VertexBuffers {
             color_print_colors,
             layer_zs: viewer.layers().get_zs(),
             viewer: ViewerImpl::default(),
-            moves_slider: MovesSlider::default(),
+            moves_slider: MovesSlider::new(&viewer),
         };
         for v in viewer.vertices() {
             out.values.extend_from_slice(&[
@@ -217,6 +217,10 @@ impl VertexBuffers {
         }
         out.viewer = viewer;
         out
+    }
+
+    fn moves_thumbs(&self) -> [u32; 2] {
+        [self.moves_slider.lower, self.moves_slider.higher].map(|stop| stop as u32)
     }
 
     fn visible_range(&self) -> Vec<u32> {
@@ -318,10 +322,9 @@ impl VertexBuffers {
             .set_layers_view_range(min_layer as usize, max_layer as usize);
         self.visible_range()
     }
-    /// `viewRange`, then the moves slider of `GCodeViewer::update_moves_slider`
-    /// (`GCodeViewer::set_layers_z_range`, `GCodeViewer.cpp:1864-1868`), kept
-    /// for `setMovesRange`. Returns `[spanMin, spanMax, ...gcodeIds]`: the
-    /// visible stops and the G-code line id of each stop.
+    /// The visibility as `viewRange` sets it, then `MovesSlider::set_layers_z_range`
+    /// (GCodeViewer `set_layers_z_range` / `update_moves_slider`). Returns
+    /// `[lower, higher, ...gcodeIds]`: the thumbs and the G-code line id of each stop.
     #[wasm_bindgen(js_name = movesSlider)]
     pub fn moves_slider(
         &mut self,
@@ -330,30 +333,29 @@ impl VertexBuffers {
         visible_roles: u32,
         visible_options: u16,
     ) -> Vec<u32> {
-        self.view_range(min_layer, max_layer, visible_roles, visible_options);
-        self.moves_slider = MovesSlider::new(&self.viewer).unwrap_or_default();
-        let MovesSlider {
-            span,
-            alternate_values,
-            ..
-        } = &self.moves_slider;
-        span.iter()
-            .map(|&stop| stop as u32)
-            .chain(alternate_values.iter().copied())
+        self.set_visibility(visible_roles, visible_options);
+        self.moves_slider
+            .set_layers_z_range(&mut self.viewer, [min_layer as usize, max_layer as usize]);
+        self.moves_thumbs()
+            .into_iter()
+            .chain(self.moves_slider.alternate_values.iter().copied())
             .collect()
     }
-    /// libvgcode `ViewerImpl::set_view_visible_range` of the moves slider
-    /// thumbs `low` and `high`, stops of the latest `movesSlider`
-    /// (`GLCanvas3D.cpp:8263-8266`). Returns `[first, last, current]` as `viewRange`.
+    /// `MovesSlider::set_higher_value` (`IMSlider::SetHigherValue`). Returns
+    /// the thumbs `[lower, higher]`.
+    #[wasm_bindgen(js_name = setMovesHigher)]
+    pub fn set_moves_higher(&mut self, value: i32) -> Vec<u32> {
+        self.moves_slider.set_higher_value(value as isize);
+        self.moves_thumbs().to_vec()
+    }
+    /// libvgcode `ViewerImpl::set_view_visible_range` between the moves slider
+    /// thumbs (`GLCanvas3D.cpp:8263-8266`). Returns `[first, last, current]`
+    /// as `viewRange`; fails before `movesSlider` has stops.
     #[wasm_bindgen(js_name = setMovesRange)]
-    pub fn set_moves_range(&mut self, low: u32, high: u32) -> Result<Vec<u32>, JsError> {
-        let stops = self.moves_slider.values.len();
-        if low > high || high as usize >= stops {
-            return Err(JsError::new(&format!(
-                "moves range {low}..{high} outside {stops} stops"
-            )));
-        }
-        let [min, max] = self.moves_slider.vertex_range(low as usize, high as usize);
+    pub fn set_moves_range(&mut self) -> Result<Vec<u32>, JsError> {
+        let Some([min, max]) = self.moves_slider.vertex_range() else {
+            return Err(JsError::new("moves slider without stops"));
+        };
         self.viewer.set_view_visible_range(min, max);
         Ok(self.visible_range())
     }

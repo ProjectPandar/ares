@@ -185,6 +185,7 @@ async function checkMovesKeys(page: Page, gcode: string[], moves: Move[], top: n
   const at = async (layerIndex: number, stop: number) => {
     const stops = movesSliderStops(moves, layerIndex);
     const index = stop < 0 ? stops.length + stop : stop;
+    await expect(page.getByTestId("moves-slider")).toHaveAttribute("aria-busy", "false");
     await expect(layer).toHaveAttribute("aria-valuenow", String(layerIndex + 1));
     await expect(slider).toHaveAttribute("aria-valuemax", String(stops.length - 1));
     await expect(slider).toHaveValue(String(index));

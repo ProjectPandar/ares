@@ -136,6 +136,11 @@ export function stepLayers(delta: number, wheel: boolean) {
   });
 }
 
+/** Moves the upper layer thumb by `delta` (GLCanvas3D::on_key Left/Right past the moves slider ends). */
+export function stepTopLayer(delta: number) {
+  useApp.setState(({ preview }) => ({ preview: moveThumb(preview, 1, preview.layers[1] + delta, lastLayer()) }));
+}
+
 export function toggleOneLayer() {
   useApp.setState(({ preview }) => ({ preview: switchOneLayer(preview, lastLayer()) }));
 }

@@ -3,23 +3,24 @@ import { EXTRUSION_ROLES, type Toolpaths, type ViewColors } from "@ares-slicer/w
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Sidebar } from "../sidebar/Sidebar";
 import { cmdDown, isShortcut } from "../shell/keys";
-import { setPreview, slicePlate, stepLayers, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
+import { setPreview, slicePlate, stepLayers, stepTopLayer, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
 import { slicer } from "../state/slicer";
 import { useApp } from "../state/store";
 import { usedOptions, usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
 import { LayerSlider } from "./LayerSlider";
-import type { MovesState } from "./MovesSlider";
+import type { LayerSteps, MovesState } from "./MovesSlider";
 
 // Fetched once a slice has move vertices to show.
 const Legend = lazy(() => import("./Legend").then((module) => ({ default: module.Legend })));
+const LAYER_STEPS: LayerSteps = { stepLayers, stepTopLayer };
 const MovesSlider = lazy(() => import("./MovesSlider").then((module) => ({ default: module.MovesSlider })));
 const GCodeWindow = lazy(() => import("./GCodeWindow").then((module) => ({ default: module.GCodeWindow })));
 
 /**
  * Preview keys: C toggles the G-code window (GLCanvas3D::on_char), L one layer
- * mode (Preview::update_layers_slider_from_canvas, no modifiers), Up/Down move
- * the active layer thumb, x5 with Shift or Ctrl/Cmd (GLCanvas3D::on_key).
+ * mode (Preview::update_layers_slider_from_canvas, no modifiers); the moves
+ * slider handles the slider navigation keys.
  */
 function onPreviewKey(event: KeyboardEvent) {
   if (!isShortcut(event) || event.altKey) return;
@@ -31,11 +32,6 @@ function onPreviewKey(event: KeyboardEvent) {
   const { slice } = useApp.getState();
   if (slice.status !== "done" || !slice.toolpaths) return;
   if (key === "l" && !cmdDown(event) && !event.shiftKey) toggleOneLayer();
-  else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-    event.preventDefault();
-    const step = cmdDown(event) || event.shiftKey ? 5 : 1;
-    stepLayers(event.key === "ArrowUp" ? step : -step, false);
-  }
 }
 
 const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
@@ -120,7 +116,7 @@ export function PreviewPage() {
         )}
         {toolpaths && (
           <Suspense>
-            <MovesSlider toolpaths={toolpaths} view={view} onMoves={setMoves} />
+            <MovesSlider toolpaths={toolpaths} view={view} onMoves={setMoves} steps={LAYER_STEPS} />
           </Suspense>
         )}
         {slice.status === "done" && gcodeWindow && currentLine !== 0 && (
