@@ -2,15 +2,15 @@
 
 ## 上游边界与 destination
 
-固定 OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`。移植 `src/libslic3r/Print.cpp:1627-1652::Print::validate` 的 non-raft first-layer height 与 object layer-height 检查；共享 `:1524-1532` 已用 nozzle minimum，与已合入 O4 / Print upper-width 共用一次 used-extruder traversal。
+固定 OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`。移植 `src/libslic3r/Print.cpp:1627-1652::Print::validate` 的 first-layer height（含 raft）与 object layer-height 检查；共享 `:1524-1532` 已用 nozzle minimum，与已合入 O4 / Print upper-width 共用一次 used-extruder traversal。
 
-Rust destination 是 `crates/ares-core/src/print/validate/extrusion_width.rs` 内现有 nozzle-dependent object validation owner：其当前 width-only 命名是上游 nozzle block 的临时兼容 shell。本片增加一个私有层高检查，在每对象原 `object_widths` 之前调用，仍使用同一个 min/max tuple，不另建 usage/nozzle owner、遍历、fallback、pipeline。无需文件重命名或独立 geometry/config crate；模块远小于 400 LOC。
+Rust destination 是 `crates/ares-core/src/print/validate/extrusion_width.rs` 内现有 nozzle-dependent object validation owner：其当前 width-only 命名是上游 nozzle block 的临时兼容 shell。本片增加一个私有层高检查，在每对象原 `object_widths` 之前调用，仍使用同一个 min/max tuple，不另建 usage/nozzle owner、遍历或自研 fallback/pipeline；下面的 `get_at` front fallback 是必须保留的上游行为。无需文件重命名或独立 geometry/config crate；模块远小于 400 LOC。
 
 ## Included 与 deferred
 
-- **Included first layer**：仅 `!object.has_raft()` 分支，global `m_config.initial_layer_print_height.value > min_used_nozzle` 返回精确 `Layer height cannot exceed nozzle diameter.`。比较原 float，严格 >，等号合法，无百分比基准、EPSILON、clamp 或自动改层高。
+- **Included first layer**：`!object.has_raft()` 使用 min_used_nozzle；raft 使用下一条定义的 first-layer nozzle。global `m_config.initial_layer_print_height.value > first_layer_nozzle` 返回精确 `Layer height cannot exceed nozzle diameter.`。比较原 float，严格 >，等号合法，无百分比基准、EPSILON、clamp 或自动改层高。
 - **Included object layer**：`object.config().layer_height.value > min_used_nozzle` 同样返回该精确文本，包括 raft 对象的这个独立 predicate。resolved object layer override 保持 object-local；不是用 global layer_height 覆盖所有对象。
-- **Deferred raft first layer**：`Print.cpp:1629-1641` 的 raft_layers==1 选 support_interface_filament，否则选 support_filament，selector0 用 minUsed，否则直接 `m_config.nozzle_diameter.get_at(selector-1)`。其应用期 logical/physical remapping 边界尚未核清，**本片不猜、不替换成 min/maxUsed、也不加新的 mapper/守卫/处理路径**。raft 对象暂不执行新的 first-layer predicate，保持已有 shell；这不是完整 Print::validate 或 raft validation parity。若公开 RED 必须借 raft 输入才可达，停止缩片，不制造 native harness。
+- **Included raft first layer / 不得修正的上游怪癖**：`Print.cpp:1629-1641` 的 raft_layers==1 选 support_interface_filament，否则选 support_filament，减 1 作为 size_t。selector0 对应 size_t(-1)，用 minUsed；其余**直接**把 filament selector-1 当 nozzle index，调用 `m_config.nozzle_diameter.get_at`，**不经过 filament_map**。`Config.hpp:624-628::ConfigOptionVector::get_at` 在非空 vector 上，index 越界取 `values.front()`。Rust 按 selector0/minUsed 与非0/direct-index/front 三分支移植，不新增越界错误、不将此处换成 usage mapping 或 clamp-last、不复制 nozzle vector。这是上游规定的 fallback，不是 Ares legacy fallback；普通 min/max used-set 仍沿用原 filament_map，只有 raft first-layer lookup 故意直接索引。
 - Deferred tree-support flow/tip/branch checks与warnings (`Print.cpp:1557-1625`)、bridge width branches、printer max_layer_height/其他层高约束、slicing parameters与自适应层高算法、generic config validation、输出格式和 profile 数据修复。
 
 ## 两个函数与顺序
@@ -30,6 +30,6 @@ Rust destination 是 `crates/ares-core/src/print/validate/extrusion_width.rs` �
 
 ## TDD 与退出标准
 
-批准后：先 commit 两个真实 native-backed public API RED（global first-layer / object layer-height分别测），再预写控制，再产品。控制包括 <=minUsed/刚越界、unused smaller nozzle、support/wipe-used nozzle最小值、global first height与object-local层高、两 predicate优先于同对象 width与O1、原 width 首错在 earlier-object 内优先于 later-object height（若合法公开 fixture支持）。raft initial明确 deferred，不制造无来源自动修复。新增高度会合法改变先前 Ares 的 width/O1 首错，若旧断言确实过时须逐条列出原 native/source 证据向协调者申请迁移，不能默认修改断言。
+批准后：先 commit global first-layer / object layer-height 两个及至少一个 raft 的真实 native-backed public API RED，再预写控制，再产品。控制包括 <=minUsed/刚越界、unused smaller nozzle、support/wipe-used nozzle最小值、global first height与object-local层高、两 predicate优先于同对象 width与O1、原 width 首错在 earlier-object 内优先于 later-object height（若合法公开 fixture支持）。raft 控制锁定 1/interface 与 >=2/support、selector0/minUsed、非identity filament_map 下直接 nozzle index、越界/front；至少补一个 native raft 可达 RED，不制造无来源自动修复。新增高度会合法改变先前 Ares 的 width/O1 首错，若旧断言确实过时须逐条列出原 native/source 证据向协调者申请迁移，不能默认修改断言。
 
 始终保留 per-test tempdir 默认 artifacts，不要求 artifact env，不减弱原 O4 / upper / Flow 测试或比较器。门禁 plain workspace nextest、strict all-target/all-feature Clippy、fmt、WASM；新当前 base 独立官方/seeded complete controls、共同 Ares G-code bytes 与残余 reference 错误诚实保存。执行日志、计数在外部 evidence/commit messages，不写入 ARD。公开不可达则停止，本 spec 不授权产品在可达性未证实时先实现。
