@@ -10,6 +10,9 @@ mod loaded_config_probes;
 #[path = "loaded_config_validation.rs"]
 mod loaded_config_validation;
 
+#[path = "loaded_config_ranges.rs"]
+mod loaded_config_ranges;
+
 #[path = "preset_scalar_loading.rs"]
 mod preset_scalar_loading;
 #[path = "preset_vector_loading.rs"]
