@@ -34,6 +34,13 @@ pub(super) fn generate(
             f64::from(i32::MIN),
             upper_bound(block).expect("hot plate ceiling"),
         ))
+    } else if key == "tree_support_top_rate" {
+        // PrintConfig.cpp:6469-6481 leaves max implicit; Config.hpp:2475-2479
+        // supplies FLT_MAX, not the max_literal UI warning threshold.
+        Some((
+            lower_bound(block).expect("branch density minimum"),
+            f64::from(f32::MAX),
+        ))
     } else {
         numeric_bounds(block)
     };
@@ -49,6 +56,14 @@ pub(super) fn generate(
             ];
             if key == "temperature_vitrification" {
                 cases.push(case("probe", "110", entry));
+            }
+            if key == "tree_support_top_rate" {
+                cases.push(numeric_case(
+                    "probe",
+                    seeded_interior(key, minimum, minimum.max(1.0) * 4.0 + 1.0, false),
+                    entry,
+                    option_type,
+                ));
             }
             if key == "filament_printable" {
                 cases.extend(["0", "1", "2", "3"].map(|value| case(value, value, entry)));

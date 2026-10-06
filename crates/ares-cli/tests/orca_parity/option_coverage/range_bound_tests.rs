@@ -1,6 +1,27 @@
 use super::*;
 
 #[test]
+fn percent_probes_use_upstream_six_significant_digit_serialization() {
+    let entry = serde_json::json!({"wire_shape": "scalar"});
+    for (value, expected) in [
+        (f64::from(f32::MAX), "3.40282e+38%"),
+        (
+            seeded_interior("tree_support_top_rate", 5.0, f64::from(f32::MAX), false),
+            "2.28416e+38%",
+        ),
+        (0.00001, "1e-05%"),
+        (999999.9, "1e+06%"),
+        (100000.0, "100000%"),
+        (5.0, "5%"),
+    ] {
+        for kind in ["coPercent", "coPercents"] {
+            let probe = numeric_case("probe", value, &entry, kind);
+            assert_eq!(probe.value, Some(serde_json::json!(expected)), "{kind}");
+        }
+    }
+}
+
+#[test]
 fn numeric_bounds_do_not_accept_prefixes_of_unsupported_expressions() {
     for expression in [
         "1 / 2",

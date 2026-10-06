@@ -255,11 +255,35 @@ pub(super) fn numeric_case(
     let rendered = if option_type.contains("Int") {
         format!("{value:.0}")
     } else if option_type.contains("Percent") {
-        format!("{value}%")
+        format!("{}%", serialize_percent_probe(value))
     } else {
         value.to_string()
     };
     case(label, &rendered, entry)
+}
+
+// Config.hpp:1179-1185 (ConfigOptionPercent) and 1294-1300
+// (ConfigOptionFloatOrPercent): default ostringstream precision is six.
+fn serialize_percent_probe(value: f64) -> String {
+    let scientific = format!("{value:.5e}");
+    let (mantissa, exponent) = scientific.split_once('e').unwrap();
+    let exponent: i32 = exponent.parse().unwrap();
+    if !(-4..6).contains(&exponent) {
+        let mantissa = mantissa.trim_end_matches('0').trim_end_matches('.');
+        format!("{mantissa}e{exponent:+03}")
+    } else {
+        let precision = usize::try_from(5 - exponent).unwrap();
+        let rounded: f64 = scientific.parse().unwrap();
+        let rendered = format!("{rounded:.precision$}");
+        if precision == 0 {
+            rendered
+        } else {
+            rendered
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_owned()
+        }
+    }
 }
 
 pub(super) fn case(label: &str, value: &str, entry: &Value) -> OptionCase {
