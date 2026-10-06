@@ -23,6 +23,15 @@
   `isnan → nullable`；`min==0 && v<0 → false`；`is_approx(v,min,1e-4)`
   或 `is_approx(v,max,1e-4)` → true（max_precision=4）；否则
   `min<=v<=max`。
+- nil 语义按类型分（`Config.hpp` 的 `nil_value()`）：`coFloats`/
+  `coPercents` 的 nil 元素存 `quiet_NaN` → `isnan` 分支命中 nullable
+  → **合法**；`coInts` 的 nil 元素存 `INT_MAX`（Config.hpp:1013）→
+  `is_value_valid(INT_MAX)` 落到 `min<=v<=max`，`filament_flush_temp`
+  max=1500，INT_MAX 超界 → **拒绝** `nil not in range [0,1500]`。
+  因此 nullable 的 int vector 带 nil 会被上游拒，float vector 的 nil
+  不会。实测 Anycubic Kobra S1 Max：`filament_flush_temp: nil not in
+  range [0.000000,1500.000000]`（与 `retraction_distances_when_cut: 0`
+  同例双行输出）。
 - bridge_line_width 的独立上界在同函数 `PrintConfig.cpp:10504-10517`：
   `allowed_max = min_nozzle_diameter`（非 `MAX_LINE_WIDTH_MULTIPLIER *
   max_nozzle_diameter`），越界报 `Bridge line width must not exceed
