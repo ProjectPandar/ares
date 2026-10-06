@@ -121,29 +121,8 @@ fn orca_parity_o2_profile_overrides_apply_before_validation() {
         );
         actual.unwrap();
         if let Some(runner) = OrcaRunner::from_env().unwrap() {
-            let exported = fs::read(directory.join("native.3mf")).unwrap();
-            let mut archive = zip::ZipArchive::new(Cursor::new(exported)).unwrap();
-            let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
-            for index in 0..archive.len() {
-                let mut file = archive.by_index(index).unwrap();
-                let mut bytes = Vec::new();
-                file.read_to_end(&mut bytes).unwrap();
-                if file.name() == "Metadata/project_settings.config" {
-                    let mut settings: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-                    settings["use_firmware_retraction"] = json!("1");
-                    settings["wipe"] = json!(["1"]);
-                    bytes = serde_json::to_vec(&settings).unwrap();
-                }
-                output
-                    .start_file(
-                        file.name(),
-                        zip::write::SimpleFileOptions::default()
-                            .compression_method(file.compression()),
-                    )
-                    .unwrap();
-                output.write_all(&bytes).unwrap();
-            }
-            let embedded = output.finish().unwrap().into_inner();
+            let embedded =
+                invalid_firmware_wipe_project(fs::read(directory.join("native.3mf")).unwrap());
             fs::write(directory.join("embedded-invalid.3mf"), &embedded).unwrap();
             let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
             stages::run(
@@ -175,4 +154,28 @@ fn orca_parity_o2_profile_overrides_apply_before_validation() {
             actual.unwrap();
         }
     }
+}
+
+fn invalid_firmware_wipe_project(exported: Vec<u8>) -> Vec<u8> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(exported)).unwrap();
+    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..archive.len() {
+        let mut file = archive.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            let mut settings: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+            settings["use_firmware_retraction"] = json!("1");
+            settings["wipe"] = json!(["1"]);
+            bytes = serde_json::to_vec(&settings).unwrap();
+        }
+        output
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+            )
+            .unwrap();
+        output.write_all(&bytes).unwrap();
+    }
+    output.finish().unwrap().into_inner()
 }
