@@ -5,6 +5,8 @@ use std::fs;
 mod entries;
 #[path = "print_validation/minimum_width.rs"]
 mod minimum_width;
+#[path = "print_validation/minimum_width_controls.rs"]
+mod minimum_width_controls;
 #[path = "print_validation/positive.rs"]
 mod positive;
 #[path = "print_validation/rejections.rs"]
