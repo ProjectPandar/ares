@@ -1,4 +1,4 @@
-//! Print.cpp:1524-1556,1627-1671: nozzle-dependent height/width bounds.
+//! Print.cpp:1524-1556,1627-1692: nozzle-dependent height/width bounds.
 use crate::project::effective_config::{types::BoundedResolvedProjectConfig, usage};
 use crate::{FloatOrPercent, ObjectOptions, OrcaInts, ProjectSettings, RegionOptions, SliceError};
 
@@ -40,6 +40,7 @@ pub(super) fn applied(resolved: &BoundedResolvedProjectConfig) -> Result<(), Sli
                 )?;
             }
         }
+        bridge_widths(settings, &object.object, &object.all_regions)?;
     }
     Ok(())
 }
@@ -68,7 +69,7 @@ pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
     for value in region_widths!(region) {
         width(value, object.layer_height.0, nozzles)?;
     }
-    Ok(())
+    bridge_widths(settings, &object, std::slice::from_ref(&region))
 }
 
 fn nozzle_bounds(
@@ -130,6 +131,44 @@ fn layer_heights(
         return Err(SliceError::InvalidInput(
             "Layer height cannot exceed nozzle diameter.".to_owned(),
         ));
+    }
+    Ok(())
+}
+
+fn bridge_widths(
+    settings: &ProjectSettings,
+    object: &ObjectOptions,
+    regions: &[RegionOptions],
+) -> Result<(), SliceError> {
+    let allow_thin = object.thick_bridges.0 && object.thick_internal_bridges.0;
+    let diameters = &settings.project.print.nozzle_diameter.0;
+    for region in regions {
+        // PrintRegion.cpp:7-23, in Print.cpp:1675-1692 role order.
+        for selector in [
+            region.inner_wall_filament_id,
+            region.sparse_infill_filament_id,
+            region.internal_solid_filament_id,
+            region.top_surface_filament_id,
+        ] {
+            // Unsigned selector0 underflows; get_at falls back to front. No map.
+            let index = (selector.0 as usize).wrapping_sub(1);
+            let nozzle = diameters.get(index).unwrap_or(&diameters[0]).0;
+            let width = match region.bridge_line_width {
+                FloatOrPercent::Float(value) => value,
+                FloatOrPercent::Percent(value) => nozzle * value.0 / 100.0,
+            };
+            if width <= 0.0 {
+                continue;
+            }
+            if width > nozzle {
+                return Err(SliceError::InvalidInput(
+                    "Bridge line width must not exceed nozzle diameter".to_owned(),
+                ));
+            }
+            if !allow_thin && width <= object.layer_height.0 {
+                return Err(SliceError::InvalidInput("Too small line width".to_owned()));
+            }
+        }
     }
     Ok(())
 }
