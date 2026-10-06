@@ -1,9 +1,12 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
+import { normalize } from "./orcaGcode";
 import { checkToolpathPreview } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -17,6 +20,26 @@ function nativeGcode(plate: string): Buffer {
   const output = `${artifacts}native.gcode`;
   execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", plate, "-o", output, fixture]);
   return readFileSync(output);
+}
+
+/**
+ * Official OrcaSlicer slicing a copy of the project whose `Metadata/project_settings.config`
+ * (bbs_3mf.cpp:210, loaded at :2647) carries the edit: the PresetBundle::full_config ->
+ * Print::apply path a GUI edit takes (Config.cpp:573 set_deserialize_nothrow, PrintApply.cpp:1113),
+ * as the M854 oracle crates/ares-cli/tests/orca_parity/runner/user_overrides.rs does.
+ */
+function orcaEditedGcode(edit: Record<string, string>): string {
+  const work = `${mkdtempSync(`${tmpdir()}/ares-web-project-edit-`)}/`;
+  const entries = unzipSync(readFileSync(fixture));
+  const config = "Metadata/project_settings.config";
+  entries[config] = strToU8(JSON.stringify({ ...JSON.parse(strFromU8(entries[config])), ...edit }));
+  writeFileSync(`${work}edited.3mf`, zipSync(entries));
+  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", work, `${work}edited.3mf`], {
+    cwd: work, stdio: ["ignore", "pipe", "pipe"],
+  });
+  const gcode = readFileSync(`${work}plate_1.gcode`, "utf8");
+  writeFileSync(`${artifacts}project-edit/native.gcode`, gcode);
+  return normalize(gcode, "OrcaSlicer");
 }
 
 /** True when the WebGL canvas shows more than a flat background. */
@@ -57,6 +80,7 @@ async function sliceTimings(page: Page, runs = 20) {
 
 test("import 3MF, slice in the WASM worker, export and preview G-code", async ({ page }) => {
   // GCodeProcessor oracle (tools/chain-probe/procgcode.nix) of the toolpath preview.
+  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
   const oracle = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
@@ -112,8 +136,8 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
 
   if (oracle) await checkToolpathPreview(page, oracle, gcodePath, artifacts, errors);
 
-  // Process edits live in UI state; the library rejects them until ares-core
-  // ships option overrides (M854).
+  // A process edit slices the project with the edit applied over its config (M854): the G-code is
+  // byte-equal to OrcaSlicer's for the project carrying the same value.
   const layerHeight = page.getByRole("textbox", { name: "layer_height", exact: true });
   await layerHeight.fill("0.12");
   await layerHeight.press("Enter");
@@ -122,7 +146,26 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   await expect(page.getByTestId("slice-summary")).toContainText("Plate not sliced");
   await page.screenshot({ path: `${artifacts}process-edited.png` });
   await page.getByRole("button", { name: "Slice plate" }).first().click();
-  await expect(page.getByTestId("status")).toContainText("Option overrides are not supported");
+  await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
+  mkdirSync(`${artifacts}project-edit/`, { recursive: true });
+  const [editedDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Export G-code" }).click(),
+  ]);
+  const editedPath = `${artifacts}project-edit/${editedDownload.suggestedFilename()}`;
+  await editedDownload.saveAs(editedPath);
+  const edited = readFileSync(editedPath, "utf8");
+  expect(edited === gcode.toString("utf8"), "the edit changes the browser output").toBe(false);
+  if (orca) {
+    const nativeEdited = orcaEditedGcode({ layer_height: "0.12" });
+    writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
+      oracle: "official OrcaSlicer 2.4.2 on the project with the edit in Metadata/project_settings.config",
+      evidence: "ordered_bytes_generator_only",
+      edit: { layer_height: "0.12" },
+      bytes: edited.length,
+    }, null, 2)}\n`);
+    expect(normalize(edited, "Ares") === nativeEdited, "edited browser G-code equals OrcaSlicer's for the edited project").toBe(true);
+  }
   await page.getByRole("button", { name: "Reset all" }).click();
   await expect(page.getByTestId("process-edited")).toHaveCount(0);
   await expect(layerHeight).not.toHaveValue("0.12");
