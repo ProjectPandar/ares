@@ -63,6 +63,14 @@ and printer tab pages, groups, lines and labels from OrcaSlicer `Tab.cpp` /
 node scripts/extract-process-layout.mjs /path/to/OrcaSlicer
 ```
 
+## Known differences from OrcaSlicer
+
+- Process edits in the sidebar are kept when another printer or process preset is
+  selected, and apply on top of the new presets. OrcaSlicer asks first, with
+  `UnsavedChangesDialog` from `Tab::may_discard_current_dirty_preset`
+  (`Tab.cpp:6278-6282`), whether to transfer or discard them; that dialog is
+  not ported.
+
 ## End-to-end test
 
 ```sh
