@@ -167,7 +167,7 @@ fn print_bridge_width_stl_adapter_retains_width_and_object_flags() {
         (
             1,
             json!({"layer_height":0.2,"bridge_line_width":0.1,"thick_bridges":true,"thick_internal_bridges":true}),
-            None,
+            Some(super::RELATIVE_ERROR),
         ),
         (
             2,

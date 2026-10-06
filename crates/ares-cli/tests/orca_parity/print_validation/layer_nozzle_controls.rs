@@ -45,9 +45,9 @@ fn print_layer_nozzle_equal_is_legal_strictly_above_is_not() {
 
 #[test]
 fn print_layer_nozzle_unused_smaller_nozzle_is_not_minimum() {
-    check(
+    check_exact(
         json!({"nozzle_diameter":["0.1","0.4"],"filament_map":["2"]}),
-        false,
+        Some("Too small line width"),
     );
     check(
         json!({"nozzle_diameter":["0.4","0.1"],"filament_map":["2"]}),

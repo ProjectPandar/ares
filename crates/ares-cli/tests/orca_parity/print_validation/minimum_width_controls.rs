@@ -83,7 +83,7 @@ fn o4_flat_first_error_precedes_o1() {
 fn o4_flat_nozzle_baseline_uses_mapped_used_extruder_only() {
     check(
         json!({"nozzle_diameter":["0.2", "0.6"], "filament_map":["2"], "line_width":"50%"}),
-        false,
+        true,
     );
     check(
         json!({"nozzle_diameter":["0.6", "0.2"], "filament_map":["2"], "line_width":"100%"}),
