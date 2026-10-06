@@ -1,6 +1,9 @@
 //! Public profile-entry tracer. Native CLI input is independently flattened;
 //! raw catalog input retains every inherited fragment for the Rust entry.
 
+#[path = "preset_vector_loading.rs"]
+mod preset_vector_loading;
+
 use std::path::Path;
 
 use serde_json::{Value, json};
