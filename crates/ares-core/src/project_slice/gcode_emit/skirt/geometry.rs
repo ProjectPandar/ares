@@ -64,11 +64,9 @@ pub(in crate::project_slice::gcode_emit) fn split_at_nearest_for_brim(
     let mut best_distance = f64::MAX;
     let mut seam = points[0];
     let mut seam_index = 0usize;
-    // Upstream loop polylines repeat the first vertex at the end
-    // (`ExtrusionPath` closed polylines), so `foot_pt` also projects onto
-    // the closing edge; mirror that by wrapping.
-    // Closed loops store `points.len()` edges — the wrap edge is index
-    // `points.len() - 1` (last vertex to first vertex).
+    // A repeated terminal vertex represents closure, not another cyclic
+    // vertex (`ExtrusionEntity.cpp:265-312`, `Polyline.cpp:757-885`).
+    // Open polygon inputs also wrap to include their closing edge.
     let edge_count = points.len() - usize::from(points.first() == points.last());
     let edges = (0..edge_count).map(|index| [points[index], points[(index + 1) % points.len()]]);
     for (index, pair) in edges.enumerate() {
@@ -103,13 +101,13 @@ pub(in crate::project_slice::gcode_emit) fn split_at_nearest_for_brim(
     let start = if seam == a {
         seam_index
     } else {
-        (seam_index + 1) % points.len()
+        (seam_index + 1) % edge_count
     };
     if seam != points[start] {
         output.push(seam);
     }
-    for step in 0..points.len() {
-        output.push(points[(start + step) % points.len()]);
+    for step in 0..edge_count {
+        output.push(points[(start + step) % edge_count]);
     }
     output.push(seam);
     output
