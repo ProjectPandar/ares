@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import { checkColorRanges, type RangeMove } from "./colorRanges";
+import { checkFilamentView } from "./filamentView";
 import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
 
 /** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current and drawn. */
@@ -44,7 +45,7 @@ const MARKER_TYPES: Record<string, number> = {
   Retractions: 1, Unretractions: 2, Seams: 3, ToolChanges: 4, ColorChanges: 5, PausePrints: 6, CustomGCodes: 7,
 };
 
-export type Move = RangeMove & { gcodeId: number; x: number; y: number; z: number; internalOnly: boolean };
+export type Move = RangeMove & { gcodeId: number; x: number; y: number; z: number; internalOnly: boolean; extruder: number; deltaE: number };
 /** GCodeProcessor `EMoveType::Noop` / `Travel` / `Wipe`: with `Extrude`, the moves libvgcode draws as paths. */
 const PATH_TYPES = new Set([0, 8, 9, EXTRUDE]);
 
@@ -68,6 +69,8 @@ function oracleMoves(oracle: string, gcodePath: string, workDir: string): Move[]
       type: values[column.type],
       role: values[column.role],
       internalOnly: values[column.internal_only] === 1,
+      extruder: values[column.extruder_id],
+      deltaE: values[column.delta_extruder],
       x: values[column.x],
       y: values[column.y],
       z: values[column.z],
@@ -356,11 +359,12 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await outerWall.click();
   await expect.poll(() => canvasDigest(page)).toBe(marked);
   const colorRanges = await checkColorRanges(page, moves, artifacts);
+  const filamentView = await checkFilamentView(page, moves, gcode.join("\n"), artifacts);
 
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, movesSlider, toolPosition, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges,
+      moves: moves.length, layers, movesSlider, toolPosition, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges, filamentView,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,

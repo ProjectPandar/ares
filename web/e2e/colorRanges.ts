@@ -99,6 +99,7 @@ function rangeInputs(moves: RangeMove[], travels: boolean) {
  */
 const VIEWS = [
   { view: "FeatureType", label: "Line Type" },
+  { view: "ColorPrint", label: "Filament" },
   { view: "Speed", label: "Speed", decimals: 0 },
   { view: "Height", label: "Layer Height", decimals: 2 },
   { view: "Width", label: "Line Width", decimals: 2 },
