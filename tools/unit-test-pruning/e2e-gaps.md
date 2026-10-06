@@ -40,3 +40,13 @@ coordinator can add E2E oracle cases after pruning finishes.
   `sparse_infill_density = 100` (full-density infill promotion) and/or
   `bottom_shell_layers = 0`. No seeded case reaches either retag branch,
   so `retag()` (fill_surfaces.rs:115-119) never executes under E2E.
+
+## project_slice/prepare_infill/horizontal_shell_promotion
+
+- `promote.rs:25-55` — `stage_decision()` non-empty path
+  (`ExtraSolidInfills::parse_raw` + `schedule.matches_layer`) and
+  `commit()`'s `Internal → InternalSolid` retag loop. Upstream:
+  OrcaSlicer `PrintObject::extra_solid_infill` schedule matching
+  (`PrintObject.cpp`). Trigger: `extra_solid_infills` option set to a
+  non-empty schedule (e.g. `1` or `0,2,4`) on a project; all 6 tests
+  exercise regions unreachable without it.

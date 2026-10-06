@@ -1,0 +1,46 @@
+{
+ "module": "project_slice/prepare_infill/horizontal_shell_promotion",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 6,
+ "deleted": 0,
+ "kept": 6,
+ "tests": [
+  {
+   "test": "invalid_nonempty_schedule_returns_the_stable_error_before_matching",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "promote.rs schedule parser/matcher regions never reached by E2E (no case sets extra_solid_infills to non-empty)"
+  },
+  {
+   "test": "matching_retags_every_and_only_internal_surface_in_place",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "promote.rs schedule parser/matcher regions never reached by E2E (no case sets extra_solid_infills to non-empty)"
+  },
+  {
+   "test": "matching_uses_one_based_planned_array_index",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "promote.rs schedule parser/matcher regions never reached by E2E (no case sets extra_solid_infills to non-empty)"
+  },
+  {
+   "test": "noop_is_allocation_exact_and_promotion_is_idempotent",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "promote.rs schedule parser/matcher regions never reached by E2E (no case sets extra_solid_infills to non-empty)"
+  },
+  {
+   "test": "promotion_has_no_sparse_density_gate",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "promote.rs schedule parser/matcher regions never reached by E2E (no case sets extra_solid_infills to non-empty)"
+  },
+  {
+   "test": "raw_empty_is_the_only_parser_and_matcher_short_circuit",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "reason": "promote.rs schedule parser/matcher regions never reached by E2E (no case sets extra_solid_infills to non-empty)"
+  }
+ ]
+}
