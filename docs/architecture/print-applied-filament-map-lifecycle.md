@@ -29,7 +29,7 @@ Rust destination 是 `project/effective_config/{phases,types}.rs` 保存 validat
 
 Print applied validation 的 nozzle_bounds 接收该 applied map 的 borrowed reference；flat/STL 仍接收自身 settings map。所有 min/max、one-based physical mapping、usage/support0/wipe/dedup、无效下标错误依然由**同一个 mapper**处理，不移除 ok_or_else、宽松截断、get_at fallback 或重复值特判来消掉症状。
 
-当前 `views.full/runtime/runtime_gcode` 的 recommended map 和 auto helper时机、算法、colour count/normalization 保持完全不变，保护已有 processing/export 字节。这个仍提前构造的 export view 是明确的临时 compatibility shell；本片只禁止晚期 map 污染 applied Print validation，**不声称完整 ToolOrdering pipeline 时序已移植**。不为两个阶段创建泛化模式/旗标/第二解析器，不让纯 processing 隐藏调用 Print validation。
+当前 `views.full/runtime/runtime_gcode` 的 recommended map 和 auto helper时机、算法、colour count/normalization 保持完全不变，保护已有 processing/export 字节。这个仍提前构造的 export view 是明确的临时 compatibility shell；本片只禁止晚期 map 污染 applied Print validation，**不声称完整 ToolOrdering pipeline 时序已移植**。将来移植 `Print::process / ToolOrdering` 的原生时序后，必须删除这个 applied map 快照，把 recommendation 移回 validate 之后执行；快照不能成为永久架构。不为两个阶段创建泛化模式/旗标/第二解析器，不让纯 processing 隐藏调用 Print validation。
 
 保留已合入 raft 的怪癖：raft首层 selector−1 **直接** nozzle get_at，不经 filament_map；0/minUsed、越界/front 不改。applied map 只用于现有普通 used-nozzle traversal，不把 raft direct lookup“修正”成它。不触碰 O3 options validation、layer-height/width predicates及文本、Flow/geometry/模板、CLI 参数/plate overlay。
 
