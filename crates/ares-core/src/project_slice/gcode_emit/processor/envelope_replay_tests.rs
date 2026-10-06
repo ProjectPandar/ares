@@ -63,7 +63,6 @@ fn replay(name: &str, reference: &str) -> Vec<u8> {
         input.as_bytes().to_vec(),
         true,
         setting(reference, "machine_load_filament_time"),
-        0.0,
         limits.with_settings(&Default::default()),
     )
     .gcode;

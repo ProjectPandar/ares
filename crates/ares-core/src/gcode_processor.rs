@@ -70,10 +70,47 @@ impl Default for MoveVertex {
     }
 }
 
+/// `GCodeProcessorResult::print_statistics` — the extruded-volume
+/// buckets the viewer's Filament/ColorPrint legend reads
+/// (`GCodeProcessor.hpp:46-78`, `UsedFilaments::process_*_cache`,
+/// `GCodeProcessor.cpp:3895-3911, 5931-5944, 6031-6037`). Volumes are
+/// mm³ dense-indexed by filament id (zero for unused filaments);
+/// upstream's sparse `std::map` is equivalent because every legend
+/// lookup probes `find(id)`.
+///
+/// `total_used_filament` is `PrintStatistics::total_used_filament`
+/// (`GCode.cpp:1914-1937`): Σ volume / (π·(d/2)²) in mm.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize)]
+pub struct PrintEstimatedStatistics {
+    /// `UsedFilaments::model_volumes_per_filament` →
+    /// `model_volumes_per_extruder`.
+    pub model_volumes_per_extruder: Vec<f64>,
+    /// `UsedFilaments::wipe_tower_volumes_per_filament` →
+    /// `wipe_tower_volumes_per_extruder`.
+    pub wipe_tower_volumes_per_extruder: Vec<f64>,
+    /// `UsedFilaments::support_volumes_per_filament` →
+    /// `support_volumes_per_extruder`.
+    pub support_volumes_per_extruder: Vec<f64>,
+    /// `UsedFilaments::total_volumes_per_filament` →
+    /// `total_volumes_per_extruder`.
+    pub total_volumes_per_extruder: Vec<f64>,
+    /// `UsedFilaments::flush_per_filament` → `flush_per_filament`.
+    pub flush_per_filament: Vec<f64>,
+    /// `PrintStatistics::total_used_filament` (mm).
+    pub total_used_filament: f64,
+}
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GCodeProcessorResult {
     pub moves: Vec<MoveVertex>,
     pub spiral_vase_mode: bool,
+    /// `GCodeProcessorResult::print_statistics` (`GCodeProcessor.hpp:118`).
+    pub print_statistics: PrintEstimatedStatistics,
+    /// `GCodeProcessorResult::extruder_colors` — `filament_colour`
+    /// config values, padded to `filaments_count` and defaulted to
+    /// `#FF8000` (`GCodeProcessor::apply_config`,
+    /// `GCodeProcessor.cpp:2321-2343`).
+    pub extruder_colors: Vec<String>,
 }
 
 /// Exported G-code together with the processor result of the same pass.

@@ -12,6 +12,8 @@ pub struct SliceOutput {
     gcode: Vec<u8>,
     moves: MoveBuffers,
     vertices: VertexBuffers,
+    print_statistics: Vec<u8>,
+    extruder_colors: Vec<String>,
 }
 
 impl SliceOutput {
@@ -23,10 +25,16 @@ impl SliceOutput {
         let data = from_processor_result(&output.result, tool_colors, color_print_colors);
         let mut vertices = VertexBuffers::pack(data);
         vertices.move_type_counts = move_type_counts(&output.result.moves).to_vec();
+        // `PrintEstimatedStatistics` passes through as JSON — volumes in
+        // mm³ dense-indexed by filament id; `total_used_filament` in mm.
+        let print_statistics = serde_json::to_vec(&output.result.print_statistics)
+            .expect("PrintEstimatedStatistics serializes");
         Self {
             gcode: output.gcode,
             moves: MoveBuffers::pack(&output.result.moves),
             vertices,
+            print_statistics,
+            extruder_colors: output.result.extruder_colors,
         }
     }
 }
@@ -46,6 +54,20 @@ impl SliceOutput {
     #[wasm_bindgen(js_name = takeVertices)]
     pub fn take_vertices(&mut self) -> VertexBuffers {
         std::mem::take(&mut self.vertices)
+    }
+
+    /// `GCodeProcessorResult::print_statistics` as UTF-8 JSON bytes
+    /// (`PrintEstimatedStatistics`, `GCodeProcessor.hpp:46-78`).
+    #[wasm_bindgen(js_name = takePrintStatistics)]
+    pub fn take_print_statistics(&mut self) -> Vec<u8> {
+        std::mem::take(&mut self.print_statistics)
+    }
+
+    /// `GCodeProcessorResult::extruder_colors`
+    /// (`GCodeProcessor.cpp:2321-2343`).
+    #[wasm_bindgen(js_name = takeExtruderColors)]
+    pub fn take_extruder_colors(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.extruder_colors)
     }
 }
 

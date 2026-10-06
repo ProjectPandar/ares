@@ -1,8 +1,8 @@
-use super::account_volumes;
+use super::account_statistics;
 
 fn used_filament(gcode: &[u8]) -> f64 {
-    account_volumes(gcode, &[crate::OrcaFloat(1.75)])[0]
-        / (std::f64::consts::PI * (0.5_f64 * 1.75).powi(2))
+    let statistics = account_statistics(gcode, &[crate::OrcaFloat(1.75)]);
+    statistics.total_volumes_per_extruder[0] / (std::f64::consts::PI * (0.5_f64 * 1.75).powi(2))
 }
 
 #[test]

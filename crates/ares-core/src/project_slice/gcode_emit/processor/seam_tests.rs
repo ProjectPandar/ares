@@ -37,7 +37,6 @@ fn replay(name: &str, reference: &str) {
         input.as_bytes().to_vec(),
         true,
         0.0,
-        0.0,
         limits.with_settings(&Default::default()),
     )
     .gcode;

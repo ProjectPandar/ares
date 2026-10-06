@@ -22,6 +22,7 @@ fn processed_buffers_preserve_ids_and_owned_data() {
             result: GCodeProcessorResult {
                 moves: vec![MoveVertex::default(), vertex],
                 spiral_vase_mode: true,
+                ..Default::default()
             },
         },
         &["#FF0000".into()],
@@ -69,6 +70,7 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
                     at(EMoveType::Travel, 2, 0.8),
                 ],
                 spiral_vase_mode: false,
+                ..Default::default()
             },
         },
         &[],
@@ -107,6 +109,7 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
                     at(EMoveType::Travel, 2),
                 ],
                 spiral_vase_mode: false,
+                ..Default::default()
             },
         },
         &[],

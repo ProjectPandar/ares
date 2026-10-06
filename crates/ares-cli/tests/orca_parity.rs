@@ -11,6 +11,8 @@ mod adaptive_pressure_advance;
 mod artifacts;
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
+#[path = "orca_parity/filament_usage_stats.rs"]
+mod filament_usage_stats;
 #[path = "orca_parity/flow_errors.rs"]
 mod flow_errors;
 #[path = "orca_parity/honeycomb_multiline.rs"]

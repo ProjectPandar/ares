@@ -1,14 +1,33 @@
-/// `GCodeProcessor::process_G1` / `UsedFilaments::process_total_volume_cache`.
+/// `GCodeProcessor::process_G1` / `UsedFilaments::process_*_cache`.
 /// Track the global E
 /// position (M82/M83, G90/G91, G92 resets), classify each move
-/// (`move_type`, `GCodeProcessor.cpp:3834-3851`) and count only Extrude
-/// moves — E-positive with an X or Y displacement. Retracts, unretracts
-/// and E-only bowden re-primes do not count.
-pub(in crate::project_slice::gcode_emit) fn account_volumes(
+/// (`move_type`, `GCodeProcessor.cpp:3834-3851`) and bucket extruded
+/// volume by the active `;TYPE:` role tag — upstream parses the same
+/// marker via `reserved_tag(ETags::Role)` +
+/// `ExtrusionEntity::string_to_role` (`GCodeProcessor.cpp:3120-3122`,
+/// `ExtrusionEntity.cpp:593-651`).
+///
+/// Role → bucket (`GCodeProcessor.cpp:3902-3911`):
+/// `Support`/`Support interface`/`Support transition` → support,
+/// `Prime tower` (erWipeTower) → wipe tower, everything else → model.
+/// `; FLUSH_START`/`; FLUSH_END` regions (`Flush_Start_Tag`,
+/// `GCodeProcessor.cpp:3170-3178`) credit positive-E deltas to
+/// `flush_per_filament` + `total` (`update_flush_per_filament`,
+/// `GCodeProcessor.cpp:1606-1619, 3949-3961`); upstream additionally
+/// caps flush by `nozzle_volume` via `m_remaining_volume` — that cap is
+/// deferred since the emitter does not tag flush regions today.
+pub(in crate::project_slice::gcode_emit) fn account_statistics(
     gcode: &[u8],
     diameters: &[crate::options::OrcaFloat],
-) -> Vec<f64> {
-    let mut volumes = vec![0.0; diameters.len()];
+) -> crate::PrintEstimatedStatistics {
+    let mut statistics = crate::PrintEstimatedStatistics {
+        model_volumes_per_extruder: vec![0.0; diameters.len()],
+        wipe_tower_volumes_per_extruder: vec![0.0; diameters.len()],
+        support_volumes_per_extruder: vec![0.0; diameters.len()],
+        total_volumes_per_extruder: vec![0.0; diameters.len()],
+        flush_per_filament: vec![0.0; diameters.len()],
+        total_used_filament: 0.0,
+    };
     let mut filament = None;
     let text = std::str::from_utf8(gcode).unwrap_or_default();
     let mut e_position = 0.0_f64;
@@ -16,8 +35,35 @@ pub(in crate::project_slice::gcode_emit) fn account_volumes(
     let mut y_position = 0.0_f64;
     let mut e_local_relative = false;
     let mut global_relative = false;
+    let mut role = Bucket::Model;
+    let mut flushing = false;
+    // `UsedFilaments::model/support/wipe_tower_volume_cache` — one
+    // cache per role, flushed to the active filament at every tool
+    // change (`process_caches`, `GCodeProcessor.cpp:5931-5944`).
+    let mut pending = [0.0_f64; 3];
     let mut used = 0.0_f64;
     for line in text.lines() {
+        // `GCodeProcessor::process_tags` reads the role tag from the
+        // comment span — `;TYPE:` for compatible printers,
+        // `; FEATURE: ` for BBL (`Reserved_Tags` vs
+        // `Reserved_Tags_compatible`, `GCodeProcessor.cpp:58-81`).
+        if let Some(comment) = line.split_once(';').map(|(_, comment)| comment) {
+            if let Some(name) = comment
+                .strip_prefix("TYPE:")
+                .or_else(|| comment.strip_prefix(" FEATURE: "))
+            {
+                role = Bucket::from_role(name.trim());
+                continue;
+            }
+            if comment.starts_with(" FLUSH_START") {
+                flushing = true;
+                continue;
+            }
+            if comment.starts_with(" FLUSH_END") {
+                flushing = false;
+                continue;
+            }
+        }
         let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
         let mut words = code.split_ascii_whitespace();
         let Some(command) = words.next() else {
@@ -36,7 +82,11 @@ pub(in crate::project_slice::gcode_emit) fn account_volumes(
             if let Some(previous) = filament
                 && previous != next
             {
-                volumes[previous] += used;
+                // `process_caches` flushes the role caches into the
+                // per-filament buckets at every tool change
+                // (`GCodeProcessor.cpp:5942-5947`).
+                flush_pending(&mut statistics, &mut pending, previous);
+                statistics.total_volumes_per_extruder[previous] += used;
                 used = 0.0;
             }
             filament = Some(next);
@@ -69,19 +119,81 @@ pub(in crate::project_slice::gcode_emit) fn account_volumes(
                 let dx = x_position - start.0;
                 let dy = y_position - start.1;
                 let delta_e = e_position - start.2;
-                if delta_e > 0.0 && (dx != 0.0 || dy != 0.0) {
-                    let diameter = diameters[filament.unwrap_or(0)].0 as f32;
-                    let radius = 0.5_f32 * diameter;
-                    let area = std::f32::consts::PI * (radius * radius);
-                    // GCodeProcessor::process_G1 stores each extruded volume as float.
-                    used += f64::from((f64::from(area) * delta_e) as f32);
+                if delta_e <= 0.0 {
+                    continue;
+                }
+                let diameter = diameters[filament.unwrap_or(0)].0 as f32;
+                let radius = 0.5_f32 * diameter;
+                let area = std::f32::consts::PI * (radius * radius);
+                // GCodeProcessor::process_G1 stores each extruded volume
+                // as float.
+                let volume = f64::from((f64::from(area) * delta_e) as f32);
+                // `EMoveType::Unretract && m_flushing` → flush + total
+                // (`GCodeProcessor.cpp:3949-3961`); extrude moves keep
+                // their role bucket.
+                if flushing && dx == 0.0 && dy == 0.0 {
+                    statistics.flush_per_filament[filament.unwrap_or(0)] += volume;
+                    used += volume;
+                } else if dx != 0.0 || dy != 0.0 {
+                    pending[role as usize] += volume;
+                    used += volume;
                 }
             }
             _ => {}
         }
     }
-    volumes[filament.unwrap_or(0)] += used;
-    volumes
+    flush_pending(&mut statistics, &mut pending, filament.unwrap_or(0));
+    statistics.total_volumes_per_extruder[filament.unwrap_or(0)] += used;
+    // `PrintStatistics::total_used_filament` (`GCode.cpp:1914-1937`).
+    statistics.total_used_filament = statistics
+        .total_volumes_per_extruder
+        .iter()
+        .zip(diameters)
+        .map(|(volume, diameter)| {
+            let diameter = f64::from(diameter.0 as f32);
+            volume / (std::f64::consts::PI * (0.5 * diameter).powi(2))
+        })
+        .sum();
+    statistics
+}
+
+/// `UsedFilaments` role cache ordering — the `pending` array index.
+#[derive(Clone, Copy)]
+enum Bucket {
+    Model = 0,
+    Support = 1,
+    WipeTower = 2,
+}
+
+impl Bucket {
+    /// `ExtrusionEntity::string_to_role` restricted to the support /
+    /// wipe-tower split `GCodeProcessor.cpp:3902-3911` applies; every
+    /// other role counts as model.
+    fn from_role(name: &str) -> Bucket {
+        match name {
+            "Support" | "Support interface" | "Support transition" => Bucket::Support,
+            "Prime tower" => Bucket::WipeTower,
+            _ => Bucket::Model,
+        }
+    }
+}
+
+fn flush_pending(
+    statistics: &mut crate::PrintEstimatedStatistics,
+    pending: &mut [f64; 3],
+    filament: usize,
+) {
+    for (bucket, cache) in [
+        &mut statistics.model_volumes_per_extruder,
+        &mut statistics.support_volumes_per_extruder,
+        &mut statistics.wipe_tower_volumes_per_extruder,
+    ]
+    .iter_mut()
+    .zip(pending.iter())
+    {
+        bucket[filament] += cache;
+    }
+    *pending = [0.0; 3];
 }
 
 fn apply_e(current: f64, value: f64, relative: bool) -> f64 {

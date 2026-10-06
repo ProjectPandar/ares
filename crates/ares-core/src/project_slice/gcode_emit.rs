@@ -300,17 +300,24 @@ pub(super) fn emit(
     machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let filament = &traversal.resolved.views.full.filament.gcode;
-    let volumes = finish::account_volumes(&output, &filament.filament_diameter.0);
-    let used_filament = volumes
-        .iter()
-        .zip(&filament.filament_diameter.0)
-        .map(|(volume, diameter)| {
-            let diameter = f64::from(diameter.0 as f32);
-            volume / (std::f64::consts::PI * (0.5 * diameter).powi(2))
+    let print_statistics = finish::account_statistics(&output, &filament.filament_diameter.0);
+    let volumes = &print_statistics.total_volumes_per_extruder;
+    // `GCodeProcessorResult::extruder_colors`: `filament_colour` padded
+    // to `filaments_count`, missing/empty slots → `#FF8000`
+    // (`GCodeProcessor::apply_config`, `GCodeProcessor.cpp:2321-2343`).
+    let extruder_colors = (0..filament.filament_diameter.0.len())
+        .map(|id| {
+            filament
+                .filament_colour
+                .0
+                .get(id)
+                .filter(|value| !value.is_empty())
+                .cloned()
+                .unwrap_or_else(|| "#FF8000".to_string())
         })
-        .sum();
+        .collect::<Vec<_>>();
     let (total_weight, total_cost) =
-        finish::append_filament_stats(&mut output, traversal, &volumes, &state);
+        finish::append_filament_stats(&mut output, traversal, volumes, &state);
     finish::append_compatible_stats(
         &mut output,
         traversal,
@@ -376,9 +383,9 @@ pub(super) fn emit(
             .gcode
             .machine_load_filament_time
             .0,
-        used_filament,
         processor::ProcessorLimits::from_traversal(traversal, state.tags.is_bbl())
             .with_settings(&traversal.resolved.views.full)
+            .statistics(print_statistics, extruder_colors)
             .recording_moves(record_moves),
     ))
 }

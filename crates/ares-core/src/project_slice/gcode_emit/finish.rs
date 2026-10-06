@@ -6,7 +6,7 @@ use crate::{
 use super::{template, value};
 
 mod accounting;
-pub(super) use accounting::account_volumes;
+pub(super) use accounting::account_statistics;
 
 #[cfg(test)]
 mod tests;

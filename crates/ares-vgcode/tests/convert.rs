@@ -11,6 +11,7 @@ fn empty_and_dummy_results_have_no_vertices() {
             &GCodeProcessorResult {
                 moves,
                 spiral_vase_mode: true,
+                ..Default::default()
             },
             &[],
             &[],
@@ -66,6 +67,7 @@ fn path_starts_use_previous_position_and_zero_time() {
         &GCodeProcessorResult {
             moves: vec![MoveVertex::default(), a, b, c, d, e, f],
             spiral_vase_mode: false,
+            ..Default::default()
         },
         &[],
         &[],

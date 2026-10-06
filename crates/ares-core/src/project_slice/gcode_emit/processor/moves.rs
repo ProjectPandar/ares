@@ -349,6 +349,7 @@ impl MoveRecorder {
         GCodeProcessorResult {
             moves: self.moves,
             spiral_vase_mode: self.spiral_vase_mode,
+            ..Default::default()
         }
     }
 }

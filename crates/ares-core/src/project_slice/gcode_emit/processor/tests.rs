@@ -28,7 +28,6 @@ fn inserts_progress_and_rewrites_time_fields() {
             output,
             true,
             0.0,
-            0.0,
             bbl_limits().with_settings(&Default::default()),
         )
         .gcode,
@@ -49,7 +48,6 @@ fn rewrites_compatible_time_footer_for_non_bbl_printers() {
         process(
             output,
             true,
-            0.0,
             0.0,
             nonbinding_axis_limits().with_settings(&Default::default()),
         )
@@ -74,7 +72,6 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
             output,
             false,
             0.0,
-            0.0,
             bbl_limits().with_settings(&Default::default()),
         )
         .gcode,
@@ -94,7 +91,6 @@ fn progress_updates_follow_motion_lines_not_delay_commands() {
             output,
             true,
             120.0,
-            0.0,
             bbl_limits().with_settings(&Default::default()),
         )
         .gcode,
@@ -115,7 +111,6 @@ fn finalized_motion_time_is_exported_after_the_next_motion_command() {
             output,
             true,
             0.0,
-            0.0,
             bbl_limits().with_settings(&Default::default()),
         )
         .gcode,
@@ -133,7 +128,6 @@ fn non_bbl_g29_counts_the_bed_leveling_delay_without_m622_markers() {
         process(
             output,
             true,
-            0.0,
             0.0,
             nonbinding_axis_limits().with_settings(&Default::default()),
         )
@@ -154,7 +148,6 @@ fn bbl_g29_counts_the_bed_leveling_delay_only_inside_m622_j1() {
             gated.to_vec(),
             true,
             0.0,
-            0.0,
             bbl_limits().with_settings(&Default::default()),
         )
         .gcode,
@@ -164,7 +157,6 @@ fn bbl_g29_counts_the_bed_leveling_delay_only_inside_m622_j1() {
         process(
             ungated,
             true,
-            0.0,
             0.0,
             bbl_limits().with_settings(&Default::default()),
         )
@@ -271,7 +263,6 @@ fn g4_dwell_shifts_progress_markers_and_the_total_footer() {
             output,
             true,
             0.0,
-            0.0,
             nonbinding_axis_limits().with_settings(&Default::default()),
         )
         .gcode,
@@ -293,7 +284,6 @@ fn preparation_time_ends_at_first_print_feature() {
         process(
             output,
             false,
-            0.0,
             0.0,
             bbl_limits().with_settings(&Default::default()),
         )
@@ -320,7 +310,6 @@ fn progress_skips_e_only_retract_lines() {
             output,
             true,
             0.0,
-            0.0,
             nonbinding_axis_limits().with_settings(&Default::default()),
         )
         .gcode,
@@ -344,7 +333,6 @@ fn first_layer_time_trailer_prints_fractional_seconds() {
         process(
             output,
             true,
-            0.0,
             0.0,
             nonbinding_axis_limits().with_settings(&Default::default()),
         )

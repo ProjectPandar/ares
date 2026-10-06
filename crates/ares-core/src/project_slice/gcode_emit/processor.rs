@@ -41,6 +41,13 @@ pub(super) struct ProcessorConfig<'a> {
     settings: &'a crate::ProjectSettings,
     /// Also record `GCodeProcessorResult::moves` (`GCodeProcessor::process_file`).
     record_moves: bool,
+    /// `GCodeProcessorResult::print_statistics` — accounted by the emit
+    /// pass (`UsedFilaments::process_*_cache`,
+    /// `GCodeProcessor.cpp:3895-3911`) and attached to the result.
+    print_statistics: crate::PrintEstimatedStatistics,
+    /// `GCodeProcessorResult::extruder_colors`
+    /// (`GCodeProcessor.cpp:2321-2343`).
+    extruder_colors: Vec<String>,
 }
 
 impl ProcessorLimits {
@@ -49,6 +56,8 @@ impl ProcessorLimits {
             limits: self,
             settings,
             record_moves: false,
+            print_statistics: crate::PrintEstimatedStatistics::default(),
+            extruder_colors: Vec::new(),
         }
     }
 }
@@ -57,6 +66,18 @@ impl ProcessorConfig<'_> {
     pub(super) fn recording_moves(self, record_moves: bool) -> Self {
         Self {
             record_moves,
+            ..self
+        }
+    }
+
+    pub(super) fn statistics(
+        self,
+        print_statistics: crate::PrintEstimatedStatistics,
+        extruder_colors: Vec<String>,
+    ) -> Self {
+        Self {
+            print_statistics,
+            extruder_colors,
             ..self
         }
     }
@@ -87,7 +108,6 @@ pub(super) fn process(
     output: Vec<u8>,
     emit_progress: bool,
     machine_load_filament_time: f64,
-    used_filament: f64,
     config: ProcessorConfig<'_>,
 ) -> crate::ProcessedGCode {
     let limits = config.limits;
@@ -116,7 +136,10 @@ pub(super) fn process(
     let prepare_time = estimate.prepare;
     let model_time = (estimate.total - prepare_time).max(0.0);
     let print_time_sec = format!("{:.2}", estimate.total);
-    let used_filament_length = format!("{:.2}", used_filament / 1_000.0);
+    let used_filament_length = format!(
+        "{:.2}",
+        config.print_statistics.total_used_filament / 1_000.0
+    );
 
     for (index, line) in lines.iter().enumerate() {
         let expanded = stats::expand(line, &print_time_sec, &used_filament_length);
@@ -183,12 +206,18 @@ pub(super) fn process(
         }
     }
     let (gcode, line_map) = result.finish();
+    let mut processor_result = recorder
+        .zip(line_map)
+        .map(|(recorder, line_map)| recorder.finish(&line_map))
+        .unwrap_or_default();
+    // The emit pass already accounted the exported stream
+    // (`UsedFilaments::process_*_cache`, `GCodeProcessor.cpp:3895-3911`);
+    // the recorded pass reuses its buckets rather than re-parsing.
+    processor_result.print_statistics = config.print_statistics;
+    processor_result.extruder_colors = config.extruder_colors;
     crate::ProcessedGCode {
         gcode,
-        result: recorder
-            .zip(line_map)
-            .map(|(recorder, line_map)| recorder.finish(&line_map))
-            .unwrap_or_default(),
+        result: processor_result,
     }
 }
 
