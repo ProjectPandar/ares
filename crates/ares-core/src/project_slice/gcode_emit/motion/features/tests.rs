@@ -10,6 +10,7 @@ fn properties(feature: &'static str, is_perimeter: bool) -> PathProperties<'stat
         end_clip: 0.0,
         fitting: &[],
         slope: None,
+        inside_loop: false,
     }
 }
 

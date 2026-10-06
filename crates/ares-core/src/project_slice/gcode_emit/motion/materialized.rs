@@ -1,30 +1,18 @@
 use super::{EmitState, LayerGeometry, features::PathProperties, path, scarf};
 use crate::project_slice::perimeters::classic::materialize::{ExtrusionPath, ExtrusionRole};
 
-pub(super) fn emit_flat(
-    output: &mut Vec<u8>,
-    path: &ExtrusionPath,
-    end_clip: f64,
-    geometry: LayerGeometry<'_>,
-    state: &mut EmitState,
-) {
-    emit(
-        output,
-        state,
-        Emission {
-            path,
-            end_clip,
-            slope: None,
-            geometry,
-        },
-    );
-}
-
 pub(super) struct Emission<'a> {
     pub(super) path: &'a ExtrusionPath,
     pub(super) end_clip: f64,
     pub(super) slope: Option<scarf::Slope>,
     pub(super) geometry: LayerGeometry<'a>,
+    /// The path belongs to an `ExtrusionLoop`/`ExtrusionMultiPath`
+    /// entity whose full point list was already handed to
+    /// `CurlTracker::collect_entity`; the per-path collect in
+    /// `overhang::estimate` must skip it
+    /// (`ExtrusionLoop::collect_points` covers the closed loop,
+    /// `ExtrusionEntity.hpp:507-512`).
+    pub(super) inside_loop: bool,
 }
 
 pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, emission: Emission<'_>) {
@@ -33,6 +21,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, emission: Emissi
         end_clip,
         slope,
         geometry,
+        inside_loop,
     } = emission;
     let feature = match path.role {
         ExtrusionRole::ExternalPerimeter => "Outer wall",
@@ -60,6 +49,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, emission: Emissi
             end_clip,
             fitting: &path.polyline.fitting,
             slope,
+            inside_loop,
         },
         geometry,
         state,

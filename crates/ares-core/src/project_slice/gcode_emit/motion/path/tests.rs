@@ -35,6 +35,7 @@ fn volumetric_speed_cap_divides_by_print_and_filament_flow_ratios() {
             end_clip: 0.0,
             fitting: &[],
             slope: None,
+            inside_loop: false,
         },
         test_geometry(),
         &mut state,
@@ -83,6 +84,7 @@ fn zero_max_volumetric_speed_leaves_the_role_speed_uncapped() {
             end_clip: 0.0,
             fitting: &[],
             slope: None,
+            inside_loop: false,
         },
         test_geometry(),
         &mut state,
@@ -145,6 +147,7 @@ fn plate_loops_unscale_after_integer_translation() {
                     end_clip: 0.0,
                     fitting: &[],
                     slope: None,
+                    inside_loop: false,
                 },
                 test_geometry(),
                 &mut state,
@@ -204,6 +207,7 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             end_clip: 0.0,
             fitting: &[],
             slope: None,
+            inside_loop: false,
         };
         path::emit(
             &mut Vec::new(),

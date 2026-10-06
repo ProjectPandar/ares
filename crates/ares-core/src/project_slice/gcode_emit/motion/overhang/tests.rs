@@ -64,6 +64,7 @@ fn overhang_reference_speed_cap_divides_by_print_and_filament_flow_ratios() {
         end_clip: 0.0,
         fitting: &[],
         slope: None,
+        inside_loop: false,
     };
     let points = [(0.0, 0.0), (1.0, 0.0)];
     let original_speed = 4.0 / (0.08 * 0.5 * 0.98);

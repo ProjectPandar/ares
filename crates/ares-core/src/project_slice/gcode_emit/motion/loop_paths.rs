@@ -42,6 +42,7 @@ pub(super) fn emit(
                     end_clip: 0.0,
                     slope: path.slope,
                     geometry,
+                    inside_loop: true,
                 },
             );
         }
@@ -96,7 +97,17 @@ pub(super) fn emit(
         } else {
             0.0
         };
-        super::materialized::emit_flat(output, path, end_clip, geometry, state);
+        super::materialized::emit(
+            output,
+            state,
+            super::materialized::Emission {
+                path,
+                end_clip,
+                slope: None,
+                geometry,
+                inside_loop: true,
+            },
+        );
         // `GCode.cpp:5979-5990`: upstream appends each emitted path's
         // polyline to `m_wipe.path`, dropping the join point ONLY when
         // it duplicates the previous last point — adjacent sub-paths

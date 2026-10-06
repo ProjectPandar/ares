@@ -160,6 +160,7 @@ fn emit_fill_entity(
                 end_clip: 0.0,
                 fitting: &path.fitting,
                 slope: None,
+                inside_loop: false,
             },
             geometry,
             state,
@@ -177,7 +178,17 @@ fn emit_variable_width_entity(
     state: &mut EmitState,
 ) {
     match entity {
-        GapFillEntity::Path(path) => materialized::emit_flat(output, path, 0.0, geometry, state),
+        GapFillEntity::Path(path) => materialized::emit(
+            output,
+            state,
+            materialized::Emission {
+                path,
+                end_clip: 0.0,
+                slope: None,
+                geometry,
+                inside_loop: false,
+            },
+        ),
         GapFillEntity::Loop(paths) => {
             // `variable_width` (VariableWidth.cpp:224-227) closes up loop
             // entities; `GCode::extrude_loop` then splits them at the point

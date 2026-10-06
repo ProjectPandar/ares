@@ -160,6 +160,7 @@ fn sloped_segments_interpolate_z_and_endpoint_extrusion_ratio() {
         end_clip: 0.0,
         fitting: &[],
         slope: None,
+        inside_loop: false,
     };
     let mut output = Vec::new();
 

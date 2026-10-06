@@ -49,7 +49,14 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     // layer's external perimeters while overhang speed is enabled —
     // including the first layer, whose curl state feeds the next layer's
     // artificial distance (`SupportSpotsGenerator.cpp:141-196`).
-    if request.options.enable_overhang_speed && request.properties.feature == "Outer wall" {
+    // A path inside a loop is collected once at `loop_paths::emit` with
+    // the whole loop's closed point list; collecting the open fragment
+    // here would score seam-adjacent curvature on a truncated walk and
+    // duplicate the loop's lines in `current`.
+    if request.options.enable_overhang_speed
+        && request.properties.feature == "Outer wall"
+        && !request.properties.inside_loop
+    {
         request.curl.collect(
             request.layer_index,
             request.points,

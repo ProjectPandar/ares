@@ -68,11 +68,52 @@ impl CurlTracker {
         }
     }
 
+    /// Collects one whole external-perimeter ENTITY — an
+    /// `ExtrusionLoop`'s or `ExtrusionMultiPath`'s concatenated sub-path
+    /// points (`ExtrusionEntity.hpp:507-512,431-435`). Doing this at
+    /// entity level, before seam placement, gives `collect` the closed
+    /// loop upstream feeds `estimate_malformations`: `looped` sees
+    /// `front == back` and the 8 mm curvature `walk` wraps across the
+    /// seam instead of truncating at emitted-path fragment ends. Returns
+    /// early for non-external roles (`erExternalPerimeter` filter,
+    /// `SupportSpotsGenerator.cpp:159-160`).
+    pub(in crate::project_slice::gcode_emit) fn collect_entity(
+        &mut self,
+        layer_index: usize,
+        paths: &[crate::project_slice::perimeters::classic::materialize::ExtrusionPath],
+        geometry: &LayerGeometry<'_>,
+    ) {
+        use crate::project_slice::perimeters::classic::materialize::ExtrusionRole;
+        if !paths
+            .first()
+            .is_some_and(|path| path.role == ExtrusionRole::ExternalPerimeter)
+        {
+            return;
+        }
+        let points: Vec<(f64, f64)> = paths
+            .iter()
+            .flat_map(|path| {
+                path.polyline.points.iter().map(|point| {
+                    (
+                        geometry.scale.unscale(point.x),
+                        geometry.scale.unscale(point.y),
+                    )
+                })
+            })
+            .collect();
+        self.collect(
+            layer_index,
+            &points,
+            (paths[0].width, paths[0].height),
+            geometry,
+        );
+    }
+
     /// Collects one outer-wall path (`estimate_malformations` over an
     /// `erExternalPerimeter`): per segment, the distance to the nearest
     /// previous-layer line signed through the lower layer's slices, the
     /// endpoint curvature, and the chained curl height.
-    pub(super) fn collect(
+    pub(in crate::project_slice::gcode_emit) fn collect(
         &mut self,
         layer_index: usize,
         points: &[(f64, f64)],

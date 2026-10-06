@@ -9,8 +9,29 @@ pub(super) fn emit(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
+    // `estimate_malformations` collects each entity once — for an
+    // `ExtrusionMultiPath` (`ExtrusionEntity.hpp:430-436`, role = first
+    // path's role, `ExtrusionEntity.hpp:415`) that is the concatenated
+    // sub-path polylines, contiguous so the curvature walk crosses the
+    // junctions. Per-path collection would truncate the 8mm window at
+    // every sub-path boundary.
+    if state.options.enable_overhang_speed {
+        state
+            .curl
+            .collect_entity(state.layer_index, paths, &geometry);
+    }
     for path in paths {
-        super::super::materialized::emit_flat(output, path, 0.0, geometry, state);
+        super::super::materialized::emit(
+            output,
+            state,
+            super::super::materialized::Emission {
+                path,
+                end_clip: 0.0,
+                slope: None,
+                geometry,
+                inside_loop: true,
+            },
+        );
     }
     if state.options.wipe {
         let mut wipe = Vec::new();
