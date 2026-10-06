@@ -30,9 +30,8 @@ pub(super) fn normalize(kind: OptionValueKind, value: &str) -> Result<Cow<'_, st
         }
         OptionValueKind::Bool => {
             let first = value
-                .split(',')
-                .next()
-                .unwrap()
+                .split_once(',')
+                .map_or(value, |(first, _)| first)
                 .trim_matches(|c: char| c.is_ascii_whitespace());
             match first {
                 "0" | "1" => Ok(Cow::Borrowed(first)),
