@@ -95,6 +95,11 @@ async fn original_profile(nozzle: &str) {
         placement: Placement::None,
     };
     let loaded = ares_core::profile_settings(&input, request).await;
+    let placed = ares_core::profile_placed_project(&input, request).await;
+    assert!(
+        placed.is_ok(),
+        "placed scene must allow editing invalid config; evidence {directory:?}"
+    );
     let validated = ares_core::validate_with_profiles(&input, request);
     let sliced = ares_core::slice_with_profiles_validated(
         &input,

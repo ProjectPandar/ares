@@ -2,18 +2,12 @@ use crate::{OrcaInt, ProjectSettings, SliceError};
 
 use super::{Project, ValidatedMaterializedProject, invalid_option};
 
-// `PrintConfig.cpp:10391-10394`: firmware retraction is incompatible with
-// wipe (G-code wipe interleaves with G10/G11 retracts).
-const FIRMWARE_RETRACTION_WIPE_MESSAGE: &str =
-    "--use-firmware-retraction is not compatible with --wipe";
-
 pub(super) fn validate(
     settings: &ProjectSettings,
     project: &Project,
     validated: ValidatedMaterializedProject,
 ) -> Result<(), SliceError> {
     validate_wipe_tower(settings, validated)?;
-    validate_firmware_retraction(settings)?;
     validate_support_selector("support_filament", settings.process.object.support_filament)?;
     validate_support_selector(
         "support_interface_filament",
@@ -94,17 +88,6 @@ fn validate_raw_extruder(
         && (extruder.0 < 0 || extruder.0 as usize > logical_filament_count)
     {
         return Err(invalid_option("extruder"));
-    }
-    Ok(())
-}
-
-fn validate_firmware_retraction(settings: &ProjectSettings) -> Result<(), SliceError> {
-    if settings.printer.gcode.use_firmware_retraction.0
-        && settings.project.print.wipe.0.iter().any(|wipe| wipe.0)
-    {
-        return Err(SliceError::InvalidInput(format!(
-            "use_firmware_retraction: {FIRMWARE_RETRACTION_WIPE_MESSAGE}"
-        )));
     }
     Ok(())
 }

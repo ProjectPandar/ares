@@ -30,6 +30,7 @@ pub fn validate_print(settings: &ProjectSettings, bbl_printer: bool) -> Result<(
 pub fn validate_stl(input: impl AsRef<[u8]>, options: &SliceOptions) -> Result<(), SliceError> {
     // `Print.cpp:1260`: validation follows model application, not malformed input.
     crate::load_model(input)?;
+    options.validate_loaded_firmware_retraction()?;
     validate_stl_options(options)
 }
 
@@ -62,6 +63,7 @@ pub fn validate_project_plate(
     overrides: &ConfigOverrides,
 ) -> Result<(), SliceError> {
     let mut project = crate::project::load_project_with(input, overrides)?;
+    project.settings().validate_loaded_firmware_retraction()?;
     project.initialize_cli_loaded_project_config();
     validate_loaded_project(project, plate, None)
 }
