@@ -72,6 +72,11 @@ export interface ProfileSliceOptions {
   plate?: number;
   /** Seed of the per-slice random streams (fuzzy skin, templates); the caller chooses it. */
   seed: number;
+  /**
+   * User edits applied after the selected presets, by option key: a `ConfigOption::serialize()`
+   * string from `encodeConfigValues`, or one string per element of a vector option.
+   */
+  overrides?: Record<string, string | string[]>;
 }
 
 /** One preset record of an imported file: `type` is derived by the engine, other values are as exported. */
