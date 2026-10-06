@@ -179,11 +179,24 @@ fn task22o71_unported_anchor_group_params_fail_without_fallback() {
         "\"internal_solid_infill_pattern\": \"gyroid\"",
         "internal_solid_infill_pattern",
     );
-    assert_unsupported_mutation(
+}
+
+#[test]
+fn task22o71_divergent_role_filament_ids_are_admitted() {
+    // `PrintObject::bridge_over_infill` (`PrintObject.cpp:2468+`) is
+    // extruder-agnostic: rewritten surfaces stay in their LayerRegion and
+    // emit on the region's role filament (`Fill.cpp:865`,
+    // `Fill.cpp:920-924`), so a `top_surface_filament_id` differing from
+    // the sparse/solid filament is a supported configuration.
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
         "\"top_surface_filament_id\": \"0\"",
         "\"top_surface_filament_id\": \"2\"",
-        "bridge_over_infill_anchor_extruder_order",
     );
+    let prepared = transaction::prepare(super::super::prepare(archive))
+        .expect("divergent role filament ids must be admitted");
+    transaction::dispose(prepared);
 }
 
 #[test]

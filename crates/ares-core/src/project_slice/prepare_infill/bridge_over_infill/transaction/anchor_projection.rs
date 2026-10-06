@@ -93,11 +93,12 @@ pub(super) fn validate(
     ) {
         return unsupported("internal_solid_infill_pattern");
     }
-    if options.sparse_infill_filament_id != options.internal_solid_filament_id
-        || options.sparse_infill_filament_id != options.top_surface_filament_id
-    {
-        return unsupported("bridge_over_infill_anchor_extruder_order");
-    }
+    // `PrintObject::bridge_over_infill` (`PrintObject.cpp:2468+`) is
+    // extruder-agnostic: rewritten surfaces stay in their LayerRegion and
+    // emit on the region's role filament (`Fill.cpp:865`,
+    // `Fill.cpp:920-924`), so divergent `sparse_infill_filament_id` /
+    // `internal_solid_filament_id` / `top_surface_filament_id` are
+    // admitted here; role→filament resolution happens downstream.
     let (anchor, anchor_max) = projected_anchor_lengths(options, f64::from(spacing));
     if !anchor_max.is_finite() || anchor_max < 0.05 {
         return unsupported("infill_anchor_max");
