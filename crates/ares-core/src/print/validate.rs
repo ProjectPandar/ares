@@ -164,12 +164,13 @@ pub(crate) fn validate_loaded_project(
     });
     let project = project.select_plate(plate)?;
     let resolved = resolve_bounded_project_config(&project)?;
-    validate_applied_project(&project, &resolved, selected_printer)
+    validate_applied_project(&project, &resolved, plate, selected_printer)
 }
 
 pub(crate) fn validate_applied_project(
     project: &Project,
     resolved: &BoundedResolvedProjectConfig,
+    plate_number: u32,
     selected_printer: Option<&str>,
 ) -> Result<(), SliceError> {
     extrusion_width::applied(resolved)?;
@@ -184,7 +185,7 @@ pub(crate) fn validate_applied_project(
         settings,
         bbl,
         &resolved.usage.supported_used_filaments,
-        project.plates()[0].id(),
+        plate_number,
     )
 }
 

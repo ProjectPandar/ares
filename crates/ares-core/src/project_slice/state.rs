@@ -83,7 +83,12 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     }
     let resolved = resolve_bounded_project_config(&project)?;
     if validate_print {
-        crate::print::validate::validate_applied_project(&project, &resolved, selected_printer)?;
+        crate::print::validate::validate_applied_project(
+            &project,
+            &resolved,
+            plate_id,
+            selected_printer,
+        )?;
     }
     // OrcaSlicer writes the config block into every sliced G-code and uses it
     // as the machine/layer template placeholder source (`GCode.cpp` config

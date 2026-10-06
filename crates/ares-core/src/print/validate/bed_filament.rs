@@ -7,6 +7,9 @@ pub(super) fn validate(
     used: &[usize],
     plate_number: u32,
 ) -> Result<(), SliceError> {
+    if !bbl && !settings.printer.gcode.support_multi_bed_types.0 {
+        return Ok(());
+    }
     let temperatures = &settings.filament.print;
     let (bed, values) = match settings.project.print.curr_bed_type {
         ProjectBedType::SupertackPlate => ("Supertack Plate", &temperatures.supertack_plate_temp),
@@ -27,9 +30,6 @@ pub(super) fn validate(
             ));
         }
     };
-    if !bbl && !settings.printer.gcode.support_multi_bed_types.0 {
-        return Ok(());
-    }
     // Print::extruders() supplies sorted/deduplicated logical indices. No map.
     for &filament in used {
         if values.0.get(filament).unwrap_or(&values.0[0]).0 == 0 {
