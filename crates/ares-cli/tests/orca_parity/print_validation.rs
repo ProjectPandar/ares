@@ -3,6 +3,8 @@ use std::fs;
 
 #[path = "print_validation/applied_map_controls.rs"]
 mod applied_map_controls;
+#[path = "print_validation/bed_compatibility.rs"]
+mod bed_compatibility;
 #[path = "print_validation/bridge_width.rs"]
 mod bridge_width;
 #[path = "print_validation/bridge_width_controls.rs"]
