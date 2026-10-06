@@ -48,6 +48,25 @@ pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
     pub(in crate::project_slice) nearest_seam_plans: Vec<Vec<NearestSeamLayer>>,
 }
 
+impl PreparedPostIslandPrintOrder {
+    /// The resolved filament config the emit pass printed with.
+    pub(in crate::project_slice) fn filament(&self) -> &crate::FilamentGCodeSourceOptions {
+        &self
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .resolved
+            .views
+            .full
+            .filament
+            .gcode
+    }
+}
+
 /// Per-layer candidate data for the Nearest seam selection at emit time
 /// (`SeamPlacer.cpp:1500-1560` `place_seam` with spNearest — geometric
 /// loop-to-perimeter match, then gaussian distance penalty minimization

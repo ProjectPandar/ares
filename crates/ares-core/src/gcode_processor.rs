@@ -111,6 +111,34 @@ pub struct GCodeProcessorResult {
     /// `#FF8000` (`GCodeProcessor::apply_config`,
     /// `GCodeProcessor.cpp:2321-2343`).
     pub extruder_colors: Vec<String>,
+    /// `GCodeProcessorResult::filament_diameters` (`GCodeProcessor.hpp:252`).
+    pub filament_diameters: Vec<f32>,
+    /// `GCodeProcessorResult::filament_densities` (`GCodeProcessor.hpp:254`).
+    pub filament_densities: Vec<f32>,
+}
+
+impl GCodeProcessorResult {
+    /// The `filament_diameters`/`filament_densities` slice of
+    /// `GCodeProcessor::apply_config`: both are sized to
+    /// `filament_count = filament_diameter.size()` (`GCodeProcessor.cpp:2033,
+    /// 2054-2056`) and slot `i` reads `get_at(i)` as float (`:2081, 2083`),
+    /// which falls back to the first value (`Config.hpp:624-628`). The
+    /// `reset()` defaults (`:1672-1674`) are always overwritten here, so a
+    /// key missing from the config reads its `PrintConfig` default instead
+    /// (`filament_diameter` `{ 1.75 }`, `filament_density` `{ 0. }`,
+    /// `PrintConfig.cpp:2606-2611, 2864-2870`), as resolved by the options.
+    pub(crate) fn apply_filament_config(&mut self, filament: &crate::FilamentGCodeSourceOptions) {
+        let diameters = &filament.filament_diameter.0;
+        let densities = &filament.filament_density.0;
+        let get_at =
+            |values: &[crate::OrcaFloat], id: usize| values.get(id).unwrap_or(&values[0]).0 as f32;
+        self.filament_diameters = (0..diameters.len())
+            .map(|id| get_at(diameters, id))
+            .collect();
+        self.filament_densities = (0..diameters.len())
+            .map(|id| get_at(densities, id))
+            .collect();
+    }
 }
 
 /// Exported G-code together with the processor result of the same pass.

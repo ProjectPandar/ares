@@ -251,7 +251,8 @@ fn consume_post_island_print_order(
     record_moves: bool,
     context: &mut crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
-    let output = gcode_emit::emit(&mut prepared, metadata, record_moves, context)?;
+    let mut output = gcode_emit::emit(&mut prepared, metadata, record_moves, context)?;
+    output.result.apply_filament_config(prepared.filament());
     island_print_order::dispose(prepared);
     Ok(output)
 }

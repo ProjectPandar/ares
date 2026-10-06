@@ -14,6 +14,8 @@ pub struct SliceOutput {
     vertices: VertexBuffers,
     print_statistics: Vec<u8>,
     extruder_colors: Vec<String>,
+    filament_diameters: Vec<f32>,
+    filament_densities: Vec<f32>,
 }
 
 impl SliceOutput {
@@ -35,6 +37,8 @@ impl SliceOutput {
             vertices,
             print_statistics,
             extruder_colors: output.result.extruder_colors,
+            filament_diameters: output.result.filament_diameters,
+            filament_densities: output.result.filament_densities,
         }
     }
 }
@@ -68,6 +72,18 @@ impl SliceOutput {
     #[wasm_bindgen(js_name = takeExtruderColors)]
     pub fn take_extruder_colors(&mut self) -> Vec<String> {
         std::mem::take(&mut self.extruder_colors)
+    }
+
+    /// `GCodeProcessorResult::filament_diameters` (`GCodeProcessor.hpp:252`).
+    #[wasm_bindgen(js_name = takeFilamentDiameters)]
+    pub fn take_filament_diameters(&mut self) -> Vec<f32> {
+        std::mem::take(&mut self.filament_diameters)
+    }
+
+    /// `GCodeProcessorResult::filament_densities` (`GCodeProcessor.hpp:254`).
+    #[wasm_bindgen(js_name = takeFilamentDensities)]
+    pub fn take_filament_densities(&mut self) -> Vec<f32> {
+        std::mem::take(&mut self.filament_densities)
     }
 }
 
