@@ -45,6 +45,18 @@ mod prepare_infill;
 mod pressure_equalizer;
 mod profile;
 mod profile_entry;
+
+/// Loads the project for a selected-profile request without slicing it —
+/// the same load path `prepare_profile_slice` uses, exposed for the
+/// `profile_settings` view.
+pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project, SliceError> {
+    let Some(profile) = source.profile else {
+        return Err(SliceError::InvalidInput(
+            "a selected profile is required".to_owned(),
+        ));
+    };
+    profile_entry::load_with_profile(source, profile)
+}
 mod raw_intersections;
 mod region_slices;
 #[cfg_attr(

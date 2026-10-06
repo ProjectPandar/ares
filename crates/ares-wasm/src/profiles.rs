@@ -285,3 +285,59 @@ pub async fn slice_with_profiles_processed_bytes(
     .map_err(|error| error.to_string())
     .map(|output| (output, tool_colors, color_print_colors))
 }
+
+#[wasm_bindgen(js_name = profileSettings)]
+pub async fn profile_settings(
+    input: Vec<u8>,
+    filename: String,
+    catalog_json: String,
+    selection_json: String,
+    options_json: String,
+) -> Result<String, JsValue> {
+    profile_settings_json(
+        input,
+        &filename,
+        &catalog_json,
+        &selection_json,
+        &options_json,
+    )
+    .await
+    .map_err(|error| JsValue::from_str(&error))
+}
+
+pub async fn profile_settings_json(
+    input: Vec<u8>,
+    filename: &str,
+    catalog_json: &str,
+    selection_json: &str,
+    options_json: &str,
+) -> Result<String, String> {
+    let options = ProfileSliceOptions::parse(options_json)?;
+    let overrides = options.overrides();
+    let settings = ares_core::profile_settings(
+        input,
+        ares_core::ProfileSliceRequest {
+            filename,
+            catalog_json,
+            selection_json,
+            plate: options.plate,
+            overrides: &overrides,
+            placement: options.placement(),
+        },
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+    serde_json::to_string(&settings)
+        .map_err(|error| format!("profile settings cannot serialize: {error}"))
+}
+
+#[cfg(test)]
+pub(crate) async fn profile_settings_json_for_test(
+    input: Vec<u8>,
+    filename: &str,
+    catalog_json: &str,
+    selection_json: &str,
+    options_json: &str,
+) -> Result<String, String> {
+    profile_settings_json(input, filename, catalog_json, selection_json, options_json).await
+}

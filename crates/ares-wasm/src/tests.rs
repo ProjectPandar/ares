@@ -155,3 +155,45 @@ fn slice_with_profiles_options_accept_center_placement() {
             .unwrap();
     assert!(matches!(options, ares_core::Placement::Center));
 }
+
+#[tokio::test]
+async fn profile_settings_json_exposes_merged_values() {
+    let vendor = serde_json::json!({
+        "index": {
+            "name": "Acme",
+            "machine_list": [{"sub_path": "machine.json"}],
+            "process_list": [{"sub_path": "process.json"}],
+            "filament_list": [{"sub_path": "filament.json"}]
+        },
+        "files": {
+            "machine.json": {
+                "type": "machine", "name": "Acme A1", "instantiation": "true",
+                "nozzle_diameter": [0.4],
+                "printable_area": ["0x0", "256x0", "256x256", "0x256"]
+            },
+            "process.json": {
+                "type": "process", "name": "0.20mm", "instantiation": "true",
+                "layer_height": "0.2"
+            },
+            "filament.json": {
+                "type": "filament", "name": "Acme PLA", "instantiation": "true",
+                "filament_diameter": [1.75]
+            }
+        }
+    });
+    let catalog = serde_json::json!({"vendors": [vendor], "imports": []});
+    let selection = serde_json::json!({
+        "machine": "Acme A1", "process": "0.20mm", "filaments": ["Acme PLA"]
+    });
+    let json = super::profiles::profile_settings_json_for_test(
+        square_ascii_stl(),
+        "square.stl",
+        &catalog.to_string(),
+        &selection.to_string(),
+        r#"{"seed":0}"#,
+    )
+    .await
+    .unwrap();
+    let view: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(view["layer_height"], serde_json::json!("0.2"), "{view}");
+}

@@ -86,7 +86,7 @@ fn catalog_parts() -> (Value, Value) {
 }
 
 fn embedded_settings() -> String {
-    let (catalog, selection) = catalog_parts();
+    let (_catalog, _selection) = catalog_parts();
     let mut embedded = json!({
         "printer_settings_id": "Old Machine",
         "print_settings_id": "Old Process",
@@ -99,7 +99,6 @@ fn embedded_settings() -> String {
     // Embed the machine preset's own area values so only the preset-supplied
     // keys differ from the selection overlay below.
     embedded["printable_area"] = json!(["0x0", "256x0", "256x256", "0x256"]);
-    let _ = catalog;
     embedded.to_string()
 }
 

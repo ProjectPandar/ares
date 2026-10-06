@@ -10,7 +10,7 @@ use crate::{Project, SliceError, profiles::Placement, project::SelectedProfile};
 
 /// Loads the model with the selected profiles applied: `.3mf` inputs load
 /// model and embedded config; other inputs stay on the STL import path.
-fn load_with_profile(
+pub(super) fn load_with_profile(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
