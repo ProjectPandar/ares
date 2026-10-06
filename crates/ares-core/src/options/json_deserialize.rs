@@ -1,4 +1,5 @@
 //! Config.cpp:927-929/952-1006 maps preset JSON strings/arrays to ConfigOption wire values.
+mod scalar;
 #[cfg(test)]
 mod tests;
 use serde::de::DeserializeOwned;
@@ -22,7 +23,9 @@ pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
         };
         let kind = definition.kind;
         let decoded = match value {
-            RawConfigValue::Text(value) if is_vector(kind) => Some(decode(kind, value)),
+            RawConfigValue::Text(value) if is_vector(kind) || scalar::is_scalar(kind) => {
+                Some(decode(kind, value))
+            }
             RawConfigValue::List(values) if is_string_array(values) => Some(
                 encode_array(kind, values)
                     .map_err(str::to_owned)
@@ -65,7 +68,11 @@ fn is_vector(kind: OptionValueKind) -> bool {
 }
 
 fn decode(kind: OptionValueKind, value: &str) -> Result<RawConfigValue, String> {
-    wire::decode(kind, value).map(|value| match value {
+    let value = scalar::normalize(kind, value)?;
+    if scalar::is_scalar(kind) {
+        wire::validate_lexical(kind, &value)?;
+    }
+    wire::decode(kind, &value).map(|value| match value {
         WireValue::Scalar(value) => RawConfigValue::Text(value),
         WireValue::Sequence(values) => {
             RawConfigValue::List(values.into_iter().map(RawConfigValue::Text).collect())
