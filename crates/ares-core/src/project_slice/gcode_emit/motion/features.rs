@@ -51,6 +51,23 @@ pub(super) struct PathProperties<'a> {
     pub(super) inside_loop: bool,
 }
 
+/// `is_infill` (`ExtrusionEntity.hpp:73-82`): the infill-jerk class.
+/// `erGapFill` is NOT a member (gap fill takes `default_jerk`) while
+/// `erIroning` IS; `erTopSolidInfill` is a member, so a zero
+/// `top_surface_jerk` still falls through to `infill_jerk`.
+fn is_infill(feature: &str) -> bool {
+    matches!(
+        feature,
+        "Bridge"
+            | "Internal Bridge"
+            | "Sparse infill"
+            | "Internal solid infill"
+            | "Top surface"
+            | "Bottom surface"
+            | "Ironing"
+    )
+}
+
 impl PathProperties<'_> {
     pub(super) fn kinematics(
         self,
@@ -113,16 +130,7 @@ impl PathProperties<'_> {
             }
             "Inner wall" if options.inner_wall_jerk > 0.0 => options.inner_wall_jerk,
             "Top surface" if options.top_surface_jerk > 0.0 => options.top_surface_jerk,
-            "Sparse infill"
-            | "Internal solid infill"
-            | "Bottom surface"
-            | "Bridge"
-            | "Internal Bridge"
-            | "Gap infill"
-                if options.infill_jerk > 0.0 =>
-            {
-                options.infill_jerk
-            }
+            _ if is_infill(self.feature) && options.infill_jerk > 0.0 => options.infill_jerk,
             _ => options.default_jerk,
         }
     }
