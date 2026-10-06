@@ -117,7 +117,7 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
     let ids = vertices.take_ids();
     let all_roles = u32::MAX;
     let (travels, seams) = (1 << 0, 1 << 4);
-    for (layers, current_layer) in [([0, 0], 0), ([0, 1], 1), ([1, 9], 1)] {
+    for (layers, current_layer) in [([0, 0], 0), ([0, 1], 1)] {
         let [first, last, current] =
             vertices.view_range(layers[0], layers[1], all_roles, seams)[..]
         else {
@@ -131,6 +131,15 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
         assert_eq!(tags[4 * current + 1], 10, "extrusion at {current}");
         assert_eq!(ids[2 * current + 1], current_layer);
     }
+    // Top layer only (the GCodeViewer default): a top layer without visible
+    // vertices walks the enabled start to the last vertex (ViewerImpl.cpp:1796-1808).
+    let [_, last, current] = vertices.view_range(1, 9, all_roles, seams)[..] else {
+        panic!("three indices");
+    };
+    assert_eq!(
+        [last, current].map(|id| id as usize),
+        [ids.len() / 2 - 1; 2]
+    );
     // Visible travels extend the range over the trailing travel of the top layer.
     let [_, last, _] = vertices.view_range(0, 2, all_roles, travels | seams)[..] else {
         panic!("three indices");

@@ -1,6 +1,6 @@
 // Ports the color part of AGPL-licensed OrcaSlicer `src/libvgcode/src/ViewerImpl.cpp`:
 // default colors (`:283-317`), `update_colors` (`:1261-1287`), `set_view_type`
-// (`:1313-1317`), `get_vertex_color` (`:1467-1553`), `get_color_range`
+// (`:1313-1317`), `update_colors_texture` (`:1227-1245`), `get_vertex_color` (`:1467-1553`), `get_color_range`
 // (`:1599-1621`) and `update_color_ranges` (`:1817-1878`).
 
 use super::ViewerImpl;
@@ -147,6 +147,37 @@ impl ViewerImpl {
             self.update_colors();
         }
         &self.vertices_colors
+    }
+
+    /// `update_colors_texture` (`ViewerImpl.cpp:1227-1245`): `colors`, dark grey
+    /// below the top layer of a top-layer-only view while the visible range ends
+    /// before the full range.
+    pub fn texture_colors(&mut self) -> Vec<Color> {
+        if self.settings.update_colors {
+            self.update_colors();
+        }
+        let top_layer_id = if self.settings.top_layer_only_view_range {
+            self.layers.get_view_range()[1]
+        } else {
+            0
+        };
+        let color_top_layer_only =
+            self.view_range.get_full()[1] != self.view_range.get_visible()[1];
+        let enabled_first = self.view_range.get_enabled()[0];
+        let spiral_vase_mode = self.settings.spiral_vase_mode;
+        (0..)
+            .zip(self.vertices.iter().zip(&self.vertices_colors))
+            .map(|(i, (v, &color))| {
+                if color_top_layer_only
+                    && (v.layer_id as usize) < top_layer_id
+                    && (!spiral_vase_mode || i != enabled_first)
+                {
+                    DUMMY_COLOR
+                } else {
+                    color
+                }
+            })
+            .collect()
     }
 
     /// `update_colors` (`ViewerImpl.cpp:1261-1287`); tool colors past the

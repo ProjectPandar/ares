@@ -6,11 +6,13 @@ use crate::{
 };
 
 mod colors;
+mod enabled;
 pub use colors::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS};
 
 /// `ViewerImpl` state behind the layer and view ranges: vertices, layers,
-/// visibility settings, the full / enabled / visible `ViewRange`, color ranges
-/// and vertex colors. Textures, times and markers belong to the renderer.
+/// visibility settings, the full / enabled / visible `ViewRange`, enabled
+/// segments and options, color ranges and vertex colors. Textures, times and
+/// markers belong to the renderer.
 #[derive(Clone, Debug, Default)]
 pub struct ViewerImpl {
     settings: Settings,
@@ -22,6 +24,9 @@ pub struct ViewerImpl {
     vertices_colors: Vec<Color>,
     settings_used_for_ranges: Option<Settings>,
     ranges: colors::ColorRanges,
+    valid_lines: Vec<bool>,
+    enabled_segments: Vec<u32>,
+    enabled_options: Vec<u32>,
 }
 
 /// `is_visible` (ViewerImpl.cpp:1713-1726): options by option visibility,
@@ -56,9 +61,11 @@ impl ViewerImpl {
         if !self.layers.empty() {
             self.layers.set_view_range(0, self.layers.count() - 1);
         }
+        self.valid_lines = enabled::valid_lines(&self.vertices);
         self.update_view_full_range();
         self.view_range
             .set_visible_interval(self.view_range.get_enabled());
+        self.settings.update_enabled_entities = true;
     }
 
     pub fn vertices(&self) -> &[PathVertex] {
@@ -78,6 +85,7 @@ impl ViewerImpl {
         let visible = &mut self.settings.options_visibility[option.index()];
         *visible = !*visible;
         self.settings.update_colors = true;
+        self.settings.update_enabled_entities = true;
         let old_enabled_range = self.view_range.get_enabled();
         self.update_view_full_range();
         let new_enabled_range = self.view_range.get_enabled();
@@ -103,7 +111,12 @@ impl ViewerImpl {
         let visible = &mut self.settings.extrusion_roles_visibility[role.index()];
         *visible = !*visible;
         self.settings.update_colors = true;
+        self.settings.update_enabled_entities = true;
         self.update_view_full_range();
+    }
+
+    pub fn is_top_layer_only_view_range(&self) -> bool {
+        self.settings.top_layer_only_view_range
     }
 
     /// ViewerImpl.cpp:1342-1347.
@@ -112,6 +125,7 @@ impl ViewerImpl {
         self.update_view_full_range();
         self.view_range
             .set_visible_interval(self.view_range.get_enabled());
+        self.settings.update_enabled_entities = true;
     }
 
     pub fn get_layers_view_range(&self) -> Interval {
@@ -125,6 +139,7 @@ impl ViewerImpl {
         self.update_view_full_range();
         self.view_range
             .set_visible_interval(self.view_range.get_enabled());
+        self.settings.update_enabled_entities = true;
     }
 
     pub fn get_view_full_range(&self) -> Interval {
@@ -137,6 +152,15 @@ impl ViewerImpl {
 
     pub fn get_view_visible_range(&self) -> Interval {
         self.view_range.get_visible()
+    }
+
+    /// ViewerImpl.cpp:1450-1459; the colors texture is `texture_colors`.
+    pub fn set_view_visible_range(&mut self, min: usize, max: usize) {
+        // force update of the full range, to avoid clamping the visible range with full old values
+        // when calling m_view_range.set_visible()
+        self.update_view_full_range();
+        self.view_range.set_visible(min, max);
+        self.update_enabled_entities();
     }
 
     /// ViewerImpl.hpp:132.

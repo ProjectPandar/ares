@@ -24,7 +24,7 @@ Source-cited rewrite slice of AGPL-licensed OrcaSlicer `src/libvgcode` and the r
 
 ## Library and app
 
-- `AresSlicer.movesSlider(layers, roles, options)` and `AresSlicer.movesRange(low, high, viewType, roles, options)`, the latter returning the view range, enabled segment / option ids and the vertex colors.
+- `AresSlicer.movesSlider(layers, roles, options)` and `AresSlicer.movesRange([low, high], viewType, roles, options)`, the latter returning the view range, enabled segment / option ids and the vertex colors.
 - A horizontal moves slider under the preview canvas (`<input type=range>`, the higher thumb). It resets to its maximum when the layer range or a legend toggle changes. The toolpath mesh and option markers draw only the enabled entities; the G-code window follows the current vertex. TS only maps slider position to the call and an id list to instance flags.
 
 ## Deferred

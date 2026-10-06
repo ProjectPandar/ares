@@ -41,7 +41,8 @@ struct ColorRangeView {
 impl VertexBuffers {
     /// Uint8Array RGB triples: libvgcode `ViewerImpl::get_vertex_color` of each
     /// vertex under `view_type` (`ViewerImpl::update_colors`), after the
-    /// `set_visibility` the color ranges depend on.
+    /// `set_visibility` the color ranges depend on, grayed as
+    /// `update_colors_texture` does for the moves slider range.
     #[wasm_bindgen(js_name = vertexColors)]
     pub fn vertex_colors(
         &mut self,
@@ -54,7 +55,7 @@ impl VertexBuffers {
         if self.viewer.get_view_type() != view_type {
             self.viewer.set_view_type(view_type);
         }
-        Ok(self.viewer.colors().as_flattened().to_vec())
+        Ok(self.viewer.texture_colors().as_flattened().to_vec())
     }
 
     /// JSON `{rangeType, range, values, palette}` of libvgcode

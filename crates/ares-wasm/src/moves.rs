@@ -1,6 +1,6 @@
 use ares_core::{ProcessedGCode, gcode_processor::MoveVertex};
 use ares_vgcode::{
-    GCodeExtrusionRole, GCodeInputData, OptionType, ViewerImpl,
+    GCodeExtrusionRole, GCodeInputData, MovesSlider, OptionType, ViewerImpl,
     convert::{from_processor_result, move_type_counts},
     move_type_to_option,
 };
@@ -120,13 +120,15 @@ impl MoveBuffers {
 }
 
 /// Converted libvgcode vertices and palettes; no G-code parsing in the adapter.
-/// Keeps the vertices loaded in libvgcode `ViewerImpl` for `viewRange`.
+/// Keeps the vertices loaded in libvgcode `ViewerImpl` for `viewRange` and
+/// the moves slider.
 #[wasm_bindgen]
 #[derive(Default)]
 pub struct VertexBuffers {
     count: usize,
     spiral_vase_mode: bool,
     pub(crate) viewer: ViewerImpl,
+    moves_slider: MovesSlider,
     values: Vec<f32>,
     ids: Vec<u32>,
     tags: Vec<u8>,
@@ -145,6 +147,9 @@ impl VertexBuffers {
         let spiral_vase_mode = data.spiral_vase_mode;
         let mut viewer = ViewerImpl::default();
         viewer.load(data);
+        // GCodeViewer::load_as_gcode (GCodeViewer.cpp:1128-1131) with the
+        // `seq_top_layer_only` default "1" (AppConfig.cpp:202-203).
+        viewer.toggle_top_layer_only_view_range();
         let mut out = Self {
             count,
             spiral_vase_mode,
@@ -157,6 +162,7 @@ impl VertexBuffers {
             color_print_colors,
             layer_zs: viewer.layers().get_zs(),
             viewer: ViewerImpl::default(),
+            moves_slider: MovesSlider::default(),
         };
         for v in viewer.vertices() {
             out.values.extend_from_slice(&[
@@ -189,6 +195,13 @@ impl VertexBuffers {
         }
         out.viewer = viewer;
         out
+    }
+
+    fn visible_range(&self) -> Vec<u32> {
+        let [first, last] = self.viewer.get_view_visible_range();
+        [first, last, self.viewer.get_current_vertex_id()]
+            .map(|id| id as u32)
+            .to_vec()
     }
 
     /// Shows the extrusion roles with bit `i` of `visible_roles` set
@@ -279,12 +292,58 @@ impl VertexBuffers {
         visible_options: u16,
     ) -> Vec<u32> {
         self.set_visibility(visible_roles, visible_options);
-        let viewer = &mut self.viewer;
-        viewer.set_layers_view_range(min_layer as usize, max_layer as usize);
-        let [first, last] = viewer.get_view_visible_range();
-        [first, last, viewer.get_current_vertex_id()]
-            .map(|id| id as u32)
-            .to_vec()
+        self.viewer
+            .set_layers_view_range(min_layer as usize, max_layer as usize);
+        self.visible_range()
+    }
+    /// `viewRange`, then the moves slider of `GCodeViewer::update_moves_slider`
+    /// (`GCodeViewer::set_layers_z_range`, `GCodeViewer.cpp:1864-1868`), kept
+    /// for `setMovesRange`. Returns `[spanMin, spanMax, ...gcodeIds]`: the
+    /// visible stops and the G-code line id of each stop.
+    #[wasm_bindgen(js_name = movesSlider)]
+    pub fn moves_slider(
+        &mut self,
+        min_layer: u32,
+        max_layer: u32,
+        visible_roles: u32,
+        visible_options: u16,
+    ) -> Vec<u32> {
+        self.view_range(min_layer, max_layer, visible_roles, visible_options);
+        self.moves_slider = MovesSlider::new(&self.viewer).unwrap_or_default();
+        let MovesSlider {
+            span,
+            alternate_values,
+            ..
+        } = &self.moves_slider;
+        span.iter()
+            .map(|&stop| stop as u32)
+            .chain(alternate_values.iter().copied())
+            .collect()
+    }
+    /// libvgcode `ViewerImpl::set_view_visible_range` of the moves slider
+    /// thumbs `low` and `high`, stops of the latest `movesSlider`
+    /// (`GLCanvas3D.cpp:8263-8266`). Returns `[first, last, current]` as `viewRange`.
+    #[wasm_bindgen(js_name = setMovesRange)]
+    pub fn set_moves_range(&mut self, low: u32, high: u32) -> Result<Vec<u32>, JsError> {
+        let stops = self.moves_slider.values.len();
+        if low > high || high as usize >= stops {
+            return Err(JsError::new(&format!(
+                "moves range {low}..{high} outside {stops} stops"
+            )));
+        }
+        let [min, max] = self.moves_slider.vertex_range(low as usize, high as usize);
+        self.viewer.set_view_visible_range(min, max);
+        Ok(self.visible_range())
+    }
+    /// Uint32Array: vertex ids of libvgcode's enabled segments (`i` to `i + 1`).
+    #[wasm_bindgen(js_name = enabledSegments)]
+    pub fn enabled_segments(&mut self) -> Vec<u32> {
+        self.viewer.enabled_segments().to_vec()
+    }
+    /// Uint32Array: vertex ids of libvgcode's enabled option markers.
+    #[wasm_bindgen(js_name = enabledOptions)]
+    pub fn enabled_options(&mut self) -> Vec<u32> {
+        self.viewer.enabled_options().to_vec()
     }
     /// Float32Array: libvgcode `Layers::get_zs`, one z per layer.
     #[wasm_bindgen(js_name = takeLayerZs)]
