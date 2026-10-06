@@ -9,11 +9,76 @@ mod tests;
 
 use functions::function;
 
+/// The placeholder parse path an evaluation runs under. Upstream's grammar
+/// routes the two placeholder spellings into separate resolution paths, and
+/// each path reports unknown symbols with its own message:
+/// - brace placeholders resolve symbols via `resolve_variable`, which throws
+///   "Not a variable name" (`PlaceholderParser.cpp:988-1000`);
+/// - legacy bracket placeholders expand via `legacy_variable_expansion`,
+///   which throws "Variable does not exist" (`PlaceholderParser.cpp:918-932`).
+#[derive(Clone, Copy)]
+pub(crate) enum ParsePath {
+    Brace,
+    Legacy,
+}
+
+impl ParsePath {
+    fn unknown_variable_message(self) -> &'static str {
+        match self {
+            Self::Brace => "Not a variable name",
+            Self::Legacy => "Variable does not exist",
+        }
+    }
+}
+
+/// Unknown-symbol resolution failure. `offset` is the failing identifier's
+/// byte offset in the expression input; it feeds the upstream line/caret
+/// report (`PlaceholderParser.cpp:1726-1770`).
+pub(crate) struct ParseFailure {
+    pub(crate) message: String,
+    pub(crate) offset: usize,
+}
+
+pub(crate) enum PathError {
+    Parse(ParseFailure),
+    Other(String),
+}
+
+/// Evaluates `input` under one of the upstream placeholder parse paths so
+/// unknown symbols surface with the path's message and identifier offset.
+pub(crate) fn evaluate_path(
+    input: &str,
+    config: &Config,
+    path: ParsePath,
+) -> Result<Value, PathError> {
+    let tokens = tokenize(input).map_err(PathError::Other)?;
+    let mut parser = Parser {
+        tokens,
+        index: 0,
+        config,
+        unknown_offset: None,
+    };
+    match parser.parse_or() {
+        Ok(value) if parser.index == parser.tokens.len() => Ok(value),
+        Ok(_) => Err(PathError::Other(format!(
+            "unexpected token in expression: {input}"
+        ))),
+        Err(error) => match parser.unknown_offset {
+            Some(offset) => Err(PathError::Parse(ParseFailure {
+                message: path.unknown_variable_message().to_owned(),
+                offset,
+            })),
+            None => Err(PathError::Other(error)),
+        },
+    }
+}
+
 pub(crate) fn evaluate(input: &str, config: &Config) -> Result<Value, String> {
     let mut parser = Parser {
         tokens: tokenize(input)?,
         index: 0,
         config,
+        unknown_offset: None,
     };
     let value = parser.parse_or()?;
     if parser.index != parser.tokens.len() {
@@ -26,6 +91,9 @@ struct Parser<'a> {
     tokens: Vec<Token>,
     index: usize,
     config: &'a Config,
+    /// Byte offset of the identifier whose resolution failed, captured at
+    /// the unknown-variable throw site for the caret report.
+    unknown_offset: Option<usize>,
 }
 
 impl Parser<'_> {
@@ -175,12 +243,12 @@ impl Parser<'_> {
             Token::Number(value) => Ok(Value::Number(value)),
             Token::Bool(value) => Ok(Value::Bool(value)),
             Token::String(value) | Token::Regex(value) => Ok(Value::String(value)),
-            Token::Ident(name) => {
+            Token::Ident(name, offset) => {
                 if self.take(Token::Left) {
                     // PlaceholderParser.cpp:1687,2333: size takes an unindexed
                     // vector variable, not a scalar or an arbitrary expression.
                     if name == "size" {
-                        let Some(Token::Ident(variable)) = self.next() else {
+                        let Some(Token::Ident(variable, _)) = self.next() else {
                             return Err("parameter of size() is not a vector variable".to_owned());
                         };
                         if !self.take(Token::Right) {
@@ -205,11 +273,13 @@ impl Parser<'_> {
                     }
                     return function(&name, args, self.config);
                 }
-                let mut value = self
-                    .config
-                    .get(&name)
-                    .cloned()
-                    .ok_or_else(|| format!("unknown placeholder: {name}"))?;
+                let mut value = match self.config.get(&name).cloned() {
+                    Some(value) => value,
+                    None => {
+                        self.unknown_offset = Some(offset);
+                        return Err(format!("unknown placeholder: {name}"));
+                    }
+                };
                 while self.take(Token::LeftBracket) {
                     let index = self
                         .parse_or()?

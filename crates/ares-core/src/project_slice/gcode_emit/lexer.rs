@@ -5,7 +5,9 @@ pub(crate) enum Token {
     Bool(bool),
     String(String),
     Regex(String),
-    Ident(String),
+    /// Identifier with its byte offset in the expression input (feeds the
+    /// upstream caret report, `PlaceholderParser.cpp:1726-1770`).
+    Ident(String, usize),
     Plus,
     Minus,
     Star,
@@ -33,23 +35,25 @@ pub(crate) enum Token {
 
 pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
-    let mut chars = input.chars().peekable();
-    while let Some(&character) = chars.peek() {
+    let mut rest = input;
+    while let Some(character) = rest.chars().next() {
         if character.is_whitespace() {
-            chars.next();
+            rest = &rest[character.len_utf8()..];
             continue;
         }
+        // Byte offset of the token being scanned within `input`.
+        let offset = input.len() - rest.len();
         let token = match character {
             '+' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Plus
             }
             '-' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Minus
             }
             '*' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Star
             }
             '/' if matches!(
@@ -57,101 +61,124 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
                 Some(Token::RegexMatch | Token::RegexNotMatch)
             ) =>
             {
-                Token::Regex(read_regex(&mut chars)?)
+                Token::Regex(read_regex(&mut rest)?)
             }
             '/' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Slash
             }
             '%' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Percent
             }
             '(' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Left
             }
             ')' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Right
             }
             '[' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::LeftBracket
             }
             ']' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::RightBracket
             }
             ',' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Comma
             }
             '?' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Question
             }
             ':' => {
-                chars.next();
+                rest = &rest[1..];
                 Token::Colon
             }
             '=' => {
-                chars.next();
-                if chars.next_if_eq(&'~').is_some() {
+                rest = &rest[1..];
+                if rest.starts_with('~') {
+                    rest = &rest[1..];
                     Token::RegexMatch
                 } else {
                     // Upstream treats `=`, `==` as equality
                     // (`PlaceholderParser.cpp:599`); consume a doubled sign.
-                    chars.next_if_eq(&'=');
+                    rest = rest.strip_prefix('=').unwrap_or(rest);
                     Token::Eq
                 }
             }
             '!' => {
-                chars.next();
-                if chars.next_if_eq(&'=').is_some() {
+                rest = &rest[1..];
+                if let Some(tail) = rest.strip_prefix('=') {
+                    rest = tail;
                     Token::NotEq
-                } else if chars.next_if_eq(&'~').is_some() {
+                } else if let Some(tail) = rest.strip_prefix('~') {
+                    rest = tail;
                     Token::RegexNotMatch
                 } else {
                     Token::Not
                 }
             }
             '<' => {
-                chars.next();
-                if chars.next_if_eq(&'=').is_some() {
+                rest = &rest[1..];
+                if let Some(tail) = rest.strip_prefix('=') {
+                    rest = tail;
                     Token::Le
                 } else {
                     Token::Lt
                 }
             }
             '>' => {
-                chars.next();
-                if chars.next_if_eq(&'=').is_some() {
+                rest = &rest[1..];
+                if let Some(tail) = rest.strip_prefix('=') {
+                    rest = tail;
                     Token::Ge
                 } else {
                     Token::Gt
                 }
             }
             '&' => {
-                chars.next();
-                expect_char(&mut chars, '&')?;
+                rest = &rest[1..];
+                expect_char(&mut rest, '&')?;
                 Token::And
             }
             '|' => {
-                chars.next();
-                expect_char(&mut chars, '|')?;
+                rest = &rest[1..];
+                expect_char(&mut rest, '|')?;
                 Token::Or
             }
-            '"' => Token::String(read_string(&mut chars)?),
-            character if character.is_ascii_digit() || character == '.' => read_number(&mut chars)?,
+            '"' => Token::String(read_string(&mut rest)?),
+            character if character.is_ascii_digit() || character == '.' => read_number(&mut rest)?,
             character if character.is_ascii_alphabetic() || character == '_' => {
-                match read_ident(&mut chars).as_str() {
-                    "and" => Token::And,
-                    "or" => Token::Or,
-                    "not" => Token::Not,
-                    "true" => Token::Bool(true),
-                    "false" => Token::Bool(false),
-                    identifier => Token::Ident(identifier.to_owned()),
+                match read_ident(rest).as_str() {
+                    "and" => {
+                        rest = &rest[3..];
+                        Token::And
+                    }
+                    "or" => {
+                        rest = &rest[2..];
+                        Token::Or
+                    }
+                    "not" => {
+                        rest = &rest[3..];
+                        Token::Not
+                    }
+                    "true" => {
+                        rest = &rest[4..];
+                        Token::Bool(true)
+                    }
+                    "false" => {
+                        rest = &rest[5..];
+                        Token::Bool(false)
+                    }
+                    identifier => {
+                        rest = &rest[identifier.len()..];
+                        Token::Ident(identifier.to_owned(), offset)
+                    }
                 }
             }
             _ => return Err(format!("invalid expression character: {character}")),
@@ -161,39 +188,49 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
     Ok(tokens)
 }
 
-fn expect_char(
-    chars: &mut std::iter::Peekable<std::str::Chars<'_>>,
-    expected: char,
-) -> Result<(), String> {
-    if chars.next_if_eq(&expected).is_some() {
+fn expect_char(rest: &mut &str, expected: char) -> Result<(), String> {
+    if let Some(tail) = rest.strip_prefix(expected) {
+        *rest = tail;
         Ok(())
     } else {
         Err(format!("expected {expected}"))
     }
 }
 
-fn read_string(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<String, String> {
-    chars.next();
+fn read_string(rest: &mut &str) -> Result<String, String> {
+    *rest = &rest[1..];
     let mut output = String::new();
+    let mut chars = rest.chars();
     while let Some(character) = chars.next() {
         match character {
-            '"' => return Ok(output),
-            '\\' => output.push(chars.next().ok_or("unterminated string")?),
+            '"' => {
+                *rest = chars.as_str();
+                return Ok(output);
+            }
+            '\\' => {
+                let escaped = chars.next().ok_or("unterminated string")?;
+                output.push(escaped);
+            }
             character => output.push(character),
         }
     }
     Err("unterminated string".to_owned())
 }
 
-fn read_regex(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<String, String> {
-    chars.next();
+fn read_regex(rest: &mut &str) -> Result<String, String> {
+    *rest = &rest[1..];
     let mut output = String::new();
+    let mut chars = rest.chars();
     while let Some(character) = chars.next() {
         match character {
-            '/' => return Ok(output),
+            '/' => {
+                *rest = chars.as_str();
+                return Ok(output);
+            }
             '\\' => {
                 output.push(character);
-                output.push(chars.next().ok_or("unterminated regex")?);
+                let escaped = chars.next().ok_or("unterminated regex")?;
+                output.push(escaped);
             }
             character => output.push(character),
         }
@@ -201,34 +238,27 @@ fn read_regex(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<St
     Err("unterminated regex".to_owned())
 }
 
-fn read_number(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<Token, String> {
-    let mut value = String::new();
-    while chars
-        .peek()
-        .is_some_and(|character| character.is_ascii_digit() || *character == '.')
-    {
-        value.push(chars.next().unwrap());
-    }
-    if value.contains('.') {
-        value
+fn read_number(rest: &mut &str) -> Result<Token, String> {
+    let digits: String = rest
+        .chars()
+        .take_while(|character| character.is_ascii_digit() || *character == '.')
+        .collect();
+    *rest = &rest[digits.len()..];
+    if digits.contains('.') {
+        digits
             .parse()
             .map(Token::Number)
-            .map_err(|_| format!("invalid number: {value}"))
+            .map_err(|_| format!("invalid number: {digits}"))
     } else {
-        value
+        digits
             .parse()
             .map(Token::Integer)
-            .map_err(|_| format!("invalid integer: {value}"))
+            .map_err(|_| format!("invalid integer: {digits}"))
     }
 }
 
-fn read_ident(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> String {
-    let mut value = String::new();
-    while chars
-        .peek()
-        .is_some_and(|character| character.is_ascii_alphanumeric() || *character == '_')
-    {
-        value.push(chars.next().unwrap());
-    }
-    value
+fn read_ident(rest: &str) -> String {
+    rest.chars()
+        .take_while(|character| character.is_ascii_alphanumeric() || *character == '_')
+        .collect()
 }

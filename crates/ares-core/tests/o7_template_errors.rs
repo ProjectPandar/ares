@@ -38,8 +38,7 @@ machine_start_gcode Parsing error at line 1: Not a variable name
 START_PRINT BED_TEMPERATURE=[bed_temperature_initial_layer] KAMP_LEVELING=1 EXTRUDER_ROTATION_VOLUME={extruder_rotation_volume[0]} MIXING_STEPPER_ROTATION_VOLUME={mixing_stepper_rotation_volume[0]} PURGE_LAYER_HEIGHT=2 PURGE_PARKING_SPEED=10000 PURGE_LENGHT=500 PURGE_SPEED=500 PURGE_MATERIAL_QUANTITY=10000 EXTRUDER_TEMPERATURE=[nozzle_temperature] EXTRUDER_TEMPERATURE_INITIAL_LAYER=[nozzle_temperature_initial_layer] PRESSURE_ADVANCE=0.2 PRESSURE_ADVANCE_SMOOTH_TIME=0.5 ZONE_1_TEMPERATURE={multi_zone_1_initial_layer[0]} ZONE_2_TEMPERATURE={multi_zone_2_initial_layer[0]} ZONE_3_TEMPERATURE={multi_zone_3_initial_layer[0]}
                                                                                                       ^
 
-Please check the custom G-code or use the default custom G-code."#
-        // clang-format on
+Please check the custom G-code or use the default custom G-code."# // clang-format on
     );
 }
 
@@ -67,7 +66,6 @@ machine_start_gcode Parsing error at line 51: Variable does not exist
 M117 Print [output_filename_format]; Display: Printing started...
             ^
 
-Please check the custom G-code or use the default custom G-code."#
-        // clang-format on
+Please check the custom G-code or use the default custom G-code."# // clang-format on
     );
 }

@@ -1,11 +1,19 @@
-use super::{expression::evaluate, value::Config};
+use super::{
+    expression::{ParsePath, PathError, evaluate, evaluate_path},
+    value::Config,
+};
+
+mod error;
 
 /// Orca template node: literal text or an `{if}`/`{elsif}`/`{else}` branch.
 /// Directives are consumed with their condition text (including any newline
 /// inside a multiline condition); every other byte, newlines included, is
 /// preserved verbatim, so whole-line and inline directives share one engine.
 enum Node {
-    Text(String),
+    /// Verbatim template text with its byte offset in the template (the
+    /// offset feeds the upstream caret report for placeholder failures).
+    Text { text: String, offset: usize },
+    /// An `{if}`/`{elsif}`/`{else}` branch.
     Branch { arms: Vec<Arm> },
 }
 
@@ -32,7 +40,7 @@ pub(super) fn render_for_filament(
     // `" _SP_PRINT_START"` loses its leading space).
     let template = template.trim_start_matches([' ', '\t', '\r', '\n']);
     let nodes = parse(template)?;
-    render_nodes(&nodes, config, filament)
+    render_nodes(&nodes, template, config, filament)
 }
 
 fn parse(template: &str) -> Result<Vec<Node>, String> {
@@ -65,13 +73,19 @@ impl Parser<'_> {
             let Some((start, end, directive)) = self.next_directive() else {
                 let text = &self.template[self.offset..];
                 if !text.is_empty() {
-                    nodes.push(Node::Text(text.to_owned()));
+                    nodes.push(Node::Text {
+                        text: text.to_owned(),
+                        offset: self.offset,
+                    });
                 }
                 self.offset = self.template.len();
                 return Ok((nodes, None));
             };
             if start > self.offset {
-                nodes.push(Node::Text(self.template[self.offset..start].to_owned()));
+                nodes.push(Node::Text {
+                    text: self.template[self.offset..start].to_owned(),
+                    offset: self.offset,
+                });
             }
             self.offset = end;
             match directive {
@@ -202,11 +216,18 @@ enum Directive {
     clippy::excessive_nesting,
     reason = "branch selection stays with node rendering"
 )]
-fn render_nodes(nodes: &[Node], config: &mut Config, filament: usize) -> Result<String, String> {
+fn render_nodes(
+    nodes: &[Node],
+    template: &str,
+    config: &mut Config,
+    filament: usize,
+) -> Result<String, String> {
     let mut output = String::new();
     for node in nodes {
         match node {
-            Node::Text(text) => output.push_str(&render_text(text, config, filament)?),
+            Node::Text { text, offset } => {
+                output.push_str(&render_text(text, *offset, template, config, filament)?)
+            }
             Node::Branch { arms } => {
                 for arm in arms {
                     let selected = match &arm.condition {
@@ -216,7 +237,7 @@ fn render_nodes(nodes: &[Node], config: &mut Config, filament: usize) -> Result<
                             .as_bool(),
                     };
                     if selected {
-                        output.push_str(&render_nodes(&arm.nodes, config, filament)?);
+                        output.push_str(&render_nodes(&arm.nodes, template, config, filament)?);
                         break;
                     }
                 }
@@ -226,7 +247,13 @@ fn render_nodes(nodes: &[Node], config: &mut Config, filament: usize) -> Result<
     Ok(output)
 }
 
-fn render_text(text: &str, config: &mut Config, filament: usize) -> Result<String, String> {
+fn render_text(
+    text: &str,
+    text_offset: usize,
+    template: &str,
+    config: &mut Config,
+    filament: usize,
+) -> Result<String, String> {
     let mut output = String::new();
     let mut index = 0;
     while index < text.len() {
@@ -250,6 +277,15 @@ fn render_text(text: &str, config: &mut Config, filament: usize) -> Result<Strin
             return Err(format!("unclosed placeholder in {text:?}"));
         };
         let expression = &text[expression_start..expression_start + relative_end];
+        // The placeholder spelling selects the upstream parse path: brace
+        // placeholders resolve symbols via resolve_variable
+        // (`PlaceholderParser.cpp:988-1000`), bracket placeholders expand
+        // via legacy_variable_expansion (`:918-932`); each path reports
+        // unknown symbols with its own message.
+        let path = match delimiter {
+            '{' => ParsePath::Brace,
+            _ => ParsePath::Legacy,
+        };
         // Upstream supports assignment statements (`{var[idx] = expr}`) that
         // store into the parser and render nothing.
         if let Some((name, index_expression, rhs)) = assignment_parts(expression) {
@@ -266,16 +302,29 @@ fn render_text(text: &str, config: &mut Config, filament: usize) -> Result<Strin
             index = expression_start + relative_end + 1;
             continue;
         }
-        let value =
-            evaluate(expression, config).map_err(|error| format!("{error} in {expression}"))?;
+        let value = match evaluate_path(expression, config, path) {
+            Ok(value) => value,
+            Err(PathError::Parse(failure)) => {
+                return Err(error::report(
+                    template,
+                    &failure,
+                    text_offset + expression_start + failure.offset,
+                ));
+            }
+            Err(PathError::Other(message)) => {
+                return Err(format!("{message} in {expression}"));
+            }
+        };
         // `PlaceholderParser.cpp:915`: legacy vectors use the process call's
         // logical filament context, not a template's physical extruder ID.
-        let vector_index = if delimiter == '[' { filament } else { 0 };
+        let vector_index = match path {
+            ParsePath::Legacy => filament,
+            ParsePath::Brace => 0,
+        };
         let value = value.index(vector_index).unwrap_or(&value);
-        let rendered = if delimiter == '[' {
-            value.as_legacy_string()
-        } else {
-            value.as_string()
+        let rendered = match path {
+            ParsePath::Legacy => value.as_legacy_string(),
+            ParsePath::Brace => value.as_string(),
         };
         output.push_str(&rendered);
         index = expression_start + relative_end + 1;

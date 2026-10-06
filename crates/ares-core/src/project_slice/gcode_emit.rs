@@ -343,10 +343,16 @@ pub(super) fn emit(
     // Upstream throws after emit when any custom template failed
     // (`GCode.cpp:3637-3645` — `failed_templates` collected via
     // `placeholder_parser_process` `GCode.cpp:3920-3933`).
-    if let Some((name, error)) = state.failed_templates.first() {
-        return Err(SliceError::InvalidInput(format!(
-            "failed to process the custom G-code template {name}: {error}"
-        )));
+    if !state.failed_templates.is_empty() {
+        let mut message = String::from("Failed to generate G-code for invalid custom G-code.\n\n");
+        for (name, error) in &state.failed_templates {
+            message.push_str(name);
+            message.push(' ');
+            message.push_str(error);
+            message.push('\n');
+        }
+        message.push_str("Please check the custom G-code or use the default custom G-code.");
+        return Err(SliceError::InvalidInput(message));
     }
     // `GCodeProcessor.cpp:2920-2926,3323-3325,1136-1139`: count exact
     // reserved comment lines in the complete stream, including end templates.
