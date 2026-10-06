@@ -61,7 +61,8 @@ pub(super) fn append(
         }
         let entities = variable_width::convert_with_role(
             &polylines,
-            with_spacing(fill.params.flow, fill.params.spacing as f32),
+            with_spacing(fill.params.flow, fill.params.spacing as f32)
+                .expect("InternalSolid projection retains the canonical spacing"),
             scale,
             MaterializedRole::SolidInfill,
         )?
@@ -177,7 +178,7 @@ pub(super) fn append_configured(
         };
         let mut entities = variable_width::convert_with_role(
             &polylines,
-            with_spacing(params.flow, params.spacing as f32),
+            with_spacing(params.flow, params.spacing as f32)?,
             scale,
             materialized_role,
         )?

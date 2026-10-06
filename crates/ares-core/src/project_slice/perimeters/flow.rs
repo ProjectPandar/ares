@@ -4,7 +4,9 @@ use super::super::layers::PlannedLayer;
 use super::types::{Flow, PerimeterFlows};
 
 mod fill;
+mod spacing;
 mod support;
+pub(in crate::project_slice) use spacing::{rounded_spacing, with_spacing};
 pub(in crate::project_slice) use support::{SupportFlows, resolve_support_flows};
 
 pub(in crate::project_slice) use fill::{
@@ -240,8 +242,8 @@ fn build_nonbridging_from_width(
     height: f32,
     nozzle_diameter: f32,
 ) -> Result<Flow, SliceError> {
-    let spacing = width - height * (ROUNDED_RECTANGLE_FACTOR as f32);
-    if !spacing.is_finite() || spacing <= 0.0 {
+    let spacing = rounded_spacing(width, height)?;
+    if !spacing.is_finite() {
         return Err(invalid("invalid external perimeter flow spacing"));
     }
     Ok(Flow {
@@ -259,25 +261,6 @@ fn require_positive_volume(flow: Flow, message: &str) -> Result<Flow, SliceError
         return Err(invalid(message));
     }
     Ok(flow)
-}
-
-pub(in crate::project_slice) fn with_spacing(flow: Flow, spacing: f32) -> Flow {
-    let (width, height, mm3_per_mm) = if flow.bridge {
-        let diameter = spacing - (flow.spacing - flow.width);
-        (diameter, diameter, bridge_volume(diameter))
-    } else {
-        let width = flow.width + (spacing - flow.spacing);
-        debug_assert!(width >= flow.height);
-        (width, flow.height, ordinary_volume(width, flow.height))
-    };
-    Flow {
-        width,
-        height,
-        spacing,
-        nozzle_diameter: flow.nozzle_diameter,
-        bridge: flow.bridge,
-        mm3_per_mm,
-    }
 }
 
 pub(in crate::project_slice) fn with_flow_ratio(flow: Flow, ratio: f64) -> Flow {

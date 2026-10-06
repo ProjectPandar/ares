@@ -37,9 +37,9 @@ impl Flow {
         self,
         height: f32,
     ) -> Result<Self, crate::SliceError> {
-        let spacing = self.width - height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
+        let spacing = super::flow::rounded_spacing(self.width, height)?;
         let mm3_per_mm = super::flow::ordinary_volume(self.width, height);
-        if spacing <= 0.0 || mm3_per_mm <= 0.0 {
+        if mm3_per_mm <= 0.0 {
             return Err(crate::SliceError::InvalidInput(
                 "invalid support interface flow".to_owned(),
             ));
@@ -64,14 +64,13 @@ impl Flow {
         self,
         width: f32,
     ) -> Result<Self, crate::SliceError> {
-        let rounded_rectangle_factor = (1.0 - 0.25 * std::f64::consts::PI) as f32;
-        let spacing = width - self.height * rounded_rectangle_factor;
+        let spacing = super::flow::rounded_spacing(width, self.height)?;
         let mm3_per_mm = f64::from(
             (f64::from(self.height)
                 * (f64::from(width) - f64::from(self.height) * (1.0 - 0.25 * std::f64::consts::PI)))
                 as f32,
         );
-        if !spacing.is_finite() || spacing <= 0.0 || !mm3_per_mm.is_finite() || mm3_per_mm <= 0.0 {
+        if !spacing.is_finite() || !mm3_per_mm.is_finite() || mm3_per_mm <= 0.0 {
             return Err(crate::SliceError::InvalidInput(
                 "invalid smaller external perimeter flow".to_owned(),
             ));

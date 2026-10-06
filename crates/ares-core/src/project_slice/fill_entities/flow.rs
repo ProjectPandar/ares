@@ -6,13 +6,22 @@ pub(in crate::project_slice) fn materialized_flow(
     params: crate::project_slice::group_fills::SurfaceFillParams,
     spacing: f32,
 ) -> crate::project_slice::perimeters::types::Flow {
+    try_materialized_flow(params, spacing)
+        .expect("fixed projected spacing preserves the canonical Flow invariant")
+}
+
+// FillBase.cpp:148-157: geometry-adjusted spacing can fail.
+pub(in crate::project_slice) fn try_materialized_flow(
+    params: crate::project_slice::group_fills::SurfaceFillParams,
+    spacing: f32,
+) -> Result<crate::project_slice::perimeters::types::Flow, crate::SliceError> {
     let mut flow = if params.extrusion_role == ExtrusionRole::InternalInfill && !params.bridge {
         params.flow
     } else {
-        crate::project_slice::perimeters::flow::with_spacing(params.flow, spacing)
+        crate::project_slice::perimeters::flow::with_spacing(params.flow, spacing)?
     };
     flow.mm3_per_mm *= params.flow_ratio;
-    flow
+    Ok(flow)
 }
 
 /// `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) applied
