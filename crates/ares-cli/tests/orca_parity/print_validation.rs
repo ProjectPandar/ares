@@ -5,6 +5,8 @@ use std::fs;
 mod entries;
 #[path = "print_validation/layer_nozzle.rs"]
 mod layer_nozzle;
+#[path = "print_validation/layer_nozzle_controls.rs"]
+mod layer_nozzle_controls;
 #[path = "print_validation/maximum_width.rs"]
 mod maximum_width;
 #[path = "print_validation/maximum_width_controls.rs"]
