@@ -32,7 +32,7 @@ fn check(extra: Value, bbl: bool, expected: Option<&str>) {
     }
 }
 
-fn only_second() -> Value {
+fn regions_second_with_default_volume() -> Value {
     json!({"nozzle_diameter":["0.4","0.4"],"filament_diameter":["1.75","1.75"],"filament_map":["1","1"],"outer_wall_filament_id":"2","inner_wall_filament_id":"2","sparse_infill_filament_id":"2","internal_solid_filament_id":"2","top_surface_filament_id":"2","bottom_surface_filament_id":"2"})
 }
 
@@ -69,8 +69,15 @@ fn print_bed_compat_flat_six_vectors_selected_only_and_exact_zero() {
 
 #[test]
 fn print_bed_compat_flat_unused_zero_is_not_scanned_and_no_physical_map() {
-    let mut fields = only_second();
-    fields["cool_plate_temp"] = json!(["0", "45"]);
+    let mut fields = regions_second_with_default_volume();
+    fields["outer_wall_filament_id"] = json!("1");
+    fields["inner_wall_filament_id"] = json!("1");
+    fields["sparse_infill_filament_id"] = json!("1");
+    fields["internal_solid_filament_id"] = json!("1");
+    fields["top_surface_filament_id"] = json!("1");
+    fields["bottom_surface_filament_id"] = json!("1");
+    fields["filament_map"] = json!(["2", "1"]);
+    fields["cool_plate_temp"] = json!(["45", "0"]);
     check(fields, false, None);
 }
 
@@ -80,10 +87,10 @@ fn print_bed_compat_flat_second_used_index_get_at_falls_back_to_front() {
         ("45", None),
         (
             "0",
-            Some("Plate 1: Cool Plate does not support filament 2\n"),
+            Some("Plate 1: Cool Plate does not support filament 1\n"),
         ),
     ] {
-        let mut fields = only_second();
+        let mut fields = regions_second_with_default_volume();
         fields["cool_plate_temp"] = json!([temperature]);
         check(fields, false, expected);
     }
@@ -109,7 +116,7 @@ fn print_bed_compat_flat_support_current_and_explicit_usage() {
         false,
         Some("Plate 1: Cool Plate does not support filament 2\n"),
     );
-    let mut current = only_second();
+    let mut current = regions_second_with_default_volume();
     current.as_object_mut().unwrap().extend(json!({"enable_support":"1","support_filament":"0","support_interface_filament":"0","cool_plate_temp":["45","0"]}).as_object().unwrap().clone());
     check(
         current,
@@ -232,5 +239,8 @@ fn print_bed_compat_pure_processing_remains_unvalidated_frozen_bytes() {
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(actual, "71d496647da663a597b7f0de76371db43bfce7cf9e0e8789c92e1d0b24206076", "{directory:?}");
+    assert_eq!(
+        actual, "71d496647da663a597b7f0de76371db43bfce7cf9e0e8789c92e1d0b24206076",
+        "{directory:?}"
+    );
 }
