@@ -50,20 +50,28 @@ pub(super) fn resolve(
 }
 
 fn select_ironing(options: &mut RegionOptions, filament: &FilamentRegionSourceOptions) {
+    // `ConfigOptionVector::get_at` clamps out-of-range indices to the front
+    // (`Config.hpp:623-626`): the project may carry fewer vector entries than
+    // the extruder an object selects (e.g. a 1-entry nullable from the
+    // preset against a second extruder's region).
     let index = options.top_surface_filament_id.0 as usize - 1;
-    options.filament_ironing_flow = match &filament.filament_ironing_flow[index] {
+    fn clamp_front<T>(values: &[T], index: usize) -> &T {
+        values.get(index).unwrap_or(&values[0])
+    }
+    options.filament_ironing_flow = match clamp_front(&filament.filament_ironing_flow, index) {
         Nullable::Nil => options.ironing_flow,
         Nullable::Value(value) => *value,
     };
-    options.filament_ironing_spacing = match &filament.filament_ironing_spacing[index] {
+    options.filament_ironing_spacing = match clamp_front(&filament.filament_ironing_spacing, index)
+    {
         Nullable::Nil => options.ironing_spacing,
         Nullable::Value(value) => *value,
     };
-    options.filament_ironing_inset = match &filament.filament_ironing_inset[index] {
+    options.filament_ironing_inset = match clamp_front(&filament.filament_ironing_inset, index) {
         Nullable::Nil => options.ironing_inset,
         Nullable::Value(value) => *value,
     };
-    options.filament_ironing_speed = match &filament.filament_ironing_speed[index] {
+    options.filament_ironing_speed = match clamp_front(&filament.filament_ironing_speed, index) {
         Nullable::Nil => options.ironing_speed,
         Nullable::Value(value) => *value,
     };
