@@ -3,6 +3,8 @@ use std::fs;
 
 #[path = "print_validation/entries.rs"]
 mod entries;
+#[path = "print_validation/maximum_width.rs"]
+mod maximum_width;
 #[path = "print_validation/minimum_width.rs"]
 mod minimum_width;
 #[path = "print_validation/minimum_width_controls.rs"]
