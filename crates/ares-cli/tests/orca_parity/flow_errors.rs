@@ -25,11 +25,11 @@ fn narrow_width_returns_negative_spacing() {
 }
 
 #[test]
-fn zero_bridge_ratio_returns_negative_flow() {
+fn zero_bridge_ratio_keeps_preflight_first_error() {
     verify_error(
         "flow-negative-volume-",
         br#"{"bridge_flow":"0","thick_bridges":"0"}"#,
-        "Flow::mm3_per_mm() produced negative flow. Did you set some extrusion width too small?",
+        "invalid Orca option bridge_flow",
     );
 }
 
