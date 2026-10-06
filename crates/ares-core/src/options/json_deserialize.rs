@@ -1,4 +1,6 @@
 //! Config.cpp:927-929/952-1006 maps preset JSON strings/arrays to ConfigOption wire values.
+#[cfg(test)]
+mod tests;
 use serde::de::DeserializeOwned;
 
 use super::{
