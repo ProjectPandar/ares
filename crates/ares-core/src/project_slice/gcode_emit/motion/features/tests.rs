@@ -100,3 +100,23 @@ fn ironing_jerk_uses_infill() {
     };
     assert_eq!(properties("Ironing", false).jerk(&unset, 3), 9.0);
 }
+
+#[test]
+fn overhang_wall_jerk_falls_to_default() {
+    // `is_external_perimeter` covers only `erExternalPerimeter`
+    // (ExtrusionEntity.hpp:64-66), so the overhang wall hits no role arm in
+    // the jerk selection (`GCode.cpp:6440-6458`) and takes `default_jerk`
+    // even when `outer_wall_jerk` is set.
+    let options = MotionOptions {
+        default_jerk: 9.0,
+        outer_wall_jerk: 7.0,
+        inner_wall_jerk: 7.0,
+        ..MotionOptions::default()
+    };
+    assert_eq!(
+        properties("Overhang wall", true).jerk(&options, 3),
+        9.0
+    );
+    // Contrast: the true external perimeter takes the outer value.
+    assert_eq!(properties("Outer wall", true).jerk(&options, 3), 7.0);
+}
