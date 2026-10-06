@@ -1,6 +1,6 @@
 //! Print.cpp:1524-1556,1627-1671: nozzle-dependent height/width bounds.
 use crate::project::effective_config::{types::BoundedResolvedProjectConfig, usage};
-use crate::{FloatOrPercent, ObjectOptions, ProjectSettings, RegionOptions, SliceError};
+use crate::{FloatOrPercent, ObjectOptions, OrcaInts, ProjectSettings, RegionOptions, SliceError};
 
 macro_rules! region_widths {
     ($region:expr) => {
@@ -18,7 +18,11 @@ macro_rules! region_widths {
 
 pub(super) fn applied(resolved: &BoundedResolvedProjectConfig) -> Result<(), SliceError> {
     let settings = &resolved.views.full;
-    let nozzles = nozzle_bounds(settings, &resolved.usage.supported_used_filaments)?;
+    let nozzles = nozzle_bounds(
+        settings,
+        &resolved.applied_filament_map,
+        &resolved.usage.supported_used_filaments,
+    )?;
     for object in resolved
         .objects
         .iter()
@@ -54,7 +58,11 @@ pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
         settings,
         settings.filament.gcode.filament_diameter.0.len(),
     );
-    let nozzles = nozzle_bounds(settings, &used.supported_used_filaments)?;
+    let nozzles = nozzle_bounds(
+        settings,
+        &settings.project.gcode.filament_map,
+        &used.supported_used_filaments,
+    )?;
     layer_heights(settings, &object, nozzles.0)?;
     object_widths(&object, nozzles)?;
     for value in region_widths!(region) {
@@ -63,14 +71,15 @@ pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
     Ok(())
 }
 
-fn nozzle_bounds(settings: &ProjectSettings, used: &[usize]) -> Result<(f64, f64), SliceError> {
+fn nozzle_bounds(
+    settings: &ProjectSettings,
+    filament_map: &OrcaInts,
+    used: &[usize],
+) -> Result<(f64, f64), SliceError> {
     let mut minimum = f64::MAX;
     let mut maximum = 0.0_f64;
     for &filament in used {
-        let extruder = settings
-            .project
-            .gcode
-            .filament_map
+        let extruder = filament_map
             .0
             .get(filament)
             .ok_or_else(|| SliceError::InvalidInput("invalid filament_map".to_owned()))?
