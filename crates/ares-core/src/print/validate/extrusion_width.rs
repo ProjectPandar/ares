@@ -1,4 +1,4 @@
-//! Print.cpp:1524-1556,1654-1671: width bounds on applied objects/regions.
+//! Print.cpp:1524-1556,1627-1671: nozzle-dependent height/width bounds.
 use crate::project::effective_config::{types::BoundedResolvedProjectConfig, usage};
 use crate::{FloatOrPercent, ObjectOptions, ProjectSettings, RegionOptions, SliceError};
 
@@ -24,6 +24,7 @@ pub(super) fn applied(resolved: &BoundedResolvedProjectConfig) -> Result<(), Sli
         .iter()
         .filter(|object| !object.print_objects.is_empty())
     {
+        layer_heights(settings, &object.object, nozzles.0)?;
         object_widths(&object.object, nozzles)?;
         // Upstream iterates keys before regions, not regions before keys.
         for index in 0..7 {
@@ -54,6 +55,7 @@ pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
         settings.filament.gcode.filament_diameter.0.len(),
     );
     let nozzles = nozzle_bounds(settings, &used.supported_used_filaments)?;
+    layer_heights(settings, &object, nozzles.0)?;
     object_widths(&object, nozzles)?;
     for value in region_widths!(region) {
         width(value, object.layer_height.0, nozzles)?;
@@ -82,6 +84,45 @@ fn nozzle_bounds(settings: &ProjectSettings, used: &[usize]) -> Result<(f64, f64
         maximum = maximum.max(diameter.0);
     }
     Ok((minimum, maximum))
+}
+
+fn layer_heights(
+    settings: &ProjectSettings,
+    object: &ObjectOptions,
+    minimum_nozzle: f64,
+) -> Result<(), SliceError> {
+    let first_layer_nozzle = if object.raft_layers.0 > 0 {
+        let selector = if object.raft_layers.0 == 1 {
+            object.support_interface_filament.0
+        } else {
+            object.support_filament.0
+        };
+        if selector == 0 {
+            minimum_nozzle
+        } else {
+            // Print.cpp uses the filament index directly, without filament_map.
+            // Config.hpp:624-628 get_at falls back to the first value, not the last.
+            let diameters = &settings.project.print.nozzle_diameter.0;
+            usize::try_from(i64::from(selector) - 1)
+                .ok()
+                .and_then(|index| diameters.get(index))
+                .unwrap_or(&diameters[0])
+                .0
+        }
+    } else {
+        minimum_nozzle
+    };
+    if settings.process.print.initial_layer_print_height.0 > first_layer_nozzle {
+        return Err(SliceError::InvalidInput(
+            "Layer height cannot exceed nozzle diameter.".to_owned(),
+        ));
+    }
+    if object.layer_height.0 > minimum_nozzle {
+        return Err(SliceError::InvalidInput(
+            "Layer height cannot exceed nozzle diameter.".to_owned(),
+        ));
+    }
+    Ok(())
 }
 
 fn has_support(object: &ObjectOptions) -> bool {

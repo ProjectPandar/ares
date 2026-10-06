@@ -1,5 +1,5 @@
-//! `Print.cpp:1524-1556,1654-1671,1695-1749::Print::validate` (OrcaSlicer
-//! v2.4.2): applied minimum widths precede extruder-addressing template checks.
+//! `Print.cpp:1524-1556,1627-1671,1695-1749::Print::validate` (OrcaSlicer
+//! v2.4.2): applied nozzle height/width bounds precede extruder-addressing checks.
 mod extrusion_width;
 mod identity;
 
@@ -89,6 +89,8 @@ pub(crate) fn validate_stl_options(options: &SliceOptions) -> Result<(), SliceEr
         .map(|(key, value)| (key.as_str(), value));
     let mut settings = ProjectSettings::deserialize(serde::de::value::MapDeserializer::new(fields))
         .map_err(|error| SliceError::InvalidInput(error.to_string()))?;
+    settings.process.print.initial_layer_print_height =
+        OrcaFloat(options.initial_layer_print_height()?);
     settings.project.print.nozzle_diameter = OrcaFloats(
         options
             .nozzle_diameters()?

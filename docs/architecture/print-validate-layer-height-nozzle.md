@@ -23,7 +23,7 @@ Rust destination 是 `crates/ares-core/src/print/validate/extrusion_width.rs` �
 
 - Applied：global initial height 从 `resolved.views.full.process.print` 取值，layer height 从 resolved object 取值。使用现有 BoundedProjectUsage / filament_map / nozzle owner，不扫描全部物理 nozzle；未使用小 nozzle 不得导致拒绝。
 - Flat：仍构建 ObjectOptions/RegionOptions，沿用 collect_usage + 同 nozzle tuple；initial height 取 global PrintOptions，不从对象 layer_height 派生。
-- STL：只在现有 selected-field adapter 加 `initial_layer_print_height`，原 layer_height/nozzle getter/usage字段不变。`options/initial_layer_print_height.rs::SliceOptions::initial_layer_print_height` 的 default 是 DEFAULT_LAYER_HEIGHT（0.2），不是随 object 层高的 fallback；不为此重写 legacy DTO 或 generic JSON parsing。
+- STL：在现有 selected-field adapter 用 `SliceOptions::initial_layer_print_height()` 的已存在 numeric/string getter 填入 typed initial-height field；该 legacy option 的 raw numeric 不送入仅接收 Orca 字符串/数组的 ProjectSettings deserializer。原 layer_height/nozzle getter/usage字段不变。`options/initial_layer_print_height.rs::SliceOptions::initial_layer_print_height` 的 default 是 DEFAULT_LAYER_HEIGHT（0.2），不是随 object 层高的 fallback；不为此重写 legacy DTO 或 generic JSON parsing。
 - Project/profile validated entry points 均复用同 borrowed validation owner，仍只加载/应用一次。没有额外 process-stage 层高修复或第二套 nozzle 比较。
 
 先写 spec，再在原 S1 Plus 0.2 nozzle 项目中仅改变一个公开 layer_height 或 initial_layer_print_height 为 0.3。原生必须实际跨过 loading 并返回 Unix205、精确 `Layer height cannot exceed nozzle diameter.\n`、无 G-code；现 Ares 的后续 O4/upper/O1 错误不等价。保留原低 width / 模板 / nozzle / geometry，禁止为得到 acceptance-vs-rejection 修输入。若被更早配置或 Print 边界拦住，记录真实 blocker，不冒称本 RED。公开 CLI/validate_project_plate/validated slice 的 input hash、唯一 overrides、阶段、真实 stdout/stderr 和无 G-code分别留证；不写隔离 private-helper harness。
