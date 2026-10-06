@@ -169,6 +169,49 @@ async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top:
   return { stops: stops.length, first: stops[0], middle: stops[middle], last: stops.at(-1) };
 }
 
+/**
+ * Canvas keys on the moves slider (GLCanvas3D::on_key, `GLCanvas3D.cpp:3844-3885`)
+ * with the top layer thumb at `top`: Left/Right step the higher thumb, x5 with
+ * Shift, clamped to the stops (IMSlider::correct_higher_value,
+ * `IMSlider.cpp:1675-1683`); Home/End jump to the ends. Left at the first stop
+ * moves the top layer down and the thumb to the max, Right at the last stop the
+ * top layer up and the thumb to the min, which the rebuilt slider keeps
+ * (`keep_min`, `GCodeViewer.cpp:1813-1820`); Up/Down set the thumb to the max
+ * first (`:3857`).
+ */
+async function checkMovesKeys(page: Page, gcode: string[], moves: Move[], top: number) {
+  const slider = page.getByRole("slider", { name: "Moves" });
+  const layer = page.getByRole("slider", { name: "Top layer" });
+  const at = async (layerIndex: number, stop: number) => {
+    const stops = movesSliderStops(moves, layerIndex);
+    const index = stop < 0 ? stops.length + stop : stop;
+    await expect(layer).toHaveAttribute("aria-valuenow", String(layerIndex + 1));
+    await expect(slider).toHaveAttribute("aria-valuemax", String(stops.length - 1));
+    await expect(slider).toHaveValue(String(index));
+    await expectMarkedLine(page, gcode, stops[index]);
+  };
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  const steps: [string, number, number][] = [
+    ["Home", top, 0],
+    ["ArrowRight", top, 1],
+    ["Shift+ArrowRight", top, 6],
+    ["ArrowLeft", top, 5],
+    ["Shift+ArrowLeft", top, 0],
+    ["ArrowLeft", top - 1, -1],
+    ["ArrowLeft", top - 1, -2],
+    ["Shift+ArrowRight", top - 1, -1],
+    ["ArrowRight", top, 0],
+    ["ArrowUp", top + 1, -1],
+    ["Home", top + 1, 0],
+    ["ArrowDown", top, -1],
+  ];
+  await at(top, -1);
+  for (const [key, layerIndex, stop] of steps) {
+    await page.keyboard.press(key);
+    await at(layerIndex, stop);
+  }
+}
+
 /** libvgcode `Layers::update`: a layer's z is that of its last non-custom extrusion. */
 function layerZ(moves: Move[], layer: number) {
   let z = 0;
@@ -274,6 +317,8 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expect(top).toHaveAttribute("aria-valuenow", "21");
   await expectCurrentLine(page, gcode, moves, 20);
   await page.screenshot({ path: `${artifacts}preview-layer-21.png` });
+  await checkMovesKeys(page, gcode, moves, 20);
+  await top.focus();
   await page.keyboard.press("End");
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   await expect.poll(() => canvasDigest(page)).toBe(full);
