@@ -13,6 +13,9 @@ pub(crate) struct SelectedProfile<'a> {
     pub(crate) settings: &'a ProjectSettings,
     pub(crate) profile_raw: &'a ProjectSettingsRaw,
     pub(crate) filament_raws: &'a [ProjectSettingsRaw],
+    /// CLI composite entries set this; the 3MF overlay checks the embedded
+    /// `post_process` before applying profiles (O5).
+    pub(crate) validate_print: bool,
 }
 
 /// The selected-profile overlay onto a raw settings view:
@@ -31,6 +34,7 @@ pub(super) fn merged_profile_raw(
         settings,
         profile_raw,
         filament_raws,
+        validate_print: _,
     } = profile;
     let filament_keys: std::collections::BTreeSet<&String> = filament_raws
         .iter()

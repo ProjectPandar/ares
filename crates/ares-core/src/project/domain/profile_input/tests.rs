@@ -111,6 +111,7 @@ fn overlay(
             settings: &composed,
             profile_raw: &profile_raw,
             filament_raws: &filament_raws,
+            validate_print: false,
         },
         &crate::ConfigOverrides::default(),
     )

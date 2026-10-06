@@ -46,6 +46,9 @@ pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
     let mut project = crate::project::load_project_with(source.bytes, source.overrides)?;
+    if source.validate_print {
+        super::validated::validate_post_process(&project)?;
+    }
     project.initialize_cli_loaded_project_config();
     prepare_loaded_project_slice_with_validation(project, source.plate, None, source.validate_print)
 }

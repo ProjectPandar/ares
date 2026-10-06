@@ -5,7 +5,10 @@
 //! is rejected with the exact upstream message. STL inputs are never
 //! checked (verified against the native 2.4.2 binary).
 
-use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest, slice_project_plate, slice_with_profiles};
+use ares_core::{
+    ConfigOverrides, Placement, ProfileSliceRequest, slice_project_plate_validated,
+    slice_with_profiles_validated,
+};
 use serde_json::{Value, json};
 
 // ---------------------------------------------------------------------------
@@ -61,7 +64,8 @@ fn base_settings(post_process: Option<Value>) -> String {
         "print_settings_id": "0.20mm Standard @A1",
         "filament_settings_id": ["Acme PLA"],
         "nozzle_diameter": [0.4],
-        "printable_area": ["0x0", "256x0", "256x256", "0x256"]
+        "printable_area": ["0x0", "256x0", "256x256", "0x256"],
+        "layer_change_gcode": "G92 E0"
     });
     if let Some(value) = post_process {
         settings["post_process"] = value;
@@ -81,8 +85,14 @@ fn project_3mf(post_process: Option<Value>) -> Vec<u8> {
             ("3D/root.model", ROOT_MODEL.as_bytes()),
             ("Metadata/model_settings.config", MODEL_SETTINGS.as_bytes()),
             ("Metadata/slice_info.config", SLICE_INFO.as_bytes()),
-            ("Metadata/filament_sequence.json", FILAMENT_SEQUENCE.as_bytes()),
-            ("Metadata/project_settings.config", base_settings(post_process).as_bytes()),
+            (
+                "Metadata/filament_sequence.json",
+                FILAMENT_SEQUENCE.as_bytes(),
+            ),
+            (
+                "Metadata/project_settings.config",
+                base_settings(post_process).as_bytes(),
+            ),
         ] {
             writer.start_file(path, options).unwrap();
             writer.write_all(bytes).unwrap();
@@ -104,7 +114,8 @@ fn catalog_parts() -> (Value, Value) {
     let machine = json!({
         "type": "machine", "name": "Acme A1 0.4 nozzle", "from": "system",
         "instantiation": "true", "nozzle_diameter": [0.4],
-        "printable_area": ["0x0", "256x0", "256x256", "0x256"]
+        "printable_area": ["0x0", "256x0", "256x256", "0x256"],
+        "use_relative_e_distances": false
     });
     let process = json!({
         "type": "process", "name": "0.20mm Standard @A1", "from": "system",
@@ -145,32 +156,38 @@ async fn embedded_post_process_with_empty_string_is_rejected() {
     // Matrix S13: Prusa process_common_mk3 writes "post_process": [""],
     // a single-element array whose sole value is an empty string. Upstream
     // checks size() > 0 (`:1686`), so [""] is rejected exactly like ["script"].
-    let error = slice_project_plate(
+    let error = slice_project_plate_validated(
         project_3mf(Some(json!([""]))),
         ares_core::GenerationMetadata::default(),
         None,
+        &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     )
     .await
     .unwrap_err();
     assert!(
-        error.to_string().contains("post_process is not supported under CLI."),
+        error
+            .to_string()
+            .contains("post_process is not supported under CLI."),
         "{error}"
     );
 }
 
 #[tokio::test]
 async fn embedded_post_process_with_script_is_rejected() {
-    let error = slice_project_plate(
+    let error = slice_project_plate_validated(
         project_3mf(Some(json!(["my_script.sh"]))),
         ares_core::GenerationMetadata::default(),
         None,
+        &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     )
     .await
     .unwrap_err();
     assert!(
-        error.to_string().contains("post_process is not supported under CLI."),
+        error
+            .to_string()
+            .contains("post_process is not supported under CLI."),
         "{error}"
     );
 }
@@ -178,10 +195,11 @@ async fn embedded_post_process_with_script_is_rejected() {
 #[tokio::test]
 async fn embedded_post_process_empty_array_is_allowed() {
     // size() == 0 → upstream does not reject.
-    slice_project_plate(
+    slice_project_plate_validated(
         project_3mf(Some(json!([]))),
         ares_core::GenerationMetadata::default(),
         None,
+        &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     )
     .await
@@ -190,10 +208,11 @@ async fn embedded_post_process_empty_array_is_allowed() {
 
 #[tokio::test]
 async fn absent_post_process_is_allowed() {
-    slice_project_plate(
+    slice_project_plate_validated(
         project_3mf(None),
         ares_core::GenerationMetadata::default(),
         None,
+        &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     )
     .await
@@ -208,7 +227,7 @@ async fn stl_with_profile_post_process_is_not_rejected() {
     let (mut catalog, selection) = catalog_parts();
     catalog["vendors"][0]["files"]["process.json"]["post_process"] = json!([""]);
     let overrides = ConfigOverrides::default();
-    slice_with_profiles(
+    slice_with_profiles_validated(
         stl(),
         ProfileSliceRequest {
             filename: "square.stl",
@@ -232,7 +251,7 @@ async fn three_mf_with_profile_checks_embedded_not_overlay() {
     // the `config` returned by read_from_file), so the embedded value wins.
     let (catalog, selection) = catalog_parts();
     let overrides = ConfigOverrides::default();
-    let error = slice_with_profiles(
+    let error = slice_with_profiles_validated(
         project_3mf(Some(json!([""]))),
         ProfileSliceRequest {
             filename: "cube.3mf",
@@ -248,7 +267,9 @@ async fn three_mf_with_profile_checks_embedded_not_overlay() {
     .await
     .unwrap_err();
     assert!(
-        error.to_string().contains("post_process is not supported under CLI."),
+        error
+            .to_string()
+            .contains("post_process is not supported under CLI."),
         "{error}"
     );
 }

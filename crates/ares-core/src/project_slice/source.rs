@@ -21,6 +21,9 @@ pub(crate) struct ProfileInput<'a> {
     /// Merged raw per selected filament (`OrcaSlicer.cpp:3301` slot overlay).
     pub(crate) filament_raws: &'a [ProjectSettingsRaw],
     pub(crate) placement: crate::profiles::Placement,
+    /// CLI composite entries set this; the profile path checks the
+    /// embedded `post_process` on it before overlay (O5).
+    pub(crate) validate_print: bool,
 }
 
 impl AsRef<[u8]> for ProjectSource<'_> {

@@ -93,6 +93,9 @@ fn slice_validated_profile_source(
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     with_profile_source(input.as_ref(), request, |mut source| {
         source.validate_print = true;
+        if let Some(profile) = &mut source.profile {
+            profile.validate_print = true;
+        }
         slice_source(source, metadata, record_moves, context)
     })
 }
@@ -175,6 +178,7 @@ fn with_profile_source<T>(
             raw: &composed.raw,
             filament_raws: &composed.filament_raws,
             placement,
+            validate_print: false,
         }),
         overrides,
         validate_print: false,

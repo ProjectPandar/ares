@@ -50,9 +50,15 @@ impl Project {
             settings,
             profile_raw,
             filament_raws,
+            validate_print,
         } = profile;
         let mut project = crate::load_project(input)?;
         let embedded_raw = project.documents.project_settings_raw.clone();
+        // O5: the CLI composite entry checks the **embedded**
+        // post_process before the profile overlay (`OrcaSlicer.cpp:1682-1690`).
+        if profile.validate_print {
+            crate::project_slice::validate_post_process(&project)?;
+        }
 
         let selected = settings.project.preset.filament_settings_id.0.len();
         let embedded_count = project
@@ -80,6 +86,7 @@ impl Project {
                 settings,
                 profile_raw,
                 filament_raws,
+                validate_print,
             },
             selected,
             embedded_count,

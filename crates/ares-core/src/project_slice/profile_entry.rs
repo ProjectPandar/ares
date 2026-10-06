@@ -38,6 +38,7 @@ pub(super) fn load_with_profile(
         settings: profile.composed.settings(),
         profile_raw: profile.raw,
         filament_raws: profile.filament_raws,
+        validate_print: project.validate_print,
     };
     match crate::InputFormat::detect(project.bytes) {
         crate::InputFormat::ThreeMf => {

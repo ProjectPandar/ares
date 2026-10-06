@@ -1,8 +1,30 @@
 //! Adapter orchestration of `Print.hpp:911,935`: apply once, validate, process.
 use super::{ProjectSource, slice_source};
 use crate::{
-    ConfigOverrides, GenerationMetadata, SliceError, SlicerContext, gcode_processor::ProcessedGCode,
+    ConfigOverrides, GenerationMetadata, Project, SliceError, SlicerContext,
+    gcode_processor::ProcessedGCode,
 };
+
+/// `OrcaSlicer.cpp:1682-1690`: a 3MF whose embedded `post_process` array
+/// is non-empty (including `[""]`) is rejected before slicing with the
+/// exact `:131` message. Called from the shared loading path when
+/// `validate_print` is true — after the single `load_project` and before
+/// `Print::validate` (profile paths check the pre-overlay embedded raw).
+pub(crate) fn validate_post_process(project: &Project) -> Result<(), SliceError> {
+    let Some(value) = project.documents().project_settings_raw.get("post_process") else {
+        return Ok(());
+    };
+    let len = match value {
+        crate::project::raw_settings::RawConfigValue::List(items) => items.len(),
+        _ => 1,
+    };
+    if len > 0 {
+        return Err(SliceError::InvalidInput(
+            "post_process is not supported under CLI.".to_owned(),
+        ));
+    }
+    Ok(())
+}
 
 pub async fn slice_project_plate_validated(
     input: impl AsRef<[u8]>,
