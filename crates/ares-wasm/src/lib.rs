@@ -24,7 +24,7 @@ pub async fn slice_stl(input: Vec<u8>, options_json: String) -> Result<Vec<u8>, 
 
 pub async fn slice_stl_bytes(input: Vec<u8>, options_json: &str) -> Result<Vec<u8>, String> {
     let options = parse_options(options_json)?;
-    ares_core::slice(input, options)
+    ares_core::slice_stl_validated(input, options)
         .await
         .map_err(|error| error.to_string())
 }
@@ -44,7 +44,7 @@ pub async fn slice_project_plate(
     overrides_json: Option<String>,
 ) -> Result<Vec<u8>, JsValue> {
     let overrides = parse_overrides(overrides_json)?;
-    ares_core::slice_project_plate(
+    ares_core::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         plate,
@@ -66,7 +66,7 @@ pub async fn slice_project_plate_processed(
     overrides_json: Option<String>,
 ) -> Result<SliceOutput, JsValue> {
     let overrides = parse_overrides(overrides_json)?;
-    let output = ares_core::slice_project_plate_processed(
+    let output = ares_core::slice_project_plate_processed_validated(
         input,
         GenerationMetadata::default(),
         plate,

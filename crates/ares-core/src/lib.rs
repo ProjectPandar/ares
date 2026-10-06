@@ -157,8 +157,10 @@ pub use perimeters::{
     LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,
     WallGenerator, WallSequence, generate_perimeters,
 };
+pub use pipeline::slice_stl_validated;
 pub use pipeline::{PipelineDiagnostics, PipelineStage, SlicingPipeline, run_slicing_pipeline};
 pub use planning::{Layer, plan_layers};
+pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::{LayerRegion, Print, PrintLayer, PrintObject, PrintRegion, build_print_domain};
 #[cfg(test)]
 pub(crate) use print_paths::finalize_print_paths;
@@ -176,12 +178,15 @@ pub use profiles::{
     ProfileSelection, ProfileSettings, ProfileSliceRequest, SelectablePrinter,
     compose_profile_fragments, filter_compatible_presets, merge_profile_fragments,
     parse_preset_bundle, profile_settings, slice_with_profiles, slice_with_profiles_processed,
+    validate_with_profiles,
 };
+pub use profiles::{slice_with_profiles_processed_validated, slice_with_profiles_validated};
 pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
     ProjectObject, ProjectVolume, ProjectVolumeType, Transform3d, load_project,
 };
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
+pub use project_slice::{slice_project_plate_processed_validated, slice_project_plate_validated};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use slicer_context::SlicerContext;

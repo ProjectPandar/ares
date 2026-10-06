@@ -8,6 +8,26 @@ use super::{
 };
 use crate::{Project, SliceError, profiles::Placement, project::SelectedProfile};
 
+pub(crate) fn validate_profile_source(
+    source: &ProjectSource<'_>,
+    profile: ProfileInput<'_>,
+) -> Result<(), SliceError> {
+    let project = load_with_profile(source, profile)?;
+    crate::print::validate::validate_loaded_project(
+        project,
+        source.plate,
+        Some(
+            &profile
+                .composed
+                .settings()
+                .project
+                .preset
+                .printer_settings_id
+                .0,
+        ),
+    )
+}
+
 /// Loads the model with the selected profiles applied: `.3mf` inputs load
 /// model and embedded config; other inputs stay on the STL import path.
 pub(super) fn load_with_profile(
@@ -48,7 +68,20 @@ pub(super) fn prepare_profile_slice(
         loaded.center_instances_around_point(bed);
         loaded.drop_instances_to_ground();
     }
-    state::prepare_loaded_project_slice(loaded, project.plate)
+    state::prepare_loaded_project_slice_with_validation(
+        loaded,
+        project.plate,
+        Some(
+            &profile
+                .composed
+                .settings()
+                .project
+                .preset
+                .printer_settings_id
+                .0,
+        ),
+        project.validate_print,
+    )
 }
 
 /// `BuildVolume::bed_center()` (`BuildVolume.hpp:83`): the printable-area

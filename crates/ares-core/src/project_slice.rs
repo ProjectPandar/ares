@@ -45,6 +45,9 @@ mod prepare_infill;
 mod pressure_equalizer;
 mod profile;
 mod profile_entry;
+mod validated;
+pub(crate) use profile_entry::validate_profile_source;
+pub use validated::{slice_project_plate_processed_validated, slice_project_plate_validated};
 
 /// Loads the project for a selected-profile request without slicing it —
 /// the same load path `prepare_profile_slice` uses, exposed for the
@@ -114,6 +117,7 @@ pub async fn slice_project_plate(
             plate,
             profile: None,
             overrides,
+            validate_print: false,
         },
         metadata,
         false,
@@ -137,6 +141,7 @@ pub async fn slice_project_plate_processed(
             plate,
             profile: None,
             overrides,
+            validate_print: false,
         },
         metadata,
         true,
@@ -274,7 +279,7 @@ fn prepare_post_closing(project: ProjectSource<'_>) -> Result<PreparedPostClosin
     } = if let Some(profile) = project.profile {
         profile_entry::prepare_profile_slice(&project, profile)?
     } else {
-        state::prepare_project_slice(project.bytes, project.plate, project.overrides)?
+        state::prepare_project_source(project)?
     };
     let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
     let max_gap_scaled = scale

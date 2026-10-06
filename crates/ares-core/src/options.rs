@@ -44,7 +44,7 @@ option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type)
 mod decode;
 mod encode;
 mod machine_limits;
-mod model_config_deserialize;
+pub(crate) mod model_config_deserialize;
 #[rustfmt::skip]
 option_modules!(layer_change_retraction, legacy, initial_layer_print_height, object_distance, overhang_reverse, overhang_speed, parameter_size, raft, skirt_type, support_enable, support_object_skip_flush, support_style, support_placement, pub(crate) support_threshold, support_interface_not_for_body, support_type, pub(crate) support_z_distance, tree_support_options, wall_direction, wall_sequence);
 mod object_fields;

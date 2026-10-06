@@ -31,6 +31,7 @@ fn first_plate_id(project: &Project) -> u32 {
         .unwrap_or(1)
 }
 
+#[cfg(test)]
 pub(super) fn prepare_project_slice(
     project: impl AsRef<[u8]>,
     plate: Option<u32>,
@@ -41,13 +42,38 @@ pub(super) fn prepare_project_slice(
     prepare_loaded_project_slice(project, plate)
 }
 
+pub(super) fn prepare_project_source(
+    source: super::ProjectSource<'_>,
+) -> Result<ProjectSliceState, SliceError> {
+    let mut project = crate::project::load_project_with(source.bytes, source.overrides)?;
+    project.initialize_cli_loaded_project_config();
+    prepare_loaded_project_slice_with_validation(project, source.plate, None, source.validate_print)
+}
+
+#[cfg(test)]
 pub(super) fn prepare_loaded_project_slice(
     project: Project,
     plate: Option<u32>,
 ) -> Result<ProjectSliceState, SliceError> {
+    prepare_loaded_project_slice_with_validation(project, plate, None, false)
+}
+
+pub(super) fn prepare_loaded_project_slice_with_validation(
+    project: Project,
+    plate: Option<u32>,
+    selected_printer: Option<&str>,
+    validate_print: bool,
+) -> Result<ProjectSliceState, SliceError> {
     let plate_id = plate.unwrap_or_else(|| first_plate_id(&project));
     let project = project.select_plate(plate_id)?;
     let resolved = resolve_bounded_project_config(&project)?;
+    if validate_print {
+        crate::print::validate::validate_applied_project(
+            &project,
+            &resolved.views.full,
+            selected_printer,
+        )?;
+    }
     // OrcaSlicer writes the config block into every sliced G-code and uses it
     // as the machine/layer template placeholder source (`GCode.cpp` config
     // export), not only for Bambu Lab printers.

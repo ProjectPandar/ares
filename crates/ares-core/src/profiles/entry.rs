@@ -64,6 +64,52 @@ pub async fn slice_with_profiles_processed(
     slice_profile_source(input, request, metadata, true, context)
 }
 
+/// Adapter entry: compose and load once, then validate before processing.
+pub async fn slice_with_profiles_validated(
+    input: impl AsRef<[u8]>,
+    request: ProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext,
+) -> Result<Vec<u8>, SliceError> {
+    slice_validated_profile_source(input, request, metadata, false, context)
+        .map(|output| output.gcode)
+}
+
+pub async fn slice_with_profiles_processed_validated(
+    input: impl AsRef<[u8]>,
+    request: ProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext,
+) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
+    slice_validated_profile_source(input, request, metadata, true, context)
+}
+
+fn slice_validated_profile_source(
+    input: impl AsRef<[u8]>,
+    request: ProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    record_moves: bool,
+    context: SlicerContext,
+) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
+    with_profile_source(input.as_ref(), request, |mut source| {
+        source.validate_print = true;
+        slice_source(source, metadata, record_moves, context)
+    })
+}
+
+/// Apply selected profiles, then run the independent O1 Print validation step.
+pub fn validate_with_profiles(
+    input: impl AsRef<[u8]>,
+    request: ProfileSliceRequest<'_>,
+) -> Result<(), SliceError> {
+    with_profile_source(input.as_ref(), request, |source| {
+        if let Some(profile) = source.profile {
+            crate::project_slice::validate_profile_source(&source, profile)?;
+        }
+        Ok(())
+    })
+}
+
 fn slice_profile_source(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
@@ -131,5 +177,6 @@ fn with_profile_source<T>(
             placement,
         }),
         overrides,
+        validate_print: false,
     })
 }

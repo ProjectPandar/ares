@@ -17,7 +17,8 @@ pub use composition::{
 };
 pub use entry::{
     Placement, ProfileSettings, ProfileSliceRequest, profile_settings, slice_with_profiles,
-    slice_with_profiles_processed,
+    slice_with_profiles_processed, slice_with_profiles_processed_validated,
+    slice_with_profiles_validated, validate_with_profiles,
 };
 pub use fragment::{ProfileFragment, ProfileKind, merge_profile_fragments};
 pub use import::{ParsedPresetBundle, parse_preset_bundle};

@@ -1,3 +1,5 @@
+pub(crate) mod validate;
+
 use crate::{
     ExtrusionEntityCollection, ExtrusionPath, ExtrusionRole, Layer, LayerContours, LayerPrintPaths,
     SliceError, Surface, SurfaceType,

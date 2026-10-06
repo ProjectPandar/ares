@@ -88,7 +88,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
             let context = ares_core::SlicerContext::new(0);
             match &args.dump_moves {
                 Some(path) => {
-                    let processed = ares_core::slice_project_plate_processed(
+                    let processed = ares_core::slice_project_plate_processed_validated(
                         input, metadata, args.plate, &overrides, context,
                     )
                     .await?;
@@ -96,8 +96,10 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
                     processed.gcode
                 }
                 None => {
-                    ares_core::slice_project_plate(input, metadata, args.plate, &overrides, context)
-                        .await?
+                    ares_core::slice_project_plate_validated(
+                        input, metadata, args.plate, &overrides, context,
+                    )
+                    .await?
                 }
             }
         }
@@ -107,7 +109,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
             })?;
             let options = fs::read(options)?;
             let options = serde_json::from_slice::<ares_core::SliceOptions>(&options)?;
-            ares_core::slice(input, options).await?
+            ares_core::slice_stl_validated(input, options).await?
         }
         _ => unreachable!("input extension was validated above"),
     };

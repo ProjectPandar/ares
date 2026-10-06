@@ -105,6 +105,23 @@ pub fn run_slicing_pipeline(
     input: impl AsRef<[u8]>,
     options: &SliceOptions,
 ) -> Result<SlicingPipeline, SliceError> {
+    run_slicing_pipeline_with_validation(input, options, false)
+}
+
+/// The CLI/WASM STL boundary: `Print::apply` → `validate` → `process` on one model.
+pub async fn slice_stl_validated(
+    input: impl AsRef<[u8]>,
+    options: SliceOptions,
+) -> Result<Vec<u8>, SliceError> {
+    let pipeline = run_slicing_pipeline_with_validation(input, &options, true)?;
+    crate::gcode::format_gcode(&pipeline, pipeline.options())
+}
+
+fn run_slicing_pipeline_with_validation(
+    input: impl AsRef<[u8]>,
+    options: &SliceOptions,
+    validate_print: bool,
+) -> Result<SlicingPipeline, SliceError> {
     let mut options = options.clone();
     options.normalize_fdm(0)?;
     options.validate_slicing_print_sequence()?;
@@ -121,6 +138,9 @@ pub fn run_slicing_pipeline(
         .consume_runtime();
     options.tree_support_options()?.consume_runtime();
     let model = crate::model_shrinkage::apply(load_model(input)?, &options)?;
+    if validate_print {
+        crate::print::validate::validate_stl_options(&options)?;
+    }
     options.validate_model_bed_excluded_area(&model)?;
     let layers = plan_layers(&model, &options)?;
     crate::printable_height::validate_layers(&layers, &options)?;

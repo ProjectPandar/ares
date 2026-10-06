@@ -9,6 +9,8 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) profile: Option<ProfileInput<'a>>,
     /// User option overrides (M854); empty for the unedited document.
     pub(crate) overrides: &'a ConfigOverrides,
+    /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
+    pub(crate) validate_print: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -44,6 +46,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             plate: None,
             profile: None,
             overrides: &EMPTY_OVERRIDES,
+            validate_print: false,
         }
     }
 }
@@ -57,6 +60,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             plate: None,
             profile: None,
             overrides: &EMPTY_OVERRIDES,
+            validate_print: false,
         }
     }
 }

@@ -120,16 +120,17 @@ pub async fn slice_with_profiles_bytes(
 ) -> Result<Vec<u8>, String> {
     let options = ProfileSliceOptions::parse(options_json)?;
     let overrides = options.overrides();
-    ares_core::slice_with_profiles(
+    let request = ProfileSliceRequest {
+        filename,
+        catalog_json,
+        selection_json,
+        plate: options.plate,
+        overrides: &overrides,
+        placement: options.placement(),
+    };
+    ares_core::slice_with_profiles_validated(
         input,
-        ProfileSliceRequest {
-            filename,
-            catalog_json,
-            selection_json,
-            plate: options.plate,
-            overrides: &overrides,
-            placement: options.placement(),
-        },
+        request,
         GenerationMetadata::default(),
         SlicerContext::new(options.seed),
     )
@@ -288,16 +289,17 @@ pub async fn slice_with_profiles_processed_bytes(
     let overrides = options.overrides();
     let tool_colors = options.tool_colors.clone().unwrap_or_default();
     let color_print_colors = options.color_print_colors.clone().unwrap_or_default();
-    ares_core::slice_with_profiles_processed(
+    let request = ares_core::ProfileSliceRequest {
+        filename,
+        catalog_json,
+        selection_json,
+        plate: options.plate,
+        overrides: &overrides,
+        placement: options.placement(),
+    };
+    ares_core::slice_with_profiles_processed_validated(
         input,
-        ares_core::ProfileSliceRequest {
-            filename,
-            catalog_json,
-            selection_json,
-            plate: options.plate,
-            overrides: &overrides,
-            placement: options.placement(),
-        },
+        request,
         ares_core::GenerationMetadata::default(),
         ares_core::SlicerContext::new(options.seed),
     )
