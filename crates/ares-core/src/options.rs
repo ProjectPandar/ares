@@ -9,7 +9,7 @@ option_modules!(adaptive_bed_mesh, bed_excluded_area, defaults, different_extrud
 mod brim;
 mod config_export;
 pub(crate) use config_export::{serialize_config_value, write_config_block};
-pub(crate) use typed_legacy::{EXPLICIT_RULES, OBSOLETE_INPUTS};
+pub(crate) use typed_legacy::{EXPLICIT_RULES, LegacyAction, OBSOLETE_INPUTS};
 mod config_types;
 mod gcode_fields;
 mod gcode_options;

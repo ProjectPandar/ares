@@ -1,4 +1,7 @@
-use crate::{OrcaBool, ProjectBedType, ProjectSettings, SliceError};
+use crate::{
+    OrcaBool, ProjectBedType, ProjectSettings, SliceError,
+    options::{EXPLICIT_RULES, LegacyAction},
+};
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
@@ -178,6 +181,18 @@ pub(crate) fn write_canonical_entries(
     }
     for (key, token) in raw_settings.iter() {
         if matches!(key, "from" | "name" | "version") {
+            continue;
+        }
+        // Legacy rule sources are consumed by the typed resolution and never
+        // reach the exported config upstream: `handle_legacy` renames or
+        // drops them at load (Config.cpp:573-587, PrintConfig.cpp:8033+).
+        // Deferred bookkeeping rules (different_settings_to_system and the
+        // cummulative keys) rename at export time instead and stay in the
+        // config block.
+        if EXPLICIT_RULES.iter().any(|rule| {
+            rule.source == key
+                && !matches!(rule.action, LegacyAction::DeferredProfileBookkeeping { .. })
+        }) {
             continue;
         }
         if lines.iter().any(|(existing, _)| existing.as_str() == key) {
