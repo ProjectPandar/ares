@@ -28,6 +28,17 @@ const ABSOLUTE_INPUT: &[u8] =
 const ABSOLUTE_SHA256: &str = "9bede932e95c6e2a1c558667e233c75c3d467ac0f8ed3c3628c03be1e7a9ae01";
 const ABSOLUTE_ERROR: &str = "\"G92 E0\" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing.";
 
+fn evidence_directory(prefix: &str) -> std::path::PathBuf {
+    let mut builder = tempfile::Builder::new();
+    builder.prefix(prefix);
+    let directory = if std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some() {
+        builder.tempdir_in(crate::artifacts::root_from_env().unwrap())
+    } else {
+        builder.tempdir()
+    };
+    directory.unwrap().keep()
+}
+
 fn sha256(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()

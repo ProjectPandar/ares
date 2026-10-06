@@ -72,12 +72,7 @@ stock_case!(
 
 fn verify(label: &str, input: &[u8], expected_hash: &str) {
     assert_eq!(super::sha256(input), expected_hash);
-    let root = crate::artifacts::root_from_env().unwrap();
-    let directory = tempfile::Builder::new()
-        .prefix("o4-stock-")
-        .tempdir_in(root)
-        .unwrap()
-        .keep();
+    let directory = super::evidence_directory("o4-stock-");
     let path = directory.join("input.3mf");
     fs::write(&path, input).unwrap();
     let runner = OrcaRunner::from_env().unwrap();

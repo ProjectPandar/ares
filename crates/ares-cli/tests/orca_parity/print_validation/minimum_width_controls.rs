@@ -16,12 +16,7 @@ fn settings(extra: Value) -> ProjectSettings {
 fn check(extra: Value, rejected: bool) {
     let config = settings(extra.clone());
     let actual = ares_core::validate_print(&config, false);
-    let root = crate::artifacts::root_from_env().unwrap();
-    let evidence = tempfile::Builder::new()
-        .prefix("o4-flat-")
-        .tempdir_in(root)
-        .unwrap()
-        .keep();
+    let evidence = super::evidence_directory("o4-flat-");
     std::fs::write(evidence.join("result.json"), serde_json::to_vec_pretty(&json!({"settings":extra, "expected_rejection":rejected, "ares":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
     if rejected {
         assert!(
