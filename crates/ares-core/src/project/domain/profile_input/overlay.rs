@@ -2,7 +2,7 @@
 //! (`OrcaSlicer.cpp:2750-2812,3155-3161,3259-3271,3301`).
 
 use crate::{
-    ProjectSettings,
+    ProjectSettings, SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
@@ -29,7 +29,7 @@ pub(super) fn merged_profile_raw(
     profile: &SelectedProfile<'_>,
     selected: usize,
     embedded_count: usize,
-) -> ProjectSettingsRaw {
+) -> Result<ProjectSettingsRaw, SliceError> {
     let SelectedProfile {
         settings,
         profile_raw,
@@ -69,7 +69,7 @@ pub(super) fn merged_profile_raw(
         let len = embedded_len.max(selected);
         let values = (0..len)
             .map(|index| filament_slot(embedded_raw, filament_raws, key, index, selected))
-            .collect();
+            .collect::<Result<Vec<_>, _>>()?;
         inserts.push(((*key).clone(), RawConfigValue::List(values)));
     }
 
@@ -238,8 +238,19 @@ pub(super) fn merged_profile_raw(
         merged.insert(key, value);
     }
 
-    merged
+    Ok(merged)
 }
+
+/// Keys upstream skips at the per-filament merge (`OrcaSlicer.cpp:3293`);
+/// their emptiness is legal — the compatibility gate treats an empty
+/// `compatible_printers` as unrestricted, so they never reach `set_at`.
+const SKIPPED_BY_SET_AT: [&str; 5] = [
+    "compatible_printers",
+    "compatible_prints",
+    "model_id",
+    "dev_model_name",
+    "filament_settings_id",
+];
 
 /// One slot of a filament-vector overlay (`OrcaSlicer.cpp:3301` `set_at`).
 fn filament_slot(
@@ -248,18 +259,30 @@ fn filament_slot(
     key: &str,
     index: usize,
     selected: usize,
-) -> RawConfigValue {
+) -> Result<RawConfigValue, SliceError> {
     if index < selected
         && let Some(value) = filament_raws[index].get(key)
-        && let Some(element) = value.element(0)
     {
-        return element.clone();
+        // `set_at(src, index - 1, 0)` throws when the source vector is
+        // empty (`Config.hpp:432-441`); upstream aborts on the uncaught
+        // exception while Ares returns the same message as `InvalidInput`
+        // (accepted deviation, see the O8 ARD).
+        if matches!(value, RawConfigValue::List(values) if values.is_empty())
+            && !SKIPPED_BY_SET_AT.contains(&key)
+        {
+            return Err(SliceError::InvalidInput(
+                "ConfigOptionVector::set_at(): Assigning from an empty vector".to_owned(),
+            ));
+        }
+        if let Some(element) = value.element(0) {
+            return Ok(element.clone());
+        }
     }
-    embedded_raw
+    Ok(embedded_raw
         .get(key)
         .and_then(|value| value.element(index).or_else(|| value.element(0)))
         .cloned()
-        .unwrap_or(RawConfigValue::Null)
+        .unwrap_or(RawConfigValue::Null))
 }
 
 /// One slot of a per-slot name vector (`filament_settings_id`, `filament_ids`).

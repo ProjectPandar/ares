@@ -2,6 +2,8 @@
 mod scalar;
 #[cfg(test)]
 mod tests;
+use std::collections::BTreeMap;
+
 use serde::de::DeserializeOwned;
 
 use super::{
@@ -39,6 +41,24 @@ pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
         }
     }
     T::deserialize(RawConfigValue::Object(values)).map_err(|error| error.to_string())
+}
+
+/// Bare empty preset strings on vector-kind options deserialize to EMPTY
+/// vectors upstream (`ConfigOptionStrings::deserialize` Config.hpp:1153-1159
+/// clears then leaves the values empty because `unescape_strings_cstyle`
+/// returns without appending, Config.cpp:146-149; the scalar JSON branch
+/// Config.cpp:927-929 routes bare strings there). Raw views must carry the
+/// same shape, so both raw entry points (catalog documents and 3MF embedded
+/// settings) normalize through this function.
+pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawConfigValue>) {
+    for (key, value) in values {
+        if let Some(definition) = option_definition(key)
+            && is_vector(definition.kind)
+            && matches!(value, RawConfigValue::Text(text) if text.is_empty())
+        {
+            *value = RawConfigValue::List(Vec::new());
+        }
+    }
 }
 
 fn is_vector(kind: OptionValueKind) -> bool {

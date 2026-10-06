@@ -118,8 +118,13 @@ impl Catalog {
         &mut self,
         scope: Scope,
         kind: ProfileKind,
-        document: ProfileDocument,
+        mut document: ProfileDocument,
     ) -> Result<(), SliceError> {
+        // Bare empty preset strings on vector-kind options are EMPTY
+        // vectors upstream (`ConfigOptionStrings::deserialize`,
+        // Config.hpp:1153-1159); normalize at the parse boundary so the raw
+        // and typed views agree on the shape.
+        crate::options::json_deserialize::normalize_empty_vector_strings(&mut document.fields);
         let position = self.records.len();
         let key = (kind, document.name.clone());
         if self

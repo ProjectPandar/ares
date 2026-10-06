@@ -44,6 +44,14 @@ impl ProjectSettingsRaw {
         self.0.insert(key, value);
     }
 
+    /// Applies the shared vector-kind empty-string normalization
+    /// (`options::json_deserialize::normalize_empty_vector_strings`);
+    /// the 3MF embedded raw uses the same upstream deserializer semantics
+    /// as preset documents.
+    pub(crate) fn normalize_empty_vector_strings(&mut self) {
+        crate::options::json_deserialize::normalize_empty_vector_strings(&mut self.0);
+    }
+
     pub(crate) fn entries(&self) -> impl Iterator<Item = (&String, &RawConfigValue)> {
         self.0.iter()
     }

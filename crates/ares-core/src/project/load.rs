@@ -116,6 +116,10 @@ pub fn load_project_with(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    // Same upstream deserializer semantics as preset documents: bare empty
+    // strings on vector-kind options are empty vectors
+    // (`ConfigOptionStrings::deserialize`, Config.hpp:1153-1159).
+    project_settings_raw.normalize_empty_vector_strings();
     let settings = if overrides.is_empty() {
         settings
     } else {

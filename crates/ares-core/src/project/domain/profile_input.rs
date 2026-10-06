@@ -89,7 +89,7 @@ impl Project {
             },
             selected,
             embedded_count,
-        );
+        )?;
         // M854 edit order: user overrides apply last (`Config.cpp:461`).
         overrides.apply(&mut merged);
 
@@ -126,7 +126,7 @@ impl Project {
                 &profile,
                 count,
                 count,
-            );
+            )?;
             overrides.apply(&mut merged);
             (
                 crate::options::json_deserialize::deserialize_preset_config::<ProjectSettingsBuilder>(merged.clone().into_object())

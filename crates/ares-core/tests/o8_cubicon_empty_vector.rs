@@ -73,25 +73,24 @@ fn cubicon_catalog() -> String {
         "{}/../../tests/parity/validation/o8-cubicon",
         env!("CARGO_MANIFEST_DIR")
     );
-    let machines = ["machine-xceler-I", "machine-xceler-Mini", "machine-xceler-Plus"];
+    let machines = [
+        "machine-xceler-I",
+        "machine-xceler-Mini",
+        "machine-xceler-Plus",
+    ];
     let processes = [
         "process-default-I",
         "process-default-Mini",
         "process-default-Plus",
     ];
-    let filaments = [
-        "filament-pla-I",
-        "filament-pla-Mini",
-        "filament-pla-Plus",
-    ];
+    let filaments = ["filament-pla-I", "filament-pla-Mini", "filament-pla-Plus"];
     let mut machine_list = Vec::new();
     let mut process_list = Vec::new();
     let mut filament_list = Vec::new();
     let mut files = serde_json::Map::new();
-    let mut add = |stem: &str, list: &mut Vec<Value>, files: &mut serde_json::Map<String, Value>| {
+    let add = |stem: &str, list: &mut Vec<Value>, files: &mut serde_json::Map<String, Value>| {
         let path = format!("{dir}/{stem}.json");
-        let value: Value =
-            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        let value: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
         list.push(json!({"sub_path": format!("{stem}.json")}));
         files.insert(format!("{stem}.json"), value);
     };
