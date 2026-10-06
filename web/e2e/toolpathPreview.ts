@@ -4,9 +4,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import { checkColorRanges, type RangeMove } from "./colorRanges";
 
-/** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current. */
+/** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current and drawn. */
 export async function canvasDigest(page: Page) {
   await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
+  await expect(page.locator("[data-testid=viewport][data-drawing]")).toHaveCount(0);
   return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     probe.width = 256;

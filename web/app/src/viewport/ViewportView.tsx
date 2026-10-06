@@ -1,5 +1,5 @@
 import type { MovesView, Scene, Toolpaths } from "@ares-slicer/wasm";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
@@ -133,13 +133,14 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport.setView("plate");
     viewport.zoomTo(scene ? fit : "plate");
   }, [viewport, scene, toolpaths, fit]);
-  useEffect(() => {
+  // Layout effects: the commit that shows a preview state already has its draw queued.
+  useLayoutEffect(() => {
     if (view) viewport?.setPreviewView(view);
   }, [viewport, view]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (colors) viewport?.setToolpathColors(colors);
   }, [viewport, colors]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (enabled && toolpaths) viewport?.setEnabled(enabled.segments, enabled.options, toolpaths.vertexCount);
   }, [viewport, enabled, toolpaths]);
 

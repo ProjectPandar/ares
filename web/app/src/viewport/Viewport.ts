@@ -62,6 +62,7 @@ export class Viewport {
     this.#renderTask.port1.onmessage = () => {
       this.#dirty = false;
       this.#renderer.render(this.#scene, this.#camera);
+      delete this.container.dataset.drawing;
     };
     this.#controls = new OrbitControls(this.#camera, this.#renderer.domElement);
     this.#controls.enableDamping = false;
@@ -253,6 +254,7 @@ export class Viewport {
   render() {
     if (this.#dirty) return;
     this.#dirty = true;
+    this.container.dataset.drawing = "";
     this.#renderTask.port2.postMessage(null);
   }
 
