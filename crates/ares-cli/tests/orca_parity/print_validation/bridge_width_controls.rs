@@ -172,7 +172,12 @@ fn print_bridge_width_stl_adapter_retains_width_and_object_flags() {
         (
             2,
             json!({"layer_height":0.2,"bridge_line_width":0.5}),
-            Some(UPPER),
+            // The unified loaded-config validate (`validate_loaded_config`)
+            // runs the upstream `bridge_line_width <= nozzle` bound
+            // (PrintConfig.cpp:10504-10517) before the Print.cpp region
+            // check, so the STL adapter now returns the key-prefixed map
+            // text rather than the bare `UPPER` message.
+            Some("bridge_line_width: Bridge line width must not exceed nozzle diameter: 0.500000"),
         ),
     ] {
         let options: ares_core::SliceOptions = serde_json::from_value(fields.clone()).unwrap();
