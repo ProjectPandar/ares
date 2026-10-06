@@ -21,9 +21,7 @@ mod stars;
 mod tpms_d;
 mod tpms_fk;
 
-pub(in crate::project_slice) use flow::{
-    extended_object_bounding_box_x, materialized_flow, try_materialized_flow,
-};
+pub(in crate::project_slice) use flow::{extended_object_bounding_box_x, materialized_flow};
 #[cfg(test)]
 pub(in crate::project_slice) use generate::generate_layer;
 

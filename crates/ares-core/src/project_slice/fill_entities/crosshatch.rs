@@ -32,7 +32,7 @@ pub(super) fn append(
         if polylines.is_empty() {
             continue;
         }
-        let flow = super::materialized_flow(fill.params, fill.params.spacing as f32);
+        let flow = super::materialized_flow(fill.params, fill.params.spacing as f32)?;
         output.collections.push(FillExtrusionCollection {
             entities: polylines
                 .into_iter()

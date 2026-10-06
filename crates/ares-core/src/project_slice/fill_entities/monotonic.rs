@@ -118,7 +118,7 @@ pub(super) fn append(
         if generated.polylines.is_empty() {
             continue;
         }
-        let flow = super::try_materialized_flow(fill.params, generated.spacing)?;
+        let flow = super::materialized_flow(fill.params, generated.spacing)?;
         let mut entities: Vec<FillExtrusionEntity> = generated
             .polylines
             .iter()

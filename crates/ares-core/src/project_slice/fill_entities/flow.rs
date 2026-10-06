@@ -2,16 +2,8 @@
 
 use crate::ExtrusionRole;
 
+// FillBase.cpp:148-157: propagate with_spacing failures at the source call site.
 pub(in crate::project_slice) fn materialized_flow(
-    params: crate::project_slice::group_fills::SurfaceFillParams,
-    spacing: f32,
-) -> crate::project_slice::perimeters::types::Flow {
-    try_materialized_flow(params, spacing)
-        .expect("fixed projected spacing preserves the canonical Flow invariant")
-}
-
-// FillBase.cpp:148-157: geometry-adjusted spacing can fail.
-pub(in crate::project_slice) fn try_materialized_flow(
     params: crate::project_slice::group_fills::SurfaceFillParams,
     spacing: f32,
 ) -> Result<crate::project_slice::perimeters::types::Flow, crate::SliceError> {

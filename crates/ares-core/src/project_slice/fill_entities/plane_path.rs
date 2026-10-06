@@ -55,7 +55,7 @@ pub(super) fn append(
             continue;
         }
 
-        let flow = super::materialized_flow(params, params.spacing as f32);
+        let flow = super::materialized_flow(params, params.spacing as f32)?;
         let mut entities = polylines
             .into_iter()
             .map(|polyline| {
