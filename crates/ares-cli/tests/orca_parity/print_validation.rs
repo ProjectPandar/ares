@@ -1,10 +1,14 @@
 //! Real stock inputs rejected by `Print.cpp:1695-1749::Print::validate`.
 use std::fs;
 
+#[path = "print_validation/entries.rs"]
+mod entries;
 #[path = "print_validation/positive.rs"]
 mod positive;
+#[path = "print_validation/rejections.rs"]
+pub(crate) mod rejections;
 
-use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
+use ares_core::{ConfigOverrides, SliceError};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
@@ -89,21 +93,9 @@ fn verify_stock_rejection(label: &str, project: &[u8], expected_hash: &str, expe
             "evidence": error.evidence,
         })
     });
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_project_plate(
-            project,
-            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            None,
-            &ConfigOverrides::default(),
-            SlicerContext::new(0),
-        ));
+    let actual = ares_core::validate_project_plate(project, None, &ConfigOverrides::default());
     let outcome = match &actual {
-        Ok(gcode) => {
-            fs::write(directory.join("ares.gcode"), gcode).unwrap();
-            json!({"status": "GCODE", "sha256": sha256(gcode)})
-        }
+        Ok(()) => json!({"status": "VALIDATED"}),
         Err(error) => json!({"status": "ERROR", "error": error.to_string()}),
     };
     fs::write(

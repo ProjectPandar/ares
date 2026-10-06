@@ -10,7 +10,7 @@ fn brim_gcode_slice_stl_writes_artifacts_and_commands() {
     let output = temp.path().join("output.gcode");
     fs::write(
         &options,
-        br#"{"layer_height":0.2,"initial_layer_height":0.2,"brim_width":1.2,"brim_object_gap":0.2,"brim_type":"outer_only","outer_wall_speed":60,"filament_max_volumetric_speed":0.0,"slow_down_for_layer_cooling":false}"#,
+        br#"{"layer_change_gcode":"G92 E0","layer_height":0.2,"initial_layer_height":0.2,"brim_width":1.2,"brim_object_gap":0.2,"brim_type":"outer_only","outer_wall_speed":60,"filament_max_volumetric_speed":0.0,"slow_down_for_layer_cooling":false}"#,
     )
     .unwrap();
     fs::write(&input, square_pyramid_ascii_stl()).unwrap();

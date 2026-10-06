@@ -10,7 +10,7 @@ fn slice_stl_writes_skirt_artifacts_and_commands() {
     let output = temp.path().join("output.gcode");
     fs::write(
         &options,
-        br#"{"layer_height":0.2,"initial_layer_height":0.2,"sparse_infill_density":50,"sparse_infill_line_width":0.25,"minimum_sparse_infill_area":0,"infill_direction":0,"is_infill_first":true,"filament_max_volumetric_speed":0.0,"slow_down_for_layer_cooling":false}"#,
+        br#"{"layer_change_gcode":"G92 E0","layer_height":0.2,"initial_layer_height":0.2,"sparse_infill_density":50,"sparse_infill_line_width":0.25,"minimum_sparse_infill_area":0,"infill_direction":0,"is_infill_first":true,"filament_max_volumetric_speed":0.0,"slow_down_for_layer_cooling":false}"#,
     )
     .unwrap();
     fs::write(&input, square_pyramid_ascii_stl()).unwrap();

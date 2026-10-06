@@ -2,9 +2,12 @@ use super::*;
 
 #[tokio::test]
 async fn slice_stl_bytes_returns_gcode_bytes() {
-    let output = slice_stl_bytes(square_ascii_stl(), r#"{"layer_height":0.2}"#)
-        .await
-        .unwrap();
+    let output = slice_stl_bytes(
+        square_ascii_stl(),
+        r#"{"layer_height":0.2,"layer_change_gcode":"G92 E0"}"#,
+    )
+    .await
+    .unwrap();
     let gcode = String::from_utf8(output).unwrap();
 
     assert!(gcode.contains("; input_format = stl"));

@@ -11,7 +11,7 @@ fn slice_accepts_percent_sparse_infill_width() {
     let output = temp.path().join("output.gcode");
     fs::write(
         &options,
-        br#"{"sparse_infill_density":0,"sparse_infill_line_width":"120%"}"#,
+        br#"{"layer_change_gcode":"G92 E0","sparse_infill_density":0,"sparse_infill_line_width":"120%"}"#,
     )
     .unwrap();
     fs::write(&input, square_pyramid_ascii_stl()).unwrap();

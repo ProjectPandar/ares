@@ -308,6 +308,9 @@ pub(crate) fn compare_exported_for(
     let mut outcome = match runner.slice_case(exported) {
         Ok(case) => compare_case(&case),
         Err(error) => {
+            if let Some(outcome) = print_validation::rejections::compare(exported, &error) {
+                return outcome;
+            }
             if option_key.is_some_and(|key| error.input_rejection(key)) {
                 return ParityOutcome {
                     label: exported.label.clone(),

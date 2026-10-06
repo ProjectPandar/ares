@@ -11,7 +11,7 @@ fn slice_stl_writes_output_with_stl_format() {
     let output = temp.path().join("output.gcode");
     fs::write(
         &options,
-        br#"{"layer_height":0.2,"initial_layer_height":0.2,"seam_gap":0,"nozzle_diameter":["0.4"],"filament_diameter":["1.75"],"min_layer_height":["0.07"],"max_layer_height":["0.28"],"sparse_infill_density":50,"sparse_infill_line_width":0.25,"minimum_sparse_infill_area":0,"infill_direction":0,"is_infill_first":true,"infill_anchor_max":0}"#,
+        br#"{"layer_change_gcode":"G92 E0","layer_height":0.2,"initial_layer_height":0.2,"seam_gap":0,"nozzle_diameter":["0.4"],"filament_diameter":["1.75"],"min_layer_height":["0.07"],"max_layer_height":["0.28"],"sparse_infill_density":50,"sparse_infill_line_width":0.25,"minimum_sparse_infill_area":0,"infill_direction":0,"is_infill_first":true,"infill_anchor_max":0}"#,
     )
     .unwrap();
     fs::write(&input, square_pyramid_ascii_stl()).unwrap();
