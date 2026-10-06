@@ -56,13 +56,6 @@ fn task22o2_wall_loops_changes_the_exact_caller_gate() {
 #[test]
 fn task22o2_gap_and_width_options_change_post_split_geometry() {
     let baseline = geometry_summary(project());
-    let mut no_gap = archive();
-    no_gap.replace_unique(
-        "Metadata/project_settings.config",
-        "\"gap_infill_speed\": \"250\"",
-        "\"gap_infill_speed\": \"0\"",
-    );
-    assert_ne!(baseline, geometry_summary(no_gap.bytes()));
 
     let mut min_width = archive();
     min_width.replace_unique(

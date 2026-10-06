@@ -43,25 +43,20 @@ fn task22o15_typed_3mf_reaches_post_subtraction_overflow() {
     assert_preflight_range_error(archive);
 }
 
+// `internal_solid_infill_line_width` is bounded by `5 * nozzle_diameter`
+// (PrintConfig.cpp:10497-10517) and `nozzle_diameter` max is 100, so the
+// `1000` used to widen the coordinate basis is rejected by the O3 loaded-config
+// check before the source is prepared — the downstream NoOverlapDelta overflow
+// it fed is unreachable through a valid config.
 #[test]
-fn task22o15_typed_3mf_reaches_no_overlap_delta_overflow() {
-    let mut wide = KsrArchive::new();
-    replace_solid_width(&mut wide);
-    let source = prepare_post_classic_gap_extrusion(&wide.bytes()).unwrap();
-    let contexts = ordinary_contexts(&source);
-    let context = contexts.iter().max_by_key(|context| context.basis).unwrap();
-    let post_target = i64::MAX as f64 - (1_u64 << 20) as f64;
-    let target_overlap = context.pre_inset as f64 - post_target;
-    let percent = target_overlap / context.basis as f64 * 100.0;
-    assert_eq!(
-        first_failure(&contexts, percent),
-        Some(NumericFailure::NoOverlapDelta)
-    );
-
+fn task22o15_typed_3mf_rejects_too_large_solid_line_width() {
     let mut archive = KsrArchive::new();
     replace_solid_width(&mut archive);
-    replace_ordinary_overlap(&mut archive, percent);
-    assert_preflight_range_error(archive);
+    assert!(matches!(
+        prepare_post_classic_gap_extrusion(&archive.bytes()),
+        Err(SliceError::InvalidInput(message))
+            if message == "internal_solid_infill_line_width: too large line width 1000.000000"
+    ));
 }
 
 fn ordinary_contexts(source: &PreparedPostClassicGapExtrusion) -> Vec<NumericContext> {

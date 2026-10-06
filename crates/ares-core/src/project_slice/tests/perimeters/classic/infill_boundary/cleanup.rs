@@ -25,15 +25,15 @@ fn task22o15_success_and_numeric_cleanup_fit_constrained_stack() {
         incomplete_sink::consume_boxed_post_classic_traversal(success.predecessor);
     });
 
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        CONFIG,
-        "\"top_bottom_infill_wall_overlap\": \"25%\"",
-        "\"top_bottom_infill_wall_overlap\": \"1e308%\"",
-    );
-    let mut numeric = prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap();
+    // The `1e308%` overlap sentinel the old numeric half relied on is now
+    // rejected by the O3 loaded-config range loop before the source is
+    // prepared, so exercise the same deep-stack cleanup with a valid archive
+    // and an injected geometry failure instead.
+    let mut numeric = prepare_post_classic_gap_extrusion(ksr_project()).unwrap();
     deepen_both_tree_families(&mut numeric.predecessor);
     run_on_constrained_stack(move || {
+        infill_boundary::reset_geometry_hooks();
+        infill_boundary::fail_geometry_at(GeometryStep::Simplify);
         assert!(infill_boundary::finish(numeric).is_err());
     });
 }

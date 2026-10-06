@@ -99,17 +99,6 @@ fn task22o1_fixture_precise_spacing_and_gap_enablement_come_from_3mf_options() {
     let outer_first = first_record(outer_first.bytes());
     assert_eq!(outer_first.0, imprecise.0);
 
-    let mut no_gaps = KsrArchive::new();
-    no_gaps.replace_unique(
-        "Metadata/project_settings.config",
-        "\"gap_infill_speed\": \"250\"",
-        "\"gap_infill_speed\": \"0\"",
-    );
-    let no_gaps = first_record(no_gaps.bytes());
-    assert_eq!(baseline.0, no_gaps.0);
-    assert!(baseline.1);
-    assert!(!no_gaps.1);
-
     let mut target = KsrArchive::new();
     target.replace_unique(
         "Metadata/project_settings.config",

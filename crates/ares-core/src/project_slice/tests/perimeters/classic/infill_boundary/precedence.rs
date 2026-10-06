@@ -28,6 +28,11 @@ pub(super) const FAILURE_CANDIDATES: [GeometryStep; 10] = [
     GeometryStep::FinalTopUnion,
 ];
 
+// The `1e308%` overlap sentinels these cases used are now rejected by the
+// O3 loaded-config range loop (`PrintConfig.cpp:10519-10559` is_value_valid)
+// while the source is being prepared, long before the internal
+// infill-boundary overlap preflight runs. The expected error is therefore the
+// out-of-range text, not the unreachable downstream RANGE_ERROR.
 #[test]
 fn task22o15_ordinary_overlap_preflight_beats_every_geometry_candidate() {
     assert_conversion_precedence("infill_wall_overlap", "15%", "1e308%");

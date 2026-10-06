@@ -147,7 +147,7 @@ fn task22o26_resolved_archive_options_drive_each_window_density_flow_and_scale()
     thin_top.replace_unique(
         "Metadata/project_settings.config",
         "\"top_shell_layers\": \"5\"",
-        "\"top_shell_layers\": \"-1\"",
+        "\"top_shell_layers\": \"1\"",
     );
     thin_top.replace_unique(
         "Metadata/project_settings.config",

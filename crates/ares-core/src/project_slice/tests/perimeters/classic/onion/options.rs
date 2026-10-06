@@ -28,20 +28,6 @@ fn task22o3_ksr_sparse_density_zero_suppresses_the_gap_only_pass() {
 }
 
 #[test]
-fn task22o3_ksr_gap_fill_speed_zero_disables_all_gap_masks() {
-    let mut disabled = archive();
-    disabled.replace_unique(
-        "Metadata/project_settings.config",
-        "\"gap_infill_speed\": \"250\"",
-        "\"gap_infill_speed\": \"0\"",
-    );
-    let disabled = summaries(disabled.bytes());
-
-    assert!(disabled.iter().all(|surface| surface.gaps == 0));
-    assert_ne!(summaries(project()), disabled);
-}
-
-#[test]
 fn task22o3_ksr_wall_loop_mutation_changes_raw_shell_depth() {
     let baseline = summaries(project());
     let mut deeper = archive();

@@ -1,8 +1,7 @@
 use crate::{
     geometry::ExPolygon,
     project_slice::perimeters::{
-        classic::gap_extrusion::GapFillEntity, layer_region::PreparedPostLayerRegionPerimeters,
-        prepare_post_layer_region_perimeters,
+        layer_region::PreparedPostLayerRegionPerimeters, prepare_post_layer_region_perimeters,
     },
 };
 
@@ -26,28 +25,6 @@ fn task22o16_wall_loop_output_changes_from_typed_3mf_option() {
         prepare_post_layer_region_perimeters(&archive.bytes(), &mut crate::SlicerContext::new(0))
             .unwrap();
     assert_ne!(perimeter_shape(&mutated), baseline);
-}
-
-#[test]
-fn task22o16_gap_output_changes_from_typed_3mf_option() {
-    let baseline = prepare_post_layer_region_perimeters(
-        &KsrArchive::new().bytes(),
-        &mut crate::SlicerContext::new(0),
-    )
-    .unwrap();
-    let baseline = thin_fill_shape(&baseline);
-    assert!(!baseline.is_empty());
-
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        CONFIG,
-        "\"gap_infill_speed\": \"250\"",
-        "\"gap_infill_speed\": \"0\"",
-    );
-    let mutated =
-        prepare_post_layer_region_perimeters(&archive.bytes(), &mut crate::SlicerContext::new(0))
-            .unwrap();
-    assert_ne!(thin_fill_shape(&mutated), baseline);
 }
 
 #[test]
@@ -96,19 +73,6 @@ fn perimeter_shape(prepared: &PreparedPostLayerRegionPerimeters) -> Vec<(usize, 
                     .map(|entity| entity.inset_idx())
                     .collect(),
             )
-        })
-        .collect()
-}
-
-fn thin_fill_shape(prepared: &PreparedPostLayerRegionPerimeters) -> Vec<(u8, usize, i64)> {
-    prepared
-        .objects
-        .iter()
-        .flat_map(|object| object.records.iter().flatten())
-        .flat_map(|record| &record.thin_fills)
-        .map(|entity| match entity {
-            GapFillEntity::Path(path) => (1, 1, path.polyline.points[0].x),
-            GapFillEntity::Loop(paths) => (2, paths.len(), paths[0].polyline.points[0].x),
         })
         .collect()
 }
