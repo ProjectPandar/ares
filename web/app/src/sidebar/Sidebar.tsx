@@ -6,7 +6,7 @@ import { type CompatibleState, type PresetSelection, useApp } from "../state/sto
 import { tabValues } from "../state/typedSettings";
 import { ObjectList } from "./ObjectList";
 import { type PresetGroup, PresetCombo } from "./PresetCombo";
-import { filamentNames, firstString, stringList } from "./options";
+import { filamentNames, firstString, presetFilamentSlots, stringList } from "./options";
 import { ModeSwitch } from "./ModeSwitch";
 import { ProcessSettings, usePresetValues } from "./ProcessSettings";
 import type { SettingsTab } from "./SettingsDialog";
@@ -114,6 +114,7 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
   const names = filamentNames(settings);
   const colours = stringList(settings?.filament, "filament_colour");
   const types = stringList(settings?.filament, "filament_type");
+  const slots = selection ? presetFilamentSlots(settings) : names.length;
   // Each preset once, drawn in the colour of its first slot.
   const presets = names
     .map((name, index) => ({ name, colour: colours[index] }))
@@ -122,16 +123,18 @@ function FilamentSection({ settings, openTab }: { settings: ProjectSettings | nu
     ? compatibleGroups(compatible, "filaments", importedNames(imports, "filament"))
     : [{ title: "Project presets" as const, presets }];
   return (
-    <Section icon={<OrcaIcon name="filament" />} title="Filament" extra={names.length ? names.length : undefined}>
-      {names.length === 0 && <div className="side-empty">No filament preset</div>}
-      {names.map((name, index) => (
+    <Section icon={<OrcaIcon name="filament" />} title="Filament" extra={slots || undefined}>
+      {slots === 0 && <div className="side-empty">No filament preset</div>}
+      {Array.from({ length: slots }, (_, index) => names[index]).map((name, index) => (
         <div className="filament-row" key={index}>
           <span className="filament-swatch" data-testid={`filament-swatch-${index + 1}`}
             style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
           <PresetCombo label={`Filament ${index + 1} preset`} value={selection?.filaments[index] ?? name} groups={groups}
             placeholder="" onSelect={(filament) => selection && selectFilament(index, filament)} />
           <span className="filament-type">{types[index]}</span>
-          <EditButton label={`Edit filament ${index + 1} settings`} onClick={() => openTab({ kind: "filament", slot: index })} />
+          {name !== undefined && (
+            <EditButton label={`Edit filament ${index + 1} settings`} onClick={() => openTab({ kind: "filament", slot: index })} />
+          )}
         </div>
       ))}
     </Section>

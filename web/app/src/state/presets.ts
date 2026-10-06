@@ -1,5 +1,5 @@
 import type { ConfigOverrides, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
-import { filamentNames } from "../sidebar/options";
+import { presetFilamentSlots } from "../sidebar/options";
 import { slicer } from "./slicer";
 import { type ModelFile, type PresetSelection, useApp } from "./store";
 import { decodeOptions } from "./typedSettings";
@@ -136,7 +136,7 @@ export function presetSliceBlocker(selection: PresetSelection, scene: Scene): st
     return "Placing more than one STL object on the plate needs arrange, which is not ported yet";
   }
   if (!selection.process) return "Select a process preset to slice";
-  if (filamentNames(scene.settings).some((_, slot) => !selection.filaments[slot])) {
+  if (Array.from({ length: presetFilamentSlots(scene.settings) }).some((_, slot) => !selection.filaments[slot])) {
     return "Select a filament preset for every filament to slice";
   }
   return null;
