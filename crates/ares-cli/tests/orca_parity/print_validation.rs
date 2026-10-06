@@ -1,6 +1,8 @@
 //! Real stock inputs rejected by `Print.cpp:1695-1749::Print::validate`.
 use std::fs;
 
+#[path = "print_validation/applied_map_controls.rs"]
+mod applied_map_controls;
 #[path = "print_validation/entries.rs"]
 mod entries;
 #[path = "print_validation/layer_nozzle.rs"]

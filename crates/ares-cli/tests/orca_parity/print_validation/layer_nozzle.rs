@@ -28,7 +28,7 @@ fn print_layer_nozzle_raft_two_logical_filaments_share_one_physical_tool() {
     );
 }
 
-fn verify(fields: Value) {
+pub(super) fn verify(fields: Value) {
     let input = include_bytes!("../../../../../tests/parity/validation/o4-ender3s1plus-0.2.3mf");
     let hash = "edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110";
     assert_eq!(super::sha256(input), hash);
