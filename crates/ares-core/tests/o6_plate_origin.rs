@@ -56,7 +56,7 @@ async fn plate_two_min_slices_like_native() {
 }
 
 #[tokio::test]
-async fn empty_plate_one_keeps_empty_error() {
+async fn empty_plate_one_uses_model_read_error() {
     let error = slice_project_plate(
         fixture("print-bed-two-plates.3mf"),
         GenerationMetadata::default(),
@@ -66,9 +66,10 @@ async fn empty_plate_one_keeps_empty_error() {
     )
     .await
     .unwrap_err();
-    // The empty-plate selection keeps its pre-O6 behavior: Ares rejects at
-    // the select_plate guard. (The native refuses an empty plate earlier
-    // with a different channel — documented as a separate divergence in
-    // the matrix clusters, not this slice.)
-    assert_eq!(error.to_string(), "plate 1 has no printable objects");
+    // Selected importer projection is empty: Model.cpp:354-355 read error,
+    // not the later print-volume rejection. CLI exit parity remains deferred.
+    assert_eq!(
+        error.to_string(),
+        "The supplied file couldn't be read because it's empty"
+    );
 }

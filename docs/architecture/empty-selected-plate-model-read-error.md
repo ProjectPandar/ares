@@ -13,7 +13,7 @@ Locked OrcaSlicer 2.4.2 (`8500fcdccaa10b5099ac20d252af3a7c560046f1`):
 
 ## Rust destination and non-negotiable decisions
 
-The owning byte-oriented compatibility shell is `Project::select_plate` in `crates/ares-core/src/project/domain.rs`. Its object/instance projection corresponds to selected-plate importer assembly; when that existing projection is empty, its current Ares-specific `plate {id} has no printable objects` text must become the source Model read exception text above.
+The owning byte-oriented compatibility shell is `Project::select_plate` in `crates/ares-core/src/project/domain/plate_selection.rs` (separated from `domain.rs` to keep the changed modules below 400 LOC). Its object/instance projection corresponds to selected-plate importer assembly; when that existing projection is empty, its current Ares-specific `plate {id} has no printable objects` text must become the source Model read exception text above.
 
 - Preserve `SliceError::InvalidInput` and the existing selection stage before print-volume and `Print::validate`. Do not turn a failed model read into a print-validation failure.
 - Apply the exact source diagnostic to the existing empty-projection branch only. Do not change instance filtering, plate origin, geometry, object ordering, overrides or processing eligibility.
