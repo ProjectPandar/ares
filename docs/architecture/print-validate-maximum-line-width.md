@@ -27,7 +27,7 @@ Float 是原 absolute value；Percent 分别以 min/max nozzle 求绝对值。�
 
 ## 公共可达性：先验证，不能仅靠公式假定
 
-- **优先候选：general line_width**。加载期宽度列表 `PrintConfig.cpp:10497-10506` 没有 general line_width；Print lambda `Print.cpp:1654-1656` 则先检查它。选择合法原项目，仅用公开配置输入将 general line_width 设为大于 5×used max；原生必须实际越过 loading 并返回精确 `Too large line width\n` / exit205 / 无 G-code。Ares 独立 Print validation 或 validated composition 当前接受、或返回后续旧 lower/O1 错误，才构成真实差异。原项目/hash、唯一配置变体及所有调用/输出分别留证，不修补其他字段消掉首错。
+- **已识别的公开可达边界：general line_width**。加载期宽度列表 `PrintConfig.cpp:10497-10506` 没有 general line_width；Print lambda `Print.cpp:1654-1656` 则先检查它。沿用原 S1 Plus 0.2 nozzle 项目，唯一公开配置变体为 general line_width=3，必须返回精确 `Too large line width\n` / exit205 / 无 G-code。该项目还保留后续 O4 小线宽，因此这是有意的首错 seam：现有 Ares 会返回后续 `Too small line width`，不能为获得“接受 vs 拒绝”而修补后续宽度。独立 Print validation 与 validated composition 均须按源顺序优先返回上界错误。原项目/hash、唯一配置变体及所有调用/输出分别留证，不修补其他字段消掉首错。
 - **第二候选：absolute width + unused larger nozzle**。加载期允许 width <=5×global max，但 Print 的 used max 较小时可拒绝；须公开输入具备合法 cardinality/mapping、实际不用大 nozzle，并实测两阶段，不虚构 usage 或直接调 private helper。
 - **百分比不是自动的绕过路径**。同一 raw percent P 在两个正 nozzle 基准 d 上，正常数值的 `P*d/100 > 5*d` 都归约为 P>500；单纯 global-max 与 used-max 不同不能据此声称 percentage 上界公开可达。仍测试 500% 等号/auto 及 O4 min-baseline 首错；若靠 config scope/object overrides 才有差异，必须单独 source-cite 合并顺序并实测，不借浮点病态值或输入修复造 RED。
 
