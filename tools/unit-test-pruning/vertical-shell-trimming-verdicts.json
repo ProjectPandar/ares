@@ -1,0 +1,178 @@
+{
+ "module": "project_slice/prepare_infill/vertical_shell_trimming",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 11,
+ "deleted": 0,
+ "kept": 11,
+ "tests": [
+  {
+   "test": "task22o24_internal_void_is_representable_but_has_no_o21_producer",
+   "verdict": "KEEP",
+   "coverage": "no-production-regions",
+   "uncovered": [],
+   "reason": "executes no production-code regions (test-only/helper-only)"
+  },
+  {
+   "test": "task22o24_polygons_internal_includes_void_in_collection_and_hole_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  },
+  {
+   "test": "task22o21_complete_erasure_takes_gate_before_present_solid_append",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_trimming.rs:65:30:65:49",
+    "vertical_shell_trimming.rs:65:50:65:54",
+    "vertical_shell_trimming.rs:65:55:65:60",
+    "vertical_shell_trimming.rs:66:51:66:58",
+    "vertical_shell_trimming.rs:66:59:66:62",
+    "vertical_shell_trimming.rs:72:18:72:23",
+    "vertical_shell_trimming.rs:73:9:73:10",
+    "vertical_shell_trimming.rs:106:26:106:41",
+    "vertical_shell_trimming.rs:106:42:106:47",
+    "vertical_shell_trimming.rs:90:26:90:45",
+    "vertical_shell_trimming.rs:90:46:90:51",
+    "vertical_shell_trimming.rs:91:28:91:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_trimming.rs:65:30:65:49, vertical_shell_trimming.rs:65:50:65:54, vertical_shell_trimming.rs:65:55:65:60, vertical_shell_trimming.rs:66:51:66:58, vertical_shell_trimming.rs:66:59:66:62, vertical_shell_trimming.rs:72:18:72:23 +25 more"
+  },
+  {
+   "test": "task22o21_each_geometry_site_uses_the_stable_boundary_error",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "trim.rs:27:46:27:47",
+    "trim.rs:28:52:28:53",
+    "trim.rs:32:44:32:45",
+    "vertical_shell_trimming.rs:65:30:65:49",
+    "vertical_shell_trimming.rs:65:50:65:54",
+    "vertical_shell_trimming.rs:65:55:65:60",
+    "vertical_shell_trimming.rs:66:51:66:58",
+    "vertical_shell_trimming.rs:66:59:66:62",
+    "vertical_shell_trimming.rs:67:19:67:30",
+    "vertical_shell_trimming.rs:67:32:67:41",
+    "vertical_shell_trimming.rs:67:47:67:67",
+    "vertical_shell_trimming.rs:67:71:67:80"
+   ],
+   "reason": "executes regions not E2E-covered: trim.rs:27:46:27:47, trim.rs:28:52:28:53, trim.rs:32:44:32:45, vertical_shell_trimming.rs:65:30:65:49, vertical_shell_trimming.rs:65:50:65:54, vertical_shell_trimming.rs:65:55:65:60 +44 more"
+  },
+  {
+   "test": "task22o21_empty_internal_input_still_runs_both_flat_boolean_sites",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_trimming.rs:65:30:65:49",
+    "vertical_shell_trimming.rs:65:50:65:54",
+    "vertical_shell_trimming.rs:65:55:65:60",
+    "vertical_shell_trimming.rs:66:51:66:58",
+    "vertical_shell_trimming.rs:66:59:66:62",
+    "vertical_shell_trimming.rs:72:18:72:23",
+    "vertical_shell_trimming.rs:73:9:73:10",
+    "vertical_shell_trimming.rs:106:26:106:41",
+    "vertical_shell_trimming.rs:106:42:106:47",
+    "vertical_shell_trimming.rs:90:26:90:45",
+    "vertical_shell_trimming.rs:90:46:90:51",
+    "vertical_shell_trimming.rs:91:28:91:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_trimming.rs:65:30:65:49, vertical_shell_trimming.rs:65:50:65:54, vertical_shell_trimming.rs:65:55:65:60, vertical_shell_trimming.rs:66:51:66:58, vertical_shell_trimming.rs:66:59:66:62, vertical_shell_trimming.rs:72:18:72:23 +25 more"
+  },
+  {
+   "test": "task22o21_empty_projected_shell_can_gain_internal_difference",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_trimming.rs:65:30:65:49",
+    "vertical_shell_trimming.rs:65:50:65:54",
+    "vertical_shell_trimming.rs:65:55:65:60",
+    "vertical_shell_trimming.rs:66:51:66:58",
+    "vertical_shell_trimming.rs:66:59:66:62",
+    "vertical_shell_trimming.rs:72:18:72:23",
+    "vertical_shell_trimming.rs:73:9:73:10",
+    "vertical_shell_trimming.rs:106:26:106:41",
+    "vertical_shell_trimming.rs:106:42:106:47",
+    "vertical_shell_trimming.rs:90:26:90:45",
+    "vertical_shell_trimming.rs:90:46:90:51",
+    "vertical_shell_trimming.rs:91:28:91:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_trimming.rs:65:30:65:49, vertical_shell_trimming.rs:65:50:65:54, vertical_shell_trimming.rs:65:55:65:60, vertical_shell_trimming.rs:66:51:66:58, vertical_shell_trimming.rs:66:59:66:62, vertical_shell_trimming.rs:72:18:72:23 +25 more"
+  },
+  {
+   "test": "task22o21_inactive_record_is_some_empty_and_has_zero_events",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_trimming.rs:106:26:106:41",
+    "vertical_shell_trimming.rs:106:42:106:47",
+    "vertical_shell_trimming.rs:90:26:90:45",
+    "vertical_shell_trimming.rs:90:46:90:51",
+    "vertical_shell_trimming.rs:91:28:91:35",
+    "vertical_shell_trimming.rs:91:36:91:39",
+    "vertical_shell_trimming.rs:91:40:91:44",
+    "vertical_shell_trimming.rs:105:1:105:71",
+    "vertical_shell_trimming.rs:106:5:106:11",
+    "vertical_shell_trimming.rs:106:12:106:16",
+    "vertical_shell_trimming.rs:107:1:107:2",
+    "vertical_shell_trimming.rs:89:1:89:55"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_trimming.rs:106:26:106:41, vertical_shell_trimming.rs:106:42:106:47, vertical_shell_trimming.rs:90:26:90:45, vertical_shell_trimming.rs:90:46:90:51, vertical_shell_trimming.rs:91:28:91:35, vertical_shell_trimming.rs:91:36:91:39 +11 more"
+  },
+  {
+   "test": "task22o21_output_is_intersection_then_difference_then_verbatim_solid",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_trimming.rs:65:30:65:49",
+    "vertical_shell_trimming.rs:65:50:65:54",
+    "vertical_shell_trimming.rs:65:55:65:60",
+    "vertical_shell_trimming.rs:66:51:66:58",
+    "vertical_shell_trimming.rs:66:59:66:62",
+    "vertical_shell_trimming.rs:72:18:72:23",
+    "vertical_shell_trimming.rs:73:9:73:10",
+    "vertical_shell_trimming.rs:90:26:90:45",
+    "vertical_shell_trimming.rs:90:46:90:51",
+    "vertical_shell_trimming.rs:91:28:91:35",
+    "vertical_shell_trimming.rs:91:36:91:39",
+    "vertical_shell_trimming.rs:91:40:91:44"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_trimming.rs:65:30:65:49, vertical_shell_trimming.rs:65:50:65:54, vertical_shell_trimming.rs:65:55:65:60, vertical_shell_trimming.rs:66:51:66:58, vertical_shell_trimming.rs:66:59:66:62, vertical_shell_trimming.rs:72:18:72:23 +19 more"
+  },
+  {
+   "test": "task22o21_solid_participates_then_is_appended_verbatim_after_nonempty_gate",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_trimming.rs:65:30:65:49",
+    "vertical_shell_trimming.rs:65:50:65:54",
+    "vertical_shell_trimming.rs:65:55:65:60",
+    "vertical_shell_trimming.rs:66:51:66:58",
+    "vertical_shell_trimming.rs:66:59:66:62",
+    "vertical_shell_trimming.rs:72:18:72:23",
+    "vertical_shell_trimming.rs:73:9:73:10",
+    "vertical_shell_trimming.rs:106:26:106:41",
+    "vertical_shell_trimming.rs:106:42:106:47",
+    "vertical_shell_trimming.rs:90:26:90:45",
+    "vertical_shell_trimming.rs:90:46:90:51",
+    "vertical_shell_trimming.rs:91:28:91:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_trimming.rs:65:30:65:49, vertical_shell_trimming.rs:65:50:65:54, vertical_shell_trimming.rs:65:55:65:60, vertical_shell_trimming.rs:66:51:66:58, vertical_shell_trimming.rs:66:59:66:62, vertical_shell_trimming.rs:72:18:72:23 +25 more"
+  },
+  {
+   "test": "task22o21_filtering_is_collection_order_not_kind_order_and_contour_then_holes",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  },
+  {
+   "test": "task22o21_surface_metadata_does_not_change_path_selection",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  }
+ ]
+}

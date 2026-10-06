@@ -1,0 +1,377 @@
+{
+ "module": "project_slice/prepare_infill/vertical_shell_filtering",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 19,
+ "deleted": 0,
+ "kept": 19,
+ "tests": [
+  {
+   "test": "task22o23_large_bed_constant_bits_preserve_selected_scale",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_filtering.rs:155:1:155:93",
+    "vertical_shell_filtering.rs:156:5:156:59",
+    "vertical_shell_filtering.rs:156:60:156:67",
+    "vertical_shell_filtering.rs:157:1:157:2",
+    "vertical_shell_filtering.rs:137:1:140:14",
+    "vertical_shell_filtering.rs:141:9:141:15",
+    "vertical_shell_filtering.rs:141:18:141:36",
+    "vertical_shell_filtering.rs:141:37:141:57",
+    "vertical_shell_filtering.rs:141:59:141:64",
+    "vertical_shell_filtering.rs:142:5:151:6",
+    "vertical_shell_filtering.rs:143:9:143:18",
+    "vertical_shell_filtering.rs:143:19:143:33"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_filtering.rs:155:1:155:93, vertical_shell_filtering.rs:156:5:156:59, vertical_shell_filtering.rs:156:60:156:67, vertical_shell_filtering.rs:157:1:157:2, vertical_shell_filtering.rs:137:1:140:14, vertical_shell_filtering.rs:141:9:141:15 +22 more"
+  },
+  {
+   "test": "task22o23_normal_constant_bits_preserve_source_mixed_precision",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_filtering.rs:155:1:155:93",
+    "vertical_shell_filtering.rs:156:5:156:59",
+    "vertical_shell_filtering.rs:156:60:156:67",
+    "vertical_shell_filtering.rs:157:1:157:2",
+    "vertical_shell_filtering.rs:137:1:140:14",
+    "vertical_shell_filtering.rs:141:9:141:15",
+    "vertical_shell_filtering.rs:141:18:141:36",
+    "vertical_shell_filtering.rs:141:37:141:57",
+    "vertical_shell_filtering.rs:141:59:141:64",
+    "vertical_shell_filtering.rs:142:5:151:6",
+    "vertical_shell_filtering.rs:143:9:143:18",
+    "vertical_shell_filtering.rs:143:19:143:33"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_filtering.rs:155:1:155:93, vertical_shell_filtering.rs:156:5:156:59, vertical_shell_filtering.rs:156:60:156:67, vertical_shell_filtering.rs:157:1:157:2, vertical_shell_filtering.rs:137:1:140:14, vertical_shell_filtering.rs:141:9:141:15 +22 more"
+  },
+  {
+   "test": "task22o23_odd_and_above_exact_f32_spacing_use_the_shared_one_cast_minimum",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_filtering.rs:137:1:140:14",
+    "vertical_shell_filtering.rs:141:9:141:15",
+    "vertical_shell_filtering.rs:141:18:141:36",
+    "vertical_shell_filtering.rs:141:37:141:57",
+    "vertical_shell_filtering.rs:141:59:141:64",
+    "vertical_shell_filtering.rs:142:5:151:6",
+    "vertical_shell_filtering.rs:143:9:143:18",
+    "vertical_shell_filtering.rs:143:19:143:33",
+    "vertical_shell_filtering.rs:143:34:143:41",
+    "vertical_shell_filtering.rs:144:9:144:35",
+    "vertical_shell_filtering.rs:145:9:145:18",
+    "vertical_shell_filtering.rs:145:19:145:47"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_filtering.rs:137:1:140:14, vertical_shell_filtering.rs:141:9:141:15, vertical_shell_filtering.rs:141:18:141:36, vertical_shell_filtering.rs:141:37:141:57, vertical_shell_filtering.rs:141:59:141:64, vertical_shell_filtering.rs:142:5:151:6 +18 more"
+  },
+  {
+   "test": "task22o23_interleaved_survivors_are_stable_and_deep_cloned",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41",
+    "filter.rs:164:5:164:6",
+    "vertical_shell_filtering.rs:72:30:72:49",
+    "vertical_shell_filtering.rs:72:50:72:54",
+    "vertical_shell_filtering.rs:72:55:72:60"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:160:39:160:40, filter.rs:161:9:163:72, filter.rs:161:9:162:26, filter.rs:163:14:163:18 +17 more"
+  },
+  {
+   "test": "task22o23_internal_protection_uses_literal_flat_path_count",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41",
+    "filter.rs:164:5:164:6",
+    "vertical_shell_filtering.rs:72:30:72:49",
+    "vertical_shell_filtering.rs:72:50:72:54",
+    "vertical_shell_filtering.rs:72:55:72:60"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:160:39:160:40, filter.rs:161:9:163:72, filter.rs:161:9:162:26, filter.rs:163:14:163:18 +17 more"
+  },
+  {
+   "test": "task22o23_signed_contour_plus_hole_area_drives_the_tiny_branch",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:173:1:173:39, filter.rs:174:5:174:21, filter.rs:174:22:174:26, filter.rs:175:1:175:2 +41 more"
+  },
+  {
+   "test": "task22o23_spacing_bits_change_the_threshold_branch_and_survivor",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41",
+    "filter.rs:164:5:164:6",
+    "vertical_shell_filtering.rs:72:30:72:49",
+    "vertical_shell_filtering.rs:72:50:72:54",
+    "vertical_shell_filtering.rs:72:55:72:60"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:160:39:160:40, filter.rs:161:9:163:72, filter.rs:161:9:162:26, filter.rs:163:14:163:18 +17 more"
+  },
+  {
+   "test": "task22o23_strict_thresholds_and_short_circuits_follow_source_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:173:1:173:39, filter.rs:174:5:174:21, filter.rs:174:22:174:26, filter.rs:175:1:175:2 +41 more"
+  },
+  {
+   "test": "task22o23_visibility_difference_distinguishes_wrapped_partial_disjoint_and_holed",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41",
+    "filter.rs:164:5:164:6",
+    "vertical_shell_filtering.rs:72:30:72:49",
+    "vertical_shell_filtering.rs:72:50:72:54",
+    "vertical_shell_filtering.rs:72:55:72:60"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:160:39:160:40, filter.rs:161:9:163:72, filter.rs:161:9:162:26, filter.rs:163:14:163:18 +17 more"
+  },
+  {
+   "test": "task22o23_multi_component_hole_protection_uses_flat_path_count_only",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41",
+    "filter.rs:164:5:164:6",
+    "vertical_shell_filtering.rs:72:30:72:49",
+    "vertical_shell_filtering.rs:72:50:72:54",
+    "vertical_shell_filtering.rs:72:55:72:60"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:160:39:160:40, filter.rs:161:9:163:72, filter.rs:161:9:162:26, filter.rs:163:14:163:18 +17 more"
+  },
+  {
+   "test": "task22o24_o23_closing_and_protection_consume_internal_void_paths",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:168:1:168:70",
+    "filter.rs:169:5:169:21",
+    "filter.rs:169:22:169:26",
+    "filter.rs:170:1:170:2",
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:169:39:169:57",
+    "filter.rs:169:58:169:63"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:168:1:168:70, filter.rs:169:5:169:21, filter.rs:169:22:169:26, filter.rs:170:1:170:2, filter.rs:160:5:160:21, filter.rs:160:22:160:26 +41 more"
+  },
+  {
+   "test": "task22o23_below_equal_above_both_thresholds_freeze_strict_branches",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:173:1:173:39, filter.rs:174:5:174:21, filter.rs:174:22:174:26, filter.rs:175:1:175:2 +41 more"
+  },
+  {
+   "test": "task22o23_negative_signed_area_rejects_final_absolute_value",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:173:1:173:39, filter.rs:174:5:174:21, filter.rs:174:22:174:26, filter.rs:175:1:175:2 +41 more"
+  },
+  {
+   "test": "task22o23_odd_and_above_exact_f32_spacing_freeze_every_product_bit",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_filtering.rs:137:1:140:14",
+    "vertical_shell_filtering.rs:141:9:141:15",
+    "vertical_shell_filtering.rs:141:18:141:36",
+    "vertical_shell_filtering.rs:141:37:141:57",
+    "vertical_shell_filtering.rs:141:59:141:64",
+    "vertical_shell_filtering.rs:142:5:151:6",
+    "vertical_shell_filtering.rs:143:9:143:18",
+    "vertical_shell_filtering.rs:143:19:143:33",
+    "vertical_shell_filtering.rs:143:34:143:41",
+    "vertical_shell_filtering.rs:144:9:144:35",
+    "vertical_shell_filtering.rs:145:9:145:18",
+    "vertical_shell_filtering.rs:145:19:145:47"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_filtering.rs:137:1:140:14, vertical_shell_filtering.rs:141:9:141:15, vertical_shell_filtering.rs:141:18:141:36, vertical_shell_filtering.rs:141:37:141:57, vertical_shell_filtering.rs:141:59:141:64, vertical_shell_filtering.rs:142:5:151:6 +18 more"
+  },
+  {
+   "test": "task22o23_flat_miter_three_closing_freezes_scale_order_holes_and_counts",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:168:1:168:70",
+    "filter.rs:169:5:169:21",
+    "filter.rs:169:22:169:26",
+    "filter.rs:170:1:170:2",
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:169:39:169:57",
+    "filter.rs:169:58:169:63"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:168:1:168:70, filter.rs:169:5:169:21, filter.rs:169:22:169:26, filter.rs:170:1:170:2, filter.rs:160:5:160:21, filter.rs:160:22:160:26 +41 more"
+  },
+  {
+   "test": "task22o23_neighbor_flattening_is_expolygon_contour_then_holes_in_collection_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  },
+  {
+   "test": "task22o23_neighbor_intersection_freezes_first_middle_last_and_topology_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:168:1:168:70",
+    "filter.rs:169:5:169:21",
+    "filter.rs:169:22:169:26",
+    "filter.rs:170:1:170:2",
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:169:39:169:57",
+    "filter.rs:169:58:169:63"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:168:1:168:70, filter.rs:169:5:169:21, filter.rs:169:22:169:26, filter.rs:170:1:170:2, filter.rs:160:5:160:21, filter.rs:160:22:160:26 +41 more"
+  },
+  {
+   "test": "task22o23_empty_o21_trim_short_circuits_all_filtering_geometry",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:174:39:174:61",
+    "filter.rs:174:62:174:67",
+    "vertical_shell_filtering.rs:133:26:133:41",
+    "vertical_shell_filtering.rs:133:42:133:47",
+    "vertical_shell_filtering.rs:114:26:114:45",
+    "vertical_shell_filtering.rs:114:46:114:51",
+    "vertical_shell_filtering.rs:115:28:115:35",
+    "vertical_shell_filtering.rs:115:36:115:39"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:173:1:173:39, filter.rs:174:5:174:21, filter.rs:174:22:174:26, filter.rs:175:1:175:2, filter.rs:174:39:174:61, filter.rs:174:62:174:67 +18 more"
+  },
+  {
+   "test": "task22o23_empty_o22_output_still_builds_both_volumes_and_reaches_empty_gate",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "filter.rs:160:5:160:21",
+    "filter.rs:160:22:160:26",
+    "filter.rs:173:1:173:39",
+    "filter.rs:174:5:174:21",
+    "filter.rs:174:22:174:26",
+    "filter.rs:175:1:175:2",
+    "filter.rs:160:39:160:40",
+    "filter.rs:161:9:163:72",
+    "filter.rs:161:9:162:26",
+    "filter.rs:163:14:163:18",
+    "filter.rs:163:20:163:34",
+    "filter.rs:163:35:163:41"
+   ],
+   "reason": "executes regions not E2E-covered: filter.rs:160:5:160:21, filter.rs:160:22:160:26, filter.rs:173:1:173:39, filter.rs:174:5:174:21, filter.rs:174:22:174:26, filter.rs:175:1:175:2 +41 more"
+  }
+ ]
+}

@@ -1,0 +1,304 @@
+{
+ "module": "project_slice/prepare_infill/surface_type_detection",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 25,
+ "deleted": 0,
+ "kept": 25,
+ "tests": [
+  {
+   "test": "actual_out_of_range_geometry_uses_the_stable_o17_error",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "stage.rs:204:88:204:89",
+    "geometry.rs:120:1:120:77",
+    "geometry.rs:121:5:121:25",
+    "geometry.rs:122:1:122:2",
+    "geometry.rs:124:1:124:40",
+    "geometry.rs:125:5:125:56",
+    "geometry.rs:126:1:126:2",
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: stage.rs:204:88:204:89, geometry.rs:120:1:120:77, geometry.rs:121:5:121:25, geometry.rs:122:1:122:2, geometry.rs:124:1:124:40, geometry.rs:125:5:125:56 +4 more"
+  },
+  {
+   "test": "arithmetic_order_distinguishes_the_source_casts",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  },
+  {
+   "test": "covered_interior_is_fresh_internal_geometry",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "final_top_preserves_metadata_when_lower_difference_is_empty",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "lower_void_uses_the_source_selected_bottom_kind",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "minimal_valid_coordinates_remain_accepted",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "multiple_holed_surfaces_flatten_contour_then_holes_in_surface_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  },
+  {
+   "test": "narrow_external_difference_collapses_during_source_opening",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "safety_difference_expands_only_the_clip_by_exactly_ten_units",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "single_layer_bottom_wins_and_preserves_source_metadata",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "spiral_mode_turns_the_last_base_layer_top_and_body_layers_internal",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  },
+  {
+   "test": "terminal_partial_overlap_reconstructs_top_with_default_metadata",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "clipped_fill_visits_numeric_kinds_and_intersects_boundaries",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "empty_boundaries_clear_all_fill_groups",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "rebuilt_fill_does_not_alias_the_boundary_geometry",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "repeated_holed_kind_preserves_each_hole_independent_of_output_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "exactly_twice_the_crack_area_does_not_pass_the_strict_test",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6",
+    "cracks.rs:74:5:74:14"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6, cracks.rs:74:5:74:14"
+  },
+  {
+   "test": "holed_case_reaches_singleton_and_collection_offset_sites",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "surface_type_detection.rs:104:1:104:71",
+    "surface_type_detection.rs:105:5:105:27",
+    "surface_type_detection.rs:106:1:106:2",
+    "surface_type_detection.rs:94:1:94:55",
+    "surface_type_detection.rs:95:5:95:32",
+    "surface_type_detection.rs:96:1:96:2",
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: surface_type_detection.rs:104:1:104:71, surface_type_detection.rs:105:5:105:27, surface_type_detection.rs:106:1:106:2, surface_type_detection.rs:94:1:94:55, surface_type_detection.rs:95:5:95:32, surface_type_detection.rs:96:1:96:2 +3 more"
+  },
+  {
+   "test": "overlapping_holed_expolygons_distinguish_singleton_and_collection_outputs",
+   "verdict": "KEEP",
+   "coverage": "no-production-regions",
+   "uncovered": [],
+   "reason": "executes no production-code regions (test-only/helper-only)"
+  },
+  {
+   "test": "sub_ten_unit_gap_is_not_hidden_by_the_dropped_safety_argument",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6",
+    "cracks.rs:74:5:74:14"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6, cracks.rs:74:5:74:14"
+  },
+  {
+   "test": "tiny_crack_inside_a_large_bottom_remains_bottom",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6"
+  },
+  {
+   "test": "tiny_crack_without_a_large_bottom_is_removed_from_bottom",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "geometry.rs:112:8:112:34",
+    "geometry.rs:112:35:112:39",
+    "geometry.rs:114:5:114:6",
+    "cracks.rs:77:1:81:28",
+    "cracks.rs:82:5:82:12",
+    "cracks.rs:82:13:82:50",
+    "cracks.rs:83:9:83:17",
+    "cracks.rs:84:9:84:25",
+    "cracks.rs:84:26:84:31",
+    "cracks.rs:84:33:84:42",
+    "cracks.rs:84:44:84:59",
+    "cracks.rs:84:74:84:81"
+   ],
+   "reason": "executes regions not E2E-covered: geometry.rs:112:8:112:34, geometry.rs:112:35:112:39, geometry.rs:114:5:114:6, cracks.rs:77:1:81:28, cracks.rs:82:5:82:12, cracks.rs:82:13:82:50 +34 more"
+  },
+  {
+   "test": "source_support_predicate_distinguishes_automatic_support_types",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "preflight.rs:26:47:26:75",
+    "preflight.rs:30:24:30:64",
+    "preflight.rs:32:82:32:87",
+    "preflight.rs:35:9:35:34"
+   ],
+   "reason": "executes regions not E2E-covered: preflight.rs:26:47:26:75, preflight.rs:30:24:30:64, preflight.rs:32:82:32:87, preflight.rs:35:9:35:34"
+  },
+  {
+   "test": "source_support_predicate_preserves_every_operand",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "preflight.rs:26:47:26:75",
+    "preflight.rs:30:24:30:64",
+    "preflight.rs:32:82:32:87",
+    "preflight.rs:35:9:35:34"
+   ],
+   "reason": "executes regions not E2E-covered: preflight.rs:26:47:26:75, preflight.rs:30:24:30:64, preflight.rs:32:82:32:87, preflight.rs:35:9:35:34"
+  },
+  {
+   "test": "every_o17_geometry_site_has_a_reached_stable_failure_hook",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "stage.rs:268:26:268:27",
+    "surface_type_detection.rs:104:1:104:71",
+    "surface_type_detection.rs:105:5:105:27",
+    "surface_type_detection.rs:106:1:106:2",
+    "surface_type_detection.rs:99:1:99:69",
+    "surface_type_detection.rs:100:5:100:19",
+    "surface_type_detection.rs:100:20:100:24",
+    "surface_type_detection.rs:101:1:101:2",
+    "surface_type_detection.rs:94:1:94:55",
+    "surface_type_detection.rs:95:5:95:32",
+    "surface_type_detection.rs:96:1:96:2",
+    "geometry.rs:96:41:96:42"
+   ],
+   "reason": "executes regions not E2E-covered: stage.rs:268:26:268:27, surface_type_detection.rs:104:1:104:71, surface_type_detection.rs:105:5:105:27, surface_type_detection.rs:106:1:106:2, surface_type_detection.rs:99:1:99:69, surface_type_detection.rs:100:5:100:19 +49 more"
+  }
+ ]
+}

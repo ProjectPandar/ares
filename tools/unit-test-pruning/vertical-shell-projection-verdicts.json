@@ -1,0 +1,350 @@
+{
+ "module": "project_slice/prepare_infill/vertical_shell_projection",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 17,
+ "deleted": 0,
+ "kept": 17,
+ "tests": [
+  {
+   "test": "task22o20_acute_anchor_freezes_miter_limit_three_not_two",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35",
+    "vertical_shell_projection.rs:88:36:88:39",
+    "vertical_shell_projection.rs:88:40:88:44"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +19 more"
+  },
+  {
+   "test": "task22o20_anchor_uses_current_spacing_and_stopped_lslice_with_contour_then_hole",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_count_one_zero_thickness_runs_top_then_bottom_anchors",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_each_anchor_geometry_site_has_an_independent_failure_hook",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "gather.rs:122:10:122:11",
+    "gather.rs:163:10:163:11",
+    "gather.rs:84:47:84:48",
+    "gather.rs:85:50:85:51",
+    "gather.rs:215:27:215:28",
+    "gather.rs:224:27:224:28",
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:68:19:68:23"
+   ],
+   "reason": "executes regions not E2E-covered: gather.rs:122:10:122:11, gather.rs:163:10:163:11, gather.rs:84:47:84:48, gather.rs:85:50:85:51, gather.rs:215:27:215:28, gather.rs:224:27:224:28 +44 more"
+  },
+  {
+   "test": "task22o20_empty_anchor_source_still_runs_offset_then_intersection",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_both_combiners_preserve_holed_repeated_disjoint_paths_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_combine_holes_clears_on_either_empty_side",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35",
+    "vertical_shell_projection.rs:88:36:88:39",
+    "vertical_shell_projection.rs:88:40:88:44",
+    "vertical_shell_projection.rs:102:1:102:71",
+    "vertical_shell_projection.rs:103:5:103:11",
+    "vertical_shell_projection.rs:103:12:103:16",
+    "vertical_shell_projection.rs:104:1:104:2",
+    "vertical_shell_projection.rs:86:1:86:55"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:103:26:103:41, vertical_shell_projection.rs:103:42:103:47, vertical_shell_projection.rs:87:26:87:45, vertical_shell_projection.rs:87:46:87:51, vertical_shell_projection.rs:88:28:88:35, vertical_shell_projection.rs:88:36:88:39 +11 more"
+  },
+  {
+   "test": "task22o20_combine_holes_uses_incremental_nonzero_intersection",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_combine_shells_copies_then_appends_and_unions",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_hole_and_shell_boolean_failures_use_the_same_exact_error",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "gather.rs:191:54:191:55",
+    "gather.rs:202:48:202:49",
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:68:19:68:23",
+    "vertical_shell_projection.rs:68:25:68:34",
+    "vertical_shell_projection.rs:68:40:68:53",
+    "vertical_shell_projection.rs:68:57:68:66",
+    "vertical_shell_projection.rs:68:70:68:71"
+   ],
+   "reason": "executes regions not E2E-covered: gather.rs:191:54:191:55, gather.rs:202:48:202:49, vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58 +37 more"
+  },
+  {
+   "test": "task22o20_bottom_window_uses_f64_bottom_z_subtraction",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_count_windows_visit_top_then_bottom",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_inactive_modes_stage_empty_without_geometry",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35",
+    "vertical_shell_projection.rs:88:36:88:39",
+    "vertical_shell_projection.rs:88:40:88:44",
+    "vertical_shell_projection.rs:102:1:102:71",
+    "vertical_shell_projection.rs:103:5:103:11",
+    "vertical_shell_projection.rs:103:12:103:16",
+    "vertical_shell_projection.rs:104:1:104:2",
+    "vertical_shell_projection.rs:86:1:86:55"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:103:26:103:41, vertical_shell_projection.rs:103:42:103:47, vertical_shell_projection.rs:87:26:87:45, vertical_shell_projection.rs:87:46:87:51, vertical_shell_projection.rs:88:28:88:35, vertical_shell_projection.rs:88:36:88:39 +11 more"
+  },
+  {
+   "test": "task22o20_missing_first_bottom_and_last_top_neighbors_do_not_anchor",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35",
+    "vertical_shell_projection.rs:88:36:88:39",
+    "vertical_shell_projection.rs:88:40:88:44",
+    "vertical_shell_projection.rs:102:1:102:71",
+    "vertical_shell_projection.rs:103:5:103:11",
+    "vertical_shell_projection.rs:103:12:103:16",
+    "vertical_shell_projection.rs:104:1:104:2",
+    "vertical_shell_projection.rs:86:1:86:55"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:103:26:103:41, vertical_shell_projection.rs:103:42:103:47, vertical_shell_projection.rs:87:26:87:45, vertical_shell_projection.rs:87:46:87:51, vertical_shell_projection.rs:88:28:88:35, vertical_shell_projection.rs:88:36:88:39 +11 more"
+  },
+  {
+   "test": "task22o20_none_neighbor_is_visited_clears_holes_and_suppresses_anchor",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_thickness_equality_is_excluded_and_one_step_below_is_included",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:66:30:66:49",
+    "vertical_shell_projection.rs:66:50:66:54",
+    "vertical_shell_projection.rs:66:55:66:60",
+    "vertical_shell_projection.rs:67:51:67:58",
+    "vertical_shell_projection.rs:67:59:67:62",
+    "vertical_shell_projection.rs:73:18:73:23",
+    "vertical_shell_projection.rs:74:9:74:10",
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:66:30:66:49, vertical_shell_projection.rs:66:50:66:54, vertical_shell_projection.rs:66:55:66:60, vertical_shell_projection.rs:67:51:67:58, vertical_shell_projection.rs:67:59:67:62, vertical_shell_projection.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o20_zero_and_negative_counts_run_neither_scan_nor_anchor",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_projection.rs:103:26:103:41",
+    "vertical_shell_projection.rs:103:42:103:47",
+    "vertical_shell_projection.rs:87:26:87:45",
+    "vertical_shell_projection.rs:87:46:87:51",
+    "vertical_shell_projection.rs:88:28:88:35",
+    "vertical_shell_projection.rs:88:36:88:39",
+    "vertical_shell_projection.rs:88:40:88:44",
+    "vertical_shell_projection.rs:102:1:102:71",
+    "vertical_shell_projection.rs:103:5:103:11",
+    "vertical_shell_projection.rs:103:12:103:16",
+    "vertical_shell_projection.rs:104:1:104:2",
+    "vertical_shell_projection.rs:86:1:86:55"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_projection.rs:103:26:103:41, vertical_shell_projection.rs:103:42:103:47, vertical_shell_projection.rs:87:26:87:45, vertical_shell_projection.rs:87:46:87:51, vertical_shell_projection.rs:88:28:88:35, vertical_shell_projection.rs:88:36:88:39 +11 more"
+  }
+ ]
+}

@@ -61,3 +61,24 @@ coordinator can add E2E oracle cases after pruning finishes.
   top/bottom shell boundary crosses internal sparse infill so the
   assignment loop has nonzero work; seeded corpus never reaches the
   uncovered regions, so no E2E case exercises assignment.
+
+## project_slice/prepare_infill/horizontal_shell_propagation
+
+- `geometry.rs:148-165` — `first_factor`/`second_factor` select on
+  `ensure_vertical_shell_thickness` mode (None/CriticalOnly/Moderate/
+  EnsureAll). Upstream: `PrintObject::discover_horizontal_shells` factor
+  tables (`PrintObject.cpp`). Trigger: projects with
+  `ensure_vertical_shell_thickness = critical_only` / `moderate` /
+  `ensure_all`; the None-only path is what seeded E2E reaches.
+- `geometry.rs:113-120` + `gather.rs`/`rebuild.rs`/`hooks.rs` — miter-5
+  propagation opening, ordered geometry-site error mapping. Real
+  production paths gated by the same option + non-empty neighbor sets.
+
+## vertical_shell_{s,filtering,projection,regularization,trimming,assignment} + surface_type_detection
+
+- Predominant uncovered regions are `#[cfg(test)]` instrumentation
+  (`observe`/`record_*` failure hooks, EVENTS/VOLUME_SNAPSHOTS
+  thread-locals) that cannot run under E2E — not real gaps. Real
+  uncovered production paths: `ensure_vertical_shell_thickness` modes
+  other than None and the Internal→InternalSolid retag arms where the
+  shell fully covers internal surfaces.

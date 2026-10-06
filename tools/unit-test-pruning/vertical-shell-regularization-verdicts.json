@@ -1,0 +1,177 @@
+{
+ "module": "project_slice/prepare_infill/vertical_shell_regularization",
+ "generated": "2026-10-06",
+ "method": "per-test llvm-cov regions vs per-case seeded-E2E regions (506 cases)",
+ "total": 9,
+ "deleted": 0,
+ "kept": 9,
+ "tests": [
+  {
+   "test": "task22o22_empty_union_still_reaches_both_offsets_and_shrink",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_regularization.rs:66:30:66:49",
+    "vertical_shell_regularization.rs:66:50:66:54",
+    "vertical_shell_regularization.rs:66:55:66:60",
+    "vertical_shell_regularization.rs:67:51:67:58",
+    "vertical_shell_regularization.rs:67:59:67:62",
+    "vertical_shell_regularization.rs:73:18:73:23",
+    "vertical_shell_regularization.rs:74:9:74:10",
+    "vertical_shell_regularization.rs:106:26:106:41",
+    "vertical_shell_regularization.rs:106:42:106:47",
+    "vertical_shell_regularization.rs:90:26:90:45",
+    "vertical_shell_regularization.rs:90:46:90:51",
+    "vertical_shell_regularization.rs:91:28:91:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_regularization.rs:66:30:66:49, vertical_shell_regularization.rs:66:50:66:54, vertical_shell_regularization.rs:66:55:66:60, vertical_shell_regularization.rs:67:51:67:58, vertical_shell_regularization.rs:67:59:67:62, vertical_shell_regularization.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o22_nonempty_shell_runs_exact_nested_source_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_regularization.rs:66:30:66:49",
+    "vertical_shell_regularization.rs:66:50:66:54",
+    "vertical_shell_regularization.rs:66:55:66:60",
+    "vertical_shell_regularization.rs:67:51:67:58",
+    "vertical_shell_regularization.rs:67:59:67:62",
+    "vertical_shell_regularization.rs:73:18:73:23",
+    "vertical_shell_regularization.rs:74:9:74:10",
+    "vertical_shell_regularization.rs:106:26:106:41",
+    "vertical_shell_regularization.rs:106:42:106:47",
+    "vertical_shell_regularization.rs:90:26:90:45",
+    "vertical_shell_regularization.rs:90:46:90:51",
+    "vertical_shell_regularization.rs:91:28:91:35"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_regularization.rs:66:30:66:49, vertical_shell_regularization.rs:66:50:66:54, vertical_shell_regularization.rs:66:55:66:60, vertical_shell_regularization.rs:67:51:67:58, vertical_shell_regularization.rs:67:59:67:62, vertical_shell_regularization.rs:73:18:73:23 +25 more"
+  },
+  {
+   "test": "task22o22_o21_empty_gate_skips_all_regularization_geometry",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_regularization.rs:106:26:106:41",
+    "vertical_shell_regularization.rs:106:42:106:47",
+    "vertical_shell_regularization.rs:90:26:90:45",
+    "vertical_shell_regularization.rs:90:46:90:51",
+    "vertical_shell_regularization.rs:91:28:91:35",
+    "vertical_shell_regularization.rs:91:36:91:39",
+    "vertical_shell_regularization.rs:91:40:91:44",
+    "vertical_shell_regularization.rs:105:1:105:71",
+    "vertical_shell_regularization.rs:106:5:106:11",
+    "vertical_shell_regularization.rs:106:12:106:16",
+    "vertical_shell_regularization.rs:107:1:107:2",
+    "vertical_shell_regularization.rs:89:1:89:55"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_regularization.rs:106:26:106:41, vertical_shell_regularization.rs:106:42:106:47, vertical_shell_regularization.rs:90:26:90:45, vertical_shell_regularization.rs:90:46:90:51, vertical_shell_regularization.rs:91:28:91:35, vertical_shell_regularization.rs:91:36:91:39 +11 more"
+  },
+  {
+   "test": "task22o22_opening_removes_material_narrower_than_the_ensure_diameter",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_regularization.rs:66:30:66:49",
+    "vertical_shell_regularization.rs:66:50:66:54",
+    "vertical_shell_regularization.rs:66:55:66:60",
+    "vertical_shell_regularization.rs:67:51:67:58",
+    "vertical_shell_regularization.rs:67:59:67:62",
+    "vertical_shell_regularization.rs:73:18:73:23",
+    "vertical_shell_regularization.rs:74:9:74:10",
+    "vertical_shell_regularization.rs:66:9:66:15",
+    "vertical_shell_regularization.rs:66:16:66:20",
+    "vertical_shell_regularization.rs:67:13:67:19",
+    "vertical_shell_regularization.rs:67:22:67:29",
+    "vertical_shell_regularization.rs:67:30:67:34"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_regularization.rs:66:30:66:49, vertical_shell_regularization.rs:66:50:66:54, vertical_shell_regularization.rs:66:55:66:60, vertical_shell_regularization.rs:67:51:67:58, vertical_shell_regularization.rs:67:59:67:62, vertical_shell_regularization.rs:73:18:73:23 +8 more"
+  },
+  {
+   "test": "task22o22_square_morphology_closes_gap_with_exact_order_and_fresh_storage",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_regularization.rs:66:30:66:49",
+    "vertical_shell_regularization.rs:66:50:66:54",
+    "vertical_shell_regularization.rs:66:55:66:60",
+    "vertical_shell_regularization.rs:67:51:67:58",
+    "vertical_shell_regularization.rs:67:59:67:62",
+    "vertical_shell_regularization.rs:73:18:73:23",
+    "vertical_shell_regularization.rs:74:9:74:10",
+    "vertical_shell_regularization.rs:66:9:66:15",
+    "vertical_shell_regularization.rs:66:16:66:20",
+    "vertical_shell_regularization.rs:67:13:67:19",
+    "vertical_shell_regularization.rs:67:22:67:29",
+    "vertical_shell_regularization.rs:67:30:67:34"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_regularization.rs:66:30:66:49, vertical_shell_regularization.rs:66:50:66:54, vertical_shell_regularization.rs:66:55:66:60, vertical_shell_regularization.rs:67:51:67:58, vertical_shell_regularization.rs:67:59:67:62, vertical_shell_regularization.rs:73:18:73:23 +8 more"
+  },
+  {
+   "test": "task22o22_touching_polygons_union_before_exact_square_morphology",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_regularization.rs:66:30:66:49",
+    "vertical_shell_regularization.rs:66:50:66:54",
+    "vertical_shell_regularization.rs:66:55:66:60",
+    "vertical_shell_regularization.rs:67:51:67:58",
+    "vertical_shell_regularization.rs:67:59:67:62",
+    "vertical_shell_regularization.rs:73:18:73:23",
+    "vertical_shell_regularization.rs:74:9:74:10",
+    "vertical_shell_regularization.rs:66:9:66:15",
+    "vertical_shell_regularization.rs:66:16:66:20",
+    "vertical_shell_regularization.rs:67:13:67:19",
+    "vertical_shell_regularization.rs:67:22:67:29",
+    "vertical_shell_regularization.rs:67:30:67:34"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_regularization.rs:66:30:66:49, vertical_shell_regularization.rs:66:50:66:54, vertical_shell_regularization.rs:66:55:66:60, vertical_shell_regularization.rs:67:51:67:58, vertical_shell_regularization.rs:67:59:67:62, vertical_shell_regularization.rs:73:18:73:23 +8 more"
+  },
+  {
+   "test": "task22o22_union_and_square_offsets_preserve_exact_hole_topology_order",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "vertical_shell_regularization.rs:66:30:66:49",
+    "vertical_shell_regularization.rs:66:50:66:54",
+    "vertical_shell_regularization.rs:66:55:66:60",
+    "vertical_shell_regularization.rs:67:51:67:58",
+    "vertical_shell_regularization.rs:67:59:67:62",
+    "vertical_shell_regularization.rs:73:18:73:23",
+    "vertical_shell_regularization.rs:74:9:74:10",
+    "vertical_shell_regularization.rs:66:9:66:15",
+    "vertical_shell_regularization.rs:66:16:66:20",
+    "vertical_shell_regularization.rs:67:13:67:19",
+    "vertical_shell_regularization.rs:67:22:67:29",
+    "vertical_shell_regularization.rs:67:30:67:34"
+   ],
+   "reason": "executes regions not E2E-covered: vertical_shell_regularization.rs:66:30:66:49, vertical_shell_regularization.rs:66:50:66:54, vertical_shell_regularization.rs:66:55:66:60, vertical_shell_regularization.rs:67:51:67:58, vertical_shell_regularization.rs:67:59:67:62, vertical_shell_regularization.rs:73:18:73:23 +8 more"
+  },
+  {
+   "test": "task22o22_radii_preserve_source_f32_expression_order",
+   "verdict": "KEEP",
+   "coverage": "subsumed",
+   "uncovered": [],
+   "reason": "coverage-subsumed but asserts ordering/numeric/boundary/mode/invariant (not pure output contract) - conservative keep"
+  },
+  {
+   "test": "task22o22_every_geometry_site_maps_to_the_stable_error_at_its_exact_boundary",
+   "verdict": "KEEP",
+   "coverage": "has-uncovered",
+   "uncovered": [
+    "regularize.rs:64:18:64:29",
+    "regularize.rs:47:39:47:40",
+    "regularize.rs:50:46:50:47",
+    "regularize.rs:64:32:64:33",
+    "regularize.rs:66:40:66:41",
+    "vertical_shell_regularization.rs:66:30:66:49",
+    "vertical_shell_regularization.rs:66:50:66:54",
+    "vertical_shell_regularization.rs:66:55:66:60",
+    "vertical_shell_regularization.rs:67:51:67:58",
+    "vertical_shell_regularization.rs:67:59:67:62",
+    "vertical_shell_regularization.rs:68:19:68:30",
+    "vertical_shell_regularization.rs:68:32:68:41"
+   ],
+   "reason": "executes regions not E2E-covered: regularize.rs:64:18:64:29, regularize.rs:47:39:47:40, regularize.rs:50:46:50:47, regularize.rs:64:32:64:33, regularize.rs:66:40:66:41, vertical_shell_regularization.rs:66:30:66:49 +52 more"
+  }
+ ]
+}
