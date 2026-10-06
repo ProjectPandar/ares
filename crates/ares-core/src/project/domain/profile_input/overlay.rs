@@ -114,7 +114,7 @@ pub(super) fn merged_profile_raw(
         "filament_self_index".to_owned(),
         RawConfigValue::List(
             (1..=embedded_count)
-                .map(|index| RawConfigValue::Number(serde_json::Number::from(index)))
+                .map(|index| RawConfigValue::Text(index.to_string()))
                 .collect(),
         ),
     ));
