@@ -9,6 +9,8 @@ import { checkToolpathPreview } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-slice/", import.meta.url));
+// A sidebar process edit that differs from the selected process preset's value.
+const EDIT = { key: "layer_height", value: "0.3" };
 
 async function choose(page: Page, combo: string, group: string, name: string) {
   await page.getByRole("button", { name: combo, exact: true }).click();
@@ -18,17 +20,17 @@ async function choose(page: Page, combo: string, group: string, name: string) {
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }
 
-async function exportGcode(page: Page) {
+async function exportGcode(page: Page, directory: string) {
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Export G-code" }).click(),
   ]);
-  const path = `${artifacts}${download.suggestedFilename()}`;
+  const path = `${directory}${download.suggestedFilename()}`;
   await download.saveAs(path);
   return path;
 }
 
-test("a 3MF plate and a centered STL sliced with selected system presets match OrcaSlicer --load-settings bytes", async ({ page }) => {
+test("a 3MF plate with and without a sidebar edit and a centered STL sliced with selected system presets match OrcaSlicer --load-settings bytes", async ({ page }) => {
   const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
   const procgcode = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
   if (!orca) test.skip();
@@ -70,6 +72,21 @@ test("a 3MF plate and a centered STL sliced with selected system presets match O
   const centerNames = ["machine", "process", "filament"].map((kind) => JSON.parse(readFileSync(`${centerWork}center-${kind}.json`, "utf8")).name);
   expect(centerNames, "both native runs use the same presets").toEqual([selection.machine, selection.process, ...selection.filaments]);
 
+  // Override oracle: the same user edit written into the --load-settings process JSON, so
+  // upstream applies it on top of the selected preset as a GUI edit would
+  // (GUI.cpp:113 change_opt_value, Config.cpp:461 apply_only: later values win).
+  const processPreset = JSON.parse(readFileSync(`${work}process.json`, "utf8")) as Record<string, unknown>;
+  writeFileSync(`${work}process-override.json`, JSON.stringify({ ...processPreset, [EDIT.key]: EDIT.value }, null, 2));
+  mkdirSync(`${work}override-reference`);
+  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, [
+    "--load-settings", `${work}machine.json;${work}process-override.json`,
+    "--load-filaments", `${work}filament.json`,
+    "--slice", "0", "--outputdir", `${work}override-reference`, `${work}profile-entry.3mf`,
+  ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
+  cpSync(`${work}override-reference`, `${artifacts}native/override-reference`, { recursive: true });
+  const nativeEdited = normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  expect(nativeEdited === native, "the edit changes the native output").toBe(false);
+
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await page.getByTestId("import-input").setInputFiles(`${work}profile-entry.3mf`);
@@ -92,7 +109,7 @@ test("a 3MF plate and a centered STL sliced with selected system presets match O
 
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
-  const gcodePath = await exportGcode(page);
+  const gcodePath = await exportGcode(page, artifacts);
   const browser = readFileSync(gcodePath, "utf8");
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
     oracle: "official OrcaSlicer 2.4.2 --load-settings on a 3MF (orca_parity_profile_entry_3mf_load_settings)",
@@ -107,6 +124,25 @@ test("a 3MF plate and a centered STL sliced with selected system presets match O
   await expect(page.getByTestId("toolpaths-pending")).toHaveCount(0);
   if (procgcode) await checkToolpathPreview(page, procgcode, gcodePath, artifacts, errors);
 
+  // Sidebar edits ride on the preset slice as overrides applied after the selected presets.
+  await page.getByRole("link", { name: "Prepare" }).click();
+  const field = page.getByRole("textbox", { name: EDIT.key, exact: true });
+  await expect(field, "process settings stay editable with presets selected").toBeVisible();
+  await field.fill(EDIT.value);
+  await field.press("Enter");
+  await expect(page.getByTestId("process-edited")).toContainText("1 modified option");
+  await page.getByRole("button", { name: "Slice plate" }).click();
+  await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
+  const editedPath = await exportGcode(page, `${artifacts}edited/`);
+  const browserEdited = readFileSync(editedPath, "utf8");
+  writeFileSync(`${artifacts}edited/result.json`, `${JSON.stringify({
+    oracle: "official OrcaSlicer 2.4.2 --load-settings with the edit written into the process JSON",
+    evidence: "ordered_bytes_generator_only",
+    edit: EDIT,
+    bytes: browserEdited.length,
+  }, null, 2)}\n`);
+  expect(normalize(browserEdited, "Ares") === nativeEdited, "edited browser G-code equals native --load-settings G-code").toBe(true);
+
   // An STL loaded on the empty plate is centered on the bed and dropped to it
   // (Plater.cpp:7056-7058, 7111-7112, 7149-7160): the presets stay selected.
   await page.getByRole("link", { name: "Prepare" }).click();
@@ -115,7 +151,7 @@ test("a 3MF plate and a centered STL sliced with selected system presets match O
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
-  const centered = readFileSync(await exportGcode(page), "utf8");
+  const centered = readFileSync(await exportGcode(page, artifacts), "utf8");
   writeFileSync(`${artifacts}result-stl.json`, `${JSON.stringify({
     oracle: "official OrcaSlicer 2.4.2 --load-settings on cube10.stl at the bed center (orca_parity_profile_entry_stl_center_placement)",
     evidence: "ordered_bytes_generator_only",
