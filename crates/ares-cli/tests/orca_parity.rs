@@ -15,6 +15,8 @@ mod brim_bed_region;
 mod brim_bed_region_controls;
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
+#[path = "orca_parity/empty_selected_plate.rs"]
+mod empty_selected_plate;
 #[path = "orca_parity/filament_usage_stats.rs"]
 mod filament_usage_stats;
 #[path = "orca_parity/flow_errors.rs"]
