@@ -1,6 +1,9 @@
 //! Public profile-entry tracer. Native CLI input is independently flattened;
 //! raw catalog input retains every inherited fragment for the Rust entry.
 
+#[path = "loaded_config_acceptance.rs"]
+mod loaded_config_acceptance;
+
 #[path = "loaded_config_probes.rs"]
 mod loaded_config_probes;
 
