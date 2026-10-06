@@ -99,7 +99,12 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await wizard.getByRole("checkbox", { name: "LH", exact: true }).check();
   await wizard.getByRole("button", { name: "Done" }).click();
 
-  await choose(page, "Printer preset", "System presets", selection.machine);
+  // The plater combo lists the printer model (PresetComboBoxes.cpp:1238-1251); selecting it
+  // resolves the preset with PresetBundle::get_similar_printer_preset (Plater.cpp:9565-9572),
+  // here the 3MF's own printer, which the byte comparison below checks.
+  const machine = JSON.parse(readFileSync(`${work}machine.json`, "utf8")) as { printer_model: string };
+  await choose(page, "Printer preset", "System presets", machine.printer_model);
+  await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute("title", selection.machine);
   await choose(page, "Process preset", "System presets", selection.process);
   for (const [slot, filament] of selection.filaments.entries()) {
     await choose(page, `Filament ${slot + 1} preset`, "System presets", filament);

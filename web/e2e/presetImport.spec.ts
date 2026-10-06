@@ -1,8 +1,10 @@
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
+import { projectConfig } from "./settingsOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const orca = process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`;
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-import/", import.meta.url));
 
 interface Compatible {
@@ -40,6 +42,48 @@ async function choose(page: Page, combo: string, name: string) {
   await page.getByRole("button", { name: combo, exact: true }).click();
   await page.getByRole("listbox", { name: combo, exact: true }).getByRole("option", { name, exact: true }).click();
   await expect(page.getByRole("button", { name: combo, exact: true })).toHaveText(name);
+}
+
+/**
+ * The plater printer combo's "System presets" items for one installed vendor, from the raw
+ * OrcaSlicer vendor files: PlaterPresetComboBox::update keys each visible system printer by its
+ * `printer_model` once (PresetComboBoxes.cpp:1238-1251) in a `std::map` (:1150), appended in key
+ * order without a re-sort for the "System" group (:1317-1324, 1427). The wizard installs every
+ * model and variant of the vendor (Preset::set_visible_from_appconfig, Preset.cpp:858-864); abstract
+ * machine presets (`instantiation` "false") are not listed.
+ */
+function systemPrinterModels(vendor: string) {
+  const models = systemPrinters(vendor).map((printer) => printer.printer_model);
+  return [...new Set(models)].sort(ordinal);
+}
+
+const ordinal = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** The vendor's instantiable machine presets with their (inherited) model and variant, from the raw files. */
+function systemPrinters(vendor: string) {
+  const readJson = (path: string) => JSON.parse(readFileSync(`${orca}resources/profiles/${path}`, "utf8"));
+  const index = readJson(`${vendor}.json`) as { machine_list: { sub_path: string }[] };
+  const machines = new Map(index.machine_list.map(({ sub_path }) => {
+    const machine = readJson(`${vendor}/${sub_path}`) as Record<string, string>;
+    return [machine.name, machine];
+  }));
+  const field = (name: string, key: string): string => machines.get(name)![key] ?? field(machines.get(name)!.inherits, key);
+  return [...machines.values()].filter((machine) => machine.instantiation === "true").map(({ name }) => ({
+    name, printer_model: field(name, "printer_model"), printer_variant: field(name, "printer_variant"),
+  }));
+}
+
+/**
+ * PresetBundle::get_similar_printer_preset(model, {}) (PresetBundle.cpp:3750-3782) as the plater calls it
+ * (Plater.cpp:9565-9566) with a project-inside printer selected, whose variant is `variantOld`: the
+ * system candidates of the model keyed by name (:3757-3762). The alias step (:3765-3771) picks the same
+ * preset as the variant step here: either alias ("" or the project preset name) yields no other name of
+ * the model. Then the first candidate with the old variant (:3773-3779), else the first by name (:3781).
+ */
+function similarSystemPrinter(vendor: string, model: string, variantOld: string) {
+  const candidates = systemPrinters(vendor).filter((printer) => printer.printer_model === model)
+    .sort((a, b) => ordinal(a.name, b.name));
+  return (candidates.find((printer) => printer.printer_variant === variantOld) ?? candidates[0]).name;
 }
 
 const timings = (page: Page) =>
@@ -88,6 +132,8 @@ test("imported printer presets list the compatible processes and filaments", asy
   await wizard.getByRole("button", { name: "Done" }).click();
   await expect(page.getByTestId("preset-error")).toHaveCount(0);
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  // One item per printer model, not per preset (48 instantiable BBL printers, 12 models).
+  expect(await groupOptions(page, "Printer preset", "System presets")).toEqual(systemPrinterModels("BBL"));
 
   const processes = [
     ...await groupOptions(page, "Process preset", "User presets"),
@@ -137,9 +183,20 @@ test("imported printer presets list the compatible processes and filaments", asy
   expect(build).toHaveLength(2);
   expect(filter).toHaveLength(3);
   expect(measures.filter((entry) => entry.name === "ares:catalog-stringify")).toHaveLength(0);
+
+  // A printer model selected over the project's printer, which no installed vendor holds: the combo
+  // shows the model and its tooltip the resolved preset (PresetComboBoxes.cpp:1241-1244, 1265, 1486).
+  const model = "Bambu Lab X1 Carbon";
+  const project = projectConfig(`${repositoryRoot}tests/parity/orca_cli_ender3.3mf`);
+  const resolved = similarSystemPrinter("BBL", model, String(project.printer_variant));
+  await choose(page, "Printer preset", model);
+  await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute("title", resolved);
+  await expect(page.getByTestId("preset-error")).toHaveCount(0);
+  await page.screenshot({ path: `${artifacts}printer-model.png` });
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
     vendors: ["BBL", "OrcaFilamentLibrary"],
     printer: expected.printer,
+    printerModel: { model, resolved },
     processes: processes.length,
     filaments: filaments.length,
     missingParents: expected.withoutProcess.missing_parents,
