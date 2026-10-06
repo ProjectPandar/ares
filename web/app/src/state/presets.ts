@@ -129,7 +129,11 @@ export function selectFilament(slot: number, filament: string) {
  * is not ported yet.
  */
 export function presetSliceBlocker(selection: PresetSelection, scene: Scene): string | null {
-  if (scene.format !== "3mf") return "Slicing an STL with selected presets needs arrange, which is not ported yet";
+  // An STL is centered like one model loaded on an empty plate (Plater.cpp:7149-7160); with more
+  // objects OrcaSlicer looks for empty cells instead, which is not ported yet.
+  if (scene.format === "stl" && scene.objects.length !== 1) {
+    return "Placing more than one STL object on the plate needs arrange, which is not ported yet";
+  }
   if (!selection.process) return "Select a process preset to slice";
   if (filamentNames(scene.settings).some((_, slot) => !selection.filaments[slot])) {
     return "Select a filament preset for every filament to slice";
@@ -138,19 +142,25 @@ export function presetSliceBlocker(selection: PresetSelection, scene: Scene): st
 }
 
 /**
- * Slices a 3MF plate with the selected presets over its project config, like
- * the OrcaSlicer CLI's `--load-settings` / `--load-filaments` on a 3MF.
+ * Slices with the selected presets, like the OrcaSlicer CLI's `--load-settings` /
+ * `--load-filaments`: a 3MF plate over its project config, or an STL centered on
+ * the bed as Plater::priv::load_model_objects places a model loaded on an empty
+ * plate (Plater.cpp:7056-7058, 7111-7112, 7149-7160).
  */
 export async function sliceWithPresets(
   file: { name: string; bytes: Uint8Array },
-  plate: number | undefined,
+  scene: Scene,
   { printer, process, filaments }: PresetSelection,
 ): Promise<SliceResult> {
   const { vendors, presetImports } = useApp.getState();
   const { loadVendor } = await import("@ares-slicer/profiles");
   const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
   const catalog = JSON.stringify({ vendors: loaded, imports: presetImports });
-  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, { machine: printer, process: process!, filaments }, { plate, seed: 0 });
+  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, { machine: printer, process: process!, filaments }, {
+    plate: scene.plates[0]?.id,
+    seed: 0,
+    placement: scene.format === "stl" ? "center" : "none",
+  });
 }
 
 /** Names of the imported presets of one `type`, for the "User presets" group. */

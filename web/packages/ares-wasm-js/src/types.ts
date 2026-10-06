@@ -77,6 +77,11 @@ export interface ProfileSliceOptions {
    * string from `encodeConfigValues`, or one string per element of a vector option.
    */
   overrides?: Record<string, string | string[]>;
+  /**
+   * `"center"` centers the model on the bed center (the `printable_area` bounding-box center) and
+   * drops it to the bed, like the OrcaSlicer CLI's `--center`; `"none"` (default) slices it where it is.
+   */
+  placement?: "none" | "center";
 }
 
 /** One preset record of an imported file: `type` is derived by the engine, other values are as exported. */

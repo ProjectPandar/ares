@@ -69,7 +69,7 @@ export async function slicePlate() {
   useApp.setState({ slice: { status: "slicing", startedAt } });
   try {
     const result = presetSelection
-      ? await sliceWithPresets(file, scene.plates[0]?.id, presetSelection)
+      ? await sliceWithPresets(file, scene, presetSelection)
       : scene.format === "3mf"
         ? await slicer.sliceProject(file.bytes, scene.plates[0]?.id, overrides)
         : await slicer.sliceStl(file.bytes);
