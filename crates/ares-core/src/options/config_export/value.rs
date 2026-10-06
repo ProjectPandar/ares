@@ -14,7 +14,7 @@ use super::super::config_types::{
     },
 };
 use sequence::{ConfigSequence, SequenceKind};
-use strings::escape_scalar_string;
+pub(crate) use strings::escape_scalar_string;
 
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) struct SerializedConfigValue {

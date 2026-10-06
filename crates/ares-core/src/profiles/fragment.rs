@@ -3,8 +3,6 @@ pub(super) mod payload;
 
 use std::{collections::BTreeMap, fmt};
 
-use serde::Deserialize;
-
 use crate::{
     SliceError,
     options::{ProjectRuntimeOptionsBuilder, ProjectSettingsBuilder},
@@ -63,7 +61,10 @@ impl ProfileFragment {
         let parsed = metadata::parse_values(input.clone())?;
         // Config.cpp's preset loader uses the same typed legacy normalization as
         // project loading, before parent/child overlay; keep absence as absence.
-        let builder = ProjectSettingsBuilder::deserialize(input).map_err(|error| {
+        let builder = crate::options::json_deserialize::deserialize_preset_config::<
+            ProjectSettingsBuilder,
+        >(input)
+        .map_err(|error| {
             SliceError::InvalidInput(format!("profile option JSON is invalid: {error}"))
         })?;
         let (printer, process, filament, runtime) = builder.into_profile_parts();

@@ -43,6 +43,7 @@ option_modules!(
 option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type);
 mod decode;
 mod encode;
+pub(crate) mod json_deserialize;
 mod machine_limits;
 pub(crate) mod model_config_deserialize;
 #[rustfmt::skip]

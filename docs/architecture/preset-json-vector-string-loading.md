@@ -4,8 +4,8 @@
 
 - 本片是 OrcaSlicer 2.4.2 `libslic3r/Config.cpp::ConfigBase::load_from_json` 的 JSON → ConfigOption 向量读取重写，不包含 O2 配置校验迁移。`PresetBundle.cpp:4861` 和 `Preset.cpp:1638` 都委托该加载器；`Config.cpp:927-929` 将标量 JSON 字符串直接传给 set_deserialize，`:588-595,603-659` 按选项定义调用 ConfigOption::deserialize。
 - 标量字符串不是一律包成单元素数组。`Config.hpp:1153-1157::ConfigOptionStrings::deserialize` 委托 `Config.cpp:146-213::unescape_strings_cstyle`：普通非空字符串为一个元素，分号分隔多个元素，引号/转义按 Orca wire grammar，空字符串为空向量。RH3D 的 default_filament_profile 普通标量因此为单元素 coStrings（`PrintConfig.cpp:1874-1878`）。数值、bool、enum 等向量沿用各自逗号 grammar。
-- Rust 落点是 options 的已知字段 typed builder 反序列化：复用 `model_config_deserialize::wire::decode` 与 registry 的向量种类，在 JSON 字符串入口解码，再交给现有字段类型；数组直接走原 typed sequence 路径。未知字段、重复字段、标量选项、legacy conversion 的优先级及 raw presence/export 来源不变。不修改原始 profile、不补 defaults、不引入回退。
-- 此边界同时覆盖 catalog 的 ProfileFragment typed parts 和组合配置再次加载；单独修改某个 preset 字段或仅 catalog 第一遍解析不能满足合同。raw profile/presence view 保留原始标量值，转换仅属于 ConfigOption typed 解码。
+- Rust 落点只在 native preset catalog 的 ProfileFragment::from_catalog_values 及选中 profile 的最终 raw 合成解码（project/domain/profile_input.rs），不是通用 option_group / typed DTO Deserialize。向量标量字符串复用 `model_config_deserialize::wire::decode`；字符串数组先按 `Config.cpp:952-1006` 生成 wire 文本再解码，coStrings 以分号连接并逐项 C-style 引号/转义，其余以逗号连接，coPointsGroups/嵌套数组按上游以 # 连接。不特判 thumbnails（它是 coString，PrintConfig.cpp:7122-7127）。独立 typed DTO、ProjectSettings、ProfileFragment typed-fragment API 的严格形状、空向量与错误优先级合同保持；它们不是本片的 ConfigBase::load_from_json 入口。Rust typed 数值/bool 表示及已有标量 lexical 行为不改，不做失败后回退。
+- raw profile/presence view 保留原始值；typed native-preset 解码消费另一份已有工作视图。已经 wire-decoded 的 deserialize_known_value 路径不重复过 JSON codec；通用 typed builder 不挂 JSON seed。
 - 既有 wire grammar/lexical acceptance 不在本片扩展；INI/model wire 解码不改。O1 生命周期、O2 selector/options 规则与 profile_settings 的可编辑行为不改。
 
 ## 验收合同

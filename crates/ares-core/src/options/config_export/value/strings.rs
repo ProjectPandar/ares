@@ -1,6 +1,6 @@
 use super::SerializedConfigValue;
 
-pub(super) fn escape_scalar_string(value: &str) -> String {
+pub(crate) fn escape_scalar_string(value: &str) -> String {
     let mut output = String::with_capacity(value.len());
     for character in value.chars() {
         match character {

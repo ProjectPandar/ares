@@ -15,7 +15,6 @@ use crate::{
         slice_info::{SliceInfo, SliceInfoHeader},
     },
 };
-use serde::Deserialize as _;
 
 impl Project {
     pub(crate) fn initialize_cli_loaded_project_config(&mut self) {
@@ -94,11 +93,13 @@ impl Project {
         // M854 edit order: user overrides apply last (`Config.cpp:461`).
         overrides.apply(&mut merged);
 
-        project.settings = ProjectSettingsBuilder::deserialize(merged.clone().into_object())
-            .map_err(|error| {
-                SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
-            })?
-            .resolve();
+        project.settings = crate::options::json_deserialize::deserialize_preset_config::<
+            ProjectSettingsBuilder,
+        >(merged.clone().into_object())
+        .map_err(|error| {
+            SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
+        })?
+        .resolve();
         project.documents.project_settings_raw = merged;
         project.initialize_cli_loaded_project_config();
         Ok(project)
@@ -128,7 +129,7 @@ impl Project {
             );
             overrides.apply(&mut merged);
             (
-                ProjectSettingsBuilder::deserialize(merged.clone().into_object())
+                crate::options::json_deserialize::deserialize_preset_config::<ProjectSettingsBuilder>(merged.clone().into_object())
                     .map_err(|error| {
                         SliceError::InvalidInput(format!(
                             "merged project settings are invalid: {error}"
