@@ -5,8 +5,9 @@ const MODEL: &str = "3D/3dmodel.model";
 const FILAMENTS: &str = "Metadata/filament_sequence.json";
 
 /// Splits the KSR reference project into two plates: plate 1 keeps the
-/// original instance; plate 2 receives a duplicated object placed 60 mm
-/// along +X.
+/// original instance; plate 2 receives a duplicated object placed at the
+/// native plate-2 grid origin (bed width × 1.2 along +X,
+/// `PartPlate.cpp:55/3952-3962`).
 fn two_plate_archive() -> KsrArchive {
     let mut archive = KsrArchive::new();
 
@@ -51,7 +52,7 @@ fn two_plate_archive() -> KsrArchive {
             "00000002-61cb-4c03-9d28-80fed5dfa1dc",
             "00000003-61cb-4c03-9d28-80fed5dfa1dc",
         );
-    let item_two = "<item objectid=\"3\" transform=\"1 0 0 0 1 0 0 0 1 193.039205 115.992105 46\" printable=\"1\" auto_drop=\"1\"/>";
+    let item_two = "<item objectid=\"3\" transform=\"1 0 0 0 1 0 0 0 1 440.239205 115.992105 46\" printable=\"1\" auto_drop=\"1\"/>";
     archive.insert_text(
         MODEL,
         format!(

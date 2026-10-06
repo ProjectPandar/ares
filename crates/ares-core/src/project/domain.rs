@@ -60,6 +60,14 @@ pub struct Project {
     plates: Vec<PlateMetadata>,
     settings: ProjectSettings,
     documents: ProjectDocuments,
+    /// The selected plate's grid origin in the project-global coordinate
+    /// space (`PartPlate.cpp:3914-3962`; zero until a plate is selected).
+    /// Instances stay in global coordinates upstream
+    /// (`OrcaSlicer.cpp:4837-4845`), so the volume gate tests them against
+    /// the bed shape translated to this origin (`PartPlate.cpp:3179-3187`)
+    /// and the G-code emitter subtracts it again
+    /// (`Print.cpp:2636-2638` `set_gcode_offset`).
+    plate_origin: (f64, f64),
 }
 
 impl Project {
@@ -76,6 +84,7 @@ impl Project {
             plates,
             settings,
             documents,
+            plate_origin: (0.0, 0.0),
         }
     }
 
@@ -94,6 +103,7 @@ impl Project {
     /// Projects slice one plate at a time (OrcaSlicer exports `plate_<n>.gcode`
     /// per plate). Returns a view containing only the instances of `plate_id`.
     pub(crate) fn select_plate(&self, plate_id: u32) -> Result<Self, SliceError> {
+        let plate_count = self.plates.len();
         let index = self
             .plates
             .iter()
@@ -156,7 +166,14 @@ impl Project {
             plates: vec![self.plates[index].clone()],
             settings,
             documents,
+            plate_origin: plate_grid_origin(index, plate_count, &self.settings),
         })
+    }
+
+    /// The selected plate's grid origin (`PartPlateList::compute_origin`,
+    /// `PartPlate.cpp:3914-3921`). Zero for unselected projects.
+    pub(crate) fn plate_origin(&self) -> (f64, f64) {
+        self.plate_origin
     }
 
     pub fn settings(&self) -> &ProjectSettings {
@@ -426,4 +443,35 @@ impl ProjectInstance {
     pub fn transform(&self) -> Transform3d {
         self.transform
     }
+}
+
+/// `compute_colum_count` (`PartPlate.hpp:38-48`), ported verbatim: the
+/// float `sqrt`/`round` comparison decides the column count, not an f64
+/// `ceil`, so boundary counts match upstream exactly.
+fn compute_colum_count(count: usize) -> usize {
+    let value = (count as f32).sqrt();
+    let round_value = value.round();
+    if value > round_value {
+        (round_value + 1.0) as usize
+    } else {
+        round_value as usize
+    }
+}
+
+/// The plate grid origin (`PartPlate.cpp:3914-3921` `compute_origin` +
+/// `:3952-3962` `compute_shape_position` with `LOGICAL_PART_PLATE_GAP =
+/// 1/5` from `:55`): stride = bed bounding box × 1.2, row-major columns
+/// with negative-Y rows. The functions live in `slic3r/GUI/PartPlate`
+/// upstream but the CLI path uses this same grid geometry; the port stays
+/// in the project/plate layer without GUI dependencies.
+fn plate_grid_origin(index: usize, plate_count: usize, settings: &ProjectSettings) -> (f64, f64) {
+    let area = &settings.printer.remaining.printable_area.0;
+    let width = area.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max)
+        - area.iter().map(|p| p.x).fold(f64::INFINITY, f64::min);
+    let depth = area.iter().map(|p| p.y).fold(f64::NEG_INFINITY, f64::max)
+        - area.iter().map(|p| p.y).fold(f64::INFINITY, f64::min);
+    let cols = compute_colum_count(plate_count);
+    let row = index / cols;
+    let col = index % cols;
+    (col as f64 * width * 1.2, -(row as f64) * depth * 1.2)
 }

@@ -56,6 +56,19 @@ impl PrintVolume {
         let printer = &project.settings().printer.remaining;
         let area = &printer.printable_area.0;
         let max_z = printer.printable_height.0;
+        // The bed shape is translated to the plate's grid position before
+        // the gate (`PartPlate.cpp:3179-3187` `set_shape` adds the position
+        // to every point) so the still-global instance coordinates are
+        // tested against the equally-global shape.
+        let (origin_x, origin_y) = project.plate_origin();
+        let translated = area
+            .iter()
+            .map(|p| crate::Point2d {
+                x: p.x + origin_x,
+                y: p.y + origin_y,
+            })
+            .collect::<Vec<_>>();
+        let area = &translated;
         let shape = if area.len() == 4 && is_axis_aligned_rectangle(area) {
             BedShape::Rectangle {
                 min: [

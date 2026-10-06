@@ -63,6 +63,10 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
         }
         plates.push(PlateMetadata::new(id, instances));
     }
+    // Upstream's plate list is indexed sequentially by plate id
+    // (`PartPlateList` inserts in id order; the grid position is the list
+    // index), regardless of the XML document order.
+    plates.sort_by_key(|plate| plate.id());
     Ok(MetadataIndex {
         plates,
         loaded_labels,

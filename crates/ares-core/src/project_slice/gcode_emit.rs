@@ -126,7 +126,8 @@ pub(super) fn emit(
     let model_offset = if schedule.tower.is_some() {
         (0.0, 0.0)
     } else {
-        traversal
+        let (origin_x, origin_y) = traversal.project.plate_origin();
+        let object_offset = traversal
             .resolved
             .objects
             .first()
@@ -135,7 +136,8 @@ pub(super) fn emit(
                     &traversal.project.objects()[object.source_object_index],
                     traversal.scale,
                 )
-            })
+            });
+        (object_offset.0 - origin_x, object_offset.1 - origin_y)
     };
     let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
     let offset = (

@@ -98,6 +98,9 @@ pub(super) struct InstanceDefinition {
 
 pub(super) fn definitions(traversal: &PreparedPostClassicTraversal) -> Vec<InstanceDefinition> {
     let scale = traversal.scale;
+    // Exclude-object definitions are plate-local like every emitted
+    // coordinate (`set_gcode_offset`, Print.cpp:2636-2638).
+    let plate_origin = traversal.project.plate_origin();
     let mut unique_id = 0;
     let mut output = Vec::new();
     for (object_index, object) in traversal.project.objects().iter().enumerate() {
@@ -105,7 +108,7 @@ pub(super) fn definitions(traversal: &PreparedPostClassicTraversal) -> Vec<Insta
             output.push(InstanceDefinition {
                 name: instance_name(object.name(), object_index as u32, instance_index as u32),
                 unique_id,
-                klipper_body: klipper_body(object, instance, scale),
+                klipper_body: klipper_body(object, instance, scale, plate_origin),
             });
             unique_id += 1;
         }
@@ -184,6 +187,7 @@ fn klipper_body(
     object: &ProjectObject,
     instance: &ProjectInstance,
     scale: CoordinateScale,
+    plate_origin: (f64, f64),
 ) -> Option<String> {
     let mut min = [f64::INFINITY; 2];
     let mut max = [f64::NEG_INFINITY; 2];
@@ -196,6 +200,11 @@ fn klipper_body(
         let transform = instance.transform().then(volume.transform());
         for vertex in volume.mesh().vertices() {
             let transformed = transform.transform_point(*vertex);
+            let transformed = crate::Point3d::new(
+                transformed.x - plate_origin.0,
+                transformed.y - plate_origin.1,
+                transformed.z,
+            );
             if !transformed.x.is_finite() || !transformed.y.is_finite() {
                 return None;
             }
