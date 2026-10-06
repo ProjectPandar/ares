@@ -75,32 +75,27 @@ async fn orca_parity_preset_scalar_original_bbl_array() {
     let catalog_json = catalog.to_string();
     let selection_json = selection.to_string();
     let overrides = ConfigOverrides::default();
-    let loaded = ares_core::profile_settings(
-        input,
-        ProfileSliceRequest {
-            filename: "input.3mf",
-            catalog_json: &catalog_json,
-            selection_json: &selection_json,
-            plate: None,
-            overrides: &overrides,
-            placement: Placement::None,
-        },
-    )
-    .await;
+    let request = ProfileSliceRequest {
+        filename: "input.3mf",
+        catalog_json: &catalog_json,
+        selection_json: &selection_json,
+        plate: None,
+        overrides: &overrides,
+        placement: Placement::None,
+    };
+    let loaded = ares_core::profile_settings(input, request).await;
+    let placed = ares_core::profile_placed_project(input, request).await;
     write_json(
         &directory.join("result.json"),
-        &json!({"native": native, "ares": loaded.as_ref().map(|view| json!(view)).map_err(ToString::to_string)}),
+        &json!({"native": native, "ares": loaded.as_ref().map(|view| json!(view)).map_err(ToString::to_string), "typed_bridge_speed": placed.as_ref().map(|project| project.settings().process.region.bridge_speed.0).map_err(ToString::to_string)}),
     );
     let loaded = serde_json::to_value(
         loaded.unwrap_or_else(|error| panic!("{error}; evidence {directory:?}")),
     )
     .unwrap();
+    assert_eq!(loaded["bridge_speed"], json!(["50", "50"]));
     assert_eq!(
-        loaded["bridge_speed"]
-            .as_str()
-            .unwrap()
-            .parse::<f64>()
-            .unwrap(),
+        placed.unwrap().settings().process.region.bridge_speed.0,
         50.0
     );
 }
