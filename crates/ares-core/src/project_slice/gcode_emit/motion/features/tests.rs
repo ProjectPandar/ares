@@ -61,3 +61,42 @@ fn resonance_avoidance_clamps_outer_wall_speed_band() {
         50.0
     );
 }
+
+#[test]
+fn gap_fill_jerk_uses_default_not_infill() {
+    // `is_infill` (ExtrusionEntity.hpp:73-82) excludes `erGapFill`, so gap
+    // fill falls to `default_jerk` even when `infill_jerk` is set
+    // (`GCode.cpp:6451`).
+    let options = MotionOptions {
+        default_jerk: 9.0,
+        infill_jerk: 20.0,
+        ..MotionOptions::default()
+    };
+    assert_eq!(
+        properties("Gap infill", false).jerk(&options, 3),
+        options.default_jerk
+    );
+    // Contrast: real infill roles take `infill_jerk`.
+    assert_eq!(
+        properties("Internal solid infill", false).jerk(&options, 3),
+        20.0
+    );
+}
+
+#[test]
+fn ironing_jerk_uses_infill() {
+    // `is_infill` (ExtrusionEntity.hpp:73-82) includes `erIroning`, so
+    // ironing takes `infill_jerk` when set (`GCode.cpp:6451`) and falls to
+    // `default_jerk` otherwise.
+    let options = MotionOptions {
+        default_jerk: 9.0,
+        infill_jerk: 20.0,
+        ..MotionOptions::default()
+    };
+    assert_eq!(properties("Ironing", false).jerk(&options, 3), 20.0);
+    let unset = MotionOptions {
+        default_jerk: 9.0,
+        ..MotionOptions::default()
+    };
+    assert_eq!(properties("Ironing", false).jerk(&unset, 3), 9.0);
+}
