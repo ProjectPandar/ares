@@ -51,7 +51,7 @@ export const checks = [
   assert<Equal<ReturnType<AresSlicer["printConfigDef"]>, Promise<PrintConfigDef>>>(),
   assert<Equal<PrintConfigDef["options"], ConfigOptionDef[]>>(),
   assert<Equal<ConfigOptionDef["mode"], ConfigOptionMode>>(),
-  assert<Equal<Parameters<AresSlicer["sliceProject"]>, [Uint8Array, number?, ConfigOverrides?]>>(),
+  assert<Equal<Parameters<AresSlicer["sliceProject"]>, [Uint8Array, number?, Record<string, string | string[]>?]>>(),
   assert<Equal<ReturnType<AresSlicer["sliceProject"]>, Promise<SliceResult>>>(),
   assert<Equal<Parameters<AresSlicer["sliceWithProfiles"]>, [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]>>(),
   assert<Equal<ReturnType<AresSlicer["sliceWithProfiles"]>, Promise<SliceResult>>>(),

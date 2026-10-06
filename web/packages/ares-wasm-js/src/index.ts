@@ -1,7 +1,7 @@
 import type { PrintConfigDef } from "./configDef.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { ConfigOverrides, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
+import type { SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
 import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
@@ -66,16 +66,13 @@ export class AresSlicer {
 
   /**
    * Slices one plate of a 3MF project (first plate when omitted). `overrides`
-   * edit the project config before slicing; they are rejected until ares-core
-   * ships its option override API (M854).
+   * are user edits applied over the project config, by option key: a
+   * `ConfigOption::serialize()` string from `encodeConfigValues`, or one string
+   * per element of a vector option. Rejects an unknown key or invalid value.
    */
-  async sliceProject(input: Uint8Array, plate?: number, overrides: ConfigOverrides = {}): Promise<SliceResult> {
-    const edited = Object.keys(overrides);
-    if (edited.length > 0) {
-      throw new Error(`Option overrides are not supported by this Ares build yet (edited: ${edited.join(", ")})`);
-    }
+  async sliceProject(input: Uint8Array, plate?: number, overrides: Record<string, string | string[]> = {}): Promise<SliceResult> {
     await this.#ready;
-    return (await this.#call({ kind: "sliceProject", input: input.slice(), plate })) as SliceResult;
+    return (await this.#call({ kind: "sliceProject", input: input.slice(), plate, overrides: JSON.stringify(overrides) })) as SliceResult;
   }
 
   /**

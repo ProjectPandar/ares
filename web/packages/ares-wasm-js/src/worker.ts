@@ -94,7 +94,7 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "sliceProject":
       // No palettes: the preview colors by feature type, and raw moves stay in wasm memory.
-      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, [], []));
+      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, [], [], request.overrides));
     case "sliceWithProfiles": {
       const { input, filename, catalog, selection, options } = request;
       return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));

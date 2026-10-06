@@ -1,6 +1,6 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
-import { presetSliceBlocker, sliceWithPresets } from "./presets";
+import { overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets";
 import { slicer } from "./slicer";
 import { decodeSettings } from "./typedSettings";
 import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp, type ViewMode } from "./store";
@@ -71,7 +71,7 @@ export async function slicePlate() {
     const result = presetSelection
       ? await sliceWithPresets(file, scene, presetSelection, overrides)
       : scene.format === "3mf"
-        ? await slicer.sliceProject(file.bytes, scene.plates[0]?.id, overrides)
+        ? await slicer.sliceProject(file.bytes, scene.plates[0]?.id, await overrideTokens(overrides))
         : await slicer.sliceStl(file.bytes);
     if (useApp.getState().file !== file) return;
     setSliceResult(result, performance.now() - startedAt);

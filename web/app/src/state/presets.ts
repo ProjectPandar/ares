@@ -183,7 +183,7 @@ async function profileRequest(scene: Scene, { printer, process, filaments }: Pre
  * Sidebar edits as engine override tokens: text edits already hold the option's
  * `serialize()` text (the Field.cpp commit), typed values are encoded by the engine.
  */
-async function overrideTokens(overrides: ConfigOverrides): Promise<Record<string, string | string[]>> {
+export async function overrideTokens(overrides: ConfigOverrides): Promise<Record<string, string | string[]>> {
   const isText = (value: OptionValue): value is string | string[] =>
     typeof value === "string" || (Array.isArray(value) && value.every((element) => typeof element === "string"));
   const edits = Object.entries(overrides);
