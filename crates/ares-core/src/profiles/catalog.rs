@@ -1,5 +1,7 @@
 mod cli_metadata;
 mod document;
+mod printer_models;
+#[allow(unused_imports)]
 mod raw;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -403,7 +405,7 @@ pub struct SelectablePrinter {
     pub printer_variant: String,
 }
 
-fn document_text(document: &ProfileDocument, key: &str) -> String {
+pub(super) fn document_text(document: &ProfileDocument, key: &str) -> String {
     match document.fields.get(key) {
         Some(RawConfigValue::Text(value)) => value.clone(),
         _ => String::new(),

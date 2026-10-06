@@ -7,10 +7,8 @@ use serde_json::{Value, json};
 
 fn vendor(name: &str, lists: Value, files: Value) -> Value {
     let mut index = json!({"name": name});
-    for key in ["machine_list"] {
-        if let Some(entries) = lists.get(key) {
-            index[key] = entries.clone();
-        }
+    if let Some(entries) = lists.get("machine_list") {
+        index["machine_list"] = entries.clone();
     }
     json!({"index": index, "files": files})
 }
@@ -36,9 +34,24 @@ fn machine(sub_path: &str, name: &str, model: &str, variant: &str) -> (String, V
 fn acme_vendor() -> Value {
     let files = [
         machine("base.json", "fdm_acme_common", "", ""),
-        machine("stinger_04.json", "LH Stinger 0.4 nozzle", "LH Stinger", "0.4"),
-        machine("stinger_06.json", "LH Stinger 0.6 nozzle", "LH Stinger", "0.6"),
-        machine("stinger_mmu.json", "LH Stinger MMU 0.4 nozzle", "LH Stinger", "0.4"),
+        machine(
+            "stinger_04.json",
+            "LH Stinger 0.4 nozzle",
+            "LH Stinger",
+            "0.4",
+        ),
+        machine(
+            "stinger_06.json",
+            "LH Stinger 0.6 nozzle",
+            "LH Stinger",
+            "0.6",
+        ),
+        machine(
+            "stinger_mmu.json",
+            "LH Stinger MMU 0.4 nozzle",
+            "LH Stinger",
+            "0.4",
+        ),
         machine("harrier_04.json", "Harrier 0.4 nozzle", "Harrier", "0.4"),
         machine("template.json", "fdm_acme_template", "ACME", ""),
     ]
@@ -46,6 +59,7 @@ fn acme_vendor() -> Value {
     .collect::<serde_json::Map<_, _>>();
     let mut files = Value::Object(files);
     files["template.json"]["instantiation"] = json!("false");
+    files["base.json"]["instantiation"] = json!("false");
     vendor(
         "Acme",
         json!({
@@ -92,13 +106,11 @@ fn printer_models_dedupes_system_printers_by_first_occurrence() {
         "type": "machine", "name": "Acme Orphan", "inherits": "fdm_missing",
         "instantiation": "true", "printer_model": "Orphan"
     });
-    h.add_import(orphan.to_string().as_bytes(), "orphan.json").unwrap();
+    h.add_import(orphan.to_string().as_bytes(), "orphan.json")
+        .unwrap();
     assert_eq!(
         models(&h),
-        vec![
-            json!({"model": "LH Stinger"}),
-            json!({"model": "Harrier"}),
-        ]
+        vec![json!({"model": "LH Stinger"}), json!({"model": "Harrier"}),]
     );
 }
 
@@ -112,7 +124,8 @@ fn printer_models_exclude_user_printers() {
         "from": "User", "instantiation": "true", "version": "1.9.0.0",
         "printer_model": "LH Stinger", "printer_variant": "0.8"
     });
-    h.add_import(user.to_string().as_bytes(), "my.json").unwrap();
+    h.add_import(user.to_string().as_bytes(), "my.json")
+        .unwrap();
     assert_eq!(
         models(&h),
         vec![json!({"model": "LH Stinger"}), json!({"model": "Harrier"})]
@@ -124,10 +137,17 @@ fn similar_resolves_by_exact_alias_match() {
     // PresetBundle.cpp:3768-3776: prefer_printer = the current preset's
     // alias with the old variant replaced by the requested one.
     let h = handle(&stinger_04_with_alias());
-    // With an explicit alias, the substituted alias matches the 0.6 preset's
-    // own alias (which resolves to the bare model name).
+    // The explicit alias has no variant substring, so the substitution
+    // cannot hit and resolution falls through to the variant match.
     assert_eq!(
-        h.similar_printer_preset("LH Stinger", "0.6", "My Stinger"),
+        h.similar_printer_preset("LH Stinger", "0.6", "LH Stinger 0.4 nozzle"),
+        Some("LH Stinger 0.6 nozzle".to_owned())
+    );
+    // A derived alias (the bare name) contains the old variant; the
+    // substitution hits the 0.6 preset exactly (`:3768-3776`).
+    let h2 = handle(&acme_vendor());
+    assert_eq!(
+        h2.similar_printer_preset("LH Stinger", "0.6", "LH Stinger MMU 0.4 nozzle"),
         Some("LH Stinger 0.6 nozzle".to_owned())
     );
 }
@@ -159,7 +179,8 @@ fn similar_with_empty_variant_considers_system_only() {
         "from": "User", "instantiation": "true", "version": "1.9.0.0",
         "printer_model": "Harrier", "printer_variant": "0.6"
     });
-    h.add_import(user.to_string().as_bytes(), "user_harrier.json").unwrap();
+    h.add_import(user.to_string().as_bytes(), "user_harrier.json")
+        .unwrap();
     assert_eq!(
         h.similar_printer_preset("Harrier", "", "Harrier 0.4 nozzle"),
         Some("Harrier 0.4 nozzle".to_owned())
@@ -174,5 +195,8 @@ fn similar_with_empty_variant_considers_system_only() {
 fn similar_missing_model_returns_none() {
     // `:3755-3756`: no candidates → nullptr upstream → None here.
     let h = handle(&acme_vendor());
-    assert_eq!(h.similar_printer_preset("Ghost", "0.4", "LH Stinger 0.4 nozzle"), None);
+    assert_eq!(
+        h.similar_printer_preset("Ghost", "0.4", "LH Stinger 0.4 nozzle"),
+        None
+    );
 }
