@@ -72,15 +72,30 @@ pub(super) fn first(values: &crate::OrcaFloats) -> f64 {
 pub(super) fn append_second_layer_transition(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
+    state: &motion::EmitState,
     cached_bed_temperature: i32,
 ) {
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;
-    // Nozzle temperature transition (`GCode.cpp:4800-4810`): M104 when the
+    // Nozzle temperature transition (`GCode.cpp:4800-4812`): M104 when the
     // second-layer temperature differs from the first-layer one. The tool
     // parameter is dropped for single-extruder printers
-    // (`GCodeWriter.cpp:155-164`).
+    // (`GCodeWriter.cpp:155-164`); under SEMM (or ooze prevention) upstream
+    // sets the temperature for the CURRENT extruder only, skipping the
+    // rest (`GCode.cpp:4804-4807`).
+    let runtime = &traversal.resolved.views.runtime_gcode;
+    let single_extruder_multi_material = runtime.single_extruder_multi_material.0;
+    // `GCodeWriter::multiple_extruders` (GCodeWriter.cpp:78) is true when a
+    // used extruder id exceeds zero — the writer then keeps the tool
+    // suffix (`GCodeWriter.cpp:159-164`).
+    let multiple_extruders = state.extruders.multiple() && !single_extruder_multi_material;
+    let ooze_prevention = settings.process.print.ooze_prevention.0;
     for tool in 0..traversal.resolved.logical_filament_count {
+        if (single_extruder_multi_material || ooze_prevention)
+            && tool != state.extruders.active_id()
+        {
+            continue;
+        }
         let temperature =
             temperature::filament_int(&settings.filament.print.nozzle_temperature, tool);
         let initial = temperature::filament_int(
@@ -88,7 +103,7 @@ pub(super) fn append_second_layer_transition(
             tool,
         );
         if temperature > 0 && temperature != initial {
-            let tool_suffix = if traversal.resolved.logical_filament_count > 1 {
+            let tool_suffix = if multiple_extruders {
                 format!(" T{tool}")
             } else {
                 String::new()

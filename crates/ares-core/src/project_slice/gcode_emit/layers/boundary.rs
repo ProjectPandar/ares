@@ -276,7 +276,7 @@ pub(super) fn append<'a>(
     // layers (`GCode.cpp:4777-4830`), once per slice.
     if layer_index == 1 && !*second_layer_done {
         *second_layer_done = true;
-        machine::append_second_layer_transition(output, traversal, bed_cache);
+        machine::append_second_layer_transition(output, traversal, state, bed_cache);
     }
     // Orca `GCode.cpp:5205-5210`: core-xy BBL printers emit the eager
     // change-layer lift (the second change-layer retract is a no-op

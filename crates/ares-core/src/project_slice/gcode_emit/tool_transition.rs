@@ -106,6 +106,41 @@ fn emit_inner(
     }
     let custom = change::append(output, state, filament, context)?;
     motion::tool_selection::toolchange(output, state, context.traversal, filament, &custom);
+    // `GCode.cpp:8000-8004` (`set_extruder` tail): SEMM without a prime
+    // tower re-emits the nozzle temperature after every filament change —
+    // the initial-layer value while `m_layer_index <= 0`, the ordinary one
+    // after — through the writer overload that drops the tool index for
+    // SEMM (`GCodeWriter.cpp:159-164`).
+    if state.options.single_extruder_multi_material
+        && !context
+            .traversal
+            .resolved
+            .views
+            .full
+            .process
+            .print
+            .enable_prime_tower
+            .0
+    {
+        let filament_settings = &context.traversal.resolved.views.full.filament.print;
+        // `m_layer_index <= 0` covers the pre-first-layer (-1) and first
+        // layer (0) states; Ares' `layer_index` is a `usize` whose 0 covers
+        // both (the startup toolchange emits the initial-layer value under
+        // `== 0`, matching the native `<= 0` behavior).
+        let values = if state.layer_index == 0 {
+            &filament_settings.nozzle_temperature_initial_layer
+        } else {
+            &filament_settings.nozzle_temperature
+        };
+        let temperature = values.0.get(filament).unwrap_or(&values.0[0]).0;
+        super::temperature::append(
+            output,
+            context.traversal.resolved.views.runtime_gcode.gcode_flavor,
+            temperature as u32,
+            false,
+            None,
+        );
+    }
     append_filament(output, state, filament, true, context)?;
     temperature::post(output, state, context);
     super::pressure_advance::append(output, state, context.traversal, filament);
