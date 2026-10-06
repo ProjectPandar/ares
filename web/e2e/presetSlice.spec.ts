@@ -150,6 +150,9 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await page.getByRole("link", { name: "Prepare" }).click();
   await page.getByTestId("import-input").setInputFiles(`${repositoryRoot}tests/parity/cube10.stl`);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
+  // The sidebar always has the first filament combo (Plater.cpp:2188-2191); without project filaments it
+  // keeps the selected filament (PresetBundle.cpp:435-436), the one the STL slices with.
+  await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true })).toHaveText(selection.filaments[0]);
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
