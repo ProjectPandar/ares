@@ -66,8 +66,8 @@ fn brim_bed_control_trailing_exclusion_pair_is_not_a_polygon() {
         &[(
             "bed_exclude_area",
             Some(json!([
-                "0x0", "255x0", "255x255", "0x255", "0x0", "2x2", "2x253", "253x253", "150x150",
-                "151x151",
+                "0x0", "255x0", "255x255", "0x255", "0x0", "2x2", "2x253", "253x253", "252x2",
+                "2x2",
             ])),
         )],
     );
@@ -96,7 +96,7 @@ fn brim_bed_control_empty_brim_does_not_reject_the_object() {
         OUTER,
         &[(
             "extruder_printable_area",
-            Some(json!(["105x105,110x105,110x110,105x110"])),
+            Some(json!(["115x122,116x122,116x123,115x123"])),
         )],
     );
     compare_native("brim-empty-clipped-area", &project, false);
