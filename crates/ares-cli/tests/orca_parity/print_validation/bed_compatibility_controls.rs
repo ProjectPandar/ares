@@ -1,0 +1,236 @@
+//! Failure modes prewritten before the Print.cpp:1751-1781 guard port.
+use ares_core::{ConfigOverrides, GenerationMetadata, ProjectSettings, SliceError, SlicerContext};
+use serde_json::{Value, json};
+
+const DEFAULT_ERROR: &str = "curr_bed_type Default Plate has no first-layer temperature";
+const BEDS: [(&str, &str); 6] = [
+    ("Cool Plate", "cool_plate_temp"),
+    ("Textured Cool Plate", "textured_cool_plate_temp"),
+    ("Engineering Plate", "eng_plate_temp"),
+    ("High Temp Plate", "hot_plate_temp"),
+    ("Textured PEI Plate", "textured_plate_temp"),
+    ("Supertack Plate", "supertack_plate_temp"),
+];
+
+fn check(extra: Value, bbl: bool, expected: Option<&str>) {
+    let mut fields = json!({"nozzle_diameter":["0.4"],"filament_map":["1"],"layer_height":"0.2","initial_layer_print_height":"0.2","line_width":"0","bridge_line_width":"0","gcode_flavor":"marlin","use_relative_e_distances":"0","support_multi_bed_types":"1","curr_bed_type":"Cool Plate"});
+    fields
+        .as_object_mut()
+        .unwrap()
+        .extend(extra.as_object().unwrap().clone());
+    let settings: ProjectSettings = serde_json::from_value(fields.clone()).unwrap();
+    let actual = ares_core::validate_print(&settings, bbl);
+    let directory = super::evidence_directory("print-bed-flat-");
+    std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"settings":fields,"bbl":bbl,"expected_error":expected,"actual":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
+    if let Some(expected) = expected {
+        assert!(
+            matches!(actual,Err(SliceError::InvalidInput(ref text)) if text==expected),
+            "{actual:?}; {directory:?}"
+        );
+    } else {
+        assert!(actual.is_ok(), "{actual:?}; {directory:?}");
+    }
+}
+
+fn only_second() -> Value {
+    json!({"nozzle_diameter":["0.4","0.4"],"filament_diameter":["1.75","1.75"],"filament_map":["1","1"],"outer_wall_filament_id":"2","inner_wall_filament_id":"2","sparse_infill_filament_id":"2","internal_solid_filament_id":"2","top_surface_filament_id":"2","bottom_surface_filament_id":"2"})
+}
+
+#[test]
+fn print_bed_compat_flat_bbl_or_multi_bed_activation() {
+    for bbl in [false, true] {
+        for multi in ["0", "1"] {
+            let error = "Plate 1: Cool Plate does not support filament 1\n";
+            check(
+                json!({"support_multi_bed_types":multi,"cool_plate_temp":["0"]}),
+                bbl,
+                (bbl || multi == "1").then_some(error),
+            );
+        }
+    }
+}
+
+#[test]
+fn print_bed_compat_flat_six_vectors_selected_only_and_exact_zero() {
+    for (bed, key) in BEDS {
+        check(
+            json!({"curr_bed_type":bed,key:["0"]}),
+            false,
+            Some(&format!("Plate 1: {bed} does not support filament 1\n")),
+        );
+        let mut fields = json!({"curr_bed_type":bed});
+        for (_, other) in BEDS {
+            fields[other] = json!([if other == key { "1" } else { "0" }]);
+        }
+        fields[format!("{key}_initial_layer")] = json!(["0"]);
+        check(fields, false, None);
+    }
+}
+
+#[test]
+fn print_bed_compat_flat_unused_zero_is_not_scanned_and_no_physical_map() {
+    let mut fields = only_second();
+    fields["cool_plate_temp"] = json!(["0", "45"]);
+    check(fields, false, None);
+}
+
+#[test]
+fn print_bed_compat_flat_second_used_index_get_at_falls_back_to_front() {
+    for (temperature, expected) in [
+        ("45", None),
+        (
+            "0",
+            Some("Plate 1: Cool Plate does not support filament 2\n"),
+        ),
+    ] {
+        let mut fields = only_second();
+        fields["cool_plate_temp"] = json!([temperature]);
+        check(fields, false, expected);
+    }
+}
+
+#[test]
+fn print_bed_compat_flat_shared_usage_sorted_before_first_zero() {
+    check(
+        json!({"nozzle_diameter":["0.4","0.4"],"filament_diameter":["1.75","1.75"],"filament_map":["1","1"],"outer_wall_filament_id":"2","inner_wall_filament_id":"1","wall_loops":"2","cool_plate_temp":["0","0"]}),
+        false,
+        Some("Plate 1: Cool Plate does not support filament 1\n"),
+    );
+}
+
+#[test]
+fn print_bed_compat_flat_support_current_and_explicit_usage() {
+    let base = json!({"nozzle_diameter":["0.4","0.4"],"filament_diameter":["1.75","1.75"],"filament_map":["1","1"],"cool_plate_temp":["45","0"],"support_filament":"2","support_interface_filament":"2"});
+    check(base.clone(), false, None);
+    let mut enabled = base;
+    enabled["enable_support"] = json!("1");
+    check(
+        enabled,
+        false,
+        Some("Plate 1: Cool Plate does not support filament 2\n"),
+    );
+    let mut current = only_second();
+    current.as_object_mut().unwrap().extend(json!({"enable_support":"1","support_filament":"0","support_interface_filament":"0","cool_plate_temp":["45","0"]}).as_object().unwrap().clone());
+    check(
+        current,
+        false,
+        Some("Plate 1: Cool Plate does not support filament 2\n"),
+    );
+}
+
+#[test]
+fn print_bed_compat_flat_wipe_tower_explicit_filament_enters_used_union() {
+    check(
+        json!({"nozzle_diameter":["0.4","0.4","0.4","0.4"],"filament_diameter":["1.75","1.75","1.75"],"filament_map":["1","1","1"],"wall_loops":"2","inner_wall_filament_id":"2","enable_prime_tower":"1","wipe_tower_filament":"3","cool_plate_temp":["45","45","0"]}),
+        false,
+        Some("Plate 1: Cool Plate does not support filament 3\n"),
+    );
+}
+
+#[test]
+fn print_bed_compat_flat_height_bridge_and_o1_still_precede_bed() {
+    check(
+        json!({"cool_plate_temp":["0"],"layer_height":"0.5"}),
+        false,
+        Some("Layer height cannot exceed nozzle diameter."),
+    );
+    check(
+        json!({"cool_plate_temp":["0"],"bridge_line_width":"0.1"}),
+        false,
+        Some("Too small line width"),
+    );
+    check(
+        json!({"cool_plate_temp":["0"],"before_layer_change_gcode":"G92 E0\n"}),
+        false,
+        Some(super::ABSOLUTE_ERROR),
+    );
+}
+
+#[test]
+fn print_bed_compat_default_sentinel_exact_public_error_not_native_red() {
+    let fields = json!({"curr_bed_type":"Default Plate","cool_plate_temp":["0"]});
+    let overrides = ConfigOverrides::from_json(fields.to_string().as_bytes()).unwrap();
+    let input = super::bed_compatibility::INPUT;
+    let validation = ares_core::validate_project_plate(input, None, &overrides);
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+        input,
+        GenerationMetadata::default(),
+        None,
+        &overrides,
+        SlicerContext::new(0),
+    ));
+    let directory = super::evidence_directory("print-bed-default-");
+    std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"accepted_deviation":"native139UB; currentAresError/noGcode/noPanic; NOTparityRED","overrides":fields,"expected_error":DEFAULT_ERROR,"validation":validation.as_ref().map_err(ToString::to_string),"validated_slice":sliced.as_ref().map(Vec::len).map_err(ToString::to_string)})).unwrap()).unwrap();
+    assert!(
+        matches!(validation,Err(SliceError::InvalidInput(ref text)) if text==DEFAULT_ERROR),
+        "{validation:?}; {directory:?}"
+    );
+    assert!(
+        matches!(sliced,Err(SliceError::InvalidInput(ref text)) if text==DEFAULT_ERROR),
+        "{sliced:?}; {directory:?}"
+    );
+    check(fields, false, Some(DEFAULT_ERROR));
+}
+
+#[test]
+fn print_bed_compat_stl_adapter_keeps_bed_vector_and_activation() {
+    let input = include_bytes!("../../../../../tests/parity/cube10.stl");
+    for (fields, expected) in [
+        (
+            json!({"gcode_flavor":"klipper","support_multi_bed_types":true,"curr_bed_type":"Cool Plate","cool_plate_temp":[0]}),
+            Some("Plate 1: Cool Plate does not support filament 1\n"),
+        ),
+        (
+            json!({"gcode_flavor":"klipper","support_multi_bed_types":false,"curr_bed_type":"Cool Plate","cool_plate_temp":[0]}),
+            None,
+        ),
+        (
+            json!({"gcode_flavor":"klipper","support_multi_bed_types":true,"curr_bed_type":"Default Plate","cool_plate_temp":[0]}),
+            Some(DEFAULT_ERROR),
+        ),
+    ] {
+        let options: ares_core::SliceOptions = serde_json::from_value(fields.clone()).unwrap();
+        let actual = ares_core::validate_stl(input, &options);
+        let directory = super::evidence_directory("print-bed-stl-");
+        std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"options":fields,"expected_error":expected,"actual":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
+        if let Some(expected) = expected {
+            assert!(
+                matches!(actual,Err(SliceError::InvalidInput(ref text)) if text==expected),
+                "{actual:?}; {directory:?}"
+            );
+        } else {
+            assert!(actual.is_ok(), "{actual:?}; {directory:?}");
+        }
+    }
+}
+
+#[test]
+fn print_bed_compat_pure_processing_remains_unvalidated_frozen_bytes() {
+    let fields = json!({"cool_plate_temp":["0"]});
+    let overrides = ConfigOverrides::from_json(fields.to_string().as_bytes()).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let gcode = runtime
+        .block_on(ares_core::slice_project_plate(
+            super::bed_compatibility::INPUT,
+            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            None,
+            &overrides,
+            SlicerContext::new(0),
+        ))
+        .unwrap();
+    let actual = super::sha256(&gcode);
+    let directory = super::evidence_directory("print-bed-pure-");
+    std::fs::write(directory.join("ares.gcode"), &gcode).unwrap();
+    std::fs::write(
+        directory.join("result.json"),
+        serde_json::to_vec_pretty(&json!({"overrides":fields,"sha256":actual,"bytes":gcode.len()}))
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(actual, "71d496647da663a597b7f0de76371db43bfce7cf9e0e8789c92e1d0b24206076", "{directory:?}");
+}

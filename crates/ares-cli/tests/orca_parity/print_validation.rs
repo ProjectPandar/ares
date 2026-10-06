@@ -5,6 +5,10 @@ use std::fs;
 mod applied_map_controls;
 #[path = "print_validation/bed_compatibility.rs"]
 mod bed_compatibility;
+#[path = "print_validation/bed_compatibility_controls.rs"]
+mod bed_compatibility_controls;
+#[path = "print_validation/bed_compatibility_native_controls.rs"]
+mod bed_compatibility_native_controls;
 #[path = "print_validation/bridge_width.rs"]
 mod bridge_width;
 #[path = "print_validation/bridge_width_controls.rs"]
