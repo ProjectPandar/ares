@@ -143,3 +143,43 @@ async fn malformed_typed_settings_fail_during_project_loading() {
         );
     }
 }
+
+#[test]
+fn scalar_strings_coerce_to_single_element_vectors() {
+    // `ConfigBase::load_from_json` routes every JSON string through
+    // `set_deserialize` (`Config.cpp:927-929`) regardless of the target
+    // option type; `ConfigOptionVector::deserialize` (`Config.hpp:868-887`)
+    // splits on `,` so a bare scalar becomes a one-element vector.
+    for (input, check) in [
+        (
+            r#"{"idle_temperature":"180"}"#,
+            Box::new(|settings: &crate::ProjectSettings| {
+                assert_eq!(
+                    settings.filament.print.idle_temperature.0,
+                    vec![crate::OrcaInt(180)]
+                );
+            }) as Box<dyn Fn(&crate::ProjectSettings)>,
+        ),
+        (
+            r#"{"activate_chamber_temp_control":"0"}"#,
+            Box::new(|settings: &crate::ProjectSettings| {
+                assert_eq!(
+                    settings.filament.print.activate_chamber_temp_control.0,
+                    vec![crate::OrcaBool(false)]
+                );
+            }) as Box<dyn Fn(&crate::ProjectSettings)>,
+        ),
+        (
+            r#"{"default_filament_colour":""}"#,
+            Box::new(|settings: &crate::ProjectSettings| {
+                assert!(settings.filament.gcode.default_filament_colour.0.is_empty());
+            }) as Box<dyn Fn(&crate::ProjectSettings)>,
+        ),
+    ] {
+        let mut parts = ProjectParts::valid();
+        parts.insert_text("Metadata/project_settings.config", input);
+        let loaded =
+            load_project(parts.bytes()).unwrap_or_else(|error| panic!("{input} rejected: {error}"));
+        check(loaded.settings());
+    }
+}

@@ -61,6 +61,34 @@ pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawCo
     }
 }
 
+/// `ConfigBase::load_from_json` routes every JSON string through
+/// `set_deserialize` (`Config.cpp:927-929`) without checking the target
+/// option's JSON shape first, so a bare scalar reaches
+/// `ConfigOptionVector::deserialize` (`Config.hpp:868-887`), which splits
+/// on the kind's separator and yields a single-element vector. Preset
+/// documents already decode through `deserialize_preset_config`; 3MF
+/// embedded settings need the same normalization before the typed
+/// builders run. Non-empty scalars decode to lists; the empty-string case
+/// keeps the `ConfigOptionStrings::deserialize` empty-vector result and
+/// is handled by `normalize_empty_vector_strings`, which must run first.
+pub(crate) fn normalize_scalar_vector_strings(
+    values: &mut BTreeMap<String, RawConfigValue>,
+) -> Result<(), String> {
+    for (key, value) in values {
+        let Some(definition) = option_definition(key) else {
+            continue;
+        };
+        if let RawConfigValue::Text(text) = value
+            && !text.is_empty()
+            && is_vector(definition.kind)
+        {
+            *value = decode(definition.kind, text)
+                .map_err(|error| format!("invalid Orca option {key}: {error}"))?;
+        }
+    }
+    Ok(())
+}
+
 fn is_vector(kind: OptionValueKind) -> bool {
     match kind {
         OptionValueKind::Percents

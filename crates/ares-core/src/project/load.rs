@@ -10,7 +10,7 @@ pub(crate) use volume_metadata::selected_volume_metadata_for_test;
 
 use std::collections::BTreeSet;
 
-use crate::{ORCA_SLICER_COMPATIBILITY_VERSION, ProjectSettings, SliceError};
+use crate::{ORCA_SLICER_COMPATIBILITY_VERSION, SliceError};
 
 use super::{
     ArchiveLimits, PackagePath, ProjectArchive,
@@ -109,29 +109,27 @@ pub fn load_project_with(
         }
     }
     let settings_bytes = read(&mut archive, PROJECT_SETTINGS_PATH)?;
-    // The strict typed load keeps the document's duplicate-key rejection;
-    // overrides then win over those values (`apply_only`, `Config.cpp:461`).
-    let settings: ProjectSettings = deserialize_json(&settings_bytes, JsonRole::ProjectSettings)?;
     let mut project_settings_raw: ProjectSettingsRaw = serde_json::from_slice(&settings_bytes)
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
-    // Same upstream deserializer semantics as preset documents: bare empty
-    // strings on vector-kind options are empty vectors
-    // (`ConfigOptionStrings::deserialize`, Config.hpp:1153-1159).
-    project_settings_raw.normalize_empty_vector_strings();
-    let settings = if overrides.is_empty() {
-        settings
-    } else {
-        overrides.apply(&mut project_settings_raw);
-        <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
-            project_settings_raw.clone().into_object(),
-        )
+    // Overrides win over document values (`apply_only`, `Config.cpp:461`).
+    overrides.apply(&mut project_settings_raw);
+    // Same upstream deserializer semantics as preset documents: JSON
+    // strings on vector-kind options deserialize through
+    // `ConfigOptionVector::deserialize` (`Config.hpp:868-887`,
+    // `ConfigOptionStrings::deserialize`, `Config.hpp:1153-1159`) — a bare
+    // scalar is a single-element vector, an empty string an empty one.
+    project_settings_raw
+        .normalize_option_scalars()
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
-        })?
-        .resolve()
-    };
+        })?;
+    let settings = <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
+        project_settings_raw.clone().into_object(),
+    )
+    .map_err(|error| SliceError::InvalidInput(format!("invalid project settings JSON: {error}")))?
+    .resolve();
 
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::normalize_volume_offsets(&mut objects);

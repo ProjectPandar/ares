@@ -44,12 +44,17 @@ impl ProjectSettingsRaw {
         self.0.insert(key, value);
     }
 
-    /// Applies the shared vector-kind empty-string normalization
-    /// (`options::json_deserialize::normalize_empty_vector_strings`);
-    /// the 3MF embedded raw uses the same upstream deserializer semantics
-    /// as preset documents.
-    pub(crate) fn normalize_empty_vector_strings(&mut self) {
+    /// Applies the shared upstream deserializer normalizations for the
+    /// 3MF embedded raw: empty strings on vector-kind options become
+    /// empty vectors (`ConfigOptionStrings::deserialize`,
+    /// `Config.hpp:1153-1159`) and scalar strings become single-element
+    /// vectors (`ConfigOptionVector::deserialize`, `Config.hpp:868-887`,
+    /// reached for every JSON string via `set_deserialize`,
+    /// `Config.cpp:927-929`) — the same semantics preset documents get
+    /// through `json_deserialize::deserialize_preset_config`.
+    pub(crate) fn normalize_option_scalars(&mut self) -> Result<(), String> {
         crate::options::json_deserialize::normalize_empty_vector_strings(&mut self.0);
+        crate::options::json_deserialize::normalize_scalar_vector_strings(&mut self.0)
     }
 
     pub(crate) fn entries(&self) -> impl Iterator<Item = (&String, &RawConfigValue)> {

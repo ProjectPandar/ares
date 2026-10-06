@@ -51,7 +51,6 @@ impl XmlRole {
 pub(crate) enum JsonRole {
     FilamentSequences,
     Plate,
-    ProjectSettings,
 }
 
 impl JsonRole {
@@ -59,7 +58,6 @@ impl JsonRole {
         match self {
             Self::FilamentSequences => "filament sequences",
             Self::Plate => "plate metadata",
-            Self::ProjectSettings => "settings",
         }
     }
 }
