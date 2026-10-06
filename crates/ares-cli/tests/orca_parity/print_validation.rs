@@ -1,0 +1,127 @@
+//! Real stock inputs rejected by `Print.cpp:1695-1749::Print::validate`.
+use std::fs;
+
+#[path = "print_validation/positive.rs"]
+mod positive;
+
+use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
+use serde_json::json;
+use sha2::{Digest, Sha256};
+
+use crate::runner::{OrcaRunner, stages};
+
+const RELATIVE_INPUT: &[u8] =
+    include_bytes!("../../../../tests/parity/validation/o1-kobra-plus-relative.3mf");
+const RELATIVE_SHA256: &str = "0919c79bc4f84dd0fdaffd237645a0e91124fa12cf07a24da6376d4eeeca9093";
+const RELATIVE_ERROR: &str = "Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode.";
+
+const ABSOLUTE_INPUT: &[u8] =
+    include_bytes!("../../../../tests/parity/validation/o1-dremel-3d40-absolute.3mf");
+const ABSOLUTE_SHA256: &str = "9bede932e95c6e2a1c558667e233c75c3d467ac0f8ed3c3628c03be1e7a9ae01";
+const ABSOLUTE_ERROR: &str = "\"G92 E0\" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing.";
+
+fn sha256(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+#[test]
+fn o1_relative_stock_project_rejects_missing_active_layer_reset() {
+    verify_stock_rejection(
+        "stock/Anycubic/Anycubic Kobra Plus 0.4 nozzle",
+        RELATIVE_INPUT,
+        RELATIVE_SHA256,
+        RELATIVE_ERROR,
+    );
+}
+
+#[test]
+fn o1_absolute_stock_project_rejects_before_layer_reset() {
+    verify_stock_rejection(
+        "stock/Dremel/Dremel 3D40 0.4 nozzle",
+        ABSOLUTE_INPUT,
+        ABSOLUTE_SHA256,
+        ABSOLUTE_ERROR,
+    );
+}
+
+fn verify_stock_rejection(label: &str, project: &[u8], expected_hash: &str, expected_error: &str) {
+    assert_eq!(sha256(project), expected_hash);
+    let runner = OrcaRunner::from_env().unwrap();
+    let directory = tempfile::Builder::new()
+        .prefix("o1-stock-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    let input = directory.join("input.3mf");
+    fs::write(&input, project).unwrap();
+    let oracle = runner.as_ref().map(|runner| {
+        let output = directory.join("orca");
+        fs::create_dir(&output).unwrap();
+        let error = stages::run(
+            runner.bin(),
+            [
+                "--slice".to_owned(),
+                "0".to_owned(),
+                "--outputdir".to_owned(),
+                output.to_str().unwrap().to_owned(),
+                input.to_str().unwrap().to_owned(),
+            ],
+            stages::Stage::Slice,
+            &directory,
+        )
+        .unwrap_err();
+        let captured = error.captured.as_ref().unwrap();
+        let stderr = String::from_utf8(captured.stderr.clone()).unwrap();
+        let expected_code = if cfg!(unix) { 205 } else { -51 };
+        assert_eq!(captured.code, Some(expected_code), "{error}");
+        assert_eq!(
+            stderr.lines().collect::<Vec<_>>(),
+            [expected_error],
+            "{error}"
+        );
+        assert!(!output.join("plate_1.gcode").exists());
+        json!({
+            "code": captured.code,
+            "error": expected_error,
+            "evidence": error.evidence,
+        })
+    });
+    let actual = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(ares_core::slice_project_plate(
+            project,
+            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            None,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0),
+        ));
+    let outcome = match &actual {
+        Ok(gcode) => {
+            fs::write(directory.join("ares.gcode"), gcode).unwrap();
+            json!({"status": "GCODE", "sha256": sha256(gcode)})
+        }
+        Err(error) => json!({"status": "ERROR", "error": error.to_string()}),
+    };
+    fs::write(
+        directory.join("result.json"),
+        serde_json::to_vec_pretty(&json!({
+            "printer": label,
+            "input_sha256": expected_hash,
+            "expected_error": expected_error,
+            "oracle": oracle,
+            "ares": outcome,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(
+        matches!(actual, Err(SliceError::InvalidInput(ref message)) if message == expected_error),
+        "O1 must reject the original stock input; evidence: {}",
+        directory.display()
+    );
+    assert!(!directory.join("ares.gcode").exists());
+}
