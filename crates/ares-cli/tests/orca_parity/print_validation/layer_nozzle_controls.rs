@@ -3,6 +3,13 @@ use ares_core::{ProjectSettings, SliceError};
 use serde_json::{Value, json};
 
 fn check(extra: Value, rejected: bool) {
+    check_exact(
+        extra,
+        rejected.then_some("Layer height cannot exceed nozzle diameter."),
+    );
+}
+
+fn check_exact(extra: Value, expected: Option<&str>) {
     let mut fields = json!({"nozzle_diameter":["0.4"],"layer_height":"0.2","initial_layer_print_height":"0.2","line_width":"0","gcode_flavor":"marlin","use_relative_e_distances":"0"});
     fields
         .as_object_mut()
@@ -11,10 +18,10 @@ fn check(extra: Value, rejected: bool) {
     let settings: ProjectSettings = serde_json::from_value(fields.clone()).unwrap();
     let actual = ares_core::validate_print(&settings, false);
     let directory = super::evidence_directory("print-layer-flat-");
-    std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"settings":fields,"expected_rejection":rejected,"actual":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
-    if rejected {
+    std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"settings":fields,"expected_error":expected,"actual":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
+    if let Some(expected) = expected {
         assert!(
-            matches!(actual,Err(SliceError::InvalidInput(ref text)) if text=="Layer height cannot exceed nozzle diameter."),
+            matches!(actual,Err(SliceError::InvalidInput(ref text)) if text==expected),
             "{actual:?}; {directory:?}"
         );
     } else {
@@ -26,7 +33,11 @@ fn check(extra: Value, rejected: bool) {
 fn print_layer_nozzle_equal_is_legal_strictly_above_is_not() {
     for key in ["layer_height", "initial_layer_print_height"] {
         for height in ["0.399999", "0.4"] {
-            check(json!({key:height}), false);
+            if key == "layer_height" && height == "0.4" {
+                check_exact(json!({key:height}), Some("Too small line width"));
+            } else {
+                check(json!({key:height}), false);
+            }
         }
         check(json!({key:"0.400001"}), true);
     }

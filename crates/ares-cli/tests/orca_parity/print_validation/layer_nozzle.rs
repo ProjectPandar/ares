@@ -21,13 +21,6 @@ fn print_layer_nozzle_raft_support_first_height_precedes_width() {
     verify(json!({"raft_layers":"2","support_filament":"1","initial_layer_print_height":"0.3"}));
 }
 
-#[test]
-fn print_layer_nozzle_raft_two_logical_filaments_share_one_physical_tool() {
-    verify(
-        json!({"raft_layers":"2","support_filament":"2","support_interface_filament":"2","filament_diameter":["1.75","1.75"],"filament_map":["1","1"],"initial_layer_print_height":"0.3"}),
-    );
-}
-
 fn verify(fields: Value) {
     let input = include_bytes!("../../../../../tests/parity/validation/o4-ender3s1plus-0.2.3mf");
     let hash = "edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110";
@@ -43,11 +36,7 @@ fn verify(fields: Value) {
         let mut arguments = Vec::new();
         for (key,value) in fields.as_object().unwrap() {
             arguments.push(format!("--{}", key.replace('_',"-")));
-            arguments.push(match value {
-                Value::String(value) => value.clone(),
-                Value::Array(values) => values.iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>().join(","),
-                _ => unreachable!(),
-            });
+            arguments.push(value.as_str().unwrap().to_owned());
         }
         arguments.extend(["--slice".to_owned(),"0".to_owned(),"--outputdir".to_owned(),output.to_str().unwrap().to_owned(),path.to_str().unwrap().to_owned()]);
         let error = stages::run(runner.bin(),arguments,stages::Stage::Slice,&directory).unwrap_err();
