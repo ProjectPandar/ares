@@ -47,6 +47,57 @@ fn print_bed_compat_native_multi_sorted_first_zero_is_index_zero() {
 }
 
 #[test]
+fn print_bed_compat_native_selected_second_plate_reports_plate_two() {
+    let input = include_bytes!("../../../../../tests/parity/validation/print-bed-two-plates.3mf");
+    let hash = "a5aa1fafb4ed2daffa2a496f4e8853b559fe0710be09a13c77da03a13f653a07";
+    assert_eq!(super::sha256(input), hash);
+    let project = ares_core::load_project(input).unwrap();
+    assert_eq!(project.plates().len(), 2);
+    assert_eq!(
+        project
+            .plates()
+            .iter()
+            .map(|plate| plate.id())
+            .collect::<Vec<_>>(),
+        [1, 2]
+    );
+    let expected = "Plate 2: High Temp Plate does not support filament 1\n";
+    let directory = super::evidence_directory("print-bed-plate-two-");
+    let path = directory.join("input.3mf");
+    fs::write(&path, input).unwrap();
+    let oracle = OrcaRunner::from_env().unwrap().map(|runner| {
+        let output = directory.join("orca");
+        fs::create_dir(&output).unwrap();
+        let error = stages::run(runner.bin(), [
+            "--hot-plate-temp", "0", "--slice", "2", "--outputdir",
+            output.to_str().unwrap(), path.to_str().unwrap(),
+        ].map(str::to_owned), stages::Stage::Slice, &directory).unwrap_err();
+        let captured = error.captured.as_ref().unwrap();
+        assert_eq!(captured.code, Some(if cfg!(unix) {195} else {-61}), "{error}");
+        assert_eq!(captured.stderr, format!("{expected}\n").as_bytes(), "{error}");
+        assert!(!output.join("plate_2.gcode").exists());
+        json!({"code":captured.code,"stderr":String::from_utf8(captured.stderr.clone()).unwrap(),"evidence":error.evidence})
+    });
+    let overrides = ConfigOverrides::from_json(br#"{"hot_plate_temp":["0"]}"#).unwrap();
+    let validation = ares_core::validate_project_plate(input, Some(2), &overrides);
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+        input,
+        GenerationMetadata::default(),
+        Some(2),
+        &overrides,
+        SlicerContext::new(0),
+    ));
+    fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"input_sha256":hash,"selected_plate":2,"oracle":oracle,"expected_error":expected,"validation":validation.as_ref().map_err(ToString::to_string),"validated_slice":sliced.as_ref().map(Vec::len).map_err(ToString::to_string)})).unwrap()).unwrap();
+    assert!(
+        matches!(validation, Err(ares_core::SliceError::InvalidInput(ref text)) if text==expected),
+        "{validation:?}; {directory:?}"
+    );
+}
+
+#[test]
 fn print_bed_compat_native_initial_layer_zero_and_original_still_slice() {
     let input = super::bed_compatibility::INPUT;
     for fields in [json!({}), json!({"cool_plate_temp_initial_layer":["0"]})] {

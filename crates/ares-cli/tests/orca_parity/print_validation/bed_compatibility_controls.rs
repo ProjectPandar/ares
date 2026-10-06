@@ -37,6 +37,26 @@ fn regions_second_with_default_volume() -> Value {
 }
 
 #[test]
+fn print_bed_compat_default_plate_skipped_without_bbl_or_multi_bed() {
+    check(
+        json!({"curr_bed_type":"Default Plate","support_multi_bed_types":"0"}),
+        false,
+        None,
+    );
+    let options: ares_core::SliceOptions = serde_json::from_value(json!({
+        "gcode_flavor":"klipper","support_multi_bed_types":false,"curr_bed_type":"Default Plate"
+    }))
+    .unwrap();
+    assert!(
+        ares_core::validate_stl(
+            include_bytes!("../../../../../tests/parity/cube10.stl"),
+            &options
+        )
+        .is_ok()
+    );
+}
+
+#[test]
 fn print_bed_compat_flat_bbl_or_multi_bed_activation() {
     for bbl in [false, true] {
         for multi in ["0", "1"] {
