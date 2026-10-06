@@ -25,6 +25,10 @@ pub(in crate::project_slice::gcode_emit) struct ExtruderRegistry {
     private: Vec<PrivateState>,
     shared: Vec<SharedAxis>,
     physical: Vec<usize>,
+    /// Last filament loaded into each physical extruder — upstream
+    /// `m_writer.filament(extruder_id)->id()` (`GCode.cpp:7829`), read by
+    /// `set_extruder` before `toolchange` activates the new filament.
+    loaded: Vec<Option<usize>>,
     properties: Vec<(f64, f64)>,
 }
 
@@ -36,6 +40,7 @@ impl Default for ExtruderRegistry {
             private: vec![PrivateState::default()],
             shared: vec![SharedAxis::default()],
             physical: vec![0],
+            loaded: vec![None],
             properties: vec![(1.75 * 1.75 * 0.25 * std::f64::consts::PI, 1.24)],
         }
     }
@@ -74,6 +79,7 @@ impl ExtruderRegistry {
             private: vec![PrivateState::default(); count],
             shared: vec![SharedAxis::default(); physical_count],
             physical,
+            loaded: vec![None; physical_count],
             properties,
         }
     }
@@ -172,6 +178,7 @@ impl ExtruderRegistry {
         active: &mut ExtruderState,
         sharing: bool,
     ) {
+        self.loaded[self.physical[id]] = Some(id);
         if id == self.active_id {
             return;
         }
@@ -203,6 +210,16 @@ impl ExtruderRegistry {
             filament_used: next.absolute_e,
         };
         self.active_id = id;
+    }
+
+    /// `GCodeWriter::filament(extruder_id)->id()` — filament last loaded
+    /// into the physical extruder, `None` when it was never selected
+    /// (`GCode.cpp:7829-7830`).
+    pub(in crate::project_slice::gcode_emit) fn loaded_filament(
+        &self,
+        extruder: usize,
+    ) -> Option<usize> {
+        self.loaded.get(extruder).copied().flatten()
     }
 
     pub(in crate::project_slice::gcode_emit) fn used_filament(

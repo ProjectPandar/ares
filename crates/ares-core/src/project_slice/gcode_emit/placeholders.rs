@@ -282,6 +282,34 @@ fn insert_runtime_placeholders(
     {
         config.insert("min_vitrification_temperature", Value::number(minimum));
     }
+    // `GCode.cpp:3009-3037`: `overall_chamber_temperature` is the maximum
+    // `chamber_temperature` over the writer's extruders (the used
+    // filaments). Registered as an INT placeholder.
+    if let Some(value) = config.get("chamber_temperature") {
+        let overall = value
+            .iter_list()
+            .enumerate()
+            .filter(|(index, _)| used.contains(index))
+            .filter_map(|(_, item)| item.as_number())
+            .fold(0.0_f64, f64::max);
+        config.insert(
+            "overall_chamber_temperature",
+            Value::Integer(overall as i64),
+        );
+    }
+    // `GCode.cpp:2729-2743,2871` + `ToolOrdering::cal_max_additional_fan`
+    // (`ToolOrdering.cpp:983-996`): maximum `additional_cooling_fan_speed`
+    // over the filaments used on any layer. Registered as a FLOAT
+    // placeholder (upstream stores `float`).
+    if let Some(value) = config.get("additional_cooling_fan_speed") {
+        let max_fan = value
+            .iter_list()
+            .enumerate()
+            .filter(|(index, _)| used.contains(index))
+            .filter_map(|(_, item)| item.as_number())
+            .fold(0.0_f64, f64::max);
+        config.insert("max_additional_fan", Value::number(max_fan));
+    }
 }
 
 fn insert_outer_wall_volumetric_speed(
