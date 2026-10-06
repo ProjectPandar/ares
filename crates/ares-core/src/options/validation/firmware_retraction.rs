@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+use serde::Deserialize;
+
 use crate::{GCodeFlavor, ProjectSettings, SliceError};
 
 use super::super::SliceOptions;
@@ -31,7 +33,10 @@ impl SliceOptions {
 
         if let Some(message) = rejection_message(
             use_firmware_retraction,
-            is_known_unsupported_firmware_retraction_flavor(&gcode_flavor),
+            GCodeFlavor::deserialize(
+                serde::de::value::StrDeserializer::<serde::de::value::Error>::new(&gcode_flavor),
+            )
+            .is_ok_and(is_known_unsupported_firmware_retraction_flavor),
             wipe.into_iter(),
         ) {
             errors.insert(FIRMWARE_RETRACTION_KEY.to_owned(), message.to_owned());
@@ -44,14 +49,8 @@ impl SliceOptions {
 // DynamicPrintConfig::validate / Slic3r::validate (PrintConfig.cpp:8866-8878,10391-10394).
 impl ProjectSettings {
     pub(crate) fn validate_loaded_firmware_retraction(&self) -> Result<(), SliceError> {
-        let unsupported = matches!(
-            self.printer.gcode.gcode_flavor,
-            GCodeFlavor::Teacup
-                | GCodeFlavor::MakerWare
-                | GCodeFlavor::Sailfish
-                | GCodeFlavor::Mach3
-                | GCodeFlavor::NoExtrusion
-        );
+        let unsupported =
+            is_known_unsupported_firmware_retraction_flavor(self.printer.gcode.gcode_flavor);
         if let Some(message) = rejection_message(
             self.printer.gcode.use_firmware_retraction.0,
             unsupported,
@@ -80,9 +79,13 @@ fn rejection_message(
         .then_some(FIRMWARE_RETRACTION_WIPE_MESSAGE)
 }
 
-fn is_known_unsupported_firmware_retraction_flavor(gcode_flavor: &str) -> bool {
+fn is_known_unsupported_firmware_retraction_flavor(gcode_flavor: GCodeFlavor) -> bool {
     matches!(
         gcode_flavor,
-        "teacup" | "makerware" | "sailfish" | "mach3" | "no-extrusion"
+        GCodeFlavor::Teacup
+            | GCodeFlavor::MakerWare
+            | GCodeFlavor::Sailfish
+            | GCodeFlavor::Mach3
+            | GCodeFlavor::NoExtrusion
     )
 }
