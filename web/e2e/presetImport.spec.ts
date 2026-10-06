@@ -167,6 +167,11 @@ test("imported printer presets list the compatible processes and filaments", asy
   // A 3MF with every preset selected slices through sliceWithProfiles.
   await expect(sliceButton).toBeEnabled();
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
+  // The BBL process stores the scalar bridge_speed as an array; upstream loads it
+  // (Config.cpp:950-1000 joins it, ConfigOptionFloat::deserialize Config.hpp:784-790 reads the
+  // leading value), so the imported printer over the 3MF slices.
+  await sliceButton.click();
+  await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   await page.getByRole("button", { name: "Filament 1 preset", exact: true }).click();
   await page.screenshot({ path: `${artifacts}filaments.png` });
   await page.keyboard.press("Escape");
