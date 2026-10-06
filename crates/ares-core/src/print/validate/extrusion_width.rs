@@ -18,15 +18,7 @@ macro_rules! region_widths {
 
 pub(super) fn applied(resolved: &BoundedResolvedProjectConfig) -> Result<(), SliceError> {
     let settings = &resolved.views.full;
-    let nozzle = resolved
-        .usage
-        .supported_used_filaments
-        .iter()
-        .map(|&filament| {
-            let extruder = settings.project.gcode.filament_map.0[filament].0 as usize - 1;
-            settings.project.print.nozzle_diameter.0[extruder].0
-        })
-        .fold(f64::MAX, f64::min);
+    let nozzle = minimum_nozzle(settings, &resolved.usage.supported_used_filaments)?;
     for object in resolved
         .objects
         .iter()
@@ -50,30 +42,28 @@ pub(super) fn applied(resolved: &BoundedResolvedProjectConfig) -> Result<(), Sli
 pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
     let object = ObjectOptions::from_base(&settings.process.object);
     let region = RegionOptions::from_base(&settings.process.region);
-    let mut used = Vec::new();
-    usage::append_region_filaments(&mut used, &region, usage::supported_brim(&object));
-    // A flat STL has a model part with the default selector, as in usage.rs.
-    used.push(0);
-    if has_support(&object) {
-        for selector in [
-            object.support_filament.0,
-            object.support_interface_filament.0,
-        ] {
-            if selector > 0 {
-                used.push(selector as usize - 1);
-            }
-        }
+    let used = usage::collect_usage(
+        &[usage::ObjectUsageInput {
+            object: &object,
+            regions: std::slice::from_ref(&region),
+            object_extruder: None,
+            model_part_extruders: vec![None],
+            layer_range_extruders: Vec::new(),
+        }],
+        settings,
+        settings.filament.gcode.filament_diameter.0.len(),
+    );
+    let nozzle = minimum_nozzle(settings, &used.supported_used_filaments)?;
+    object_widths(&object, nozzle)?;
+    for value in region_widths!(region) {
+        width(value, object.layer_height.0, nozzle)?;
     }
-    used.sort_unstable();
-    used.dedup();
-    if usage::has_wipe_tower(settings, settings.filament.gcode.filament_diameter.0.len())
-        && used.len() > 1
-        && settings.process.print.wipe_tower_filament.0 > 0
-    {
-        used.push(settings.process.print.wipe_tower_filament.0 as usize - 1);
-    }
+    Ok(())
+}
+
+fn minimum_nozzle(settings: &ProjectSettings, used: &[usize]) -> Result<f64, SliceError> {
     let mut nozzle = f64::MAX;
-    for filament in used {
+    for &filament in used {
         let extruder = settings
             .project
             .gcode
@@ -89,11 +79,7 @@ pub(super) fn flat(settings: &ProjectSettings) -> Result<(), SliceError> {
             .ok_or_else(|| SliceError::InvalidInput("invalid nozzle_diameter".to_owned()))?;
         nozzle = nozzle.min(diameter.0);
     }
-    object_widths(&object, nozzle)?;
-    for value in region_widths!(region) {
-        width(value, object.layer_height.0, nozzle)?;
-    }
-    Ok(())
+    Ok(nozzle)
 }
 
 fn has_support(object: &ObjectOptions) -> bool {

@@ -1,6 +1,6 @@
 use crate::{
-    ProcessBrimType, ProcessTimelapseType, ProjectObject, ProjectSettings, ProjectVolumeType,
-    RegionOptions,
+    ObjectOptions, ProcessBrimType, ProcessTimelapseType, ProjectObject, ProjectSettings,
+    ProjectVolumeType, RegionOptions,
 };
 
 use super::{
@@ -15,56 +15,88 @@ pub(crate) struct ProjectUsageSources<'a> {
     pub(crate) resolved: &'a [ResolvedProjectObject],
 }
 
+pub(crate) struct ObjectUsageInput<'a> {
+    pub(crate) object: &'a ObjectOptions,
+    pub(crate) regions: &'a [RegionOptions],
+    pub(crate) object_extruder: Option<i32>,
+    pub(crate) model_part_extruders: Vec<Option<i32>>,
+    pub(crate) layer_range_extruders: Vec<i32>,
+}
+
 pub(crate) fn collect_bounded_project_usage(
     sources: ProjectUsageSources<'_>,
     wipe_settings: &ProjectSettings,
 ) -> BoundedProjectUsage {
-    let qualifying = || {
-        sources
-            .grouped
-            .by_object
-            .iter()
-            .filter(|group| !group.transforms.is_empty())
-            .zip(sources.resolved)
-    };
-    let has_brim = qualifying().any(|(_, resolved)| supported_brim(&resolved.object));
+    let objects = sources
+        .grouped
+        .by_object
+        .iter()
+        .filter(|group| !group.transforms.is_empty())
+        .zip(sources.resolved)
+        .map(|(group, resolved)| {
+            let object = &sources.objects[group.source_object_index];
+            ObjectUsageInput {
+                object: &resolved.object,
+                regions: &resolved.all_regions,
+                object_extruder: object.region_overrides().extruder.map(|value| value.0),
+                model_part_extruders: object
+                    .volumes()
+                    .iter()
+                    .filter(|volume| {
+                        matches!(
+                            volume.volume_type(),
+                            ProjectVolumeType::ModelPart | ProjectVolumeType::ParameterModifier
+                        )
+                    })
+                    .map(|volume| volume.region_overrides().extruder.map(|value| value.0))
+                    .collect(),
+                layer_range_extruders: object
+                    .layer_config_ranges()
+                    .iter()
+                    .filter_map(|range| range.region_overrides().extruder.map(|value| value.0))
+                    .collect(),
+            }
+        })
+        .collect::<Vec<_>>();
+    collect_usage(
+        &objects,
+        wipe_settings,
+        sources.settings.filament.gcode.filament_diameter.0.len(),
+    )
+}
+
+pub(crate) fn collect_usage(
+    objects: &[ObjectUsageInput<'_>],
+    wipe_settings: &ProjectSettings,
+    logical_filament_count: usize,
+) -> BoundedProjectUsage {
+    let has_brim = objects.iter().any(|input| supported_brim(input.object));
     let mut object_filaments = Vec::new();
     let mut support_filaments = Vec::new();
     let mut support_uses_current = false;
 
-    for (group, resolved) in qualifying() {
-        for region in &resolved.all_regions {
+    for input in objects {
+        for region in input.regions {
             append_region_filaments(&mut object_filaments, region, has_brim);
         }
-
-        let object = &sources.objects[group.source_object_index];
-        for volume in object.volumes().iter().filter(|volume| {
-            matches!(
-                volume.volume_type(),
-                ProjectVolumeType::ModelPart | ProjectVolumeType::ParameterModifier
-            )
-        }) {
-            let volume_selector = volume.region_overrides().extruder.map(|value| value.0);
-            let object_selector = object.region_overrides().extruder.map(|value| value.0);
+        for &volume_selector in &input.model_part_extruders {
             let selector = match volume_selector {
                 Some(selector) if selector != 0 => selector,
-                _ => object_selector.unwrap_or(1),
+                _ => input.object_extruder.unwrap_or(1),
             };
             append_positive(&mut object_filaments, selector);
         }
-        for range in object.layer_config_ranges() {
-            if let Some(selector) = range.region_overrides().extruder {
-                append_positive(&mut object_filaments, selector.0);
-            }
+        for &selector in &input.layer_range_extruders {
+            append_positive(&mut object_filaments, selector);
         }
-
-        if resolved.object.enable_support.0
-            || resolved.object.enforce_support_layers.0 > 0
-            || resolved.object.raft_layers.0 > 0
+        let object = input.object;
+        if object.enable_support.0
+            || object.enforce_support_layers.0 > 0
+            || object.raft_layers.0 > 0
         {
             for selector in [
-                resolved.object.support_filament.0,
-                resolved.object.support_interface_filament.0,
+                object.support_filament.0,
+                object.support_interface_filament.0,
             ] {
                 support_uses_current |= append_support(&mut support_filaments, selector);
             }
@@ -79,7 +111,6 @@ pub(crate) fn collect_bounded_project_usage(
 
     let mut supported_used_filaments = object_filaments;
     supported_used_filaments.extend(support_filaments);
-    let logical_filament_count = sources.settings.filament.gcode.filament_diameter.0.len();
     let wipe_selector = wipe_settings.process.print.wipe_tower_filament.0;
     if has_wipe_tower(wipe_settings, logical_filament_count)
         && wipe_selector != 0
@@ -95,17 +126,13 @@ pub(crate) fn collect_bounded_project_usage(
     }
 }
 
-pub(crate) fn supported_brim(object: &crate::ObjectOptions) -> bool {
+fn supported_brim(object: &crate::ObjectOptions) -> bool {
     object.raft_layers.0 <= 0
         && (object.brim_type == ProcessBrimType::AutoBrim
             || (object.brim_type != ProcessBrimType::NoBrim && object.brim_width.0 > 0.0))
 }
 
-pub(crate) fn append_region_filaments(
-    output: &mut Vec<usize>,
-    region: &RegionOptions,
-    has_brim: bool,
-) {
+fn append_region_filaments(output: &mut Vec<usize>, region: &RegionOptions, has_brim: bool) {
     if region.wall_loops.0 > 0 || has_brim {
         append_positive(output, region.outer_wall_filament_id.0);
     }
