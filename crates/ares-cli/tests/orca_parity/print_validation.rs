@@ -5,6 +5,8 @@ use std::fs;
 mod applied_map_controls;
 #[path = "print_validation/bridge_width.rs"]
 mod bridge_width;
+#[path = "print_validation/bridge_width_controls.rs"]
+mod bridge_width_controls;
 #[path = "print_validation/entries.rs"]
 mod entries;
 #[path = "print_validation/layer_nozzle.rs"]
