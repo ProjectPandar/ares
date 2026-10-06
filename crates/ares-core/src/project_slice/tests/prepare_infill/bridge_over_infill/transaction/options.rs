@@ -191,7 +191,7 @@ fn task22o71_invalid_nominal_anchor_flow_returns_an_error_instead_of_panicking()
     assert_error_mutation(
         "\"sparse_infill_line_width\": \"0.45\"",
         "\"sparse_infill_line_width\": \"0.001\"",
-        SliceError::InvalidInput("invalid external perimeter flow spacing".to_owned()),
+        SliceError::InvalidInput("Flow::spacing() produced negative spacing. Did you set some extrusion width too small?".to_owned()),
     );
     assert_error_mutation(
         "\"sparse_infill_line_width\": \"0.45\"",

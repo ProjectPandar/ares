@@ -166,7 +166,7 @@ fn task22m_transaction_preflight_phase_order_is_global() {
             ],
             &[0.4],
         ),
-        SliceError::InvalidInput("invalid external perimeter flow spacing".to_owned()),
+        SliceError::InvalidInput("Flow::spacing() produced negative spacing. Did you set some extrusion width too small?".to_owned()),
     );
     let mut invalid_flow_options = task22m_options(0.15, 1, 0);
     invalid_flow_options.line_width = FloatOrPercent::Float(0.01);
@@ -184,7 +184,7 @@ fn task22m_transaction_preflight_phase_order_is_global() {
             ],
             &[0.4],
         ),
-        SliceError::InvalidInput("invalid external perimeter flow spacing".to_owned()),
+        SliceError::InvalidInput("Flow::spacing() produced negative spacing. Did you set some extrusion width too small?".to_owned()),
     );
 }
 

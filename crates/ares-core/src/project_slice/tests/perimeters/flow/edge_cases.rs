@@ -19,7 +19,7 @@ fn task22n_flow_roles_resolve_overhang_before_solid_derived_error() {
 
     assert_eq!(
         error,
-        SliceError::InvalidInput("invalid external perimeter flow spacing".to_owned())
+        SliceError::InvalidInput("Flow::spacing() produced negative spacing. Did you set some extrusion width too small?".to_owned())
     );
 }
 

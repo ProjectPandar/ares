@@ -229,10 +229,19 @@ fn task22m_flow_rejects_invalid_nozzle_height_and_spacing() {
         assert_invalid(error, "invalid Orca option layer_height");
     }
 
-    for width in [
-        FloatOrPercent::Float(0.01),
-        FloatOrPercent::Float(f64::NAN),
-        FloatOrPercent::Percent(Percent(f64::MAX)),
+    for (width, expected) in [
+        (
+            FloatOrPercent::Float(0.01),
+            "Flow::spacing() produced negative spacing. Did you set some extrusion width too small?",
+        ),
+        (
+            FloatOrPercent::Float(f64::NAN),
+            "invalid external perimeter flow spacing",
+        ),
+        (
+            FloatOrPercent::Percent(Percent(f64::MAX)),
+            "invalid external perimeter flow spacing",
+        ),
     ] {
         let error = resolve_external_perimeter_flow(
             &layer(1, 0.2),
@@ -243,7 +252,7 @@ fn task22m_flow_rejects_invalid_nozzle_height_and_spacing() {
             &OrcaFloats(vec![OrcaFloat(0.4)]),
         )
         .unwrap_err();
-        assert_invalid(error, "invalid external perimeter flow spacing");
+        assert_invalid(error, expected);
     }
 }
 
