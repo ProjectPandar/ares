@@ -84,14 +84,17 @@ fn o1_profile_entries_reject_relative_without_reset() {
         .build()
         .unwrap();
     let overrides = ConfigOverrides::default();
-    for (input, filename) in [(RELATIVE_INPUT, "input.3mf"), (stl.as_slice(), "input.stl")] {
+    for (input, filename, placement) in [
+        (RELATIVE_INPUT, "input.3mf", ares_core::Placement::None),
+        (stl.as_slice(), "input.stl", ares_core::Placement::Center),
+    ] {
         let request = ProfileSliceRequest {
             filename,
             catalog_json: &catalog,
             selection_json: &selection,
             plate: None,
             overrides: &overrides,
-            placement: ares_core::Placement::None,
+            placement,
         };
         let result = runtime.block_on(ares_core::slice_with_profiles_validated(
             input,

@@ -56,7 +56,9 @@ fn request<'a>(
         selection_json: selection,
         plate: None,
         overrides,
-        placement: ares_core::Placement::None,
+        // Center the raw STL on the bed: the unconditional volume gate
+        // rejects partially-outside instances (upstream --arrange equivalent).
+        placement: ares_core::Placement::Center,
     }
 }
 

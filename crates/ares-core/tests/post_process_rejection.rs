@@ -235,7 +235,8 @@ async fn stl_with_profile_post_process_is_not_rejected() {
             selection_json: &selection.to_string(),
             plate: None,
             overrides: &overrides,
-            placement: Placement::None,
+            // Center the raw STL on the bed for the volume gate.
+            placement: Placement::Center,
         },
         ares_core::GenerationMetadata::default(),
         ares_core::SlicerContext::new(0),
