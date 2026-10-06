@@ -8,17 +8,27 @@ use crate::runner::{OrcaRunner, stages};
 
 #[test]
 fn print_upper_general_width_precedes_later_o4_lower_width() {
+    verify("3");
+}
+
+#[test]
+fn print_upper_general_percentage_is_not_in_loading_width_list() {
+    verify("600%");
+}
+
+fn verify(width: &str) {
     let input = include_bytes!("../../../../../tests/parity/validation/o4-ender3s1plus-0.2.3mf");
     let hash = "edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110";
     assert_eq!(super::sha256(input), hash);
     let directory = super::evidence_directory("print-upper-general-");
     let path = directory.join("input.3mf");
     fs::write(&path, input).unwrap();
-    let overrides = ConfigOverrides::from_json(br#"{"line_width":"3"}"#).unwrap();
+    let override_json = json!({"line_width":width}).to_string();
+    let overrides = ConfigOverrides::from_json(override_json.as_bytes()).unwrap();
     fs::write(
         directory.join("invocation.json"),
         serde_json::to_vec_pretty(&json!({
-            "input_sha256":hash, "overrides":{"line_width":"3"},
+            "input_sha256":hash, "overrides":{"line_width":width},
             "expected_error":"Too large line width",
             "apis":["validate_project_plate","slice_project_plate_validated"]
         }))
@@ -33,7 +43,7 @@ fn print_upper_general_width_precedes_later_o4_lower_width() {
             runner.bin(),
             [
                 "--line-width".to_owned(),
-                "3".to_owned(),
+                width.to_owned(),
                 "--slice".to_owned(),
                 "0".to_owned(),
                 "--outputdir".to_owned(),
