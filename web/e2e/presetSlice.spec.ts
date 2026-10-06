@@ -20,6 +20,43 @@ async function choose(page: Page, combo: string, group: string, name: string) {
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }
 
+/**
+ * Centroid of the model-coloured (filament teal) viewport pixels relative to the canvas centre, in
+ * canvas-width fractions, with their count. The bed axes (ColorRGB::X/Y/Z) are excluded by hue.
+ */
+function modelOffset(page: Page) {
+  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+    const probe = document.createElement("canvas");
+    [probe.width, probe.height] = [400, Math.round((400 * canvas.height) / canvas.width)];
+    const context = probe.getContext("2d")!;
+    context.drawImage(canvas, 0, 0, probe.width, probe.height);
+    const pixels = context.getImageData(0, 0, probe.width, probe.height).data;
+    let [count, sumX, sumY] = [0, 0, 0];
+    for (let index = 0; index < pixels.length; index += 4) {
+      const [r, g, b] = [pixels[index], pixels[index + 1], pixels[index + 2]];
+      if (g - r > 60 && b - r > 60 && Math.abs(g - b) < 50) {
+        const pixel = index / 4;
+        count++;
+        sumX += pixel % probe.width;
+        sumY += Math.floor(pixel / probe.width);
+      }
+    }
+    return { count, x: (sumX / count - probe.width / 2) / probe.width, y: (sumY / count - probe.height / 2) / probe.width };
+  });
+}
+
+/** `BuildVolume::bed_center` (BuildVolume.hpp:83): the printable_area bbox centre of a raw vendor machine, through `inherits`. */
+function bedCenter(vendor: string, machine: string): [number, number] {
+  const dir = `${repositoryRoot}OrcaSlicer/resources/profiles/${vendor}/machine/`;
+  const field = (name: string): string[] => {
+    const json = JSON.parse(readFileSync(`${dir}${name}.json`, "utf8")) as { printable_area?: string[]; inherits: string };
+    return json.printable_area ?? field(json.inherits);
+  };
+  const points = field(machine).map((point) => point.split("x").map(Number));
+  const [xs, ys] = [points.map(([x]) => x), points.map(([, y]) => y)];
+  return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+}
+
 async function exportGcode(page: Page, directory: string) {
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -159,6 +196,17 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // keeps the selected filament (PresetBundle.cpp:435-436), the one the STL slices with.
   await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true })).toHaveText(selection.filaments[0]);
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
+  // The Prepare viewport shows the model where the slice places it: framed on the selected printer's
+  // plate and seen from the top, the plate centre - where --center puts the model
+  // (OrcaSlicer.cpp:4376-4392, Model.cpp:704-722 around BuildVolume::bed_center) - is the canvas centre.
+  const viewToolbar = page.getByTestId("view-toolbar");
+  await viewToolbar.getByRole("button", { name: "Fit to plate" }).click();
+  await viewToolbar.getByRole("button", { name: "Top", exact: true }).click();
+  await expect.poll(async () => (await modelOffset(page)).count, "the model is drawn").toBeGreaterThan(50);
+  const offset = await modelOffset(page);
+  await page.screenshot({ path: `${artifacts}prepare-stl-top.png` });
+  writeFileSync(`${artifacts}prepare-stl.json`, `${JSON.stringify({ bedCenter: bedCenter("LH", selection.machine), offset }, null, 2)}\n`);
+  expect(Math.hypot(offset.x, offset.y), "model centred on the selected printer's plate").toBeLessThan(0.01);
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const centered = readFileSync(await exportGcode(page, artifacts), "utf8");
