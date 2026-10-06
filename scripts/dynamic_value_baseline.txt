@@ -610,9 +610,6 @@ crates/ares-core/src/options/validation/helpers.rs#bool_value@1|type|&serde_json
 crates/ares-core/src/options/validation/helpers.rs#crate@1|use|serde_json::Value
 crates/ares-core/src/options/validation/helpers.rs#scalar_f64@1|type|&serde_json::Value
 crates/ares-core/src/options/validation/helpers.rs#scalar_i64@1|type|&serde_json::Value
-crates/ares-core/src/options/validation/range.rs#SliceOptions::raw_float_or_percent_or_default@1|path|serde_json::Value::String
-crates/ares-core/src/options/validation/range.rs#crate@1|use|serde_json::Value
-crates/ares-core/src/options/validation/range.rs#parse_raw_float_or_percent@1|type|&serde_json::Value
 crates/ares-core/src/options/vector_resize.rs#crate@1|use|serde_json::Value
 crates/ares-core/src/options/vector_resize.rs#default_array_member@1|path|serde_json::Value::String
 crates/ares-core/src/options/vector_resize.rs#default_array_member@1|type|Result<serde_json::Value,SliceError>
