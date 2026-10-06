@@ -192,8 +192,8 @@ impl PresetCatalog {
             .map_err(|error| JsValue::from_str(&error))
     }
 
-    /// System printer models deduplicated by first occurrence, as JSON
-    /// `[{model}]` (`PresetComboBoxes.cpp:1243-1251`).
+    /// System printer models in "System presets" group order, as JSON
+    /// `[{model}]` (`PresetComboBoxes.cpp:1243-1251, 1427`).
     #[wasm_bindgen(js_name = printerModels)]
     pub fn printer_models(&self) -> Result<String, JsValue> {
         self.printer_models_json()
@@ -201,15 +201,17 @@ impl PresetCatalog {
     }
 
     /// `PresetBundle::get_similar_printer_preset`: resolves a model/variant
-    /// pair to a concrete preset name (JSON string or null).
+    /// pair to a concrete preset name (JSON string or null), given the
+    /// selected printer's name and `printer_variant`.
     #[wasm_bindgen(js_name = similarPrinterPreset)]
     pub fn similar_printer_preset(
         &self,
         model: String,
         variant: String,
-        current: String,
+        current_name: String,
+        current_variant: String,
     ) -> String {
-        self.similar_printer_preset_json(&model, &variant, &current)
+        self.similar_printer_preset_json(&model, &variant, &current_name, &current_variant)
     }
 }
 
@@ -370,7 +372,17 @@ impl PresetCatalog {
             .map_err(|error| format!("printer model listing cannot serialize: {error}"))
     }
 
-    pub fn similar_printer_preset_json(&self, model: &str, variant: &str, current: &str) -> String {
+    pub fn similar_printer_preset_json(
+        &self,
+        model: &str,
+        variant: &str,
+        current_name: &str,
+        current_variant: &str,
+    ) -> String {
+        let current = ares_core::CurrentPrinter {
+            name: current_name,
+            printer_variant: current_variant,
+        };
         serde_json::to_string(&self.handle.similar_printer_preset(model, variant, current))
             .unwrap_or_else(|_| "null".to_owned())
     }

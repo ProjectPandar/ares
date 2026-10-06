@@ -20,6 +20,7 @@ use crate::{
 
 pub(super) use document::ProfileDocument;
 use document::{CatalogInput, VendorInput};
+pub use printer_models::CurrentPrinter;
 
 /// `Catalog::compose` result: the fully resolved profile, the merged raw
 /// presence view, and per-filament raw views for the 3MF slot overlay.

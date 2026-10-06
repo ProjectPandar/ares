@@ -230,6 +230,6 @@ fn preset_catalog_printer_models_and_similar_json() {
     let models: serde_json::Value =
         serde_json::from_str(&catalog.printer_models_json().unwrap()).unwrap();
     assert_eq!(models, serde_json::json!([{"model": "A1"}]));
-    let similar = catalog.similar_printer_preset_json("A1", "0.6", "A1 0.4 nozzle");
+    let similar = catalog.similar_printer_preset_json("A1", "0.6", "A1 0.4 nozzle", "0.4");
     assert_eq!(similar, serde_json::json!("A1 0.6 nozzle").to_string());
 }
