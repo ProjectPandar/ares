@@ -284,3 +284,75 @@ test exists at
 currently still fails on those residuals; the loop-entity collect fix
 is nevertheless independently correct against the cited upstream
 boundary.
+
+## Residual slice spec: loop vertex order at `collect_points` time
+
+**Scope**: the ~30-line residual on layers Z0.8+ — two seam-adjacent
+outer-wall segments per layer slowed ~10% too much (F6120 vs oracle
+F6818.82; artificial distance 0.081 vs ~0). Traced to the degenerate
+`i == 0` CurledLine: `estimate_points_properties` emits a zero-length
+line at point 0 with `curled_height` from `curvature[0]` — in ares that
+point is the loop's natural start vertex, the square's corner, whose
+windowed curvature is π/3 (upstream-faithful per the
+`square_corners_carry_the_windowed_curvature` test: the seam-start
+corner gets a zero-length backward tangent and `atan2(+0,−0) → π`,
+matching the MK4S oracle observation). If upstream's `paths[0]` start
+vertex is a different point (non-corner, or a different corner whose
+degenerate line chains to < 0.1 height), the whole residual follows.
+
+**Upstream vertex-order chain** (Arachne, since stock
+`wall_generator` default = `PerimeterGeneratorType::Arachne`,
+`PrintConfig.cpp:7155-7167`; classic `traverse_loops` is NOT on this
+path):
+
+1. `process_arachne` (`PerimeterGenerator.cpp:2093+`) offsets
+   `surface.expolygon` via `offset_ex(..., -ext_perimeter_width/2 +
+   ext_perimeter_spacing/2)` — vertex 0 of the offset contour is
+   ClipperLib-v1's `OutRec` ring head (`clipper.cpp` append/hole
+   semantics), not a normalized lowest-vertex.
+2. Arachne `WallToolPaths` builds the outer wall
+   (`Arachne/WallToolPaths.cpp:68+`) from the inset outline; the closed
+   `extrusion`'s junction 0 follows the outline vertex order.
+3. `extrudePathsToExtrusionEntities`
+   (`PerimeterGenerator.cpp:~528-566`) splits the closed extrusion at
+   `ExtrusionJunction` boundaries into `paths`; overhang splitting
+   (`append_overhang_clipped_paths` equivalent, :440-520) then calls
+   `chain_and_reorder_extrusion_paths(paths, &start_point)` where
+   `start_point` = the first `occurrence==1` junction in
+   `std::unordered_map` iteration order, preferring non-overhang
+   (:491-506) — **hash-order-dependent** when multiple
+   occurrence-once candidates exist.
+4. `estimate_malformations` (`PrintObject.cpp:900-914`, runs during
+   perimeter generation) sees this chained order; `paths[0]`'s first
+   point becomes the degenerate `i == 0` CurledLine position.
+
+**Ares equivalence points to compare**:
+- `ares-core/.../mesh_slicer/chaining.rs` (loop seed = first spare
+  line, mirrors `chain_lines_by_triangle_connectivity`
+  `TriangleMeshSlicer.cpp:1082-1146`).
+- `geometry/clipper` offset output ring-head order vs
+  `clipper.cpp`'s `OutRec::pts` head for a simple square offset.
+- `arachne/traverse/overhang.rs::select_open_start` uses
+  `PointHashMap::into_ordered()` — deterministic — where upstream's
+  `unordered_map` order may pick a different occurrence-once point.
+
+**Verification plan** (choose cheapest first):
+1. Dump ares' loop vertex list at `collect_entity` (env probe) for
+   layers 1-3 of the C1 case → already known: starts at corner
+   (4.645,4.645), 5 lines/loop (4 whole-edge + 1 degenerate).
+2. Build orca with `-DSLIC3R_DEBUG_FILES` (or `OrcaSlicer_DEP` debug
+   env `debug feature`) to emit `object_full.obj`/`layer` debug
+   polygons, recovering upstream's pre-seam loop vertex order for the
+   same layers — establishes whether upstream's paths[0] also starts
+   at a corner (then residual is elsewhere) or not.
+3. If DEBUG_FILES build is unavailable, infer from oracle output: with
+   the seeded oracle the only extra-slowed segment should mark the
+   degenerate line's position; orca's Z0.8/Z1.0 walls show NO
+   extra-slowed seam-adjacent segment, suggesting upstream's i==0 line
+   either sits at a non-corner (curvature 0 → chain-only h ≈ 0) or its
+   h decays below the 0.1 threshold.
+
+**Exit criterion**: C1 case `orca_parity` full byte-compare PASS
+(modulo documented M73 placement + E-ulp flake classes), or a
+byte-exact demonstration that upstream's collect-time vertex order is
+reproduced.
