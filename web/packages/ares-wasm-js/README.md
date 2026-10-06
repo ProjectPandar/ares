@@ -122,7 +122,8 @@ them; bit `i` of a `visibleOptions` mask is `optionTypes[i]`.
 OrcaSlicer's legend counts them. `visibleOptions` is the mask of options the viewer shows by default (seams).
 
 `colors` holds the RGB triple of each vertex in the line type view
-(`colors[3 * i ...]`), as `viewColors("FeatureType", ...)` returns it.
+(`colors[3 * i ...]`), as `viewColors("FeatureType", ...)` returns it; line
+type colors do not depend on the shown roles and options.
 `viewTypes` lists the color schemes `viewColors` accepts, as libvgcode
 `EViewType` names. `roleColors` and `optionColors` are the viewer's RGB
 colors of each extrusion role (`EXTRUSION_ROLES` order) and option

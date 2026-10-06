@@ -9,9 +9,9 @@ import { useApp } from "../state/store";
 import { usedOptions, usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
 import { LayerSlider } from "./LayerSlider";
-import { Legend } from "./Legend";
 
 // Fetched once a slice has move vertices to show.
+const Legend = lazy(() => import("./Legend").then((module) => ({ default: module.Legend })));
 const GCodeWindow = lazy(() => import("./GCodeWindow").then((module) => ({ default: module.GCodeWindow })));
 
 /**
@@ -40,12 +40,14 @@ const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
 
 /**
  * Engine toolpath colors and color range of the legend's view type
- * (GCodeViewer `refresh` after the view type combo or a legend toggle).
+ * (GCodeViewer `refresh` after the view type combo or a legend toggle). The
+ * line type view is `Toolpaths.colors`, which has no range to follow toggles.
  */
 function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRoles: number, visibleOptions: number) {
   const [state, setState] = useState<{ toolpaths: Toolpaths; colors: ViewColors } | null>(null);
+  const lineType = viewType === "FeatureType";
   useEffect(() => {
-    if (!toolpaths) return;
+    if (!toolpaths || lineType) return;
     let stale = false;
     void slicer.viewColors(viewType, ALL_ROLES & ~hiddenRoles, visibleOptions).then((colors) => {
       if (!stale) setState({ toolpaths, colors });
@@ -53,8 +55,10 @@ function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRole
     return () => {
       stale = true;
     };
-  }, [toolpaths, viewType, hiddenRoles, visibleOptions]);
-  return state && state.toolpaths === toolpaths ? state.colors : null;
+  }, [toolpaths, lineType, viewType, hiddenRoles, visibleOptions]);
+  if (!toolpaths) return null;
+  if (lineType) return { colors: toolpaths.colors, range: null };
+  return state?.toolpaths === toolpaths ? state.colors : null;
 }
 
 export function PreviewPage() {
@@ -98,8 +102,12 @@ export function PreviewPage() {
             </div>
           )}
         </div>
-        {toolpaths && <Legend roles={roles} options={options} toolpaths={toolpaths}
-          range={colors?.range ?? null} view={view} onChange={setPreview} />}
+        {toolpaths && (
+          <Suspense>
+            <Legend roles={roles} options={options} toolpaths={toolpaths}
+              range={colors?.range ?? null} view={view} onChange={setPreview} />
+          </Suspense>
+        )}
         {toolpaths && toolpaths.layerZs.length > 0 && (
           <LayerSlider zs={toolpaths.layerZs} view={view} />
         )}

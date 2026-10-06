@@ -42,6 +42,7 @@ export class Viewport {
   readonly #raycaster = new THREE.Raycaster();
   #bed = new THREE.Group();
   #toolpaths: THREE.Mesh | null = null;
+  #toolpathColors: Uint8Array | null = null;
   #previewView: PreviewView | null = null;
   #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
   #colors: ViewportColors;
@@ -179,6 +180,7 @@ export class Viewport {
     delete this.container.dataset.optionMarkers;
     if (toolpaths) {
       this.#toolpaths = buildToolpathMesh(toolpaths);
+      this.#toolpathColors = toolpaths.colors;
       const markers = buildOptionMarkers(toolpaths);
       this.#toolpaths.add(markers.mesh);
       this.#scene.add(this.#toolpaths);
@@ -190,7 +192,8 @@ export class Viewport {
 
   /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths. */
   setToolpathColors(colors: Uint8Array) {
-    if (!this.#toolpaths) return;
+    if (!this.#toolpaths || colors === this.#toolpathColors) return;
+    this.#toolpathColors = colors;
     applyVertexColors(this.#toolpaths, colors);
     this.render();
   }

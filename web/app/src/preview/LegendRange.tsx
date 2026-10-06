@@ -4,25 +4,19 @@ import type { ColorRange } from "@ares-slicer/wasm";
  * Legend view type combo items in `view_type_items` order (`GCodeViewer.cpp:1077-1093`)
  * with their `get_view_type_string` labels (`GCodeViewer.cpp:66-101`) and the
  * decimals `render_legend` passes to `append_range` (`GCodeViewer.cpp:3911-3986`;
- * layer times pass `true`, i.e. 1). Only the engine's `Toolpaths.viewTypes` are offered.
+ * layer times pass `true`, i.e. 1), for the view types the engine's `Toolpaths.viewTypes`
+ * offers; the others have no data source yet.
  */
 export const VIEW_TYPE_ITEMS: { view: string; label: string; decimals?: number }[] = [
-  { view: "Summary", label: "Summary" },
   { view: "FeatureType", label: "Line Type" },
-  { view: "ColorPrint", label: "Filament" },
   { view: "Speed", label: "Speed", decimals: 0 },
-  { view: "ActualSpeed", label: "Actual Speed", decimals: 0 },
-  { view: "Acceleration", label: "Acceleration", decimals: 0 },
-  { view: "Jerk", label: "Jerk", decimals: 1 },
   { view: "Height", label: "Layer Height", decimals: 2 },
   { view: "Width", label: "Line Width", decimals: 2 },
   { view: "VolumetricFlowRate", label: "Flow", decimals: 2 },
-  { view: "ActualVolumetricFlowRate", label: "Actual Flow", decimals: 2 },
   { view: "LayerTimeLinear", label: "Layer Time", decimals: 1 },
   { view: "LayerTimeLogarithmic", label: "Layer Time (log)", decimals: 1 },
   { view: "FanSpeed", label: "Fan Speed", decimals: 0 },
   { view: "Temperature", label: "Temperature", decimals: 0 },
-  { view: "PressureAdvance", label: "Pressure Advance", decimals: 3 },
 ];
 
 export const css = ([r, g, b]: ArrayLike<number>) => `rgb(${r} ${g} ${b})`;
