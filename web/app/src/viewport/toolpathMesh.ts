@@ -1,7 +1,7 @@
 import { EXTRUSION_ROLES, MOVE_TYPES, type Toolpaths, VERTEX_VALUES } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import type { PreviewView } from "../state/store";
-import { ROLE_COLORS, TRAVEL_COLOR, WIPE_COLOR } from "./roles";
+import { OPTION_COLORS, ROLE_COLORS } from "./roles";
 
 const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
 const TRAVEL = MOVE_TYPES.indexOf("Travel");
@@ -10,9 +10,8 @@ const CUSTOM = EXTRUSION_ROLES.indexOf("Custom");
 const STRIDE = VERTEX_VALUES.length;
 const HEIGHT = VERTEX_VALUES.indexOf("height");
 const WIDTH = VERTEX_VALUES.indexOf("width");
-/** `aKind` values above the role ids. */
-const KIND_TRAVEL = 254;
-const KIND_WIPE = 255;
+/** `aKind` of travels and wipes: this plus their `EOptionType` index, above the role ids. */
+const KIND_OPTION = 32;
 /** Cross-section of travel / wipe moves, which carry no extrusion size. */
 const OPTION_SIZE = 0.08;
 
@@ -25,16 +24,15 @@ in float aLayer;
 in float aKind;
 uniform vec2 uLayers;
 uniform int uHiddenRoles;
-uniform bool uTravel;
-uniform bool uWipe;
+uniform int uOptions;
 out vec3 vColor;
 out vec3 vNormal;
 
 bool hidden() {
   if (aLayer < uLayers.x || aLayer > uLayers.y) return true;
-  if (aKind > 254.5) return !uWipe;
-  if (aKind > 253.5) return !uTravel;
-  return ((uHiddenRoles >> int(aKind)) & 1) == 1;
+  int kind = int(aKind);
+  if (kind >= ${KIND_OPTION}) return ((uOptions >> (kind - ${KIND_OPTION})) & 1) == 0;
+  return ((uHiddenRoles >> kind) & 1) == 1;
 }
 
 void main() {
@@ -59,7 +57,7 @@ void main() {
 }
 `;
 
-const fragmentShader = /* glsl */ `
+export const fragmentShader = /* glsl */ `
 in vec3 vColor;
 in vec3 vNormal;
 out vec4 outColor;
@@ -78,7 +76,7 @@ void main() {
  * update uniforms.
  */
 export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
-  const { values, ids, tags, vertexCount } = toolpaths;
+  const { values, ids, tags, options, optionTypes, vertexCount } = toolpaths;
   const start = new Float32Array(vertexCount * 3);
   const end = new Float32Array(vertexCount * 3);
   const size = new Float32Array(vertexCount * 2);
@@ -102,8 +100,8 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     if (extrude && role !== CUSTOM) bounds.expandByPoint(point.fromArray(values, a)).expandByPoint(point.fromArray(values, b));
     size[count * 2] = extrude ? values[b + WIDTH] : OPTION_SIZE;
     size[count * 2 + 1] = extrude ? values[b + HEIGHT] : OPTION_SIZE;
-    const id = extrude ? role : type === TRAVEL ? KIND_TRAVEL : KIND_WIPE;
-    color.set(extrude ? ROLE_COLORS[id] : id === KIND_TRAVEL ? TRAVEL_COLOR : WIPE_COLOR, count * 3);
+    const id = extrude ? role : KIND_OPTION + options[i];
+    color.set(extrude ? ROLE_COLORS[id] : OPTION_COLORS[optionTypes[options[i]]], count * 3);
     layer[count] = ids[2 * i + 1];
     kind[count] = id;
     count++;
@@ -131,8 +129,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     uniforms: {
       uLayers: { value: new THREE.Vector2(0, 0) },
       uHiddenRoles: { value: 0 },
-      uTravel: { value: false },
-      uWipe: { value: false },
+      uOptions: { value: 0 },
     },
   });
   const mesh = new THREE.Mesh(geometry, material);
@@ -140,10 +137,13 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   return mesh;
 }
 
+/** Sets the view on the toolpath mesh and its option markers (children). */
 export function applyPreviewView(mesh: THREE.Mesh, view: PreviewView) {
-  const { uniforms } = mesh.material as THREE.ShaderMaterial;
-  (uniforms.uLayers.value as THREE.Vector2).set(view.layers[0], view.layers[1]);
-  uniforms.uHiddenRoles.value = view.hiddenRoles;
-  uniforms.uTravel.value = view.travel;
-  uniforms.uWipe.value = view.wipe;
+  mesh.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const { uniforms } = node.material as THREE.ShaderMaterial;
+    (uniforms.uLayers.value as THREE.Vector2).set(view.layers[0], view.layers[1]);
+    uniforms.uOptions.value = view.visibleOptions;
+    if (uniforms.uHiddenRoles) uniforms.uHiddenRoles.value = view.hiddenRoles;
+  });
 }

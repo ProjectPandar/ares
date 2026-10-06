@@ -14,6 +14,14 @@ export interface Toolpaths {
   ids: Uint32Array<ArrayBuffer>;
   /** Per-vertex `[ExtrusionRoleId, MoveTypeId, extruder_id, color_id]`. */
   tags: Uint8Array<ArrayBuffer>;
+  /** Per-vertex libvgcode `move_type_to_option`: an index into `optionTypes`, 255 for none. */
+  options: Uint8Array<ArrayBuffer>;
+  /** libvgcode `EOptionType` names in index order: bit `i` of `viewRange` `visibleOptions` is `optionTypes[i]`. */
+  optionTypes: string[];
+  /** Moves by `MOVE_TYPES` index, internal split moves excluded (GCodeViewer `m_move_type_counts`). */
+  moveTypeCounts: Uint32Array<ArrayBuffer>;
+  /** Options shown by default (libvgcode `Settings::options_visibility`) as a `visibleOptions` mask. */
+  visibleOptions: number;
   /** libvgcode `Layers::get_zs`: z of each layer. */
   layerZs: Float32Array<ArrayBuffer>;
   spiralVaseMode: boolean;
@@ -86,20 +94,6 @@ export const EXTRUSION_ROLES = [
 ] as const;
 export type ExtrusionRole = (typeof EXTRUSION_ROLES)[number];
 export type ExtrusionRoleId = number;
-
-/** libvgcode `EOptionType` order (`Types.hpp`): bits of `viewRange` `visibleOptions`. */
-export const OPTION_TYPES = [
-  "Travels",
-  "Wipes",
-  "Retractions",
-  "Unretractions",
-  "Seams",
-  "ToolChanges",
-  "ColorChanges",
-  "PausePrints",
-  "CustomGCodes",
-] as const;
-export type OptionType = (typeof OPTION_TYPES)[number];
 
 /** Vertex indices `[first, last, current]` of the visible view range. */
 export type ViewRange = [first: number, last: number, current: number];

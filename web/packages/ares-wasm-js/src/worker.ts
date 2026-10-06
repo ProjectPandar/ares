@@ -5,6 +5,7 @@ import init, {
   encodeConfigValue,
   filterCompatiblePresets,
   loadScene,
+  optionTypes,
   parsePresetBundle,
   printConfigDef,
   sliceProjectPlateProcessed,
@@ -42,12 +43,19 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
     values: vertices.takeValues() as Float32Array<ArrayBuffer>,
     ids: vertices.takeIds() as Uint32Array<ArrayBuffer>,
     tags: owned(vertices.takeTags()),
+    options: owned(vertices.takeOptions()),
+    optionTypes: optionTypes(),
+    moveTypeCounts: vertices.takeMoveTypeCounts() as Uint32Array<ArrayBuffer>,
+    visibleOptions: vertices.visibleOptions,
     layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
     spiralVaseMode: vertices.spiralVaseMode,
   };
   replaceViewer(vertices);
-  const { values, ids, tags, layerZs } = toolpaths;
-  return [{ gcode, toolpaths }, [gcode.buffer, values.buffer, ids.buffer, tags.buffer, layerZs.buffer]];
+  const { values, ids, tags, options, moveTypeCounts, layerZs } = toolpaths;
+  return [
+    { gcode, toolpaths },
+    [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, layerZs.buffer],
+  ];
 }
 
 async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]> {

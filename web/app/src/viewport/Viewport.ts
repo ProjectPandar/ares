@@ -5,6 +5,7 @@ import type { PreviewView } from "../state/store";
 import { buildBed } from "./bed";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
+import { buildOptionMarkers } from "./optionMarkers";
 import { applyPreviewView, buildToolpathMesh } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
@@ -174,8 +175,15 @@ export class Viewport {
       this.#scene.remove(this.#toolpaths);
       disposeTree(this.#toolpaths);
     }
-    this.#toolpaths = toolpaths && buildToolpathMesh(toolpaths);
-    if (this.#toolpaths) this.#scene.add(this.#toolpaths);
+    this.#toolpaths = null;
+    delete this.container.dataset.optionMarkers;
+    if (toolpaths) {
+      this.#toolpaths = buildToolpathMesh(toolpaths);
+      const markers = buildOptionMarkers(toolpaths);
+      this.#toolpaths.add(markers.mesh);
+      this.#scene.add(this.#toolpaths);
+      this.container.dataset.optionMarkers = JSON.stringify(markers.counts);
+    }
     if (this.#previewView) this.setPreviewView(this.#previewView);
     else this.render();
   }

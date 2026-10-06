@@ -4,7 +4,7 @@ import { Sidebar } from "../sidebar/Sidebar";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { setPreview, slicePlate, stepLayers, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
 import { useApp } from "../state/store";
-import { usedRoles } from "../viewport/roles";
+import { usedOptions, usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
 import { LayerSlider } from "./LayerSlider";
 import { Legend } from "./Legend";
@@ -45,6 +45,7 @@ export function PreviewPage() {
     return () => window.removeEventListener("keydown", onPreviewKey);
   }, []);
   const roles = useMemo(() => (toolpaths ? usedRoles(toolpaths) : []), [toolpaths]);
+  const options = useMemo(() => (toolpaths ? usedOptions(toolpaths) : []), [toolpaths]);
   return (
     <div className="page">
       <Sidebar />
@@ -73,7 +74,8 @@ export function PreviewPage() {
             </div>
           )}
         </div>
-        {toolpaths && <Legend roles={roles} view={view} onChange={setPreview} />}
+        {toolpaths && <Legend roles={roles} options={options} optionTypes={toolpaths.optionTypes}
+          moveTypeCounts={toolpaths.moveTypeCounts} view={view} onChange={setPreview} />}
         {toolpaths && toolpaths.layerZs.length > 0 && (
           <LayerSlider zs={toolpaths.layerZs} view={view} />
         )}

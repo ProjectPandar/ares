@@ -169,7 +169,7 @@ export class AresSlicer {
    * as GCodeViewer computes it for the legend and layer slider: shows the
    * extrusion roles with bit `i` of `visibleRoles` set (`EXTRUSION_ROLES`
    * order) and the options with bit `i` of `visibleOptions` set
-   * (`OPTION_TYPES` order), then sets the inclusive 0-based `layers` range.
+   * (`Toolpaths.optionTypes` order), then sets the inclusive 0-based `layers` range.
    * Returns vertex indices `[first, last, current]`; `current` is the vertex
    * whose G-code line the G-code window marks.
    */

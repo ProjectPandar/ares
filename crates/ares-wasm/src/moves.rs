@@ -1,6 +1,7 @@
 use ares_core::{ProcessedGCode, gcode_processor::MoveVertex};
 use ares_vgcode::{
-    GCodeExtrusionRole, GCodeInputData, OptionType, ViewerImpl, convert::from_processor_result,
+    GCodeExtrusionRole, GCodeInputData, MoveType, OptionType, ViewerImpl,
+    convert::from_processor_result, move_type_to_option,
 };
 use wasm_bindgen::prelude::*;
 
@@ -19,10 +20,16 @@ impl SliceOutput {
         color_print_colors: &[String],
     ) -> Self {
         let data = from_processor_result(&output.result, tool_colors, color_print_colors);
+        let mut vertices = VertexBuffers::pack(data);
+        // GCodeViewer::load_as_preview `m_move_type_counts` (GCodeViewer.cpp:1318-1324).
+        vertices.move_type_counts = vec![0; MoveType::COUNT];
+        for m in output.result.moves.iter().filter(|m| !m.internal_only) {
+            vertices.move_type_counts[m.move_type as usize] += 1;
+        }
         Self {
             gcode: output.gcode,
             moves: MoveBuffers::pack(&output.result.moves),
-            vertices: VertexBuffers::pack(data),
+            vertices,
         }
     }
 }
@@ -126,6 +133,8 @@ pub struct VertexBuffers {
     values: Vec<f32>,
     ids: Vec<u32>,
     tags: Vec<u8>,
+    options: Vec<u8>,
+    move_type_counts: Vec<u32>,
     tool_colors: Vec<u8>,
     color_print_colors: Vec<u8>,
     layer_zs: Vec<f32>,
@@ -151,6 +160,8 @@ impl VertexBuffers {
             values: Vec::with_capacity(16 * count),
             ids: Vec::with_capacity(2 * count),
             tags: Vec::with_capacity(4 * count),
+            options: Vec::with_capacity(count),
+            move_type_counts: Vec::new(),
             tool_colors,
             color_print_colors,
             layer_zs: viewer.layers().get_zs(),
@@ -182,6 +193,8 @@ impl VertexBuffers {
                 v.extruder_id,
                 v.color_id,
             ]);
+            out.options
+                .push(move_type_to_option(v.move_type).map_or(u8::MAX, |option| option as u8));
         }
         out.viewer = viewer;
         out
@@ -213,6 +226,27 @@ impl VertexBuffers {
     #[wasm_bindgen(js_name = takeTags)]
     pub fn take_tags(&mut self) -> Vec<u8> {
         std::mem::take(&mut self.tags)
+    }
+    /// Uint8Array: libvgcode `move_type_to_option` of each vertex as an
+    /// `EOptionType` index (`optionTypes` order), 255 for none.
+    #[wasm_bindgen(js_name = takeOptions)]
+    pub fn take_options(&mut self) -> Vec<u8> {
+        std::mem::take(&mut self.options)
+    }
+    /// Uint32Array: processed moves by `EMoveType`, internal split moves excluded
+    /// (GCodeViewer `m_move_type_counts`).
+    #[wasm_bindgen(js_name = takeMoveTypeCounts)]
+    pub fn take_move_type_counts(&mut self) -> Vec<u32> {
+        std::mem::take(&mut self.move_type_counts)
+    }
+    /// Bit `i` set when `EOptionType` `i` is visible in the loaded
+    /// `ViewerImpl` (`Settings::options_visibility`).
+    #[wasm_bindgen(getter, js_name = visibleOptions)]
+    pub fn visible_options(&self) -> u16 {
+        OptionType::ALL
+            .into_iter()
+            .filter(|&option| self.viewer.is_option_visible(option))
+            .fold(0, |mask, option| mask | 1 << option.index())
     }
     /// Uint8Array RGB triples.
     #[wasm_bindgen(js_name = takeToolColors)]
@@ -260,4 +294,14 @@ impl VertexBuffers {
     pub fn take_layer_zs(&mut self) -> Vec<f32> {
         std::mem::take(&mut self.layer_zs)
     }
+}
+
+/// libvgcode `EOptionType` names in index order: the bits of `viewRange`
+/// `visible_options` and the values of `VertexBuffers::takeOptions`.
+#[wasm_bindgen(js_name = optionTypes)]
+pub fn option_types() -> Vec<String> {
+    OptionType::ALL
+        .iter()
+        .map(|option| format!("{option:?}"))
+        .collect()
 }

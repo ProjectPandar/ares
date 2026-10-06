@@ -27,8 +27,8 @@ export interface PreviewView {
   oneLayerValue: number;
   /** Bit `i` hides `EXTRUSION_ROLES[i]`. */
   hiddenRoles: number;
-  travel: boolean;
-  wipe: boolean;
+  /** Bit `i` shows `Toolpaths.optionTypes[i]`. */
+  visibleOptions: number;
 }
 
 /** Presets picked outside the project's embedded ones (PresetBundle selections). */
@@ -84,8 +84,7 @@ export const DEFAULT_PREVIEW: PreviewView = {
   oneLayer: false,
   oneLayerValue: 0,
   hiddenRoles: 0,
-  travel: false,
-  wipe: false,
+  visibleOptions: 0,
 };
 
 export const useApp = create<AppState>(() => ({

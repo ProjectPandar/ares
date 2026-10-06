@@ -15,11 +15,32 @@ export function canvasDigest(page: Page) {
   }).then((pixels) => createHash("sha256").update(pixels).digest("hex"));
 }
 
-/** GCodeProcessor `EMoveType::Extrude` and `ExtrusionRole::erCustom` in `--dump-moves` CSV ids. */
+/** GCodeProcessor `EMoveType::Extrude` / `Seam` and `ExtrusionRole::erCustom` in `--dump-moves` CSV ids. */
 const EXTRUDE = 10;
+const SEAM = 3;
 const CUSTOM = 18;
 
-type Move = { gcodeId: number; type: number; role: number; z: number; layer: number };
+/**
+ * Legend option rows in libvgcode `EOptionType` order (`Types.hpp`) with the
+ * GCodeProcessor `EMoveType` they show (`move_type_to_option`, `Types.cpp:12-27`)
+ * and their `append_option_item` label (`GCodeViewer.cpp:3834-3861`); color
+ * changes, pauses and custom G-codes get no row there. All but Travel show the
+ * move count (`GCodeViewer.cpp:3808`).
+ */
+const OPTION_ROWS = [
+  { option: "Travels", type: 8, label: "Travel" },
+  { option: "Wipes", type: 9, label: "Wipe" },
+  { option: "Retractions", type: 1, label: "Retract" },
+  { option: "Unretractions", type: 2, label: "Unretract" },
+  { option: "Seams", type: 3, label: "Seams" },
+  { option: "ToolChanges", type: 4, label: "Filament Changes" },
+] as const;
+/** Option markers (libvgcode `PathVertex::is_option`, `PathVertex.cpp:26-41`) by `EOptionType` name. */
+const MARKER_TYPES: Record<string, number> = {
+  Retractions: 1, Unretractions: 2, Seams: 3, ToolChanges: 4, ColorChanges: 5, PausePrints: 6, CustomGCodes: 7,
+};
+
+type Move = { gcodeId: number; type: number; role: number; z: number; layer: number; internalOnly: boolean };
 
 /**
  * Upstream GCodeProcessor moves of the browser's G-code, from the procgcode oracle
@@ -40,6 +61,7 @@ function oracleMoves(oracle: string, gcodePath: string, workDir: string): Move[]
       gcodeId: values[column.gcode_id],
       type: values[column.type],
       role: values[column.role],
+      internalOnly: values[column.internal_only] === 1,
       z: values[column.z],
       layer: values[column.layer_id],
     };
@@ -49,14 +71,15 @@ function oracleMoves(oracle: string, gcodePath: string, workDir: string): Move[]
 /**
  * G-code line the G-code window marks: `GCodeViewer::render` passes
  * `get_current_vertex().gcode_id`, the last vertex of the view range. With
- * every extrusion role shown and travels / wipes hidden
- * (`ViewerImpl::update_view_full_range`), that is the last extrusion up to the top layer.
+ * every extrusion role and the default options shown (only seams,
+ * `Settings.hpp:33-42`) and `ViewerImpl::update_view_full_range`, that is the
+ * last extrusion or seam up to the top layer.
  */
 function currentLine(moves: Move[], top: number) {
   let id = 0;
   for (const move of moves) {
     if (move.layer > top) break;
-    if (move.type === EXTRUDE) id = move.gcodeId;
+    if (move.type === EXTRUDE || move.type === SEAM) id = move.gcodeId;
   }
   return id;
 }
@@ -76,12 +99,55 @@ function layerZ(moves: Move[], layer: number) {
 async function expectCurrentLine(page: Page, gcode: string[], moves: Move[], top: number) {
   const id = currentLine(moves, top);
   const line = gcode[id - 1];
-  expect(line, `line ${id} is an extrusion move`).toMatch(/^G1 .*E/);
+  expect(line, `line ${id} is a move`).toMatch(/^G1 /);
   const current = page.getByTestId("gcode-panel").locator(".gcode-line.current");
   await expect(current.locator(".gcode-ln")).toHaveText(String(id));
   await expect(current).toContainText(line.length > 55 ? `${line.slice(0, 52)}...` : line);
   const shown = await page.getByTestId("gcode-panel").locator(".gcode-text").allTextContents();
   expect(Math.max(...shown.map((text) => text.length)), "lines are cut at 55 characters").toBeLessThanOrEqual(55);
+}
+
+/**
+ * Legend option rows and option markers (GCodeViewer::render_legend feature
+ * type view, `GCodeViewer.cpp:3870-3911`; libvgcode option markers) against the
+ * upstream move counts: each row shows its move count and the viewport draws
+ * one marker per option move. Seams are shown by default (`Settings.hpp:33-42`).
+ */
+async function checkOptions(page: Page, moves: Move[], roles: number, artifacts: string) {
+  // GCodeViewer::load_as_preview counts moves but internal split ones (`GCodeViewer.cpp:1318-1324`).
+  const counts = new Map<number, number>();
+  for (const move of moves) if (!move.internalOnly) counts.set(move.type, (counts.get(move.type) ?? 0) + 1);
+  const rows = OPTION_ROWS.filter(({ type }) => counts.has(type));
+  expect(rows.map(({ option }) => option), "options of the sliced cube").toEqual(["Travels", "Wipes", "Retractions", "Unretractions", "Seams"]);
+  const legend = page.getByTestId("legend");
+  const buttons = legend.getByRole("button");
+  await expect(buttons).toHaveCount(roles + rows.length);
+  for (const [index, { option, type, label }] of rows.entries()) {
+    const row = buttons.nth(roles + index);
+    await expect(row).toHaveAttribute("data-option", option);
+    await expect(row.locator(".legend-label")).toHaveText(label);
+    await expect(row.locator(".legend-count")).toHaveText(option === "Travels" ? "" : String(counts.get(type)));
+    await expect(row).toHaveAttribute("aria-pressed", String(option === "Seams"));
+  }
+  const markers = JSON.parse((await page.getByTestId("viewport").getAttribute("data-option-markers"))!) as Record<string, number>;
+  const expected = Object.fromEntries(Object.entries(MARKER_TYPES).flatMap(([option, type]) => (counts.has(type) ? [[option, counts.get(type)!]] : [])));
+  expect(markers, "one marker per option move").toEqual(expected);
+
+  const shown = await canvasDigest(page);
+  const seams = legend.locator("[data-option=Seams]");
+  await seams.click();
+  await expect(seams).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(() => canvasDigest(page), { message: "hiding seams must change the view" }).not.toBe(shown);
+  const hidden = await canvasDigest(page);
+  const retract = legend.locator("[data-option=Retractions]");
+  await retract.click();
+  await expect(retract).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => canvasDigest(page), { message: "showing retractions must change the view" }).not.toBe(hidden);
+  await page.screenshot({ path: `${artifacts}preview-retractions.png` });
+  await retract.click();
+  await seams.click();
+  await expect.poll(() => canvasDigest(page)).toBe(shown);
+  return { counts: Object.fromEntries(rows.map(({ option, type }) => [option, counts.get(type)])), markers };
 }
 
 /**
@@ -99,10 +165,10 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expect(page.getByTestId("layer-count")).toHaveText(String(layers));
   await expectCurrentLine(page, gcode, moves, layers - 1);
   const legend = page.getByTestId("legend");
-  await expect(legend.getByRole("button")).toHaveCount(extrudeRoles.size + 2);
   for (const label of ["Outer wall", "Inner wall", "Sparse infill", "Travel"]) {
     await expect(legend).toContainText(label);
   }
+  const options = await checkOptions(page, moves, extrudeRoles.size, artifacts);
   const top = page.getByRole("slider", { name: "Top layer" });
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   await expect(page.getByTestId("layer-slider")).toContainText(layerZ(moves, layers - 1).toFixed(2));
@@ -136,7 +202,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, roles: [...extrudeRoles].sort((a, b) => a - b),
+      moves: moves.length, layers, roles: [...extrudeRoles].sort((a, b) => a - b), options,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,

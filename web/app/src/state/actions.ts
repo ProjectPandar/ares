@@ -103,7 +103,12 @@ export function setSliceResult({ gcode, toolpaths }: SliceResult, elapsedMs: num
   useApp.setState({
     slice: { status: "done", gcode, toolpaths, elapsedMs },
     // IMSlider::SetSelectionSpan resets the saved one layer to the middle.
-    preview: { ...DEFAULT_PREVIEW, layers: [0, top], oneLayerValue: Math.floor(top / 2) },
+    preview: {
+      ...DEFAULT_PREVIEW,
+      layers: [0, top],
+      oneLayerValue: Math.floor(top / 2),
+      visibleOptions: toolpaths?.visibleOptions ?? 0,
+    },
   });
 }
 

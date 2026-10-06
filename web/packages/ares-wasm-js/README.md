@@ -17,7 +17,7 @@ The package is ESM-only and ships three entry points:
 
 | Export | Contents |
 | --- | --- |
-| `@ares-slicer/wasm` | `AresSlicer` client, types, `MOVE_TYPES`, `EXTRUSION_ROLES`, `OPTION_TYPES`, `VERTEX_VALUES` |
+| `@ares-slicer/wasm` | `AresSlicer` client, types, `MOVE_TYPES`, `EXTRUSION_ROLES`, `VERTEX_VALUES` |
 | `@ares-slicer/wasm/worker` | Module worker script that hosts the WebAssembly module |
 | `@ares-slicer/wasm/ares_wasm_bg.wasm` | The WebAssembly binary (about 9 MB, 3 MB gzip) |
 
@@ -64,7 +64,7 @@ If the worker crashes, every pending call is rejected.
 | `loadScene(input)` | `Promise<Scene>` | Parses a 3MF project or a binary/ASCII STL into plater scene data. |
 | `printConfigDef()` | `Promise<PrintConfigDef>` | OrcaSlicer `PrintConfigDef` option metadata: label, tooltip, unit (`sidetext`), type, enum values and labels, `min`/`max`, mode and GUI type of every config key, in upstream definition order. Strings are untranslated English. |
 | `sliceProject(input, plate?, overrides?)` | `Promise<SliceResult>` | Slices one plate of a 3MF project with the settings it contains. `plate` is the 3MF `plater_id` (default: the first plate). `overrides` is reserved: any non-empty object is rejected until the core option override API ships. |
-| `viewRange(layers, visibleRoles, visibleOptions)` | `Promise<ViewRange>` | View range of the latest `sliceProject` or `sliceWithProfiles` toolpaths, computed by the engine like OrcaSlicer's G-code viewer (libvgcode `ViewerImpl`). Shows the extrusion roles with bit `i` of `visibleRoles` set (`EXTRUSION_ROLES` order) and the options with bit `i` of `visibleOptions` set (`OPTION_TYPES` order), then sets the inclusive 0-based `layers` range. Returns vertex indices `[first, last, current]`; the G-code window marks the line of `current` (`ids[2 * current]`). Rejects before a project has been sliced. |
+| `viewRange(layers, visibleRoles, visibleOptions)` | `Promise<ViewRange>` | View range of the latest `sliceProject` or `sliceWithProfiles` toolpaths, computed by the engine like OrcaSlicer's G-code viewer (libvgcode `ViewerImpl`). Shows the extrusion roles with bit `i` of `visibleRoles` set (`EXTRUSION_ROLES` order) and the options with bit `i` of `visibleOptions` set (`Toolpaths.optionTypes` order), then sets the inclusive 0-based `layers` range. Returns vertex indices `[first, last, current]`; the G-code window marks the line of `current` (`ids[2 * current]`). Rejects before a project has been sliced. |
 | `parsePresetBundle(input, filename)` | `Promise<ParsedPresetBundle>` | Reads the presets of an OrcaSlicer preset JSON or an `.orca_printer` / `.orca_filament` / `.orca_bundle` / `.zip` archive, like OrcaSlicer's Import Configs. Returns `{profiles, bundle}`; add it to the catalog's `imports`. Rejects with the engine's message for malformed files. |
 | `filterCompatiblePresets(catalogJson, printer, process?)` | `Promise<CompatiblePresets>` | Selectable processes and filaments compatible with the `printer` preset (filaments also with `process` when given), as OrcaSlicer filters its preset lists. `catalogJson` is the `sliceWithProfiles` catalog with `imports` filled. Returns `{processes, filaments, diagnostics, missing_parents}`; a diagnostic is a compatibility condition that failed to evaluate, and its preset stays listed. A preset whose parent is not in the catalog is left out and listed in `missing_parents` as `{kind, name, parent}`. Rejects when the printer or process is not in the catalog or is missing a parent, e.g. `printer preset '…' is missing parent '…'` when the parent's vendor is missing. For repeated filtering use `createPresetCatalog()`. |
 | `createPresetCatalog()` | `Promise<PresetCatalog>` | An empty preset catalog held in the worker, like OrcaSlicer's `PresetBundle`: `addVendor(vendorJson)` takes the UTF-8 JSON bytes of a `loadVendor()` result (add `OrcaFilamentLibrary` first), `addImport(input, filename)` an OrcaSlicer preset JSON or `.orca_*` archive, and `filterCompatible(printer, process?)` returns what `filterCompatiblePresets` returns without re-reading the catalog, and `printers()` the printers a printer combo lists as `{vendor, name, printer_model, printer_variant}`: the vendors first, imported printers (`vendor` `"user"`) last, without abstract printers or printers missing a parent. Each file is parsed once, when added. `free()` releases it. |
@@ -110,7 +110,15 @@ arrays. Vertex `i` owns:
   G-code line of the move;
 - `tags[4 * i ...]`: `[role, moveType, extruder, color]`. `role` and
   `moveType` index `EXTRUSION_ROLES` and `MOVE_TYPES`, which follow
-  libvgcode's `Types.hpp` order.
+  libvgcode's `Types.hpp` order;
+- `options[i]`: the vertex's libvgcode option type (travel, wipe, retraction,
+  seam, ...) as an index into `optionTypes`, or 255 for extrusions and other
+  moves.
+
+`optionTypes` lists libvgcode's `EOptionType` names as the engine defines
+them; bit `i` of a `visibleOptions` mask is `optionTypes[i]`.
+`moveTypeCounts[t]` is the number of G-code moves of `MOVE_TYPES[t]`, as
+OrcaSlicer's legend counts them. `visibleOptions` is the mask of options the viewer shows by default (seams).
 
 `layerZs` is the z of each layer, from libvgcode's `Layers`.
 

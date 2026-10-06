@@ -10,11 +10,27 @@ export const ROLE_COLORS: readonly Rgb[] = [
   [102, 92, 199], [77, 128, 186], [0, 59, 110], [0, 64, 0], [128, 128, 128],
 ];
 
-/** libvgcode `DEFAULT_OPTIONS_COLORS` Travels / Wipes (`ViewerImpl.cpp:307`). */
-export const TRAVEL_COLOR: Rgb = [56, 72, 155];
-export const WIPE_COLOR: Rgb = [255, 255, 0];
+/** libvgcode `DEFAULT_OPTIONS_COLORS` (`ViewerImpl.cpp:307-317`) by `EOptionType` name. */
+export const OPTION_COLORS: Record<string, Rgb> = {
+  Travels: [56, 72, 155],
+  Wipes: [255, 255, 0],
+  Retractions: [205, 34, 214],
+  Unretractions: [73, 173, 207],
+  Seams: [230, 230, 230],
+  ToolChanges: [193, 190, 99],
+  ColorChanges: [218, 148, 139],
+  PausePrints: [82, 240, 131],
+  CustomGCodes: [226, 210, 67],
+};
 
 const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
+
+/** Used options, as indices into `Toolpaths.optionTypes` in `EOptionType` order (`ViewerImpl.cpp:1013-1015, 1054-1056`). */
+export function usedOptions({ options, optionTypes, vertexCount }: Toolpaths) {
+  const used = new Array<boolean>(optionTypes.length).fill(false);
+  for (let i = 0; i < vertexCount; i++) if (options[i] < used.length) used[options[i]] = true;
+  return used.flatMap((on, id) => (on ? [id] : []));
+}
 
 /** Role ids with at least one extrusion, in `EXTRUSION_ROLES` order (legend rows). */
 export function usedRoles({ tags, vertexCount }: Toolpaths): number[] {

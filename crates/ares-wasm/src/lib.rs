@@ -2,7 +2,7 @@ mod moves;
 mod profiles;
 mod scene;
 
-pub use moves::{MoveBuffers, SliceOutput, VertexBuffers};
+pub use moves::{MoveBuffers, SliceOutput, VertexBuffers, option_types};
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;

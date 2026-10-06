@@ -1,4 +1,4 @@
-import { EXTRUSION_ROLES, OPTION_TYPES, type Toolpaths } from "@ares-slicer/wasm";
+import { EXTRUSION_ROLES, type Toolpaths } from "@ares-slicer/wasm";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { slicer } from "../state/slicer";
 import type { PreviewView } from "../state/store";
@@ -21,8 +21,6 @@ function splitLine(text: string) {
 }
 
 const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
-const TRAVELS = 1 << OPTION_TYPES.indexOf("Travels");
-const WIPES = 1 << OPTION_TYPES.indexOf("Wipes");
 
 /**
  * GCodeViewer's G-code window (`GCodeViewer::SequentialView::GCodeWindow::render`,
@@ -34,17 +32,15 @@ const WIPES = 1 << OPTION_TYPES.indexOf("Wipes");
 export function GCodeWindow({ gcode, toolpaths, view }: { gcode: Uint8Array; toolpaths: Toolpaths; view: PreviewView }) {
   const [current, setCurrent] = useState(0);
   useEffect(() => {
-    // The engine computes the view range (libvgcode `ViewerImpl`); the preview
-    // draws no options other than travels and wipes, so the rest stay hidden.
+    // The engine computes the view range (libvgcode `ViewerImpl`).
     let stale = false;
-    const options = (view.travel ? TRAVELS : 0) | (view.wipe ? WIPES : 0);
-    void slicer.viewRange(view.layers, ALL_ROLES & ~view.hiddenRoles, options).then(([, , vertex]) => {
+    void slicer.viewRange(view.layers, ALL_ROLES & ~view.hiddenRoles, view.visibleOptions).then(([, , vertex]) => {
       if (!stale) setCurrent(toolpaths.ids[2 * vertex]);
     });
     return () => {
       stale = true;
     };
-  }, [toolpaths, view.layers, view.hiddenRoles, view.travel, view.wipe]);
+  }, [toolpaths, view.layers, view.hiddenRoles, view.visibleOptions]);
   return current === 0 ? null : <GCodeLines gcode={gcode} current={current} />;
 }
 
