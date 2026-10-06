@@ -104,6 +104,30 @@ export class AresSlicer {
   }
 
   /**
+   * The scene `sliceWithProfiles` slices for the same arguments: the model
+   * loaded with the selected presets and placed as `options.placement` asks
+   * (an STL centered on the selected printer's bed), with the composed
+   * config as `settings`. Rejects as `sliceWithProfiles` does.
+   */
+  async placementScene(
+    input: Uint8Array,
+    filename: string,
+    catalogJson: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<Scene> {
+    await this.#ready;
+    return (await this.#call({
+      kind: "placementScene",
+      input: input.slice(),
+      filename,
+      catalog: catalogJson,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
+    })) as Scene;
+  }
+
+  /**
    * The config `sliceWithProfiles` slices with for the same arguments: the
    * selected presets composed over the input (`PresetBundle::full_config`) with
    * `options.overrides` applied, as one option map in the stored form of

@@ -1,7 +1,8 @@
-import type { Toolpaths } from "@ares-slicer/wasm";
+import type { Scene, Toolpaths } from "@ares-slicer/wasm";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { selectObject } from "../state/actions";
+import { placedScene, presetSliceBlocker } from "../state/presets";
 import { type PreviewView, useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bedShape";
@@ -46,8 +47,31 @@ export function ViewportView({ toolpaths = null, colors = null, view, fit = "pla
   const [viewport, setViewport] = useState<Viewport | null>(null);
   const [active, setActive] = useState<ViewPreset | null>("plate");
   const theme = useApp((state) => state.theme);
-  const scene = useApp((state) => state.scene);
+  const loaded = useApp((state) => state.scene);
+  const file = useApp((state) => state.file);
+  const selection = useApp((state) => state.presetSelection);
+  const vendors = useApp((state) => state.vendors);
+  const presetImports = useApp((state) => state.presetImports);
   const selected = useApp((state) => state.selectedObject);
+  // With presets selected the plate shows the model and bed the preset slice uses, re-placed on
+  // every printer switch (on_select_preset -> on_config_change -> set_bed_shape, Plater.cpp:9576-9580,
+  // 16754-16755).
+  const [placed, setPlaced] = useState<{ inputs: unknown[]; scene: Scene } | null>(null);
+  const inputs = [loaded, selection, vendors, presetImports];
+  const scene = placed && placed.inputs.every((input, at) => input === inputs[at]) ? placed.scene : loaded;
+  useEffect(() => {
+    if (!file || !loaded || !selection || presetSliceBlocker(selection, loaded)) return;
+    let stale = false;
+    // A selection the engine cannot compose keeps the loaded plate; the process tab shows the
+    // same composition error (usePresetValues).
+    placedScene(file, loaded, selection, { vendors, presetImports }).then(
+      (result) => !stale && setPlaced({ inputs: [loaded, selection, vendors, presetImports], scene: result }),
+      () => !stale && setPlaced(null),
+    );
+    return () => {
+      stale = true;
+    };
+  }, [file, loaded, selection, vendors, presetImports]);
   // A new scene or slice result resets the camera to the plate view.
   const [framed, setFramed] = useState([scene, toolpaths]);
   if (framed[0] !== scene || framed[1] !== toolpaths) {
@@ -94,8 +118,8 @@ export function ViewportView({ toolpaths = null, colors = null, view, fit = "pla
 
   useEffect(() => {
     viewport?.setBed(bedFromSettings(scene?.settings ?? null));
-    viewport?.setScene(scene, firstString(scene?.settings?.filament, "filament_colour") ?? "#29b2a3");
-  }, [viewport, scene]);
+    viewport?.setScene(scene, firstString(loaded?.settings?.filament, "filament_colour") ?? "#29b2a3");
+  }, [viewport, scene, loaded]);
 
   useEffect(() => viewport?.setSelected(selected), [viewport, selected]);
   // A new scene or slice result is re-framed: Prepare the plate, Preview the print.

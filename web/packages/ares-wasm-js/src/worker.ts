@@ -8,11 +8,13 @@ import init, {
   optionColors,
   optionTypes,
   parsePresetBundle,
+  placementScene,
   printConfigDef,
   profileSettings,
   roleColors,
   sliceProjectPlateProcessed,
   sliceWithProfilesProcessed,
+  type SceneData,
   type SliceOutput,
   slice_stl,
   type VertexBuffers,
@@ -38,6 +40,14 @@ const replaceViewer = (next?: VertexBuffers) => {
 const catalogs = new Map<number, PresetCatalog>();
 
 /** G-code and libvgcode toolpaths of a processed slice; its vertices stay loaded for `viewRange`. */
+function sceneResult(data: SceneData): [Scene, Transferable[]] {
+  const positions = data.takePositions();
+  const indices = data.takeIndices();
+  const scene: Scene = { ...JSON.parse(data.metadata), positions, indices };
+  data.free();
+  return [scene, [positions.buffer, indices.buffer]];
+}
+
 function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
   const gcode = owned(output.takeGcode());
   const vertices = output.takeVertices();
@@ -76,13 +86,11 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const definition: PrintConfigDef = JSON.parse(new TextDecoder().decode(printConfigDef()));
       return [definition, []];
     }
-    case "loadScene": {
-      const data = loadScene(request.input);
-      const positions = data.takePositions();
-      const indices = data.takeIndices();
-      const scene: Scene = { ...JSON.parse(data.metadata), positions, indices };
-      data.free();
-      return [scene, [positions.buffer, indices.buffer]];
+    case "loadScene":
+      return sceneResult(loadScene(request.input));
+    case "placementScene": {
+      const { input, filename, catalog, selection, options } = request;
+      return sceneResult(await placementScene(input, filename, catalog, selection, options));
     }
     case "sliceProject":
       // No palettes: the preview colors by feature type, and raw moves stay in wasm memory.

@@ -70,6 +70,11 @@ node scripts/extract-process-layout.mjs /path/to/OrcaSlicer
   `UnsavedChangesDialog` from `Tab::may_discard_current_dirty_preset`
   (`Tab.cpp:6278-6282`), whether to transfer or discard them; that dialog is
   not ported.
+- The Prepare plate switches to the selected printer's bed, with an STL centered
+  on it, once a process and every filament are selected too: `placementScene`
+  composes the full selection. OrcaSlicer updates the bed as soon as the
+  printer changes (`Plater::priv::on_select_preset` -> `on_config_change` ->
+  `set_bed_shape`, `Plater.cpp:9576-9580, 16754-16755`).
 
 ## End-to-end test
 

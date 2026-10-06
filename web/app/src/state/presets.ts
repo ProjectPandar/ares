@@ -217,6 +217,15 @@ export async function presetValues(file: ModelFile, scene: Scene, selection: Pre
   return { ...settings, ...(await decodeOptions(useApp.getState().configDefs!, settings)) };
 }
 
+/**
+ * The scene as the preset slice places it on the selected printer's bed: an STL centered like
+ * one model loaded on an empty plate (Plater.cpp:7149-7160), with the composed config's bed.
+ */
+export async function placedScene(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
+  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
+  return slicer.placementScene(file.bytes, file.name, catalog, profiles, options);
+}
+
 /** Names of the imported presets of one `type`, for the "User presets" group. */
 export function importedNames(imports: readonly ParsedPresetBundle[], type: "machine" | "process" | "filament"): Set<string> {
   return new Set(
