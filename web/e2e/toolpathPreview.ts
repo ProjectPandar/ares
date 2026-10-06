@@ -162,14 +162,14 @@ async function expectMarkedLine(page: Page, gcode: string[], id: number) {
  * `GCodeViewer::update_sequential_view_current`); the layers below turn grey
  * (`ViewerImpl::update_colors_texture`).
  */
-async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top: number, artifacts: string) {
+async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top: number, artifacts: string, latched: boolean) {
   const stops = movesSliderStops(moves, top);
   const slider = page.getByRole("slider", { name: "Moves" });
   await expect(slider).toHaveAttribute("aria-valuemax", String(stops.length - 1));
   await expect(slider).toHaveValue(String(stops.length - 1));
   await expectMarkedLine(page, gcode, stops.at(-1)!);
   const full = await canvasDigest(page);
-  const latched = (await page.getByTestId("tool-position").count()) > 0;
+  await expect(page.getByTestId("tool-position")).toHaveCount(latched ? 1 : 0);
   const middle = Math.floor(stops.length / 2);
   await slider.fill(String(middle));
   await expectMarkedLine(page, gcode, stops[middle]);
@@ -179,7 +179,9 @@ async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top:
   await expectMarkedLine(page, gcode, stops[0]);
   await slider.fill(String(stops.length - 1));
   await expectMarkedLine(page, gcode, stops.at(-1)!);
-  // The tool marker shown since the thumb left the end stays (`GCodeViewer.cpp:1594-1596`).
+  // The marker latches once the thumb leaves the end and stays (`GCodeViewer.cpp:1594-1596`): back at the
+  // end it is drawn, which changes the view only if it was not drawn at the start.
+  await expect(page.getByTestId("tool-position")).toHaveCount(1);
   if (latched) await expect.poll(() => canvasDigest(page)).toBe(full);
   else await expect.poll(() => canvasDigest(page), { message: "the latched tool marker draws at the end" }).not.toBe(full);
   return { stops: stops.length, first: stops[0], middle: stops[middle], last: stops.at(-1) };
@@ -328,7 +330,8 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expectCurrentLine(page, gcode, moves, 0);
   await expect.poll(() => canvasDigest(page), { message: "first layer only must differ from all layers" }).not.toBe(full);
   await expectNoToolPosition(page);
-  const movesSlider = { 1: await checkMovesSlider(page, gcode, moves, 0, artifacts) };
+  // Fresh load: the marker is not latched yet (`GCodeViewer.cpp:1388`).
+  const movesSlider = { 1: await checkMovesSlider(page, gcode, moves, 0, artifacts, false) };
   const toolPosition = await checkToolPosition(page, moves, 0, artifacts);
   await top.focus();
   await page.keyboard.press("PageUp");
@@ -343,7 +346,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   // GCodeViewer::render (`GCodeViewer.cpp:1594-1601`): the marker stays shown once the moves thumb left the end.
   await expect.poll(() => canvasDigest(page), { message: "the latched tool marker draws at the last move" }).not.toBe(full);
   const marked = await canvasDigest(page);
-  Object.assign(movesSlider, { [layers]: await checkMovesSlider(page, gcode, moves, layers - 1, artifacts) });
+  Object.assign(movesSlider, { [layers]: await checkMovesSlider(page, gcode, moves, layers - 1, artifacts, true) });
 
   const outerWall = legend.getByRole("button", { name: "Outer wall" });
   await outerWall.click();
