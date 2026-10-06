@@ -1,5 +1,6 @@
-//! `Print.cpp:1695-1749::Print::validate` (OrcaSlicer v2.4.2): raw layer
-//! templates must agree with the extruder addressing mode.
+//! `Print.cpp:1524-1556,1654-1671,1695-1749::Print::validate` (OrcaSlicer
+//! v2.4.2): applied minimum widths precede extruder-addressing template checks.
+mod extrusion_width;
 mod identity;
 
 pub(crate) use identity::project_is_bbl;
@@ -7,15 +8,27 @@ pub(crate) use identity::project_is_bbl;
 use std::sync::OnceLock;
 
 use regex::Regex;
+use serde::Deserialize;
 
 use crate::{
-    ConfigOverrides, GCodeFlavor, Project, ProjectSettings, SliceError, SliceOptions,
-    project::effective_config::resolve_bounded_project_config,
+    ConfigOverrides, GCodeFlavor, OrcaFloat, OrcaFloats, Project, ProjectSettings, SliceError,
+    SliceOptions,
+    project::effective_config::{
+        resolve_bounded_project_config, types::BoundedResolvedProjectConfig,
+    },
 };
 
-/// The O1 slice of `Print.hpp:935::Print::validate`, separate from processing.
+/// The O4 and O1 slices of `Print.hpp:935::Print::validate`, separate from processing.
 /// Returns the exact upstream diagnostic in `SliceError::InvalidInput`.
 pub fn validate_print(settings: &ProjectSettings, bbl_printer: bool) -> Result<(), SliceError> {
+    extrusion_width::flat(settings)?;
+    validate_layer_templates(settings, bbl_printer)
+}
+
+fn validate_layer_templates(
+    settings: &ProjectSettings,
+    bbl_printer: bool,
+) -> Result<(), SliceError> {
     let gcode = &settings.printer.gcode;
     layer_gcode(
         gcode.use_relative_e_distances.0,
@@ -35,6 +48,55 @@ pub fn validate_stl(input: impl AsRef<[u8]>, options: &SliceOptions) -> Result<(
 }
 
 pub(crate) fn validate_stl_options(options: &SliceOptions) -> Result<(), SliceError> {
+    // SliceOptions has legacy scalar carriers for unrelated vector fields.
+    // Deserialize only the config used by the applied width/usage view.
+    let fields = options
+        .values()
+        .iter()
+        .filter(|(key, _)| {
+            matches!(
+                key.as_str(),
+                "layer_height"
+                    | "line_width"
+                    | "support_line_width"
+                    | "inner_wall_line_width"
+                    | "outer_wall_line_width"
+                    | "sparse_infill_line_width"
+                    | "internal_solid_infill_line_width"
+                    | "top_surface_line_width"
+                    | "skin_infill_line_width"
+                    | "skeleton_infill_line_width"
+                    | "enable_support"
+                    | "enforce_support_layers"
+                    | "raft_layers"
+                    | "support_filament"
+                    | "support_interface_filament"
+                    | "brim_type"
+                    | "brim_width"
+                    | "wall_loops"
+                    | "sparse_infill_density"
+                    | "top_shell_layers"
+                    | "bottom_shell_layers"
+                    | "outer_wall_filament_id"
+                    | "inner_wall_filament_id"
+                    | "sparse_infill_filament_id"
+                    | "internal_solid_filament_id"
+                    | "top_surface_filament_id"
+                    | "bottom_surface_filament_id"
+                    | "filament_map"
+            )
+        })
+        .map(|(key, value)| (key.as_str(), value));
+    let mut settings = ProjectSettings::deserialize(serde::de::value::MapDeserializer::new(fields))
+        .map_err(|error| SliceError::InvalidInput(error.to_string()))?;
+    settings.project.print.nozzle_diameter = OrcaFloats(
+        options
+            .nozzle_diameters()?
+            .into_iter()
+            .map(OrcaFloat)
+            .collect(),
+    );
+    extrusion_width::flat(&settings)?;
     let identity = |key: &str| -> Result<&str, SliceError> {
         match options.values().get(key) {
             None => Ok(""),
@@ -83,20 +145,22 @@ pub(crate) fn validate_loaded_project(
     });
     let project = project.select_plate(plate)?;
     let resolved = resolve_bounded_project_config(&project)?;
-    validate_applied_project(&project, &resolved.views.full, selected_printer)
+    validate_applied_project(&project, &resolved, selected_printer)
 }
 
 pub(crate) fn validate_applied_project(
     project: &Project,
-    settings: &ProjectSettings,
+    resolved: &BoundedResolvedProjectConfig,
     selected_printer: Option<&str>,
 ) -> Result<(), SliceError> {
+    extrusion_width::applied(resolved)?;
+    let settings = &resolved.views.full;
     let bbl = project_is_bbl(
         settings,
         &project.documents().project_settings_raw,
         selected_printer,
     )?;
-    validate_print(settings, bbl)
+    validate_layer_templates(settings, bbl)
 }
 
 const MISSING_RESET: &str = "Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode.";
