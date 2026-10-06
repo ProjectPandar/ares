@@ -33,8 +33,10 @@ const VIEW_KEYS: Record<string, ViewPreset> = {
   "0": "plate", "1": "top", "2": "bottom", "3": "front", "4": "rear", "5": "left", "6": "right",
 };
 
-export function ViewportView({ toolpaths = null, view, fit = "plate", children }: {
+export function ViewportView({ toolpaths = null, colors = null, view, fit = "plate", children }: {
   toolpaths?: Toolpaths | null;
+  /** Per-vertex RGB of `toolpaths` (`ViewColors.colors`); `null` keeps `Toolpaths.colors`. */
+  colors?: Uint8Array | null;
   view?: PreviewView;
   /** Initial framing when the scene loads. */
   fit?: Exclude<ZoomTarget, "bed">;
@@ -107,6 +109,9 @@ export function ViewportView({ toolpaths = null, view, fit = "plate", children }
   useEffect(() => {
     if (view) viewport?.setPreviewView(view);
   }, [viewport, view]);
+  useEffect(() => {
+    if (colors) viewport?.setToolpathColors(colors);
+  }, [viewport, colors]);
 
   return (
     <div className="viewport">

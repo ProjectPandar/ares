@@ -108,6 +108,8 @@ export function setSliceResult({ gcode, toolpaths }: SliceResult, elapsedMs: num
       layers: [0, top],
       oneLayerValue: Math.floor(top / 2),
       visibleOptions: toolpaths?.visibleOptions ?? 0,
+      // The view type is a viewer setting a new G-code keeps.
+      viewType: useApp.getState().preview.viewType,
     },
   });
 }

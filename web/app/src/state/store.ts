@@ -29,6 +29,8 @@ export interface PreviewView {
   hiddenRoles: number;
   /** Bit `i` shows `Toolpaths.optionTypes[i]`. */
   visibleOptions: number;
+  /** Legend color scheme, one of `Toolpaths.viewTypes` (libvgcode `Settings::view_type`). */
+  viewType: string;
 }
 
 /** Presets picked outside the project's embedded ones (PresetBundle selections). */
@@ -85,6 +87,7 @@ export const DEFAULT_PREVIEW: PreviewView = {
   oneLayerValue: 0,
   hiddenRoles: 0,
   visibleOptions: 0,
+  viewType: "FeatureType",
 };
 
 export const useApp = create<AppState>(() => ({

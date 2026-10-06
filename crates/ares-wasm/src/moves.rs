@@ -126,7 +126,7 @@ impl MoveBuffers {
 pub struct VertexBuffers {
     count: usize,
     spiral_vase_mode: bool,
-    viewer: ViewerImpl,
+    pub(crate) viewer: ViewerImpl,
     values: Vec<f32>,
     ids: Vec<u32>,
     tags: Vec<u8>,
@@ -138,16 +138,10 @@ pub struct VertexBuffers {
 }
 
 impl VertexBuffers {
-    fn pack(mut data: GCodeInputData) -> Self {
+    fn pack(data: GCodeInputData) -> Self {
         let count = data.vertices.len();
-        let tool_colors = std::mem::take(&mut data.tools_colors)
-            .into_iter()
-            .flatten()
-            .collect();
-        let color_print_colors = std::mem::take(&mut data.color_print_colors)
-            .into_iter()
-            .flatten()
-            .collect();
+        let tool_colors = data.tools_colors.as_flattened().to_vec();
+        let color_print_colors = data.color_print_colors.as_flattened().to_vec();
         let spiral_vase_mode = data.spiral_vase_mode;
         let mut viewer = ViewerImpl::default();
         viewer.load(data);
@@ -195,6 +189,23 @@ impl VertexBuffers {
         }
         out.viewer = viewer;
         out
+    }
+
+    /// Shows the extrusion roles with bit `i` of `visible_roles` set
+    /// (`EGCodeExtrusionRole` order) and the options with bit `i` of
+    /// `visible_options` set (`EOptionType` order), as GCodeViewer toggles the legend.
+    pub(crate) fn set_visibility(&mut self, visible_roles: u32, visible_options: u16) {
+        let viewer = &mut self.viewer;
+        for role in GCodeExtrusionRole::ALL {
+            if viewer.is_extrusion_role_visible(role) != (visible_roles >> role.index() & 1 == 1) {
+                viewer.toggle_extrusion_role_visibility(role);
+            }
+        }
+        for option in OptionType::ALL {
+            if viewer.is_option_visible(option) != (visible_options >> option.index() & 1 == 1) {
+                viewer.toggle_option_visibility(option);
+            }
+        }
     }
 }
 
@@ -255,9 +266,7 @@ impl VertexBuffers {
     pub fn take_color_print_colors(&mut self) -> Vec<u8> {
         std::mem::take(&mut self.color_print_colors)
     }
-    /// libvgcode `ViewerImpl` view range after showing extrusion roles with
-    /// bit `i` of `visible_roles` set (`EGCodeExtrusionRole` order) and options
-    /// with bit `i` of `visible_options` set (`EOptionType` order), then
+    /// libvgcode `ViewerImpl` view range after `set_visibility` and
     /// `set_layers_view_range(min_layer, max_layer)`, as GCodeViewer toggles the
     /// legend and moves the layer slider. Returns the visible range and the
     /// current vertex: `[first, last, current]`.
@@ -269,17 +278,8 @@ impl VertexBuffers {
         visible_roles: u32,
         visible_options: u16,
     ) -> Vec<u32> {
+        self.set_visibility(visible_roles, visible_options);
         let viewer = &mut self.viewer;
-        for role in GCodeExtrusionRole::ALL {
-            if viewer.is_extrusion_role_visible(role) != (visible_roles >> role.index() & 1 == 1) {
-                viewer.toggle_extrusion_role_visibility(role);
-            }
-        }
-        for option in OptionType::ALL {
-            if viewer.is_option_visible(option) != (visible_options >> option.index() & 1 == 1) {
-                viewer.toggle_option_visibility(option);
-            }
-        }
         viewer.set_layers_view_range(min_layer as usize, max_layer as usize);
         let [first, last] = viewer.get_view_visible_range();
         [first, last, viewer.get_current_vertex_id()]

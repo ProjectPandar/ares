@@ -5,18 +5,21 @@ import init, {
   encodeConfigValue,
   filterCompatiblePresets,
   loadScene,
+  optionColors,
   optionTypes,
   parsePresetBundle,
   printConfigDef,
+  roleColors,
   sliceProjectPlateProcessed,
   sliceWithProfilesProcessed,
   type SliceOutput,
   slice_stl,
   type VertexBuffers,
+  viewTypes,
 } from "./wasm/ares_wasm.js";
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { SliceResult, Toolpaths } from "./toolpaths.js";
+import type { ColorRange, SliceResult, Toolpaths, ViewColors } from "./toolpaths.js";
 import type { Scene } from "./types.js";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -24,7 +27,7 @@ declare const self: DedicatedWorkerGlobalScope;
 // wasm-bindgen returns `Vec<u8>` as a `.slice()` copy out of wasm memory: always a fresh, transferable ArrayBuffer.
 const owned = (bytes: Uint8Array) => bytes as Uint8Array<ArrayBuffer>;
 
-/** Vertices of the latest `sliceProject`, loaded in libvgcode `ViewerImpl` for `viewRange`. */
+/** Vertices of the latest `sliceProject`, loaded in libvgcode `ViewerImpl` for `viewRange` and `viewColors`. */
 let viewer: VertexBuffers | undefined;
 const replaceViewer = (next?: VertexBuffers) => {
   viewer?.free();
@@ -47,14 +50,19 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
     optionTypes: optionTypes(),
     moveTypeCounts: vertices.takeMoveTypeCounts() as Uint32Array<ArrayBuffer>,
     visibleOptions: vertices.visibleOptions,
+    // Every extrusion role shown, the default options.
+    colors: owned(vertices.vertexColors("FeatureType", 0xffffffff, vertices.visibleOptions)),
+    viewTypes: viewTypes(),
+    roleColors: owned(roleColors()),
+    optionColors: owned(optionColors()),
     layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
     spiralVaseMode: vertices.spiralVaseMode,
   };
   replaceViewer(vertices);
-  const { values, ids, tags, options, moveTypeCounts, layerZs } = toolpaths;
+  const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs } = toolpaths;
   return [
     { gcode, toolpaths },
-    [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, layerZs.buffer],
+    [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, colors.buffer, roles.buffer, optionRgb.buffer, layerZs.buffer],
   ];
 }
 
@@ -129,6 +137,13 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { layers, visibleRoles, visibleOptions } = request;
       return [[...viewer.viewRange(layers[0], layers[1], visibleRoles, visibleOptions)], []];
+    }
+    case "viewColors": {
+      if (!viewer) throw new Error("No toolpaths: slice a project first");
+      const { viewType, visibleRoles, visibleOptions } = request;
+      const colors = owned(viewer.vertexColors(viewType, visibleRoles, visibleOptions));
+      const value: ViewColors = { colors, range: JSON.parse(viewer.colorRange(viewType)) as ColorRange | null };
+      return [value, [colors.buffer]];
     }
   }
 }

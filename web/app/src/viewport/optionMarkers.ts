@@ -1,6 +1,5 @@
 import { MOVE_TYPES, type Toolpaths, VERTEX_VALUES } from "@ares-slicer/wasm";
 import * as THREE from "three";
-import { OPTION_COLORS } from "./roles";
 import { fragmentShader } from "./toolpathMesh";
 
 const TRAVEL = MOVE_TYPES.indexOf("Travel");
@@ -45,12 +44,13 @@ void main() {
  * but travels and wipes, which are segments). Returns the mesh and its marker
  * count by `EOptionType` name.
  */
-export function buildOptionMarkers({ values, ids, tags, options, optionTypes, vertexCount }: Toolpaths) {
+export function buildOptionMarkers({ values, ids, tags, options, optionTypes, colors, vertexCount }: Toolpaths) {
   const center = new Float32Array(vertexCount * 3);
   const size = new Float32Array(vertexCount * 2);
   const color = new Uint8Array(vertexCount * 3);
   const layer = new Float32Array(vertexCount);
   const option = new Uint8Array(vertexCount);
+  const vertex = new Uint32Array(vertexCount);
   const counts: Record<string, number> = {};
   let count = 0;
   for (let i = 0; i < vertexCount; i++) {
@@ -61,7 +61,8 @@ export function buildOptionMarkers({ values, ids, tags, options, optionTypes, ve
     center.set([values[at], values[at + 1], values[at + 2] - 0.5 * values[at + HEIGHT]], count * 3);
     size[count * 2] = SCALING * values[at + HEIGHT];
     size[count * 2 + 1] = SCALING * values[at + WIDTH];
-    color.set(OPTION_COLORS[name], count * 3);
+    color.set(colors.subarray(3 * i, 3 * i + 3), count * 3);
+    vertex[count] = i;
     layer[count] = ids[2 * i + 1];
     option[count] = options[i];
     counts[name] = (counts[name] ?? 0) + 1;
@@ -89,5 +90,6 @@ export function buildOptionMarkers({ values, ids, tags, options, optionTypes, ve
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
+  mesh.userData.vertices = vertex.subarray(0, count);
   return { mesh, counts };
 }

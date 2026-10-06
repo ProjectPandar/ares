@@ -1,0 +1,100 @@
+use crate::VertexBuffers;
+use ares_vgcode::{
+    Color, ColorRangeType, DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS, ViewType,
+};
+use serde::Serialize;
+use wasm_bindgen::prelude::*;
+
+/// View types exposed in `EViewType` order. Actual speed / flow, pressure
+/// advance, acceleration and jerk are left out because ares-core moves do not
+/// record them yet; color print, tool and summary views are not ported yet.
+const VIEW_TYPES: [ViewType; 9] = [
+    ViewType::FeatureType,
+    ViewType::Speed,
+    ViewType::Height,
+    ViewType::Width,
+    ViewType::VolumetricFlowRate,
+    ViewType::LayerTimeLinear,
+    ViewType::LayerTimeLogarithmic,
+    ViewType::FanSpeed,
+    ViewType::Temperature,
+];
+
+fn view_type(name: &str) -> Result<ViewType, JsError> {
+    VIEW_TYPES
+        .into_iter()
+        .find(|view_type| format!("{view_type:?}") == name)
+        .ok_or_else(|| JsError::new(&format!("unknown view type {name}")))
+}
+
+/// libvgcode `ColorRange` state (`ColorRange.hpp`).
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ColorRangeView {
+    range_type: &'static str,
+    range: [f32; 2],
+    values: Vec<f32>,
+    palette: Vec<Color>,
+}
+
+#[wasm_bindgen]
+impl VertexBuffers {
+    /// Uint8Array RGB triples: libvgcode `ViewerImpl::get_vertex_color` of each
+    /// vertex under `view_type` (`ViewerImpl::update_colors`), after the
+    /// `set_visibility` the color ranges depend on.
+    #[wasm_bindgen(js_name = vertexColors)]
+    pub fn vertex_colors(
+        &mut self,
+        view_type_name: &str,
+        visible_roles: u32,
+        visible_options: u16,
+    ) -> Result<Vec<u8>, JsError> {
+        let view_type = view_type(view_type_name)?;
+        self.set_visibility(visible_roles, visible_options);
+        if self.viewer.get_view_type() != view_type {
+            self.viewer.set_view_type(view_type);
+        }
+        Ok(self.viewer.colors().as_flattened().to_vec())
+    }
+
+    /// JSON `{rangeType, range, values, palette}` of libvgcode
+    /// `ViewerImpl::get_color_range(view_type)` after `vertexColors`, or `null`
+    /// for a view type without a range.
+    #[wasm_bindgen(js_name = colorRange)]
+    pub fn color_range(&self, view_type_name: &str) -> Result<String, JsError> {
+        let range = self
+            .viewer
+            .get_color_range(view_type(view_type_name)?)
+            .map(|range| ColorRangeView {
+                range_type: match range.get_type() {
+                    ColorRangeType::Linear => "Linear",
+                    ColorRangeType::Logarithmic => "Logarithmic",
+                },
+                range: range.get_range(),
+                values: range.get_values(),
+                palette: range.get_palette().to_vec(),
+            });
+        Ok(serde_json::to_string(&range).expect("color range serializes"))
+    }
+}
+
+/// libvgcode `EViewType` names `vertexColors` and `colorRange` accept, in index order.
+#[wasm_bindgen(js_name = viewTypes)]
+pub fn view_types() -> Vec<String> {
+    VIEW_TYPES
+        .iter()
+        .map(|view_type| format!("{view_type:?}"))
+        .collect()
+}
+
+/// Uint8Array RGB triples: libvgcode `DEFAULT_EXTRUSION_ROLES_COLORS` in `EGCodeExtrusionRole` order.
+#[wasm_bindgen(js_name = roleColors)]
+pub fn role_colors() -> Vec<u8> {
+    DEFAULT_EXTRUSION_ROLES_COLORS.as_flattened().to_vec()
+}
+
+/// Uint8Array RGB triples: libvgcode `DEFAULT_OPTIONS_COLORS` in `EOptionType` order.
+#[wasm_bindgen(js_name = optionColors)]
+pub fn option_colors() -> Vec<u8> {
+    DEFAULT_OPTIONS_COLORS.as_flattened().to_vec()
+}

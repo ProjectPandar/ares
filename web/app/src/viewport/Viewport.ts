@@ -6,7 +6,7 @@ import { buildBed } from "./bed";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
-import { applyPreviewView, buildToolpathMesh } from "./toolpathMesh";
+import { applyPreviewView, applyVertexColors, buildToolpathMesh } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -186,6 +186,13 @@ export class Viewport {
     }
     if (this.#previewView) this.setPreviewView(this.#previewView);
     else this.render();
+  }
+
+  /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths. */
+  setToolpathColors(colors: Uint8Array) {
+    if (!this.#toolpaths) return;
+    applyVertexColors(this.#toolpaths, colors);
+    this.render();
   }
 
   setPreviewView(view: PreviewView) {

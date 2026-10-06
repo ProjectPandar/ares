@@ -1,7 +1,6 @@
 import { EXTRUSION_ROLES, MOVE_TYPES, type Toolpaths, VERTEX_VALUES } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import type { PreviewView } from "../state/store";
-import { OPTION_COLORS, ROLE_COLORS } from "./roles";
 
 const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
 const TRAVEL = MOVE_TYPES.indexOf("Travel");
@@ -76,13 +75,14 @@ void main() {
  * update uniforms.
  */
 export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
-  const { values, ids, tags, options, optionTypes, vertexCount } = toolpaths;
+  const { values, ids, tags, options, colors, vertexCount } = toolpaths;
   const start = new Float32Array(vertexCount * 3);
   const end = new Float32Array(vertexCount * 3);
   const size = new Float32Array(vertexCount * 2);
   const color = new Uint8Array(vertexCount * 3);
   const layer = new Float32Array(vertexCount);
   const kind = new Uint8Array(vertexCount);
+  const vertex = new Uint32Array(vertexCount);
   // GCodeViewer::load paths box: every extrusion role except Custom (prime lines).
   const bounds = new THREE.Box3();
   const point = new THREE.Vector3();
@@ -101,7 +101,8 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     size[count * 2] = extrude ? values[b + WIDTH] : OPTION_SIZE;
     size[count * 2 + 1] = extrude ? values[b + HEIGHT] : OPTION_SIZE;
     const id = extrude ? role : KIND_OPTION + options[i];
-    color.set(extrude ? ROLE_COLORS[id] : OPTION_COLORS[optionTypes[options[i]]], count * 3);
+    color.set(colors.subarray(3 * i, 3 * i + 3), count * 3);
+    vertex[count] = i;
     layer[count] = ids[2 * i + 1];
     kind[count] = id;
     count++;
@@ -134,7 +135,24 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
+  mesh.userData.vertices = vertex.subarray(0, count);
   return mesh;
+}
+
+/**
+ * Recolors the toolpath mesh and its option markers with per-vertex RGB
+ * (`ViewColors.colors`); each instance takes its vertex's color, as libvgcode
+ * segments take their end vertex color.
+ */
+export function applyVertexColors(mesh: THREE.Mesh, colors: Uint8Array) {
+  mesh.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const vertices = node.userData.vertices as Uint32Array;
+    const attribute = (node.geometry as THREE.InstancedBufferGeometry).getAttribute("aColor") as THREE.InstancedBufferAttribute;
+    const color = attribute.array as Uint8Array;
+    for (let n = 0; n < vertices.length; n++) color.set(colors.subarray(3 * vertices[n], 3 * vertices[n] + 3), 3 * n);
+    attribute.needsUpdate = true;
+  });
 }
 
 /** Sets the view on the toolpath mesh and its option markers (children). */

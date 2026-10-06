@@ -1,7 +1,9 @@
+mod colors;
 mod moves;
 mod profiles;
 mod scene;
 
+pub use colors::{option_colors, role_colors, view_types};
 pub use moves::{MoveBuffers, SliceOutput, VertexBuffers, option_types};
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};

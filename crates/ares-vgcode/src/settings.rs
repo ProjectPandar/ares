@@ -1,11 +1,14 @@
-// Ports the view-range subset of AGPL-licensed OrcaSlicer `src/libvgcode/src/Settings.hpp`.
+// Ports AGPL-licensed OrcaSlicer `src/libvgcode/src/Settings.hpp`.
 
-use crate::{GCodeExtrusionRole, OptionType};
+use crate::{GCodeExtrusionRole, OptionType, TimeMode, ViewType};
 
-/// `Settings` visibility fields used by the view range. View type, time mode
-/// and the update flags belong to the renderer and are not ported.
+/// `Settings` fields used by the view range and the vertex colors. The
+/// textures and enabled-entities update flags belong to the renderer.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Settings {
+    pub view_type: ViewType,
+    pub time_mode: TimeMode,
+    pub update_colors: bool,
     pub top_layer_only_view_range: bool,
     pub spiral_vase_mode: bool,
     pub options_visibility: [bool; OptionType::COUNT],
@@ -17,6 +20,9 @@ impl Default for Settings {
         let mut options_visibility = [false; OptionType::COUNT];
         options_visibility[OptionType::Seams.index()] = true;
         Self {
+            view_type: ViewType::FeatureType,
+            time_mode: TimeMode::Normal,
+            update_colors: true,
             top_layer_only_view_range: false,
             spiral_vase_mode: false,
             options_visibility,

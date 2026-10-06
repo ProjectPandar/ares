@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
+import { checkColorRanges, type RangeMove } from "./colorRanges";
 
 /** Hash of the downscaled viewport canvas, to detect view changes. */
 export function canvasDigest(page: Page) {
@@ -40,7 +41,7 @@ const MARKER_TYPES: Record<string, number> = {
   Retractions: 1, Unretractions: 2, Seams: 3, ToolChanges: 4, ColorChanges: 5, PausePrints: 6, CustomGCodes: 7,
 };
 
-type Move = { gcodeId: number; type: number; role: number; z: number; layer: number; internalOnly: boolean };
+type Move = RangeMove & { gcodeId: number; z: number; internalOnly: boolean };
 
 /**
  * Upstream GCodeProcessor moves of the browser's G-code, from the procgcode oracle
@@ -64,6 +65,13 @@ function oracleMoves(oracle: string, gcodePath: string, workDir: string): Move[]
       internalOnly: values[column.internal_only] === 1,
       z: values[column.z],
       layer: values[column.layer_id],
+      width: values[column.width],
+      height: values[column.height],
+      feedrate: values[column.feedrate],
+      mm3PerMm: values[column.mm3_per_mm],
+      fanSpeed: values[column.fan_speed],
+      temperature: values[column.temperature],
+      time: values[column.time0],
     };
   });
 }
@@ -198,11 +206,12 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await page.screenshot({ path: `${artifacts}preview-no-outer-wall.png` });
   await outerWall.click();
   await expect.poll(() => canvasDigest(page)).toBe(full);
+  const colorRanges = await checkColorRanges(page, moves, artifacts);
 
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, roles: [...extrudeRoles].sort((a, b) => a - b), options,
+      moves: moves.length, layers, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,

@@ -1,7 +1,7 @@
 import type { PrintConfigDef } from "./configDef.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { ConfigOverrides, SliceResult, ViewRange } from "./toolpaths.js";
+import type { ConfigOverrides, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
 import type { CompatiblePresets, ConfigValue, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
@@ -176,6 +176,19 @@ export class AresSlicer {
   async viewRange(layers: [number, number], visibleRoles: number, visibleOptions: number): Promise<ViewRange> {
     await this.#ready;
     return (await this.#call({ kind: "viewRange", layers, visibleRoles, visibleOptions })) as ViewRange;
+  }
+
+  /**
+   * libvgcode `ViewerImpl` toolpath colors of the latest `sliceProject`
+   * toolpaths in the `viewType` view (one of `Toolpaths.viewTypes`), as
+   * GCodeViewer colors them after the legend's view type combo: with the
+   * extrusion roles and options of `visibleRoles` / `visibleOptions` shown
+   * (see `viewRange`), which the color ranges cover. Also returns the view's
+   * color range for the legend.
+   */
+  async viewColors(viewType: string, visibleRoles: number, visibleOptions: number): Promise<ViewColors> {
+    await this.#ready;
+    return (await this.#call({ kind: "viewColors", viewType, visibleRoles, visibleOptions })) as ViewColors;
   }
 
   terminate(): void {

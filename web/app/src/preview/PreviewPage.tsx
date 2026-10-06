@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo } from "react";
+import { EXTRUSION_ROLES, type Toolpaths, type ViewColors } from "@ares-slicer/wasm";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Sidebar } from "../sidebar/Sidebar";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { setPreview, slicePlate, stepLayers, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
+import { slicer } from "../state/slicer";
 import { useApp } from "../state/store";
 import { usedOptions, usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
@@ -34,6 +36,27 @@ function onPreviewKey(event: KeyboardEvent) {
   }
 }
 
+const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
+
+/**
+ * Engine toolpath colors and color range of the legend's view type
+ * (GCodeViewer `refresh` after the view type combo or a legend toggle).
+ */
+function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRoles: number, visibleOptions: number) {
+  const [state, setState] = useState<{ toolpaths: Toolpaths; colors: ViewColors } | null>(null);
+  useEffect(() => {
+    if (!toolpaths) return;
+    let stale = false;
+    void slicer.viewColors(viewType, ALL_ROLES & ~hiddenRoles, visibleOptions).then((colors) => {
+      if (!stale) setState({ toolpaths, colors });
+    });
+    return () => {
+      stale = true;
+    };
+  }, [toolpaths, viewType, hiddenRoles, visibleOptions]);
+  return state && state.toolpaths === toolpaths ? state.colors : null;
+}
+
 export function PreviewPage() {
   const scene = useApp((state) => state.scene);
   const slice = useApp((state) => state.slice);
@@ -46,10 +69,11 @@ export function PreviewPage() {
   }, []);
   const roles = useMemo(() => (toolpaths ? usedRoles(toolpaths) : []), [toolpaths]);
   const options = useMemo(() => (toolpaths ? usedOptions(toolpaths) : []), [toolpaths]);
+  const colors = useViewColors(toolpaths, view.viewType, view.hiddenRoles, view.visibleOptions);
   return (
     <div className="page">
       <Sidebar />
-      <ViewportView toolpaths={toolpaths} view={view} fit="objects">
+      <ViewportView toolpaths={toolpaths} colors={colors?.colors ?? null} view={view} fit="objects">
         <div className="preview-card" data-testid="slice-summary">
           <div className="preview-card-title">Slice result</div>
           {slice.status === "done" ? (
@@ -74,8 +98,8 @@ export function PreviewPage() {
             </div>
           )}
         </div>
-        {toolpaths && <Legend roles={roles} options={options} optionTypes={toolpaths.optionTypes}
-          moveTypeCounts={toolpaths.moveTypeCounts} view={view} onChange={setPreview} />}
+        {toolpaths && <Legend roles={roles} options={options} toolpaths={toolpaths}
+          range={colors?.range ?? null} view={view} onChange={setPreview} />}
         {toolpaths && toolpaths.layerZs.length > 0 && (
           <LayerSlider zs={toolpaths.layerZs} view={view} />
         )}

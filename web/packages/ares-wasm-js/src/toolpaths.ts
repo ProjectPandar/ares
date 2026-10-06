@@ -22,6 +22,14 @@ export interface Toolpaths {
   moveTypeCounts: Uint32Array<ArrayBuffer>;
   /** Options shown by default (libvgcode `Settings::options_visibility`) as a `visibleOptions` mask. */
   visibleOptions: number;
+  /** libvgcode `ViewerImpl::get_vertex_color` RGB of each vertex in the `FeatureType` view, `ViewColors.colors` layout. */
+  colors: Uint8Array<ArrayBuffer>;
+  /** libvgcode `EViewType` names `viewColors` accepts, in `EViewType` order. */
+  viewTypes: string[];
+  /** libvgcode `DEFAULT_EXTRUSION_ROLES_COLORS`: RGB of `EXTRUSION_ROLES[i]` at `3 * i`. */
+  roleColors: Uint8Array<ArrayBuffer>;
+  /** libvgcode `DEFAULT_OPTIONS_COLORS`: RGB of `optionTypes[i]` at `3 * i`. */
+  optionColors: Uint8Array<ArrayBuffer>;
   /** libvgcode `Layers::get_zs`: z of each layer. */
   layerZs: Float32Array<ArrayBuffer>;
   spiralVaseMode: boolean;
@@ -94,6 +102,29 @@ export const EXTRUSION_ROLES = [
 ] as const;
 export type ExtrusionRole = (typeof EXTRUSION_ROLES)[number];
 export type ExtrusionRoleId = number;
+
+/** RGB triple. */
+export type Rgb = [r: number, g: number, b: number];
+
+/**
+ * libvgcode `ColorRange` (`ColorRange.hpp`): the value range of one view type
+ * over the shown toolpaths and the palette it maps onto.
+ */
+export interface ColorRange {
+  rangeType: "Linear" | "Logarithmic";
+  /** `[min, max]`. */
+  range: [min: number, max: number];
+  /** `ColorRange::get_values`: the one or two values found, or one value per palette color. */
+  values: number[];
+  palette: Rgb[];
+}
+
+/** Toolpath colors of one view type and its color range (`null` for views without one, such as `FeatureType`). */
+export interface ViewColors {
+  /** RGB of vertex `i` at `3 * i`. */
+  colors: Uint8Array<ArrayBuffer>;
+  range: ColorRange | null;
+}
 
 /** Vertex indices `[first, last, current]` of the visible view range. */
 export type ViewRange = [first: number, last: number, current: number];

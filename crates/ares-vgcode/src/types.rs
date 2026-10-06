@@ -39,6 +39,25 @@ pub enum ViewType {
 
 impl ViewType {
     pub const COUNT: usize = 17;
+    pub const ALL: [Self; Self::COUNT] = [
+        Self::Summary,
+        Self::FeatureType,
+        Self::ColorPrint,
+        Self::Speed,
+        Self::ActualSpeed,
+        Self::Height,
+        Self::Width,
+        Self::VolumetricFlowRate,
+        Self::ActualVolumetricFlowRate,
+        Self::LayerTimeLinear,
+        Self::LayerTimeLogarithmic,
+        Self::FanSpeed,
+        Self::Temperature,
+        Self::PressureAdvance,
+        Self::Acceleration,
+        Self::Jerk,
+        Self::Tool,
+    ];
 
     pub const fn index(self) -> usize {
         self as usize

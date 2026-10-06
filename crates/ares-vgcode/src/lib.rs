@@ -1,5 +1,6 @@
 //! Rendering-neutral data ported from AGPL-licensed OrcaSlicer `src/libvgcode` sources.
 
+mod color_range;
 pub mod convert;
 mod input_data;
 mod layers;
@@ -9,6 +10,7 @@ mod settings;
 mod types;
 mod viewer;
 
+pub use color_range::{ColorRange, DEFAULT_RANGES_COLORS};
 pub use input_data::{ColorPrint, GCodeInputData};
 pub use layers::Layers;
 pub use path_vertex::PathVertex;
@@ -20,4 +22,4 @@ pub use types::{
     MIN_TRAVELS_RADIUS_MM, MIN_WIPES_RADIUS_MM, Mat4x4, MoveType, OptionType, Palette, TimeMode,
     Vec3, ViewType, lerp_color, move_type_to_option,
 };
-pub use viewer::ViewerImpl;
+pub use viewer::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS, ViewerImpl};

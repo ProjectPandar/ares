@@ -1,19 +1,27 @@
-// Ports the view-range logic of AGPL-licensed OrcaSlicer `src/libvgcode/src/ViewerImpl.hpp` and `src/ViewerImpl.cpp`.
+// Ports the view-range and color logic of AGPL-licensed OrcaSlicer `src/libvgcode/src/ViewerImpl.hpp` and `src/ViewerImpl.cpp`.
 
 use crate::{
-    GCodeExtrusionRole, GCodeInputData, Interval, Layers, MoveType, OptionType, PathVertex,
-    ViewRange, move_type_to_option, settings::Settings,
+    Color, GCodeExtrusionRole, GCodeInputData, Interval, Layers, MoveType, OptionType, Palette,
+    PathVertex, ViewRange, move_type_to_option, settings::Settings,
 };
 
+mod colors;
+pub use colors::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS};
+
 /// `ViewerImpl` state behind the layer and view ranges: vertices, layers,
-/// visibility settings and the full / enabled / visible `ViewRange`. Textures,
-/// colors, times and markers belong to the renderer and are not ported.
+/// visibility settings, the full / enabled / visible `ViewRange`, color ranges
+/// and vertex colors. Textures, times and markers belong to the renderer.
 #[derive(Clone, Debug, Default)]
 pub struct ViewerImpl {
     settings: Settings,
     layers: Layers,
     view_range: ViewRange,
     vertices: Vec<PathVertex>,
+    tool_colors: Palette,
+    color_print_colors: Palette,
+    vertices_colors: Vec<Color>,
+    settings_used_for_ranges: Option<Settings>,
+    ranges: colors::ColorRanges,
 }
 
 /// `is_visible` (ViewerImpl.cpp:1713-1726): options by option visibility,
@@ -37,6 +45,10 @@ impl ViewerImpl {
         self.layers.reset();
         self.view_range.reset();
         self.vertices = data.vertices;
+        self.tool_colors = data.tools_colors;
+        self.color_print_colors = data.color_print_colors;
+        self.vertices_colors.clear();
+        self.settings_used_for_ranges = None;
         self.settings.spiral_vase_mode = data.spiral_vase_mode;
         for (i, v) in (0..).zip(&self.vertices) {
             self.layers.update(v, i);
@@ -61,10 +73,11 @@ impl ViewerImpl {
         self.settings.options_visibility[option.index()]
     }
 
-    /// ViewerImpl.cpp:1419-1433.
+    /// ViewerImpl.cpp:1419-1435.
     pub fn toggle_option_visibility(&mut self, option: OptionType) {
         let visible = &mut self.settings.options_visibility[option.index()];
         *visible = !*visible;
+        self.settings.update_colors = true;
         let old_enabled_range = self.view_range.get_enabled();
         self.update_view_full_range();
         let new_enabled_range = self.view_range.get_enabled();
@@ -85,10 +98,11 @@ impl ViewerImpl {
         self.settings.extrusion_roles_visibility[role.index()]
     }
 
-    /// ViewerImpl.cpp:1440-1446.
+    /// ViewerImpl.cpp:1442-1448.
     pub fn toggle_extrusion_role_visibility(&mut self, role: GCodeExtrusionRole) {
         let visible = &mut self.settings.extrusion_roles_visibility[role.index()];
         *visible = !*visible;
+        self.settings.update_colors = true;
         self.update_view_full_range();
     }
 
