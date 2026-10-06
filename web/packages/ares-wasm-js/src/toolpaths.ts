@@ -137,6 +137,17 @@ export interface MovesSlider {
   gcodeIds: Uint32Array<ArrayBuffer>;
 }
 
+/**
+ * GCodeViewer tool marker, shown once the view ended before the last move
+ * (`GCodeViewer.cpp:1594-1601`): the vertex it is drawn at and the vertex the
+ * position window describes (a seam shows the vertex before it outside the
+ * FeatureType view, `GCodeViewer.cpp:345-352`).
+ */
+export interface ToolMarker {
+  vertex: number;
+  windowVertex: number;
+}
+
 /** The view between the moves slider thumbs. */
 export interface MovesView {
   range: ViewRange;
@@ -148,6 +159,8 @@ export interface MovesView {
   options: Uint32Array<ArrayBuffer>;
   /** RGB of vertex `i` at `3 * i`, grayed below the top layer before the last stop. */
   colors: Uint8Array<ArrayBuffer>;
+  /** The tool marker; `null` while hidden. */
+  marker: ToolMarker | null;
 }
 
 /** One OrcaSlicer option value as ares-core serializes it. */

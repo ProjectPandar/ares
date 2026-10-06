@@ -95,3 +95,18 @@
 .gcode-params { color: #fff; }
 .gcode-comment { color: rgb(179, 179, 179); }
 
+/* Marker::render_position_window: centred above the moves slider, rounded 8, padding 10, 0.8 alpha. */
+.tool-position {
+  position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); padding: 10px; border-radius: 8px;
+  background: rgba(26, 26, 26, 0.8); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.tool-position-row { display: flex; align-items: center; gap: 10px; }
+.tool-position-axis { min-width: 9ch; }
+.tool-position-speed { min-width: 11ch; }
+.tool-position-fold {
+  width: 20px; height: 20px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: inherit; cursor: pointer;
+}
+.tool-position-fold:hover { background: rgb(84, 84, 90); }
+.tool-position-table { border-collapse: collapse; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.6); }
+.tool-position-table th { text-align: left; font-weight: normal; color: rgba(255, 255, 255, 0.7); padding: 1px 12px 1px 0; }
+.tool-position-table td { text-align: left; padding: 1px 0; }

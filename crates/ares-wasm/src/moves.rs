@@ -1,6 +1,6 @@
 use ares_core::{ProcessedGCode, gcode_processor::MoveVertex};
 use ares_vgcode::{
-    GCodeExtrusionRole, GCodeInputData, MovesSlider, OptionType, ViewerImpl,
+    GCodeExtrusionRole, GCodeInputData, MovesSlider, OptionType, SequentialView, ViewerImpl,
     convert::{from_processor_result, move_type_counts},
     move_type_to_option,
 };
@@ -151,6 +151,7 @@ pub struct VertexBuffers {
     spiral_vase_mode: bool,
     pub(crate) viewer: ViewerImpl,
     moves_slider: MovesSlider,
+    sequential_view: SequentialView,
     values: Vec<f32>,
     ids: Vec<u32>,
     tags: Vec<u8>,
@@ -185,6 +186,7 @@ impl VertexBuffers {
             layer_zs: viewer.layers().get_zs(),
             viewer: ViewerImpl::default(),
             moves_slider: MovesSlider::new(&viewer),
+            sequential_view: SequentialView::default(),
         };
         for v in viewer.vertices() {
             out.values.extend_from_slice(&[
@@ -358,6 +360,16 @@ impl VertexBuffers {
         };
         self.viewer.set_view_visible_range(min, max);
         Ok(self.visible_range())
+    }
+    /// `SequentialView::update` after `setMovesRange` and `vertexColors`:
+    /// `[vertex, windowVertex]` of the shown tool marker, empty while hidden.
+    #[wasm_bindgen(js_name = toolMarker)]
+    pub fn tool_marker(&mut self) -> Vec<u32> {
+        self.sequential_view
+            .update(&self.viewer)
+            .map_or_else(Vec::new, |marker| {
+                vec![marker.vertex as u32, marker.window_vertex as u32]
+            })
     }
     /// Uint32Array: vertex ids of libvgcode's enabled segments (`i` to `i + 1`).
     #[wasm_bindgen(js_name = enabledSegments)]

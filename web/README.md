@@ -78,8 +78,15 @@ node scripts/extract-process-layout.mjs /path/to/OrcaSlicer
 - The Preview moves slider labels its thumb (the higher one, the only one a
   horizontal `IMSlider` draws, `IMSlider.cpp:1241-1248`) with the G-code line
   of the stop. OrcaSlicer also shows the estimated time or distance of a stop
-  (`alternate_values`) and draws the tool position marker at the current move
-  (`GCodeViewer::SequentialView::Marker`).
+  (`alternate_values`).
+- The Preview tool position window (`Marker::render_position_window`,
+  `GCodeViewer.cpp:325-690`) lists Type, Line Type, Width, Height, Layer, Speed,
+  Flow rate, Fan speed and Temperature. OrcaSlicer also lists Acceleration,
+  Jerk, Pressure Advance and the estimated Time, and offers the actual speed
+  profile; the engine does not record those per move yet. The marker arrow is a
+  Three.js cone on a cylinder with the `stilized_arrow(16, 1.5, 3.0, 0.8, 3.0)`
+  dimensions (`GLModel.cpp:934`), lit by the viewport lights instead of the
+  `gouraud_light` shader.
 
 ## End-to-end test
 

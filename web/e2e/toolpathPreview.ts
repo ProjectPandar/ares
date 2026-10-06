@@ -169,6 +169,7 @@ async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top:
   await expect(slider).toHaveValue(String(stops.length - 1));
   await expectMarkedLine(page, gcode, stops.at(-1)!);
   const full = await canvasDigest(page);
+  const latched = (await page.getByTestId("tool-position").count()) > 0;
   const middle = Math.floor(stops.length / 2);
   await slider.fill(String(middle));
   await expectMarkedLine(page, gcode, stops[middle]);
@@ -178,7 +179,9 @@ async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top:
   await expectMarkedLine(page, gcode, stops[0]);
   await slider.fill(String(stops.length - 1));
   await expectMarkedLine(page, gcode, stops.at(-1)!);
-  await expect.poll(() => canvasDigest(page)).toBe(full);
+  // The tool marker shown since the thumb left the end stays (`GCodeViewer.cpp:1594-1596`).
+  if (latched) await expect.poll(() => canvasDigest(page)).toBe(full);
+  else await expect.poll(() => canvasDigest(page), { message: "the latched tool marker draws at the end" }).not.toBe(full);
   return { stops: stops.length, first: stops[0], middle: stops[middle], last: stops.at(-1) };
 }
 

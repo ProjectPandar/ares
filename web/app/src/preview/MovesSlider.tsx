@@ -1,14 +1,15 @@
-import { EXTRUSION_ROLES, type MovesSlider as Stops, type MovesView, type Toolpaths } from "@ares-slicer/wasm";
+import { EXTRUSION_ROLES, type MovesSlider as Stops, type MovesView, type ToolMarker, type Toolpaths } from "@ares-slicer/wasm";
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { slicer } from "../state/slicer";
 import { type PreviewView, useApp } from "../state/store";
 import type { ToolpathFilter } from "../viewport/toolpathMesh";
+import { ToolPosition } from "./ToolPosition";
 
 const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
 
 type SliderState = { toolpaths: Toolpaths; stops: Stops; high: number; request: number; filter: ToolpathFilter };
-type Applied = { slider: SliderState; viewType: string; high: number };
+type Applied = { slider: SliderState; viewType: string; high: number; marker: ToolMarker | null };
 type Moves = { high: number; max: number; request: (high: number) => void };
 /** `stepLayers` and `stepTopLayer` of the app actions. */
 export type LayerSteps = { stepLayers: (delta: number, wheel: boolean) => void; stepTopLayer: (delta: number) => void };
@@ -72,6 +73,8 @@ function onNavigationKey(event: KeyboardEvent, moves: Moves | null, { stepLayers
  * `GCodeViewer.cpp:1765-1821`), starting from the thumb last requested here;
  * reports the engine's view between the thumbs (`set_view_visible_range`) to
  * `onMoves`; `aria-busy` while that view is behind the slider, layers or legend.
+ * The tool position window of the engine's marker sits above it
+ * (`SequentialView::render`, `GCodeViewer.cpp:957-963`).
  */
 export function MovesSlider({ toolpaths, view, onMoves, steps }: {
   toolpaths: Toolpaths;
@@ -104,7 +107,7 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
       (result) => {
         if (!current()) return;
         onMoves({ toolpaths: slider.toolpaths, view: result, filter });
-        setApplied({ slider, viewType, high: result.thumbs[1] });
+        setApplied({ slider, viewType, high: result.thumbs[1], marker: result.marker });
       },
       (error: unknown) => {
         if (current()) throw error;
@@ -125,10 +128,12 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
     return () => window.removeEventListener("keydown", onKey);
   }, [settled, high, steps]);
   if (!live) return null;
+  const marker = applied?.slider.toolpaths === toolpaths ? applied.marker : null;
   const { stops, filter } = live;
   const busy = applied?.slider !== live || applied.viewType !== viewType || filter.layers !== layers
     || filter.hiddenRoles !== hiddenRoles || filter.visibleOptions !== visibleOptions;
-  return (
+  return (<>
+    {marker && <ToolPosition toolpaths={toolpaths} vertex={marker.windowVertex} viewType={applied!.viewType} />}
     <div className="moves-slider" data-testid="moves-slider" aria-busy={busy}>
       <input type="range" aria-label="Moves" min={0} max={stops.gcodeIds.length - 1} step={1} value={high}
         aria-valuemax={stops.gcodeIds.length - 1}
@@ -140,5 +145,5 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
         }} />
       <span className="moves-slider-label">{stops.gcodeIds[high]}</span>
     </div>
-  );
+  </>);
 }

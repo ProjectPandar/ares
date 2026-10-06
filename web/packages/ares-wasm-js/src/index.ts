@@ -257,7 +257,8 @@ export class AresSlicer {
    * between the thumbs (libvgcode `set_view_visible_range`). Returns the view
    * range, the thumbs, the enabled segments and option markers, and the
    * `viewType` colors with the layers below the top one grayed while the
-   * higher thumb is not at the last stop.
+   * higher thumb is not at the last stop, and the tool marker once the view
+   * ended before the last move since the slice.
    */
   async movesHigher(higher: number, viewType: string, visibleRoles: number, visibleOptions: number): Promise<MovesView> {
     await this.#ready;

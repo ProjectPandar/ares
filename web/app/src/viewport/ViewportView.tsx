@@ -141,7 +141,9 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     if (colors) viewport?.setToolpathColors(colors);
   }, [viewport, colors]);
   useLayoutEffect(() => {
-    if (enabled && toolpaths) viewport?.setEnabled(enabled.segments, enabled.options, toolpaths.vertexCount);
+    if (!enabled || !toolpaths) return;
+    viewport?.setEnabled(enabled.segments, enabled.options, toolpaths.vertexCount);
+    viewport?.setToolMarker(toolpaths, enabled.marker?.vertex ?? null);
   }, [viewport, enabled, toolpaths]);
 
   return (

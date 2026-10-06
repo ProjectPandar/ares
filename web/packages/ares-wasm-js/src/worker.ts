@@ -183,7 +183,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
         segments: viewer.enabledSegments() as Uint32Array<ArrayBuffer>,
         options: viewer.enabledOptions() as Uint32Array<ArrayBuffer>,
         colors: owned(viewer.vertexColors(viewType, visibleRoles, visibleOptions)),
+        marker: null,
       };
+      const [vertex, windowVertex] = viewer.toolMarker();
+      if (vertex !== undefined) value.marker = { vertex, windowVertex };
       return [value, [value.segments.buffer, value.options.buffer, value.colors.buffer]];
     }
   }

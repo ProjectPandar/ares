@@ -1,10 +1,11 @@
-import type { Scene, Toolpaths, VolumeType } from "@ares-slicer/wasm";
+import { type Scene, type Toolpaths, VERTEX_VALUES, type VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildBed } from "./bed";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
+import { buildToolMarker, placeToolMarker } from "./toolMarker";
 import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
@@ -41,6 +42,7 @@ export class Viewport {
   readonly #raycaster = new THREE.Raycaster();
   #bed = new THREE.Group();
   #toolpaths: THREE.Mesh | null = null;
+  readonly #toolMarker = buildToolMarker();
   #toolpathColors: Uint8Array | null = null;
   #previewView: ToolpathFilter | null = null;
   #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
@@ -75,7 +77,7 @@ export class Viewport {
     key.position.set(-0.6, -1, 1.4);
     const fill = new THREE.DirectionalLight(0xffffff, 0.5);
     fill.position.set(1, 0.8, 0.6);
-    this.#scene.add(hemisphere, key, fill, this.#models, this.#bed);
+    this.#scene.add(hemisphere, key, fill, this.#models, this.#bed, this.#toolMarker);
 
     const canvas = this.#renderer.domElement;
     canvas.addEventListener("pointerdown", (event) => {
@@ -177,6 +179,7 @@ export class Viewport {
       disposeTree(this.#toolpaths);
     }
     this.#toolpaths = null;
+    this.#toolMarker.visible = false;
     delete this.container.dataset.optionMarkers;
     if (toolpaths) {
       this.#toolpaths = buildToolpathMesh(toolpaths);
@@ -202,6 +205,16 @@ export class Viewport {
   setEnabled(segments: Uint32Array, options: Uint32Array, vertexCount: number) {
     if (!this.#toolpaths) return;
     applyEnabled(this.#toolpaths, segments, options, vertexCount);
+    this.render();
+  }
+
+/** Shows the tool marker at vertex `vertex` of `toolpaths`, or hides it. */
+  setToolMarker(toolpaths: Toolpaths, vertex: number | null) {
+    this.#toolMarker.visible = vertex !== null;
+    if (vertex !== null) {
+      const [x, y, z] = toolpaths.values.subarray(vertex * VERTEX_VALUES.length);
+      placeToolMarker(this.#toolMarker, x, y, z);
+    }
     this.render();
   }
 
@@ -264,6 +277,7 @@ export class Viewport {
     this.#controls.dispose();
     disposeTree(this.#models);
     disposeTree(this.#bed);
+    disposeTree(this.#toolMarker);
     if (this.#toolpaths) disposeTree(this.#toolpaths);
     this.#renderer.dispose();
     this.#renderer.domElement.remove();
