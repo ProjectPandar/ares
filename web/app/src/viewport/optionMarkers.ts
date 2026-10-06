@@ -20,13 +20,14 @@ in vec2 aSize;
 in vec3 aColor;
 in float aLayer;
 in float aOption;
+in float aEnabled;
 uniform vec2 uLayers;
 uniform int uOptions;
 out vec3 vColor;
 out vec3 vNormal;
 
 void main() {
-  if (aLayer < uLayers.x || aLayer > uLayers.y || ((uOptions >> int(aOption)) & 1) == 0) {
+  if (aEnabled == 0.0 || aLayer < uLayers.x || aLayer > uLayers.y || ((uOptions >> int(aOption)) & 1) == 0) {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     return;
   }
@@ -80,6 +81,7 @@ export function buildOptionMarkers({ values, ids, tags, options, optionTypes, co
   geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(color.subarray(0, count * 3), 3, true));
   geometry.setAttribute("aLayer", new THREE.InstancedBufferAttribute(layer.subarray(0, count), 1));
   geometry.setAttribute("aOption", new THREE.InstancedBufferAttribute(option.subarray(0, count), 1));
+  geometry.setAttribute("aEnabled", new THREE.InstancedBufferAttribute(new Uint8Array(count).fill(1), 1));
   geometry.instanceCount = count;
 
   const material = new THREE.ShaderMaterial({

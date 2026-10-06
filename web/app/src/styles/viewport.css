@@ -72,6 +72,14 @@
   background: var(--panel); border: 3px solid var(--accent); box-shadow: var(--shadow);
 }
 .layer-slider-thumb:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+/* GCodeViewer m_moves_slider: horizontal, centred under the toolpaths. */
+.moves-slider {
+  position: absolute; left: 50%; bottom: 14px; width: min(56%, 640px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; padding: 4px 10px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow);
+}
+.moves-slider input { flex: 1; accent-color: var(--accent); }
+.moves-slider-label { min-width: 6ch; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-dim); }
 /* GCodeWindow::render: right of the layer slider, below the legend, COL_WINDOW_BACKGROUND at 0.8 alpha. */
 .gcode-panel {
   position: absolute; right: 86px; top: 56px; bottom: 40px; width: max-content; overflow: hidden;

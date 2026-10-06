@@ -1,7 +1,4 @@
-import { EXTRUSION_ROLES, type Toolpaths } from "@ares-slicer/wasm";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { slicer } from "../state/slicer";
-import type { PreviewView } from "../state/store";
 
 const ROW_HEIGHT = 18;
 const PADDING = 8;
@@ -20,31 +17,14 @@ function splitLine(text: string) {
   return { command, parameters: parameters.map((word) => ` ${word}`).join(""), comment };
 }
 
-const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
-
 /**
  * GCodeViewer's G-code window (`GCodeViewer::SequentialView::GCodeWindow::render`,
  * `GCodeViewer.cpp:764-947`): as many lines as fit, centred on the current
- * move's 1-based G-code line, which is framed. `GCodeViewer::render` passes
- * `get_current_vertex().gcode_id` (`GCodeViewer.cpp:1601`); there is no window
- * without one (`curr_line_id == 0`).
+ * move's 1-based G-code line `current`, which is framed. `GCodeViewer::render`
+ * passes `get_current_vertex().gcode_id` (`GCodeViewer.cpp:1601`); there is no
+ * window without one (`curr_line_id == 0`).
  */
-export function GCodeWindow({ gcode, toolpaths, view }: { gcode: Uint8Array; toolpaths: Toolpaths; view: PreviewView }) {
-  const [current, setCurrent] = useState(0);
-  useEffect(() => {
-    // The engine computes the view range (libvgcode `ViewerImpl`).
-    let stale = false;
-    void slicer.viewRange(view.layers, ALL_ROLES & ~view.hiddenRoles, view.visibleOptions).then(([, , vertex]) => {
-      if (!stale) setCurrent(toolpaths.ids[2 * vertex]);
-    });
-    return () => {
-      stale = true;
-    };
-  }, [toolpaths, view.layers, view.hiddenRoles, view.visibleOptions]);
-  return current === 0 ? null : <GCodeLines gcode={gcode} current={current} />;
-}
-
-function GCodeLines({ gcode, current }: { gcode: Uint8Array; current: number }) {
+export function GCodeWindow({ gcode, current }: { gcode: Uint8Array; current: number }) {
   const lines = useMemo(() => {
     const all = new TextDecoder().decode(gcode).split("\n");
     if (all.at(-1) === "") all.pop();

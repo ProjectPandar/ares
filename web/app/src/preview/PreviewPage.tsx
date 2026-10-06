@@ -9,9 +9,11 @@ import { useApp } from "../state/store";
 import { usedOptions, usedRoles } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
 import { LayerSlider } from "./LayerSlider";
+import type { MovesState } from "./MovesSlider";
 
 // Fetched once a slice has move vertices to show.
 const Legend = lazy(() => import("./Legend").then((module) => ({ default: module.Legend })));
+const MovesSlider = lazy(() => import("./MovesSlider").then((module) => ({ default: module.MovesSlider })));
 const GCodeWindow = lazy(() => import("./GCodeWindow").then((module) => ({ default: module.GCodeWindow })));
 
 /**
@@ -74,10 +76,15 @@ export function PreviewPage() {
   const roles = useMemo(() => (toolpaths ? usedRoles(toolpaths) : []), [toolpaths]);
   const options = useMemo(() => (toolpaths ? usedOptions(toolpaths) : []), [toolpaths]);
   const colors = useViewColors(toolpaths, view.viewType, view.hiddenRoles, view.visibleOptions);
+  const [movesState, setMoves] = useState<MovesState | null>(null);
+  const live = movesState?.toolpaths === toolpaths ? movesState : null;
+  const moves = live?.view ?? null;
+  // GCodeViewer::render: the window frames the current vertex's line (`GCodeViewer.cpp:1601`).
+  const currentLine = toolpaths && moves ? toolpaths.ids[2 * moves.range[2]] : 0;
   return (
     <div className="page">
       <Sidebar />
-      <ViewportView toolpaths={toolpaths} colors={colors?.colors ?? null} view={view} fit="objects">
+      <ViewportView toolpaths={toolpaths} colors={moves?.colors ?? colors?.colors ?? null} enabled={moves} view={live?.filter ?? view} fit="objects">
         <div className="preview-card" data-testid="slice-summary">
           <div className="preview-card-title">Slice result</div>
           {slice.status === "done" ? (
@@ -111,9 +118,14 @@ export function PreviewPage() {
         {toolpaths && toolpaths.layerZs.length > 0 && (
           <LayerSlider zs={toolpaths.layerZs} view={view} />
         )}
-        {slice.status === "done" && gcodeWindow && toolpaths && (
+        {toolpaths && (
           <Suspense>
-            <GCodeWindow gcode={slice.gcode} toolpaths={toolpaths} view={view} />
+            <MovesSlider toolpaths={toolpaths} view={view} onMoves={setMoves} />
+          </Suspense>
+        )}
+        {slice.status === "done" && gcodeWindow && currentLine !== 0 && (
+          <Suspense>
+            <GCodeWindow gcode={slice.gcode} current={currentLine} />
           </Suspense>
         )}
       </ViewportView>

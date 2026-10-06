@@ -22,7 +22,7 @@ import init, {
 } from "./wasm/ares_wasm.js";
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { ColorRange, SliceResult, Toolpaths, ViewColors } from "./toolpaths.js";
+import type { ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
 import type { Scene } from "./types.js";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -163,6 +163,25 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const colors = owned(viewer.vertexColors(viewType, visibleRoles, visibleOptions));
       const value: ViewColors = { colors, range: JSON.parse(viewer.colorRange(viewType)) as ColorRange | null };
       return [value, [colors.buffer]];
+    }
+    case "movesSlider": {
+      if (!viewer) throw new Error("No toolpaths: slice a project first");
+      const { layers, visibleRoles, visibleOptions } = request;
+      const slider = viewer.movesSlider(layers[0], layers[1], visibleRoles, visibleOptions) as Uint32Array<ArrayBuffer>;
+      const value: MovesSlider = { span: [slider[0], slider[1]], gcodeIds: slider.slice(2) };
+      return [value, [value.gcodeIds.buffer]];
+    }
+    case "movesRange": {
+      if (!viewer) throw new Error("No toolpaths: slice a project first");
+      const { stops, viewType, visibleRoles, visibleOptions } = request;
+      const range = [...viewer.setMovesRange(stops[0], stops[1])] as ViewRange;
+      const value: MovesView = {
+        range,
+        segments: viewer.enabledSegments() as Uint32Array<ArrayBuffer>,
+        options: viewer.enabledOptions() as Uint32Array<ArrayBuffer>,
+        colors: owned(viewer.vertexColors(viewType, visibleRoles, visibleOptions)),
+      };
+      return [value, [value.segments.buffer, value.options.buffer, value.colors.buffer]];
     }
   }
 }

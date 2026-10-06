@@ -4,8 +4,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import { checkColorRanges, type RangeMove } from "./colorRanges";
 
-/** Hash of the downscaled viewport canvas, to detect view changes. */
-export function canvasDigest(page: Page) {
+/** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current. */
+export async function canvasDigest(page: Page) {
+  await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
   return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     probe.width = 256;
@@ -266,6 +267,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expectCurrentLine(page, gcode, moves, 0);
   await expect.poll(() => canvasDigest(page), { message: "first layer only must differ from all layers" }).not.toBe(full);
   const movesSlider = { 1: await checkMovesSlider(page, gcode, moves, 0, artifacts) };
+  await top.focus();
   await page.keyboard.press("PageUp");
   await page.keyboard.press("PageUp");
   await expect(top).toHaveAttribute("aria-valuenow", "21");

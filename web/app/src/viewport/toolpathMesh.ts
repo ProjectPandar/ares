@@ -2,6 +2,9 @@ import { EXTRUSION_ROLES, MOVE_TYPES, type Toolpaths, VERTEX_VALUES } from "@are
 import * as THREE from "three";
 import type { PreviewView } from "../state/store";
 
+/** The preview state the toolpath shaders filter by. */
+export type ToolpathFilter = Pick<PreviewView, "layers" | "hiddenRoles" | "visibleOptions">;
+
 const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
 const TRAVEL = MOVE_TYPES.indexOf("Travel");
 const WIPE = MOVE_TYPES.indexOf("Wipe");
@@ -21,6 +24,7 @@ in vec2 aSize;
 in vec3 aColor;
 in float aLayer;
 in float aKind;
+in float aEnabled;
 uniform vec2 uLayers;
 uniform int uHiddenRoles;
 uniform int uOptions;
@@ -35,7 +39,7 @@ bool hidden() {
 }
 
 void main() {
-  if (hidden()) {
+  if (aEnabled == 0.0 || hidden()) {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     return;
   }
@@ -120,6 +124,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(color.subarray(0, count * 3), 3, true));
   geometry.setAttribute("aLayer", new THREE.InstancedBufferAttribute(layer.subarray(0, count), 1));
   geometry.setAttribute("aKind", new THREE.InstancedBufferAttribute(kind.subarray(0, count), 1));
+  geometry.setAttribute("aEnabled", new THREE.InstancedBufferAttribute(new Uint8Array(count).fill(1), 1));
   geometry.instanceCount = count;
   geometry.boundingBox = bounds;
 
@@ -155,8 +160,29 @@ export function applyVertexColors(mesh: THREE.Mesh, colors: Uint8Array) {
   });
 }
 
+/**
+ * Draws only the engine's enabled segments and option markers
+ * (`MovesView.segments` / `options`, libvgcode `update_enabled_entities`).
+ * Instance `n` of the toolpath mesh is the segment ending at its vertex.
+ */
+export function applyEnabled(mesh: THREE.Mesh, segments: Uint32Array, options: Uint32Array, vertexCount: number) {
+  const segmentEnds = new Uint8Array(vertexCount + 1);
+  for (const id of segments) segmentEnds[id + 1] = 1;
+  const optionVertices = new Uint8Array(vertexCount);
+  for (const id of options) optionVertices[id] = 1;
+  mesh.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const flags = node === mesh ? segmentEnds : optionVertices;
+    const vertices = node.userData.vertices as Uint32Array;
+    const attribute = (node.geometry as THREE.InstancedBufferGeometry).getAttribute("aEnabled") as THREE.InstancedBufferAttribute;
+    const enabled = attribute.array as Uint8Array;
+    for (let n = 0; n < vertices.length; n++) enabled[n] = flags[vertices[n]];
+    attribute.needsUpdate = true;
+  });
+}
+
 /** Sets the view on the toolpath mesh and its option markers (children). */
-export function applyPreviewView(mesh: THREE.Mesh, view: PreviewView) {
+export function applyPreviewView(mesh: THREE.Mesh, view: ToolpathFilter) {
   mesh.traverse((node) => {
     if (!(node instanceof THREE.Mesh)) return;
     const { uniforms } = node.material as THREE.ShaderMaterial;

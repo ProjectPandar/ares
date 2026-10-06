@@ -1,7 +1,7 @@
 import type { PrintConfigDef } from "./configDef.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
+import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
 import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
@@ -235,6 +235,29 @@ export class AresSlicer {
   async viewColors(viewType: string, visibleRoles: number, visibleOptions: number): Promise<ViewColors> {
     await this.#ready;
     return (await this.#call({ kind: "viewColors", viewType, visibleRoles, visibleOptions })) as ViewColors;
+  }
+
+  /**
+   * Moves slider of the latest `sliceProject` toolpaths (GCodeViewer
+   * `update_moves_slider` after `set_layers_z_range`): sets the view as
+   * `viewRange` does, then returns one stop per G-code line of the top layer's
+   * moves and the stops of the visible range. `movesRange` uses these stops.
+   */
+  async movesSlider(layers: [number, number], visibleRoles: number, visibleOptions: number): Promise<MovesSlider> {
+    await this.#ready;
+    return (await this.#call({ kind: "movesSlider", layers, visibleRoles, visibleOptions })) as MovesSlider;
+  }
+
+  /**
+   * Shows the moves between the latest `movesSlider` stops `low` and `high`
+   * (libvgcode `set_view_visible_range`). Returns the view range, the enabled
+   * segments and option markers, and the `viewType` colors with the layers
+   * below the top one grayed while `high` is not the last stop. Rejects for
+   * stops outside the slider.
+   */
+  async movesRange(stops: [low: number, high: number], viewType: string, visibleRoles: number, visibleOptions: number): Promise<MovesView> {
+    await this.#ready;
+    return (await this.#call({ kind: "movesRange", stops, viewType, visibleRoles, visibleOptions })) as MovesView;
   }
 
   terminate(): void {

@@ -1,9 +1,10 @@
-import type { Scene, Toolpaths } from "@ares-slicer/wasm";
+import type { MovesView, Scene, Toolpaths } from "@ares-slicer/wasm";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
+import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
 import { placedScene, presetSliceBlocker } from "../state/presets";
-import { type PreviewView, useApp } from "../state/store";
+import { useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
@@ -34,11 +35,13 @@ const VIEW_KEYS: Record<string, ViewPreset> = {
   "0": "plate", "1": "top", "2": "bottom", "3": "front", "4": "rear", "5": "left", "6": "right",
 };
 
-export function ViewportView({ toolpaths = null, colors = null, view, fit = "plate", children }: {
+export function ViewportView({ toolpaths = null, colors = null, enabled = null, view, fit = "plate", children }: {
   toolpaths?: Toolpaths | null;
   /** Per-vertex RGB of `toolpaths` (`ViewColors.colors`); `null` keeps `Toolpaths.colors`. */
   colors?: Uint8Array | null;
-  view?: PreviewView;
+  /** Enabled segments and option markers of `toolpaths`; `null` draws all. */
+  enabled?: MovesView | null;
+  view?: ToolpathFilter;
   /** Initial framing when the scene loads. */
   fit?: Exclude<ZoomTarget, "bed">;
   children?: ReactNode;
@@ -136,6 +139,9 @@ export function ViewportView({ toolpaths = null, colors = null, view, fit = "pla
   useEffect(() => {
     if (colors) viewport?.setToolpathColors(colors);
   }, [viewport, colors]);
+  useEffect(() => {
+    if (enabled && toolpaths) viewport?.setEnabled(enabled.segments, enabled.options, toolpaths.vertexCount);
+  }, [viewport, enabled, toolpaths]);
 
   return (
     <div className="viewport">

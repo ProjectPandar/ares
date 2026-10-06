@@ -1,12 +1,11 @@
 import type { Scene, Toolpaths, VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import type { PreviewView } from "../state/store";
 import { buildBed } from "./bed";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
-import { applyPreviewView, applyVertexColors, buildToolpathMesh } from "./toolpathMesh";
+import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -43,7 +42,7 @@ export class Viewport {
   #bed = new THREE.Group();
   #toolpaths: THREE.Mesh | null = null;
   #toolpathColors: Uint8Array | null = null;
-  #previewView: PreviewView | null = null;
+  #previewView: ToolpathFilter | null = null;
   #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
   #colors: ViewportColors;
   /** Delivers the render after the requesting task; `#dirty` while one is queued. */
@@ -198,7 +197,14 @@ export class Viewport {
     this.render();
   }
 
-  setPreviewView(view: PreviewView) {
+  /** Shows only the enabled segments and option markers of the current toolpaths. */
+  setEnabled(segments: Uint32Array, options: Uint32Array, vertexCount: number) {
+    if (!this.#toolpaths) return;
+    applyEnabled(this.#toolpaths, segments, options, vertexCount);
+    this.render();
+  }
+
+  setPreviewView(view: ToolpathFilter) {
     this.#previewView = view;
     if (this.#toolpaths) applyPreviewView(this.#toolpaths, view);
     this.render();

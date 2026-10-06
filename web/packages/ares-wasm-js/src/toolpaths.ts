@@ -129,6 +129,25 @@ export interface ViewColors {
 /** Vertex indices `[first, last, current]` of the visible view range. */
 export type ViewRange = [first: number, last: number, current: number];
 
+/** Moves slider of the shown layers (GCodeViewer `update_moves_slider`): one stop per G-code line. */
+export interface MovesSlider {
+  /** Stops of the visible range (`SetSelectionSpan`). */
+  span: [low: number, high: number];
+  /** 1-based G-code line of each stop. */
+  gcodeIds: Uint32Array<ArrayBuffer>;
+}
+
+/** The view with the moves slider thumbs at two stops. */
+export interface MovesView {
+  range: ViewRange;
+  /** Vertex ids `i` of the enabled segments `i` to `i + 1` (libvgcode `update_enabled_entities`). */
+  segments: Uint32Array<ArrayBuffer>;
+  /** Vertex ids of the enabled option markers. */
+  options: Uint32Array<ArrayBuffer>;
+  /** RGB of vertex `i` at `3 * i`, grayed below the top layer before the last stop. */
+  colors: Uint8Array<ArrayBuffer>;
+}
+
 /** One OrcaSlicer option value as ares-core serializes it. */
 export type OptionValue = string | number | boolean | (string | number | boolean)[];
 

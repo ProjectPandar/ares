@@ -22,7 +22,9 @@ export type WorkerRequest =
   | { id: number; kind: "decodeConfigValues"; entries: [string, string][] }
   | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number }
-  | { id: number; kind: "viewColors"; viewType: string; visibleRoles: number; visibleOptions: number };
+  | { id: number; kind: "viewColors"; viewType: string; visibleRoles: number; visibleOptions: number }
+  | { id: number; kind: "movesSlider"; layers: [number, number]; visibleRoles: number; visibleOptions: number }
+  | { id: number; kind: "movesRange"; stops: [number, number]; viewType: string; visibleRoles: number; visibleOptions: number };
 
 /** A request before the client assigns its `id`. */
 export type RequestBody = WorkerRequest extends infer R ? (R extends unknown ? Omit<R, "id"> : never) : never;
