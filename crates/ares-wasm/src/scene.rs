@@ -103,6 +103,10 @@ pub fn scene_from_bytes(input: &[u8]) -> Result<SceneData, SliceError> {
     }
 }
 
+pub(crate) fn project_scene_data(project: &Project) -> SceneData {
+    project_scene(project)
+}
+
 fn project_scene(project: &Project) -> SceneData {
     let mut positions = Vec::new();
     let mut indices = Vec::new();

@@ -387,3 +387,33 @@ impl PresetCatalog {
             .unwrap_or_else(|_| "null".to_owned())
     }
 }
+
+/// Returns the placed scene (after `placement` is applied) as `SceneData`,
+/// reusing the existing scene extraction. Bed shape (`printable_area`) is
+/// available in the metadata's `settings.printer` section.
+#[wasm_bindgen(js_name = placementScene)]
+pub async fn placement_scene(
+    input: Vec<u8>,
+    filename: String,
+    catalog_json: String,
+    selection_json: String,
+    options_json: String,
+) -> Result<crate::SceneData, JsValue> {
+    let options =
+        ProfileSliceOptions::parse(&options_json).map_err(|error| JsValue::from_str(&error))?;
+    let overrides = options.overrides();
+    let project = ares_core::profile_placed_project(
+        input,
+        ares_core::ProfileSliceRequest {
+            filename: &filename,
+            catalog_json: &catalog_json,
+            selection_json: &selection_json,
+            plate: options.plate,
+            overrides: &overrides,
+            placement: options.placement(),
+        },
+    )
+    .await
+    .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    Ok(crate::scene::project_scene_data(&project))
+}

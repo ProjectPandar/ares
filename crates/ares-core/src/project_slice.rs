@@ -46,6 +46,7 @@ mod pressure_equalizer;
 mod profile;
 mod profile_entry;
 mod validated;
+pub(crate) use profile_entry::load_and_place;
 pub(crate) use profile_entry::validate_profile_source;
 
 pub(crate) use validated::validate_post_process;

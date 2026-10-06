@@ -53,6 +53,21 @@ pub(super) fn load_with_profile(
     }
 }
 
+/// Loads with profiles and applies placement without slicing — the exact
+/// load+placement prefix of `prepare_profile_slice`.
+pub(crate) fn load_and_place(
+    project: &ProjectSource<'_>,
+    profile: ProfileInput<'_>,
+) -> Result<Project, SliceError> {
+    let mut loaded = load_with_profile(project, profile)?;
+    if profile.placement == Placement::Center {
+        let bed = bed_center(&profile.composed.settings().printer.remaining.printable_area);
+        loaded.center_instances_around_point(bed);
+        loaded.drop_instances_to_ground();
+    }
+    Ok(loaded)
+}
+
 /// Prepares the slice state for a selected-profile request: the loaded
 /// project enters the ordinary plate-selection lifecycle, with the
 /// requested placement applied first.
@@ -60,15 +75,7 @@ pub(super) fn prepare_profile_slice(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let mut loaded = load_with_profile(project, profile)?;
-    // `OrcaSlicer.cpp:4376-4392` (--center): bed-center placement
-    // (`BuildVolume::bed_center`, the printable-area bbox center) followed
-    // by the Z ground drop.
-    if profile.placement == Placement::Center {
-        let bed = bed_center(&profile.composed.settings().printer.remaining.printable_area);
-        loaded.center_instances_around_point(bed);
-        loaded.drop_instances_to_ground();
-    }
+    let loaded = load_and_place(project, profile)?;
     state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,

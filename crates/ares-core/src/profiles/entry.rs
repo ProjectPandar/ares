@@ -100,7 +100,23 @@ fn slice_validated_profile_source(
     })
 }
 
-/// Apply selected profiles, then run the independent O1 Print validation step.
+/// Loads the model with the selected profiles and applies the requested
+/// placement, returning the placed project for scene extraction without
+/// slicing. Reuses the exact `load_with_profile` and placement logic from
+/// `prepare_profile_slice` — no separate centering implementation.
+pub async fn profile_placed_project(
+    input: impl AsRef<[u8]>,
+    request: ProfileSliceRequest<'_>,
+) -> Result<crate::Project, SliceError> {
+    with_profile_source(input.as_ref(), request, |source| {
+        let Some(profile) = source.profile else {
+            return Err(SliceError::InvalidInput(
+                "a selected profile is required".to_owned(),
+            ));
+        };
+        crate::project_slice::load_and_place(&source, profile)
+    })
+}
 pub fn validate_with_profiles(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
