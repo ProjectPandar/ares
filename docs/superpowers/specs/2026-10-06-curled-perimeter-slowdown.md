@@ -356,3 +356,49 @@ path):
 (modulo documented M73 placement + E-ulp flake classes), or a
 byte-exact demonstration that upstream's collect-time vertex order is
 reproduced.
+
+## Residual investigation — second pass (2026-10-06)
+
+**Mechanism exclusions verified**:
+- `point_occurrence`/`std::unordered_map` start-point selection runs ONLY
+  for `!extrusion->is_closed` (`PerimeterGenerator.cpp:463-497`). The C1
+  cube wall is a closed extrusion → `start_point =
+  paths.front().first_point()`; no map. The libstdc++ unordered_map
+  simulation is therefore NOT needed for this residual (the
+  `bridge_direction.rs` extraction stays unimplemented for now).
+- Ares' collected input (`collect_entity`, all layers): a single
+  `ExternalPerimeter` path of 5 points (4 corners + closing duplicate),
+  vertex 0 = corner (4.645,4.645); no overhang `clip_extrusion` split on
+  this wall → `clip_extrusion` Clipper2Z ordering is also excluded.
+  Remaining vertex-order candidate: the upstream offset contour's ring
+  head / Arachne wall junction 0 — cannot be observed without an
+  upstream DEBUG_FILES build, but see below.
+
+**NaN-semantics experiment (reverted)**: ares' `walk` interpolation
+leaves `position` unchanged when the delta is zero-length, producing a
+(0,0) back/front vector and `atan2(+0,-0) = π` → curvature[0] = π/3 for
+the loop-start corner (documented in
+`square_corners_carry_the_windowed_curvature` as oracle-verified).
+Upstream `normalized()` on the same zero vector yields NaN, so the
+curvature update is discarded (`abs(cur) < abs(NaN)` is false). Making
+ares propagate NaN identically gives curvature[0]=curvature[1]=0 on the
+square — and the whole CurledLine set shifts: the seam-adjacent
+extra-slowdown disappeared, but the divergence shape changed (151 diff
+lines vs 42 before) — orca's inner wall is slowed MORE (F5940 on 3
+edges) than either ares variant. Conclusion: the π/3 seam-start quirk is
+upstream-faithful for at least some cases; the NaN model cannot be right
+unconditionally, or another compensation exists upstream (e.g. upstream
+feeds a slightly different point list where pt0 is not at a dup corner —
+loop vertex order again).
+
+**Orca band shape (no-cooling)**: outer wall Z0.8 emits F4800/F5580 on
+seam-adjacent scarf groups, F5400/F5520/F4800+F5580 mid-loop; inner wall
+F5940×3 edges + F6060. Ares (pre-NaN) emits F6360/F5520/F5400/F5520/F6300
+outer, F6477.88 inner uniform — both directions differ from oracle, so
+the residual is NOT a single localized fix: upstream's CurledLine h
+values differ per position in a way that requires the actual line set.
+Decision point reached within the time box: next step requires upstream
+`layer->curled_lines` — either a `-DSLIC3R_DEBUG_FILES` orca build
+(`SupportSpotsGenerator.cpp:144-147` writes
+`object_malformations.obj`/`object_full.obj`) or an upstream instrument
+that dumps `curled_height` per segment.
