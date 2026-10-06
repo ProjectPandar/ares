@@ -2,7 +2,7 @@ use serde_json::{Map, Value, json};
 
 use super::super::super::{
     FilamentOptions, FilamentPrintSourceOptions, FilamentRegionSourceOptions,
-    FilamentRetractOverrideOptions,
+    FilamentRetractOverrideOptions, config_types::Nullable,
 };
 use super::{InventoryRow, inventory, remaining_rows};
 
@@ -47,46 +47,57 @@ fn every_remaining_field_rejects_invalid_element_with_key() {
 
 #[test]
 fn child_ownership_duplicates_unknown_and_nested_groups_are_rejected() {
-    for (json, key) in [
-        (
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins in the parent and in every
+    // owning child scope.
+    let parsed: FilamentOptions =
+        serde_json::from_str(
             r#"{"additional_cooling_fan_speed":["1"],"additional_cooling_fan_speed":["2"]}"#,
-            "additional_cooling_fan_speed",
-        ),
-        (
+        )
+        .unwrap();
+    assert_eq!(parsed.print.additional_cooling_fan_speed.0[0].0, 2);
+    let parsed: FilamentPrintSourceOptions =
+        serde_json::from_str(
+            r#"{"additional_cooling_fan_speed":["1"],"additional_cooling_fan_speed":["2"]}"#,
+        )
+        .unwrap();
+    assert_eq!(parsed.additional_cooling_fan_speed.0[0].0, 2);
+    let parsed: FilamentOptions =
+        serde_json::from_str(
             r#"{"filament_ironing_flow":["nil"],"filament_ironing_flow":["37%"]}"#,
-            "filament_ironing_flow",
-        ),
-        (
+        )
+        .unwrap();
+    assert!(matches!(
+        parsed.region.filament_ironing_flow.as_slice(),
+        [Nullable::Value(percent)] if percent.0 == 37.0
+    ));
+    let parsed: FilamentRegionSourceOptions =
+        serde_json::from_str(
+            r#"{"filament_ironing_flow":["nil"],"filament_ironing_flow":["37%"]}"#,
+        )
+        .unwrap();
+    assert!(matches!(
+        parsed.filament_ironing_flow.as_slice(),
+        [Nullable::Value(percent)] if percent.0 == 37.0
+    ));
+    let parsed: FilamentOptions =
+        serde_json::from_str(
             r#"{"filament_retraction_length":["0.8"],"filament_retraction_length":["1"]}"#,
-            "filament_retraction_length",
-        ),
-    ] {
-        let error = serde_json::from_str::<FilamentOptions>(json)
-            .unwrap_err()
-            .to_string();
-        assert!(error.contains("duplicate Orca option"), "{error}");
-        assert!(error.contains(key), "{error}");
-        let child_error = match key {
-            "additional_cooling_fan_speed" => {
-                serde_json::from_str::<FilamentPrintSourceOptions>(json)
-                    .unwrap_err()
-                    .to_string()
-            }
-            "filament_ironing_flow" => {
-                serde_json::from_str::<FilamentRegionSourceOptions>(json)
-                    .unwrap_err()
-                    .to_string()
-            }
-            "filament_retraction_length" => {
-                serde_json::from_str::<FilamentRetractOverrideOptions>(json)
-                    .unwrap_err()
-                    .to_string()
-            }
-            _ => unreachable!(),
-        };
-        assert!(child_error.contains("duplicate Orca option"), "{child_error}");
-        assert!(child_error.contains(key), "{child_error}");
-    }
+        )
+        .unwrap();
+    assert!(matches!(
+        parsed.retract_overrides.filament_retraction_length.as_slice(),
+        [Nullable::Value(value)] if value.0 == 1.0
+    ));
+    let parsed: FilamentRetractOverrideOptions =
+        serde_json::from_str(
+            r#"{"filament_retraction_length":["0.8"],"filament_retraction_length":["1"]}"#,
+        )
+        .unwrap();
+    assert!(matches!(
+        parsed.filament_retraction_length.as_slice(),
+        [Nullable::Value(value)] if value.0 == 1.0
+    ));
 
     for input in [
         r#"{"print":{"additional_cooling_fan_speed":["1"]}}"#,

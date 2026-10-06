@@ -191,8 +191,12 @@ fn printer_machine_envelope_changed_limit_reaches_typed_state() {
 
 #[test]
 fn printer_machine_envelope_rejects_duplicate_unknown_and_invalid_enum_fields() {
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let parsed: MachineEnvelopeOptions =
+        serde_json::from_str(r#"{"input_shaping_emit":"0","input_shaping_emit":"1"}"#).unwrap();
+    assert_eq!(parsed.input_shaping_emit, OrcaBool(true));
     for invalid in [
-        r#"{"input_shaping_emit":"0","input_shaping_emit":"1"}"#,
         r#"{"not_a_machine_field":"1"}"#,
         r#"{"input_shaping_type":"TwoHumpEI"}"#,
     ] {

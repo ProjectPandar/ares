@@ -189,8 +189,12 @@ fn printer_gcode_source_preserves_all_five_long_fixture_gcodes_exactly() {
 
 #[test]
 fn printer_gcode_source_rejects_duplicate_unknown_and_invalid_enum_fields() {
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let parsed: PrinterGCodeSourceOptions =
+        serde_json::from_str(r#"{"auxiliary_fan":"0","auxiliary_fan":"1"}"#).unwrap();
+    assert_eq!(parsed.auxiliary_fan, OrcaBool(true));
     for invalid in [
-        r#"{"auxiliary_fan":"0","auxiliary_fan":"1"}"#,
         r#"{"not_a_printer_gcode_field":"1"}"#,
         r#"{"bed_temperature_formula":"highest"}"#,
         r#"{"enable_power_loss_recovery":"Printer configuration"}"#,

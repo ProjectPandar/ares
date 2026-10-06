@@ -50,19 +50,28 @@ fn child_parent_boundaries_reject_non_map_top_level_shapes() {
 }
 
 #[test]
-fn every_real_field_rejects_duplicates_in_child_and_flat_parent() {
+fn every_real_field_duplicate_overwrites_in_child_and_flat_parent() {
+    // Upstream overwrites on repeated assignments (`set_deserialize_raw`,
+    // Config.cpp:573-587): literal duplicates resolve to the later value in
+    // the flat parent and in the owning child scope.
     for field in &REAL_FIELDS {
         let value = serde_json::to_string(&alternate(field)).unwrap();
         let input = format!(
             "{{\"{}\":{},\"{}\":{}}}",
             field.key, value, field.key, value
         );
-        let parent_error = serde_json::from_str::<ProjectRuntimeOptions>(&input)
-            .unwrap_err()
-            .to_string();
-        assert_keyed_bounded_error(&parent_error, field.key);
-        let child_error = child_raw_error(field.child, &input);
-        assert_keyed_bounded_error(&child_error, field.key);
+        let parent: ProjectRuntimeOptions = serde_json::from_str(&input).unwrap();
+        assert_eq!(
+            serde_json::to_value(&parent).unwrap()[field.key],
+            alternate(field),
+            "{input}"
+        );
+        let child = child_value(field.child, &input);
+        assert_eq!(
+            serde_json::to_value(&child).unwrap()[field.key],
+            alternate(field),
+            "{input}"
+        );
     }
 }
 
@@ -101,17 +110,17 @@ fn children_reject_every_cross_child_key_and_all_boundaries_reject_nested_or_unk
     }
 }
 
-fn child_raw_error(child: Child, input: &str) -> String {
+fn child_value(child: Child, input: &str) -> serde_json::Value {
     match child {
         Child::GCode => serde_json::from_str::<ProjectGCodeSourceOptions>(input)
-            .unwrap_err()
-            .to_string(),
+            .map(|v| serde_json::to_value(&v).unwrap())
+            .unwrap(),
         Child::Print => serde_json::from_str::<ProjectPrintSourceOptions>(input)
-            .unwrap_err()
-            .to_string(),
+            .map(|v| serde_json::to_value(&v).unwrap())
+            .unwrap(),
         Child::Preset => serde_json::from_str::<ProjectPresetSourceOptions>(input)
-            .unwrap_err()
-            .to_string(),
+            .map(|v| serde_json::to_value(&v).unwrap())
+            .unwrap(),
     }
 }
 

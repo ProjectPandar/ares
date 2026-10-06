@@ -82,7 +82,7 @@ fn all_74_scalars_reject_array_and_object_shapes_with_the_flat_key() {
 }
 
 #[test]
-fn child_ownership_is_strict_and_duplicates_remain_specific() {
+fn child_ownership_is_strict_and_duplicates_overwrite() {
     let rows = inventory();
     let gcode_key = owner_keys(&rows, "g_code_config")[0];
     let print_key = owner_keys(&rows, "print_config")[0];
@@ -100,14 +100,18 @@ fn child_ownership_is_strict_and_duplicates_remain_specific() {
     ] {
         assert!(serde_json::from_str::<ProcessPrintSourceOptions>(&json).is_err(), "{json}");
     }
-    for (json, key) in [
-        (r#"{"enable_arc_fitting":"0","enable_arc_fitting":"1"}"#, "enable_arc_fitting"),
-        (r#"{"enable_prime_tower":"0","enable_prime_tower":"1"}"#, "enable_prime_tower"),
-    ] {
-        let error = serde_json::from_str::<ProcessOptions>(json).unwrap_err().to_string();
-        assert!(error.contains("duplicate Orca option"), "{error}");
-        assert!(error.contains(key), "{error}");
-    }
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let parsed: ProcessOptions = serde_json::from_str(
+        r#"{"enable_arc_fitting":"0","enable_arc_fitting":"1"}"#,
+    )
+    .unwrap();
+    assert!(parsed.gcode.enable_arc_fitting.0);
+    let parsed: ProcessOptions = serde_json::from_str(
+        r#"{"enable_prime_tower":"0","enable_prime_tower":"1"}"#,
+    )
+    .unwrap();
+    assert!(parsed.print.enable_prime_tower.0);
 }
 
 #[test]

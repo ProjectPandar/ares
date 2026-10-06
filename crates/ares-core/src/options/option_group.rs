@@ -287,11 +287,12 @@ macro_rules! declare_option_group {
                 match key {
                     $(
                         $key => {
-                            if self.$field.is_some() {
-                                return Err(serde::de::Error::custom(concat!(
-                                    "duplicate Orca option ", $key
-                                )));
-                            }
+                            // Upstream overwrites on a second assignment
+                            // to the same target (`set_deserialize_raw`,
+                            // Config.cpp:573-587): legacy aliases
+                            // coexisting with their new keys resolve by
+                            // last-writer-wins in the source map's iteration
+                            // order.
                             self.$field = Some(map.next_value::<$ty>().map_err(|error| {
                                 serde::de::Error::custom(format_args!(
                                     concat!("invalid Orca option ", $key, ": {}"),
@@ -317,11 +318,10 @@ macro_rules! declare_option_group {
                 match key {
                     $(
                         $key => {
-                            if self.$field.is_some() {
-                                return Err(serde::de::Error::custom(concat!(
-                                    "duplicate Orca option ", $key
-                                )));
-                            }
+                            // Same overwrite semantics as
+                            // `deserialize_known_field`: a legacy alias
+                            // routing onto an already-set target replaces
+                            // it (`set_deserialize_raw`, Config.cpp:573-587).
                             self.$field = Some(<$ty as serde::Deserialize>::deserialize(
                                 deserializer,
                             ).map_err(|error| {

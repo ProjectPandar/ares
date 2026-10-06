@@ -1,4 +1,6 @@
-use crate::{ProfileFragment, ProfileKind, ProfileSelection, merge_profile_fragments};
+use crate::{
+    MergedProfile, ProfileFragment, ProfileKind, ProfileSelection, merge_profile_fragments,
+};
 
 use super::{assert_invalid, fragment, fragments};
 
@@ -65,11 +67,22 @@ fn unknown_misplaced_duplicate_and_malformed_options_are_rejected() {
         br#"{"type":"process","name":"p","filament_diameter":[1.75]}"#,
         br#"{"type":"filament","name":"f","printer_model":"X1"}"#,
         br#"{"type":"machine","name":"m","layer_height":0.2}"#,
-        br#"{"type":"process","name":"p","layer_height":0.2,"layer_height":0.1}"#,
         br#"{"type":"process","name":"p","layer_height":{"bad":true}}"#,
     ] {
         assert_invalid(ProfileFragment::from_json_bytes(input), "option");
     }
+
+    // Literal duplicate option keys now overwrite (upstream
+    // `set_deserialize_raw`, Config.cpp:573-587): the later value loads.
+    let duplicated = ProfileFragment::from_json_bytes(
+        br#"{"type":"process","name":"p","layer_height":0.2,"layer_height":0.1}"#,
+    )
+    .unwrap();
+    let merged = merge_profile_fragments(&[duplicated], ProfileKind::Process, "p").unwrap();
+    let MergedProfile::Process { options, .. } = &merged else {
+        unreachable!("process fragment merged into a process profile")
+    };
+    assert_eq!(options.object.layer_height.0, 0.1);
 
     let malformed_thumbnails =
         fragment(br#"{"type":"machine","name":"malformed-thumbnails","thumbnails":"broken"}"#);

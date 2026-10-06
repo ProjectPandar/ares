@@ -152,36 +152,47 @@ fn a_consumed_assignment_does_not_claim_canonical_target_presence() {
 }
 
 #[test]
-fn prime_tower_rib_trigger_claims_its_concrete_target_presence() {
-    for input in [
+fn prime_tower_rib_trigger_overwrites_by_document_order() {
+    // Upstream has no duplicate concept (`set_deserialize_raw` overwrites,
+    // Config.cpp:573-587): the later spelling in the source map wins.
+    let settings = parse(
         r#"{"prime_tower_rib_wall":"1","wipe_tower_wall_type":"rectangle"}"#,
+    );
+    assert_eq!(
+        settings.process.print.wipe_tower_wall_type,
+        ProcessWipeTowerWallType::Rectangle
+    );
+    let settings = parse(
         r#"{"wipe_tower_wall_type":"rectangle","prime_tower_rib_wall":"1"}"#,
-    ] {
-        assert_error_contains(input, &["duplicate Orca option wipe_tower_wall_type"]);
-    }
+    );
+    assert_eq!(
+        settings.process.print.wipe_tower_wall_type,
+        ProcessWipeTowerWallType::Rib
+    );
 }
 
 #[test]
-fn canonical_and_legacy_spellings_share_strict_duplicate_presence() {
-    for input in [
+fn canonical_and_legacy_spellings_overwrite_by_document_order() {
+    // Upstream has no duplicate concept (`set_deserialize_raw` overwrites,
+    // Config.cpp:573-587): the later spelling in the source map wins.
+    let settings = parse(
         r#"{"bottom_solid_infill_flow_ratio":"0.7","initial_layer_flow_ratio":"0.8"}"#,
+    );
+    assert_eq!(settings.process.region.bottom_solid_infill_flow_ratio.0, 0.8);
+    let settings = parse(
         r#"{"initial_layer_flow_ratio":"0.8","bottom_solid_infill_flow_ratio":"0.7"}"#,
-    ] {
-        assert_error_contains(
-            input,
-            &["duplicate Orca option bottom_solid_infill_flow_ratio"],
-        );
-    }
+    );
+    assert_eq!(settings.process.region.bottom_solid_infill_flow_ratio.0, 0.7);
 }
 
 #[test]
-fn two_legacy_spellings_for_one_target_are_strict_duplicates() {
-    for input in [
-        r#"{"wall_filament":"2","perimeter_extruder":"3"}"#,
-        r#"{"perimeter_extruder":"3","wall_filament":"2"}"#,
-    ] {
-        assert_error_contains(input, &["duplicate Orca option outer_wall_filament_id"]);
-    }
+fn two_legacy_spellings_for_one_target_overwrite_by_document_order() {
+    // Upstream has no duplicate concept (`set_deserialize_raw` overwrites,
+    // Config.cpp:573-587): the later spelling in the source map wins.
+    let settings = parse(r#"{"wall_filament":"2","perimeter_extruder":"3"}"#);
+    assert_eq!(settings.process.region.outer_wall_filament_id.0, 3);
+    let settings = parse(r#"{"perimeter_extruder":"3","wall_filament":"2"}"#);
+    assert_eq!(settings.process.region.outer_wall_filament_id.0, 2);
 }
 
 #[test]

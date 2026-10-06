@@ -156,13 +156,25 @@ fn invalid_thumbnail_values_report_the_concrete_project_option() {
 }
 
 #[test]
-fn canonical_and_legacy_thumbnail_collisions_remain_strict() {
-    for input in [
-        r#"{"thumbnails":"16x16","thumbnail_size":"32x32"}"#,
-        r#"{"thumbnail_size":"32x32","thumbnails":"16x16"}"#,
-    ] {
-        assert_error_contains(input, &["duplicate Orca option thumbnails"]);
-    }
+fn canonical_and_legacy_thumbnail_collisions_overwrite_by_document_order() {
+    // Upstream has no duplicate concept (`set_deserialize_raw` overwrites,
+    // Config.cpp:573-587): the later spelling in the source map wins.
+    assert_eq!(
+        parse(r#"{"thumbnails":"16x16","thumbnail_size":"32x32"}"#)
+            .printer
+            .remaining
+            .thumbnails
+            .as_str(),
+        "32x32/PNG"
+    );
+    assert_eq!(
+        parse(r#"{"thumbnail_size":"32x32","thumbnails":"16x16"}"#)
+            .printer
+            .remaining
+            .thumbnails
+            .as_str(),
+        "16x16/PNG"
+    );
 
     assert_eq!(
         parse(r#"{"thumbnails":"16x16"}"#)

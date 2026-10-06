@@ -10,21 +10,14 @@ fn unknown_project_options_are_ignored_like_orca_config_loading() {
 
 #[test]
 fn duplicate_diagnostics_are_compact_and_exact_keyed() {
-    for (input, key, exact) in [
-        (
-            r#"{"layer_height":"0.2","layer_height":"0.3"}"#,
-            "layer_height",
-            "duplicate Orca option layer_height",
-        ),
-        (
-            r#"{"from":"project","from":"copy"}"#,
-            "from",
-            "duplicate Orca option from",
-        ),
-    ] {
-        let error = keyed_error(input, key);
-        assert_eq!(error.split(" at line").next().unwrap(), exact);
-    }
+    // Option-group duplicates now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587); the hand-written metadata guard still rejects
+    // duplicates of the metadata keys.
+    assert!(keyed_error(
+        r#"{"from":"project","from":"copy"}"#,
+        "from",
+    )
+    .starts_with("duplicate Orca option from"));
 }
 
 #[test]

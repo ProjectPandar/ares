@@ -58,8 +58,15 @@ fn every_field_rejects_invalid_element_shape_with_key() {
 
 #[test]
 fn duplicate_unknown_and_cross_scope_fields_are_rejected() {
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let parsed: FilamentOptions =
+        serde_json::from_str(r#"{"pressure_advance":["0.1"],"pressure_advance":["0.2"]}"#).unwrap();
+    assert_eq!(parsed.gcode.pressure_advance.0[0].0, 0.2);
+    let parsed: FilamentGCodeSourceOptions =
+        serde_json::from_str(r#"{"pressure_advance":["0.1"],"pressure_advance":["0.2"]}"#).unwrap();
+    assert_eq!(parsed.pressure_advance.0[0].0, 0.2);
     for input in [
-        r#"{"pressure_advance":["0.1"],"pressure_advance":["0.2"]}"#,
         r#"{"unknown_filament_option":["1"]}"#,
         r#"{"gcode":{"pressure_advance":["0.1"]}}"#,
         r#"{"layer_height":"0.2"}"#,
@@ -73,12 +80,6 @@ fn duplicate_unknown_and_cross_scope_fields_are_rejected() {
         assert!(!child.is_empty(), "{input}");
         assert!(!parent.is_empty(), "{input}");
     }
-    let error = serde_json::from_str::<FilamentOptions>(
-        r#"{"pressure_advance":["0.1"],"pressure_advance":["0.2"]}"#,
-    )
-    .unwrap_err()
-    .to_string();
-    assert!(error.contains("duplicate Orca option pressure_advance"), "{error}");
 }
 
 fn alternate(row: &InventoryRow) -> Value {

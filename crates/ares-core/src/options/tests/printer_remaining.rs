@@ -158,8 +158,12 @@ fn printer_options_preserves_points_groups_and_explicit_empty_areas() {
 
 #[test]
 fn printer_options_rejects_duplicate_unknown_cross_scope_and_wrong_shapes() {
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let parsed: PrinterOptions =
+        serde_json::from_str(r#"{"printable_height":"100","printable_height":"200"}"#).unwrap();
+    assert_eq!(parsed.remaining.printable_height.0, 200.0);
     for invalid in [
-        r#"{"printable_height":"100","printable_height":"200"}"#,
         r#"{"unknown_printer_field":"1"}"#,
         r#"{"extruder_ams_count":["1#0|4#0"]}"#,
         r#"{"extruder_offset":["0x0"]}"#,

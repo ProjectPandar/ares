@@ -17,8 +17,12 @@ fn process_object_source_every_field_accepts_nondefault_typed_state() {
 
 #[test]
 fn process_object_source_rejects_duplicate_unknown_wrong_shape_and_deferred_scopes() {
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let parsed: ProcessObjectSourceOptions =
+        serde_json::from_str(r#"{"layer_height":"0.2","layer_height":"0.3"}"#).unwrap();
+    assert_eq!(parsed.layer_height.0, 0.3);
     for invalid in [
-        r#"{"layer_height":"0.2","layer_height":"0.3"}"#,
         r#"{"unknown_object_option":"1"}"#,
         r#"{"layer_height":[]}"#,
         r#"{"enable_support":null}"#,
@@ -59,12 +63,11 @@ fn process_object_source_rejects_duplicate_unknown_wrong_shape_and_deferred_scop
 
 #[test]
 fn process_object_source_duplicate_and_unknown_errors_stay_specific() {
-    let duplicate = serde_json::from_str::<ProcessObjectSourceOptions>(
-        r#"{"layer_height":"0.2","layer_height":"0.3"}"#,
-    )
-    .unwrap_err()
-    .to_string();
-    assert!(duplicate.contains("duplicate Orca option layer_height"), "{duplicate}");
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let parsed: ProcessObjectSourceOptions =
+        serde_json::from_str(r#"{"layer_height":"0.2","layer_height":"0.3"}"#).unwrap();
+    assert_eq!(parsed.layer_height.0, 0.3);
 
     let unknown = serde_json::from_str::<ProcessObjectSourceOptions>(
         r#"{"unknown_object_option":"1"}"#,

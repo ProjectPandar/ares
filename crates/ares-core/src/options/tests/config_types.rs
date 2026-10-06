@@ -366,9 +366,11 @@ fn nonmatching_group_leaves_the_value_for_the_next_typed_group() {
 }
 
 #[test]
-fn option_group_rejects_duplicate_known_keys() {
-    let error = serde_json::from_str::<DispatchGroups>(r#"{"enabled":"1","enabled":"0"}"#)
-        .unwrap_err()
-        .to_string();
-    assert!(error.contains("duplicate Orca option enabled"));
+fn option_group_duplicate_known_keys_last_write_wins() {
+    // Upstream overwrites on a repeated assignment
+    // (`set_deserialize_raw`, Config.cpp:573-587); literal duplicate keys
+    // in one JSON stream resolve to the later value.
+    let parsed: DispatchGroups =
+        serde_json::from_str(r#"{"enabled":"1","enabled":"0"}"#).unwrap();
+    assert_eq!(parsed.primary.enabled, OrcaBool(false));
 }

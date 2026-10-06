@@ -183,7 +183,6 @@ fn region_and_parent_decode_errors_are_keyed_strict_and_scope_aware() {
     }
     for json in [
         r#"{"layer_height":"0.3"}"#,
-        r#"{"wall_loops":"2","wall_loops":"3"}"#,
         r#"{"not_an_orca_option":"0"}"#,
     ] {
         assert!(serde_json::from_str::<ProcessRegionSourceOptions>(json).is_err());
@@ -243,12 +242,13 @@ fn process_parent_accepts_mixed_children_and_rejects_duplicate_across_flat_map()
         process.region.print_extruder_id,
         OrcaInts(vec![OrcaInt(2), OrcaInt(3)])
     );
-    assert!(
-        serde_json::from_str::<ProcessOptions>(
-            r#"{"wall_loops":"2","wall_loops":"3","layer_height":"0.2"}"#
-        )
-        .is_err()
-    );
+    // Literal duplicate keys now overwrite (upstream `set_deserialize_raw`,
+    // Config.cpp:573-587): the later value wins.
+    let duplicated: ProcessOptions = serde_json::from_str(
+        r#"{"wall_loops":"2","wall_loops":"3","layer_height":"0.2"}"#,
+    )
+    .unwrap();
+    assert_eq!(duplicated.region.wall_loops, OrcaInt(3));
 }
 
 #[test]
