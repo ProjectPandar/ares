@@ -1,0 +1,11 @@
+{
+   "after" : "outer_only",
+   "before" : "auto_brim",
+   "changed_entries" : [
+      "Metadata/project_settings.config"
+   ],
+   "changed_key" : "brim_type",
+   "input" : "tests/parity/validation/kobra3-centered/0.4.3mf",
+   "unchanged_entries" : 8,
+   "variant" : "tests/parity/validation/kobra3-centered/0.4-outer-only.3mf"
+}

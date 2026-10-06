@@ -2,7 +2,7 @@
 
 ## Decision status
 
-Proposed source-cited rewrite slice. This record fixes the architectural boundary; it does not authorize product implementation before spec approval, public RED and prewritten controls.
+Approved source-cited rewrite slice (`2bf5a2a14`). Product implementation follows public RED and prewritten controls.
 
 ## Upstream ownership
 
@@ -23,8 +23,8 @@ The destination is `crates/ares-core/src/project_slice/gcode_emit/brim.rs::BrimP
 2. Preserve the cited `Model::setPrintSpeedTable` interpretation: complete four-point exclusion groups, original orientation, discarded incomplete trailing group, flat difference traversal and first-polygon selection. A general polygon-with-hole interpretation is a different algorithm and is not an acceptable replacement.
 3. Preserve the distinction between an empty configured per-extruder outer list and existing per-slot groups. The former uses the source Model bed polygon; configured groups follow `Print::get_extruder_printable_polygons`. Do not invent empty-inner-group fallbacks.
 4. Select the physical bed region using the source logical usage and applied filament map. Do not alter existing Flow/nozzle selection or the recommendation lifecycle as part of this slice.
-5. Follow the source's 30 mm round offset, expanded-bed difference and first resulting forbidden region. Combine it with the existing object-island no-brim region in the final brim-area difference before simplification/loop stepping. Preserve contour traversal semantics rather than substituting a similar-looking intersection.
-6. Keep clipping in Native's `shift_without_plate_offset` plate-local lattice. Preserve input placements and the current emitter/template contracts with explicit conversions at the existing plan boundary. Coordinate plumbing must compose with the independently owned O6 origin port; arbitrary G-code text rewriting is prohibited.
+5. Follow the source's `scale_(30.)`, `jtRound`, `SCALED_RESOLUTION` offset and expanded-bed difference literally. Take `.front()` only when the result vector is nonempty, exactly as the source does; do not search/reorder entries. Combine this region with the existing object-island no-brim region in the final brim-area difference before simplification/loop stepping. Preserve contour traversal semantics rather than substituting a similar-looking intersection.
+6. Upstream's `shift_without_plate_offset` describes its native storage interface; it does not authorize a second Ares origin convention. Ares/O6 keeps geometry global, with bed geometry in the same coordinate system as the print-volume gate. Brim clipping consumes that shared coordinate system without independently adding or subtracting plate origin. Only writer motion formatting and footprint output subtract origin, as owned by O6. Preserve input placements; do not rewrite G-code text. The Kobra fixtures are single plate with origin zero, so this slice does not depend on O6. Whichever slice merges later rebases and reconciles this interface.
 7. Covered-area footprint data must come from the clipped brim region consumed by the source footprint/hull path. An unmasked outer offset is not the same region.
 8. Empty brim geometry is not a new object-volume validation failure. Preserve inactive brim behavior and existing eligibility. Native undefined empty first-polygon accesses are not permission to add a legacy fallback or a new processing-time validation policy.
 
@@ -34,4 +34,4 @@ Included: supported explicit-outer single-object brim bed-region construction, m
 
 Deferred: generalized multi-object/support/ears/auto-brim generation, the rest of `GlobalSpeedMap`, new configuration validation/loading, Flow selector corrections, bridge processing, and independent O6 implementation.
 
-The centered Kobra-3 0.4 input is an inactive `auto_brim` control, not a successful explicit-brim oracle. Existing original-position rejection fixtures remain separate from centered slicing coverage. Complete ordered-byte parity with only the existing generator normalization is the acceptance policy; diagnostic selected-move or point checks cannot replace it.
+The centered Kobra-3 0.4 input is an inactive `auto_brim` control, not a successful explicit-brim oracle. Existing original-position rejection fixtures remain separate from centered slicing coverage. Complete ordered-byte parity with only the existing generator normalization is the acceptance policy; diagnostic selected-move or point checks cannot replace it. Prewritten controls include ordinary single-object explicit brim and machines without `bed_exclude_area`, with zero output change, plus independent complete official/seeded current-base comparisons.

@@ -9,6 +9,8 @@
 mod adaptive_pressure_advance;
 #[path = "orca_parity/artifacts.rs"]
 mod artifacts;
+#[path = "orca_parity/brim_bed_region.rs"]
+mod brim_bed_region;
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
 #[path = "orca_parity/filament_usage_stats.rs"]
