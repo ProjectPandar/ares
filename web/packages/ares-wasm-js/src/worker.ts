@@ -117,6 +117,12 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [JSON.parse(catalogs.get(request.catalogId)!.filterCompatible(request.printer, request.process)), []];
     case "catalogPrinters":
       return [JSON.parse(catalogs.get(request.catalogId)!.printers()), []];
+    case "catalogPrinterModels":
+      return [JSON.parse(catalogs.get(request.catalogId)!.printerModels()), []];
+    case "catalogSimilarPrinter": {
+      const { catalogId, model, variant, current } = request;
+      return [JSON.parse(catalogs.get(catalogId)!.similarPrinterPreset(model, variant, current.name, current.printer_variant)), []];
+    }
     case "catalogFree":
       catalogs.get(request.catalogId)!.free();
       catalogs.delete(request.catalogId);

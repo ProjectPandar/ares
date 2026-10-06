@@ -141,6 +141,17 @@ export interface SelectablePrinter {
   printer_variant: string;
 }
 
+/** One system printer model of the plater printer combo. */
+export interface PrinterModel {
+  model: string;
+}
+
+/** The selected printer `PresetCatalog.similarPrinterPreset` resolves from; it may be a project printer outside the catalog. */
+export interface CurrentPrinter {
+  name: string;
+  printer_variant: string;
+}
+
 export interface MissingParent {
   kind: "machine" | "process" | "filament";
   name: string;

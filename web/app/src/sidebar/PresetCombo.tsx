@@ -22,9 +22,11 @@ export interface ComboAction {
  * PlaterPresetComboBox (PresetComboBoxes.cpp:1418-1468): project-embedded,
  * user and system groups in that order, then the wizard items.
  */
-export function PresetCombo({ label, value, groups, placeholder, onSelect, actions = [] }: {
+export function PresetCombo({ label, value, tooltip, groups, placeholder, onSelect, actions = [] }: {
   label: string;
   value?: string;
+  /** The selected preset's name when `value` shows its printer model (PresetComboBoxes.cpp:1265, 1486). */
+  tooltip?: string;
   groups: PresetGroup[];
   placeholder: string;
   onSelect?: (name: string, group: PresetGroup["title"]) => void;
@@ -53,7 +55,7 @@ export function PresetCombo({ label, value, groups, placeholder, onSelect, actio
 
   return (
     <div className="combo-root" ref={root}>
-      <button type="button" className={value ? "combo" : "combo empty"} title={value ?? placeholder} aria-label={label}
+      <button type="button" className={value ? "combo" : "combo empty"} title={tooltip ?? value ?? placeholder} aria-label={label}
         aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined}
         disabled={shown.length === 0 && actions.length === 0} onClick={() => setOpen(!open)}>
         <span className="combo-text">{value ?? placeholder}</span>

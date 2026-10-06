@@ -1,7 +1,7 @@
 import type { ProjectSettings } from "@ares-slicer/wasm";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { ObjectIcon, OrcaIcon } from "../shell/icons";
-import { importedNames, presetSliceBlocker, selectFilament, selectPrinter, selectProcess } from "../state/presets";
+import { importedNames, presetSliceBlocker, selectFilament, selectPrinter, selectPrinterModel, selectProcess } from "../state/presets";
 import { type CompatibleState, type PresetSelection, useApp } from "../state/store";
 import { tabValues } from "../state/typedSettings";
 import { ObjectList } from "./ObjectList";
@@ -83,19 +83,26 @@ function PrinterSection({ settings, openTab }: { settings: ProjectSettings | nul
   const selection = useApp((state) => state.presetSelection);
   const compatible = useApp((state) => state.compatible);
   const systemPrinters = useApp((state) => state.systemPrinters);
+  const printerModels = useApp((state) => state.printerModels);
   const [wizard, setWizard] = useState(false);
   const nozzle = firstString(settings?.project, "nozzle_diameter");
   const bed = firstString(settings?.project, "curr_bed_type") ?? firstString(settings?.printer, "default_bed_type");
   const printer = firstString(settings?.printer, "printer_settings_id") ?? firstString(settings?.project, "printer_settings_id");
   const user = [...importedNames(imports, "machine")].map((name) => ({ name }));
-  // TabPresetComboBox::update (PresetComboBoxes.cpp:1773, 1807): user presets, then system preset names.
-  const system = systemPrinters.map(({ name }) => ({ name }));
+  // PlaterPresetComboBox::update: system printers as their models (PresetComboBoxes.cpp:1238-1251), a
+  // selected one shown by its model with the preset name as the tooltip (:1241-1244, 1265, 1486).
+  const system = printerModels.map((name) => ({ name }));
+  const current = selection?.printer ?? printer;
+  const selectedModel = systemPrinters.find(({ name }) => name === selection?.printer)?.printer_model;
+  // PresetBundle.cpp:3755: the selected printer's printer_variant, a project printer's from its settings.
+  const variant = systemPrinters.find(({ name }) => name === current)?.printer_variant ?? firstString(settings?.printer, "printer_variant") ?? "";
   return (
     <Section icon={<OrcaIcon name="printer" />} title="Printer">
       <div className="preset-row">
-        <PresetCombo label="Printer preset" value={selection?.printer ?? printer}
+        <PresetCombo label="Printer preset" value={selectedModel ?? current} tooltip={current}
           groups={[project(printer), { title: "User presets", presets: user }, { title: "System presets", presets: system }]} placeholder="No printer preset"
-          onSelect={(name, group) => void selectPrinter(group === "Project presets" ? null : name)}
+          onSelect={(name, group) => void (group === "System presets" ? selectPrinterModel(name, { name: current ?? "", printer_variant: variant })
+            : selectPrinter(group === "Project presets" ? null : name))}
           actions={[{ label: "Select/Remove printers (system presets)", run: () => setWizard(true) }]} />
         {settings && <EditButton label="Edit printer settings" onClick={() => openTab({ kind: "printer" })} />}
       </div>

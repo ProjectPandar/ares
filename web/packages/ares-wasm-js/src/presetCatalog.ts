@@ -1,5 +1,5 @@
 import type { RequestBody } from "./protocol.js";
-import type { CompatiblePresets, SelectablePrinter } from "./types.js";
+import type { CompatiblePresets, CurrentPrinter, PrinterModel, SelectablePrinter } from "./types.js";
 
 type Call = (body: RequestBody) => Promise<unknown>;
 
@@ -53,6 +53,26 @@ export class PresetCatalog {
    */
   async printers(): Promise<SelectablePrinter[]> {
     return (await this.#call({ kind: "catalogPrinters", catalogId: this.#catalogId })) as SelectablePrinter[];
+  }
+
+  /**
+   * The system printer models the plater printer combo lists instead of their
+   * presets, each once (`PresetComboBoxes.cpp:1238-1251`). Imported printers
+   * are not models; `printers()` lists them by name.
+   */
+  async printerModels(): Promise<PrinterModel[]> {
+    return (await this.#call({ kind: "catalogPrinterModels", catalogId: this.#catalogId })) as PrinterModel[];
+  }
+
+  /**
+   * The printer preset a selected printer `model` stands for
+   * (`PresetBundle::get_similar_printer_preset`), preferring the preset like
+   * `current` with `variant` (empty: `current`'s variant). `null` when no
+   * printer has the model, or when `model` is empty and `current` is not in
+   * the catalog.
+   */
+  async similarPrinterPreset(model: string, variant: string, current: CurrentPrinter): Promise<string | null> {
+    return (await this.#call({ kind: "catalogSimilarPrinter", catalogId: this.#catalogId, model, variant, current })) as string | null;
   }
 
   /** Releases the worker's catalog. */

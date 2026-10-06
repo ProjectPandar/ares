@@ -1,4 +1,4 @@
-import type { ConfigOverrides, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
+import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
 import { presetFilamentSlots } from "../sidebar/options";
 import { slicer } from "./slicer";
 import { type ModelFile, type PresetSelection, useApp } from "./store";
@@ -46,13 +46,17 @@ async function syncCatalog(): Promise<PresetCatalog> {
   return synced.catalog;
 }
 
-/** The installed vendors' printers for the printer combo's "System presets" group. */
+/** The installed vendors' printers and the printer models of the printer combo's "System presets" group. */
 async function updateSystemPrinters() {
   const { vendors } = useApp.getState();
   try {
-    const printers = await (await presetCatalog()).printers();
+    const catalog = await presetCatalog();
+    const [printers, models] = await Promise.all([catalog.printers(), catalog.printerModels()]);
     if (useApp.getState().vendors === vendors) {
-      useApp.setState({ systemPrinters: printers.filter((printer) => printer.vendor !== "user") });
+      useApp.setState({
+        systemPrinters: printers.filter((printer) => printer.vendor !== "user"),
+        printerModels: models.map(({ model }) => model),
+      });
     }
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });
@@ -108,6 +112,23 @@ export async function setVendors(vendors: string[]) {
 export async function selectPrinter(printer: string | null) {
   useApp.setState({ presetSelection: printer === null ? null : { printer, filaments: [] } });
   await updateCompatible();
+}
+
+/**
+ * Selects the printer a printer model item stands for, resolved from the `current` printer
+ * (Plater::priv::on_select_preset, Plater.cpp:9565-9572).
+ */
+export async function selectPrinterModel(model: string, current: CurrentPrinter) {
+  try {
+    const printer = await (await presetCatalog()).similarPrinterPreset(model, "", current);
+    if (printer === null) {
+      useApp.setState({ compatible: { status: "error", error: `No printer preset of model "${model}" for "${current.name}"` } });
+      return;
+    }
+    await selectPrinter(printer);
+  } catch (error) {
+    useApp.setState({ compatible: { status: "error", error: (error as Error).message } });
+  }
 }
 
 /** Selects a process of the compatible list; filaments are filtered against it. */

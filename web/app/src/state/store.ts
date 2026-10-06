@@ -72,6 +72,8 @@ export interface AppState {
   vendors: readonly string[];
   /** Selectable printers of the installed vendors (`PresetCatalog.printers`). */
   systemPrinters: readonly SelectablePrinter[];
+  /** System printer models the plater printer combo lists (`PresetCatalog.printerModels`). */
+  printerModels: readonly string[];
   /** Imported user preset files (MainFrame::load_config_file). */
   presetImports: readonly ParsedPresetBundle[];
   presetSelection: PresetSelection | null;
@@ -108,6 +110,7 @@ export const useApp = create<AppState>(() => ({
   slice: { status: "idle" },
   vendors: JSON.parse(localStorage.getItem("ares.vendors") ?? "[]") as string[],
   systemPrinters: [],
+  printerModels: [],
   presetImports: [],
   presetSelection: null,
   compatible: null,
