@@ -113,10 +113,7 @@ fn overhang_wall_jerk_falls_to_default() {
         inner_wall_jerk: 7.0,
         ..MotionOptions::default()
     };
-    assert_eq!(
-        properties("Overhang wall", true).jerk(&options, 3),
-        9.0
-    );
+    assert_eq!(properties("Overhang wall", true).jerk(&options, 3), 9.0);
     // Contrast: the true external perimeter takes the outer value.
     assert_eq!(properties("Outer wall", true).jerk(&options, 3), 7.0);
 }

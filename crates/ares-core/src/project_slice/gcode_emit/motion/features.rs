@@ -68,6 +68,18 @@ fn is_infill(feature: &str) -> bool {
     )
 }
 
+/// `is_external_perimeter` (`ExtrusionEntity.hpp:64-66`): only the true
+/// external perimeter — the overhang wall is NOT a member.
+fn is_external_perimeter(feature: &str) -> bool {
+    matches!(feature, "Outer wall")
+}
+
+/// `is_internal_perimeter` (`ExtrusionEntity.hpp:59-62`): only
+/// `erPerimeter`.
+fn is_internal_perimeter(feature: &str) -> bool {
+    matches!(feature, "Inner wall")
+}
+
 impl PathProperties<'_> {
     pub(super) fn kinematics(
         self,
@@ -125,12 +137,14 @@ impl PathProperties<'_> {
             return options.initial_layer_jerk;
         }
         match self.feature {
-            "Outer wall" | "Overhang wall" if options.outer_wall_jerk > 0.0 => {
+            feature if is_external_perimeter(feature) && options.outer_wall_jerk > 0.0 => {
                 options.outer_wall_jerk
             }
-            "Inner wall" if options.inner_wall_jerk > 0.0 => options.inner_wall_jerk,
+            feature if is_internal_perimeter(feature) && options.inner_wall_jerk > 0.0 => {
+                options.inner_wall_jerk
+            }
             "Top surface" if options.top_surface_jerk > 0.0 => options.top_surface_jerk,
-            _ if is_infill(self.feature) && options.infill_jerk > 0.0 => options.infill_jerk,
+            feature if is_infill(feature) && options.infill_jerk > 0.0 => options.infill_jerk,
             _ => options.default_jerk,
         }
     }
