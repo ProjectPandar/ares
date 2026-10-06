@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import { checkColorRanges, type RangeMove } from "./colorRanges";
+import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
 
 /** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current and drawn. */
 export async function canvasDigest(page: Page) {
@@ -43,7 +44,7 @@ const MARKER_TYPES: Record<string, number> = {
   Retractions: 1, Unretractions: 2, Seams: 3, ToolChanges: 4, ColorChanges: 5, PausePrints: 6, CustomGCodes: 7,
 };
 
-type Move = RangeMove & { gcodeId: number; z: number; internalOnly: boolean };
+export type Move = RangeMove & { gcodeId: number; x: number; y: number; z: number; internalOnly: boolean };
 /** GCodeProcessor `EMoveType::Noop` / `Travel` / `Wipe`: with `Extrude`, the moves libvgcode draws as paths. */
 const PATH_TYPES = new Set([0, 8, 9, EXTRUDE]);
 
@@ -67,6 +68,8 @@ function oracleMoves(oracle: string, gcodePath: string, workDir: string): Move[]
       type: values[column.type],
       role: values[column.role],
       internalOnly: values[column.internal_only] === 1,
+      x: values[column.x],
+      y: values[column.y],
       z: values[column.z],
       layer: values[column.layer_id],
       width: values[column.width],
@@ -97,12 +100,12 @@ function currentLine(moves: Move[], top: number) {
 }
 
 /**
- * Moves slider stops (G-code line ids) with layers `[0, top]` shown, every
- * extrusion role and only seams among the options (`Settings.hpp:33-42`), and
- * the `seq_top_layer_only` default (`AppConfig.cpp:202-203`,
- * `GCodeViewer.cpp:1128-1131`).
+ * libvgcode vertices and, per moves slider stop, the vertex it ends the view
+ * at, with layers `[0, top]` shown, every extrusion role and only seams among
+ * the options (`Settings.hpp:33-42`), and the `seq_top_layer_only` default
+ * (`AppConfig.cpp:202-203`, `GCodeViewer.cpp:1128-1131`).
  */
-function movesSliderStops(moves: Move[], top: number) {
+export function movesSliderVertices(moves: Move[], top: number) {
   // libvgcode::convert (LibVGCodeWrapper.cpp:209-240): a path move whose type, role or
   // mm3/mm differs from the previous move gets a phantom vertex first, with its own ids.
   const vertices: Move[] = [];
@@ -128,10 +131,20 @@ function movesSliderStops(moves: Move[], top: number) {
     shortened = true;
   }
   if (shortened) first--;
-  // GCodeViewer::update_moves_slider (GCodeViewer.cpp:1790-1807): one stop per run of equal gcode ids.
+  // GCodeViewer::update_moves_slider (GCodeViewer.cpp:1790-1807): one stop per run of equal gcode ids,
+  // at its last vertex (`values.back() = i + 1`; update_sequential_view_current takes value - 1).
   const stops: number[] = [];
-  for (let i = first; i <= last; i++) if (stops.at(-1) !== vertices[i].gcodeId) stops.push(vertices[i].gcodeId);
-  return stops;
+  for (let i = first; i <= last; i++) {
+    if (i > first && vertices[i - 1].gcodeId === vertices[i].gcodeId) stops[stops.length - 1] = i;
+    else stops.push(i);
+  }
+  return { vertices, stops };
+}
+
+/** Moves slider stops as G-code line ids. */
+function movesSliderStops(moves: Move[], top: number) {
+  const { vertices, stops } = movesSliderVertices(moves, top);
+  return stops.map((i) => vertices[i].gcodeId);
 }
 
 /** `GCodeWindow::render`: the framed line is `id`, cut to 52 characters plus "..." past 55. */
@@ -311,7 +324,9 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expect(page.getByTestId("layer-slider")).toContainText(layerZ(moves, 0).toFixed(2));
   await expectCurrentLine(page, gcode, moves, 0);
   await expect.poll(() => canvasDigest(page), { message: "first layer only must differ from all layers" }).not.toBe(full);
+  await expectNoToolPosition(page);
   const movesSlider = { 1: await checkMovesSlider(page, gcode, moves, 0, artifacts) };
+  const toolPosition = await checkToolPosition(page, moves, 0, artifacts);
   await top.focus();
   await page.keyboard.press("PageUp");
   await page.keyboard.press("PageUp");
@@ -322,7 +337,9 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await top.focus();
   await page.keyboard.press("End");
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
-  await expect.poll(() => canvasDigest(page)).toBe(full);
+  // GCodeViewer::render (`GCodeViewer.cpp:1594-1601`): the marker stays shown once the moves thumb left the end.
+  await expect.poll(() => canvasDigest(page), { message: "the latched tool marker draws at the last move" }).not.toBe(full);
+  const marked = await canvasDigest(page);
   Object.assign(movesSlider, { [layers]: await checkMovesSlider(page, gcode, moves, layers - 1, artifacts) });
 
   const outerWall = legend.getByRole("button", { name: "Outer wall" });
@@ -331,13 +348,13 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expect.poll(() => canvasDigest(page), { message: "hiding outer walls must change the view" }).not.toBe(full);
   await page.screenshot({ path: `${artifacts}preview-no-outer-wall.png` });
   await outerWall.click();
-  await expect.poll(() => canvasDigest(page)).toBe(full);
+  await expect.poll(() => canvasDigest(page)).toBe(marked);
   const colorRanges = await checkColorRanges(page, moves, artifacts);
 
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, movesSlider, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges,
+      moves: moves.length, layers, movesSlider, toolPosition, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,
