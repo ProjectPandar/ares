@@ -167,43 +167,20 @@ async fn orca_parity_o3_retraction_when_cut_28_loaded_config() {
 }
 
 /// Creality K2 carries `retraction_distances_when_cut: "30"` (above
-/// [10,18]) — but profile composition first fails on a legacy-alias
-/// collision (`solid_infill_filament`/`internal_solid_filament_id`), a
-/// separate `handle_legacy` milestone tracked outside O3. The O3 range
-/// check never runs for K2 until that is resolved; this pins the *current*
-/// behavior so the O3 assertion flips to the native text once the alias
-/// path is fixed (the `error_lines` below is native's, recorded for then).
+/// [10,18]). The `solid_infill_filament`/`internal_solid_filament_id`
+/// legacy-alias collision is now resolved by upstream overwrite
+/// semantics (`f5c869df`), so the O3 range loop reaches and rejects the
+/// out-of-range retraction with the native text.
 #[tokio::test]
-async fn orca_parity_o3_retraction_when_cut_30_known_legacy_blocked() {
-    let root = super::super::repo_root();
-    let profiles_root = root.join("OrcaSlicer/resources/profiles");
-    let catalog = json!({"vendors": [
-        vendor(&profiles_root, "OrcaFilamentLibrary"),
-        vendor(&profiles_root, "Creality"),
-    ], "imports": []});
-    let selection = json!({
-        "machine": "Creality K2 0.4 nozzle",
-        "process": "0.20mm Standard @Creality K2 0.4 nozzle",
-        "filaments": ["Creality Generic PLA @K2-all"],
-    });
-    let catalog_json = serde_json::to_string(&catalog).unwrap();
-    let selection_json = serde_json::to_string(&selection).unwrap();
-    let overrides = ConfigOverrides::default();
-    let input = fs::read(root.join("tests/parity/cube10.stl")).unwrap();
-    let request = ProfileSliceRequest {
-        filename: "cube10.stl",
-        catalog_json: &catalog_json,
-        selection_json: &selection_json,
-        plate: None,
-        overrides: &overrides,
-        placement: Placement::None,
-    };
-    let validated = ares_core::validate_with_profiles(&input, request);
-    assert!(
-        matches!(&validated, Err(SliceError::InvalidInput(text)) if text.contains("internal_solid_filament_id")),
-        "K2 is currently blocked by the legacy-alias collision before O3; \
-         once handle_legacy is fixed this should become `retraction_distances_when_cut: 30 not in range [10.000000,18.000000]`; got {validated:?}"
-    );
+async fn orca_parity_o3_retraction_when_cut_30_loaded_config() {
+    original_profile(&RangeCase {
+        vendor_name: "Creality",
+        machine: "Creality K2 0.4 nozzle",
+        process: "0.20mm Standard @Creality K2 0.4 nozzle",
+        filament: "Creality Generic PLA @K2-all",
+        error_lines: "retraction_distances_when_cut: 30 not in range [10.000000,18.000000]",
+    })
+    .await;
 }
 
 #[tokio::test]
@@ -441,11 +418,10 @@ async fn orca_parity_o3_matrix_sweep_loaded_config() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    // K2 0.4 is the same machine as `retraction_when_cut_30` — currently
-    // blocked by the legacy-alias collision before O3 runs (see the named
-    // test). Recorded in the report; excluded from the strict parity assert
-    // until `handle_legacy` lands.
-    const KNOWN_LEGACY_BLOCKED: &[&str] = &["Creality K2 0.4 nozzle"];
+    // K2 0.4 now resolves its `solid_infill_filament`/
+    // `internal_solid_filament_id` legacy-alias collision via upstream
+    // overwrite semantics (`f5c869df`), so every machine below reaches the
+    // O3 range loop and is held to strict parity.
     const CASES: &[(&str, &str)] = &[
         ("Creality", "Creality K2 0.4 nozzle"),
         ("Creality", "Creality SPARKX i7 0.2 nozzle"),
@@ -545,9 +521,6 @@ async fn orca_parity_o3_matrix_sweep_loaded_config() {
         );
         report.last_mut().unwrap()["native_text"] = json!(native_text);
         report.last_mut().unwrap()["matched"] = json!(matched);
-        if KNOWN_LEGACY_BLOCKED.contains(machine) {
-            continue;
-        }
         if !matched {
             failures.push(format!(
                 "{vendor_name}/{machine}: ares={validated:?} native={native_text:?}"
