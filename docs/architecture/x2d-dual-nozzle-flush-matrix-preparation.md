@@ -259,6 +259,14 @@ and must become GREEN: its override legitimately changes nozzle count and
 colours and supplies an8-entry matrix. Retain its prior matrix-size RED from
 `fresh-d789-identified/workspace.log`. No new internal-value assertions.
 
+Dependency inspection reads support flags with the source's `get_at` semantics
+(`:3473–3475`, `Config.hpp:624–627,1892`); it never broadcasts selectors or
+datasets. If selector dependencies are unresolved, decline reconstruction before
+entering its support-size/minimum checks. For admitted reconstruction retain the
+source's explicit support/colour count equality check (`:3412–3418`). This keeps
+the public API's supplied valid matrix intact when its extra inactive tool has
+no complete selector context; no padding of flag or selector vectors is added.
+
 ## Sequence, validation and exit
 
 1. Submit this spec and wait for exact-hash coordinator approval.
