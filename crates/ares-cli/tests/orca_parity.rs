@@ -9,12 +9,14 @@
 mod adaptive_pressure_advance;
 #[path = "orca_parity/artifacts.rs"]
 mod artifacts;
+#[path = "orca_parity/bridge_over_infill_filament.rs"]
+mod bridge_over_infill_filament;
 #[path = "orca_parity/brim_bed_region.rs"]
 mod brim_bed_region;
 #[path = "orca_parity/brim_bed_region_controls.rs"]
 mod brim_bed_region_controls;
-#[path = "orca_parity/bridge_over_infill_filament.rs"]
-mod bridge_over_infill_filament;
+#[path = "orca_parity/change_filament_flush_blocks.rs"]
+mod change_filament_flush_blocks;
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
 #[path = "orca_parity/empty_selected_plate.rs"]
