@@ -108,133 +108,100 @@ the fixture white-box test; the C1 byte-compare flip; probes
 Out: collect path (verified), junction density (verified),
 artificial_distance formula (verified), other matrix cases.
 
-## Verified facts
+## Verified emit-path mechanism (probe evidence, byte-consistent binary)
 
-Case: stock matrix Sermoon V1 cube10
-(`/tmp/ares-stock-matrix-028c758-seeded/case-6qvP0t/input.3mf`).
+Two new probes on the byte-verified replay-source binary
+(`/tmp/spd-orca`, `/tmp/lspd-orca`; gcode diffed byte-identical to
+`case-6qvP0t/orca.gcode` before use):
 
-- **Upstream's stored `ExtrusionLine` is IDENTICAL to ares'**: a
-  dedicated oracle probe (`/tmp/junctdump.nix`, nix postPatch on
-  `WallToolPaths::simplifyToolPaths`, built at
-  `/tmp/junct-orca`) dumps upstream's pre/post-simplify junction
-  lists: `PRE nj=9` (4 corners + 4 edge midpoints, all w=567079)
-  → `POST nj=5` — the exact same 9→5 sequence ares produces. So
-  Arachne junction generation/simplify is at parity; the earlier
-  junction-density hypothesis is DISPROVEN.
-- The 1.1612mm-spaced points in orca's CURL `seg=` records are
-  therefore **not** stored polyline vertices — they are the
-  `ExtendedPoint` list produced by
-  `estimate_points_properties<true,true,false,false>` inside
-  `estimate_malformations` (`SupportSpotsGenerator.cpp:159-175`):
-  the annotation inserts boundary-intersection points and
-  prev-layer-distance segmentation points (ExtrusionProcessor.hpp
-  ~95-160: `min_distance`/`line_len` splits where
-  `distance + 3·boundary_offset` crosses zero), and the
-  `ExtrusionLine`s handed to `curled_up_height` are consecutive
-  annotated-point pairs (~19 segments vs ares' 5).
-- Ares' `CurlTracker::collect` (`motion/overhang/curl.rs:116-180`)
-  consumes the raw 5-point list — no annotation, no segmentation —
-  producing 5 whole-edge CurledLines including the degenerate
-  corner line at h=0.4761 (orca: 0.0561/0.1503). That line drives
-  `art=0.1179` vs orca's `0.0743` → band-edge flip →
-  F6120 vs F6818.82 (and the F4800 vs F5580 sibling), matching
-  every observed F-diff.
-- Record correction: the earlier claim "CurledLine sets verified
-  EQUAL" compared orca's stored set against ares' September-era
-  PER-EMITTED-PATH collect (`/tmp/curl-ares.log`), which saw
-  junction-level emitted polylines. After the loop-entity fix
-  (`417495df`), `collect_entity` consumes the stored 5-pt loop
-  polyline instead — the comparison set changed, and the current
-  5-line set is what `collect` actually produces today. The orca
-  stored set itself is unchanged; the equality claim does not
-  hold for the post-fix collect path.
-- Other Arachne cases pass byte-identical because their
-  annotated point lists coincide with the raw polyline (flat
-  walls fully supported → no boundary-crossing or segmentation
-  inserts). The branch that differs here: **segments whose
-  prev-layer distance crosses the slowdown band or
-  `boundary_offset` on a partially-supported (chamfer) layer** —
-  the C1 cube's layer-1 overhang exactly.
+1. **`spdin` probe** — per-seg `curr/next/art/spd` inside
+   `estimate_extrusion_quality`: ares' `art`, `curr`, `next`
+   distances and post-curl `spd` are **IDENTICAL** to upstream
+   (e.g. art=0.117856/0.096684/0.095438; spd 80/93/92/64 on the
+   same segments). The estimate path is at parity.
+2. **`lastspd` probe** — per-path `PATH role/npts/F/v0/vlast` at
+   `last_set_speed` init (`GCode.cpp:7112`) + `WIPE cur/chosen`
+   at `Wipe::wipe` (`GCode.cpp:476`): upstream's last emitted
+   `set_speed` before each wipe equals `vlast` of the last
+   processed path (e.g. 5580 for the 11-pt outer wall ending at
+   seg speed 93) — exactly the observed wipe feedrates.
 
-## Upstream anchors (source-cited boundary)
+## Root cause (ares)
 
-- `src/libslic3r/Support/SupportSpotsGenerator.cpp:150-196`:
-  `estimate_malformations` — `extrusion->collect_points` →
-  `estimate_points_properties<true,true,false,false>` →
-  per-annotated-pair `ExtrusionLine` → `curled_up_height` →
-  `l->curled_lines`.
-- `src/libslic3r/GCode/ExtrusionProcessor.hpp:95-160`:
-  `estimate_points_properties` — `boundary_offset` distance
-  annotation, `intersections_with_line` insertion, and the
-  `min_distance`/`line_len >= 2` segmentation that produces the
-  ~1.16mm splits on this wall. The `<true,true,false,false>`
-  instantiation vs the emit path's `<true,true,true,true>`:
-  confirm which annotation stages each flag enables during
-  implementation.
-- Ares port: `crates/ares-core/src/project_slice/gcode_emit/
-  motion/overhang/curl.rs::CurlTracker::{collect,collect_entity}`
-  and `curl/geometry.rs`. The existing
-  `estimate_points_properties` port in
-  `overhang.rs::estimate`/`BoundaryContext::{add_boundary_
-  intersections,add_segmentation_points}` (the
-  `<true,true,true,true>` instantiation) MUST be reused/factored
-  rather than duplicated — the `<true,true,false,false>`
-  collect-path instantiation shares the boundary-offset distance
-  and insertion machinery; implementation extends that shared
-  code, parameterized by the upstream template flags.
+Ares' emit diverges NOT in speed computation but in
+`extrusion_feedrate` bookkeeping for **scarf/slope paths**:
 
-## The open delta (what this slice must resolve)
+- `path.rs:219` sets `state.extrusion_feedrate =
+  processed.map_or(original_speed, |p| p[0].speed) * 60` — the
+  FIRST point's processed speed.
+- `properties.slope.is_some()` routes to
+  `scarf::emit_segments` (`motion/scarf/emit.rs`), which emits
+  Z-interpolated segments but **never updates
+  `extrusion_feedrate`** — it stays at `v0·60` (e.g. 4800).
+- Upstream: a sloped path runs through the SAME processed
+  `extrude_path` loop (`GCode.cpp:7028-7110` `sloped` Z emission
+  inside the `new_points` walk) — per-seg `set_speed` applies the
+  delta>60mm/min rule and leaves `m_current_speed` at the last
+  emitted segment speed (5580), which `get_current_speed()`
+  returns at the next wipe.
+- `constant::emit` (processed=None) likewise never updates
+  `extrusion_feedrate` after `path.rs:219` preset it; upstream's
+  non-variable branch emits `set_speed(F)` (the capped
+  `original_speed`) — verify whether ares' preset matches per
+  entity kind.
 
-Make `collect` build its `ExtrusionLine` inputs from the upstream
-annotation result for `<true,true,false,false>`:
+Additional confirmed semantics:
+- `ProcessedPoint.speed` may carry the unrounded
+  `original_speed` float: F6818.82 = 113.647·60 comes from
+  `set_speed(F)` on a `|F−new|≤60` reset or non-variable header;
+  `original_speed` is the volumetric-capped float, not
+  `speed.round()`.
+- ares emits `G1 F750` where orca emits `G1 F729` at the same
+  wall-header position — likely scarf `slope.speed` (ares 12.5
+  vs orca 12.15mm/s); check the `scarf_joint_speed` source in
+  `scarf.rs:210`.
 
-1. Distance annotation with `boundary_offset` (the `0.5·flow_width`
-   convention used at `ExtrusionProcessor.hpp:95-140`).
-2. `intersections_with_line` insertion where the distance sign
-   flips.
-3. The `line_len >= 2` / `min_distance` segmentation that produces
-   the observed ~1.16mm vertices on this case.
-4. `curvatures` must run over the ANNOTATED list (upstream computes
-   curvature inside the same `estimate_points_properties` walk).
+## Root-cause chain
+
+Loop outer wall (ExtrusionPathSloped, 11-pt) → upstream emits
+per-seg speeds, last=5580 → `Wipe::wipe` reads 5580 → `G1 F5580`.
+ares emits identical per-seg speeds BUT leaves
+`extrusion_feedrate=4800` (v0) → wipe `G1 F4800`. Sibling wipe
+F6120-vs-F6818.82 expected same mechanism (per-path confirm
+pending).
 
 ## RED tests (required order)
 
-1. `ares-core` white-box RED: drive `CurlTracker::collect` (or the
-   factored annotation step) on the fixture point list — the
-   Sermoon-V1 layer-1 outer-wall entities (three `erExternalPerimeter`
-   paths: `(4.597,4.645)→…→(-4.645,1.935)`,
-   `(-4.645,1.935)→…→(4.645,4.645)`,
-   `(4.645,4.645)→…→(-4.645,1.983)`; raw = 5-pt loop) — assert the
-   produced `CurledLine` set equals orca's (the fixture
-   `oracle_artd_sermoon_v1.txt` layer-1 sets: 13 lines with
-   h ∈ {0.2057, 0.2613, 0.3054, 0.2980, 0.3003, 0.3129} pattern).
-   Fails today (5 coarse lines, corner h=0.4761).
-   The `prev_layer_lines`/`prev_layer_boundary` inputs for the
-   annotation come from the L0 chamfer layer — fixture holds the
-   minimal boundary lines needed.
-2. E2E whole-file byte compare on `case-6qvP0t` (Sermoon V1),
-   normalize only `; generated by` — the C1 acceptance case —
-   must go green with the fix, including M73/E hunks.
+1. `ares-core` white-box RED (path-level, existing harness in
+   `path/tests.rs`): emit a sloped processed path whose point
+   speeds vary (v0 vs vlast differing by >1mm/s); assert
+   `state.extrusion_feedrate` equals the last emitted segment
+   speed per the delta-60 `set_speed` rules — fails today (stays
+   at `points[0].speed·60`).
+2. E2E whole-file byte compare on `case-6qvP0t` — normalize only
+   `; generated by` — M73/E hunks included.
 
-## Blast radius / gate requirements
+## Blast radius / gates
 
-The change is confined to `collect` (the malformation
-annotation path): emitted vertex sequences, `estimate()`'s own
-`<true,true,true,true>` path, and all other consumers are
-untouched. Affected surface: `CurlTracker` output on
-partially-supported walls (the `detect_overhang_wall` Arachne
-cases where annotation inserts points).
-
-GREEN bar: full v2 control set (seeded + official) on the
-submission hash name-for-name non-regressing vs base `d789b0750`;
-`cargo nextest run --workspace`, clippy, fmt, wasm32 check.
+`scarf::emit_segments` gains processed-speed emission +
+`extrusion_feedrate`/`last_set_speed` tracking, or slope paths
+reroute through `variable::emit` with `sloped` Z support — pick
+the shape that mirrors upstream's single `extrude_path` loop.
+`constant::emit` `extrusion_feedrate` semantics also in scope if
+the per-path probe shows divergence on non-variable paths.
+GREEN bar: full v2 control set (seeded+official) non-regression
+vs base `d789b0750`; `cargo nextest run --workspace`, clippy,
+fmt, wasm32.
 
 ## Scope
 
-In: the `estimate_points_properties` annotation inside
-`CurlTracker::collect` (boundary-offset distance, boundary
-intersections, min_distance segmentation, annotated curvature);
-the fixture white-box test; the C1 byte-compare flip.
-Out: Arachne junction generation (verified at parity via the
-junct-orca probe), `artificial_distance` (verified at parity via
-`0786b86a9`), emitted-move paths, other matrix cases.
+In: slope-path speed emission + `extrusion_feedrate` bookkeeping
+(`motion/scarf/emit.rs`, `path.rs` slope branch, possibly
+`variable.rs` shared feedrate logic); constant-path
+`extrusion_feedrate` if probed divergent; the white-box RED; the
+C1 byte-compare flip; probe recipes `tools/orca-probes/
+{spdin-src,lastspd}.nix` committed with provenance.
+Out: collect path, junction density, artificial_distance formula
+(all verified at parity); TiQ2 skirt/wall split (pi-tower —
+revisit if same root after this lands); F750-vs-F729 scarf speed
+value (adjacent residual if it persists after the emit fix).
