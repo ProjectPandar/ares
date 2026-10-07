@@ -168,6 +168,8 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   const filteredLast = native.vertices.findLast((v) => v.layerId <= top && (v.type === SEAM || (v.type === EXTRUDE && v.role !== 2)))!;
   await expect(timeCell).toHaveText(time(filteredLast.id));
   await outer.click();
+  // The moves slider answers the visibility change asynchronously.
+  await expect(slider).toHaveAttribute("max", String(stops.length - 1));
   await slider.fill(String(stops.length - 1));
   await expect(timeCell).toHaveText(time(stops.at(-1)!));
   const initialTheme = await page.locator("html").getAttribute("data-theme");
