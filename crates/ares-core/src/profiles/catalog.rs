@@ -539,11 +539,18 @@ fn invalid_json(error: serde_json::Error) -> SliceError {
 
 /// `option(key, true)` with the option default (`Config.hpp` create path):
 /// absent keys are created from the registry default, present keys stay.
+/// The pairs are filtered out of the option registry, so every inserted
+/// default is a registry `OptionDefinition::default_value`.
 fn insert_default_gcodes(raw: &mut ProjectSettingsRaw, keys: &[&str]) {
-    for key in keys {
-        if !raw.contains_key(key) {
-            let default = crate::option_definition(key).map_or("", |d| d.default_value);
-            raw.insert((*key).to_owned(), RawConfigValue::Text(default.to_owned()));
+    for definition in crate::option_definitions() {
+        if !keys.contains(&definition.key) {
+            continue;
+        }
+        if !raw.contains_key(definition.key) {
+            raw.insert(
+                definition.key.to_owned(),
+                RawConfigValue::Text(definition.default_value.to_owned()),
+            );
         }
     }
 }
