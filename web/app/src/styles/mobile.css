@@ -45,6 +45,7 @@
   .view-toolbar { top: 8px; left: 60px; right: 8px; transform: none; overflow-x: auto; scrollbar-width: none; }
   .view-button { flex: none; }
   .preview-card, .layer-slider { top: 66px; }
-  .preview-card { width: min(250px, calc(100% - 100px)); }
-  .legend { width: min(200px, calc(100% - 100px)); }
+  /* The cards keep the centre free for orbit and pinch: the summary above it, the legend below it and above the moves slider. */
+  .preview-card { width: min(250px, calc(100% - 100px)); max-height: calc(50% - 96px); overflow: auto; }
+  .legend { bottom: 64px; width: min(200px, calc(100% - 100px)); max-height: calc(50% - 94px); }
 }

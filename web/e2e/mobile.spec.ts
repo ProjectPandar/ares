@@ -97,9 +97,10 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   const gestures: Record<string, string> = {};
   if (touch) {
     const top = page.getByRole("slider", { name: "Top layer" });
-    await expectFits(page, [top, button("Export G-code file"), tab("Prepare")]);
-    // Single-finger orbit and two-finger zoom on the 3D view change what it draws.
+    // Gestures start at the 3D view's centre, so no overlay may cover it.
     const canvas = page.locator("[data-testid=viewport] canvas");
+    await expectFits(page, [top, button("Export G-code file"), tab("Prepare"), canvas]);
+    // Single-finger orbit and two-finger zoom on the 3D view change what it draws.
     const box = (await canvas.boundingBox())!;
     const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     let before = await canvas.screenshot();
