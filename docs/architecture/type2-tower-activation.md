@@ -1,6 +1,36 @@
 # Type2 wipe-tower activation parity (TiQ2 / Kobra 3 Max)
 
 Status: SPEC — awaiting behavioral RED + review before implementation.
+
+> **2026-10-07 update (pi-tower, `1b1751434`)**: the TiQ2 symptom does
+> **not reproduce** on the recorded fixture
+> (`/tmp/ares-orca-cache/19f06bc6065b3213/6e02aea054799098-fae0cc8012f785c5.3mf`,
+> `enable_prime_tower=1`, `wipe_tower_type=type2`, 2 filaments). Slicing the
+> identical input through restored official `orca-slicer` (bin sha256
+> `64515d01f887b479…`, resources `286fab66…`) and `ares`:
+>
+> - native `plate_1.gcode`: 33995 lines, **0** `;TYPE:Prime tower`,
+>   `; enable_prime_tower = 0`, 70 `T0/T1`/`M62x` tool-change sites.
+> - `ares` output: 33743 lines, **0** `;TYPE:Prime tower`,
+>   `; enable_prime_tower = 0`, 70 tool-change sites.
+>
+> Both suppress the tower — native uses both filaments (real `T0`/`T1`
+> toolchanges), so this is the `ToolOrdering::has_wipe_tower()` gate
+> (front-layer `wipe_tower_partitions==0`), not `normalize_fdm_2`
+> `used_filaments==1`. Ares's `build()` (`type2_tower = prime &&
+> first_extruder.is_some() && layers.first().has_wipe_tower`) already yields
+> `false`, matching upstream. The merged Type2 lifecycle slices
+> (`8d41b1a13`, `3cfacc332`, `c53be4fe9`, `4f02cbe8a`, plus the
+> `fdm_normalization`/`usage` used-filament counting) closed the reported
+> 140-section divergence between the 2026-10-06 cluster observation and
+> `1b1751434`. Positive control `smooth_type2_tower` still emits a tower
+> where native does — no over-suppression.
+>
+> Residual whole-file diff on this fixture is the skirt/wall vertex-split
+> family (e.g. `E.07625` vs `E.05751`, shifted perimeter breakpoints) — a
+> different cluster, out of scope here. **Awaiting coordinator direction:
+> confirm fixed / supply the actual divergent input / repurpose this slice
+> toward the residual wall-split divergence.**
 Owner: pi-tower (wipe-tower emission lives in this area). Divergence found
 during pi-arachne's bridge_over_infill multi-filament E2E (`clusters.md`,
 `DIVERGENT — Type2 wipe-tower activation`).
