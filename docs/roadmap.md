@@ -9000,8 +9000,9 @@ independent and can follow on the same branch.
 
 ### ColorChange / M600 preview continuation
 
-Filament/ColorPrint `9b5db6d7a` is approved and merged. Next, review the
-[ColorChange rewrite spec](architecture/web-colorchange.md): upstream
+Filament/ColorPrint `9b5db6d7a` is approved and merged. The
+[ColorChange rewrite spec](architecture/web-colorchange.md) is implemented
+and awaiting coordinator review: upstream
 `GCodeProcessor` custom items, `UsedFilaments::volumes_per_color_change` and
 normal custom times → ares-core; `libvgcode::ColorPrint` and GCodeViewer
 partial display records → ares-vgcode; thin WASM and lazy display-only TS.
@@ -9011,3 +9012,11 @@ Rust/build gates and coordinator approval. Native probing resolved the
 zero-volume question: preserve raw data and report partial usage unavailable
 rather than indexing absent volumes. Automatic M600 injection and
 bare-M600 color inference remain outside this slice.
+
+Verification on `43df7c95d`: workspace 7,935 passed / 9 skipped; seeded
+reference 561/561 in both trees; full browser 14/14 base and 15/15 candidate;
+candidate initial JS gzip 124,953 B. Official retains eight shared environment
+failures; the extra base tree-support failure has exact raw-Ares equality
+and differing native M73 insertion evidence. See the architecture record for
+artifacts, setup corrections and approved diagnostic distinctions. Do not
+merge before approval; a later VG1/UsedFilaments merger must rebase and rerun.

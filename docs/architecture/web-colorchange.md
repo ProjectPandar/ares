@@ -1,6 +1,7 @@
 # ColorChange / M600 preview — source-cited rewrite spec
 
-Status: approved (`d5f91a6c0`); implementation and verification in progress.
+Status: approved (`d5f91a6c0`); implementation complete, awaiting review.
+Final code checkpoint: `96f91ff28`, based on `43df7c95d`.
 
 Implementation constraints from approval: core changes are processor parsing
 and statistics only; slicing/emission behavior is out of scope. Tagged slice
@@ -132,7 +133,8 @@ but not `OptionsZCorrector::m_move_id` (`GCodeProcessor.hpp:687-705`). Its
 later update can therefore relocate an unrelated internal extrusion instead
 of the marker, producing spurious ColorPrint transitions.
 
-Repro at pre-M73-C checkpoint `f27867a3` (`two-changes`; input line IDs
+Repro at pre-M73-C checkpoint `52678d625` (rebased from `f27867a3`)
+(`two-changes`; input line IDs
 advance after the C-line port): unmodified
 native moves relocate the internal vertex for G-code line 188 from first-layer
 geometry to index 569, XYZ `(114.346001,114.346001,0.600000024)`, after the
@@ -172,9 +174,9 @@ may already have flushed a stop's G1 ID, leaving its native stop time at zero.
 Reuse the existing cache elapsed and its next entry for last-minute decisions;
 never recalculate them. Preserve first-match updates for repeated G1 stop IDs.
 
-Tests-only RED commit `057e0636` contains three complete official G-code
+Tests-only RED commit `4d686d5ba` (originally `057e0636`) contains three complete official G-code
 oracles (SYNC, ordinary fractional last-minute, and pre-model stop), with exact
-M73 and full-byte comparisons. A separate source-cited GREEN follows. Before
+M73 and full-byte comparisons. Source-cited GREEN is `7f07fceb8`. Before
 merge, run both official and seeded full reference suites including
 `profile_entry`, plus all web gates. All color-change case changes must match
 native. The later merger with lint's VG1 timing work must rebase and rerun.
@@ -211,7 +213,7 @@ Deferred: automatic M600 injection, editable custom-height events / 3MF
 custom-G-code authoring, bare-M600 color inference, pre-slice object coloring,
 Stealth time estimation, firmware wait-duration simulation, imperial units,
 unrelated flush/nozzle accounting gaps and full native GUI behavior. The
-existing Tool/FeatureType views and Filament totals must not regress.
+existing Rust Tool-color lookup and web FeatureType/Filament totals must not regress.
 
 ## RED-first plan and acceptance evidence
 
@@ -240,7 +242,8 @@ existing Tool/FeatureType views and Filament totals must not regress.
    maintain browser WASM, Windows, macOS and Linux portability.
 4. **Browser RED → display.** Native-backed E2E checks ColorPrint segment
    colors, event row order, corrected layer/Z data, m/g cells and trailing
-   Print interval; switches to FeatureType/Tool and back; reloads a no-change
+   Print interval; switches to the existing FeatureType/Speed picker entries
+   and back (Tool is not exposed by this web picker); reloads a no-change
    model to prove stale palette/rows disappear. Preserve the existing 14
    browser specs and add focused coverage, rather than replace them. Save
    screenshots, native/Rust JSON comparison, generated G-code SHA256 and
@@ -253,3 +256,48 @@ existing Tool/FeatureType views and Filament totals must not regress.
    load failure, report evidence and seek the coordinator's control-run
    ruling; do not retry until green. Send REVIEW-REQUEST with commit and
    artifacts; merge only after APPROVED.
+
+## Final verification checkpoint (2026-10-07)
+
+- Core/vgcode/CLI reference checkpoint `06fc4be9d`; final code `96f91ff28`
+  changes only WASM transport to typed `Serialize` views. No dynamic-value
+  allowlist changes. The path-scoped reference-source diff is empty.
+- `cargo fmt --check`, workspace/all-target clippy with `-D warnings`,
+  workspace nextest: **7,935 passed, 9 skipped**. The raw/stable processor
+  pair was enabled, including all nine BBL cardinality fixtures, tag edge
+  cases and three complete original-native M73/G-code byte oracles.
+- Both base and candidate used the coordinator's corrected
+  `/tmp/ares-parity-control-set-v2.sh`, including `profile_entry`, with
+  fresh empty caches. Seeded: **561/561 each**. Official: base **552/561**,
+  candidate **553/561**; both retain the same eight reference-environment
+  failures. These are not represented as a fully passing official suite.
+- The extra base failure, `tree-support/auto/hybrid/overhang`, meets the
+  operator's ND rule: base/candidate **raw Ares bytes are identical**, SHA256
+  `6f9a9ab3bf60d7987356befe5106df6c6a0453e9baa21a409ac4fac3939ebe1a`.
+  Native outputs differ beyond generator metadata: `M73 P3 R25` changes
+  insertion point. No rerun-to-pass was used.
+- WASM, library and app builds, typecheck and lint completed for both trees.
+  Full low-load browser runs: **14/14 base**, **15/15 candidate**, one valid
+  invocation each. Initial JS gzip: base **124,949 B**, candidate
+  **124,953 B**, strictly below 125,000 B. Filament legend and `presetSlice`
+  are included. ColorChange checks use three original-native byte oracles,
+  source records, missing usage, view restoration, reload and non-overlap.
+- Setup-only failures are retained, not counted as validation: candidate
+  reference artifacts initially violated the external-directory rule;
+  browser collection initially lacked three archived generated input
+  fixtures; an audit filter initially selected zero tests. Corrected setup
+  changed no assertions, timeouts, reference binaries or budgets. The real
+  dynamic-value audit RED was fixed with typed transport before rerunning.
+
+Evidence: `/tmp/ares-colorchange-reference-43df7c95d/comparison.json` and
+`environment-failures.json`; repository-local
+`target/color-change-final-43df7c95d/` (gates, setup failures and build logs),
+`target/web-e2e/` (fresh browser artifacts), and
+`target/color-change-slice-oracle/` (raw/stable metadata and exact XYZ-bit
+sets). The base browser artifacts are under
+`/tmp/ares-web-filament-control/target/web-e2e/`.
+
+The eight official environment failures and approved diagnostic distinctions
+remain explicit. This Linux/Chrome verification is not a claim of native
+Windows/macOS execution. Lint's VG1/UsedFilaments integration remains owned by
+lint; the later merger must rebase and rerun the required gates.
