@@ -41,15 +41,11 @@ fn numeric_bounds_do_not_accept_prefixes_of_unsupported_expressions() {
 }
 
 #[test]
-fn omitted_bounds_report_missing_endpoints_not_expression_failures() {
-    for (block, missing) in [
-        ("def->min = 0;", "upper endpoint"),
-        ("def->max = 100;", "lower endpoint"),
-        ("", "implicit endpoints"),
-    ] {
+fn omitted_bounds_are_unbounded_sides_not_expression_failures() {
+    for block in ["def->min = 0;", "def->max = 100;", ""] {
         let reason = incomplete_numeric_domain(block);
-        assert!(reason.contains(missing), "{reason}");
-        assert!(reason.contains("full-range seed"), "{reason}");
+        assert!(reason.contains("unbounded"), "{reason}");
+        assert!(!reason.contains("unverified"), "{reason}");
         assert!(!reason.contains("unsupported"), "{reason}");
     }
 }

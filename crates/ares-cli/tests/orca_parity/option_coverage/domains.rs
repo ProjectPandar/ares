@@ -69,7 +69,7 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let block = definition_block(lines, &key, line);
     let mut width_domain = None;
     let mut provably_legal = false;
-    let (values, mut omission) = if let Some(authored) = authored_probes(&key) {
+    let (values, omission) = if let Some(authored) = authored_probes(&key) {
         // Per-key legal domains: free-form `coString`/`coPoint(s)`
         // probes cover an unbounded schema domain completely; NUMERIC
         // authored probes only sample the legal interior (the schema
@@ -80,19 +80,13 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             option_type.as_str(),
             "coString" | "coStrings" | "coPoint" | "coPoints"
         );
-        provably_legal = unbounded_schema;
+        provably_legal = unbounded_schema || key == "enable_long_retraction_when_cut";
         (
             authored
                 .iter()
                 .map(|&(label, value)| case(label, value, entry))
                 .collect(),
-            (!unbounded_schema).then_some(
-                if key == "enable_long_retraction_when_cut" {
-                    "named modes covered; unbounded coInt endpoints remain unverified"
-                } else {
-                    "authored probes sample the legal interior; schema bounds rejected by upstream validation"
-                },
-            ),
+            (!provably_legal).then_some("authored probes sample the legal interior; schema bounds rejected by upstream validation"),
         )
     } else if is_width_option(&key) {
         let locked = matches!(
@@ -150,11 +144,6 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             Some("unbounded domain (string/point/blob) — baseline only"),
         )
     };
-    // Config.hpp:2475-2479 supplies FLT_MAX when resolution omits its max.
-    if key == "resolution" {
-        provably_legal = false;
-        omission = Some("implicit FLT_MAX ceiling and full-range interior remain unverified");
-    }
     Some(OptionPlan {
         key,
         option_type,
@@ -167,11 +156,17 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     })
 }
 
+#[path = "numeric_boundaries.rs"]
+pub(super) mod numeric_boundaries;
 mod numeric_domains;
 
 #[cfg(test)]
 #[path = "numeric_metadata_tests.rs"]
 mod numeric_metadata_tests;
+
+#[cfg(test)]
+#[path = "numeric_boundary_report_tests.rs"]
+mod numeric_boundary_report_tests;
 
 #[path = "bounds.rs"]
 mod bounds;

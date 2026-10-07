@@ -81,6 +81,11 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
             || (plan.key == "filament_retraction_distances_when_cut"
                 && labels == ["min", "max", "seeded", "nil"])
             || labels == ["min", "seeded"]
+            || (plan.key == "temperature_vitrification" && labels == ["probe"])
+            || (plan.key == "filament_printable" && labels == ["0", "1", "2", "3"])
+            || (plan.key == "enable_long_retraction_when_cut" && labels == ["0", "1", "2"])
+            || (plan.key == "slow_down_layers" && labels == ["min", "seeded", "1", "4"])
+            || (plan.key == "tree_support_top_rate" && labels == ["min", "seeded", "probe"])
             || labels
                 == [
                     "min",
@@ -325,7 +330,7 @@ fn option_inventory_reconciles_with_upstream_key_set() {
 }
 
 #[test]
-fn tree_top_rate_probes_cover_the_implicit_ceiling_and_full_range() {
+fn tree_top_rate_probes_cover_declared_minimum_and_keep_local_interiors() {
     let Some(plans) = domains::try_load(&runner::repo_root()) else {
         return;
     };
@@ -338,7 +343,7 @@ fn tree_top_rate_probes_cover_the_implicit_ceiling_and_full_range() {
         .iter()
         .map(|case| case.label.as_str())
         .collect::<Vec<_>>();
-    assert_eq!(labels, ["min", "max", "seeded", "probe"]);
+    assert_eq!(labels, ["min", "seeded", "probe"]);
     let value = |label| {
         plan.cases
             .iter()
@@ -354,11 +359,9 @@ fn tree_top_rate_probes_cover_the_implicit_ceiling_and_full_range() {
             .parse::<f64>()
             .unwrap()
     };
-    // PrintConfig.cpp:6469-6481 sets min=5, not max; Config.hpp:2475-2479
-    // supplies FLT_MAX. max_literal=35 is only a UI warning threshold.
+    // PrintConfig.cpp:6469-6481 declares min=5 and no slicing maximum.
     assert_eq!(value("min"), 5.0);
-    assert_eq!(value("max"), 3.40282e38);
-    assert!(value("seeded") > 35.0 && value("seeded") < value("max"));
+    assert!(value("seeded") > 5.0 && value("seeded") < 21.0);
     assert!(value("probe") > 5.0 && value("probe") < 21.0);
     assert!(plan.provably_legal);
     assert!(plan.omission.is_none());

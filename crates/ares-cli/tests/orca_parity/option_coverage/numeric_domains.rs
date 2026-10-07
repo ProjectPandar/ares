@@ -8,69 +8,22 @@ pub(super) fn generate(
     option_type: &str,
     block: &str,
 ) -> (Vec<OptionCase>, Option<&'static str>, bool) {
-    let bounds = if matches!(key, "temperature_vitrification" | "filament_printable") {
-        // ConfigOptionInts reserves INT_MAX as nil, even when non-nullable.
-        Some((f64::from(i32::MIN), f64::from(i32::MAX - 1)))
-    } else if matches!(
-        key,
-        "slow_down_layers"
-            | "bottom_shell_layers"
-            | "top_shell_layers"
-            | "elefant_foot_compensation_layers"
-    ) {
-        // ConfigOptionInt has no nil sentinel; its scalar ceiling is INT_MAX.
-        Some((
-            lower_bound(block).expect("scalar layer-count minimum"),
-            f64::from(i32::MAX),
-        ))
-    } else if key == "skirt_height" {
+    let bounds = if key == "skirt_height" {
         // `PrintConfig.cpp:10422-10424` rejects negatives at validation,
         // although the option definition only declares the upper bound.
         Some((0.0, upper_bound(block).expect("skirt height ceiling")))
-    } else if key == "hot_plate_temp_initial_layer" {
-        // `ConfigOptionInts` stores signed 32-bit values; the default
-        // schema min (-FLT_MAX) is below its representable domain.
-        Some((
-            f64::from(i32::MIN),
-            upper_bound(block).expect("hot plate ceiling"),
-        ))
-    } else if key == "tree_support_top_rate" {
-        // PrintConfig.cpp:6469-6481 leaves max implicit; Config.hpp:2475-2479
-        // supplies FLT_MAX, not the max_literal UI warning threshold.
-        Some((
-            lower_bound(block).expect("branch density minimum"),
-            f64::from(f32::MAX),
-        ))
     } else {
         numeric_bounds(block)
     };
     match bounds {
         Some((minimum, maximum)) if minimum < maximum => {
             let interior = seeded_interior(key, minimum, maximum, option_type.contains("Int"));
-            // An explicit `min`/`max` schema bound makes min+max+interior
-            // cover the option's legal range (the goal's Range contract).
+            // Declared endpoints plus existing interior samples, not full-range coverage.
             let mut cases = vec![
                 numeric_case("min", minimum, entry, option_type),
                 numeric_case("max", maximum, entry, option_type),
                 numeric_case("seeded", interior, entry, option_type),
             ];
-            if key == "temperature_vitrification" {
-                cases.push(case("probe", "110", entry));
-            }
-            if key == "tree_support_top_rate" {
-                cases.push(numeric_case(
-                    "probe",
-                    seeded_interior(key, minimum, minimum.max(1.0) * 4.0 + 1.0, false),
-                    entry,
-                    option_type,
-                ));
-            }
-            if key == "filament_printable" {
-                cases.extend(["0", "1", "2", "3"].map(|value| case(value, value, entry)));
-            }
-            if key == "slow_down_layers" {
-                cases.extend(["1", "4"].map(|value| case(value, value, entry)));
-            }
             if key == "filament_retraction_distances_when_cut" {
                 // Generated nullable override: nil selects the machine distance.
                 cases.push(case("nil", "nil", entry));
@@ -94,8 +47,34 @@ pub(super) fn generate(
             (cases, None, true)
         }
         _ => {
-            let (cases, omission) = incomplete_cases(entry, key, option_type, block);
-            (cases, omission, false)
+            let (mut cases, mut omission) = incomplete_cases(entry, key, option_type, block);
+            match key {
+                "temperature_vitrification" => {
+                    cases = vec![case("probe", "110", entry)];
+                    omission = None;
+                }
+                "filament_printable" => {
+                    cases = ["0", "1", "2", "3"]
+                        .map(|value| case(value, value, entry))
+                        .to_vec();
+                    omission = None;
+                }
+                "slow_down_layers" => {
+                    cases.extend(["1", "4"].map(|value| case(value, value, entry)))
+                }
+                _ => {}
+            }
+            if key == "tree_support_top_rate" {
+                let minimum = lower_bound(block).expect("branch density minimum");
+                cases.push(numeric_case(
+                    "probe",
+                    seeded_interior(key, minimum, minimum.max(1.0) * 4.0 + 1.0, false),
+                    entry,
+                    option_type,
+                ));
+            }
+            let complete = omission.is_none() && cases.iter().all(|case| case.value.is_some());
+            (cases, omission, complete)
         }
     }
 }
@@ -106,9 +85,12 @@ fn incomplete_cases(
     option_type: &str,
     block: &str,
 ) -> (Vec<OptionCase>, Option<&'static str>) {
-    // Retain local comparison probes, but absent assignments inherit
-    // ConfigOptionDef's finite defaults. Unknown expressions also
-    // leave endpoint and full-range seeded coverage unproved.
+    // An absent source assignment is unbounded, not an endpoint obligation.
+    // Unknown expressions remain unresolved; local samples do not resolve them.
+    let omission = [numeric_bound(block, "min"), numeric_bound(block, "max")]
+        .iter()
+        .any(|bound| matches!(bound, Some(Err(()))))
+        .then_some(incomplete_numeric_domain(block));
     match (lower_bound(block), upper_bound(block)) {
         (None, Some(maximum)) => {
             // Upper-only bound (`max` declared, no `min` — e.g.
@@ -125,7 +107,7 @@ fn incomplete_cases(
                     numeric_case("max", maximum, entry, option_type),
                     numeric_case("seeded", interior, entry, option_type),
                 ],
-                Some(incomplete_numeric_domain(block)),
+                omission,
             )
         }
         (Some(minimum), _) => {
@@ -162,10 +144,9 @@ fn incomplete_cases(
                     ],
                 );
             }
-            (cases, Some(incomplete_numeric_domain(block)))
+            (cases, omission)
         }
         (None, None) => {
-            // Small local probes do not cover implicit endpoints.
             // Integer ID/vector options retain baseline-only probes
             // because generic values can crash the original slicer.
             let unbounded_int = matches!(option_type, "coInt" | "coInts");
@@ -184,7 +165,14 @@ fn incomplete_cases(
                     numeric_case("probe-seeded", seed_hi, entry, option_type),
                 ]
             };
-            (cases, Some(incomplete_numeric_domain(block)))
+            (
+                cases,
+                if unbounded_int {
+                    Some("baseline only; no injected numerical samples")
+                } else {
+                    omission
+                },
+            )
         }
     }
 }

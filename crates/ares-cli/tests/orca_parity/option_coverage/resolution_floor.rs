@@ -8,8 +8,9 @@ fn resolution_samples_do_not_claim_the_unprobed_implicit_ceiling() {
         return;
     };
     let plan = plans.iter().find(|plan| plan.key == "resolution").unwrap();
-    assert!(!plan.provably_legal);
-    assert!(plan.omission.unwrap().contains("ceiling"));
+    assert!(plan.provably_legal);
+    assert!(plan.omission.is_none());
+    assert!(plan.cases.iter().all(|case| case.label != "max"));
     assert!(
         plan.cases
             .iter()

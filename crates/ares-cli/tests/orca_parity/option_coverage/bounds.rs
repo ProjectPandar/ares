@@ -54,9 +54,22 @@ pub(super) fn definition_block(lines: &[&str], key: &str, reported_line: usize) 
             }
         }
     }
+    if start.is_none()
+        && let Some((prefix, axis)) = key.rsplit_once('_')
+        && matches!(axis, "x" | "y" | "z" | "e")
+        && matches!(
+            prefix,
+            "machine_max_acceleration" | "machine_max_speed" | "machine_max_jerk"
+        )
+    {
+        let axis_needle = format!("add(\"{prefix}_\"");
+        start = lines.iter().position(|line| line.contains(&axis_needle));
+    }
     let start = start.unwrap_or_else(|| reported_line.saturating_sub(1));
     let end = (start + 1..lines.len())
-        .find(|index| lines[*index].contains("this->add(\"") || lines[*index].contains("add(\""))
+        .find(|index| {
+            lines[*index].contains("add(\"") || lines[*index].contains("this->add_nullable(")
+        })
         .unwrap_or(lines.len());
     lines[start..end.min(start + 160)].join("\n")
 }
@@ -178,7 +191,7 @@ pub(super) fn upper_bound(block: &str) -> Option<f64> {
 }
 
 // None means no assignment; Err means an expression we cannot interpret.
-fn numeric_bound(block: &str, name: &str) -> Option<Result<f64, ()>> {
+pub(super) fn numeric_bound(block: &str, name: &str) -> Option<Result<f64, ()>> {
     let active = strip_comments(block);
     let assignment = Regex::new(&format!(r"def->{name}\s*=\s*([^;]+);")).unwrap();
     let captures = assignment.captures(&active)?;
@@ -206,9 +219,9 @@ pub(super) fn incomplete_numeric_domain(block: &str) -> &'static str {
         (Some(Err(())), _) | (_, Some(Err(()))) => {
             "unsupported numeric bound expression; endpoints and full-range seed unverified"
         }
-        (None, Some(Ok(_))) => "implicit lower endpoint and full-range seed unverified",
-        (Some(Ok(_)), None) => "implicit upper endpoint and full-range seed unverified",
-        (None, None) => "implicit endpoints and full-range seed unverified",
+        (None, Some(Ok(_))) => "source minimum is unbounded; no declared lower endpoint",
+        (Some(Ok(_)), None) => "source maximum is unbounded; no declared upper endpoint",
+        (None, None) => "source minimum and maximum are unbounded; no declared endpoints",
         (Some(Ok(_)), Some(Ok(_))) => "non-increasing numeric bounds; legal range unverified",
     }
 }

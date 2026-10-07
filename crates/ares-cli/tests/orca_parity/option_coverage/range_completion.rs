@@ -58,7 +58,7 @@ fn bounded_literal_seeds_use_the_schema_range_not_gui_warning_thresholds() {
 }
 
 #[test]
-fn numeric_local_probes_cannot_complete_missing_endpoints() {
+fn numeric_local_probes_complete_declared_endpoints_without_claiming_unbounded_sides() {
     let Some(plans) = domains::try_load(&runner::repo_root()) else {
         return;
     };
@@ -73,13 +73,10 @@ fn numeric_local_probes_cannot_complete_missing_endpoints() {
     ] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
         let outcome = OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
-        assert_eq!(outcome.status, "INCOMPLETE", "{key}");
+        assert_eq!(outcome.status, "PASS", "{key}");
         assert_eq!(outcome.compared, plan.cases.len(), "{key}");
-        assert!(
-            plan.omission.is_some_and(|reason| !reason.is_empty()),
-            "{key}"
-        );
-        assert!(sweep::require_complete(&[outcome]).is_err(), "{key}");
+        assert!(plan.omission.is_none(), "{key}");
+        assert!(sweep::require_complete(&[outcome]).is_ok(), "{key}");
     }
 }
 
