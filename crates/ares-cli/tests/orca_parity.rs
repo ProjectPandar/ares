@@ -37,6 +37,8 @@ mod klipper_velocity_limit;
 mod m205;
 #[path = "orca_parity/narrowed_x2d_whole_file.rs"]
 mod narrowed_x2d_whole_file;
+#[path = "orca_parity/sermoon_v1_whole_file.rs"]
+mod sermoon_v1_whole_file;
 #[path = "orca_parity/option_coverage.rs"]
 mod option_coverage;
 #[path = "orca_parity/presets.rs"]
