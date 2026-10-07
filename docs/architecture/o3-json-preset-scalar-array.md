@@ -54,11 +54,22 @@ the selected inheritance metadata preserved. The original BBL preset
 export/loading test separately locks real BBL array input and the decoded
 raw scalar `"50"`.
 
-The initial BBL/Ender-3 3MF draft exposed unrelated embedded-script,
+The initial BBL/Ender-3 3MF drafts newly exposed embedded-script,
 model-label and CLI filament-variant metadata differences after the range
-failure was removed. Do not change those behaviors or normalize them out
-of G-code. Use the already-established non-BBL STL whole-file control to
-isolate this `Config.cpp` scalar-array rewrite boundary.
+failure was removed. Their pre-existing/unrelated status has not been
+established; they remain OPEN/UNTRIAGED. Inputs and first differing lines
+are retained in `/tmp/ares-matrix-clusters.md` (O3-BBL-PROFILE-ENTRY), with
+full input/catalog/output hashes in `/tmp/o3-bbl-new-differences.json`.
+Do not change those behaviors or normalize them out of G-code. The
+already-established non-BBL STL whole-file control isolates this
+`Config.cpp` scalar-array rewrite boundary without discarding the BBL
+discoveries.
+
+The historical test rewrite `76fca6664` is not a comparator relaxation:
+Native still runs first, both `[50,50]` and `[50,60]` remain, the Native
+`[50]` control remains, and complete generated-by-only byte comparison is
+unchanged. The current rebased fixture commit is `dc82bbba5`; the additional
+legacy-order RED is `124338ea0` (formerly `6edc28af8`).
 
 Lock the existing override cardinality rejection with a control, and run
 workspace nextest, clippy, fmt, wasm and sequential seeded/official v2 gates
