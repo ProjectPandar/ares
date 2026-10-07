@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import { movesSliderVertices, type Move } from "./toolpathPreview";
 
@@ -34,18 +34,20 @@ function axes(move: Move) {
   return position.map((value) => printf(value, decimals));
 }
 
+type DetailView = "FeatureType" | "Height" | "Acceleration" | "Jerk" | "PressureAdvance";
+
 /** The view type detail next to the speed (`GCodeViewer.cpp:358-412`) for the views it checks. */
-function detail(move: Move, view: "FeatureType" | "Height") {
+function detail(move: Move, view: DetailView) {
   const extrusion = move.type === EXTRUDE;
   if (view === "Height") return `Height: ${extrusion ? printf(f32(move.height), 2) : "N/A"}`;
+  if (view === "Acceleration") return `Acceleration: ${printf(move.acceleration, 0)}`;
+  if (view === "Jerk") return `Jerk: ${printf(move.jerk, 1)}`;
+  if (view === "PressureAdvance") return `PA: ${printf(move.pressureAdvance, 4)}`;
   if (extrusion) return ROLE_LABELS[move.role];
   return move.type === 0 ? "N/A" : TYPE_LABELS[move.type];
 }
 
-/**
- * The properties table rows backed by engine data (`GCodeViewer.cpp:430-454`);
- * Acceleration, Jerk and Pressure Advance remain deferred.
- */
+/** The properties table rows before Time (`GCodeViewer.cpp:430-451`). */
 function properties(move: Move): [string, string][] {
   const extrusion = move.type === EXTRUDE;
   const na = (value: string) => (extrusion ? value : "N/A");
@@ -58,9 +60,12 @@ function properties(move: Move): [string, string][] {
     ["Height", na(`${printf(f32(move.height), 3)} mm`)],
     ["Layer", String(move.layer + 1)],
     ["Speed", `${printf(f32(move.feedrate), 1)} mm/s`],
+    ["Acceleration", `${printf(move.acceleration, 0)} mm/s²`],
+    ["Jerk", `${printf(move.jerk, 1)} mm/s`],
     ["Flow rate", na(`${printf(flow, 3)} mm³/s`)],
     ["Fan speed", `${printf(f32(move.fanSpeed), 0)} %`],
     ["Temperature", `${printf(f32(move.temperature), 0)} °C`],
+    ["Pressure Advance", printf(move.pressureAdvance, 4)],
   ];
 }
 
@@ -70,7 +75,7 @@ export async function expectNoToolPosition(page: Page) {
   await expect(page.getByTestId("tool-position")).toHaveCount(0);
 }
 
-async function expectToolPosition(page: Page, move: Move, view: "FeatureType" | "Height") {
+async function expectToolPosition(page: Page, move: Move, view: DetailView) {
   await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
   const window = page.getByTestId("tool-position");
   await expect(window.locator(".tool-position-axis-value")).toHaveText(axes(move));
@@ -130,6 +135,22 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   await expect(window.locator("table th")).toHaveText(rows.map(([label]) => label));
   await expect(window.locator("table td")).toHaveText(rows.map(([, value]) => value));
   await page.screenshot({ path: `${artifacts}preview-tool-properties.png` });
+  // ORCA Acceleration / Jerk / Pressure Advance views (`GCodeViewer.cpp:404-412`) on the same vertex.
+  const motion: string[] = ["view,gcode_id,type,pressure_advance,acceleration,jerk,detail"];
+  for (const [view, label] of [["Acceleration", "Acceleration"], ["Jerk", "Jerk"], ["PressureAdvance", "Pressure Advance"]] as const) {
+    await select.selectOption({ label });
+    await expectToolPosition(page, before, view);
+    await expect(window.locator("table td")).toHaveText(rows.map(([, value]) => value));
+    motion.push([view, before.gcodeId, before.type, before.pressureAdvance, before.acceleration, before.jerk, detail(before, view)].join(","));
+  }
+  const motionTheme = await page.locator("html").getAttribute("data-theme");
+  for (const theme of ["dark", "light"] as const) {
+    if (await page.locator("html").getAttribute("data-theme") !== theme)
+      await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
+    await page.screenshot({ path: `${artifacts}motion-attributes-${theme}.png` });
+  }
+  if (motionTheme === "dark") await page.getByTitle("Dark theme").click();
+  writeFileSync(`${artifacts}motion-attributes.csv`, `${motion.join("\n")}\n`);
   const box = await window.boundingBox();
   const sliderBox = await page.getByTestId("moves-slider").boundingBox();
   expect(box!.y + box!.height).toBeLessThanOrEqual(sliderBox!.y);

@@ -48,6 +48,7 @@ const MARKER_TYPES: Record<string, number> = {
 export type Move = RangeMove & { gcodeId: number; x: number; y: number; z: number; internalOnly: boolean; extruder: number; deltaE: number };
 /** GCodeProcessor `EMoveType::Noop` / `Travel` / `Wipe`: with `Extrude`, the moves libvgcode draws as paths. */
 const PATH_TYPES = new Set([0, 8, 9, EXTRUDE]);
+const f32 = Math.fround;
 
 /**
  * Upstream GCodeProcessor moves of the browser's G-code, from the procgcode oracle
@@ -62,8 +63,9 @@ export function oracleMoves(oracle: string, gcodePath: string, workDir: string):
   execFileSync(oracle, ["--process-gcode", input, "--dump-moves", csv], { stdio: "ignore" });
   const [header, ...rows] = readFileSync(csv, "utf8").trimEnd().split("\n");
   const column = Object.fromEntries(header.split(",").map((name, index) => [name, index]));
-  return rows.map((row) => {
-    const values = row.split(",").map(Number);
+  const parsed = rows.map((row) => row.split(",").map(Number));
+  const dynamics = oracleDynamics(input, workDir, parsed.map((values) => ({ gcode_id: values[column.gcode_id], type: values[column.type] })));
+  return parsed.map((values, index) => {
     return {
       gcodeId: values[column.gcode_id],
       type: values[column.type],
@@ -82,7 +84,28 @@ export function oracleMoves(oracle: string, gcodePath: string, workDir: string):
       fanSpeed: values[column.fan_speed],
       temperature: values[column.temperature],
       time: values[column.time0],
+      ...dynamics[index],
     };
+  });
+}
+
+/**
+ * ORCA `MoveVertex` pressure advance / acceleration / jerk (`store_move_vertex`,
+ * `GCodeProcessor.cpp:5630-5664`) per move, from the initialized-native dynamics
+ * oracle (`tools/chain-probe/procgcode-dynamics.nix`, `--dump-move-dynamics`).
+ */
+function oracleDynamics(input: string, workDir: string, moves: { gcode_id: number; type: number }[]) {
+  const oracle = process.env.ARES_PROCGCODE_DYNAMICS_BIN;
+  if (!oracle) throw new Error("ARES_PROCGCODE_DYNAMICS_BIN is required for the motion attributes oracle");
+  const csv = `${workDir}oracle-dynamics.csv`;
+  execFileSync(oracle, ["--process-gcode", input, "--dump-move-dynamics", csv], { stdio: "ignore" });
+  const [header, ...rows] = readFileSync(csv, "utf8").trimEnd().split("\n");
+  expect(header).toBe("gcode_id,type,internal_only,pressure_advance,acceleration,jerk");
+  expect(rows).toHaveLength(moves.length);
+  return rows.map((row, index) => {
+    const [gcodeId, type, , pressureAdvance, acceleration, jerk] = row.split(",").map(Number);
+    expect([gcodeId, type], `dynamics row ${index}`).toEqual([moves[index].gcode_id, moves[index].type]);
+    return { pressureAdvance: f32(pressureAdvance), acceleration: f32(acceleration), jerk: f32(jerk) };
   });
 }
 
