@@ -2,6 +2,7 @@ mod archive;
 mod documents;
 mod effective_config;
 mod layer_config_ranges;
+mod legacy;
 mod model;
 mod orca_cli_export;
 mod path;

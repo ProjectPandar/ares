@@ -115,7 +115,7 @@ fn is_vector(kind: OptionValueKind) -> bool {
     }
 }
 
-fn decode(kind: OptionValueKind, value: &str) -> Result<RawConfigValue, String> {
+pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<RawConfigValue, String> {
     let value = scalar::normalize(kind, value)?;
     if scalar::is_scalar(kind) {
         wire::validate_lexical(kind, &value)?;

@@ -7,10 +7,9 @@
 use std::collections::BTreeMap;
 
 use serde::Deserialize;
-use serde_json::Value;
 
 use crate::SliceError;
-use crate::project::raw_settings::ProjectSettingsRaw;
+use crate::project::raw_settings::{ProjectSettingsRaw, RawConfigValue};
 
 use super::super::SliceOptions;
 use crate::OptionValueKind;
@@ -120,10 +119,15 @@ fn parse_element(text: &str, int_kind: bool, key: &str) -> Result<LoadedElement,
         .ok_or_else(|| SliceError::InvalidInput(format!("{key} contains invalid value")))
 }
 
-/// One element of a serde `Value`.
-fn json_element(key: &str, value: &Value, int_kind: bool) -> Result<LoadedElement, SliceError> {
+/// One element of a `RawConfigValue` — the post-`handle_legacy` token view
+/// (`Text`/`Number`/`Flag` scalars, `List` vectors, `Null` nil).
+fn raw_element(
+    key: &str,
+    value: &RawConfigValue,
+    int_kind: bool,
+) -> Result<LoadedElement, SliceError> {
     match value {
-        Value::Number(number) => number
+        RawConfigValue::Number(number) => number
             .as_f64()
             .filter(|value| value.is_finite())
             .map(|value| LoadedElement {
@@ -132,42 +136,45 @@ fn json_element(key: &str, value: &Value, int_kind: bool) -> Result<LoadedElemen
                 percent: false,
             })
             .ok_or_else(|| SliceError::InvalidInput(format!("{key} contains invalid value"))),
-        Value::String(text) => parse_element(text, int_kind, key),
-        Value::Null => Ok(LoadedElement {
+        // A bool/list/object is not a numeric element — upstream
+        // `deserialize` for a numeric option rejects it (`Config.cpp:1000`,
+        // the `//should not happen` non-string branch).
+        RawConfigValue::Flag(_) | RawConfigValue::List(_) | RawConfigValue::Object(_) => Err(
+            SliceError::InvalidInput(format!("{key} contains invalid value")),
+        ),
+        RawConfigValue::Text(text) => parse_element(text, int_kind, key),
+        RawConfigValue::Null => Ok(LoadedElement {
             value: if int_kind { INT_NIL } else { f64::NAN },
             nil: true,
             percent: false,
         }),
-        _ => Err(SliceError::InvalidInput(format!(
-            "{key} contains invalid value"
-        ))),
     }
 }
 
-/// Splits one config `Value` into its elements. Vector-kind scalars/strings
-/// are comma-joined; `Value::Array` lists element-wise.
+/// Splits one config `RawConfigValue` into its elements. Vector-kind
+/// scalars/text are comma-joined; `RawConfigValue::List` lists element-wise.
 fn elements_of(
     key: &str,
-    value: &Value,
+    value: &RawConfigValue,
     int_kind: bool,
     vector_kind: bool,
 ) -> Result<Vec<LoadedElement>, SliceError> {
     match value {
         // A list on a scalar-kind option is a shape mismatch upstream
         // `deserialize` rejects before the range loop.
-        Value::Array(_) if !vector_kind => Err(SliceError::InvalidInput(format!(
+        RawConfigValue::List(_) if !vector_kind => Err(SliceError::InvalidInput(format!(
             "{key} contains invalid value"
         ))),
-        Value::Array(values) => values
+        RawConfigValue::List(values) => values
             .iter()
-            .map(|item| json_element(key, item, int_kind))
+            .map(|item| raw_element(key, item, int_kind))
             .collect(),
         // `ConfigOptionVector::deserialize` splits a scalar token on ','.
-        Value::String(text) if vector_kind => text
+        RawConfigValue::Text(text) if vector_kind => text
             .split(',')
             .map(|item| parse_element(item, int_kind, key))
             .collect(),
-        _ => json_element(key, value, int_kind).map(|element| vec![element]),
+        _ => raw_element(key, value, int_kind).map(|element| vec![element]),
     }
 }
 
@@ -197,7 +204,7 @@ fn serialize_value(elements: &[LoadedElement]) -> String {
 /// `PrintConfig.cpp:10521-10559`: the generic `is_value_valid` loop over a
 /// normalized flat `key → Value` config (the `cfg.keys()` iteration).
 fn collect_range_errors(
-    values: &BTreeMap<String, Value>,
+    values: &BTreeMap<String, RawConfigValue>,
     errors: &mut BTreeMap<String, String>,
 ) -> Result<(), SliceError> {
     for (key, value) in values {
@@ -234,10 +241,20 @@ impl SliceOptions {
     /// the flat `--options` config. Replaces `LINE_WIDTH_RANGES`.
     /// `SliceOptions` deserialization already applies `handle_legacy`
     /// normalization, so `values()` holds the post-normalize config upstream
-    /// `Slic3r::validate` sees.
+    /// `Slic3r::validate` sees; each entry is re-materialized as a
+    /// `RawConfigValue` for the typed-element loop.
     pub fn validate_loaded_range_options(&self) -> Result<BTreeMap<String, String>, SliceError> {
+        let mut raw = BTreeMap::new();
+        for (key, value) in self.values() {
+            raw.insert(
+                key.clone(),
+                RawConfigValue::deserialize(value.clone()).map_err(|error| {
+                    SliceError::InvalidInput(format!("invalid option {key}: {error}"))
+                })?,
+            );
+        }
         let mut errors = BTreeMap::new();
-        collect_range_errors(self.values(), &mut errors)?;
+        collect_range_errors(&raw, &mut errors)?;
         Ok(errors)
     }
 
@@ -250,20 +267,20 @@ impl SliceOptions {
 
 impl ProjectSettingsRaw {
     /// `PrintConfig.cpp:10519-10559` over the merged project config. The raw
-    /// view is pre-normalization, so it is re-deserialized through
-    /// `SliceOptions` to apply `handle_legacy` (e.g. `ironing_angle`
-    /// negatives → `0`) before the range loop sees the same values upstream
-    /// `Slic3r::validate` sees.
+    /// view is already post-`handle_legacy` (`load.rs` normalizes it before
+    /// this runs), so the range loop reads `RawConfigValue` elements
+    /// directly — the same values upstream `Slic3r::validate` sees on the
+    /// post-normalize config.
     pub(crate) fn loaded_range_options(&self) -> Result<BTreeMap<String, String>, SliceError> {
+        let mut errors = BTreeMap::new();
+        collect_range_errors(self.as_map(), &mut errors)?;
+        // `PrintConfig.cpp:10504-10517`: the line-width nozzle bound (bridge
+        // uses `min_nozzle_diameter`; the rest `5*max`) — same map, carried
+        // via `SliceOptions`' typed readers rather than the raw element loop.
         let normalized =
             SliceOptions::deserialize(self.clone().into_object()).map_err(|error| {
                 SliceError::InvalidInput(format!("invalid project settings: {error}"))
             })?;
-        let mut errors = normalized.validate_loaded_range_options()?;
-        // `PrintConfig.cpp:10504-10517`: the line-width nozzle bound (bridge
-        // uses `min_nozzle_diameter`; the rest `5*max`) — same map, the raw
-        // flat config path carries it here rather than via `SliceOptions`'s
-        // `validate_fff_options`.
         merge_first(&mut errors, normalized.validate_extrusion_width_options()?);
         Ok(errors)
     }

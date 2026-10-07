@@ -47,7 +47,7 @@ pub(crate) mod json_deserialize;
 mod machine_limits;
 pub(crate) mod model_config_deserialize;
 #[rustfmt::skip]
-option_modules!(layer_change_retraction, legacy, initial_layer_print_height, object_distance, overhang_reverse, overhang_speed, parameter_size, raft, skirt_type, support_enable, support_object_skip_flush, support_style, support_placement, pub(crate) support_threshold, support_interface_not_for_body, support_type, pub(crate) support_z_distance, tree_support_options, wall_direction, wall_sequence);
+option_modules!(layer_change_retraction, pub(crate) legacy, initial_layer_print_height, object_distance, overhang_reverse, overhang_speed, parameter_size, raft, skirt_type, support_enable, support_object_skip_flush, support_style, support_placement, pub(crate) support_threshold, support_interface_not_for_body, support_type, pub(crate) support_z_distance, tree_support_options, wall_direction, wall_sequence);
 mod object_fields;
 mod object_options;
 pub(crate) mod option_group;
@@ -105,6 +105,7 @@ pub(crate) use infill::{
     ExtraSolidInfills, InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions,
     InternalBridgeFilter,
 };
+pub(crate) use legacy::handle_legacy;
 pub(crate) use machine_limits::MachineLimits;
 pub(crate) use model_config_deserialize::{
     deserialize_object_model_field, deserialize_region_model_field,

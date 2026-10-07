@@ -92,6 +92,11 @@ impl Project {
         )?;
         // M854 edit order: user overrides apply last (`Config.cpp:461`).
         overrides.apply(&mut merged);
+        // `set_deserialize`/`handle_legacy` runs on every option token the
+        // merged config carries — embedded base and profile overlay alike
+        // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
+        // typed builder and the `is_value_valid` loop see it.
+        merged.handle_legacy();
 
         project.settings = crate::options::json_deserialize::deserialize_preset_config::<
             ProjectSettingsBuilder,
@@ -117,7 +122,12 @@ impl Project {
         // settings re-resolve. The no-override path stays byte-identical to
         // the proven entry.
         let (settings, raw) = if overrides.is_empty() {
-            (profile.settings.clone(), profile.profile_raw.clone())
+            // The sparse profile raw is the post-`handle_legacy` view of the
+            // selected presets (`Config.cpp:577-579` normalizes each option
+            // token as it is read).
+            let mut raw = profile.profile_raw.clone();
+            raw.handle_legacy();
+            (profile.settings.clone(), raw)
         } else {
             let count = profile.settings.project.preset.filament_settings_id.0.len();
             let mut merged = merged_profile_raw(
@@ -128,6 +138,9 @@ impl Project {
                 count,
             )?;
             overrides.apply(&mut merged);
+            // `handle_legacy` on the overlay (`Config.cpp:577-579`) — same
+            // post-legacy contract as the 3MF branch.
+            merged.handle_legacy();
             (
                 crate::options::json_deserialize::deserialize_preset_config::<ProjectSettingsBuilder>(merged.clone().into_object())
                     .map_err(|error| {

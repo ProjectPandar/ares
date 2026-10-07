@@ -57,8 +57,78 @@ impl ProjectSettingsRaw {
         crate::options::json_deserialize::normalize_scalar_vector_strings(&mut self.0)
     }
 
+    /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs inside
+    /// `set_deserialize` (`Config.cpp:577-579`) on each `key/value` token
+    /// before the option is stored, so the loaded config — and the flat map
+    /// `Slic3r::validate` checks — is post-legacy. Applies the shared
+    /// string-token `handle_legacy` core to every entry: the value's
+    /// `token()` is the `value` string upstream sees, the normalized token is
+    /// re-decoded by the (possibly renamed) key's option kind, and a cleared
+    /// key drops the entry.
+    /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs inside
+    /// `set_deserialize` (`Config.cpp:577-579`) on each `key/value` token
+    /// before the option is stored, so the loaded config — and the flat map
+    /// `Slic3r::validate` checks — is post-legacy.
+    ///
+    /// Upstream `load_from_json` (`Config.cpp:945-962`) hands `handle_legacy`
+    /// the raw string for scalar values but an *empty* `value_str` for array
+    /// elements (the array is element-processed later), so non-scalar
+    /// `RawConfigValue`s only ever get a key rename — their elements are
+    /// preserved untouched. Scalars carry their `token()` through the rewrite
+    /// and are re-decoded by the (possibly renamed) key's option kind. A
+    /// cleared key drops the entry; keys with no option definition are kept
+    /// (matching `SliceOptions`' normalization, which does not drop them).
+    pub(crate) fn handle_legacy(&mut self) {
+        let mut normalized = BTreeMap::new();
+        for (mut key, value) in std::mem::take(&mut self.0) {
+            let scalar = matches!(
+                value,
+                RawConfigValue::Text(_) | RawConfigValue::Number(_) | RawConfigValue::Flag(_)
+            );
+            let mut token = if scalar {
+                value.token().unwrap_or_default()
+            } else {
+                String::new()
+            };
+            // `load_from_json`-level derived keys (`Config.cpp:937-945`): a
+            // string `key`/token can produce an extra entry (e.g.
+            // `is_infill_first` for `infill/…` wall orders) before
+            // `handle_legacy` rewrites the pair.
+            if scalar
+                && let Some((derived_key, derived_token)) =
+                    crate::options::legacy::handle_legacy_derived(&key, &token)
+            {
+                normalized
+                    .entry(derived_key.to_owned())
+                    .or_insert_with(|| RawConfigValue::Text(derived_token.to_owned()));
+            }
+            crate::options::handle_legacy(&mut key, &mut token);
+            if key.is_empty() {
+                continue;
+            }
+            // Upstream `handle_legacy` only rewrites the `value` string; the
+            // option's own `deserialize` (run later by the typed builder) is
+            // what parses/validates it, so the normalized token is stored back
+            // as a plain text scalar — not re-decoded here (which would
+            // pre-empt the typed builder's diagnostics).
+            let stored = if scalar {
+                RawConfigValue::Text(token)
+            } else {
+                value
+            };
+            normalized.insert(key, stored);
+        }
+        self.0 = normalized;
+    }
+
     pub(crate) fn entries(&self) -> impl Iterator<Item = (&String, &RawConfigValue)> {
         self.0.iter()
+    }
+
+    /// The post-`handle_legacy` flat map, for the `is_value_valid` range
+    /// loop (`PrintConfig.cpp:10519-10559`) which reads `cfg.keys()`.
+    pub(crate) fn as_map(&self) -> &BTreeMap<String, RawConfigValue> {
+        &self.0
     }
 
     /// Consumes the raw view into its typed tree (`RawConfigValue::Object`),
@@ -125,7 +195,7 @@ impl RawConfigValue {
     /// Renders the export token; `nil` strings, `null`, and object
     /// placeholders stay without a value and lists join their renderable
     /// items with `;`.
-    fn token(&self) -> Option<String> {
+    pub(crate) fn token(&self) -> Option<String> {
         match self {
             Self::Text(text) => (text != "nil").then(|| text.clone()),
             Self::Number(number) => Some(number.to_string()),

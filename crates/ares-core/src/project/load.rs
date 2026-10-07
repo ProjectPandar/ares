@@ -125,6 +125,11 @@ pub fn load_project_with(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    // `set_deserialize` runs `handle_legacy` on each option token before the
+    // typed builders run (Config.cpp:577-579), so the raw view — and the
+    // `Slic3r::validate` flat map — is post-legacy (e.g. `ironing_angle: -1`
+    // normalizes to `0`).
+    project_settings_raw.handle_legacy();
     let settings = <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
         project_settings_raw.clone().into_object(),
     )
