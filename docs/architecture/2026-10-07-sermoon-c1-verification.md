@@ -109,3 +109,18 @@ No group changed, disappeared, or was added. Comparison artifact:
 C1 CLI output `/tmp/worker3-c1-revision-sermoon.gcode` is also byte-identical
 to `/tmp/worker3-c1-d0e-sermoon.gcode`; its normalized SHA remains
 `3bcca80d277f9c355bf15ce3dbc94fc12449dc160e5150061482cd8768193a83`.
+
+## Approved post-rebase validation
+
+`da75739a5` was APPROVED. The first ordinary push was safely rejected
+when worker5 advanced main; the branch was then rebased to `b18d963b1`.
+Required post-rebase reruns:
+- seeded full: 607/607 (`/tmp/worker3-c1-b18-seeded.log`);
+- strict Sermoon: PASS (`/tmp/worker3-c1-b18-sermoon.log`);
+- workspace: 7996/7996, 9 existing skips (`/tmp/worker3-c1-b18-workspace.log`);
+- clippy, wasm32, fmt: PASS (`/tmp/worker3-c1-b18-{clippy,wasm,fmt}.log`).
+
+All prior 517 raw G-code artifacts / 468 label groups remain exactly
+unchanged after rebase: `/tmp/worker3-c1-b18-artifact-comparison.json`,
+`allPreviousArtifactsUnchanged=true`. Thus the d0e official comparison
+is retained under the coordinator's explicit post-rebase approval terms.
