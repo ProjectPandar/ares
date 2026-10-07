@@ -184,7 +184,12 @@ fn print_bridge_width_stl_adapter_retains_width_and_object_flags() {
         let actual = ares_core::validate_stl(input, &options);
         let directory = super::evidence_directory("print-bridge-stl-");
         std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"case":index,"options":fields,"expected_error":expected,"actual":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
-        if let Some(expected) = expected {
+        if index == 2 {
+            assert!(
+                matches!(actual, Err(SliceError::InvalidValuesInProject(ref text)) if text == "bridge_line_width: Bridge line width must not exceed nozzle diameter: 0.500000"),
+                "{actual:?}; {directory:?}"
+            );
+        } else if let Some(expected) = expected {
             assert!(
                 matches!(actual,Err(SliceError::InvalidInput(ref text)) if text==expected),
                 "{actual:?}; {directory:?}"

@@ -38,7 +38,7 @@ struct RangeCase {
 
 /// One O3 case: native `--load-settings` rejects with exit 238 and the
 /// exact `key: <serialize()> not in range [min,max]` text; Ares must
-/// surface the same `SliceError::InvalidInput` text via
+/// surface the same `SliceError::InvalidValuesInProject` text via
 /// `validate_with_profiles` / `slice_with_profiles_validated`.
 async fn original_profile(case: &RangeCase) {
     let root = super::super::repo_root();
@@ -142,11 +142,11 @@ async fn original_profile(case: &RangeCase) {
     );
     loaded.unwrap();
     assert!(
-        matches!(validated, Err(SliceError::InvalidInput(text)) if text == case.error_lines),
+        matches!(validated, Err(SliceError::InvalidValuesInProject(text)) if text == case.error_lines),
         "validated must surface the same key:text lines; evidence {directory:?}"
     );
     assert!(
-        matches!(sliced, Err(SliceError::InvalidInput(text)) if text == case.error_lines),
+        matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == case.error_lines),
         "sliced must surface the same key:text lines; evidence {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());
@@ -353,11 +353,11 @@ async fn run_override_case(case: &OverrideCase) {
         }),
     );
     assert!(
-        matches!(validated, Err(SliceError::InvalidInput(text)) if text == *error_lines),
+        matches!(validated, Err(SliceError::InvalidValuesInProject(text)) if text == *error_lines),
         "validated must emit the same key:text lines; evidence {directory:?}"
     );
     assert!(
-        matches!(sliced, Err(SliceError::InvalidInput(text)) if text == *error_lines),
+        matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == *error_lines),
         "sliced must emit the same key:text lines; evidence {directory:?}"
     );
 }
@@ -517,7 +517,7 @@ async fn orca_parity_o3_matrix_sweep_loaded_config() {
             .map(|body| body.trim_end().to_owned());
         let matched = matches!(
             (&validated, native_text.as_deref()),
-            (Err(SliceError::InvalidInput(text)), Some(native)) if text == native
+            (Err(SliceError::InvalidValuesInProject(text)), Some(native)) if text == native
         );
         report.last_mut().unwrap()["native_text"] = json!(native_text);
         report.last_mut().unwrap()["matched"] = json!(matched);

@@ -301,7 +301,7 @@ impl crate::ProjectSettings {
     }
 }
 
-/// Serializes the shared error map into the `SliceError::InvalidInput`
+/// Serializes the shared error map into the `SliceError::InvalidValuesInProject`
 /// multi-line text (`OrcaSlicer.cpp:3649-3653` prints `key: text` per line).
 fn loaded_config_error(errors: BTreeMap<String, String>) -> Result<(), SliceError> {
     if errors.is_empty() {
@@ -312,7 +312,7 @@ fn loaded_config_error(errors: BTreeMap<String, String>) -> Result<(), SliceErro
         .map(|(key, message)| format!("{key}: {message}"))
         .collect::<Vec<_>>()
         .join("\n");
-    Err(SliceError::InvalidInput(text))
+    Err(SliceError::InvalidValuesInProject(text))
 }
 
 fn merge_first(target: &mut BTreeMap<String, String>, source: BTreeMap<String, String>) {
