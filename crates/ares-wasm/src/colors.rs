@@ -32,13 +32,14 @@ fn view_type(name: &str) -> Result<ViewType, JsError> {
         .ok_or_else(|| JsError::new(&format!("unknown view type {name}")))
 }
 
-/// libvgcode `ColorRange` state (`ColorRange.hpp`).
+/// libvgcode `ColorRange` state (`ColorRange.hpp`). The floats are widened to
+/// f64 so JSON carries the exact f32 values the legend prints.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ColorRangeView {
     range_type: &'static str,
-    range: [f32; 2],
-    values: Vec<f32>,
+    range: [f64; 2],
+    values: Vec<f64>,
     palette: Vec<Color>,
 }
 
@@ -76,8 +77,8 @@ impl VertexBuffers {
                     ColorRangeType::Linear => "Linear",
                     ColorRangeType::Logarithmic => "Logarithmic",
                 },
-                range: range.get_range(),
-                values: range.get_values(),
+                range: range.get_range().map(f64::from),
+                values: range.get_values().into_iter().map(f64::from).collect(),
                 palette: range.get_palette().to_vec(),
             });
         Ok(serde_json::to_string(&range).expect("color range serializes"))
