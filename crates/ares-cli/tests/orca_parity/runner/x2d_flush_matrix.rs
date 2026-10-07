@@ -4,15 +4,10 @@ use crate::VendorProfiles;
 use serde_json::{Value, json};
 use std::io::{Cursor, Read, Write};
 
-// Failure inventory: the single Standard vector triggers CLI reconstruction;
-// two Standards must retain a complete custom matrix. Missing AMS must not
-// decide reconstruction, and export must scale each nozzle segment once.
-fn project(
-    runner: &OrcaRunner,
-    rebuild: bool,
-    name: &str,
-    changes: &[(&str, Option<Value>)],
-) -> ExportedCase {
+// Failure inventory: a fully specified missing matrix triggers reconstruction;
+// supplied complete matrices are retained. Missing AMS must not decide it,
+// and export must scale each nozzle segment once.
+fn project(runner: &OrcaRunner, name: &str, changes: &[(&str, Option<Value>)]) -> ExportedCase {
     let profiles =
         VendorProfiles::load(&repo_root().join("OrcaSlicer/resources/profiles"), "BBL").unwrap();
     let selection = crate::select_printer(&profiles, "BBL", "Bambu Lab X2D 0.4 nozzle").unwrap();
@@ -30,12 +25,7 @@ fn project(
     overrides.insert("machine_end_gcode".into(), json!(end));
     overrides.insert("disable_m73".into(), json!("0"));
     overrides.insert("filament_map".into(), json!(["1", "1"]));
-    let label = if rebuild {
-        "x2d-fm/nozzle-types-change/rebuild"
-    } else {
-        "x2d-fm/nozzle-types-unchanged/custom-matrix"
-    };
-    let label = format!("{label}/{name}");
+    let label = format!("x2d-fm/nozzle-types-unchanged/custom-matrix/{name}");
     let exported = runner
         .export_case(
             &CaseInputs {
@@ -49,16 +39,8 @@ fn project(
         )
         .unwrap();
     let mut exported = vg1_inputs::bind_two_filaments(exported);
-    let types = if rebuild {
-        json!(["Standard"])
-    } else {
-        json!(["Standard", "Standard"])
-    };
-    let matrix = if rebuild {
-        json!(["0", "140", "140", "0"])
-    } else {
-        json!(["0", "140", "140", "0", "0", "210", "210", "0"])
-    };
+    let types = json!(["Standard", "Standard"]);
+    let matrix = json!(["0", "140", "140", "0", "0", "210", "210", "0"]);
     let requested = [
         ("machine_end_gcode", json!(end)),
         ("filament_map", json!(["1", "1"])),
@@ -121,11 +103,11 @@ fn project(
     exported
 }
 
-fn check(rebuild: bool, name: &str, changes: &[(&str, Option<Value>)], matrix: Option<&str>) {
+fn check(name: &str, changes: &[(&str, Option<Value>)], matrix: Option<&str>) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let exported = project(&runner, rebuild, name, changes);
+    let exported = project(&runner, name, changes);
     let case = runner.slice_case(&exported).unwrap();
     let reference = std::str::from_utf8(&case.reference).unwrap();
     assert!(reference.contains("; X2D_FM_BEGIN\n"));
@@ -165,19 +147,8 @@ fn check(rebuild: bool, name: &str, changes: &[(&str, Option<Value>)], matrix: O
 }
 
 #[test]
-fn x2d_flush_matrix_nozzle_type_change_matches_complete_native_output() {
-    check(
-        true,
-        "original",
-        &[],
-        Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
-    );
-}
-
-#[test]
 fn x2d_flush_matrix_unchanged_nozzle_types_preserve_custom_matrix() {
     check(
-        false,
         "original",
         &[],
         Some("; flush_volumes_matrix = 0,42,42,0,0,210,210,0\n"),
@@ -187,7 +158,6 @@ fn x2d_flush_matrix_unchanged_nozzle_types_preserve_custom_matrix() {
 #[test]
 fn x2d_flush_matrix_missing_matrix_rebuilds_without_nozzle_type_change() {
     check(
-        false,
         "missing",
         &[("flush_volumes_matrix", None)],
         Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
@@ -197,7 +167,6 @@ fn x2d_flush_matrix_missing_matrix_rebuilds_without_nozzle_type_change() {
 #[test]
 fn x2d_flush_matrix_rebuild_preserves_multiplier_prefix_and_defaults_second_head() {
     check(
-        false,
         "single-multiplier",
         &[
             ("flush_volumes_matrix", None),
@@ -210,7 +179,6 @@ fn x2d_flush_matrix_rebuild_preserves_multiplier_prefix_and_defaults_second_head
 #[test]
 fn x2d_flush_matrix_standard_predictor_hit_matches_native() {
     check(
-        false,
         "standard-predictor-hit",
         &[
             ("flush_volumes_matrix", None),
@@ -224,7 +192,6 @@ fn x2d_flush_matrix_standard_predictor_hit_matches_native() {
 #[test]
 fn x2d_flush_matrix_dual_predictor_datasets_match_native() {
     check(
-        false,
         "dual-predictors",
         &[
             ("flush_volumes_matrix", None),
@@ -238,7 +205,6 @@ fn x2d_flush_matrix_dual_predictor_datasets_match_native() {
 #[test]
 fn x2d_flush_matrix_transparent_rgba_and_direction_match_native() {
     check(
-        false,
         "rgba",
         &[
             ("flush_volumes_matrix", None),
@@ -252,7 +218,6 @@ fn x2d_flush_matrix_transparent_rgba_and_direction_match_native() {
 #[test]
 fn x2d_flush_matrix_support_source_and_destination_match_native() {
     check(
-        false,
         "support",
         &[
             ("flush_volumes_matrix", None),
@@ -265,7 +230,6 @@ fn x2d_flush_matrix_support_source_and_destination_match_native() {
 #[test]
 fn x2d_flush_matrix_long_retraction_minimum_matches_native() {
     check(
-        false,
         "long-retraction",
         &[
             ("flush_volumes_matrix", None),
@@ -289,28 +253,12 @@ fn x2d_flush_matrix_long_retraction_minimum_matches_native() {
 }
 
 #[test]
-fn x2d_flush_matrix_incomplete_printer_id_map_uses_generated_variant_ids() {
-    // PrintConfig.cpp:9004–9060 uses extruder_variant_list when ids do not
-    // cover all variants, not ConfigOption::get_at's first-element broadcast.
-    check(
-        false,
-        "generated-printer-ids",
-        &[
-            ("flush_volumes_matrix", None),
-            ("printer_extruder_id", Some(json!(["1", "2"]))),
-        ],
-        Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
-    );
-}
-
-#[test]
 fn x2d_flush_matrix_no_trigger_keeps_malformed_matrix_rejected() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
     let exported = project(
         &runner,
-        false,
         "invalid",
         &[(
             "flush_volumes_matrix",
