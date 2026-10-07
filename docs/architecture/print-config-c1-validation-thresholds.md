@@ -141,3 +141,14 @@ observed failure names are recorded, and production diff is empty. No automatic
 PASS promotion or claim of complete legal-range coverage. A later reviewed
 GREEN should make the same cases pass without changing inputs, expectations,
 messages, diagnostics, deadlines or comparators.
+
+## Approved execution ruling (after approval of2a77ced85)
+
+The operator explicitly permits the two0.001 layer-height cases to be rejected
+later by `Print::validate` (printer minimum/nozzle context). Preserve their
+original accept prediction and set `prediction_mismatch:true`. A complete,
+single-line Native-51 diagnostic compared exactly to both independent Ares
+public error payloads establishes **matching rejection parity**, not numerical
+acceptance or byte coverage. Do not adjust either sample or weaken message
+comparison. This ruling supersedes the earlier later-stage-blocker rule for
+these two cases only; other unexpected failures remain blockers.
