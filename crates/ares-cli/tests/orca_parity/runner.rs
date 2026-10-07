@@ -90,6 +90,9 @@ pub(crate) mod stages;
 #[path = "runner/stl_model_label.rs"]
 mod stl_model_label;
 #[cfg(test)]
+#[path = "runner/stl_variant_whole_file.rs"]
+mod stl_variant_whole_file;
+#[cfg(test)]
 #[path = "runner/support_annotations.rs"]
 mod support_annotations;
 #[cfg(test)]
