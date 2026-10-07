@@ -13,6 +13,8 @@ mod bed_compatibility_native_controls;
 mod bridge_width;
 #[path = "print_validation/bridge_width_controls.rs"]
 mod bridge_width_controls;
+#[path = "print_validation/c1_thresholds.rs"]
+mod c1_thresholds;
 #[path = "print_validation/entries.rs"]
 mod entries;
 #[path = "print_validation/layer_nozzle.rs"]
