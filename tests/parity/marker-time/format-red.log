@@ -1,0 +1,23 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 e2e/markerTimeFormat.spec.ts:6:1 › marker Time text matches native source-kernel boundary records (4ms)
+
+
+  1) e2e/markerTimeFormat.spec.ts:6:1 › marker Time text matches native source-kernel boundary records 
+
+    Error: Cannot find module '/tmp/ares-pi-worker-web/web/app/src/preview/toolPositionFormat' imported from /tmp/ares-pi-worker-web/web/e2e/markerTimeFormat.spec.ts
+
+       5 | // decomposition and printf ties-to-even. Expected text comes only from C++.
+       6 | test("marker Time text matches native source-kernel boundary records", async () => {
+    >  7 |   const { formatMarkerTime } = await import("../app/src/preview/toolPositionFormat");
+         |                                ^
+       8 |   const native = JSON.parse(readFileSync(new URL("../../tests/parity/marker-time/native.json", import.meta.url), "utf8")) as {
+       9 |     formats: { elapsedBits: number; durationBits: number; text: string }[];
+      10 |     synthetic: { elapsedBits: number[]; durationBits: number[]; text: string[] }[];
+        at /tmp/ares-pi-worker-web/web/e2e/markerTimeFormat.spec.ts:7:32
+
+    Error Context: ../target/marker-time-format-red/results/markerTimeFormat-marker-Ti-ff19d-rce-kernel-boundary-records/error-context.md
+
+  1 failed
+    e2e/markerTimeFormat.spec.ts:6:1 › marker Time text matches native source-kernel boundary records 
