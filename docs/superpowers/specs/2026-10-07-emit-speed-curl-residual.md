@@ -252,3 +252,44 @@ Next step: dump upstream's per-point `processed` list for the
 slope path (extend spdin probe to print the annotated point
 positions + per-point final `speed` after curl clamp) and diff
 against ares' `extended` list for that path.
+
+## Residual root cause (probe-verified, byte-consistent binaries)
+
+Emit-path probes (`spdin2-src.nix` = per-annotated-point
+`pos/curr/next/art/spd` post-curl clamp + `SPD_END`; `emittune-src.nix`
+= per-segment `ll/dE/e_per_mm/mm3/F` in both emit branches;
+`curlp` reuse): oracle verified byte-identical each time.
+
+- The remaining whole-file residual is NOT feedrate bookkeeping
+  (fixed) — it is `artificial_distance` divergence at ONE
+  inner-wall vertex near the seam: ares layer-3 `i=4` art=0.0737 →
+  spd=101, upstream same point art=0.0412 → spd=107.96 (flat). The
+  F754-vs-F729 lines are downstream cooling-buffer slowdown values
+  fed by the differing segment times.
+- Consequence chain: ares' inner-wall path goes "variable" (one
+  point differs from original_speed by >1mm/s) → quantized
+  emit-length basis → E.37485; upstream stays constant → raw
+  `Line::length()*SCALING_FACTOR` → E.3749. Same for the outer
+  slope-path header F729: upstream `new_points[0].speed`=12.15 vs
+  ares 12.57 — same art-input class at the seam vertex.
+- Upstream emit at layer N uses `prev_curled_extrusions` = layer
+  N-1's `curled_lines` (ares `previous_curled` semantics match).
+  Upstream layer-2 `curled_lines`: 5 lines, corner h=0.166997.
+  Ares' collect for layer 2 must produce a DIFFERENT line near the
+  seam vertex — i.e. the collect-side annotation input still
+  diverges at the seam for inner-region vertices (the
+  `<true,true,false,false>` annotated-point insertions upstream
+  applies inside `estimate_malformations` before
+  `curled_up_height` — the previously-documented annotation gap,
+  now evidenced ON the emit path via the art delta).
+
+## Revised plan
+
+The collect-side `estimate_points_properties<true,true,false,false>`
+annotation (boundary intersections + segmentation at
+`min_distance`/`line_len>=2` + annotated curvature) is still the
+correct fix — it now has hard emit-side evidence (art 0.0737 vs
+0.0412 at the same vertex, same 5-line input frame). Redo the
+annotation port inside `CurlTracker::collect` per the earlier
+directive (reuse `BoundaryContext` machinery), then rerun the
+whole-file test.
