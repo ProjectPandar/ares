@@ -45,6 +45,8 @@ mod smoke_overrides;
 mod smooth_type2_tower;
 #[path = "orca_parity/stock_presets.rs"]
 mod stock_presets;
+#[path = "orca_parity/sync_time.rs"]
+mod sync_time;
 
 #[path = "ksr_fdmtest_v4/golden.rs"]
 mod golden;
