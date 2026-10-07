@@ -1,36 +1,41 @@
 # Type2 wipe-tower activation parity (TiQ2 / Kobra 3 Max)
 
-Status: SPEC — awaiting behavioral RED + review before implementation.
+Status: **OPEN** — closure withdrawn; enable=1 behavior and the responsible
+upstream gate remain unproven. No production fix is authorized.
 
-> **2026-10-07 update (pi-tower, `1b1751434`)**: the TiQ2 symptom does
-> **not reproduce** on the recorded fixture
-> (`/tmp/ares-orca-cache/19f06bc6065b3213/6e02aea054799098-fae0cc8012f785c5.3mf`,
-> `enable_prime_tower=1`, `wipe_tower_type=type2`, 2 filaments). Slicing the
-> identical input through restored official `orca-slicer` (bin sha256
-> `64515d01f887b479…`, resources `286fab66…`) and `ares`:
->
-> - native `plate_1.gcode`: 33995 lines, **0** `;TYPE:Prime tower`,
->   `; enable_prime_tower = 0`, 70 `T0/T1`/`M62x` tool-change sites.
-> - `ares` output: 33743 lines, **0** `;TYPE:Prime tower`,
->   `; enable_prime_tower = 0`, 70 tool-change sites.
->
-> Both suppress the tower — native uses both filaments (real `T0`/`T1`
-> toolchanges), so this is the `ToolOrdering::has_wipe_tower()` gate
-> (front-layer `wipe_tower_partitions==0`), not `normalize_fdm_2`
-> `used_filaments==1`. Ares's `build()` (`type2_tower = prime &&
-> first_extruder.is_some() && layers.first().has_wipe_tower`) already yields
-> `false`, matching upstream. The merged Type2 lifecycle slices
-> (`8d41b1a13`, `3cfacc332`, `c53be4fe9`, `4f02cbe8a`, plus the
-> `fdm_normalization`/`usage` used-filament counting) closed the reported
-> 140-section divergence between the 2026-10-06 cluster observation and
-> `1b1751434`. Positive control `smooth_type2_tower` still emits a tower
-> where native does — no over-suppression.
->
-> Residual whole-file diff on this fixture is the skirt/wall vertex-split
-> family (e.g. `E.07625` vs `E.05751`, shifted perimeter breakpoints) — a
-> different cluster, out of scope here. **Awaiting coordinator direction:
-> confirm fixed / supply the actual divergent input / repurpose this slice
-> toward the residual wall-split divergence.**
+## Evidence correction (2026-10-07)
+
+The closure recorded in `2c489196a` was based on the wrong fixture state.
+The original ZIP
+`/tmp/ares-orca-cache/19f06bc6065b3213/6e02aea054799098-fae0cc8012f785c5.3mf`
+(SHA256 `74ada1cbfe1e28ce7f52007bd4f77f80f3014488ee21fb580a27b7c3f172de3a`)
+stores `enable_prime_tower="0"`. The observed `"1"` belonged to an edited
+extracted `Metadata/project_settings.config`; that edit was never
+successfully repacked into the input ZIP used by either slicer.
+
+The 33995-line Native and 33743-line Ares outputs therefore establish only
+that both emit zero tower sections for the **disabled** input. They do not
+prove parity for enable=1, front-layer partition values, which upstream
+gate suppressed the tower, or that any cited commit fixed the reported
+140-section divergence. Those fixed-at-main and causal claims are withdrawn.
+Passing `smooth_type2_tower` positive controls does not repair this missing
+negative-case evidence.
+
+Before further conclusions, change the original ZIP's configuration,
+repack it, reopen the resulting ZIP to verify enable=1, and record its
+SHA256. Run Native first, then Ares on those exact bytes. Only a confirmed
+divergence warrants the two-layer RED: whole-file byte comparison with
+only generated-by normalization, plus a ToolOrdering core test whose
+expected state comes from a minimal nix oracle probe under
+`tools/orca-probes/`. Pinpoint one divergent site before tightening the
+spec and requesting implementation review.
+
+Skirt first-difference localization is deferred until that verification.
+Its first observed mismatch is line 86, first layer Z=0.2, feature Skirt.
+Compare `_make_skirt`'s pre-offset occupied hull and support_fills points
+(`Print.cpp:2646-2760`, especially `:2691`) before deciding whether it
+shares pi-arachne's SupportSpots point-insertion cause.
+
 Owner: pi-tower (wipe-tower emission lives in this area). Divergence found
 during pi-arachne's bridge_over_infill multi-filament E2E (`clusters.md`,
 `DIVERGENT — Type2 wipe-tower activation`).
@@ -42,8 +47,9 @@ emitted at all:
 
 - **iQ TiQ2 0.4 nozzle** — 2 filaments, `enable_prime_tower=1`,
   `wipe_tower_type=type2`, `single_extruder_multi_material=0`. Native emits
-  **zero** `;TYPE:Prime tower` sections; Ares emits **140** sections plus
-  tower geometry (57K vs 34K lines). Fixture
+  Historical report: Native emitted zero tower sections and Ares 140.
+  The recorded fixture below actually has enable=0, so it does not
+  reproduce that enabled-input report. Reproduction is pending:
   `/tmp/ares-orca-cache/19f06bc6065b3213/6e02aea054799098-fae0cc8012f785c5.3mf`.
 - **Anycubic Kobra 3 Max 0.4** — single nozzle,
   `single_extruder_multi_material=1`, 2 used filaments,
@@ -102,11 +108,11 @@ extruded on that layer**, derived from each LayerRegion's non-empty
 layers contribute `support_filament`/`support_interface_filament` slots
 (`:760-`).
 
-**TiQ2 no-tower mechanism**: with `sparse_infill_filament_id=2` but every
-layer printing only one logical filament, each `lt.extruders` resolves to
-a single tool, `wipe_tower_partitions` stays `0`, no `has_object` layer
-satisfies `partitions>0`, `wrapping`/timelapse are off →
-`m_layer_tools.front().has_wipe_tower==false` → early return, zero tower.
+**Possible TiQ2 no-tower mechanism (unproven)**: if the ordered layers
+require no tool changes, their partitions may remain zero and the
+front-layer gate may suppress tower generation. No native probe has yet
+established this state for a correctly repacked enable=1 TiQ2 input.
+
 
 **K3M no-tower mechanism (adjacent, deferred)**: `DynamicPrintConfig::
 normalize_fdm_2` (`PrintConfig.cpp:8688-8730`) forces
@@ -140,11 +146,10 @@ tool-ordering) and is deferred to the `normalize_fdm_*` port slice.
 
 ## Suspected divergence (to confirm with a RED before implementing)
 
-Because `type2_requested`, the `first().has_wipe_tower` gate, and
-`fill_wipe_tower_partitions` all mirror upstream, the divergence is
-upstream of the gate — Ares must be producing `layers.first().
-has_wipe_tower == true` where upstream produces `false`. Candidate sites,
-in audit order:
+The source-level gates are candidate comparison boundaries, not measured
+TiQ2 state. First establish enable=1 Native/Ares behavior. If it diverges,
+probe configuration normalization and ToolOrdering inputs before selecting
+one site to change. Candidate sites, in audit order:
 
 1. `collect::object` (`collect.rs:29-67`) pushes a filament id whenever a
    `usage.*` flag is set on `layer.tool_regions`. Upstream pushes an id
@@ -196,7 +201,9 @@ record, before any production change.
 
 - New `orca_parity`/`loaded_config` test on the TiQ2 fixture asserting
   Ares produces zero `;TYPE:Prime tower` sections and a native-identical
-  no-tower stream (or the smallest byte-stable prefix the slice allows).
+  whole-file ordered-byte comparison with only the generated-by banner
+  normalized. Tower counts and ToolOrdering probes are localization
+  evidence, not substitutes for that comparison.
 - A positive Type2 control keeps emitting the tower.
 - No change to `serde_json::Value` fingerprint count.
 - Workspace nextest + clippy + fmt + wasm check green; seeded + official
