@@ -11,6 +11,8 @@ export const VIEW_TYPE_ITEMS: { view: string; label: string; decimals?: number }
   { view: "FeatureType", label: "Line Type" },
   { view: "ColorPrint", label: "Filament" },
   { view: "Speed", label: "Speed", decimals: 0 },
+  { view: "Acceleration", label: "Acceleration", decimals: 0 },
+  { view: "Jerk", label: "Jerk", decimals: 1 },
   { view: "Height", label: "Layer Height", decimals: 2 },
   { view: "Width", label: "Line Width", decimals: 2 },
   { view: "VolumetricFlowRate", label: "Flow", decimals: 2 },
@@ -18,6 +20,7 @@ export const VIEW_TYPE_ITEMS: { view: string; label: string; decimals?: number }
   { view: "LayerTimeLogarithmic", label: "Layer Time (log)", decimals: 1 },
   { view: "FanSpeed", label: "Fan Speed", decimals: 0 },
   { view: "Temperature", label: "Temperature", decimals: 0 },
+  { view: "PressureAdvance", label: "Pressure Advance", decimals: 3 },
 ];
 
 export const css = ([r, g, b]: Iterable<number>) => `rgb(${r} ${g} ${b})`;

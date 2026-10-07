@@ -33,6 +33,9 @@ function detail(viewType: string, value: (name: VertexValue) => number, extrusio
     case "Temperature": return `Temperature: ${printf(value("temperature"), 0)}`;
     case "LayerTimeLinear":
     case "LayerTimeLogarithmic": return `Layer Time: ${printf(value("layerDuration"), 1)}`;
+    case "Acceleration": return `Acceleration: ${printf(value("acceleration"), 0)}`;
+    case "Jerk": return `Jerk: ${printf(value("jerk"), 1)}`;
+    case "PressureAdvance": return `PA: ${printf(value("pressureAdvance"), 4)}`;
     default: return "";
   }
 }
@@ -42,8 +45,7 @@ const AXES = [["X", "#ff3c5b"], ["Y", "#64c818"], ["Z", "#2f88e9"]] as const;
 /**
  * GCodeViewer `Marker::render_position_window` (`GCodeViewer.cpp:325-690`)
  * for vertex `vertex` of `toolpaths`: the fold button shows the properties
- * table (`:420-454`; Acceleration, Jerk and Pressure Advance need
- * engine data), the bottom row the colored X/Y/Z with fewer decimals on big
+ * table (`:420-454`), the bottom row the colored X/Y/Z with fewer decimals on big
  * prints (`:651-674`), the speed and the view type detail (`:676-683`).
  */
 export function ToolPosition({ toolpaths, vertex, viewType, time }: { toolpaths: Toolpaths; vertex: number; viewType: string; time: ToolMarker["time"] }) {
@@ -66,9 +68,12 @@ export function ToolPosition({ toolpaths, vertex, viewType, time }: { toolpaths:
     ["Height", extrusionValue(value("height"), "mm")],
     ["Layer", String(toolpaths.ids[2 * vertex + 1] + 1)],
     ["Speed", `${printf(value("feedrate"), 1)} mm/s`],
+    ["Acceleration", `${printf(value("acceleration"), 0)} mm/s²`],
+    ["Jerk", `${printf(value("jerk"), 1)} mm/s`],
     ["Flow rate", extrusionValue(Math.fround(value("feedrate") * value("mm3PerMm")), "mm³/s")],
     ["Fan speed", `${printf(value("fanSpeed"), 0)} %`],
     ["Temperature", `${printf(value("temperature"), 0)} °C`],
+    ["Pressure Advance", printf(value("pressureAdvance"), 4)],
     ["Time", formatMarkerTime(time)],
   ];
   return (

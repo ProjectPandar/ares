@@ -44,6 +44,8 @@ const OPTION_ROWS: Record<string, { label: string; moves?: MoveType }> = {
   ToolChanges: { label: "Filament Changes", moves: "ToolChange" },
 };
 
+const TRAVEL_ROW_VIEWS = new Set(["Speed", "Acceleration", "Jerk"]);
+
 /** `format_compact_count` (`GCodeViewer.cpp:3166-3188`). */
 function compactCount(value: number) {
   if (value < 1000) return String(value);
@@ -64,7 +66,8 @@ function compactCount(value: number) {
  * extrusion role and one per used option in `EOptionType` order; clicking a
  * row toggles it. Option rows but Travel show the move count
  * (`GCodeViewer.cpp:3808`; Travel's comes from print statistics). Range views
- * list their color range; Speed adds the Travel row (`GCodeViewer.cpp:3913-3929`).
+ * list their color range; Speed, Acceleration and Jerk add the Travel row
+ * (`GCodeViewer.cpp:3913-3929, 3947-3978`).
  */
 export function Legend({ roles, options, toolpaths, range, view, onChange }: {
   roles: number[];
@@ -108,7 +111,7 @@ export function Legend({ roles, options, toolpaths, range, view, onChange }: {
       ) : view.viewType !== "FeatureType" ? (
         <>
           {range && item?.decimals !== undefined && <RangeRows range={range} decimals={item.decimals} />}
-          {view.viewType === "Speed" && <ul className="legend-list">{optionRow(optionTypes.indexOf("Travels"), false)}</ul>}
+          {TRAVEL_ROW_VIEWS.has(view.viewType) && <ul className="legend-list">{optionRow(optionTypes.indexOf("Travels"), false)}</ul>}
         </>
       ) : (
       <ul className="legend-list">
