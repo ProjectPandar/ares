@@ -302,8 +302,6 @@ pub(super) fn emit(
     machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let filament = &traversal.resolved.views.full.filament.gcode;
-    let print_statistics = finish::account_statistics(&output, &filament.filament_diameter.0);
-    let volumes = &print_statistics.total_volumes_per_extruder;
     // `GCodeProcessorResult::extruder_colors`: `filament_colour` padded
     // to `filaments_count`, missing/empty slots → `#FF8000`
     // (`GCodeProcessor::apply_config`, `GCodeProcessor.cpp:2321-2343`).
@@ -318,12 +316,10 @@ pub(super) fn emit(
                 .unwrap_or_else(|| "#FF8000".to_string())
         })
         .collect::<Vec<_>>();
-    let (total_weight, total_cost) =
-        finish::append_filament_stats(&mut output, traversal, volumes, &state);
+    finish::append_filament_stats(&mut output, traversal, &state);
     finish::append_compatible_stats(
         &mut output,
         traversal,
-        (total_weight, total_cost),
         tail_layer_count,
         state.wipe_tower.as_ref().map_or_else(
             || state.initial_filaments.total_toolchanges(),
@@ -387,7 +383,7 @@ pub(super) fn emit(
             .0,
         processor::ProcessorLimits::from_traversal(traversal, state.tags.is_bbl())
             .with_settings(&traversal.resolved.views.full)
-            .statistics(print_statistics, extruder_colors)
+            .extruder_colors(extruder_colors)
             .recording_moves(record_moves),
     ))
 }

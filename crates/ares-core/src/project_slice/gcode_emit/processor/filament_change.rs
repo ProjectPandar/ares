@@ -75,6 +75,19 @@ impl<'a> FilamentChange<'a> {
         Some((filament, extra))
     }
 
+    pub(super) fn selection(&self) -> (usize, usize, usize) {
+        let physical = self.physical.unwrap_or(0);
+        (
+            physical,
+            self.current[physical].unwrap_or(0),
+            self.last[physical].unwrap_or(0),
+        )
+    }
+
+    pub(super) fn initialized(&self) -> bool {
+        self.physical.is_some()
+    }
+
     fn unload_time(&self) -> f32 {
         if self.unloaded { 0.0 } else { self.unload }
     }

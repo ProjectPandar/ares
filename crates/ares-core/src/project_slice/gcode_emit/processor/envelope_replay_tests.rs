@@ -63,7 +63,7 @@ fn replay(name: &str, reference: &str) -> Vec<u8> {
         input.as_bytes().to_vec(),
         true,
         setting(reference, "machine_load_filament_time"),
-        limits.with_settings(&Default::default()),
+        limits.with_settings(&super::replay_config_tests::settings(reference)),
     )
     .gcode;
     if let Some(root) = std::env::var_os("ARES_ENVELOPE_OUTPUT") {

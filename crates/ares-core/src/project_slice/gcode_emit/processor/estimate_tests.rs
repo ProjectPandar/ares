@@ -314,7 +314,7 @@ fn arc_p_word_adds_full_turns() {
 }
 
 #[test]
-fn bare_g92_resets_all_logical_axes() {
+fn bare_g92_sets_origin_without_moving_physical_axes() {
     let mut state = MotionState {
         position: [10.0, 20.0, 30.0],
         e_position: 40.0,
@@ -323,6 +323,12 @@ fn bare_g92_resets_all_logical_axes() {
 
     assert!(state.motion("G92").is_none());
 
-    assert_eq!(state.position, [0.0; 3]);
-    assert_eq!(state.e_position, 0.0);
+    assert_eq!(state.position, [10.0, 20.0, 30.0]);
+    assert_eq!(state.e_position, 40.0);
+    assert_eq!(state.origin, [10.0, 20.0, 30.0, 40.0]);
+    assert_eq!(
+        std::array::from_fn::<_, 3, _>(|axis| state.position[axis] - state.origin[axis]),
+        [0.0; 3]
+    );
+    assert_eq!(state.e_position - state.origin[3], 0.0);
 }

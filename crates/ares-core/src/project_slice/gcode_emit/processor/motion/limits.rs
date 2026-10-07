@@ -99,13 +99,21 @@ impl MotionState {
         let e = word(code, 'E');
         let position = ['X', 'Y', 'Z'].map(|letter| word(code, letter));
         if e.is_none() && position.iter().all(Option::is_none) {
-            self.position = [0.0; 3];
-            self.e_position = 0.0;
+            self.origin = [
+                self.position[0],
+                self.position[1],
+                self.position[2],
+                self.e_position,
+            ];
             return;
         }
-        self.e_position = e.unwrap_or(self.e_position);
+        if let Some(value) = e {
+            self.e_position = f64::from(value as f32 * self.units);
+        }
         for (axis, value) in position.into_iter().enumerate() {
-            self.position[axis] = value.unwrap_or(self.position[axis]);
+            if let Some(value) = value {
+                self.origin[axis] = self.position[axis] - f64::from(value as f32 * self.units);
+            }
         }
     }
 }

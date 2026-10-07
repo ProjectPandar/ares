@@ -5,12 +5,6 @@ use crate::{
 
 use super::{template, value};
 
-mod accounting;
-pub(super) use accounting::account_statistics;
-
-#[cfg(test)]
-mod tests;
-
 /// Print-end placeholder inputs (`GCode.cpp:3470-3493`).
 pub(super) struct FinishContext {
     pub(super) metadata: GenerationMetadata,
@@ -114,21 +108,13 @@ pub(super) fn append(
 pub(super) fn append_compatible_stats(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
-    (total_weight, total_cost): (f64, f64),
     layer_count: usize,
     total_toolchanges: usize,
 ) {
     if super::tags::Tags::of(traversal).is_bbl() {
         return;
     }
-    output.extend_from_slice(
-        format!(
-            "; total filament used [g] = {total_weight:.2}\n\
-; total filament cost = {total_cost:.2}\n\
-"
-        )
-        .as_bytes(),
-    );
+    output.extend_from_slice(b"; total filament used [g] =\n; total filament cost =\n");
     // `GCode.cpp:3539–3542` uses the same non-tower forecast as templates.
     if total_toolchanges > 0 {
         output.extend_from_slice(
@@ -152,33 +138,9 @@ pub(super) fn append_compatible_stats(
 pub(super) fn append_filament_stats(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
-    volumes: &[f64],
     state: &super::motion::EmitState,
-) -> (f64, f64) {
+) {
     let filament = &traversal.resolved.views.full.filament.gcode;
-    let mut used_mm = Vec::with_capacity(volumes.len());
-    let mut used_cm3 = Vec::with_capacity(volumes.len());
-    let mut used_g = Vec::with_capacity(volumes.len());
-    let mut costs = Vec::with_capacity(volumes.len());
-    let mut total_weight = 0.0;
-    let mut total_cost = 0.0;
-    // Processor properties are floats; each output is derived from original
-    // volume independently (`GCodeProcessor.cpp:997–1009`).
-    for (index, &volume) in volumes.iter().enumerate() {
-        let diameter = f64::from(filament.filament_diameter.0[index].0 as f32);
-        let density = f64::from(float_at(&filament.filament_density, index) as f32);
-        let cost = f64::from(float_at(&filament.filament_cost, index) as f32);
-        let length = volume / (std::f64::consts::PI * (0.5 * diameter).powi(2));
-        let cm3 = volume * 0.001;
-        let weight = cm3 * density;
-        let material_cost = weight * cost * 0.001;
-        used_mm.push(format!("{length:.2}"));
-        used_cm3.push(format!("{cm3:.2}"));
-        used_g.push(format!("{weight:.2}"));
-        costs.push(format!("{material_cost:.2}"));
-        total_weight += weight;
-        total_cost += material_cost;
-    }
     // Writer signed counters decide line presence; once present, processor
     // post-processing replaces the entire configured-width vector.
     let mut weight_line = false;
@@ -206,20 +168,15 @@ pub(super) fn append_filament_stats(
         }
     }
     if !state.extruders.ids().is_empty() {
-        let mut stats = format!(
-            "; filament used [mm] = {}\n; filament used [cm3] = {}\n",
-            used_mm.join(", "),
-            used_cm3.join(", "),
-        );
+        let mut stats = String::from("; filament used [mm] =\n; filament used [cm3] =\n");
         if weight_line {
-            stats.push_str(&format!("; filament used [g] = {}\n", used_g.join(", ")));
+            stats.push_str("; filament used [g] =\n");
         }
         if cost_line {
-            stats.push_str(&format!("; filament cost = {}\n", costs.join(", ")));
+            stats.push_str("; filament cost =\n");
         }
         output.extend_from_slice(stats.as_bytes());
     }
-    (total_weight, total_cost)
 }
 
 fn float_at(values: &crate::OrcaFloats, index: usize) -> f64 {

@@ -3,7 +3,10 @@
 use super::{MotionBlock, MotionKind, MotionState};
 
 impl MotionState {
-    pub(super) fn segment_block(&self, delta: [f64; 4]) -> Option<MotionBlock> {
+    pub(in crate::project_slice::gcode_emit::processor) fn segment_block(
+        &self,
+        delta: [f64; 4],
+    ) -> Option<MotionBlock> {
         // `move_length` (`GCodeProcessor.cpp:3965-3968`): the squared sum
         // accumulates in double, stores once into `float sq_xyz_length`,
         // and the square root is the float sqrt of the stored sum; an

@@ -1,5 +1,24 @@
 use super::super::filament_change::unloads_filament;
+use super::super::motion::{MotionBlock, MotionKind};
 use super::{IndexedMotion, MoveRecorder, RecordedMotion, SeamDetector, word};
+
+pub(super) fn tool_change_block() -> MotionBlock {
+    MotionBlock {
+        distance: 0.0,
+        delta: [0.0; 4],
+        speed: 0.0,
+        acceleration: 0.0,
+        centripetal_acceleration: 0.0,
+        max_feedrate: [0.0; 4],
+        max_acceleration: [0.0; 4],
+        jerk: [0.0; 4],
+        extrude_factor: 1.0,
+        // Tool_change never enters g1_times_cache or advances
+        // the G1 ID, including zero-duration transitions.
+        e_only: true,
+        kind: MotionKind::ToolChange,
+    }
+}
 
 /// The `Seam` vertex each arc segment's `process_G1` stores, if any; a
 /// seam-carrying or non-cacheable segment stays out of `g1_times_cache`.

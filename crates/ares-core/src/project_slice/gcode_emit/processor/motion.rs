@@ -19,6 +19,8 @@ use std::f64::consts::PI;
 pub(super) struct MotionState {
     pub(super) position: [f64; 3],
     pub(super) e_position: f64,
+    pub(super) units: f32,
+    pub(super) origin: [f64; 4],
     pub(super) feedrate: f64,
     pub(super) acceleration: f64,
     pub(super) retract_acceleration: f64,
@@ -51,6 +53,8 @@ impl Default for MotionState {
         Self {
             position: [0.0; 3],
             e_position: 0.0,
+            units: 1.0,
+            origin: [0.0; 4],
             feedrate: 0.0,
             acceleration: 0.0,
             retract_acceleration: 0.0,
@@ -192,6 +196,14 @@ impl MotionState {
     }
 
     pub(super) fn motion(&mut self, code: &str) -> Option<MotionBlock> {
+        if code == "G20" {
+            self.units = 25.4;
+            return None;
+        }
+        if code == "G21" {
+            self.units = 1.0;
+            return None;
+        }
         if code == "G90" {
             self.relative = false;
             return None;
@@ -244,18 +256,20 @@ impl MotionState {
             // f32-quantized before the position/delta math — the text
             // 152.193 becomes 152.1929931640625, and the whole estimator
             // chain (distances, axis feedrates, cruises) follows.
-            let value = f64::from(value as f32);
+            let value = f64::from(value as f32) * f64::from(self.units);
             next[axis] = match self.relative {
                 true => old[axis] + value,
-                false => value,
+                false => self.origin[axis] + value,
             };
         }
         let old_e = self.e_position;
-        let (e_delta, next_e) = match word(code, 'E').map(|value| f64::from(value as f32)) {
-            Some(value) if self.e_relative => (value, old_e + value),
-            Some(value) => (value - old_e, value),
-            None => (0.0, old_e),
-        };
+        let next_e =
+            match word(code, 'E').map(|value| f64::from(value as f32) * f64::from(self.units)) {
+                Some(value) if self.relative || self.e_relative => old_e + value,
+                Some(value) => self.origin[3] + value,
+                None => old_e,
+            };
+        let e_delta = next_e - old_e;
         self.e_position = next_e;
         self.position = next;
         // Upstream always tracks the position; a non-positive feedrate only

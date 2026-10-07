@@ -4,6 +4,7 @@ mod envelope;
 mod estimate;
 mod export_lines;
 pub(super) mod filament_change;
+mod material_statistics;
 mod motion;
 mod motion_util;
 mod moves;
@@ -11,6 +12,8 @@ mod schedule;
 mod stats;
 mod stop_times;
 mod time;
+mod used_filaments;
+mod virtual_motion;
 use crate::options::GCodeFlavor;
 use estimate::Estimate;
 use export_lines::ExportLines;
@@ -42,10 +45,6 @@ pub(super) struct ProcessorConfig<'a> {
     settings: &'a crate::ProjectSettings,
     /// Also record `GCodeProcessorResult::moves` (`GCodeProcessor::process_file`).
     record_moves: bool,
-    /// `GCodeProcessorResult::print_statistics` — accounted by the emit
-    /// pass (`UsedFilaments::process_*_cache`,
-    /// `GCodeProcessor.cpp:3895-3911`) and attached to the result.
-    print_statistics: crate::PrintEstimatedStatistics,
     /// `GCodeProcessorResult::extruder_colors`
     /// (`GCodeProcessor.cpp:2321-2343`).
     extruder_colors: Vec<String>,
@@ -57,7 +56,6 @@ impl ProcessorLimits {
             limits: self,
             settings,
             record_moves: false,
-            print_statistics: crate::PrintEstimatedStatistics::default(),
             extruder_colors: Vec::new(),
         }
     }
@@ -71,13 +69,8 @@ impl ProcessorConfig<'_> {
         }
     }
 
-    pub(super) fn statistics(
-        self,
-        print_statistics: crate::PrintEstimatedStatistics,
-        extruder_colors: Vec<String>,
-    ) -> Self {
+    pub(super) fn extruder_colors(self, extruder_colors: Vec<String>) -> Self {
         Self {
-            print_statistics,
             extruder_colors,
             ..self
         }
@@ -122,6 +115,8 @@ pub(super) fn process(
         &config,
         recorder.as_mut(),
     );
+    let materials =
+        material_statistics::MaterialStatistics::new(&estimate.print_statistics, &config);
     let mut result = ExportLines::new(
         config.settings,
         limits.gcode_flavor,
@@ -140,10 +135,12 @@ pub(super) fn process(
     let print_time_sec = format!("{:.2}", estimate.total);
     let used_filament_length = format!(
         "{:.2}",
-        config.print_statistics.total_used_filament / 1_000.0
+        estimate.print_statistics.total_used_filament / 1_000.0
     );
 
     for (index, line) in lines.iter().enumerate() {
+        let material = materials.process(line);
+        let line = material.as_deref().unwrap_or(line);
         let expanded = stats::expand(line, &print_time_sec, &used_filament_length);
         let line = expanded.as_ref();
         result.begin(line, estimate.export_elapsed_at(index + 1));
@@ -218,10 +215,7 @@ pub(super) fn process(
         .zip(line_map)
         .map(|(recorder, line_map)| recorder.finish(&line_map))
         .unwrap_or_default();
-    // The emit pass already accounted the exported stream
-    // (`UsedFilaments::process_*_cache`, `GCodeProcessor.cpp:3895-3911`);
-    // the recorded pass reuses its buckets rather than re-parsing.
-    let mut statistics = config.print_statistics;
+    let mut statistics = estimate.print_statistics;
     statistics.volumes_per_color_change =
         std::mem::take(&mut processor_result.print_statistics.volumes_per_color_change);
     processor_result.print_statistics = statistics;
@@ -254,6 +248,8 @@ mod estimate_tests;
 mod gt_oracle_tests;
 #[cfg(test)]
 mod motion_parse_tests;
+#[cfg(test)]
+mod replay_config_tests;
 #[cfg(test)]
 mod seam_tests;
 #[cfg(test)]

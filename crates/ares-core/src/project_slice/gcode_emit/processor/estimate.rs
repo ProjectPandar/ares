@@ -12,12 +12,13 @@ use seam::SeamDetector;
 use super::arc_accounting::arc_internal_g1_lines;
 use super::delays::command_delay;
 use super::filament_change::FilamentChange;
-use super::motion::{IndexedMotion, MotionBlock, MotionKind, MotionState};
+use super::motion::{IndexedMotion, MotionState};
 use super::motion_util::word;
 use super::moves::tags::ParsedLine;
 use super::moves::{MoveRecorder, RecordedMotion};
 use super::schedule::{DelayTarget, FlushEvent, PendingDelay, Schedule, scheduled_times};
 use super::stop_times::StopTimes;
+use super::used_filaments::UsedFilaments;
 use super::{ProcessorConfig, is_progress_motion};
 
 pub(super) struct Estimate {
@@ -25,6 +26,7 @@ pub(super) struct Estimate {
     pub(super) prepare: f64,
     pub(super) custom_gcode_times: Vec<crate::gcode_processor::CustomGCodeTime>,
     pub(super) stop_times: StopTimes,
+    pub(super) print_statistics: crate::PrintEstimatedStatistics,
     elapsed: Vec<Option<elapsed::Snapshot>>,
     export_elapsed: Vec<Option<f32>>,
     #[cfg(test)]
@@ -50,6 +52,7 @@ impl Estimate {
         let mut saw_motion_command = false;
         let mut measure_g29_time = false;
         let mut filaments = FilamentChange::new(config, machine_load_filament_time);
+        let mut used_filaments = UsedFilaments::new(config);
         let mut g1_line_id = 0;
         let mut block_line_ids = Vec::new();
         // `TimeBlock::move_id` of every block (`GCodeProcessor.cpp:4001`).
@@ -64,6 +67,7 @@ impl Estimate {
         let mut arc_seam_excluded = vec![false; lines.len()];
         for (index, line) in lines.iter().enumerate() {
             seams.role(line);
+            used_filaments.tags(line, filaments.selection().1);
             match line.trim() {
                 "; WIPE_START" | ";WIPE_START" => state.set_wiping(true),
                 "; WIPE_END" | ";WIPE_END" => state.set_wiping(false),
@@ -73,7 +77,8 @@ impl Estimate {
                 }
                 _ => {}
             }
-            let code = line.split(';').next().unwrap_or_default().trim();
+            let code = super::virtual_motion::command(line)
+                .unwrap_or_else(|| line.split(';').next().unwrap_or_default().trim());
             let line_start = [
                 state.position[0],
                 state.position[1],
@@ -119,26 +124,18 @@ impl Estimate {
                     }),
                 });
             }
-            if let Some((filament, extra_time)) = filaments.command(code) {
+            let previous_selection = filaments.selection();
+            let initialized = filaments.initialized();
+            let change = filaments.command(code);
+            if change.is_some() && initialized {
+                used_filaments.tool_change(previous_selection.0, previous_selection.1);
+            }
+            if let Some((filament, extra_time)) = change {
                 let move_id = recorder
                     .as_deref_mut()
                     .map(|recorder| recorder.tool_change(index + 1, filament, line_start));
                 block_moves.push(move_id.unwrap_or(0));
-                blocks.push(MotionBlock {
-                    distance: 0.0,
-                    delta: [0.0; 4],
-                    speed: 0.0,
-                    acceleration: 0.0,
-                    centripetal_acceleration: 0.0,
-                    max_feedrate: [0.0; 4],
-                    max_acceleration: [0.0; 4],
-                    jerk: [0.0; 4],
-                    extrude_factor: 1.0,
-                    // Tool_change never enters g1_times_cache or advances
-                    // the G1 ID, including zero-duration transitions.
-                    e_only: true,
-                    kind: MotionKind::ToolChange,
-                });
+                blocks.push(commands::tool_change_block());
                 block_line_ids.push(g1_line_id);
                 remaining_internal.push(0);
                 cache_eligible.push(false);
@@ -152,11 +149,42 @@ impl Estimate {
                 });
             }
             let command = code.split_whitespace().next().unwrap_or_default();
+            if command == "VG1" {
+                // `process_VG1` advances G1 identity even for no displacement;
+                // it queues a default move_id=0 block and never stores a vertex.
+                g1_line_id += 1;
+                saw_motion_command = true;
+            }
+            let virtual_block = (command == "VG1")
+                .then(|| state.virtual_motion(code))
+                .flatten();
+            if command == "VG1"
+                && word(code, 'F').is_some()
+                && let Some(recorder) = recorder.as_deref_mut()
+            {
+                recorder.set_feedrate(state.feedrate, false);
+            }
+            if command == "VG1" && virtual_block.is_none() {
+                continue;
+            }
+            if let Some(block) = virtual_block {
+                used_filaments.motion(block.delta, true, state.wiping, &filaments);
+                blocks.push(block);
+                block_moves.push(0);
+                block_line_ids.push(g1_line_id);
+                prepare_stages.push(prepare_stage);
+                cache_eligible.push(false);
+                remaining_internal.push(0);
+                continue;
+            }
             let arc_internal = matches!(command, "G2" | "G3")
                 .then(|| arc_internal_g1_lines(code, command, &state));
             let arc_start = state.position;
             let mut seam_excluded = false;
             let motion_blocks = state.motions_indexed(code);
+            for motion in &motion_blocks {
+                used_filaments.motion(motion.block.delta, false, state.wiping, &filaments);
+            }
             let mut seam_vertices = Vec::new();
             // Linear commands produce at most one block; only arcs subdivide.
             // `GCodeProcessor::process_G10/G11` calls `process_G1` after
@@ -340,6 +368,7 @@ impl Estimate {
             custom_gcode_times,
             stop_times,
             prepare,
+            print_statistics: used_filaments.finish(filaments.selection().1),
             elapsed,
             export_elapsed,
             #[cfg(test)]
