@@ -1,8 +1,11 @@
 # Spec: emit-path `estimate_extrusion_quality` speed divergence
 
-Status: REVISED AGAIN — the `estimate_points_properties`
-annotation hypothesis is DISPROVEN. Third revision; supersedes
-the malformation-annotation framing below.
+Status: C1 implementation GREEN, full gates in progress. Authoritative
+boundary/evidence: `docs/architecture/2026-10-07-sermoon-predecessor-aabb.md`.
+The residual was indexed AABB predecessor selection, not inserted
+annotation points. Raw output now matches including M73; its test filter
+has been removed. The exploratory revisions below are historical and
+superseded by that ARD and the effective correction at the end.
 Origin: the C1 curled-perimeter residual
 (`docs/superpowers/specs/2026-10-07-curl-artificial-distance-residual.md`).
 
