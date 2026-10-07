@@ -130,12 +130,10 @@ impl Project {
         // settings re-resolve. The no-override path stays byte-identical to
         // the proven entry.
         let (settings, raw) = if overrides.is_empty() {
-            // The sparse profile raw is the post-`handle_legacy` view of the
-            // selected presets (`Config.cpp:577-579` normalizes each option
-            // token as it is read).
-            let mut raw = profile.profile_raw.clone();
-            raw.handle_legacy();
-            (profile.settings.clone(), raw)
+            // The composed profile raw is already the post-`handle_legacy`
+            // view (`Config.cpp:577-579` normalizes every loaded preset at
+            // compose, before any overlay).
+            (profile.settings.clone(), profile.profile_raw.clone())
         } else {
             let count = profile.settings.project.preset.filament_settings_id.0.len();
             let mut merged = merged_profile_raw(

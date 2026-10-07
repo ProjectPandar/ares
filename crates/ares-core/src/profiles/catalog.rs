@@ -224,6 +224,17 @@ impl Catalog {
         if let Some(group) = composed.metadata().inherits_group() {
             raw.insert_string_slots("inherits_group", group);
         }
+        // Every loaded preset file normalizes through
+        // `set_deserialize`/`handle_legacy` at load (`Config.cpp:577-579`,
+        // `PrintConfig.cpp:8033`), before `update_full_config` overlays it
+        // onto the embedded project (`OrcaSlicer.cpp:2750-2812`); the
+        // embedded base keeps its own post-merge normalization in the
+        // profile entries.
+        raw.handle_legacy();
+        let mut filament_raws = filament_raws;
+        for filament_raw in &mut filament_raws {
+            filament_raw.handle_legacy();
+        }
         Ok(ComposedSelection {
             profile: composed,
             raw,
