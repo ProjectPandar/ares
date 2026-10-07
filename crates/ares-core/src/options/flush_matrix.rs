@@ -46,7 +46,10 @@ pub(crate) fn prepare(
     });
     let covered = types.len() >= nozzle_count
         && settings.printer.gcode.printer_extruder_variant.0.len() >= nozzle_count
-        && settings.printer.gcode.printer_extruder_id.0.len() >= nozzle_count;
+        && settings.printer.gcode.printer_extruder_id.0.len() >= nozzle_count
+        // PrintConfig.cpp:9033–9040 otherwise requires the separate id generator.
+        && settings.printer.gcode.printer_extruder_id.0.len()
+            >= settings.printer.gcode.printer_extruder_variant.0.len();
     settings
         .project
         .print
@@ -68,20 +71,24 @@ pub(crate) fn prepare(
     let count = colors.len();
     let mut matrix = vec![0.0; count * count * nozzle_count];
     for (nozzle, segment) in matrix.chunks_exact_mut(count * count).enumerate() {
-        let dataset = requires_dataset
+        let Some(dataset) = requires_dataset
             .then(|| dataset(settings, raw, nozzle))
-            .transpose()?;
+            .transpose()?
+        else {
+            segment.fill(230.0);
+            segment
+                .iter_mut()
+                .step_by(count + 1)
+                .for_each(|value| *value = 0.0);
+            continue;
+        };
         for (index, value) in segment.iter_mut().enumerate() {
             let (from, to) = (index / count, index % count);
             *value = f64::from(match (from == to, support[from].0, support[to].0) {
                 (true, _, _) => 0,
                 (_, _, true) => 230,
-                (_, true, _) => {
-                    calculate(minima[from], dataset.unwrap(), colors[from], colors[to]).max(700)
-                }
-                (_, false, false) => {
-                    calculate(minima[from], dataset.unwrap(), colors[from], colors[to])
-                }
+                (_, true, _) => calculate(minima[from], dataset, colors[from], colors[to]).max(700),
+                (_, false, false) => calculate(minima[from], dataset, colors[from], colors[to]),
             });
         }
     }
@@ -119,23 +126,15 @@ fn dataset(
             NozzleVolumeType::HighFlow => "High Flow",
         };
         let variant = format!("{extruder} {volume}");
-        // PrintConfig.cpp:9004–9060, called here by CLI:3457–3462.
-        let complete_ids =
-            printer.printer_extruder_id.0.len() >= printer.printer_extruder_variant.0.len();
-        let id_for_variant = |index: usize| {
-            if complete_ids {
-                printer.printer_extruder_id.0[index].0
-            } else {
-                generated_printer_id(settings, raw, index)
-            }
-        };
+        // PrintConfig.cpp:9033–9040; admission requires a complete id map.
         printer
             .printer_extruder_variant
             .0
             .iter()
             .enumerate()
             .find_map(|(i, token)| {
-                (token == &variant && id_for_variant(i) == (nozzle + 1) as i32).then_some(i)
+                (token == &variant && printer.printer_extruder_id.0[i].0 == (nozzle + 1) as i32)
+                    .then_some(i)
             })
             .ok_or_else(|| {
                 SliceError::InvalidInput("invalid Orca option printer_extruder_variant".into())
@@ -147,28 +146,6 @@ fn dataset(
         Nullable::Value(value) => value.0,
         Nullable::Nil => i32::MAX,
     })
-}
-
-fn generated_printer_id(settings: &ProjectSettings, raw: &ProjectSettingsRaw, index: usize) -> i32 {
-    if !raw.contains_key("extruder_variant_list") {
-        return 0;
-    }
-    settings
-        .printer
-        .remaining
-        .extruder_variant_list
-        .0
-        .iter()
-        .enumerate()
-        .flat_map(|(physical, tokens)| {
-            tokens
-                .split(',')
-                .map(str::trim)
-                .filter(|token| !token.is_empty())
-                .map(move |_| (physical + 1) as i32)
-        })
-        .nth(index)
-        .unwrap_or(0)
 }
 
 // Pure extraction of Plater.cpp:764–835. CLI deliberately calls this for
