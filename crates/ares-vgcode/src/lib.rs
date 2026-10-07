@@ -28,4 +28,8 @@ pub use types::{
     MIN_TRAVELS_RADIUS_MM, MIN_WIPES_RADIUS_MM, Mat4x4, MoveType, OptionType, Palette, TimeMode,
     Vec3, ViewType, lerp_color, move_type_to_option,
 };
-pub use viewer::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS, ViewerImpl};
+pub use viewer::{
+    ColorPrintLegend, ColorPrintRange, DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS,
+    ExtruderColorPrints, MissingColorVolume, PartialTime, PartialTimeKind, PrintedColor,
+    ViewerImpl, color_print_legend,
+};

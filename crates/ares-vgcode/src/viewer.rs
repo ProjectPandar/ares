@@ -7,7 +7,12 @@ use crate::{
     OptionType, Palette, PathVertex, TimeMode, ViewRange, move_type_to_option, settings::Settings,
 };
 
+mod color_print;
 mod colors;
+pub use color_print::{
+    ColorPrintLegend, ColorPrintRange, ExtruderColorPrints, MissingColorVolume, PartialTime,
+    PartialTimeKind, PrintedColor, color_print_legend,
+};
 mod enabled;
 pub use colors::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS};
 
