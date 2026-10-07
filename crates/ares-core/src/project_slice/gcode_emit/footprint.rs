@@ -198,13 +198,26 @@ fn klipper_body(
         .filter(|volume| volume.volume_type() == ProjectVolumeType::ModelPart)
     {
         let transform = instance.transform().then(volume.transform());
+        // `ModelVolume::calculate_convex_hull_2d` (Model.cpp:2625-2644)
+        // applies the instance transform WITHOUT its translation
+        // (`get_matrix_no_offset`), scales with the C-cast truncating
+        // `scaled()` — the rounding variant is commented out
+        // (Point.hpp:665-670) — and translates the polygon by the
+        // truncated scaled offset afterwards. Truncation toward zero
+        // shifts negative rotated coordinates by +1 scaled unit, which
+        // breaks exact collinearity for rotation-residue transforms and
+        // the hull then keeps edge midpoints the uniform-translation
+        // ordering would collapse.
+        let matrix = transform.as_matrix();
+        let offset = ((matrix[0][3] / 1e-6) as i64, (matrix[1][3] / 1e-6) as i64);
         for vertex in volume.mesh().vertices() {
-            let transformed = transform.transform_point(*vertex);
-            let transformed = crate::Point3d::new(
-                transformed.x - plate_origin.0,
-                transformed.y - plate_origin.1,
-                transformed.z,
-            );
+            let rotated_x =
+                matrix[0][0] * vertex.x + matrix[0][1] * vertex.y + matrix[0][2] * vertex.z;
+            let rotated_y =
+                matrix[1][0] * vertex.x + matrix[1][1] * vertex.y + matrix[1][2] * vertex.z;
+            let x = (rotated_x / 1e-6) as i64 + offset.0;
+            let y = (rotated_y / 1e-6) as i64 + offset.1;
+            let transformed = crate::Point3d::new(scale.unscale(x), scale.unscale(y), vertex.z);
             if !transformed.x.is_finite() || !transformed.y.is_finite() {
                 return None;
             }
@@ -225,12 +238,16 @@ fn klipper_body(
         return None;
     }
     let unscaled = |point: &Point| [scale.unscale(point.x()), scale.unscale(point.y())];
+    // `polygon_to_string` renders through `translate_to_print_space`
+    // (`unscale(p) - m_origin`, GCode.cpp:8059-8072, Print.cpp:3055-3062):
+    // the plate origin subtracts from the rendered hull coordinates and
+    // center, not from the hull input.
     let coordinate = |point: &Point| {
         let [x, y] = unscaled(point);
         format!(
             "[{},{}]",
-            format_processor_float(x),
-            format_processor_float(y)
+            format_processor_float(x - plate_origin.0),
+            format_processor_float(y - plate_origin.1)
         )
     };
     let polygon = hull
@@ -241,8 +258,8 @@ fn klipper_body(
         .join(",");
     Some(format!(
         "CENTER={},{} POLYGON=[{polygon}]",
-        format_processor_float((min[0] + max[0]) * 0.5),
-        format_processor_float((min[1] + max[1]) * 0.5),
+        format_processor_float((min[0] + max[0]) * 0.5 - plate_origin.0),
+        format_processor_float((min[1] + max[1]) * 0.5 - plate_origin.1),
     ))
 }
 

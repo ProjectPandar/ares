@@ -154,6 +154,12 @@ impl Transform3d {
         Self(product)
     }
 
+    /// The raw row-major matrix (used by the exclude-object hull port,
+    /// `Model.cpp:2625-2644`).
+    pub(crate) fn as_matrix(&self) -> &[[f64; 4]; 4] {
+        &self.0
+    }
+
     pub fn transform_point(self, point: Point3d) -> Point3d {
         Point3d {
             x: self.0[0][0] * point.x
