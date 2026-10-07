@@ -99,6 +99,10 @@ mod user_overrides;
 mod wrapper_tests;
 
 use stages::{FailureKind, Stage, StageError};
+#[path = "runner/cache.rs"]
+mod cache;
+#[path = "runner/cache_identity.rs"]
+mod cache_identity;
 
 pub(super) struct ExportedCase {
     pub(super) label: String,
@@ -113,6 +117,7 @@ pub(super) struct OrcaRunner {
     /// Content-keyed export and reference outputs; the private work
     /// directory unless ARES_ORCA_CACHE_DIR shares them across runs.
     cache: PathBuf,
+    producer: std::sync::OnceLock<cache_identity::Producer>,
 }
 
 pub(super) struct ParityCase {
@@ -182,11 +187,10 @@ impl OrcaRunner {
             .tempdir_in(&root)
             .map_err(|error| init_error(format!("runner work directory under {root:?}: {error}")))?
             .keep();
-        // ARES_ORCA_CACHE_DIR keeps reference outputs across runs, keyed by
-        // the Orca executable and the environment that selects its build.
+        // Shared roots store v2 content-addressed entries across runs.
         let cache = match std::env::var_os("ARES_ORCA_CACHE_DIR") {
             Some(cache) => {
-                let cache = PathBuf::from(cache).join(orca_identity(&bin));
+                let cache = PathBuf::from(cache);
                 std::fs::create_dir_all(&cache).map_err(|error| {
                     init_error(format!("Orca cache directory {cache:?}: {error}"))
                 })?;
@@ -194,171 +198,13 @@ impl OrcaRunner {
             }
             None => work.clone(),
         };
-        Ok(Some(Self { bin, work, cache }))
+        Ok(Some(Self {
+            bin,
+            work,
+            cache,
+            producer: Default::default(),
+        }))
     }
-
-    pub(super) fn export_case(
-        &self,
-        inputs: &CaseInputs<'_>,
-        overrides: &Map<String, Value>,
-        model: &Path,
-    ) -> Result<ExportedCase, StageError> {
-        let label = inputs.label;
-        let machine = apply_override(inputs.machine, overrides, PresetKind::Machine);
-        let mut process = apply_override(inputs.process, overrides, PresetKind::Process);
-        // The CLI's machine-switch compatibility check matches the
-        // process's compatible_printers against the machine name
-        // (`OrcaSlicer.cpp:2579-2585`); presets without a non-empty list
-        // (e.g. the Prusa CORE One chain) fail with
-        // CLI_PROCESS_NOT_COMPATIBLE (-17). Inject the machine name when
-        // the process omits it or resolves it empty.
-        let compatible_empty = process
-            .get("compatible_printers")
-            .and_then(Value::as_array)
-            .is_none_or(|printers| printers.is_empty());
-        if compatible_empty && let Some(name) = machine.get("name").and_then(Value::as_str) {
-            process.insert(
-                "compatible_printers".to_owned(),
-                Value::Array(vec![Value::String(name.to_owned())]),
-            );
-        }
-        let filaments: Vec<Map<String, Value>> = inputs
-            .filaments
-            .iter()
-            .map(|filament| apply_override(filament, overrides, PresetKind::Filament))
-            .collect();
-
-        let slug = digest_slug(label, &machine, &process, &filaments, model);
-        let _lock = lock(&self.cache.join(format!("{slug}.lock")), Stage::Export)?;
-        let project_path = self.cache.join(format!("{slug}.3mf"));
-        let output_dir = self.cache.join(&slug);
-        std::fs::create_dir_all(&output_dir)
-            .map_err(|error| StageError::new(Stage::Export, FailureKind::Io, error))?;
-        let model_bytes = stages::read(model, Stage::Export)?;
-        std::fs::write(output_dir.join("input.stl"), model_bytes)
-            .map_err(|error| StageError::new(Stage::Export, FailureKind::Io, error))?;
-        if !project_path.exists() {
-            let machine_file = self.cache.join(format!("{slug}-machine.json"));
-            let process_file = self.cache.join(format!("{slug}-process.json"));
-            write_preset(&machine_file, "machine", &machine)?;
-            write_preset(&process_file, "process", &process)?;
-            let mut filament_files = Vec::new();
-            for (index, filament) in filaments.iter().enumerate() {
-                let file = self.cache.join(format!("{slug}-filament-{index}.json"));
-                write_preset(&file, "filament", filament)?;
-                filament_files.push(file);
-            }
-
-            stages::run(
-                &self.bin,
-                [
-                    "--load-settings",
-                    &join_paths([&machine_file, &process_file].into_iter()),
-                    "--load-filaments",
-                    &join_paths(filament_files.iter()),
-                    "--arrange",
-                    "1",
-                    "--export-3mf",
-                ]
-                .into_iter()
-                .chain([project_path.to_str().unwrap(), model.to_str().unwrap()])
-                .map(std::borrow::ToOwned::to_owned),
-                Stage::Export,
-                &self.work,
-            )
-            .inspect_err(|_| discard(&project_path))?;
-        }
-        let project = stages::read(&project_path, Stage::Export)?;
-        Ok(ExportedCase {
-            label: label.to_owned(),
-            project,
-            project_path,
-            output_dir,
-        })
-    }
-
-    pub(super) fn slice_case(&self, exported: &ExportedCase) -> Result<ParityCase, StageError> {
-        let ExportedCase {
-            label,
-            project,
-            project_path,
-            output_dir,
-        } = exported;
-        let reference_path = output_dir.join("plate_1.gcode");
-        let _lock = lock(&output_dir.with_extension("lock"), Stage::Slice)?;
-        if !reference_path.exists() {
-            stages::run(
-                &self.bin,
-                [
-                    "--slice",
-                    "0",
-                    "--outputdir",
-                    output_dir.to_str().unwrap(),
-                    project_path.to_str().unwrap(),
-                ]
-                .into_iter()
-                .map(std::borrow::ToOwned::to_owned),
-                Stage::Slice,
-                &self.work,
-            )
-            .inspect_err(|_| discard(&reference_path))?;
-        }
-
-        let reference = stages::read(&reference_path, Stage::Slice)?;
-        Ok(ParityCase {
-            label: label.to_owned(),
-            project: project.to_vec(),
-            reference,
-        })
-    }
-
-    /// Re-slices the OrcaSlicer reference for an already-exported case: the
-    /// 2.4.2 CLI itself is non-deterministic across runs (parallel fill
-    /// ordering flips tiny concentric survivors and M73 placement), so a
-    /// diverging comparison may legitimately match a fresh oracle run.
-    pub(super) fn rerun_reference(
-        &self,
-        exported: &ExportedCase,
-    ) -> Result<ParityCase, StageError> {
-        match std::fs::remove_file(exported.output_dir.join("plate_1.gcode")) {
-            Ok(()) => {}
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => {
-                return Err(StageError::new(Stage::Slice, FailureKind::Io, error));
-            }
-        }
-        self.slice_case(exported)
-    }
-}
-
-/// Serializes Orca runs for one case across test processes sharing
-/// ARES_ORCA_CACHE_DIR; released when the returned file drops.
-fn lock(path: &Path, stage: Stage) -> Result<std::fs::File, StageError> {
-    let file = std::fs::File::create(path)
-        .map_err(|error| StageError::new(stage, FailureKind::Io, error))?;
-    file.lock()
-        .map_err(|error| StageError::new(stage, FailureKind::Io, error))?;
-    Ok(file)
-}
-
-/// Drops a partial Orca output so a failed run is not reused from the cache.
-fn discard(path: &Path) {
-    let _ = std::fs::remove_file(path);
-}
-
-fn orca_identity(bin: &Path) -> String {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    std::fs::read(bin).unwrap_or_default().hash(&mut hasher);
-    for key in [
-        "ORCA_APPDIR",
-        "ORCA_REPLAY_BIN",
-        "ORCA_REPLAY_SEED",
-        "ARES_PARITY_SEEDED_REFERENCE",
-    ] {
-        std::env::var_os(key).hash(&mut hasher);
-    }
-    format!("{:016x}", hasher.finish())
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -426,12 +272,13 @@ fn digest_slug(
     machine: &Map<String, Value>,
     process: &Map<String, Value>,
     filaments: &[Map<String, Value>],
-    model: &Path,
+    (model, model_bytes): (&Path, &[u8]),
 ) -> String {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     label.hash(&mut hasher);
-    format!("{:016x}", hasher.finish()) + &content_digest(machine, process, filaments, model)
+    format!("{:016x}", hasher.finish())
+        + &content_digest(machine, process, filaments, model, model_bytes)
 }
 
 fn content_digest(
@@ -439,6 +286,7 @@ fn content_digest(
     process: &Map<String, Value>,
     filaments: &[Map<String, Value>],
     model: &Path,
+    model_bytes: &[u8],
 ) -> String {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -448,7 +296,7 @@ fn content_digest(
         format!("{:?}", filament).hash(&mut hasher);
     }
     model.file_name().hash(&mut hasher);
-    std::fs::read(model).unwrap_or_default().hash(&mut hasher);
+    model_bytes.hash(&mut hasher);
     format!("-{:016x}", hasher.finish())
 }
 

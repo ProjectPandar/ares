@@ -22,6 +22,7 @@ fn exact_reference_on_retry_passes() {
 
 fn run_case(mode: &str) {
     let temp = tempfile::tempdir().unwrap();
+    fs::create_dir(temp.path().join("resources")).unwrap();
     let output = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
@@ -32,6 +33,8 @@ fn run_case(mode: &str) {
         .env("ARES_STRICT_REFERENCE_MODE", mode)
         .env("ARES_PARITY_ARTIFACT_ROOT", temp.path())
         .env("ARES_ORCA_RUNS", "2")
+        .env("ARES_ORCA_NATIVE_BIN", temp.path().join("oracle.sh"))
+        .env("ARES_ORCA_RESOURCES_DIR", temp.path().join("resources"))
         .output()
         .unwrap();
     assert!(
@@ -117,6 +120,7 @@ fn reordered_reference_child() {
         bin,
         work: root.clone(),
         cache: root.clone(),
+        producer: Default::default(),
     };
     let outcome = crate::compare_exported_for(&runner, &exported, None);
     assert_eq!(
