@@ -1,6 +1,6 @@
 # Web preview: Summary view
 
-Status: proposed (spec only, awaiting review). Branch `pi/web-summary` from
+Status: approved (`eea439ac6`); data-source ruling option A. Branch `pi/web-summary` from
 `042fe5687`.
 
 ## Slice selection
