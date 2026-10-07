@@ -1,8 +1,10 @@
 // Ports the view-range and color logic of AGPL-licensed OrcaSlicer `src/libvgcode/src/ViewerImpl.hpp` and `src/ViewerImpl.cpp`.
 
+use std::collections::BTreeSet;
+
 use crate::{
-    Color, GCodeExtrusionRole, GCodeInputData, Interval, Layers, MoveType, OptionType, Palette,
-    PathVertex, ViewRange, move_type_to_option, settings::Settings,
+    Color, DUMMY_COLOR, GCodeExtrusionRole, GCodeInputData, Interval, Layers, MoveType, OptionType,
+    Palette, PathVertex, ViewRange, move_type_to_option, settings::Settings,
 };
 
 mod colors;
@@ -21,6 +23,9 @@ pub struct ViewerImpl {
     vertices: Vec<PathVertex>,
     tool_colors: Palette,
     color_print_colors: Palette,
+    /// The keys of `m_used_extruders`; the per-extruder `ColorPrint` lists
+    /// serve the color change ranges, which are not ported.
+    used_extruders: BTreeSet<u8>,
     vertices_colors: Vec<Color>,
     settings_used_for_ranges: Option<Settings>,
     ranges: colors::ColorRanges,
@@ -55,8 +60,19 @@ impl ViewerImpl {
         self.vertices_colors.clear();
         self.settings_used_for_ranges = None;
         self.settings.spiral_vase_mode = data.spiral_vase_mode;
+        self.used_extruders.clear();
         for (i, v) in (0..).zip(&self.vertices) {
             self.layers.update(v, i);
+            // ViewerImpl.cpp:1017-1022.
+            if v.move_type == MoveType::Extrude {
+                self.used_extruders.insert(v.extruder_id);
+            }
+        }
+        // `update_colors` (ViewerImpl.cpp:1265-1273): a tool color up to the
+        // max used extruder id.
+        if let Some(&max) = self.used_extruders.last() {
+            let len = self.tool_colors.len().max(usize::from(max) + 1);
+            self.tool_colors.resize(len, DUMMY_COLOR);
         }
         if !self.layers.empty() {
             self.layers.set_view_range(0, self.layers.count() - 1);
@@ -74,6 +90,15 @@ impl ViewerImpl {
 
     pub fn layers(&self) -> &Layers {
         &self.layers
+    }
+
+    /// ViewerImpl.cpp:1363-1370.
+    pub fn get_used_extruders_ids(&self) -> Vec<u8> {
+        self.used_extruders.iter().copied().collect()
+    }
+
+    pub fn get_tool_colors(&self) -> &Palette {
+        &self.tool_colors
     }
 
     pub fn is_option_visible(&self, option: OptionType) -> bool {

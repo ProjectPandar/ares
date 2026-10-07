@@ -33,6 +33,16 @@ export interface Toolpaths {
   /** libvgcode `Layers::get_zs`: z of each layer. */
   layerZs: Float32Array<ArrayBuffer>;
   spiralVaseMode: boolean;
+  /** Engine-selected ColorPrint legend columns and used filament volumes. */
+  filamentLegend: FilamentLegend;
+}
+
+export interface FilamentLegend {
+  columns: ("Model" | "Support" | "Flushed" | "Tower" | "Total")[];
+  rows: { extruderId: number; color: Rgb; volumes: number[] }[];
+  /** GCodeProcessorResult metadata, indexed by extruder id; volumes are mm³. */
+  filamentDiameters: number[];
+  filamentDensities: number[];
 }
 
 /**

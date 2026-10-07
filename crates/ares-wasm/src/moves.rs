@@ -1,8 +1,10 @@
-use ares_core::{ProcessedGCode, gcode_processor::MoveVertex};
+use crate::MoveBuffers;
+use ares_core::ProcessedGCode;
 use ares_vgcode::{
-    GCodeExtrusionRole, GCodeInputData, MovesSlider, OptionType, SequentialView, ViewerImpl,
+    FilamentLegend, GCodeExtrusionRole, GCodeInputData, MovesSlider, OptionType, SequentialView,
+    ViewerImpl,
     convert::{from_processor_result, move_type_counts},
-    move_type_to_option,
+    filament_legend, move_type_to_option,
 };
 use wasm_bindgen::prelude::*;
 
@@ -19,14 +21,14 @@ pub struct SliceOutput {
 }
 
 impl SliceOutput {
-    pub fn from_processed(
-        output: ProcessedGCode,
-        tool_colors: &[String],
-        color_print_colors: &[String],
-    ) -> Self {
-        let data = from_processor_result(&output.result, tool_colors, color_print_colors);
+    /// Tool colors are the result's `extruder_colors`: the `filament_colour`
+    /// GUI_Preview passes (`GUI_Preview.cpp:680`, `Plater.cpp:16889-16901`).
+    pub fn from_processed(output: ProcessedGCode, color_print_colors: &[String]) -> Self {
+        let result = &output.result;
+        let data = from_processor_result(result, &result.extruder_colors, color_print_colors);
         let mut vertices = VertexBuffers::pack(data);
-        vertices.move_type_counts = move_type_counts(&output.result.moves).to_vec();
+        vertices.move_type_counts = move_type_counts(&result.moves).to_vec();
+        vertices.filament_legend = filament_legend(&vertices.viewer, result);
         // `PrintEstimatedStatistics` passes through as JSON — volumes in
         // mm³ dense-indexed by filament id; `total_used_filament` in mm.
         let print_statistics = serde_json::to_vec(&output.result.print_statistics)
@@ -87,76 +89,6 @@ impl SliceOutput {
     }
 }
 
-/// Raw moves in record order, including the dummy and internal split vertices.
-#[wasm_bindgen]
-#[derive(Default)]
-pub struct MoveBuffers {
-    count: usize,
-    values: Vec<f32>,
-    ids: Vec<u32>,
-    tags: Vec<u8>,
-}
-
-impl MoveBuffers {
-    fn pack(moves: &[MoveVertex]) -> Self {
-        let mut out = Self {
-            count: moves.len(),
-            values: Vec::with_capacity(12 * moves.len()),
-            ids: Vec::with_capacity(2 * moves.len()),
-            tags: Vec::with_capacity(5 * moves.len()),
-        };
-        for m in moves {
-            out.values.extend_from_slice(&[
-                m.position[0],
-                m.position[1],
-                m.position[2],
-                m.delta_extruder,
-                m.feedrate,
-                m.width,
-                m.height,
-                m.mm3_per_mm,
-                m.travel_dist,
-                m.fan_speed,
-                m.temperature,
-                m.time,
-            ]);
-            out.ids.extend_from_slice(&[m.gcode_id, m.layer_id]);
-            out.tags.extend_from_slice(&[
-                m.move_type as u8,
-                m.extrusion_role as u8,
-                m.extruder_id,
-                m.cp_color_id,
-                u8::from(m.internal_only),
-            ]);
-        }
-        out
-    }
-}
-
-#[wasm_bindgen]
-impl MoveBuffers {
-    #[wasm_bindgen(getter)]
-    pub fn count(&self) -> usize {
-        self.count
-    }
-
-    /// Float32Array stride12: x,y,z,deltaE,feedrate,width,height,mm3/mm,travel,fan,temp,time.
-    #[wasm_bindgen(js_name = takeValues)]
-    pub fn take_values(&mut self) -> Vec<f32> {
-        std::mem::take(&mut self.values)
-    }
-    /// Uint32Array stride2: gcode_id,layer_id.
-    #[wasm_bindgen(js_name = takeIds)]
-    pub fn take_ids(&mut self) -> Vec<u32> {
-        std::mem::take(&mut self.ids)
-    }
-    /// Uint8Array stride5: type,role,extruder,color,internal_only.
-    #[wasm_bindgen(js_name = takeTags)]
-    pub fn take_tags(&mut self) -> Vec<u8> {
-        std::mem::take(&mut self.tags)
-    }
-}
-
 /// Converted libvgcode vertices and palettes; no G-code parsing in the adapter.
 /// Keeps the vertices loaded in libvgcode `ViewerImpl` for `viewRange` and
 /// the moves slider.
@@ -176,6 +108,7 @@ pub struct VertexBuffers {
     tool_colors: Vec<u8>,
     color_print_colors: Vec<u8>,
     layer_zs: Vec<f32>,
+    pub(crate) filament_legend: FilamentLegend,
 }
 
 impl VertexBuffers {
@@ -203,6 +136,7 @@ impl VertexBuffers {
             viewer: ViewerImpl::default(),
             moves_slider: MovesSlider::new(&viewer),
             sequential_view: SequentialView::default(),
+            filament_legend: FilamentLegend::default(),
         };
         for v in viewer.vertices() {
             out.values.extend_from_slice(&[

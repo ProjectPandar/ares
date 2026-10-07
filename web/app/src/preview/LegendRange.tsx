@@ -9,6 +9,7 @@ import type { ColorRange } from "@ares-slicer/wasm";
  */
 export const VIEW_TYPE_ITEMS: { view: string; label: string; decimals?: number }[] = [
   { view: "FeatureType", label: "Line Type" },
+  { view: "ColorPrint", label: "Filament" },
   { view: "Speed", label: "Speed", decimals: 0 },
   { view: "Height", label: "Layer Height", decimals: 2 },
   { view: "Width", label: "Line Width", decimals: 2 },
@@ -19,7 +20,7 @@ export const VIEW_TYPE_ITEMS: { view: string; label: string; decimals?: number }
   { view: "Temperature", label: "Temperature", decimals: 0 },
 ];
 
-export const css = ([r, g, b]: ArrayLike<number>) => `rgb(${r} ${g} ${b})`;
+export const css = ([r, g, b]: Iterable<number>) => `rgb(${r} ${g} ${b})`;
 
 /**
  * `append_range` (`GCodeViewer.cpp:3293-3313`): one row per value from the top

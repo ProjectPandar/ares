@@ -65,6 +65,12 @@ node scripts/extract-process-layout.mjs /path/to/OrcaSlicer
 
 ## Known differences from OrcaSlicer
 
+- The Preview Filament (`ColorPrint`) view uses the processed tool colors and
+  metric usage columns. Custom ColorChange ranges/palettes and imperial units
+  are deferred (`GCodeViewer.cpp:4026-4034`, `color_print_ranges`). Its Display
+  header has no visibility control: the upstream row callback is empty
+  (`GCodeViewer.cpp:4097`); this slice does not invent one.
+
 - Process edits in the sidebar are kept when another printer or process preset is
   selected, and apply on top of the new presets. OrcaSlicer asks first, with
   `UnsavedChangesDialog` from `Tab::may_discard_current_dirty_preset`

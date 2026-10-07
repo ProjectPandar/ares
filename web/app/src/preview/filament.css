@@ -1,0 +1,7 @@
+.legend:has(.filament-legend) { width: max-content; max-width: calc(100% - 108px); }
+.filament-legend { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.filament-legend th { color: var(--text-dim); font-weight: 600; text-align: left; }
+.filament-legend th, .filament-legend td { padding: 3px 8px; white-space: pre; }
+.filament-legend th:first-child, .filament-legend td:first-child { padding-left: 4px; }
+.filament-legend .legend-swatch { display: inline-block; margin-right: 8px; }
+.legend-filament-total { border-top: 1px solid var(--border); }

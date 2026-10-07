@@ -1,10 +1,13 @@
 mod colors;
+mod filament_legend;
 mod moves;
 mod profiles;
+mod raw_moves;
 mod scene;
 
 pub use colors::{option_colors, role_colors, view_types};
-pub use moves::{MoveBuffers, SliceOutput, VertexBuffers, option_types};
+pub use moves::{SliceOutput, VertexBuffers, option_types};
+pub use raw_moves::MoveBuffers;
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;
@@ -55,13 +58,12 @@ pub async fn slice_project_plate(
     .map_err(slice_error_js)
 }
 
-/// Palettes follow LibVGCodeWrapper::convert: tool colors come from the caller's
-/// filament_colour configuration; an empty color-print palette uses tool colors.
+/// Palettes follow LibVGCodeWrapper::convert: tool colors are the processed
+/// `filament_colour`; an empty color-print palette uses tool colors.
 #[wasm_bindgen(js_name = sliceProjectPlateProcessed)]
 pub async fn slice_project_plate_processed(
     input: Vec<u8>,
     plate: Option<u32>,
-    tool_colors: Vec<String>,
     color_print_colors: Vec<String>,
     overrides_json: Option<String>,
 ) -> Result<SliceOutput, JsValue> {
@@ -75,11 +77,7 @@ pub async fn slice_project_plate_processed(
     )
     .await
     .map_err(slice_error_js)?;
-    Ok(SliceOutput::from_processed(
-        output,
-        &tool_colors,
-        &color_print_colors,
-    ))
+    Ok(SliceOutput::from_processed(output, &color_print_colors))
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {

@@ -89,7 +89,8 @@ function expectedLegend(moves: Move[], gcode: string) {
   };
 }
 
-const rgb = (hex: string) => `rgb(${[1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16)).join(", ")})`;
+// LibVGCodeWrapper.cpp:58-61: ORCA's minimum brightness clamp, before display.
+const rgb = (hex: string) => `rgb(${[1, 3, 5].map((at) => Math.max(48, Math.trunc(f32(f32(parseInt(hex.slice(at, at + 2), 16) * f32(1 / 255)) * 255)))).join(", ")})`;
 
 /**
  * The Filament view lists the used filaments (`GCodeViewer.cpp:4026-4141`) and

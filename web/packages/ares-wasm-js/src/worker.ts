@@ -68,6 +68,7 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
     optionColors: owned(optionColors()),
     layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
     spiralVaseMode: vertices.spiralVaseMode,
+    filamentLegend: JSON.parse(vertices.filamentLegend()),
   };
   replaceViewer(vertices);
   const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs } = toolpaths;
@@ -93,8 +94,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return sceneResult(await placementScene(input, filename, catalog, selection, options));
     }
     case "sliceProject":
-      // No palettes: the preview colors by feature type, and raw moves stay in wasm memory.
-      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, [], [], request.overrides));
+      // Tool colors come from GCodeProcessorResult; no custom color-print palette.
+      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, [], request.overrides));
     case "sliceWithProfiles": {
       const { input, filename, catalog, selection, options } = request;
       return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));

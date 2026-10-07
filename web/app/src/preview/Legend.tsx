@@ -1,7 +1,10 @@
+import { lazy, Suspense } from "react";
 import type { ColorRange, ExtrusionRole, MoveType, Toolpaths } from "@ares-slicer/wasm";
 import { EXTRUSION_ROLES, MOVE_TYPES } from "@ares-slicer/wasm";
 import type { PreviewView } from "../state/store";
 import { css, RangeRows, VIEW_TYPE_ITEMS } from "./LegendRange";
+
+const FilamentRows = lazy(() => import("./LegendFilament"));
 
 /** `ExtrusionEntity::role_to_string` (`ExtrusionEntity.cpp:583`). */
 const ROLE_LABELS: Record<ExtrusionRole, string> = {
@@ -98,7 +101,11 @@ export function Legend({ roles, options, toolpaths, range, view, onChange }: {
           <option key={type} value={type}>{label}</option>
         ))}
       </select>
-      {view.viewType !== "FeatureType" ? (
+      {view.viewType === "ColorPrint" ? (
+        <Suspense fallback={<p role="status">Loading filament legend…</p>}>
+          <FilamentRows legend={toolpaths.filamentLegend} />
+        </Suspense>
+      ) : view.viewType !== "FeatureType" ? (
         <>
           {range && item?.decimals !== undefined && <RangeRows range={range} decimals={item.decimals} />}
           {view.viewType === "Speed" && <ul className="legend-list">{optionRow(optionTypes.indexOf("Travels"), false)}</ul>}

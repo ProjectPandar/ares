@@ -7,9 +7,10 @@ use wasm_bindgen::prelude::*;
 
 /// View types exposed in `EViewType` order. Actual speed / flow, pressure
 /// advance, acceleration and jerk are left out because ares-core moves do not
-/// record them yet; color print, tool and summary views are not ported yet.
-const VIEW_TYPES: [ViewType; 9] = [
+/// record them yet; tool and summary views are not ported yet.
+const VIEW_TYPES: [ViewType; 10] = [
     ViewType::FeatureType,
+    ViewType::ColorPrint,
     ViewType::Speed,
     ViewType::Height,
     ViewType::Width,

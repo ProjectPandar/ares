@@ -50,11 +50,12 @@ libvgcode GCodeInputData/PathVertex, not a new slicing or preview pipeline.
 ## Implemented binding contract
 
 `sliceProjectPlateProcessed(input: Uint8Array, plate: number | undefined,
- toolColors: string[], colorPrintColors: string[]) -> Promise<SliceOutput>`.
-Palettes are explicit, like upstream convert's arguments. Empty color-print
-colors use tool colors. The old `sliceProjectPlate` still returns G-code only.
-This lets worker-web migrate deliberately after approval; no legacy fallback
-or alternate conversion lives in the Rust adapter.
+ colorPrintColors: string[], overridesJson?: string) -> Promise<SliceOutput>`.
+Tool colors now come from `GCodeProcessorResult::extruder_colors`, as the GUI
+preview loads them; empty color-print colors use tool colors. See
+[Filament ColorPrint slice](web-filament-colorprint.md). `sliceProjectPlate`
+returns G-code only; no legacy palette fallback or alternate conversion lives
+in the Rust adapter.
 
 `SliceOutput.takeGcode()` returns Uint8Array. `takeMoves()` and
 `takeVertices()` return owned buffer handles; their take methods empty the

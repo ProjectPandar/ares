@@ -39,11 +39,9 @@ pub fn filter_compatible_presets_json(
 struct ProfileSliceOptions {
     plate: Option<u32>,
     seed: u32,
-    /// Display palettes for the processed export (`sliceProjectPlateProcessed`
-    /// keeps them as arguments; the arity limit folds them into the options
-    /// document here).
-    #[serde(default)]
-    tool_colors: Option<Vec<String>>,
+    /// Display color-print palette for the processed export
+    /// (`sliceProjectPlateProcessed` keeps it as an argument; the arity limit
+    /// folds it into the options document here).
     #[serde(default)]
     color_print_colors: Option<Vec<String>>,
     /// M854 user edits in the same `{key: token}` shape as
@@ -255,7 +253,7 @@ pub async fn slice_with_profiles_processed(
     selection_json: String,
     options_json: String,
 ) -> Result<crate::SliceOutput, JsValue> {
-    let (output, tool_colors, color_print_colors) = slice_with_profiles_processed_bytes(
+    let (output, color_print_colors) = slice_with_profiles_processed_bytes(
         input,
         &filename,
         &catalog_json,
@@ -266,30 +264,21 @@ pub async fn slice_with_profiles_processed(
     .map_err(|error| JsValue::from_str(&error))?;
     Ok(crate::SliceOutput::from_processed(
         output,
-        &tool_colors,
         &color_print_colors,
     ))
 }
 
-/// Returns the processed output plus the palette lists the options document
-/// carried (empty defaults match `sliceProjectPlateProcessed`).
+/// Returns the processed output plus the color-print palette the options
+/// document carried (empty defaults match `sliceProjectPlateProcessed`).
 pub async fn slice_with_profiles_processed_bytes(
     input: Vec<u8>,
     filename: &str,
     catalog_json: &str,
     selection_json: &str,
     options_json: &str,
-) -> Result<
-    (
-        ares_core::gcode_processor::ProcessedGCode,
-        Vec<String>,
-        Vec<String>,
-    ),
-    String,
-> {
+) -> Result<(ares_core::gcode_processor::ProcessedGCode, Vec<String>), String> {
     let options = ProfileSliceOptions::parse(options_json)?;
     let overrides = options.overrides();
-    let tool_colors = options.tool_colors.clone().unwrap_or_default();
     let color_print_colors = options.color_print_colors.clone().unwrap_or_default();
     let request = ares_core::ProfileSliceRequest {
         filename,
@@ -307,7 +296,7 @@ pub async fn slice_with_profiles_processed_bytes(
     )
     .await
     .map_err(|error| error.to_string())
-    .map(|output| (output, tool_colors, color_print_colors))
+    .map(|output| (output, color_print_colors))
 }
 
 #[wasm_bindgen(js_name = profileSettings)]

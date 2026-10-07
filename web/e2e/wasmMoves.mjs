@@ -55,9 +55,9 @@ try {
     mkdirSync(dir, { recursive: true });
     const browserCounts = await page.evaluate(async ({ name, plate }) => {
       const wasm = await import("/ares_wasm.js");
-      await wasm.default();
+      await wasm.default({ module_or_path: "/ares_wasm_bg.wasm" });
       const input = new Uint8Array(await (await fetch(`/${name}.3mf`)).arrayBuffer());
-      const output = await wasm.sliceProjectPlateProcessed(input, plate, ["#FF8040"], []);
+      const output = await wasm.sliceProjectPlateProcessed(input, plate, [], undefined);
       const upload = async (key, value) => {
         const response = await fetch(`/${name}/${key}`, { method: "POST", body: value });
         if (!response.ok) throw new Error(`upload failed: ${key}`);
@@ -85,7 +85,10 @@ try {
     const result = compareBuffers(dir);
     assert.equal(browserCounts.moves, result.moves);
     assert.equal(browserCounts.vertices, result.vertices);
-    assert.deepEqual([...readFileSync(`${dir}/tool-colors.bin`)], [255, 128, 64]);
+    // Plater.cpp:16889-16901 uses processed filament_colour; LibVGCodeWrapper.cpp:58-61 clamps brightness.
+    const colors = /^; filament_colour = (.*)$/m.exec(gcode)[1].split(/[;,]/);
+    const rgb = colors.flatMap((hex) => [1, 3, 5].map((at) => Math.max(48, Math.trunc(Math.fround(Math.fround(parseInt(hex.trim().slice(at, at + 2), 16) * Math.fround(1 / 255)) * 255)))));
+    assert.deepEqual([...readFileSync(`${dir}/tool-colors.bin`)], rgb);
     assert.deepEqual(readFileSync(`${dir}/tool-colors.bin`), readFileSync(`${dir}/print-colors.bin`));
     results.push({ name, ...result, gcodeSha256: createHash("sha256").update(gcode).digest("hex") });
     console.log(JSON.stringify(results.at(-1)));

@@ -22,10 +22,10 @@ fn processed_buffers_preserve_ids_and_owned_data() {
             result: GCodeProcessorResult {
                 moves: vec![MoveVertex::default(), vertex],
                 spiral_vase_mode: true,
+                extruder_colors: vec!["#FF0000".into()],
                 ..Default::default()
             },
         },
-        &["#FF0000".into()],
         &[],
     );
     assert_eq!(output.take_gcode(), b"G1 X1\n");
@@ -74,7 +74,6 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
             },
         },
         &[],
-        &[],
     );
     let mut vertices = output.take_vertices();
     assert_eq!(
@@ -112,7 +111,6 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
                 ..Default::default()
             },
         },
-        &[],
         &[],
     );
     let mut vertices = output.take_vertices();
