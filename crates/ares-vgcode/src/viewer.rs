@@ -1,10 +1,10 @@
 // Ports the view-range and color logic of AGPL-licensed OrcaSlicer `src/libvgcode/src/ViewerImpl.hpp` and `src/ViewerImpl.cpp`.
 
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 
 use crate::{
-    Color, DUMMY_COLOR, GCodeExtrusionRole, GCodeInputData, Interval, Layers, MoveType, OptionType,
-    Palette, PathVertex, ViewRange, move_type_to_option, settings::Settings,
+    Color, ColorPrint, DUMMY_COLOR, GCodeExtrusionRole, GCodeInputData, Interval, Layers, MoveType,
+    OptionType, Palette, PathVertex, TimeMode, ViewRange, move_type_to_option, settings::Settings,
 };
 
 mod colors;
@@ -13,8 +13,8 @@ pub use colors::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS};
 
 /// `ViewerImpl` state behind the layer and view ranges: vertices, layers,
 /// visibility settings, the full / enabled / visible `ViewRange`, enabled
-/// segments and options, color ranges and vertex colors. Textures, times and
-/// markers belong to the renderer.
+/// segments and options, color ranges and vertex colors. Textures and drawing
+/// belong to the renderer.
 #[derive(Clone, Debug, Default)]
 pub struct ViewerImpl {
     settings: Settings,
@@ -23,9 +23,8 @@ pub struct ViewerImpl {
     vertices: Vec<PathVertex>,
     tool_colors: Palette,
     color_print_colors: Palette,
-    /// The keys of `m_used_extruders`; the per-extruder `ColorPrint` lists
-    /// serve the color change ranges, which are not ported.
-    used_extruders: BTreeSet<u8>,
+    /// `m_used_extruders`: ordered per-extruder ColorPrint transitions.
+    used_extruders: BTreeMap<u8, Vec<ColorPrint>>,
     vertices_colors: Vec<Color>,
     settings_used_for_ranges: Option<Settings>,
     ranges: colors::ColorRanges,
@@ -61,16 +60,29 @@ impl ViewerImpl {
         self.settings_used_for_ranges = None;
         self.settings.spiral_vase_mode = data.spiral_vase_mode;
         self.used_extruders.clear();
+        let mut total_time = [0.0; TimeMode::COUNT];
         for (i, v) in (0..).zip(&self.vertices) {
             self.layers.update(v, i);
-            // ViewerImpl.cpp:1017-1022.
-            if v.move_type == MoveType::Extrude {
-                self.used_extruders.insert(v.extruder_id);
+            // ViewerImpl.cpp:1007-1026: timestamp includes this vertex.
+            for (total, time) in total_time.iter_mut().zip(v.times) {
+                *total += time;
+            }
+            if v.move_type != MoveType::Extrude {
+                continue;
+            }
+            let colors = self.used_extruders.entry(v.extruder_id).or_default();
+            if colors.last().is_none_or(|last| last.color_id != v.color_id) {
+                colors.push(ColorPrint {
+                    extruder_id: v.extruder_id,
+                    color_id: v.color_id,
+                    layer_id: v.layer_id,
+                    times: total_time,
+                });
             }
         }
         // `update_colors` (ViewerImpl.cpp:1265-1273): a tool color up to the
         // max used extruder id.
-        if let Some(&max) = self.used_extruders.last() {
+        if let Some((&max, _)) = self.used_extruders.last_key_value() {
             let len = self.tool_colors.len().max(usize::from(max) + 1);
             self.tool_colors.resize(len, DUMMY_COLOR);
         }
@@ -94,7 +106,19 @@ impl ViewerImpl {
 
     /// ViewerImpl.cpp:1363-1370.
     pub fn get_used_extruders_ids(&self) -> Vec<u8> {
-        self.used_extruders.iter().copied().collect()
+        self.used_extruders.keys().copied().collect()
+    }
+
+    /// ViewerImpl.cpp:1373-1376.
+    pub fn get_color_prints_count(&self, extruder_id: u8) -> usize {
+        self.used_extruders.get(&extruder_id).map_or(0, Vec::len)
+    }
+
+    /// ViewerImpl.cpp:1379-1382, borrowing the neutral records without copying.
+    pub fn get_color_prints(&self, extruder_id: u8) -> &[ColorPrint] {
+        self.used_extruders
+            .get(&extruder_id)
+            .map_or(&[], Vec::as_slice)
     }
 
     pub fn get_tool_colors(&self) -> &Palette {
