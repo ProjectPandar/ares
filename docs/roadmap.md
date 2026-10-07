@@ -9106,18 +9106,27 @@ unchanged G-code/M73, full Rust/reference/browser gates and initial JS gzip
 strictly below 125,000 B. Approved with rulings (initialized-native PA oracle,
 f32 bit-exact machine state); Klipper `SET_VELOCITY_LIMIT` travel-accel fix in-slice.
 
-### Known low-priority difference: `process_M205` (located, not scheduled)
+### `GCodeProcessor::process_M205` machine limits — integrated
 
-Ares' M205 (`processor/motion/config_commands.rs`) applies X/Y/Z/E word by
-word; upstream `GCodeProcessor::process_M205` (`GCodeProcessor.cpp:5236-5265`)
-makes `X` set both X and Y jerk, and maps `S`/`T`/`J` to
-`machine_min_extruding_rate`/`machine_min_travel_rate`/
-`machine_max_junction_deviation`. Both affect estimated time and M73 only.
-Impact count over upstream `8500fcdcc` stock profiles
-(`target/m205-impact/README.md`): zero printers emit X-only, J, S or T M205
-from custom G-code; Orca's writer always emits X and Y together; the 174 Marlin2
-envelope `M205 J` lines restate `machine_max_junction_deviation`, so stock
-values do not change timing. Ruled low priority; take it up when idle.
-RED candidates: (a) JD calibration (`GCode.cpp:4753`, per-layer interpolated
-`M205 J`), (b) custom-G-code X-only `M205 X<v>`. The motion-attributes fixture
-writes `M205 X12 Y9` to avoid this difference, not to cover it.
+Integrated at `d0e8b64f9bf35750f51f5e6ca5a6d01bbfcda16b`; see the
+[source-owned M205 slice](architecture/gcode-processor-m205-machine-limits.md).
+The Rust `processor/motion` rewrite ports `GCodeProcessor.cpp:5236-5265`
+(X also sets Y; a later Y overrides; S/T/J update existing-parser values),
+minimum-rate initialization including the RRF reset (`:2087-2098`), exact
+E-delta travel/extrusion selection (`:3987-3989,4347-4349`), and the block
+feedrate floor (`:5726-5740`) without changing commanded F or JD formulas.
+Six permanent same-input Native/public processed-output cases preserve the
+four original complete-byte REDs and two controls; all six are now PASS.
+
+Fresh matching-base `7b4b1ee2b` acceptance: seeded base598/598 and
+candidate604/604; official base588/598 and candidate594/604 have exactly
+the same ten failure names (both exit100 retained, not a count-based waiver).
+Workspace7990/7990 with nine existing skips, strict Clippy/rustfmt, and WASM
+check/release pass. All517 common raw Ares G-code streams remain byte-identical;
+118 inputs have exact archive SHA equality and399 have identical payloads
+for every ZIP entry. All12006 upstream resource JSON files were inspected:
+522 authored minimum-rate fields are zero, so the nonzero-rate stock subset
+is empty; the67 missing retained stock inputs are not credited as PASS.
+Browser E2E is explicitly waived for this slice: no web changes, unchanged
+common output bytes, and no nonzero stock minimum rates. Independent remote
+confirmation after non-force FF integration matches the approved hash.
