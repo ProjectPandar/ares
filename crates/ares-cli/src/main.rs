@@ -58,15 +58,20 @@ enum CliFailure {
 }
 
 // Upstream result metadata is only consumed on Linux (OrcaSlicer.cpp:416-460).
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 struct FamilyFailure {
     return_code: i32,
+    #[cfg(target_os = "linux")]
     plate_index: u32,
+    #[cfg(target_os = "linux")]
     layer_height: f64,
+    #[cfg(target_os = "linux")]
     wall_loops: i32,
+    #[cfg(target_os = "linux")]
     sparse_infill_density: f64,
+    #[cfg(target_os = "linux")]
     error_string: &'static str,
     stderr: String,
+    #[cfg(target_os = "linux")]
     output: PathBuf,
 }
 
@@ -98,7 +103,7 @@ impl FamilyFailure {
     /// to write are swallowed like the upstream `catch (...)`.
     #[cfg(target_os = "linux")]
     fn record_exit_reason(&self) {
-        let json_error_string = serde_json::to_string(self.error_string).unwrap();
+        let json_error_string = serde_json::Value::from(self.error_string).to_string();
         let body = format!(
             "{{\n\t\"error_string\": {json_error_string},\n\t\"export_time\": 0,\n\t\
              \"layer_height\": {:?},\n\t\"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\
@@ -137,60 +142,99 @@ impl From<serde_json::Error> for CliFailure {
 /// family variants carry the result.json payload; everything else keeps
 /// the legacy `Error:` channel — those surfaces have no native family
 /// emulation in this slice (recorded in clusters.md).
-fn slice_error_to_failure(error: SliceError, output: &Path) -> CliFailure {
-    let family =
-        |return_code, plate_index, layer_height, wall_loops, sparse, error_string, stderr| {
-            CliFailure::Family(Box::new(FamilyFailure {
-                return_code,
-                plate_index,
-                layer_height,
-                wall_loops,
-                sparse_infill_density: sparse,
-                error_string,
-                stderr,
-                output: output.to_owned(),
-            }))
-        };
+fn slice_error_to_failure(
+    error: SliceError,
+    #[cfg(target_os = "linux")] output: &Path,
+) -> CliFailure {
+    let family = |return_code,
+                  #[cfg(target_os = "linux")] plate_index,
+                  #[cfg(target_os = "linux")] layer_height,
+                  #[cfg(target_os = "linux")] wall_loops,
+                  #[cfg(target_os = "linux")] sparse,
+                  #[cfg(target_os = "linux")] error_string,
+                  stderr| {
+        CliFailure::Family(Box::new(FamilyFailure {
+            return_code,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: sparse,
+            #[cfg(target_os = "linux")]
+            error_string,
+            stderr,
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    };
     match error {
         SliceError::PostProcessNotSupported => family(
             -19,
+            #[cfg(target_os = "linux")]
             0,
+            #[cfg(target_os = "linux")]
             0.0,
+            #[cfg(target_os = "linux")]
             0,
+            #[cfg(target_os = "linux")]
             0.0,
+            #[cfg(target_os = "linux")]
             "post_process is not supported under CLI.",
             String::new(),
         ),
         SliceError::NoSuitableObjects(_) => family(
             -50,
+            #[cfg(target_os = "linux")]
             1,
+            #[cfg(target_os = "linux")]
             0.0,
+            #[cfg(target_os = "linux")]
             0,
+            #[cfg(target_os = "linux")]
             0.0,
+            #[cfg(target_os = "linux")]
             "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading.",
             String::new(),
         ),
         SliceError::InvalidValuesInProject(detail) => family(
             -18,
+            #[cfg(target_os = "linux")]
             0,
+            #[cfg(target_os = "linux")]
             0.0,
+            #[cfg(target_os = "linux")]
             0,
+            #[cfg(target_os = "linux")]
             0.0,
+            #[cfg(target_os = "linux")]
             "Invalid parameter value(s) included in the 3mf file.",
             format!("Param values in 3mf/config error: \n{detail}\n"),
         ),
         SliceError::Validate {
             message,
+            #[cfg(target_os = "linux")]
             plate_index,
+            #[cfg(target_os = "linux")]
             layer_height,
+            #[cfg(target_os = "linux")]
             wall_loops,
+            #[cfg(target_os = "linux")]
             sparse_infill_density,
+            ..
         } => family(
             -51,
+            #[cfg(target_os = "linux")]
             plate_index,
+            #[cfg(target_os = "linux")]
             layer_height,
+            #[cfg(target_os = "linux")]
             wall_loops,
+            #[cfg(target_os = "linux")]
             sparse_infill_density,
+            #[cfg(target_os = "linux")]
             "There are some incorrect slicing parameters in the 3mf. Please verify the slicing of all plates in Orca Slicer before uploading.",
             format!("{message}\n"),
         ),
@@ -246,12 +290,18 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             return Err(CliFailure::Family(Box::new(FamilyFailure {
                 return_code: -3,
+                #[cfg(target_os = "linux")]
                 plate_index: 0,
+                #[cfg(target_os = "linux")]
                 layer_height: 0.0,
+                #[cfg(target_os = "linux")]
                 wall_loops: 0,
+                #[cfg(target_os = "linux")]
                 sparse_infill_density: 0.0,
+                #[cfg(target_os = "linux")]
                 error_string: "The input files to the slicer are not found.",
                 stderr: format!("No such file: {}\n", args.input.display()),
+                #[cfg(target_os = "linux")]
                 output: args.output,
             })));
         }
@@ -270,7 +320,11 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed,
                         Err(error) => {
-                            return Err(slice_error_to_failure(error, &args.output));
+                            return Err(slice_error_to_failure(
+                                error,
+                                #[cfg(target_os = "linux")]
+                                &args.output,
+                            ));
                         }
                     };
                     fs::write(path, moves_csv::format(&processed.result))?;
@@ -284,7 +338,11 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(gcode) => gcode,
                         Err(error) => {
-                            return Err(slice_error_to_failure(error, &args.output));
+                            return Err(slice_error_to_failure(
+                                error,
+                                #[cfg(target_os = "linux")]
+                                &args.output,
+                            ));
                         }
                     }
                 }
@@ -298,7 +356,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             let options = serde_json::from_slice::<ares_core::SliceOptions>(&options)?;
             match ares_core::slice_stl_validated(input, options).await {
                 Ok(gcode) => gcode,
-                Err(error) => return Err(slice_error_to_failure(error, &args.output)),
+                Err(error) => {
+                    return Err(slice_error_to_failure(
+                        error,
+                        #[cfg(target_os = "linux")]
+                        &args.output,
+                    ));
+                }
             }
         }
         _ => unreachable!("input extension was validated above"),
