@@ -41,12 +41,9 @@ struct SliceArgs {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let args = match Cli::parse().command {
-        Commands::Slice(args) => args,
-    };
-    let output_path = args.output.clone();
+    let Commands::Slice(args) = Cli::parse().command;
     if let Err(failure) = run_slice(args).await {
-        failure.report(&output_path);
+        failure.report();
     }
 }
 
@@ -72,7 +69,7 @@ struct FamilyFailure {
 }
 
 impl CliFailure {
-    fn report(self, output: &Path) -> ! {
+    fn report(self) -> ! {
         match self {
             Self::Family(failure) => failure.flush_and_exit(),
             Self::Legacy(error) => {
@@ -85,7 +82,7 @@ impl CliFailure {
 
 impl FamilyFailure {
     fn flush_and_exit(self) -> ! {
-        print!("run found error, return {}, exit...\n", self.return_code);
+        println!("run found error, return {}, exit...", self.return_code);
         eprint!("{}", self.stderr);
         self.record_exit_reason();
         std::process::exit(256 + self.return_code);
