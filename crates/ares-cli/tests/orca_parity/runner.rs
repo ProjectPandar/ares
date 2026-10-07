@@ -34,6 +34,9 @@ pub(crate) mod filament_map;
 #[path = "runner/filament_map_tests.rs"]
 mod filament_map_tests;
 #[cfg(test)]
+#[path = "runner/generated_printer_ids.rs"]
+mod generated_printer_ids;
+#[cfg(test)]
 #[path = "runner/infill_first_ironing.rs"]
 mod infill_first_ironing;
 #[cfg(test)]
