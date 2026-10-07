@@ -1,0 +1,49 @@
+diff --git a/src/OrcaSlicer.cpp b/src/OrcaSlicer.cpp
+index ab4b59d34..0ee66a404 100644
+--- a/src/OrcaSlicer.cpp
++++ b/src/OrcaSlicer.cpp
+@@ -7587,6 +7587,20 @@ int main(int argc, char **argv)
+                             v.time[0], v.layer_id, v.internal_only ? 1 : 0);
+                 fclose(out);
+             }
++            // --dump-move-dynamics <csv>: store_move_vertex ORCA preview
++            // attributes (GCodeProcessor.cpp:5630-5706). %.9g round-trips f32.
++            for (int j = 1; j + 1 < argc; ++j) {
++                if (strcmp(argv[j], "--dump-move-dynamics") != 0)
++                    continue;
++                FILE* out = fopen(argv[j + 1], "w");
++                if (out == nullptr)
++                    return 1;
++                fprintf(out, "gcode_id,type,internal_only,pressure_advance,acceleration,jerk\n");
++                for (const auto& v : result.moves)
++                    fprintf(out, "%u,%d,%d,%.9g,%.9g,%.9g\n", v.gcode_id, static_cast<int>(v.type),
++                            v.internal_only ? 1 : 0, v.pressure_advance, v.acceleration, v.jerk);
++                fclose(out);
++            }
+             // Raw public processor records, not GCodeViewer's unchecked join.
+             for (int j = 1; j + 1 < argc; ++j) {
+                 if (strcmp(argv[j], "--dump-color-change") != 0)
+diff --git a/src/libslic3r/GCode/GCodeProcessor.cpp b/src/libslic3r/GCode/GCodeProcessor.cpp
+index aa56185c8..bd09cca3a 100644
+--- a/src/libslic3r/GCode/GCodeProcessor.cpp
++++ b/src/libslic3r/GCode/GCodeProcessor.cpp
+@@ -2445,6 +2445,10 @@ void GCodeProcessor::apply_config(const DynamicPrintConfig& config)
+         m_time_processor.machines[i].retract_acceleration     = (max_retract_acceleration > 0.0f) ? max_retract_acceleration :
+                                                                                                     DEFAULT_RETRACT_ACCELERATION;
+         float max_travel_acceleration = get_option_value(m_time_processor.machine_limits.machine_max_acceleration_travel, i);
++        // Slicing-path alignment (oracle only): apply_config(const PrintConfig&) gates the
++        // travel limit by flavor (:2116-2119); the process_file DynamicPrintConfig path does not.
++        if (!GCodeWriter::supports_separate_travel_acceleration(m_flavor))
++            max_travel_acceleration = 0;
+         m_time_processor.machines[i].max_travel_acceleration = max_travel_acceleration;
+         m_time_processor.machines[i].travel_acceleration     = (max_travel_acceleration > 0.0f) ? max_travel_acceleration :
+                                                                                                   DEFAULT_TRAVEL_ACCELERATION;
+@@ -2520,6 +2524,8 @@ void GCodeProcessor::reset()
+     m_mm3_per_mm = 0.0f;
+     m_travel_dist = 0.0f;
+     m_fan_speed = 0.0f;
++    // Initialized-native oracle only: upstream never initializes this member (UB).
++    m_pressure_advance = 0.0f;
+     m_z_offset = 0.0f;
+ 
+     m_extrusion_role = erNone;
