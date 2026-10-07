@@ -87,6 +87,14 @@ fn check(name: &str, output: &ProcessedGCode) {
             .map(|vertex| [vertex.actual_feedrate.to_bits()]),
     );
     std::fs::write(directory.join("ares.actual-speed.rle"), &actual_speed).unwrap();
+    let time = encode(
+        output
+            .result
+            .moves
+            .iter()
+            .map(|vertex| [vertex.time.to_bits()]),
+    );
+    std::fs::write(directory.join("ares.time.rle"), &time).unwrap();
     if let Some(oracle) = std::env::var_os("ARES_PROCGCODE_DYNAMICS_BIN") {
         check_native(&directory, &oracle, output);
     }
@@ -100,6 +108,13 @@ fn check(name: &str, output: &ProcessedGCode) {
         actual,
         expected(".rle"),
         "{name}: per-vertex PA/acceleration/jerk bits"
+    );
+    // The planner feeds actual_feedrate, so its Normal move times
+    // (`TimeMachine::calculate_time`) are asserted first.
+    assert_eq!(
+        time,
+        expected(".time.rle"),
+        "{name}: per-vertex Normal-mode move time bits"
     );
     assert_eq!(
         actual_speed,
@@ -126,6 +141,8 @@ fn check_native(directory: &std::path::Path, oracle: &std::ffi::OsStr, output: &
         .arg(&input)
         .arg("--dump-move-dynamics")
         .arg(&csv)
+        .arg("--dump-moves")
+        .arg(directory.join("native-moves.csv"))
         .output()
         .unwrap();
     std::fs::write(
@@ -165,6 +182,15 @@ fn check_native(directory: &std::path::Path, oracle: &std::ffi::OsStr, output: &
     std::fs::write(directory.join("native.rle"), native).unwrap();
     let native = encode(rows.iter().map(|row| [bits(row, 6)]));
     std::fs::write(directory.join("native.actual-speed.rle"), native).unwrap();
+    let moves = std::fs::read_to_string(directory.join("native-moves.csv")).unwrap();
+    let moves: Vec<Vec<String>> = moves
+        .lines()
+        .skip(1)
+        .map(|line| line.split(',').map(str::to_owned).collect())
+        .collect();
+    assert_eq!(moves.len(), rows.len(), "native moves dump length");
+    let native = encode(moves.iter().map(|row| [bits(row, 16)]));
+    std::fs::write(directory.join("native.time.rle"), native).unwrap();
 }
 
 macro_rules! case {

@@ -3,7 +3,9 @@
 Per-vertex `MoveVertex::{pressure_advance, acceleration, jerk}` f32 bits for
 `crates/ares-core/tests/processed_motion_attributes.rs`, as `count,pa,acc,jerk`
 hex runs in `GCodeProcessorResult::moves` order. `<case>.actual-speed.rle` holds
-the Normal-mode `actual_feedrate` bits as `count,bits` runs (docs/architecture/web-actual-speed.md).
+the Normal-mode `actual_feedrate` bits as `count,bits` runs (docs/architecture/web-actual-speed.md), and
+`<case>.time.rle` the Normal-mode `MoveVertex::time` bits from the same oracle
+(`--dump-moves`, column `time0`).
 
 Motion `.rle` files were produced by the first dynamics oracle `tools/chain-probe/procgcode-dynamics.nix`
 (OrcaSlicer 8500fcdcc + procgcode + stable-options + dynamics patches):
