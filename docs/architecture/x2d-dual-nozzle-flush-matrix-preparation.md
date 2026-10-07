@@ -267,6 +267,38 @@ source's explicit support/colour count equality check (`:3412–3418`). This kee
 the public API's supplied valid matrix intact when its extra inactive tool has
 no complete selector context; no padding of flag or selector vectors is added.
 
+## Review boundary correction: generated ids and calculator reachability
+
+The generic generated-printer-id rewrite remains exclusively in spec
+`703658c84`; FM must consume a complete materialized id map, not implement
+any portion of that generator. `PrintConfig.cpp:9033` defines completeness
+against the entire variant vector (not merely physical nozzle count), and
+`:9040` chooses generation for an incomplete map. Therefore FM's dataset
+admission must also require ids covering every variant. If a calculator cell
+needs that missing capability, preserve the supplied matrix without rebuilding;
+independent multiplier resizing and dataset-free source constants remain valid.
+
+For provenance, the two removed generator-zero branches *do* have upstream
+counterparts: absent `extruder_variant_list` returns zero at `:9012–9013`, and
+no matching flattened index returns zero at `:9028`. They are deleted from FM
+because their owner is the separately specified generic materialization slice,
+not because source arithmetic should be redefined. FM neither synthesizes ids
+nor substitutes zero for an unresolved map.
+
+Calculator calls are reachable only in a `Some(dataset)` match arm. The
+`None` arm fills only source-independent diagonals/support destinations,
+admitted by the existing cell-dependency predicate; it never invokes a
+calculator or substitutes a dataset. Do not replace production unwraps with
+expect/unreachable or introduce a palette-count special case.
+
+Failure inventory before implementation: ids covering nozzles but not all
+variants must decline reconstruction; complete maps must retain exact selection
+and output; diagonal/support-only matrices must still compute without ids;
+multiplier prefix resizing must precede a dependency decline. Existing focused
+whole-output E2Es and all x2d_flush_matrix witnesses remain unchanged. Reuse
+full controls only with a changed-source inventory, identical focused artifact
+bytes, and fresh focused/Clippy/fmt results, per coordinator review ruling.
+
 ## Sequence, validation and exit
 
 1. Submit this spec and wait for exact-hash coordinator approval.
