@@ -124,12 +124,22 @@ pub struct CustomGCodeItem {
     pub extra: String,
 }
 
+/// Normal-mode `get_custom_gcode_times` (GCodeProcessor.cpp:2737-2750).
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
+pub struct CustomGCodeTime {
+    pub kind: CustomGCodeType,
+    pub duration: f32,
+    pub remaining: f32,
+}
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GCodeProcessorResult {
     pub moves: Vec<MoveVertex>,
     pub spiral_vase_mode: bool,
     /// `GCodeProcessorResult::custom_gcode_per_print_z` (`:260`).
     pub custom_gcode_per_print_z: Vec<CustomGCodeItem>,
+    /// Normal-mode `PrintEstimatedStatistics::Mode::custom_gcode_times`.
+    pub custom_gcode_times: Vec<CustomGCodeTime>,
     /// `GCodeProcessorResult::print_statistics` (`GCodeProcessor.hpp:118`).
     pub print_statistics: PrintEstimatedStatistics,
     /// `GCodeProcessorResult::extruder_colors` — `filament_colour`

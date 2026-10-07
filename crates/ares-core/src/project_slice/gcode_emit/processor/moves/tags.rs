@@ -36,14 +36,86 @@ pub(super) const COMPATIBLE_TAGS: Tags = Tags {
     custom_code: "CUSTOM_GCODE",
 };
 
+/// One parse shared by move recording and timing, including unrecorded slices.
+#[derive(Clone, Copy)]
+pub(in crate::project_slice::gcode_emit::processor) enum CustomTag<'a> {
+    ColorChange {
+        filament: usize,
+        color: Option<&'a str>,
+    },
+    PausePrint,
+    Custom,
+}
+
+impl CustomTag<'_> {
+    pub(in crate::project_slice::gcode_emit::processor) fn time_kind(
+        self,
+        active: usize,
+    ) -> Option<CustomGCodeType> {
+        match self {
+            Self::ColorChange { filament, .. } if filament == active => {
+                Some(CustomGCodeType::ColorChange)
+            }
+            Self::PausePrint => Some(CustomGCodeType::PausePrint),
+            Self::ColorChange { .. } | Self::Custom => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub(in crate::project_slice::gcode_emit::processor) struct ParsedLine<'a> {
+    pub(in crate::project_slice::gcode_emit::processor) raw: &'a str,
+    pub(in crate::project_slice::gcode_emit::processor) custom: Option<CustomTag<'a>>,
+}
+
+impl<'a> ParsedLine<'a> {
+    pub(in crate::project_slice::gcode_emit::processor) fn new(raw: &'a str, bbl: bool) -> Self {
+        Self {
+            raw,
+            custom: parse_custom_tag(raw, bbl),
+        }
+    }
+}
+
+fn parse_custom_tag(line: &str, bbl: bool) -> Option<CustomTag<'_>> {
+    let comment = line.strip_prefix(';')?;
+    let tags = if bbl { &BBL_TAGS } else { &COMPATIBLE_TAGS };
+    if comment.starts_with(tags.color_change) {
+        // boost::split(token_compress_on) retains the final empty token.
+        let mut tokens = comment
+            .split(',')
+            .filter(|token| !token.is_empty())
+            .chain(comment.ends_with(',').then_some(""));
+        let mut filament = 0;
+        if let Some(tool) = tokens.nth(1).and_then(|token| token.strip_prefix('T')) {
+            match tool.parse::<i32>() {
+                Ok(tool @ 0..=255) => filament = tool as usize,
+                _ => return None,
+            }
+        }
+        Some(CustomTag::ColorChange {
+            filament,
+            color: tokens.next(),
+        })
+    } else if comment == tags.pause_print {
+        Some(CustomTag::PausePrint)
+    } else if comment == tags.custom_code {
+        Some(CustomTag::Custom)
+    } else {
+        None
+    }
+}
+
 impl MoveRecorder {
     pub(super) fn tag(
         &mut self,
         source: usize,
-        comment: &str,
+        line: ParsedLine<'_>,
         g1_line_id: usize,
         position: [f64; 4],
     ) {
+        let comment = &line.raw[1..];
+        let custom = line.custom;
         let tags = self.tags;
         if let Some(role) = comment.strip_prefix(tags.role) {
             self.role = ExtrusionRole::from_name(role);
@@ -57,9 +129,9 @@ impl MoveRecorder {
             if let Ok(width) = width.parse() {
                 self.forced_width = width;
             }
-        } else if comment.starts_with(tags.color_change) {
-            self.color_change(source, comment, position);
-        } else if comment == tags.pause_print {
+        } else if let Some(CustomTag::ColorChange { filament, color }) = custom {
+            self.color_change(source, filament, color, position);
+        } else if matches!(custom, Some(CustomTag::PausePrint)) {
             self.store(source, EMoveType::PausePrint, position, 0.0);
             self.custom_gcode_per_print_z.push(CustomGCodeItem {
                 print_z: position[2],
@@ -72,7 +144,7 @@ impl MoveRecorder {
                 self.moves.len() - 1,
                 self.custom_gcode_per_print_z.len() - 1,
             ));
-        } else if comment == tags.custom_code {
+        } else if matches!(custom, Some(CustomTag::Custom)) {
             self.store(source, EMoveType::CustomGCode, position, 0.0);
             self.custom_gcode_per_print_z.push(CustomGCodeItem {
                 print_z: position[2],
@@ -91,23 +163,17 @@ impl MoveRecorder {
     }
 
     /// `GCodeProcessor.cpp:3237-3301`: active-filament metadata and color ids.
-    fn color_change(&mut self, source: usize, comment: &str, position: [f64; 4]) {
+    fn color_change(
+        &mut self,
+        source: usize,
+        filament: usize,
+        color: Option<&str>,
+        position: [f64; 4],
+    ) {
         const DEFAULT_COLORS: [&str; 6] = [
             "#0B2C7A", "#1C8891", "#AAF200", "#F5CE0A", "#D16830", "#942616",
         ];
-        // boost::split(token_compress_on) retains the final empty token.
-        let mut tokens = comment
-            .split(',')
-            .filter(|token| !token.is_empty())
-            .chain(comment.ends_with(',').then_some(""));
-        let mut filament = 0;
-        if let Some(tool) = tokens.nth(1).and_then(|token| token.strip_prefix('T')) {
-            match tool.parse::<i32>() {
-                Ok(tool @ 0..=255) => filament = tool as usize,
-                _ => return,
-            }
-        }
-        let color = match tokens.next() {
+        let color = match color {
             Some(color)
                 if color.len() == 7
                     && color.starts_with('#')

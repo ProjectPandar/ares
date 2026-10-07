@@ -1,6 +1,9 @@
 //! `GCodeProcessor` motion accounting and exported progress-time lookup.
 
+mod commands;
+mod custom_time;
 mod elapsed;
+use commands::{arc_seams, record_motions, synchronizes_planner};
 mod export_cache;
 mod seam;
 use elapsed::elapsed_snapshots;
@@ -8,9 +11,10 @@ use seam::SeamDetector;
 
 use super::arc_accounting::arc_internal_g1_lines;
 use super::delays::command_delay;
-use super::filament_change::{FilamentChange, unloads_filament};
+use super::filament_change::FilamentChange;
 use super::motion::{IndexedMotion, MotionBlock, MotionKind, MotionState};
 use super::motion_util::word;
+use super::moves::tags::ParsedLine;
 use super::moves::{MoveRecorder, RecordedMotion};
 use super::schedule::{DelayTarget, FlushEvent, PendingDelay, Schedule, scheduled_times};
 use super::{ProcessorConfig, is_progress_motion};
@@ -18,6 +22,7 @@ use super::{ProcessorConfig, is_progress_motion};
 pub(super) struct Estimate {
     pub(super) total: f64,
     pub(super) prepare: f64,
+    pub(super) custom_gcode_times: Vec<crate::gcode_processor::CustomGCodeTime>,
     elapsed: Vec<Option<f64>>,
     export_elapsed: Vec<Option<f32>>,
     #[cfg(test)]
@@ -37,6 +42,7 @@ impl Estimate {
         let mut state = MotionState::with_limits(limits);
         let mut prepare_stages = Vec::new();
         let mut events = Vec::new();
+        let mut custom_events = Vec::new();
         let mut prepare_stage = false;
         let mut saw_motion_command = false;
         let mut measure_g29_time = false;
@@ -71,8 +77,19 @@ impl Estimate {
                 state.position[2],
                 state.e_position,
             ];
+            let parsed = ParsedLine::new(line, limits.bbl_printer);
             if let Some(recorder) = recorder.as_deref_mut() {
-                recorder.line(index + 1, line, g1_line_id, line_start);
+                recorder.line(index + 1, parsed, g1_line_id, line_start);
+            }
+            if let Some(kind) = parsed
+                .custom
+                .and_then(|tag| tag.time_kind(filaments.current_filament()))
+            {
+                custom_events.push((kind, events.len()));
+                events.push(FlushEvent {
+                    block_count: blocks.len(),
+                    delay: None,
+                });
             }
             if code.starts_with("M622") && word(code, 'J').unwrap_or(0.0).round() == 1.0 {
                 measure_g29_time = true;
@@ -260,6 +277,7 @@ impl Estimate {
             times,
             trapezoids,
             trailing_delay,
+            flush_ends,
         } = scheduled_times(&blocks, &events);
         if let Some(recorder) = recorder {
             recorder.apply_schedule(&block_moves, &times, &trapezoids);
@@ -303,8 +321,12 @@ impl Estimate {
             .zip(prepare_stages)
             .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
             .fold(0.0_f32, |sum, time| sum + *time as f32) as f64;
+        let total = cumulative + trailing_delay;
+        let custom_gcode_times =
+            custom_time::custom_times(&custom_events, &flush_ends, &times, trailing_delay, total);
         Self {
-            total: cumulative + trailing_delay,
+            total,
+            custom_gcode_times,
             prepare,
             elapsed,
             export_elapsed,
@@ -320,61 +342,4 @@ impl Estimate {
     pub(super) fn export_elapsed_at(&self, line: usize) -> Option<f32> {
         self.export_elapsed[line]
     }
-}
-
-/// The `Seam` vertex each arc segment's `process_G1` stores, if any; a
-/// seam-carrying or non-cacheable segment stays out of `g1_times_cache`.
-fn arc_seams(
-    seams: &mut SeamDetector,
-    motion_blocks: &[IndexedMotion],
-    arc_start: [f64; 3],
-    wiping: bool,
-    cache_eligible: &mut Vec<bool>,
-) -> Vec<Option<[f32; 3]>> {
-    let mut position = arc_start;
-    motion_blocks
-        .iter()
-        .map(|IndexedMotion { block, .. }| {
-            let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
-            let extruding =
-                !wiping && block.delta[3] > 0.0 && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
-            position = end;
-            let seam = seams.associate(extruding, end);
-            cache_eligible.push((!block.e_only || wiping) && seam.is_none());
-            seam
-        })
-        .collect()
-}
-
-/// Records one command's `process_G1` vertices; each arc segment starts
-/// where the previous one ended. Returns the move id of every block.
-fn record_motions(
-    recorder: &mut MoveRecorder,
-    mut motion: RecordedMotion,
-    motions: &[IndexedMotion],
-    seams: &[Option<[f32; 3]>],
-) -> Vec<u32> {
-    motions
-        .iter()
-        .enumerate()
-        .map(|(index, indexed)| {
-            motion.end = indexed.end;
-            motion.seam = seams.get(index).copied().flatten();
-            let move_id = recorder.motion(motion);
-            motion.start = indexed.end;
-            move_id
-        })
-        .collect()
-}
-
-fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {
-    let command = code.split_whitespace().next().unwrap_or_default();
-    matches!(command, "M0" | "M1")
-        || matches!(command, "G4" | "M400")
-            && (word(code, 'S').is_some() || word(code, 'P').is_some())
-        || measured_g29
-        || command == "M191" && word(code, 'S').unwrap_or(0.0) > 40.0
-        || command == "G92" && word(code, 'E').is_none()
-        || unloads_filament(code)
-        || command == "SYNC" && word(code, 'T').is_some()
 }

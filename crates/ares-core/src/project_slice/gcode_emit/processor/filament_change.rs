@@ -29,6 +29,10 @@ impl<'a> FilamentChange<'a> {
         }
     }
 
+    pub(super) fn current_filament(&self) -> usize {
+        self.physical.and_then(|id| self.current[id]).unwrap_or(0)
+    }
+
     /// Returns the selected filament and the change's extra time.
     pub(super) fn command(&mut self, code: &str) -> Option<(usize, f32)> {
         let command = code.split_whitespace().next()?;

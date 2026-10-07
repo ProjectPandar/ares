@@ -26,6 +26,8 @@ pub(super) struct Schedule {
     /// the zero default.
     pub(super) trapezoids: Vec<Trapezoid>,
     pub(super) trailing_delay: f64,
+    /// Processed-block count after each explicit synchronization.
+    pub(super) flush_ends: Vec<usize>,
 }
 
 pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> Schedule {
@@ -35,6 +37,7 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
     let mut pending = VecDeque::new();
     let mut pushed = 0;
     let mut emitted = 0;
+    let mut flush_ends = Vec::with_capacity(events.len());
 
     for event in events {
         while pushed < event.block_count {
@@ -54,6 +57,7 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
         }
         let batch = planner.flush();
         record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
+        flush_ends.push(emitted);
     }
     while pushed < blocks.len() {
         let batch = planner.push(&blocks[pushed]);
@@ -71,6 +75,7 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
         times,
         trapezoids,
         trailing_delay: f64::from(trailing_delay),
+        flush_ends,
     }
 }
 

@@ -4,14 +4,14 @@
 
 mod actual_speed;
 mod extrusion;
-mod tags;
+pub(super) mod tags;
 
 use super::ProcessorConfig;
 use super::motion::Trapezoid;
 use super::motion_util::{MMMIN_TO_MMSEC, word};
 use crate::ExtrusionRole;
 use crate::gcode_processor::{CustomGCodeItem, EMoveType, GCodeProcessorResult, MoveVertex};
-use tags::{BBL_TAGS, COMPATIBLE_TAGS, Tags};
+use tags::{BBL_TAGS, COMPATIBLE_TAGS, ParsedLine, Tags};
 
 const DEFAULT_TOOLPATH_WIDTH: f32 = 0.4;
 const DEFAULT_TOOLPATH_HEIGHT: f32 = 0.2;
@@ -139,17 +139,17 @@ impl MoveRecorder {
     pub(super) fn line(
         &mut self,
         source: usize,
-        line: &str,
+        line: ParsedLine<'_>,
         g1_line_id: usize,
         position: [f64; 4],
     ) {
-        if let Some(comment) = line.strip_prefix(';') {
-            if line.len() > 2 {
-                self.tag(source, comment, g1_line_id, position);
+        if line.raw.starts_with(';') {
+            if line.raw.len() > 2 {
+                self.tag(source, line, g1_line_id, position);
             }
             return;
         }
-        let code = line.split(';').next().unwrap_or_default().trim();
+        let code = line.raw.split(';').next().unwrap_or_default().trim();
         let mut words = code.split_whitespace();
         let filament = self.filament;
         match words.next() {

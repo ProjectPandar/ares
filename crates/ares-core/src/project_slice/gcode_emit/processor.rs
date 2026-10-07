@@ -218,6 +218,7 @@ pub(super) fn process(
         std::mem::take(&mut processor_result.print_statistics.volumes_per_color_change);
     processor_result.print_statistics = statistics;
     processor_result.extruder_colors = config.extruder_colors;
+    processor_result.custom_gcode_times = estimate.custom_gcode_times;
     crate::ProcessedGCode {
         gcode,
         result: processor_result,

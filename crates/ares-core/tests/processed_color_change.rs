@@ -255,13 +255,15 @@ fn check_native_processor(output: &ares_core::ProcessedGCode, name: &str) {
     assert_eq!(output.result.custom_gcode_times.len(), expected_times.len());
     for (actual, expected) in output.result.custom_gcode_times.iter().zip(expected_times) {
         assert_eq!(actual.kind as u64, expected["type"].as_u64().unwrap());
+        // Native fields are float (GCodeProcessor.hpp:505). Compare those
+        // bits, not extra f64 precision introduced by JSON decimal parsing.
         assert_eq!(
-            f64::from(actual.duration),
-            expected["duration"].as_f64().unwrap()
+            actual.duration.to_bits(),
+            (expected["duration"].as_f64().unwrap() as f32).to_bits()
         );
         assert_eq!(
-            f64::from(actual.remaining),
-            expected["remaining"].as_f64().unwrap()
+            actual.remaining.to_bits(),
+            (expected["remaining"].as_f64().unwrap() as f32).to_bits()
         );
     }
     std::fs::write(
