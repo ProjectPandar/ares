@@ -13,6 +13,13 @@ and all `case-LqoYic` artifacts. No ignored test or numeric fallback is added.
 Repository-cube10 X2D input:
 `/tmp/ares-x2d-flush-matrix/red/seeded/case-LqoYic/input.3mf`.
 Original admission and input SHA remain in `red/admitted-red.json`.
+This is a **test-constructed input, not a real GUI-saved 3MF**: the test exports
+repository `tests/parity/cube10.stl` with the stock X2D machine/process/filament
+profiles through Native CLI, binds two logical filaments, then rewrites
+`Metadata/project_settings.config` (including the scalar nozzle-volume type and
+four-entry matrix) and adds explicit end-G-code tool switches. It is not a
+cropped customer GUI project. O8-X2D-SCALAR is scheduled after FM; genuine GUI
+provenance, if subsequently established for another reproducer, raises priority.
 
 Fresh source base `d789b0750` includes `458938aa4`; candidate test-only HEAD
 `304bda1ebd9a1984f3cf9f01270424298c57f4fc` plus uncommitted FM preparation.
