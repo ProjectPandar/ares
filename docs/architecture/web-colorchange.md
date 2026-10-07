@@ -1,7 +1,9 @@
 # ColorChange / M600 preview — source-cited rewrite spec
 
-Status: approved (`d5f91a6c0`); implementation complete, awaiting review.
-Final code checkpoint: `96f91ff28`, based on `43df7c95d`.
+Status: approved and fast-forwarded to main at `70323c9a7`.
+Spec approval: `d5f91a6c0`. Full gate checkpoint: `96f91ff28`, based on
+`43df7c95d`; the final stop-time unwrap removal in `70323c9a7` passed focused
+M73 byte tests (3/3), fmt and workspace clippy under the approved review scope.
 
 Implementation constraints from approval: core changes are processor parsing
 and statistics only; slicing/emission behavior is out of scope. Tagged slice

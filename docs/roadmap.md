@@ -9001,8 +9001,8 @@ independent and can follow on the same branch.
 ### ColorChange / M600 preview continuation
 
 Filament/ColorPrint `9b5db6d7a` is approved and merged. The
-[ColorChange rewrite spec](architecture/web-colorchange.md) is implemented
-and awaiting coordinator review: upstream
+[ColorChange rewrite spec](architecture/web-colorchange.md) is approved and
+merged at `70323c9a7`: upstream
 `GCodeProcessor` custom items, `UsedFilaments::volumes_per_color_change` and
 normal custom times → ares-core; `libvgcode::ColorPrint` and GCodeViewer
 partial display records → ares-vgcode; thin WASM and lazy display-only TS.
@@ -9018,5 +9018,21 @@ reference 561/561 in both trees; full browser 14/14 base and 15/15 candidate;
 candidate initial JS gzip 124,953 B. Official retains eight shared environment
 failures; the extra base tree-support failure has exact raw-Ares equality
 and differing native M73 insertion evidence. See the architecture record for
-artifacts, setup corrections and approved diagnostic distinctions. Do not
-merge before approval; a later VG1/UsedFilaments merger must rebase and rerun.
+artifacts, setup corrections and approved diagnostic distinctions. A later
+VG1/UsedFilaments merger must rebase and rerun.
+
+### Tool-position Time row — proposed next thin-display slice
+
+Review [the marker-time spec](architecture/web-marker-time.md) before writing
+implementation code. Port `libvgcode::ViewerImpl::get_estimated_time_at`
+(`ViewerImpl.cpp:1461-1465`) into ares-vgcode and transport its inclusive f32
+prefix plus the existing selected vertex duration to the lazy Time property
+(`GCodeViewer.cpp:345-355,452-454`). No core timing, M73, slicing or accounting
+changes. The README's slider `alternate_values` time/distance claim was
+incorrect: those values are G-code IDs, not a new feature to invent.
+
+Exit: source-kernel/native processor f32-bit and display-text evidence,
+RED-before-GREEN, unchanged G-code/M73, reload/filter/seam correctness, full
+Rust/build/browser gates and initial JS gzip strictly below 125,000 B.
+Stealth UI, acceleration/jerk/PA, actual-speed profile and slider time/distance
+remain deferred. This milestone is spec-only until coordinator approval.

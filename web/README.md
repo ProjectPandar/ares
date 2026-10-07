@@ -74,8 +74,10 @@ filament colors and custom G-code items, including the pause/custom gray entry.
 ## Known differences from OrcaSlicer
 
 - The Preview Filament (`ColorPrint`) view uses the processed tool colors and
-  metric usage columns and result-derived palettes. Custom ColorChange ranges and imperial units
-  are deferred (`GCodeViewer.cpp:4026-4034`, `color_print_ranges`). Its Display
+  metric usage columns and result-derived palettes. Source-selected ColorChange
+  ranges and partial records are available; absent native volume intervals make
+  partial usage unavailable rather than inferred. Imperial units remain deferred.
+  Its Display
   header has no visibility control: the upstream row callback is empty
   (`GCodeViewer.cpp:4097`); this slice does not invent one.
 
@@ -89,15 +91,18 @@ filament colors and custom G-code items, including the pause/custom gray entry.
   composes the full selection. OrcaSlicer updates the bed as soon as the
   printer changes (`Plater::priv::on_select_preset` -> `on_config_change` ->
   `set_bed_shape`, `Plater.cpp:9576-9580, 16754-16755`).
-- The Preview moves slider labels its thumb (the higher one, the only one a
-  horizontal `IMSlider` draws, `IMSlider.cpp:1241-1248`) with the G-code line
-  of the stop. OrcaSlicer also shows the estimated time or distance of a stop
-  (`alternate_values`).
+- The Preview moves slider labels its higher thumb with the G-code line of
+  the stop. Upstream `GCodeViewer.cpp:1765-1821` also supplies G-code IDs as
+  `alternate_values`; this is not an elapsed-time/distance feature. The
+  separate tool-position Time property is proposed in
+  [the marker-time spec](../docs/architecture/web-marker-time.md), not implemented.
 - The Preview tool position window (`Marker::render_position_window`,
   `GCodeViewer.cpp:325-690`) lists Type, Line Type, Width, Height, Layer, Speed,
   Flow rate, Fan speed and Temperature. OrcaSlicer also lists Acceleration,
-  Jerk, Pressure Advance and the estimated Time, and offers the actual speed
-  profile; the engine does not record those per move yet. The marker arrow is a
+  Jerk, Pressure Advance and Time, and offers the actual speed profile.
+  Time's vertex durations are already recorded; the source-owned inclusive
+  lookup and Time row are not wired yet. The other properties/profile remain
+  deferred. The marker arrow is a
   Three.js cone on a cylinder with the `stilized_arrow(16, 1.5, 3.0, 0.8, 3.0)`
   dimensions (`GLModel.cpp:934`), lit by the viewport lights instead of the
   `gouraud_light` shader.
