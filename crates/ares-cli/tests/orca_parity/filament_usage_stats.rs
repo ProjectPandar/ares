@@ -85,6 +85,17 @@ fn assert_statistics_own_footer(runner: &OrcaRunner, exported: &runner::Exported
     let sliced = runner.slice_case(exported).unwrap();
     let processed = processed_gcode(&sliced.project);
     let own = std::str::from_utf8(&processed.gcode).unwrap();
+    if let Some(directory) = std::env::var_os("ARES_FILAMENT_STATS_ARTIFACTS") {
+        let directory = std::path::PathBuf::from(directory);
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("ares.gcode"), &processed.gcode).unwrap();
+        std::fs::write(
+            directory.join("ares-statistics.txt"),
+            format!("{:#?}", processed.result.print_statistics),
+        )
+        .unwrap();
+        std::fs::write(directory.join("input.3mf"), &sliced.project).unwrap();
+    }
     assert_footer_equal(&processed, exported, own, "own");
 }
 
@@ -145,17 +156,8 @@ fn assert_footer_equal(
             format!("{:.2}", expected_g[id]),
             "extruder {id}: volume {volume} g vs {footer_source} footer"
         );
-        assert!(
-            (stats.model_volumes_per_extruder[id]
-                + stats.support_volumes_per_extruder[id]
-                + stats.wipe_tower_volumes_per_extruder[id]
-                + stats.flush_per_filament[id]
-                - volume)
-                .abs()
-                < 1e-6,
-            "extruder {id}: splits do not sum to total {volume}"
-        );
     }
+    crate::filament_volume_oracle::check(processed);
     let colours = settings["filament_colour"]
         .as_array()
         .unwrap()

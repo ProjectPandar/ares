@@ -21,6 +21,8 @@ mod empty_selected_plate;
 mod empty_selected_plate_controls;
 #[path = "orca_parity/filament_usage_stats.rs"]
 mod filament_usage_stats;
+#[path = "orca_parity/filament_volume_oracle.rs"]
+mod filament_volume_oracle;
 #[path = "orca_parity/flow_errors.rs"]
 mod flow_errors;
 #[path = "orca_parity/honeycomb_multiline.rs"]
