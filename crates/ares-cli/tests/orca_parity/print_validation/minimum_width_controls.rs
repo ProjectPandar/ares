@@ -20,7 +20,7 @@ fn check(extra: Value, rejected: bool) {
     std::fs::write(evidence.join("result.json"), serde_json::to_vec_pretty(&json!({"settings":extra, "expected_rejection":rejected, "ares":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
     if rejected {
         assert!(
-            matches!(actual, Err(SliceError::InvalidInput(ref text)) if text == ERROR),
+            matches!(actual, Err(SliceError::Validate { message: ref text, .. }) if text == ERROR),
             "expected exact O4 rejection: {actual:?}; {evidence:?}"
         );
     } else {

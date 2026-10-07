@@ -135,12 +135,12 @@ fn verify(label: &str, input: &[u8], expected_hash: &str) {
         "oracle":oracle, "ares_validation":validation_report, "ares_validated_slice":slice_report,
     })).unwrap()).unwrap();
     assert!(
-        matches!(validation, Err(SliceError::InvalidInput(ref text)) if text == ERROR),
+        matches!(validation, Err(SliceError::Validate { message: ref text, .. }) if text == ERROR),
         "independent Print validation must match native; evidence: {}",
         directory.display()
     );
     assert!(
-        matches!(sliced, Ok(Err(SliceError::InvalidInput(ref text))) if text == ERROR),
+        matches!(sliced, Ok(Err(SliceError::Validate { message: ref text, .. })) if text == ERROR),
         "validated composition must match native; evidence: {}",
         directory.display()
     );

@@ -20,7 +20,7 @@ fn o1_processed_project_entry_rejects_missing_reset() {
             SlicerContext::new(0),
         ));
     assert!(
-        matches!(result, Err(SliceError::InvalidInput(ref text)) if text == RELATIVE_ERROR),
+        matches!(result, Err(SliceError::Validate { message: ref text, .. }) if text == RELATIVE_ERROR),
         "observed error: {:?}",
         result.as_ref().err()
     );
@@ -103,7 +103,7 @@ fn o1_profile_entries_reject_relative_without_reset() {
             SlicerContext::new(0),
         ));
         assert!(
-            matches!(result, Err(SliceError::InvalidInput(ref text)) if text == RELATIVE_ERROR),
+            matches!(result, Err(SliceError::Validate { message: ref text, .. }) if text == RELATIVE_ERROR),
             "observed error: {:?}",
             result.as_ref().err()
         );
@@ -114,7 +114,7 @@ fn o1_profile_entries_reject_relative_without_reset() {
             SlicerContext::new(0),
         ));
         assert!(
-            matches!(result, Err(SliceError::InvalidInput(ref text)) if text == RELATIVE_ERROR),
+            matches!(result, Err(SliceError::Validate { message: ref text, .. }) if text == RELATIVE_ERROR),
             "observed error: {:?}",
             result.as_ref().err()
         );

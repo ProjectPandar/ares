@@ -82,11 +82,11 @@ pub(super) fn verify(input: &[u8], hash: &str, fields: Value, expected: &str) {
     }
     fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"input_sha256":hash,"overrides":fields,"expected_error":expected,"oracle":oracle,"validation":validation.as_ref().map_err(ToString::to_string),"validated_slice":sliced.as_ref().map(Vec::len).map_err(ToString::to_string)})).unwrap()).unwrap();
     assert!(
-        matches!(validation,Err(SliceError::InvalidInput(ref text)) if text==expected),
+        matches!(validation,Err(SliceError::Validate { message: ref text, .. }) if text==expected),
         "{validation:?}; {directory:?}"
     );
     assert!(
-        matches!(sliced,Err(SliceError::InvalidInput(ref text)) if text==expected),
+        matches!(sliced,Err(SliceError::Validate { message: ref text, .. }) if text==expected),
         "{sliced:?}; {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());

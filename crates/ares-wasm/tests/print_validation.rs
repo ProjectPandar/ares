@@ -27,7 +27,7 @@ fn o1_wasm_project_core_boundary_preserves_print_validation_error() {
         ares_core::validate_project_plate(INPUT, None, &ares_core::ConfigOverrides::default());
     let artifact = tempfile_root("o1-wasm-project-core.json", &format!("{result:?}"));
     assert!(
-        matches!(result, Err(ares_core::SliceError::InvalidInput(ref text)) if text == ERROR),
+        matches!(result, Err(ares_core::SliceError::Validate { message: ref text, .. }) if text == ERROR),
         "{}",
         artifact.display()
     );

@@ -24,7 +24,7 @@ fn check(extra: Value, bbl: bool, expected: Option<&str>) {
     std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"settings":fields,"bbl":bbl,"expected_error":expected,"actual":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
     if let Some(expected) = expected {
         assert!(
-            matches!(actual,Err(SliceError::InvalidInput(ref text)) if text==expected),
+            matches!(actual,Err(SliceError::Validate { message: ref text, .. }) if text==expected),
             "{actual:?}; {directory:?}"
         );
     } else {
@@ -192,11 +192,11 @@ fn print_bed_compat_default_sentinel_exact_public_error_not_native_red() {
     let directory = super::evidence_directory("print-bed-default-");
     std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"accepted_deviation":"native139UB; currentAresError/noGcode/noPanic; NOTparityRED","overrides":fields,"expected_error":DEFAULT_ERROR,"validation":validation.as_ref().map_err(ToString::to_string),"validated_slice":sliced.as_ref().map(Vec::len).map_err(ToString::to_string)})).unwrap()).unwrap();
     assert!(
-        matches!(validation,Err(SliceError::InvalidInput(ref text)) if text==DEFAULT_ERROR),
+        matches!(validation,Err(SliceError::Validate { message: ref text, .. }) if text==DEFAULT_ERROR),
         "{validation:?}; {directory:?}"
     );
     assert!(
-        matches!(sliced,Err(SliceError::InvalidInput(ref text)) if text==DEFAULT_ERROR),
+        matches!(sliced,Err(SliceError::Validate { message: ref text, .. }) if text==DEFAULT_ERROR),
         "{sliced:?}; {directory:?}"
     );
     check(fields, false, Some(DEFAULT_ERROR));

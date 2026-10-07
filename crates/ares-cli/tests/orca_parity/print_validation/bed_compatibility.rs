@@ -92,11 +92,11 @@ pub(super) fn verify(input: &[u8], hash: &str, fields: Value, expected: &str) {
     )
     .unwrap();
     assert!(
-        matches!(validation,Err(SliceError::InvalidInput(ref text)) if text==expected),
+        matches!(validation,Err(SliceError::Validate { message: ref text, .. }) if text==expected),
         "{validation:?}; {directory:?}"
     );
     assert!(
-        matches!(sliced,Err(SliceError::InvalidInput(ref text)) if text==expected),
+        matches!(sliced,Err(SliceError::Validate { message: ref text, .. }) if text==expected),
         "{sliced:?}; {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());

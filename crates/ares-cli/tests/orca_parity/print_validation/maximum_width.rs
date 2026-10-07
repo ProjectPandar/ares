@@ -89,11 +89,11 @@ fn verify(width: &str) {
     )
     .unwrap();
     assert!(
-        matches!(validation, Err(SliceError::InvalidInput(ref text)) if text == "Too large line width"),
+        matches!(validation, Err(SliceError::Validate { message: ref text, .. }) if text == "Too large line width"),
         "Print upper must precede later O4 lower: {validation:?}; {directory:?}"
     );
     assert!(
-        matches!(sliced, Err(SliceError::InvalidInput(ref text)) if text == "Too large line width"),
+        matches!(sliced, Err(SliceError::Validate { message: ref text, .. }) if text == "Too large line width"),
         "validated composition must preserve the same first error; {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());

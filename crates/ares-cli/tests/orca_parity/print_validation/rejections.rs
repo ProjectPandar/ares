@@ -41,7 +41,8 @@ pub(crate) fn compare(exported: &ExportedCase, error: &StageError) -> Option<Par
     fs::write(directory.join("input.3mf"), &exported.project).unwrap();
     let actual =
         ares_core::validate_project_plate(&exported.project, None, &ConfigOverrides::default());
-    let matched = matches!(&actual, Err(SliceError::InvalidInput(text)) if text == message);
+    let matched =
+        matches!(&actual, Err(SliceError::Validate { message: text, .. }) if text == message);
     let ares = match actual {
         Ok(()) => json!({"status": "VALIDATED"}),
         Err(error) => json!({"status":"ERROR", "error":error.to_string()}),

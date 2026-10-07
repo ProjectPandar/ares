@@ -126,11 +126,11 @@ async fn original_profile(nozzle: &str) {
         FILAMENT
     );
     assert!(
-        matches!(validated, Err(SliceError::InvalidInput(text)) if text == ERROR),
+        matches!(validated, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),
         "evidence {directory:?}"
     );
     assert!(
-        matches!(sliced, Err(SliceError::InvalidInput(text)) if text == ERROR),
+        matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),
         "evidence {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());

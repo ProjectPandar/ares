@@ -82,11 +82,11 @@ pub(super) fn verify(fields: Value) {
     )
     .unwrap();
     assert!(
-        matches!(validation,Err(SliceError::InvalidInput(ref text)) if text=="Layer height cannot exceed nozzle diameter."),
+        matches!(validation,Err(SliceError::Validate { message: ref text, .. }) if text=="Layer height cannot exceed nozzle diameter."),
         "{validation:?}; {directory:?}"
     );
     assert!(
-        matches!(sliced,Err(SliceError::InvalidInput(ref text)) if text=="Layer height cannot exceed nozzle diameter."),
+        matches!(sliced,Err(SliceError::Validate { message: ref text, .. }) if text=="Layer height cannot exceed nozzle diameter."),
         "validated composition mismatch; {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());

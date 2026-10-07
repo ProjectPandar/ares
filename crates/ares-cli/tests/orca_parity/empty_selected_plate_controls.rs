@@ -113,5 +113,5 @@ fn empty_selected_plate_control_nonempty_outside_volume_keeps_later_error() {
         "label": "empty-plate-control/outside", "native": native, "ares": actual.as_ref().err().map(ToString::to_string),
         "ares_debug": format!("{actual:?}"), "source": "OrcaSlicer.cpp:5710-5724; unchanged print volume gate",
     })).unwrap()).unwrap();
-    assert!(matches!(actual, Err(SliceError::InvalidInput(ref text)) if text == OUTSIDE));
+    assert!(matches!(actual, Err(SliceError::NoSuitableObjects(ref text)) if text == OUTSIDE));
 }

@@ -24,7 +24,7 @@ fn print_applied_map_flat_shared_map_retains_height_error() {
     )
     .unwrap();
     assert!(
-        matches!(actual,Err(SliceError::InvalidInput(ref text)) if text=="Layer height cannot exceed nozzle diameter."),
+        matches!(actual,Err(SliceError::Validate { message: ref text, .. }) if text=="Layer height cannot exceed nozzle diameter."),
         "{actual:?}; {directory:?}"
     );
 }
@@ -70,7 +70,7 @@ fn print_applied_map_flat_missing_map_lookup_guard_is_preserved() {
     )
     .unwrap();
     assert!(
-        matches!(actual,Err(SliceError::InvalidInput(ref text)) if text=="invalid filament_map"),
+        matches!(actual,Err(SliceError::Validate { message: ref text, .. }) if text=="invalid filament_map"),
         "{actual:?}; {directory:?}"
     );
 }

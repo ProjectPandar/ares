@@ -36,7 +36,7 @@ async fn orca_parity_o2_legacy_stl_firmware_wipe() {
     let actual = ares_core::slice_stl_validated(&input, options).await;
     record_actual(&directory, native, &actual);
     assert!(
-        matches!(actual, Err(SliceError::InvalidInput(text)) if text == ERROR),
+        matches!(actual, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),
         "evidence {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());
@@ -120,7 +120,7 @@ async fn orca_parity_o2_any_wipe_before_variant_selection() {
     .await;
     record_actual(&directory, native, &actual);
     assert!(
-        matches!(actual, Err(SliceError::InvalidInput(text)) if text == ERROR),
+        matches!(actual, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),
         "evidence {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());

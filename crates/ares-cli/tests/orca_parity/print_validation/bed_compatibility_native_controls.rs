@@ -92,7 +92,7 @@ fn print_bed_compat_native_selected_second_plate_reports_plate_two() {
     ));
     fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"input_sha256":hash,"selected_plate":2,"oracle":oracle,"expected_error":expected,"validation":validation.as_ref().map_err(ToString::to_string),"validated_slice":sliced.as_ref().map(Vec::len).map_err(ToString::to_string)})).unwrap()).unwrap();
     assert!(
-        matches!(validation, Err(ares_core::SliceError::InvalidInput(ref text)) if text==expected),
+        matches!(validation, Err(ares_core::SliceError::Validate { message: ref text, .. }) if text==expected),
         "{validation:?}; {directory:?}"
     );
 }

@@ -21,7 +21,7 @@ fn check_exact(extra: Value, expected: Option<&str>) {
     std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"settings":fields,"expected_error":expected,"actual":actual.as_ref().map_err(ToString::to_string)})).unwrap()).unwrap();
     if let Some(expected) = expected {
         assert!(
-            matches!(actual,Err(SliceError::InvalidInput(ref text)) if text==expected),
+            matches!(actual,Err(SliceError::Validate { message: ref text, .. }) if text==expected),
             "{actual:?}; {directory:?}"
         );
     } else {

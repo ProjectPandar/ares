@@ -131,7 +131,7 @@ fn verify(label: &str, input: &[u8], entry: Entry) {
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
-    let matched = matches!(&actual, Err(SliceError::InvalidInput(text)) if text == MESSAGE);
+    let matched = matches!(&actual, Err(SliceError::NoSuitableObjects(text)) if text == MESSAGE);
     fs::write(directory.join("result.json"), serde_json::to_vec_pretty(&json!({
         "label": label, "input_sha256": hash,
         "source": "bbs_3mf.cpp:2059-2080,2351-2363; Model.cpp:354-355; OrcaSlicer.cpp:1874-1877",

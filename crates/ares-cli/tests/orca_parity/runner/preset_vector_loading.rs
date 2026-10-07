@@ -115,7 +115,7 @@ async fn orca_parity_rh3d_original_scalar_vector_profile_loads_then_rejects_o2()
     assert!(loaded.is_ok(), "{load}; evidence {directory:?}");
     assert_eq!(load["settings"]["default_filament_profile"], FILAMENT);
     assert!(
-        matches!(sliced, Err(SliceError::InvalidInput(text)) if text == ERROR),
+        matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),
         "{slice}; evidence {directory:?}",
     );
     assert!(!directory.join("ares.gcode").exists());

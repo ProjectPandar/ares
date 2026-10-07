@@ -148,7 +148,7 @@ fn verify_stock_rejection(label: &str, project: &[u8], expected_hash: &str, expe
     )
     .unwrap();
     assert!(
-        matches!(actual, Err(SliceError::InvalidInput(ref message)) if message == expected_error),
+        matches!(actual, Err(SliceError::Validate { message: ref message, .. }) if message == expected_error),
         "O1 must reject the original stock input; evidence: {}",
         directory.display()
     );

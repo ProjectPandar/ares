@@ -16,7 +16,7 @@ fn check(extra: Value, expected: Option<&str>) {
     })).unwrap()).unwrap();
     match expected {
         Some(expected) => assert!(
-            matches!(actual, Err(SliceError::InvalidInput(ref text)) if text == expected),
+            matches!(actual, Err(SliceError::Validate { message: ref text, .. }) if text == expected),
             "{actual:?}; {directory:?}"
         ),
         None => assert!(actual.is_ok(), "{actual:?}; {directory:?}"),
