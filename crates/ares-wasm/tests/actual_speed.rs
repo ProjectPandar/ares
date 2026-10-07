@@ -84,4 +84,17 @@ fn actual_speed_view_types_expose_processor_values_and_ranges() {
         range(&mut vertices, "ActualVolumetricFlowRate", TRAVELS),
         [0.25, 2.0]
     );
+    // `append_range_item` prints the float values with `%.*f`: JS must read
+    // each legend value as the exact f32, not the f64 of its shortest decimal
+    // (f32 2.315 prints as 2.32, f64 2.315 as 2.31).
+    // Parsed with correctly rounded `str::parse`, as `JSON.parse` does
+    // (serde_json's default float parsing is not).
+    let json = vertices.color_range("ActualVolumetricFlowRate").unwrap();
+    let values = json.split_once("\"values\":[").unwrap().1;
+    let values: Vec<f64> = values[..values.find(']').unwrap()]
+        .split(',')
+        .map(|value| value.parse().unwrap())
+        .collect();
+    let exact: Vec<f64> = values.iter().map(|&v| f64::from(v as f32)).collect();
+    assert_eq!(values, exact, "color range values carry exact f32");
 }
