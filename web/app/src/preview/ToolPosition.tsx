@@ -1,5 +1,6 @@
 import { EXTRUSION_ROLES, MOVE_TYPES, type ExtrusionRole, type MoveType, type Toolpaths, VERTEX_VALUES, type VertexValue } from "@ares-slicer/wasm";
 import { useState } from "react";
+import { printf } from "./toolPositionFormat";
 
 /** `to_string(EMoveType)` (`GCodeViewer.cpp:277-294`). */
 const TYPE_LABELS: Record<MoveType, string> = {
@@ -19,19 +20,6 @@ const ROLE_LABELS: Record<ExtrusionRole, string> = {
 };
 
 const NA = "N/A";
-const formats = new Map<number, Intl.NumberFormat>();
-
-/** printf `%.Nf`: half to even on the exact float value, as glibc rounds. */
-function printf(value: number, decimals: number) {
-  let format = formats.get(decimals);
-  if (!format) {
-    format = new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: decimals, maximumFractionDigits: decimals, roundingMode: "halfEven", useGrouping: false,
-    });
-    formats.set(decimals, format);
-  }
-  return format.format(value);
-}
 
 /** The view type detail after the speed (`GCodeViewer.cpp:360-412`); empty for Speed. */
 function detail(viewType: string, value: (name: VertexValue) => number, extrusion: boolean, label: string) {
