@@ -4,7 +4,10 @@ use crate::{
     runner::{OrcaRunner, application, repo_root, vg1_inputs::bind_two_filaments},
 };
 use serde_json::json;
-fn check(printer: &str, virtual_moves: bool) {
+#[path = "vg1/state_oracle.rs"]
+mod state_oracle;
+
+fn check(printer: &str, virtual_moves: bool, verify_state: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -22,8 +25,13 @@ fn check(printer: &str, virtual_moves: bool) {
     } else {
         ""
     };
+    let state_probe = if verify_state {
+        "M82\n; VG1_STATE_PROBE\nG1 X25 Y10 E45\nM83\n"
+    } else {
+        ""
+    };
     let end = format!(
-        "; VG1_TEST_BEGIN\nM83\nG92 E0\nG1 X10 Y10 F1200\nT1 H-1\n{virtual_segment}SYNC T5\nM1020 S1\nT0 H-1\nM1020 S0\nG1 X20 Y10 F1200\n; VG1_TEST_END\n{}",
+        "; VG1_TEST_BEGIN\nM83\nG92 E0\nG1 X10 Y10 F1200\nT1 H-1\n{virtual_segment}{state_probe}SYNC T5\nM1020 S1\nT0 H-1\nM1020 S0\nG1 X20 Y10 F1200\n; VG1_TEST_END\n{}",
         machine["machine_end_gcode"].as_str().unwrap()
     );
     let mut overrides = crate::smoke_case_overrides(&machine, &process);
@@ -32,7 +40,13 @@ fn check(printer: &str, virtual_moves: bool) {
     overrides.insert("filament_map".into(), json!(["1", "1"]));
     let label = format!(
         "vg1/{printer}/{}",
-        if virtual_moves { "positive" } else { "none" }
+        if verify_state {
+            "state"
+        } else if virtual_moves {
+            "positive"
+        } else {
+            "none"
+        }
     );
     let exported = runner
         .export_case(
@@ -71,6 +85,10 @@ fn check(printer: &str, virtual_moves: bool) {
         assert!(reference.contains(virtual_segment));
     }
     assert!(reference.lines().any(|line| line.starts_with("M73 ")));
+    if verify_state {
+        state_oracle::check(&case.project);
+        return;
+    }
     let outcome = crate::compare_case(&case);
     assert_eq!(
         outcome.status, "PASS",
@@ -81,9 +99,16 @@ fn check(printer: &str, virtual_moves: bool) {
 
 #[test]
 fn vg1_x1c_dual_filament_transition_matches_native() {
-    check("Bambu Lab X1 Carbon 0.4 nozzle", true);
+    check("Bambu Lab X1 Carbon 0.4 nozzle", true, false);
 }
 #[test]
 fn vg1_x1c_dual_filament_without_virtual_moves_matches_native() {
-    check("Bambu Lab X1 Carbon 0.4 nozzle", false);
+    check("Bambu Lab X1 Carbon 0.4 nozzle", false, false);
+}
+
+#[test]
+fn vg1_x1c_virtual_state_and_vertex_effects_match_native() {
+    if std::env::var_os("ARES_PROCGCODE_BIN").is_some() {
+        check("Bambu Lab X1 Carbon 0.4 nozzle", true, true);
+    }
 }
