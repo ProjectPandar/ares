@@ -79,6 +79,41 @@ async fn processed_layer_templates_preserve_ordered_color_change_items() {
 }
 
 #[tokio::test]
+async fn tag_defaults_invalid_colors_and_inactive_tools_match_native() {
+    for (name, tag, two_tools) in [
+        ("default-color", ";COLOR_CHANGE,T0", false),
+        ("default-tool-color", ";COLOR_CHANGE", false),
+        ("invalid-color", ";COLOR_CHANGE,T0,#ZZ0000", false),
+        ("out-of-range-tool", ";COLOR_CHANGE,T1,#FF0000", false),
+        ("inactive-tool", ";COLOR_CHANGE,T1,#FF0000", true),
+        ("inline-tag", "G4 P0 ;COLOR_CHANGE,T0,#FF0000", false),
+    ] {
+        let mut values = serde_json::json!({
+            "layer_change_gcode": format!("{{if layer_num == 2}}{tag}\nM600\n{{endif}}"),
+        });
+        if two_tools {
+            values["filament_diameter"] = serde_json::json!(["1.75", "1.75"]);
+            values["filament_colour"] = serde_json::json!(["#00AE42", "#0000FF"]);
+            values["nozzle_diameter"] = serde_json::json!(["0.4", "0.4"]);
+            // Per-head 2×2 matrix (two heads): keep the slicing fixture valid.
+            values["flush_volumes_matrix"] =
+                serde_json::json!(["0", "140", "140", "0", "0", "140", "140", "0"]);
+        }
+        let overrides = ConfigOverrides::from_json(&serde_json::to_vec(&values).unwrap()).unwrap();
+        let output = slice_project_plate_processed(
+            PROJECT.to_vec(),
+            GenerationMetadata::default(),
+            Some(1),
+            &overrides,
+            SlicerContext::new(0),
+        )
+        .await
+        .unwrap();
+        check_native_processor(&output, name);
+    }
+}
+
+#[tokio::test]
 async fn no_change_slice_is_a_native_processor_control() {
     let plain = slice_project_plate_processed(
         PROJECT.to_vec(),
