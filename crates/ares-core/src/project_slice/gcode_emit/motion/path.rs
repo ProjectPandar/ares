@@ -314,7 +314,6 @@ pub(super) fn emit(
             processed: &processed,
             original_speed,
             acceleration,
-            slope: properties.slope,
             properties,
             state,
         });

@@ -1,9 +1,6 @@
 use super::Slope;
-use crate::project_slice::gcode_emit::motion::extrusion;
 use crate::project_slice::gcode_emit::motion::{
-    EmitState, arc,
-    features::{PathProperties, feature_description, is_bridge_feature},
-    format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
+    EmitState, arc, extrusion, features::PathProperties,
 };
 
 pub(in crate::project_slice::gcode_emit::motion) fn segments(
@@ -29,19 +26,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
         let e_ratio = slope.e_begin + (slope.e_end - slope.e_begin) * ratio;
         let z =
             state.layer_z - f64::from(properties.height) + f64::from(properties.height) * z_ratio;
-        // Upstream splits the loop at the scarf boundary: only the ramp is
-        // `ExtrusionPathSloped` and every ramp move carries Z (including the
-        // final move that reaches the layer top); the saturated body is a
-        // plain path whose moves carry no Z word. Emit Z only when it
-        // changes from the previous segment: the last ramp move keeps its
-        // word, the body drops it.
-        let previous_z = state.scarf_z;
-        let z_word = if previous_z.is_some_and(|last| (z - last).abs() < 1.0e-9) {
-            String::new()
-        } else {
-            format!(" Z{}", format_z(z))
-        };
-        let extrusion = extrusion::for_length(
+        let delta = extrusion::for_length(
             length,
             properties.mm3_per_mm,
             state.options.filament_flow_ratio,
@@ -52,39 +37,18 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
                 .small_area_flow
                 .multiplier_for_feature(properties.feature, length)
             * e_ratio;
-        let extrusion = extrusion::coordinate(state, extrusion);
-        let end = arc::Point {
-            x: pair[1].0,
-            y: pair[1].1,
-        };
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{}{} E{}{}\n",
-                format_axis(end.x),
-                format_axis(end.y),
-                z_word,
-                format_extrusion(extrusion),
-                if state.options.gcode_comments {
-                    let bridge = if is_bridge_feature(properties.feature) {
-                        " (bridge)"
-                    } else {
-                        ""
-                    };
-                    format!(" ; {}{bridge}", feature_description(properties.feature))
-                } else {
-                    Default::default()
-                }
-            )
-            .as_bytes(),
+        extrusion::extrude_to_xyz(
+            output,
+            extrusion::XyzEmission {
+                end: arc::Point {
+                    x: pair[1].0,
+                    y: pair[1].1,
+                },
+                z,
+                delta,
+                properties,
+            },
+            state,
         );
-        state.x = end.x;
-        state.y = end.y;
-        state.scarf_z = Some(z);
-        // The ramp's `Z` word is a real emitted Z — the writer's
-        // `m_pos.z()` tracks it (`GCode.cpp:5712` semantics).
-        if !z_word.is_empty() {
-            state.record_z(z);
-        }
-        state.wipe_start = Some(end);
     }
 }

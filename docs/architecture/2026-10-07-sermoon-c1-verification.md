@@ -72,3 +72,40 @@ Official reference failures remain pre-existing, demonstrated by the
 same-base exact failure set. C1 raw M73 parity is established for this
 fixture, not asserted for arbitrary profiles. Await coordinator review;
 do not merge or begin the final empty-plate slice before approval.
+
+## Reviewer-requested writer correction
+
+Separate RED: `ad1baed0` pins quantized Z suppression, crossing a bin
+boundary, and raw writer position (`GCodeWriter.cpp:975-1000`). Native
+nextest failed before implementation with redundant `Z.4` in a same-bin
+move (`/tmp/worker3-c1-writer-red.log`).
+
+The new shared `extrusion::extrude_to_xyz` takes a small `XyzEmission`
+command and is called by scarf and processed-slope emission. Quantized
+Z comparison replaces 1e-9 proximity; raw position advances on every
+XYZ segment. The new lint suppression and production unwrap are removed;
+slope/total length are bound together, and the redundant Emission slope
+field is removed.
+
+Revalidation on d0e:
+- curl/scarf: 12/12 (`/tmp/worker3-c1-writer-green.log`);
+- strict Sermoon: PASS (`/tmp/worker3-c1-revision-sermoon.log`);
+- workspace: 7994/7994, 9 existing skips (`/tmp/worker3-c1-revision-workspace.log`);
+- clippy: no warnings (`/tmp/worker3-c1-revision-clippy.log`);
+- fmt: PASS (`/tmp/worker3-c1-revision-fmt.log`);
+- final seeded full: 605/605, zero skipped at 8 threads
+  (`/tmp/worker3-c1-revision-final-seeded.log`).
+
+An earlier concurrent seeded run had one Native slice timeout; the
+isolated retry passed, then the final complete run passed. The retry
+is not substituted for that final full result.
+
+Official same-round failure evidence above is reused as permitted by
+the reviewer: all 517 persisted Ares G-code artifacts (468 label groups,
+fixed generation metadata) retain their exact raw SHA256 multisets.
+No group changed, disappeared, or was added. Comparison artifact:
+`/tmp/worker3-c1-revision-final-artifact-comparison.json`,
+`exactHashMultisetMatch=true`.
+C1 CLI output `/tmp/worker3-c1-revision-sermoon.gcode` is also byte-identical
+to `/tmp/worker3-c1-d0e-sermoon.gcode`; its normalized SHA remains
+`3bcca80d277f9c355bf15ce3dbc94fc12449dc160e5150061482cd8768193a83`.

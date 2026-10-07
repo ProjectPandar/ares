@@ -4,8 +4,66 @@ mod tests;
 use super::{
     EmitState, arc,
     features::{PathProperties, feature_description, is_bridge_feature},
-    format::{axis as format_axis, extrusion as format_extrusion},
+    format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
 };
+
+pub(super) struct XyzEmission<'a> {
+    pub(super) end: arc::Point,
+    pub(super) z: f64,
+    pub(super) delta: f64,
+    pub(super) properties: PathProperties<'a>,
+}
+
+/// `GCodeWriter.cpp:975-1000::extrude_to_xyz`, with extrusion enabled.
+pub(super) fn extrude_to_xyz(
+    output: &mut Vec<u8>,
+    command: XyzEmission<'_>,
+    state: &mut EmitState,
+) {
+    let XyzEmission {
+        end,
+        z,
+        delta,
+        properties,
+    } = command;
+    // `GCodeWriter.hpp:226-228::quantize_xyzf` and writer line 982.
+    let quantize = |value: f64| (value * 1000.0).round() * 0.001;
+    let z_changed = state
+        .writer_z
+        .is_none_or(|previous| quantize(z) != quantize(previous));
+    let z_word = if z_changed {
+        format!(" Z{}", format_z(z))
+    } else {
+        String::new()
+    };
+    let value = coordinate(state, delta);
+    let comment = if state.options.gcode_comments {
+        let bridge = if is_bridge_feature(properties.feature) {
+            " (bridge)"
+        } else {
+            ""
+        };
+        format!(" ; {}{bridge}", feature_description(properties.feature))
+    } else {
+        String::new()
+    };
+    output.extend_from_slice(
+        format!(
+            "G1 X{} Y{}{} E{}{comment}\n",
+            format_axis(end.x),
+            format_axis(end.y),
+            z_word,
+            format_extrusion(value),
+        )
+        .as_bytes(),
+    );
+    state.x = end.x;
+    state.y = end.y;
+    state.scarf_z = Some(z);
+    // `m_pos = point`: raw position advances even with an omitted Z word.
+    state.record_z(z);
+    state.wipe_start = Some(end);
+}
 
 pub(super) fn linear_segment(
     output: &mut Vec<u8>,
