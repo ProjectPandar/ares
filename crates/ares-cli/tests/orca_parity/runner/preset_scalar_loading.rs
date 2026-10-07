@@ -93,7 +93,7 @@ async fn orca_parity_preset_scalar_original_bbl_array() {
         loaded.unwrap_or_else(|error| panic!("{error}; evidence {directory:?}")),
     )
     .unwrap();
-    assert_eq!(loaded["bridge_speed"], json!(["50", "50"]));
+    assert_eq!(loaded["bridge_speed"], json!("50"));
     assert_eq!(
         placed.unwrap().settings().process.region.bridge_speed.0,
         50.0

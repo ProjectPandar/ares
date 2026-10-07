@@ -89,6 +89,35 @@ pub(crate) fn normalize_scalar_vector_strings(
     Ok(())
 }
 
+/// `Config.cpp:945-1001` joins JSON array tokens before scalar
+/// deserialization; `Config.hpp:784-790` reads a numeric prefix. Keep the
+/// preset presence view consistent with the typed scalar, without applying
+/// preset coercion to project documents or user overrides.
+pub(crate) fn normalize_numeric_scalar_arrays(
+    values: &mut BTreeMap<String, RawConfigValue>,
+) -> Result<(), String> {
+    for (key, value) in values {
+        let Some(definition) = option_definition(key) else {
+            continue;
+        };
+        if matches!(
+            definition.kind,
+            OptionValueKind::Float
+                | OptionValueKind::Int
+                | OptionValueKind::Percent
+                | OptionValueKind::FloatOrPercent
+        ) && let RawConfigValue::List(items) = value
+            && is_string_array(items)
+        {
+            *value = encode_array(definition.kind, items)
+                .map_err(str::to_owned)
+                .and_then(|wire| decode(definition.kind, &wire))
+                .map_err(|error| format!("invalid Orca option {key}: {error}"))?;
+        }
+    }
+    Ok(())
+}
+
 fn is_vector(kind: OptionValueKind) -> bool {
     match kind {
         OptionValueKind::Percents
