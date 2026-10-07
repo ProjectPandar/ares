@@ -68,7 +68,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await shot("2-imported");
 
   await settings(true);
-  if (touch) await expectFits(page, [button("Printer preset"), button("Process preset"), button("Filament 1 preset")]);
+  if (touch) await expectFits(page, [button("Printer preset"), button("Process preset")]);
   await act(input, button("Printer preset"));
   await act(input, page.getByRole("option", { name: "Select/Remove printers (system presets)" }));
   const wizard = page.getByRole("dialog", { name: "System presets" });
@@ -77,6 +77,8 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await act(input, wizard.getByRole("button", { name: "Done" }));
   await choose(page, input, "Printer preset", "System presets", PRESETS.printer);
   await choose(page, input, "Process preset", "System presets", PRESETS.process);
+  // An STL has no filament slots until a system printer is chosen.
+  if (touch) await expectFits(page, [button("Filament 1 preset")]);
   await choose(page, input, "Filament 1 preset", "System presets", PRESETS.filament);
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await shot("3-presets");

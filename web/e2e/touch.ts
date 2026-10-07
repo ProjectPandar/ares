@@ -9,7 +9,9 @@ type Frame = Point[];
  * CDP `Input.dispatchTouchEvent`, so `touch-action` and default panning apply
  * as on a phone. Playwright has no WebKit touch-move input, so WebKit gets
  * the same frames as `touch` pointer events dispatched at the element under
- * the first finger; `touch-action` is not exercised there.
+ * the first finger; `touch-action` is not exercised there. Those pointer ids
+ * are not active browser pointers, so `setPointerCapture` would throw
+ * NotFoundError; capture calls for them are no-ops while the frames play.
  */
 export async function gesture(page: Page, frames: Frame[]) {
   const browser = page.context().browser()!.browserType().name();
@@ -26,6 +28,10 @@ export async function gesture(page: Page, frames: Frame[]) {
   }
   await page.evaluate((played) => {
     const target = document.elementFromPoint(played[0][0].x, played[0][0].y)!;
+    const { setPointerCapture, releasePointerCapture } = Element.prototype;
+    const synthetic = (id: number) => id >= 100 && id < 100 + played[0].length;
+    Element.prototype.setPointerCapture = function (id) { if (!synthetic(id)) setPointerCapture.call(this, id); };
+    Element.prototype.releasePointerCapture = function (id) { if (!synthetic(id)) releasePointerCapture.call(this, id); };
     const fire = (type: string, frame: Point[]) => frame.forEach(({ x, y }, index) => target.dispatchEvent(new PointerEvent(type, {
       pointerId: 100 + index, pointerType: "touch", isPrimary: index === 0, clientX: x, clientY: y,
       bubbles: true, cancelable: true, composed: true, buttons: type === "pointerup" ? 0 : 1, button: 0,
@@ -33,6 +39,7 @@ export async function gesture(page: Page, frames: Frame[]) {
     fire("pointerdown", played[0]);
     for (const frame of played.slice(1)) fire("pointermove", frame);
     fire("pointerup", played.at(-1)!);
+    Object.assign(Element.prototype, { setPointerCapture, releasePointerCapture });
   }, frames);
   return "synthetic-pointer";
 }
