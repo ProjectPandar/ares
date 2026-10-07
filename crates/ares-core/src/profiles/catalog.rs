@@ -22,6 +22,24 @@ pub(super) use document::ProfileDocument;
 use document::{CatalogInput, VendorInput};
 pub use printer_models::CurrentPrinter;
 
+/// `OrcaSlicer.cpp:546` gcodes key set created on the machine config by
+/// `load_default_gcodes_to_config` (`:548-586`).
+const PRINTER_GCODE_KEYS: [&str; 10] = [
+    "change_filament_gcode",
+    "layer_change_gcode",
+    "machine_end_gcode",
+    "machine_pause_gcode",
+    "machine_start_gcode",
+    "template_custom_gcode",
+    "printing_by_object_gcode",
+    "before_layer_change_gcode",
+    "time_lapse_gcode",
+    "wrapping_detection_gcode",
+];
+
+/// `OrcaSlicer.cpp:587-606` filament keys resized to one empty slot.
+const FILAMENT_GCODE_KEYS: [&str; 2] = ["filament_start_gcode", "filament_end_gcode"];
+
 /// `Catalog::compose` result: the fully resolved profile, the merged raw
 /// presence view, and per-filament raw views for the 3MF slot overlay.
 pub(super) struct ComposedSelection {
@@ -168,6 +186,13 @@ impl Catalog {
             &mut raw,
             &mut runtime,
         )?;
+        // `load_default_gcodes_to_config(load_machine_config, TYPE_PRINTER)`
+        // (`OrcaSlicer.cpp:2850,548-586`): every printer G-code option
+        // exists on the machine config, created with the option default —
+        // empty except the two templates (PrintConfig.cpp:5947,2035) —
+        // before `update_full_config` overlays the machine onto the
+        // embedded project settings.
+        insert_default_gcodes(&mut raw, &PRINTER_GCODE_KEYS);
         let process = self.merge(
             ProfileKind::Process,
             selection.process(),
@@ -184,6 +209,10 @@ impl Catalog {
                 let mut filament_raw = ProjectSettingsRaw::default();
                 let merged =
                     self.merge(ProfileKind::Filament, name, &mut filament_raw, &mut runtime)?;
+                // `load_default_gcodes_to_config(config, TYPE_FILAMENT)`
+                // (`OrcaSlicer.cpp:3150,587-606`): an empty filament
+                // start/end G-code vector is resized to one empty slot.
+                insert_default_gcodes(&mut filament_raw, &FILAMENT_GCODE_KEYS);
                 raw.extend_raw(&filament_raw);
                 filament_raws.push(filament_raw);
                 Ok(merged)
@@ -506,6 +535,17 @@ fn invalid_json(error: serde_json::Error) -> SliceError {
     invalid(format!(
         "invalid profile catalog or selection JSON: {error}"
     ))
+}
+
+/// `option(key, true)` with the option default (`Config.hpp` create path):
+/// absent keys are created from the registry default, present keys stay.
+fn insert_default_gcodes(raw: &mut ProjectSettingsRaw, keys: &[&str]) {
+    for key in keys {
+        if !raw.contains_key(key) {
+            let default = crate::option_definition(key).map_or("", |d| d.default_value);
+            raw.insert((*key).to_owned(), RawConfigValue::Text(default.to_owned()));
+        }
+    }
 }
 
 fn invalid(message: impl Into<String>) -> SliceError {
