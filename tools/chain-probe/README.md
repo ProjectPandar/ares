@@ -68,7 +68,7 @@ process_file — without it the processor's per-extruder arrays are
 empty and E-extrusion lines SEGFAULT (deterministic 5/5 on minimal
 files; the full ksr reference never crashed because its comment
 self-detection populates enough state). Build: same nix pattern as the
-other patches (see /tmp/orca-gt/procgcode.nix). Verified outputs:
+other patches (see `tools/chain-probe/procgcode.nix`). Verified outputs:
 toolchange microbench 5.630681s, spiraltest2 3.015093s (the pre-config
 binary gave 2.988959 — the spiral pin in processor/tests.rs needs
 re-baselining), full ksr reference 6538.005371s (UNCHANGED by the
@@ -87,3 +87,29 @@ newlined file the toolchange-context spiral matches ares EXACTLY
 dump-scope artifact — upstream skips the cache push but counts the
 time, same as ares. See the convergence spec #178-#179 for the full
 correction chain.
+
+## Diagnostic JSON and stable-marker variant
+
+`--dump-color-change <json>` exports the processor's raw custom items,
+normal custom times (seconds), color volumes (mm³), and these unconverted
+`std::map<size_t, double>` statistics as `[filament_id, f64_mm3]` pairs:
+`flush_per_filament`, `total_volumes_per_extruder`,
+`model_volumes_per_extruder`, `support_volumes_per_extruder`, and
+`wipe_tower_volumes_per_extruder`. Empty maps remain empty arrays. There is no
+float narrowing, dense padding, allocation to events, or processor change.
+
+The diagnostic reads G-code, not 3MF. Its bootstrap config above is replaced
+from embedded G-code settings for recognized OrcaSlicer/Slic3r producers,
+with defaults for absent settings (`GCodeProcessor.cpp:2620-2642`). Truncating
+away the config footer changes that experiment. Load/unload/tool-change time
+bootstrap defaults are zero; recognized embedded settings can override them.
+
+`procgcode-stable-options.nix` builds a separately named diagnostic with only
+`procgcode-stable-options.patch` added to the raw oracle. It remaps the pending
+OptionsZCorrector marker after actual-speed insertions. It is **not** the
+unmodified upstream reference. Set `ARES_PROCGCODE_BIN` to the raw executable
+and `ARES_PROCGCODE_STABLE_BIN` to this corrected executable for ColorChange
+checks; preserve both hashes and outputs. See
+`docs/architecture/web-colorchange.md` for the approved difference and exact
+raw→Rust versus raw→stable ordinal/XYZ difference-set requirement. G-code
+and M73 byte comparisons continue to use the unmodified official slicer.

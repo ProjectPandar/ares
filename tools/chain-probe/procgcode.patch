@@ -2,7 +2,7 @@ diff --git a/src/OrcaSlicer.cpp b/src/OrcaSlicer.cpp
 index 271759b5e..e6003eee0 100644
 --- a/src/OrcaSlicer.cpp
 +++ b/src/OrcaSlicer.cpp
-@@ -7533,6 +7533,92 @@ extern "C" {
+@@ -7533,6 +7533,97 @@ extern "C" {
  #else /* _MSC_VER */
  int main(int argc, char **argv)
  {
@@ -66,6 +66,11 @@ index 271759b5e..e6003eee0 100644
 +                    continue;
 +                nlohmann::json data = {
 +                    {"volumes_per_color_change", result.print_statistics.volumes_per_color_change},
++                    {"flush_per_filament", result.print_statistics.flush_per_filament},
++                    {"total_volumes_per_extruder", result.print_statistics.total_volumes_per_extruder},
++                    {"model_volumes_per_extruder", result.print_statistics.model_volumes_per_extruder},
++                    {"support_volumes_per_extruder", result.print_statistics.support_volumes_per_extruder},
++                    {"wipe_tower_volumes_per_extruder", result.print_statistics.wipe_tower_volumes_per_extruder},
 +                    {"extruder_colors", result.extruder_colors},
 +                    {"filament_diameters", result.filament_diameters},
 +                    {"filament_densities", result.filament_densities},
