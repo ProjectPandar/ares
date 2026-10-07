@@ -1,0 +1,109 @@
+# Preview Actual Speed / Actual Flow — source-cited rewrite spec
+
+Status: proposed (REVIEW-REQUEST). Base: `6ff32f927` (motion attributes merged).
+Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.
+
+## Why this slice
+
+Orca's `view_type_items` (`slic3r/GUI/GCodeViewer.cpp:1077-1093`) lists, in
+order: Summary, Line Type, Filament, Speed, **Actual Speed**, Acceleration,
+Jerk, Layer Height, Line Width, Flow, **Actual Flow**, Layer Time, Layer Time
+(log), Fan Speed, Temperature, Pressure Advance (`Tool` is commented out).
+After the motion-attributes merge the web viewer offers every item except
+Summary, Actual Speed and Actual Flow. Actual Speed / Actual Flow are the
+planner-based views users read to see where a print really reaches its
+target speed. Summary is a different legend layout and stays out of this slice.
+
+Ares already inserts the internal actual-speed vertices
+(`crates/ares-core/src/project_slice/gcode_emit/processor/moves/actual_speed.rs`,
+port of `GCodeProcessor.cpp:458-547,5962-5997`) but never records
+`MoveVertex::actual_feedrate`. `crates/ares-vgcode/src/convert.rs:64-71`
+hard-codes `actual_feedrate: 0.0` ("deferred by M853"), and
+`crates/ares-wasm/src/colors.rs` leaves both views out "because ares-core
+moves do not record them yet". The ranges and colors are already ported in
+`crates/ares-vgcode/src/viewer/colors.rs`; they are only fed zeros.
+
+This is a rewrite of the upstream recording, the wrapper pass-through and the
+GUI items. It does not design an Ares speed model.
+
+## Source → destination
+
+| Source owner | Included behavior | Rust / thin adapter destination |
+| --- | --- | --- |
+| `libslic3r/GCode/GCodeProcessor.hpp:194,217` `MoveVertex::actual_feedrate`, `actual_volumetric_rate()` | One f32 field per move (mm/s) | `crates/ares-core/src/gcode_processor.rs::MoveVertex` (+4 B/move); dummy move `0.0` |
+| `GCodeProcessor.hpp:425-445` `FeedrateProfile`, `Trapezoid::{cruise_feedrate, deceleration_distance, is_cruise_only}` | f32 entry/exit and cruise feedrate of each planned block | `processor/motion/planner/trapezoid.rs::Trapezoid` gains `cruise_feedrate`, `entry`, `exit` (already computed there; not stored today) |
+| `GCodeProcessor.cpp:480-497` (Normal mode only) | When `prev` is not Extrude/Travel/Wipe and of a different type, `prev.actual_feedrate = block.feedrate_profile.entry` | `moves/actual_speed.rs::apply` |
+| `GCodeProcessor.cpp:499-558` | Each inserted acceleration-end / deceleration-start vertex carries `actual_feedrate = trapezoid.cruise_feedrate` | `actual_speed.rs::actual_vertex` |
+| `GCodeProcessor.cpp:560-572,5986-5997` | The block's own move gets `(is_cruise_only \|\| !has_deceleration) ? cruise_feedrate : feedrate_profile.exit`; if the move right after it is a `Seam`, the seam gets the same value | `actual_speed.rs::apply` |
+| `slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp:215-260` `convert` | Phantom path-start vertex takes **`prev.actual_feedrate`**; normal vertices take `curr.actual_feedrate` | `crates/ares-vgcode/src/convert.rs` (drop the M853 deferral comment) |
+| `libvgcode/src/ViewerImpl.cpp:1495,1526,1845-1862` | Actual-speed range over visible travel/wipe/extrusion without binning; actual-flow range over extrusions with `round_to_bin`, Custom gated by its role visibility | Already ported (`viewer/colors.rs`, `viewer/ranges.rs`); unchanged |
+| `GCodeViewer.cpp:66-101,1077-1093` | Labels "Actual Speed" after Speed and "Actual Flow" after Flow | `crates/ares-wasm/src/colors.rs::VIEW_TYPES`, `web/app/src/preview/LegendRange.tsx::VIEW_TYPE_ITEMS` |
+| `GCodeViewer.cpp:3930-3946,3986` | Actual Speed: `append_range` decimals 0 plus the Travel option row (as Speed); Actual Flow: `append_range` decimals 2, no option rows | `web/app/src/preview/Legend.tsx` (`TRAVEL_ROW_VIEWS` gains `ActualSpeed`) |
+
+Upstream has no ToolPosition detail text or property row for actual speed
+(`GCodeViewer.cpp:360-455` `default:` → empty detail). Ares matches that.
+
+## Behavior to preserve exactly
+
+- Only the Normal time machine records actual speed. Stealth is not touched.
+- f32 arithmetic as upstream; exact f32 bits are the parity target, with no
+  tolerance.
+- The vertex count and order are unchanged; the inserted vertices already
+  match the oracle.
+- The `prev.actual_feedrate = entry` write happens while blocks are walked in
+  order. A later block can overwrite it; this slice keeps upstream's order.
+- G-code bytes, M73 and estimated times are unchanged. This slice only adds a
+  preview field.
+
+## Included / deferred
+
+Included: the field, its recording, the vgcode pass-through, the two view
+types, legend ranges and the Actual Speed Travel row.
+
+Deferred to their own slices:
+- The ToolPosition "actual speed profile" table and plot
+  (`GCodeViewer.cpp:152-200,519-600,1686-1745`, `ActualSpeedImguiWidget`).
+- The Summary view.
+- The `Tool` view (commented out upstream).
+- Stealth time mode.
+- `process_M205` (located low-priority difference, roadmap).
+
+## RED-first plan and acceptance evidence
+
+1. **Oracle.** Extend `tools/chain-probe/procgcode-dynamics.patch` so
+   `--dump-move-dynamics` appends an `actual_feedrate` column (`%.9g`, all
+   `result.moves`). This is a new store path; the old one stays for history.
+   The build is a multi-core heavy job and runs only in a coordinated window.
+   Diffs and hashes are committed.
+2. **Processor RED/GREEN** (`crates/ares-core/tests/processed_actual_speed.rs`,
+   reusing the `tests/parity/motion-attributes` fixtures plus one fixture with
+   an option move (tool change / custom G-code) before an extrusion, and an
+   extrusion followed by a seam).
+   - RED: an assertion failure on the current zeros.
+   - GREEN: every vertex, internal ones included, matches the oracle
+     bit-exactly by index with `gcode_id`/type checks.
+3. **vgcode/WASM RED/GREEN.** `convert` carries `actual_feedrate`, the phantom
+   vertex takes `prev`'s value, and `viewTypes()` / `colorRange("ActualSpeed" |
+   "ActualVolumetricFlowRate")` match ranges derived from the oracle.
+4. **Browser E2E (lazy UI only).**
+   - Extend `web/e2e/colorRanges.ts`: the two views, legend title/rows
+     (decimals 0/2), and the Travel row for Actual Speed checked with and
+     without travels, all against oracle-derived ranges.
+   - Assert that ToolPosition shows no new row.
+   - Artifacts: dark/light screenshots and a CSV.
+   - RED: the options are missing. GREEN: they render.
+5. **Gates.** fmt, clippy `-D warnings`, `cargo nextest run --workspace`,
+   CLI/WASM/app builds (`npm run build:wasm` before `npm run build`),
+   typecheck, lint, the seeded full set and profile_entry groups (G-code bytes
+   unchanged), the full browser run with BROWSER-START/END, and initial JS gzip
+   strictly below 125,000 B.
+
+## Open questions for review
+
+1. Should the oracle extension replace the dynamics probe (new header, E2E
+   updated in the RED commit) or be a separate `procgcode-actual-speed` probe?
+   Proposal: extend the dynamics probe. It is one processor pass and one CSV,
+   and the motion E2E keeps its columns by name.
+2. Is the profile table/plot (deferred above) wanted as the immediate
+   follow-up, or should the next web item come from elsewhere in the roadmap?
