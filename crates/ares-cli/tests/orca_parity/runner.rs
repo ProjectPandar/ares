@@ -67,6 +67,9 @@ mod profile_entry;
 #[path = "runner/profile_entry_3mf.rs"]
 mod profile_entry_3mf;
 #[cfg(test)]
+#[path = "runner/profile_overlay_default_gcodes.rs"]
+mod profile_overlay_default_gcodes;
+#[cfg(test)]
 #[path = "runner/stage_tests.rs"]
 mod stage_tests;
 #[path = "runner/stages.rs"]
