@@ -2,7 +2,7 @@ diff --git a/src/OrcaSlicer.cpp b/src/OrcaSlicer.cpp
 index 271759b5e..e6003eee0 100644
 --- a/src/OrcaSlicer.cpp
 +++ b/src/OrcaSlicer.cpp
-@@ -7533,6 +7533,50 @@ extern "C" {
+@@ -7533,6 +7533,92 @@ extern "C" {
  #else /* _MSC_VER */
  int main(int argc, char **argv)
  {
@@ -20,6 +20,19 @@ index 271759b5e..e6003eee0 100644
 +            config.machine_max_acceleration_extruding.values = { 20000.f, 20000.f, 20000.f };
 +            config.machine_max_acceleration_retracting.values = { 30000.f, 5000.f, 30000.f };
 +            config.machine_max_acceleration_travel.values = { 9000.f, 9000.f, 9000.f };
++            // Explicit fixture tool count; existing invocations keep their config.
++            for (int j = 1; j + 1 < argc; ++j) {
++                if (strcmp(argv[j], "--colorchange-tools") != 0)
++                    continue;
++                const int count = atoi(argv[j + 1]);
++                if (count < 1 || count > 256)
++                    return 1;
++                config.filament_diameter.values.assign(count, 1.75);
++                config.filament_density.values.assign(count, 1.24);
++                config.filament_type.values.assign(count, "PLA");
++                config.filament_colour.values.assign(count, "#F2754E");
++                config.nozzle_diameter.values.assign(count, 0.4);
++            }
 +            processor.apply_config(config);
 +            processor.process_file(argv[i + 1]);
 +            const auto& result = processor.get_result();
@@ -46,6 +59,35 @@ index 271759b5e..e6003eee0 100644
 +                            v.width, v.height, v.mm3_per_mm, v.travel_dist, v.fan_speed, v.temperature,
 +                            v.time[0], v.layer_id, v.internal_only ? 1 : 0);
 +                fclose(out);
++            }
++            // Raw public processor records, not GCodeViewer's unchecked join.
++            for (int j = 1; j + 1 < argc; ++j) {
++                if (strcmp(argv[j], "--dump-color-change") != 0)
++                    continue;
++                nlohmann::json data = {
++                    {"volumes_per_color_change", result.print_statistics.volumes_per_color_change},
++                    {"extruder_colors", result.extruder_colors},
++                    {"filament_diameters", result.filament_diameters},
++                    {"filament_densities", result.filament_densities},
++                    {"custom_gcode_per_print_z", nlohmann::json::array()},
++                    {"custom_gcode_times", nlohmann::json::array()}
++                };
++                for (const auto& item : result.custom_gcode_per_print_z)
++                    data["custom_gcode_per_print_z"].push_back({
++                        {"type", static_cast<int>(item.type)}, {"extruder", item.extruder},
++                        {"print_z", item.print_z}, {"color", item.color}, {"extra", item.extra}
++                    });
++                const auto& normal = result.print_statistics.modes[0];
++                data["normal_time"] = normal.time;
++                for (const auto& [type, times] : normal.custom_gcode_times)
++                    data["custom_gcode_times"].push_back({
++                        {"type", static_cast<int>(type)},
++                        {"duration", times.first}, {"remaining", times.second}
++                    });
++                std::ofstream out(argv[j + 1]);
++                out << data.dump(2) << '\n';
++                if (!out)
++                    return 1;
 +            }
 +            return 0;
 +        }
