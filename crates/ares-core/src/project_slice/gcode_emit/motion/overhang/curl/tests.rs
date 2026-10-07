@@ -3,6 +3,51 @@
 //! layer-2 artificial distance ≈ 0.050).
 
 use super::CurledLine;
+
+// Failure modes: wrong previous-layer rollover; wrong equal-distance
+// predecessor selection at the degenerate corner; wrong height decay.
+#[test]
+fn sermoon_layer_two_corner_height_matches_oracle() {
+    use crate::geometry::CoordinateScale;
+    use crate::project_slice::gcode_emit::motion::{LayerGeometry, state::AvoidCrossingGeometry};
+    let geometry = LayerGeometry {
+        nearest_seam_penalties: None,
+        staggered_inner: false,
+        internal_surfaces: &[],
+        support_islands: None,
+        scale: CoordinateScale::Normal,
+        previous_layer_boundary: None,
+        avoid_crossing: AvoidCrossingGeometry {
+            external_perimeter_width: 0.61,
+            layer_slices: &[],
+            perimeter_spacing: 0.0,
+            top_surfaces: &[],
+            chunk_slices: &[],
+            chunk_perimeter_spacing: 0.0,
+        },
+    };
+    let mut tracker = super::CurlTracker::default();
+    for (layer, half_side) in [4.345001, 4.645001, 4.645001].into_iter().enumerate() {
+        let points = [
+            (half_side, half_side),
+            (-half_side, half_side),
+            (-half_side, -half_side),
+            (half_side, -half_side),
+            (half_side, half_side),
+        ];
+        tracker.collect(layer, &points, (0.61, 0.2), &geometry);
+    }
+    let corner = tracker.current_curled[0];
+    assert_eq!((corner.x0, corner.y0), (corner.x1, corner.y1));
+    // curlp oracle kv5pcc97ack7c1fpmvni44bm5ffp4hm2, byte-identical
+    // case-6qvP0t output: CURL layer=2 corner h=0.166997.
+    assert!(
+        (corner.curled_height - 0.166997).abs() < 1e-6,
+        "layer-2 corner height {} != oracle 0.166997",
+        corner.curled_height,
+    );
+}
+
 use super::geometry::{artificial_distance, curvatures, estimate_curled_up_height};
 
 #[test]
