@@ -1,6 +1,8 @@
 # Preview Actual Speed / Actual Flow — source-cited rewrite spec
 
-Status: proposed (REVIEW-REQUEST). Base: `6ff32f927` (motion attributes merged).
+Status: approved at `667d92a0f` (extend the existing dynamics probe; the
+profile table/plot is a roadmap deferral; core RED/GREEN bit-exact per vertex;
+zero G-code change proven by seeded full raw bytes on both trees). Base: `6ff32f927` (motion attributes merged).
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.
 
@@ -76,10 +78,13 @@ Deferred to their own slices:
    `result.moves`). This is a new store path; the old one stays for history.
    The build is a multi-core heavy job and runs only in a coordinated window.
    Diffs and hashes are committed.
-2. **Processor RED/GREEN** (`crates/ares-core/tests/processed_actual_speed.rs`,
-   reusing the `tests/parity/motion-attributes` fixtures plus one fixture with
-   an option move (tool change / custom G-code) before an extrusion, and an
-   extrusion followed by a seam).
+2. **Processor RED/GREEN** (`crates/ares-core/tests/processed_motion_attributes.rs`:
+   a second per-case assertion over `<case>.actual-speed.rle`, sharing the
+   same oracle run and fixtures, plus a new `marlin2_option_moves` case with
+   `;PAUSE_PRINT` / `;CUSTOM_GCODE` option moves before travel). Every fixture
+   has 50 Seam vertices after extrusions, and Retract/Unretract/dummy-Noop
+   predecessors; the RED adds the field as a zero placeholder so the failure
+   is an assertion, not a compile error.
    - RED: an assertion failure on the current zeros.
    - GREEN: every vertex, internal ones included, matches the oracle
      bit-exactly by index with `gcode_id`/type checks.

@@ -2,22 +2,24 @@ diff --git a/src/OrcaSlicer.cpp b/src/OrcaSlicer.cpp
 index ab4b59d34..0ee66a404 100644
 --- a/src/OrcaSlicer.cpp
 +++ b/src/OrcaSlicer.cpp
-@@ -7587,6 +7587,20 @@ int main(int argc, char **argv)
+@@ -7587,6 +7587,22 @@ int main(int argc, char **argv)
                              v.time[0], v.layer_id, v.internal_only ? 1 : 0);
                  fclose(out);
              }
 +            // --dump-move-dynamics <csv>: store_move_vertex ORCA preview
-+            // attributes (GCodeProcessor.cpp:5630-5706). %.9g round-trips f32.
++            // attributes (GCodeProcessor.cpp:5630-5706) and the Normal-mode
++            // actual_feedrate (:480-572,5962-5997). %.9g round-trips f32.
 +            for (int j = 1; j + 1 < argc; ++j) {
 +                if (strcmp(argv[j], "--dump-move-dynamics") != 0)
 +                    continue;
 +                FILE* out = fopen(argv[j + 1], "w");
 +                if (out == nullptr)
 +                    return 1;
-+                fprintf(out, "gcode_id,type,internal_only,pressure_advance,acceleration,jerk\n");
++                fprintf(out, "gcode_id,type,internal_only,pressure_advance,acceleration,jerk,actual_feedrate\n");
 +                for (const auto& v : result.moves)
-+                    fprintf(out, "%u,%d,%d,%.9g,%.9g,%.9g\n", v.gcode_id, static_cast<int>(v.type),
-+                            v.internal_only ? 1 : 0, v.pressure_advance, v.acceleration, v.jerk);
++                    fprintf(out, "%u,%d,%d,%.9g,%.9g,%.9g,%.9g\n", v.gcode_id, static_cast<int>(v.type),
++                            v.internal_only ? 1 : 0, v.pressure_advance, v.acceleration, v.jerk,
++                            v.actual_feedrate);
 +                fclose(out);
 +            }
              // Raw public processor records, not GCodeViewer's unchecked join.

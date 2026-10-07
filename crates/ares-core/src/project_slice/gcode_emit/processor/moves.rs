@@ -327,6 +327,7 @@ impl MoveRecorder {
             pressure_advance: self.pressure_advance,
             acceleration,
             jerk,
+            actual_feedrate: 0.0,
             time: 0.0,
             layer_id: self.layer_id.max(1) - 1,
             internal_only: false,
