@@ -1,0 +1,37 @@
+# ARD: processed-G-code printable-area rejection boundary
+
+Date: 2026-10-07. Status: proposed.
+
+## Source owner and destination
+
+Port `GCodeProcessor::check_multi_extruder_gcode_valid`
+(`OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:1866-1999`), called by
+`GCode.cpp:2166-2173` and consumed by CLI `OrcaSlicer.cpp:6220-6227`.
+Rust owner is `ares-core`'s existing G-code processor and shared slice
+completion boundary, not a new Ares slicing pipeline or a `ares-vgcode`
+renderer feature.
+
+## Non-negotiable decisions
+
+- Emitted non-custom extrusion groups, not model bbox, all travel points,
+  timelapse enum values or exact polygon clipping, drive the active checks.
+  Preserve upstream object/filament grouping, scaling, XY offset,2mm plate
+  bbox tolerance, print-Z height and mapped per-head bounds.
+- Keep the check in the existing processor pass; no second G-code parse,
+  full move copies, or special-case preset/fixture rejection.
+- The small result/check module belongs at
+  `crates/ares-core/src/gcode_processor/printable_area.rs`. The move/tag
+  producer must retain required upstream object-label/print-Z state;
+  current public move fields cannot justify silently omitting that data.
+- Shared core success-byte completion returns a typed
+  `SliceError::ToolpathOutsidePrintableArea` for active bits0–3 failures,
+  with the upstream CLI diagnostic. Core has no filesystem/terminal side
+  effects and must work on WASM, Windows, macOS and Linux.
+- CLI `-102` mapping is worker4's separate adapter slice. Until merged,
+  core rejection and CLI status are distinct evidence claims.
+- Commented bit4/arc checks and non-rejecting viewer filament-limit data
+  are deferred. Successful outputs remain strict generator-only byte
+  comparisons; Native rejection cannot be declared success-stream PASS.
+
+The [spec](../superpowers/specs/2026-10-07-gcode-printable-area-rejection.md)
+binds the witness, failure inventory, TDD controls and review gates.
