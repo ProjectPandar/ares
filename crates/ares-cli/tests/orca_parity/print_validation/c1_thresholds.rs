@@ -166,7 +166,7 @@ async fn verify(fields: Value, expected_error: Option<&str>) {
     fs::write(&input, &exported.project).unwrap();
     let output = directory.join("native");
     fs::create_dir(&output).unwrap();
-    let effective = directory.join("effective.3mf");
+    let effective = output.join("effective.3mf");
     let mut args = Vec::new();
     for (key, value) in fields.as_object().unwrap() {
         args.push(format!("--{}", key.replace('_', "-")));
@@ -184,7 +184,7 @@ async fn verify(fields: Value, expected_error: Option<&str>) {
         "--slice".to_owned(),
         "0".to_owned(),
         "--export-3mf".to_owned(),
-        effective.to_str().unwrap().to_owned(),
+        "effective.3mf".to_owned(),
         "--outputdir".to_owned(),
         output.to_str().unwrap().to_owned(),
         input.to_str().unwrap().to_owned(),
