@@ -15,11 +15,11 @@ mod geometry;
 mod tests;
 
 use super::super::LayerGeometry;
-use crate::geometry::{CoordinateScale, LineDistanceTree};
+use crate::geometry::{CoordinateScale, FloatLineDistanceTree, LineDistanceTree};
 
 pub(super) use geometry::artificial_distance;
 
-use geometry::{curvatures, estimate_curled_up_height, point_segment_distance, signed_distance};
+use geometry::{curvatures, estimate_curled_up_height, signed_distance};
 
 const CURLING_TOLERANCE_LIMIT: f32 = 0.1;
 
@@ -48,6 +48,7 @@ struct ExternalLine {
 pub(crate) struct CurlTracker {
     layer: Option<usize>,
     previous: Vec<ExternalLine>,
+    previous_tree: FloatLineDistanceTree<f32>,
     previous_curled: Vec<CurledLine>,
     current: Vec<ExternalLine>,
     current_curled: Vec<CurledLine>,
@@ -63,6 +64,19 @@ impl CurlTracker {
     fn roll_over(&mut self, layer_index: usize) {
         if self.layer != Some(layer_index) {
             self.previous = std::mem::take(&mut self.current);
+            // `SupportSpotsGenerator.cpp:151,195`: construct the indexed
+            // previous-layer distancer once, preserving collected line order.
+            self.previous_tree = FloatLineDistanceTree::new(
+                self.previous
+                    .iter()
+                    .map(|line| {
+                        [
+                            [line.x0 as f32, line.y0 as f32],
+                            [line.x1 as f32, line.y1 as f32],
+                        ]
+                    })
+                    .collect(),
+            );
             self.previous_curled = std::mem::take(&mut self.current_curled);
             self.layer = Some(layer_index);
         }
@@ -182,14 +196,16 @@ impl CurlTracker {
     /// that line's chained curl height
     /// (`prev_layer_lines.distance_from_lines_extra<false>`).
     fn nearest_previous(&self, point: (f64, f64)) -> (f32, f32) {
-        let mut best = (f32::MAX, 0.0_f32);
-        for line in &self.previous {
-            let distance = point_segment_distance(point, (line.x0, line.y0), (line.x1, line.y1));
-            if distance < best.0 {
-                best = (distance, line.curled_height);
-            }
-        }
-        best
+        // `AABBTreeLines.hpp:329-345`, `AABBTreeIndirect.hpp:552-632`:
+        // strict improvement retains the first TREE-visited primitive.
+        self.previous_tree
+            .nearest_within([point.0 as f32, point.1 as f32], f32::INFINITY)
+            .map_or((f32::INFINITY, 0.0), |hit| {
+                (
+                    hit.squared_distance.sqrt(),
+                    self.previous[hit.index].curled_height,
+                )
+            })
     }
 }
 

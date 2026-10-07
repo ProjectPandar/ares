@@ -55,3 +55,16 @@ output as parity evidence.
 Core RED committed separately as `7baa7837`: native nextest observed
 `0.3261211 != oracle 0.166997`. Whole-file GREEN remains mandatory before
 review; M73 omission in the attribution test does not prove M73 parity.
+
+## Target GREEN
+
+After the indexed predecessor rewrite, the corner regression passes.
+Raw CLI output for the original staged case equals its saved oracle
+including M73 (only generated-by normalized). Therefore the test
+comparator has been tightened: M73 filtering removed from both operands
+and from the native self-stability gate. Fresh-cache native nextest
+`sermoon_v1_whole_file` passes under that strict comparison (run
+776c1a68-9550-42f8-9e2f-d042da229906, log
+`/tmp/sermoon-whole-raw-green.log`). Main stock M73 reorder is therefore
+consistent with the fixed downstream motion timing, not a separately
+proven insertion defect on this case. Full controls remain required.

@@ -314,23 +314,6 @@ fn next_index(index: usize, count: usize, looped: bool) -> usize {
     }
 }
 
-/// `distance_from_lines_extra` on `LinesDistancer<ExtrusionLine>` —
-/// `ExtrusionLine::Scalar` is `float`, so the projection and squared
-/// distance are computed in f32 (`SupportSpotsGenerator.cpp:69-87`).
-pub(super) fn point_segment_distance(point: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f32 {
-    let point = [point.0 as f32, point.1 as f32];
-    let a = [a.0 as f32, a.1 as f32];
-    let b = [b.0 as f32, b.1 as f32];
-    let dx = b[0] - a[0];
-    let dy = b[1] - a[1];
-    let length_squared = dx * dx + dy * dy;
-    if length_squared <= 0.0 {
-        return (point[0] - a[0]).hypot(point[1] - a[1]);
-    }
-    let t = (((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / length_squared).clamp(0.0, 1.0);
-    (point[0] - (a[0] + t * dx)).hypot(point[1] - (a[1] + t * dy))
-}
-
 pub(super) fn signed_distance(
     tree: &LineDistanceTree<'_>,
     scale: CoordinateScale,

@@ -1,13 +1,13 @@
-//! Containing-box order and bounded strict hits from `AABBTreeIndirect.hpp`.
+//! Containing-box order and strict hits: `AABBTreeIndirect.hpp:552-632`.
 
 use super::super::segment::distance_squared;
-use super::{Bounds, FloatLineDistanceTree, FloatLineHit, NodeKind};
+use super::{Bounds, FloatLineDistanceTree, FloatLineHit, NativeFloat, NodeKind};
 
-pub(super) fn nearest(
-    tree: &FloatLineDistanceTree,
-    origin: [f64; 2],
-    limit: f64,
-) -> Option<FloatLineHit> {
+pub(super) fn nearest<F: NativeFloat>(
+    tree: &FloatLineDistanceTree<F>,
+    origin: [F; 2],
+    limit: F,
+) -> Option<FloatLineHit<F>> {
     if tree.nodes.is_empty() {
         return None;
     }
@@ -21,14 +21,14 @@ pub(super) fn nearest(
     query.hit
 }
 
-struct Query<'a> {
-    tree: &'a FloatLineDistanceTree,
-    origin: [f64; 2],
-    limit: f64,
-    hit: Option<FloatLineHit>,
+struct Query<'a, F> {
+    tree: &'a FloatLineDistanceTree<F>,
+    origin: [F; 2],
+    limit: F,
+    hit: Option<FloatLineHit<F>>,
 }
 
-impl Query<'_> {
+impl<F: NativeFloat> Query<'_, F> {
     fn visit(&mut self, index: usize) {
         let node = self.tree.nodes[index];
         match node.kind {
@@ -39,6 +39,7 @@ impl Query<'_> {
                 if distance < self.limit {
                     self.limit = distance;
                     self.hit = Some(FloatLineHit {
+                        index: line,
                         squared_distance: distance,
                         point,
                     });
@@ -82,21 +83,21 @@ impl Query<'_> {
     }
 }
 
-fn contains(bounds: Bounds, origin: [f64; 2]) -> bool {
+fn contains<F: NativeFloat>(bounds: Bounds<F>, origin: [F; 2]) -> bool {
     (0..2).all(|axis| bounds.min[axis] <= origin[axis] && origin[axis] <= bounds.max[axis])
 }
 
-fn exterior(bounds: Bounds, origin: [f64; 2]) -> f64 {
-    let mut distance = 0.0;
+fn exterior<F: NativeFloat>(bounds: Bounds<F>, origin: [F; 2]) -> F {
+    let mut distance = F::ZERO;
     for (axis, value) in origin.into_iter().enumerate() {
         let delta = if value < bounds.min[axis] {
             bounds.min[axis] - value
         } else if value > bounds.max[axis] {
             value - bounds.max[axis]
         } else {
-            0.0
+            F::ZERO
         };
-        distance += delta * delta;
+        distance = distance + delta * delta;
     }
     distance
 }

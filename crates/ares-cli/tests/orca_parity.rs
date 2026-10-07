@@ -37,8 +37,6 @@ mod klipper_velocity_limit;
 mod m205;
 #[path = "orca_parity/narrowed_x2d_whole_file.rs"]
 mod narrowed_x2d_whole_file;
-#[path = "orca_parity/sermoon_v1_whole_file.rs"]
-mod sermoon_v1_whole_file;
 #[path = "orca_parity/option_coverage.rs"]
 mod option_coverage;
 #[path = "orca_parity/presets.rs"]
@@ -51,6 +49,8 @@ mod replay;
 mod replay_tests;
 #[path = "orca_parity/runner.rs"]
 mod runner;
+#[path = "orca_parity/sermoon_v1_whole_file.rs"]
+mod sermoon_v1_whole_file;
 #[path = "orca_parity/smoke.rs"]
 mod smoke;
 #[path = "orca_parity/smoke_overrides.rs"]

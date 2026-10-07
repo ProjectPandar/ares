@@ -1,43 +1,48 @@
-//! Native `AABBTreeLines.hpp` over `Linef` / `Tree<2, double>`.
+//! Native `AABBTreeLines.hpp:165-224,300-345` over `Linef` / `ExtrusionLine`.
 
 use super::NodeKind;
 
 mod build;
 mod query;
+mod scalar;
 
-pub(crate) struct FloatLineDistanceTree {
-    lines: Vec<[[f64; 2]; 2]>,
-    nodes: Vec<Node>,
+pub(super) use scalar::NativeFloat;
+
+#[derive(Default)]
+pub(crate) struct FloatLineDistanceTree<F = f64> {
+    lines: Vec<[[F; 2]; 2]>,
+    nodes: Vec<Node<F>>,
 }
 
 #[derive(Clone, Copy)]
-struct Bounds {
-    min: [f64; 2],
-    max: [f64; 2],
+struct Bounds<F> {
+    min: [F; 2],
+    max: [F; 2],
 }
 
 #[derive(Clone, Copy)]
-struct Node {
+struct Node<F> {
     kind: NodeKind,
-    bounds: Bounds,
+    bounds: Bounds<F>,
 }
 
-pub(crate) struct FloatLineHit {
-    pub(crate) squared_distance: f64,
-    pub(crate) point: [f64; 2],
+pub(crate) struct FloatLineHit<F = f64> {
+    pub(crate) index: usize,
+    pub(crate) squared_distance: F,
+    pub(crate) point: [F; 2],
 }
 
-impl FloatLineDistanceTree {
-    pub(crate) fn new(lines: Vec<[[f64; 2]; 2]>) -> Self {
+impl<F: NativeFloat> FloatLineDistanceTree<F> {
+    pub(crate) fn new(lines: Vec<[[F; 2]; 2]>) -> Self {
         let nodes = build::build(&lines);
         Self { lines, nodes }
     }
 
     pub(crate) fn nearest_within(
         &self,
-        point: [f64; 2],
-        squared_limit: f64,
-    ) -> Option<FloatLineHit> {
+        point: [F; 2],
+        squared_limit: F,
+    ) -> Option<FloatLineHit<F>> {
         query::nearest(self, point, squared_limit)
     }
 }

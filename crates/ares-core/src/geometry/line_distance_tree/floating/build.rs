@@ -1,15 +1,15 @@
-//! `AABBTreeIndirect.hpp::build_recursive/partition_input` in native f64.
+//! `AABBTreeIndirect.hpp:125-215::build_recursive/partition_input`, native precision.
 
-use super::{Bounds, Node, NodeKind};
+use super::{Bounds, NativeFloat, Node, NodeKind};
 
 #[derive(Clone, Copy)]
-struct Input {
+struct Input<F> {
     index: usize,
-    bounds: Bounds,
-    centroid: [f64; 2],
+    bounds: Bounds<F>,
+    centroid: [F; 2],
 }
 
-pub(super) fn build(lines: &[[[f64; 2]; 2]]) -> Vec<Node> {
+pub(super) fn build<F: NativeFloat>(lines: &[[[F; 2]; 2]]) -> Vec<Node<F>> {
     if lines.is_empty() {
         return Vec::new();
     }
@@ -22,15 +22,15 @@ pub(super) fn build(lines: &[[[f64; 2]; 2]]) -> Vec<Node> {
                 min: [a[0].min(b[0]), a[1].min(b[1])],
                 max: [a[0].max(b[0]), a[1].max(b[1])],
             },
-            centroid: [(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5],
+            centroid: [(a[0] + b[0]) * F::HALF, (a[1] + b[1]) * F::HALF],
         })
         .collect::<Vec<_>>();
     let mut nodes = vec![
         Node {
             kind: NodeKind::Unused,
             bounds: Bounds {
-                min: [0.0; 2],
-                max: [0.0; 2]
+                min: [F::ZERO; 2],
+                max: [F::ZERO; 2]
             },
         };
         input.len().next_power_of_two() * 2 - 1
@@ -39,7 +39,7 @@ pub(super) fn build(lines: &[[[f64; 2]; 2]]) -> Vec<Node> {
     nodes
 }
 
-fn build_recursive(input: &mut [Input], nodes: &mut [Node], index: usize) {
+fn build_recursive<F: NativeFloat>(input: &mut [Input<F>], nodes: &mut [Node<F>], index: usize) {
     if input.len() == 1 {
         nodes[index] = Node {
             kind: NodeKind::Leaf(input[0].index),
@@ -66,7 +66,7 @@ fn build_recursive(input: &mut [Input], nodes: &mut [Node], index: usize) {
     build_recursive(right, nodes, index * 2 + 2);
 }
 
-fn partition(input: &mut [Input], axis: usize, k: usize) {
+fn partition<F: NativeFloat>(input: &mut [Input<F>], axis: usize, k: usize) {
     let mut left = 0;
     let mut right = input.len() - 1;
     while left < right {
