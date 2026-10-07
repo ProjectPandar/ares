@@ -9093,7 +9093,7 @@ review/acceptance remains required.
 The tagged stable-Time authority and bounded raw difference are explicitly
 approved and documented in the ColorChange Known difference section.
 
-### Preview Acceleration / Jerk / Pressure Advance — spec proposed
+### Preview Acceleration / Jerk / Pressure Advance — spec approved, in progress
 
 The [motion-attributes spec](architecture/web-motion-attributes.md) ports
 `GCodeProcessor::store_move_vertex` `pressure_advance`/`acceleration`/`jerk`
@@ -9103,5 +9103,21 @@ recording (`GCodeProcessor.cpp:5630-5706,5771-5885`) and the M900/M572/
 `GCodeViewer` view-type items, legend ranges and ToolPosition rows into the
 lazy web UI. Exit: native-oracle f32-bit vertex parity on processor fixtures,
 unchanged G-code/M73, full Rust/reference/browser gates and initial JS gzip
-strictly below 125,000 B. Awaiting coordinator approval (two open rulings:
-indeterminate initial PA, f32 machine-state rounding).
+strictly below 125,000 B. Approved with rulings (initialized-native PA oracle,
+f32 bit-exact machine state); Klipper `SET_VELOCITY_LIMIT` travel-accel fix in-slice.
+
+### Known low-priority difference: `process_M205` (located, not scheduled)
+
+Ares' M205 (`processor/motion/config_commands.rs`) applies X/Y/Z/E word by
+word; upstream `GCodeProcessor::process_M205` (`GCodeProcessor.cpp:5236-5265`)
+makes `X` set both X and Y jerk, and maps `S`/`T`/`J` to
+`machine_min_extruding_rate`/`machine_min_travel_rate`/
+`machine_max_junction_deviation`. Both affect estimated time and M73 only.
+Impact count over upstream `8500fcdcc` stock profiles
+(`target/m205-impact/README.md`): zero printers emit X-only, J, S or T M205
+from custom G-code; Orca's writer always emits X and Y together; the 174 Marlin2
+envelope `M205 J` lines restate `machine_max_junction_deviation`, so stock
+values do not change timing. Ruled low priority; take it up when idle.
+RED candidates: (a) JD calibration (`GCode.cpp:4753`, per-layer interpolated
+`M205 J`), (b) custom-G-code X-only `M205 X<v>`. The motion-attributes fixture
+writes `M205 X12 Y9` to avoid this difference, not to cover it.
