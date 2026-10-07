@@ -200,6 +200,56 @@ matrix is retained rather than reconstructed. This derived control is not
 the original fixture and has no Native parity verdict: Native reconstruction
 on the still-undersized vector remains outside the defined domain.
 
+## Related stock rows: thirteen multi-head singleton-selector cases
+
+These historical stock rows belong to the **same upstream CLI UB boundary**
+as O8-X2D-SCALAR, not thirteen independent Rust failures. All are recorded in
+[the same machine-readable record](o8-x2d-scalar-flush-context-record.json)
+under `related_stock_cases`, with **UB_ADJACENT / parity_pass=false**.
+No original scalar RED, source option, guard, or comparator was changed.
+
+Evidence snapshot: the authoritative single-attempt matrix at `5cde90c23`.
+The saved thirteen 3MF inputs were replayed without editing their bytes.
+Fresh Ares observation uses main `879163bac`, its existing cargo-built CLI,
+and binds the input/binary/output hashes in
+`/tmp/worker3-o8-stock-ares-879/report.json`.
+
+The exact seed-replay producer `72d4hac8qmg5p9m22v2kifbp1hkxjk63` was
+rebuilt to realize its existing separate-debug output. Raw Native SHA remains
+`59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`;
+Build-ID `bdbbf4336095c2ce6283fc5441e1e56fbf595b99` matches the debug file.
+Source is `/nix/store/g3wj93lyhjsvc32fmgvw0cdbd6191q55-orca-slicer-2.4.2-seed-replay-source`.
+One seed0/CPU3 gdb invocation per input was retained, with output directories
+remapped only to avoid overwriting original evidence. MyToolChanger0.8
+SIGSEGV backtrace: `get_extruder_variant_string` at `PrintConfig.cpp:604`,
+negative enum bits `0xe63fab60`; `get_index_for_extruder` at9034 with
+extruder id3; `CLI::run` at `OrcaSlicer.cpp:3462`. The other twelve invocations
+exited normally and produced G-code. This instability is not retry-based
+oracle recovery or a new numerical contract.
+
+**Shape and safe-Rust outcome differ from the original two-colour witness.**
+These stock configurations have four/five nozzle entries, but singleton
+`extruder_type` and `nozzle_volume_type`, and one colour/palette entry.
+All thirteen Ares runs exit0 and emit G-code; none returns the original
+X2D matrix-size error. This difference was reported and explicitly accepted
+by the coordinator: do not add rejection just to match the two-colour case.
+The original X2D witness needs unavailable selectors for non-diagonal cells;
+a singleton selector is not itself globally illegal. Preserve each input's
+actual shape and observed result, rather than claiming identical error behavior.
+
+For the twelve normal Native outputs, complete-byte comparisons with their
+Ares outputs normalize **only the generated-by line**: **12 equal, 0 unequal**.
+Raw/normalized hashes, byte lengths and paths are recorded per row; there is
+no first differing line. The SIGSEGV row has no comparison. These are observed
+success-stream equalities, **not parity PASS**: all thirteen rows retain
+`parity_pass=false` because the Native execution crosses the undefined
+per-nozzle selector read. No retries, fixture repair, numeric expectations,
+production change, or scalar rejection were introduced.
+
+Raw stacks/commands/receipts: `/tmp/worker3-native-crash-triage/`.
+Cubicon's three export aborts are separate and not included in this group;
+their reconstructed-input backtraces remain a separate follow-up.
+
 ## Included, deferred and exit
 
 Included: original-input fresh-main E2E RED, precise current/new context and
