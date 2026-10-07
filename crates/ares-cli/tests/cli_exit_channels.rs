@@ -92,6 +92,12 @@ fn cli_exit_values_family_matches_native() {
 }
 
 #[test]
+fn cli_exit_o3_range_family_matches_native() {
+    let temp = tempfile::tempdir().unwrap();
+    assert_family("range", "range.3mf", temp.path());
+}
+
+#[test]
 fn cli_exit_empty_plate_family_matches_native() {
     let temp = tempfile::tempdir().unwrap();
     assert_family("empty-plate", "empty-plate.3mf", temp.path());
