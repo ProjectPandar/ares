@@ -285,8 +285,8 @@ because their owner is the separately specified generic materialization slice,
 not because source arithmetic should be redefined. FM neither synthesizes ids
 nor substitutes zero for an unresolved map.
 
-Calculator calls are reachable only in a `Some(dataset)` match arm. The
-`None` arm fills only source-independent diagonals/support destinations,
+Calculator calls are reachable only after destructuring `Some(dataset)`.
+The `None` branch fills only source-independent diagonals/support destinations,
 admitted by the existing cell-dependency predicate; it never invokes a
 calculator or substitutes a dataset. Do not replace production unwraps with
 expect/unreachable or introduce a palette-count special case.
@@ -295,9 +295,12 @@ Failure inventory before implementation: ids covering nozzles but not all
 variants must decline reconstruction; complete maps must retain exact selection
 and output; diagonal/support-only matrices must still compute without ids;
 multiplier prefix resizing must precede a dependency decline. Existing focused
-whole-output E2Es and all x2d_flush_matrix witnesses remain unchanged. Reuse
-full controls only with a changed-source inventory, identical focused artifact
-bytes, and fresh focused/Clippy/fmt results, per coordinator review ruling.
+whole-output E2Es and all x2d_flush_matrix witnesses remain unchanged.
+The follow-up review requires a new full seeded v2 run after BROWSER-END:
+compare every common case's raw Ares bytes against the previous 594-test
+candidate, inventory and explain any changes, and require seeded all PASS.
+Focused/source-equality evidence alone cannot prove this stricter guard inert.
+Official need not rerun; retain its previously accepted evidence.
 
 ## Sequence, validation and exit
 
