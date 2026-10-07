@@ -139,16 +139,18 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
             &runner.work.join(format!("ares-result-{label}.json")),
             &json!({"error": actual.as_ref().err().map(ToString::to_string)}),
         );
-        match actual {
-            Ok(actual) => {
-                fs::write(path(&format!("ares-{label}.gcode")), &actual).unwrap();
-                if let Err(difference) =
-                    crate::golden::compare_ordered_bytes_generator_only(reference, &actual)
-                {
-                    failures.push(format!("{label}: {difference}"));
-                }
+        let actual = match actual {
+            Ok(actual) => actual,
+            Err(error) => {
+                failures.push(format!("{label}: {error}"));
+                continue;
             }
-            Err(error) => failures.push(format!("{label}: {error}")),
+        };
+        fs::write(path(&format!("ares-{label}.gcode")), &actual).unwrap();
+        if let Err(difference) =
+            crate::golden::compare_ordered_bytes_generator_only(reference, &actual)
+        {
+            failures.push(format!("{label}: {difference}"));
         }
     }
     assert!(
