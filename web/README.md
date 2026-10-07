@@ -94,15 +94,14 @@ filament colors and custom G-code items, including the pause/custom gray entry.
 - The Preview moves slider labels its higher thumb with the G-code line of
   the stop. Upstream `GCodeViewer.cpp:1765-1821` also supplies G-code IDs as
   `alternate_values`; this is not an elapsed-time/distance feature. The
-  separate tool-position Time property is proposed in
-  [the marker-time spec](../docs/architecture/web-marker-time.md), not implemented.
+  separate tool-position Time property uses the Rust-owned inclusive f32 prefix;
+  see [the marker-time record](../docs/architecture/web-marker-time.md).
 - The Preview tool position window (`Marker::render_position_window`,
   `GCodeViewer.cpp:325-690`) lists Type, Line Type, Width, Height, Layer, Speed,
-  Flow rate, Fan speed and Temperature. OrcaSlicer also lists Acceleration,
-  Jerk, Pressure Advance and Time, and offers the actual speed profile.
-  Time's vertex durations are already recorded; the source-owned inclusive
-  lookup and Time row are not wired yet. The other properties/profile remain
-  deferred. The marker arrow is a
+  Flow rate, Fan speed, Temperature and Time (Normal mode). The Time row follows
+  the selected property-window vertex, including seam substitution, rather
+  than independently selecting an arrow vertex. Acceleration, Jerk, Pressure
+  Advance, the actual speed profile and Stealth UI remain deferred. The marker arrow is a
   Three.js cone on a cylinder with the `stilized_arrow(16, 1.5, 3.0, 0.8, 3.0)`
   dimensions (`GLModel.cpp:934`), lit by the viewport lights instead of the
   `gouraud_light` shader.
@@ -132,7 +131,11 @@ Artifacts are written to `target/web-e2e/`:
 
 The oracles are external binaries named by environment variables: `ORCA_APPDIR`
 above, and `ARES_PROCGCODE_BIN` for the OrcaSlicer `GCodeProcessor` build
-(`tools/chain-probe/procgcode.nix`) that checks the toolpath preview. A variable
+(`tools/chain-probe/procgcode.nix`) that checks the toolpath preview.
+`ARES_MARKER_TIME_STABLE_BIN` selects the approved marker-only variant of the
+real-conversion/native source-kernel probe
+(`tools/chain-probe/marker-time-stable-options.nix`) for exact Time text. It is not full native
+viewer execution. A variable
 set to a missing path fails the test. An unset variable fails it too, except
 under `CI`, which does not provision the oracles and reports the check as
 skipped.

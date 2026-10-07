@@ -45,3 +45,32 @@ recorded before implementation in that test and the approved spec. The first
 RED is the missing timing query/record API; no production changes accompany
 that checkpoint. Source-kernel diagnostics never replace official full
 G-code/M73 oracles or grant a timing exception for marker-remapping differences.
+
+## Approved tagged stable authority
+
+`tagged-stable.tsv` is the stable native JSON projection
+`id, gcodeId, durationBits[0], durationBits[1], elapsedBits[0], elapsedBits[1]`.
+It contains 7,347 vertices for the real project slice using
+`tagged-overrides.json`; `tagged-oracle.json` records its provenance. The
+operator-approved bounded raw/stable difference is documented in
+`docs/architecture/web-colorchange.md` under Known difference: tagged marker
+Time. Stable vertex IDs are authoritative; raw IDs must not be compared by
+ordinal. The first ordinal diagnostic failure remains in the artifacts.
+
+```sh
+cargo nextest run -p ares-wasm --test marker_time_tagged
+# Build marker-time-stable-options.nix with the same source/nixpkgs variables.
+ARES_MARKER_TIME_BIN=<raw-output>/bin/orca-slicer \
+ARES_MARKER_TIME_STABLE_BIN=<stable-output>/bin/orca-slicer \
+node tools/chain-probe/marker-time-pair.mjs \
+  target/marker-time-stable-proof/oracle-input.gcode /tmp/fresh-marker-pair
+node tools/chain-probe/marker-time-bounds.mjs /tmp/fresh-marker-pair
+cmp tests/parity/marker-time/tagged-stable.tsv /tmp/fresh-marker-pair/stable.tsv
+```
+
+The real processed-slice → public WASM adapter integration checks every
+stable identity, both duration modes and Normal elapsed bits after moving
+display buffers. The separate bounded-impact proof checks the extra phantom,
+exact five-field direct-difference set, unaffected nonzero-duration ordering,
+and both complete native prefix recurrences, including tails. Scripts emit
+only counts and a first difference; complete evidence is written to files.

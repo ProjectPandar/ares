@@ -1,0 +1,21 @@
+{
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "oracle": "stable native source-kernel, not full native viewer",
+  "inputSha256": "55ec96a28d3ac035d94d0923c5f3be53cb9d897963fc2b8a561b7291ef935f89",
+  "binaries": [
+    {
+      "path": "/nix/store/1fhccjjpi187yg45bchvg8935iwxywim-orca-slicer-marker-time-2.4.2/bin/orca-slicer",
+      "sha256": "ba90ceb881adb8bc6f0a26fdd87393b526104eb2b8bdfce3f11c21088c88f2c9"
+    },
+    {
+      "path": "/nix/store/d9n5bs7mp9d3i7wlkcik81k47jpay8ir-orca-slicer-marker-time-stable-options-2.4.2/bin/orca-slicer",
+      "sha256": "a25bdaa55081992205c3c661e68649469f0aaf550c8ec1ccd414e75eefa24fd4"
+    }
+  ],
+  "stableJsonSha256": "4a76d17881003e2cad59f888c6387d93bbc81fe2062f44ba263be7a8370097e5",
+  "stableTsvSha256": "a512fff52062307b69e2fbd5355340ffac9a5fd1aeb989d4289f2bd7d4c7781c",
+  "overridesSha256": "d74a0e48d9bad17b5b8aa33bcaad2d2e41003138a1b04e55d123f6a0c69caacd",
+  "vertices": 7347,
+  "authority": "stable vertex id; raw is bounded-impact evidence only",
+  "knownDifference": "docs/architecture/web-colorchange.md#known-difference-tagged-marker-time-approved"
+}

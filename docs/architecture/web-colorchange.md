@@ -160,6 +160,55 @@ corrected diagnostic. The committed stable-options patch may contain only
 OptionsZCorrector marker remapping. No tolerances are enlarged and no failing
 assertion is dropped.
 
+## Known difference: tagged marker Time (approved)
+
+For the Time row, the **stable native source-kernel** (only the approved
+marker-remap patch above) is authoritative. This is actual native conversion
+plus the extracted `ViewerImpl::get_estimated_time_at` kernel, not execution
+of the full GL viewer. Ares's real processed-slice → vgcode → WASM output
+matches all **7,347 stable vertex IDs and G-code IDs**, both duration-mode
+bits and every Normal-mode elapsed bit, including after display-buffer
+transfer and reverse queries. No core timing arithmetic changed.
+
+The tagged normal input SHA256 is
+`55ec96a28d3ac035d94d0923c5f3be53cb9d897963fc2b8a561b7291ef935f89`.
+Raw has 7,348 vertices. Aligning by **G-code ID and occurrence**, rather than
+ordinal, leaves exactly these direct differences:
+
+| G-code ID | Raw / stable vertex | Bounded effect |
+| --- | --- | --- |
+| 679 | 1654 / 1450 | Stale-index relocation changes the extrusion position and duration: raw `0.1304752230644226s`, stable `0.03975646197795868s` |
+| 680 | 1450 / 1451 | Following phantom inherits the changed preceding position; duration stays zero |
+| 790 | 1645 / 1653 | Intended ColorChange marker is relocated correctly; duration is raw zero versus stable `0.1304752230644226s` |
+
+Raw's additional vertex **1653 / G-code 679** is a zero-duration phantom at
+the relocated extrusion's start. These five field differences and that
+phantom are bounded by `GCodeProcessor.cpp:3291-3296,5962-6008`,
+`OptionsZCorrector::update` (`GCodeProcessor.hpp:693-706`) and the resulting
+path-start insertion (`LibVGCodeWrapper.cpp:215-238`). Every other direct
+identity/duration field and the order of unaffected nonzero durations match.
+
+Elapsed first diverges at stable vertex 1450: the native increment is
+`0.03975677490234375s`, the result of adding vertex 679's
+`0.03975646197795868s` duration to the prior prefix in **f32**. It is not an
+exact real-valued subtraction identity. The misplaced raw duration transfers
+back to marker 790 in stable; the relocated marker's prefix also reflects
+its changed place in the sequence. Subsequent ordered f32 additions propagate
+the offset to the complete tail (`0.039794921875s`). Both native streams'
+full prefix recurrences were checked; no tail was omitted. This bounded
+propagation is explicitly approved, not a general timing tolerance or an XYZ
+waiver. Any difference outside these boundaries must stop validation.
+
+Reproduction: `marker-time-stable-options.nix`, `marker-time-pair.mjs`, and
+`marker-time-bounds.mjs` under `tools/chain-probe/`; committed native-derived
+`tests/parity/marker-time/tagged-stable.tsv` and overrides; integration test
+`crates/ares-wasm/tests/marker_time_tagged.rs`. Full records, correspondence,
+first differences/counts and propagation evidence are retained under
+`target/marker-time-final-9e/tagged-time/normal/` and
+`target/marker-time-stable-proof/`. Diagnostics print bounded summaries, not
+large assertion diffs. The initial ordinal comparison and exit 137 are
+retained as failed diagnostic evidence, not silently retried to pass.
+
 ## M73 C stop-time postprocessing boundary
 
 Operator-approved follow-up: port Normal-mode `GCodeProcessor` stop registration

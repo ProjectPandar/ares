@@ -3,7 +3,9 @@
 Status: approved at `75c08a84`; implementation proceeds RED → GREEN.
 Oracle approval additionally requires the source/adapted diff and hashes to be
 committed, with only member/parameter adaptations. Notify the coordinator's
-inbox before browser E2E and run it in a low-load window.
+inbox before browser E2E and run it in a low-load window; send BROWSER-END on
+every success, failure or interruption. The later approved tagged-Time ruling
+is recorded in [ColorChange Known difference](web-colorchange.md#known-difference-tagged-marker-time-approved).
 Base: approved ColorChange chain `70323c9a7`.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.
@@ -118,9 +120,11 @@ For each selected native vertex emit identity, duration/prefix **f32 bits**,
 mode, and the exact final Time text. Assert Rust bits and browser text against
 these records. Tagged geometry cases retain the approved raw/stable marker
 pair and complete difference-set rule; the stable patch remains marker-only.
-Retain timing outputs from both diagnostic variants. If they differ, stop for
-an explicit timing ruling: the existing XYZ exception is not permission to
-waive a timing mismatch.
+Stable source-kernel vertex IDs and bits are authoritative for Ares. Retain
+both native streams; align raw/stable by G-code ID, explicitly accounting for
+phantoms and bounded elapsed propagation as documented in the approved Known
+difference. Differences outside that boundary still require an explicit ruling;
+the existing XYZ exception is not a blanket timing waiver.
 Generated G-code/M73 use the unmodified official slicer, never that patch.
 Keep all RED inputs and source-kernel fixture outputs reproducible and committed.
 

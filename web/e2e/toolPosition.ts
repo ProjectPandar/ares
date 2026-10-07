@@ -88,8 +88,8 @@ async function expectToolPosition(page: Page, move: Move, view: "FeatureType" | 
  */
 export async function checkToolPosition(page: Page, moves: Move[], top: number, artifacts: string) {
   const { vertices, stops } = movesSliderVertices(moves, top);
-  const oracle = process.env.ARES_MARKER_TIME_BIN;
-  if (!oracle) throw new Error("ARES_MARKER_TIME_BIN is required for the marker Time oracle");
+  const oracle = process.env.ARES_MARKER_TIME_STABLE_BIN;
+  if (!oracle) throw new Error("ARES_MARKER_TIME_STABLE_BIN is required for the marker Time oracle");
   execFileSync(oracle, ["--process-gcode", `${artifacts}oracle-input.gcode`,
     "--dump-moves", `${artifacts}marker-time-moves.csv`,
     "--dump-marker-time", `${artifacts}marker-time-native.json`], { stdio: "ignore" });
