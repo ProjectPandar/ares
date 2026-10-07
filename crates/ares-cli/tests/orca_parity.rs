@@ -33,6 +33,8 @@ mod flow_errors;
 mod honeycomb_multiline;
 #[path = "orca_parity/klipper_velocity_limit.rs"]
 mod klipper_velocity_limit;
+#[path = "orca_parity/m205.rs"]
+mod m205;
 #[path = "orca_parity/narrowed_x2d_whole_file.rs"]
 mod narrowed_x2d_whole_file;
 #[path = "orca_parity/option_coverage.rs"]
