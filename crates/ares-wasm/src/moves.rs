@@ -321,6 +321,17 @@ impl VertexBuffers {
                 vec![marker.vertex as u32, marker.window_vertex as u32]
             })
     }
+    /// Float32Array `[elapsedSeconds, vertexSeconds]` for the position window.
+    #[wasm_bindgen(js_name = markerTime)]
+    pub fn marker_time(&self, window_vertex: u32) -> Result<Vec<f32>, JsError> {
+        let id = window_vertex as usize;
+        if id >= self.viewer.vertices().len() {
+            return Err(JsError::new("marker vertex outside loaded toolpaths"));
+        }
+        let time = self.viewer.get_marker_time(id);
+        Ok(vec![time.elapsed_seconds, time.vertex_seconds])
+    }
+
     /// Uint32Array: vertex ids of libvgcode's enabled segments (`i` to `i + 1`).
     #[wasm_bindgen(js_name = enabledSegments)]
     pub fn enabled_segments(&mut self) -> Vec<u32> {

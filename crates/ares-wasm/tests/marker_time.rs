@@ -21,6 +21,7 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
                 move_type: match uint(1) {
                     0 => EMoveType::Noop,
                     3 => EMoveType::Seam,
+                    4 => EMoveType::ToolChange,
                     8 => EMoveType::Travel,
                     10 => EMoveType::Extrude,
                     other => panic!("unexpected fixture type {other}"),
