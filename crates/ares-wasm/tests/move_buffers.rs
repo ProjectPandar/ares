@@ -33,6 +33,14 @@ fn processed_buffers_preserve_ids_and_owned_data() {
     assert_eq!(&moves.take_values()[12..15], &[1.0, 2.0, 3.0]);
     assert_eq!(&moves.take_tags()[5..], &[10, 0, 0, 0, 1]);
     let mut vertices = output.take_vertices();
+    let legend: serde_json::Value =
+        serde_json::from_str(&vertices.filament_legend().unwrap()).unwrap();
+    assert_eq!(legend["colorPrint"]["visible"], false);
+    assert_eq!(legend["colorPrint"]["partialUsage"]["status"], "available");
+    assert_eq!(
+        legend["colorPrint"]["extruders"][0]["segments"][0]["color"],
+        serde_json::json!([255, 48, 48])
+    );
     assert_eq!(vertices.count(), 2);
     assert!(vertices.spiral_vase_mode());
     assert_eq!(vertices.take_ids(), [16777217, 0, 16777217, 0]);
