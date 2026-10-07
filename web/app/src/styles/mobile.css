@@ -1,0 +1,50 @@
+/* Phone layout toggle for the sidebar drawer; desktop and tablet always show the sidebar. */
+.panel-toggle { display: none; }
+
+/* Tablets: a narrower sidebar leaves the 3D view most of the width. */
+@media (max-width: 1024px) {
+  .sidebar { width: 280px; }
+}
+
+/* Phones: one column, plate actions in a bottom bar, sidebar as a drawer. */
+@media (max-width: 640px) {
+  .shell {
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  }
+  .titlebar { grid-template-columns: 1fr auto; padding: env(safe-area-inset-top) 4px 0; }
+  .titlebar-title { display: none; }
+  .brand { font-size: 0; margin: 0 6px 0 2px; }
+
+  /* The notebook row keeps the tabs; its SideButtons become the bottom bar. */
+  .tabbar { display: contents; }
+  .tabbar-tabs { grid-row: 2; background: var(--topbar); border-top: 1px solid rgba(255, 255, 255, 0.06); }
+  .tab { flex: 1; min-width: 0; padding: 0 12px; }
+  .workspace { grid-row: 3; }
+  .tabbar-actions { grid-row: 4; padding: 6px 8px; background: var(--topbar); }
+  .side-button { flex: 1; min-width: 0; }
+  .statusbar { grid-row: 5; padding-bottom: env(safe-area-inset-bottom); }
+  .status-message { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .status-right > :not(.engine-dot) { display: none; }
+
+  .page { position: relative; }
+  .sidebar {
+    position: absolute; inset: 0 auto 0 0; z-index: 30; width: calc(100% - 60px);
+    border-right: 1px solid var(--border); box-shadow: var(--shadow);
+  }
+  .sidebar[data-open="false"] { display: none; }
+  .panel-toggle {
+    position: absolute; top: 8px; left: 8px; z-index: 31; display: grid; place-items: center;
+    width: 44px; height: 44px; padding: 0; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--panel); color: var(--text); font-size: 20px; box-shadow: var(--shadow); cursor: pointer;
+  }
+  .panel-toggle[aria-expanded="true"] { left: auto; right: 8px; }
+
+  /* Overlays stay inside the 3D view; the camera toolbar scrolls sideways right of the panel toggle. */
+  .viewport { overflow: hidden; }
+  .view-toolbar { top: 8px; left: 60px; right: 8px; transform: none; overflow-x: auto; scrollbar-width: none; }
+  .view-button { flex: none; }
+  .preview-card, .layer-slider { top: 66px; }
+  .preview-card { width: min(250px, calc(100% - 100px)); }
+  .legend { width: min(200px, calc(100% - 100px)); }
+}

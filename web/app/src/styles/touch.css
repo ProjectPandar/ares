@@ -1,0 +1,20 @@
+/* Coarse pointers (touch screens): 44x44 CSS px targets (WCAG 2.5.5). */
+@media (pointer: coarse) {
+  .bar-button, .view-button { min-width: 44px; min-height: 44px; justify-content: center; }
+  .tab { min-height: 44px; }
+  .side-button { min-height: 44px; }
+  .combo { height: 44px; }
+  .combo-option { min-height: 44px; }
+  .preset-edit { width: 44px; height: 44px; }
+  .vendor-item { min-height: 44px; }
+  .legend-row { min-height: 44px; }
+  /* The thumb's touch box; the 16px dot is drawn inside it. */
+  .layer-slider-thumb {
+    width: 44px; height: 44px; border: none; background: none; box-shadow: none;
+  }
+  .layer-slider-thumb::after {
+    content: ""; position: absolute; inset: 14px; border-radius: 50%;
+    background: var(--panel); border: 3px solid var(--accent); box-shadow: var(--shadow); box-sizing: border-box;
+  }
+  .layer-slider-track::before { inset: -8px -20px; }
+}
