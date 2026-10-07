@@ -61,12 +61,12 @@ fn project(runner: &OrcaRunner, name: &str, changes: &[(&str, Option<Value>)]) -
             for (key, value) in &requested {
                 settings[*key] = value.clone();
             }
+            let object = settings.as_object_mut().unwrap();
             for (key, value) in changes {
-                if let Some(value) = value {
-                    settings[*key] = value.clone();
-                } else {
-                    settings.as_object_mut().unwrap().remove(*key);
-                }
+                match value {
+                    Some(value) => object.insert((*key).to_owned(), value.clone()),
+                    None => object.remove(*key),
+                };
             }
             bytes = serde_json::to_vec_pretty(&settings).unwrap();
         }
