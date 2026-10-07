@@ -53,7 +53,7 @@ const PATH_TYPES = new Set([0, 8, 9, EXTRUDE]);
  * Upstream GCodeProcessor moves of the browser's G-code, from the procgcode oracle
  * (`tools/chain-probe/procgcode.nix`, `--dump-moves`). Only used for expected values.
  */
-function oracleMoves(oracle: string, gcodePath: string, workDir: string): Move[] {
+export function oracleMoves(oracle: string, gcodePath: string, workDir: string): Move[] {
   // `GCodeProcessor::detect_producer` only parses HEIGHT/WIDTH tags for known
   // producers; renaming keeps every line id.
   const input = `${workDir}oracle-input.gcode`;

@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import { movesSliderVertices, type Move } from "./toolpathPreview";
 
@@ -42,7 +44,7 @@ function detail(move: Move, view: "FeatureType" | "Height") {
 
 /**
  * The properties table rows backed by engine data (`GCodeViewer.cpp:430-454`);
- * Acceleration, Jerk, Pressure Advance and Time are deferred.
+ * Acceleration, Jerk and Pressure Advance remain deferred.
  */
 function properties(move: Move): [string, string][] {
   const extrusion = move.type === EXTRUDE;
@@ -86,6 +88,21 @@ async function expectToolPosition(page: Page, move: Move, view: "FeatureType" | 
  */
 export async function checkToolPosition(page: Page, moves: Move[], top: number, artifacts: string) {
   const { vertices, stops } = movesSliderVertices(moves, top);
+  const oracle = process.env.ARES_MARKER_TIME_BIN;
+  if (!oracle) throw new Error("ARES_MARKER_TIME_BIN is required for the marker Time oracle");
+  execFileSync(oracle, ["--process-gcode", `${artifacts}oracle-input.gcode`,
+    "--dump-moves", `${artifacts}marker-time-moves.csv`,
+    "--dump-marker-time", `${artifacts}marker-time-native.json`], { stdio: "ignore" });
+  expect(readFileSync(`${artifacts}marker-time-moves.csv`)).toEqual(readFileSync(`${artifacts}oracle-moves.csv`));
+  const native = JSON.parse(readFileSync(`${artifacts}marker-time-native.json`, "utf8")) as {
+    vertices: { id: number; gcodeId: number; layerId: number; type: number; role: number; text: [string, string] }[];
+  };
+  expect(native.vertices).toHaveLength(vertices.length);
+  const time = (id: number) => {
+    expect(native.vertices[id].id).toBe(id);
+    expect(native.vertices[id].gcodeId).toBe(vertices[id].gcodeId);
+    return native.vertices[id].text[0];
+  };
   const slider = page.getByRole("slider", { name: "Moves" });
   await expect(slider).toHaveValue(String(stops.length - 1));
   await expectToolPosition(page, vertices[stops.at(-1)!], "FeatureType");
@@ -108,10 +125,38 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   await expect(window.locator("table")).toHaveCount(0);
   await fold.click();
   await expect(fold).toHaveAttribute("aria-expanded", "true");
-  const rows = properties(before);
+  const rows = [...properties(before), ["Time", time(stops[seamStop] - 1)]];
+  await page.screenshot({ path: `${artifacts}marker-time-before-assert.png` });
   await expect(window.locator("table th")).toHaveText(rows.map(([label]) => label));
   await expect(window.locator("table td")).toHaveText(rows.map(([, value]) => value));
   await page.screenshot({ path: `${artifacts}preview-tool-properties.png` });
+  const box = await window.boundingBox();
+  const sliderBox = await page.getByTestId("moves-slider").boundingBox();
+  expect(box!.y + box!.height).toBeLessThanOrEqual(sliderBox!.y);
+  await select.selectOption({ label: "Line Type" });
+  const timeCell = window.locator("tr").filter({ has: page.getByText("Time", { exact: true }) }).locator("td");
+  await expect(timeCell).toHaveText(time(stops[seamStop]));
+  for (const stop of [0, Math.floor(stops.length / 2), stops.length - 1, 0]) {
+    await slider.fill(String(stop));
+    await expect(timeCell).toHaveText(time(stops[stop]));
+  }
+  const outer = page.getByTestId("legend").getByRole("button", { name: "Outer wall" });
+  await outer.click();
+  await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
+  await slider.fill((await slider.getAttribute("max"))!);
+  const filteredLast = native.vertices.findLast((v) => v.layerId <= top && (v.type === SEAM || (v.type === EXTRUDE && v.role !== 2)))!;
+  await expect(timeCell).toHaveText(time(filteredLast.id));
+  await outer.click();
+  await slider.fill(String(stops.length - 1));
+  await expect(timeCell).toHaveText(time(stops.at(-1)!));
+  const initialTheme = await page.locator("html").getAttribute("data-theme");
+  for (const theme of ["light", "dark"] as const) {
+    if (await page.locator("html").getAttribute("data-theme") !== theme)
+      await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
+    await expect(timeCell).toHaveText(time(stops.at(-1)!));
+    await page.screenshot({ path: `${artifacts}marker-time-${theme}.png` });
+  }
+  if (initialTheme === "light") await page.getByTitle("Light theme").click();
   await fold.click();
   await expect(window.locator("table")).toHaveCount(0);
   await select.selectOption({ label: "Line Type" });

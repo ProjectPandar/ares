@@ -7,7 +7,8 @@ import { expect, type Page, test } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { checkToolpathPreview } from "./toolpathPreview";
+import { checkToolpathPreview, oracleMoves } from "./toolpathPreview";
+import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/", import.meta.url));
@@ -156,6 +157,18 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   await editedDownload.saveAs(editedPath);
   const edited = readFileSync(editedPath, "utf8");
   expect(edited === gcode.toString("utf8"), "the edit changes the browser output").toBe(false);
+  await page.getByRole("link", { name: "Preview" }).click();
+  await expectNoToolPosition(page);
+  if (oracle) {
+    const moves = oracleMoves(oracle, editedPath, `${artifacts}project-edit/`);
+    await page.getByRole("slider", { name: "Top layer" }).focus();
+    await page.keyboard.press("Home");
+    const slider = page.getByRole("slider", { name: "Moves" });
+    await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
+    await slider.fill("0");
+    await slider.fill((await slider.getAttribute("max"))!);
+    await checkToolPosition(page, moves, 0, `${artifacts}project-edit/`);
+  }
   if (orca) {
     const nativeEdited = orcaEditedGcode({ layer_height: "0.12" });
     writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
