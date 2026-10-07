@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct FilamentLegendView<'a> {
-    color_print: serde_json::Value,
+    color_print: crate::color_print::ColorPrintView,
     columns: Vec<String>,
     rows: Vec<FilamentRowView<'a>>,
     filament_diameters: &'a [f32],
@@ -25,7 +25,7 @@ struct FilamentRowView<'a> {
 impl<'a> From<&'a FilamentLegend> for FilamentLegendView<'a> {
     fn from(legend: &'a FilamentLegend) -> Self {
         Self {
-            color_print: crate::color_print::legend_json(&legend.color_print),
+            color_print: crate::color_print::ColorPrintView::from(&legend.color_print),
             columns: legend
                 .columns
                 .iter()
