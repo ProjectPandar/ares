@@ -1,5 +1,6 @@
 import type { FilamentLegend } from "@ares-slicer/wasm";
 import { css } from "./LegendRange";
+import ColorPrintDetails from "./LegendColorPrint";
 import "./filament.css";
 
 type Usage = [m: number, g: number];
@@ -34,7 +35,7 @@ export default function FilamentRows({ legend }: { legend: FilamentLegend }) {
   });
   if (summed) totals.push(totals.reduce<Usage>(([m, g], value) => [m + value[0], g + value[1]], [0, 0]));
   const cell = ([m, g]: Usage) => `${m.toFixed(2)} m${summed ? "\n" : "    "}${weight(g)}`;
-  return (
+  return <>
     <table className="filament-legend" data-testid="filament-legend" aria-label="Filament usage">
       <thead><tr>
         {columns.includes("Model") && <th scope="col">Filament</th>}
@@ -51,5 +52,6 @@ export default function FilamentRows({ legend }: { legend: FilamentLegend }) {
         </tr>}
       </tbody>
     </table>
-  );
+    <ColorPrintDetails legend={legend} />
+  </>;
 }

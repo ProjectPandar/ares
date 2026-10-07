@@ -89,12 +89,16 @@ test("ColorChange shows source records, unavailable usage, view restoration and 
       await expect(changes.locator(".printed-colors li").nth(2).locator(".legend-swatch")).toHaveCSS("background-color", "rgb(48, 48, 255)");
       const ranges = changes.locator(".color-change-ranges li");
       await expect(ranges).toHaveCount(2);
-      for (const [i, item] of native.custom_gcode_per_print_z.filter((item) => item.type === 0).entries()) {
+      for (const [i, item] of native.custom_gcode_per_print_z.filter((record) => record.type === 0).entries()) {
         await expect(ranges.nth(i)).toContainText(item.print_z.toFixed(2));
         await expect(ranges.nth(i)).toContainText("mm");
       }
+      await page.screenshot({ path: `${directory}/records.png` });
+      const legendBox = (await page.getByTestId("legend").boundingBox())!;
+      const sliderBox = (await page.getByTestId("moves-slider").boundingBox())!;
+      expect(legendBox.y + legendBox.height, "all source records remain above the moves slider").toBeLessThanOrEqual(sliderBox.y - 4);
       const colorView = await canvasDigest(page);
-      for (const view of ["FeatureType", "Tool"]) {
+      for (const view of ["FeatureType", "Speed"]) {
         await page.getByTestId("view-type").selectOption(view);
         await expect(changes).toHaveCount(0);
         await page.getByTestId("view-type").selectOption("ColorPrint");

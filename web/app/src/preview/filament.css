@@ -5,3 +5,18 @@
 .filament-legend th:first-child, .filament-legend td:first-child { padding-left: 4px; }
 .filament-legend .legend-swatch { display: inline-block; margin-right: 8px; }
 .legend-filament-total { border-top: 1px solid var(--border); }
+.legend:has(.color-print-details) { bottom: 52px; max-height: calc(100% - 242px); }
+.color-print-details { border-top: 1px solid var(--border); margin-top: 10px; padding: 0 4px; font-variant-numeric: tabular-nums; }
+.color-print-details h3, .partial-print-records caption { margin: 12px 0 6px; font: inherit; font-weight: 600; text-align: left; }
+.printed-colors, .color-change-ranges { list-style: none; padding: 0; margin: 0; }
+.printed-colors li, .color-change-ranges li { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.printed-colors li span:last-child { margin-left: auto; }
+.color-print-details .legend-swatch { display: inline-block; flex-shrink: 0; }
+.partial-print-records { border-collapse: collapse; width: 100%; }
+.partial-print-records th, .partial-print-records td { padding: 4px 6px; white-space: nowrap; text-align: right; }
+.partial-print-records th { font-weight: 400; }
+.partial-print-records thead th { color: var(--text-dim); font-weight: 600; }
+.partial-print-records th:first-child { padding-left: 0; text-align: left; }
+.partial-print-records td:last-child { padding-right: 0; }
+.partial-print-records .legend-swatch { margin-right: 5px; }
+.partial-unavailable { max-width: 34ch; margin: 12px 0 4px; line-height: 1.5; }
