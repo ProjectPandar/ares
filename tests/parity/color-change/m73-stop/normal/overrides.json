@@ -1,0 +1,3 @@
+{
+  "layer_change_gcode": "{if layer_num == 2}SYNC T2.75\n;COLOR_CHANGE,T0,#FF0000\nM600\n{endif}{if layer_num == 4}SYNC T1.25\n;PAUSE_PRINT\n{endif}{if layer_num == 6};COLOR_CHANGE,T0,#0000FF\nM600\n{endif}{if layer_num == 8};CUSTOM_GCODE\n{endif}"
+}

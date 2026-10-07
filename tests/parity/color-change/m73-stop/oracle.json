@@ -1,0 +1,35 @@
+{
+  "source": "unmodified official OrcaSlicer 2.4.2",
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "generator": "web/e2e/colorChangeOracle.mjs",
+  "normalization": "only the one generator identity/timestamp line",
+  "fixtures": [
+    {
+      "name": "normal",
+      "sha256": "f080cbf5e236cf9312423de50baa578ed106a12c45c009e33d7157473637dff6",
+      "m73": 105,
+      "stops": [
+        "M73 C0",
+        "M73 C1",
+        "M73 C0"
+      ]
+    },
+    {
+      "name": "stop-times",
+      "sha256": "b52ee23be3e4a4871794c0684fb4e0e0ff36bf17278435c017d48b5e961ebdd7",
+      "m73": 106,
+      "stops": [
+        "M73 C1",
+        "M73 C0.01"
+      ]
+    },
+    {
+      "name": "zero-before",
+      "sha256": "269ad2f2862d1c304ba3b913185121f85428d755525f37381f83d5ab197e74d1",
+      "m73": 108,
+      "stops": [
+        "M73 C0"
+      ]
+    }
+  ]
+}
