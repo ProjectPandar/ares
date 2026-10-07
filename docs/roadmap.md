@@ -9092,3 +9092,16 @@ official accepts the BBL array value (reported to the coordinator). Initial gzip
 review/acceptance remains required.
 The tagged stable-Time authority and bounded raw difference are explicitly
 approved and documented in the ColorChange Known difference section.
+
+### Preview Acceleration / Jerk / Pressure Advance — spec proposed
+
+The [motion-attributes spec](architecture/web-motion-attributes.md) ports
+`GCodeProcessor::store_move_vertex` `pressure_advance`/`acceleration`/`jerk`
+recording (`GCodeProcessor.cpp:5630-5706,5771-5885`) and the M900/M572/
+`SET_PRESSURE_ADVANCE` commands (`:5031-5060`) into ares-core, the
+`LibVGCodeWrapper::convert` pass-through into ares-vgcode, and the three
+`GCodeViewer` view-type items, legend ranges and ToolPosition rows into the
+lazy web UI. Exit: native-oracle f32-bit vertex parity on processor fixtures,
+unchanged G-code/M73, full Rust/reference/browser gates and initial JS gzip
+strictly below 125,000 B. Awaiting coordinator approval (two open rulings:
+indeterminate initial PA, f32 machine-state rounding).
