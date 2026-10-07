@@ -142,3 +142,35 @@ skipped.
 
 If Playwright's bundled Chromium cannot run on the host (for example on NixOS),
 set `ARES_E2E_CHROME` to a system Chrome/Chromium binary.
+
+### Phones
+
+The `desktop` project (Chromium, 1600x900) runs every spec except
+`e2e/mobile.spec.ts`, which runs in two touch-emulated phone projects:
+`iphone` (Playwright WebKit, iPhone 15) and `pixel` (Chromium, Pixel 7). The
+spec imports `tests/parity/cube10.stl`, installs the LH system presets, slices,
+opens the preview, orbits and pinch-zooms the view, drags the layer slider and
+downloads the G-code by touch; the downloaded G-code must have the sha256 of
+the same flow with desktop layout and mouse input. Artifacts go to
+`target/web-e2e/mobile/<project>/` (step screenshots, axe reports,
+`gcode.sha256`, `result.json`).
+
+```sh
+npx playwright install webkit     # once
+npx playwright test --project=pixel --project=iphone
+```
+
+Playwright's WebKit needs system libraries that NixOS does not provide on a
+library path. `e2e/webkit-env.sh` builds them from `e2e/webkit-libs.nix` with
+the nixpkgs named by `ARES_E2E_NIXPKGS` and points the `iphone` project at
+`e2e/webkit-run.sh`, which starts the bundled headless MiniBrowser with them:
+
+```sh
+# same pinned nixpkgs as scripts/orca-replay/build.nix
+ARES_E2E_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source \
+  e2e/webkit-env.sh npx playwright test --project=iphone
+```
+
+The library list matches the WebKit revision of the pinned `@playwright/test`
+(1.63.0, `webkit-2359`); a Playwright upgrade rechecks it with `ldd` on
+`minibrowser-wpe/bin/*` and `lib/*.so*`.

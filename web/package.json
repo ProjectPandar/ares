@@ -15,6 +15,7 @@
     "test:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build && playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "1.63.0",
     "@types/node": "^24.19.1",
     "fflate": "^0.8.3",
