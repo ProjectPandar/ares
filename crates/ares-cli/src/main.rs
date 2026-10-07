@@ -51,12 +51,14 @@ async fn main() {
 /// `flush_and_exit` (`OrcaSlicer.cpp:396-411` — the stdout line and the
 /// negative return, which becomes the POSIX exit 256+n) plus
 /// `record_exit_reson` (`:416-460`, Linux-only result.json); every other
-/// error keeps the plain `Error: <detail>` + exit 1 shape.
+/// error keeps Rust's original `Error: <Debug>` + exit 1 shape.
 enum CliFailure {
     Family(Box<FamilyFailure>),
     Legacy(Box<dyn Error>),
 }
 
+// Upstream result metadata is only consumed on Linux (OrcaSlicer.cpp:416-460).
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 struct FamilyFailure {
     return_code: i32,
     plate_index: u32,
@@ -73,7 +75,7 @@ impl CliFailure {
         match self {
             Self::Family(failure) => failure.flush_and_exit(),
             Self::Legacy(error) => {
-                eprintln!("Error: {error}");
+                eprintln!("Error: {error:?}");
                 std::process::exit(1);
             }
         }
@@ -82,10 +84,13 @@ impl CliFailure {
 
 impl FamilyFailure {
     fn flush_and_exit(self) -> ! {
+        #[cfg(target_os = "linux")]
         println!("run found error, return {}, exit...", self.return_code);
+        #[cfg(not(target_os = "linux"))]
+        println!("run found error, exit");
         eprint!("{}", self.stderr);
         self.record_exit_reason();
-        std::process::exit(256 + self.return_code);
+        std::process::exit(self.return_code);
     }
 
     /// `record_exit_reson` (`OrcaSlicer.cpp:416-460`): Linux-only, sorted
