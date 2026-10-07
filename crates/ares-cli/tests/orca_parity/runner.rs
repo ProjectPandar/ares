@@ -15,6 +15,9 @@ pub(crate) mod application;
 #[path = "runner/application_tests.rs"]
 mod application_tests;
 #[cfg(test)]
+#[path = "runner/cache_contract_tests.rs"]
+mod cache_contract_tests;
+#[cfg(test)]
 #[path = "runner/clipped_loop_motion.rs"]
 mod clipped_loop_motion;
 #[cfg(test)]
