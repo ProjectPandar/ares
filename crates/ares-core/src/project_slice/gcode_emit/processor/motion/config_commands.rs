@@ -69,11 +69,12 @@ impl MotionState {
             return true;
         }
         if code.split_whitespace().next() == Some("SET_VELOCITY_LIMIT") {
-            // Klipper: ACCEL applies to print and travel moves alike
-            // (`GCodeProcessor.cpp:5269-5304`).
+            // Klipper: ACCEL applies to print and travel moves alike; each
+            // setter clamps the raw value to its own limit
+            // (`GCodeProcessor.cpp:5287-5298`), and Klipper's travel limit is
+            // 0 (`supports_separate_travel_acceleration`), i.e. unclamped.
             if let Some(value) = assignment(code, "ACCEL=") {
-                let value = clamp(value, self.max_print_acceleration);
-                self.acceleration = value;
+                self.acceleration = clamp(value, self.max_print_acceleration);
                 self.travel_acceleration = clamp(value, self.max_travel_acceleration);
             }
             if let Some(value) = assignment(code, "SQUARE_CORNER_VELOCITY=") {
