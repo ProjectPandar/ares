@@ -1,6 +1,9 @@
 # Tool-position Time row — source-cited thin-display spec
 
-Status: proposed; **spec review required before implementation**.
+Status: approved at `75c08a84`; implementation proceeds RED → GREEN.
+Oracle approval additionally requires the source/adapted diff and hashes to be
+committed, with only member/parameter adaptations. Notify the coordinator's
+inbox before browser E2E and run it in a low-load window.
 Base: approved ColorChange chain `70323c9a7`.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.

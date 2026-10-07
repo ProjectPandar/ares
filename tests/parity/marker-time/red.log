@@ -1,0 +1,28 @@
+   Compiling ares-vgcode v0.1.0 (/tmp/ares-pi-worker-web/crates/ares-vgcode)
+error[E0599]: no method named `get_estimated_time_at` found for reference `&ViewerImpl` in the current scope
+  --> crates/ares-vgcode/tests/marker_time.rs:68:20
+   |
+68 |             viewer.get_estimated_time_at(id).to_bits(),
+   |                    ^^^^^^^^^^^^^^^^^^^^^ method not found in `&ViewerImpl`
+
+error[E0599]: no method named `get_marker_time` found for reference `&ViewerImpl` in the current scope
+  --> crates/ares-vgcode/tests/marker_time.rs:72:27
+   |
+72 |         let time = viewer.get_marker_time(id);
+   |                           ^^^^^^^^^^^^^^^ method not found in `&ViewerImpl`
+
+error[E0599]: no method named `get_marker_time` found for struct `ViewerImpl` in the current scope
+   --> crates/ares-vgcode/tests/marker_time.rs:130:31
+    |
+130 |     let feature_time = viewer.get_marker_time(marker.window_vertex);
+    |                               ^^^^^^^^^^^^^^^ method not found in `ViewerImpl`
+
+error[E0599]: no method named `get_marker_time` found for struct `ViewerImpl` in the current scope
+   --> crates/ares-vgcode/tests/marker_time.rs:138:29
+    |
+138 |     let speed_time = viewer.get_marker_time(marker.window_vertex);
+    |                             ^^^^^^^^^^^^^^^ method not found in `ViewerImpl`
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `ares-vgcode` (test "marker_time") due to 4 previous errors
+error: command `/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/bin/cargo test --no-run --message-format json-render-diagnostics --package ares-vgcode --test marker_time` exited with code 101

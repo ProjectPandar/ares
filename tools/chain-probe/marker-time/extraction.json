@@ -1,0 +1,32 @@
+{
+  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "conversion": {
+    "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
+    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+  },
+  "label": "native source-kernel oracle; not full native viewer execution",
+  "adaptations": [
+    "member function to free function",
+    "vertices and time mode supplied as parameters",
+    "lambda captures mode instead of this"
+  ],
+  "upstream": [
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "excerptSha256": "9fbd975e15b7ce5052e1e6c560465391c1685b377d30fba3e64d652dd6d0c4e0"
+    },
+    {
+      "path": "src/libslic3r/Utils.hpp",
+      "fileSha256": "dcda75767a109135f52d366e320a5cd7bf4818d54d2c2a9296ebc49e57590c38",
+      "excerptSha256": "f959688c2bf1c71a7ec13ef8cc4edb0a7c47d8bf821fc1415a1bc3a5aac0c8af"
+    }
+  ],
+  "files": {
+    "kernel.upstream.hpp": "9fbd975e15b7ce5052e1e6c560465391c1685b377d30fba3e64d652dd6d0c4e0",
+    "kernel.hpp": "a8a448e6b76b5b99fadbeddb9b422fbba1f56e0fef3027d853e5c0745c2f2e22",
+    "kernel.diff": "042fd0f09d11c76d9181b15b2ae95cd535d28a3be2004fc31ff969928298e8cc",
+    "formatter.upstream.hpp": "f959688c2bf1c71a7ec13ef8cc4edb0a7c47d8bf821fc1415a1bc3a5aac0c8af",
+    "formatter.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

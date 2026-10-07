@@ -1,0 +1,2252 @@
+{
+  "formats": [
+    {
+      "durationBits": 0,
+      "elapsedBits": 0,
+      "text": "0.000000s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 0,
+      "text": "0.000000s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 0,
+      "text": "0.000000s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 0,
+      "text": "0.000000s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1065353215,
+      "text": "1.000000s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1065353215,
+      "text": "1.000000s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1065353215,
+      "text": "1.000000s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1065353215,
+      "text": "1.000000s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1065353216,
+      "text": "1.000000s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1065353216,
+      "text": "1.000000s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1065353216,
+      "text": "1.000000s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1065353216,
+      "text": "1.000000s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1065353217,
+      "text": "1s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1065353217,
+      "text": "1s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1065353217,
+      "text": "1s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1065353217,
+      "text": "1s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1114636287,
+      "text": "59s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1114636287,
+      "text": "59s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1114636287,
+      "text": "59s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1114636287,
+      "text": "59s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1114636288,
+      "text": "1m 0s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1114636288,
+      "text": "1m 0s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1114636288,
+      "text": "1m 0s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1114636288,
+      "text": "1m 0s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1114636289,
+      "text": "1m 0s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1114636289,
+      "text": "1m 0s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1114636289,
+      "text": "1m 0s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1114636289,
+      "text": "1m 0s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1163984892,
+      "text": "59m 59s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1163984892,
+      "text": "59m 59s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1163984892,
+      "text": "59m 59s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1163984892,
+      "text": "59m 59s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1163984896,
+      "text": "1h 0m 0s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1163984896,
+      "text": "1h 0m 0s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1163984896,
+      "text": "1h 0m 0s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1163984896,
+      "text": "1h 0m 0s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1202241535,
+      "text": "23h 59m 59s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1202241535,
+      "text": "23h 59m 59s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1202241535,
+      "text": "23h 59m 59s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1202241535,
+      "text": "23h 59m 59s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1202241536,
+      "text": "1d 0h 0m 0s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1202241536,
+      "text": "1d 0h 0m 0s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1202241536,
+      "text": "1d 0h 0m 0s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1202241536,
+      "text": "1d 0h 0m 0s (1.235s)"
+    },
+    {
+      "durationBits": 0,
+      "elapsedBits": 1202710176,
+      "text": "1d 1h 1m 1s (0.000s)"
+    },
+    {
+      "durationBits": 973279855,
+      "elapsedBits": 1202710176,
+      "text": "1d 1h 1m 1s (0.001s)"
+    },
+    {
+      "durationBits": 1031798784,
+      "elapsedBits": 1202710176,
+      "text": "1d 1h 1m 1s (0.062s)"
+    },
+    {
+      "durationBits": 1067320345,
+      "elapsedBits": 1202710176,
+      "text": "1d 1h 1m 1s (1.235s)"
+    }
+  ],
+  "oracle": "native source-kernel (not full Viewer execution)",
+  "synthetic": [
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        0,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 1,
+      "id": 0,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "role": 0,
+      "text": [
+        "0.000000s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1036831949,
+        1045220557
+      ],
+      "elapsedBits": [
+        1036831949,
+        1045220557
+      ],
+      "extruderId": 0,
+      "gcodeId": 2,
+      "id": 1,
+      "layerId": 0,
+      "position": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "role": 0,
+      "text": [
+        "0.100000s (0.100s)",
+        "0.200000s (0.200s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1045220557,
+        1036831949
+      ],
+      "elapsedBits": [
+        1050253722,
+        1050253722
+      ],
+      "extruderId": 0,
+      "gcodeId": 3,
+      "id": 2,
+      "layerId": 0,
+      "position": [
+        2.0,
+        0.0,
+        0.0
+      ],
+      "role": 0,
+      "text": [
+        "0.300000s (0.200s)",
+        "0.300000s (0.100s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1266679808,
+        1050253722
+      ],
+      "elapsedBits": [
+        1266679808,
+        1058642330
+      ],
+      "extruderId": 0,
+      "gcodeId": 4,
+      "id": 3,
+      "layerId": 0,
+      "position": [
+        3.0,
+        0.0,
+        0.0
+      ],
+      "role": 0,
+      "text": [
+        "194d 4h 20m 16s (16777216.000s)",
+        "0.600000s (0.300s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1065353216,
+        925353388
+      ],
+      "elapsedBits": [
+        1266679808,
+        1058642498
+      ],
+      "extruderId": 0,
+      "gcodeId": 5,
+      "id": 4,
+      "layerId": 0,
+      "position": [
+        4.0,
+        0.0,
+        0.0
+      ],
+      "role": 0,
+      "text": [
+        "194d 4h 20m 16s (1.000s)",
+        "0.600010s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1065353216,
+        925353388
+      ],
+      "elapsedBits": [
+        1266679808,
+        1058642666
+      ],
+      "extruderId": 0,
+      "gcodeId": 6,
+      "id": 5,
+      "layerId": 0,
+      "position": [
+        5.0,
+        0.0,
+        0.0
+      ],
+      "role": 0,
+      "text": [
+        "194d 4h 20m 16s (1.000s)",
+        "0.600020s (0.000s)"
+      ],
+      "type": 10
+    }
+  ],
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "vertices": [
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        0,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 4,
+      "id": 0,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "role": 0,
+      "text": [
+        "0.000000s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 4
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        0,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 10,
+      "id": 1,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "role": 2,
+      "text": [
+        "0.000000s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        0,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 10,
+      "id": 2,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.10000002384185791
+      ],
+      "role": 2,
+      "text": [
+        "0.000000s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1022739087,
+        0
+      ],
+      "elapsedBits": [
+        1022739087,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 10,
+      "id": 3,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "0.030000s (0.030s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1022739087,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 11,
+      "id": 4,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "0.030000s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1022739087,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 11,
+      "id": 5,
+      "layerId": 0,
+      "position": [
+        0.15000005066394806,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "0.030000s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1022739087,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 11,
+      "id": 6,
+      "layerId": 0,
+      "position": [
+        19.850000381469727,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "0.030000s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1065395158,
+        0
+      ],
+      "elapsedBits": [
+        1065646816,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 11,
+      "id": 7,
+      "layerId": 0,
+      "position": [
+        20.0,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "1s (1.005s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1065646816,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 12,
+      "id": 8,
+      "layerId": 0,
+      "position": [
+        20.0,
+        0.15000005066394806,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "1s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1065646816,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 12,
+      "id": 9,
+      "layerId": 0,
+      "position": [
+        20.0,
+        19.850000381469727,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "1s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1065395158,
+        0
+      ],
+      "elapsedBits": [
+        1073909595,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 12,
+      "id": 10,
+      "layerId": 0,
+      "position": [
+        20.0,
+        20.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "2s (1.005s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1073909595,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 13,
+      "id": 11,
+      "layerId": 0,
+      "position": [
+        19.850000381469727,
+        20.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "2s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1073909595,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 13,
+      "id": 12,
+      "layerId": 0,
+      "position": [
+        0.14999985694885254,
+        20.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "2s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1065395158,
+        0
+      ],
+      "elapsedBits": [
+        1078124870,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 13,
+      "id": 13,
+      "layerId": 0,
+      "position": [
+        0.0,
+        20.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "3s (1.005s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1078124870,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 14,
+      "id": 14,
+      "layerId": 0,
+      "position": [
+        0.0,
+        19.850000381469727,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "3s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1078124870,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 14,
+      "id": 15,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.14999985694885254,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "3s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1065395158,
+        0
+      ],
+      "elapsedBits": [
+        1082235288,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 14,
+      "id": 16,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "4s (1.005s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1044424306,
+        0
+      ],
+      "elapsedBits": [
+        1082629836,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 14,
+      "id": 17,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "4s (0.188s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 3
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1082629836,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 15,
+      "id": 18,
+      "layerId": 0,
+      "position": [
+        0.0,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1082629836,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 15,
+      "id": 19,
+      "layerId": 0,
+      "position": [
+        5.0,
+        0.0,
+        0.20000000298023224
+      ],
+      "role": 2,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1082629836,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 17,
+      "id": 20,
+      "layerId": 1,
+      "position": [
+        5.0,
+        0.0,
+        0.29996001720428467
+      ],
+      "role": 2,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1022526487,
+        0
+      ],
+      "elapsedBits": [
+        1082691920,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 17,
+      "id": 21,
+      "layerId": 1,
+      "position": [
+        5.0,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 2,
+      "text": [
+        "4s (0.030s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1082691920,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 19,
+      "id": 22,
+      "layerId": 1,
+      "position": [
+        5.0,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1082691920,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 19,
+      "id": 23,
+      "layerId": 1,
+      "position": [
+        4.599999904632568,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1082691920,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 19,
+      "id": 24,
+      "layerId": 1,
+      "position": [
+        0.4000002145767212,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1043878378,
+        0
+      ],
+      "elapsedBits": [
+        1083069407,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 19,
+      "id": 25,
+      "layerId": 1,
+      "position": [
+        0.0,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.180s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083069407,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 26,
+      "layerId": 1,
+      "position": [
+        0.0,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083069407,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 27,
+      "layerId": 1,
+      "position": [
+        0.1496383249759674,
+        0.007357118185609579,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028863364,
+        0
+      ],
+      "elapsedBits": [
+        1083177546,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 28,
+      "layerId": 1,
+      "position": [
+        0.9801706671714783,
+        0.048191070556640625,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.052s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083177546,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 29,
+      "layerId": 1,
+      "position": [
+        0.9801706671714783,
+        0.048191070556640625,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028193035,
+        0
+      ],
+      "elapsedBits": [
+        1083280448,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 30,
+      "layerId": 1,
+      "position": [
+        1.9508941173553467,
+        0.19222354888916016,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083280448,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 31,
+      "layerId": 1,
+      "position": [
+        1.9508941173553467,
+        0.19222354888916016,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192985,
+        0
+      ],
+      "elapsedBits": [
+        1083383350,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 32,
+      "layerId": 1,
+      "position": [
+        2.9028220176696777,
+        0.4307098388671875,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083383350,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 33,
+      "layerId": 1,
+      "position": [
+        2.9028220176696777,
+        0.4307098388671875,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192933,
+        0
+      ],
+      "elapsedBits": [
+        1083486251,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 34,
+      "layerId": 1,
+      "position": [
+        3.826786518096924,
+        0.7613515853881836,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083486251,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 35,
+      "layerId": 1,
+      "position": [
+        3.826786518096924,
+        0.7613515853881836,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192884,
+        0
+      ],
+      "elapsedBits": [
+        1083589152,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 36,
+      "layerId": 1,
+      "position": [
+        4.713890075683594,
+        1.180964469909668,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083589152,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 37,
+      "layerId": 1,
+      "position": [
+        4.713890075683594,
+        1.180964469909668,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192828,
+        0
+      ],
+      "elapsedBits": [
+        1083692052,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 38,
+      "layerId": 1,
+      "position": [
+        5.555589199066162,
+        1.6855058670043945,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083692052,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 39,
+      "layerId": 1,
+      "position": [
+        5.555589199066162,
+        1.6855058670043945,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192783,
+        0
+      ],
+      "elapsedBits": [
+        1083794952,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 40,
+      "layerId": 1,
+      "position": [
+        6.343778133392334,
+        2.2701172828674316,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083794952,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 41,
+      "layerId": 1,
+      "position": [
+        6.343778133392334,
+        2.2701172828674316,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192731,
+        0
+      ],
+      "elapsedBits": [
+        1083897852,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 42,
+      "layerId": 1,
+      "position": [
+        7.07086706161499,
+        2.9291672706604004,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1083897852,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 43,
+      "layerId": 1,
+      "position": [
+        7.07086706161499,
+        2.9291672706604004,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192679,
+        0
+      ],
+      "elapsedBits": [
+        1084000751,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 44,
+      "layerId": 1,
+      "position": [
+        7.729853630065918,
+        3.656308174133301,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084000751,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 45,
+      "layerId": 1,
+      "position": [
+        7.729853630065918,
+        3.656308174133301,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192626,
+        0
+      ],
+      "elapsedBits": [
+        1084103650,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 46,
+      "layerId": 1,
+      "position": [
+        8.31439208984375,
+        4.4445366859436035,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084103650,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 47,
+      "layerId": 1,
+      "position": [
+        8.31439208984375,
+        4.4445366859436035,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192578,
+        0
+      ],
+      "elapsedBits": [
+        1084206549,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 48,
+      "layerId": 1,
+      "position": [
+        8.818854331970215,
+        5.286261558532715,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084206549,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 49,
+      "layerId": 1,
+      "position": [
+        8.818854331970215,
+        5.286261558532715,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "4s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192526,
+        0
+      ],
+      "elapsedBits": [
+        1084309447,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 50,
+      "layerId": 1,
+      "position": [
+        9.238382339477539,
+        6.173376083374023,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084309447,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 51,
+      "layerId": 1,
+      "position": [
+        9.238382339477539,
+        6.173376083374023,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192478,
+        0
+      ],
+      "elapsedBits": [
+        1084412345,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 52,
+      "layerId": 1,
+      "position": [
+        9.56893539428711,
+        7.0973358154296875,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084412345,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 53,
+      "layerId": 1,
+      "position": [
+        9.56893539428711,
+        7.0973358154296875,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192425,
+        0
+      ],
+      "elapsedBits": [
+        1084515242,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 54,
+      "layerId": 1,
+      "position": [
+        9.807332038879395,
+        8.049242973327637,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084515242,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 55,
+      "layerId": 1,
+      "position": [
+        9.807332038879395,
+        8.049242973327637,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028192375,
+        0
+      ],
+      "elapsedBits": [
+        1084618139,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 56,
+      "layerId": 1,
+      "position": [
+        9.951276779174805,
+        9.019929885864258,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.049s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084618139,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 57,
+      "layerId": 1,
+      "position": [
+        9.951276779174805,
+        9.019929885864258,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084618139,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 58,
+      "layerId": 1,
+      "position": [
+        9.992561340332031,
+        9.850370407104492,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1028862348,
+        0
+      ],
+      "elapsedBits": [
+        1084726270,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 20,
+      "id": 59,
+      "layerId": 1,
+      "position": [
+        10.0,
+        10.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.052s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084726270,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 21,
+      "id": 60,
+      "layerId": 1,
+      "position": [
+        10.0,
+        10.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084726270,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 21,
+      "id": 61,
+      "layerId": 1,
+      "position": [
+        9.850000381469727,
+        10.0,
+        0.40000003576278687
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1084726270,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 21,
+      "id": 62,
+      "layerId": 1,
+      "position": [
+        0.14999985694885254,
+        10.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1057048493,
+        0
+      ],
+      "elapsedBits": [
+        1085785332,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 21,
+      "id": 63,
+      "layerId": 1,
+      "position": [
+        0.0,
+        10.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.505s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1085785332,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 22,
+      "id": 64,
+      "layerId": 1,
+      "position": [
+        0.0,
+        9.850000381469727,
+        0.40000003576278687
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1085785332,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 22,
+      "id": 65,
+      "layerId": 1,
+      "position": [
+        0.0,
+        0.14999985694885254,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "5s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1057048493,
+        0
+      ],
+      "elapsedBits": [
+        1086844394,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 22,
+      "id": 66,
+      "layerId": 1,
+      "position": [
+        0.0,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "6s (0.505s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 10
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1086844394,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 23,
+      "id": 67,
+      "layerId": 1,
+      "position": [
+        0.0,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "6s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1086844394,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 23,
+      "id": 68,
+      "layerId": 1,
+      "position": [
+        0.40000006556510925,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "6s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        0,
+        0
+      ],
+      "elapsedBits": [
+        1086844394,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 23,
+      "id": 69,
+      "layerId": 1,
+      "position": [
+        4.599999904632568,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "6s (0.000s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    },
+    {
+      "colorId": 0,
+      "durationBits": [
+        1043878378,
+        0
+      ],
+      "elapsedBits": [
+        1087221881,
+        0
+      ],
+      "extruderId": 0,
+      "gcodeId": 23,
+      "id": 70,
+      "layerId": 1,
+      "position": [
+        5.0,
+        0.0,
+        0.4000000059604645
+      ],
+      "role": 4,
+      "text": [
+        "6s (0.180s)",
+        "0.000000s (0.000s)"
+      ],
+      "type": 8
+    }
+  ]
+}

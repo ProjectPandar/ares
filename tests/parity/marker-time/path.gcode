@@ -1,0 +1,23 @@
+; Native marker-time oracle: loops, travel, two layers, arc, repeated ids
+G90
+M83
+T0
+G92 E0
+; CHANGE_LAYER
+; LAYER_HEIGHT: 0.2
+; LINE_WIDTH: 0.4
+; FEATURE: Outer wall
+G1 Z0.2 F600
+G1 X20 Y0 E1 F1200
+G1 X20 Y20 E1
+G1 X0 Y20 E1
+G1 X0 Y0 E1
+G1 X5 Y0 F1800
+; CHANGE_LAYER
+G1 Z0.4 F600
+; FEATURE: Sparse infill
+G1 X0 Y0 F1800
+G3 X10 Y10 I0 J10 E1 F1200
+G1 X0 Y10 E1
+G1 X0 Y0 E1
+G1 X5 Y0 F1800

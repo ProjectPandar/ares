@@ -1,0 +1,25 @@
+{
+  "kind": "native source-kernel (not full Viewer execution)",
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "binary": "/nix/store/1fhccjjpi187yg45bchvg8935iwxywim-orca-slicer-marker-time-2.4.2/bin/orca-slicer",
+  "binarySha256": "ba90ceb881adb8bc6f0a26fdd87393b526104eb2b8bdfce3f11c21088c88f2c9",
+  "extractionManifestSha256": "bb317aa53c960f00671e4953e9106c83f16f927e930883dcda5bb0f769a1e038",
+  "command": [
+    "/nix/store/1fhccjjpi187yg45bchvg8935iwxywim-orca-slicer-marker-time-2.4.2/bin/orca-slicer",
+    "--process-gcode",
+    "path.gcode",
+    "--dump-moves",
+    "moves.csv",
+    "--dump-marker-time",
+    "native.json"
+  ],
+  "stdout": "[2026-10-07 14:41:48.533556] [0x000074a9eead5900] [error]   get_hrc_by_nozzle_type: parse info/nozzle_info.json got a nlohmann::detail::parse_error, reason = [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected end of input; expected '[', '{', or a literal\nTIME mode=0 total=6.427792\n",
+  "vertices": 71,
+  "files": {
+    "path.gcode": "a8a34ec48e94c96f3f126125261e1fabea47a978e3ee02359dff71dc22b1da03",
+    "moves.csv": "6798c0b0c763590620d266bdbeb35cb8dfb34e5690fb6264687668ba6ea13a4d",
+    "native.json": "54fe572b793b3254df58ebf9a6b26fa3bf968869e83464c3f98b6c418ddf7bf3",
+    "vertices.tsv": "8e9bb3ed88017fa2cbc98fd95d0374138fa329308e7022f84c7689a5cdec7c7a",
+    "synthetic.tsv": "304bc7ac4783e7f57970bdb95423365141b65cb455b5f24eb83be304083aab88"
+  }
+}

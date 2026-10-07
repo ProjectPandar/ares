@@ -1,0 +1,11 @@
+--- upstream/ViewerImpl.cpp:1461-1465
++++ marker-time/kernel.hpp
+@@ -1,5 +1,5 @@
+-float ViewerImpl::get_estimated_time_at(size_t id) const
++float get_estimated_time_at(const std::vector<PathVertex>& vertices, size_t id, ETimeMode mode)
+ {
+-    return std::accumulate(m_vertices.begin(), m_vertices.begin() + id + 1, 0.0f, 
+-        [this](float a, const PathVertex& v) { return a + v.times[static_cast<size_t>(m_settings.time_mode)]; });
++    return std::accumulate(vertices.begin(), vertices.begin() + id + 1, 0.0f, 
++        [mode](float a, const PathVertex& v) { return a + v.times[static_cast<size_t>(mode)]; });
+ }
