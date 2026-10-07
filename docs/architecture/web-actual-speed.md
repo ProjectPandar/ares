@@ -112,3 +112,27 @@ Deferred to their own slices:
    and the motion E2E keeps its columns by name.
 2. Is the profile table/plot (deferred above) wanted as the immediate
    follow-up, or should the next web item come from elsewhere in the roadmap?
+
+## Located planner divergence (pending coordinator ruling)
+
+`marlin2_junction_deviation` is the only case that is not bit-exact after the
+core GREEN (`0390a77ad`). It has 190 differing vertices. Every other case and
+every PA/acceleration/jerk bit matches. The cause is the planner copy of the
+JD jerk, `processor/motion/limits.rs::MotionState::effective_jerk`, compared
+with upstream `GCodeProcessor::get_axis_max_jerk_with_jd`
+(`GCodeProcessor.cpp:5774-5791`):
+
+1. **f64 instead of f32.** Upstream computes `std::sqrt(jd * effective_acc * 2.5f)`
+   in float; Ares computes it in f64. This gives 1-ulp junction/safe speeds
+   (`1.80277562` vs `1.80277574`).
+2. **`acceleration <= 0` fallback.** Upstream uses the axis maximum
+   acceleration when the current acceleration is 0 (`M204 S0`, `:5781-5786`).
+   Ares takes `min(0, max) = 0`, so the junction jerk becomes 0. The
+   preview-attribute port (`moves/dynamics.rs`) already does this correctly.
+
+With both fixes applied (`target/actual-speed/planner-jd-jerk.patch`, not
+committed), all 5 cases are bit-exact. The planner feeds time estimation, so
+the fix could change M73/estimated-time bytes for JD profiles. That conflicts
+with this slice's zero-G-code-change condition, so it needs a ruling:
+fix it in-slice as a separate RED/GREEN pair with seeded evidence, or flag it
+for the owner of the planner.
