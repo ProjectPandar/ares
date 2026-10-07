@@ -7,6 +7,8 @@
 //! the family's detail on stderr in the native channel shape. Expected
 //! artifacts are seeded-native 2.4.2 outputs captured on the same inputs.
 
+#![cfg(target_os = "linux")]
+
 use std::process::Command;
 
 fn fixture(name: &str) -> std::path::PathBuf {
