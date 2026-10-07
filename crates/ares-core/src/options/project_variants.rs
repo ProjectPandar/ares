@@ -4,6 +4,8 @@ mod index;
 mod printer;
 mod select;
 
+pub(crate) use index::get_index_for_extruder;
+
 use crate::{
     SliceError,
     options::{OrcaInts, ProjectSettings},
@@ -24,7 +26,7 @@ pub(crate) fn materialize_project_variants(
     let printer_indices = index::resolve_printer_indices(&materialized, &active)?;
     printer::materialize_variant_one(&mut materialized, &printer_indices)?;
 
-    let printer_indices = index::resolve_printer_indices(&materialized, &active)?;
+    let printer_indices = index::resolve_printer_indices_for_variant_two(&materialized, &active);
     printer::materialize_variant_two(&mut materialized, &printer_indices)?;
 
     let process_indices = index::resolve_process_indices(&materialized, &active)?;

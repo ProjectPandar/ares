@@ -37,6 +37,26 @@ pub(super) fn resolve_printer_indices(
     )
 }
 
+pub(super) fn resolve_printer_indices_for_variant_two(
+    source: &ProjectSettings,
+    active: &ActiveVariants,
+) -> Vec<usize> {
+    physical_requests(&active.0)
+        .map(|(requested_id, requested_variant)| {
+            // PrintApply.cpp:1167 invokes PrintConfig.cpp:9677–9681
+            // after variant-one has materialized the id/variant metadata.
+            get_index_for_extruder(
+                (requested_id, requested_variant),
+                Some(&source.printer.gcode.printer_extruder_id.0),
+                &source.printer.gcode.printer_extruder_variant.0,
+                &source.printer.remaining.extruder_variant_list.0,
+                1,
+            )
+            .unwrap_or(0)
+        })
+        .collect()
+}
+
 pub(super) fn resolve_process_indices(
     source: &ProjectSettings,
     active: &ActiveVariants,
@@ -173,34 +193,53 @@ fn resolve_requests<'a>(
         return Ok(vec![0; requests.len()]);
     }
 
-    let complete_ids = ids.len() >= variants.len();
-    let generated_ids = (!complete_ids).then(|| generated_ids(variant_groups));
     let indices = requests
         .into_iter()
         .map(|(requested_id, requested_variant)| {
-            variants
-                .iter()
-                .enumerate()
-                .find_map(|(index, variant)| {
-                    if variant != requested_variant {
-                        return None;
-                    }
-                    let id = if complete_ids {
-                        ids[index].0
-                    } else {
-                        generated_ids
-                            .as_ref()
-                            .and_then(|ids| ids.get(index))
-                            .copied()
-                            .unwrap_or(0)
-                    };
-                    (id == requested_id).then_some(index)
-                })
-                .ok_or_else(|| invalid(variant_key))
+            get_index_for_extruder(
+                (requested_id, requested_variant),
+                Some(ids),
+                variants,
+                variant_groups,
+                1,
+            )
+            .ok_or_else(|| invalid(variant_key))
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
     select_stride(variants, &indices, 1, variant_key)?;
     Ok(indices)
+}
+
+// PrintConfig.cpp:9004–9060. None is upstream -1; callers own miss policy.
+pub(crate) fn get_index_for_extruder(
+    (requested_id, requested_variant): (i32, &str),
+    ids: Option<&[OrcaInt]>,
+    variants: &[String],
+    variant_groups: &[String],
+    stride: usize,
+) -> Option<usize> {
+    let complete_ids = ids.is_some_and(|ids| ids.len() >= variants.len());
+    let generated = (!complete_ids).then(|| generated_ids(variant_groups));
+    variants.iter().enumerate().find_map(|(index, variant)| {
+        if variant != requested_variant {
+            return None;
+        }
+        let matches = ids.is_none_or(|ids| {
+            let id = if complete_ids {
+                ids[index].0
+            } else {
+                // Missing groups or exhausted flattened indices return0
+                // in the source generator (PrintConfig.cpp:9012–9013,9028).
+                generated
+                    .as_ref()
+                    .and_then(|ids| ids.get(index))
+                    .copied()
+                    .unwrap_or(0)
+            };
+            id == requested_id
+        });
+        matches.then_some(index * stride)
+    })
 }
 
 fn generated_ids(variant_groups: &[String]) -> Vec<i32> {

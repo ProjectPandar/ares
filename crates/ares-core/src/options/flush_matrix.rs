@@ -46,19 +46,27 @@ pub(crate) fn prepare(
     });
     let covered = types.len() >= nozzle_count
         && settings.printer.gcode.printer_extruder_variant.0.len() >= nozzle_count
-        && settings.printer.gcode.printer_extruder_id.0.len() >= nozzle_count
-        // PrintConfig.cpp:9033–9040 otherwise requires the separate id generator.
-        && settings.printer.gcode.printer_extruder_id.0.len()
-            >= settings.printer.gcode.printer_extruder_variant.0.len();
+        && settings.printer.gcode.printer_extruder_id.0.len() >= nozzle_count;
     settings
         .project
         .print
         .flush_multiplier
         .0
         .resize(nozzle_count, OrcaFloat(1.0));
-    if requires_dataset && !covered {
-        return Ok(());
-    }
+    let datasets = if requires_dataset {
+        if !covered {
+            return Ok(());
+        }
+        let Some(datasets) = (0..nozzle_count)
+            .map(|nozzle| dataset(settings, raw, nozzle))
+            .collect::<Option<Vec<_>>>()
+        else {
+            return Ok(());
+        };
+        Some(datasets)
+    } else {
+        None
+    };
     if support.len() != colors.len() {
         return Err(SliceError::InvalidInput(format!(
             "filament_is_support's count {} not equal to filament_colour's size {}",
@@ -71,10 +79,7 @@ pub(crate) fn prepare(
     let count = colors.len();
     let mut matrix = vec![0.0; count * count * nozzle_count];
     for (nozzle, segment) in matrix.chunks_exact_mut(count * count).enumerate() {
-        let Some(dataset) = requires_dataset
-            .then(|| dataset(settings, raw, nozzle))
-            .transpose()?
-        else {
+        let Some(dataset) = datasets.as_ref().map(|datasets| datasets[nozzle]) else {
             segment.fill(230.0);
             segment
                 .iter_mut()
@@ -100,11 +105,7 @@ fn at<T>(values: &[T], index: usize) -> &T {
     values.get(index).unwrap_or(&values[0])
 }
 
-fn dataset(
-    settings: &ProjectSettings,
-    raw: &ProjectSettingsRaw,
-    nozzle: usize,
-) -> Result<i32, SliceError> {
+fn dataset(settings: &ProjectSettings, raw: &ProjectSettingsRaw, nozzle: usize) -> Option<i32> {
     let printer = &settings.printer.gcode;
     let mut values = printer.nozzle_flush_dataset.0.clone();
     let has_variants = raw.contains_key("printer_extruder_variant");
@@ -126,23 +127,27 @@ fn dataset(
             NozzleVolumeType::HighFlow => "High Flow",
         };
         let variant = format!("{extruder} {volume}");
-        // PrintConfig.cpp:9033–9040; admission requires a complete id map.
-        printer
-            .printer_extruder_variant
-            .0
-            .iter()
-            .enumerate()
-            .find_map(|(i, token)| {
-                (token == &variant && printer.printer_extruder_id.0[i].0 == (nozzle + 1) as i32)
-                    .then_some(i)
-            })
-            .ok_or_else(|| {
-                SliceError::InvalidInput("invalid Orca option printer_extruder_variant".into())
-            })?
+        let groups = if raw.contains_key("extruder_variant_list") {
+            settings
+                .printer
+                .remaining
+                .extruder_variant_list
+                .0
+                .as_slice()
+        } else {
+            &[]
+        };
+        super::project_variants::get_index_for_extruder(
+            ((nozzle + 1) as i32, &variant),
+            Some(&printer.printer_extruder_id.0),
+            &printer.printer_extruder_variant.0,
+            groups,
+            1,
+        )?
     } else {
         0
     };
-    Ok(match values[index] {
+    Some(match values[index] {
         Nullable::Value(value) => value.0,
         Nullable::Nil => i32::MAX,
     })
