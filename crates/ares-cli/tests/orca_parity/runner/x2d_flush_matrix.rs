@@ -7,7 +7,12 @@ use std::io::{Cursor, Read, Write};
 // Failure inventory: the single Standard vector triggers CLI reconstruction;
 // two Standards must retain a complete custom matrix. Missing AMS must not
 // decide reconstruction, and export must scale each nozzle segment once.
-fn project(runner: &OrcaRunner, rebuild: bool) -> ExportedCase {
+fn project(
+    runner: &OrcaRunner,
+    rebuild: bool,
+    name: &str,
+    changes: &[(&str, Option<Value>)],
+) -> ExportedCase {
     let profiles =
         VendorProfiles::load(&repo_root().join("OrcaSlicer/resources/profiles"), "BBL").unwrap();
     let selection = crate::select_printer(&profiles, "BBL", "Bambu Lab X2D 0.4 nozzle").unwrap();
@@ -30,10 +35,11 @@ fn project(runner: &OrcaRunner, rebuild: bool) -> ExportedCase {
     } else {
         "x2d-fm/nozzle-types-unchanged/custom-matrix"
     };
+    let label = format!("{label}/{name}");
     let exported = runner
         .export_case(
             &CaseInputs {
-                label,
+                label: &label,
                 machine: &machine,
                 process: &process,
                 filaments: &filaments,
@@ -73,6 +79,13 @@ fn project(runner: &OrcaRunner, rebuild: bool) -> ExportedCase {
             for (key, value) in &requested {
                 settings[*key] = value.clone();
             }
+            for (key, value) in changes {
+                if let Some(value) = value {
+                    settings[*key] = value.clone();
+                } else {
+                    settings.as_object_mut().unwrap().remove(*key);
+                }
+            }
             bytes = serde_json::to_vec_pretty(&settings).unwrap();
         }
         output
@@ -86,7 +99,20 @@ fn project(runner: &OrcaRunner, rebuild: bool) -> ExportedCase {
     exported.project = output.finish().unwrap().into_inner();
     std::fs::write(&exported.project_path, &exported.project).unwrap();
     for (key, value) in requested {
-        application::verify_value(&exported.project, key, &value).unwrap();
+        if !changes.iter().any(|(changed, _)| *changed == key) {
+            application::verify_value(&exported.project, key, &value).unwrap();
+        }
+    }
+    for (key, value) in changes {
+        if let Some(value) = value {
+            application::verify_value(&exported.project, key, value).unwrap();
+        } else {
+            assert!(
+                !application::settings(&exported.project)
+                    .unwrap()
+                    .contains_key(*key)
+            );
+        }
     }
     assert_eq!(
         application::settings(&exported.project).unwrap()["nozzle_diameter"],
@@ -95,25 +121,24 @@ fn project(runner: &OrcaRunner, rebuild: bool) -> ExportedCase {
     exported
 }
 
-fn check(rebuild: bool) {
+fn check(rebuild: bool, name: &str, changes: &[(&str, Option<Value>)], matrix: Option<&str>) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let exported = project(&runner, rebuild);
+    let exported = project(&runner, rebuild, name, changes);
     let case = runner.slice_case(&exported).unwrap();
     let reference = std::str::from_utf8(&case.reference).unwrap();
     assert!(reference.contains("; X2D_FM_BEGIN\n"));
     assert!(reference.contains("; X2D_FM_END\n"));
     assert!(reference.contains("T1 H-1\n"));
     assert!(reference.contains("T0 H-1\n"));
-    let expected_matrix = if rebuild {
-        "; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"
-    } else {
-        "; flush_volumes_matrix = 0,42,42,0,0,210,210,0\n"
-    };
-    assert!(reference.contains(expected_matrix), "{expected_matrix}");
+    if let Some(expected_matrix) = matrix {
+        assert!(reference.contains(expected_matrix), "{expected_matrix}");
+    }
     assert!(reference.contains("; flush_multiplier = 0.3,1\n"));
-    assert!(reference.contains("; extruder_ams_count = 1#0|4#1;1#0|4#1\n"));
+    if !changes.iter().any(|(key, _)| *key == "extruder_ams_count") {
+        assert!(reference.contains("; extruder_ams_count = 1#0|4#1;1#0|4#1\n"));
+    }
     // The v2 receipt, not a profile name or historic cached byte hash, declares
     // actual Native executable/resources/policy for this same-input slice.
     let receipt = std::fs::read_dir(&runner.work)
@@ -141,10 +166,193 @@ fn check(rebuild: bool) {
 
 #[test]
 fn x2d_flush_matrix_nozzle_type_change_matches_complete_native_output() {
-    check(true);
+    check(
+        true,
+        "original",
+        &[],
+        Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
+    );
 }
 
 #[test]
 fn x2d_flush_matrix_unchanged_nozzle_types_preserve_custom_matrix() {
-    check(false);
+    check(
+        false,
+        "original",
+        &[],
+        Some("; flush_volumes_matrix = 0,42,42,0,0,210,210,0\n"),
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_missing_matrix_rebuilds_without_nozzle_type_change() {
+    check(
+        false,
+        "missing",
+        &[("flush_volumes_matrix", None)],
+        Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_rebuild_preserves_multiplier_prefix_and_defaults_second_head() {
+    check(
+        false,
+        "single-multiplier",
+        &[
+            ("flush_volumes_matrix", None),
+            ("flush_multiplier", Some(json!(["0.3"]))),
+        ],
+        Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_standard_predictor_hit_matches_native() {
+    check(
+        false,
+        "standard-predictor-hit",
+        &[
+            ("flush_volumes_matrix", None),
+            ("filament_colour", Some(json!(["#000000", "#545454"]))),
+            ("nozzle_flush_dataset", Some(json!(["0", "0", "0", "0"]))),
+        ],
+        None,
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_dual_predictor_datasets_match_native() {
+    check(
+        false,
+        "dual-predictors",
+        &[
+            ("flush_volumes_matrix", None),
+            ("filament_colour", Some(json!(["#000000", "#FFFFFF"]))),
+            ("nozzle_flush_dataset", Some(json!(["1", "2", "2", "1"]))),
+        ],
+        None,
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_transparent_rgba_and_direction_match_native() {
+    check(
+        false,
+        "rgba",
+        &[
+            ("flush_volumes_matrix", None),
+            ("filament_colour", Some(json!(["#F2754E00", "#0000FFFF"]))),
+            ("nozzle_flush_dataset", Some(json!(["0", "0", "0", "0"]))),
+        ],
+        None,
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_support_source_and_destination_match_native() {
+    check(
+        false,
+        "support",
+        &[
+            ("flush_volumes_matrix", None),
+            ("filament_is_support", Some(json!(["0", "1"]))),
+        ],
+        None,
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_long_retraction_minimum_matches_native() {
+    check(
+        false,
+        "long-retraction",
+        &[
+            ("flush_volumes_matrix", None),
+            ("nozzle_flush_dataset", Some(json!(["0", "0", "0", "0"]))),
+            ("enable_long_retraction_when_cut", Some(json!("2"))),
+            (
+                "long_retractions_when_cut",
+                Some(json!(["1", "1", "1", "1"])),
+            ),
+            (
+                "filament_long_retractions_when_cut",
+                Some(json!(["1", "1"])),
+            ),
+            (
+                "filament_retraction_distances_when_cut",
+                Some(json!(["18", "nil"])),
+            ),
+        ],
+        None,
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_incomplete_printer_id_map_uses_generated_variant_ids() {
+    // PrintConfig.cpp:9004–9060 uses extruder_variant_list when ids do not
+    // cover all variants, not ConfigOption::get_at's first-element broadcast.
+    check(
+        false,
+        "generated-printer-ids",
+        &[
+            ("flush_volumes_matrix", None),
+            ("printer_extruder_id", Some(json!(["1", "2"]))),
+        ],
+        Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
+    );
+}
+
+#[test]
+fn x2d_flush_matrix_no_trigger_keeps_malformed_matrix_rejected() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let exported = project(
+        &runner,
+        false,
+        "invalid",
+        &[(
+            "flush_volumes_matrix",
+            Some(json!(["0", "140", "140", "0"])),
+        )],
+    );
+    let error = match runner.slice_case(&exported) {
+        Ok(_) => panic!("Native must reject a malformed non-rebuilt matrix"),
+        Err(error) => error,
+    };
+    let captured = error.captured.as_ref().unwrap();
+    let text = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&captured.stdout),
+        String::from_utf8_lossy(&captured.stderr)
+    );
+    const MATRIX_ERROR: &str = "Flush volumes matrix do not match to the correct size!";
+    assert!(text.contains(MATRIX_ERROR), "{error}: {text}");
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let ares_error = runtime
+        .block_on(ares_core::slice_project(
+            &exported.project,
+            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            ares_core::SlicerContext::new(0),
+        ))
+        .unwrap_err();
+    assert_eq!(ares_error.to_string(), MATRIX_ERROR);
+    let root = crate::artifacts::root_from_env().unwrap();
+    let directory = tempfile::Builder::new()
+        .prefix("x2d-fm-invalid-")
+        .tempdir_in(root)
+        .unwrap()
+        .keep();
+    std::fs::write(directory.join("input.3mf"), &exported.project).unwrap();
+    std::fs::write(directory.join("native.stdout"), &captured.stdout).unwrap();
+    std::fs::write(directory.join("native.stderr"), &captured.stderr).unwrap();
+    std::fs::write(directory.join("result.json"), serde_json::to_vec_pretty(&json!({
+        "label":exported.label, "native_code":captured.code, "native_evidence":error.evidence,
+        "native_binary":runner.bin(), "ares_error":ares_error.to_string(), "expected_error":MATRIX_ERROR,
+        "no_successful_ares_stream":true,
+    })).unwrap()).unwrap();
+    eprintln!("nontrigger rejection artifacts {directory:?}");
 }

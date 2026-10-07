@@ -154,6 +154,35 @@ new crates or Native UB emulation. The calculator's **upstream** prediction miss
 branch is included behavior, not a legacy Ares fallback. Required dependencies
 cannot be dropped merely to make the initial size error disappear.
 
+## Coordinator UB ruling and dataset-index dependency (2026-10-07)
+
+Preserve `/tmp/ares-x2d-flush-matrix/green/seeded-focused/case-9whGha/`
+unchanged as **upstream O8/UB adjacent**, not an Ares calculator numeric RED.
+Its scalar `nozzle_volume_type=[Standard]` has only one element for two nozzles.
+`OrcaSlicer.cpp:3460–3462` directly indexes `volume_types[eidx]` (and extruders),
+with no vector broadcasting. Reading entry1 is out of bounds; the observed
+Native second-head dataset0 behavior is undefined. Native's652/172 and the
+observed Rust900/120 are retained evidence, **not correct-value contracts**.
+Do not add a scalar-input expected-value assertion or emulate Native UB.
+
+Coordinator explicitly approved changing dataset-dependent witnesses because
+of this **UB input**, not to obtain a pass: specify both nozzle-volume types as
+`[Standard,Standard]`, omit the matrix, and invoke the legitimate missing-matrix
+rebuild branch. Palette/dataset inputs are taken from the pinned upstream data,
+not selected by runtime outcome. Keep complete-stream comparisons. The initial
+approved reconstruction RED and unchanged custom-matrix control remain; new
+calculator/minimum/multiplier witnesses use fully specified nozzle vectors.
+
+`PrintConfig.cpp:9004–9060::DynamicPrintConfig::get_index_for_extruder` is a
+required X2D-FM dependency because `OrcaSlicer.cpp:3457–3462` calls it to select
+each nozzle's flush dataset before calculating the matrix. Include only complete
+versus generated printer-id selection at that private preparation call site.
+When ids are shorter than the variant list, derive ids from the ordered,
+comma-separated `extruder_variant_list`, skipping empty trimmed tokens. Do not
+substitute first-id broadcasting. A legal fully specified nozzle/missing-matrix
+public E2E witness must establish RED before this branch is ported. No generic
+mapping API, filament-map recommendation or emitter ordering change is included.
+
 ## Sequence, validation and exit
 
 1. Submit this spec and wait for exact-hash coordinator approval.
