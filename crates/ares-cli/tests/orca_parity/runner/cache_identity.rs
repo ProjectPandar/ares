@@ -88,19 +88,15 @@ pub(super) fn identify(bin: &Path) -> Result<Producer, StageError> {
     let mut tree = Sha256::new();
     resource_hash(&resources, &resources, &mut tree).map_err(io)?;
     let resources_hash = hex(&tree.finalize());
-    let policy = [
-        "ORCA_REPLAY_SEED",
-        "ORCA_REPLAY_CPU",
-        "ARES_PARITY_SEEDED_REFERENCE",
-        "LC_ALL",
-    ]
-    .map(|key| (key, std::env::var(key).ok()))
-    .into_iter()
-    .collect::<std::collections::BTreeMap<_, _>>();
+    let policy = ["ORCA_REPLAY_SEED", "ARES_PARITY_SEEDED_REFERENCE", "LC_ALL"]
+        .map(|key| (key, std::env::var(key).ok()))
+        .into_iter()
+        .collect::<std::collections::BTreeMap<_, _>>();
     let components = json!({"schema":"native-cache-v2","native":native_hash,
-        "launcher":launcher_hash,"endpoint":endpoint_hash,"resources":resources_hash,"policy":policy});
+        "launcher":launcher_hash,"endpoint":endpoint_hash,"resources":resources_hash,"policy":policy,"parallelism":std::thread::available_parallelism().map_err(io)?.get()});
     let key = digest(&[b"producer-v2", &serde_json::to_vec(&components).unwrap()]);
     let runtime_environment = [
+        "ORCA_REPLAY_CPU",
         "ORCA_APPDIR",
         "HOME",
         "XDG_CONFIG_HOME",
