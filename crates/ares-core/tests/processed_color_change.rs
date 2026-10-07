@@ -57,7 +57,21 @@ async fn processed_layer_templates_preserve_ordered_color_change_items() {
             .iter()
             .all(|volume| *volume > 0.0)
     );
-    check_native_volumes(&output, "two-changes");
+    assert_eq!(output.result.custom_gcode_times.len(), 3);
+    let unrecorded = ares_core::slice_project_plate(
+        PROJECT,
+        GenerationMetadata::default(),
+        Some(1),
+        &overrides,
+        SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        output.gcode, unrecorded,
+        "custom synchronization must not depend on recording moves"
+    );
+    check_native_processor(&output, "two-changes");
 
     let plain = slice_project_plate_processed(
         PROJECT.to_vec(),
@@ -75,7 +89,8 @@ async fn processed_layer_templates_preserve_ordered_color_change_items() {
         plain.result.print_statistics.volumes_per_color_change.len(),
         1
     );
-    check_native_volumes(&plain, "no-change");
+    assert!(plain.result.custom_gcode_times.is_empty());
+    check_native_processor(&plain, "no-change");
 }
 
 #[tokio::test]
@@ -116,7 +131,7 @@ async fn color_change_z_follows_the_next_extrusion_position() {
         output.result.moves[marker].position[2],
         extrusion.position[2]
     );
-    check_native_volumes(&output, "corrected-z");
+    check_native_processor(&output, "corrected-z");
 }
 
 #[tokio::test]
@@ -157,10 +172,23 @@ async fn pause_and_custom_items_keep_color_volume_intervals_intact() {
             .len(),
         2
     );
-    check_native_volumes(&output, "pause-custom");
+    assert_eq!(
+        output
+            .result
+            .custom_gcode_times
+            .iter()
+            .map(|item| item.kind)
+            .collect::<Vec<_>>(),
+        [
+            CustomGCodeType::ColorChange,
+            CustomGCodeType::PausePrint,
+            CustomGCodeType::ColorChange
+        ]
+    );
+    check_native_processor(&output, "pause-custom");
 }
 
-fn check_native_volumes(output: &ares_core::ProcessedGCode, name: &str) {
+fn check_native_processor(output: &ares_core::ProcessedGCode, name: &str) {
     let Some(oracle) = std::env::var_os("ARES_PROCGCODE_BIN") else {
         eprintln!("native comparison requires ARES_PROCGCODE_BIN (procgcode.nix)");
         return;
@@ -223,6 +251,24 @@ fn check_native_volumes(output: &ares_core::ProcessedGCode, name: &str) {
             .collect::<Vec<_>>(),
         expected_z
     );
+    let expected_times = native["custom_gcode_times"].as_array().unwrap();
+    assert_eq!(output.result.custom_gcode_times.len(), expected_times.len());
+    for (actual, expected) in output.result.custom_gcode_times.iter().zip(expected_times) {
+        assert_eq!(actual.kind as u64, expected["type"].as_u64().unwrap());
+        assert_eq!(
+            f64::from(actual.duration),
+            expected["duration"].as_f64().unwrap()
+        );
+        assert_eq!(
+            f64::from(actual.remaining),
+            expected["remaining"].as_f64().unwrap()
+        );
+    }
+    std::fs::write(
+        directory.join("rust-custom-times.json"),
+        serde_json::to_vec_pretty(&output.result.custom_gcode_times).unwrap(),
+    )
+    .unwrap();
     // Both processors accumulate the same per-G1 float volume into a double
     // cache; compare raw volumes, not reconstructed metric legend strings.
     assert_eq!(
