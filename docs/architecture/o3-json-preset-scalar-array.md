@@ -11,9 +11,16 @@ JSON arrays by applying legacy key handling, joining array elements with
 (`Config.hpp:784-790`) uses `std::istringstream >> value` and checks
 stream failure, not complete token consumption. Thus `"50,60"` loads 50.
 This is **join then scalar deserialize**, not selecting an array element.
+`set_deserialize` (`Config.cpp:577-579`) runs `handle_legacy` again on
+that **full joined wire**, before numeric-prefix extraction. Normalizing
+first can lose a legacy discriminator: `initial_layer_print_height` array
+`["50%","60%"]` must be dropped by the percentage legacy rule, not
+converted to absolute height 50. The LH whole-file case additionally
+pins this failure mode before the helper's ordering correction.
+
 Existing Ares `json_deserialize::{encode_array,decode}` and
-`scalar::normalize` already port that typed behavior; O3's raw range view
-retains the original list and incorrectly rejects it as scalar shape.
+`scalar::normalize` already port the typed array/prefix behavior; O3's raw
+range view retains the original list and incorrectly rejects scalar shape.
 
 ## Non-negotiable boundary
 

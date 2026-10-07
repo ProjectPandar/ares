@@ -96,24 +96,30 @@ pub(crate) fn normalize_scalar_vector_strings(
 pub(crate) fn normalize_numeric_scalar_arrays(
     values: &mut BTreeMap<String, RawConfigValue>,
 ) -> Result<(), String> {
-    for (key, value) in values {
-        let Some(definition) = option_definition(key) else {
-            continue;
-        };
-        if matches!(
-            definition.kind,
-            OptionValueKind::Float
-                | OptionValueKind::Int
-                | OptionValueKind::Percent
-                | OptionValueKind::FloatOrPercent
-        ) && let RawConfigValue::List(items) = value
+    for (mut key, mut value) in std::mem::take(values) {
+        if let Some(definition) = option_definition(&key)
+            && matches!(
+                definition.kind,
+                OptionValueKind::Float
+                    | OptionValueKind::Int
+                    | OptionValueKind::Percent
+                    | OptionValueKind::FloatOrPercent
+            )
+            && let RawConfigValue::List(items) = &value
             && is_string_array(items)
         {
-            *value = encode_array(definition.kind, items)
-                .map_err(str::to_owned)
-                .and_then(|wire| decode(definition.kind, &wire))
+            let mut wire = encode_array(definition.kind, items)
+                .map_err(|error| format!("invalid Orca option {key}: {error}"))?;
+            // `set_deserialize` handles the complete joined token before the
+            // scalar deserializer consumes its prefix (Config.cpp:577-579).
+            super::handle_legacy(&mut key, &mut wire);
+            if key.is_empty() {
+                continue;
+            }
+            value = decode(definition.kind, &wire)
                 .map_err(|error| format!("invalid Orca option {key}: {error}"))?;
         }
+        values.insert(key, value);
     }
     Ok(())
 }
