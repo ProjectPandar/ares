@@ -42,7 +42,7 @@ async fn task22l_stepped_invalid_options_fail_before_disabled_gate() {
         let mut archive = stepped_builder(false);
         archive.replace_unique(PROCESS, from, to);
         let project = archive.bytes();
-        let error = || SliceError::InvalidInput(message.to_owned());
+        let error = || SliceError::InvalidValuesInProject(message.to_owned());
         assert_eq!(
             slice_project(&project, metadata(), crate::SlicerContext::new(0)).await,
             Err(error())

@@ -54,7 +54,7 @@ fn assert_conversion_precedence(key: &str, old: &str, new: &str) {
     // out of `[-FLT_MAX, FLT_MAX]` during `prepare_post_classic_gap_extrusion`.
     assert!(matches!(
         prepare_post_classic_gap_extrusion(&archive.bytes()),
-        Err(SliceError::InvalidInput(message)) if message
+        Err(SliceError::InvalidValuesInProject(message)) if message
             == format!("{key}: 1e+308% not in range [-340282346638528859811704183484516925440.000000,340282346638528859811704183484516925440.000000]")
     ));
 }

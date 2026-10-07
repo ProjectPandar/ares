@@ -54,7 +54,7 @@ fn task22o15_typed_3mf_rejects_too_large_solid_line_width() {
     replace_solid_width(&mut archive);
     assert!(matches!(
         prepare_post_classic_gap_extrusion(&archive.bytes()),
-        Err(SliceError::InvalidInput(message))
+        Err(SliceError::InvalidValuesInProject(message))
             if message == "internal_solid_infill_line_width: too large line width 1000.000000"
     ));
 }
