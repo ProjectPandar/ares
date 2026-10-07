@@ -28,6 +28,10 @@ pub(crate) struct Trapezoid {
     pub(crate) distance: f32,
     pub(crate) accelerate_until: f32,
     pub(crate) decelerate_after: f32,
+    pub(crate) cruise_feedrate: f32,
+    /// `TimeBlock::feedrate_profile.{entry, exit}`.
+    pub(crate) entry: f32,
+    pub(crate) exit: f32,
 }
 
 struct JunctionInput {

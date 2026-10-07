@@ -1,5 +1,5 @@
 //! `TimeMachine::calculate_time` move times and actual-speed vertices
-//! (`GCodeProcessor.cpp:458-547`) inserted by `GCodeProcessor::
+//! with their `actual_feedrate` (`GCodeProcessor.cpp:458-572`) inserted by `GCodeProcessor::
 //! calculate_time` (`:5962-5997`).
 
 use crate::gcode_processor::{EMoveType, MoveVertex};
@@ -15,6 +15,7 @@ pub(super) fn apply(
     trapezoids: &[Trapezoid],
 ) {
     let mut inserted = Vec::new();
+    let mut block_speeds = Vec::new();
     for ((&move_id, &time), trapezoid) in block_moves.iter().zip(times).zip(trapezoids) {
         let id = move_id as usize;
         moves[id].time = time as f32;
@@ -25,21 +26,55 @@ pub(super) fn apply(
         ) {
             continue;
         }
-        let prev = moves[id - 1];
         let Trapezoid {
             distance,
             accelerate_until,
             decelerate_after,
+            cruise_feedrate,
+            entry,
+            exit,
         } = *trapezoid;
+        let prev = &mut moves[id - 1];
+        if prev.move_type != curr.move_type
+            && !matches!(
+                prev.move_type,
+                EMoveType::Extrude | EMoveType::Travel | EMoveType::Wipe
+            )
+        {
+            prev.actual_feedrate = entry;
+        }
+        let prev = *prev;
+        let mut insert = |t| {
+            inserted.extend(actual_vertex(&prev, &curr, t, cruise_feedrate).map(|v| (id, v)));
+        };
         let accelerate = f64::from(accelerate_until);
         if EPSILON < accelerate && accelerate < f64::from(distance) - EPSILON {
-            inserted
-                .extend(actual_vertex(&prev, &curr, accelerate_until / distance).map(|v| (id, v)));
+            insert(accelerate_until / distance);
         }
         let has_deceleration = f64::from(distance - decelerate_after) > EPSILON;
         if has_deceleration && f64::from(decelerate_after) > accelerate + EPSILON {
-            inserted
-                .extend(actual_vertex(&prev, &curr, decelerate_after / distance).map(|v| (id, v)));
+            insert(decelerate_after / distance);
+        }
+        // `Trapezoid::is_cruise_only` (`GCodeProcessor.hpp:444`).
+        let is_cruise_only =
+            f64::from(((decelerate_after - accelerate_until) - distance).abs()) < EPSILON;
+        block_speeds.push((
+            id,
+            if is_cruise_only || !has_deceleration {
+                cruise_feedrate
+            } else {
+                exit
+            },
+        ));
+    }
+    // The insertion pass (`:5986-5997`) runs after every predecessor write and
+    // only inserts before block moves, so a following Seam keeps index `id + 1`.
+    for (id, speed) in block_speeds {
+        moves[id].actual_feedrate = speed;
+        if let Some(next) = moves.get_mut(id + 1)
+            && next.move_type == EMoveType::Seam
+        {
+            next.actual_feedrate = speed;
         }
     }
     if inserted.is_empty() {
@@ -59,7 +94,12 @@ pub(super) fn apply(
 /// The vertex at fraction `t` of `prev → curr`, unless it coincides with
 /// either end. Only a same-type predecessor interpolates the extrusion
 /// attributes (`:509-520`).
-fn actual_vertex(prev: &MoveVertex, curr: &MoveVertex, t: f32) -> Option<MoveVertex> {
+fn actual_vertex(
+    prev: &MoveVertex,
+    curr: &MoveVertex,
+    t: f32,
+    actual_feedrate: f32,
+) -> Option<MoveVertex> {
     let position = std::array::from_fn(|i| lerp(prev.position[i], curr.position[i], t));
     if norm(position, prev.position) <= EPSILON || norm(position, curr.position) <= EPSILON {
         return None;
@@ -73,6 +113,7 @@ fn actual_vertex(prev: &MoveVertex, curr: &MoveVertex, t: f32) -> Option<MoveVer
         height: mix(prev.height, curr.height),
         fan_speed: mix(prev.fan_speed, curr.fan_speed),
         temperature: mix(prev.temperature, curr.temperature),
+        actual_feedrate,
         time: 0.0,
         internal_only: true,
         ..*curr

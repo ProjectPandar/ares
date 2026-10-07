@@ -77,6 +77,9 @@ pub(super) fn block_time(block: PlannedBlock) -> (f32, Trapezoid) {
             distance: block.distance,
             accelerate_until,
             decelerate_after,
+            cruise_feedrate,
+            entry: block.entry,
+            exit: block.exit,
         },
     )
 }
