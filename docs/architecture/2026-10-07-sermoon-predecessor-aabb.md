@@ -68,3 +68,20 @@ and from the native self-stability gate. Fresh-cache native nextest
 `/tmp/sermoon-whole-raw-green.log`). Main stock M73 reorder is therefore
 consistent with the fixed downstream motion timing, not a separately
 proven insertion defect on this case. Full controls remain required.
+
+## Review correction: shared XYZ writer
+
+The follow-up ports `GCodeWriter.cpp:975-1000::extrude_to_xyz` into
+`motion/extrusion.rs`, shared by `scarf/emit.rs` and `path/variable.rs`.
+Use a small segment command (XY endpoint, Z, delta E, path properties),
+not a long positional argument list or lint suppression. Caller-specific
+slope interpolation and flow calculations remain at the existing source
+boundary. Bind slope and its total length into one optional tuple, so
+there is no production unwrap or independently optional correlated state.
+
+Compare Z at `GCodeWriter.hpp:226-228::quantize_xyzf` export precision;
+remove the duplicated 1e-9 proximity check. The writer updates its raw
+position on every XYZ extrusion even if quantized Z does not change.
+The isolated RED fixture covers same-bin 0.40001 -> 0.40049, cross-bin
+0.40049 -> 0.40051, and raw position tracking. Existing strict whole-file,
+workspace and seeded controls remain unchanged acceptance gates.

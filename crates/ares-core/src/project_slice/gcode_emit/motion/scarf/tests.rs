@@ -138,6 +138,57 @@ fn source_scarf_recursively_segments_and_clips_both_overlaps() {
     assert_eq!(scarf.paths[2].slope.unwrap().z_begin, 1.0);
 }
 
+// Failure modes: redundant Z within one quantized bin, omitted Z across
+// a bin boundary, or stale raw writer position after a Z-less XYZ move.
+#[test]
+fn sloped_writer_compares_quantized_z_and_tracks_raw_position() {
+    for (previous, next, z_word) in [(0.40001, 0.40049, ""), (0.40049, 0.40051, " Z.401")] {
+        let mut state = EmitState {
+            layer_z: next,
+            writer_z: Some(previous),
+            scarf_z: Some(previous),
+            options: MotionOptions {
+                filament_area: 1.0,
+                filament_flow_ratio: 1.0,
+                print_flow_ratio: 1.0,
+                use_relative_e_distances: true,
+                ..MotionOptions::default()
+            },
+            ..EmitState::default()
+        };
+        let properties = PathProperties {
+            mm3_per_mm: 1.0,
+            width: 0.45,
+            height: 0.2,
+            feature: "Outer wall",
+            is_perimeter: true,
+            end_clip: 0.0,
+            fitting: &[],
+            slope: None,
+            inside_loop: false,
+        };
+        let mut output = Vec::new();
+        super::emit_segments(
+            &mut output,
+            &[(0.0, 0.0), (1.0, 0.0)],
+            super::Slope {
+                z_begin: 1.0,
+                z_end: 1.0,
+                e_begin: 1.0,
+                e_end: 1.0,
+                speed: 50.0,
+                flow_ratio: 1.0,
+            },
+            properties,
+            &mut state,
+        );
+        // `GCodeWriter.cpp:975-1000`: compare export precision, but m_pos
+        // is always assigned the raw point even if the Z word is omitted.
+        assert_eq!(output, format!("G1 X1 Y0{z_word} E1\n").as_bytes());
+        assert_eq!(state.writer_z, Some(next));
+    }
+}
+
 #[test]
 fn sloped_segments_interpolate_z_and_endpoint_extrusion_ratio() {
     let mut state = EmitState {
