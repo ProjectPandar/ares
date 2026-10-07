@@ -100,9 +100,13 @@ pub(super) fn append_layer_end_timelapse(
     if inserted {
         return Ok(());
     }
-    if traditional {
+    if traditional && !state.has_insert_timelapse_gcode {
         // `GCode.cpp:5538-5546` `add_object_change_labels`: pending
-        // object-end labels flush before the layer-end template.
+        // object-end labels flush before the layer-end template. When the
+        // mid-layer insert already ran, the tail block is skipped
+        // (`!has_insert_timelapse_gcode`, `GCode.cpp:5534`) and the flush
+        // belongs to the next layer's `change_layer`
+        // (`GCode.cpp:5699`, boundary.rs `append_exclude_end`).
         motion::append_exclude_end(output, state);
     }
     // Only the traditional path emits timelapse at layer end

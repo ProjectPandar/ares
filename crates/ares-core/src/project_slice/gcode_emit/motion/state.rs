@@ -147,6 +147,14 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
         Option<super::arc::Point>,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
+    /// `has_insert_timelapse_gcode` is a `process_layer` local upstream
+    /// (`GCode.cpp:4653`) — reset at every layer, set by the traditional
+    /// timelapse insert (`GCode.cpp:5289-5297`, ported at the toolchange
+    /// boundary) and the per-layer interlude.
+    pub(in crate::project_slice::gcode_emit) has_insert_timelapse_gcode: bool,
+    /// `ToolOrdering::most_used_extruder` (`ToolOrdering.cpp:955-981`),
+    /// resolved once from the layer tool ordering.
+    pub(in crate::project_slice::gcode_emit) most_used_extruder: usize,
     /// Per-layer avoid-crossing routing boundary, built lazily on the first
     /// routed travel and dropped by `begin_layer`
     /// (`AvoidCrossingPerimeters::init_layer`).

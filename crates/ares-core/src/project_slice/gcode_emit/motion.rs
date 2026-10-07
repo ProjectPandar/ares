@@ -89,10 +89,15 @@ pub(super) fn defer_layer_change_lift(state: &mut EmitState) {
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
-        if state.traditional_timelapse {
+        if state.traditional_timelapse && !state.has_insert_timelapse_gcode {
             // Traditional timelapse prints (i3 structure or multi-nozzle)
             // retract immediately at the layer end (`GCode.cpp:5527-5546`
-            // fires `retract()` before the labels and timelapse template).
+            // fires `retract()` before the labels and timelapse template) —
+            // UNLESS the mid-layer insert already ran
+            // (`!has_insert_timelapse_gcode`, `GCode.cpp:5534`): then the
+            // layer-end block is skipped entirely and the retraction +
+            // label flush move into the next layer's `change_layer`
+            // (`GCode.cpp:5690-5699`, the deferred path below).
             travel::retract_for_timelapse(output, state);
         } else {
             // Core-xy BBL (`GCode.cpp:5693` change_layer retract) and

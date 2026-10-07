@@ -45,6 +45,9 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     state.layer_index = layer_index;
     state.layer_chunk_index = layer_index;
     state.object_layer_over_raft = object_layer_over_raft;
+    // `has_insert_timelapse_gcode` is a per-`process_layer` local upstream
+    // (`GCode.cpp:4653`).
+    state.has_insert_timelapse_gcode = false;
     // `change_layer` retracts while the writer still sits at the previous
     // layer's z (`GCode.cpp:5693-5706` precede the z move), so the
     // deferred-lift gate must see the OLD `m_pos.z()`; only after the

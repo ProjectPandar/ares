@@ -37,6 +37,16 @@ pub(super) struct ToolOrdering {
     pub(super) type2_tower: bool,
 }
 
+/// `ToolOrdering.cpp:962-972`: count each distinct extruder of the layer
+/// once (dedup on a reused scratch buffer, then bump the presence counts).
+fn count_layer_extruders(distinct: &mut Vec<usize>, counts: &mut [usize]) {
+    distinct.sort_unstable();
+    distinct.dedup();
+    for extruder in distinct.iter().copied() {
+        counts[extruder] += 1;
+    }
+}
+
 impl ToolOrdering {
     /// `Print.cpp:3409–3443`: install the first contiguous tower-only layer run.
     pub(super) fn install_tower_support_layers(
@@ -93,6 +103,31 @@ impl ToolOrdering {
         }
     }
     /// `DoExport::total_toolchanges_from_ordering` (`GCode.cpp:2289–2300`).
+    /// `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`):
+    /// per physical extruder (`filament_map[f] - 1`), count the layers it
+    /// appears on (distinct per layer); the highest index wins ties.
+    pub(super) fn most_used_extruder(
+        &self,
+        traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    ) -> usize {
+        let views = &traversal.resolved.views.full;
+        let map = &views.project.gcode.filament_map.0;
+        let extruder_of = |filament: usize| -> usize { (map[filament].0 - 1) as usize };
+        let mut counts = vec![0usize; views.project.print.nozzle_diameter.0.len()];
+        let mut distinct = Vec::new();
+        for layer in &self.layers {
+            distinct.extend(layer.extruders.iter().map(|f| extruder_of(*f)));
+            count_layer_extruders(&mut distinct, &mut counts);
+        }
+        let mut most_used = 0;
+        for (extruder, count) in counts.iter().enumerate().skip(1) {
+            if *count >= counts[most_used] {
+                most_used = extruder;
+            }
+        }
+        most_used
+    }
+
     pub(super) fn total_toolchanges(&self) -> usize {
         let mut last = None;
         let mut changes = 0;

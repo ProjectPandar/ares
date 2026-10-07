@@ -84,6 +84,9 @@ pub(super) fn append(
     let layer_change_template =
         layer_gcode::LayerChangeTemplate::new(traversal, metadata, first_layer_bounds);
     let timelapse_gate = timelapse::gate(traversal, state);
+    // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`) —
+    // consumed by the toolchange-boundary timelapse insert gate
+    // (`GCode.cpp:5292-5297`).
     let traditional_interlude = timelapse_gate.traditional_interlude;
     let mut second_layer_done = false;
     // Avoid-crossing boundaries are built per slice_z across every object
@@ -123,6 +126,10 @@ pub(super) fn append(
         layer_count,
         ..
     } = schedule;
+    // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`) —
+    // consumed by the toolchange-boundary timelapse insert gate
+    // (`GCode.cpp:5292-5297`).
+    state.most_used_extruder = tool_ordering.most_used_extruder(traversal);
     let mut raft_layers = raft
         .as_mut()
         .map(|raft| std::mem::take(&mut raft.layers))
