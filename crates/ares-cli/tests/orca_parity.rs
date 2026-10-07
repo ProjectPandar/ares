@@ -47,6 +47,8 @@ mod smooth_type2_tower;
 mod stock_presets;
 #[path = "orca_parity/sync_time.rs"]
 mod sync_time;
+#[path = "orca_parity/vg1.rs"]
+mod vg1;
 
 #[path = "ksr_fdmtest_v4/golden.rs"]
 mod golden;

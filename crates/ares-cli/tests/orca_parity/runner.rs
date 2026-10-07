@@ -8,6 +8,8 @@ use serde_json::{Map, Value};
 
 #[path = "runner/type2_copies.rs"]
 pub(crate) mod type2_copies;
+#[path = "runner/vg1_inputs.rs"]
+pub(crate) mod vg1_inputs;
 
 #[path = "runner/application.rs"]
 pub(crate) mod application;
