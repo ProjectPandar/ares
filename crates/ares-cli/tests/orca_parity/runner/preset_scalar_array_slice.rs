@@ -63,6 +63,7 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
         flattened.insert("inherits".into(), json!(parent));
         flattened.insert("from".into(), json!("user"));
         flattened.insert("bridge_speed".into(), values.clone());
+        flattened.insert("initial_layer_print_height".into(), json!(["50%", "60%"]));
         write_json(
             &runner.work.join(format!("process-{label}.json")),
             &Value::Object(flattened),
@@ -115,7 +116,8 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
         let catalog = json!({
             "vendors": vendors,
             "imports": [{"profiles": [{"type": "process", "name": user, "inherits": parent,
-                "from": "user", "instantiation": "true", "bridge_speed": values}]}],
+                "from": "user", "instantiation": "true", "bridge_speed": values,
+                "initial_layer_print_height": ["50%", "60%"]}]}],
         });
         write_json(&runner.work.join(format!("catalog-{label}.json")), &catalog);
         let catalog_json = catalog.to_string();
