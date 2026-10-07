@@ -44,7 +44,7 @@ const OPTION_ROWS: Record<string, { label: string; moves?: MoveType }> = {
   ToolChanges: { label: "Filament Changes", moves: "ToolChange" },
 };
 
-const TRAVEL_ROW_VIEWS = new Set(["Speed", "Acceleration", "Jerk"]);
+const TRAVEL_ROW_VIEWS = new Set(["Speed", "ActualSpeed", "Acceleration", "Jerk"]);
 
 /** `format_compact_count` (`GCodeViewer.cpp:3166-3188`). */
 function compactCount(value: number) {
