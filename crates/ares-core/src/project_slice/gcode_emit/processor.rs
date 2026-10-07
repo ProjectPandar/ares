@@ -213,7 +213,10 @@ pub(super) fn process(
     // The emit pass already accounted the exported stream
     // (`UsedFilaments::process_*_cache`, `GCodeProcessor.cpp:3895-3911`);
     // the recorded pass reuses its buckets rather than re-parsing.
-    processor_result.print_statistics = config.print_statistics;
+    let mut statistics = config.print_statistics;
+    statistics.volumes_per_color_change =
+        std::mem::take(&mut processor_result.print_statistics.volumes_per_color_change);
+    processor_result.print_statistics = statistics;
     processor_result.extruder_colors = config.extruder_colors;
     crate::ProcessedGCode {
         gcode,

@@ -3,6 +3,7 @@
 //! `:5540-5605` filament change, `:5630-5718` `store_move_vertex`).
 
 mod actual_speed;
+mod extrusion;
 mod tags;
 
 use super::ProcessorConfig;
@@ -36,6 +37,8 @@ pub(super) struct MoveRecorder {
     moves: Vec<MoveVertex>,
     custom_gcode_per_print_z: Vec<CustomGCodeItem>,
     last_default_color: usize,
+    color_change_volume: f64,
+    color_change_volumes: Vec<f64>,
     tags: &'static Tags,
     role: ExtrusionRole,
     processing_start_custom_gcode: bool,
@@ -96,6 +99,8 @@ impl MoveRecorder {
             moves: vec![MoveVertex::default()],
             custom_gcode_per_print_z: Vec::new(),
             last_default_color: 0,
+            color_change_volume: 0.0,
+            color_change_volumes: Vec::new(),
             tags: if config.limits.bbl_printer {
                 &BBL_TAGS
             } else {
@@ -241,52 +246,6 @@ impl MoveRecorder {
         move_id
     }
 
-    /// Width, height and `mm3_per_mm` of an extrusion (`:3880-3947`).
-    fn extrusion_geometry(&mut self, delta: [f64; 4], delta_xyz: f32, z: f64, linear: bool) {
-        let diameter = self
-            .filament_diameters
-            .get(self.filament)
-            .or(self.filament_diameters.last())
-            .copied()
-            .unwrap_or(1.75);
-        let radius = 0.5 * diameter;
-        let area = std::f32::consts::PI * (radius * radius);
-        let volume = (f64::from(area) * delta[3]) as f32;
-        self.mm3_per_mm = volume / delta_xyz;
-        if self.forced_height > 0.0 {
-            self.height = self.forced_height;
-        } else if linear && z > f64::from(self.extruded_last_z) + 1e-4 {
-            self.height = (z - f64::from(self.extruded_last_z)) as f32;
-        }
-        if self.height == 0.0 {
-            self.height = DEFAULT_TOOLPATH_HEIGHT;
-        }
-        if linear {
-            self.extruded_last_z = z as f32;
-        }
-        let section = f64::from(delta_xyz * self.height);
-        self.width = if self.forced_width > 0.0 {
-            self.forced_width
-        } else if self.role == ExtrusionRole::ExternalPerimeter {
-            let factor =
-                (std::f64::consts::PI * f64::from((1.05 * radius) * (1.05 * radius))) as f32;
-            (delta[3] * f64::from(factor) / section) as f32
-        } else if matches!(
-            self.role,
-            ExtrusionRole::BridgeInfill | ExtrusionRole::InternalBridgeInfill | ExtrusionRole::None
-        ) {
-            (f64::from(diameter) * (delta[3] / f64::from(delta_xyz)).sqrt()) as f32
-        } else {
-            let factor = (std::f64::consts::PI * f64::from(radius * radius)) as f32;
-            let semicircles = (1.0 - 0.25 * std::f64::consts::PI) as f32 * self.height;
-            (delta[3] * f64::from(factor) / section + f64::from(semicircles)) as f32
-        };
-        if self.width == 0.0 {
-            self.width = DEFAULT_TOOLPATH_WIDTH;
-        }
-        self.width = self.width.min(2.0_f32.max(4.0 * self.height));
-    }
-
     /// `store_move_vertex` (`:5630-5718`); `source` is the input line the
     /// vertex reports before the export remap.
     fn store(&mut self, source: usize, move_type: EMoveType, end: [f64; 4], delta_extruder: f64) {
@@ -335,6 +294,7 @@ impl MoveRecorder {
     /// input lines onto the exported file's 1-based lines
     /// (`ExportLines::synchronize_moves`, `:951-960`).
     pub(super) fn finish(mut self, line_map: &[u32]) -> GCodeProcessorResult {
+        self.flush_color_change_volume();
         for vertex in &mut self.moves {
             if vertex.move_type == EMoveType::Wipe {
                 vertex.width = WIPE_WIDTH;
@@ -353,6 +313,10 @@ impl MoveRecorder {
         GCodeProcessorResult {
             moves: self.moves,
             custom_gcode_per_print_z: self.custom_gcode_per_print_z,
+            print_statistics: crate::PrintEstimatedStatistics {
+                volumes_per_color_change: self.color_change_volumes,
+                ..Default::default()
+            },
             spiral_vase_mode: self.spiral_vase_mode,
             ..Default::default()
         }

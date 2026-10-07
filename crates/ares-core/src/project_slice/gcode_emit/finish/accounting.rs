@@ -21,6 +21,7 @@ pub(in crate::project_slice::gcode_emit) fn account_statistics(
     diameters: &[crate::options::OrcaFloat],
 ) -> crate::PrintEstimatedStatistics {
     let mut statistics = crate::PrintEstimatedStatistics {
+        volumes_per_color_change: Vec::new(),
         model_volumes_per_extruder: vec![0.0; diameters.len()],
         wipe_tower_volumes_per_extruder: vec![0.0; diameters.len()],
         support_volumes_per_extruder: vec![0.0; diameters.len()],

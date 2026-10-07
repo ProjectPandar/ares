@@ -117,6 +117,7 @@ impl MoveRecorder {
                 color: color.to_owned(),
                 extra: String::new(),
             });
+            self.flush_color_change_volume();
         }
     }
 }

@@ -82,6 +82,8 @@ impl Default for MoveVertex {
 /// (`GCode.cpp:1914-1937`): Σ volume / (π·(d/2)²) in mm.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize)]
 pub struct PrintEstimatedStatistics {
+    /// Nonzero chronological model caches (`GCodeProcessor.cpp:1549-1555`).
+    pub volumes_per_color_change: Vec<f64>,
     /// `UsedFilaments::model_volumes_per_filament` →
     /// `model_volumes_per_extruder`.
     pub model_volumes_per_extruder: Vec<f64>,
