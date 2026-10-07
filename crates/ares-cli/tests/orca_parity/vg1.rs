@@ -7,7 +7,22 @@ use serde_json::json;
 #[path = "vg1/state_oracle.rs"]
 mod state_oracle;
 
-fn check(printer: &str, virtual_moves: bool, verify_state: bool) {
+#[path = "vg1/volume_oracle.rs"]
+mod volume_oracle;
+
+const VIRTUAL_SEGMENT: &str =
+    ";VG1 E4 F523\n;VG1 E4 F261\n; VFLUSH_START\n;VG1 E34.9231 F523\n; VFLUSH_END\n";
+
+#[derive(Clone, Copy)]
+enum Oracle {
+    Bytes,
+    State,
+    Volumes,
+}
+
+fn check(printer: &str, virtual_segment: &str, oracle: Oracle) {
+    let verify_state = matches!(oracle, Oracle::State);
+    let virtual_moves = !virtual_segment.is_empty();
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -20,11 +35,6 @@ fn check(printer: &str, virtual_moves: bool, verify_state: bool) {
     let filament = profiles.filament(&selection.filaments[0]).unwrap();
     let mut filaments = vec![filament.clone(), filament];
     crate::normalize_filament_defaults(&mut filaments);
-    let virtual_segment = if virtual_moves {
-        ";VG1 E4 F523\n;VG1 E4 F261\n; VFLUSH_START\n;VG1 E34.9231 F523\n; VFLUSH_END\n"
-    } else {
-        ""
-    };
     let state_probe = if verify_state {
         "M82\n; VG1_STATE_PROBE\nG1 X25 Y10 E45\nM83\n"
     } else {
@@ -81,13 +91,29 @@ fn check(printer: &str, virtual_moves: bool, verify_state: bool) {
     assert!(reference.contains("T0 H-1\n"));
     assert!(reference.contains("M1020 S0\n"));
     assert!(reference.contains("; VG1_TEST_END\n"));
-    if virtual_moves {
+    if virtual_moves && !virtual_segment.lines().any(|line| line.starts_with("G1 ")) {
         assert!(reference.contains(virtual_segment));
     }
+    if virtual_segment.lines().any(|line| line.starts_with("G1 ")) {
+        let mut reference_lines = reference.lines();
+        for expected in virtual_segment.lines() {
+            assert!(
+                reference_lines.any(|line| line == expected),
+                "missing ordered fixture line: {expected}"
+            );
+        }
+    }
     assert!(reference.lines().any(|line| line.starts_with("M73 ")));
-    if verify_state {
-        state_oracle::check(&case.project);
-        return;
+    match oracle {
+        Oracle::State => {
+            state_oracle::check(&case.project);
+            return;
+        }
+        Oracle::Volumes => {
+            volume_oracle::check(&case.project);
+            return;
+        }
+        Oracle::Bytes => {}
     }
     let outcome = crate::compare_case(&case);
     assert_eq!(
@@ -99,16 +125,62 @@ fn check(printer: &str, virtual_moves: bool, verify_state: bool) {
 
 #[test]
 fn vg1_x1c_dual_filament_transition_matches_native() {
-    check("Bambu Lab X1 Carbon 0.4 nozzle", true, false);
+    check(
+        "Bambu Lab X1 Carbon 0.4 nozzle",
+        VIRTUAL_SEGMENT,
+        Oracle::Bytes,
+    );
 }
 #[test]
 fn vg1_x1c_dual_filament_without_virtual_moves_matches_native() {
-    check("Bambu Lab X1 Carbon 0.4 nozzle", false, false);
+    check("Bambu Lab X1 Carbon 0.4 nozzle", "", Oracle::Bytes);
 }
 
 #[test]
 fn vg1_x1c_virtual_state_and_vertex_effects_match_native() {
     if std::env::var_os("ARES_PROCGCODE_BIN").is_some() {
-        check("Bambu Lab X1 Carbon 0.4 nozzle", true, true);
+        check(
+            "Bambu Lab X1 Carbon 0.4 nozzle",
+            VIRTUAL_SEGMENT,
+            Oracle::State,
+        );
     }
+}
+
+fn volumes(segment: &str) {
+    if std::env::var_os("ARES_PROCGCODE_BIN").is_some() {
+        check("Bambu Lab X1 Carbon 0.4 nozzle", segment, Oracle::Volumes);
+    }
+}
+
+#[test]
+fn vg1_x1c_flush_below_remaining_volume_five_maps_match_native() {
+    volumes(VIRTUAL_SEGMENT);
+}
+
+#[test]
+fn vg1_x1c_flush_overflow_five_maps_match_native() {
+    volumes("; VFLUSH_START\n;VG1 E80 F523\n; VFLUSH_END\n");
+}
+
+#[test]
+fn vg1_x1c_repeated_flush_five_maps_match_native() {
+    volumes("; VFLUSH_START\n;VG1 E20 F523\n;VG1 E80 F523\n;VG1 E4 F261\n; VFLUSH_END\n");
+}
+
+#[test]
+fn vg1_x1c_inactive_zero_flush_five_maps_match_native() {
+    volumes(";VG1 E80 F523\n; VFLUSH_START\n;VG1 E0 F261\n; VFLUSH_END\n;VG1 E4 F523\n");
+}
+
+#[test]
+fn vg1_x1c_virtual_and_physical_flush_share_remainder() {
+    volumes(
+        "; VFLUSH_START\n;VG1 E20 F523\n; VFLUSH_END\n; FLUSH_START\nG1 E80 F523\n; FLUSH_END\n",
+    );
+}
+
+#[test]
+fn vg1_x1c_no_virtual_five_maps_match_native() {
+    volumes("");
 }

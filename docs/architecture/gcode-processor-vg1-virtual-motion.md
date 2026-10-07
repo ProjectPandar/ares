@@ -6,6 +6,8 @@ Port OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`, not an Ares t
 
 Rust destination is exclusively `crates/ares-core/src/project_slice/gcode_emit/processor/`: estimate dispatch, motion state/block admission and planner, moves/schedule/export-cache attribution, and required filament/volume bookkeeping. New processor submodules may separate virtual-motion and flush accounting to remain at most 400 LOC. Existing processor and emitter-supplied statistics are temporary compatibility shells around those upstream concepts, not authority for a newly invented accounting model.
 
+Coordinator ruling includes `GCodeProcessor::post_process:993–1010` (material quantities from authoritative total-volume maps) and `process_used_filament:1147–1174` (canonical material-statistic export). Processor `UsedFilaments` is the sole volume source for all five public maps and material footer fields. Delete the superseded finish accounting and snapshot handoff; do not retain parallel accounting, comparison or a fallback. This source-required export is not an arbitrary footer correction. All non-VG1 reference footer bytes must remain unchanged, while VG1 changes must equal Native. Web ColorPrint legend and presetSlice E2E remain mandatory gates.
+
 Do not modify `gcode_emit/{layers/boundary,motion/state,motion/travel}` or any emitter ordering, templates, bridge geometry, object labels, travel/lift order, or profile data. Those BBL ordering areas belong to pi-tip. A source-required volume prerequisite must stay in the processor; if that cannot be achieved, stop for a boundary decision rather than expanding the emitter scope.
 
 ## Admitted data before this spec
