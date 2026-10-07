@@ -2,12 +2,18 @@
 
 use super::export_cache;
 
+#[derive(Clone, Copy)]
+pub(super) struct Snapshot {
+    pub(super) elapsed: f32,
+    pub(super) next: Option<f32>,
+}
+
 pub(super) fn elapsed_snapshots(
     lines: &[String],
     cache: &[export_cache::Entry],
     arc_segment_counts: &[usize],
     arc_seam_excluded: &[bool],
-) -> Vec<Option<f64>> {
+) -> Vec<Option<Snapshot>> {
     let mut elapsed = vec![None; lines.len() + 1];
     let mut cache_index = 0;
     let mut exported_g1_lines = 0;
@@ -72,7 +78,10 @@ pub(super) fn elapsed_snapshots(
             .get(cache_index)
             .is_some_and(|entry| entry.id == lookup_id);
         if hit {
-            elapsed[index + 1] = Some(f64::from(cache[cache_index].elapsed));
+            elapsed[index + 1] = Some(Snapshot {
+                elapsed: cache[cache_index].elapsed,
+                next: cache.get(cache_index + 1).map(|entry| entry.elapsed),
+            });
         }
     }
     elapsed

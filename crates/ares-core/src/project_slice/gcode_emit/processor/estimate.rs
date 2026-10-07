@@ -17,13 +17,15 @@ use super::motion_util::word;
 use super::moves::tags::ParsedLine;
 use super::moves::{MoveRecorder, RecordedMotion};
 use super::schedule::{DelayTarget, FlushEvent, PendingDelay, Schedule, scheduled_times};
+use super::stop_times::StopTimes;
 use super::{ProcessorConfig, is_progress_motion};
 
 pub(super) struct Estimate {
     pub(super) total: f64,
     pub(super) prepare: f64,
     pub(super) custom_gcode_times: Vec<crate::gcode_processor::CustomGCodeTime>,
-    elapsed: Vec<Option<f64>>,
+    pub(super) stop_times: StopTimes,
+    elapsed: Vec<Option<elapsed::Snapshot>>,
     export_elapsed: Vec<Option<f32>>,
     #[cfg(test)]
     pub(super) block_line_ids: Vec<usize>,
@@ -43,6 +45,7 @@ impl Estimate {
         let mut prepare_stages = Vec::new();
         let mut events = Vec::new();
         let mut custom_events = Vec::new();
+        let mut stop_events = Vec::new();
         let mut prepare_stage = false;
         let mut saw_motion_command = false;
         let mut measure_g29_time = false;
@@ -85,6 +88,7 @@ impl Estimate {
                 .custom
                 .and_then(|tag| tag.time_kind(filaments.current_filament()))
             {
+                stop_events.push((g1_line_id, events.len()));
                 custom_events.push((kind, events.len()));
                 events.push(FlushEvent {
                     block_count: blocks.len(),
@@ -278,7 +282,10 @@ impl Estimate {
             trapezoids,
             trailing_delay,
             flush_ends,
+            flush_starts,
+            processed_blocks,
         } = scheduled_times(&blocks, &events);
+        let mut stop_times = StopTimes::new(&stop_events, &flush_starts, processed_blocks);
         if let Some(recorder) = recorder {
             recorder.apply_schedule(&block_moves, &times, &trapezoids);
         }
@@ -299,10 +306,14 @@ impl Estimate {
             .zip(&times)
             .zip(cache_eligible)
             .zip(remaining_internal)
-            .filter_map(|(((id, time), eligible), remaining)| {
+            .enumerate()
+            .filter_map(|(block, (((id, time), eligible), remaining))| {
                 // calculate_time adds every block's time before testing the
                 // associated move vertex for Extrude, Travel or Wipe.
                 cumulative += time;
+                if eligible {
+                    stop_times.record(id, block, cumulative as f32);
+                }
                 // (g1_line_id, f32 elapsed snapshot)
                 eligible.then_some(export_cache::Entry {
                     id,
@@ -327,6 +338,7 @@ impl Estimate {
         Self {
             total,
             custom_gcode_times,
+            stop_times,
             prepare,
             elapsed,
             export_elapsed,
@@ -336,7 +348,19 @@ impl Estimate {
     }
 
     pub(super) fn elapsed_at(&self, line: usize) -> Option<f64> {
-        self.elapsed.get(line).copied().flatten()
+        self.elapsed
+            .get(line)
+            .copied()
+            .flatten()
+            .map(|entry| f64::from(entry.elapsed))
+    }
+
+    pub(super) fn next_elapsed_at(&self, line: usize) -> Option<f32> {
+        self.elapsed
+            .get(line)
+            .copied()
+            .flatten()
+            .and_then(|entry| entry.next)
     }
 
     pub(super) fn export_elapsed_at(&self, line: usize) -> Option<f32> {

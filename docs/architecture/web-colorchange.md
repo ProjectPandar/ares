@@ -132,7 +132,8 @@ but not `OptionsZCorrector::m_move_id` (`GCodeProcessor.hpp:687-705`). Its
 later update can therefore relocate an unrelated internal extrusion instead
 of the marker, producing spurious ColorPrint transitions.
 
-Repro: `two-changes` under `target/color-change-slice-oracle/`: unmodified
+Repro at pre-M73-C checkpoint `f27867a3` (`two-changes`; input line IDs
+advance after the C-line port): unmodified
 native moves relocate the internal vertex for G-code line 188 from first-layer
 geometry to index 569, XYZ `(114.346001,114.346001,0.600000024)`, after the
 ColorChange at line 380. The actual marker remains at Z=0.4 while the custom
@@ -154,6 +155,29 @@ M73 line remain byte-compared with the unmodified official slicer, never the
 corrected diagnostic. The committed stable-options patch may contain only
 OptionsZCorrector marker remapping. No tolerances are enlarged and no failing
 assertion is dropped.
+
+## M73 C stop-time postprocessing boundary
+
+Operator-approved follow-up: port Normal-mode `GCodeProcessor` stop registration
+(`GCodeProcessor.cpp:5715`), eligible cached-block elapsed updates (`:576-579`),
+initial stop placeholder (`:1098-1101`), and next-stop / last-minute export
+(`:1260-1293`). This only adds `stop_times` and M73 C output; it must not change
+planner arithmetic, elapsed values, M73 P/R, slicing, or GCodeGenerator behavior.
+Stealth-mode M73 D is outside the existing Normal-only estimate boundary.
+
+The existing Schedule is a temporary representation of upstream interleaved
+parsing/planning: observe how many blocks were already processed when a stop
+was registered. Do not infer stop times from custom interval durations: SYNC
+may already have flushed a stop's G1 ID, leaving its native stop time at zero.
+Reuse the existing cache elapsed and its next entry for last-minute decisions;
+never recalculate them. Preserve first-match updates for repeated G1 stop IDs.
+
+Tests-only RED commit `057e0636` contains three complete official G-code
+oracles (SYNC, ordinary fractional last-minute, and pre-model stop), with exact
+M73 and full-byte comparisons. A separate source-cited GREEN follows. Before
+merge, run both official and seeded full reference suites including
+`profile_entry`, plus all web gates. All color-change case changes must match
+native. The later merger with lint's VG1 timing work must rebase and rerun.
 
 ## Existing scaffold replacement
 

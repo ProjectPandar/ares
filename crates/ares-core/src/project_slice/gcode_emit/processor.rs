@@ -9,6 +9,7 @@ mod motion_util;
 mod moves;
 mod schedule;
 mod stats;
+mod stop_times;
 mod time;
 use crate::options::GCodeFlavor;
 use estimate::Estimate;
@@ -129,6 +130,7 @@ pub(super) fn process(
         record_moves.then_some(lines.len()),
     );
     let mut last_progress = None;
+    let mut stop_export = estimate.stop_times.exporter(estimate.total);
     let first_marker = lines
         .iter()
         .position(|line| line == "M73 P0 R0")
@@ -150,6 +152,9 @@ pub(super) fn process(
                 let remaining = minutes(estimate.total);
                 last_progress = Some((0, remaining));
                 result.append(format!("M73 P0 R{remaining}\n"));
+            }
+            if emit_progress && let Some(line) = stop_export.initial() {
+                result.append(line);
             }
             continue;
         }
@@ -203,6 +208,9 @@ pub(super) fn process(
         if last_progress != Some((percent, remaining)) {
             last_progress = Some((percent, remaining));
             result.append(format!("M73 P{percent} R{remaining}\n"));
+        }
+        if let Some(line) = stop_export.progress(elapsed, estimate.next_elapsed_at(index + 1)) {
+            result.append(line);
         }
     }
     let (gcode, line_map) = result.finish();

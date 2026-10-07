@@ -66,7 +66,7 @@ async fn check(name: &str) {
         "{name}: original native M73 bytes"
     );
     assert_eq!(
-        actual.as_bytes().len(),
+        actual.len(),
         expected.len(),
         "{name}: complete G-code byte length"
     );
