@@ -34,3 +34,10 @@ fn quote_string_vector_element(value: &str, value_count: usize) -> String {
     }
     format!("\"{}\"", escape_scalar_string(value))
 }
+
+/// `escape_strings_cstyle` for one element of an in-memory vector
+/// (`Config.cpp:72-120`): quote when the element carries a separator; the
+/// lone-empty rule applies only to a single-element vector.
+pub(crate) fn escape_string_vector_element(value: &str, value_count: usize) -> String {
+    quote_string_vector_element(value, value_count)
+}

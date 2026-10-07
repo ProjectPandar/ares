@@ -32,6 +32,27 @@ impl ProjectSettingsRaw {
             .insert(key.to_owned(), RawConfigValue::Text(value.token));
     }
 
+    /// Profile group vectors are `ConfigOptionStrings`: one raw element per
+    /// slot (`OrcaSlicer.cpp:2816-2817`). Elements are stored export-escaped
+    /// (`escape_strings_cstyle`, `Config.cpp:72-120`), the same wire form
+    /// every stored token carries, so the raw layer renders verbatim.
+    pub(crate) fn insert_string_slots(&mut self, key: &str, values: &[String]) {
+        self.0.insert(
+            key.to_owned(),
+            RawConfigValue::List(
+                values
+                    .iter()
+                    .map(|value| {
+                        RawConfigValue::Text(crate::options::escape_string_vector_element(
+                            value,
+                            values.len(),
+                        ))
+                    })
+                    .collect(),
+            ),
+        );
+    }
+
     pub(crate) fn contains_key(&self, key: &str) -> bool {
         self.0.contains_key(key)
     }

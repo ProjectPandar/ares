@@ -21,7 +21,17 @@ pub(crate) fn project_is_bbl(
         None => None,
         Some(RawConfigValue::List(values)) => match values.last() {
             None => None,
-            Some(RawConfigValue::Text(name)) => Some(name.as_str()),
+            // Elements are stored export-escaped (`escape_strings_cstyle`);
+            // decode to the in-memory system name like the token form below.
+            Some(RawConfigValue::Text(name)) => {
+                let wire::WireValue::Scalar(system_name) =
+                    wire::decode(OptionValueKind::String, name)
+                        .map_err(SliceError::InvalidInput)?
+                else {
+                    unreachable!("String decoder returns a scalar");
+                };
+                Some(system_name)
+            }
             Some(_) => {
                 return Err(SliceError::InvalidInput(
                     "inherits_group must contain strings".to_owned(),
@@ -46,6 +56,9 @@ pub(crate) fn project_is_bbl(
             ));
         }
     };
-    let system = inherited.filter(|name| !name.is_empty()).unwrap_or(current);
+    let system = inherited
+        .as_deref()
+        .filter(|name| !name.is_empty())
+        .unwrap_or(current);
     Ok(super::is_bbl_printer("", "", system))
 }
