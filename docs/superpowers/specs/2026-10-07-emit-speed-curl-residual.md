@@ -221,3 +221,34 @@ Out: collect path, junction density, artificial_distance formula
 (all verified at parity); TiQ2 skirt/wall split (pi-tower —
 revisit if same root after this lands); F750-vs-F729 scarf speed
 value (adjacent residual if it persists after the emit fix).
+
+## Implementation status (partial GREEN)
+
+`1b0b8a3f` routes processed sloped paths through `variable::emit`
+with sloped Z/E emission (`GCode.cpp:7028-7048`, `7115-7122`,
+`7229-7248`) and quantized-position segment lengths
+(`GCode.cpp:7124`, `7149` `point_to_gcode_quantized` basis).
+Result on case-6qvP0t: diff 106 → 34 lines; all wipe feedrates
+(F5580/F6818.82) now match. Remaining residual, all in the first
+scarf-slope layer:
+
+- `G1 F729` (12.15mm/s) vs ares `G1 F754` (12.57mm/s) on the
+  seam-start processed-path header — upstream's
+  `new_points[0].speed` at the seam vertex. Root: the slope
+  path's first annotated segment's `art`/distance input differs
+  (~0.4mm/s in a 10-30mm/s band lerp). Both sides compute
+  min-clamp via the same sections; the point-level inputs
+  (boundary-offset distance / artificial distance at the
+  seam-adjacent ExtendedPoint) differ — likely an
+  annotation-insertion point set difference at the seam vertex
+  (emit-side `<true,true,true,true>`).
+- Sub-micron E deltas on the same segments (E.3749 vs .37485,
+  E.01465 vs .01466) — likely follow from the same input diff
+  (e_ratio breakpoints shift if the annotated vertices differ),
+  or `mm3_per_mm` rounding; to verify after the p0-speed fix.
+- Trailing `estimated printing time` off by 1s (speed-fed).
+
+Next step: dump upstream's per-point `processed` list for the
+slope path (extend spdin probe to print the annotated point
+positions + per-point final `speed` after curl clamp) and diff
+against ares' `extended` list for that path.
