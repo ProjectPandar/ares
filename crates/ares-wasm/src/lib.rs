@@ -1,3 +1,4 @@
+mod color_print;
 mod colors;
 mod filament_legend;
 mod moves;

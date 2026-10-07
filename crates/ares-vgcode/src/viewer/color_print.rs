@@ -55,6 +55,16 @@ pub struct ColorPrintLegend {
     pub partial_usage: Result<Vec<PartialTime>, MissingColorVolume>,
 }
 
+impl Default for ColorPrintLegend {
+    fn default() -> Self {
+        Self {
+            visible: false,
+            extruders: Vec::new(),
+            partial_usage: Ok(Vec::new()),
+        }
+    }
+}
+
 /// Keeps printed transitions, layer brackets and partial times distinct.
 /// Missing native volume indices make the whole partial table unavailable;
 /// the original result and the other two structures are untouched.

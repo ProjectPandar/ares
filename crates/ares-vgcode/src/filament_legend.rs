@@ -1,7 +1,7 @@
 // Ports the used filament data of AGPL-licensed OrcaSlicer
 // `src/slic3r/GUI/GCodeViewer.cpp` `render_legend` for the ColorPrint view.
 
-use crate::{Color, ViewerImpl};
+use crate::{Color, ColorPrintLegend, ViewerImpl, color_print_legend};
 use ares_core::gcode_processor::GCodeProcessorResult;
 
 /// `displayed_columns` in header order (`GCodeViewer.cpp:3749-3767`).
@@ -24,6 +24,7 @@ pub struct FilamentRow {
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct FilamentLegend {
+    pub color_print: ColorPrintLegend,
     pub columns: Vec<FilamentColumn>,
     pub rows: Vec<FilamentRow>,
     /// GCodeProcessorResult metadata for display-only m/g conversion.
@@ -78,6 +79,7 @@ pub fn filament_legend(viewer: &ViewerImpl, result: &GCodeProcessorResult) -> Fi
         })
         .collect();
     FilamentLegend {
+        color_print: color_print_legend(viewer, result),
         columns,
         rows,
         filament_diameters: result.filament_diameters.clone(),

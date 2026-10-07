@@ -38,6 +38,24 @@ export interface Toolpaths {
 }
 
 export interface FilamentLegend {
+  colorPrint: {
+    visible: boolean;
+    extruders: {
+      extruderId: number;
+      segments: { colorId: number; layerId: number; times: [number, number]; color: Rgb }[];
+      ranges: { color: Rgb; z: [number, number] }[];
+    }[];
+    partialUsage: { status: "available"; rows: {
+      kind: "Print" | "ColorChange" | "Pause";
+      /** One-based CustomGCode::Item extruder id. */
+      extruderId: number;
+      color1: Rgb;
+      color2: Rgb;
+      duration: number;
+      remaining: number;
+      volume: number | null;
+    }[] } | { status: "unavailable"; missingIndex: number };
+  };
   columns: ("Model" | "Support" | "Flushed" | "Tower" | "Total")[];
   rows: { extruderId: number; color: Rgb; volumes: number[] }[];
   /** GCodeProcessorResult metadata, indexed by extruder id; volumes are mm³. */
