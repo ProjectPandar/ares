@@ -88,11 +88,17 @@ fn orca_parity_short_filament_variants_preserve_zero_slots_in_complete_output() 
     }
     let sliced = runner.slice_case(&exported).unwrap();
     let native = std::str::from_utf8(&sliced.reference).unwrap();
+    // The ruled flatten clips the BBL filament chain to the parent's single
+    // variant (`PrintConfig.cpp:10263`), so each filament resolves one
+    // slot: the shortened payloads still reach the complete output with
+    // their nil slot preserved, but no second-variant zero fill remains.
     assert!(native.contains("\n; activate_air_filtration_during_print = 1,0\n"));
+    assert!(native.contains("\n; filament_z_hop_types = Spiral Lift,Spiral Lift\n"));
+    assert!(native.contains("\n; filament_wipe = 1,1\n"));
     assert!(native.contains("\n; filament_ironing_flow = nil,0%\n"));
-    assert!(native.contains("\n; filament_z_hop_types = Spiral Lift,Auto Lift\n"));
-    assert!(native.contains("\n; filament_wipe = 1,0\n"));
-    assert!(native.contains("\n; volumetric_speed_coefficients = \"0 0 0 0 0 0\";\n"));
+    assert!(
+        native.contains("\n; volumetric_speed_coefficients = \"0 0 0 0 0 0\";\"0 0 0 0 0 0\"\n")
+    );
     assert!(!native.contains("\n; filament used [g] = "));
     let outcome = parity::compare_case(&sliced);
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);

@@ -160,15 +160,7 @@ impl VendorProfiles {
             Some(parent) if index.contains_key(parent) => self.flatten(index, parent, kind)?,
             Some(_) | None => Map::new(),
         };
-        if merged.is_empty() {
-            // Custom root preset: no parent layout to map onto
-            // (`Preset.cpp:1688-1696` default-preset branch).
-            for (key, value) in &entry {
-                merged.insert(key.clone(), value.clone());
-            }
-        } else {
-            Self::overlay_variant_mapped(&mut merged, &entry, kind);
-        }
+        Self::overlay_variant_mapped(&mut merged, &entry, kind);
         merged.remove("inherits");
         Ok(merged)
     }
@@ -181,34 +173,36 @@ impl VendorProfiles {
     /// child slot matched by variant name (`set_only_diff`,
     /// `Config.hpp:561-584`) when the base length agrees with the layout
     /// (`:10287-10292` falls back to the child value otherwise).
+    ///
+    /// Only filament presets resolve this way: the D6 divergence this
+    /// flattener fixes is the filament chain's `filament_self_index`
+    /// sizing, and Ares' own filament inheritance ports the same mapping.
+    /// Machine and process presets keep the leaf's variant values (their
+    /// leaf variant lists are the hardware/process identity the catalog
+    /// overlay also carries — e.g. the X2D leaf declares the Bowden head
+    /// its parent lacks), so they overlay plain child values; kinds without
+    /// variant vocabulary (`Preset::get_extruder_names_and_keysets`,
+    /// `Preset.cpp:941-946`) likewise.
     fn overlay_variant_mapped(
         merged: &mut Map<String, Value>,
         entry: &Map<String, Value>,
         kind: &str,
     ) {
         let (id_name, variant_name, key_set1, key_set2) = match kind {
-            "machine" => (
-                Some("printer_extruder_id"),
-                "printer_extruder_variant",
-                ares_core::printer_options_with_variant_1(),
-                ares_core::printer_options_with_variant_2(),
-            ),
-            "process" => (
-                Some("print_extruder_id"),
-                "print_extruder_variant",
-                ares_core::print_options_with_variant(),
-                NO_VARIANT_KEYS,
-            ),
             "filament" => (
                 None,
                 "filament_extruder_variant",
                 ares_core::filament_options_with_variant(),
                 NO_VARIANT_KEYS,
             ),
-            // No variant vocabulary (`Preset::get_extruder_names_and_keysets`,
-            // `Preset.cpp:941-946`): plain child values.
             _ => (None, "", NO_VARIANT_KEYS, NO_VARIANT_KEYS),
         };
+        if variant_name.is_empty() {
+            for (key, value) in entry {
+                merged.insert(key.clone(), value.clone());
+            }
+            return;
+        }
         let variant_list = |fields: &Map<String, Value>| -> Vec<String> {
             fields
                 .get(variant_name)
