@@ -2,7 +2,11 @@
 
 ## Status and decision
 
-Spec for coordinator review only; no production change or admitted RED yet.
+Approved boundary, revised after source tracing and coordinator's system-boundary
+ruling (2026-10-07). Production is uncommitted and not accepted; initial RED
+`65336cb5` remains historical evidence but its undersized scalar type vector
+is no longer an acceptance input. Fully specified missing-matrix reconstruction
+is the replacement RED. Generic materialization RED moves to a separate slice.
 Predecessor VG1/UsedFilaments is integrated at `9e3e8183777d465f9134361eb26c0a27d82e82c7`.
 This is #55 / `X2D-FM` in `/tmp/ares-matrix-clusters.md`, independently owned by
 pi-lint. It is configuration preparation, not a processor timing patch or an
@@ -59,11 +63,11 @@ external model or generated forensic G-code is committed as a fixture.
 | `OrcaSlicer.cpp:5993–6022` | Existing auto-map AMS default `1#0|4#1` per nozzle remains a separate later operation under mode<Manual, including replacement of an existing AMS mapping. Do not use this gate to decide matrix reconstruction. |
 | `libslic3r/GCode.cpp:5596–5614` | Scale/round a valid full matrix exactly once for CONFIG_BLOCK; preserve errors/one-filament semantics. Existing `scale_flush_matrix` remains this operation, not preparation. |
 
-For the historical input, default new nozzle-volume types have two Standard
-entries whereas the project has one. The CLI vector-change condition therefore
-explains a rebuild independently of the empty AMS. Fresh RED artifacts must
-verify this state and the actual preset dataset/minimum; do not assume empty
-AMS caused Native reconstruction or hardcode339/621.
+The historical vector-change predicate explains Native entering reconstruction,
+but does not establish the calculator's source input preconditions: its scalar
+nozzle-volume type cannot cover two nozzles. Keep this observation diagnostic;
+do not emulate its out-of-bounds reads or hardcode339/621. Acceptance uses two
+explicit Standard entries and a genuinely absent matrix instead.
 
 ## Rust destination and replacement seam
 
@@ -111,9 +115,10 @@ input/effective output artifacts are part of admission, not inferred from labels
 
 Discriminating cases:
 
-1. Historical single Standard→two Standard default rebuild: Native succeeds,
+1. Fully specified two-Standard X2D input with missing matrix: Native succeeds,
    base Ares exact matrix error; assert complete output after GREEN and the full
-   effective matrix, multiplier and AMS values (all segments, not just length).
+   effective matrix, multiplier and AMS values. The former scalar1-entry RED
+   is retained as UB evidence, not an active correct-value acceptance test.
 2. Two Standard input, unchanged nozzle count and supplied valid8-entry custom
    matrix: predicate false, retain custom values before one export scaling.
    Pair with malformed supplied matrix under the same false predicate: Native
@@ -169,19 +174,48 @@ Coordinator explicitly approved changing dataset-dependent witnesses because
 of this **UB input**, not to obtain a pass: specify both nozzle-volume types as
 `[Standard,Standard]`, omit the matrix, and invoke the legitimate missing-matrix
 rebuild branch. Palette/dataset inputs are taken from the pinned upstream data,
-not selected by runtime outcome. Keep complete-stream comparisons. The initial
-approved reconstruction RED and unchanged custom-matrix control remain; new
-calculator/minimum/multiplier witnesses use fully specified nozzle vectors.
+not selected by runtime outcome. Keep complete-stream comparisons. Under the
+later any-vector coverage ruling, the initial scalar reconstruction RED is
+retired from acceptance; the unchanged complete custom-matrix control remains.
+All calculator/minimum/multiplier witnesses use fully specified nozzle vectors.
 
-`PrintConfig.cpp:9004–9060::DynamicPrintConfig::get_index_for_extruder` is a
-required X2D-FM dependency because `OrcaSlicer.cpp:3457–3462` calls it to select
-each nozzle's flush dataset before calculating the matrix. Include only complete
-versus generated printer-id selection at that private preparation call site.
-When ids are shorter than the variant list, derive ids from the ordered,
-comma-separated `extruder_variant_list`, skipping empty trimmed tokens. Do not
-substitute first-id broadcasting. A legal fully specified nozzle/missing-matrix
-public E2E witness must establish RED before this branch is ported. No generic
-mapping API, filament-map recommendation or emitter ordering change is included.
+`PrintConfig.cpp:9004–9060::DynamicPrintConfig::get_index_for_extruder` remains
+an FM dataset-selection dependency. However, the incomplete/generated-id E2E
+also fails on pre-FM base9e3 with the same input and error, establishing an
+existing generic materialization issue rather than an FM regression. Its RED
+must move to a separately source-cited spec; FM does not depend on repairing
+that generic boundary. No generic mapping API or emitter change is included.
+
+## Defined boundary and predicate correction (coordinator ruling)
+
+At the external configuration boundary, **any** undersized
+`nozzle_volume_type`, `printer_extruder_variant` or printer-id vector makes the
+calculator's input preconditions unsatisfied. Preserve the supplied matrix;
+do not reconstruct, report a selector error, synthesize zeros or broadcast a
+dataset. This rule also retires the original scalar X2D RED; it is not confined
+to the case where all three vectors are undersized. Ordinary downstream matrix
+validation and the exact existing error remain unchanged.
+
+Source basis: `OrcaSlicer.cpp:3022–3047` creates the new Standard vector but
+never resizes the current vectors. `:3460–3462` uses unchecked source indices.
+`DynamicPrintConfig::update_values_to_printer_extruders` (`PrintConfig.cpp:9634ff`)
+is called later, not before this calculation. Retained same-input diagnostic
+`/tmp/ares-x2d-flush-matrix/trace/compact-aa.native.log` has flush computation
+at lines68–72, an actual garbage `ExtruderType=25276`, identical before/after
+matrix, and later update calls at lines126–128. The18 unique compact inputs
+are inventoried in `trace/predicate-input-inventory.json`; existing whole-byte
+controls, not new internal scalar-value assertions, cover their preservation.
+`case-9whGha` remains untouched. Boundary preservation is defined input
+validation, not a legacy numeric fallback or an excuse to waive regressions.
+
+The outer colour predicate at `:3340–3351` requires an actual project colour
+option, not a later typed default. Sparse STL profile documents without
+`filament_colour` must not reconstruct. Same-input seeded diagnostic
+`trace/profile/00000.log` never enters flush calculation; the four existing
+profile-entry whole-byte REDs show Native's original16-entry matrix versus the
+erroneous reconstructed0. Check raw option presence before using typed colours;
+do not add printer-name, AMS or matrix-length predicates.
+
 
 ## Sequence, validation and exit
 
