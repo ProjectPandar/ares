@@ -113,7 +113,7 @@ Deferred to their own slices:
 2. Is the profile table/plot (deferred above) wanted as the immediate
    follow-up, or should the next web item come from elsewhere in the roadmap?
 
-## Located planner divergence (pending coordinator ruling)
+## Located planner divergence (ruled: fix in-slice, option A)
 
 `marlin2_junction_deviation` is the only case that is not bit-exact after the
 core GREEN (`0390a77ad`). It has 190 differing vertices. Every other case and
@@ -136,3 +136,34 @@ the fix could change M73/estimated-time bytes for JD profiles. That conflicts
 with this slice's zero-G-code-change condition, so it needs a ruling:
 fix it in-slice as a separate RED/GREEN pair with seeded evidence, or flag it
 for the owner of the planner.
+
+Ruling A applied:
+
+- **RED `dafca192b`.** `processed_motion_attributes.rs` asserts the per-vertex
+  move time bits against native `time0` (`--dump-moves`, column 16). The four
+  control cases are bit-exact; `marlin2_junction_deviation` fails.
+- **GREEN `dd3950d14`.** `effective_jerk` ports `GCodeProcessor.cpp:5771-5791`
+  line by line in f32. All 5 cases are bit-exact on time, motion and
+  `actual_feedrate`. The `actual_feedrate` comparator is unchanged.
+- **`0f514e6b2`.** The pre-existing unit test
+  `envelope::tests::junction_deviation_only_affects_marlin_firmware_not_klipper`
+  hard-coded the replaced f64 formula (`3.535533866420067`). It now expects
+  the upstream f32 value (`3.535533905029297`).
+
+## G-code byte changes (seeded full set, rebased on `5cde90c23`)
+
+The seeded full set (control-set-v2, fresh caches, seeded native
+`1k0p5nlb…-orca-slicer-seed-replay-2.4.2`) ran on main `5cde90c23` and on
+branch `8703fe7d6`; both passed 597/597. For every case label, the multiset of
+`ares.gcode` sha256s is identical between main and branch (517/517 case
+manifests, 13 `DIVERGENT` generator-only manifests on each side).
+
+**Per-case byte changes: none.** The JD port changes no seeded output, so the
+native-match proof for the planner fix is the per-vertex time assertion above. Before the fix it mismatched native `time0`
+on `marlin2_junction_deviation` (`target/actual-speed/planner-red.log`); after
+the fix it is bit-exact (`planner-green.log`). profile_entry passed 26/26 on
+both official and seeded.
+
+Evidence: `/tmp/ares-actual-speed-rebased-8703fe7d6/` (`summary.txt`,
+`seeded-{main,branch}/run.log`, `seeded-bytediff.json`, produced by
+`/tmp/ares-actual-speed-bytediff.mjs`).
