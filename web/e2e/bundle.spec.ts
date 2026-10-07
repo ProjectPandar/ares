@@ -24,6 +24,9 @@ test("Three.js is a lazily loaded chunk outside the initial bundle", async ({ pa
   expect(initial).not.toContain(threeChunks[0]);
   const initialGzip = initial.reduce((total, file) => total + gzip(file), 0);
   expect(initialGzip).toBeLessThan(INITIAL_GZIP_BUDGET);
+  // Orca SVG icons ship as asset files (`?url&no-inline`), not base64 inside the initial JS.
+  const inlinedSvgs = initial.map((file) => readFileSync(`${dist}${file}`, "utf8").split("data:image/svg+xml").length - 1);
+  expect(inlinedSvgs, "inlined data:image/svg+xml URLs per initial script").toEqual(initial.map(() => 0));
 
   // Hold the Three.js chunk: the shell, sidebar and engine still come up without it.
   let release!: () => void;
@@ -35,6 +38,11 @@ test("Three.js is a lazily loaded chunk outside the initial bundle", async ({ pa
   await page.goto("/");
   await expect(page.getByRole("link", { name: "Prepare" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Process preset" })).toBeVisible();
+  const icons = page.locator("img.orca-icon");
+  await expect(icons.first()).toBeVisible();
+  await expect.poll(() => icons.evaluateAll((images) => (images as HTMLImageElement[])
+    .filter((image) => !image.complete || image.naturalWidth === 0).map((image) => image.src)),
+  { message: "every first-screen Orca icon loads" }).toEqual([]);
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("viewport").locator("canvas")).toHaveCount(0);
   await page.screenshot({ path: `${artifacts}shell-before-three.png` });
