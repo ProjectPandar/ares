@@ -301,6 +301,31 @@ pub(super) fn emit(
         extrusion::speed(output, state.extrusion_feedrate, properties);
         state.current_feedrate = state.extrusion_feedrate;
     }
+    // `GCode.cpp:7115`: sloped paths run through the same processed
+    // `extrude_path` loop when `estimate` produced `new_points` — the
+    // `sloped` flag only changes the per-segment emission to
+    // `extrude_to_xyz` (`GCode.cpp:7242-7248`), the delta-60
+    // `set_speed`/`last_set_speed` tracking is identical.
+    if let Some(processed) = processed {
+        variable::emit(variable::Emission {
+            output,
+            points: &points,
+            wipe_points: &wipe_points_source,
+            processed: &processed,
+            original_speed,
+            acceleration,
+            slope: properties.slope,
+            properties,
+            state,
+        });
+        state.last_scaled_position = Some(last_scaled);
+        state.scarf_z = Some(state.layer_z);
+        output.extend_from_slice(b";_EXTRUDE_END\n");
+        return;
+    }
+    // Non-processed sloped path (`GCode.cpp:6992` non-`new_points`
+    // branch, `sloped != nullptr`): constant speed F, Z-interpolated
+    // segments — no per-segment speed tracking needed.
     if let Some(slope) = properties.slope {
         let wipe_points = wipe_points_source
             .iter()
@@ -311,22 +336,6 @@ pub(super) fn emit(
         output.extend_from_slice(b";_EXTRUDE_END\n");
         state.wipe_path = wipe_points.into_iter().rev().collect();
         state.last_scaled_position = Some(last_scaled);
-        return;
-    }
-    if let Some(processed) = processed {
-        variable::emit(variable::Emission {
-            output,
-            points: &points,
-            wipe_points: &wipe_points_source,
-            processed: &processed,
-            original_speed,
-            acceleration,
-            properties,
-            state,
-        });
-        state.last_scaled_position = Some(last_scaled);
-        state.scarf_z = Some(state.layer_z);
-        output.extend_from_slice(b";_EXTRUDE_END\n");
         return;
     }
     constant::emit(constant::Emission {
