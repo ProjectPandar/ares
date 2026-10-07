@@ -9007,6 +9007,7 @@ normal custom times → ares-core; `libvgcode::ColorPrint` and GCodeViewer
 partial display records → ares-vgcode; thin WASM and lazy display-only TS.
 Exit requires native-oracle-backed event/volume/segment parity, full existing
 browser coverage plus ColorChange E2E artifacts, unchanged bundle budget,
-Rust/build gates and coordinator approval. Resolve the spec's zero-volume
-cardinality question before implementation; automatic M600 injection and
+Rust/build gates and coordinator approval. Native probing resolved the
+zero-volume question: preserve raw data and report partial usage unavailable
+rather than indexing absent volumes. Automatic M600 injection and
 bare-M600 color inference remain outside this slice.

@@ -24,7 +24,7 @@ const report = {
   binaries: Object.fromEntries([oracle, join(dirname(oracle), '.orca-slicer-wrapped')]
     .filter(existsSync).map((path) => [path, sha256(path)])),
   config: { tools: 1, diameter_mm: 1.75, density_g_cm3: 1.24,
-    color: '#F2754E', flavor: 'MarlinLegacy', semm: false },
+    color: '#F2754E', flavor: 'MarlinLegacy', semm: false, tag_family: 'BBL' },
   audit_source: 'GCodeViewer.cpp:4221,4230: one volume read per ColorChange time record',
   fixtures: [],
 };

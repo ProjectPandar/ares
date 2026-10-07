@@ -1,6 +1,16 @@
 # ColorChange / M600 preview — source-cited rewrite spec
 
-Status: draft for coordinator review; no runtime implementation yet.
+Status: approved (`d5f91a6c0`); RED/oracle phase in progress.
+
+Implementation constraints from approval: core changes are processor parsing
+and statistics only; slicing/emission behavior is out of scope. Tagged slice
+fixtures use existing user G-code templates. Native cardinality inputs live
+in `tests/parity/color-change/`, not `/tmp`. Removing caller
+`color_print_colors` requires a breaking `!` commit and `web/README.md` notice.
+The coordinator explicitly permits one data-initialization exception in
+`finish/accounting.rs`: initialize the new color-volume vector to empty;
+no algorithm, control-flow or G-code output change there.
+
 Predecessor: Filament/ColorPrint `9b5db6d7a`, approved and fast-forwarded to
 `main` and `pi/web-ui`. Upstream source revision:
 `OrcaSlicer` `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
@@ -101,12 +111,16 @@ Two important upstream limitations are explicit:
   branch. Preserve the normal-mode duration/remaining values from the
   processor rather than deriving them from wall time or TS move summation.
 - Upstream indexes the volume vector directly while constructing partial
-  rows (`GCodeViewer.cpp:4221, 4230`). Zero-volume intervals can expose a
-  cardinality problem. Before implementation, probe these inputs against the
-  native result and record the outcome. Do not silently zip/truncate vectors,
-  invent zero volumes or copy an unchecked C++ access into Rust. If the native
-  display contract is undefined for a case, report it to the coordinator and
-  make that limitation explicit before approving the implementation contract.
+  rows (`GCodeViewer.cpp:4221, 4230`). The checked-in native probe confirms
+  out-of-bounds reads for zero-before (1 volume / 2 time records), zero-between
+  (2 / 3), zero-after (1 / 2), and zero-only/support-only (0 / 2); normal is
+  3 / 3. See `tests/parity/color-change/oracle-cardinality.json`.
+  **Approved Known difference:** preserve raw statistics and ColorPrint
+  segments; if a required volume index is absent, Rust reports partial usage
+  unavailable and TS displays that status instead of a guessed partial table.
+  Do not zero-fill, truncate, partially return misleading usage rows, or invent
+  event/volume associations. No-change prints with no time records need no
+  volume reads and do not trigger this status.
 
 ## Existing scaffold replacement
 

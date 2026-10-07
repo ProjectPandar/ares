@@ -5,6 +5,16 @@ These checked-in G-code inputs probe the approved
 They are native processor inputs, not an alternative slicing/emission path.
 Future slice/browser fixtures must use existing user G-code template overrides.
 
+These producer-less inputs use the **BBL spaced tag family**:
+`GCodeProcessor.cpp:116` initializes `s_IsBBLPrinter = true` independently of
+G-code flavor; `GCodeProcessor.hpp:375` selects the tag family with that flag.
+Only a recognized producer with a nonempty `printer_model` in its embedded
+config changes it (`GCodeProcessor.cpp:2620-2633`). The first diagnostic run
+used compatible tags and therefore recorded no events; that invalid setup is
+preserved separately in artifacts. Correcting tag spelling does not change
+any source-derived expected cardinality below. The processed-slice RED uses
+an actual Ender3 project and its compatible user-template tags.
+
 ## Failure inventory (before Rust implementation)
 
 Upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
@@ -45,6 +55,21 @@ The probe audits only the source's vector reads. It does **not** execute the
 commented-out GUI table, claim a native GUI crash, silently fill missing
 volumes, or zip/truncate records. An out-of-bounds index is evidence that the
 source display join needs a coordinator ruling before its Rust port.
+
+## Native outcome and approved display boundary
+
+`oracle-cardinality.json` records the native probe: all nine cardinalities
+match the source-derived table above. Five fixtures require out-of-bounds
+volume indices in the upstream display join. The coordinator approved:
+preserve raw statistics and ColorPrint segments; Rust reports partial usage
+unavailable when a required volume index is absent, and the frontend displays
+that status instead of guessing or partially returning usage rows. A no-change
+print needs no partial-row volume reads and is not unavailable.
+
+The static `apply_config(PrintConfig)` probe overload returns empty
+`extruder_colors` even with `filament_colour` configured; these raw fixtures
+prove cardinality, not the processed project's palette configuration. Palette
+parity will use the native generated G-code/config and processed-slice seam.
 
 ## Reproduce
 
