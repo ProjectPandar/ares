@@ -31,6 +31,8 @@ mod filament_volume_oracle;
 mod flow_errors;
 #[path = "orca_parity/honeycomb_multiline.rs"]
 mod honeycomb_multiline;
+#[path = "orca_parity/klipper_velocity_limit.rs"]
+mod klipper_velocity_limit;
 #[path = "orca_parity/narrowed_x2d_whole_file.rs"]
 mod narrowed_x2d_whole_file;
 #[path = "orca_parity/option_coverage.rs"]
