@@ -47,6 +47,7 @@ pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
             // path start; its times stay zero.
             vertices.push(PathVertex {
                 position: prev.position,
+                actual_feedrate: prev.actual_feedrate,
                 times: [0.0; TimeMode::COUNT],
                 ..vertex(curr, move_type)
             });
@@ -61,14 +62,14 @@ pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
     }
 }
 
-/// Fields deferred by M853 (`actual_feedrate`, stealth time) stay zero.
+/// Stealth time (deferred by M853) stays zero.
 fn vertex(curr: &MoveVertex, move_type: MoveType) -> PathVertex {
     PathVertex {
         position: curr.position,
         height: curr.height,
         width: curr.width,
         feedrate: curr.feedrate,
-        actual_feedrate: 0.0,
+        actual_feedrate: curr.actual_feedrate,
         mm3_per_mm: curr.mm3_per_mm,
         fan_speed: curr.fan_speed,
         temperature: curr.temperature,
