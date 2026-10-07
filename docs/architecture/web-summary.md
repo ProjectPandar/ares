@@ -29,6 +29,32 @@ table and plot, and Summary.
 | `ViewerImpl.cpp:1543-1548` / `crates/ares-vgcode/src/viewer/colors.rs:243` | Summary colors vertices like ColorPrint | Already ported; `VIEW_TYPES` already has Summary at slot 0 |
 | `GCodeViewer.cpp:66-69` | Label "Summary" | `VIEW_TYPE_ITEMS` entry, first in combo order |
 
+### Shared data source, independent formula (ruled: option A)
+
+The four values reuse the data source, not the material-statistics
+calculation. They read the same `estimate.print_statistics` that
+`processor/material_statistics.rs::MaterialStatistics::new` reads: the same
+object from the same finalize, so volumes are never estimated twice.
+
+Two fields come from that object:
+- `total_volumes_per_extruder`;
+- `modes[Normal].time`.
+
+The formula is a separate port of `GCode.cpp:1904-1940`. `MaterialStatistics`
+ports a different upstream function (`GCodeProcessor::post_process`,
+`GCodeProcessor.cpp:993-1008`, which produces the G-code tail lines), and
+reusing its totals would drift from upstream in three ways:
+
+| | `post_process` → `MaterialStatistics` | `update_print_estimated_stats` → Summary |
+|---|---|---|
+| Per-filament values | `m_result.filament_diameters/densities/costs`, `std::vector<float>` (`GCodeProcessor.hpp:252-255`) | `Extruder::filament_*()` → `double get_at(id)` (`Extruder.cpp:148-161`) |
+| `time_cost` | not added | `+= time_cost * normal_time / 3600` |
+| Extruders not in `m_writer.extruders()` | counted | skipped for used filament, weight and cost |
+
+For example, density 1.24 is 1.2400000095367432 in f32, so reused totals
+would differ in the low bits. Cost would also be wrong whenever
+`time_cost > 0`.
+
 ### Details of the upstream computation that must be kept
 
 - **Which volumes count:** the loop runs over `total_volumes_per_extruder`.
@@ -60,16 +86,16 @@ table and plot, and Summary.
 
 ## Scope note: ares-core
 
-The original task said core slicing code belongs to other workers. This slice
-adds a read-only post-processor value (`update_print_estimated_stats`) and
-changes no slicing or G-code output. I'm asking the coordinator to approve
-this core addition here. If it should instead live in ares-wasm, the same
-function moves there unchanged.
+Ruled: `update_print_estimated_stats` lives in ares-core; ares-wasm only binds
+it. It is a read-only post-processor value and changes no slicing or G-code
+output.
 
 ## Oracle and evidence
 
-1. **Probe:** `tools/chain-probe/print-statistics.nix` builds a probe of
-   official 2.4.2 (with `--cores 8`). It patches the CLI after export to dump
+1. **Probe:** `tools/chain-probe/print-statistics.nix` builds a probe from the
+   2.4.2 source of the seeded replay producer (`1k0p5nlb…`, source store path
+   `g3wj93ly…-orca-slicer-2.4.2-seed-replay-source`; its `GCode.cpp` and
+   `OrcaSlicer.cpp` match `OrcaSlicer/src`), with `--cores 8`. It patches the CLI after export to dump
    `print.print_statistics()` (the four fields, `%.17g`) plus the normal time.
    The store path and sha are recorded here.
 2. **Fixtures:**
@@ -79,7 +105,9 @@ function moves there unchanged.
    - A plate where one configured filament is unused, to cover the skip
      branch.
 3. **Core check:** an integration test in `crates/ares-core/tests/` compares the
-   four totals bit for bit (f64) against the probe output. RED is an
+   four totals bit for bit (f64) against native `PrintStatistics` from the
+   probe. RED covers at least the `time_cost > 0` fixture and the
+   unused-filament fixture. RED is an
    assertion failure on missing or zero values, not a compile failure.
 4. **WASM check:** a wasm test asserts the JSON round-trips the exact f64 bits.
    Floats are parsed with `str::parse::<f64>`, as JS does.
