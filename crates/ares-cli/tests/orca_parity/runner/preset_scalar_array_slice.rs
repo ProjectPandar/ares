@@ -1,5 +1,6 @@
-//! Config.cpp:945-1001 JSON arrays -> scalar ConfigOptionFloat (Config.hpp:784).
-//! Native CLI first; Ares receives the unflattened inherited user preset.
+//! Config.cpp:945-1001 joins JSON arrays before ConfigOptionFloat reads a
+//! numeric prefix (Config.hpp:784). Exercise the inherited user-preset path
+//! with the existing LH whole-file control, independently flattened for CLI.
 use std::fs;
 
 use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest};
@@ -7,25 +8,44 @@ use serde_json::{Value, json};
 
 use super::{OrcaRunner, stages, vendor, write_json};
 
-#[tokio::test]
+#[tokio::test(flavor = "current_thread")]
 async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let root = super::super::repo_root();
-    let profiles_root = root.join("OrcaSlicer/resources/profiles");
-    let profiles = crate::presets::VendorProfiles::load(&profiles_root, "BBL").unwrap();
-    let machine = "Bambu Lab X1 Carbon 0.4 nozzle";
-    let parent = "0.20mm Standard @BBL X1C";
-    let user = "0.20mm Standard @BBL X1C - Mine";
-    let filament = "Bambu PLA Basic @BBL X1C";
-    let input = include_bytes!("../../../../../tests/parity/validation/preset-json-ender3-0.2.3mf");
+    let profiles_root = super::super::repo_root().join("OrcaSlicer/resources/profiles");
+    let profiles = crate::presets::VendorProfiles::load(&profiles_root, "LH").unwrap();
+    let machine = "LH Stinger 0.4 nozzle";
+    let parent = profiles.compatible_process(machine).unwrap();
+    let filament = profiles.compatible_filament(machine).unwrap();
+    let user = format!("{parent} - Mine");
+    let vendors = json!([
+        vendor(&profiles_root, "OrcaFilamentLibrary"),
+        vendor(&profiles_root, "LH"),
+    ]);
+    let input = super::placed_cube(include_bytes!("../../../../../tests/parity/cube10.stl"));
     let path = |name: &str| runner.work.join(name).to_str().unwrap().to_owned();
-    fs::write(path("input.3mf"), input).unwrap();
-    for (kind, fields) in [
-        ("machine", profiles.machine(machine).unwrap()),
-        ("filament", profiles.filament(filament).unwrap()),
+    fs::write(path("cube10.stl"), &input).unwrap();
+    for (kind, name, mut fields) in [
+        ("machine", machine, profiles.machine(machine).unwrap()),
+        (
+            "filament",
+            filament.as_str(),
+            profiles.filament(&filament).unwrap(),
+        ),
     ] {
+        // Flatten values, but retain the selected leaf's inheritance metadata,
+        // exactly as the stock whole-file profile-entry control does.
+        let selected = vendors
+            .as_array()
+            .unwrap()
+            .iter()
+            .flat_map(|vendor| vendor["files"].as_object().unwrap().values())
+            .find(|profile| profile["type"] == kind && profile["name"] == name)
+            .unwrap();
+        if let Some(inherits) = selected.get("inherits") {
+            fields.insert("inherits".to_owned(), inherits.clone());
+        }
         write_json(
             &runner.work.join(format!("{kind}.json")),
             &Value::Object(fields),
@@ -38,7 +58,7 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
     ];
     let mut references = Vec::new();
     for (label, values) in &cases {
-        let mut flattened = profiles.process(parent).unwrap();
+        let mut flattened = profiles.process(&parent).unwrap();
         flattened.insert("name".into(), json!(user));
         flattened.insert("inherits".into(), json!(parent));
         flattened.insert("from".into(), json!("user"));
@@ -60,11 +80,13 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
                 ),
                 "--load-filaments".to_owned(),
                 path("filament.json"),
+                "--arrange".to_owned(),
+                "0".to_owned(),
                 "--slice".to_owned(),
                 "0".to_owned(),
                 "--outputdir".to_owned(),
                 output.to_str().unwrap().to_owned(),
-                path("input.3mf"),
+                path("cube10.stl"),
             ],
             stages::Stage::Slice,
             &runner.work,
@@ -72,19 +94,14 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
         .unwrap();
         references.push(fs::read(output.join("plate_1.gcode")).unwrap());
     }
-    let normalized_single = crate::golden::normalize_one_generator_line(
-        &references[2],
-        crate::golden::GeneratorKind::Orca,
-    )
-    .unwrap();
+    let normalize = |bytes: &[u8]| {
+        crate::golden::normalize_one_generator_line(bytes, crate::golden::GeneratorKind::Orca)
+            .unwrap()
+    };
+    let normalized_single = normalize(&references[2]);
     for reference in &references[..2] {
-        let normalized = crate::golden::normalize_one_generator_line(
-            reference,
-            crate::golden::GeneratorKind::Orca,
-        )
-        .unwrap();
         assert!(
-            crate::golden::first_difference(&normalized_single, &normalized).is_none(),
+            crate::golden::first_difference(&normalized_single, &normalize(reference)).is_none(),
             "native array differs from single-element control; evidence {:?}",
             runner.work
         );
@@ -96,16 +113,16 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
     let mut failures = Vec::new();
     for ((label, values), reference) in cases.iter().zip(&references).take(2) {
         let catalog = json!({
-            "vendors": [vendor(&profiles_root, "OrcaFilamentLibrary"), vendor(&profiles_root, "BBL")],
+            "vendors": vendors,
             "imports": [{"profiles": [{"type": "process", "name": user, "inherits": parent,
                 "from": "user", "instantiation": "true", "bridge_speed": values}]}],
         });
         write_json(&runner.work.join(format!("catalog-{label}.json")), &catalog);
         let catalog_json = catalog.to_string();
         let actual = ares_core::slice_with_profiles(
-            input,
+            &input,
             ProfileSliceRequest {
-                filename: "input.3mf",
+                filename: "cube10.stl",
                 catalog_json: &catalog_json,
                 selection_json: &selection_json,
                 plate: None,
@@ -118,10 +135,7 @@ async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
         .await;
         write_json(
             &runner.work.join(format!("ares-result-{label}.json")),
-            &json!({
-                "error": actual.as_ref().err().map(ToString::to_string),
-                "native": "50,50 and 50,60 match single-element 50 (generated-by only)",
-            }),
+            &json!({"error": actual.as_ref().err().map(ToString::to_string)}),
         );
         match actual {
             Ok(actual) => {
