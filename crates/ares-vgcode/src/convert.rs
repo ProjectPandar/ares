@@ -3,24 +3,32 @@
 // type / color conversions it uses (`:46-146`).
 
 use ares_core::ExtrusionRole;
-use ares_core::gcode_processor::{EMoveType, GCodeProcessorResult, MoveVertex};
+use ares_core::gcode_processor::{CustomGCodeType, EMoveType, GCodeProcessorResult, MoveVertex};
 
 use crate::{
     Color, DUMMY_COLOR, GCodeExtrusionRole, GCodeInputData, MoveType, OptionType, PathVertex,
     TimeMode, move_type_to_option,
 };
 
-/// `libvgcode::convert(result, str_tool_colors, str_color_print_colors, viewer)`.
-pub fn from_processor_result(
-    result: &GCodeProcessorResult,
-    tool_colors: &[String],
-    color_print_colors: &[String],
-) -> GCodeInputData {
-    let color_print_colors = if color_print_colors.is_empty() {
-        tool_colors
-    } else {
-        color_print_colors
-    };
+/// `LibVGCodeWrapper::convert` with result-derived palettes from
+/// `Plater.cpp:16927-16946` and `GUI_Preview.cpp:680-688` (G-code viewer path).
+pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
+    let tools_colors: Vec<_> = result
+        .extruder_colors
+        .iter()
+        .map(|color| decode(color))
+        .collect();
+    let mut color_print_colors = tools_colors.clone();
+    if !result.custom_gcode_per_print_z.is_empty() {
+        color_print_colors.extend(
+            result
+                .custom_gcode_per_print_z
+                .iter()
+                .filter(|item| item.kind == CustomGCodeType::ColorChange)
+                .map(|item| decode(&item.color)),
+        );
+        color_print_colors.push([128; 3]);
+    }
     let moves = &result.moves;
     let mut vertices = Vec::with_capacity(2 * moves.len());
     for pair in moves.windows(2) {
@@ -48,11 +56,8 @@ pub fn from_processor_result(
     GCodeInputData {
         spiral_vase_mode: result.spiral_vase_mode,
         vertices,
-        tools_colors: tool_colors.iter().map(|color| decode(color)).collect(),
-        color_print_colors: color_print_colors
-            .iter()
-            .map(|color| decode(color))
-            .collect(),
+        tools_colors,
+        color_print_colors,
     }
 }
 

@@ -16,18 +16,15 @@ fn processed_buffers_preserve_ids_and_owned_data() {
         time: 7.0,
         ..MoveVertex::default()
     };
-    let mut output = SliceOutput::from_processed(
-        ProcessedGCode {
-            gcode: b"G1 X1\n".to_vec(),
-            result: GCodeProcessorResult {
-                moves: vec![MoveVertex::default(), vertex],
-                spiral_vase_mode: true,
-                extruder_colors: vec!["#FF0000".into()],
-                ..Default::default()
-            },
+    let mut output = SliceOutput::from_processed(ProcessedGCode {
+        gcode: b"G1 X1\n".to_vec(),
+        result: GCodeProcessorResult {
+            moves: vec![MoveVertex::default(), vertex],
+            spiral_vase_mode: true,
+            extruder_colors: vec!["#FF0000".into()],
+            ..Default::default()
         },
-        &[],
-    );
+    });
     assert_eq!(output.take_gcode(), b"G1 X1\n");
     assert!(output.take_gcode().is_empty());
     let mut moves = output.take_moves();
@@ -57,24 +54,21 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
         position: [0.0, 0.0, z],
         ..MoveVertex::default()
     };
-    let mut output = SliceOutput::from_processed(
-        ProcessedGCode {
-            gcode: Vec::new(),
-            result: GCodeProcessorResult {
-                moves: vec![
-                    MoveVertex::default(),
-                    at(EMoveType::Travel, 0, 5.0),
-                    at(EMoveType::Extrude, 0, 0.2),
-                    at(EMoveType::Travel, 1, 0.6),
-                    at(EMoveType::Extrude, 1, 0.4),
-                    at(EMoveType::Travel, 2, 0.8),
-                ],
-                spiral_vase_mode: false,
-                ..Default::default()
-            },
+    let mut output = SliceOutput::from_processed(ProcessedGCode {
+        gcode: Vec::new(),
+        result: GCodeProcessorResult {
+            moves: vec![
+                MoveVertex::default(),
+                at(EMoveType::Travel, 0, 5.0),
+                at(EMoveType::Extrude, 0, 0.2),
+                at(EMoveType::Travel, 1, 0.6),
+                at(EMoveType::Extrude, 1, 0.4),
+                at(EMoveType::Travel, 2, 0.8),
+            ],
+            spiral_vase_mode: false,
+            ..Default::default()
         },
-        &[],
-    );
+    });
     let mut vertices = output.take_vertices();
     assert_eq!(
         vertices.take_ids()[1..]
@@ -95,24 +89,21 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
         layer_id,
         ..MoveVertex::default()
     };
-    let mut output = SliceOutput::from_processed(
-        ProcessedGCode {
-            gcode: Vec::new(),
-            result: GCodeProcessorResult {
-                moves: vec![
-                    MoveVertex::default(),
-                    at(EMoveType::Travel, 0),
-                    at(EMoveType::Extrude, 0),
-                    at(EMoveType::Travel, 1),
-                    at(EMoveType::Extrude, 1),
-                    at(EMoveType::Travel, 2),
-                ],
-                spiral_vase_mode: false,
-                ..Default::default()
-            },
+    let mut output = SliceOutput::from_processed(ProcessedGCode {
+        gcode: Vec::new(),
+        result: GCodeProcessorResult {
+            moves: vec![
+                MoveVertex::default(),
+                at(EMoveType::Travel, 0),
+                at(EMoveType::Extrude, 0),
+                at(EMoveType::Travel, 1),
+                at(EMoveType::Extrude, 1),
+                at(EMoveType::Travel, 2),
+            ],
+            spiral_vase_mode: false,
+            ..Default::default()
         },
-        &[],
-    );
+    });
     let mut vertices = output.take_vertices();
     let tags = vertices.take_tags();
     let ids = vertices.take_ids();

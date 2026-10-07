@@ -94,8 +94,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return sceneResult(await placementScene(input, filename, catalog, selection, options));
     }
     case "sliceProject":
-      // Tool colors come from GCodeProcessorResult; no custom color-print palette.
-      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, [], request.overrides));
+      // Both palettes come from GCodeProcessorResult.
+      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, request.overrides));
     case "sliceWithProfiles": {
       const { input, filename, catalog, selection, options } = request;
       return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));

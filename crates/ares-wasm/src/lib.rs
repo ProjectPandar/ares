@@ -58,13 +58,11 @@ pub async fn slice_project_plate(
     .map_err(slice_error_js)
 }
 
-/// Palettes follow LibVGCodeWrapper::convert: tool colors are the processed
-/// `filament_colour`; an empty color-print palette uses tool colors.
+/// Palettes derive from processed filament colors and custom G-code items.
 #[wasm_bindgen(js_name = sliceProjectPlateProcessed)]
 pub async fn slice_project_plate_processed(
     input: Vec<u8>,
     plate: Option<u32>,
-    color_print_colors: Vec<String>,
     overrides_json: Option<String>,
 ) -> Result<SliceOutput, JsValue> {
     let overrides = parse_overrides(overrides_json)?;
@@ -77,7 +75,7 @@ pub async fn slice_project_plate_processed(
     )
     .await
     .map_err(slice_error_js)?;
-    Ok(SliceOutput::from_processed(output, &color_print_colors))
+    Ok(SliceOutput::from_processed(output))
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {

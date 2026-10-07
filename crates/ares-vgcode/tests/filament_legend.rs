@@ -30,7 +30,7 @@ fn used_extruders_select_volume_columns_and_pad_colors() {
         ..Default::default()
     };
     let mut viewer = ViewerImpl::default();
-    viewer.load(from_processor_result(&result, &result.extruder_colors, &[]));
+    viewer.load(from_processor_result(&result));
     let legend = filament_legend(&viewer, &result);
     use FilamentColumn::*;
     assert_eq!(viewer.get_used_extruders_ids(), [0, 2]);

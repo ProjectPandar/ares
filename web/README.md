@@ -63,10 +63,18 @@ and printer tab pages, groups, lines and labels from OrcaSlicer `Tab.cpp` /
 node scripts/extract-process-layout.mjs /path/to/OrcaSlicer
 ```
 
+## Breaking processed-palette API change
+
+`sliceProjectPlateProcessed(input, plate, overridesJson?)` no longer accepts
+`colorPrintColors`. Profile slicing options no longer accept
+`color_print_colors` (unknown fields are rejected). Remove these arguments/keys;
+there is no compatibility fallback. Rust derives both palettes from processed
+filament colors and custom G-code items, including the pause/custom gray entry.
+
 ## Known differences from OrcaSlicer
 
 - The Preview Filament (`ColorPrint`) view uses the processed tool colors and
-  metric usage columns. Custom ColorChange ranges/palettes and imperial units
+  metric usage columns and result-derived palettes. Custom ColorChange ranges and imperial units
   are deferred (`GCodeViewer.cpp:4026-4034`, `color_print_ranges`). Its Display
   header has no visibility control: the upstream row callback is empty
   (`GCodeViewer.cpp:4097`); this slice does not invent one.

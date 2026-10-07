@@ -57,7 +57,7 @@ try {
       const wasm = await import("/ares_wasm.js");
       await wasm.default({ module_or_path: "/ares_wasm_bg.wasm" });
       const input = new Uint8Array(await (await fetch(`/${name}.3mf`)).arrayBuffer());
-      const output = await wasm.sliceProjectPlateProcessed(input, plate, [], undefined);
+      const output = await wasm.sliceProjectPlateProcessed(input, plate, undefined);
       const upload = async (key, value) => {
         const response = await fetch(`/${name}/${key}`, { method: "POST", body: value });
         if (!response.ok) throw new Error(`upload failed: ${key}`);

@@ -23,9 +23,9 @@ pub struct SliceOutput {
 impl SliceOutput {
     /// Tool colors are the result's `extruder_colors`: the `filament_colour`
     /// GUI_Preview passes (`GUI_Preview.cpp:680`, `Plater.cpp:16889-16901`).
-    pub fn from_processed(output: ProcessedGCode, color_print_colors: &[String]) -> Self {
+    pub fn from_processed(output: ProcessedGCode) -> Self {
         let result = &output.result;
-        let data = from_processor_result(result, &result.extruder_colors, color_print_colors);
+        let data = from_processor_result(result);
         let mut vertices = VertexBuffers::pack(data);
         vertices.move_type_counts = move_type_counts(&result.moves).to_vec();
         vertices.filament_legend = filament_legend(&vertices.viewer, result);
