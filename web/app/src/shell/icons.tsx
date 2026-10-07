@@ -2,7 +2,7 @@ import type { ReactNode, SVGProps } from "react";
 
 // OrcaSlicer resources/images, copied by scripts/extract-process-layout.mjs.
 const ORCA_ICONS = Object.fromEntries(
-  Object.entries(import.meta.glob<string>("../assets/orca/*.svg", { eager: true, query: "?url", import: "default" }))
+  Object.entries(import.meta.glob<string>("../assets/orca/*.svg", { eager: true, query: "?url&no-inline", import: "default" }))
     .map(([path, url]) => [path.slice(path.lastIndexOf("/") + 1, -4), url]),
 );
 
