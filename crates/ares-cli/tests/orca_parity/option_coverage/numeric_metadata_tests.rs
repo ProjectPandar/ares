@@ -1,0 +1,171 @@
+use super::{bounds, numeric_domains};
+use serde_json::json;
+
+#[test]
+fn source_named_integer_samples_and_resolution_complete_only_the_declared_scope() {
+    let Some(plans) = super::try_load(&crate::runner::repo_root()) else {
+        return;
+    };
+    for key in [
+        "resolution",
+        "enable_long_retraction_when_cut",
+        "min_bead_width",
+    ] {
+        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+        assert!(plan.provably_legal, "{key}: {:?}", plan.omission);
+        assert!(
+            plan.cases
+                .iter()
+                .all(|case| !matches!(case.label.as_str(), "max" | "max-literal"))
+        );
+    }
+}
+
+#[test]
+fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
+    let Some(plans) = super::try_load(&crate::runner::repo_root()) else {
+        return;
+    };
+    for key in [
+        "layer_height",
+        "extruder_printable_area",
+        "skin_infill_line_width",
+        "filament_map",
+        "filament_self_index",
+    ] {
+        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+        assert!(!plan.provably_legal, "{key}");
+        assert!(plan.omission.is_some(), "{key}");
+    }
+}
+
+#[test]
+fn declared_upper_only_scope_is_complete_without_an_invented_lower_endpoint() {
+    let entry = json!({"wire_shape": "array"});
+    let (cases, omission, complete) =
+        numeric_domains::generate(&entry, "nozzle_diameter", "coFloats", "def->max = 100;");
+    assert_eq!(
+        cases
+            .iter()
+            .map(|case| case.label.as_str())
+            .collect::<Vec<_>>(),
+        ["max", "seeded"]
+    );
+    assert!(complete);
+    assert_eq!(omission, None);
+}
+
+#[test]
+fn declared_minimum_and_existing_interior_complete_an_unbounded_upper_scope() {
+    let entry = json!({"wire_shape": "scalar"});
+    for (key, kind) in [
+        ("bridge_speed", "coFloat"),
+        ("resolution", "coFloat"),
+        ("bottom_surface_filament_id", "coInt"),
+        ("tree_support_top_rate", "coPercent"),
+    ] {
+        let (cases, omission, complete) =
+            numeric_domains::generate(&entry, key, kind, "def->min = 0;");
+        let expected: &[&str] = if key == "tree_support_top_rate" {
+            &["min", "seeded", "probe"]
+        } else {
+            &["min", "seeded"]
+        };
+        assert_eq!(
+            cases
+                .iter()
+                .map(|case| case.label.as_str())
+                .collect::<Vec<_>>(),
+            expected
+        );
+        assert!(complete, "{key}");
+        assert_eq!(omission, None, "{key}");
+        assert_eq!(
+            cases[0].value,
+            Some(json!(if kind == "coPercent" { "0%" } else { "0" }))
+        );
+        let interior: f64 = cases[1]
+            .value
+            .as_ref()
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .trim_end_matches('%')
+            .parse()
+            .unwrap();
+        assert!((0.0..5.0).contains(&interior), "{key}: {interior}");
+    }
+}
+
+#[test]
+fn source_unbounded_floats_keep_local_samples_without_claiming_extrema() {
+    let entry = json!({"wire_shape": "array"});
+    let (cases, omission, complete) =
+        numeric_domains::generate(&entry, "retraction_length", "coFloats", "");
+    assert_eq!(
+        cases
+            .iter()
+            .map(|case| case.label.as_str())
+            .collect::<Vec<_>>(),
+        ["probe-min", "probe-seeded"]
+    );
+    assert!(complete);
+    assert_eq!(omission, None);
+    assert_eq!(cases[0].value, Some(json!(["0.5"])));
+}
+
+#[test]
+fn unknown_expression_is_not_treated_as_an_unbounded_source_side() {
+    let entry = json!({"wire_shape": "scalar"});
+    let (cases, omission, complete) = numeric_domains::generate(
+        &entry,
+        "unknown",
+        "coFloat",
+        "def->min = 0; def->max = scale * 10;",
+    );
+    assert!(!complete);
+    assert!(omission.unwrap().contains("unsupported"));
+    assert!(cases.iter().all(|case| case.label != "max"));
+}
+
+#[test]
+fn min_bead_width_definition_stops_before_dynamic_nullable_metadata_copy() {
+    let source = [
+        "def = this->add(\"min_bead_width\", coPercent);",
+        "def->min = 0;",
+        "for (auto& opt_key : filament_extruder_override_keys) {",
+        "def = this->add_nullable(opt_key, it_opt->second.type);",
+        "def->min = it_opt->second.min;",
+        "def->max = it_opt->second.max;",
+        "}",
+        "def = this->add(\"next\", coBool);",
+    ];
+    let block = bounds::definition_block(&source, "min_bead_width", 1);
+    assert_eq!(bounds::lower_bound(&block), Some(0.0));
+    assert_eq!(bounds::upper_bound(&block), None);
+    assert!(!block.contains("it_opt->second.max"));
+    let (cases, omission, complete) = numeric_domains::generate(
+        &json!({"wire_shape": "scalar"}),
+        "min_bead_width",
+        "coPercent",
+        &block,
+    );
+    assert!(complete);
+    assert_eq!(omission, None);
+    assert_eq!(cases[0].value, Some(json!("0%")));
+    assert!(cases.iter().all(|case| case.label != "max"));
+}
+
+#[test]
+fn generated_nullable_option_uses_declared_base_bounds_not_neighbor_metadata() {
+    let source = [
+        "def = this->add(\"retraction_distances_when_cut\", coFloats);",
+        "def->min = 10;",
+        "def->max = 18;",
+        "def = this->add(\"unrelated\", coInt);",
+        "def->min = 100;",
+        "def->max = 200;",
+    ];
+    let block = bounds::definition_block(&source, "filament_retraction_distances_when_cut", 5);
+    assert_eq!(bounds::numeric_bounds(&block), Some((10.0, 18.0)));
+}

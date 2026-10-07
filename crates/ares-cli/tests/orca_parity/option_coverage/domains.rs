@@ -169,6 +169,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
 
 mod numeric_domains;
 
+#[cfg(test)]
+#[path = "numeric_metadata_tests.rs"]
+mod numeric_metadata_tests;
+
 #[path = "bounds.rs"]
 mod bounds;
 use bounds::*;
