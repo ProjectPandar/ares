@@ -1,0 +1,137 @@
+{
+  "case": "O8-X2D-SCALAR",
+  "status": "UB_ADJACENT",
+  "parity_pass": false,
+  "handling_contract": "APPROVED 78b1007ed44c7a3d3db49271dc50a9b97c8e4d87",
+  "main": "cbee8353998283332cb838f2be3b41b826d8ef66",
+  "source_head": "78b1007ed44c7a3d3db49271dc50a9b97c8e4d87",
+  "crates_tree": "788f2899cad65edfba97ade4dc2bf3476065870f",
+  "production_changes": 0,
+  "original_input": {
+    "path": "/tmp/ares-o8-current-main-cbee/input.3mf",
+    "bytes": 15828,
+    "sha256": "b980548a6170e454a0b0701c115aecbae3441487c35b92fcd64e8c50b50595b2"
+  },
+  "original_input_unchanged": true,
+  "original_shape": {
+    "nozzle_diameter": [
+      "0.4",
+      "0.4"
+    ],
+    "nozzle_volume_type": [
+      "Standard"
+    ],
+    "extruder_type": [
+      "Direct Drive",
+      "Bowden"
+    ],
+    "printer_extruder_id": [
+      "1",
+      "1",
+      "2",
+      "2"
+    ],
+    "printer_extruder_variant": [
+      "Direct Drive Standard",
+      "Direct Drive High Flow",
+      "Bowden Standard",
+      "Bowden High Flow"
+    ],
+    "flush_multiplier": [
+      "0.3",
+      "1"
+    ],
+    "flush_volumes_matrix": [
+      "0",
+      "140",
+      "140",
+      "0"
+    ],
+    "filament_colour": [
+      "#F2754E",
+      "#0000FF"
+    ],
+    "filament_is_support": [
+      "0",
+      "0"
+    ]
+  },
+  "ares": {
+    "exit": 1,
+    "error": "Flush volumes matrix do not match to the correct size!",
+    "gcode_emitted": false,
+    "binary": {
+      "path": "/tmp/ares-vg1-red-target/debug/ares",
+      "bytes": 254992312,
+      "sha256": "6aba323605f13cf5ea77c4f40f3051012c49e10a80d0e62754056d81b6f4c687"
+    },
+    "entry": "slice_project_plate_validated via fresh cargo-built CLI, default overrides/context0",
+    "evidence": {
+      "path": "/tmp/ares-o8-current-main-cbee/ares.stderr",
+      "bytes": 78,
+      "sha256": "ba70f586d1263399c7fdb7165c89472aa6911b76c426ab223a1a03d16cd4dd4a"
+    }
+  },
+  "native": {
+    "exit": 0,
+    "producer": {
+      "path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+      "bytes": 68582904,
+      "sha256": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff"
+    },
+    "resources": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+    "seed": 0,
+    "cpu": 4,
+    "invocations": 1,
+    "cache": "none; direct fresh invocation",
+    "output": {
+      "path": "/tmp/ares-o8-current-main-cbee/native/output/plate_1.gcode",
+      "bytes": 164031,
+      "sha256": "e9ce8823980c96883d0765af083c6a39c27102a3ad7cb4e300cbc1b1421e8395"
+    },
+    "diagnostic_lines": [
+      "flush_volumes_matrix before computing: 0,140,140,0",
+      "get_extruder_variant_string, unsupported NozzleVolumeType=29611",
+      "flush_volumes_matrix after computed: 0,339,621,0,0,339,621,0"
+    ],
+    "numeric_values_are_observations_not_expectations": true,
+    "evidence": {
+      "path": "/tmp/ares-o8-current-main-cbee/native/00000.log",
+      "bytes": 24552,
+      "sha256": "073f1ea58ec7ea2399a56a3f6257746ab7a0c68ff8fda72f6a2cefc8f658a1c7"
+    }
+  },
+  "valid_size_scalar_control": {
+    "classification": "ARES_SAFE_PRESERVATION_ONLY_NOT_NATIVE_PARITY",
+    "input": {
+      "path": "/tmp/ares-o8-current-main-cbee/valid-size-scalar-control.3mf",
+      "bytes": 15787,
+      "sha256": "f99d7f40dcab00f2fddf29af5c388820a677e954903d75e1c0e996504b7d5d57"
+    },
+    "only_semantic_change": "flush_volumes_matrix -> [0,141,142,0,0,143,144,0]",
+    "exit": 0,
+    "nozzle_volume_type": "; nozzle_volume_type = Standard",
+    "matrix": "; flush_volumes_matrix = 0,42,43,0,0,143,144,0",
+    "multiplier": "; flush_multiplier = 0.3,1",
+    "output": {
+      "path": "/tmp/ares-o8-current-main-cbee/valid-size-scalar-control.gcode",
+      "bytes": 163997,
+      "sha256": "25bbb6cdea53effb4c858be13bea5243502dbc55519d5b106351139409b3ff3b"
+    },
+    "native_invoked": false
+  },
+  "source_basis": {
+    "safe_decline": "options/flush_matrix.rs:43-59: types1<nozzles2 -> return before matrix assignment; independent multiplier resize before return",
+    "unchanged_guard": "options/config_export/transform.rs:74-96, upstream GCode.cpp:5596-5614",
+    "undefined_index": "OrcaSlicer.cpp:3462 volume_types[1]; possible3463 dataset_full[-1]",
+    "no_global_scalar_rejection": true,
+    "no_broadcast_or_matrix_padding": true
+  },
+  "historical_evidence": "/tmp/ares-x2d-flush-matrix/rebase-458/original-input/results.json",
+  "reproduce": {
+    "build": "CARGO_TARGET_DIR=/tmp/ares-vg1-red-target CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 cargo build -p ares-cli",
+    "ares": "/tmp/ares-vg1-red-target/debug/ares slice /tmp/ares-o8-current-main-cbee/input.3mf -o /tmp/ares-o8-current-main-cbee/ares.gcode",
+    "native": "ORCA_REPLAY_BIN=/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer ORCA_REPLAY_SEED=0 ORCA_REPLAY_CPU=4 scripts/orca-seeded-parity.sh --debug 4 --slice 0 --outputdir /tmp/ares-o8-current-main-cbee/native/output /tmp/ares-o8-current-main-cbee/input.3mf"
+  },
+  "resolution": "Approved safe-Rust UB disposition verified on main; not Native numerical parity. Preserve original RED/history. No production correction required."
+}

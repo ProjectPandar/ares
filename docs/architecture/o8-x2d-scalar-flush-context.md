@@ -2,10 +2,11 @@
 
 ## Status and owner
 
-**Open, worker1 (formerly pi-lint); spec/disposition review only.** Not solved
-by X2D-FM or generated printer ids. Separate follow-up slice, pending
-coordinator approval of the handling contract below. Removing its test from the defined-input
-FM module does not waive the original divergence or close the reported issue.
+**UB_ADJACENT, worker1 (formerly pi-lint).** Coordinator approved handling
+contract `78b1007ed44c7a3d3db49271dc50a9b97c8e4d87`; verified on main
+`cbee8353998283332cb838f2be3b41b826d8ef66`, without production changes.
+This resolves the safe-input disposition, not Native numerical parity. Native
+success is an observed result of the UB invocation, never a parity PASS.
 Preserve the admitted test-only RED `65336cb594253ca0c4b54942719927cdf4c24bd8`
 and all `case-LqoYic` artifacts. No ignored test or numeric fallback is added.
 
@@ -66,8 +67,8 @@ matrix guard, or silently replace the original input with a complete vector.
 
 ## Undefined-read boundary and proposed handling contract
 
-This section is a **proposal for coordinator review**, not permission to alter
-production or a declaration that the original parity difference is fixed.
+This contract is **coordinator-approved**. It is not permission to emulate UB
+or a declaration that the original Native-output parity difference is fixed.
 Current integrated base is `cbee8353998283332cb838f2be3b41b826d8ef66`.
 
 ### What is undefined, and what is not
@@ -166,6 +167,38 @@ fixture; claiming seed pinning defines UB. Verify unchanged whole-output FM and
 generic generated-id controls, and all affected lint/Tier1/workspace gates if
 production changes. Complete Native byte parity remains mandatory for defined
 inputs, and explicitly inapplicable to the OOB invocation itself.
+
+## Fresh-main verification and matrix record
+
+Machine-readable record: [o8-x2d-scalar-flush-context-record.json](o8-x2d-scalar-flush-context-record.json).
+Raw evidence: `/tmp/ares-o8-current-main-cbee/`. Source tree of `crates` is
+`788f2899cad65edfba97ade4dc2bf3476065870f` on both fetched main and the
+approved spec HEAD; `git diff origin/main -- crates tests scripts` is empty.
+Fresh `cargo build -p ares-cli` succeeded; binary/input/log/output hashes and
+reproduction commands are recorded. No production or test changes required.
+
+On byte-identical original input, the public validated byte/options entry
+through the fresh CLI returns exactly the existing matrix-size error, exit1,
+with no G-code. `flush_matrix.rs:43–59` sees type count1<nozzle count2 and
+declines before matrix assignment; the original four cells remain supplied,
+while multiplier resizing remains independent. The unchanged export guard
+requires eight cells and produces the exact error.
+
+One fresh identified Native invocation (no cache/retry) succeeds, produces
+164031 bytes, and logs invalid enum29611 between its before/after matrix
+messages. It confirms the already source-bounded UB-adjacent observation,
+not an expected enum/matrix or full-byte oracle. Historical Native outputs
+and admitted RED remain untouched. Matrix classification is **UB_ADJACENT**,
+`parity_pass=false`; do not count this row among PASS controls.
+
+An explicitly separate Ares-only preservation control changes only the
+supplied matrix to eight distinguishable cells[0,141,142,0,0,143,144,0].
+It slices successfully with `nozzle_volume_type = Standard` still one entry
+and exports [0,42,43,0,0,143,144,0] after the unchanged[0.3,1] scaling.
+Thus scalar is not globally rejected or broadcast, and a valid-size supplied
+matrix is retained rather than reconstructed. This derived control is not
+the original fixture and has no Native parity verdict: Native reconstruction
+on the still-undersized vector remains outside the defined domain.
 
 ## Included, deferred and exit
 
