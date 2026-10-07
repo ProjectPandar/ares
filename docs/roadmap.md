@@ -25,7 +25,7 @@ external X2D fixtures are deferred. No heavy gates during web's browser window.
 ### O8-X2D-SCALAR: original flush-context divergence (open, pi-lint)
 
 Original admitted `case-LqoYic` still has Native success versus Ares's exact
-matrix-size error on fresh main plus the any-vector safety boundary. Two Native
+matrix-size error on fresh main plus the calculator-dependency safety boundary. Two Native
 diagnostics demonstrate out-of-bounds nozzle-type reads; stable observed bytes
 do not make that behavior defined. Preserve the original RED and explicitly
 track the unresolved difference, not a silent exemption or a claimed FM fix.

@@ -191,13 +191,30 @@ that generic boundary. No generic mapping API or emitter change is included.
 
 ## Defined boundary and predicate correction (coordinator ruling)
 
-At the external configuration boundary, **any** undersized
-`nozzle_volume_type`, `printer_extruder_variant` or printer-id vector makes the
-calculator's input preconditions unsatisfied. Preserve the supplied matrix;
-do not reconstruct, report a selector error, synthesize zeros or broadcast a
-dataset. This rule also retires the original scalar X2D RED; it is not confined
-to the case where all three vectors are undersized. Ordinary downstream matrix
-validation and the exact existing error remain unchanged.
+At the external configuration boundary, inspect the cells to be calculated.
+Only a cell using the colour calculator needs a nozzle's type/dataset; if any
+such dependency has an undersized `nozzle_volume_type`,
+`printer_extruder_variant` or printer-id vector, preserve the supplied matrix
+without reconstruction. Diagonals are always computable (`:3467–3503`); support
+destinations also use their source constant rather than a dataset. Do not encode
+this as a palette-count special case or choose a replacement dataset.
+
+This supersedes the unconditional any-vector rule: source-independent cells must
+still be prepared. In a one-colour matrix all cells are diagonal, so their exact
+zeros and the multiplier-prefix resize (`:3412–3465`) require no type/dataset
+lookup. Seven existing full-output REDs prove this: four seeded template-RNG
+cases (`distributions_and_shared_stream`, `raise3d_{dual,left,right}`) and three
+BBL SYNC cases (`positive_delay`, `without_sync`, `zero_delay`) retain Native/base
+`flush_volumes_matrix=0,0` and `flush_multiplier=0.3,1`; the unconditional rule
+incorrectly left a16-entry default matrix and multiplier0.3. Evidence is retained
+under `/tmp/ares-x2d-flush-matrix/fresh-d789-identified/candidate-seeded.log`
+and `rebase-1b175/prior-failure-inventory.json`. Use their complete-stream
+comparisons, not new internal matrix assertions. This is source computation of
+diagonals, not zero padding or a restored export-only shell.
+
+The original two-colour X2D RED and the18 compact cases need off-diagonal
+calculator cells, so their preservation rule is unchanged. Ordinary downstream
+matrix validation and the exact existing error remain unchanged.
 
 Source basis: `OrcaSlicer.cpp:3022–3047` creates the new Standard vector but
 never resizes the current vectors. `:3460–3462` uses unchecked source indices.
@@ -208,8 +225,8 @@ at lines68–72, an actual garbage `ExtruderType=25276`, identical before/after
 matrix, and later update calls at lines126–128. The18 unique compact inputs
 are inventoried in `trace/predicate-input-inventory.json`; existing whole-byte
 controls, not new internal scalar-value assertions, cover their preservation.
-`case-9whGha` remains untouched. Boundary preservation is defined input
-validation, not a legacy numeric fallback or an excuse to waive regressions.
+`case-9whGha` remains untouched. Boundary preservation applies to unresolved calculator dependencies, not source
+constants, and is not a legacy numeric fallback or an excuse to waive regressions.
 
 The outer colour predicate at `:3340–3351` requires an actual project colour
 option, not a later typed default. Sparse STL profile documents without

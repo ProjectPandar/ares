@@ -24,8 +24,9 @@ provenance, if subsequently established for another reproducer, raises priority.
 Fresh source base `d789b0750` includes `458938aa4`; candidate test-only HEAD
 `304bda1ebd9a1984f3cf9f01270424298c57f4fc` plus uncommitted FM preparation.
 Public `slice_project` on the exact original bytes returns
-`Flush volumes matrix do not match to the correct size!` after the any-vector
-coverage rule preserves the original matrix. It does **not** succeed.
+`Flush volumes matrix do not match to the correct size!` after the dependency
+coverage rule preserves the original matrix: this two-colour input needs
+non-diagonal type/dataset calculations. It does **not** succeed.
 
 Two prescribed seeded Native diagnostic invocations both succeed. Their logs
 show `unsupported NozzleVolumeType=30898` and `=6` respectively, between
@@ -57,7 +58,8 @@ Revision `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 Rust destination is the existing raw project/CLI preparation context and
 `ares-core/src/options/flush_matrix.rs`, not emitter geometry or a new pipeline.
 This follow-up must first define an approved source-owned handling contract for
-this undersized input. The any-vector nonrebuild rule alone does not solve parity.
+this undersized input. Preserving cells with unresolved dataset dependencies
+alone does not solve the original parity difference.
 Do not derive that contract from observed numeric values, emulate UB, relax the
 matrix guard, or silently replace the original input with a complete vector.
 
