@@ -8997,3 +8997,16 @@ slices. Each slice gets its own REVIEW-REQUEST:
 
 M853 lands first because Preview is the larger user-visible gap. M854 is
 independent and can follow on the same branch.
+
+### ColorChange / M600 preview continuation
+
+Filament/ColorPrint `9b5db6d7a` is approved and merged. Next, review the
+[ColorChange rewrite spec](architecture/web-colorchange.md): upstream
+`GCodeProcessor` custom items, `UsedFilaments::volumes_per_color_change` and
+normal custom times → ares-core; `libvgcode::ColorPrint` and GCodeViewer
+partial display records → ares-vgcode; thin WASM and lazy display-only TS.
+Exit requires native-oracle-backed event/volume/segment parity, full existing
+browser coverage plus ColorChange E2E artifacts, unchanged bundle budget,
+Rust/build gates and coordinator approval. Resolve the spec's zero-volume
+cardinality question before implementation; automatic M600 injection and
+bare-M600 color inference remain outside this slice.
