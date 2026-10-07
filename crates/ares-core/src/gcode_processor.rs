@@ -100,10 +100,34 @@ pub struct PrintEstimatedStatistics {
     pub total_used_filament: f64,
 }
 
+/// `CustomGCode::Type` (`CustomGCode.hpp:14-22`).
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize)]
+#[repr(u8)]
+pub enum CustomGCodeType {
+    ColorChange,
+    PausePrint,
+    ToolChange,
+    Template,
+    Custom,
+    Unknown,
+}
+
+/// Processor custom event (`CustomGCode.hpp:24-43`), with one-based tool id.
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+pub struct CustomGCodeItem {
+    pub print_z: f64,
+    pub kind: CustomGCodeType,
+    pub extruder: u32,
+    pub color: String,
+    pub extra: String,
+}
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GCodeProcessorResult {
     pub moves: Vec<MoveVertex>,
     pub spiral_vase_mode: bool,
+    /// `GCodeProcessorResult::custom_gcode_per_print_z` (`:260`).
+    pub custom_gcode_per_print_z: Vec<CustomGCodeItem>,
     /// `GCodeProcessorResult::print_statistics` (`GCodeProcessor.hpp:118`).
     pub print_statistics: PrintEstimatedStatistics,
     /// `GCodeProcessorResult::extruder_colors` — `filament_colour`

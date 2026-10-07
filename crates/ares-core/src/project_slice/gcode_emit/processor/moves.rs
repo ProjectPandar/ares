@@ -9,7 +9,7 @@ use super::ProcessorConfig;
 use super::motion::Trapezoid;
 use super::motion_util::{MMMIN_TO_MMSEC, word};
 use crate::ExtrusionRole;
-use crate::gcode_processor::{EMoveType, GCodeProcessorResult, MoveVertex};
+use crate::gcode_processor::{CustomGCodeItem, EMoveType, GCodeProcessorResult, MoveVertex};
 use tags::{BBL_TAGS, COMPATIBLE_TAGS, Tags};
 
 const DEFAULT_TOOLPATH_WIDTH: f32 = 0.4;
@@ -34,6 +34,8 @@ pub(super) struct RecordedMotion {
 
 pub(super) struct MoveRecorder {
     moves: Vec<MoveVertex>,
+    custom_gcode_per_print_z: Vec<CustomGCodeItem>,
+    last_default_color: usize,
     tags: &'static Tags,
     role: ExtrusionRole,
     processing_start_custom_gcode: bool,
@@ -92,6 +94,8 @@ impl MoveRecorder {
             .collect();
         Self {
             moves: vec![MoveVertex::default()],
+            custom_gcode_per_print_z: Vec::new(),
+            last_default_color: 0,
             tags: if config.limits.bbl_printer {
                 &BBL_TAGS
             } else {
@@ -348,6 +352,7 @@ impl MoveRecorder {
         }
         GCodeProcessorResult {
             moves: self.moves,
+            custom_gcode_per_print_z: self.custom_gcode_per_print_z,
             spiral_vase_mode: self.spiral_vase_mode,
             ..Default::default()
         }

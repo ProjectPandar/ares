@@ -3,7 +3,7 @@
 
 use super::MoveRecorder;
 use crate::ExtrusionRole;
-use crate::gcode_processor::EMoveType;
+use crate::gcode_processor::{CustomGCodeItem, CustomGCodeType, EMoveType};
 
 pub(super) struct Tags {
     role: &'static str,
@@ -68,10 +68,16 @@ impl MoveRecorder {
         }
     }
 
-    /// `GCodeProcessor.cpp:3237-3301`; the color token only selects the
-    /// preview palette, which this slice does not carry.
+    /// `GCodeProcessor.cpp:3237-3301`: active-filament metadata and color ids.
     fn color_change(&mut self, source: usize, comment: &str, position: [f64; 4]) {
-        let mut tokens = comment.split(',').filter(|token| !token.is_empty());
+        const DEFAULT_COLORS: [&str; 6] = [
+            "#0B2C7A", "#1C8891", "#AAF200", "#F5CE0A", "#D16830", "#942616",
+        ];
+        // boost::split(token_compress_on) retains the final empty token.
+        let mut tokens = comment
+            .split(',')
+            .filter(|token| !token.is_empty())
+            .chain(comment.ends_with(',').then_some(""));
         let mut filament = 0;
         if let Some(tool) = tokens.nth(1).and_then(|token| token.strip_prefix('T')) {
             match tool.parse::<i32>() {
@@ -79,6 +85,21 @@ impl MoveRecorder {
                 _ => return,
             }
         }
+        let color = match tokens.next() {
+            Some(color)
+                if color.len() == 7
+                    && color.starts_with('#')
+                    && color.as_bytes()[1..].iter().all(u8::is_ascii_hexdigit) =>
+            {
+                color
+            }
+            Some(_) => DEFAULT_COLORS[0],
+            None => {
+                let color = DEFAULT_COLORS[self.last_default_color];
+                self.last_default_color = (self.last_default_color + 1) % DEFAULT_COLORS.len();
+                color
+            }
+        };
         if let Some(color) = self.extruder_colors.get_mut(filament) {
             *color = (self.extruder_offsets.len() as u8).wrapping_add(self.cp_color_counter);
         }
@@ -89,6 +110,13 @@ impl MoveRecorder {
         if self.filament == filament {
             self.cp_color_current = self.extruder_colors[filament];
             self.store(source, EMoveType::ColorChange, position, 0.0);
+            self.custom_gcode_per_print_z.push(CustomGCodeItem {
+                print_z: position[2],
+                kind: CustomGCodeType::ColorChange,
+                extruder: filament as u32 + 1,
+                color: color.to_owned(),
+                extra: String::new(),
+            });
         }
     }
 }
