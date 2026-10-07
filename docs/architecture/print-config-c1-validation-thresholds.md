@@ -152,3 +152,18 @@ public error payloads establishes **matching rejection parity**, not numerical
 acceptance or byte coverage. Do not adjust either sample or weaken message
 comparison. This ruling supersedes the earlier later-stage-blocker rule for
 these two cases only; other unexpected failures remain blockers.
+
+## Observed CLI transport correction (samples unchanged)
+
+The first22-case execution observed every predicted rejection with the exact
+PrintConfig payload, but at the **earlier direct-CLI setup** call:
+`OrcaSlicer.cpp:7198,7209–7214` invokes the same `m_config.validate(true)` and
+`1314–1317` transports it as `CLI_INVALID_PARAMS=-2` (254 on Unix).
+Thus this direct-override seam must require exactly:
+`Params in command line error: \n<key>: <message>\nsetup params error\n`.
+It must not expect the later loaded3MF transport-18. Payloads and all sample
+values remain unchanged; do not accept either framing interchangeably.
+The earlier execution and its wrong-transport assertions remain archived;
+independent Ares results already show11 nonmatching rejection outcomes.
+Formal RED must assert the source-correct CLI framing before checking Ares.
+No production fix or option-summary promotion is authorized by this correction.

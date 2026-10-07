@@ -257,12 +257,13 @@ async fn verify(fields: Value, expected_error: Option<&str>) {
             let capture = error.captured.unwrap();
             assert_eq!(
                 capture.code,
-                Some(if cfg!(unix) { 238 } else { -18 }),
+                Some(if cfg!(unix) { 254 } else { -2 }),
                 "{directory:?}"
             );
             assert_eq!(
                 capture.stderr,
-                format!("Param values in 3mf/config error: \n{expected}\n").as_bytes(),
+                format!("Params in command line error: \n{expected}\nsetup params error\n")
+                    .as_bytes(),
                 "{directory:?}"
             );
             assert!(
