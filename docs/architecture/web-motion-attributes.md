@@ -1,6 +1,11 @@
 # Preview Acceleration / Jerk / Pressure Advance — source-cited rewrite spec
 
-Status: proposed; awaiting coordinator approval before any RED.
+Status: approved at `3b7c0e493` with rulings below; implementation proceeds
+RED → GREEN. The ares-core processor part is its own RED/GREEN pair, verified
+vertex-by-vertex bit-exactly against the procgcode oracle, and must prove zero
+G-code output change (full v2 references identical on both trees). Touching
+shared processor files (`used_filaments`, `virtual_motion`) requires notifying
+the coordinator first.
 Base: `b61061fc3` (marker-time merged).
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.
@@ -53,9 +58,9 @@ all three (`crates/ares-wasm/src/moves.rs:213-214`, stride-16 `PA,acceleration,j
 - Ranges, colors, palette, visibility rules and G-code bytes / M73 are
   unchanged; this slice only fills data that was zero.
 
-## Questions requiring a ruling before RED
+## Rulings (approved)
 
-1. **Indeterminate initial Pressure Advance.** `GCodeProcessor.hpp:822`
+1. **Indeterminate initial Pressure Advance — UB-adjacent, not ported.** `GCodeProcessor.hpp:822`
    declares `float m_pressure_advance;` and neither `reset()` nor the
    constructor (`GCodeProcessor.cpp:1764-1774`) initialises it, so official
    2.4.2 records an unspecified value on every vertex before the first
@@ -64,10 +69,15 @@ all three (`crates/ares-wasm/src/moves.rs:213-214`, stride-16 `PA,acceleration,j
    adds `m_pressure_advance = 0.0f` in `reset()` only, labelled an
    *initialized-native* oracle; pre-command PA values from official are not
    compared and are documented as a known difference.
+   Ruling: accepted. Reading the uninitialized member is upstream UB and is
+   not ported; Ares records `0.0`. Classified UB-adjacent, the same class as
+   `initialized_object_id`.
 2. **f64 machine state.** Ares' processor motion limits are held as f64.
    Proposal: round the stored machine values to f32 exactly where upstream
    stores `float` members and compute the preview getters in f32, with any
    bit mismatch treated as a failure (no tolerance).
+   Ruling: accepted. f32 storage and arithmetic at upstream `float`
+   members; bit-exact, no tolerance.
 
 ## RED-first plan and acceptance evidence
 
