@@ -39,6 +39,10 @@ pub struct MoveVertex {
     pub travel_dist: f32,
     pub fan_speed: f32,
     pub temperature: f32,
+    /// ORCA preview attributes (`GCodeProcessor.hpp:194-217`), Normal mode.
+    pub pressure_advance: f32,
+    pub acceleration: f32,
+    pub jerk: f32,
     pub time: f32,
     pub layer_id: u32,
     /// Actual-speed vertex inserted by `calculate_time` (`:5962-5997`).
@@ -63,6 +67,9 @@ impl Default for MoveVertex {
             travel_dist: 0.0,
             fan_speed: 0.0,
             temperature: 0.0,
+            pressure_advance: 0.0,
+            acceleration: 0.0,
+            jerk: 0.0,
             time: 0.0,
             layer_id: 0,
             internal_only: false,

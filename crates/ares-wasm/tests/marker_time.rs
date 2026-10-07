@@ -46,6 +46,7 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
                 time: float(16),
                 layer_id: uint(17),
                 internal_only: uint(18) != 0,
+                ..MoveVertex::default()
             }
         })
         .collect();

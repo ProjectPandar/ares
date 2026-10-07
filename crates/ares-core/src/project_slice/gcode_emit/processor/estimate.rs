@@ -87,6 +87,7 @@ impl Estimate {
             ];
             let parsed = ParsedLine::new(line, limits.bbl_printer);
             if let Some(recorder) = recorder.as_deref_mut() {
+                recorder.machine(&state);
                 recorder.line(index + 1, parsed, g1_line_id, line_start);
             }
             if let Some(kind) = parsed

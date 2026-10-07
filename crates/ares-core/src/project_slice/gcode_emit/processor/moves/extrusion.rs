@@ -1,5 +1,6 @@
 use super::{DEFAULT_TOOLPATH_HEIGHT, DEFAULT_TOOLPATH_WIDTH, MoveRecorder};
 use crate::ExtrusionRole;
+use crate::gcode_processor::EMoveType;
 
 impl MoveRecorder {
     /// Width, height and `mm3_per_mm` of an extrusion (`:3880-3947`).
@@ -70,5 +71,33 @@ impl MoveRecorder {
             self.color_change_volumes.push(self.color_change_volume);
             self.color_change_volume = 0.0;
         }
+    }
+}
+
+/// `process_G1::move_type` (`:3835-3851`).
+pub(super) fn move_type(wiping: bool, delta: [f64; 4]) -> EMoveType {
+    let [x, y, z, e] = delta;
+    if wiping {
+        EMoveType::Wipe
+    } else if e < 0.0 {
+        if x != 0.0 || y != 0.0 || z != 0.0 {
+            EMoveType::Travel
+        } else {
+            EMoveType::Retract
+        }
+    } else if e > 0.0 {
+        if x == 0.0 && y == 0.0 {
+            if z == 0.0 {
+                EMoveType::Unretract
+            } else {
+                EMoveType::Travel
+            }
+        } else {
+            EMoveType::Extrude
+        }
+    } else if x != 0.0 || y != 0.0 || z != 0.0 {
+        EMoveType::Travel
+    } else {
+        EMoveType::Noop
     }
 }

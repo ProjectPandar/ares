@@ -3,14 +3,18 @@
 //! `:5540-5605` filament change, `:5630-5718` `store_move_vertex`).
 
 mod actual_speed;
+pub(super) mod dynamics;
 mod extrusion;
+use extrusion::move_type;
 pub(super) mod tags;
 
 use super::ProcessorConfig;
-use super::motion::Trapezoid;
+use super::motion::{MotionState, Trapezoid};
 use super::motion_util::{MMMIN_TO_MMSEC, word};
 use crate::ExtrusionRole;
 use crate::gcode_processor::{CustomGCodeItem, EMoveType, GCodeProcessorResult, MoveVertex};
+use crate::options::GCodeFlavor;
+use dynamics::PreviewMachine;
 use tags::{BBL_TAGS, COMPATIBLE_TAGS, ParsedLine, Tags};
 
 const DEFAULT_TOOLPATH_WIDTH: f32 = 0.4;
@@ -65,6 +69,11 @@ pub(super) struct MoveRecorder {
     spiral_vase_mode: bool,
     /// `m_last_line_id`, in processor input lines.
     last_line_id: u32,
+    flavor: GCodeFlavor,
+    /// Normal-mode machine state at the start of the current line.
+    machine: PreviewMachine,
+    /// `m_pressure_advance`; upstream leaves it uninitialized (UB, not ported).
+    pressure_advance: f32,
 }
 
 impl MoveRecorder {
@@ -131,7 +140,15 @@ impl MoveRecorder {
             first_layer_height: settings.process.print.initial_layer_print_height.0.abs() as f32,
             spiral_vase_mode: settings.process.print.spiral_mode.0,
             last_line_id: 0,
+            flavor: config.limits.gcode_flavor,
+            machine: PreviewMachine::default(),
+            pressure_advance: 0.0,
         }
+    }
+
+    /// Normal-mode machine state at the start of the next input line.
+    pub(super) fn machine(&mut self, state: &MotionState) {
+        self.machine = PreviewMachine::new(state);
     }
 
     /// Tag comments and the non-motion state commands of one input line.
@@ -166,7 +183,14 @@ impl MoveRecorder {
                 }
             }
             Some("M107") => self.fan_speed = 0.0,
-            _ => {}
+            Some(command) => {
+                if let Some(value) =
+                    dynamics::pressure_advance(command, code, line.raw, self.flavor)
+                {
+                    self.pressure_advance = value;
+                }
+            }
+            None => {}
         }
     }
 
@@ -196,7 +220,7 @@ impl MoveRecorder {
     ) -> u32 {
         self.filament = filament;
         self.cp_color_current = self.extruder_colors[filament];
-        self.store(source, EMoveType::ToolChange, position, 0.0);
+        self.store(source, EMoveType::ToolChange, [position; 2], 0.0);
         self.moves.len() as u32 - 1
     }
 
@@ -241,11 +265,11 @@ impl MoveRecorder {
             self.store(
                 source,
                 EMoveType::Seam,
-                [f64::from(seam[0]), f64::from(seam[1]), z, 0.0],
+                [start, [f64::from(seam[0]), f64::from(seam[1]), z, end[3]]],
                 delta[3],
             );
         }
-        self.store(source, move_type, end, delta[3]);
+        self.store(source, move_type, [start, end], delta[3]);
         move_id
     }
 
@@ -264,8 +288,16 @@ impl MoveRecorder {
     }
 
     /// `store_move_vertex` (`:5630-5718`); `source` is the input line the
-    /// vertex reports before the export remap.
-    fn store(&mut self, source: usize, move_type: EMoveType, end: [f64; 4], delta_extruder: f64) {
+    /// vertex reports before the export remap, `[start, end]` are
+    /// `m_start_position`/`m_end_position`.
+    fn store(
+        &mut self,
+        source: usize,
+        move_type: EMoveType,
+        [start, end]: [[f64; 4]; 2],
+        delta_extruder: f64,
+    ) {
+        let [acceleration, jerk] = self.machine.sample(move_type, start, end);
         self.last_line_id = source as u32;
         let offset = self
             .extruder_offsets
@@ -292,6 +324,9 @@ impl MoveRecorder {
             travel_dist: self.travel_dist,
             fan_speed: self.fan_speed,
             temperature: self.extruder_temps[self.filament],
+            pressure_advance: self.pressure_advance,
+            acceleration,
+            jerk,
             time: 0.0,
             layer_id: self.layer_id.max(1) - 1,
             internal_only: false,
@@ -337,33 +372,5 @@ impl MoveRecorder {
             spiral_vase_mode: self.spiral_vase_mode,
             ..Default::default()
         }
-    }
-}
-
-/// `process_G1::move_type` (`:3835-3851`).
-fn move_type(wiping: bool, delta: [f64; 4]) -> EMoveType {
-    let [x, y, z, e] = delta;
-    if wiping {
-        EMoveType::Wipe
-    } else if e < 0.0 {
-        if x != 0.0 || y != 0.0 || z != 0.0 {
-            EMoveType::Travel
-        } else {
-            EMoveType::Retract
-        }
-    } else if e > 0.0 {
-        if x == 0.0 && y == 0.0 {
-            if z == 0.0 {
-                EMoveType::Unretract
-            } else {
-                EMoveType::Travel
-            }
-        } else {
-            EMoveType::Extrude
-        }
-    } else if x != 0.0 || y != 0.0 || z != 0.0 {
-        EMoveType::Travel
-    } else {
-        EMoveType::Noop
     }
 }

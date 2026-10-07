@@ -132,7 +132,7 @@ impl MoveRecorder {
         } else if let Some(CustomTag::ColorChange { filament, color }) = custom {
             self.color_change(source, filament, color, position);
         } else if matches!(custom, Some(CustomTag::PausePrint)) {
-            self.store(source, EMoveType::PausePrint, position, 0.0);
+            self.store(source, EMoveType::PausePrint, [position; 2], 0.0);
             self.custom_gcode_per_print_z.push(CustomGCodeItem {
                 print_z: position[2],
                 kind: CustomGCodeType::PausePrint,
@@ -145,7 +145,7 @@ impl MoveRecorder {
                 self.custom_gcode_per_print_z.len() - 1,
             ));
         } else if matches!(custom, Some(CustomTag::Custom)) {
-            self.store(source, EMoveType::CustomGCode, position, 0.0);
+            self.store(source, EMoveType::CustomGCode, [position; 2], 0.0);
             self.custom_gcode_per_print_z.push(CustomGCodeItem {
                 print_z: position[2],
                 kind: CustomGCodeType::Custom,
@@ -197,7 +197,7 @@ impl MoveRecorder {
         }
         if self.filament == filament {
             self.cp_color_current = self.extruder_colors[filament];
-            self.store(source, EMoveType::ColorChange, position, 0.0);
+            self.store(source, EMoveType::ColorChange, [position; 2], 0.0);
             self.custom_gcode_per_print_z.push(CustomGCodeItem {
                 print_z: position[2],
                 kind: CustomGCodeType::ColorChange,
