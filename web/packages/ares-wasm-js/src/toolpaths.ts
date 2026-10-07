@@ -174,6 +174,8 @@ export interface MovesSlider {
 export interface ToolMarker {
   vertex: number;
   windowVertex: number;
+  /** Engine-selected inclusive time and this window vertex's duration, in seconds. */
+  time: { elapsedSeconds: number; vertexSeconds: number };
 }
 
 /** The view between the moves slider thumbs. */

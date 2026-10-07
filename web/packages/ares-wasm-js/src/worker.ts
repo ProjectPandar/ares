@@ -187,7 +187,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
         marker: null,
       };
       const [vertex, windowVertex] = viewer.toolMarker();
-      if (vertex !== undefined) value.marker = { vertex, windowVertex };
+      if (vertex !== undefined) {
+        const [elapsedSeconds, vertexSeconds] = viewer.markerTime(windowVertex);
+        value.marker = { vertex, windowVertex, time: { elapsedSeconds, vertexSeconds } };
+      }
       return [value, [value.segments.buffer, value.options.buffer, value.colors.buffer]];
     }
   }

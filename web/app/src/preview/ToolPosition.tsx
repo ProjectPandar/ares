@@ -1,6 +1,6 @@
-import { EXTRUSION_ROLES, MOVE_TYPES, type ExtrusionRole, type MoveType, type Toolpaths, VERTEX_VALUES, type VertexValue } from "@ares-slicer/wasm";
+import { EXTRUSION_ROLES, MOVE_TYPES, type ExtrusionRole, type MoveType, type ToolMarker, type Toolpaths, VERTEX_VALUES, type VertexValue } from "@ares-slicer/wasm";
 import { useState } from "react";
-import { printf } from "./toolPositionFormat";
+import { formatMarkerTime, printf } from "./toolPositionFormat";
 
 /** `to_string(EMoveType)` (`GCodeViewer.cpp:277-294`). */
 const TYPE_LABELS: Record<MoveType, string> = {
@@ -42,11 +42,11 @@ const AXES = [["X", "#ff3c5b"], ["Y", "#64c818"], ["Z", "#2f88e9"]] as const;
 /**
  * GCodeViewer `Marker::render_position_window` (`GCodeViewer.cpp:325-690`)
  * for vertex `vertex` of `toolpaths`: the fold button shows the properties
- * table (`:420-454`; Acceleration, Jerk, Pressure Advance and Time need
+ * table (`:420-454`; Acceleration, Jerk and Pressure Advance need
  * engine data), the bottom row the colored X/Y/Z with fewer decimals on big
  * prints (`:651-674`), the speed and the view type detail (`:676-683`).
  */
-export function ToolPosition({ toolpaths, vertex, viewType }: { toolpaths: Toolpaths; vertex: number; viewType: string }) {
+export function ToolPosition({ toolpaths, vertex, viewType, time }: { toolpaths: Toolpaths; vertex: number; viewType: string; time: ToolMarker["time"] }) {
   const [shown, setShown] = useState(false);
   const value = (name: VertexValue) => toolpaths.values[vertex * VERTEX_VALUES.length + VERTEX_VALUES.indexOf(name)];
   const type = MOVE_TYPES[toolpaths.tags[4 * vertex + 1]];
@@ -69,6 +69,7 @@ export function ToolPosition({ toolpaths, vertex, viewType }: { toolpaths: Toolp
     ["Flow rate", extrusionValue(Math.fround(value("feedrate") * value("mm3PerMm")), "mm³/s")],
     ["Fan speed", `${printf(value("fanSpeed"), 0)} %`],
     ["Temperature", `${printf(value("temperature"), 0)} °C`],
+    ["Time", formatMarkerTime(time)],
   ];
   return (
     <div className="tool-position" data-testid="tool-position">

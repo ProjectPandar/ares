@@ -133,7 +133,7 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
   const busy = applied?.slider !== live || applied.viewType !== viewType || filter.layers !== layers
     || filter.hiddenRoles !== hiddenRoles || filter.visibleOptions !== visibleOptions;
   return (<>
-    {marker && <ToolPosition toolpaths={toolpaths} vertex={marker.windowVertex} viewType={applied!.viewType} />}
+    {marker && <ToolPosition toolpaths={toolpaths} vertex={marker.windowVertex} viewType={applied!.viewType} time={marker.time} />}
     <div className="moves-slider" data-testid="moves-slider" aria-busy={busy}>
       <input type="range" aria-label="Moves" min={0} max={stops.gcodeIds.length - 1} step={1} value={high}
         aria-valuemax={stops.gcodeIds.length - 1}

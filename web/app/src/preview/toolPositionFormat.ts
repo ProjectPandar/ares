@@ -1,3 +1,5 @@
+import type { ToolMarker } from "@ares-slicer/wasm";
+
 const formats = new Map<number, Intl.NumberFormat>();
 
 /** printf `%.Nf`: half to even on the exact float value, as glibc rounds. */
@@ -13,7 +15,7 @@ export function printf(value: number, decimals: number) {
 }
 
 /** Utils.hpp:540-562 and GCodeViewer.cpp:452-454; display-only f32 decomposition. */
-export function formatMarkerTime({ elapsedSeconds, vertexSeconds }: { elapsedSeconds: number; vertexSeconds: number }) {
+export function formatMarkerTime({ elapsedSeconds, vertexSeconds }: ToolMarker["time"]) {
   const f32 = Math.fround;
   let seconds = f32(elapsedSeconds);
   const days = Math.trunc(f32(seconds / 86400));
