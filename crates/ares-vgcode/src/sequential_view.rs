@@ -13,6 +13,13 @@ pub struct ToolMarker {
     pub window_vertex: usize,
 }
 
+/// Raw seconds in the position window's Time row (GCodeViewer.cpp:452-454).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MarkerTime {
+    pub elapsed_seconds: f32,
+    pub vertex_seconds: f32,
+}
+
 /// `GCodeViewer::SequentialView::m_show_marker`, false for a new load
 /// (`GCodeViewer.cpp:1388`).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

@@ -26,6 +26,7 @@ pub struct ViewerImpl {
     layers: Layers,
     view_range: ViewRange,
     vertices: Vec<PathVertex>,
+    elapsed_times: Vec<[f32; TimeMode::COUNT]>,
     tool_colors: Palette,
     color_print_colors: Palette,
     /// `m_used_extruders`: ordered per-extruder ColorPrint transitions.
@@ -65,6 +66,8 @@ impl ViewerImpl {
         self.settings_used_for_ranges = None;
         self.settings.spiral_vase_mode = data.spiral_vase_mode;
         self.used_extruders.clear();
+        self.elapsed_times.clear();
+        self.elapsed_times.reserve(self.vertices.len());
         let mut total_time = [0.0; TimeMode::COUNT];
         for (i, v) in (0..).zip(&self.vertices) {
             self.layers.update(v, i);
@@ -72,6 +75,7 @@ impl ViewerImpl {
             for (total, time) in total_time.iter_mut().zip(v.times) {
                 *total += time;
             }
+            self.elapsed_times.push(total_time);
             if v.move_type != MoveType::Extrude {
                 continue;
             }
@@ -107,6 +111,19 @@ impl ViewerImpl {
 
     pub fn layers(&self) -> &Layers {
         &self.layers
+    }
+
+    /// ViewerImpl.cpp:1461-1465: inclusive ordered f32 sum, cached during load.
+    pub fn get_estimated_time_at(&self, id: usize) -> f32 {
+        self.elapsed_times[id][self.settings.time_mode.index()]
+    }
+
+    /// GCodeViewer.cpp:452-454, for the engine-selected property-window vertex.
+    pub fn get_marker_time(&self, window_vertex: usize) -> crate::MarkerTime {
+        crate::MarkerTime {
+            elapsed_seconds: self.get_estimated_time_at(window_vertex),
+            vertex_seconds: self.vertices[window_vertex].times[self.settings.time_mode.index()],
+        }
     }
 
     /// ViewerImpl.cpp:1363-1370.
