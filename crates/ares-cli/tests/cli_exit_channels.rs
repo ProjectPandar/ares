@@ -48,10 +48,13 @@ fn assert_family(case: &str, input: &str, temp: &std::path::Path) {
     let code: i32 = String::from_utf8(expected(case, "stdout"))
         .unwrap()
         .parse_line_return_code();
+    // `flush_and_exit` returns the negative CLI code; the process exit is
+    // its POSIX form 256+n (`OrcaSlicer.cpp:396-411`).
+    let expected_exit = 256 + code;
     assert_eq!(
-        outcome.code, code,
+        outcome.code, expected_exit,
         "{case}: exit code {} vs native {}",
-        outcome.code, code
+        outcome.code, expected_exit
     );
     assert_eq!(
         outcome.stdout,

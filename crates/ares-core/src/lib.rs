@@ -225,10 +225,34 @@ impl InputFormat {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum SliceError {
     EmptyInput,
     InvalidInput(String),
+    /// `CLI_POSTPROCESS_NOT_SUPPORTED` (`Utils.hpp:44`): a 3MF whose
+    /// embedded `post_process` array is non-empty is rejected under the CLI
+    /// (`OrcaSlicer.cpp:1682-1690`).
+    PostProcessNotSupported,
+    /// `CLI_NO_SUITABLE_OBJECTS` (`Utils.hpp:61`): the selected plate is
+    /// empty or has no object fully inside it. The payload keeps the
+    /// model-read detail for the stderr channel.
+    NoSuitableObjects(String),
+    /// `CLI_INVALID_VALUES_IN_3MF` (`Utils.hpp:43`): parameter values
+    /// embedded in the 3MF/config fail validation; the payload is the
+    /// `key: detail` block for the stderr channel.
+    InvalidValuesInProject(String),
+    /// `CLI_VALIDATE_ERROR` (`Utils.hpp:62`): `Print::validate` rejection.
+    /// `sliced_info` is already populated at the validate point
+    /// (`OrcaSlicer.cpp:5981-5987`), so the result.json fields ride along:
+    /// plate_index, layer_height (the f32-stored value widened to f64),
+    /// wall_loops, sparse_infill_density.
+    Validate {
+        message: String,
+        plate_index: u32,
+        layer_height: f64,
+        wall_loops: i32,
+        sparse_infill_density: f64,
+    },
     ProjectSlicingIncomplete,
     UnsupportedProjectFeature(String),
     ToolpathOutsidePrintableArea { error_code: u8, gcode: Vec<u8> },
@@ -239,6 +263,12 @@ impl fmt::Display for SliceError {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
             Self::InvalidInput(message) => f.write_str(message),
+            Self::PostProcessNotSupported => {
+                f.write_str("post_process is not supported under CLI.")
+            }
+            Self::NoSuitableObjects(message) => f.write_str(message),
+            Self::InvalidValuesInProject(message) => f.write_str(message),
+            Self::Validate { message, .. } => f.write_str(message),
             Self::ProjectSlicingIncomplete => f.write_str("ProjectSlicingIncomplete"),
             Self::UnsupportedProjectFeature(feature) => {
                 write!(f, "unsupported project feature: {feature}")

@@ -19,9 +19,7 @@ pub(crate) fn validate_post_process(project: &Project) -> Result<(), SliceError>
         _ => 1,
     };
     if len > 0 {
-        return Err(SliceError::InvalidInput(
-            "post_process is not supported under CLI.".to_owned(),
-        ));
+        return Err(SliceError::PostProcessNotSupported);
     }
     Ok(())
 }

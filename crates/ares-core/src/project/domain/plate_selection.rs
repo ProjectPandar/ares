@@ -43,7 +43,10 @@ impl Project {
             .collect::<Vec<_>>();
         if objects.is_empty() {
             // Model.cpp:354-355 rejects an empty selected importer model.
-            return Err(SliceError::InvalidInput(
+            // The CLI adapter maps this to `CLI_NO_SUITABLE_OBJECTS`
+            // (-50, Utils.hpp:61) with an empty stderr channel — the
+            // payload only feeds the legacy `Error:` detail.
+            return Err(SliceError::NoSuitableObjects(
                 "The supplied file couldn't be read because it's empty".to_owned(),
             ));
         }

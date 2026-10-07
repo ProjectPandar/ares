@@ -20,11 +20,31 @@ use crate::{
 };
 
 /// Applied nozzle, extruder-addressing and bed slices of `Print.hpp:935::Print::validate`.
-/// Returns the exact upstream diagnostic in `SliceError::InvalidInput`.
+/// Returns the exact upstream diagnostic in the `Validate` family: the CLI
+/// adapter exits with `CLI_VALIDATE_ERROR` (-51, Utils.hpp:62) and the
+/// result.json carries the `sliced_info` values populated at the validate
+/// point (`OrcaSlicer.cpp:5981-5987`) — the f32-stored layer height and
+/// density widen to f64 like upstream's ConfigOptionFloat/Percent reads.
 pub fn validate_print(settings: &ProjectSettings, bbl_printer: bool) -> Result<(), SliceError> {
-    let usage = extrusion_width::flat(settings)?;
-    validate_layer_templates(settings, bbl_printer)?;
-    bed_filament::validate(settings, bbl_printer, &usage.supported_used_filaments, 1)
+    let into_validate = |error: SliceError| match error {
+        SliceError::InvalidInput(message) => SliceError::Validate {
+            message,
+            plate_index: 1,
+            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+            wall_loops: settings.process.region.wall_loops.0,
+            sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),
+        },
+        other => other,
+    };
+    let usage = extrusion_width::flat(settings).map_err(into_validate)?;
+    validate_layer_templates(settings, bbl_printer).map_err(into_validate)?;
+    bed_filament::validate(
+        settings,
+        bbl_printer,
+        &usage.supported_used_filaments,
+        1,
+    )
+    .map_err(into_validate)
 }
 
 fn validate_layer_templates(
@@ -176,20 +196,39 @@ pub(crate) fn validate_applied_project(
     plate_number: u32,
     selected_printer: Option<&str>,
 ) -> Result<(), SliceError> {
-    extrusion_width::applied(resolved)?;
     let settings = &resolved.views.full;
+    let into_validate = |error: SliceError| into_validate_message(error, settings);
+    extrusion_width::applied(resolved).map_err(into_validate)?;
     let bbl = project_is_bbl(
         settings,
         &project.documents().project_settings_raw,
         selected_printer,
     )?;
-    validate_layer_templates(settings, bbl)?;
+    validate_layer_templates(settings, bbl).map_err(into_validate)?;
     bed_filament::validate(
         settings,
         bbl,
         &resolved.usage.supported_used_filaments,
         plate_number,
     )
+    .map_err(into_validate)
+}
+
+/// Wrap an `InvalidInput` rejection from the applied-project validation in
+/// the `Validate` family (`CLI_VALIDATE_ERROR`, -51, Utils.hpp:62): the
+/// CLI adapter's result.json carries the sliced_info values populated at
+/// the validate point (`OrcaSlicer.cpp:5981-5987`).
+fn into_validate_message(error: SliceError, settings: &ProjectSettings) -> SliceError {
+    match error {
+        SliceError::InvalidInput(message) => SliceError::Validate {
+            message,
+            plate_index: 1,
+            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+            wall_loops: settings.process.region.wall_loops.0,
+            sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),
+        },
+        other => other,
+    }
 }
 
 const MISSING_RESET: &str = "Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode.";
