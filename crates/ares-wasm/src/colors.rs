@@ -5,10 +5,10 @@ use ares_vgcode::{
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
-/// View types exposed in `EViewType` order. Actual speed / flow, pressure
-/// advance, acceleration and jerk are left out because ares-core moves do not
-/// record them yet; tool and summary views are not ported yet.
-const VIEW_TYPES: [ViewType; 10] = [
+/// View types exposed in `EViewType` order. Actual speed / flow are left out
+/// because ares-core moves do not record them yet; tool and summary views are
+/// not ported yet.
+const VIEW_TYPES: [ViewType; 13] = [
     ViewType::FeatureType,
     ViewType::ColorPrint,
     ViewType::Speed,
@@ -19,6 +19,9 @@ const VIEW_TYPES: [ViewType; 10] = [
     ViewType::LayerTimeLogarithmic,
     ViewType::FanSpeed,
     ViewType::Temperature,
+    ViewType::PressureAdvance,
+    ViewType::Acceleration,
+    ViewType::Jerk,
 ];
 
 fn view_type(name: &str) -> Result<ViewType, JsError> {

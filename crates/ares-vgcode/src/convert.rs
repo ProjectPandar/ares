@@ -61,8 +61,7 @@ pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
     }
 }
 
-/// Fields deferred by M853 (`actual_feedrate`, stealth time, pressure
-/// advance, acceleration, jerk) stay zero.
+/// Fields deferred by M853 (`actual_feedrate`, stealth time) stay zero.
 fn vertex(curr: &MoveVertex, move_type: MoveType) -> PathVertex {
     PathVertex {
         position: curr.position,
@@ -81,9 +80,9 @@ fn vertex(curr: &MoveVertex, move_type: MoveType) -> PathVertex {
         color_id: curr.cp_color_id,
         times: [curr.time, 0.0],
         layer_duration: 0.0,
-        pressure_advance: 0.0,
-        acceleration: 0.0,
-        jerk: 0.0,
+        pressure_advance: curr.pressure_advance,
+        acceleration: curr.acceleration,
+        jerk: curr.jerk,
     }
 }
 
