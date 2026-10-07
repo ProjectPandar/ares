@@ -92,6 +92,13 @@ all three (`crates/ares-wasm/src/moves.rs:213-214`, stride-16 `PA,acceleration,j
      `machine_max_acceleration_*`, XY / X / Y / Z-only / E-only / XYZ /
      zero-length moves, travel, retract and unretract.
    - Marlin classic (JD = 0) and Marlin2 with JD = 0: M205 X/Y/Z/E jerks.
+     The fixture writes `M205 X12 Y9` (both axes explicit) on purpose: Ares'
+     M205 (`processor/motion/config_commands.rs`) does not yet port
+     `process_M205` (`GCodeProcessor.cpp:5236-5265`), where `X` sets both the
+     X and Y jerk and `J`/`S`/`T` set junction deviation / minimum rates.
+     That timing divergence is a separate slice (ruled: next after this one);
+     the fixture avoids it rather than masking it, and must not be read as
+     coverage of X-only or `J` M205.
    - Klipper: `SET_VELOCITY_LIMIT`, `SET_PRESSURE_ADVANCE ADVANCE=…` with and
      without `EXTRUDER=`, lowercase command (dispatched, regex no-match keeps
      value), `ADVANCE=.` (→ 0); the same command under Marlin2 is ignored.
