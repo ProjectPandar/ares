@@ -67,6 +67,9 @@ mod profile_entry;
 #[path = "runner/profile_entry_3mf.rs"]
 mod profile_entry_3mf;
 #[cfg(test)]
+#[path = "runner/profile_inherits_group.rs"]
+mod profile_inherits_group;
+#[cfg(test)]
 #[path = "runner/profile_overlay_default_gcodes.rs"]
 mod profile_overlay_default_gcodes;
 #[cfg(test)]
