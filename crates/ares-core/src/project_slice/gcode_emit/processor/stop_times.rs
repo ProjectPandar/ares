@@ -80,9 +80,14 @@ impl StopExport<'_> {
             let is_last = match next {
                 None => true,
                 Some(next) => {
+                    // GCodeProcessor.cpp:1281-1283 compares the two-decimal strings
+                    // after parsing; compare their signs/zero forms without parsing.
+                    let remaining = fraction(remaining);
                     self.upper_bound(next) != index
-                        || fraction(remaining).parse::<f64>().unwrap() > 0.0
-                            && fraction(stop.elapsed - next).parse::<f64>().unwrap() == 0.0
+                        || remaining != "0.00"
+                            && remaining != "-0.00"
+                            && !remaining.starts_with('-')
+                            && matches!(fraction(stop.elapsed - next).as_str(), "0.00" | "-0.00")
                 }
             };
             if !is_last {
