@@ -237,6 +237,28 @@ erroneous reconstructed0. Check raw option presence before using typed colours;
 do not add printer-name, AMS or matrix-length predicates.
 
 
+## Short-lived old/new preparation context (coordinator-approved)
+
+`OrcaSlicer.cpp:1704` captures the input nozzle count and current type option at
+load time; `:3022–3047` compares this old side with the new CLI configuration
+(and fills an absent/empty current type vector with Standard for the old count).
+`:3340` independently tests existence of a CLI colour option. Keep exactly
+three internal values: original input nozzle count, colour-override presence,
+and current nozzle-volume-type vector. Capture before applying public/API
+option overrides; selected profiles must retain the input side too, while STL
+starts with the CLI's one-nozzle Standard current state.
+
+Pass this value only through internal load/profile preparation to the single
+matrix-preparation call. Do not put it in `ProjectSettings`, resolved configs,
+public API or persistent project state. Drop it after preparation. This replaces
+the insufficient predicate inferred only from an already-overlaid raw map; do
+not compensate with shape/name heuristics. Source-independent multiplier resize
+runs before declining unresolved calculator dependencies, matching `:3412–3465`.
+The existing `processed_color_change/inactive-tool` public E2E stays unchanged
+and must become GREEN: its override legitimately changes nozzle count and
+colours and supplies an8-entry matrix. Retain its prior matrix-size RED from
+`fresh-d789-identified/workspace.log`. No new internal-value assertions.
+
 ## Sequence, validation and exit
 
 1. Submit this spec and wait for exact-hash coordinator approval.
