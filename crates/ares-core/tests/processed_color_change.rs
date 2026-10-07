@@ -78,6 +78,47 @@ async fn processed_layer_templates_preserve_ordered_color_change_items() {
     check_native_volumes(&plain, "no-change");
 }
 
+#[tokio::test]
+async fn color_change_z_follows_the_next_extrusion_position() {
+    // OptionsZCorrector::update copies the preceding move's f32 position
+    // at the next extrusion (GCodeProcessor.hpp:693-705). The template hop
+    // precedes the slicer's own layer travel: neither the tag Z nor the first
+    // travel after it is necessarily the next extrusion's Z.
+    let overrides = ConfigOverrides::from_json(
+        br##"{"layer_change_gcode":"{if layer_num == 2};COLOR_CHANGE,T0,#FF0000\nM600\nG1 Z0.9 F600\nG1 X21 F600\n{endif}"} "##,
+    ).unwrap();
+    let output = slice_project_plate_processed(
+        PROJECT.to_vec(),
+        GenerationMetadata::default(),
+        Some(1),
+        &overrides,
+        SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    assert_eq!(output.result.custom_gcode_per_print_z.len(), 1);
+    use ares_core::gcode_processor::EMoveType;
+    let marker = output
+        .result
+        .moves
+        .iter()
+        .position(|vertex| vertex.move_type == EMoveType::ColorChange)
+        .unwrap();
+    let extrusion = output.result.moves[marker + 1..]
+        .iter()
+        .find(|vertex| vertex.move_type == EMoveType::Extrude)
+        .unwrap();
+    assert_eq!(
+        output.result.custom_gcode_per_print_z[0].print_z,
+        f64::from(extrusion.position[2])
+    );
+    assert_eq!(
+        output.result.moves[marker].position[2],
+        extrusion.position[2]
+    );
+    check_native_volumes(&output, "corrected-z");
+}
+
 fn check_native_volumes(output: &ares_core::ProcessedGCode, name: &str) {
     let Some(oracle) = std::env::var_os("ARES_PROCGCODE_BIN") else {
         eprintln!("native comparison requires ARES_PROCGCODE_BIN (procgcode.nix)");
@@ -126,6 +167,21 @@ fn check_native_volumes(output: &ares_core::ProcessedGCode, name: &str) {
         serde_json::to_vec_pretty(&output.result.print_statistics).unwrap(),
     )
     .unwrap();
+    let expected_z: Vec<f64> = native["custom_gcode_per_print_z"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["print_z"].as_f64().unwrap())
+        .collect();
+    assert_eq!(
+        output
+            .result
+            .custom_gcode_per_print_z
+            .iter()
+            .map(|item| item.print_z)
+            .collect::<Vec<_>>(),
+        expected_z
+    );
     // Both processors accumulate the same per-G1 float volume into a double
     // cache; compare raw volumes, not reconstructed metric legend strings.
     assert_eq!(
