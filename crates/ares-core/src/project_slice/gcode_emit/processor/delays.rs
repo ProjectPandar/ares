@@ -1,6 +1,10 @@
 use super::motion_util::word;
 
 pub(super) fn command_delay(code: &str) -> Option<f64> {
+    // GCodeProcessor.cpp:5430–5436: SYNC T synchronizes with additional seconds.
+    if code.split_whitespace().next() == Some("SYNC") {
+        return word(code, 'T');
+    }
     if code.starts_with("M400") {
         return Some(word(code, 'S').unwrap_or(0.0) + word(code, 'P').unwrap_or(0.0) * 0.001);
     }
