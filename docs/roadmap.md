@@ -7,6 +7,21 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### X2D dual-nozzle flush-matrix preparation (#55, spec review)
+
+After integrated VG1/UsedFilaments `9e3e81837`, port the upstream preparation
+slice `OrcaSlicer.cpp:3340–3503`, `PrintConfig.hpp:2130–2153` and required
+`libslic3r::FlushVolCalculator`/`FlushVolPredictor` dependencies, retaining
+`GCode.cpp:5596–5614` export scaling and rejection. See
+[spec/ARD](architecture/x2d-dual-nozzle-flush-matrix-preparation.md).
+Rust destination: core typed flush preparation before existing apply-like
+normalization, with the export-only one-palette matrix shell replaced, not an
+independent Ares purge pipeline. Exit: fresh identified same-input Native RED,
+exact prepared nozzle-major matrices and complete G-code equality, preserved
+nontrigger rejection/control bytes, full reference/workspace/Tier1 gates and
+exact-hash coordinator approval. Processor timing, emitter ordering/geometry and
+external X2D fixtures are deferred. No heavy gates during web's browser window.
+
 ### Profile-based slicing entry (2026-10-05, interface approved)
 
 Port PresetBundle loading/inheritance/full_fff_config and Preset compatibility into
