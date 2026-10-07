@@ -91,7 +91,8 @@ export function oracleMoves(oracle: string, gcodePath: string, workDir: string):
 
 /**
  * ORCA `MoveVertex` pressure advance / acceleration / jerk (`store_move_vertex`,
- * `GCodeProcessor.cpp:5630-5664`) per move, from the initialized-native dynamics
+ * `GCodeProcessor.cpp:5630-5664`) and Normal-mode `actual_feedrate`
+ * (`TimeMachine::calculate_time`, `:480-572`, `:5962-5997`) per move, from the initialized-native dynamics
  * oracle (`tools/chain-probe/procgcode-dynamics.nix`, `--dump-move-dynamics`).
  */
 function oracleDynamics(input: string, workDir: string, moves: { gcode_id: number; type: number }[]) {
@@ -100,12 +101,12 @@ function oracleDynamics(input: string, workDir: string, moves: { gcode_id: numbe
   const csv = `${workDir}oracle-dynamics.csv`;
   execFileSync(oracle, ["--process-gcode", input, "--dump-move-dynamics", csv], { stdio: "ignore" });
   const [header, ...rows] = readFileSync(csv, "utf8").trimEnd().split("\n");
-  expect(header).toBe("gcode_id,type,internal_only,pressure_advance,acceleration,jerk");
+  expect(header).toBe("gcode_id,type,internal_only,pressure_advance,acceleration,jerk,actual_feedrate");
   expect(rows).toHaveLength(moves.length);
   return rows.map((row, index) => {
-    const [gcodeId, type, , pressureAdvance, acceleration, jerk] = row.split(",").map(Number);
+    const [gcodeId, type, , pressureAdvance, acceleration, jerk, actualFeedrate] = row.split(",").map(Number);
     expect([gcodeId, type], `dynamics row ${index}`).toEqual([moves[index].gcode_id, moves[index].type]);
-    return { pressureAdvance: f32(pressureAdvance), acceleration: f32(acceleration), jerk: f32(jerk) };
+    return { pressureAdvance: f32(pressureAdvance), acceleration: f32(acceleration), jerk: f32(jerk), actualFeedrate: f32(actualFeedrate) };
   });
 }
 

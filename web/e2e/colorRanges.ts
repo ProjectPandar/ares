@@ -16,10 +16,13 @@ export type RangeMove = {
   pressureAdvance: number;
   acceleration: number;
   jerk: number;
+  actualFeedrate: number;
 };
 
 const EXTRUDE = 10;
 const TRAVEL = 8;
+/** GCodeProcessor `EMoveType::Noop` / `Travel` / `Wipe` / `Extrude`: the moves libvgcode draws as paths. */
+const PATH_TYPES = new Set([0, TRAVEL, 9, EXTRUDE]);
 const f32 = Math.fround;
 
 /**
@@ -68,11 +71,18 @@ function legendValues(values: number[], logarithmic: boolean) {
  * Values each range sees, from `ViewerImpl::update_color_ranges`
  * (`ViewerImpl.cpp:1817-1878`) over the libvgcode vertices, which carry the
  * values of moves 1.. (`LibVGCodeWrapper.cpp:191-268`; the extra path-start
- * vertices repeat their move's values with zero times). Every extrusion role
- * is shown, so Custom extrusions count for width and flow (`:1847`).
+ * vertices repeat their move's values with zero times, except the previous
+ * move's `actual_feedrate`, `:215-240`). Every extrusion role is shown, so
+ * Custom extrusions count for width and flow (`:1847`).
  */
 function rangeInputs(moves: RangeMove[], travels: boolean) {
-  const vertices = moves.slice(1);
+  const vertices: RangeMove[] = [];
+  for (let i = 1; i < moves.length; i++) {
+    const [prev, curr] = [moves[i - 1], moves[i]];
+    if (PATH_TYPES.has(curr.type) && (vertices.length === 0 || prev.type !== curr.type || prev.role !== curr.role || prev.mm3PerMm !== curr.mm3PerMm))
+      vertices.push({ ...curr, time: 0, actualFeedrate: prev.actualFeedrate });
+    vertices.push(curr);
+  }
   const extrusions = vertices.filter((move) => move.type === EXTRUDE);
   const moving = vertices.filter((move) => move.type === EXTRUDE || (travels && move.type === TRAVEL));
   // `Layers::update` sums vertex times per layer (`Layers.cpp`); `get_times` (`:1870-1875`).
@@ -85,6 +95,8 @@ function rangeInputs(moves: RangeMove[], travels: boolean) {
     Width: extrusions.map((move) => roundToBin(move.width)),
     // `:1849`, `PathVertex::volumetric_rate` (`PathVertex.hpp:129`)
     VolumetricFlowRate: extrusions.map((move) => roundToBin(f32(move.feedrate * move.mm3PerMm))),
+    // `:1850-1851`, `PathVertex::actual_volumetric_rate` (`PathVertex.hpp:133`)
+    ActualVolumetricFlowRate: extrusions.map((move) => roundToBin(f32(move.actualFeedrate * move.mm3PerMm))),
     // `:1852-1853`
     FanSpeed: extrusions.map((move) => roundToBin(move.fanSpeed)),
     Temperature: extrusions.map((move) => roundToBin(move.temperature)),
@@ -92,6 +104,7 @@ function rangeInputs(moves: RangeMove[], travels: boolean) {
     PressureAdvance: extrusions.filter((move) => move.pressureAdvance >= 0).map((move) => move.pressureAdvance),
     // `:1858-1866`: extrusions, plus travels while shown (wipes stay hidden here).
     Speed: moving.map((move) => move.feedrate),
+    ActualSpeed: moving.map((move) => move.actualFeedrate),
     Acceleration: moving.map((move) => move.acceleration),
     Jerk: moving.map((move) => move.jerk),
     LayerTimeLinear: layerTimes,
@@ -109,11 +122,13 @@ const VIEWS = [
   { view: "FeatureType", label: "Line Type" },
   { view: "ColorPrint", label: "Filament" },
   { view: "Speed", label: "Speed", decimals: 0 },
+  { view: "ActualSpeed", label: "Actual Speed", decimals: 0 },
   { view: "Acceleration", label: "Acceleration", decimals: 0 },
   { view: "Jerk", label: "Jerk", decimals: 1 },
   { view: "Height", label: "Layer Height", decimals: 2 },
   { view: "Width", label: "Line Width", decimals: 2 },
   { view: "VolumetricFlowRate", label: "Flow", decimals: 2 },
+  { view: "ActualVolumetricFlowRate", label: "Actual Flow", decimals: 2 },
   { view: "LayerTimeLinear", label: "Layer Time", decimals: 1 },
   { view: "LayerTimeLogarithmic", label: "Layer Time (log)", decimals: 1 },
   { view: "FanSpeed", label: "Fan Speed", decimals: 0 },
@@ -133,8 +148,8 @@ async function expectRows(page: Page, values: number[], decimals: number, view: 
  * GCodeViewer legend view types: each range view lists the values of its
  * libvgcode `ColorRange`, recomputed from the upstream GCodeProcessor moves,
  * and recolors the toolpaths; Speed also offers the Travel row, whose
- * visibility feeds the speed range (`GCodeViewer.cpp:3913-3929`); Acceleration
- * and Jerk do the same (`:3947-3978`).
+ * visibility feeds the speed range (`GCodeViewer.cpp:3913-3929`); Actual
+ * Speed, Acceleration and Jerk do the same (`:3930-3978`).
  */
 export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts: string) {
   const select = page.getByTestId("view-type");
@@ -150,7 +165,7 @@ export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts
     expected[view] = legendValues(inputs[view], view === "LayerTimeLogarithmic");
     await expectRows(page, expected[view], decimals, view);
     await expect.poll(() => canvasDigest(page), { message: `${label} must recolor the toolpaths` }).not.toBe(featureType);
-    if (["Height", "Speed", "LayerTimeLogarithmic", "Acceleration", "Jerk", "PressureAdvance"].includes(view)) {
+    if (["Height", "Speed", "ActualSpeed", "ActualVolumetricFlowRate", "LayerTimeLogarithmic", "Acceleration", "Jerk", "PressureAdvance"].includes(view)) {
       await page.screenshot({ path: `${artifacts}preview-view-${view}.png` });
     }
   }
@@ -164,10 +179,10 @@ export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts
   await expectRows(page, withTravels, 0, "Speed with travels");
   await travel.click();
   await expectRows(page, expected.Speed, 0, "Speed");
-  // Acceleration and Jerk offer the same Travel row (`GCodeViewer.cpp:3947-3978`).
+  // Actual Speed, Acceleration and Jerk offer the same Travel row (`GCodeViewer.cpp:3930-3978`).
   const travelInputs = rangeInputs(moves, true);
-  for (const [view, decimals] of [["Acceleration", 0], ["Jerk", 1]] as const) {
-    await select.selectOption({ label: view });
+  for (const [view, label, decimals] of [["ActualSpeed", "Actual Speed", 0], ["Acceleration", "Acceleration", 0], ["Jerk", "Jerk", 1]] as const) {
+    await select.selectOption({ label });
     await expect(travel).toHaveAttribute("aria-pressed", "false");
     await travel.click();
     await expectRows(page, legendValues(travelInputs[view], false), decimals, `${view} with travels`);
