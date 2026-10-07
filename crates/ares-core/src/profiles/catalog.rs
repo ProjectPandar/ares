@@ -231,7 +231,6 @@ impl Catalog {
         // embedded base keeps its own post-merge normalization in the
         // profile entries.
         raw.handle_legacy();
-        let mut filament_raws = filament_raws;
         for filament_raw in &mut filament_raws {
             filament_raw.handle_legacy();
         }
