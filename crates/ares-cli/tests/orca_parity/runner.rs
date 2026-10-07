@@ -75,6 +75,9 @@ mod stage_tests;
 #[path = "runner/stages.rs"]
 pub(crate) mod stages;
 #[cfg(test)]
+#[path = "runner/stl_model_label.rs"]
+mod stl_model_label;
+#[cfg(test)]
 #[path = "runner/support_annotations.rs"]
 mod support_annotations;
 #[cfg(test)]
