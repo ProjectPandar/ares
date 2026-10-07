@@ -36,6 +36,9 @@ fn path_starts_use_previous_position_and_zero_time() {
         temperature: 210.0,
         extruder_id: 1,
         cp_color_id: 3,
+        pressure_advance: 0.04,
+        acceleration: 1500.0,
+        jerk: 8.5,
         ..MoveVertex::default()
     };
     let b = MoveVertex {
@@ -87,6 +90,14 @@ fn path_starts_use_previous_position_and_zero_time() {
         (0.4, 0.2, 40.0, 50.0, 210.0)
     );
     assert_eq!(v.times, [3.0, 0.0]);
+    // ORCA PA/acceleration/jerk visualization (`LibVGCodeWrapper.cpp:215-260`):
+    // phantom and regular vertices both carry the current move's values.
+    for v in &data.vertices[..2] {
+        assert_eq!(
+            (v.pressure_advance, v.acceleration, v.jerk),
+            (0.04, 1500.0, 8.5)
+        );
+    }
 }
 
 #[test]
