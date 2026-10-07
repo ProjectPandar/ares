@@ -40,6 +40,15 @@ Case: stock matrix Sermoon V1 cube10
   `art=0.1179` vs orca's `0.0743` → band-edge flip →
   F6120 vs F6818.82 (and the F4800 vs F5580 sibling), matching
   every observed F-diff.
+- Record correction: the earlier claim "CurledLine sets verified
+  EQUAL" compared orca's stored set against ares' September-era
+  PER-EMITTED-PATH collect (`/tmp/curl-ares.log`), which saw
+  junction-level emitted polylines. After the loop-entity fix
+  (`417495df`), `collect_entity` consumes the stored 5-pt loop
+  polyline instead — the comparison set changed, and the current
+  5-line set is what `collect` actually produces today. The orca
+  stored set itself is unchanged; the equality claim does not
+  hold for the post-fix collect path.
 - Other Arachne cases pass byte-identical because their
   annotated point lists coincide with the raw polyline (flat
   walls fully supported → no boundary-crossing or segmentation
@@ -65,10 +74,15 @@ Case: stock matrix Sermoon V1 cube10
   implementation.
 - Ares port: `crates/ares-core/src/project_slice/gcode_emit/
   motion/overhang/curl.rs::CurlTracker::{collect,collect_entity}`
-  and `curl/geometry.rs` — the missing annotation step must be
-  added on the collect path (sharing the `extended`-point
-  construction used by `overhang::estimate` where upstream shares
-  code, or porting `estimate_points_properties` faithfully).
+  and `curl/geometry.rs`. The existing
+  `estimate_points_properties` port in
+  `overhang.rs::estimate`/`BoundaryContext::{add_boundary_
+  intersections,add_segmentation_points}` (the
+  `<true,true,true,true>` instantiation) MUST be reused/factored
+  rather than duplicated — the `<true,true,false,false>`
+  collect-path instantiation shares the boundary-offset distance
+  and insertion machinery; implementation extends that shared
+  code, parameterized by the upstream template flags.
 
 ## The open delta (what this slice must resolve)
 
