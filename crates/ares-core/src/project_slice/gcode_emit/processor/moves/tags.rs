@@ -61,8 +61,30 @@ impl MoveRecorder {
             self.color_change(source, comment, position);
         } else if comment == tags.pause_print {
             self.store(source, EMoveType::PausePrint, position, 0.0);
+            self.custom_gcode_per_print_z.push(CustomGCodeItem {
+                print_z: position[2],
+                kind: CustomGCodeType::PausePrint,
+                extruder: self.filament as u32 + 1,
+                color: String::new(),
+                extra: String::new(),
+            });
+            self.pending_option = Some((
+                self.moves.len() - 1,
+                self.custom_gcode_per_print_z.len() - 1,
+            ));
         } else if comment == tags.custom_code {
             self.store(source, EMoveType::CustomGCode, position, 0.0);
+            self.custom_gcode_per_print_z.push(CustomGCodeItem {
+                print_z: position[2],
+                kind: CustomGCodeType::Custom,
+                extruder: self.filament as u32 + 1,
+                color: String::new(),
+                extra: String::new(),
+            });
+            self.pending_option = Some((
+                self.moves.len() - 1,
+                self.custom_gcode_per_print_z.len() - 1,
+            ));
         } else if comment == tags.layer_change {
             self.layer_id += 1;
         }
