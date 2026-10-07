@@ -119,6 +119,47 @@ async fn color_change_z_follows_the_next_extrusion_position() {
     check_native_volumes(&output, "corrected-z");
 }
 
+#[tokio::test]
+async fn pause_and_custom_items_keep_color_volume_intervals_intact() {
+    // GCodeProcessor.cpp:3303-3319: both tags record/arm Z correction,
+    // but only PausePrint flushes custom time, and neither flushes color volume.
+    let overrides = ConfigOverrides::from_json(
+        br##"{"layer_change_gcode":"{if layer_num == 2};COLOR_CHANGE,T0,#FF0000\nM600\n{endif}{if layer_num == 4};PAUSE_PRINT\n{endif}{if layer_num == 6};CUSTOM_GCODE\n{endif}"} "##,
+    ).unwrap();
+    let output = slice_project_plate_processed(
+        PROJECT.to_vec(),
+        GenerationMetadata::default(),
+        Some(1),
+        &overrides,
+        SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    use ares_core::gcode_processor::CustomGCodeType;
+    assert_eq!(
+        output
+            .result
+            .custom_gcode_per_print_z
+            .iter()
+            .map(|item| item.kind)
+            .collect::<Vec<_>>(),
+        [
+            CustomGCodeType::ColorChange,
+            CustomGCodeType::PausePrint,
+            CustomGCodeType::Custom
+        ]
+    );
+    assert_eq!(
+        output
+            .result
+            .print_statistics
+            .volumes_per_color_change
+            .len(),
+        2
+    );
+    check_native_volumes(&output, "pause-custom");
+}
+
 fn check_native_volumes(output: &ares_core::ProcessedGCode, name: &str) {
     let Some(oracle) = std::env::var_os("ARES_PROCGCODE_BIN") else {
         eprintln!("native comparison requires ARES_PROCGCODE_BIN (procgcode.nix)");
