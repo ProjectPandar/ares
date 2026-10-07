@@ -88,6 +88,45 @@ upstream's `estimate_malformations` per-segment inputs and the
   oracle for `artificial_distance_to_curled_lines` at
   `ExtrusionProcessor.hpp:382-420`.
 
+## Investigation result (2026-10-07) — root cause localized OUTSIDE curl geometry
+
+White-box check: ares' `artificial_distance` reproduces orca's
+`art`/`nr` values **exactly** when fed orca's stored CurledLine set
+(fixture `oracle_artd_sermoon_v1.txt`, test
+`artificial_distance_matches_the_sermoon_v1_oracle_records` —
+green on first run; H1/H4 ruled out for the formula itself).
+
+Local probes (env-gated, uncommitted, reverted) then showed:
+
+- ares' `previous_curled` set at layer 2 = **5 whole-edge lines**
+  (h 0.30-0.48) vs orca's ~19 junction-level lines. The degenerate
+  corner line (4.645,4.645)-(4.645,4.645) reaches h=0.4761 vs
+  orca's 0.0561/0.1503 — producing art=0.1179 vs orca's 0.0743
+  (crosses the 13% band edge → F6120 vs F6818.82).
+- Reason: ares' stored `ExtrusionLoop.paths` polyline for this wall
+  = **5 points** (4 corners + close) while upstream's stored entity
+  = **~15-19 points at 1.1612mm junction spacing** — confirmed both
+  by orca's CURL/ARTD dumps and by ares' own emitted path points
+  (the scarf `detail()` subdivision reproduces the same 1.1612
+  positions: 9.29mm edge / 8). 
+- ares' pre-simplify Arachne `ExtrusionLine` = **9 junctions**
+  (4 corners + 4 edge midpoints, uniform width 567079) → simplify
+  legitimately removes 4 → 5. Upstream's junction set contains the
+  ~1.16mm spaced junctions, i.e. **ares' Arachne beading/
+  SkeletalTrapezoidation emits fewer junctions than upstream**
+  (upstream `WallToolPaths.cpp:491,545-553` passes
+  `discretization_step_size = scaled(0.8)` into the wall maker;
+  SkeletalTrapezoidation.cpp:167-302 discretizes edges).
+
+Consequence: the residual is NOT in the curl pipeline at all — it
+is in the Arachne junction density of the stored perimeter entities.
+That is a new upstream-cited boundary
+(`SkeletalTrapezoidation.cpp::discretize`, `WallToolPaths.cpp::
+generateToolpaths`) rather than the `ExtrusionProcessor.hpp` /
+`AABBTreeLines` boundary this spec scoped. The implementation slice
+must be re-planned around that boundary; the curl white-box test
+lands as evidence that the curl path itself is at parity.
+
 ## The open delta (what this slice must resolve)
 
 Orca's `ART` records show `art=0.0743` for

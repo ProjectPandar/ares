@@ -95,3 +95,67 @@ fn square_corners_carry_the_windowed_curvature() {
     assert!((curvature[2].abs() - corner).abs() < 1e-3);
     assert!(curvature[3].abs() > 0.01);
 }
+
+/// Whole-file-excerpt oracle for `artificial_distance`
+/// (`ExtrusionProcessor.hpp:382-420`) — Sermoon V1 cube10, stock
+/// matrix case-6qvP0t. The fixture `oracle_artd_sermoon_v1.txt`
+/// (sha256-provenanced header inside) carries upstream's stored
+/// `CurledLine` endpoints, the per-segment `all_lines_in_radius` hit
+/// count `nr`, and upstream's resulting `art` — the diverging
+/// segments on the emitted gcode (orca art 0.0743/0.0750 vs ares'
+/// ~0.081 crossing the 13%-of-width band edge).
+#[test]
+fn artificial_distance_matches_the_sermoon_v1_oracle_records() {
+    let mut sets: Vec<(String, Vec<CurledLine>)> = Vec::new();
+    let mut cases: Vec<(usize, [f64; 4], usize, f32)> = Vec::new();
+    for raw in include_str!("oracle_artd_sermoon_v1.txt").lines() {
+        let line = raw.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let fields: Vec<&str> = line.split_whitespace().collect();
+        match fields[0] {
+            "SET" => sets.push((fields[1].to_string(), Vec::new())),
+            "CL" => sets.last_mut().unwrap().1.push(CurledLine {
+                x0: fields[1].parse().unwrap(),
+                y0: fields[2].parse().unwrap(),
+                x1: fields[3].parse().unwrap(),
+                y1: fields[4].parse().unwrap(),
+                curled_height: fields[5].parse().unwrap(),
+            }),
+            "CASE" => cases.push((
+                sets.len() - 1,
+                [
+                    fields[1].parse().unwrap(),
+                    fields[2].parse().unwrap(),
+                    fields[3].parse().unwrap(),
+                    fields[4].parse().unwrap(),
+                ],
+                fields[5].parse().unwrap(),
+                fields[6].parse().unwrap(),
+            )),
+            other => panic!("unknown fixture directive {other}"),
+        }
+    }
+    for (set_index, segment, _oracle_nr, oracle_art) in cases {
+        let (set_name, curled) = &sets[set_index];
+        let art = artificial_distance(
+            curled,
+            [(segment[0], segment[1]), (segment[2], segment[3])],
+            0.61,
+            0.2,
+            crate::geometry::CoordinateScale::Normal,
+        );
+        // f32-vs-dump-4-digit tolerance: upstream prints `art` at 4
+        // decimals; 5e-4 covers the printed rounding but not the
+        // ~0.007 band-edge miss this test exists to expose.
+        assert!(
+            (art - oracle_art).abs() < 5e-4,
+            "set {set_name} seg ({},{})-({},{}): oracle art={oracle_art} nr={_oracle_nr} ares art={art}",
+            segment[0],
+            segment[1],
+            segment[2],
+            segment[3],
+        );
+    }
+}
