@@ -34,6 +34,9 @@ pub(crate) mod filament_map;
 #[path = "runner/filament_map_tests.rs"]
 mod filament_map_tests;
 #[cfg(test)]
+#[path = "runner/filament_self_index.rs"]
+mod filament_self_index;
+#[cfg(test)]
 #[path = "runner/generated_printer_ids.rs"]
 mod generated_printer_ids;
 #[cfg(test)]
