@@ -2,6 +2,48 @@ use super::{bounds, numeric_domains};
 use serde_json::json;
 
 #[test]
+fn generated_axis_option_resolves_cpp_definition_instead_of_header_line_number() {
+    let lines = [
+        "def = this->add(\"unrelated\", coFloat);",
+        "def->min = 71;",
+        "def->max = 72;",
+        "def = this->add(\"machine_max_acceleration_\" + axis.name, coFloats);",
+        "def->min = 0;",
+        "def = this->add(\"machine_max_jerk_\" + axis.name, coFloats);",
+        "def->min = 0;",
+        "def = this->add(\"next\", coFloat);",
+    ];
+    for axis in ["x", "y", "z", "e"] {
+        let block =
+            bounds::definition_block(&lines, &format!("machine_max_acceleration_{axis}"), 2);
+        assert_eq!(bounds::lower_bound(&block), Some(0.0));
+        assert_eq!(bounds::upper_bound(&block), None);
+        assert!(block.starts_with("def = this->add(\"machine_max_acceleration_\""));
+    }
+}
+
+#[test]
+fn implicit_integer_storage_limits_are_not_generated_as_source_boundaries() {
+    let entry = json!({"wire_shape":"scalar"});
+    for key in [
+        "slow_down_layers",
+        "bottom_shell_layers",
+        "top_shell_layers",
+        "elefant_foot_compensation_layers",
+    ] {
+        let (cases, omission, complete) =
+            numeric_domains::generate(&entry, key, "coInt", "def->min = 0;");
+        assert!(complete, "{key}");
+        assert_eq!(omission, None);
+        for case in cases {
+            let value: i32 = case.value.unwrap().as_str().unwrap().parse().unwrap();
+            assert!((0..=5).contains(&value), "{key}: {value}");
+            assert_ne!(case.label, "max");
+        }
+    }
+}
+
+#[test]
 fn source_named_integer_samples_and_resolution_complete_only_the_declared_scope() {
     let Some(plans) = super::try_load(&crate::runner::repo_root()) else {
         return;
