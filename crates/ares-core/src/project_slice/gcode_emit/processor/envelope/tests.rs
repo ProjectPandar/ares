@@ -191,7 +191,8 @@ fn junction_deviation_only_affects_marlin_firmware_not_klipper() {
             MotionState::with_limits(ProcessorLimits::from_config(&afinia(), flavor, false));
         let block = state.motion("G1 X10 F600").unwrap();
         if flavor == GCodeFlavor::MarlinFirmware {
-            assert_eq!(block.jerk[2], (f64::from(0.01_f32) * 500.0 * 2.5).sqrt());
+            // `get_axis_max_jerk_with_jd` (`GCodeProcessor.cpp:5790`): f32 `sqrt(jd * acc * 2.5f)`.
+            assert_eq!(block.jerk[2], f64::from((0.01_f32 * 500.0 * 2.5).sqrt()));
         } else {
             assert_eq!(block.jerk[2], f64::from(0.2_f32));
         }
