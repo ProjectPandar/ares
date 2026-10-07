@@ -19,14 +19,49 @@ use super::{
 pub(super) fn resolve_bounded_project_config(
     project: &Project,
 ) -> Result<BoundedResolvedProjectConfig, SliceError> {
-    resolve_with_observer(project, &mut NoopObserver)
+    let context = crate::options::flush_matrix::PreparationContext::current(
+        project.settings(),
+        &project.documents().project_settings_raw,
+    );
+    resolve_bounded_project_config_with_preparation(
+        project,
+        &context,
+        &crate::ConfigOverrides::default(),
+    )
+}
+
+pub(crate) fn resolve_bounded_project_config_with_preparation(
+    project: &Project,
+    context: &crate::options::flush_matrix::PreparationContext,
+    overrides: &crate::ConfigOverrides,
+) -> Result<BoundedResolvedProjectConfig, SliceError> {
+    resolve_with_observer(
+        project,
+        prepared_source(project, context, overrides)?,
+        &mut NoopObserver,
+    )
+}
+
+fn prepared_source(
+    project: &Project,
+    context: &crate::options::flush_matrix::PreparationContext,
+    overrides: &crate::ConfigOverrides,
+) -> Result<ProjectSettings, SliceError> {
+    let mut source = project.settings().clone();
+    crate::options::flush_matrix::prepare(
+        &mut source,
+        &project.documents().project_settings_raw,
+        context,
+        overrides,
+    )?;
+    Ok(source)
 }
 
 fn resolve_with_observer(
     project: &Project,
+    mut normalized_source: ProjectSettings,
     observer: &mut impl PhaseObserver,
 ) -> Result<BoundedResolvedProjectConfig, SliceError> {
-    let mut normalized_source = project.settings().clone();
     normalize_fdm_1(&mut normalized_source);
     observer.normalize_fdm_1(&normalized_source);
 

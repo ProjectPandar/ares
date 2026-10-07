@@ -48,7 +48,8 @@ pub(super) fn prepare_project_slice(
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let mut project = crate::project::load_project_with(source.bytes, source.overrides)?;
+    let (mut project, preparation) =
+        crate::project::load_project_with_preparation(source.bytes, source.overrides)?;
     if source.validate_print {
         super::validated::validate_post_process(&project)?;
     }
@@ -56,7 +57,13 @@ pub(super) fn prepare_project_source(
         .settings()
         .validate_loaded_config(&project.documents().project_settings_raw)?;
     project.initialize_cli_loaded_project_config();
-    prepare_loaded_project_slice_with_validation(project, source.plate, None, source.validate_print)
+    prepare_loaded_project_slice_with_validation(
+        project,
+        source.plate,
+        None,
+        source.validate_print,
+        Some((preparation, source.overrides)),
+    )
 }
 
 #[cfg(test)]
@@ -64,7 +71,7 @@ pub(super) fn prepare_loaded_project_slice(
     project: Project,
     plate: Option<u32>,
 ) -> Result<ProjectSliceState, SliceError> {
-    prepare_loaded_project_slice_with_validation(project, plate, None, false)
+    prepare_loaded_project_slice_with_validation(project, plate, None, false, None)
 }
 
 pub(super) fn prepare_loaded_project_slice_with_validation(
@@ -72,6 +79,10 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     plate: Option<u32>,
     selected_printer: Option<&str>,
     validate_print: bool,
+    preparation: Option<(
+        crate::options::flush_matrix::PreparationContext,
+        &crate::ConfigOverrides,
+    )>,
 ) -> Result<ProjectSliceState, SliceError> {
     let plate_id = plate.unwrap_or_else(|| first_plate_id(&project));
     let project = project.select_plate(plate_id)?;
@@ -84,7 +95,10 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
                 .to_owned(),
         ));
     }
-    let resolved = resolve_bounded_project_config(&project)?;
+    let resolved = match preparation {
+        Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, &context, overrides)?,
+        None => resolve_bounded_project_config(&project)?,
+    };
     if validate_print {
         crate::print::validate::validate_applied_project(
             &project,

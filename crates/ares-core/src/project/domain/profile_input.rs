@@ -44,14 +44,18 @@ impl Project {
         input: &[u8],
         profile: SelectedProfile<'_>,
         overrides: &crate::ConfigOverrides,
-    ) -> Result<Self, SliceError> {
+    ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
         let SelectedProfile {
             settings,
             profile_raw,
             filament_raws,
             validate_print,
         } = profile;
-        let mut project = crate::load_project(input)?;
+        let (mut project, preparation) = crate::project::load_project_with_preparation(
+            input,
+            &crate::ConfigOverrides::default(),
+        )?;
+        let preparation = preparation.for_overrides(overrides);
         let embedded_raw = project.documents.project_settings_raw.clone();
         // O5: the CLI composite entry checks the **embedded**
         // post_process before the profile overlay (`OrcaSlicer.cpp:1682-1690`).
@@ -107,7 +111,7 @@ impl Project {
         .resolve();
         project.documents.project_settings_raw = merged;
         project.initialize_cli_loaded_project_config();
-        Ok(project)
+        Ok((project, preparation))
     }
 
     pub(crate) fn from_stl_with_profiles(
@@ -115,7 +119,11 @@ impl Project {
         filename: &str,
         profile: SelectedProfile<'_>,
         overrides: &crate::ConfigOverrides,
-    ) -> Result<Self, SliceError> {
+    ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
+        let preparation = crate::options::flush_matrix::PreparationContext::capture(
+            &ProjectSettingsRaw::default(),
+            overrides,
+        )?;
         // With user edits the sparse profile raw cannot carry a full config;
         // route through the same overlay machinery as the 3MF entry (an
         // empty embedded view) so `ConfigOverrides` apply last and the typed
@@ -199,25 +207,28 @@ impl Project {
             vec![volume],
             vec![instance],
         );
-        Ok(Self::new(
-            vec![ProjectModel::new(filename.to_owned(), vec![1])],
-            vec![object],
-            vec![PlateMetadata::new(1, vec![[1, 0, 0]])],
-            settings,
-            ProjectDocuments {
-                model_settings: ModelSettings {
-                    objects: Vec::new(),
-                    plates: Vec::new(),
-                    assemble: None,
+        Ok((
+            Self::new(
+                vec![ProjectModel::new(filename.to_owned(), vec![1])],
+                vec![object],
+                vec![PlateMetadata::new(1, vec![[1, 0, 0]])],
+                settings,
+                ProjectDocuments {
+                    model_settings: ModelSettings {
+                        objects: Vec::new(),
+                        plates: Vec::new(),
+                        assemble: None,
+                    },
+                    project_settings_raw: raw,
+                    slice_info: SliceInfo {
+                        header: SliceInfoHeader { items: Vec::new() },
+                    },
+                    filament_sequences: FilamentSequences(Default::default()),
+                    plate_documents: Vec::new(),
+                    has_painted_layer_height_profile: false,
                 },
-                project_settings_raw: raw,
-                slice_info: SliceInfo {
-                    header: SliceInfoHeader { items: Vec::new() },
-                },
-                filament_sequences: FilamentSequences(Default::default()),
-                plate_documents: Vec::new(),
-                has_painted_layer_height_profile: false,
-            },
+            ),
+            preparation,
         ))
     }
 }

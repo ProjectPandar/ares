@@ -129,6 +129,14 @@ pub(crate) fn resolve_bounded_project_config_with_trace(
     project: &Project,
 ) -> Result<(BoundedResolvedProjectConfig, ResolutionTrace), SliceError> {
     let mut trace = ResolutionTrace::default();
-    let resolved = resolve_with_observer(project, &mut trace)?;
+    let context = crate::options::flush_matrix::PreparationContext::current(
+        project.settings(),
+        &project.documents().project_settings_raw,
+    );
+    let resolved = resolve_with_observer(
+        project,
+        super::prepared_source(project, &context, &crate::ConfigOverrides::default())?,
+        &mut trace,
+    )?;
     Ok((resolved, trace))
 }

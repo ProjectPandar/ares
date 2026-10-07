@@ -25,6 +25,7 @@ pub use domain::{
     ProjectVolume, ProjectVolumeType,
 };
 pub use layer_config_ranges::LayerConfigRange;
+pub(crate) use load::load_project_with_preparation;
 pub use load::{load_project, load_project_with};
 pub use transform::Transform3d;
 #[cfg(test)]

@@ -37,6 +37,13 @@ pub(super) fn load_with_profile(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
+    load_with_profile_preparation(project, profile).map(|(loaded, _)| loaded)
+}
+
+fn load_with_profile_preparation(
+    project: &ProjectSource<'_>,
+    profile: ProfileInput<'_>,
+) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     let selected = SelectedProfile {
         settings: profile.composed.settings(),
         profile_raw: profile.raw,
@@ -62,13 +69,20 @@ pub(crate) fn load_and_place(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
-    let mut loaded = load_with_profile(project, profile)?;
+    load_and_place_with_preparation(project, profile).map(|(loaded, _)| loaded)
+}
+
+fn load_and_place_with_preparation(
+    project: &ProjectSource<'_>,
+    profile: ProfileInput<'_>,
+) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
+    let (mut loaded, preparation) = load_with_profile_preparation(project, profile)?;
     if profile.placement == Placement::Center {
         let bed = bed_center(&profile.composed.settings().printer.remaining.printable_area);
         loaded.center_instances_around_point(bed);
         loaded.drop_instances_to_ground();
     }
-    Ok(loaded)
+    Ok((loaded, preparation))
 }
 
 /// Prepares the slice state for a selected-profile request: the loaded
@@ -78,7 +92,7 @@ pub(super) fn prepare_profile_slice(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let loaded = load_and_place(project, profile)?;
+    let (loaded, preparation) = load_and_place_with_preparation(project, profile)?;
     loaded
         .settings()
         .validate_loaded_config(&loaded.documents().project_settings_raw)?;
@@ -95,6 +109,7 @@ pub(super) fn prepare_profile_slice(
                 .0,
         ),
         project.validate_print,
+        Some((preparation, project.overrides)),
     )
 }
 

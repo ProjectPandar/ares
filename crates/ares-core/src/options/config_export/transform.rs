@@ -1,4 +1,4 @@
-use crate::{OrcaFloat, ProjectSettings, SliceError};
+use crate::{ProjectSettings, SliceError};
 
 use super::writer::ExportOverrides;
 
@@ -64,28 +64,7 @@ fn prepare_multi_extruder_cli_defaults(settings: &mut ProjectSettings) {
     if count <= 1 || settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual {
         return;
     }
-    let missing_ams = settings
-        .project
-        .gcode
-        .extruder_ams_count
-        .0
-        .iter()
-        .all(String::is_empty);
     settings.project.gcode.extruder_ams_count.0 = vec!["1#0|4#1".to_owned(); count];
-    if !missing_ams {
-        return;
-    }
-    settings
-        .project
-        .print
-        .flush_multiplier
-        .0
-        .resize(count, OrcaFloat(1.0));
-    // Preserve the existing flush preparation shell's scope; the CLI's
-    // `get_flush_volumes_matrix` rewrite is separate from the AMS override.
-    if settings.filament.gcode.filament_colour.0.len() == 1 {
-        settings.project.print.flush_volumes_matrix.0 = vec![0.0; count];
-    }
 }
 
 fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> {
@@ -111,22 +90,6 @@ fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> 
         }
         Ok(())
     } else if filament_count == 1 {
-        // `OrcaSlicer.cpp:3351,3429`: when the CLI overrides
-        // `nozzle_volume_type` (or the matrix is otherwise missing), the
-        // flush matrix is recomputed and resized to
-        // `filament_count^2 * extruder_count` zeros — for a single filament
-        // that collapses the project matrix to `[0]`.
-        if matrix.len() != 1
-            && settings
-                .project
-                .gcode
-                .nozzle_volume_type
-                .0
-                .iter()
-                .any(|t| *t != crate::NozzleVolumeType::Standard)
-        {
-            matrix.resize(1, 0.0);
-        }
         Ok(())
     } else {
         Err(matrix_error())

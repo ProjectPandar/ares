@@ -77,6 +77,10 @@ impl ConfigOverrides {
         self.values.is_empty()
     }
 
+    pub(crate) fn contains_key(&self, key: &str) -> bool {
+        self.values.contains_key(key)
+    }
+
     /// Applies the overrides onto the raw project-settings view
     /// (`ConfigBase::apply_only`, `Config.cpp:461`: later values win).
     pub(crate) fn apply(&self, raw: &mut ProjectSettingsRaw) {

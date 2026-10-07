@@ -49,6 +49,13 @@ pub fn load_project_with(
     input: impl AsRef<[u8]>,
     overrides: &crate::ConfigOverrides,
 ) -> Result<Project, SliceError> {
+    load_project_with_preparation(input, overrides).map(|(project, _)| project)
+}
+
+pub(crate) fn load_project_with_preparation(
+    input: impl AsRef<[u8]>,
+    overrides: &crate::ConfigOverrides,
+) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     let input = input.as_ref();
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
@@ -113,6 +120,11 @@ pub fn load_project_with(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    // CLI:1704 captures the old configuration before user edits.
+    let preparation = crate::options::flush_matrix::PreparationContext::capture(
+        &project_settings_raw,
+        overrides,
+    )?;
     // Overrides win over document values (`apply_only`, `Config.cpp:461`).
     overrides.apply(&mut project_settings_raw);
     // Same upstream deserializer semantics as preset documents: JSON
@@ -139,19 +151,22 @@ pub fn load_project_with(
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::normalize_volume_offsets(&mut objects);
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
-    Ok(Project::new(
-        models,
-        objects,
-        metadata.plates,
-        settings,
-        ProjectDocuments {
-            project_settings_raw,
-            model_settings,
-            slice_info,
-            filament_sequences,
-            plate_documents,
-            has_painted_layer_height_profile,
-        },
+    Ok((
+        Project::new(
+            models,
+            objects,
+            metadata.plates,
+            settings,
+            ProjectDocuments {
+                project_settings_raw,
+                model_settings,
+                slice_info,
+                filament_sequences,
+                plate_documents,
+                has_painted_layer_height_profile,
+            },
+        ),
+        preparation,
     ))
 }
 

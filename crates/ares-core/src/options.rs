@@ -8,6 +8,8 @@ mod acceleration;
 option_modules!(adaptive_bed_mesh, bed_excluded_area, defaults, different_extruders, draft_shield, extruder_count, extruder_index, extruder_variant, fdm_normalization);
 mod brim;
 mod config_export;
+pub(crate) mod flush_matrix;
+mod flush_volume;
 pub(crate) use config_export::{serialize_config_value, write_config_block};
 pub(crate) use typed_legacy::{EXPLICIT_RULES, LegacyAction, OBSOLETE_INPUTS};
 mod config_types;
