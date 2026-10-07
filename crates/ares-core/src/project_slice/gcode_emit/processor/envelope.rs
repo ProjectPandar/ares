@@ -104,6 +104,18 @@ impl ProcessorLimits {
             gcode_flavor,
             bbl_printer,
             junction_deviation: normal(&machine.machine_max_junction_deviation),
+            // `GCodeProcessor.cpp:2094–2097`: RRF initial minimum rates are
+            // zero; a later M205 S/T still mutates the processor limits.
+            min_extruding_rate: if gcode_flavor == GCodeFlavor::RepRapFirmware {
+                0.0
+            } else {
+                normal(&machine.machine_min_extruding_rate)
+            },
+            min_travel_rate: if gcode_flavor == GCodeFlavor::RepRapFirmware {
+                0.0
+            } else {
+                normal(&machine.machine_min_travel_rate)
+            },
             max_feedrate: [
                 &machine.machine_max_speed_x,
                 &machine.machine_max_speed_y,

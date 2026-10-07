@@ -48,8 +48,21 @@ impl MotionState {
             return true;
         }
         if code.starts_with("M205") {
-            for (axis, letter) in ['X', 'Y', 'Z', 'E'].into_iter().enumerate() {
+            // `GCodeProcessor.cpp:5241–5249`: X writes both XY axes,
+            // then an explicit Y overrides only Y.
+            if let Some(value) = word(code, 'X') {
+                self.jerk[0] = value;
+                self.jerk[1] = value;
+            }
+            for (axis, letter) in [(1, 'Y'), (2, 'Z'), (3, 'E')] {
                 self.jerk[axis] = word(code, letter).unwrap_or(self.jerk[axis]);
+            }
+            for (limit, letter) in [
+                (&mut self.min_extruding_rate, 'S'),
+                (&mut self.min_travel_rate, 'T'),
+                (&mut self.junction_deviation, 'J'),
+            ] {
+                *limit = word(code, letter).unwrap_or(*limit);
             }
             return true;
         }

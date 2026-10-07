@@ -15,6 +15,8 @@ impl MotionState {
         Self {
             gcode_flavor: limits.gcode_flavor,
             junction_deviation: limits.junction_deviation,
+            min_extruding_rate: limits.min_extruding_rate,
+            min_travel_rate: limits.min_travel_rate,
             max_feedrate: limits.max_feedrate,
             max_acceleration: limits.max_acceleration,
             jerk: limits.jerk,
@@ -28,6 +30,16 @@ impl MotionState {
                 travel,
             )
         }
+    }
+
+    /// `GCodeProcessor.cpp:3987–3989,4347–4349,5726–5740`: zero E delta
+    /// selects the travel floor; retracts and E-only moves use extrusion.
+    pub(super) fn block_feedrate(&self, e_delta: f64) -> f64 {
+        self.feedrate.max(if e_delta == 0.0 {
+            self.min_travel_rate
+        } else {
+            self.min_extruding_rate
+        })
     }
 
     /// `get_axis_max_jerk` (`GCodeProcessor.cpp:5798-5804`): for Marlin

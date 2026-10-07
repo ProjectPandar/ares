@@ -32,6 +32,8 @@ pub(super) struct MotionState {
     pub(super) max_feedrate: [f64; 4],
     pub(super) jerk: [f64; 4],
     pub(super) junction_deviation: f64,
+    pub(super) min_extruding_rate: f64,
+    pub(super) min_travel_rate: f64,
     /// `M221` extrude factor override (`TimeMachine::
     /// extrude_factor_override_percentage`), applied to the E-axis
     /// feedrate before the safe/jerk limits (`GCodeProcessor.cpp:4040`).
@@ -66,6 +68,8 @@ impl Default for MotionState {
             max_feedrate: [0.0; 4],
             jerk: [9.0, 9.0, 3.0, 2.5],
             junction_deviation: 0.0,
+            min_extruding_rate: 0.0,
+            min_travel_rate: 0.0,
             extrude_factor: 1.0,
             relative: false,
             e_relative: false,
@@ -361,11 +365,11 @@ impl MotionState {
         };
         // The axis factor chain and centripetal limit run in the
         // planner's `prepare` in upstream order
-        // (`GCodeProcessor.cpp:3993-4080`); the raw F travels here.
+        // (`GCodeProcessor.cpp:3993-4080`); the minimum-rate-selected F travels here.
         Some(MotionBlock {
             distance,
             delta,
-            speed: self.feedrate,
+            speed: self.block_feedrate(e_delta),
             acceleration,
             centripetal_acceleration: self.acceleration,
             max_feedrate: self.max_feedrate,

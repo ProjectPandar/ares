@@ -34,8 +34,8 @@ impl MotionState {
             delta,
             // The axis factor chain and centripetal limit run in the
             // planner's `prepare` in upstream order
-            // (`GCodeProcessor.cpp:3993-4080`); the raw F travels here.
-            speed: self.feedrate,
+            // (`GCodeProcessor.cpp:3993-4080`); the minimum-rate-selected F travels here.
+            speed: self.block_feedrate(delta[3]),
             acceleration,
             centripetal_acceleration: self.acceleration,
             max_feedrate: self.max_feedrate,

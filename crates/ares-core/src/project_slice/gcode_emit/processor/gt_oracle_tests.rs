@@ -156,6 +156,7 @@ fn spiral_in_toolchange_context_matches_gt() {
         retract_restart_extra: 0.0,
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
+        ..ProcessorLimits::default()
     };
     let estimate = Estimate::record(
         &lines,
@@ -220,6 +221,7 @@ fn wall_ramp_after_travel_matches_gt() {
         retract_restart_extra: 0.0,
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
+        ..ProcessorLimits::default()
     };
     let estimate = Estimate::record(
         &lines,
@@ -262,6 +264,7 @@ fn ksr_prefix_total() {
         retract_restart_extra: 0.0,
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
+        ..ProcessorLimits::default()
     };
     let estimate = Estimate::record(
         &lines,
@@ -324,6 +327,7 @@ fn toolchange_ladder_totals() {
             retract_restart_extra: 0.0,
             retraction_feedrate: 0.0,
             deretraction_feedrate: 0.0,
+            ..ProcessorLimits::default()
         };
         let estimate = Estimate::record(
             &lines,
@@ -373,6 +377,7 @@ fn marlin_arc_segment_boundary_uses_f32_radius() {
         retract_restart_extra: 0.0,
         retraction_feedrate: 0.0,
         deretraction_feedrate: 0.0,
+        ..ProcessorLimits::default()
     };
     let estimate = Estimate::record(
         &lines,
