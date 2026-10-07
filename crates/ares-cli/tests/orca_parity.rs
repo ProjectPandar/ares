@@ -29,6 +29,8 @@ mod filament_usage_stats;
 mod filament_volume_oracle;
 #[path = "orca_parity/flow_errors.rs"]
 mod flow_errors;
+#[path = "orca_parity/gcode_printable_area.rs"]
+mod gcode_printable_area;
 #[path = "orca_parity/honeycomb_multiline.rs"]
 mod honeycomb_multiline;
 #[path = "orca_parity/klipper_velocity_limit.rs"]
