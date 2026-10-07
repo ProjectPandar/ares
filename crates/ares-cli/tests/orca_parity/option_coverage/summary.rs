@@ -107,13 +107,14 @@ pub(super) fn write_summary(outcomes: &[OptionOutcome]) {
     let unbounded = boundaries
         .iter()
         .flat_map(|row| {
-            ["minimum", "maximum"].into_iter().filter_map(move |side| {
-                (row[side]["kind"] == "UNBOUNDED").then(|| {
+            ["minimum", "maximum"]
+                .into_iter()
+                .filter(move |side| row[*side]["kind"] == "UNBOUNDED")
+                .map(move |side| {
                     serde_json::json!({
                         "key": row["key"], "side": side, "source": row["source"]
                     })
                 })
-            })
         })
         .collect::<Vec<_>>();
     parity::artifacts::overwrite(
