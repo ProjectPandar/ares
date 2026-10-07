@@ -99,6 +99,9 @@ mod user_overrides;
 #[cfg(test)]
 #[path = "runner/wrapper_tests.rs"]
 mod wrapper_tests;
+#[cfg(test)]
+#[path = "runner/x2d_flush_matrix.rs"]
+mod x2d_flush_matrix;
 
 use stages::{FailureKind, Stage, StageError};
 #[path = "runner/cache.rs"]
