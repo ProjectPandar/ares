@@ -32,19 +32,16 @@ pub fn validate_print(settings: &ProjectSettings, bbl_printer: bool) -> Result<(
             plate_index: 1,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
             wall_loops: settings.process.region.wall_loops.0,
-            sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),
+            sparse_infill_density: f64::from(
+                settings.process.region.sparse_infill_density.0 as f32,
+            ),
         },
         other => other,
     };
     let usage = extrusion_width::flat(settings).map_err(into_validate)?;
     validate_layer_templates(settings, bbl_printer).map_err(into_validate)?;
-    bed_filament::validate(
-        settings,
-        bbl_printer,
-        &usage.supported_used_filaments,
-        1,
-    )
-    .map_err(into_validate)
+    bed_filament::validate(settings, bbl_printer, &usage.supported_used_filaments, 1)
+        .map_err(into_validate)
 }
 
 fn validate_layer_templates(
@@ -225,7 +222,9 @@ fn into_validate_message(error: SliceError, settings: &ProjectSettings) -> Slice
             plate_index: 1,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
             wall_loops: settings.process.region.wall_loops.0,
-            sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),
+            sparse_infill_density: f64::from(
+                settings.process.region.sparse_infill_density.0 as f32,
+            ),
         },
         other => other,
     }

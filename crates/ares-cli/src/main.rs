@@ -136,18 +136,19 @@ impl From<serde_json::Error> for CliFailure {
 /// the legacy `Error:` channel — those surfaces have no native family
 /// emulation in this slice (recorded in clusters.md).
 fn slice_error_to_failure(error: SliceError, output: &Path) -> CliFailure {
-    let family = |return_code, plate_index, layer_height, wall_loops, sparse, error_string, stderr| {
-        CliFailure::Family(Box::new(FamilyFailure {
-            return_code,
-            plate_index,
-            layer_height,
-            wall_loops,
-            sparse_infill_density: sparse,
-            error_string,
-            stderr,
-            output: output.to_owned(),
-        }))
-    };
+    let family =
+        |return_code, plate_index, layer_height, wall_loops, sparse, error_string, stderr| {
+            CliFailure::Family(Box::new(FamilyFailure {
+                return_code,
+                plate_index,
+                layer_height,
+                wall_loops,
+                sparse_infill_density: sparse,
+                error_string,
+                stderr,
+                output: output.to_owned(),
+            }))
+        };
     match error {
         SliceError::PostProcessNotSupported => family(
             -19,
@@ -260,17 +261,16 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             let context = ares_core::SlicerContext::new(0);
             match &args.dump_moves {
                 Some(path) => {
-                    let processed =
-                        match ares_core::slice_project_plate_processed_validated(
-                            input, metadata, args.plate, &overrides, context,
-                        )
-                        .await
-                        {
-                            Ok(processed) => processed,
-                            Err(error) => {
-                                return Err(slice_error_to_failure(error, &args.output));
-                            }
-                        };
+                    let processed = match ares_core::slice_project_plate_processed_validated(
+                        input, metadata, args.plate, &overrides, context,
+                    )
+                    .await
+                    {
+                        Ok(processed) => processed,
+                        Err(error) => {
+                            return Err(slice_error_to_failure(error, &args.output));
+                        }
+                    };
                     fs::write(path, moves_csv::format(&processed.result))?;
                     processed.gcode
                 }
