@@ -9039,9 +9039,24 @@ remain deferred. Historical VG1 checkpoint `9e3e81837`: full browser base/candid
 15/15 and 16/16 passed, initial gzip 124,949/124,954 B. Workspace: 7,953 passed,
 9 skipped. Corrected-protocol seeded: 575/575 on both trees. Official: 566/575
 on both trees, with eight shared environment failures and two distinct native
-ND cases backed by identical raw Ares bytes. These are not an all-green official
-gate; coordinator review/acceptance remains required. The branch is now rebased
-onto `d789b0750`; fresh gates (including the narrowed X2D whole-file control)
-are in progress and earlier results do not substitute for this baseline.
+ND cases backed by identical raw Ares bytes. That checkpoint is historical.
+
+Final gates on `1b1751434` (later main commits through `21c18b79d` are
+docs-only): fmt, workspace all-target clippy `-D warnings`, workspace nextest
+**7,964 passed, 9 skipped**, CLI/example/WASM/library/app builds, typecheck
+and lint. Fresh corrected v2 references with empty caches: seeded **585/585**
+on both trees; official base **574/585**, candidate **575/585**. Eight shared
+reference-environment failures remain. Base-only `painted-blocker` is ND
+(identical raw Ares bytes). Two shared native-oracle 300 s SIGKILLs were rerun
+solo per ruling (threads=1, unchanged timeout): `change_filament_flush_blocks`
+passes on both trees; `narrowed_x2d_whole_file` fails identically, with
+identical Ares bytes, only on official 2.4.2's uninitialized object-label ids
+(accepted as the `initialized_*` environment class, ARD-0081), and passes
+whole-file under seeded on both trees. Full browser: base **14/15**,
+candidate **15/16**; the single shared failure is `presetImport.spec.ts:96`
+(`bridge_speed contains invalid value`), an O3 regression on main: native
+official accepts the BBL array value (reported to the coordinator). Initial gzip
+**124,951 / 124,948 B**. Not an all-green official gate; coordinator
+review/acceptance remains required.
 The tagged stable-Time authority and bounded raw difference are explicitly
 approved and documented in the ColorChange Known difference section.
