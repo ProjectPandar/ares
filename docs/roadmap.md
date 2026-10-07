@@ -7,7 +7,7 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### X2D dual-nozzle flush-matrix preparation (#55, spec review)
+### X2D dual-nozzle flush-matrix preparation (#55, GREEN paused)
 
 After integrated VG1/UsedFilaments `9e3e81837`, port the upstream preparation
 slice `OrcaSlicer.cpp:3340–3503`, `PrintConfig.hpp:2130–2153` and required
@@ -21,6 +21,23 @@ exact prepared nozzle-major matrices and complete G-code equality, preserved
 nontrigger rejection/control bytes, full reference/workspace/Tier1 gates and
 exact-hash coordinator approval. Processor timing, emitter ordering/geometry and
 external X2D fixtures are deferred. No heavy gates during web's browser window.
+
+### O8-X2D-SCALAR: original flush-context divergence (open, pi-lint)
+
+Original admitted `case-LqoYic` still has Native success versus Ares's exact
+matrix-size error on fresh main plus the any-vector safety boundary. Two Native
+diagnostics demonstrate out-of-bounds nozzle-type reads; stable observed bytes
+do not make that behavior defined. Preserve the original RED and explicitly
+track the unresolved difference, not a silent exemption or a claimed FM fix.
+[Follow-up spec](architecture/o8-x2d-scalar-flush-context.md) cites
+`OrcaSlicer.cpp:1708–1718,3022–3047,3340–3351,3457–3462`,
+`PrintConfig.cpp:9004–9060` and `GCode.cpp:5596–5614`.
+Rust destination: existing raw/CLI configuration preparation and core
+`options/flush_matrix.rs`; included work begins with an approved handling
+contract and same-input RED. Generic materialization, timing and emitter
+geometry/order are deferred. Exit requires an explicit accepted resolution of
+this original discrepancy with complete-stream and unchanged-control evidence;
+no UB emulation, numeric patch or relaxed size guard.
 
 ### Profile-based slicing entry (2026-10-05, interface approved)
 

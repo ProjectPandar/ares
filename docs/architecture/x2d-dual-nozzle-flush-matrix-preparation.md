@@ -5,8 +5,11 @@
 Approved boundary, revised after source tracing and coordinator's system-boundary
 ruling (2026-10-07). Production is uncommitted and not accepted; initial RED
 `65336cb5` remains historical evidence but its undersized scalar type vector
-is no longer an acceptance input. Fully specified missing-matrix reconstruction
-is the replacement RED. Generic materialization RED moves to a separate slice.
+is not a defined-input calculator acceptance witness. **Its original Ares-error /
+Native-success divergence remains unresolved**, separately tracked in
+[O8-X2D-SCALAR](o8-x2d-scalar-flush-context.md); this slice must not claim to fix
+that reported input. Fully specified missing-matrix reconstruction is the FM
+RED. Generic materialization RED moves to a separate slice.
 Predecessor VG1/UsedFilaments is integrated at `9e3e8183777d465f9134361eb26c0a27d82e82c7`.
 This is #55 / `X2D-FM` in `/tmp/ares-matrix-clusters.md`, independently owned by
 pi-lint. It is configuration preparation, not a processor timing patch or an
