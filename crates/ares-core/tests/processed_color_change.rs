@@ -188,6 +188,45 @@ async fn pause_and_custom_items_keep_color_volume_intervals_intact() {
     check_native_processor(&output, "pause-custom");
 }
 
+#[tokio::test]
+async fn sync_delays_survive_color_and_pause_time_flushes() {
+    // GCodeProcessor.cpp:5430-5436 synchronizes with T seconds. Exercise a
+    // delay before ColorChange, between events, before PausePrint and at EOF;
+    // all expectations come from processing the exact emitted commands natively.
+    let overrides = ConfigOverrides::from_json(
+        br##"{"layer_change_gcode":"{if layer_num == 2}SYNC T2.75\n;COLOR_CHANGE,T0,#FF0000\nM600\nSYNC T1.25\n{endif}{if layer_num == 4}SYNC T3.5\n;PAUSE_PRINT\n{endif}","machine_end_gcode":"SYNC T4.25\n"}"##,
+    ).unwrap();
+    let output = slice_project_plate_processed(
+        PROJECT.to_vec(),
+        GenerationMetadata::default(),
+        Some(1),
+        &overrides,
+        SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        std::str::from_utf8(&output.gcode)
+            .unwrap()
+            .lines()
+            .filter(|line| line.starts_with("SYNC T"))
+            .count(),
+        4
+    );
+    assert_eq!(output.result.custom_gcode_times.len(), 3);
+    let unrecorded = ares_core::slice_project_plate(
+        PROJECT,
+        GenerationMetadata::default(),
+        Some(1),
+        &overrides,
+        SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    assert_eq!(output.gcode, unrecorded);
+    check_native_processor(&output, "sync-color-pause");
+}
+
 fn check_native_processor(output: &ares_core::ProcessedGCode, name: &str) {
     let Some(oracle) = std::env::var_os("ARES_PROCGCODE_BIN") else {
         eprintln!("native comparison requires ARES_PROCGCODE_BIN (procgcode.nix)");
