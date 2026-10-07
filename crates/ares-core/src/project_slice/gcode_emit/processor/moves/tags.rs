@@ -117,6 +117,10 @@ impl MoveRecorder {
                 color: color.to_owned(),
                 extra: String::new(),
             });
+            self.pending_option = Some((
+                self.moves.len() - 1,
+                self.custom_gcode_per_print_z.len() - 1,
+            ));
             self.flush_color_change_volume();
         }
     }

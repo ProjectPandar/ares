@@ -39,6 +39,7 @@ pub(super) struct MoveRecorder {
     last_default_color: usize,
     color_change_volume: f64,
     color_change_volumes: Vec<f64>,
+    pending_option: Option<(usize, usize)>,
     tags: &'static Tags,
     role: ExtrusionRole,
     processing_start_custom_gcode: bool,
@@ -101,6 +102,7 @@ impl MoveRecorder {
             last_default_color: 0,
             color_change_volume: 0.0,
             color_change_volumes: Vec::new(),
+            pending_option: None,
             tags: if config.limits.bbl_printer {
                 &BBL_TAGS
             } else {
@@ -228,6 +230,7 @@ impl MoveRecorder {
         self.travel_dist = delta_xyz;
         if move_type == EMoveType::Extrude {
             self.extrusion_geometry(delta, delta_xyz, end[2], linear);
+            self.correct_options_z();
         }
         let move_id = self.moves.len() as u32;
         if let Some(seam) = seam {
@@ -244,6 +247,20 @@ impl MoveRecorder {
         }
         self.store(source, move_type, end, delta[3]);
         move_id
+    }
+
+    /// OptionsZCorrector::update (GCodeProcessor.hpp:693-705): relocate only
+    /// the latest pending marker, preserving its original source line.
+    fn correct_options_z(&mut self) {
+        if let Some((move_id, item_id)) = self.pending_option.take() {
+            let position = self.moves[self.moves.len() - 1].position;
+            let mut marker = self.moves[move_id];
+            marker.position = position;
+            marker.height = self.height;
+            self.moves.push(marker);
+            self.moves.remove(move_id);
+            self.custom_gcode_per_print_z[item_id].print_z = f64::from(position[2]);
+        }
     }
 
     /// `store_move_vertex` (`:5630-5718`); `source` is the input line the
