@@ -79,6 +79,9 @@ mod profile_legacy_overlay;
 #[path = "runner/profile_overlay_default_gcodes.rs"]
 mod profile_overlay_default_gcodes;
 #[cfg(test)]
+#[path = "runner/project_export_metadata.rs"]
+mod project_export_metadata;
+#[cfg(test)]
 #[path = "runner/stage_tests.rs"]
 mod stage_tests;
 #[path = "runner/stages.rs"]
