@@ -30,28 +30,31 @@ impl MotionState {
         }
     }
 
-    /// `GCodeProcessor.cpp:5766-5791`: for Marlin firmware with a positive
-    /// `machine_max_junction_deviation`, the per-axis jerk limit derives
-    /// from the junction deviation and the current print acceleration
-    /// clamped by the per-axis maximum; classic M205 jerks apply otherwise.
+    /// `get_axis_max_jerk` (`GCodeProcessor.cpp:5798-5804`): for Marlin
+    /// firmware with a positive `machine_max_junction_deviation`, the f32
+    /// `get_axis_max_jerk_with_jd(mode, axis, get_acceleration(mode))`
+    /// (`:5771-5791`); classic M205 jerks apply otherwise.
     pub(super) fn effective_jerk(&self) -> [f64; 4] {
-        if self.gcode_flavor != GCodeFlavor::MarlinFirmware || self.junction_deviation <= 0.0 {
+        let jd = self.junction_deviation as f32;
+        if self.gcode_flavor != GCodeFlavor::MarlinFirmware || jd <= 0.0 {
             return self.jerk;
         }
-        let mut jerk = [0.0; 4];
-        for (jerk, max_acceleration) in jerk.iter_mut().zip(self.max_acceleration) {
-            let effective_acceleration = if max_acceleration > 0.0 {
-                self.acceleration.min(max_acceleration)
-            } else {
-                self.acceleration
+        // The `<= 0` fallback to `get_acceleration(mode)` re-reads the same
+        // machine acceleration on this path.
+        let acceleration = self.acceleration as f32;
+        self.max_acceleration.map(|axis_max| {
+            let axis_max = axis_max as f32;
+            let effective = match (axis_max > 0.0, acceleration > 0.0) {
+                (true, true) => acceleration.min(axis_max),
+                (true, false) => axis_max,
+                (false, _) => acceleration,
             };
-            *jerk = if effective_acceleration > 0.0 {
-                (self.junction_deviation * effective_acceleration * 2.5).sqrt()
-            } else {
+            if effective <= 0.0 {
                 0.0
-            };
-        }
-        jerk
+            } else {
+                f64::from((jd * effective * 2.5).sqrt())
+            }
+        })
     }
 
     /// `GCodeProcessor.cpp:5160-5201` (M201) and `:5179-5201` (M203):
