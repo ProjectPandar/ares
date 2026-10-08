@@ -46,7 +46,22 @@ fn orca_parity_short_filament_variants_preserve_zero_slots_in_complete_output() 
     parity::normalize_process_defaults(&machine, &mut process);
     process.insert("enable_prime_tower".into(), Value::String("0".into()));
     process.insert("disable_m73".into(), Value::String("1".into()));
-    let mut filaments = vec![profiles.filament(&selection.filaments[0]).unwrap(); 2];
+    let mut filaments = vec![
+        profiles
+            .filament("Bambu PLA Basic @BBL H2D 0.2 nozzle")
+            .unwrap();
+        2
+    ];
+    // A standalone dual-variant filament keeps the second-variant layout
+    // alive under the ruled flatten: the variant list carries two slots
+    // while the per-slot payloads stay short, so the complete output must
+    // zero-fill the missing slots.
+    for filament in &mut filaments {
+        filament.insert(
+            "filament_extruder_variant".into(),
+            serde_json::json!(["Direct Drive Standard", "Direct Drive High Flow"]),
+        );
+    }
     parity::normalize_filament_defaults(&mut filaments);
     for (filament, colour) in filaments.iter_mut().zip(["#F2754E", "#0000FF"]) {
         filament.insert("filament_colour".into(), serde_json::json!([colour]));
@@ -88,17 +103,15 @@ fn orca_parity_short_filament_variants_preserve_zero_slots_in_complete_output() 
     }
     let sliced = runner.slice_case(&exported).unwrap();
     let native = std::str::from_utf8(&sliced.reference).unwrap();
-    // The ruled flatten clips the BBL filament chain to the parent's single
-    // variant (`PrintConfig.cpp:10263`), so each filament resolves one
-    // slot: the shortened payloads still reach the complete output with
-    // their nil slot preserved, but no second-variant zero fill remains.
+    // A standalone dual-variant filament keeps the second-variant layout
+    // alive under the ruled flatten: the per-slot payloads are short, so
+    // the complete output must zero-fill the missing second slots
+    // (defaults for enums, 0 for flags, nil for nullable flows).
     assert!(native.contains("\n; activate_air_filtration_during_print = 1,0\n"));
-    assert!(native.contains("\n; filament_z_hop_types = Spiral Lift,Spiral Lift\n"));
-    assert!(native.contains("\n; filament_wipe = 1,1\n"));
+    assert!(native.contains("\n; filament_z_hop_types = Spiral Lift,Auto Lift\n"));
+    assert!(native.contains("\n; filament_wipe = 1,0\n"));
     assert!(native.contains("\n; filament_ironing_flow = nil,0%\n"));
-    assert!(
-        native.contains("\n; volumetric_speed_coefficients = \"0 0 0 0 0 0\";\"0 0 0 0 0 0\"\n")
-    );
+    assert!(native.contains("\n; volumetric_speed_coefficients = \"0 0 0 0 0 0\";\n"));
     assert!(!native.contains("\n; filament used [g] = "));
     let outcome = parity::compare_case(&sliced);
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
