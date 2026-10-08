@@ -370,7 +370,7 @@ pub(super) fn emit(
             .count();
         header::finalize_layer_count(&mut output, layer_count);
     }
-    Ok(processor::process(
+    let (processed, printable_area) = processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,
         traversal
@@ -385,7 +385,16 @@ pub(super) fn emit(
             .with_settings(&traversal.resolved.views.full)
             .extruder_colors(extruder_colors)
             .recording_moves(record_moves),
-    ))
+    );
+    // OrcaSlicer.cpp:6215-6227 retains the fully exported stream on -102.
+    let error_code = printable_area.check(&traversal.resolved.views.full)?;
+    if error_code != 0 {
+        return Err(SliceError::ToolpathOutsidePrintableArea {
+            error_code,
+            gcode: processed.gcode,
+        });
+    }
+    Ok(processed)
 }
 
 pub(in crate::project_slice) use emit_helpers::format_processor_float;

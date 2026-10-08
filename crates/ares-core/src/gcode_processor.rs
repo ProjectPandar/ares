@@ -2,6 +2,8 @@
 //! `EMoveType`, `:184-218` `MoveVertex`), recorded by the processor pass
 //! that also stamps the exported G-code.
 
+pub(crate) mod printable_area;
+
 use crate::ExtrusionRole;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -39,6 +39,7 @@ fn replay(name: &str, reference: &str) {
         0.0,
         limits.with_settings(&super::replay_config_tests::settings(reference)),
     )
+    .0
     .gcode;
     let expected = reference.as_bytes();
     // Optional test-only artifact retention never alters the assertion.

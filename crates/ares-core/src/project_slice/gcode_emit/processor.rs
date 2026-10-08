@@ -107,7 +107,10 @@ pub(super) fn process(
     emit_progress: bool,
     machine_load_filament_time: f64,
     config: ProcessorConfig<'_>,
-) -> crate::ProcessedGCode {
+) -> (
+    crate::ProcessedGCode,
+    crate::gcode_processor::printable_area::PrintableAreaTracker,
+) {
     let limits = config.limits;
     let text = String::from_utf8(output).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
@@ -225,10 +228,13 @@ pub(super) fn process(
     processor_result.print_statistics = statistics;
     processor_result.extruder_colors = config.extruder_colors;
     processor_result.custom_gcode_times = estimate.custom_gcode_times;
-    crate::ProcessedGCode {
-        gcode,
-        result: processor_result,
-    }
+    (
+        crate::ProcessedGCode {
+            gcode,
+            result: processor_result,
+        },
+        estimate.printable_area,
+    )
 }
 
 fn is_progress_motion(line: &str) -> bool {

@@ -19,11 +19,15 @@ async fn timelapse_extrusion_outside_printable_area_rejects_after_processing() {
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
     assert_eq!(hash, SHA);
-    let directory = tempfile::Builder::new()
-        .prefix("gcode-printable-area-")
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
+    let mut builder = tempfile::Builder::new();
+    builder.prefix("gcode-printable-area-");
+    let directory = if std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some() {
+        builder.tempdir_in(crate::artifacts::root_from_env().unwrap())
+    } else {
+        builder.tempdir()
+    }
+    .unwrap()
+    .keep();
     let path = directory.join("input.3mf");
     fs::write(&path, INPUT).unwrap();
     let native = OrcaRunner::from_env().unwrap().map(|runner| {

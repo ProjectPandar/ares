@@ -20,6 +20,7 @@ use super::schedule::{DelayTarget, FlushEvent, PendingDelay, Schedule, scheduled
 use super::stop_times::StopTimes;
 use super::used_filaments::UsedFilaments;
 use super::{ProcessorConfig, is_progress_motion};
+use crate::gcode_processor::printable_area::PrintableAreaTracker;
 
 pub(super) struct Estimate {
     pub(super) total: f64,
@@ -27,6 +28,7 @@ pub(super) struct Estimate {
     pub(super) custom_gcode_times: Vec<crate::gcode_processor::CustomGCodeTime>,
     pub(super) stop_times: StopTimes,
     pub(super) print_statistics: crate::PrintEstimatedStatistics,
+    pub(super) printable_area: PrintableAreaTracker,
     elapsed: Vec<Option<elapsed::Snapshot>>,
     export_elapsed: Vec<Option<f32>>,
     #[cfg(test)]
@@ -53,6 +55,8 @@ impl Estimate {
         let mut measure_g29_time = false;
         let mut filaments = FilamentChange::new(config, machine_load_filament_time);
         let mut used_filaments = UsedFilaments::new(config);
+        // GCode.cpp's fresh export processor keeps its default XY offset zero.
+        let mut printable_area = PrintableAreaTracker::new(config.settings, [0.0; 2]);
         let mut g1_line_id = 0;
         let mut block_line_ids = Vec::new();
         // `TimeBlock::move_id` of every block (`GCodeProcessor.cpp:4001`).
@@ -68,6 +72,7 @@ impl Estimate {
         for (index, line) in lines.iter().enumerate() {
             seams.role(line);
             used_filaments.tags(line, filaments.selection().1);
+            printable_area.tag(line, limits.bbl_printer);
             match line.trim() {
                 "; WIPE_START" | ";WIPE_START" => state.set_wiping(true),
                 "; WIPE_END" | ";WIPE_END" => state.set_wiping(false),
@@ -185,6 +190,12 @@ impl Estimate {
             let motion_blocks = state.motions_indexed(code);
             for motion in &motion_blocks {
                 used_filaments.motion(motion.block.delta, false, state.wiping, &filaments);
+                printable_area.motion(
+                    motion.block.delta,
+                    motion.end,
+                    state.wiping,
+                    filaments.selection().1,
+                );
             }
             let mut seam_vertices = Vec::new();
             // Linear commands produce at most one block; only arcs subdivide.
@@ -370,6 +381,7 @@ impl Estimate {
             stop_times,
             prepare,
             print_statistics: used_filaments.finish(filaments.selection().1),
+            printable_area,
             elapsed,
             export_elapsed,
             #[cfg(test)]

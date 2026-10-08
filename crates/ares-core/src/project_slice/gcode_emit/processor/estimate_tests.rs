@@ -64,6 +64,7 @@ fn machine_max_feedrate_limits_extrusion_time() {
             0.0,
             bbl_limits().with_settings(&Default::default()),
         )
+        .0
         .gcode,
     )
     .unwrap();
