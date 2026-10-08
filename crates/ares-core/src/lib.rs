@@ -255,7 +255,14 @@ pub enum SliceError {
     },
     ProjectSlicingIncomplete,
     UnsupportedProjectFeature(String),
-    ToolpathOutsidePrintableArea { error_code: u8, gcode: Vec<u8> },
+    ToolpathOutsidePrintableArea {
+        error_code: u8,
+        gcode: Vec<u8>,
+        plate_index: u32,
+        layer_height: f64,
+        wall_loops: i32,
+        sparse_infill_density: f64,
+    },
 }
 
 impl fmt::Display for SliceError {

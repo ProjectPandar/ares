@@ -347,7 +347,10 @@ async fn circle_bed_per_vertex_accepts_inward_cylinder_then_rejects_export() {
         error.to_string(),
         "Found G-code in unprintable area of multi-extruder printers after slicing. Please make sure the 3mf file can be successfully sliced in the latest Orca Slicer."
     );
-    let ares_core::SliceError::ToolpathOutsidePrintableArea { error_code, gcode } = error else {
+    let ares_core::SliceError::ToolpathOutsidePrintableArea {
+        error_code, gcode, ..
+    } = error
+    else {
         panic!("Native rejects in the processor export gate, not Model eligibility");
     };
     assert_eq!(error_code, 4);

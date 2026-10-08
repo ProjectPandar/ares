@@ -27,6 +27,7 @@ mod offset;
 mod placeholders;
 mod pressure_advance;
 mod processor;
+mod retained_output;
 mod skirt;
 mod small_area;
 mod spiral_vase;
@@ -386,15 +387,7 @@ pub(super) fn emit(
             .extruder_colors(extruder_colors)
             .recording_moves(record_moves),
     );
-    // OrcaSlicer.cpp:6215-6227 retains the fully exported stream on -102.
-    let error_code = printable_area.check(&traversal.resolved.views.full)?;
-    if error_code != 0 {
-        return Err(SliceError::ToolpathOutsidePrintableArea {
-            error_code,
-            gcode: processed.gcode,
-        });
-    }
-    Ok(processed)
+    retained_output::check(processed, printable_area, traversal)
 }
 
 pub(in crate::project_slice) use emit_helpers::format_processor_float;
