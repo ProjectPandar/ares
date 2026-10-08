@@ -6,6 +6,9 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
 
+#[path = "runner/native_bbl_boundary_migration.rs"]
+mod native_bbl_boundary_migration;
+
 #[path = "runner/native_jerk_semm_migration.rs"]
 mod native_jerk_semm_migration;
 
