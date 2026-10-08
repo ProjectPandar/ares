@@ -46,6 +46,14 @@ pub(super) fn append(
         return Ok(String::new());
     }
     motion::refresh_writer_state(&mut config, state);
+    if !state.extruder_selected {
+        // `GCode.cpp:2856`: the parser retains the initial logical tool
+        // until the first set_extruder render has completed.
+        config.insert(
+            "current_extruder",
+            value::Value::Integer(state.initial_filaments.initial() as i64),
+        );
+    }
     let source = std::str::from_utf8(&injected).expect("G-code commands and templates are UTF-8");
     let name = "change_filament_gcode";
     let rendered = template::render_for_filament(source, &mut config, filament)
