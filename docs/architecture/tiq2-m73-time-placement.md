@@ -127,6 +127,16 @@ on the global one; `:3690/:3791` pass each ordering's own
 count per print-ordering mode — both orderings carry their own most-used
 extruder — never a single global count.
 
+Coverage: the shipped `schedule.tool_ordering` (`tool_ordering::build`,
+built over all objects) is the global print ordering — the non-sequential
+path (`GCode.cpp:2769` `print.tool_ordering()`, recomputed at `:3422`).
+The per-object mode (`:2742`/`:3290` rebuild a per-object ToolOrdering for
+sequential printing, recomputed at `:3342`/`:3345`) is **deferred**: the
+sequential print mode is not yet ported, so Ares has no per-object
+ordering to count. When that slice lands, the sequential emit path must
+recompute `most_used_extruder` from its own object ordering — not reuse
+the schedule's global one.
+
 ## Diagnosis result (coordinator-ruled): seam-rooted, slice suspended
 
 The wipe/retract position divergence is a DOWNSTREAM symptom of the layer-3
