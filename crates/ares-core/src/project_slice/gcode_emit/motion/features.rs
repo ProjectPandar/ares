@@ -86,9 +86,14 @@ impl PathProperties<'_> {
         options: &MotionOptions,
         layer_index: usize,
         object_layer_over_raft: bool,
-        path_length: f64,
+        requested_speed: Option<f64>,
     ) -> (u32, f64) {
-        let speed = self.speed(options, layer_index, object_layer_over_raft, path_length);
+        let speed = self.speed(
+            options,
+            layer_index,
+            object_layer_over_raft,
+            requested_speed,
+        );
         // `GCode.cpp:6414`: default acceleration of zero disables all per-print
         // acceleration switches.
         if options.default_acceleration == 0 {
@@ -154,22 +159,17 @@ impl PathProperties<'_> {
         options: &MotionOptions,
         layer_index: usize,
         object_layer_over_raft: bool,
-        path_length: f64,
+        requested_speed: Option<f64>,
     ) -> f64 {
-        if let Some(slope) = self.slope {
+        if requested_speed.is_none()
+            && let Some(slope) = self.slope
+        {
             return slope.speed;
         }
         let is_perimeter = matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall");
-        // The small-perimeter pre-selection replaces the role speed before
-        // the `_extrude` chain runs (`GCode.cpp:5809-5813`).
-        let base = if layer_index > 0
-            && matches!(self.feature, "Inner wall" | "Outer wall")
-            && path_length <= options.small_perimeter_threshold * 2.0 * std::f64::consts::PI
-        {
-            options.small_perimeter_speed
-        } else {
-            self.role_speed(options)
-        };
+        // `GCode.cpp:5896-5900,6515-6526`: a positive caller speed skips
+        // role selection and its default sloped-perimeter speed cap.
+        let base = requested_speed.unwrap_or_else(|| self.role_speed(options));
         // `GCode.cpp:6564-6570`: the first-layer speed override applies to
         // `on_first_layer()` OR `object_layer_over_raft()` — the first
         // object layer over a raft prints at `initial_layer_speed` even

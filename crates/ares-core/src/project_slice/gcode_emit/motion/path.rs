@@ -28,17 +28,19 @@ pub(super) fn emit(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
+    emit_with_speed(output, points, (properties, None), geometry, state);
+}
+
+pub(super) fn emit_with_speed(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    (properties, requested_speed): (PathProperties<'_>, Option<f64>),
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
     let role = role_id(properties.feature);
     let role_changed = state.last_extrusion_role != Some(role);
     let mut scaled_points = points.collect::<Vec<_>>();
-    let source_length = scaled_points
-        .windows(2)
-        .map(|pair| {
-            let dx = (pair[1].0 - pair[0].0) as f64;
-            let dy = (pair[1].1 - pair[0].1) as f64;
-            (dx * dx + dy * dy).sqrt() * geometry.scale.factor()
-        })
-        .sum();
     // Upstream clips the loop tail on `path.polyline`
     // (`GCode.cpp:5804`); for the skirt the caller pre-clips on the
     // plate-frame polyline (`emit_skirt_loop` `preclipped`).
@@ -111,7 +113,7 @@ pub(super) fn emit(
         &state.options,
         state.layer_index,
         state.object_layer_over_raft,
-        source_length,
+        requested_speed,
     );
     // `_mm3_per_mm` carries the effective flow (`GCode.cpp:6469-6471`:
     // geometric mm3_per_mm scaled by print and filament flow ratios, with

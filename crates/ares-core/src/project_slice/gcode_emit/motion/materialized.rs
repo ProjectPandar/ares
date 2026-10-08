@@ -16,6 +16,15 @@ pub(super) struct Emission<'a> {
 }
 
 pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, emission: Emission<'_>) {
+    emit_with_speed(output, state, emission, None);
+}
+
+pub(super) fn emit_with_speed(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    emission: Emission<'_>,
+    requested_speed: Option<f64>,
+) {
     let Emission {
         path,
         end_clip,
@@ -32,25 +41,28 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, emission: Emissi
         ExtrusionRole::TopSolidInfill => "Top surface",
         ExtrusionRole::BottomSurface => "Bottom surface",
     };
-    path::emit(
+    path::emit_with_speed(
         output,
         path.polyline.points.iter().map(|point| (point.x, point.y)),
-        PathProperties {
-            mm3_per_mm: path.mm3_per_mm,
-            width: path.width,
-            height: path.height,
-            feature,
-            is_perimeter: matches!(
-                path.role,
-                ExtrusionRole::ExternalPerimeter
-                    | ExtrusionRole::Perimeter
-                    | ExtrusionRole::OverhangPerimeter
-            ),
-            end_clip,
-            fitting: &path.polyline.fitting,
-            slope,
-            inside_loop,
-        },
+        (
+            PathProperties {
+                mm3_per_mm: path.mm3_per_mm,
+                width: path.width,
+                height: path.height,
+                feature,
+                is_perimeter: matches!(
+                    path.role,
+                    ExtrusionRole::ExternalPerimeter
+                        | ExtrusionRole::Perimeter
+                        | ExtrusionRole::OverhangPerimeter
+                ),
+                end_clip,
+                fitting: &path.polyline.fitting,
+                slope,
+                inside_loop,
+            },
+            requested_speed,
+        ),
         geometry,
         state,
     );

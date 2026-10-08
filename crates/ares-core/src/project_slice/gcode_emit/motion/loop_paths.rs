@@ -1,5 +1,6 @@
 mod adaptive_pa;
 mod inward;
+mod small_perimeter;
 use inward::{append_inward_move, ccw_angle, loop_is_counter_clockwise, path_length};
 #[cfg(test)]
 mod tests;
@@ -22,6 +23,16 @@ pub(super) fn emit(
 ) {
     let paths = &loop_.paths;
     let loop_role = loop_.role;
+    let small_speed = small_perimeter::speed(paths, &state.options, geometry.scale.factor());
+    // `GCode.cpp:5896-5900`: overhang/bridge roles keep the default speed.
+    let speed_for_path = |path: &ExtrusionPath| {
+        matches!(
+            path.role,
+            ExtrusionRole::ExternalPerimeter | ExtrusionRole::Perimeter
+        )
+        .then_some(small_speed)
+        .flatten()
+    };
     if !state.spiral_vase
         && let Some(scarf) = super::scarf::build(
             paths,
@@ -34,7 +45,7 @@ pub(super) fn emit(
         append_wipe_before_external(output, loop_, geometry, state, region_perimeters);
         begin_adaptive_loop(state, paths, 0.0, geometry);
         for path in &scarf.paths {
-            super::materialized::emit(
+            super::materialized::emit_with_speed(
                 output,
                 state,
                 super::materialized::Emission {
@@ -44,6 +55,7 @@ pub(super) fn emit(
                     geometry,
                     inside_loop: true,
                 },
+                speed_for_path(&path.path),
             );
         }
         state.adaptive_pa_flow = None;
@@ -97,7 +109,7 @@ pub(super) fn emit(
         } else {
             0.0
         };
-        super::materialized::emit(
+        super::materialized::emit_with_speed(
             output,
             state,
             super::materialized::Emission {
@@ -107,6 +119,7 @@ pub(super) fn emit(
                 geometry,
                 inside_loop: true,
             },
+            speed_for_path(path),
         );
         // `GCode.cpp:5979-5990`: upstream appends each emitted path's
         // polyline to `m_wipe.path`, dropping the join point ONLY when
