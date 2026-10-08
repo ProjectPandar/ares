@@ -1,10 +1,13 @@
 # SeamPlacer: parameter scope, layer height and visibility operation order
 
-Status: source-cited spec for coordinator review. No new Native RED or
-production change is claimed. Base: main
+Status: original D/A/B/C spec approved; A0 amendment awaiting coordinator
+review. D is merged. A0/A share the coordinator-accepted Native RED
+`96d1836ad1a8f473f9809548f3cb6375bbdcf7f2`; no A0/A production change is committed.
+Original spec base: main
 `117cd7eddfc8a4fdc64c2ab576f46f7714650069`.
-Owner: worker6. Execute as four independent slices in order **D → A → B → C**;
-each reachable slice has its own committed whole-output Native RED and GREEN.
+Owner: worker6. Execute in order **D → A0 → A → B → C**;
+each implemented boundary requires committed whole-output Native RED and GREEN,
+with the A0/A attribution and split rule below.
 The coordinator may approve this document once; that does not waive any
 slice's reachability, RED, verification or exact-hash merge review gate.
 
@@ -20,6 +23,7 @@ existing seam compatibility shell, not new Ares seam policies.
 | Slice | Owning upstream boundary | Rust destination |
 |---|---|---|
 | D | `SeamPlacer::calculate_overhangs_and_layer_embedding`, `.cpp:1084–1091`; threshold `.hpp:121–122`; actual height/slice-z `PrintObjectSlice.cpp:24–40,50–80` | `seam_placement/alignment/context.rs::populate, populate_overhang`; height threading through `alignment/preparation.rs` and existing traversal records |
+| A0 | `GCode.cpp:2533–2534,5330–5343,5771–5773`, export defaults followed by current-object configuration before perimeter seam placement | `gcode_emit/motion/options/build/fields/assemble.rs`, `gcode_emit/layers/object_entry.rs::emit` |
 | A | `SeamPlacer::init`, `.cpp:1431–1441`; `raycast_visibility`, `:130–132,165–167` | `seam_placement.rs::apply`, per-object construction of `GlobalVisibility` |
 | B | `process_perimeter_polygon`, `.cpp:456–471`; `LayerRegion.cpp:21–28`; `PrintRegion.cpp:6–22,25–53` | `seam_placement/alignment/preparation.rs::layer_regions, prepare_layer`; `seam_candidates.rs::RegionPerimeters, generate_regions, process_polygon` |
 | C | `raycast_visibility`, `.cpp:159–185`, AlignedBack adjustment and per-ray decrement | `seam_placement/visibility.rs::from_mesh, sample_visibility` |
@@ -81,6 +85,72 @@ diff and layer/seam context. A changed internal overhang scalar alone is
 not RED. GREEN must restore whole-file equality, including timing/wipe
 consequences. Equal-height input is a sibling control.
 
+## A0 — emit seam_position belongs to the current PrintObject
+
+### Source discrepancy and precise port
+
+Upstream `GCode.cpp:2533–2534` initializes the export configuration from
+default object/region settings. Inside the current-instance loop
+(`:5330–5332`), `:5341–5342` applies default region configuration and then
+`m_config.apply(instance_to_print.print_object.config(), true)` before
+assigning the current layer (`:5343`). Perimeter emission subsequently
+calls `m_seam_placer.place_seam(m_layer, ...)` at `:5771–5773`. Object
+configuration is refreshed for every object entry, not inherited from the
+first object in the project.
+
+Rust `gcode_emit/motion/options/build/context.rs:39` selects
+`resolved.objects.first()`. `fields/assemble.rs:326–328` uses that object's
+seam_position to initialize the shared MotionOptions. The current-object
+entry in `gcode_emit/layers/object_entry.rs::emit` does not refresh it.
+Consequently `motion/perimeter.rs:97–118` can skip Nearest selection for a
+later Nearest object when the first object is AlignedBack. Object-indexed
+nearest penalties already reach this entry through `layers/entry_builder.rs`;
+that handoff does not correct the stale motion mode.
+
+Included: initialize seam_position from the actual global default
+`full.process.object.seam_position`, removing this field's dependency on
+the first resolved object. Immediately before emitting each object's layer,
+refresh `state.options.seam_position` from
+`traversal.resolved.objects[object_index].object.seam_position`. Use the
+existing authoritative object index; add no optional lookup or fallback.
+Check option replacement by `motion/tool_selection.rs:16` so every object
+entry refresh occurs after its tool selection and before perimeter emission.
+The existing emit compatibility shell temporarily carries the one upstream
+object setting needed by this slice; no new Ares configuration policy is
+introduced.
+
+Deferred: other MotionOptions fields currently derived from the first
+object/region, generalized object configuration application, parsing and
+resolution, tool scheduling, support/skirt/brim behavior, and the separate
+visibility bias boundary A below. This authorization removes the
+first-element substitution for seam_position only.
+
+### Accepted RED, attribution and split gate
+
+The coordinator accepts RED `96d1836ad` for A0+A. Its three E2E tests retain
+the complete mixed-object fixture, both-Nearest control and single-AlignedBack
+control. Fresh Native comparison gave two PASS and one DIVERGENT. For the
+mixed fixture, the first normalized difference is byte2322, raw line105:
+Native `G1 X120.31 Y106.31 E.22677` versus Ares `M73 P60 R0`.
+The later Nearest object's first travel at raw line120 is Native
+`G1 X90.418 Y107.695 Z.6` versus Ares `G1 X93.69 Y119.69 Z.6`.
+The M73 timing difference remains part of the whole-file RED and GREEN.
+
+An isolated, uncommitted A visibility-scope trial did not change Ares's
+complete output SHA (`9e14003642f98b6003b5d385ca606ddacb934b4a2b592b6cec12d2bd678c64ef`)
+and did not fix this RED. That trial was reverted. It establishes masking
+in this fixture, not that visibility scope is correct or unreachable.
+
+After this amendment is approved, implement A0 alone first and rerun the
+unchanged three whole-file tests with fresh Native output. If A0 alone
+restores complete equality, commit and validate A0 as its own GREEN; do
+not include A's visibility edit. Then seek an independent reachable Native
+RED for A on the corrected A0 baseline. If A0 leaves a residual mismatch,
+retain both the original RED and the A0-only output and determine whether
+the residual is attributable to A before implementing that boundary in a
+separate commit. Never weaken the comparator or attribute every remaining
+mixed-object difference to visibility without evidence.
+
 ## A — visibility bias belongs to each PrintObject
 
 ### Source discrepancy and precise port
@@ -114,7 +184,9 @@ object's path changes. Use sibling configurations with both objects nearest
 and with only the aligned_back object to separate global bias leakage from
 object labels/ordering and from C. Do not suppress object-id comment
 differences; classify an unstable Native object-id oracle separately.
-GREEN must match the complete mixed-object Native output.
+GREEN must match the complete mixed-object Native output. After A0 is
+correct, follow its split gate above: a fixture already made PASS by A0
+cannot independently authorize A's production edit.
 
 ## B — angle arm comes from the region's external flow nozzle
 
@@ -192,7 +264,8 @@ their witness cannot be constructed.
 ## Per-slice TDD, artifacts and merge gates
 
 1. After this spec is approved, rebase/recheck the current slice on latest
-   main, including earlier merged slices. Never reuse another slice's RED.
+   main, including earlier merged slices. Never reuse another slice's RED,
+   except the coordinator-authorized A0+A witness under its attribution gate.
    Keep worker1's small-loop/scarf region untouched until its merge signal.
 2. Build/retain exact 3MF witnesses with CLI-side fixture construction only;
    compare the public byte slicing API against freshly generated identified
@@ -217,7 +290,7 @@ their witness cannot be constructed.
 6. Honor BROWSER-START/END and one-heavy-task limits. Request exact-hash
    review with the evidence report. Await approval, rebase conflict-free
    and push fast-forward only. Notify worker5 if a new slice changes his
-   seam/wipe/M73 witness. Scarf remains a separate approved pending slice.
+   seam/wipe/M73 witness. Scarf is assigned to worker1 and outside this owner.
 
 No preemptive helper framework, generic seam API, unit tests after
 implementation, unrelated cleanup or Ares-owned pipeline design is included.
