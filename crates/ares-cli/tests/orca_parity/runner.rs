@@ -105,6 +105,9 @@ mod nearest_seam_gaussian;
 #[path = "runner/object_layer_height_ranges.rs"]
 mod object_layer_height_ranges;
 #[cfg(test)]
+#[path = "runner/object_range_regions.rs"]
+mod object_range_regions;
+#[cfg(test)]
 #[path = "runner/overhang_reverse.rs"]
 mod overhang_reverse;
 #[cfg(test)]
