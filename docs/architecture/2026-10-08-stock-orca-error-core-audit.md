@@ -55,8 +55,13 @@ Rows: Anycubic Kobra 3 0.2/0.4/0.6/0.8.
 - **Ares (live)**: typed rejection
   `InvalidInput("One of the plate is empty or has no object fully inside
   it. Please check that the 3mf contains no empty plate …")`. Semantic
-  match; **presentation deviation** (typed error path instead of the
-  native exit-code framing).
+  match; **presentation deviation at the measured layer**. Layers:
+  the core API rejects through the typed boundary (measured); the CLI
+  error-family exit-code port is in main (`f68959e33`, merged with
+  1a8c92f55's retained-exit rework), but the live replay of these four
+  rows still surfaces the typed error rather than `-50` framing —
+  classifying this detection point into the `-50` family is a worker4
+  CLI-layer mapping question, not a core behavior gap.
 
 ### 3. Embedded post_process — Slice exit 237 (native `-19`) — 4 rows
 
@@ -81,7 +86,8 @@ Rows: FLSun QQ-S Pro 0.4, Ginger G1 1.2/3.0/5.0/8.0.
   `InvalidInput("Failed to generate G-code for invalid custom G-code.\n\n
   machine_start…")` — the existing O7 placeholder error aggregation, with
   the offending template name. Semantic match; **presentation deviation**
-  (no `-100` exit framing).
+  (no `-100` exit framing). Closing owner: worker4's `-100` slice (the
+  error-family exit-code port, `f68959e33`, in main).
 
 ### 5. Multi-head selector shape — Slice SIGSEGV (native crash) — 10 rows
 
