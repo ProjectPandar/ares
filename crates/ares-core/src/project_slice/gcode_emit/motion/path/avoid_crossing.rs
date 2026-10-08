@@ -103,13 +103,20 @@ pub(super) fn route(
         .is_none_or(|internal| !internal.contains(scaled_start) || !internal.contains(scaled_end))
         && !use_external
     {
-        boundary.internal = match boundary::Boundary::build(
-            &geometry.avoid_crossing,
-            scale,
-            [scaled_start, scaled_end],
-        )
-        .ok()?
+        let built = if let Some(spacing) = geometry
+            .support_islands
+            .and_then(|layer| layer.scaled_default_perimeter_spacing)
         {
+            boundary::Boundary::build_with_spacing(
+                &geometry.avoid_crossing,
+                scale,
+                [scaled_start, scaled_end],
+                spacing,
+            )
+        } else {
+            boundary::Boundary::build(&geometry.avoid_crossing, scale, [scaled_start, scaled_end])
+        };
+        boundary.internal = match built.ok()? {
             boundary::BuildResult::Unavailable => None,
             // `travel_to` (:1259–1264, :1285–1288) skips an empty internal
             // boundary and returns {start, end}, not a rectangle detour.

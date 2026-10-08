@@ -1,5 +1,9 @@
 //! Native per-instance support dispatch precedes object islands (`GCode.cpp:5390`).
 
+#[cfg(test)]
+#[path = "support_entry/default_spacing_tests.rs"]
+mod default_spacing_tests;
+
 use super::{
     super::{SliceError, motion, object::ObjectLabels, timelapse},
     entry::EntryGeometry,
@@ -54,7 +58,31 @@ pub(super) fn emit(
         geometry.view_raft(traversal.scale)
     };
     motion_geometry.internal_surfaces = &[];
+    motion_geometry.avoid_crossing.top_surfaces = &[];
+    let (source_object_index, _) = traversal.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object
+        .identity();
+    let resolved = traversal
+        .resolved
+        .objects
+        .iter()
+        .find(|object| object.source_object_index == source_object_index)
+        .unwrap();
+    let source = &traversal.project.objects()[source_object_index];
+    let has_brim = traversal
+        .resolved
+        .objects
+        .iter()
+        .any(|object| crate::project::effective_config::usage::supported_brim(&object.object));
+    let spacing =
+        default_perimeter_spacing(&traversal.resolved.views.full, resolved, source, has_brim);
+    let scale_ratio = motion_geometry.scale.checked_scale(1.0).unwrap() as f64 / 1_000_000.0;
     motion_geometry.support_islands = Some(motion::LayerAreas {
+        scaled_default_perimeter_spacing: Some((f64::from(spacing) * scale_ratio) as f32),
         islands: &layer.support_islands,
         tree_base: layer.tree_base_areas.as_deref(),
     });
@@ -92,4 +120,51 @@ pub(super) fn emit(
         }
     }
     Ok(())
+}
+
+// AvoidCrossingPerimeters.cpp:480-488 and PrintObject.cpp:3784-3803.
+fn default_perimeter_spacing(
+    settings: &crate::ProjectSettings,
+    resolved: &crate::project::effective_config::types::ResolvedProjectObject,
+    source: &crate::ProjectObject,
+    has_brim: bool,
+) -> f32 {
+    let mut extruders = Vec::with_capacity(resolved.all_regions.len() * 3 + source.volumes().len());
+    for region in &resolved.all_regions {
+        crate::project::effective_config::usage::append_region_filaments(
+            &mut extruders,
+            region,
+            has_brim,
+        );
+    }
+    for volume in source.volumes().iter().filter(|volume| {
+        matches!(
+            volume.volume_type(),
+            crate::ProjectVolumeType::ModelPart | crate::ProjectVolumeType::ParameterModifier
+        )
+    }) {
+        let selector = match volume.region_overrides().extruder {
+            Some(selector) if selector.0 != 0 => selector.0,
+            _ => source
+                .region_overrides()
+                .extruder
+                .map_or(1, |value| value.0),
+        };
+        if selector > 0 {
+            extruders.push(selector as usize - 1);
+        }
+    }
+    extruders.sort_unstable();
+    extruders.dedup();
+    let nozzles = &settings.project.print.nozzle_diameter.0;
+    let total = extruders
+        .iter()
+        .map(|&index| {
+            let diameter = nozzles.get(index).unwrap_or(&nozzles[0]).0;
+            crate::geometry::CoordinateScale::Normal
+                .checked_scale(diameter)
+                .unwrap() as f32
+        })
+        .sum::<f32>();
+    total / extruders.len() as f32
 }

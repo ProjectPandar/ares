@@ -58,6 +58,7 @@ pub(super) fn emit(
         && let Some(support) = input.support
     {
         view.support_islands = Some(motion::LayerAreas {
+            scaled_default_perimeter_spacing: None,
             islands: &support.support_islands,
             tree_base: support.tree_base_areas.as_deref(),
         });

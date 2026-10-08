@@ -69,9 +69,20 @@ Artifacts `/tmp/tiq2-phase-support-aaa-seeded/case-5YcqzB`; log
 both footer enable=1. This residual is deferred to the next source-cited
 CoolingBuffer/overhang-speed investigation, not normalized away.
 
+## Candidate GREEN before final-main gates
+
+Phase fix `ef71a684` passes102/102 focused cases on7a3216f67
+(`/tmp/tiq2-bounded-phase-green-7a.log`). After restoring only the source
+support input fix, the real pipeline travel assertion and scaled-nozzle
+kernel pass alongside all phase/FDM checks:104/104,16 threads
+(`/tmp/tiq2-bounded-travel-green-7a.log`). Each independent assertion RED
+precedes its corresponding production change; the helper's additional
+scaled-average test was written before implementation and is not presented
+as the independent travel RED.
+
 ## Gates before review
 
-Rebase to latest Rust main (currently7a3216f67) and run fresh same-round
+Rebase to latest Rust main (currently3b6e0ebdd) and run fresh same-round
 base/candidate seeded and official controls, recording exact failure names.
 Run workspace nextest, clippy all targets/features -Dwarnings, fmt and wasm32.
 All heavy checks are sequential,16 test threads, jobs1; browser windows defer

@@ -144,7 +144,19 @@ impl Boundary {
         let Some(scaled_spacing) = unit(f64::from(geometry.perimeter_spacing)) else {
             return Ok(BuildResult::Unavailable);
         };
-        let scaled_spacing = scaled_spacing as f32;
+        Self::build_with_spacing(geometry, scale, endpoints, scaled_spacing as f32)
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn build_with_spacing(
+        geometry: &AvoidCrossingGeometry<'_>,
+        scale: CoordinateScale,
+        endpoints: [Point; 2],
+        scaled_spacing: f32,
+    ) -> Result<BuildResult, ClipperError> {
+        if geometry.layer_slices.is_empty() {
+            return Ok(BuildResult::Unavailable);
+        }
+        let unit = |millimetres: f64| scale.checked_scale(millimetres);
         let offset_dis = 1.5 * f64::from(scaled_spacing);
         let mut boundary = inner_offset(geometry.layer_slices, offset_dis, scale)?;
         if !geometry.top_surfaces.is_empty() {

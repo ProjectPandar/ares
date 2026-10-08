@@ -11,6 +11,9 @@ use crate::{
 
 #[derive(Clone, Copy)]
 pub(in crate::project_slice::gcode_emit) struct LayerAreas<'a> {
+    /// Regionless SupportLayer spacing, in the route's scaled units
+    /// (AvoidCrossingPerimeters.cpp:480-507), without an f32 mm round-trip.
+    pub(in crate::project_slice::gcode_emit) scaled_default_perimeter_spacing: Option<f32>,
     pub(in crate::project_slice::gcode_emit) islands: &'a [crate::geometry::ExPolygon],
     pub(in crate::project_slice::gcode_emit) tree_base: Option<&'a [crate::geometry::ExPolygon]>,
 }

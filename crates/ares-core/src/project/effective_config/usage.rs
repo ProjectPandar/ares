@@ -126,13 +126,17 @@ pub(crate) fn collect_usage(
     }
 }
 
-fn supported_brim(object: &crate::ObjectOptions) -> bool {
+pub(crate) fn supported_brim(object: &crate::ObjectOptions) -> bool {
     object.raft_layers.0 <= 0
         && (object.brim_type == ProcessBrimType::AutoBrim
             || (object.brim_type != ProcessBrimType::NoBrim && object.brim_width.0 > 0.0))
 }
 
-fn append_region_filaments(output: &mut Vec<usize>, region: &RegionOptions, has_brim: bool) {
+pub(crate) fn append_region_filaments(
+    output: &mut Vec<usize>,
+    region: &RegionOptions,
+    has_brim: bool,
+) {
     if region.wall_loops.0 > 0 || has_brim {
         append_positive(output, region.outer_wall_filament_id.0);
     }
