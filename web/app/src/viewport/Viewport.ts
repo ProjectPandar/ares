@@ -59,7 +59,8 @@ export class Viewport {
   constructor(readonly container: HTMLElement, colors: ViewportColors) {
     this.#colors = colors;
     this.#renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-    this.#renderer.setPixelRatio(window.devicePixelRatio);
+    // Phones report 2.6-3; above 2 the extra pixels cost fill rate without a visible gain.
+    this.#renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(this.#renderer.domElement);
     this.#renderTask.port1.onmessage = () => {
       this.#dirty = false;
