@@ -97,6 +97,17 @@ pub(super) fn emit(
         &schedule,
     )?;
     let sliced_layer_count = schedule.layer_count();
+    // Under sequential by-object printing `m_layer_count` accumulates the
+    // per-object layer counts (`GCode.cpp:2505`, `+= instances.size() *
+    // temp_layer_count` in the sequential branch); the by-layer branch
+    // (:2522) counts merged print-z across all objects once. Either way the
+    // compatible tail (`GCode.cpp:3542`) prints the print-wide total, not a
+    // single object's layer count.
+    let tail_layer_count = schedule
+        .object_layer_counts()
+        .iter()
+        .sum::<usize>()
+        .max(sliced_layer_count);
     let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
     let first_layer_bounds = footprint::first_layer_bounds(
         traversal,
@@ -288,7 +299,6 @@ pub(super) fn emit(
     // The compatible tail's `; total layers count` prints `m_layer_count`
     // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
     // tag-based count the header placeholder carries.
-    let tail_layer_count = sliced_layer_count;
     // The final compatible layer has no following layer marker to flush its
     // deferred retraction. Flush only retract/wipe (not a travel lift) before
     // end G-code (`GCode.cpp` final object teardown).
