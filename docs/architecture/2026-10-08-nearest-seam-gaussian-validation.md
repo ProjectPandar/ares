@@ -274,3 +274,46 @@ The coordinator explicitly ruled the existing same-round evidence reusable
 across those main advances, requiring a conflict-free rebase before
 fast-forward push and no rerun. This does not authorize push before the
 exact-hash REVIEW-REQUEST receives approval.
+
+## Native nondeterminism follow-up: processor cleanup adjacent controls
+
+The processor-adjacent cleanup on `ab55a0e0c` (candidate `e603566a`) changes
+no production source. Fresh official base/candidate controls nevertheless
+exchange two existing test statuses. The coordinator classified both as
+**observed Native nondeterminism**, not UB and not a proven algorithm cause.
+These remain follow-up investigation cases; no comparator rule is relaxed.
+
+| Existing test | Original official base → candidate | First Native/Ares difference in failing leg |
+|---|---|---|
+| `runner::support_annotations::orca_parity_manual_support_enforcer_volume_preserves_complete_output` | PASS → FAIL | Annotated subcase line309: Ares `G1 X113.352 Y115.749 E.01287`, Native `M73 P6 R20`. The first geometry difference is line974: Ares/base Native travel `G1 X113.244 Y113.297 F9000`, candidate Native `G1 X113.388 Y113.135 F9000`. |
+| `runner::tree_support::retraction::single_cpu_slim_tree_roof_base_tall_skirt_preserves_complete_output` | FAIL → PASS | Base leg line1252: Ares `G1 X113.244 Y113.297 F9000`, Native `G1 X113.388 Y113.135 F9000`; candidate Native agrees with Ares. |
+
+The annotated input is byte-identical across the full pair (SHA256
+`e05ee1b53f15b0a18f3c84ab6bda169b33ec983c3fc2e0d81dbb92ef048f9e0b`).
+Its complete Ares raw SHA256 remains
+`d4c99e17b5ddf075da0efaabc3932069c8982447feddf980bc7261d668e8b258`.
+The roof input ZIP container bytes differ, but every uncompressed member name
+and byte sequence is identical; complete Ares raw SHA256 remains
+`9d8fff99e0de9f73b9d6c970da69a58bf26b3dba23bd48d0d5c482d26165ac51`.
+Native content changes in both cases, beyond generated-by timestamps.
+
+Single-thread base→candidate reruns with independent fresh caches preserve
+rather than overwrite the originals. Roof reruns both PASS. Manual-support
+reruns give base PASS/candidate FAIL; this time the candidate first fails the
+without-annotation control at line508, using the same alternative travel
+endpoint pair. For each matching input-member identity across all captures,
+Ares raw bytes remain identical. Actual Native image, launcher, resources and
+producer policy identities match across all six full/recheck legs.
+
+Whole-file comparisons continue to include M73, all movement and every byte;
+excluding M73 to locate the geometry difference is diagnostic only. Original
+full official results remain base705 PASS/11 FAIL and candidate720 PASS/11 FAIL;
+the strict candidate-failure-subset assertion is **FAIL**, not retroactively PASS.
+The coordinator explicitly accepts complete common Ares raw invariance plus
+this nondeterminism evidence in place of that subset condition for this slice.
+
+External evidence: `/tmp/worker6-adjacent-official-comparison.json`,
+`/tmp/worker6-adjacent-nondeterminism-audit.json` and
+`/tmp/worker6-adjacent-rechecks-audit.json`. Further investigation should locate
+the Native selection/order change before assigning an upstream function or UB
+cause; this cleanup does not modify or reproduce that algorithm in Rust.
