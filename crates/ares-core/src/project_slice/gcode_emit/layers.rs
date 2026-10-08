@@ -393,31 +393,28 @@ pub(super) fn append(
             .skirt_height
             .0
             .max(0) as usize;
-        // `GCode.cpp:4388+`, on the layers it covers. Raft chunks emit
-        // the skirt around the raft polygons (the skirt layer index is
-        // the raft layer index — with a raft, the covered layers start
-        // at the raft flange). Sequential by-object printing emits the
-        // skirt once, with the first instance's first layer; the
-        // per-group `m_skirt_group_done` accounting (`GCode.cpp:5240-5250`)
-        // is the upstream follow-up for per-instance resumption.
-        if !by_object || phase_index == 0 {
-            skirt_emit::emit(
-                output,
-                state,
-                skirt_emit::SkirtEmission {
-                    entries: &entries,
-                    support: support_layers,
-                    skirt,
-                    raft: &raft,
-                    print_z: layer_z,
-                    schedule: &mut skirt_schedule,
-                    entry_builder: &mut entry_builder,
-                    traversal,
-                    chunk_slices: &chunk_slices,
-                    chunk_perimeter_spacing,
-                },
-            );
-        }
+        // The per-group accounting drives emission: `m_skirt_group_done[group_idx]`
+        // (`GCode.cpp:5240-5250`, cleared once per export at :2036) is
+        // threaded through `generate_skirt`, whose `make_skirt_extrusion`
+        // gates on has_skirt, the skirt_height budget and print-z advance
+        // (`GCode.cpp:4306-4330`) — SkirtSchedule::next is that port, so
+        // the chunk position never gates the skirt.
+        skirt_emit::emit(
+            output,
+            state,
+            skirt_emit::SkirtEmission {
+                entries: &entries,
+                support: support_layers,
+                skirt,
+                raft: &raft,
+                print_z: layer_z,
+                schedule: &mut skirt_schedule,
+                entry_builder: &mut entry_builder,
+                traversal,
+                chunk_slices: &chunk_slices,
+                chunk_perimeter_spacing,
+            },
+        );
         // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
         // template insert fire once per layer inside the per-extruder loop
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
