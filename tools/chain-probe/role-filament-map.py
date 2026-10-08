@@ -1,7 +1,9 @@
 """Read the pinned Native role map; run with nix shell nixpkgs#gdb -c gdb.
 
-ARES_ROLE_ORACLE_INPUT is a single-filament, no-flush project. The output
-directory receives a fresh Native slice and a footer-validated map snapshot.
+Default mode takes a single-filament, no-flush project and validates the map
+against the same-run footer. ARES_ROLE_ORACLE_MODE=process instead replays
+G-code boundary fixtures using the same validated map reader, with explicit
+null footer_check when role totals and footer totals have different scopes.
 No inferior data/register writes or Native rebuild are involved.
 """
 

@@ -65,7 +65,23 @@ bit patterns per role. Runtime Ares artifacts are written to
 `target/role-filament-usage/`. On the RED baseline the G-code control passes
 and the missing `used_filaments_per_role` result fails.
 
-This first RED locks down real-project role accumulation and result export.
-The spec's targeted unequal-material/tool-cache and viewer cases remain to
-be added before their respective production changes; this reference does
-not claim coverage of those independent input sequences.
+The first RED locks down real-project role accumulation and result export.
+Supplemental `cache-boundaries.gcode` is a Native processor input with
+filament diameters 1.75/2.85 mm, densities 1.24/1.5 g/cm³, a same-role cache
+spanning T0→T1, repeated/revisited role tags, support/interface/transition,
+tower, ColorChange/pause, retract/travel/wipe, physical/virtual flush and EOF.
+Its complete role map is `cache-boundaries-map.json`, read from the same
+validated ELF using `ARES_ROLE_ORACLE_MODE=process`. That mode records
+`footer_check: null`: unequal-material cache conversion and flushing make a
+role/total equality assertion inappropriate. The original same-run slice
+proof above establishes the reader's reliability before this supplemental
+reference is used. Native metadata confirms actual f32 diameters
+`[1.75, 2.8499999046325684]` and densities `[1.2400000095367432, 1.5]`.
+
+The processor E2E is
+`role_cache_boundaries_match_native_processor`; WASM's
+`wasm_statistics_transparently_preserve_native_role_usage` checks byte-for-byte
+JSON pass-through of the public real-project statistics, without adapter
+accounting. Both supplemental tests were observed RED before production.
+FeatureType UI/projection remains a follow-up outside the coordinator's
+current GREEN scope (processor port and WASM pass-through only).
