@@ -2,6 +2,7 @@
 // classic-perimeter prefix through pre-medial gap-domain simplification.
 
 pub(in crate::project_slice) mod chained_loops;
+mod counterbore;
 pub(in crate::project_slice) mod entity_collections;
 mod extra_perimeters;
 mod fuzzy_skin;
@@ -73,8 +74,8 @@ pub(super) fn finish_classic_prelude(
         .objects
         .into_iter()
         .zip(validated)
-        .map(|(object, validated)| {
-            let records = prelude::prepare_object(&object, validated, prepared.scale)?;
+        .map(|(mut object, validated)| {
+            let records = prelude::prepare_object(&mut object, validated, prepared.scale)?;
             Ok(PostClassicPreludePrintObject { object, records })
         })
         .collect::<Result<Vec<_>, SliceError>>()?;

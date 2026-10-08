@@ -87,6 +87,10 @@ fn stage(
                                 &top.surfaces,
                                 validated,
                                 extra.as_ref(),
+                                &top_split.predecessor.records[index]
+                                    .as_ref()
+                                    .unwrap()
+                                    .counterbore_fill,
                             )
                             .map(Some)
                         }

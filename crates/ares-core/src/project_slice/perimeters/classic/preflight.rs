@@ -102,7 +102,9 @@ fn validate_record(
     // `first_outer::thin_wall_offsets` (PerimeterGenerator.cpp:1251-1266),
     // materialized as `variable_width` external-perimeter `ExtrusionPath`s in
     // `traverse_loops` (:231-232).
-    if region.counterbore_hole_bridging != ProcessCounterboreHoleBridging::None
+    if (region.counterbore_hole_bridging == ProcessCounterboreHoleBridging::SacrificialLayer
+        || (record.dispatch == super::super::types::PerimeterDispatch::Arachne
+            && region.counterbore_hole_bridging != ProcessCounterboreHoleBridging::None))
         && object
             .perimeter_surfaces(record)
             .iter()

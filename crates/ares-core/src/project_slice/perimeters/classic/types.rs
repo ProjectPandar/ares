@@ -40,6 +40,7 @@ pub(in crate::project_slice) struct ClassicPreludeRecord {
     pub(in crate::project_slice) external_lower_polygons_series: Vec<Vec<Polygon>>,
     pub(in crate::project_slice) smaller_external_lower_polygons_series: Vec<Vec<Polygon>>,
     pub(in crate::project_slice) surface_simplify_resolution: f64,
+    pub(in crate::project_slice) counterbore_fill: Vec<ExPolygon>,
     pub(in crate::project_slice) surfaces: Vec<PreparedClassicSurface>,
 }
 

@@ -39,10 +39,16 @@ pub(super) fn stage_record(
     top: &[PreparedTopSplitSurface],
     validated: &ValidatedRecord,
     extra: Option<&super::super::extra_perimeters::Context<'_>>,
+    counterbore_fill: &[ExPolygon],
 ) -> Result<StagedRecord, SliceError> {
     assert_eq!(source.len(), top.len());
     assert_eq!(source.len(), validated.surfaces.len());
-    let mut fill_surfaces = Vec::new();
+    // process_no_bridge appends stInternal before the per-surface wall loop.
+    let mut fill_surfaces = counterbore_fill
+        .iter()
+        .cloned()
+        .map(RegionSurface::internal)
+        .collect::<Vec<_>>();
     let mut fill_no_overlap = Vec::new();
     let mut overlap = Vec::with_capacity(source.len());
     let mut extra_perimeters = Vec::with_capacity(extra.map_or(0, |_| source.len()));

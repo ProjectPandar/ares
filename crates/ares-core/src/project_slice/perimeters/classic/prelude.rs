@@ -20,13 +20,12 @@ const OVERHANG_SAMPLING_NUMBER: f32 = 6.0;
 const MITER_LIMIT: f64 = 3.0;
 
 pub(super) fn prepare_object(
-    object: &PostPerimeterInputPrintObject,
+    object: &mut PostPerimeterInputPrintObject,
     validated: ValidatedClassicObject,
     scale: CoordinateScale,
 ) -> Result<Vec<Option<ClassicPreludeRecord>>, SliceError> {
-    object
-        .as_parts()
-        .1
+    let records = object.as_parts().1.to_vec();
+    records
         .iter()
         .zip(validated.records)
         .map(|(record, config)| match (record, config) {
@@ -38,7 +37,7 @@ pub(super) fn prepare_object(
 }
 
 fn prepare_record(
-    object: &PostPerimeterInputPrintObject,
+    object: &mut PostPerimeterInputPrintObject,
     record: &PerimeterInputRecord,
     config: ValidatedClassicConfig,
     scale: CoordinateScale,
@@ -70,6 +69,8 @@ fn prepare_record(
         as f32;
     let smaller_external_flow = record.ext_perimeter_flow.with_width(smaller_width)?;
 
+    let counterbore_fill =
+        super::counterbore::process(object, record, perimeter_spacing, external_width, scale)?;
     let lower = object.lower_slices(record);
     let lower_slices_polygons = if config.detect_overhang_wall {
         lower
@@ -108,6 +109,7 @@ fn prepare_record(
         external_lower_polygons_series,
         smaller_external_lower_polygons_series,
         surface_simplify_resolution: config.surface_simplify_resolution,
+        counterbore_fill,
         surfaces,
     })
 }

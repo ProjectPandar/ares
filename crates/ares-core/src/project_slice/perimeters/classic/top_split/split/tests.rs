@@ -51,6 +51,7 @@ fn record() -> ClassicPreludeRecord {
         external_lower_polygons_series: Vec::new(),
         smaller_external_lower_polygons_series: Vec::new(),
         surface_simplify_resolution: 1.0,
+        counterbore_fill: Vec::new(),
         surfaces: Vec::new(),
     }
 }
