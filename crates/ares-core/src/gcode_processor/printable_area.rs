@@ -74,7 +74,7 @@ impl PrintableAreaTracker {
             return;
         }
         // `store_move_vertex:5680`: addition is in f32 before conversion to fixed XY.
-        let offset = self.offsets.get(filament).copied().unwrap_or_default();
+        let offset = self.offsets[filament];
         let p = Point::new(
             scale(f64::from((end[0] + self.xy_offset[0]) as f32 + offset[0])),
             scale(f64::from((end[1] + self.xy_offset[1]) as f32 + offset[1])),
