@@ -113,6 +113,11 @@ pub(super) fn append(
     // object extrudes around its own build-item placement
     // (`bbs_3mf.cpp:3554-3560`, `GCode.cpp:5380/5403/5437`
     // `set_origin(unscale(instance.shift))`).
+    // `GCode.cpp:3284`: the sequential by-object pass, only without a
+    // wipe tower.
+    let by_object = traversal.resolved.views.full.process.print.print_sequence
+        == crate::ProcessPrintSequence::ByObject
+        && schedule.tower.is_none();
     let Schedule {
         merged,
         mut raft,
@@ -130,18 +135,79 @@ pub(super) fn append(
     // consumed by the toolchange-boundary timelapse insert gate
     // (`GCode.cpp:5292-5297`).
     state.most_used_extruder = tool_ordering.most_used_extruder(traversal);
+    // `GCode.cpp:3284-3297`: by object, every object drives the layer
+    // machinery with its own `ToolOrdering(object, final_extruder_id)`
+    // (`ToolOrdering.cpp:396-436`), seeded with the previous object's
+    // final extruder (`final_extruder_id` starts unset, `GCode.cpp:2721`)
+    // and skipped when its ordering yields no first extruder
+    // (`GCode.cpp:3293-3296`). The chunks keep their z order; the
+    // preamble still fires once on the first emitted chunk.
+    struct DrivePhase<'a> {
+        merged: &'a [(f64, schedule::LayerToPrint)],
+        tool_ordering: &'a super::tool_ordering::ToolOrdering,
+    }
+    let mut scoped_chunks: Vec<Vec<(f64, schedule::LayerToPrint)>> = Vec::new();
+    let mut scoped_orderings: Vec<super::tool_ordering::ToolOrdering> = Vec::new();
+    let phases: Vec<DrivePhase<'_>> = if by_object {
+        let mut final_extruder_id = None;
+        for object in 0..objects.len() {
+            let ordering = super::tool_ordering::build(
+                traversal,
+                objects,
+                support_layers,
+                raft.as_ref(),
+                super::tool_ordering::OrderingScope::Object {
+                    object,
+                    seed_extruder: final_extruder_id,
+                },
+            )?;
+            if ordering.first_extruder.is_none() {
+                continue;
+            }
+            final_extruder_id = ordering.last_extruder();
+            scoped_orderings.push(ordering);
+            scoped_chunks.push(
+                merged
+                    .iter()
+                    .filter(|(_, entry)| entry.object_index == object)
+                    .copied()
+                    .collect(),
+            );
+        }
+        scoped_chunks
+            .iter()
+            .zip(&scoped_orderings)
+            .map(|(merged, tool_ordering)| DrivePhase {
+                merged,
+                tool_ordering,
+            })
+            .collect()
+    } else {
+        vec![DrivePhase {
+            merged: &merged,
+            tool_ordering: &tool_ordering,
+        }]
+    };
     let mut raft_layers = raft
         .as_mut()
         .map(|raft| std::mem::take(&mut raft.layers))
         .unwrap_or_default();
 
+    let mut phase_index = 0usize;
     let mut group_start = 0;
     let mut first_group = true;
     let mut last_object_copy: Option<(usize, usize)> = None;
     let mut previous_layer_z = 0.0;
     let mut chunk_index = 0;
     let mut final_chunk = None;
-    while group_start < merged.len() {
+    while phase_index < phases.len() {
+        let merged: &[(f64, schedule::LayerToPrint)] = phases[phase_index].merged;
+        let tool_ordering: &super::tool_ordering::ToolOrdering = phases[phase_index].tool_ordering;
+        if group_start >= merged.len() {
+            phase_index += 1;
+            group_start = 0;
+            continue;
+        }
         let group_z = merged[group_start].0;
         let mut group_end = group_start;
         while group_end < merged.len() && merged[group_end].0 == group_z {

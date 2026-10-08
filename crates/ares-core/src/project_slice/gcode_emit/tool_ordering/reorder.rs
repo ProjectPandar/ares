@@ -9,7 +9,11 @@ use super::LayerTools;
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::{ProjectSettings, WipeTowerType};
 
-pub(super) fn apply(layers: &mut [LayerTools], traversal: &PreparedPostClassicTraversal) {
+pub(super) fn apply(
+    layers: &mut [LayerTools],
+    traversal: &PreparedPostClassicTraversal,
+    scoped: bool,
+) {
     if layers.is_empty() {
         return;
     }
@@ -31,7 +35,7 @@ pub(super) fn apply(layers: &mut [LayerTools], traversal: &PreparedPostClassicTr
         })
         .collect::<Vec<_>>();
     let matrices = matrices(settings, count, bbl);
-    let custom = custom_sequences(layers, settings);
+    let custom = custom_sequences(layers, settings, scoped);
     groups::reorder(layers, &maps, &matrices, &custom);
 }
 
@@ -81,6 +85,7 @@ fn nozzle_matrix(
 fn custom_sequences(
     layers: &[LayerTools],
     settings: &ProjectSettings,
+    scoped: bool,
 ) -> BTreeMap<usize, Vec<usize>> {
     let project = &settings.project.print;
     let configured = &project.other_layers_print_sequence.0;
@@ -101,6 +106,12 @@ fn custom_sequences(
             continue;
         }
         let layer_number = index as i32 + 1;
+        if scoped {
+            // The per-object ordering builds with empty per-layer
+            // switches (`ToolOrdering.cpp:417` — `collect_extruders`
+            // receives `{}`); only the settled first layer is locked.
+            continue;
+        }
         let Some(row) = ranges
             .iter()
             .rev()

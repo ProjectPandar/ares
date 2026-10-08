@@ -180,3 +180,29 @@ by-object mode upstream uses the object's own slices), the raft chunk
 interleave (first-layer only), the skirt/brim emission point (upstream
 keeps them at the true first layer), and `state.most_used_extruder`
 (S3 replaces the global count; until then the global value stays).
+
+## S1 landed state (RED advanced to the S2 boundary)
+
+The by-object pass is wired: `OrderingScope::Object` builds the scoped
+ordering (own z heights, seeded dontcare, no custom ranges —
+ToolOrdering.cpp:417), `layers.rs` drives the same per-layer machinery
+once per object over the object's chunk filter, and the header sums the
+per-object layer counts. Guarded suites pass unchanged; both REDs moved
+from the header (line 3) into the inter-object transition:
+
+- ender3: first difference at byte 76612 (line 3603), ares −68 bytes;
+- kobra3: first difference at byte 113703 (line 4261), ares −353 bytes.
+
+The missing block at each object boundary (after `stop printing object`):
+the end-of-object wipe, the safety Z lift (10.4→10.8), the cross-object
+download travel (`G1 X… Y… Z10.8`), and the `M104` temperature switch —
+exactly the S2 slice (GCode.cpp:3334-3367: the temperature, the current
+object index, the cooling reset, `travel_to_z`). The ares side instead
+emits the next object's layer-change template with a bogus negative
+HEIGHT (previous_layer_z carried over the boundary). S2 owns this; the
+S1 REDs stay red at the recorded boundary, assertions unchanged.
+
+One pre-existing quirk surfaced: the first layer's region options carry
+raw one-based filament ids that the global pass silently rewrites via
+`handle_dontcare`; the scoped seed path now applies the same rewrite
+before leading with the seed (recorded above, in build_inner).

@@ -47,6 +47,12 @@ impl Schedule {
     pub(in crate::project_slice::gcode_emit) fn layer_count(&self) -> usize {
         self.layer_count
     }
+
+    /// Per-object layer counts (`GCode.cpp:1721` collection); the
+    /// sequential by-object header sums them (`GCode.cpp:3284-3346`).
+    pub(in crate::project_slice::gcode_emit) fn object_layer_counts(&self) -> &[usize] {
+        &self.object_layer_counts
+    }
 }
 
 pub(in crate::project_slice::gcode_emit) fn build(
@@ -103,8 +109,13 @@ pub(in crate::project_slice::gcode_emit) fn build(
         traversal.scale,
         context,
     )?;
-    let mut tool_ordering =
-        super::super::tool_ordering::build(traversal, objects, support, raft.as_ref())?;
+    let mut tool_ordering = super::super::tool_ordering::build(
+        traversal,
+        objects,
+        support,
+        raft.as_ref(),
+        super::super::tool_ordering::OrderingScope::All,
+    )?;
     tool_ordering.install_tower_support_layers(support);
     let mut merged = Vec::new();
     let mut raw_zs = Vec::new();

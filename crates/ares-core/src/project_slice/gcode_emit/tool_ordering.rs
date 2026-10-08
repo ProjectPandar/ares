@@ -84,6 +84,16 @@ impl ToolOrdering {
         }
     }
 
+    /// `ToolOrdering::last_extruder` (`ToolOrdering.cpp:932-935`): the
+    /// trailing extruder of the last non-empty layer.
+    pub(super) fn last_extruder(&self) -> Option<usize> {
+        self.layers
+            .iter()
+            .rev()
+            .find(|layer| !layer.extruders.is_empty())
+            .and_then(|layer| layer.extruders.last().copied())
+    }
+
     pub(super) fn initial_extruder(&self, settings: &crate::ProjectSettings) -> usize {
         if settings.process.print.print_sequence == crate::ProcessPrintSequence::ByObject {
             self.ordered_tools().next().unwrap_or(0)
@@ -160,17 +170,50 @@ impl ToolOrdering {
     }
 }
 
+/// Which objects an ordering pass covers: the by-layer pass over every
+/// object, or the sequential per-object pass
+/// (`ToolOrdering(object, final_extruder_id)`, `ToolOrdering.cpp:396-436`)
+/// seeded with the previous object's final extruder through the dontcare
+/// handling (`ToolOrdering.cpp:253-300`).
+pub(super) enum OrderingScope {
+    All,
+    Object {
+        object: usize,
+        seed_extruder: Option<usize>,
+    },
+}
+
 pub(super) fn build(
     traversal: &PreparedPostClassicTraversal,
     objects: &[Vec<OrderedExtrusionLayer>],
     support: &[Vec<InstalledSupportLayer>],
     raft: Option<&RaftSchedule>,
+    scope: OrderingScope,
 ) -> Result<ToolOrdering, crate::SliceError> {
-    let mut layers = initialize_layers(traversal, support, raft.map(|raft| raft.plans.as_slice()));
+    let (scoped_object, seed_extruder) = match scope {
+        OrderingScope::All => (None, None),
+        OrderingScope::Object {
+            object,
+            seed_extruder,
+        } => (Some(object), seed_extruder),
+    };
+    let mut layers = match scoped_object {
+        Some(object) => initialize_layers_scoped(
+            traversal,
+            support,
+            raft.map(|raft| raft.plans.as_slice()),
+            object,
+        ),
+        None => initialize_layers(traversal, support, raft.map(|raft| raft.plans.as_slice())),
+    };
     let candidates = collect::print_extruders(traversal);
     let mut object_bottom_z = 0.0;
     let mut max_object_layer_height = 0.0_f64;
-    for object in 0..objects.len() {
+    let object_range = match scoped_object {
+        Some(object) => object..object + 1,
+        None => 0..objects.len(),
+    };
+    for object in object_range {
         let options = collect::object_options(traversal, object);
         max_object_layer_height = max_object_layer_height.max(options.layer_height.0);
         // `sort_and_build_data(Print)` retains the last object's first extrusion bottom.
@@ -226,13 +269,24 @@ pub(super) fn build(
         }
     }
     let first_order = first_layer::generate(traversal)?;
-    first_layer::handle_dontcare(&mut layers, &first_order, traversal);
-    reorder::apply(&mut layers, traversal);
+    match seed_extruder {
+        // `ToolOrdering.cpp:429`: the seed fills the dontcare handling
+        // instead of the generated first-layer tool order. The first
+        // layer's region options still carry the raw one-based ids that
+        // the global pass rewrites through `handle_dontcare`; apply the
+        // same rewrite before leading with the seed.
+        Some(seed) => {
+            first_layer::handle_dontcare(&mut layers, &first_order, traversal);
+            first_layer::handle_dontcare_seed(&mut layers, Some(seed));
+        }
+        None => first_layer::handle_dontcare(&mut layers, &first_order, traversal),
+    }
+    reorder::apply(&mut layers, traversal, scoped_object.is_some());
     let settings = &traversal.resolved.views.full;
     let max_height = max_layer_height(settings, max_object_layer_height);
     partitions::fill(&mut layers, settings, object_bottom_z, max_height);
     if partitions::insert_extruder(&mut layers, settings) {
-        reorder::apply(&mut layers, traversal);
+        reorder::apply(&mut layers, traversal, scoped_object.is_some());
         partitions::fill(&mut layers, settings, object_bottom_z, max_height);
     }
     let prime =
@@ -277,6 +331,30 @@ fn initialize_layers(
     if let Some(plans) = raft {
         zs.extend(plans.iter().flatten().map(|plan| plan.z.print_z));
     }
+    initialize_layers_on_zs(zs)
+}
+
+/// `ToolOrdering.cpp:406-414`: the per-object ordering initializes the
+/// layer tools from that object's own object/support/raft z heights only.
+fn initialize_layers_scoped(
+    traversal: &PreparedPostClassicTraversal,
+    support: &[Vec<InstalledSupportLayer>],
+    raft: Option<&[Vec<crate::project_slice::raft::RaftLayerPlan>]>,
+    object: usize,
+) -> Vec<LayerTools> {
+    let mut zs = traversal.objects[object]
+        .physical_layers()
+        .iter()
+        .map(|layer| layer.print_z)
+        .chain(support[object].iter().map(|layer| layer.print_z))
+        .collect::<Vec<_>>();
+    if let Some(plans) = raft {
+        zs.extend(plans[object].iter().map(|plan| plan.z.print_z));
+    }
+    initialize_layers_on_zs(zs)
+}
+
+fn initialize_layers_on_zs(mut zs: Vec<f64>) -> Vec<LayerTools> {
     zs.sort_by(f64::total_cmp);
     zs.dedup();
     let mut layers = Vec::new();

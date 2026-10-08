@@ -227,3 +227,40 @@ fn prefer_first_layer(tools: &mut [usize], traversal: &PreparedPostClassicTraver
     }
     apply_configured_order(tools, traversal);
 }
+
+/// `ToolOrdering::handle_dontcare_extruder(last_extruder_id)`
+/// (`ToolOrdering.cpp:253-300`), the per-object seed path of
+/// `ToolOrdering(object, first_extruder)` (`ToolOrdering.cpp:396-436`):
+/// the seeded extruder leads every layer's tool order and resolves the
+/// dontcare placeholder. Ares stores 0-based ids (upstream is 1-based
+/// with 0 as dontcare), so the caller's `++` conversion is absorbed.
+pub(super) fn handle_dontcare_seed(layers: &mut [LayerTools], seed: Option<usize>) {
+    // `ToolOrdering.cpp:258-271`: an unset seed resolves to the first
+    // extruder used anywhere in the print; with none, nothing changes.
+    let seed = match seed {
+        Some(seed) => seed,
+        None => {
+            let found = layers
+                .iter()
+                .flat_map(|layer| layer.extruders.iter().copied())
+                .find(|id| *id != 0);
+            let Some(found) = found else { return };
+            found
+        }
+    };
+    for layer in layers.iter_mut() {
+        if layer.extruders.is_empty() {
+            continue;
+        }
+        if layer.extruders.len() == 1 && layer.extruders[0] == 0 {
+            layer.extruders[0] = seed;
+        } else {
+            if layer.extruders[0] == 0 {
+                layer.extruders.remove(0);
+            }
+            if let Some(position) = layer.extruders.iter().position(|&id| id == seed) {
+                layer.extruders[..=position].rotate_right(1);
+            }
+        }
+    }
+}
