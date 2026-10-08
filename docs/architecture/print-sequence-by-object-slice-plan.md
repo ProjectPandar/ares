@@ -148,6 +148,32 @@ S1 restructure, in dependency order:
    today's by-layer path (assert the guard, do not exercise it — the
    fixtures run towerless).
 
+Wiring notes (observed, for the driver author):
+
+- `schedule.merged` is a flat `Vec<(f64, LayerToPrint)>`; the loop groups
+  equal-z runs (`layers.rs:144-150`). The per-object view is
+  `merged.iter().filter(|(_, ltp)| ltp.object_index == object)` (the
+  chunk order already carries the z order).
+- The by-object gate:
+  `traversal.resolved.views.full.process.print.print_sequence ==
+  ProcessPrintSequence::ByObject && schedule.tower.is_none()`
+  (GCode.cpp:3284 `!has_wipe_tower`).
+- Loop locals that must survive the parameterization (either as params
+  or by keeping one loop with a drive plan):
+  `cooling`, `spiral`, `entry_builder`, `raft_layers`, `max_layer_z`,
+  `layer_change_template`, `timelapse_gate`, `second_layer_done`,
+  `chunk_index`, `final_chunk`, `last_object_copy`, `previous_layer_z`,
+  `first_group`, `state.most_used_extruder` (per-object:
+  `tool_ordering.most_used_extruder(traversal)` on the scoped build).
+- How the loop consumes the ordering: the tool picks go through the
+  `tool_ordering` binding (`layers.rs:118` destructure); the driver must
+  swap it for the scoped build per object (the z-keyed lookups then hit
+  the object's own layers).
+- The last extruder for the seed chain (`ToolOrdering.cpp:932-935`):
+  walk the scoped layers backwards to the first non-empty `extruders`
+  and take `.back()`; add `ToolOrdering::last_extruder()` in
+  `statistics` alongside `collect` if absent.
+
 Known interactions to verify during implementation: the avoid-crossing
 boundary cache (built per slice_z across every object today — in
 by-object mode upstream uses the object's own slices), the raft chunk
