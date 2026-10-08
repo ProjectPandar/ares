@@ -23,8 +23,15 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   phones the summary card and the 5-line G-code window sit above it and the
   legend sits below it, above the moves slider. The camera toolbar scrolls
   sideways in one row instead of wrapping over the view.
-- **Touch targets.** `@media (pointer: coarse)` raises the touched controls to
-  44×44 CSS px (WCAG 2.5.5). Fine pointers keep the desktop sizes.
+- **Touch targets.** `@media (pointer: coarse)` raises every control to
+  44×44 CSS px (WCAG 2.5.5); the touch E2E sweeps all visible controls at each
+  flow step. A checkbox's target is its wrapping label (`display: contents`
+  for fine pointers). The settings mode switch widens to three 44px dots.
+  Fine pointers keep the desktop sizes.
+- **Hover only where a pointer hovers.** Every `:hover` rule sits in
+  `@media (hover: hover)`, so a tapped control keeps no stuck hover style.
+- **Tablet project.** `ipad` (WebKit, iPad gen 7, 810×1080) covers the
+  641–1024px layout with the same flow and checks as the phones.
 - **Touch input is OrbitControls' own mapping** (one finger rotate, two
   fingers dolly/pan). No custom gesture math.
 - **Synthetic WebKit touches.** Playwright has no WebKit touch-move, so the
@@ -35,8 +42,11 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
 
 ## Deferred to later mobile slices
 
-- `hover:none` alternatives for hover-only information, remaining target sizes
-  outside the main flow (slice 3).
+- Option tooltips (`title`, from the option definitions) have no touch
+  alternative yet; they are the remaining hover-only information.
+- Tablet preview overlays (slice 3b). At 810px the G-code window covers the
+  3D centre and the summary, the legend sits under the moves slider, and the
+  44px camera toolbar touches the summary card and the layer label.
 - axe serious findings (color-contrast) and the ≥16px input font (slice 4);
   axe is report-only until then.
 - `min(devicePixelRatio, 2)` and worker confirmation (slice 5); Lighthouse
