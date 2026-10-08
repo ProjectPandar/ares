@@ -76,15 +76,23 @@ Only test inputs and test/probe code are committed. Native maps, move CSVs,
 metadata/result JSON and stdout/stderr stay in ARES_ORCA_CACHE_DIR/runtime
 artifacts. Main's old Native products belong to worker4's cleanup.
 
-The measured non-BBL input is byte-exact:
-SHA256 `d0d02feedc6cf6a144402818ff02f2db82c950757dd407599f4015b3adf618b5`.
-At lines 31-33, spaced WIPE tags surround `G1 X120 E1`. Native treats it as
-ordinary ExternalPerimeter extrusion; current Ares treats it as Wipe.
-Native ExternalPerimeter is 0.0107540787180275 m / 0.10290679264068603 g;
-Ares is 0.009754078673612502 m / 0.09333769798278808 g. These observed values
-are evidence, not committed oracle constants. Runtime tests compare the complete
-six-role map and every f64 pair bit, then Native CSV source-line-32 move type.
-Native enum values come from GCodeProcessor.hpp:30-44, not libvgcode ordinals.
+The only slicing input is the existing
+`tests/parity/validation/kobra3-centered/0.8.3mf`. Each CLI test requests a
+runtime slice through OrcaRunner, then deterministically transforms comment
+tokens in that Native G-code. All motion commands and line counts remain
+unchanged. Cases cover spaced START/END, a spaced END after compatible START,
+compatible prefix suffixes, unchanged compatible control, and canonical BBL
+control (role tags and embedded printer_model select the BBL dialect).
+No Native G-code, transformed G-code or extracted expected result is committed.
+
+The same runtime variant is supplied to Native process_file and public core
+processing with the input project's settings. Compare complete role key sets
+and every f64 pair bit, then the selected Native CSV motion type. Select the
+first motion inside a WIPE region, or immediately after its END for the ignored
+END case; never assume a frozen output line number. Runtime receipts link 3MF,
+Native source G-code and transformed-input SHA. Native enum values come from
+GCodeProcessor.hpp:30-44, not libvgcode ordinals. Differences in ordinary
+travel versus Wipe are observable even when filament-role totals are equal.
 
 The existing ELF is pinned by SHA256
 `59f9ea7e16165df6979a243de7d6acd49d8cf523ac5de6d3fec08d6e25c7896e`.

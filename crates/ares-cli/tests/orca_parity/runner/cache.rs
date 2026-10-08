@@ -7,6 +7,9 @@ use super::{
 use serde_json::{Map, Value, json};
 use std::{fs, io::Read as _, path::Path};
 
+#[path = "cache/processor.rs"]
+mod processor;
+
 impl OrcaRunner {
     fn producer(&self) -> Result<&cache_identity::Producer, StageError> {
         if let Some(producer) = self.producer.get() {

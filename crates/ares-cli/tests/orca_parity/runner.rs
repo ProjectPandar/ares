@@ -160,6 +160,10 @@ mod wrapper_tests;
 #[path = "runner/x2d_flush_matrix.rs"]
 mod x2d_flush_matrix;
 
+#[cfg(test)]
+#[path = "runner/wipe_tags.rs"]
+mod wipe_tags;
+
 use stages::{FailureKind, Stage, StageError};
 #[path = "runner/cache.rs"]
 mod cache;

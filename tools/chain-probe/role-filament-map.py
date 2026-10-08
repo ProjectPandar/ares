@@ -36,6 +36,7 @@ ROLES = [
     "WipeTower", "Custom", "Mixed",
 ]
 snapshots = []
+printer_dialects = []
 
 
 def memory(pointer, size):
@@ -93,6 +94,10 @@ class Finalized(gdb.FinishBreakpoint):
 
 class Finalize(gdb.Breakpoint):
     def stop(self):
+        flag = int(gdb.parse_and_eval(
+            "(unsigned char*)&'Slic3r::GCodeProcessor::s_IsBBLPrinter'"
+        ))
+        printer_dialects.append(bool(memory(flag, 1)[0]))
         Finalized(int(gdb.parse_and_eval("$rdi")))
         return False
 
@@ -110,10 +115,12 @@ if MODE == "slice":
     gdb.execute("set args --slice 0 --outputdir " + str(ROOT) + " " + str(SOURCE))
 else:
     gdb.execute("set args --process-gcode " + str(SOURCE)
-                + " --dump-color-change " + str(ROOT / "metadata.json"))
+                + " --dump-color-change " + str(ROOT / "metadata.json")
+                + " --dump-moves " + str(ROOT / "moves.csv"))
 gdb.execute("run")
 assert int(gdb.parse_and_eval("$_exitcode")) == 0
 assert len(snapshots) == 1
+assert len(printer_dialects) == 1
 rows = snapshots[0]
 gcode = (ROOT / "plate_1.gcode").read_bytes() if MODE == "slice" else SOURCE.read_bytes()
 lines = gcode.decode().splitlines()
@@ -136,6 +143,7 @@ if MODE == "slice":
     "binary_sha256": SHA,
     "input_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
     "gcode_sha256": hashlib.sha256(gcode).hexdigest(),
+    "bbl_printer": printer_dialects[0],
     "roles": rows,
     "footer_check": {
         "meters_sum": meters, "grams_sum": grams,
