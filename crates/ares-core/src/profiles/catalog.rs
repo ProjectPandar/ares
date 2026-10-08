@@ -222,7 +222,7 @@ impl Catalog {
         let composed =
             compose_resolved_profiles(selection, machine, process, filaments, runtime.resolve());
         if let Some(group) = composed.metadata().inherits_group() {
-            raw.insert_string_slots("inherits_group", group);
+            raw.insert_strings("inherits_group", group);
         }
         // Every loaded preset file normalizes through
         // `set_deserialize`/`handle_legacy` at load (`Config.cpp:577-579`,

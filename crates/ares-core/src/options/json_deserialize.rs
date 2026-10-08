@@ -71,6 +71,8 @@ pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawCo
 /// builders run. Non-empty scalars decode to lists; the empty-string case
 /// keeps the `ConfigOptionStrings::deserialize` empty-vector result and
 /// is handled by `normalize_empty_vector_strings`, which must run first.
+/// coStrings JSON arrays take the same quote/join/decode route as presets
+/// (`Config.cpp:945-1001`), retaining logical slots for the typed builder.
 pub(crate) fn normalize_scalar_vector_strings(
     values: &mut BTreeMap<String, RawConfigValue>,
 ) -> Result<(), String> {
@@ -78,12 +80,19 @@ pub(crate) fn normalize_scalar_vector_strings(
         let Some(definition) = option_definition(key) else {
             continue;
         };
-        if let RawConfigValue::Text(text) = value
-            && !text.is_empty()
-            && is_vector(definition.kind)
-        {
-            *value = decode(definition.kind, text)
-                .map_err(|error| format!("invalid Orca option {key}: {error}"))?;
+        let decoded = match value {
+            RawConfigValue::Text(text) if !text.is_empty() && is_vector(definition.kind) => {
+                Some(decode(definition.kind, text))
+            }
+            RawConfigValue::List(values) if definition.kind == OptionValueKind::Strings => Some(
+                encode_array(definition.kind, values)
+                    .map_err(str::to_owned)
+                    .and_then(|wire| decode(definition.kind, &wire)),
+            ),
+            _ => None,
+        };
+        if let Some(decoded) = decoded {
+            *value = decoded.map_err(|error| format!("invalid Orca option {key}: {error}"))?;
         }
     }
     Ok(())

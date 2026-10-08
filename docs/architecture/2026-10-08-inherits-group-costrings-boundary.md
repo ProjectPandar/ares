@@ -1,6 +1,6 @@
 # Embedded coStrings import/export parity boundary
 
-Status: proposed prerequisite to the approved range-region port. The original
+Status: approved prerequisite to the approved range-region port. The original
 range fixture and strict comparison remain unchanged.
 
 ## Source-owned conclusion
@@ -31,9 +31,10 @@ Every option whose registry kind is Strings must get the same
 escape_strings_cstyle export representation, not an inherits_group special case.
 Reuse the existing coStrings serializer; no hand-written quote rule in writer.
 
-The representation must distinguish logical string elements from serialized
-wire tokens so typed builders still receive unquoted logical text, while raw
-config export obtains canonical quoted tokens. Preserve raw element access and
+Raw List stores logical string elements and the option registry supplies the
+type discriminator. Central raw rendering (`ProjectSettingsRaw::iter` and the
+active-slot token-prefix accessor) derives coStrings wire tokens only on export.
+Typed builders still receive unquoted logical text. Preserve raw element access and
 slot count/order required by profile composition. Constructors for generated
 profile bookkeeping must enter that same representation rather than pre-escape
 slots and then pass them through normalization again. Writer/profile merging

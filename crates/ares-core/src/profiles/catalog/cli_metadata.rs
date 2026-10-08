@@ -23,7 +23,7 @@ pub(super) fn filament_conditions(raw: &mut ProjectSettingsRaw, filaments: &[Mer
                 .into_iter()
                 .map(|value| value.unwrap_or_default().to_owned())
                 .collect();
-            raw.insert_string_slots(key, &values);
+            raw.insert_strings(key, &values);
         }
     }
 }

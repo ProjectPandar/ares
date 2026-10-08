@@ -25,31 +25,9 @@ impl ProjectSettingsRaw {
     }
 
     pub(crate) fn insert_strings(&mut self, key: &str, values: &[String]) {
-        let strings = crate::OrcaStrings(values.to_vec());
-        let value = crate::options::serialize_config_value(&strings)
-            .expect("profile string vectors serialize");
-        self.0
-            .insert(key.to_owned(), RawConfigValue::Text(value.token));
-    }
-
-    /// Profile group vectors are `ConfigOptionStrings`: one raw element per
-    /// slot (`OrcaSlicer.cpp:2816-2817`). Elements are stored export-escaped
-    /// (`escape_strings_cstyle`, `Config.cpp:72-120`), the same wire form
-    /// every stored token carries, so the raw layer renders verbatim.
-    pub(crate) fn insert_string_slots(&mut self, key: &str, values: &[String]) {
         self.0.insert(
             key.to_owned(),
-            RawConfigValue::List(
-                values
-                    .iter()
-                    .map(|value| {
-                        RawConfigValue::Text(crate::options::escape_string_vector_element(
-                            value,
-                            values.len(),
-                        ))
-                    })
-                    .collect(),
-            ),
+            RawConfigValue::List(values.iter().cloned().map(RawConfigValue::Text).collect()),
         );
     }
 
@@ -171,7 +149,7 @@ impl ProjectSettingsRaw {
     pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, Option<String>)> {
         self.0
             .iter()
-            .map(|(key, value)| (key.as_str(), value.token()))
+            .map(|(key, value)| (key.as_str(), value.option_token(key, None)))
     }
 
     /// Renders the export token of only the first `count` list items
@@ -179,7 +157,9 @@ impl ProjectSettingsRaw {
     /// the active extruder count, so trailing preset slots must not count
     /// toward nil-ness checks.
     pub(crate) fn token_prefix(&self, key: &str, count: usize) -> Option<String> {
-        self.0.get(key).and_then(|value| value.token_prefix(count))
+        self.0
+            .get(key)
+            .and_then(|value| value.option_token(key, Some(count)))
     }
 }
 
@@ -195,6 +175,27 @@ pub(crate) enum RawConfigValue {
 }
 
 impl RawConfigValue {
+    /// Raw coStrings retain logical slots for typed deserialization; only
+    /// export renders `escape_strings_cstyle` (Config.cpp:72-120).
+    fn option_token(&self, key: &str, count: Option<usize>) -> Option<String> {
+        use crate::options::registry::{OptionValueKind, option_definition};
+        if option_definition(key)
+            .is_some_and(|definition| definition.kind == OptionValueKind::Strings)
+            && let Self::List(values) = self
+        {
+            let count = count.unwrap_or(values.len()).min(values.len());
+            let rendered = values[..count]
+                .iter()
+                .map(|value| match value {
+                    Self::Text(text) => crate::options::escape_string_vector_element(text, count),
+                    _ => unreachable!("normalized coStrings contain logical string slots"),
+                })
+                .collect::<Vec<_>>();
+            return Some(rendered.join(";"));
+        }
+        count.map_or_else(|| self.token(), |count| self.token_prefix(count))
+    }
+
     /// `ConfigOptionVector::get_at(index)` equivalent: lists return their
     /// element, scalars return themselves at index 0 only.
     pub(crate) fn element(&self, index: usize) -> Option<&RawConfigValue> {
