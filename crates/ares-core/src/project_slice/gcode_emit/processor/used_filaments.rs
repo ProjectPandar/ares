@@ -8,11 +8,14 @@ use super::filament_change::FilamentChange;
 
 pub(super) struct UsedFilaments<'a> {
     diameters: &'a [crate::OrcaFloat],
+    densities: &'a [crate::OrcaFloat],
     nozzle_volumes: Vec<f32>,
     remaining: [f32; 64],
     pending: [f64; 3],
     total: f64,
     bucket: usize,
+    role: crate::ExtrusionRole,
+    role_cache: f64,
     flushing: bool,
     virtual_flushing: bool,
     statistics: crate::PrintEstimatedStatistics,
@@ -24,6 +27,7 @@ impl<'a> UsedFilaments<'a> {
         let count = diameters.len();
         Self {
             diameters,
+            densities: &config.settings.filament.gcode.filament_density.0,
             nozzle_volumes: config
                 .settings
                 .printer
@@ -40,10 +44,13 @@ impl<'a> UsedFilaments<'a> {
             pending: [0.0; 3],
             total: 0.0,
             bucket: 0,
+            role: crate::ExtrusionRole::None,
+            role_cache: 0.0,
             flushing: false,
             virtual_flushing: false,
             statistics: crate::PrintEstimatedStatistics {
                 volumes_per_color_change: Vec::new(),
+                used_filaments_per_role: std::collections::BTreeMap::new(),
                 model_volumes_per_extruder: vec![0.0; count],
                 support_volumes_per_extruder: vec![0.0; count],
                 wipe_tower_volumes_per_extruder: vec![0.0; count],
@@ -62,6 +69,9 @@ impl<'a> UsedFilaments<'a> {
             .strip_prefix("TYPE:")
             .or_else(|| comment.strip_prefix(" FEATURE: "))
         {
+            // set_extrusion_role flushes before replacing the active role.
+            self.process_role_cache(filament);
+            self.role = crate::ExtrusionRole::from_name(role);
             self.bucket = match role {
                 "Support" | "Support interface" | "Support transition" => 1,
                 "Prime tower" => 2,
@@ -110,6 +120,7 @@ impl<'a> UsedFilaments<'a> {
         if !virtual_move && xy {
             self.pending[self.bucket] += f64::from(volume);
             self.total += f64::from(volume);
+            self.role_cache += f64::from(volume);
             return;
         }
         let flushing = if virtual_move {
@@ -153,7 +164,34 @@ impl<'a> UsedFilaments<'a> {
         self.pending[2] = 0.0;
     }
 
+    /// `UsedFilaments::process_role_cache` (`GCodeProcessor.cpp:1621-1639`).
+    fn process_role_cache(&mut self, filament: usize) {
+        if self.role_cache == 0.0 {
+            return;
+        }
+        let radius = 0.5 * f64::from(self.diameters[filament].0 as f32);
+        let area = std::f64::consts::PI * (radius * radius);
+        // apply_config uses ConfigOptionVector::get_at (cpp:2083,
+        // Config.hpp:624-628): scalar density applies to later filaments.
+        let density =
+            f64::from(self.densities.get(filament).unwrap_or(&self.densities[0]).0 as f32);
+        let filament_usage = (
+            self.role_cache / area * 0.001,
+            self.role_cache * density * 0.001,
+        );
+        self.statistics
+            .used_filaments_per_role
+            .entry(self.role)
+            .and_modify(|usage| {
+                usage.0 += filament_usage.0;
+                usage.1 += filament_usage.1;
+            })
+            .or_insert(filament_usage);
+        self.role_cache = 0.0;
+    }
+
     pub(super) fn finish(mut self, filament: usize) -> crate::PrintEstimatedStatistics {
+        self.process_role_cache(filament);
         self.flush_model_support_total(filament);
         self.flush_wipe_tower(filament);
         self.statistics.total_used_filament = self

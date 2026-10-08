@@ -96,6 +96,9 @@ impl Default for MoveVertex {
 pub struct PrintEstimatedStatistics {
     /// Nonzero chronological model caches (`GCodeProcessor.cpp:1549-1555`).
     pub volumes_per_color_change: Vec<f64>,
+    /// `UsedFilaments::filaments_per_role`: meters and grams by extrusion
+    /// role (`GCodeProcessor.cpp:1621-1639,6036`).
+    pub used_filaments_per_role: std::collections::BTreeMap<ExtrusionRole, (f64, f64)>,
     /// `UsedFilaments::model_volumes_per_filament` →
     /// `model_volumes_per_extruder`.
     pub model_volumes_per_extruder: Vec<f64>,

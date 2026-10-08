@@ -1,6 +1,6 @@
 use crate::{Point2, PrintPathRole, SliceError};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize)]
 pub enum ExtrusionRole {
     None,
     Perimeter,
