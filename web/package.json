@@ -12,13 +12,16 @@
     "dev": "npm run build -w @ares-slicer/wasm && npm run build -w @ares-slicer/profiles && npm run dev -w ares-app",
     "lint": "oxlint packages app e2e",
     "typecheck": "npm run typecheck -w @ares-slicer/wasm && npm run typecheck -w ares-app && tsc -p tsconfig.json",
-    "test:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build && playwright test"
+    "test:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build && playwright test",
+    "lighthouse": "node e2e/lighthouse.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "1.63.0",
     "@types/node": "^24.19.1",
+    "chrome-launcher": "^1.2.2",
     "fflate": "^0.8.3",
+    "lighthouse": "^13.5.0",
     "oxlint": "^1.86.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.2"
