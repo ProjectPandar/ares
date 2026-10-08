@@ -64,11 +64,10 @@ CLI RED is excluded from this bounded PR and remains for the next slice.
 ## Verification conclusion
 
 Independent Native-assertion REDs precede each production fix. Latest directed
-checks pass104/104. Earlier fresh full seeded base/candidate pass668/668
-each; these are superseded for final admission by a required full pair on
-5d5384d92. After J1's Top-input change, affected Type2 seeded groups were
-rerun and pass6/6. Earlier workspace passes8042/8042 with9 skipped;
-latest-main workspace verification remains required. Clippy workspace/all-targets/
+checks pass104/104. Final fresh full seeded on5d5384d92 passes685/685
+on both base and candidate, with no skipped cases. After J1's Top-input
+change, affected Type2 seeded groups were rerun and pass6/6. Latest workspace
+passes8100/8100 with9 skipped; no tests were deleted. Clippy workspace/all-targets/
 all-features-Dwarnings, fmt and wasm32 core+adapter pass. Checks use separate
 targets, fresh caches, explicit Native producer/resources and16 threads.
 
