@@ -120,6 +120,13 @@ argmax `>=`; the result feeds `physical_extruder_id_for_logical` in the
 layer-change/timelapse placeholders. Implementation requires plumbing the
 count through the tool-ordering → placeholder path (next window).
 
+Precision (coordinator-confirmed): `GCode.cpp:3342` calls
+`cal_most_used_extruder` on the per-object-order ToolOrdering and `:3422`
+on the global one; `:3690/:3791` pass each ordering's own
+`get_most_used_extruder()` into `process_layer`. The Ares port must
+count per print-ordering mode — both orderings carry their own most-used
+extruder — never a single global count.
+
 ## Diagnosis result (coordinator-ruled): seam-rooted, slice suspended
 
 The wipe/retract position divergence is a DOWNSTREAM symptom of the layer-3
