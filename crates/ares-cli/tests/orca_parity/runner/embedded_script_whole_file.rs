@@ -146,9 +146,7 @@ async fn embedded_script_case(stripped: bool) -> Option<(String, String)> {
     )
     .await
     .unwrap();
-    let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return None;
-    };
+    let runner = OrcaRunner::from_env().unwrap()?;
     let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
     let output = directory.join("native");
     std::fs::create_dir(&output).unwrap();

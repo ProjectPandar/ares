@@ -257,20 +257,31 @@ impl Project {
 
 /// `OrcaSlicer.cpp:3766-3796` classification with the `:4008-4021` plate-0
 /// center offset: `Some([dx, dy])` for `shrink = 1`, `None` otherwise
-/// (shrink 2/0 are deferred; an absent or zero-sized embedded bed disables
-/// the whole step). Widths/heights truncate to int like upstream
-/// (`:1780`, `:1338`).
+/// (shrink 2/0 are deferred). Widths/heights truncate to int like upstream
+/// (`:1780`, `:1338`). The current height comes from the fully parsed
+/// config — `OrcaSlicer.cpp:3711` `opt_float("printable_height")` — with
+/// the `PrintConfigDef` default (`PrintConfig.cpp:785`, 100.0) when the
+/// presets lack the key. An unrecorded old bed dimension takes the current
+/// one (`:3729-3734`) and the classification proceeds.
 fn shrink_to_new_bed_offset(
     old: &ProjectSettingsRaw,
     new: &ProjectSettingsRaw,
 ) -> Option<[f64; 2]> {
-    let (old_width, old_depth) = printable_bed_size(old)?;
-    let old_height = printable_height(old)?;
-    if old_height <= 0.0 {
-        return None;
+    let new_height = printable_height(new)
+        .or_else(default_printable_height)
+        .unwrap_or(0.0);
+    let (new_width, new_depth) = printable_bed_size(new).unwrap_or((0.0, 0.0));
+    let (mut old_width, mut old_depth) = printable_bed_size(old).unwrap_or((0.0, 0.0));
+    let mut old_height = printable_height(old).unwrap_or(0.0);
+    if old_width == 0.0 {
+        old_width = new_width;
     }
-    let (new_width, new_depth) = printable_bed_size(new)?;
-    let new_height = printable_height(new).unwrap_or(0.0);
+    if old_depth == 0.0 {
+        old_depth = new_depth;
+    }
+    if old_height == 0.0 {
+        old_height = new_height;
+    }
     let (old_width, old_depth, old_height) =
         (old_width as i32, old_depth as i32, old_height as i32);
     let (new_width, new_depth, new_height) =
@@ -289,6 +300,13 @@ fn shrink_to_new_bed_offset(
         new_width as f64 / 2.0 - old_width as f64 / 2.0,
         new_depth as f64 / 2.0 - old_depth as f64 / 2.0,
     ])
+}
+
+/// `PrintConfig.cpp:785`: the `printable_height` default for configs that
+/// lack the key.
+fn default_printable_height() -> Option<f64> {
+    crate::option_definition("printable_height")
+        .and_then(|definition| definition.default_value.parse().ok())
 }
 
 /// `OrcaSlicer.cpp:1779-1780` (embedded) and `:3726` (overlaid): the
