@@ -70,6 +70,9 @@ mod compatible_regions;
 #[path = "runner/costrings.rs"]
 mod costrings;
 #[cfg(test)]
+#[path = "runner/counterbore_partiallybridge.rs"]
+mod counterbore_partiallybridge;
+#[cfg(test)]
 #[path = "runner/direct_stl_override_bookkeeping.rs"]
 mod direct_stl_override_bookkeeping;
 #[cfg(test)]
