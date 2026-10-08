@@ -31,7 +31,9 @@ const ANGLE_IMPORTANCE_NEAREST: f32 = 1.0;
 fn gauss_penalty(value: f32, falloff_speed: f32) -> f32 {
     let denominator = falloff_speed * value * value + 1.0;
     let exponent = 1.0 / denominator;
-    (std::f32::consts::E.exp() - 1.0).recip() * (exponent.exp() - 1.0)
+    let exponential = f64::from(exponent).exp() as f32;
+    let normalization = 1.0_f64.exp() as f32;
+    (exponential - 1.0) / (normalization - 1.0)
 }
 
 #[cfg(test)]
