@@ -1,0 +1,50 @@
+{
+  "parent": "/tmp/worker3-o6-stock-circle/stock-circle-cylinder.3mf",
+  "parent_sha256": "446e19e8f8dc9443c68774bc31fca6d0187798e41031882919cf0930362be8f6",
+  "input": "/tmp/worker3-o6-stock-circle-inward/input.3mf",
+  "input_sha256": "8958ba6462946f57d1fc2d6443e6c7fac736a87be5e89dc68d2bbfc8837c1b13",
+  "only_changed_entry": [
+    "3D/3dmodel.model"
+  ],
+  "change": "only build item x translation=-0.1 mm; mesh/config entries byte-identical",
+  "center_x": 50.9,
+  "maximum_vertex_radius_mm": 54.9,
+  "bbox_corner": [
+    54.9,
+    4.0
+  ],
+  "bbox_corner_radius_mm": 55.04552661206903,
+  "mesh_sha256": "fe62df76656d86789c033580373d6352b2d6a77307c2c415bef447d3b22cb1b2",
+  "native_slice_attempts_for_this_validated_input": 1,
+  "construction_failure_preserved": "/tmp/worker3-o6-stock-circle-inward/construction-failure",
+  "native_elf_sha256": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+  "native_args": [
+    "--slice",
+    "0",
+    "--outputdir",
+    "/tmp/worker3-o6-stock-circle-inward/output",
+    "/tmp/worker3-o6-stock-circle-inward/input.3mf"
+  ],
+  "replay_seed": 0,
+  "replay_cpu": 0,
+  "native_final_result": {
+    "error_string": "Found G-code in unprintable area of multi-extruder printers after slicing. Please make sure the 3mf file can be successfully sliced in the latest Orca Slicer.",
+    "export_time": 0,
+    "layer_height": 0.20000000298023224,
+    "plate_index": 1,
+    "prepare_time": 0,
+    "return_code": -102,
+    "sparse_infill_density": 15.0,
+    "wall_loops": 3
+  },
+  "native_exit_code": 154,
+  "native_final_parity_pass": false,
+  "native_emitted_gcode": {
+    "bytes": 167943,
+    "sha256": "cabb272d646a6404e88db9af3c1e7dd8966173aff96afb60b856a744948e1f4a",
+    "fixture": "tests/parity/validation/o6-stock-circle-inward.native-emitted.gcode",
+    "semantic_scope": "Model per-vertex acceptance and whole-byte emission only; final export -102 remains separate"
+  },
+  "core_e2e": "circle_bed_per_vertex_accepts_inward_cylinder_before_export_check",
+  "core_e2e_log": "/tmp/worker3-o6-circle-inward-test.log"
+}
