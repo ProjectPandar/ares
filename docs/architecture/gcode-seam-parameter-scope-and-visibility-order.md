@@ -1,8 +1,10 @@
 # SeamPlacer: parameter scope, layer height and visibility operation order
 
-Status: original D/A/B/C spec approved; A0 amendment awaiting coordinator
-review. D is merged. A0/A share the coordinator-accepted Native RED
-`96d1836ad1a8f473f9809548f3cb6375bbdcf7f2`; no A0/A production change is committed.
+Status: original D/A/B/C spec approved; A0 amendment approved `2076d208e`.
+D is merged. A0/A share the coordinator-accepted Native RED
+`96d1836ad1a8f473f9809548f3cb6375bbdcf7f2` and joint GREEN validation in
+[the current-object report](2026-10-08-seam-current-object-mode-validation.md).
+B/C remain separate slices.
 Original spec base: main
 `117cd7eddfc8a4fdc64c2ab576f46f7714650069`.
 Owner: worker6. Execute in order **D → A0 → A → B → C**;
