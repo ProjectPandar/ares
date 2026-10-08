@@ -47,6 +47,13 @@ Status: approved Stage2 first slice: explicit-height wall_loops region ranges.
    constant-height wall-loop witness. Spiral mode with region overrides retains
    the unsupported boundary (upstream multi-range slicing asserts !spiral_mode).
 
+10. Empty physical layer lists must fail at the slice-completion boundary, before
+    perimeter traversal and export scheduling (`PrintObjectSlice.cpp:866-867`).
+    Rust performs the existing no-layers rejection immediately after top-empty
+    trimming. Region-major record traversal must not compensate for an invalid
+    zero-layer object with a step-size special case. The retained zero-height
+    regression test requires the original `no layers were detected` error.
+
 Admitted2.4.2 identity: checked source equals seeded source store byte-for-byte.
 PrintApply.cpp SHA256 a067414959c475d23f782ebac9f5a185b63012304aced66974726d95a95daf20;
 PrintObjectSlice.cpp SHA256 d1aece12e7189353aa9a5d8ae6b1f0f320087c0d2574d7da64fe372eca076021.

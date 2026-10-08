@@ -383,6 +383,14 @@ fn prepare_post_top_empty_layers(
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_regions(project)?;
     top_empty_layers::remove_project_top_empty_layers(&mut prepared.objects);
+    // PrintObjectSlice.cpp:866-867 rejects an empty sliced object before perimeters.
+    if prepared
+        .objects
+        .iter()
+        .any(|object| object.plan.layers.is_empty())
+    {
+        return Err(SliceError::InvalidInput("no layers were detected".into()));
+    }
     Ok(prepared)
 }
 
