@@ -42,6 +42,16 @@ fn check(
     let mut process = profiles.process(&selection.process).unwrap();
     parity::normalize_process_defaults(&machine, &mut process);
     let overhang = matches!(shape, model::Shape::OverhangLoft);
+    let scarf = name == "true-loop-scarf-ramp";
+    let scarf_settings = [
+        ("seam_slope_type", "external"),
+        ("seam_slope_conditional", "0"),
+        ("seam_slope_min_length", "10"),
+        ("seam_slope_steps", "4"),
+        ("scarf_joint_speed", "100%"),
+        ("slow_down_layers", "5"),
+        ("initial_layer_speed", "20"),
+    ];
     let settings = [
         ("wall_generator", generator),
         (
@@ -77,7 +87,7 @@ fn check(
         ("slowdown_for_curled_perimeters", "0"),
         ("enable_arc_fitting", "0"),
         ("resonance_avoidance", "0"),
-        ("slow_down_layers", "0"),
+        ("slow_down_layers", if scarf { "5" } else { "0" }),
         ("seam_gap", "0"),
         ("seam_position", "nearest"),
         ("brim_type", "no_brim"),
@@ -89,6 +99,11 @@ fn check(
     ];
     for (key, value) in settings {
         process.insert(key.into(), Value::String(value.into()));
+    }
+    if scarf {
+        for (key, value) in scarf_settings {
+            process.insert(key.into(), Value::String(value.into()));
+        }
     }
     let mut filaments = selection
         .filaments
@@ -136,6 +151,11 @@ fn check(
     for (key, value) in settings {
         application::verify_value(&exported.project, key, &json!(value)).unwrap();
     }
+    if scarf {
+        for (key, value) in scarf_settings {
+            application::verify_value(&exported.project, key, &json!(value)).unwrap();
+        }
+    }
     fs::write(directory.join("input.3mf"), &exported.project).unwrap();
     let sliced = runner.slice_case(&exported).unwrap();
     fs::write(directory.join("native.gcode"), &sliced.reference).unwrap();
@@ -157,6 +177,12 @@ fn check(
         assert!(
             observed.contains(&12000.0),
             "Native long-loop role speed absent: {label}; {directory:?}"
+        );
+    } else if scarf {
+        assert_eq!(
+            observed,
+            vec![1392.0, 1584.0],
+            "Native scarf early-layer ramp witness: {directory:?}"
         );
     } else {
         assert_eq!(
@@ -286,5 +312,16 @@ fn orca_parity_small_loop_explicit_skirt() {
         "classic",
         ("100", "30%"),
         true,
+    );
+}
+
+#[test]
+fn orca_parity_small_loop_true_loop_scarf_ramp() {
+    check(
+        "true-loop-scarf-ramp",
+        model::Shape::Square,
+        "classic",
+        ("5", "30%"),
+        false,
     );
 }
