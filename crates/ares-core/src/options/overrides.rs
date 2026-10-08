@@ -88,25 +88,23 @@ impl ConfigOverrides {
                     .iter()
                     .map(|token| token.parse::<f64>().expect("validated numeric override"))
                     .collect::<Vec<_>>();
-                if numbers.iter().any(|&value| {
-                    if threshold == 1.0 {
-                        value < threshold
-                    } else {
-                        value <= threshold
-                    }
-                }) {
-                    errors.insert(
-                        key,
-                        format!(
-                            "invalid value {}",
-                            numbers
-                                .iter()
-                                .map(ToString::to_string)
-                                .collect::<Vec<_>>()
-                                .join(",")
-                        ),
-                    );
+                if !numbers
+                    .iter()
+                    .any(|&value| value < threshold || (threshold == 0.0 && value == 0.0))
+                {
+                    continue;
                 }
+                errors.insert(
+                    key,
+                    format!(
+                        "invalid value {}",
+                        numbers
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    ),
+                );
                 continue;
             }
             if !matches!(
