@@ -281,3 +281,35 @@ object. Standard slicing never produces adjacent duplicate z inside one
 object, so no current fixture exercises this branch; if a future fixture
 does (stepped z, modifier stacks), add a RED case asserting the
 deduplicated total before touching the count.
+
+## SPEC-REQUEST: by-object chunks per print-object instance
+
+Under `print_sequence = by object`, upstream iterates print-object
+INSTANCES, not objects (`GCode.cpp:3279-3302`:
+`print_object_instance_sequential_active` walks
+`print_object_instances_ordering`; per iteration it rebuilds
+ToolOrdering on object change :3283-3297 and applies the instance shift
+via `set_origin` :3302). Every instance after the first runs the full
+transition: `if (finished_objects > 0)` gate (`GCode.cpp:3304`),
+toolchange-or-retract (:3308-3320), hop + origin travel
+(:3326-3327), placeholder/first-layer temps (:3333-3339);
+`finished_objects` increments after the per-instance preamble. The M73
+count follows the same granularity: `instances().size() *
+temp_layer_count` per object (`GCode.cpp:2505`), surfaced both in the
+`total_layer_count` placeholder (`GCode.cpp:2890`) and the compatible
+tail (`GCode.cpp:3542`).
+
+Ares gap: the schedule merges same-object instances into one chunk, so
+the second copy prints without the inter-instance transition and the
+header/tail count says 62 instead of 124 (RED log
+/tmp/ares-w5-gates/m73-multi-red2.log).
+
+Planned change (pending approval):
+1. Schedule: under by-object, keep one chunk per instance (per-instance
+   layer list + per-instance transition boundary); by-layer grouping
+   unchanged.
+2. Counts: header placeholder and tail use Σ(instances × layers) per
+   object; keep the by-layer merged-z count.
+3. Acceptance: single_object_two_instances fixture GREEN
+   byte-for-byte; ender3/kobra3 by-object stay GREEN; by-layer guards
+   (wire_modes/cross_map/semm_ramming) unchanged.
