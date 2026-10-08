@@ -87,6 +87,9 @@ mod lifecycle_tests;
 #[path = "runner/multi_object_skirt.rs"]
 mod multi_object_skirt;
 #[cfg(test)]
+#[path = "runner/native_availability_tests.rs"]
+mod native_availability_tests;
+#[cfg(test)]
 #[path = "runner/nearest_seam_gaussian.rs"]
 mod nearest_seam_gaussian;
 #[cfg(test)]
@@ -182,6 +185,9 @@ mod x2d_flush_matrix;
 mod wipe_tags;
 
 use stages::{FailureKind, Stage, StageError};
+#[path = "runner/environment.rs"]
+mod environment;
+pub(crate) use environment::reference_enabled;
 #[path = "runner/cache.rs"]
 mod cache;
 #[path = "runner/cache_identity.rs"]
@@ -225,46 +231,13 @@ impl OrcaRunner {
         &self.bin
     }
 
-    /// Only absent configuration returns None; initialization errors must fail callers.
+    /// Only absent optional configuration returns None; initialization errors must fail callers.
+    #[track_caller]
     pub(super) fn from_env() -> Result<Option<Self>, StageError> {
-        let Some(bin) = std::env::var_os("ARES_ORCA_BIN")
-            .map(PathBuf::from)
-            .or_else(|| {
-                let script = repo_root().join("scripts/orca-parity.sh");
-                script.exists().then_some(script)
-            })
-        else {
+        let Some((bin, root)) = environment::available()? else {
             return Ok(None);
         };
         let init_error = |detail| StageError::new(Stage::Initialization, FailureKind::Io, detail);
-        let bin = bin
-            .canonicalize()
-            .map_err(|error| init_error(format!("configured Orca executable {bin:?}: {error}")))?;
-        // No artifact root configured -> live-oracle parity is not provisioned
-        // in this environment; report "no runner" so tests skip rather than
-        // fail (CI runs `cargo nextest` without artifacts). Explicit sweep
-        // flags demand a configured root: surface the init cause instead.
-        let root = match crate::artifacts::root_from_env() {
-            Ok(root) => root,
-            Err(cause) => {
-                // A configured-but-invalid artifact root is an initialization
-                // failure, not an offline skip; likewise the explicit sweep
-                // flags demand a configured root. Unset entirely means the
-                // live-oracle environment is unprovisioned → skip.
-                let configured = std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some();
-                let flagged = [
-                    "ARES_PARITY_SWEEP",
-                    "ARES_PARITY_CLUSTER",
-                    "ARES_PARITY_OPTIONS",
-                ]
-                .iter()
-                .any(|flag| std::env::var(flag).as_deref() == Ok("1"));
-                if configured || flagged {
-                    return Err(init_error(cause));
-                }
-                return Ok(None);
-            }
-        };
         let work = tempfile::Builder::new()
             .prefix("orca-runner-")
             .tempdir_in(&root)
