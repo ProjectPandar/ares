@@ -28,7 +28,9 @@ failed attempt remains non-PASS evidence, separate from the corrected run.
 The corrected original wall-loop witness passes complete Native/Ares output
 comparison. Only the entire generated-by line is excluded. Motion, M73,
 configuration, layer counts, and template output are not normalized. Stage1
-height controls and the spiral region-range rejection control remain intact.
+height controls remain intact. The historical gate counts below include one
+spiral unsupported-guard test subsequently removed at coordinator review; those
+counts describe the recorded runs, not the revised test inventory.
 
 Fresh seeded pairing after the cooling and seam source changes passes 743
 baseline and 745 candidate tests, with no failures or skips. Input-bound audit
@@ -41,8 +43,12 @@ also pass. Subsequent coordinator-authorized test-only changes carry this
 evidence forward without claiming that old runs executed on newer commits.
 
 This witness does not establish parity for every region option, modifiers,
-multifilament, painted profiles, SlicingAdaptive, or active ZAA. Spiral region
-overrides remain unsupported. PrintObjectSlice.cpp:244–266 epsilon-aware range
+multifilament, painted profiles, SlicingAdaptive, or active ZAA. **Spiral mode
+with layer-config ranges is DEFERRED**: PrintObjectSlice.cpp:194–213 has a
+single-range spiral slicing branch and asserts `!print_config.spiral_mode` in
+the multiple-range branch. This slice makes no spiral-range parity claim and
+does not assert Ares's unsupported guard as expected behavior.
+PrintObjectSlice.cpp:244–266 epsilon-aware range
 selection is a separate deferred RED/GREEN slice and must not be folded into
 this implementation commit.
 
