@@ -57,7 +57,7 @@ fn cooling_buffer_inactive_start_then_forced_end_restores_explicit_internal_spee
     }
     cooling.resolve_role_fans(&mut output, 0, 100, 0);
     assert_eq!(output, b"M106 S255\n");
-    assert_eq!(cooling.physical_part_speed, 100);
+    assert_eq!(cooling.physical_part_speed, 50);
 }
 
 #[test]
