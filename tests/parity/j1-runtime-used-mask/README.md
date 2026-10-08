@@ -51,3 +51,27 @@ command/cache receipts and primary full-comparison manifest. The record
 `docs/architecture/gcode-runtime-used-extruder-mask-j1-red-record.json`
 binds this independent scoped RED. No private emitter/test-only production
 API, ignored test, panic patch or Native rebuild.
+
+## J1c final Top-surface lifecycle supplement
+
+`top1-control.3mf` SHA256
+83d0c1908087d796008602671bdc3a6ef43f12fdd7423b0d3c96db2d423af310
+changes only `top_shell_layers` from `0` to `1` in the original role2
+configuration. All other configuration values and ZIP entry payloads are
+unchanged. This separate control was frozen before its first Native call;
+the original primary input remains unchanged.
+
+`runner/j1_top_surface_lifecycle.rs` calls the public `slice_project` API
+and compares the last layer's XY travel commands against fresh Native.
+The zero-top case asserts the frozen Native shortcut through
+`X152.911 Y103.089`, demonstrating removal of the obsolete top-surface holes.
+The nonzero-top control preserves avoidance of surviving Top regions.
+These are **travel-only lifecycle witnesses**, not relaxed complete-byte
+comparisons; the original primary still asserts the entire file.
+
+On main ff40fd2e7 plus separate mask/J1b commits, fresh CPU0/seed0 runs gave:
+primary complete-byte RED at byte3810/line222; zero-top travel RED; nonzero-top
+travel PASS. Three fresh Slice receipts, zero timeouts, strict workspace
+clippy/fmt exit0. No J1c production edit. Tracked machine record:
+`docs/architecture/gcode-runtime-used-extruder-mask-j1c-red-record.json`;
+full evidence `/tmp/ares-j1-mask/j1c-red/`.

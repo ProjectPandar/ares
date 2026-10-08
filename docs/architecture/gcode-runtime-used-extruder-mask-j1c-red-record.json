@@ -1,0 +1,329 @@
+{
+  "schema": "j1c-red-v1",
+  "rust_base": "ff40fd2e77864f054ee5ab34be1f75d701ed1e66",
+  "source_before_test_only": "c1be291cc",
+  "production_modified": false,
+  "rows": [
+    {
+      "status": "DIVERGENT",
+      "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output",
+      "witness": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output/artifacts/j1-runtime-used-mask-zuoqrR/usage-witness.json",
+      "data": {
+        "ares": {
+          "initial_extruder": 1,
+          "tool_and_flush_commands": [
+            "T1",
+            "T1",
+            "G1 X324 E8.5437 F6840.0",
+            "T1"
+          ],
+          "usage": [
+            false,
+            true
+          ]
+        },
+        "ares_sha256": "da4e1fc6b3cc1d32285dab67ec2e9d4d2643bf83c552e0c5829c108fc3b200ad",
+        "assertion_scope": "complete bytes; generated-by identity only; M73/footer retained",
+        "complete_comparison": [
+          "DIVERGENT",
+          "first difference at byte 3810 (line 222, column 1; expected 38416 bytes, actual 38536 bytes)\ncontext:\n  line 221: \"G1 X152.475 Y96.475 E.34876\"\n  line 222: expected \"M73 P46 R1\"; actual \"G1 X159.525 Y96.475 E.34876\"\n  line 223: expected \"G1 X159.525 Y96.475 E.34876\"; actual \"M73 P46 R1\"",
+          "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output/artifacts/case-cu0W7E"
+        ],
+        "input_sha256": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
+        "native": {
+          "initial_extruder": 1,
+          "tool_and_flush_commands": [
+            "T1",
+            "T1",
+            "G1 X324 E8.5437 F6840.0",
+            "T1"
+          ],
+          "usage": [
+            false,
+            true
+          ]
+        },
+        "native_sha256": "7ae276a300844261e81ab666fe26fcecad2b0c7832051b83e5d01c823a3ae585"
+      },
+      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
+      "producer": {
+        "components": {
+          "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+          "launcher": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+          "native": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+          "parallelism": 1,
+          "policy": {
+            "ARES_PARITY_SEEDED_REFERENCE": "1",
+            "LC_ALL": "C",
+            "ORCA_REPLAY_SEED": "0"
+          },
+          "resources": "286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69",
+          "schema": "native-cache-v2"
+        },
+        "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
+        "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+        "runtime_environment": {
+          "HOME": "/home/indexyz",
+          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
+          "ORCA_APPDIR": null,
+          "ORCA_LIB_CACHE": null,
+          "ORCA_REPLAY_CPU": "0",
+          "XDG_CACHE_HOME": null,
+          "XDG_CONFIG_HOME": null
+        }
+      },
+      "process": {
+        "name": "orca_parity_j1_by_layer_role2_usage_matches_complete_output",
+        "test": "runner::j1_runtime_used_mask::orca_parity_j1_by_layer_role2_usage_matches_complete_output",
+        "process": {
+          "exit_code": 100,
+          "timed_out": false,
+          "owned_processes": {
+            "3971438": "373063996",
+            "3971456": "373064023",
+            "3971465": "373064041",
+            "3971472": "373064106"
+          }
+        },
+        "elapsed_seconds": 2.101013956591487,
+        "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output"
+      }
+    },
+    {
+      "status": "PASS",
+      "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control",
+      "witness": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control/artifacts/j1-top-surface-lifecycle-kf5wl2/travel-witness.json",
+      "data": {
+        "ares_sha256": "09e8987c3e4cead31b71438e893f1ab3f10379b4801590ebdc2eaed4cb732f17",
+        "ares_travel": [
+          "G1 X159.025 Y99.625 Z1",
+          "G1 X159.089 Y101.565 Z1 F18000",
+          "G1 X159.089 Y98.945",
+          "G1 X159.628 Y99.772",
+          "G1 X164.372 Y99.772",
+          "G1 X164.573 Y99.464",
+          "G1 X164.975 Y99.725",
+          "G1 X164.546 Y99.506 F18000",
+          "G1 X164.372 Y99.772",
+          "G1 X164.325 Y99.772",
+          "G1 X164.325 Y99.725",
+          "G1 X164.403 Y99.742",
+          "G1 X164.911 Y97.725 Z1 F18000",
+          "G1 X164.911 Y98.945",
+          "G1 X164.372 Y99.772",
+          "G1 X159.628 Y99.772",
+          "G1 X159.089 Y98.945",
+          "G1 X159.089 Y97.949",
+          "G1 X158.826 Y97.949",
+          "G1 X153.896 Y103.089 Z1 F18000",
+          "G1 X152.911 Y103.089",
+          "G1 X152.911 Y96.911",
+          "G1 X159.089 Y96.911",
+          "G1 X159.089 Y98.945",
+          "G1 X159.628 Y99.772",
+          "G1 X164.372 Y99.772",
+          "G1 X164.911 Y98.945",
+          "G1 X164.911 Y96.911",
+          "G1 X171.089 Y96.911",
+          "G1 X171.089 Y97.949",
+          "G1 X170.826 Y97.949"
+        ],
+        "input_sha256": "83d0c1908087d796008602671bdc3a6ef43f12fdd7423b0d3c96db2d423af310",
+        "native_sha256": "5c16e61f0717f76415c29e70c3e171eaa6f6d8fd481443a6dde74004f1243c4c",
+        "native_travel": [
+          "G1 X159.025 Y99.625 Z1",
+          "G1 X159.089 Y101.565 Z1 F18000",
+          "G1 X159.089 Y98.945",
+          "G1 X159.628 Y99.772",
+          "G1 X164.372 Y99.772",
+          "G1 X164.573 Y99.464",
+          "G1 X164.975 Y99.725",
+          "G1 X164.546 Y99.506 F18000",
+          "G1 X164.372 Y99.772",
+          "G1 X164.325 Y99.772",
+          "G1 X164.325 Y99.725",
+          "G1 X164.403 Y99.742",
+          "G1 X164.911 Y97.725 Z1 F18000",
+          "G1 X164.911 Y98.945",
+          "G1 X164.372 Y99.772",
+          "G1 X159.628 Y99.772",
+          "G1 X159.089 Y98.945",
+          "G1 X159.089 Y97.949",
+          "G1 X158.826 Y97.949",
+          "G1 X153.896 Y103.089 Z1 F18000",
+          "G1 X152.911 Y103.089",
+          "G1 X152.911 Y96.911",
+          "G1 X159.089 Y96.911",
+          "G1 X159.089 Y98.945",
+          "G1 X159.628 Y99.772",
+          "G1 X164.372 Y99.772",
+          "G1 X164.911 Y98.945",
+          "G1 X164.911 Y96.911",
+          "G1 X171.089 Y96.911",
+          "G1 X171.089 Y97.949",
+          "G1 X170.826 Y97.949"
+        ],
+        "scope": "final-layer G0/G1 XY travels only; complete primary remains separately asserted"
+      },
+      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/f40b167aa256418274134643c007bcaf029c8241af3e3633632f9e424e223ab6/receipt.json",
+      "producer": {
+        "components": {
+          "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+          "launcher": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+          "native": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+          "parallelism": 1,
+          "policy": {
+            "ARES_PARITY_SEEDED_REFERENCE": "1",
+            "LC_ALL": "C",
+            "ORCA_REPLAY_SEED": "0"
+          },
+          "resources": "286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69",
+          "schema": "native-cache-v2"
+        },
+        "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
+        "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+        "runtime_environment": {
+          "HOME": "/home/indexyz",
+          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
+          "ORCA_APPDIR": null,
+          "ORCA_LIB_CACHE": null,
+          "ORCA_REPLAY_CPU": "0",
+          "XDG_CACHE_HOME": null,
+          "XDG_CONFIG_HOME": null
+        }
+      },
+      "process": {
+        "name": "orca_parity_j1c_nonzero_top_layers_travel_control",
+        "test": "runner::j1_top_surface_lifecycle::orca_parity_j1c_nonzero_top_layers_travel_control",
+        "process": {
+          "exit_code": 0,
+          "timed_out": false,
+          "owned_processes": {
+            "3971476": "373064206",
+            "3971505": "373064249",
+            "3971509": "373064307"
+          }
+        },
+        "elapsed_seconds": 1.7346763690002263,
+        "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control"
+      }
+    },
+    {
+      "status": "RED",
+      "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes",
+      "witness": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes/artifacts/j1-top-surface-lifecycle-PG1LTp/travel-witness.json",
+      "data": {
+        "ares_sha256": "da4e1fc6b3cc1d32285dab67ec2e9d4d2643bf83c552e0c5829c108fc3b200ad",
+        "ares_travel": [
+          "G1 X164.911 Y97.725 Z1",
+          "G1 X164.911 Y98.945",
+          "G1 X164.372 Y99.772",
+          "G1 X159.628 Y99.772",
+          "G1 X159.089 Y98.945",
+          "G1 X159.089 Y103.089",
+          "G1 X159.089 Y103.025",
+          "G1 X159.025 Y103.025",
+          "G1 X157.025 Y103.089 Z1 F18000",
+          "G1 X152.911 Y103.089",
+          "G1 X152.911 Y96.911",
+          "G1 X159.089 Y96.911",
+          "G1 X159.089 Y98.945",
+          "G1 X159.628 Y99.772",
+          "G1 X164.372 Y99.772",
+          "G1 X164.911 Y98.945",
+          "G1 X164.911 Y96.975",
+          "G1 X164.975 Y96.975",
+          "G1 X166.975 Y96.911 Z1 F18000",
+          "G1 X164.911 Y96.911",
+          "G1 X164.911 Y98.945",
+          "G1 X164.372 Y99.772",
+          "G1 X164.325 Y99.772",
+          "G1 X164.325 Y99.725",
+          "G1 X164.403 Y99.742"
+        ],
+        "input_sha256": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
+        "native_sha256": "02d6b2ec425a15475e94239b5ef7b4d8e154ed5217d9b46b8fdad0476ad938f3",
+        "native_travel": [
+          "G1 X164.911 Y97.725 Z1",
+          "G1 X164.911 Y98.945",
+          "G1 X164.372 Y99.772",
+          "G1 X159.628 Y99.772",
+          "G1 X152.911 Y103.089",
+          "G1 X159.089 Y103.089",
+          "G1 X159.089 Y103.025",
+          "G1 X159.025 Y103.025",
+          "G1 X157.025 Y103.089 Z1 F18000",
+          "G1 X159.628 Y99.772",
+          "G1 X164.372 Y99.772",
+          "G1 X164.911 Y98.945",
+          "G1 X164.911 Y96.975",
+          "G1 X164.975 Y96.975",
+          "G1 X166.975 Y96.911 Z1 F18000",
+          "G1 X164.372 Y99.772",
+          "G1 X164.325 Y99.772",
+          "G1 X164.325 Y99.725",
+          "G1 X164.403 Y99.742"
+        ],
+        "scope": "final-layer G0/G1 XY travels only; complete primary remains separately asserted"
+      },
+      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
+      "producer": {
+        "components": {
+          "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+          "launcher": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+          "native": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+          "parallelism": 1,
+          "policy": {
+            "ARES_PARITY_SEEDED_REFERENCE": "1",
+            "LC_ALL": "C",
+            "ORCA_REPLAY_SEED": "0"
+          },
+          "resources": "286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69",
+          "schema": "native-cache-v2"
+        },
+        "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
+        "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+        "runtime_environment": {
+          "HOME": "/home/indexyz",
+          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
+          "ORCA_APPDIR": null,
+          "ORCA_LIB_CACHE": null,
+          "ORCA_REPLAY_CPU": "0",
+          "XDG_CACHE_HOME": null,
+          "XDG_CONFIG_HOME": null
+        }
+      },
+      "process": {
+        "name": "orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes",
+        "test": "runner::j1_top_surface_lifecycle::orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes",
+        "process": {
+          "exit_code": 100,
+          "timed_out": false,
+          "owned_processes": {
+            "3971516": "373064379",
+            "3971542": "373064422",
+            "3971544": "373064477"
+          }
+        },
+        "elapsed_seconds": 1.625868537928909,
+        "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes"
+      }
+    }
+  ],
+  "timeouts": 0,
+  "fresh_slice_receipts": 3,
+  "strict_clippy_exit": 0,
+  "fmt_exit": 0,
+  "fixture_change": "separate control top_shell_layers 0\u21921 only; other config and ZIP payloads identical",
+  "frozen_inputs": {
+    "tests/parity/j1-runtime-used-mask/role2.3mf": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
+    "tests/parity/j1-runtime-used-mask/top1-control.3mf": "83d0c1908087d796008602671bdc3a6ef43f12fdd7423b0d3c96db2d423af310",
+    "control_change": "top_shell_layers:0\u21921 only in project settings; all other ZIP entry payloads unchanged; frozen before first Native invocation"
+  }
+}

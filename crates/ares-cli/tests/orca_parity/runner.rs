@@ -64,6 +64,9 @@ mod initialized_overhang_intersections;
 #[path = "runner/j1_runtime_used_mask.rs"]
 mod j1_runtime_used_mask;
 #[cfg(test)]
+#[path = "runner/j1_top_surface_lifecycle.rs"]
+mod j1_top_surface_lifecycle;
+#[cfg(test)]
 #[path = "runner/lifecycle_tests.rs"]
 mod lifecycle_tests;
 #[cfg(test)]
