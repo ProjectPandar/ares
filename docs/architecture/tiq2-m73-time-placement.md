@@ -74,11 +74,33 @@ Diagnosis plan (each step falsifiable):
    this exact case is the RED (already admitted by worker1's retained
    receipt) and the GREEN proof.
 
-## Explicit non-goals
+## Diagnosis result (coordinator-ruled): seam-rooted, slice suspended
+
+The wipe/retract position divergence is a DOWNSTREAM symptom of the layer-3
+seam placement, not a wipe-algorithm difference. Measured loop endpoints
+(the last extrusion move before the retract):
+
+- native: `… X112.043 Y110.4 E.00548` → **`G1 X107.957 Y110.4 E.11889`**
+  (the loop crosses the neck to the left end), then `G1 E-3.5 F3600` and the
+  three wipe moves toward `X107.803 Y110.524`.
+- ares: `… X112.043 Y110.4 E.00548` → `G1 E-3.5 F3600` directly (the loop
+  STOPS at the right neck end), then a single `G1 X111.043 Y110.4 E-.5`.
+
+The endpoints differ by exactly the neck width (X107.957 vs X112.043,
+mirrored across the bed center): case (b) of the coordinator's split. Root
+cause = worker6's seam-placement port bug (`seam_placement.rs:34` gauss
+denominator e^(e−1) instead of e−1, distance penalty shrunk ≈8.24×), which
+also explains the mirrored layer-3 travel target. The whole-file M73
+placement divergence (and the ≈171 ms total-time delta from the different
+wipe paths) sits downstream of it.
+
+Slice SUSPENDED pending worker6's seam fix; re-verify this fixture after
+that lands (the whole-file RED stays as pinned: first difference line 80,
+`M73 P67 R0` placement).
+
+## Explicit non-goals (unchanged)
 
 - No change to small-loop caller selection (worker1's slice owns it).
 - No comparator relaxation; the retained complete-byte DIVERGENT stays.
 - No M73 mask/footer changes; `time_in_minutes`/truncation stay.
-- CoolingBuffer interplay is out of scope: the processor reads the
-  post-cooling gcode on both sides, so any cooling F difference is already
-  embedded in the inputs and not a time-model concern.
+- No seam fix in this slice (worker6 owns SeamPlacer).
