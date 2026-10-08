@@ -99,6 +99,27 @@ upstream `most_used_extruder`) and pass it to
 layer-change gcode and timelapse gcode placeholders
 (`gcode_placeholders.rs:70,97`).
 
+## most_used_extruder computation (upstream ToolOrdering.cpp:955-976)
+
+`ToolOrdering::cal_most_used_extruder(config)`: `extruder_count` sized to
+`nozzle_diameter.size()`; for EVERY layer's tools, the layer's filaments
+map through `config.filament_map.values[filament] − 1` into a per-layer
+`std::set` (each distinct extruder counts once per layer);
+`extruder_count[id]++` per set entry; `most_used_extruder` = argmax with
+`>=` (the id-1-vs-0 comparison prefers the higher extruder on ties). The
+count spans the WHOLE print, and the filament→extruder mapping is the
+`filament_map` option — so with `filament_map = ["2","1"]` every layer
+counts extruder 2 (filament 1) and extruder 1 (filament 2), making
+extruder 2 the most-used (it appears first in the set scan and wins the
+`>=` tie against itself... precisely: both extruders count 3 layers each;
+extruder_id 1 vs 0: counts equal → `>=` keeps the later id 1 → E1).
+
+Ares port: the same whole-print count over the tool-ordering layers
+(each layer's extruder set via `filament_map`, deduped, mapped 0-based),
+argmax `>=`; the result feeds `physical_extruder_id_for_logical` in the
+layer-change/timelapse placeholders. Implementation requires plumbing the
+count through the tool-ordering → placeholder path (next window).
+
 ## Diagnosis result (coordinator-ruled): seam-rooted, slice suspended
 
 The wipe/retract position divergence is a DOWNSTREAM symptom of the layer-3
