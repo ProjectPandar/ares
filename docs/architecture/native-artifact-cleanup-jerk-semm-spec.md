@@ -58,8 +58,8 @@ Rust 测试目标为
 - `tests/parity/validation/semm-m104-k3m-expected.gcode`
 
 删除对应三个 core 测试文件，保留全部三个 3MF 与已有配置。
-该组当前无 README，新增 `tests/parity/validation/README.md` 仅描述此三例 runtime 契约，
-不改其它 validation 组。运行时保留 input、Native/Ares 完整输出、首差、行数、SHA 与
+不新增或修改共享 validation README；runtime 契约写在本文与迁移测试文件头注释。
+运行时保留 input、Native/Ares 完整输出、首差、行数、SHA 与
 缓存 trace/receipt 路径，产物只在外部 artifact/cache 目录，绝不提交 Native 产物。
 
 Included：三例参照来源与测试适配层迁移、上述控制断言、删除旧 Native 文件。
