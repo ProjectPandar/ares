@@ -403,3 +403,51 @@ are shared seeded-only reference preconditions. Original evidence is retained:
 `/tmp/worker6-bbl-boundary-official-extra-raw-audit.json` and
 `/tmp/worker6-bbl-boundary-official-raw-lifecycle-audit.json`, with repeatable
 readers under the same external prefix. No rerun overwrites the full rounds.
+
+## Native oracle follow-up: Arachne default-prisms cleanup controls
+
+The active layout-reference migration uses Stage2 base `083cb1862` and GREEN
+`bf6b263fd`; no production `src` tree changes. Earlier `d639fab1c` controls are
+historical only. Fresh official results are base738 PASS/10 FAIL and
+candidate740 PASS/9 FAIL, with no timeout. The added CLI layout test PASS does
+not claim full byte-strict parity; that separate old ignored entry is DEFERRED.
+
+`option/top_surface_pattern/concentric` has one base PASS capture, then a
+candidate DIVERGENT capture followed by the harness's existing forced Native
+rerun PASS. All three complete Ares raw SHA256 values are identical:
+`fe41e0cf51ac3bbcf2a6a33c6925c76a126c43e7e0318794702496573df25101`.
+Input ZIP member names and decompressed bytes agree; producer components agree.
+The first Native content difference is line149: base
+`G1 X111.401 Y106.013 E.11356`, first candidate `M73 P10 R7`.
+Removing M73 for diagnosis only reveals a travel-target difference at filtered
+line3506, `G1 X110.037 Y109.936 Z10.4` versus
+`G1 X105.955 Y105.955 Z10.4`. The retry Native agrees with base over the complete
+stream under the original generated-by-only comparison. This is observed Native
+output nondeterminism; no UB or upstream selection cause is assigned.
+
+The existing force mechanism replaces the first cache receipt. That limitation
+is explicit: the retained first manifest/raw bytes, same-work miss/forced-rerun
+producer/request traces and stage commands bind the initial capture; the final
+receipt binds the retry. This cleanup neither changes that mechanism nor claims
+an independently retained first receipt.
+
+`bridge_over_infill_filament::orca_parity_bridge_over_infill_multi_filament_x2d`
+changes FAIL → PASS. Its Native first difference is line1097, object id1040429596
+versus0, matching previously recorded `Print.hpp:582 m_id` oracle UB. Original
+input bytes agree and complete Ares raw SHA256 remains
+`520b3da57f8276bad8488cf73150512ee7b0a608bfb88bdeda2673879df9c938`.
+
+The raw manifest audit remains **FAIL, exit1**, because repeated captures give
+516 base versus517 candidate records; no assertion is changed. All516 common
+key-to-Ares-raw-SHA sets agree, and the surplus concentric capture has the same
+Ares SHA. The final test failure subset itself holds. Extended diagnostics
+separately identify that one duplicate file and nine Native-generated timestamp
+headers, then establish unchanged581 direct/other raw file multisets; the original
+all-raw audit also stays FAIL. The coordinator explicitly accepts these oracle
+variations and repeated-capture evidence for this test-only slice.
+
+Retained evidence and repeatable readers use `/tmp/worker6-arachne-prisms-s2-`:
+`official-comparison.json/.log/.exit`, `retry-audit.json`, `x2d-audit.json`,
+`official-extra-raw-audit.json`, `official-extra-raw-after-duplicate-audit.json`
+and `official-raw-lifecycle-after-duplicate-audit.json`. Original rounds,
+DIVERGENT output and retry remain available; none are overwritten by this audit.
