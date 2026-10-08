@@ -96,17 +96,17 @@ impl CoolingState {
                 .or(ironing_speed)
                 .unwrap_or(baseline);
             // An END requests emission even if the matching START was inactive.
-            let replacement = if force
+            let emit = force
                 && (layer_open
                     || ironing_end
                     || marker.contains("_BASE__")
-                    || marker.contains("_FORCE_"))
-            {
-                // CoolingBuffer.cpp:1004 emits baseline without replacing the
-                // retained request speed used by FORCE_RESUME (1000-1002).
-                if role_speed.or(support_speed).or(ironing_speed).is_some() {
-                    self.physical_part_speed = target;
-                }
+                    || marker.contains("_FORCE_"));
+            // CoolingBuffer.cpp:1004 emits baseline without replacing the
+            // retained request speed used by FORCE_RESUME (1000-1002).
+            if emit && role_speed.or(support_speed).or(ironing_speed).is_some() {
+                self.physical_part_speed = target;
+            }
+            let replacement = if emit {
                 self.part_fan_command(target)
             } else {
                 Vec::new()
