@@ -47,7 +47,11 @@ interpreting their traces (generated-by-only normalization). Recipes:
   (4399900,4301461), origin165,165 ->world169.3999,169.301461. No wipe
   last_pos or post-retraction route change. Travel RED must assert this
   captured actual pipeline transition before the support fix, separately
-  from the phase RED. Missing-helper compilation is not that assertion RED.
+  from the phase RED. Independent travel RED on7a3216f67 completed exit100,
+  native assertion actual `G1 X169.344 Y169.301 Z.6` versus expected
+  `G1 X169.4 Y169.301 Z.6`:
+  `/tmp/tiq2-bounded-travel-red-7a.log`. Missing-helper compilation is not
+  that assertion RED.
 
 Failure modes: phantom apply resurrects enable; support inherits object flow
 spacing; inactive configured nozzles or selected support nozzle determine

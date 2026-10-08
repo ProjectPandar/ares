@@ -43,3 +43,24 @@ fn tiq2_final_used_filament_normalization_matches_seeded_print_apply() {
         OrcaBool(false)
     );
 }
+
+// Qualified cache history: support builds at spacing400000, then the object
+// reuses that cache; raw waypoint4399900,4301461 plus origin165,165.
+// GCode.cpp:5343-5429; AvoidCrossingPerimeters.cpp:480-507,1252-1264.
+#[tokio::test]
+async fn tiq2_support_cache_waypoint_matches_seeded_travel() {
+    let output = crate::slice_project(
+        include_bytes!("../../../../../../tests/parity/validation/tiq2-type2-enabled.3mf"),
+        crate::GenerationMetadata::deterministic(2026, 10, 7, 0, 0, 0),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    let text = String::from_utf8(output).unwrap();
+    let lines = text.lines().collect::<Vec<_>>();
+    let travel = lines
+        .windows(3)
+        .find(|lines| lines[0] == "G1 Z.6 F21000" && lines[2] == "G1 X169.301 Y169.301")
+        .unwrap();
+    assert_eq!(travel[1], "G1 X169.4 Y169.301 Z.6");
+}
