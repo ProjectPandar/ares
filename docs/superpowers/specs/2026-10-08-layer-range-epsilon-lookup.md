@@ -1,7 +1,7 @@
 # Epsilon-aware complex layer-range lookup rewrite
 
-Status: proposed; coordinator spec approval required before tests or production
-changes. Baseline is merged Stage2 `083cb1862`. This is an independent
+Status: coordinator approved spec `2998d7147`; production followed independent
+runtime Native RED. Baseline is merged Stage2 `083cb1862`. This is an independent
 libslic3r source slice, not an expansion of an Ares-owned range pipeline.
 Architecture: [lookup boundary ARD](../../architecture/2026-10-08-layer-range-epsilon-boundary.md).
 
@@ -111,5 +111,7 @@ One heavy per worker, 16 test threads, build jobs 8; respect browser pauses.
 No stash. Native outputs, runtime receipts and diagnostics stay outside the
 repository; commit only approved fixture/source and conclusion-only docs.
 
-Current evidence is source reading only: no new fixture, runtime probe, test,
-or production edit has been made for this epsilon slice.
+At spec submission `2998d7147`, evidence was source reading only: no new fixture,
+runtime probe, test or production edit existed for this slice. Subsequent
+runtime evidence and exact run bindings are recorded in the epsilon
+verification ARD.

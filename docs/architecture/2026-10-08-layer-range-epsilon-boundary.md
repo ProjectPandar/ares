@@ -1,6 +1,6 @@
 # ARD: epsilon-aware complex layer-range boundary
 
-Status: proposed; independent follow-up to merged Stage2 `083cb1862`.
+Status: coordinator approved the independent follow-up to merged Stage2 `083cb1862`.
 
 1. Own the rewrite at PrintObjectSlice.cpp::layer_range_first (244–255),
    ::layer_range_next (258–266), and their complex slices_to_regions caller
