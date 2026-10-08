@@ -269,3 +269,15 @@ One pre-existing quirk surfaced: the first layer's region options carry
 raw one-based filament ids that the global pass silently rewrites via
 `handle_dontcare`; the scoped seed path now applies the same rewrite
 before leading with the seed (recorded above, in build_inner).
+
+## Deferred: M73 duplicate-z dedup under sequential printing
+
+Upstream `m_layer_count` computation deduplicates numerically adjacent
+print-z values within an object before accumulating
+(`GCode.cpp:2502-2504`: `if (abs(*it - *(it + 1)) < EPSILON)
+temp_layer_count--`). The Ares tail sums raw per-object schedule entry
+counts (`Σ object_layer_counts`), which assumes unique layer z per
+object. Standard slicing never produces adjacent duplicate z inside one
+object, so no current fixture exercises this branch; if a future fixture
+does (stepped z, modifier stacks), add a RED case asserting the
+deduplicated total before touching the count.
