@@ -210,6 +210,31 @@ pub(super) fn slice_error_to_failure(error: SliceError, output: &Path) -> CliFai
             "There are some incorrect slicing parameters in the 3mf. Please verify the slicing of all plates in Orca Slicer before uploading.",
             format!("{message}\n"),
         ),
+        SliceError::CustomGCode {
+            message,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density,
+            ..
+        } => family(
+            -100,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density,
+            #[cfg(target_os = "linux")]
+            "Failed slicing the model. Please verify the slicing of all plates on Orca Slicer before uploading.",
+            format!("{message}\n"),
+        ),
         SliceError::ToolpathOutsidePrintableArea {
             gcode,
             #[cfg(target_os = "linux")]

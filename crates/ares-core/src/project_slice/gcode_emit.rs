@@ -34,6 +34,7 @@ mod spiral_vase;
 mod tags;
 mod temperature;
 mod template;
+mod template_failure;
 #[cfg(test)]
 mod tests;
 mod timelapse;
@@ -350,15 +351,10 @@ pub(super) fn emit(
     // (`GCode.cpp:3637-3645` — `failed_templates` collected via
     // `placeholder_parser_process` `GCode.cpp:3920-3933`).
     if !state.failed_templates.is_empty() {
-        let mut message = String::from("Failed to generate G-code for invalid custom G-code.\n\n");
-        for (name, error) in &state.failed_templates {
-            message.push_str(name);
-            message.push(' ');
-            message.push_str(error);
-            message.push('\n');
-        }
-        message.push_str("Please check the custom G-code or use the default custom G-code.");
-        return Err(SliceError::InvalidInput(message));
+        return Err(template_failure::from_failed_templates(
+            &state.failed_templates,
+            traversal,
+        ));
     }
     // `GCodeProcessor.cpp:2920-2926,3323-3325,1136-1139`: count exact
     // reserved comment lines in the complete stream, including end templates.
