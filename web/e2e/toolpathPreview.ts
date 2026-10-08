@@ -222,7 +222,9 @@ async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top:
  * moves the top layer down and the thumb to the max, Right at the last stop the
  * top layer up and the thumb to the min, which the rebuilt slider keeps
  * (`keep_min`, `GCodeViewer.cpp:1813-1820`); Up/Down set the thumb to the max
- * first (`:3857`).
+ * first (`:3857`). Orca applies every key against the thumbs the previous key
+ * left, so keys pressed back to back, without waiting for the engine, add up
+ * within a layer and across a layer step.
  */
 async function checkMovesKeys(page: Page, gcode: string[], moves: Move[], top: number) {
   const slider = page.getByRole("slider", { name: "Moves" });
@@ -256,6 +258,14 @@ async function checkMovesKeys(page: Page, gcode: string[], moves: Move[], top: n
     await page.keyboard.press(key);
     await at(layerIndex, stop);
   }
+  const burst = async (keys: string[], layerIndex: number, stop: number) => {
+    for (const key of keys) await page.keyboard.press(key);
+    await at(layerIndex, stop);
+  };
+  await page.keyboard.press("Home");
+  await at(top, 0);
+  await burst(["ArrowRight", "ArrowRight", "ArrowRight"], top, 3);
+  await burst(["Home", "ArrowLeft", "ArrowLeft"], top - 1, -2);
 }
 
 /** libvgcode `Layers::update`: a layer's z is that of its last non-custom extrusion. */
