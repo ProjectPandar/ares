@@ -61,6 +61,9 @@ mod lifecycle_tests;
 #[path = "runner/multi_object_skirt.rs"]
 mod multi_object_skirt;
 #[cfg(test)]
+#[path = "runner/nearest_seam_gaussian.rs"]
+mod nearest_seam_gaussian;
+#[cfg(test)]
 #[path = "runner/overhang_reverse.rs"]
 mod overhang_reverse;
 #[cfg(test)]
