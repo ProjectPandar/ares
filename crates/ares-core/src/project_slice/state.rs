@@ -25,7 +25,7 @@ pub(super) struct ProjectSliceState {
     pub(super) intersected_objects: Vec<IntersectedPrintObject>,
 }
 
-fn first_plate_id(project: &Project) -> u32 {
+pub(super) fn first_plate_id(project: &Project) -> u32 {
     project
         .plates()
         .iter()
