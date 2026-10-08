@@ -263,6 +263,61 @@ without production edits. This bounded result is not a proof over all
 possible meshes. Apply the same no-RED/no-edit disposition to D/A/B if
 their witness cannot be constructed.
 
+### C1 — signed-distance precision chain audit (2026-10-08)
+
+Coordinator expanded C to audit the `_dist` double chain after D. This is
+separate from C's visibility accumulation order and needs its own Native
+RED attribution before any distance implementation changes.
+
+Upstream `Line.hpp:251–267`: despite its name, `Linef` stores Vec2d endpoints
+and its Scalar is double. `ExPolygon.hpp:175–193` constructs these lines by
+unscaling integer contours into Vec2d. `SeamPlacer.cpp:1083–1085` takes the
+candidate's already-float XY position, then promotes it to double. Candidate
+quantization is upstream behavior; do not replace candidate positions with
+double as part of this slice.
+
+`AABBTreeLines.hpp:300–304,329–352` uses double Floating for Linef, obtains
+squared segment distance, takes sqrt in double, applies the outside sign,
+and returns double. `Line.hpp:43–69` computes edge, squared length,
+projection, endpoint branches and squared residual in double. The interior
+residual is `(t * v - va).squaredNorm()`; changing only the final return type
+would leave earlier precision loss and would not port this source boundary.
+
+Ares `alignment/context.rs:51–95,118–130` currently narrows unscaled contour
+endpoints to f32, computes segment projection/residual in f32 (including an
+explicit mul_add and hypot), reduces with f32::min, then returns f32.
+`populate_overhang:44–47` promotes that rounded result back to f64.
+`populate_embedded_distance:103–104` adds the width contribution directly in
+f32. Upstream `.cpp:1086–1097` instead keeps signed distance double through
+the addition, and stores each final overhang/embedded value as float. The
+`0.65f * flow_width` term remains f32 before double promotion; actual layer
+height remains double and tan(float) retains the reviewed D policy.
+
+The audit also identifies two adjacent boundaries, not automatic fixes:
+Ares determines inside from a rescaled integer candidate whereas upstream
+outside() receives the promoted float candidate in double. Also upstream
+`.cpp:1092,1563` stores/returns unsupported_dist separately; the current
+Ares LayerPlan has overhangs and embedded_distances only. Neither sign
+classification nor unsupported-distance propagation may be silently added
+to an arithmetic-only GREEN; report an independently visible discrepancy.
+
+Conditional destination: existing `alignment/context.rs` distance helpers
+and final assignment sites. Preserve candidate f32 storage, region/contour
+association, source endpoint ordering and D's actual layer height. Port
+segment arithmetic/rounding from Line.hpp rather than globally replacing
+f32 types or inventing a generic geometry API. No production edit without
+an attributable complete Native RED and approval of this added boundary.
+
+RED preparation: use nearest-mode sheared/rotated single-object Dumbbell
+siblings to exclude AlignedBack accumulation bias, preserve first/regular
+heights0.3/0.2, vary a finite documented slope/orientation set, and keep an
+unsheared control. For original C visibility use one aligned_back object,
+uniform heights and concave neck/orientation variants. Retain all byte
+verdicts and producer/input/output hashes. A shared failing control or an
+unattributed seam difference is not either sub-slice's RED. If neither
+arithmetic issue is observable, retain the bounded UNREACHABLE disposition
+above; do not edit both formulas together in search of a passing result.
+
 ## Per-slice TDD, artifacts and merge gates
 
 1. After this spec is approved, rebase/recheck the current slice on latest
