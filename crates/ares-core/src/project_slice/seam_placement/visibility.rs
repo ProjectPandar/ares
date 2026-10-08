@@ -64,8 +64,13 @@ impl GlobalVisibility {
             let normal = self.samples.normals[index];
             let plane_distance = (position - sample).dot(normal).abs();
             // `SeamPlacer.cpp:341-342` adds two separately rounded contributions.
-            let weight =
-                (self.radius - plane_distance) + (self.radius - (position - sample).norm());
+            let delta = position - sample;
+            // SeamPlacer.cpp:342 Eigen squaredNorm: Native asm 0x1017941–0x1017965
+            // reduces y²+z² before x²; keep this order local to the distance weight.
+            let eigen_yz_then_x_squared_norm =
+                (delta.y * delta.y + delta.z * delta.z) + delta.x * delta.x;
+            let weight = (self.radius - plane_distance)
+                + (self.radius - eigen_yz_then_x_squared_norm.sqrt());
             total_visibility += weight * self.values[index];
             total_weight += weight;
         }
