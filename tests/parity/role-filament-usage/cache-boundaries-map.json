@@ -1,0 +1,68 @@
+{
+  "binary_sha256": "59f9ea7e16165df6979a243de7d6acd49d8cf523ac5de6d3fec08d6e25c7896e",
+  "input_sha256": "d0d02feedc6cf6a144402818ff02f2db82c950757dd407599f4015b3adf618b5",
+  "gcode_sha256": "d0d02feedc6cf6a144402818ff02f2db82c950757dd407599f4015b3adf618b5",
+  "roles": [
+    {
+      "role": "Perimeter",
+      "native_role": 1,
+      "meters": 0.0010000000444149975,
+      "grams": 0.00956909465789795,
+      "bits": [
+        4562254509122197363,
+        4576669829286407963
+      ]
+    },
+    {
+      "role": "ExternalPerimeter",
+      "native_role": 2,
+      "meters": 0.0107540787180275,
+      "grams": 0.10290679264068603,
+      "bits": [
+        4577352926089177809,
+        4592079636551012712
+      ]
+    },
+    {
+      "role": "SupportMaterial",
+      "native_role": 14,
+      "meters": 0.002000000088829995,
+      "grams": 0.0191381893157959,
+      "bits": [
+        4566758108749567859,
+        4581173428913778459
+      ]
+    },
+    {
+      "role": "SupportMaterialInterface",
+      "native_role": 15,
+      "meters": 0.0010000000444149975,
+      "grams": 0.00956909465789795,
+      "bits": [
+        4562254509122197363,
+        4576669829286407963
+      ]
+    },
+    {
+      "role": "SupportTransition",
+      "native_role": 16,
+      "meters": 0.0010000000444149975,
+      "grams": 0.00956909465789795,
+      "bits": [
+        4562254509122197363,
+        4576669829286407963
+      ]
+    },
+    {
+      "role": "WipeTower",
+      "native_role": 17,
+      "meters": 0.0010000000444149975,
+      "grams": 0.00956909465789795,
+      "bits": [
+        4562254509122197363,
+        4576669829286407963
+      ]
+    }
+  ],
+  "footer_check": null
+}

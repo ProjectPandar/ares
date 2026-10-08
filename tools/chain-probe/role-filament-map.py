@@ -23,6 +23,8 @@ SHA = "59f9ea7e16165df6979a243de7d6acd49d8cf523ac5de6d3fec08d6e25c7896e"
 assert hashlib.sha256(BINARY.read_bytes()).hexdigest() == SHA
 ROOT.mkdir(parents=True)
 SOURCE = Path(os.environ["ARES_ROLE_ORACLE_INPUT"]).resolve()
+MODE = os.environ.get("ARES_ROLE_ORACLE_MODE", "slice")
+assert MODE in ("slice", "process")
 # ExtrusionEntity.hpp:20-43, not libvgcode's different role ordinal order.
 ROLES = [
     "None", "Perimeter", "ExternalPerimeter", "OverhangPerimeter",
@@ -102,12 +104,16 @@ gdb.execute(
     + ":/nix/store/92iwsqgbgppkr2lqd5vd6fyff7vwvwg4-glew-2.3.1/lib"
 )
 Finalize("_ZN6Slic3r14GCodeProcessor13UsedFilaments14process_cachesEPS0_", internal=True)
-gdb.execute("set args --slice 0 --outputdir " + str(ROOT) + " " + str(SOURCE))
+if MODE == "slice":
+    gdb.execute("set args --slice 0 --outputdir " + str(ROOT) + " " + str(SOURCE))
+else:
+    gdb.execute("set args --process-gcode " + str(SOURCE)
+                + " --dump-color-change " + str(ROOT / "metadata.json"))
 gdb.execute("run")
 assert int(gdb.parse_and_eval("$_exitcode")) == 0
 assert len(snapshots) == 1
 rows = snapshots[0]
-gcode = (ROOT / "plate_1.gcode").read_bytes()
+gcode = (ROOT / "plate_1.gcode").read_bytes() if MODE == "slice" else SOURCE.read_bytes()
 lines = gcode.decode().splitlines()
 
 
@@ -121,8 +127,9 @@ def footer(unit):
 meters = sum(row["meters"] for row in rows)
 grams = sum(row["grams"] for row in rows)
 # Footer is a rounded observable; the role-map assertions retain all f64 bits.
-assert f"{meters * 1000:.2f}" == footer("mm")
-assert f"{grams:.2f}" == footer("g")
+if MODE == "slice":
+    assert f"{meters * 1000:.2f}" == footer("mm")
+    assert f"{grams:.2f}" == footer("g")
 (ROOT / "role-map.json").write_text(json.dumps({
     "binary_sha256": SHA,
     "input_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
@@ -132,5 +139,5 @@ assert f"{grams:.2f}" == footer("g")
         "meters_sum": meters, "grams_sum": grams,
         "mm": footer("mm"), "g": footer("g"), "passed": True,
         "scope": "same Native slice run, single filament, no flush",
-    },
+    } if MODE == "slice" else None,
 }, indent=2) + "\n")
