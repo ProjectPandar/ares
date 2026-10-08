@@ -151,6 +151,15 @@ pub(crate) fn load_project_with_preparation(
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::normalize_volume_offsets(&mut objects);
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
+    // bbs_3mf.cpp:3945-3957: the model's `Application` metadata tags the
+    // BambuStudio/OrcaSlicer family (`is_bbl_3mf`).
+    let bbl_family_3mf = graph.models.iter().any(|model| {
+        model.document.metadata.iter().any(|entry| {
+            entry.name == "Application"
+                && (entry.value.starts_with("BambuStudio-")
+                    || entry.value.starts_with("OrcaSlicer-"))
+        })
+    });
     Ok((
         Project::new(
             models,
@@ -164,6 +173,7 @@ pub(crate) fn load_project_with_preparation(
                 filament_sequences,
                 plate_documents,
                 has_painted_layer_height_profile,
+                bbl_family_3mf,
             },
         ),
         preparation,

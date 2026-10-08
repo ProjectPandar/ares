@@ -11,7 +11,7 @@ use crate::{
     project::{
         filament_sequence::FilamentSequences,
         model_settings::ModelSettings,
-        raw_settings::ProjectSettingsRaw,
+        raw_settings::{ProjectSettingsRaw, RawConfigValue},
         slice_info::{SliceInfo, SliceInfoHeader},
     },
 };
@@ -101,6 +101,16 @@ impl Project {
         // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
         // typed builder and the `is_value_valid` loop see it.
         merged.handle_legacy();
+        // `shrink_to_new_bed` (`OrcaSlicer.cpp:3766-3796`): a BBL-family 3mf
+        // re-centers onto the loaded machine's bed — the embedded bed being
+        // smaller sets `shrink = 1`, and every instance plus the wipe tower
+        // shifts by the bed-center delta (`:3958-4053 translate_models`).
+        if project.documents.bbl_family_3mf
+            && let Some(offset) = shrink_to_new_bed_offset(&embedded_raw, &merged)
+        {
+            project.translate_all_instances(offset);
+            shift_wipe_tower(&mut merged, offset);
+        }
 
         project.settings = crate::options::json_deserialize::deserialize_preset_config::<
             ProjectSettingsBuilder,
@@ -237,11 +247,115 @@ impl Project {
                     filament_sequences: FilamentSequences(Default::default()),
                     plate_documents: Vec::new(),
                     has_painted_layer_height_profile: false,
+                    bbl_family_3mf: false,
                 },
             ),
             preparation,
         ))
     }
+}
+
+/// `OrcaSlicer.cpp:3766-3796` classification with the `:4008-4021` plate-0
+/// center offset: `Some([dx, dy])` for `shrink = 1`, `None` otherwise
+/// (shrink 2/0 are deferred; an absent or zero-sized embedded bed disables
+/// the whole step). Widths/heights truncate to int like upstream
+/// (`:1780`, `:1338`).
+fn shrink_to_new_bed_offset(
+    old: &ProjectSettingsRaw,
+    new: &ProjectSettingsRaw,
+) -> Option<[f64; 2]> {
+    let (old_width, old_depth) = printable_bed_size(old)?;
+    let old_height = printable_height(old)?;
+    if old_height <= 0.0 {
+        return None;
+    }
+    let (new_width, new_depth) = printable_bed_size(new)?;
+    let new_height = printable_height(new).unwrap_or(0.0);
+    let (old_width, old_depth, old_height) =
+        (old_width as i32, old_depth as i32, old_height as i32);
+    let (new_width, new_depth, new_height) =
+        (new_width as i32, new_depth as i32, new_height as i32);
+    let shrink = if old_width > new_width || old_depth > new_depth || old_height > new_height {
+        2
+    } else if old_width < new_width || old_depth < new_depth {
+        1
+    } else {
+        0
+    };
+    if shrink != 1 {
+        return None;
+    }
+    Some([
+        new_width as f64 / 2.0 - old_width as f64 / 2.0,
+        new_depth as f64 / 2.0 - old_depth as f64 / 2.0,
+    ])
+}
+
+/// `OrcaSlicer.cpp:1779-1780` (embedded) and `:3726` (overlaid): the
+/// diagonal-corner difference of `printable_area`.
+fn printable_bed_size(raw: &ProjectSettingsRaw) -> Option<(f64, f64)> {
+    let points = point_pairs(raw.get("printable_area")?)?;
+    let first = points.first()?;
+    let diagonal = points.get(2)?;
+    Some((diagonal.0 - first.0, diagonal.1 - first.1))
+}
+
+fn printable_height(raw: &ProjectSettingsRaw) -> Option<f64> {
+    match raw.get("printable_height") {
+        Some(RawConfigValue::Text(token)) => token.trim().parse().ok(),
+        Some(RawConfigValue::Number(number)) => number.as_f64(),
+        _ => None,
+    }
+}
+
+/// `ConfigOptionPoints` wire entries (`"0x0"`, `"220x220"`) as plain
+/// coordinate pairs.
+fn point_pairs(value: &RawConfigValue) -> Option<Vec<(f64, f64)>> {
+    let tokens: Vec<String> = match value {
+        RawConfigValue::List(items) => items
+            .iter()
+            .filter_map(|item| match item {
+                RawConfigValue::Text(token) => Some(token.clone()),
+                RawConfigValue::Number(number) => Some(number.to_string()),
+                _ => None,
+            })
+            .collect(),
+        RawConfigValue::Text(token) => token.split(';').map(str::to_owned).collect(),
+        _ => return None,
+    };
+    let pairs = tokens
+        .iter()
+        .filter_map(|token| {
+            let (x, y) = token.trim().split_once('x')?;
+            Some((x.trim().parse().ok()?, y.trim().parse().ok()?))
+        })
+        .collect::<Vec<_>>();
+    (!pairs.is_empty()).then_some(pairs)
+}
+
+/// `OrcaSlicer.cpp:4038-4048`: the plate-0 wipe tower rides the
+/// re-centering delta (`set_at(…, 0)`); absent keys stay absent.
+fn shift_wipe_tower(raw: &mut ProjectSettingsRaw, [offset_x, offset_y]: [f64; 2]) {
+    for (key, offset) in [("wipe_tower_x", offset_x), ("wipe_tower_y", offset_y)] {
+        let Some(value) = raw.get(key).cloned() else {
+            continue;
+        };
+        let Some(shifted) = shift_first_slot(&value, offset) else {
+            continue;
+        };
+        raw.insert(key.to_owned(), shifted);
+    }
+}
+
+fn shift_first_slot(value: &RawConfigValue, offset: f64) -> Option<RawConfigValue> {
+    let mut items = match value {
+        RawConfigValue::List(items) => items.clone(),
+        _ => return None,
+    };
+    let first = items.first()?;
+    let position: f64 = first.token()?.trim().parse().ok()?;
+    items[0] = RawConfigValue::Text(format!("{}", position + offset));
+    Some(RawConfigValue::List(items))
 }
 
 mod overlay;

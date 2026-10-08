@@ -33,6 +33,10 @@ pub(crate) struct ProjectDocuments {
     pub filament_sequences: FilamentSequences,
     pub plate_documents: Vec<PlateJson>,
     pub has_painted_layer_height_profile: bool,
+    /// BambuStudio-family 3mf (`is_bbl_3mf`, `bbs_3mf.cpp:3945-3957`): the
+    /// model's `Application` metadata starts with `BambuStudio-` or
+    /// `OrcaSlicer-`.
+    pub bbl_family_3mf: bool,
 }
 
 impl ProjectDocuments {
@@ -44,6 +48,7 @@ impl ProjectDocuments {
             filament_sequences: self.filament_sequences.clone(),
             plate_documents: self.plate_documents.clone(),
             has_painted_layer_height_profile: self.has_painted_layer_height_profile,
+            bbl_family_3mf: self.bbl_family_3mf,
         }
     }
 }

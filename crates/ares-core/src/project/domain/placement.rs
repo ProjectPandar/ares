@@ -41,6 +41,22 @@ impl Project {
         true
     }
 
+    /// `PartPlate::translate_all_instance` (`OrcaSlicer.cpp:4037`): shift
+    /// every instance offset by the shrink_to_new_bed plate re-centering
+    /// delta.
+    pub(crate) fn translate_all_instances(&mut self, shift: [f64; 2]) {
+        if shift.iter().all(|value| value.abs() < EPSILON) {
+            return;
+        }
+        for object in &mut self.objects {
+            for instance in &mut object.instances {
+                instance.transform = instance
+                    .transform
+                    .pretranslated(Point3d::new(shift[0], shift[1], 0.0));
+            }
+        }
+    }
+
     /// `OrcaSlicer.cpp:4382-4392`: per object, instance 0's world bounding box
     /// min Z is subtracted from every instance offset.
     pub(crate) fn drop_instances_to_ground(&mut self) {
@@ -179,6 +195,7 @@ mod tests {
                 filament_sequences: FilamentSequences(Default::default()),
                 plate_documents: Vec::new(),
                 has_painted_layer_height_profile: false,
+                bbl_family_3mf: false,
             },
         )
     }
