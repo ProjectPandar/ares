@@ -94,9 +94,12 @@ also explains the mirrored layer-3 travel target. The whole-file M73
 placement divergence (and the ≈171 ms total-time delta from the different
 wipe paths) sits downstream of it.
 
-Slice SUSPENDED pending worker6's seam fix; re-verify this fixture after
-that lands (the whole-file RED stays as pinned: first difference line 80,
-`M73 P67 R0` placement).
+Slice SUSPENDED pending worker6's seam fix; re-verified after it landed:
+**PASS on main 117cd7edd** — the whole-file comparison (banner-only
+normalization) of this exact fixture is byte-identical to native, confirming
+the seam root cause (worker6's gauss denominator fix). The whole-file RED
+stays unmerged (duplicate coverage of the seam fix's own gates); this spec
+and the diagnosis record are submitted as docs.
 
 ## Explicit non-goals (unchanged)
 
