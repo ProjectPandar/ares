@@ -41,7 +41,7 @@ impl Project {
                 &project.preset.print_compatible_printers.0,
             ),
         ] {
-            raw.insert_string_slots(key, values);
+            raw.insert_strings(key, values);
         }
         for (key, values) in [
             ("filament_map", &project.gcode.filament_map.0),
