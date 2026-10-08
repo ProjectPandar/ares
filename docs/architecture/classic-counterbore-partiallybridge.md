@@ -1,6 +1,6 @@
 # Classic counterbore `partiallybridge` — source-cited rewrite spec
 
-状态：**待独立 spec 审批；没有生产 Rust 改动、Rust RED 或 GREEN。**
+状态：spec 与独立 RED 已批准；本地 Bridges 候选已编译，完整 GREEN 门禁待执行。
 
 ## 不可协商边界
 
@@ -56,8 +56,8 @@ Nix GDB17.2，在固定seeded ELF上以符号和反汇编定位：
 
 ### Deferred
 
-- `chbFilled/sacrificiallayer`及其 `PrintObject::detect_surfaces_type` 行为；仍明确拒绝真正未移植的Filled作用域，不能误放行有影响的路径。
-- Arachne `process_no_bridge` caller。本片不得让classic处理结果暗中流入Arachne，也不得以classic fallback支持Arachne。
+- **DEFERRED — `chbFilled/sacrificiallayer`**：`PerimeterGenerator.cpp:1776–1855` 的 filled 分支及其 `PrintObject::detect_surfaces_type` 行为未包含在本片。不得把跳过计算、兼容壳拒绝或 no-op 当成该上游分支已实现；任何拒绝只说明此边界仍未支持，不是 Native parity 或 GREEN 证据。
+- **DEFERRED — Arachne `process_no_bridge` caller**：本片只移植 classic caller `PerimeterGenerator.cpp:1214`。不得静默跳过 Arachne 洞的有效处理、以错误守卫当作 GREEN，或让 classic 结果暗中流入 Arachne；不提供 classic fallback。现有用例不得因这些 deferred 边界回退，需由新 main 上 matched base/candidate 验证。
 - by-object、role-filament modifier、layer-range参数重写、TiQ2、mesh repair、新bridge detector行为和数值域修补。
 
 本片不是只缩小一个if：先真实移植Bridges行为，再把兼容壳中的宽泛拒绝替换为同上游作用域一致的判定。不能“upper layer有holes就放行”却仍未处理mask。
