@@ -84,7 +84,7 @@ pub(super) fn build(
     } else {
         start_ratio
     };
-    let speed = scarf_speed(first.role, loop_length, options);
+    let speed = scarf_speed(first.role, options);
     let max_segment = slope_length / options.scarf.steps as f64 / scale;
     let seam_gap = options.seam_gap / scale;
     let mut starts = Vec::new();
@@ -207,15 +207,12 @@ fn add_slope(
     }
 }
 
-fn scarf_speed(role: ExtrusionRole, loop_length: f64, options: &MotionOptions) -> f64 {
+fn scarf_speed(role: ExtrusionRole, options: &MotionOptions) -> f64 {
     let base = if role == ExtrusionRole::ExternalPerimeter {
         options.outer_wall_speed
     } else {
         options.inner_wall_speed
     };
-    if loop_length <= options.small_perimeter_threshold * 2.0 * std::f64::consts::PI {
-        return options.small_perimeter_speed;
-    }
     let configured = match options
         .scarf
         .speed
