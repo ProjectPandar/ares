@@ -3,7 +3,7 @@
 // (`PerimeterGenerator.cpp:2269-2440`): flattens generated walls inner-to-
 // outer (or outer-to-inner), applies the `WallToolPaths::getRegionOrder`
 // constraints (`WallToolPaths.cpp:809-903`) and greedily chains the remaining
-// candidates by distance, preferring closed walls. The inner-outer-inner
+// candidates by distance, scanning open walls first. The inner-outer-inner
 // sandwich reordering (`:2404-2464`) stays a typed-rejected scope.
 
 use crate::{
@@ -54,8 +54,8 @@ pub(in crate::project_slice) fn order_walls(
         let mut available = (0..all_extrusions.len())
             .filter(|candidate| !processed[*candidate] && blocked[*candidate] == 0)
             .collect::<Vec<_>>();
-        // Closed walls first (`PerimeterGenerator.cpp:2312-2315`).
-        available.sort_by_key(|candidate| !all_extrusions[*candidate].is_closed);
+        // Open walls first (`PerimeterGenerator.cpp:2326-2328`).
+        available.sort_by_key(|candidate| all_extrusions[*candidate].is_closed);
 
         for candidate in available {
             let path = &all_extrusions[candidate];
