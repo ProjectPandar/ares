@@ -106,7 +106,13 @@ pub(super) fn emit(
         &islands.plate,
     );
     let mut output = Vec::new();
-    file_start::append(&mut output, traversal, metadata, first_layer_bounds)?;
+    file_start::append(
+        &mut output,
+        traversal,
+        metadata,
+        first_layer_bounds,
+        sliced_layer_count,
+    )?;
     let tags = tags::Tags::of(traversal);
     if header::enabled(traversal) {
         header::append_header(&mut output, traversal, &schedule, max_print_z);
@@ -165,6 +171,7 @@ pub(super) fn emit(
         crate::slicer_context::Mt19937::new(context.seed()),
     ));
     let mut state = motion::EmitState {
+        total_layer_count: sliced_layer_count,
         template_rng: template_rng.clone(),
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,
@@ -239,6 +246,7 @@ pub(super) fn emit(
                         metadata,
                         first_layer_bounds,
                         Some(&template_rng),
+                        sliced_layer_count,
                     )
                 })
                 .transpose()?

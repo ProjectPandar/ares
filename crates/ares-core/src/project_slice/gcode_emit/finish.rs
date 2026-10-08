@@ -29,6 +29,7 @@ pub(super) fn append(
         metadata,
         first_layer_bounds,
         Some(&state.template_rng),
+        state.total_layer_count,
     )?;
     // `ppi.update_from_gcodewriter(m_writer)` refreshes `position` and the
     // E counters before each template (`GCode.cpp:3896`).

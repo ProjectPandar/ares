@@ -21,12 +21,13 @@ pub(super) fn base_config(
     metadata: GenerationMetadata,
     first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
     rng: Option<&value::TemplateRng>,
+    layer_count: usize,
 ) -> Result<value::Config, SliceError> {
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
     config.random = rng.cloned();
     timestamp::insert(&mut config, metadata);
-    insert_runtime_placeholders(&mut config, traversal);
+    insert_runtime_placeholders(&mut config, traversal, layer_count);
     config.insert("current_extruder", Value::number(0.0));
     config.insert("filament_extruder_id", Value::number(0.0));
     config.insert("current_hotend", Value::number(-1.0));
@@ -155,6 +156,7 @@ fn int_at(values: &crate::OrcaInts, index: usize) -> i32 {
 fn insert_runtime_placeholders(
     config: &mut value::Config,
     traversal: &PreparedPostClassicTraversal,
+    layer_count: usize,
 ) {
     for name in [
         "initial_tool",
@@ -238,12 +240,6 @@ fn insert_runtime_placeholders(
         "has_single_extruder_multi_material_priming",
         Value::option_bool(false),
     );
-    let layer_count = traversal
-        .objects
-        .iter()
-        .map(|object| object.records.len())
-        .max()
-        .unwrap_or(0);
     config.insert("total_layer_count", Value::number(layer_count as f64));
     let max_print_z = traversal
         .objects

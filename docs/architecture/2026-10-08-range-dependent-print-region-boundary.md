@@ -1,6 +1,6 @@
 # ARD: range-dependent PrintRegion rewrite
 
-Status: proposed; no Stage2 production authorization yet.
+Status: approved Stage2 first slice: explicit-height wall_loops region ranges.
 
 1. New coordinator Stage2 means **region-override ranges**, not the painted-profile
    Stage2 named in the earlier height-profile proposal. Painted profile remains
@@ -25,13 +25,27 @@ Status: proposed; no Stage2 production authorization yet.
    hits upstream Slicing.cpp missing-option dereference UB. Do not fabricate a
    default, emulate a crash, or expand pure-None/mixed acceptance without a
    separately source-proved selection path. This stage removes region-override
-   rejection only for the legal explicit-height range collection.
+   rejection initially only for explicit-height wall_loops overrides. Other
+   region options retain their capability boundary pending independent TDD.
 6. Core remains bytes-only/platform-neutral on browserWASM/Windows/macOS/Linux.
    No I/O/UI/OpenGL/terminal, no independent slicing in CLI/WASM adapters, no
    candidate crate or extensible strategy. Reuse existing mesh slicing and flows.
 7. Approval → independent Native runtime RED → test-first GREEN → fresh required
    gates → coordinator review → ff-only push. No production or runtime probe
    in this spec-only change; no ignored test or broadened byte normalization.
+
+8. G-code template total_layer_count uses the export's physical print-Z count:
+   GCode.cpp:2487-2529 derives m_layer_count from object/support layer Z values,
+   and :2890 exposes it to the shared placeholder parser. The existing Rust
+   export schedule owns the merged count; pass it through all template contexts
+   rather than count region-major perimeter records. Machine-start must not
+   override it with a first-object record count. This correction does not change
+   the comparison contract, M73, or actual layer geometry.
+9. PrintObjectSlice.cpp:244-266 epsilon-aware range selection is a separately
+   required source slice with its own RED/GREEN and commit, not included in this
+   first Stage2 implementation. Do not claim epsilon-boundary parity from the
+   constant-height wall-loop witness. Spiral mode with region overrides retains
+   the unsupported boundary (upstream multi-range slicing asserts !spiral_mode).
 
 Admitted2.4.2 identity: checked source equals seeded source store byte-for-byte.
 PrintApply.cpp SHA256 a067414959c475d23f782ebac9f5a185b63012304aced66974726d95a95daf20;

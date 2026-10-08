@@ -70,6 +70,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
             metadata,
             first_layer_bounds,
             Some(&state.template_rng),
+            state.total_layer_count,
         )?;
         super::super::motion::refresh_writer_state(&mut config, state);
         config.insert(

@@ -102,6 +102,7 @@ pub(super) fn append_before_layer_change_gcode(
         context.metadata,
         context.first_layer_bounds,
         Some(&state.template_rng),
+        state.total_layer_count,
     )?;
     // `ppi.update_from_gcodewriter(m_writer)` refreshes `position`/
     // E-counters before each template (`GCode.cpp:3896`).
@@ -171,6 +172,7 @@ pub(super) fn append_layer_change(
             context.metadata,
             context.first_layer_bounds,
             Some(&state.template_rng),
+            state.total_layer_count,
         )?;
         super::motion::refresh_writer_state(&mut config, state);
         config.insert("layer_num", value::Value::number(layer_index as f64));

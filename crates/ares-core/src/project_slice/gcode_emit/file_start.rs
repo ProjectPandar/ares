@@ -13,12 +13,14 @@ pub(super) fn append(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<FirstLayerBounds>,
+    layer_count: usize,
 ) -> Result<(), SliceError> {
     let source = &traversal.resolved.views.runtime_gcode.file_start_gcode.0;
     if source.is_empty() {
         return Ok(());
     }
-    let mut config = placeholders::base_config(traversal, metadata, first_layer_bounds, None)?;
+    let mut config =
+        placeholders::base_config(traversal, metadata, first_layer_bounds, None, layer_count)?;
     config.insert(
         "print_time_sec",
         Value::String(processor::PRINT_TIME_SEC_PLACEHOLDER.to_owned()),
