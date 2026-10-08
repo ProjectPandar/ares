@@ -1,5 +1,5 @@
 import { EXTRUSION_ROLES, type MovesSlider as Stops, type MovesView, type ToolMarker, type Toolpaths } from "@ares-slicer/wasm";
-import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { slicer } from "../state/slicer";
 import { type PreviewView, useApp } from "../state/store";
@@ -11,6 +11,8 @@ const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
 type SliderState = { toolpaths: Toolpaths; stops: Stops; high: number; request: number; filter: ToolpathFilter };
 type Applied = { slider: SliderState; viewType: string; high: number; marker: ToolMarker | null };
 type Moves = { high: number; max: number; request: (high: number) => void };
+const NAVIGATION_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"] as const;
+type Step = { key: (typeof NAVIGATION_KEYS)[number]; increment: number };
 /** `stepLayers` and `stepTopLayer` of the app actions. */
 export type LayerSteps = { stepLayers: (delta: number, wheel: boolean) => void; stepTopLayer: (delta: number) => void };
 
@@ -23,46 +25,61 @@ export type MovesState = { toolpaths: Toolpaths; view: MovesView; filter: Toolpa
  * upper one, set the moves thumb to the max (`:3851-3857`); Left/Right move the
  * moves thumb, past its first (last) stop the upper layer thumb down (up) with
  * the moves thumb at the max (min) (`:3862-3875`); Home/End jump to the ends.
- * x5 with Shift or Ctrl/Cmd. `moves` is the engine's applied moves thumb and
- * last stop, `null` while a rebuild or request is pending; the engine clamps
- * the requested thumb.
+ * x5 with Shift or Ctrl/Cmd. Orca applies each key to the thumbs the previous
+ * one left, so a key waits until the engine has applied the previous one.
  */
-function onNavigationKey(event: KeyboardEvent, moves: Moves | null, { stepLayers, stepTopLayer }: LayerSteps) {
-  if (!isShortcut(event) || event.altKey) return;
-  const increment = cmdDown(event) || event.shiftKey ? 5 : 1;
+function navigationStep(event: KeyboardEvent): Step | null {
+  const key = NAVIGATION_KEYS.find((name) => name === event.key);
+  if (!key || !isShortcut(event) || event.altKey) return null;
+  const { slice } = useApp.getState();
+  if (slice.status !== "done" || !slice.toolpaths) return null;
+  return { key, increment: cmdDown(event) || event.shiftKey ? 5 : 1 };
+}
+
+/**
+ * Applies `step` to the engine's applied moves thumb and last stop (the engine
+ * clamps the requested thumb); returns whether the thumbs change, so that the
+ * next step waits for the engine.
+ */
+function applyStep({ key, increment }: Step, moves: Moves, { stepLayers, stepTopLayer }: LayerSteps) {
   const { preview, slice } = useApp.getState();
-  if (slice.status !== "done" || !slice.toolpaths) return;
+  if (slice.status !== "done" || !slice.toolpaths) return false;
   const [, top] = preview.layers;
   const last = slice.toolpaths.layerZs.length - 1;
-  switch (event.key) {
+  switch (key) {
     case "ArrowUp":
-    case "ArrowDown":
-      if (preview.oneLayer || preview.selection === 1) moves?.request(moves.max);
-      stepLayers(event.key === "ArrowUp" ? increment : -increment, false);
-      break;
+    case "ArrowDown": {
+      const requested = preview.oneLayer || preview.selection === 1;
+      if (requested) moves.request(moves.max);
+      stepLayers(key === "ArrowUp" ? increment : -increment, false);
+      return requested || useApp.getState().preview.layers !== preview.layers;
+    }
     case "ArrowLeft":
-      if (!moves) return;
       if (moves.high === 0 && top > 0) {
         moves.request(moves.max);
         stepTopLayer(-1);
       } else moves.request(moves.high - increment);
-      break;
+      return true;
     case "ArrowRight":
-      if (!moves) return;
       if (moves.high === moves.max && top < last) {
         moves.request(0);
         stepTopLayer(1);
       } else moves.request(moves.high + increment);
-      break;
+      return true;
     case "Home":
     case "End":
-      if (!moves) return;
-      moves.request(event.key === "Home" ? 0 : moves.max);
-      break;
-    default:
-      return;
+      moves.request(key === "Home" ? 0 : moves.max);
+      return true;
   }
-  event.preventDefault();
+}
+
+/** Applies the queued steps while the engine's view matches the thumbs. */
+function drain(ready: { current: Moves | null }, queue: Step[], steps: LayerSteps) {
+  while (ready.current) {
+    const step = queue.shift();
+    if (!step) return;
+    if (applyStep(step, ready.current, steps)) ready.current = null;
+  }
 }
 
 /**
@@ -117,21 +134,37 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
   const live = slider?.toolpaths === toolpaths ? slider : null;
   const settled = live && applied?.slider === live ? applied : null;
   const high = settled ? settled.high : live?.high ?? 0;
+  const busy = !settled || settled.viewType !== viewType || settled.slider.filter.layers !== layers
+    || settled.slider.filter.hiddenRoles !== hiddenRoles || settled.slider.filter.visibleOptions !== visibleOptions;
+  // Keys go through one listener into `queue`; `ready` is the applied view at each commit, `null`
+  // while a key's change is on its way to the engine.
+  const ready = useRef<Moves | null>(null);
+  const queue = useRef<Step[]>([]);
+  useLayoutEffect(() => {
+    ready.current = settled && !busy ? {
+      high,
+      max: settled.slider.stops.gcodeIds.length - 1,
+      request: (value: number) => {
+        held.current = { toolpaths: settled.slider.toolpaths, high: value };
+        setSlider({ ...settled.slider, high: value });
+      },
+    } : null;
+    drain(ready, queue.current, steps);
+  });
   useEffect(() => {
-    const request = settled && ((value: number) => {
-      held.current = { toolpaths: settled.slider.toolpaths, high: value };
-      setSlider({ ...settled.slider, high: value });
-    });
-    const moves = request && { high, max: settled.slider.stops.gcodeIds.length - 1, request };
-    const onKey = (event: KeyboardEvent) => onNavigationKey(event, moves, steps);
+    const onKey = (event: KeyboardEvent) => {
+      const step = navigationStep(event);
+      if (!step) return;
+      event.preventDefault();
+      queue.current.push(step);
+      drain(ready, queue.current, steps);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [settled, high, steps]);
+  }, [steps]);
   if (!live) return null;
   const marker = applied?.slider.toolpaths === toolpaths ? applied.marker : null;
-  const { stops, filter } = live;
-  const busy = applied?.slider !== live || applied.viewType !== viewType || filter.layers !== layers
-    || filter.hiddenRoles !== hiddenRoles || filter.visibleOptions !== visibleOptions;
+  const { stops } = live;
   return (<>
     {marker && <ToolPosition toolpaths={toolpaths} vertex={marker.windowVertex} viewType={applied!.viewType} time={marker.time} />}
     <div className="moves-slider" data-testid="moves-slider" aria-busy={busy}>
