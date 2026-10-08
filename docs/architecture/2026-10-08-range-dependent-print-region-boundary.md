@@ -1,0 +1,40 @@
+# ARD: range-dependent PrintRegion rewrite
+
+Status: proposed; no Stage2 production authorization yet.
+
+1. New coordinator Stage2 means **region-override ranges**, not the painted-profile
+   Stage2 named in the earlier height-profile proposal. Painted profile remains
+   separately deferred, along with SlicingAdaptive and activeZAA.
+2. Owning upstream module is PrintApply.cpp::LayerRanges and
+   generate_print_object_regions/get_create_region, together with
+   PrintObject.cpp::region_config_from_model_volume and
+   PrintObjectSlice.cpp::slices_to_regions. Port their existing data/control
+   semantics into core, not an independently designed range pipeline.
+3. Preserve one object-wide table of config-distinct PrintRegions, deterministic
+   first-created IDs, and ordered range-specific volume/parent/region mappings.
+   Range routing selects the mapping, not a new region table or cloned options
+   per layer. Height-only stage1 equivalence remains unchanged.
+4. Existing project::region_graph is the partially ported owning module for
+   config dedup/parent modifiers. Expand its use rather than create another
+   registry. Current project_slice/volume_regions single-candidate graph and
+   region_slices single record list are temporary partial shells; replace them
+   with source-owned range mappings. Remove their obsolete assumptions rather
+   than add fallback paths around them.
+5. For portable Native slice witnesses, every actual range carries explicit
+   layer_height, including ranges changing only region options. Missing height
+   hits upstream Slicing.cpp missing-option dereference UB. Do not fabricate a
+   default, emulate a crash, or expand pure-None/mixed acceptance without a
+   separately source-proved selection path. This stage removes region-override
+   rejection only for the legal explicit-height range collection.
+6. Core remains bytes-only/platform-neutral on browserWASM/Windows/macOS/Linux.
+   No I/O/UI/OpenGL/terminal, no independent slicing in CLI/WASM adapters, no
+   candidate crate or extensible strategy. Reuse existing mesh slicing and flows.
+7. Approval → independent Native runtime RED → test-first GREEN → fresh required
+   gates → coordinator review → ff-only push. No production or runtime probe
+   in this spec-only change; no ignored test or broadened byte normalization.
+
+Admitted2.4.2 identity: checked source equals seeded source store byte-for-byte.
+PrintApply.cpp SHA256 a067414959c475d23f782ebac9f5a185b63012304aced66974726d95a95daf20;
+PrintObjectSlice.cpp SHA256 d1aece12e7189353aa9a5d8ae6b1f0f320087c0d2574d7da64fe372eca076021.
+
+See [Stage2 spec](../superpowers/specs/2026-10-08-range-dependent-print-regions.md).
