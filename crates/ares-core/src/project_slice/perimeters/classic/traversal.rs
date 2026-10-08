@@ -173,27 +173,38 @@ impl PostClassicTraversalPrintObject {
     /// avoid-crossing boundary (`AvoidCrossingPerimeters.cpp:1099-1134`).
     pub(in crate::project_slice) fn slices(
         &self,
-        record_index: usize,
+        layer_index: usize,
     ) -> Option<&[crate::geometry::ExPolygon]> {
         let prelude = &self.predecessor.predecessor.predecessor.predecessor;
         prelude
             .object
             .records
-            .get(record_index)
-            .and_then(|record| record.as_ref())
+            .iter()
+            .skip(layer_index)
+            .step_by(self.physical_layers().len())
+            .flatten()
+            .next()
             .map(|record| prelude.object.current_slices(record))
     }
 
     /// Perimeter flow spacing of the record's region in millimetres
     /// (`get_perimeter_spacing`, `AvoidCrossingPerimeters.cpp:499-512`).
-    pub(in crate::project_slice) fn perimeter_spacing(&self, record_index: usize) -> Option<f32> {
+    pub(in crate::project_slice) fn perimeter_spacing(&self, layer_index: usize) -> Option<f32> {
         let prelude = &self.predecessor.predecessor.predecessor.predecessor;
-        prelude
+        let mut total = 0.0;
+        let mut count = 0;
+        for record in prelude
             .object
             .records
-            .get(record_index)
-            .and_then(|record| record.as_ref())
-            .map(|record| record.perimeter_flow.spacing)
+            .iter()
+            .skip(layer_index)
+            .step_by(self.physical_layers().len())
+            .flatten()
+        {
+            total += record.perimeter_flow.spacing;
+            count += 1;
+        }
+        (count != 0).then(|| total / count as f32)
     }
 
     /// External perimeter flow width of the record's region in millimetres
@@ -201,15 +212,23 @@ impl PostClassicTraversalPrintObject {
     /// `AvoidCrossingPerimeters.cpp:531-545`).
     pub(in crate::project_slice) fn external_perimeter_width(
         &self,
-        record_index: usize,
+        layer_index: usize,
     ) -> Option<f32> {
         let prelude = &self.predecessor.predecessor.predecessor.predecessor;
-        prelude
+        let mut total = 0.0;
+        let mut count = 0;
+        for record in prelude
             .object
             .records
-            .get(record_index)
-            .and_then(|record| record.as_ref())
-            .map(|record| record.ext_perimeter_flow.width)
+            .iter()
+            .skip(layer_index)
+            .step_by(self.physical_layers().len())
+            .flatten()
+        {
+            total += record.ext_perimeter_flow.width;
+            count += 1;
+        }
+        (count != 0).then(|| total / count as f32)
     }
 
     pub(in crate::project_slice) fn wall_direction(

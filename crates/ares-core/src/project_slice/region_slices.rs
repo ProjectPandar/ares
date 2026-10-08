@@ -10,7 +10,7 @@ mod tests;
 use super::{
     layers::PlannedPrintObject,
     volume_bounds::{BoundedPrintObject, PostBoundsVolume, VolumeBound, VolumeOccurrenceId},
-    volume_regions::{VolumeRegion, VolumeRegionGraph},
+    volume_regions::{VolumeRegion, VolumeRegionGraph, VolumeRegionRange},
 };
 
 #[derive(Clone)]
@@ -209,7 +209,7 @@ pub(super) struct PendingRegionSlices {
     output: PostRegionPrintObject,
     working_slices: Vec<VolumeSlices>,
     bounds: Vec<VolumeBound>,
-    volume_regions: Vec<VolumeRegion>,
+    volume_regions: Vec<VolumeRegionRange>,
     complex_layer_indices: Vec<usize>,
 }
 
@@ -221,7 +221,7 @@ impl PendingRegionSlices {
         &PostRegionPrintObject,
         &[VolumeSlices],
         &[VolumeBound],
-        &[VolumeRegion],
+        &[VolumeRegionRange],
         &[usize],
     ) {
         (
@@ -239,7 +239,7 @@ impl PendingRegionSlices {
         PostRegionPrintObject,
         Vec<VolumeSlices>,
         Vec<VolumeBound>,
-        Vec<VolumeRegion>,
+        Vec<VolumeRegionRange>,
         Vec<usize>,
     ) {
         (
@@ -262,7 +262,7 @@ pub(super) fn prepare_region_slices(
     let volume_slices = working_slices.clone();
     let VolumeRegionGraph {
         all_regions,
-        volume_regions,
+        ranges: volume_regions,
     } = graph;
     let layer_count = plan.layers.len();
     let regions = all_regions
@@ -285,18 +285,17 @@ pub(super) fn prepare_region_slices(
     };
     let mut complex_layer_indices = Vec::new();
 
-    match volume_regions.as_slice() {
-        [] => {}
-        [record] => {
-            if record.kind == ProjectVolumeType::ModelPart {
-                for layer_index in 0..layer_count {
+    for layer_index in 0..layer_count {
+        let z = output.plan.layers[layer_index].slice_z as f32;
+        let records = records_at_z(&volume_regions, f64::from(z));
+        match records {
+            [] => {}
+            [record] => {
+                if record.kind == ProjectVolumeType::ModelPart {
                     move_layer(&mut output, &mut working_slices, record, layer_index);
                 }
             }
-        }
-        records => {
-            for layer_index in 0..layer_count {
-                let z = output.plan.layers[layer_index].slice_z as f32;
+            records => {
                 let active =
                     |record: &VolumeRegion| bounds[record.bound_index].bbox().contains_z(z);
                 let Some(first_index) = records
@@ -341,6 +340,11 @@ pub(super) fn prepare_region_slices(
         volume_regions,
         complex_layer_indices,
     }
+}
+
+pub(super) fn records_at_z(ranges: &[VolumeRegionRange], z: f64) -> &[VolumeRegion] {
+    let index = ranges.partition_point(|range| range.max_z <= z);
+    &ranges[index].volume_regions
 }
 
 fn convert_volume(volume: PostBoundsVolume) -> VolumeSlices {

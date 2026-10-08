@@ -16,8 +16,10 @@ pub(in crate::project_slice) fn compose_complex_region_slices(
     pending: PendingRegionSlices,
     scale: CoordinateScale,
 ) -> Result<PostRegionPrintObject, SliceError> {
-    let (mut output, mut working, bounds, records, complex_layers) = pending.into_parts();
+    let (mut output, mut working, bounds, ranges, complex_layers) = pending.into_parts();
     for layer_index in complex_layers {
+        let z = f64::from(output.plan.layers[layer_index].slice_z as f32);
+        let records = super::records_at_z(&ranges, z);
         let mut slices = records
             .iter()
             .map(|record| TempSlice {
@@ -31,7 +33,7 @@ pub(in crate::project_slice) fn compose_complex_region_slices(
                 continue;
             }
             if records[index].kind == ProjectVolumeType::ParameterModifier {
-                partition_modifier(&records, &mut slices, index).map_err(map_clipper_error)?;
+                partition_modifier(records, &mut slices, index).map_err(map_clipper_error)?;
                 continue;
             }
             if !matches!(
@@ -40,7 +42,7 @@ pub(in crate::project_slice) fn compose_complex_region_slices(
             ) {
                 unreachable!("region graph cannot contain support records");
             }
-            subtract_from_predecessors(&records, &bounds, &mut slices, index)
+            subtract_from_predecessors(records, &bounds, &mut slices, index)
                 .map_err(map_clipper_error)?;
         }
         write_regions(&mut output, slices, layer_index, scale).map_err(map_clipper_error)?;

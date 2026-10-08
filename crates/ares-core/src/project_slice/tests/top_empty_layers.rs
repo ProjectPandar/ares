@@ -125,7 +125,11 @@ fn task22k_top_empty_layers_preserve_complete_volume_sidecar() {
         bounded,
         VolumeRegionGraph {
             all_regions: vec![region()],
-            volume_regions: Vec::new(),
+            ranges: vec![super::super::volume_regions::VolumeRegionRange {
+                min_z: 0.0,
+                max_z: f64::MAX,
+                volume_regions: Vec::new(),
+            }],
         },
     )
     .into_parts();

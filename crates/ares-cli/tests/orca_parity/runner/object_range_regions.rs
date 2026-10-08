@@ -78,3 +78,20 @@ async fn object_range_wall_loops_changes_only_the_selected_constant_height_inter
     crate::golden::compare_ordered_bytes_generator_only(&reference, &actual)
         .unwrap_or_else(|error| panic!("{error}; artifacts {directory:?}"));
 }
+
+#[tokio::test]
+async fn spiral_region_ranges_retain_the_unported_range_boundary() {
+    let overrides = ConfigOverrides::from_json(br#"{"spiral_mode":"1"}"#).unwrap();
+    let result = ares_core::slice_project_plate_validated(
+        INPUT,
+        GenerationMetadata::default(),
+        None,
+        &overrides,
+        SlicerContext::new(0),
+    )
+    .await;
+    assert_eq!(
+        result.unwrap_err(),
+        ares_core::SliceError::UnsupportedProjectFeature("layer_config_ranges".into())
+    );
+}

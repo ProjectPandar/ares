@@ -278,7 +278,12 @@ fn validate_layer_ranges(
             .layer_config_ranges()
             .iter()
             .any(|range| {
-                range.layer_height().is_none() || range.region_overrides() != &Default::default()
+                range.layer_height().is_none()
+                    || range.region_overrides()
+                        != &crate::options::RegionOptionOverrides {
+                            wall_loops: range.region_overrides().wall_loops,
+                            ..Default::default()
+                        }
             })
     }) {
         return unsupported("layer_config_ranges");

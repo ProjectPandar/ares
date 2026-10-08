@@ -287,7 +287,7 @@ fn loaded_graph(bytes: &[u8]) -> (VolumeRegionGraph, RegionOptions, Vec<u32>) {
 }
 
 fn facts(graph: &VolumeRegionGraph) -> Vec<RecordFact> {
-    graph
+    graph.ranges[0]
         .volume_regions
         .iter()
         .map(|record| {

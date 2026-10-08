@@ -287,20 +287,24 @@ fn pending_layers(
     let bounded = bounded(layer_zs, cases);
     let graph = VolumeRegionGraph {
         all_regions: (0..region_count).map(|_| region()).collect(),
-        volume_regions: records
-            .iter()
-            .map(|&(source, kind, parent, region_id)| VolumeRegion {
-                source_volume_index: source,
-                occurrence_id: bounded
-                    .volume_for_source_index(source)
-                    .unwrap()
-                    .occurrence_id(),
-                kind,
-                parent,
-                region_id,
-                bound_index: bounded.bound_index_for_source_index(source).unwrap(),
-            })
-            .collect(),
+        ranges: vec![crate::project_slice::volume_regions::VolumeRegionRange {
+            min_z: 0.0,
+            max_z: f64::MAX,
+            volume_regions: records
+                .iter()
+                .map(|&(source, kind, parent, region_id)| VolumeRegion {
+                    source_volume_index: source,
+                    occurrence_id: bounded
+                        .volume_for_source_index(source)
+                        .unwrap()
+                        .occurrence_id(),
+                    kind,
+                    parent,
+                    region_id,
+                    bound_index: bounded.bound_index_for_source_index(source).unwrap(),
+                })
+                .collect(),
+        }],
     };
     prepare_region_slices(bounded, graph)
 }

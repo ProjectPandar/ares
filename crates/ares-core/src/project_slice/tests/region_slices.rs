@@ -132,7 +132,7 @@ fn task22j_region_slices_sort_physical_occurrences_but_use_source_graph_priority
         vec![10, 90]
     );
     assert_eq!(
-        records
+        records[0].volume_regions
             .iter()
             .map(|record| record.occurrence_id.get())
             .collect::<Vec<_>>(),
@@ -327,20 +327,24 @@ fn graph(
 ) -> VolumeRegionGraph {
     VolumeRegionGraph {
         all_regions: (0..region_count).map(|_| region()).collect(),
-        volume_regions: records
-            .iter()
-            .map(|&(source, kind, region_id)| VolumeRegion {
-                source_volume_index: source,
-                occurrence_id: bounded
-                    .volume_for_source_index(source)
-                    .unwrap()
-                    .occurrence_id(),
-                kind,
-                parent: None,
-                region_id,
-                bound_index: bounded.bound_index_for_source_index(source).unwrap(),
-            })
-            .collect(),
+        ranges: vec![crate::project_slice::volume_regions::VolumeRegionRange {
+            min_z: 0.0,
+            max_z: f64::MAX,
+            volume_regions: records
+                .iter()
+                .map(|&(source, kind, region_id)| VolumeRegion {
+                    source_volume_index: source,
+                    occurrence_id: bounded
+                        .volume_for_source_index(source)
+                        .unwrap()
+                        .occurrence_id(),
+                    kind,
+                    parent: None,
+                    region_id,
+                    bound_index: bounded.bound_index_for_source_index(source).unwrap(),
+                })
+                .collect(),
+        }],
     }
 }
 
