@@ -161,6 +161,10 @@ and preview steps in the dark and the light theme and fail on any serious or
 critical violation. Artifacts go to
 `target/web-e2e/mobile/<project>/` (step screenshots, axe reports,
 `gcode.sha256`, `result.json`).
+`e2e/worker.mobile.spec.ts` checks, on the same devices, that the 3D view draws
+at `min(devicePixelRatio, 2)` and that slicing a generated large model in the
+Web Worker never stalls the main thread for 200 ms; its report goes to
+`target/web-e2e/mobile-worker/<project>/result.json`.
 
 ```sh
 npx playwright install webkit     # once

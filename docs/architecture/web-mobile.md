@@ -44,6 +44,13 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   spinner stands still beside its status text.
 - **Keyboard.** The E2E Tab sweep starts on a control: a plain Tab with the
   body focused switches Prepare/Preview (GLCanvas3D::on_key), as in Orca.
+- **Pixel ratio capped at 2.** The WebGL renderer uses
+  `min(devicePixelRatio, 2)`: iPhone (3) and Pixel (2.625) draw at 2x, which
+  cuts fill cost by up to 56% with no visible loss at phone sizes.
+- **Slicing stays off the main thread.** `e2e/worker.mobile.spec.ts` slices a
+  generated 512-facet cylinder (about 10 s) on each device and requires a
+  16 ms main-thread heartbeat to never stall 200 ms or more, and a theme tap to
+  apply while the plate is still slicing.
 - **Touch input is OrbitControls' own mapping** (one finger rotate, two
   fingers dolly/pan). No custom gesture math.
 - **Synthetic WebKit touches.** Playwright has no WebKit touch-move, so the
@@ -59,5 +66,4 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
 - Tablet preview overlays (slice 3b). At 810px the G-code window covers the
   3D centre and the summary, the legend sits under the moves slider, and the
   44px camera toolbar touches the summary card and the layer label.
-- `min(devicePixelRatio, 2)` and worker confirmation (slice 5); Lighthouse
-  (slice 6).
+- Lighthouse (slice 6).
