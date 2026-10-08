@@ -227,10 +227,6 @@ pub(super) fn append(
         .unwrap_or_default();
 
     let mut phase_index = 0usize;
-    // `Skirt::make_skirt_loops_per_extruder_*`'s `skirt_done` (`GCode.cpp:
-    // 4286-4315`): the print z values the skirt already printed at, shared
-    // across the sequential by-object instances.
-    let mut skirt_done: Vec<f64> = Vec::new();
     let mut group_start = 0;
     let mut first_group = true;
     let mut last_object_copy: Option<(usize, usize)> = None;
@@ -397,10 +393,14 @@ pub(super) fn append(
             .skirt_height
             .0
             .max(0) as usize;
-        if skirt_done.is_empty()
-            || (skirt_done.len() < skirt_height
-                && skirt_done[skirt_done.len() - 1] < layer_z - 1e-4)
-        {
+        // `GCode.cpp:4388+`, on the layers it covers. Raft chunks emit
+        // the skirt around the raft polygons (the skirt layer index is
+        // the raft layer index — with a raft, the covered layers start
+        // at the raft flange). Sequential by-object printing emits the
+        // skirt once, with the first instance's first layer; the
+        // per-group `m_skirt_group_done` accounting (`GCode.cpp:5240-5250`)
+        // is the upstream follow-up for per-instance resumption.
+        if !by_object || phase_index == 0 {
             skirt_emit::emit(
                 output,
                 state,
@@ -417,7 +417,6 @@ pub(super) fn append(
                     chunk_perimeter_spacing,
                 },
             );
-            skirt_done.push(layer_z);
         }
         // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
         // template insert fire once per layer inside the per-extruder loop
