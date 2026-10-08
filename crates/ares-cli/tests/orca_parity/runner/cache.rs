@@ -14,6 +14,8 @@ use super::{
 use serde_json::{Map, Value, json};
 use std::{fs, path::Path};
 
+#[path = "cache/custom_gcode.rs"]
+mod custom_gcode;
 #[path = "cache/processor.rs"]
 mod processor;
 

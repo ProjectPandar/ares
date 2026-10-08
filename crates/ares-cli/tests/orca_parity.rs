@@ -20,6 +20,9 @@ mod brim_bed_region;
 mod brim_bed_region_controls;
 #[path = "orca_parity/change_filament_flush_blocks.rs"]
 mod change_filament_flush_blocks;
+#[path = "orca_parity/cli_custom_gcode_exit.rs"]
+mod cli_custom_gcode_exit;
+
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
 #[path = "orca_parity/empty_selected_plate.rs"]

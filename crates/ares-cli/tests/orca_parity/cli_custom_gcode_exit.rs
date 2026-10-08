@@ -12,6 +12,27 @@ fn assert_native_failure(case: &str) {
         .tempdir()
         .unwrap()
         .keep();
+    let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let native = runner
+        .custom_gcode_reference(&fixtures.join(format!("{case}.3mf")))
+        .unwrap();
+    let hit = runner
+        .custom_gcode_reference(&fixtures.join(format!("{case}.3mf")))
+        .unwrap();
+    assert_eq!(native.directory, hit.directory);
+    assert_eq!(native.stdout, hit.stdout);
+    assert_eq!(native.stderr, hit.stderr);
+    assert_eq!(native.result_json, hit.result_json);
+    fs::write(artifacts.join("native.stdout"), &native.stdout).unwrap();
+    fs::write(artifacts.join("native.stderr"), &native.stderr).unwrap();
+    fs::write(artifacts.join("native.result.json"), &native.result_json).unwrap();
+    fs::copy(
+        native.directory.join("receipt.json"),
+        artifacts.join("native.receipt.json"),
+    )
+    .unwrap();
     let retained = artifacts.join("plate_1.gcode");
     let output = Command::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "-o"])
@@ -27,17 +48,11 @@ fn assert_native_failure(case: &str) {
     )
     .unwrap();
     assert_eq!(output.status.code(), Some(156), "{case}: {artifacts:?}");
-    assert_eq!(
-        output.stdout,
-        fs::read(fixtures.join(format!("{case}.stdout"))).unwrap()
-    );
-    assert_eq!(
-        output.stderr,
-        fs::read(fixtures.join(format!("{case}.stderr"))).unwrap()
-    );
+    assert_eq!(output.stdout, native.stdout);
+    assert_eq!(output.stderr, native.stderr);
     assert_eq!(
         fs::read(artifacts.join("result.json")).unwrap(),
-        fs::read(fixtures.join(format!("{case}.result.json"))).unwrap(),
+        native.result_json,
         "complete native JSON: generic error, applied metadata"
     );
     assert!(
@@ -51,7 +66,7 @@ fn custom_gcode_reference_requires_native_even_when_frozen_outputs_exist() {
     let output = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
-            "cli_custom_gcode_flsun_qqs_matches_native",
+            "cli_custom_gcode_exit::cli_custom_gcode_flsun_qqs_matches_native",
             "--nocapture",
         ])
         .env("ARES_REQUIRE_ORCA", "1")
