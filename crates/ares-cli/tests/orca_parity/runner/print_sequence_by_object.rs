@@ -8,12 +8,7 @@ use crate::runner::{OrcaRunner, repo_root};
 use crate::{self as parity, CaseInputs, smoke_overrides};
 use serde_json::Value;
 
-fn by_object_case(
-    runner: &OrcaRunner,
-    vendor: &str,
-    printer: &str,
-    label: &str,
-) {
+fn by_object_case(runner: &OrcaRunner, vendor: &str, printer: &str, label: &str) {
     by_object_case_impl(runner, vendor, printer, label, false);
 }
 

@@ -27,10 +27,14 @@ pub(crate) fn second_instance_of_first_object(mut exported: ExportedCase) -> Exp
                     1,
                 );
                 if let Some(start) = xml.find("<metadata key=\"object_id\" value=\"4\"/>") {
-                    if let Some(offset) = xml[start..].find("<metadata key=\"instance_id\" value=\"0\"/>") {
+                    if let Some(offset) =
+                        xml[start..].find("<metadata key=\"instance_id\" value=\"0\"/>")
+                    {
                         let at = start + offset;
-                        xml.replace_range(at..at + "<metadata key=\"instance_id\" value=\"0\"/>".len(),
-                            "<metadata key=\"instance_id\" value=\"1\"/>");
+                        xml.replace_range(
+                            at..at + "<metadata key=\"instance_id\" value=\"0\"/>".len(),
+                            "<metadata key=\"instance_id\" value=\"1\"/>",
+                        );
                     }
                 }
                 xml = xml.replacen(
