@@ -317,3 +317,46 @@ External evidence: `/tmp/worker6-adjacent-official-comparison.json`,
 `/tmp/worker6-adjacent-rechecks-audit.json`. Further investigation should locate
 the Native selection/order change before assigning an upstream function or UB
 cause; this cleanup does not modify or reproduce that algorithm in Rust.
+
+## Native nondeterminism follow-up: jerk / SEMM cleanup controls
+
+The three-test jerk/SEMM migration uses base `877fe87b8` and GREEN
+`3b67b0ba`. All four production `src` trees and all three migration inputs
+are unchanged. Fresh official controls have base727 PASS/11 FAIL and
+candidate730 PASS/11 FAIL, with the three added CLI comparisons all PASS.
+There are no timeouts. Common complete Ares raw SHA256 values agree in
+**516/516** streams, but two existing tests exchange status:
+
+| Existing test | Original official base → candidate | First content difference between Native legs |
+|---|---|---|
+| `runner::support_annotations::orca_parity_support_blocker_volume_preserves_complete_output` | PASS → FAIL | `normal-support/annotation/support_blocker/[(1.0, 0.0)]`, line508: base `G1 X113.244 Y113.297 F9000`, candidate `G1 X113.388 Y113.135 F9000`. Base Native agrees with Ares; candidate differs. |
+| `option_coverage::tree_activation::orca_parity_tree_style_values_change_support_moves_and_preserve_complete_output` | FAIL → PASS | `tree-activation/support_style/organic/organic`, line1769: base `G1 X113.388 Y113.135 F9000`, candidate `G1 X113.244 Y113.297 F9000`. Candidate Native agrees with Ares; base differs. |
+
+Both positions precede `;TYPE:Internal solid infill`, following the identical
+`G1 X114.115 Y114.075 E.02189` line. These are the same alternative endpoint
+pair observed in the earlier support controls. The blocker input's raw 3MF
+bytes match, SHA256
+`d8443c8874a417d764b6a092a79e1495bbd5e7e02f9464ea9e6325dd14924ad5`;
+its complete Ares raw SHA256 is
+`adb5f07104c782e8bbeb6607807ee97162613312f3ab12e9d7210aa0febfda5d`.
+The organic input ZIP container bytes differ, but every member name and
+decompressed byte matches; its complete Ares raw SHA256 is
+`d695560dfd95f573f2b0015fe447e322bc8c3c6e3554b7ddaadf2c1e75633850`.
+Matching Native slice receipts bind identical producer components, including
+the actual executable, launcher, resources, single-thread policy and locale.
+
+The original strict candidate-failure-subset comparator remains **FAIL,
+exit1**, with no assertion changes. The coordinator accepts common Ares raw
+invariance plus these input/producer/Native-output proofs for this test-only
+slice. This is observed Native nondeterminism, not UB, a production regression
+or a claimed Ares fix; the Native selection/order cause remains unassigned.
+The other ten failures are shared: eight seeded-only reference preconditions
+and two previously recorded X2D cases.
+
+External evidence: `/tmp/worker6-jerk-semm-official-comparison.json`,
+`/tmp/worker6-jerk-semm-official-comparison.log`,
+`/tmp/worker6-jerk-semm-official-comparison.exit`,
+`/tmp/worker6-jerk-semm-nondeterminism-audit.json` and its repeatable `.py`
+reader. The audit retains both manifests, full input-member hashes, producer
+receipts, Native/Ares SHA256 values and first-difference context. Original
+full-round logs and outputs are retained; no rerun overwrites them.
