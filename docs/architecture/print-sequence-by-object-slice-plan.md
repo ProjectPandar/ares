@@ -349,3 +349,18 @@ placement — `instance_origin` reads `instances.first()` only and
 `last_object_copy` tracking must drive both the origin travel and the
 extrusion coordinate offset per copy; the 62-entry `merged` slice is
 shared by both copies and stays untouched.
+
+### Refinement: the split needs per-copy path partitioning
+
+The RED body diff is only -5164 bytes (the transition/wipe blocks), not
+a missing half: Ares already prints BOTH copies' geometry inside every
+layer (by-layer style interleaving), so per-instance chunks require
+partitioning each layer entry's paths by copy (the two builds sit at
+distinct plate positions), not merely regrouping chunks. Upstream keeps
+the object's layers in local coordinates and re-homes them per instance
+via `set_origin` (`GCode.cpp:3303`), printing copy 1's full stack before
+copy 2's. The Ares traversal bakes plate coordinates into paths, so the
+emission layer must either (a) partition traversal regions per copy, or
+(b) emit local coordinates with a per-chunk origin offset. Decide (a)
+vs (b) when implementing; the transition, M73 count, and phase machinery
+findings above are unchanged.
