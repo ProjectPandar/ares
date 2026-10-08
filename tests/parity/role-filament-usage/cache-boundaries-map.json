@@ -1,7 +1,7 @@
 {
   "binary_sha256": "59f9ea7e16165df6979a243de7d6acd49d8cf523ac5de6d3fec08d6e25c7896e",
-  "input_sha256": "d0d02feedc6cf6a144402818ff02f2db82c950757dd407599f4015b3adf618b5",
-  "gcode_sha256": "d0d02feedc6cf6a144402818ff02f2db82c950757dd407599f4015b3adf618b5",
+  "input_sha256": "3418cf1d7356b378e1f2dc14af6efe9ba69c8d23fadf6b65e21a8dfee86bc65d",
+  "gcode_sha256": "3418cf1d7356b378e1f2dc14af6efe9ba69c8d23fadf6b65e21a8dfee86bc65d",
   "roles": [
     {
       "role": "Perimeter",
@@ -16,11 +16,11 @@
     {
       "role": "ExternalPerimeter",
       "native_role": 2,
-      "meters": 0.0107540787180275,
-      "grams": 0.10290679264068603,
+      "meters": 0.009754078673612502,
+      "grams": 0.09333769798278808,
       "bits": [
-        4577352926089177809,
-        4592079636551012712
+        4576776465311270882,
+        4591390110612843397
       ]
     },
     {
