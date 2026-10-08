@@ -1,8 +1,7 @@
-# inherits_group coStrings import/export parity boundary
+# Embedded coStrings import/export parity boundary
 
-Status: proposed prerequisite to the approved range-region port; no production
-change authorized before this spec review. Stage2 edits are paused outside the
-working tree; original range fixture and strict comparison remain unchanged.
+Status: proposed prerequisite to the approved range-region port. The original
+range fixture and strict comparison remain unchanged.
 
 ## Source-owned conclusion
 
@@ -25,20 +24,52 @@ registry kind or manually patch quoted G-code lines.
 
 ## Minimal Rust destination
 
-Canonicalize embedded inherits_group at the existing project raw normalization
-entry (`project/load.rs` → `ProjectSettingsRaw::normalize_option_scalars`), after
-upstream scalar-vector decoding, using the existing coStrings slot serializer.
-Both scalar-wire and JSON array input must arrive at the same canonical raw token
-representation already used by profile bookkeeping. Preserve slot order/count
-and multi-empty `;;`; do not re-escape tokens later in writer or on profile merges.
-Check selected-profile metadata/overlay paths for double escaping. No new wrapper,
-option abstraction, export exception or broad string-option refactor.
+Normalize embedded JSON arrays and scalar vector wire inputs through one
+registry-driven coStrings boundary in the existing raw/decode modules
+(`options/json_deserialize.rs`, `project/raw_settings.rs` and its deserializer).
+Every option whose registry kind is Strings must get the same
+escape_strings_cstyle export representation, not an inherits_group special case.
+Reuse the existing coStrings serializer; no hand-written quote rule in writer.
 
-Scope is inherits_group only. Other vector families, numerical slicing,
-range routing, filament usage and unrelated raw placeholder behavior are deferred.
-No Stage2 region production diff in this prerequisite. External malformed option
-handling stays at the existing parse/validation boundary; no internal defensive
-checks or invented default slot values.
+The representation must distinguish logical string elements from serialized
+wire tokens so typed builders still receive unquoted logical text, while raw
+config export obtains canonical quoted tokens. Preserve raw element access and
+slot count/order required by profile composition. Constructors for generated
+profile bookkeeping must enter that same representation rather than pre-escape
+slots and then pass them through normalization again. Writer/profile merging
+must not perform a second escape or decode a semicolon embedded inside a slot.
+Scalar wire decode and JSON-array decode must agree after normalization; generic
+numeric/vector raw joining retains its current semantics.
+
+This is a coStrings type-boundary correction, not a broad option-framework
+refactor. Do not change the correct registry mapping or introduce a separate
+writer option-name exception. External malformed strings remain validated at
+parse/decode; internal normalized values are trusted.
+
+## Affected registry options
+
+The current registry declares these 34 Strings options, all covered by the same
+boundary (not all are necessarily emitted or changed for a particular fixture):
+
+adaptive_pressure_advance_model, compatible_machine_expression_group,
+compatible_printers, compatible_prints, compatible_process_expression_group,
+default_filament_colour, default_filament_profile, different_settings_to_system,
+extruder_ams_count, extruder_colour, extruder_variant_list,
+filament_change_extrusion_role_gcode, filament_colour, filament_colour_type,
+filament_end_gcode, filament_extruder_variant, filament_ids,
+filament_multi_colour, filament_notes, filament_ramming_parameters,
+filament_settings_id, filament_start_gcode, filament_type, filament_vendor,
+inherits_group, parallel_printheads_bed_exclude_areas, post_process,
+preset_names, print_compatible_printers, print_extruder_variant,
+printer_extruder_variant, small_area_infill_flow_compensation_model,
+upward_compatible_machine, volumetric_speed_coefficients.
+
+Existing typed options already serialize coStrings correctly; their logical
+values must remain identical, not acquire literal quotes/backslashes. Changes
+to raw-only exported coStrings are expected only when upstream quoting demands
+them. Banned config keys remain banned, empty vectors and singleton/multi-empty
+slots remain source-defined. No Stage2 region diff, numerical slicing change or
+new G-code placeholder semantics belongs to this prerequisite.
 
 ## Verification conclusions required before acceptance
 
@@ -47,8 +78,8 @@ Native. Independent baseline Native succeeds; actual inherits_group vector
 contains a profile name with spaces and two empty slots. The public
 slice_project_plate_validated output must fail complete generator-only equality
 before production and pass afterward, including motion/M73 and every config line.
-The earlier diagnostic used an existing CLI binary and is not promoted to the
-new same-build runtime RED; retain all receipts outside the repository.
+Runtime Native receipts remain outside the repository; historical CLI diagnostics
+are not substitutes for a same-build runtime RED.
 
 Before the applicable production change, runtime Native E2E must also establish
 legal coStrings escaping cases (tab/backslash/quote/CR/LF, single empty slot and
@@ -59,7 +90,11 @@ receipts, diagnostics and process records stay runtime-cache/artifact storage.
 
 Acceptance requires fresh exact-main base/candidate seeded plus workspace
 nextest, targeted E2E, clippy -D warnings/fmt and platform checks as requested.
-Bind common unchanged streams and legitimate inherits_group-only differences;
-no retry-to-PASS or fixture exceptions. Coordinator review/approval before
+Bind each changed option/output stream individually to runtime Native complete-
+byte equality; full seeded differences in any of the other 33 coStrings options
+must be explained per option and proved Native-correct, not called incidental
+or hidden by a hash multiset summary. Unchanged motion/M73 and typed logical
+string values remain invariant. No retry-to-PASS or fixture exceptions.
+Coordinator review/approval before
 ordinary ff-only push. Then rebase the paused region-range port and resume its
 unchanged whole-output comparator; fixing this prerequisite is not Stage2 GREEN.
