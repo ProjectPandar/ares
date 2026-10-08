@@ -84,7 +84,13 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     // the Ares `cancelled_lift` branch in `move_emit.rs`).
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
-    eprintln!("T-DBG transition end: writer_z={:?}", state.writer_z);
+    // The transition's toolchange retract ran before the hop and its
+    // tail scheduled a deferred lift for the pre-hop (zero-lift) state;
+    // the explicit `travel_to_z` hop above has already materialized it
+    // (`GCode.cpp:3316-3326`: the retract precedes the explicit hop —
+    // the lazy slot is consumed by it, not re-fired on the incoming
+    // instance's first travel).
+    state.pending_lift = None;
     // `GCode.cpp:3330`: the instance's first travel runs once without the
     // crossing avoidance — the direct combined move to the first print
     // point (the native `G1 X… Y… Z.2 F9000`).
