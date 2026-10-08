@@ -41,14 +41,14 @@ fn committed_project_resolves_one_bounded_final_configuration() {
     );
     assert_eq!(raw_retraction_stride.0.len(), 4);
     assert_eq!(raw_filament_retraction_stride.len(), 8);
-    let second_early = trace
+    let final_usage = trace
         .usages
         .iter()
-        .find(|usage| usage.pass == UsagePass::SecondEarly)
+        .find(|usage| usage.pass == UsagePass::FinalPostNormalize)
         .unwrap();
     assert!(!trace.normalize_fdm_2[1].enable_prime_tower);
-    assert!(!second_early.source_enable_prime_tower);
-    assert!(!second_early.wipe_enable_prime_tower);
+    assert!(!final_usage.source_enable_prime_tower);
+    assert!(!final_usage.wipe_enable_prime_tower);
 }
 
 #[test]

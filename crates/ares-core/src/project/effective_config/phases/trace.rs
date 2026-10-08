@@ -53,8 +53,6 @@ impl PhaseObserver for ResolutionTrace {
             materialized_retracts_all_false: all_retracts_false(materialized),
             source_filament_retracts_all_false: all_filament_retracts_false(source),
             materialized_filament_retracts_all_false: all_filament_retracts_false(materialized),
-            source_enable_prime_tower: source.process.print.enable_prime_tower.0,
-            materialized_enable_prime_tower: materialized.process.print.enable_prime_tower.0,
         });
     }
 

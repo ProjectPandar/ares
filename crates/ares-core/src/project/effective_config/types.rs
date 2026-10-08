@@ -92,8 +92,6 @@ pub(crate) struct MaterializationSnapshot {
     pub(crate) materialized_retracts_all_false: bool,
     pub(crate) source_filament_retracts_all_false: bool,
     pub(crate) materialized_filament_retracts_all_false: bool,
-    pub(crate) source_enable_prime_tower: bool,
-    pub(crate) materialized_enable_prime_tower: bool,
 }
 
 #[cfg(test)]

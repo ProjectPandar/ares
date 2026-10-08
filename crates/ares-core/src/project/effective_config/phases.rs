@@ -65,7 +65,7 @@ fn resolve_with_observer(
     normalize_fdm_1(&mut normalized_source);
     observer.normalize_fdm_1(&normalized_source);
 
-    let mut first = normalized_source.clone();
+    let mut first = normalized_source;
     call_normalize_fdm_2(&mut first, NormalizeFdm2Pass::ColdFirst, 0, 0, observer);
     first = materialize(first, MaterializationPass::First, observer)?;
     let first_validated = validate_materialized_project(&first, project)?;
@@ -95,96 +95,38 @@ fn resolve_with_observer(
         first_pre_region.supported_used_filaments.len(),
         observer,
     );
-    let first_candidates = resolve_candidates(
-        CandidatePass::FirstPreliminary,
+    // CLI calls Print::apply once (OrcaSlicer.cpp:6040); its late
+    // normalize_fdm_2 precedes region construction (PrintApply.cpp:1620-1621).
+    let objects = resolve_candidates(
+        CandidatePass::Final,
         &first,
         first_validated,
         (project, &grouped),
         observer,
     )?;
-    let second_early = collect_usage(
-        UsagePass::SecondEarly,
+    let usage = collect_usage(
+        UsagePass::FinalPostNormalize,
         ProjectUsageSources {
             settings: &first,
             objects: project.objects(),
             grouped: &grouped,
-            resolved: &first_candidates,
+            resolved: &objects,
         },
         &first,
         observer,
     );
-
-    let mut second = normalized_source;
-    call_normalize_fdm_2(
-        &mut second,
-        NormalizeFdm2Pass::SecondEarly,
-        print_object_count,
-        second_early.supported_used_filaments.len(),
-        observer,
-    );
-    second = materialize(second, MaterializationPass::Second, observer)?;
-    let second_validated = validate_materialized_project(&second, project)?;
-    observer.validate_and_group(MaterializationPass::Second, &grouped);
-
-    let second_candidates = resolve_candidates(
-        CandidatePass::SecondPreliminary,
-        &second,
-        second_validated,
-        (project, &grouped),
-        observer,
-    )?;
-    let final_pre_normalize = collect_usage(
-        UsagePass::FinalPreNormalize,
-        ProjectUsageSources {
-            settings: &second,
-            objects: project.objects(),
-            grouped: &grouped,
-            resolved: &second_candidates,
-        },
-        &second,
-        observer,
-    );
-    call_normalize_fdm_2(
-        &mut second,
-        NormalizeFdm2Pass::SecondLate,
-        print_object_count,
-        final_pre_normalize.supported_used_filaments.len(),
-        observer,
-    );
-    let usage = collect_usage(
-        UsagePass::FinalPostNormalize,
-        ProjectUsageSources {
-            settings: &second,
-            objects: project.objects(),
-            grouped: &grouped,
-            resolved: &second_candidates,
-        },
-        &second,
-        observer,
-    );
-    debug_assert_eq!(usage, final_pre_normalize);
-
-    let objects = resolve_candidates(
-        CandidatePass::Final,
-        &second,
-        second_validated,
-        (project, &grouped),
-        observer,
-    )?;
     // Temporary applied-map snapshot until ToolOrdering runs after validation.
-    let applied_filament_map = second.project.gcode.filament_map.clone();
-    // `ToolOrdering::initialize` re-derives the filament map under
-    // `filament_map_mode < Manual` and writes it back into the print
-    // config before G-code export (`ToolOrdering.cpp:1288-1303`,
-    // `Print::update_filament_maps_to_config`).
-    crate::options::filament_map_recommend::apply_recommended_filament_map(&mut second);
-    observer.resolve_views(&second);
-    let views = resolve_project_config_views(second)?;
+    let applied_filament_map = first.project.gcode.filament_map.clone();
+    // ToolOrdering::initialize re-derives the map before G-code export
+    // (ToolOrdering.cpp:1288-1303; Print::update_filament_maps_to_config).
+    crate::options::filament_map_recommend::apply_recommended_filament_map(&mut first);
+    observer.resolve_views(&first);
+    let views = resolve_project_config_views(first)?;
 
     Ok(BoundedResolvedProjectConfig {
         views,
         applied_filament_map,
-        logical_filament_count: second_validated.logical_filament_count,
+        logical_filament_count: first_validated.logical_filament_count,
         usage,
         print_object_count,
         objects,
@@ -241,28 +183,21 @@ fn collect_usage(
 pub(crate) enum NormalizeFdm2Pass {
     ColdFirst,
     FirstLate,
-    SecondEarly,
-    SecondLate,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum MaterializationPass {
     First,
-    Second,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum CandidatePass {
-    FirstPreliminary,
-    SecondPreliminary,
     Final,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum UsagePass {
     FirstPreRegion,
-    SecondEarly,
-    FinalPreNormalize,
     FinalPostNormalize,
 }
 
