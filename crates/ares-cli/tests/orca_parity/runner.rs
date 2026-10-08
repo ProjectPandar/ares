@@ -29,6 +29,9 @@ mod clipped_loop_motion;
 #[path = "runner/compatible_regions.rs"]
 mod compatible_regions;
 #[cfg(test)]
+#[path = "runner/costrings.rs"]
+mod costrings;
+#[cfg(test)]
 #[path = "runner/embedded_script_whole_file.rs"]
 mod embedded_script_whole_file;
 #[cfg(test)]
