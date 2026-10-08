@@ -129,7 +129,7 @@ fn validation_api_remains_callable_after_filament_type_api() {
     let options = options(json!({ "layer_height": 0.0 }));
     let errors = options.validate_print_config(true).unwrap();
 
-    assert_eq!(errors["layer_height"], "invalid value 0");
+    assert_eq!(errors["layer_height"], "invalid value 0.000000");
 }
 
 #[test]

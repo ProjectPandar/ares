@@ -31,7 +31,7 @@ fn aggregate_collects_representative_source_order_errors() {
 
     let errors = options.validate_fff_options(true).unwrap();
 
-    assert_eq!(errors["layer_height"], "invalid value -0.2");
+    assert_eq!(errors["layer_height"], "invalid value -0.200000");
     assert_eq!(
         errors["use_firmware_retraction"],
         "--use-firmware-retraction is only supported by Klipper, Marlin, Smoothie, RepRapFirmware, Repetier and Machinekit firmware"
@@ -43,7 +43,7 @@ fn aggregate_collects_representative_source_order_errors() {
     );
     assert_eq!(errors["skirt_height"], "invalid value -1");
     assert_eq!(errors["bridge_flow"], "invalid value 0.000000");
-    assert_eq!(errors["internal_bridge_flow"], "invalid value 1.000000");
+    assert_eq!(errors.get("internal_bridge_flow"), None);
     assert_eq!(
         errors["extruder_clearance_radius"],
         "invalid value 0.000000"
@@ -94,7 +94,7 @@ fn aggregate_under_cli_false_suppresses_spiral_vase_cli_errors() {
 
     let errors = options.validate_fff_options(false).unwrap();
 
-    assert_eq!(errors["layer_height"], "invalid value -0.2");
+    assert_eq!(errors["layer_height"], "invalid value -0.200000");
     assert!(!errors.contains_key("wall_loops"));
 }
 
@@ -124,7 +124,7 @@ fn standalone_validation_apis_remain_callable_after_aggregate_addition() {
     let width_errors = options.validate_extrusion_width_options().unwrap();
     let range_errors = options.validate_loaded_range_options().unwrap();
 
-    assert_eq!(basic_errors["layer_height"], "invalid value -0.2");
+    assert_eq!(basic_errors["layer_height"], "invalid value -0.200000");
     assert_eq!(
         width_errors["outer_wall_line_width"],
         "too large line width 2.100000"

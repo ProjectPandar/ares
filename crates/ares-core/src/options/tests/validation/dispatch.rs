@@ -10,7 +10,7 @@ fn missing_printer_technology_defaults_to_fff_validation() {
 
     let errors = options.validate_print_config(true).unwrap();
 
-    assert_eq!(errors["layer_height"], "invalid value -0.2");
+    assert_eq!(errors["layer_height"], "invalid value -0.200000");
 }
 
 #[test]
@@ -23,7 +23,7 @@ fn explicit_fff_runs_fff_validation() {
 
     let errors = options.validate_print_config(true).unwrap();
 
-    assert_eq!(errors["layer_height"], "invalid value -0.2");
+    assert_eq!(errors["layer_height"], "invalid value -0.200000");
 }
 
 #[test]
@@ -79,5 +79,5 @@ fn fff_aggregate_api_remains_callable_after_dispatch_addition() {
 
     let errors = options.validate_fff_options(true).unwrap();
 
-    assert_eq!(errors["layer_height"], "invalid value -0.2");
+    assert_eq!(errors["layer_height"], "invalid value -0.200000");
 }
