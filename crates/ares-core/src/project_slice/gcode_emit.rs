@@ -26,7 +26,7 @@ mod object;
 mod offset;
 mod placeholders;
 mod pressure_advance;
-mod processor;
+pub(crate) mod processor;
 mod retained_output;
 mod skirt;
 mod small_area;

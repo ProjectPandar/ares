@@ -5,6 +5,7 @@
 pub(crate) mod printable_area;
 
 use crate::ExtrusionRole;
+pub use crate::project_slice::gcode_emit::processor::process_gcode;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]

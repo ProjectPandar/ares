@@ -1,6 +1,6 @@
 # Compatible WIPE tags: upstream boundary and API contract
 
-Status: initial WIPE scope approved; runtime CLI/API amendment under review.
+Status: WIPE scope and runtime CLI/API boundary approved.
 Upstream: OrcaSlicer `8500fcdcc`, `src/libslic3r/GCode/GCodeProcessor.{hpp,cpp}`.
 
 ## Source conclusions
@@ -56,8 +56,9 @@ printer flag is caller context, matching `GCode.cpp:2047`, never inferred from
 WIPE comments. UTF-8 str input needs no filesystem/parser fallback. Private
 processor configuration types remain private; no cfg(test) API or backdoor.
 
-The owning upstream boundary is `GCodeProcessor.hpp:914-915::process_buffer/
-finalize` and `GCodeProcessor.cpp:2677-2709`, exposed through the existing
+The owning upstream boundary is `GCodeProcessor.hpp:887::apply_config`,
+`:905::process_file`, `:914-915::process_buffer/finalize` and
+`GCodeProcessor.cpp:2025,2592,2677-2709`, exposed through the existing
 postprocessing shell. API exposure must preserve the current WIPE bug until
 the separately observable behavioral RED; it does not absorb unrelated options.
 

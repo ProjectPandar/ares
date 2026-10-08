@@ -102,6 +102,31 @@ impl Default for ProcessorLimits {
     }
 }
 
+/// `GCodeProcessor::apply_config` + `process_file`/`process_buffer` and
+/// `finalize` (`GCodeProcessor.hpp:887,905,914-915`; cpp:2025,2677-2709).
+/// Delegates to the existing processor without injecting progress commands.
+pub fn process_gcode(
+    gcode: &str,
+    settings: &crate::ProjectSettings,
+    bbl_printer: bool,
+) -> crate::ProcessedGCode {
+    let limits = ProcessorLimits::from_config(
+        &settings.printer.machine,
+        settings.printer.gcode.gcode_flavor,
+        bbl_printer,
+    );
+    let (mut output, _) = process(
+        gcode.as_bytes().to_vec(),
+        false,
+        0.0,
+        limits.with_settings(settings).recording_moves(true),
+    );
+    output
+        .result
+        .apply_filament_config(&settings.filament.gcode);
+    output
+}
+
 pub(super) fn process(
     output: Vec<u8>,
     emit_progress: bool,
