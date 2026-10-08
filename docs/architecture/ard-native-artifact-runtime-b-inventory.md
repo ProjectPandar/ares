@@ -14,7 +14,7 @@ consumer assertions and owner approval. Source/manual inputs are listed below.
 | `tests/ksr_fdmtest_v4/ksr_fdmtest_v4.initialized-orca.gcode` | worker4 | KSR official/initialized runtime slice + configuration consumers | Delete after runtime consumer migration |
 | `tests/parity/arachne/default-prisms.orca.gcode` | worker4 | runtime matching3mf/selectedplate; core consumers→CLI | Delete after runtime consumer migration |
 | `tests/parity/color-change/m73-stop/oracle.json` | worker6 | processor approved12 mappings; existing cache typed slice/process | Delete after runtime consumer migration |
-| `tests/parity/color-change/oracle-cardinality.json` | worker4 | runtime nine manual-input procgcode cardinality | Delete after runtime consumer migration |
+| `tests/parity/color-change/oracle-cardinality.json` | worker6 (adjacent spec) | runtime nine manual-input procgcode cardinality | Delete after runtime consumer migration |
 | `tests/parity/marker-time/format-red.log` | worker4 | runtime raw/stable source-kernel recipe→JSON/CSV/TSV; web/vgcode/WASM consumers | Delete after runtime consumer migration |
 | `tests/parity/marker-time/moves.csv` | worker4 | runtime raw/stable source-kernel recipe→JSON/CSV/TSV; web/vgcode/WASM consumers | Delete after runtime consumer migration |
 | `tests/parity/marker-time/native.json` | worker4 | runtime raw/stable source-kernel recipe→JSON/CSV/TSV; web/vgcode/WASM consumers | Delete after runtime consumer migration |
@@ -26,21 +26,21 @@ consumer assertions and owner approval. Source/manual inputs are listed below.
 | `tests/parity/marker-time/transport-red.log` | worker4 | runtime raw/stable source-kernel recipe→JSON/CSV/TSV; web/vgcode/WASM consumers | Delete after runtime consumer migration |
 | `tests/parity/marker-time/ui-red.log` | worker4 | runtime raw/stable source-kernel recipe→JSON/CSV/TSV; web/vgcode/WASM consumers | Delete after runtime consumer migration |
 | `tests/parity/marker-time/vertices.tsv` | worker4 | runtime raw/stable source-kernel recipe→JSON/CSV/TSV; web/vgcode/WASM consumers | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/klipper_pressure_advance.actual-speed.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/klipper_pressure_advance.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/klipper_pressure_advance.time.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_classic_jerk.actual-speed.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_classic_jerk.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_classic_jerk.time.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_junction_deviation.actual-speed.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_junction_deviation.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_junction_deviation.time.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_option_moves.actual-speed.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_option_moves.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin2_option_moves.time.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin_classic_jerk.actual-speed.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin_classic_jerk.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
-| `tests/parity/motion-attributes/marlin_classic_jerk.time.rle` | worker4 | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/klipper_pressure_advance.actual-speed.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/klipper_pressure_advance.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/klipper_pressure_advance.time.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_classic_jerk.actual-speed.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_classic_jerk.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_classic_jerk.time.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_junction_deviation.actual-speed.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_junction_deviation.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_junction_deviation.time.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_option_moves.actual-speed.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_option_moves.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin2_option_moves.time.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin_classic_jerk.actual-speed.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin_classic_jerk.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
+| `tests/parity/motion-attributes/marlin_classic_jerk.time.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
 | `tests/parity/processor-wipe-tower/native.json` | worker4 | runtime full five filament maps; existing VG1 volume oracle | Delete after runtime consumer migration |
 | `tests/parity/replay/ender3-classic.orca.gcode` | worker4 | runtime Ender3/classic reference; replay tests mutate Native result | Delete after runtime consumer migration |
 | `tests/parity/replay/ender3.orca.gcode` | worker4 | runtime Ender3/classic reference; replay tests mutate Native result | Delete after runtime consumer migration |

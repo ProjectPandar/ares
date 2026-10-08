@@ -35,8 +35,12 @@ new runner/processor_migration*.rs, the12 processor cases and their listed
 Native products, and process_gcode(post_process). worker4 must not edit these
 files concurrently. Shared extension requirements are interface requests to
 worker6/coordinator, not authorization for a second writer. Worker4 owns the
-other reference recipes/consumers; if processor CSV/kernel products need a
-shared adapter change, agree the writer and contract before implementing.
+other reference recipes/consumers. The adjacent processed_color_change/native.rs
+family and processed_motion_attributes.rs (including dynamics RLE migration)
+are also worker6-owned, with their own spec-first review. worker4 does not edit
+these groups or the shared core policy helper in parallel. If processor CSV/kernel
+products need a shared adapter change, agree the writer and contract before
+implementing.
 
 Reference processor spec: docs/architecture/native-artifact-cleanup-processor-spec.md,
 initial approved2e142621, with coordinator-required explicit-GDB correction.
@@ -56,7 +60,7 @@ for future implementation. Processor group is owned by worker6, not worker4.
 | slicing validation/boundaries/jerk/SEMM/plate geometry | Print::validate, PrintObject transformed hull, GCode object/tool transitions and machine limits; existing public byte-in slicing/error APIs, moved core Native consumers to CLI | worker4 |
 | KSR configuration + full stream | PrintConfig/GCode CONFIG_BLOCK writer, existing bounded full/runtime export and public slice seam; no runtime-value omission/duplicate-assignment loss | worker4 |
 | CLI channels/failures | OrcaSlicer.cpp error dispatch/result.json; exact exit/channel/JSON/export artifact inventory | worker4 |
-| color-change/raw-stable/dynamics | GCodeProcessor store_move_vertex/process_file/options correction; existing public processed slicing/API | worker4 |
+| color-change/raw-stable/dynamics | GCodeProcessor store_move_vertex/process_file/options correction; existing public processed slicing/API | worker6, adjacent spec-first sub-slice |
 | marker time/kernel + web consumers | LibVGCodeWrapper::convert, ViewerImpl.cpp:1461-1465 ordered f32 source kernel, Utils::get_time_dhms; pure viewer/WASM APIs, runtime test oracle products | worker4, coordinate web owner before touching web |
 | avoid-crossing/replay | Existing source-cited travel paths and processor replay; existing CLI full ordered comparator | worker4 |
 
