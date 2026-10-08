@@ -45,7 +45,6 @@ const NONIDENTITY_FILAMENT_SHRINK_Z: &str = concat!(
     "\t\t\"100%\"\r\n",
     "\t]",
 );
-const LAYER_HEIGHT_RANGE: &str = r#"<objects><object id="1"><range min_z="0" max_z="1"><option opt_key="layer_height">0.18</option></range></object></objects>"#;
 const EXTRUDER_RANGE: &str = r#"<objects><object id="1"><range min_z="0" max_z="1"><option opt_key="extruder">1</option></range></object></objects>"#;
 
 #[tokio::test]
@@ -108,16 +107,7 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
     );
     assert_eq!(slice_error(&chain).await, flush_matrix_error());
     chain.repair_flush_matrix();
-    chain.insert_text("Metadata/layer_config_ranges.xml", LAYER_HEIGHT_RANGE);
-    assert_eq!(
-        slice_error(&chain).await,
-        SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned())
-    );
-    chain.replace_unique(
-        "Metadata/layer_config_ranges.xml",
-        LAYER_HEIGHT_RANGE,
-        EXTRUDER_RANGE,
-    );
+    chain.insert_text("Metadata/layer_config_ranges.xml", EXTRUDER_RANGE);
     assert_eq!(
         slice_error(&chain).await,
         SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned())

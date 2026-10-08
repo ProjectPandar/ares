@@ -274,9 +274,12 @@ fn validate_layer_ranges(
     resolved_objects: &[ResolvedProjectObject],
 ) -> Result<(), SliceError> {
     if resolved_objects.iter().any(|resolved| {
-        !source_objects[resolved.source_object_index]
+        source_objects[resolved.source_object_index]
             .layer_config_ranges()
-            .is_empty()
+            .iter()
+            .any(|range| {
+                range.layer_height().is_none() || range.region_overrides() != &Default::default()
+            })
     }) {
         return unsupported("layer_config_ranges");
     }

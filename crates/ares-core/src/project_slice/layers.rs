@@ -57,12 +57,16 @@ pub(super) fn generate_layer_pairs(
     profile: &[f64],
     budget: &mut LayerBudget,
 ) -> Result<Vec<LayerPair>, SliceError> {
-    budget.claim()?;
-    let mut print_z = parameters.first_object_layer_height;
-    let mut pairs = vec![LayerPair {
-        lo: 0.0,
-        hi: print_z,
-    }];
+    let mut print_z = 0.0;
+    let mut pairs = Vec::new();
+    if parameters.first_object_layer_height_fixed() {
+        budget.claim()?;
+        print_z = parameters.first_object_layer_height;
+        pairs.push(LayerPair {
+            lo: 0.0,
+            hi: print_z,
+        });
+    }
     let object_height = parameters.object_print_z_max - parameters.object_print_z_min;
     let shrinkage_z = parameters.object_shrinkage_compensation_z;
     let mut profile_index = 0;

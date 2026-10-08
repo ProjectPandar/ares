@@ -25,12 +25,17 @@ pub(super) fn plan_project(
             project.objects(),
             std::slice::from_ref(resolved_object),
         )?[0];
-        parameters::slicing_parameters(
+        let parameters = parameters::slicing_parameters(
             &resolved.views.full,
             &resolved_object.object,
             object_height,
             &object_extruders[object_index],
-        )
+        )?;
+        let profile = profile::layer_height_profile_from_ranges(
+            &parameters,
+            project.objects()[resolved_object.source_object_index].layer_config_ranges(),
+        );
+        Ok((parameters, profile))
     })
 }
 
@@ -39,7 +44,7 @@ pub(super) fn plan_resolved_objects(
     mut prepare: impl FnMut(
         usize,
         &ResolvedProjectObject,
-    ) -> Result<parameters::SlicingParameters, SliceError>,
+    ) -> Result<(parameters::SlicingParameters, Vec<f64>), SliceError>,
 ) -> Result<Vec<layers::PlannedPrintObject>, SliceError> {
     let mut budget = layers::LayerBudget::default();
     let mut planned_objects = Vec::new();
@@ -47,8 +52,7 @@ pub(super) fn plan_resolved_objects(
         if resolved_object.print_objects.is_empty() {
             continue;
         }
-        let parameters = prepare(object_index, resolved_object)?;
-        let profile = profile::fixed_layer_height_profile(&parameters);
+        let (parameters, profile) = prepare(object_index, resolved_object)?;
         for (transform_index, _) in resolved_object.print_objects.iter().enumerate() {
             planned_objects.push(layers::plan_print_object(
                 (resolved_object.source_object_index, transform_index),

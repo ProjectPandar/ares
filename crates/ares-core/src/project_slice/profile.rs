@@ -1,15 +1,53 @@
+use crate::LayerConfigRange;
+
 use super::parameters::SlicingParameters;
 
 const EPSILON: f64 = 1e-4;
 
-pub(super) fn fixed_layer_height_profile(parameters: &SlicingParameters) -> Vec<f64> {
+pub(super) fn layer_height_profile_from_ranges(
+    parameters: &SlicingParameters,
+    ranges: &[LayerConfigRange],
+) -> Vec<f64> {
     let first = parameters.first_object_layer_height;
-    let top = parameters.object_print_z_uncompensated_max;
-    let mut profile = Vec::with_capacity(8);
+    let top = parameters.object_print_z_uncompensated_max - parameters.object_print_z_min;
+    let compensated_top = parameters.object_print_z_max - parameters.object_print_z_min;
+    let mut profile = Vec::with_capacity(ranges.len() * 4 + 8);
+    let mut previous_high = None;
 
-    append(&mut profile, 0.0, first);
-    append(&mut profile, first, first);
-    let remaining_start = profile[profile.len() - 2];
+    if parameters.first_object_layer_height_fixed() {
+        append(&mut profile, 0.0, first);
+        append(&mut profile, first, first);
+        previous_high = Some(first);
+    }
+    for range in ranges {
+        let Some(height) = range.layer_height() else {
+            continue;
+        };
+        let mut low = range.min_z();
+        let high = range.max_z().min(compensated_top);
+        if let Some(previous) = previous_high {
+            low = low.max(previous);
+        }
+        if low + EPSILON < high {
+            let last_z = if profile.is_empty() {
+                0.0
+            } else {
+                profile[profile.len() - 2]
+            };
+            if low > last_z + EPSILON {
+                append(&mut profile, last_z, parameters.layer_height);
+                append(&mut profile, low, parameters.layer_height);
+            }
+            append(&mut profile, low, height.0);
+            append(&mut profile, high, height.0);
+            previous_high = Some(high);
+        }
+    }
+    let remaining_start = if profile.is_empty() {
+        0.0
+    } else {
+        profile[profile.len() - 2]
+    };
     if remaining_start < top {
         append(&mut profile, remaining_start, parameters.layer_height);
         append(&mut profile, top, parameters.layer_height);

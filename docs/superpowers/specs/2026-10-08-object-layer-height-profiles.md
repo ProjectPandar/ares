@@ -1,6 +1,6 @@
 # Source-cited object layer-height profile rewrite slices
 
-Status: proposed; coordinator review before fixture/tests/implementation.
+Status: Stage1 approved; Stage2/automatic-adaptive/ZAA implementation not approved.
 Investigation baseline: main d9b642191 (Option report docs merge). No Rust edits,
 no Native/runtime attempts, no claimed RED/GREEN. Browser pause respected.
 
@@ -26,6 +26,14 @@ Current core is already close to the generate_object_layers consumer:
 `layers.rs::generate_layer_pairs/profile_height/plan_print_object` accepts a
 flattened alternating z/h profile. `planning.rs:51` always synthesizes the
 fixed-only profile; `profile.rs` implements its compressed empty-range form.
+Height-only ranges (no region override) are excluded from region-candidate
+segmentation, and the raw range gate admits only those explicit-height ranges.
+This is an equivalent mapping of PrintApply.cpp::generate_print_object_regions
+(:958+, get_create_region :1000-1011) deduplicating PrintRegion by equal config:
+height-only ranges yield the same PrintRegion, not a newly designed region scheme.
+Pure None/region overrides/mixed ranges retain existing rejection; actual region-
+range slicing remains a separate future stage.
+
 `project/layer_config_ranges.rs:140-189` parses optional layer_height, replaces
 identical range keys and lexicographically sorts ranges. Region candidates are
 already resolved separately; **do not replace candidate/region machinery**.

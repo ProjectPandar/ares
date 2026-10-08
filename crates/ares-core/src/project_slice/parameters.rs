@@ -33,6 +33,12 @@ pub(super) struct SlicingParameters {
     pub(super) object_shrinkage_compensation_z: f64,
 }
 
+impl SlicingParameters {
+    pub(super) fn first_object_layer_height_fixed(&self) -> bool {
+        self.base_raft_layers + self.interface_raft_layers == 0 || self.first_object_layer_bridging
+    }
+}
+
 pub(super) fn slicing_parameters(
     settings: &ProjectSettings,
     object: &ObjectOptions,

@@ -1,0 +1,26 @@
+{
+  "source_sha256": "699e9effa47a72c0de5292532aed8b1966813705f55fd0b4b22fdca661b04ee6",
+  "input_sha256": "7f078c18fa8eb8119f2215a5c98afbaa629e9946c430259ca962cd1c929bab11",
+  "range_xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<objects><object id=\"1\"><range min_z=\"0.4\" max_z=\"0.6\"><option opt_key=\"layer_height\">0.15</option></range><range min_z=\"0.25\" max_z=\"0.48\"><option opt_key=\"layer_height\">0.1</option></range></object></objects>\n",
+  "seed": 0,
+  "CPU": 23,
+  "native_exit": 0,
+  "native_bytes": 26666,
+  "native_sha256": "ae7432706f81fc85982745b773918b840faab7762eee0dba5dafccd58eb9cb9a",
+  "native_executable_sha256": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+  "native_layers": [
+    ";Z:0.3",
+    ";HEIGHT:0.3",
+    ";Z:0.4",
+    ";HEIGHT:0.1",
+    ";Z:0.5",
+    ";HEIGHT:0.1",
+    ";Z:0.65",
+    ";HEIGHT:0.15"
+  ],
+  "single_attempt": true,
+  "source_owners": [
+    "Slicing.cpp:234-305,807-870",
+    "PrintApply.cpp:958-1011"
+  ]
+}

@@ -1,6 +1,6 @@
 # ARD: upstream object layer-height profiles, not an Ares adaptive pipeline
 
-Status: proposed, spec review required before implementation.
+Status: Stage1 approved; Stage2 requires separate approval.
 
 ## Non-negotiable decisions
 
@@ -23,15 +23,21 @@ Status: proposed, spec review required before implementation.
    `layer_height` option in Slicing.cpp:249 (`getFloat`), which is UB, not a
    default-height rule. Do not imitate UB or fabricate defaults; pure None keeps
    its pre-existing behavior. Coordinator confirmed this bounded scope.
-5. Remove only the capability branch proved supported by independent Native RED
+5. Height-only ranges do not split region candidates: this is the equivalent
+   mapping of PrintApply.cpp::generate_print_object_regions (:958+, equal-config
+   get_create_region :1000-1011), where these ranges yield identical PrintRegion.
+   Raw range gate admits explicit-height/no-region-override ranges only. Pure
+   None/region overrides retain their previous rejection; region-range slicing
+   is a separate stage, not newly designed here.
+6. Remove only the capability branch proved supported by independent Native RED
    and subsequent strict GREEN. Painted and ZAA branches stay while deferred.
    Update earlier rejection tests before production changes, never after.
-5. ZAA exists in admitted OrcaSlicer2.4.2 libslic3r but is **not adaptive layer
+6. ZAA exists in admitted OrcaSlicer2.4.2 libslic3r but is **not adaptive layer
    generation**. Its owners are `PrintObject::contour_z`, `ContourZ.cpp`, mesh
    ray queries and spatial extrusion paths. Retain its active-feature gate until
    a separately approved source slice; do not treat existing box-inactive parity
    as proof for active slope following.
-6. Keep byte-in/byte-out core platform-neutral (browserWASM/Windows/macOS/Linux),
+7. Keep byte-in/byte-out core platform-neutral (browserWASM/Windows/macOS/Linux),
    no direct file I/O, UI painting state, OpenGL, terminal or Native invocation.
    Existing archive adapter supplies object data; production core never executes
    Native. No extra crate or configurable strategy is necessary.

@@ -17,8 +17,13 @@ pub(super) fn validate(
             .layer_config_ranges()
             .iter()
             .any(|range| range.layer_height().is_some())
+            && source_objects[resolved.source_object_index]
+                .layer_config_ranges()
+                .iter()
+                .any(|range| range.layer_height().is_none())
     }) {
-        return unsupported("layer_height");
+        // Slicing.cpp dereferences a missing layer_height option; no portable mixed-range oracle.
+        return unsupported("layer_config_ranges");
     }
     if resolved_objects.iter().any(|resolved| {
         zaa_requested(source_objects, resolved)

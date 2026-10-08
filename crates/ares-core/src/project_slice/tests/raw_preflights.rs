@@ -215,18 +215,6 @@ async fn task22b_layer_range_preflight_runs_after_task22a_and_before_all_raw_geo
         unsupported("layer_config_ranges")
     );
 
-    let mut task22a = KsrArchive::new();
-    task22a.insert_text(
-        "Metadata/layer_config_ranges.xml",
-        r#"<objects><object id="1"><range min_z="0" max_z="1"><option opt_key="layer_height">0.18</option></range></object></objects>"#,
-    );
-    assert_eq!(
-        slice_project(task22a.bytes(), metadata(), crate::SlicerContext::new(0))
-            .await
-            .unwrap_err(),
-        unsupported("layer_config_ranges")
-    );
-
     let (objects, resolved, plans) = ranged_later_request();
     assert_eq!(
         project(&objects, &resolved, plans).unwrap_err(),

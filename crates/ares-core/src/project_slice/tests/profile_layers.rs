@@ -10,7 +10,7 @@ use super::super::{
         generate_layer_pairs, planned_layers,
     },
     planning::plan_resolved_objects,
-    profile::fixed_layer_height_profile,
+    profile::layer_height_profile_from_ranges,
 };
 use super::support::{object_options, resolved};
 
@@ -20,11 +20,11 @@ const PROGRESS_ERROR: &str = "layer_height does not advance print_z";
 #[test]
 fn task22a_fixed_profile_compresses_equal_and_preserves_unequal_heights() {
     assert_eq!(
-        fixed_layer_height_profile(&parameters(0.2, 0.2, 0.1, 1.0)),
+        layer_height_profile_from_ranges(&parameters(0.2, 0.2, 0.1, 1.0), &[]),
         vec![0.0, 0.2, 1.0, 0.2]
     );
     assert_eq!(
-        fixed_layer_height_profile(&parameters(0.15, 0.2, 0.1, 1.0)),
+        layer_height_profile_from_ranges(&parameters(0.15, 0.2, 0.1, 1.0), &[]),
         vec![0.0, 0.15, 0.15, 0.15, 0.15, 0.2, 1.0, 0.2]
     );
 }
@@ -34,14 +34,15 @@ fn task22a_fixed_profile_uses_strict_epsilon_and_unrounded_top() {
     let epsilon = 0.0001_f64;
     let below = f64::from_bits(epsilon.to_bits() - 1);
     let top = f64::from_bits(1.0_f64.to_bits() + 1);
-    let exact = fixed_layer_height_profile(&parameters(epsilon, 0.0, 0.1, top));
+    let exact = layer_height_profile_from_ranges(&parameters(epsilon, 0.0, 0.1, top), &[]);
     assert_eq!(
         exact,
         vec![0.0, epsilon, epsilon, epsilon, epsilon, 0.0, top, 0.0]
     );
-    let compressed = fixed_layer_height_profile(&parameters(below, 0.0, 0.1, top));
+    let compressed = layer_height_profile_from_ranges(&parameters(below, 0.0, 0.1, top), &[]);
     assert_eq!(compressed, vec![0.0, below, top, 0.0]);
-    let remaining_from_compressed_z = fixed_layer_height_profile(&parameters(below, 0.2, 0.1, top));
+    let remaining_from_compressed_z =
+        layer_height_profile_from_ranges(&parameters(below, 0.2, 0.1, top), &[]);
     assert_eq!(
         remaining_from_compressed_z,
         vec![0.0, below, 0.0, 0.2, top, 0.2]
@@ -60,7 +61,7 @@ fn task22a_fixed_first_pair_is_unconditional_at_and_above_top() {
         (below, below / 2.0, 0.2, [0.0, below, 0.0, 0.2]),
     ] {
         let parameters = parameters(first, regular, 0.1, top);
-        let profile = fixed_layer_height_profile(&parameters);
+        let profile = layer_height_profile_from_ranges(&parameters, &[]);
         assert_eq!(profile, expected_profile);
         let pairs =
             generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap();
@@ -88,7 +89,7 @@ fn task22o126_planned_layers_preserve_interval_precision() {
 #[test]
 fn task22a_midpoint_equal_to_top_stops_before_candidate() {
     let parameters = parameters(0.2, 0.2, 0.1, 0.3);
-    let profile = fixed_layer_height_profile(&parameters);
+    let profile = layer_height_profile_from_ranges(&parameters, &[]);
     assert_eq!(
         generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap(),
         vec![LayerPair { lo: 0.0, hi: 0.2 }]
@@ -98,7 +99,7 @@ fn task22a_midpoint_equal_to_top_stops_before_candidate() {
 #[test]
 fn precise_z_height_distributes_the_top_gap_across_five_layers() {
     let parameters = parameters(0.2, 0.2, 0.1, 2.13);
-    let profile = fixed_layer_height_profile(&parameters);
+    let profile = layer_height_profile_from_ranges(&parameters, &[]);
     let mut pairs =
         generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap();
     let unchanged = pairs[..pairs.len() - 5].to_vec();
@@ -116,7 +117,7 @@ fn precise_z_height_distributes_the_top_gap_across_five_layers() {
 #[test]
 fn precise_z_height_leaves_short_series_unmodified() {
     let parameters = parameters(0.15, 0.2, 0.1, 0.7);
-    let profile = fixed_layer_height_profile(&parameters);
+    let profile = layer_height_profile_from_ranges(&parameters, &[]);
     let mut pairs =
         generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap();
     let before = pairs.clone();
@@ -128,7 +129,7 @@ fn precise_z_height_leaves_short_series_unmodified() {
 #[test]
 fn task22a_layer_series_preserves_nondivisible_unaligned_top_and_records() {
     let nondivisible = parameters(0.15, 0.2, 0.1, 0.7);
-    let profile = fixed_layer_height_profile(&nondivisible);
+    let profile = layer_height_profile_from_ranges(&nondivisible, &[]);
     let pairs = generate_layer_pairs(&nondivisible, &profile, &mut LayerBudget::default()).unwrap();
     let z1 = 0.15;
     let z2 = z1 + 0.2;
@@ -173,7 +174,7 @@ fn task22a_layer_series_preserves_nondivisible_unaligned_top_and_records() {
 #[test]
 fn task22a_layer_series_is_deterministic() {
     let parameters = parameters(0.15, 0.2, 0.1, 0.7);
-    let profile = fixed_layer_height_profile(&parameters);
+    let profile = layer_height_profile_from_ranges(&parameters, &[]);
     let run = || {
         let pairs =
             generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap();
@@ -188,7 +189,7 @@ fn task22a_layer_series_is_deterministic() {
 fn task22a_smallest_positive_regular_height_rejects_nonprogress() {
     let smallest = f64::from_bits(1);
     let parameters = parameters(0.2, smallest, smallest, 1.0);
-    let profile = fixed_layer_height_profile(&parameters);
+    let profile = layer_height_profile_from_ranges(&parameters, &[]);
     assert_invalid(
         generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()),
         PROGRESS_ERROR,
@@ -200,7 +201,7 @@ fn task22a_layer_budget_allows_exact_limit_and_rejects_next() {
     let exact = parameters(1.0, 1.0, 1.0, 100_000.0);
     let pairs = generate_layer_pairs(
         &exact,
-        &fixed_layer_height_profile(&exact),
+        &layer_height_profile_from_ranges(&exact, &[]),
         &mut LayerBudget::default(),
     )
     .unwrap();
@@ -221,7 +222,7 @@ fn task22a_layer_budget_allows_exact_limit_and_rejects_next() {
     assert_invalid(
         generate_layer_pairs(
             &overflow,
-            &fixed_layer_height_profile(&overflow),
+            &layer_height_profile_from_ranges(&overflow, &[]),
             &mut LayerBudget::default(),
         ),
         LIMIT_ERROR,
@@ -251,6 +252,10 @@ fn task22a_layer_budget_spans_objects_and_groups() {
             4 => Ok(large.clone()),
             _ => Ok(one.clone()),
         }
+        .map(|parameters| {
+            let profile = layer_height_profile_from_ranges(&parameters, &[]);
+            (parameters, profile)
+        })
     })
     .unwrap();
     let identities: Vec<_> = plans
@@ -278,11 +283,17 @@ fn task22a_layer_budget_spans_objects_and_groups() {
     });
     objects.push(resolved(12, object_options(), Vec::new()));
     assert_invalid(
-        plan_resolved_objects(&objects, |_, object| match object.source_object_index {
-            2 => Err(SliceError::UnsupportedProjectFeature("skipped".into())),
-            4 => Ok(large.clone()),
-            12 => Err(SliceError::UnsupportedProjectFeature("later".into())),
-            _ => Ok(one.clone()),
+        plan_resolved_objects(&objects, |_, object| {
+            match object.source_object_index {
+                2 => Err(SliceError::UnsupportedProjectFeature("skipped".into())),
+                4 => Ok(large.clone()),
+                12 => Err(SliceError::UnsupportedProjectFeature("later".into())),
+                _ => Ok(one.clone()),
+            }
+            .map(|parameters| {
+                let profile = layer_height_profile_from_ranges(&parameters, &[]);
+                (parameters, profile)
+            })
         }),
         LIMIT_ERROR,
     );
@@ -294,7 +305,7 @@ fn task22a_layer_generation_error_precedence_is_fixed() {
     assert_invalid(
         generate_layer_pairs(
             &initial_nonfinite,
-            &fixed_layer_height_profile(&initial_nonfinite),
+            &layer_height_profile_from_ranges(&initial_nonfinite, &[]),
             &mut LayerBudget::default(),
         ),
         "nonfinite layer generation value",
@@ -304,7 +315,7 @@ fn task22a_layer_generation_error_precedence_is_fixed() {
     assert_invalid(
         generate_layer_pairs(
             &candidate_nonfinite,
-            &fixed_layer_height_profile(&candidate_nonfinite),
+            &layer_height_profile_from_ranges(&candidate_nonfinite, &[]),
             &mut LayerBudget { used: 99_999 },
         ),
         "nonfinite layer generation value",
@@ -316,7 +327,7 @@ fn task22a_layer_generation_error_precedence_is_fixed() {
     assert_eq!(
         generate_layer_pairs(
             &midpoint,
-            &fixed_layer_height_profile(&midpoint),
+            &layer_height_profile_from_ranges(&midpoint, &[]),
             &mut midpoint_budget,
         )
         .unwrap(),
@@ -328,7 +339,7 @@ fn task22a_layer_generation_error_precedence_is_fixed() {
     assert_invalid(
         generate_layer_pairs(
             &stalled,
-            &fixed_layer_height_profile(&stalled),
+            &layer_height_profile_from_ranges(&stalled, &[]),
             &mut LayerBudget { used: 99_999 },
         ),
         PROGRESS_ERROR,
@@ -336,7 +347,7 @@ fn task22a_layer_generation_error_precedence_is_fixed() {
     assert_invalid(
         generate_layer_pairs(
             &regular,
-            &fixed_layer_height_profile(&regular),
+            &layer_height_profile_from_ranges(&regular, &[]),
             &mut LayerBudget { used: 99_999 },
         ),
         LIMIT_ERROR,
