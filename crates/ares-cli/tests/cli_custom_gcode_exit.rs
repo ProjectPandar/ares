@@ -47,6 +47,33 @@ fn assert_native_failure(case: &str) {
 }
 
 #[test]
+fn custom_gcode_reference_requires_native_even_when_frozen_outputs_exist() {
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "cli_custom_gcode_flsun_qqs_matches_native",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_ORCA_NATIVE_BIN")
+        .output()
+        .unwrap();
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        diagnostic.contains("running 1 test"),
+        "selector drift: {diagnostic}"
+    );
+    assert!(
+        !output.status.success() && diagnostic.contains("ARES_ORCA_NATIVE_BIN"),
+        "frozen reference concealed missing required Native: {diagnostic}"
+    );
+}
+
+#[test]
 fn cli_custom_gcode_flsun_qqs_matches_native() {
     assert_native_failure("flsun-qqs");
 }
