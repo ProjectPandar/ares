@@ -94,7 +94,8 @@ impl FamilyFailure {
         #[cfg(not(target_os = "linux"))]
         println!("run found error, exit");
         eprint!("{}", self.stderr);
-        self.record_exit_reason();
+        #[cfg(target_os = "linux")]
+        let _ = self.record_exit_reason();
         std::process::exit(self.return_code);
     }
 
@@ -102,8 +103,8 @@ impl FamilyFailure {
     /// keys, tab-indented `dump(1, '\t')` with a trailing newline; failures
     /// to write are swallowed like the upstream `catch (...)`.
     #[cfg(target_os = "linux")]
-    fn record_exit_reason(&self) {
-        let json_error_string = serde_json::Value::from(self.error_string).to_string();
+    fn record_exit_reason(&self) -> Result<(), serde_json::Error> {
+        let json_error_string = serde_json::to_string(self.error_string)?;
         let body = format!(
             "{{\n\t\"error_string\": {json_error_string},\n\t\"export_time\": 0,\n\t\
              \"layer_height\": {:?},\n\t\"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\
@@ -120,10 +121,8 @@ impl FamilyFailure {
             .filter(|parent| !parent.as_os_str().is_empty())
             .unwrap_or_else(|| Path::new("."));
         let _ = fs::write(directory.join("result.json"), body);
+        Ok(())
     }
-
-    #[cfg(not(target_os = "linux"))]
-    fn record_exit_reason(&self) {}
 }
 
 impl From<io::Error> for CliFailure {
