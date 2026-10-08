@@ -1,7 +1,10 @@
 //! `BuildVolume` print-volume gate (`BuildVolume.cpp:12-65,377-430`,
 //! `BuildVolume.hpp:15-30,91-106`; `Model.cpp:692-702,2370-2379,3423-3469`).
 
-use crate::{Point3d, Project, ProjectObject, SliceError, Transform3d};
+mod circle;
+
+use crate::{Point3d, Project, ProjectObject, SliceError, Transform3d, geometry::CoordinateScale};
+use circle::fit_circle;
 
 /// `BuildVolume.hpp:106`: the plater-level epsilon.
 const SCENE_EPSILON: f64 = 1e-4;
@@ -23,7 +26,7 @@ enum InstancePvs {
     FullyOutside,
 }
 
-/// A fitted circle: centroid + radius (`BuildVolume.cpp:52-63`).
+/// RANSAC-fitted circle in fixed coordinates (`BuildVolume.cpp:38-63`).
 struct Circle {
     center: [f64; 2],
     radius: f64,
@@ -155,17 +158,19 @@ impl PrintVolume {
     /// outside → Outside; mixed → Colliding.
     fn object_state_circle(&self, vertices: &[Point3d], circle: &Circle) -> ObjectState {
         let z_max = self.max_z + SCENE_EPSILON;
-        let r = circle.radius + SCENE_EPSILON;
-        let distance = |p: &Point3d| {
-            ((p.x - circle.center[0]).powi(2) + (p.y - circle.center[1]).powi(2)).sqrt()
-        };
+        // Native adds SceneEpsilon in scaled units, then unscales to Circlef.
+        let factor = CoordinateScale::Normal.factor() as f32;
+        let center = circle.center.map(|c| c as f32 * factor);
+        let r = (circle.radius + SCENE_EPSILON) as f32 * factor;
         let mut inside = false;
         let mut outside = false;
         for vertex in vertices {
             if vertex.z <= -SCENE_EPSILON {
                 continue; // below the bed; doesn't prevent Inside
             }
-            let xy_inside = distance(vertex) <= r;
+            let dx = vertex.x as f32 - center[0];
+            let dy = vertex.y as f32 - center[1];
+            let xy_inside = dx * dx + dy * dy <= r * r;
             let z_inside = vertex.z < z_max;
             if xy_inside && z_inside {
                 inside = true;
@@ -222,50 +227,6 @@ fn is_axis_aligned_rectangle(area: &[crate::Point2d]) -> bool {
         let on_x = (p.x - min[0]).abs() < SCENE_EPSILON || (p.x - max[0]).abs() < SCENE_EPSILON;
         let on_y = (p.y - min[1]).abs() < SCENE_EPSILON || (p.y - max[1]).abs() < SCENE_EPSILON;
         on_x && on_y
-    })
-}
-
-/// `BuildVolume.cpp:52-63`: centroid + mean radius; vertices must lie
-/// within 0.005 of the fitted radius and edge midpoints must not undercut
-/// more than 3 mm (the discretization tolerance from BedShapePanel).
-fn fit_circle(area: &[crate::Point2d]) -> Option<Circle> {
-    if area.len() < 8 {
-        return None;
-    }
-    let n = area.len() as f64;
-    let center = [
-        area.iter().map(|p| p.x).sum::<f64>() / n,
-        area.iter().map(|p| p.y).sum::<f64>() / n,
-    ];
-    let mean_r = area
-        .iter()
-        .map(|p| ((p.x - center[0]).powi(2) + (p.y - center[1]).powi(2)).sqrt())
-        .sum::<f64>()
-        / n;
-    if mean_r <= 0.0 {
-        return None;
-    }
-    // Vertex tolerance 0.005 (`BuildVolume.cpp:59`).
-    let vertex_ok = area.iter().all(|p| {
-        (((p.x - center[0]).powi(2) + (p.y - center[1]).powi(2)).sqrt() - mean_r).abs() <= 0.005
-    });
-    if !vertex_ok {
-        return None;
-    }
-    // Midpoint undercut 3 mm (`BuildVolume.cpp:60`).
-    let midpoint_ok = (0..area.len()).all(|i| {
-        let a = &area[i];
-        let b = &area[(i + 1) % area.len()];
-        let mid = [(a.x + b.x) * 0.5, (a.y + b.y) * 0.5];
-        let d = ((mid[0] - center[0]).powi(2) + (mid[1] - center[1]).powi(2)).sqrt();
-        mean_r - d <= 3.0
-    });
-    if !midpoint_ok {
-        return None;
-    }
-    Some(Circle {
-        center,
-        radius: mean_r,
     })
 }
 
@@ -345,7 +306,18 @@ fn calc_print_volume_state(
             .mesh()
             .vertices()
             .iter()
-            .map(|vertex| matrix.transform_point(*vertex))
+            .map(|vertex| {
+                if matches!(&volume.shape, BedShape::Circle(_)) {
+                    let [x, y, z] = matrix.transform_point_f32(*vertex);
+                    Point3d {
+                        x: f64::from(x),
+                        y: f64::from(y),
+                        z: f64::from(z),
+                    }
+                } else {
+                    matrix.transform_point(*vertex)
+                }
+            })
             .collect();
         match volume.object_state(&vertices) {
             ObjectState::Inside => has_inside = true,

@@ -9,7 +9,9 @@ rewrite and exits.
   centroid approximation. Sampling uses its own default mt19937 instance.
   Reuse the core's existing portable generator; do not consume slicing RNG.
 - `BuildVolume.cpp:394` adds SceneEpsilon to the **scaled** circle radius and
-  only then unscales to f32. Preserve this upstream unit order, f32 transformed
+  only then unscales to f32. `Point.hpp:688-705` casts both the scaled value
+  and SCALING_FACTOR to f32 **before** multiplying (not a double product cast
+  afterward). Preserve this upstream unit order, f32 transformed
   vertices, and f32 containment arithmetic; do not expand by 1e-4 mm or add
   tolerances to make the synthetic test pass.
 - Rust destination: `project_slice/state/print_volume.rs`, with circle fitting
