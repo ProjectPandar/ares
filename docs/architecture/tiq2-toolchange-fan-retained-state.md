@@ -53,14 +53,32 @@ Complete TiQ2 equality remains the eventual goal, not assumed from fixing
 the first fan difference. The observed full comparison agrees through1822
 lines and fails at1823; no differences may be filtered.
 
-## RED/GREEN acceptance (after spec approval)
+## Bounded verification conclusion
 
-Write a runtime-OrcaRunner integration RED using the committed TiQ2 input,
-asserting the native-generated complete tool-change fan transition against
-Ares, before changing production. No Native stream fixture is committed.
-Run the complete generated-by-only comparator to expose any next residual.
-Add source-state controls before implementation for role-end→force-resume,
-changed-baseline resetting retained state, and active-role precedence.
-Then implement only the cited state distinction, rerun affected seeded
-controls and required workspace/clippy/fmt/wasm gates. Existing scaffolding
-is replaced, not preserved as a legacy fallback.
+Coordinator approved a fan-only slice: the runtime-OrcaRunner RED compares
+all M106/M107 commands in order, their layer and preceding/following TYPE
+context. Absolute line numbers and complete streams remain runtime evidence,
+not equality assertions, because deferred travel differences shift offsets.
+The independent complete-byte RED remains on a local travel branch and is
+not registered in main by this slice.
+
+That fan-sequence RED fails before the fix and passes after it. The complete
+file now agrees through22563 lines; first residual at22564 is Native
+X169.401 Y169.401 Z8.8 versus Ares X169.399 Y169.4 Z8.8, with an additional
+G1 X169.4 Y169.4. This travel residual is not filtered or claimed resolved.
+
+Fresh full v2 seeded controls on fa6e9acae pass701/701 base and702/702
+candidate (one new fan integration case). Directed fan+Type2 integration
+passes7/7; cooling state controls pass11/11. Workspace passes8123/8123
+with9 skipped. Clippy workspace/all-targets/all-features-Dwarnings,
+wasm32 core+adapter and fmt pass. Subsequent main changes ec098d40c,
+ab55a0e0c,7770aee5a and eeb041a20 are approved evidence-preserving changes.
+The runner registration rebase preserves main's adjacent processor modules
+and required-Native environment contract.
+
+No production behavior outside the retained request state changes. The
+existing physical_part_speed field now represents the upstream remembered
+request value; END may emit baseline without rewriting it. Active requests
+retain precedence, while a changed layer baseline still resets it through
+the existing baseline path. No legacy fallback or Native output is added.
+
