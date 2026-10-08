@@ -251,9 +251,9 @@ pub(super) fn append(
                 // layer height restarts from the object's own first
                 // layer (the per-object `process_layers` z tracking).
                 let origin = instance_origin(
-                    &instances[phase.object][phase.copy.min(
-                        instances[phase.object].len().saturating_sub(1),
-                    )..],
+                    &instances[phase.object][phase
+                        .copy
+                        .min(instances[phase.object].len().saturating_sub(1))..],
                     traversal.scale.factor(),
                 );
                 let _primed = transition::emit(
@@ -384,6 +384,10 @@ pub(super) fn append(
         // chunks emit the skirt around the raft polygons (the skirt layer
         // index is the raft layer index — with a raft, the covered layers
         // start at the raft flange).
+        // `GCode.cpp:4306-4328`: `make_skirt_extrusion` also requires the
+        // NEW print z to advance past the last recorded one
+        // (`skirt_done.back() < print_z - EPSILON`) — a later object
+        // restarting at a lower z neither re-emits nor consumes budget.
         let skirt_height = traversal
             .resolved
             .views
@@ -393,7 +397,10 @@ pub(super) fn append(
             .skirt_height
             .0
             .max(0) as usize;
-        if skirt_done.is_empty() || skirt_done.len() < skirt_height {
+        if skirt_done.is_empty()
+            || (skirt_done.len() < skirt_height
+                && skirt_done[skirt_done.len() - 1] < layer_z - 1e-4)
+        {
             skirt_emit::emit(
                 output,
                 state,
