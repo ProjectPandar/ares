@@ -80,11 +80,63 @@ precedes its corresponding production change; the helper's additional
 scaled-average test was written before implementation and is not presented
 as the independent travel RED.
 
-## Gates before review
+## Gate receipts and current requirements
 
-Rebase to latest Rust main (currently3b6e0ebdd) and run fresh same-round
-base/candidate seeded and official controls, recording exact failure names.
-Run workspace nextest, clippy all targets/features -Dwarnings, fmt and wasm32.
-All heavy checks are sequential,16 test threads, jobs1; browser windows defer
-new heavy jobs. Focused earlier103/103 core and six Type2 complete-output
-positive groups are useful local evidence, not final-main gates.
+All controls use fresh caches, explicit Native producer/resources, all reference
+flags (including profile_entry), separate base/candidate targets,16 threads
+and jobs1; heavy checks are sequential and deferred during browser windows.
+Base worktree: `/tmp/ares-worker2-tiq2-gate-base`; candidate: this worktree.
+
+-3cad8b4c3 full seeded: both649/649 passed.
+-3cad8b4c3 full official: both638 passed/11 failed, same exact names;
+  `/tmp/tiq2-bounded-full-3cad-official-exact-failures.json`. On2026-10-08
+  at16:03 coordinator time, the official wrapper was fixed to inherit the
+  pinned CPU instead of forcing every Native ontoCPU1. Pre-fix Native
+  timeouts are **INCONCLUSIVE**, not accepted parity failures. The three
+  timeout names require fresh paired verification with the fixed wrapper:
+  bridge_over_infill_filament::orca_parity_bridge_over_infill_multi_filament_x2d,
+  change_filament_flush_blocks::orca_parity_change_filament_flush_blocks,
+  narrowed_x2d_whole_file::orca_parity_narrowed_x2d_whole_file.
+-3cad8b4c3 workspace:8042/8042 passed,9 skipped;
+  `/tmp/tiq2-bounded-workspace-3cad.log`.
+-dbcd52d5a full fresh seeded: both660/660 passed, no skipped cases;
+  `/tmp/tiq2-bounded-full-dbcd-{base,cand}-seeded.log`.
+-1a8c92f55 clippy workspace/all-targets/all-features with-Dwarnings passed;
+  `/tmp/tiq2-bounded-clippy-1a8.log`. Directed checks104/104 passed;
+  `/tmp/tiq2-bounded-directed-1a8.log`.
+
+Latest fresh full seeded ondc8d7f00c: base/candidate **668/668 PASS**,
+no skipped cases; `/tmp/tiq2-bounded-full-dc8-{base,cand}-seeded.log`.
+Coordinator permits reuse through3c1a79941 (only six Arachne narrow-neck
+cases change), with refreshed clippy/directed. After J1's Top input change
+on de57be8b0, affected fresh seeded Type2 groups **6/6 PASS** and directed
+checks **104/104 PASS** were rerun, not carried across that boundary.
+
+Post-fix official paired recheck on de57be8b0 completed without timeouts:
+change_filament_flush_blocks passes on both; bridge_over_infill_filament
+and narrowed_x2d_whole_file fail on both, with no candidate-only names.
+`/tmp/tiq2-bounded-official-recheck-{base,cand}.log` and
+`/tmp/tiq2-bounded-official-recheck-exact.json` replace the three old
+INCONCLUSIVE timeout observations. The eight remaining full-control
+failure names are identical in the earlier pair. Official outputs remain
+non-identical to Ares; this is bounded no-new-failure evidence, not an
+assertion of stock parity.
+
+Final gates on ancestor b1f65d40d (range behavior):
+clippy workspace/all-targets/all-features-Dwarnings, wasm32 core+wasm,
+fmt, and directed **104/104 PASS**. Logs:
+`/tmp/tiq2-bounded-clippy-final.log`, `/tmp/tiq2-bounded-wasm-final.log`,
+`/tmp/tiq2-bounded-directed-final.log`. Coordinator permits evidence reuse
+through ca1d32ea5 (role metadata; no G-code change) and7fc1c69e3 (by-object
+clearance; no by-layer G-code change). Rebase before review/push.
+
+No Native-generated output files are added by this slice: the committed
+3mf is input, probes are source instrumentation recipes, and outputs and
+logs stay in runtime cache/artifact directories. The captured source
+assertions do not submit an oracle stream.
+
+Earlier3b candidate results using a shared target incorrectly reused a base
+binary with baked CARGO_MANIFEST_DIR. That runner-path assertion failure is
+quarantined; all subsequent evidence uses independent targets. No failed or
+inconclusive run is used to claim complete TiQ2 parity.
+
