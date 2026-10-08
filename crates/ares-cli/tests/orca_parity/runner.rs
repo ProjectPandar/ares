@@ -159,6 +159,9 @@ mod seam_object_bias;
 #[path = "runner/seam_visibility_eigen_distance.rs"]
 mod seam_visibility_eigen_distance;
 #[cfg(test)]
+#[path = "runner/seam_visibility_search_radius.rs"]
+mod seam_visibility_search_radius;
+#[cfg(test)]
 #[path = "runner/small_loop_speed.rs"]
 mod small_loop_speed;
 #[cfg(test)]

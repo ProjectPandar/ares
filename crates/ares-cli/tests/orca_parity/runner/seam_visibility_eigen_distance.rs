@@ -9,7 +9,7 @@ const MACHINE: &str = "WEMAKE3D PhoenixProV1 0.4mm nozzle";
 const PROCESS: &str = "0.2mm Standard @WEMAKE3D PhoenixProV1 0.4mm nozzle";
 const FILAMENT: &str = "Generic PLA @System";
 
-fn check(name: &str, filename: &str, none: bool) {
+pub(super) fn check(name: &str, filename: &str, none: bool) {
     if !super::environment::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
