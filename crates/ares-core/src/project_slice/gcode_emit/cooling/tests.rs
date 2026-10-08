@@ -1,4 +1,5 @@
 mod equalizer_drain;
+mod retained_fan;
 mod role_end;
 
 #[test]
