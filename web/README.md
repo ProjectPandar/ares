@@ -152,8 +152,13 @@ the tablet `ipad` (Playwright WebKit, iPad gen 7, 810x1080). The
 spec imports `tests/parity/cube10.stl`, installs the LH system presets, slices,
 opens the preview, orbits and pinch-zooms the view, drags the layer slider and
 downloads the G-code by touch, checking that every visible control is at
-least 44x44 and that a tapped control keeps no hover style; the downloaded G-code must have the sha256 of
-the same flow with desktop layout and mouse input. Artifacts go to
+least 44x44, that a tapped control keeps no hover style, that fields use at
+least 16px text and that nothing animates under `prefers-reduced-motion`; the
+downloaded G-code must have the sha256 of the same flow with desktop layout and
+mouse input. That desktop flow also tabs through each step and requires a
+visible focus on every stop. Both flows run axe (WCAG 2.1 A/AA) at the prepare
+and preview steps in the dark and the light theme and fail on any serious or
+critical violation. Artifacts go to
 `target/web-e2e/mobile/<project>/` (step screenshots, axe reports,
 `gcode.sha256`, `result.json`).
 

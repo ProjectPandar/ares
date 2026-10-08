@@ -32,6 +32,18 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   `@media (hover: hover)`, so a tapped control keeps no stuck hover style.
 - **Tablet project.** `ipad` (WebKit, iPad gen 7, 810×1080) covers the
   641–1024px layout with the same flow and checks as the phones.
+- **WCAG AA contrast without moving the brand colour.** `#009688` stays the
+  accent for borders, sliders, swatches and the logo mark (non-text, 3:1).
+  Text on the accent uses `--accent-fill` (`#00796b`, 5.28:1 with white;
+  hover `#00695c`, pressed `#004d40`). Accent-coloured text uses `--accent-ink`
+  (dark `#2bb3a6`, light `#00796b`). `--text-faint` becomes `#9e9ea0` (dark)
+  and `#6e6e6e` (light). axe asserts zero serious or critical findings in
+  both themes at the desktop and touch viewports.
+- **16px fields on touch** (no iOS focus zoom) and **reduced motion**: under
+  `prefers-reduced-motion: reduce` every animation and transition is off; the
+  spinner stands still beside its status text.
+- **Keyboard.** The E2E Tab sweep starts on a control: a plain Tab with the
+  body focused switches Prepare/Preview (GLCanvas3D::on_key), as in Orca.
 - **Touch input is OrbitControls' own mapping** (one finger rotate, two
   fingers dolly/pan). No custom gesture math.
 - **Synthetic WebKit touches.** Playwright has no WebKit touch-move, so the
@@ -47,7 +59,5 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
 - Tablet preview overlays (slice 3b). At 810px the G-code window covers the
   3D centre and the summary, the legend sits under the moves slider, and the
   44px camera toolbar touches the summary card and the layer label.
-- axe serious findings (color-contrast) and the ≥16px input font (slice 4);
-  axe is report-only until then.
 - `min(devicePixelRatio, 2)` and worker confirmation (slice 5); Lighthouse
   (slice 6).
