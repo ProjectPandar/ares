@@ -74,6 +74,31 @@ Diagnosis plan (each step falsifiable):
    this exact case is the RED (already admitted by worker1's retained
    receipt) and the GREEN proof.
 
+## Root cause located: most_used_physical_extruder_id hardcodes logical 0
+
+The M9711 line is the machine template's layer-change/timelapse gcode with
+`{most_used_physical_extruder_id}` (H2D machine json,
+`M9711 M{timelapse_type} E{most_used_physical_extruder_id} …`). Upstream
+expands it as `physical_extruder_map.get_at(most_used_extruder)`
+(`GCode.cpp:4679` in `change_layer`, `:5162/:5222` in tool-change paths):
+`most_used_extruder` is the layer's most-used LOGICAL extruder, mapped
+through `physical_extruder_map` to the physical extruder.
+
+Ares (`gcode_placeholders.rs:70,97`) hardcodes logical extruder 0:
+`physical_extruder_id_for_logical(0)` — with the cross-map
+`filament_map = ["2","1"]`, native's layer-2 most-used logical extruder is
+1 (filament 2), mapping to physical 1 (`E1`); Ares reads logical 0 →
+physical 0 (`E0`). This is a real Ares port gap: per-layer most-used
+extruder tracking is missing in the layer-change/timelapse placeholder
+path.
+
+Fix (after SPEC-REVIEW): track the layer's most-used logical extruder
+(extrusion-per-extruder accounting in the layer-change path, mirroring
+upstream `most_used_extruder`) and pass it to
+`physical_extruder_id_for_logical` instead of the hardcoded 0, in BOTH the
+layer-change gcode and timelapse gcode placeholders
+(`gcode_placeholders.rs:70,97`).
+
 ## Diagnosis result (coordinator-ruled): seam-rooted, slice suspended
 
 The wipe/retract position divergence is a DOWNSTREAM symptom of the layer-3
