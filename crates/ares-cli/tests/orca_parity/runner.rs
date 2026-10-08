@@ -137,6 +137,8 @@ mod overhang_reverse;
 #[cfg(test)]
 #[path = "runner/path_tests.rs"]
 mod path_tests;
+#[path = "runner/print_sequence_by_object.rs"]
+mod print_sequence_by_object;
 #[cfg(test)]
 #[path = "runner/processor_migration.rs"]
 mod processor_migration;

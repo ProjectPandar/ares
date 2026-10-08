@@ -1,8 +1,13 @@
-# print_sequence=by_object: port slice plan (S1–S4)
+# print_sequence=by_object: port slice plan (S1–S3)
 
 Date: 2026-10-08. Worker5. Plan for review — **no production code in
 this submission**. Companion to the inventory
 ([print-sequence-by-object-inventory.md](print-sequence-by-object-inventory.md)).
+
+Scope note: the sequential clearance validations (inventory items 16-18,
+`Print::sequential_print_clearance_valid` Print.cpp:613-840, the vertical
+check Print.cpp:841ff, the validate integration Print.cpp:1298) are
+**assigned to worker4** and are not part of this plan.
 
 Ordering principle: upstream dependency order. Every slice is a port of
 named upstream functions/lines; sequential printing must reproduce the
@@ -100,34 +105,15 @@ argmax differs from the global argmax (object A mostly filament 1,
 object B mostly filament 2); the M9711/M73 placeholder must follow each
 object's own count. Fails today (one global count).
 
-## S4 — Print::validate sequential clearance checks
+## Not in this plan
 
-Upstream:
-
-- `Print::sequential_print_clearance_valid` (horizontal clearance,
-  extruder_clearance_radius) — Print.cpp:613-840.
-- The vertical clearance check — Print.cpp:841ff.
-- `Print::validate` integration and the rejection report (the object
-  pair / height) — Print.cpp:1298.
-
-Ares target modules: `print/validate/sequential_clearance.rs` (new
-sibling of bed_filament/extrusion_width/identity), wired into the
-validated entry orchestration.
-
-Include: both clearance checks and the validate integration with the
-native-matching rejection family. Defer: nothing inside the two checks;
-any sub-check unreachable by stock presets is recorded, not invented.
-
-RED: two overlapping/too-close objects with `print_sequence="by
-object"` → native rejects (`Print::validate` family); Ares must reject
-through the typed boundary with the same family, and must not reject a
-passing arrangement. Fails today (no detector).
+S4 (the `Print::validate` sequential clearance checks, inventory items
+16-18) — **owner: worker4**; this plan neither scopes nor schedules it.
 
 ## Sequencing and gates
 
-S1 → S2 → S3 → S4. S2/S3 assume the S1 loop; S4 is independent of the
-loop but lands last so its RED uses the already-porting mode. Every
-slice: source-cited spec note in this file, RED first (failing on the
-native comparison), fresh seeded base/cand before merge, clippy
-`-D warnings`, fmt, and the review gates. All fixture machinery already
-exists (`export_case_multi`).
+S1 → S2 → S3 (S4 runs under worker4 independently). S2/S3 assume the S1
+loop. Every slice: source-cited spec note in this file, RED first
+(failing on the native comparison), fresh seeded base/cand before merge,
+clippy `-D warnings`, fmt, and the review gates. All fixture machinery
+already exists (`export_case_multi`).
