@@ -10,6 +10,7 @@
 
 use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest};
 use serde_json::{Value, json};
+use std::io::{Cursor, Read as _, Write as _};
 
 use super::{
     OrcaRunner,
@@ -47,8 +48,33 @@ fn first_difference(expected: &str, actual: &str) -> String {
     )
 }
 
-#[tokio::test]
-async fn orca_parity_embedded_script_whole_file_matches_native() {
+/// Zeroes `printable_height` in the embedded project settings: upstream
+/// substitutes the current height when the recorded old bed height is 0
+/// (`OrcaSlicer.cpp:3733-3734`) and still classifies the shrink.
+fn strip_old_bed_height(project: &[u8]) -> Vec<u8> {
+    let mut input = zip::ZipArchive::new(Cursor::new(project)).unwrap();
+    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..input.len() {
+        let mut file = input.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
+            settings["printable_height"] = Value::String("0".to_owned());
+            bytes = serde_json::to_vec(&settings).unwrap();
+        }
+        output
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
+            )
+            .unwrap();
+        output.write_all(&bytes).unwrap();
+    }
+    output.finish().unwrap().into_inner()
+}
+
+async fn embedded_script_case(stripped: bool) -> Option<(String, String)> {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();
@@ -93,8 +119,14 @@ async fn orca_parity_embedded_script_whole_file_matches_native() {
             &Value::Object(fields),
         );
     }
-    let input = include_bytes!("../../../../../tests/parity/validation/preset-json-ender3-0.2.3mf");
-    std::fs::write(directory.join("input.3mf"), input).unwrap();
+    let raw_input =
+        include_bytes!("../../../../../tests/parity/validation/preset-json-ender3-0.2.3mf");
+    let input = if stripped {
+        strip_old_bed_height(raw_input)
+    } else {
+        raw_input.to_vec()
+    };
+    std::fs::write(directory.join("input.3mf"), &input).unwrap();
     let catalog_json = catalog.to_string();
     let selection_json = selection.to_string();
     let overrides = ConfigOverrides::default();
@@ -107,7 +139,7 @@ async fn orca_parity_embedded_script_whole_file_matches_native() {
         placement: Placement::None,
     };
     let ares = ares_core::slice_with_profiles(
-        input,
+        &input,
         request,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         ares_core::SlicerContext::new(0),
@@ -115,7 +147,7 @@ async fn orca_parity_embedded_script_whole_file_matches_native() {
     .await
     .unwrap();
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return;
+        return None;
     };
     let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
     let output = directory.join("native");
@@ -139,11 +171,33 @@ async fn orca_parity_embedded_script_whole_file_matches_native() {
     .unwrap();
     let native = std::fs::read_to_string(output.join("plate_1.gcode")).unwrap();
     let ares = String::from_utf8_lossy(&ares).into_owned();
+    Some((native, ares))
+}
+
+#[tokio::test]
+async fn orca_parity_embedded_script_whole_file_matches_native() {
+    let Some((native, ares)) = embedded_script_case(false).await else {
+        return;
+    };
     let (native_normalized, ares_normalized) = (normalized(&native), normalized(&ares));
     assert_eq!(
         native_normalized,
         ares_normalized,
         "embedded-script case must match native byte-for-byte (only the banner normalized): {}",
+        first_difference(&native_normalized, &ares_normalized)
+    );
+}
+
+#[tokio::test]
+async fn orca_parity_embedded_script_without_old_bed_height_matches_native() {
+    let Some((native, ares)) = embedded_script_case(true).await else {
+        return;
+    };
+    let (native_normalized, ares_normalized) = (normalized(&native), normalized(&ares));
+    assert_eq!(
+        native_normalized,
+        ares_normalized,
+        "embedded-script case without an old bed height must still re-center and match native byte-for-byte: {}",
         first_difference(&native_normalized, &ares_normalized)
     );
 }
