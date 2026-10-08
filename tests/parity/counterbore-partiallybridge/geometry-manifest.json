@@ -1,0 +1,99 @@
+{
+  "provenance": "frozen before RED Native runs; unmodified stock profiles except separate None control",
+  "geometry": [
+    {
+      "name": "stepped-hole",
+      "sha256": "1274c56d97fd205740505d88f077971c7ffe79f1552df78a4e7432de557e465e",
+      "lower_hole_mm": 8,
+      "upper_hole_mm": 4,
+      "height_mm": 0.52,
+      "centers": [
+        [
+          150,
+          150
+        ]
+      ],
+      "vertices": 24,
+      "triangles": 48,
+      "edge_use_counts": [
+        2
+      ]
+    },
+    {
+      "name": "first-layer-hole",
+      "sha256": "0a18241c2d988fb4f3500a41c6e1b2abe30aafbd8dacdb75012778cea1b55948",
+      "lower_hole_mm": 8,
+      "upper_hole_mm": 8,
+      "height_mm": 0.32,
+      "centers": [
+        [
+          150,
+          150
+        ]
+      ],
+      "vertices": 16,
+      "triangles": 32,
+      "edge_use_counts": [
+        2
+      ]
+    },
+    {
+      "name": "straight-hole",
+      "sha256": "b510f393cdc9f17056c1d68c16b0d60b671e77cf47282977d24dc835f7296331",
+      "lower_hole_mm": 8,
+      "upper_hole_mm": 8,
+      "height_mm": 0.52,
+      "centers": [
+        [
+          150,
+          150
+        ]
+      ],
+      "vertices": 16,
+      "triangles": 32,
+      "edge_use_counts": [
+        2
+      ]
+    },
+    {
+      "name": "solid-plate",
+      "sha256": "252418ebf4f2e4c9c0685ec615a5d98c6f9fdb6312cdba6a12457cf49e5b10de",
+      "lower_hole_mm": 0,
+      "upper_hole_mm": 0,
+      "height_mm": 0.52,
+      "centers": [
+        [
+          150,
+          150
+        ]
+      ],
+      "vertices": 8,
+      "triangles": 12,
+      "edge_use_counts": [
+        2
+      ]
+    },
+    {
+      "name": "two-islands",
+      "sha256": "81224d6c167a2e76e6b860689a2b17e7fc3dbde796e9543ce3c24cdf055b540e",
+      "lower_hole_mm": 8,
+      "upper_hole_mm": 4,
+      "height_mm": 0.52,
+      "centers": [
+        [
+          128,
+          150
+        ],
+        [
+          172,
+          150
+        ]
+      ],
+      "vertices": 48,
+      "triangles": 96,
+      "edge_use_counts": [
+        2
+      ]
+    }
+  ]
+}

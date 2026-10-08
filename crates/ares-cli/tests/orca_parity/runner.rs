@@ -32,6 +32,9 @@ mod compatible_regions;
 #[path = "runner/costrings.rs"]
 mod costrings;
 #[cfg(test)]
+#[path = "runner/direct_stl_override_bookkeeping.rs"]
+mod direct_stl_override_bookkeeping;
+#[cfg(test)]
 #[path = "runner/embedded_script_whole_file.rs"]
 mod embedded_script_whole_file;
 #[cfg(test)]
