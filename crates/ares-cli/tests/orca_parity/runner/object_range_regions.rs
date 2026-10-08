@@ -30,7 +30,11 @@ async fn object_range_wall_loops_changes_only_the_selected_constant_height_inter
     .keep();
     let project_path = directory.join("input.3mf");
     fs::write(&project_path, INPUT).unwrap();
+    if crate::native_environment::binary("ARES_ORCA_BIN").is_none() {
+        return;
+    }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        crate::native_environment::skipped("Native runner unavailable for region range comparison");
         return;
     };
     let output_dir = directory.join("native");
