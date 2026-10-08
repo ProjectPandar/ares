@@ -135,6 +135,9 @@ mod seam_layer_height;
 #[path = "runner/seam_object_bias.rs"]
 mod seam_object_bias;
 #[cfg(test)]
+#[path = "runner/seam_visibility_eigen_distance.rs"]
+mod seam_visibility_eigen_distance;
+#[cfg(test)]
 #[path = "runner/small_loop_speed.rs"]
 mod small_loop_speed;
 #[cfg(test)]
