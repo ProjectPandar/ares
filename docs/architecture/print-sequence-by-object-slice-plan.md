@@ -334,3 +334,18 @@ Planned change (pending approval):
 - M73: header placeholder + tail take Σ(instances × layers); the
   `.max(sliced_layer_count)` guard in `gcode_emit.rs` must be revisited
   so multi-object by-layer fixtures keep the merged-z count.
+
+### Phases driver is the split point (located, implementation pending)
+
+`layers.rs:171-200`: the by-object branch builds one `DrivePhase` per
+print OBJECT (`for object in 0..objects.len()`, filtering `merged` by
+`entry.object_index`), so a one-object-two-instance project yields one
+phase and the copies collapse. The inter-phase transition machinery
+already exists (`layers.rs:233+`, the `GCode.cpp:3309-3342` port), so
+the fix is: iterate `(object, copy)` pairs instead of objects — reusing
+the SAME ToolOrdering for the copies of one object (no rebuild,
+`GCode.cpp:3286`). Open risk to resolve first: per-copy geometry
+placement — `instance_origin` reads `instances.first()` only and
+`last_object_copy` tracking must drive both the origin travel and the
+extrusion coordinate offset per copy; the 62-entry `merged` slice is
+shared by both copies and stays untouched.
