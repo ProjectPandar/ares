@@ -101,24 +101,41 @@ impl Project {
         // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
         // typed builder and the `is_value_valid` loop see it.
         merged.handle_legacy();
-        // `shrink_to_new_bed` (`OrcaSlicer.cpp:3766-3796`): a BBL-family 3mf
-        // re-centers onto the loaded machine's bed — the embedded bed being
-        // smaller sets `shrink = 1`, and every instance plus the wipe tower
-        // shifts by the bed-center delta (`:3958-4053 translate_models`).
-        if project.documents.bbl_family_3mf
-            && let Some(offset) = shrink_to_new_bed_offset(&embedded_raw, &merged)
-        {
-            project.translate_all_instances(offset);
-            shift_wipe_tower(&mut merged, offset);
-        }
-
-        project.settings = crate::options::json_deserialize::deserialize_preset_config::<
+        // The typed build mirrors upstream's fully parsed `m_print_config`:
+        // the bed classification reads it exactly like `opt_float(
+        // "printable_height")`/`opt<ConfigOptionPoints>(
+        // "printable_area")` over the fully parsed config
+        // (`OrcaSlicer.cpp:3711,3708`), `PrintConfigDef` defaults included.
+        let mut resolved = crate::options::json_deserialize::deserialize_preset_config::<
             ProjectSettingsBuilder,
         >(merged.clone().into_object())
         .map_err(|error| {
             SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
         })?
         .resolve();
+        // `shrink_to_new_bed` (`OrcaSlicer.cpp:3766-3796`): a BBL-family 3mf
+        // re-centers onto the loaded machine's bed — the embedded bed being
+        // smaller sets `shrink = 1`, and every instance plus the wipe tower
+        // shifts by the bed-center delta (`:3958-4053 translate_models`).
+        let offset = project
+            .documents
+            .bbl_family_3mf
+            .then(|| shrink_to_new_bed_offset(&embedded_raw, &resolved))
+            .flatten();
+        if let Some(offset) = offset {
+            project.translate_all_instances(offset);
+            shift_wipe_tower(&mut merged, offset);
+            // The shifted wipe tower reaches the typed view too.
+            resolved = crate::options::json_deserialize::deserialize_preset_config::<
+                ProjectSettingsBuilder,
+            >(merged.clone().into_object())
+            .map_err(|error| {
+                SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
+            })?
+            .resolve();
+        }
+
+        project.settings = resolved;
         project.documents.project_settings_raw = merged;
         project.initialize_cli_loaded_project_config();
         Ok((project, preparation))
@@ -258,36 +275,36 @@ impl Project {
 /// `OrcaSlicer.cpp:3766-3796` classification with the `:4008-4021` plate-0
 /// center offset: `Some([dx, dy])` for `shrink = 1`, `None` otherwise
 /// (shrink 2/0 are deferred). Widths/heights truncate to int like upstream
-/// (`:1780`, `:1338`). The current bed comes from the fully parsed
-/// config — `OrcaSlicer.cpp:3708,3711` over the overlaid config, where
-/// missing keys carry the `PrintConfigDef` defaults and a default or wire
-/// value that fails to parse is a programming error. An unrecorded old bed
-/// dimension takes the current one (`:3729-3734`) and the classification
-/// proceeds.
+/// (`:1780`, `:1338`). The current bed comes from the fully parsed typed
+/// config — `OrcaSlicer.cpp:3708,3711` `opt<ConfigOptionPoints>(
+/// "printable_area")`/`opt_float("printable_height")` over a config that
+/// carries the `PrintConfigDef` defaults. An unrecorded old bed dimension
+/// takes the current one (`:3729-3734`) and the classification proceeds.
 fn shrink_to_new_bed_offset(
     old: &ProjectSettingsRaw,
-    new: &ProjectSettingsRaw,
+    settings: &crate::ProjectSettings,
 ) -> Option<[f64; 2]> {
-    let (new_width, new_depth, new_height) = current_bed(new);
+    let area = &settings.printer.remaining.printable_area.0;
+    let new_width = (area[2].x - area[0].x) as i32;
+    let new_depth = (area[2].y - area[0].y) as i32;
+    let new_height = settings.printer.remaining.printable_height.0 as i32;
     let old_area = old
         .get("printable_area")
         .cloned()
         .unwrap_or(RawConfigValue::List(Vec::new()));
     let (mut old_width, mut old_depth) = printable_bed_size(&old_area);
-    let mut old_height = printable_height(old.get("printable_height")?).unwrap_or(0.0);
+    let mut old_height = printable_height(old).unwrap_or(0.0);
     if old_width == 0.0 {
-        old_width = new_width;
+        old_width = new_width as f64;
     }
     if old_depth == 0.0 {
-        old_depth = new_depth;
+        old_depth = new_depth as f64;
     }
     if old_height == 0.0 {
-        old_height = new_height;
+        old_height = new_height as f64;
     }
     let (old_width, old_depth, old_height) =
         (old_width as i32, old_depth as i32, old_height as i32);
-    let (new_width, new_depth, new_height) =
-        (new_width as i32, new_depth as i32, new_height as i32);
     let shrink = if old_width > new_width || old_depth > new_depth || old_height > new_height {
         2
     } else if old_width < new_width || old_depth < new_depth {
@@ -304,38 +321,9 @@ fn shrink_to_new_bed_offset(
     ])
 }
 
-/// `OrcaSlicer.cpp:3708,3711,3726-3728`: the current bed from the fully
-/// parsed config — missing keys carry the `PrintConfigDef` defaults
-/// (`printable_area` 200×200, `printable_height` 100), and a default or
-/// wire value that fails to parse is a programming error.
-fn current_bed(new: &ProjectSettingsRaw) -> (f64, f64, f64) {
-    let area = new
-        .get("printable_area")
-        .cloned()
-        .unwrap_or_else(|| default_value("printable_area"));
-    let (width, depth) = printable_bed_size(&area);
-    let height = printable_height(
-        &new.get("printable_height")
-            .cloned()
-            .unwrap_or_else(|| default_value("printable_height")),
-    )
-    .expect("printable_height parses as a number");
-    (width, depth, height)
-}
-
-/// The registry default as a raw text token.
-fn default_value(key: &str) -> RawConfigValue {
-    RawConfigValue::Text(
-        crate::option_definition(key)
-            .expect("option definition exists")
-            .default_value
-            .to_owned(),
-    )
-}
-
-/// `OrcaSlicer.cpp:1779-1780` (embedded) and `:3726` (overlaid): the
-/// diagonal-corner difference of `printable_area`; fewer than four points
-/// leave the bed size at zero (`:1778` guard) for the caller to substitute.
+/// `OrcaSlicer.cpp:1779-1780`: the diagonal-corner difference of the
+/// embedded `printable_area`; fewer than four parsable points leave the old
+/// bed size at zero (`:1778` guard) for the caller to substitute.
 fn printable_bed_size(area: &RawConfigValue) -> (f64, f64) {
     let points = point_pairs(area);
     if points.len() < 4 {
@@ -346,17 +334,17 @@ fn printable_bed_size(area: &RawConfigValue) -> (f64, f64) {
     (diagonal.0 - first.0, diagonal.1 - first.1)
 }
 
-fn printable_height(value: &RawConfigValue) -> Option<f64> {
-    match value {
-        RawConfigValue::Text(token) => token.trim().parse().ok(),
-        RawConfigValue::Number(number) => number.as_f64(),
+fn printable_height(raw: &ProjectSettingsRaw) -> Option<f64> {
+    match raw.get("printable_height") {
+        Some(RawConfigValue::Text(token)) => token.trim().parse().ok(),
+        Some(RawConfigValue::Number(number)) => number.as_f64(),
         _ => None,
     }
 }
 
 /// `ConfigOptionPoints` wire entries (`"0x0"`, `"220x220"`) as coordinate
-/// pairs; a malformed entry is a programming error (the wire form is
-/// machine-written).
+/// pairs; unparsable entries are skipped (the typed layer owns parse
+/// diagnostics for config values).
 fn point_pairs(value: &RawConfigValue) -> Vec<(f64, f64)> {
     let tokens: Vec<String> = match value {
         RawConfigValue::List(items) => items
@@ -372,14 +360,9 @@ fn point_pairs(value: &RawConfigValue) -> Vec<(f64, f64)> {
     };
     tokens
         .iter()
-        .map(|token| {
-            let (x, y) = token
-                .trim()
-                .split_once('x')
-                .expect("printable_area coordinates parse as x-y pairs");
-            let x = x.trim().parse().expect("printable_area x parses");
-            let y = y.trim().parse().expect("printable_area y parses");
-            (x, y)
+        .filter_map(|token| {
+            let (x, y) = token.trim().split_once('x')?;
+            Some((x.trim().parse().ok()?, y.trim().parse().ok()?))
         })
         .collect()
 }
