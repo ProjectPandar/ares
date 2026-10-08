@@ -31,21 +31,55 @@ use ares_core::{
 };
 use std::path::PathBuf;
 
-#[path = "../../../tests/support/native_environment.rs"]
-mod native_environment;
+use crate::native_environment;
 
-#[path = "support/native_policy_checks.rs"]
+#[path = "../../../../ares-core/tests/support/native_policy_checks.rs"]
 mod native_policy_checks;
 
 #[test]
 fn required_native_dynamics_cannot_fall_back_to_frozen_encodings() {
     native_policy_checks::require_missing_dependencies_fail(
-        "marlin2_classic_jerk",
+        "runner::adjacent_motion::marlin2_classic_jerk",
         &["ARES_PROCGCODE_DYNAMICS_BIN"],
     );
 }
 
-const PROJECT: &[u8] = include_bytes!("../../../tests/parity/orca_cli_ender3.3mf");
+#[test]
+fn optional_native_dynamics_does_not_read_frozen_encodings() {
+    let directory = tempfile::Builder::new()
+        .prefix("motion-policy-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    let run = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "runner::adjacent_motion::marlin2_classic_jerk",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "0")
+        .env_remove("ARES_PROCGCODE_DYNAMICS_BIN")
+        .output()
+        .unwrap();
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&run.stdout),
+        String::from_utf8_lossy(&run.stderr)
+    );
+    std::fs::write(directory.join("optional.log"), &diagnostic).unwrap();
+    assert!(
+        diagnostic.contains("running 1 test") && diagnostic.contains("ARES_PROCGCODE_DYNAMICS_BIN"),
+        "{diagnostic}"
+    );
+    assert!(
+        run.status.success()
+            && diagnostic.contains("SKIPPED:")
+            && diagnostic.contains("not executed"),
+        "optional Native must skip visibly without reading frozen RLE: {diagnostic}; artifacts {directory:?}"
+    );
+}
+
+const PROJECT: &[u8] = include_bytes!("../../../../../tests/parity/orca_cli_ender3.3mf");
 
 fn workspace(relative: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
