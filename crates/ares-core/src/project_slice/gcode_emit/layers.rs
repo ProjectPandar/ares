@@ -25,6 +25,7 @@ mod timelapse;
 mod tool_buckets;
 mod tool_entry;
 mod tower;
+mod transition;
 mod wrapping;
 
 use entry_builder::EntryBuilder;
@@ -143,11 +144,27 @@ pub(super) fn append(
     // (`GCode.cpp:3293-3296`). The chunks keep their z order; the
     // preamble still fires once on the first emitted chunk.
     struct DrivePhase<'a> {
+        object: usize,
         merged: &'a [(f64, schedule::LayerToPrint)],
         tool_ordering: &'a super::tool_ordering::ToolOrdering,
     }
+    /// The incoming instance's origin in plate millimeters — the upstream
+    /// travels to `(0, 0)` after `set_origin(shift)`
+    /// (`GCode.cpp:3303/:3327`).
+    fn instance_origin(instances: &[Instance], factor: f64) -> [f64; 2] {
+        instances
+            .first()
+            .map(|instance| {
+                [
+                    instance.shift.x() as f64 * factor,
+                    instance.shift.y() as f64 * factor,
+                ]
+            })
+            .unwrap_or([0.0; 2])
+    }
     let mut scoped_chunks: Vec<Vec<(f64, schedule::LayerToPrint)>> = Vec::new();
     let mut scoped_orderings: Vec<super::tool_ordering::ToolOrdering> = Vec::new();
+    let mut phase_objects: Vec<usize> = Vec::new();
     let phases: Vec<DrivePhase<'_>> = if by_object {
         let mut final_extruder_id = None;
         for object in 0..objects.len() {
@@ -166,6 +183,7 @@ pub(super) fn append(
             }
             final_extruder_id = ordering.last_extruder();
             scoped_orderings.push(ordering);
+            phase_objects.push(object);
             scoped_chunks.push(
                 merged
                     .iter()
@@ -177,13 +195,16 @@ pub(super) fn append(
         scoped_chunks
             .iter()
             .zip(&scoped_orderings)
-            .map(|(merged, tool_ordering)| DrivePhase {
+            .zip(&phase_objects)
+            .map(|((merged, tool_ordering), object)| DrivePhase {
+                object: *object,
                 merged,
                 tool_ordering,
             })
             .collect()
     } else {
         vec![DrivePhase {
+            object: usize::MAX,
             merged: &merged,
             tool_ordering: &tool_ordering,
         }]
@@ -206,6 +227,27 @@ pub(super) fn append(
         if group_start >= merged.len() {
             phase_index += 1;
             group_start = 0;
+            if let Some(phase) = phases.get(phase_index) {
+                // `GCode.cpp:3309-3342`: the instance transition between
+                // the sequential objects; `:3369-3372` resets the
+                // second-layer flag for the incoming instance, and the
+                // layer height restarts from the object's own first
+                // layer (the per-object `process_layers` z tracking).
+                let origin = instance_origin(&instances[phase.object], traversal.scale.factor());
+                let _primed = transition::emit(
+                    output,
+                    state,
+                    transition::Transition {
+                        traversal,
+                        finished_objects: phase_index,
+                        initial_extruder: phase.tool_ordering.first_extruder.unwrap_or(0),
+                        lift_z: max_layer_z + state.options.z_hop,
+                        origin,
+                    },
+                );
+                previous_layer_z = 0.0;
+                second_layer_done = false;
+            }
             continue;
         }
         let group_z = merged[group_start].0;

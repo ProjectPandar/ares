@@ -13,6 +13,18 @@ pub(in crate::project_slice::gcode_emit) fn retract(output: &mut Vec<u8>, state:
     state.extruder.retracted = true;
 }
 
+/// The travel feedrate for the transition block's manual moves (the
+/// same z/travel feedrate the writer uses, `travel/lift.rs:136`).
+pub(in crate::project_slice::gcode_emit) fn travel_feedrate(state: &EmitState) -> f64 {
+    travel::lift_z_feedrate(state)
+}
+
+/// The feedrate formatting used by the writer's axis moves
+/// (`format::axis`, `motion.rs:1`).
+pub(in crate::project_slice::gcode_emit) fn format_feedrate(value: f64) -> String {
+    super::format::axis(value)
+}
+
 pub(in crate::project_slice::gcode_emit) fn travel_to(
     output: &mut Vec<u8>,
     state: &mut EmitState,

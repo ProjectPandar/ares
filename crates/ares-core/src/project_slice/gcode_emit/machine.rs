@@ -11,6 +11,18 @@ pub(super) mod first_filaments;
 mod start_config;
 mod temperature;
 
+/// The first-layer nozzle temperature of one filament
+/// (`_print_first_layer_extruder_temperatures`, `GCode.cpp:3338`).
+pub(in crate::project_slice::gcode_emit) fn initial_layer_nozzle_temperature(
+    settings: &crate::ProjectSettings,
+    tool: usize,
+) -> i32 {
+    temperature::filament_int(
+        &settings.filament.print.nozzle_temperature_initial_layer,
+        tool,
+    )
+}
+
 /// The first-line M73 placeholder consumed by the G-code processor
 /// (`GCode.cpp:2700-2701`).
 pub(super) fn append_first_line_m73(output: &mut Vec<u8>) {
