@@ -12,14 +12,14 @@
 //! multi-filament tool changes with the wipe tower.
 
 use crate::runner::{OrcaRunner, application, repo_root};
-use crate::{parity, smoke_overrides};
+use crate::{self as parity, CaseInputs, smoke_overrides};
 use serde_json::{Value, json};
 use std::io::{Cursor, Read as _, Write as _};
 
 fn dual_extruder_case(
     runner: &OrcaRunner,
     label: &str,
-    filaments: Vec<Value>,
+    filaments: Vec<serde_json::Map<String, Value>>,
 ) -> crate::runner::ExportedCase {
     let profiles = crate::presets::VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
@@ -29,7 +29,10 @@ fn dual_extruder_case(
     let selection = parity::select_printer(&profiles, "BBL", "Bambu Lab H2D 0.4 nozzle").unwrap();
     let mut machine = profiles.machine(&selection.printer).unwrap();
     machine.insert("filament_map_mode".into(), Value::String("Manual".into()));
-    machine.insert("curr_bed_type".into(), Value::String("High Temp Plate".into()));
+    machine.insert(
+        "curr_bed_type".into(),
+        Value::String("High Temp Plate".into()),
+    );
     let mut process = profiles.process(&selection.process).unwrap();
     parity::normalize_process_defaults(&machine, &mut process);
     process.insert("enable_prime_tower".into(), Value::String("0".into()));
@@ -55,7 +58,7 @@ fn h2d_filament(
     profiles: &crate::presets::VendorProfiles,
     colour: &str,
     map: &str,
-) -> Value {
+) -> serde_json::Map<String, Value> {
     let selection = parity::select_printer(profiles, "BBL", "Bambu Lab H2D 0.4 nozzle").unwrap();
     let mut filament = profiles.filament(&selection.filaments[0]).unwrap();
     filament.insert("filament_colour".into(), json!([colour]));
@@ -85,8 +88,8 @@ fn orca_parity_filament_map_cross_map_matches_native() {
         let exported = dual_extruder_case(&runner, label, filaments);
         let settings = application::settings(&exported.project).unwrap();
         assert_eq!(
-            settings["filament_map"].as_array().unwrap(),
-            &json!(maps),
+            settings["filament_map"],
+            json!(maps),
             "the cross map must reach the exported config"
         );
         let sliced = runner.slice_case(&exported).unwrap();
@@ -101,7 +104,8 @@ fn orca_parity_filament_map_cross_map_matches_native() {
             h2d_filament(&profiles, "#0000FF", "1"),
         ],
     );
-    let outcome = parity::compare_case(&out_of_range);
+    let sliced = runner.slice_case(&out_of_range).unwrap();
+    let outcome = parity::compare_case(&sliced);
     assert_eq!(
         outcome.status, "REJECTED",
         "out-of-range extruder index must be rejected: {}",
