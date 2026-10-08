@@ -11,7 +11,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::config_export::serialize_config_value;
+use super::config_export::value::serialize_config_value;
 use super::config_types::{
     FloatOrPercent, Nullable, OrcaBool, OrcaFloat, OrcaInt, OrcaStrings, Percent, Point2d,
     Point2dGroups, Point2dList, semantic::NullableVectorRef,
