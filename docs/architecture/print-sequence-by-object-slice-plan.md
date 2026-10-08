@@ -313,3 +313,24 @@ Planned change (pending approval):
 3. Acceptance: single_object_two_instances fixture GREEN
    byte-for-byte; ender3/kobra3 by-object stay GREEN; by-layer guards
    (wire_modes/cross_map/semm_ramming) unchanged.
+
+### Implementation anchors for the per-instance split (located)
+
+- `schedule.rs:223-229`: the group loop merges every entry within
+  `minimum + EPSILON` — same-z entries of both instances collapse into
+  one chunk.
+- `schedule.rs:183`: global `sort_by(z)` interleaves the two instances'
+  layer stacks; upstream prints instance-major (full z stack per
+  instance, z restarts at the first layer after each transition).
+- `schedule.rs:58 build` iterates `objects` per print object: for a
+  one-object-two-instance project `merged` holds only 62 entries — the
+  second instance's layers never enter the schedule (root cause of
+  ares 62 vs native 124).
+- Change shape: under by-object, expand `objects` to instances in
+  `build` (instance order = print order; labels stay indexed by object;
+  per-instance transition boundary at the chunk level mirrors
+  `GCode.cpp:3304`), skip the global z-sort in favor of per-instance
+  contiguous runs, and let the EPSILON group loop run within each run.
+- M73: header placeholder + tail take Σ(instances × layers); the
+  `.max(sliced_layer_count)` guard in `gcode_emit.rs` must be revisited
+  so multi-object by-layer fixtures keep the merged-z count.
