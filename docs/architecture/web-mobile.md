@@ -66,4 +66,7 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
 - Tablet preview overlays (slice 3b). At 810px the G-code window covers the
   3D centre and the summary, the legend sits under the moves slider, and the
   44px camera toolbar touches the summary card and the layer label.
-- Lighthouse (slice 6).
+- Lighthouse targets. `web/e2e/lighthouse.mjs` gates the median
+  Accessibility >= 95, Best Practices >= 95 and SEO >= 90 of three runs per
+  preset; SEO (no meta description, no `robots.txt`) and the desktop
+  `target-size` audit are the next slices, Performance is tracked per slice.

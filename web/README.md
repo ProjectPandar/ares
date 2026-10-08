@@ -185,3 +185,15 @@ ARES_E2E_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source \
 The library list matches the WebKit revision of the pinned `@playwright/test`
 (1.63.0, `webkit-2359`); a Playwright upgrade rechecks it with `ldd` on
 `minibrowser-wpe/bin/*` and `lib/*.so*`.
+
+### Lighthouse
+
+`npm run lighthouse` audits the production build (run `npm run build` first)
+served by `vite preview` on `127.0.0.1:4174`: Lighthouse's mobile (default)
+and desktop presets, three runs each, in a headless Chrome (`ARES_E2E_CHROME`
+selects the binary). Every score and metric is the median of the three runs.
+It writes each run's JSON and HTML report and `summary.json`/`summary.md`
+(the four category scores, LCP, TBT, CLS, FCP and total transfer size) to
+`target/web-lighthouse/` or the directory given as its argument, and exits
+non-zero when a median score misses its target: Accessibility 95, Best
+Practices 95, SEO 90. Performance is recorded, not gated.
