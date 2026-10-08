@@ -30,14 +30,17 @@ fn replay(name: &str) {
     let input_path = runner.work.join(format!("{name}.gcode"));
     std::fs::write(&input_path, &input).unwrap();
     let sha = super::cache_identity::raw_digest(input.as_bytes());
-    let oracle = runner.processor_reference(&input_path).unwrap();
+    let Some(oracle) = runner.processor_reference(&input_path).unwrap() else {
+        return;
+    };
     let native: serde_json::Value =
         serde_json::from_slice(&std::fs::read(oracle.join("role-map.json")).unwrap()).unwrap();
     let bbl = name == "bbl-canonical";
     assert_eq!(native["input_sha256"], sha);
     assert_eq!(native["bbl_printer"], bbl);
     let project = ares_core::load_project(PROJECT).unwrap();
-    let processed = ares_core::gcode_processor::process_gcode(&input, project.settings(), bbl);
+    let processed =
+        ares_core::gcode_processor::process_gcode(&input, project.settings(), bbl, false);
     let moves = processed.result.moves;
     let statistics = serde_json::to_value(processed.result.print_statistics).unwrap();
     let artifacts = runner.work.join("compatible-wipe-tags").join(name);

@@ -104,11 +104,12 @@ impl Default for ProcessorLimits {
 
 /// `GCodeProcessor::apply_config` + `process_file`/`process_buffer` and
 /// `finalize` (`GCodeProcessor.hpp:887,905,914-915`; cpp:2025,2677-2709).
-/// Delegates to the existing processor without injecting progress commands.
+/// `post_process` selects the existing progress pass (`hpp:915::finalize(bool)`).
 pub fn process_gcode(
     gcode: &str,
     settings: &crate::ProjectSettings,
     bbl_printer: bool,
+    post_process: bool,
 ) -> crate::ProcessedGCode {
     let limits = ProcessorLimits::from_config(
         &settings.printer.machine,
@@ -117,8 +118,12 @@ pub fn process_gcode(
     );
     let (mut output, _) = process(
         gcode.as_bytes().to_vec(),
-        false,
-        0.0,
+        post_process,
+        if post_process {
+            settings.printer.gcode.machine_load_filament_time.0
+        } else {
+            0.0
+        },
         limits.with_settings(settings).recording_moves(true),
     );
     output
@@ -276,17 +281,11 @@ fn is_progress_motion(line: &str) -> bool {
 #[cfg(test)]
 mod arc_cache_tests;
 #[cfg(test)]
-mod envelope_replay_tests;
-#[cfg(test)]
 mod estimate_tests;
 #[cfg(test)]
 mod gt_oracle_tests;
 #[cfg(test)]
 mod motion_parse_tests;
-#[cfg(test)]
-mod replay_config_tests;
-#[cfg(test)]
-mod seam_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

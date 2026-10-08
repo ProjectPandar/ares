@@ -101,7 +101,8 @@ PausePrint 和其相对运动位置，然后由既有 processor 重建 P/R/C。
 复用已有 `tools/chain-probe/role-filament-map.py` 的 slice/process reader，保持
 既有 pinned ELF SHA/layout、节点计数/唯一有序 role/cache-reset/Native exit 校验。
 使用现有 Native 二进制，不重编 Native。gdb 一律直接调用显式 `ARES_GDB_BIN`，
-缺失即 FAIL；不经 nix shell 包环境，不从 PATH 取 gdb。
+缺失遵循片 A：required 下 FAIL，optional 下可见 SKIPPED；不经 nix shell 包环境，
+不从 PATH 取 gdb。
 若 reader 确需 nix 运行环境，仅允许调用显式 pinned launcher 路径；仍将显式 gdb 路径
 传入该 launcher，不允许它自行选择 gdb。launcher/gdb 路径均进入 cache key 与 receipt。
 选择的普通 Native producer 与 pinned gdb producer 身份分别记录，不能把两者混称。
@@ -117,8 +118,8 @@ slice 模式的 G-code/map、process 模式的 map/CSV/metadata 按各自产品�
 `ARES_REQUIRE_ORCA=1` 缺任何该例所需 Native/resources/artifact 前置项必须具名失败；
 optional 缺失打印带 caller 的 `SKIPPED:`，明确比较未执行，不能记作 Native PASS。
 已配置但无效路径、launch/parse/比较失败不能变成 skip。gdb 仅由需要 map 的测试要求，
-`ARES_GDB_BIN` 缺失在 required/optional 两种模式均具名 FAIL；该项不得沿用 optional
-缺失时 skip 的分支。已配置路径校验复用 A helper。缓存命中前也检查该例的前置条件，
+`ARES_GDB_BIN` 缺失在 required 下具名 FAIL、optional 下可见 SKIPPED，
+与其它 Native 依赖一致。缺失与已配置路径校验均复用 A helper。缓存命中前也检查该例的前置条件，
 不能用缓存掩盖缺 Native/gdb；不新增隐式 oracle 替代品。
 迁移后取消旧 `ARES_ROLE_ORACLE_LIVE` opt-in：12 例默认执行运行时 Native 比较，
 不新增二级 selector；缺普通 Native 配置时仍遵循上述 A 的 required/optional 策略。

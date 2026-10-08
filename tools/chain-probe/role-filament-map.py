@@ -1,4 +1,4 @@
-"""Read the pinned Native role map; run with nix shell nixpkgs#gdb -c gdb.
+"""Read the pinned Native role map via the explicit ARES_GDB_BIN launcher.
 
 Default mode takes a single-filament, no-flush project and validates the map
 against the same-run footer. ARES_ROLE_ORACLE_MODE=process instead replays

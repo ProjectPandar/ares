@@ -1,87 +1,30 @@
-# Native role-filament reference
+# Runtime Native role-filament oracle
 
-Source boundary: `GCodeProcessor.cpp:1621-1639` role cache, `:1641-1649`
-finalization and `:6036` result-map copy. See
-`docs/architecture/gcode-processor-role-filament-usage-spec.md`.
+Source boundary: GCodeProcessor.cpp:1621-1639 role cache, :1641-1649 finalization,
+:5722 role switch and :6036 result-map copy (OrcaSlicer 8500fcdcc).
 
-The unmodified project is `tests/parity/validation/kobra3-centered/0.8.3mf`,
-SHA256 `0dc37a07daedf1aa01a48832a2ff3b4e70f6e367075274391e42884a98db1b0c`.
-The pinned raw procgcode ELF runs its normal `--slice` command for this
-capture; the diagnostic `--process-gcode` branch is not used. No Native
-rebuild or behavioral patch was added. The existing probe patch is
-`tools/chain-probe/procgcode.patch`; ELF SHA is recorded in `native-map.json`.
+The real slicing input is tests/parity/validation/kobra3-centered/0.8.3mf,
+SHA256 0dc37a07daedf1aa01a48832a2ff3b4e70f6e367075274391e42884a98db1b0c.
+CLI runner/processor_migration/roles.rs obtains Native results at runtime through
+OrcaRunner, with ARES_ORCA_CACHE_DIR and explicit ARES_GDB_BIN. The reader keeps
+its pinned ELF SHA/layout, complete map keys/original f64 bits and final-cache
+checks. No Native G-code or map is committed; ROLE_LIVE opt-in is removed.
 
-Reproduce the reference from the repository root:
+The slice-mode oracle reads all eight roles from the SAME Native process that
+writes plate_1.gcode. Input/G-code SHA links and both two-decimal footer mm/g sums
+are checked before the map can serve as a reference. Public processed slicing
+retains its full G-code control (only one generated-by line normalized), and
+both public slicing and process_gcode results retain exact complete role bits.
 
-```sh
-ARES_ROLE_ORACLE_INPUT="$PWD/tests/parity/validation/kobra3-centered/0.8.3mf" \
-ARES_ROLE_ORACLE_OUTPUT=/tmp/role-filament-fresh \
-nix shell nixpkgs#gdb -c gdb -nx -batch \
-  -x tools/chain-probe/role-filament-map.py > /tmp/role-filament-fresh.log 2>&1
-```
+The supplemental boundary test constructs a handwritten program body over a
+runtime Native producer/config block, explicitly setting diameters 1.75/2.85,
+densities 1.24/1.5 and filament_map 1,1. Same-role ToolChange, repeated/revisited
+roles, support/interface/transition/tower, ColorChange/pause, retract/travel/wipe,
+physical/virtual flush and EOF remain exercised. Its process-mode oracle has
+footer_check=null: unequal-material/flush role totals do not share footer scope.
+The same-run slice proof independently establishes reader reliability.
 
-`native.gcode` is the **complete** output of that same Native slicing run.
-`native-map.json` holds all eight role keys, both f64 values and their original
-u64 bit patterns. The reader verifies the ELF SHA before using offsets,
-checks the map's node count, unique sorted keys and final cache reset, and
-only writes the oracle JSON after a successful Native exit and footer check.
-It does not recompute role values from extrusion commands.
-
-The map sums to **343.16809722384134 mm / 1.0235158534141071 g**. Native's
-same-run footer is **343.17 mm / 1.02 g**. The comparison uses the footer's
-two-decimal format; map comparisons use the original f64 bits. This fixture
-has one filament and no flush, so footer totals and role totals have the
-same accounting scope. Do not apply this equality to flush-inclusive totals
-or to unequal-material caches spanning a ToolChange.
-
-An additional uninstrumented run of the same ELF/project produced identical
-whole G-code bytes after generated-by-line normalization alone. Captured
-diagnostic logs and disassembly are retained under `/tmp/worker6-role-oracle/`:
-`frozen.log`, `uninstrumented.log`, `process-role-cache.disassembly` and the
-two Native output directories. There is no use of the stable-options
-diagnostic oracle or a reconstructed Python/Rust role formula.
-
-Run the public API E2E against this frozen, footer-validated Native result:
-
-```sh
-ARES_ROLE_ORACLE_LIVE=1 \
-CARGO_TARGET_DIR=/tmp/ares-worker6-green-target CARGO_BUILD_JOBS=8 \
-cargo nextest run -p ares-core --test processed_role_filament_usage \
-  --test-threads 16 --no-fail-fast
-```
-
-`ARES_ROLE_ORACLE_LIVE=1` makes the oracle test run a fresh Native slice under
-gdb, compare its entire role map/footer check with the frozen record, and
-check whole G-code bytes with generated-by-only normalization. Without this
-flag the tests use the frozen reference and remain runnable without Linux/nix.
-Fresh oracle logs/output are retained at
-`target/role-filament-usage/native-live-*/`. Each run creates a fresh directory;
-the extractor rejects an existing output directory, preventing stale snapshots.
-
-The test first validates reference SHA links and the same-run footer sums,
-then compares complete Ares/Native G-code with generated-by-only normalization,
-and finally compares the complete public statistics role map and both f64
-bit patterns per role. Runtime Ares artifacts are written to
-`target/role-filament-usage/`. On the RED baseline the G-code control passes
-and the missing `used_filaments_per_role` result fails.
-
-The first RED locks down real-project role accumulation and result export.
-Supplemental `cache-boundaries.gcode` is a Native processor input with
-filament diameters 1.75/2.85 mm, densities 1.24/1.5 g/cm³, a same-role cache
-spanning T0→T1, repeated/revisited role tags, support/interface/transition,
-tower, ColorChange/pause, retract/travel/wipe, physical/virtual flush and EOF.
-Its complete role map is `cache-boundaries-map.json`, read from the same
-validated ELF using `ARES_ROLE_ORACLE_MODE=process`. That mode records
-`footer_check: null`: unequal-material cache conversion and flushing make a
-role/total equality assertion inappropriate. The original same-run slice
-proof above establishes the reader's reliability before this supplemental
-reference is used. Native metadata confirms actual f32 diameters
-`[1.75, 2.8499999046325684]` and densities `[1.2400000095367432, 1.5]`.
-
-The processor E2E is
-`role_cache_boundaries_match_native_processor`; WASM's
-`wasm_statistics_transparently_preserve_native_role_usage` checks byte-for-byte
-JSON pass-through of the public real-project statistics, without adapter
-accounting. Both supplemental tests were observed RED before production.
-FeatureType UI/projection remains a follow-up outside the coordinator's
-current GREEN scope (processor port and WASM pass-through only).
+The WASM role test remains an ordinary public-result JSON pass-through test;
+it does not read Native files. Required/optional availability follows the shared
+Native policy, including visible SKIPPED for an omitted optional comparison.
+See docs/architecture/native-artifact-cleanup-processor-spec.md.

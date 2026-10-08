@@ -7,7 +7,7 @@ use ares_core::{ProjectSettings, gcode_processor};
 #[test]
 fn public_processor_delegates_handwritten_relative_extrusion() {
     let input = "M83\nG1 X1 E10 F1200\nG90\nG1 X2 E10\n";
-    let output = gcode_processor::process_gcode(input, &ProjectSettings::default(), false);
+    let output = gcode_processor::process_gcode(input, &ProjectSettings::default(), false, false);
     assert_eq!(output.gcode, input.as_bytes());
     assert_eq!(output.result.filament_diameters, [1.75]);
     assert_eq!(output.result.filament_densities, [0.0]);
