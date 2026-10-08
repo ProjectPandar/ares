@@ -48,6 +48,17 @@ impl Schedule {
         self.layer_count
     }
 
+    /// The sequential by-object `m_layer_count`: every instance of every
+    /// object runs the full layer stack (`GCode.cpp:2505`,
+    /// `instances().size() * temp_layer_count`).
+    pub(in crate::project_slice::gcode_emit) fn m73_layer_count(&self) -> usize {
+        self.object_layer_counts
+            .iter()
+            .zip(&self.instances)
+            .map(|(layers, copies)| layers * copies.len())
+            .sum()
+    }
+
     /// Per-object layer counts (`GCode.cpp:1721` collection); the
     /// sequential by-object header sums them (`GCode.cpp:3284-3346`).
     pub(in crate::project_slice::gcode_emit) fn object_layer_counts(&self) -> &[usize] {

@@ -111,11 +111,7 @@ pub(super) fn emit(
     let by_object = traversal.resolved.views.full.process.print.print_sequence
         == crate::ProcessPrintSequence::ByObject;
     let tail_layer_count = if by_object {
-        schedule
-            .object_layer_counts()
-            .iter()
-            .sum::<usize>()
-            .max(sliced_layer_count)
+        schedule.m73_layer_count().max(sliced_layer_count)
     } else {
         sliced_layer_count
     };

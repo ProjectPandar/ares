@@ -145,6 +145,8 @@ pub(super) fn append(
     // preamble still fires once on the first emitted chunk.
     struct DrivePhase<'a> {
         object: usize,
+        copy: usize,
+        copy_filter: Option<usize>,
         merged: &'a [(f64, schedule::LayerToPrint)],
         tool_ordering: &'a super::tool_ordering::ToolOrdering,
     }
@@ -164,8 +166,8 @@ pub(super) fn append(
     }
     let mut scoped_chunks: Vec<Vec<(f64, schedule::LayerToPrint)>> = Vec::new();
     let mut scoped_orderings: Vec<super::tool_ordering::ToolOrdering> = Vec::new();
-    let mut phase_objects: Vec<usize> = Vec::new();
-    let phases: Vec<DrivePhase<'_>> = if by_object {
+    let mut phase_meta: Vec<(usize, usize, usize)> = Vec::new();
+    if by_object {
         let mut final_extruder_id = None;
         for object in 0..objects.len() {
             let ordering = super::tool_ordering::build(
@@ -182,29 +184,39 @@ pub(super) fn append(
                 continue;
             }
             final_extruder_id = ordering.last_extruder();
+            // The ordering is built once per object: a second instance of
+            // the same object does not rebuild it (`GCode.cpp:3286`), it
+            // reruns the same layer machinery after the :3304 transition.
+            let ordering_index = scoped_orderings.len();
             scoped_orderings.push(ordering);
-            phase_objects.push(object);
-            scoped_chunks.push(
-                merged
-                    .iter()
-                    .filter(|(_, entry)| entry.object_index == object)
-                    .copied()
-                    .collect(),
-            );
+            let object_chunks: Vec<(f64, schedule::LayerToPrint)> = merged
+                .iter()
+                .filter(|(_, entry)| entry.object_index == object)
+                .copied()
+                .collect();
+            for copy in 0..instances[object].len() {
+                phase_meta.push((object, copy, ordering_index));
+                scoped_chunks.push(object_chunks.clone());
+            }
         }
+    }
+    let phases: Vec<DrivePhase<'_>> = if by_object {
         scoped_chunks
             .iter()
-            .zip(&scoped_orderings)
-            .zip(&phase_objects)
-            .map(|((merged, tool_ordering), object)| DrivePhase {
+            .zip(&phase_meta)
+            .map(|(merged, (object, copy, ordering))| DrivePhase {
                 object: *object,
+                copy: *copy,
+                copy_filter: Some(*copy),
                 merged,
-                tool_ordering,
+                tool_ordering: &scoped_orderings[*ordering],
             })
             .collect()
     } else {
         vec![DrivePhase {
             object: usize::MAX,
+            copy: 0,
+            copy_filter: None,
             merged: &merged,
             tool_ordering: &tool_ordering,
         }]
@@ -227,6 +239,7 @@ pub(super) fn append(
     let mut final_chunk = None;
     while phase_index < phases.len() {
         let merged: &[(f64, schedule::LayerToPrint)] = phases[phase_index].merged;
+        let phase = &phases[phase_index];
         let tool_ordering: &super::tool_ordering::ToolOrdering = phases[phase_index].tool_ordering;
         if group_start >= merged.len() {
             phase_index += 1;
@@ -237,7 +250,12 @@ pub(super) fn append(
                 // second-layer flag for the incoming instance, and the
                 // layer height restarts from the object's own first
                 // layer (the per-object `process_layers` z tracking).
-                let origin = instance_origin(&instances[phase.object], traversal.scale.factor());
+                let origin = instance_origin(
+                    &instances[phase.object][phase.copy.min(
+                        instances[phase.object].len().saturating_sub(1),
+                    )..],
+                    traversal.scale.factor(),
+                );
                 let _primed = transition::emit(
                     output,
                     state,
@@ -416,6 +434,15 @@ pub(super) fn append(
             raft: &mut raft_layers,
         });
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
+        // By object, a phase drives ONE instance: the same-object copies
+        // split into consecutive phases with the :3304 transition between
+        // them (`GCode.cpp:3279-3304`), so the bucket set shrinks to the
+        // phase's copy. By layer keeps every copy.
+        if let Some(copy) = phase.copy_filter {
+            for (_, tool_entries) in by_tool.iter_mut() {
+                tool_entries.retain(|bucket| bucket.instance.copy == copy);
+            }
+        }
         let mut final_entry = entries[0];
         for (tool, tool_entries) in &mut by_tool {
             wrapping::emit(output, state, &timelapse_context)?;
