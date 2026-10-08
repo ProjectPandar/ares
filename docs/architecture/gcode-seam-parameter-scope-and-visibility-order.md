@@ -1,0 +1,223 @@
+# SeamPlacer: parameter scope, layer height and visibility operation order
+
+Status: source-cited spec for coordinator review. No new Native RED or
+production change is claimed. Base: main
+`117cd7eddfc8a4fdc64c2ab576f46f7714650069`.
+Owner: worker6. Execute as four independent slices in order **D → A → B → C**;
+each reachable slice has its own committed whole-output Native RED and GREEN.
+The coordinator may approve this document once; that does not waive any
+slice's reachability, RED, verification or exact-hash merge review gate.
+
+## Upstream boundary and common decisions
+
+Pinned OrcaSlicer revision:
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Upstream paths below are relative to `OrcaSlicer/src/libslic3r/`;
+Rust paths are relative to `crates/ares-core/src/project_slice/`.
+These are ports of existing `GCode/SeamPlacer.cpp/.hpp` behavior into the
+existing seam compatibility shell, not new Ares seam policies.
+
+| Slice | Owning upstream boundary | Rust destination |
+|---|---|---|
+| D | `SeamPlacer::calculate_overhangs_and_layer_embedding`, `.cpp:1084–1091`; threshold `.hpp:121–122`; actual height/slice-z `PrintObjectSlice.cpp:24–40,50–80` | `seam_placement/alignment/context.rs::populate, populate_overhang`; height threading through `alignment/preparation.rs` and existing traversal records |
+| A | `SeamPlacer::init`, `.cpp:1431–1441`; `raycast_visibility`, `:130–132,165–167` | `seam_placement.rs::apply`, per-object construction of `GlobalVisibility` |
+| B | `process_perimeter_polygon`, `.cpp:456–471`; `LayerRegion.cpp:21–28`; `PrintRegion.cpp:6–22,25–53` | `seam_placement/alignment/preparation.rs::layer_regions, prepare_layer`; `seam_candidates.rs::RegionPerimeters, generate_regions, process_polygon` |
+| C | `raycast_visibility`, `.cpp:159–185`, AlignedBack adjustment and per-ray decrement | `seam_placement/visibility.rs::from_mesh, sample_visibility` |
+
+Non-negotiable: preserve candidate order, strict/weak comparison rules,
+visibility sample count30000, ray grid5×5, RNG, mesh frame, angle weights and
+the already merged distance Gaussian. Do not add a coordinate special case,
+epsilon/tie policy, fallback, ignored test, unsupported-feature guard, probe
+or relaxed comparator. Core remains platform-neutral for WASM, Windows,
+macOS and Linux. Keep any new test helper narrowly scoped; files exceeding
+400 LOC must be split without unrelated cleanup.
+
+## D — current layer height in overhang penalty
+
+### Source discrepancy and precise port
+
+Upstream `.cpp:1085–1091` computes overhang from signed previous-layer
+distance, `.65f * perimeter.flow_width`, and
+`tan(SeamPlacer::overhang_angle_threshold) * current_layer->height`, then
+clamps negative overhang to0. The threshold is45 degrees (`.hpp:122`).
+`PrintObjectSlice.cpp:24–40` places regular slice-z at the layer midpoint;
+this is distinct from the layer's actual thickness.
+
+Rust `runtime.rs:51–63` correctly constructs midpoint slice-z, but
+`alignment/context.rs:18–24` derives height from adjacent midpoint z values.
+For consecutive thicknesses h_prev/h_current that difference is their
+average, not h_current. `:40` subtracts that derived value directly.
+
+Included: thread the authoritative existing traversal/layer thickness into
+the overhang calculation, retaining midpoint candidate z; reproduce the
+upstream threshold coefficient, evaluation types/rounding and negative
+clamp. Determine the actual C++ tan overload and intermediates before
+transcribing it; do not infer that a mathematical tan45 substitution is
+automatically float-identical. Do not widen/narrow the entire scoring chain
+as a convenience. Do not change signed-distance geometry merely to hide a
+failure elsewhere.
+
+Deferred: layer planning, adaptive/profile support, ZAA, signed-distance
+algorithms, embedding policy, unsupported-distance data not needed for this
+penalty, and spline/nearest comparator behavior.
+
+### Reachability and RED
+
+Current `capabilities.rs:12–21` rejects painted layer-height profiles and
+ranges carrying layer-height overrides; `planning.rs:50–51` uses the fixed
+profile planner. An adaptive profile rejected by Ares is **not** a seam RED.
+First try a supported first-layer height different from normal layer height
+(e.g. .3 then .2), with an unpainted stepped/sloping overhang whose candidate
+ordering can change on the second layer. Confirm both producers actually
+use those thicknesses and the same seam mode. This reaches unequal adjacent
+heights without adding adaptive support. Existing `ClassicTraversalRecord`
+already exposes actual layer_height (`runtime.rs:59`).
+
+Use a small finite set of geometric slopes/overhang depths and supported
+height pairs, recording every attempted case and result. Prefer nearest or
+short aligned strings to isolate overhang ranking from spline fitting.
+The complete Native bytes must differ before edits, with retained first
+diff and layer/seam context. A changed internal overhang scalar alone is
+not RED. GREEN must restore whole-file equality, including timing/wipe
+consequences. Equal-height input is a sibling control.
+
+## A — visibility bias belongs to each PrintObject
+
+### Source discrepancy and precise port
+
+Upstream loops over PrintObjects, reads each object's seam_position, then
+passes that setting into occlusion computation (`.cpp:1431–1441`). Only
+that object's AlignedBack mode adds front_adjustment (`:165–167`).
+Rust `seam_placement.rs:59–61` computes any(AlignedBack) over all placements
+and passes the same boolean into every object's visibility model (`:65–78`).
+This can bias an unrelated Nearest/Aligned object.
+
+Included: derive bias from the current placement while constructing that
+object's existing visibility model. Preserve object/visibility indexing and
+the existing front-adjustment arithmetic. No shared cross-object bias flag.
+Deferred: C's operation-order correction, visibility sampling/raycasts,
+transforms, seam overrides parsing, object ordering and all Gaussian logic.
+
+### Reachability and RED
+
+Construct two distinct objects with stored object-level seam_position
+metadata: one aligned_back, one nearest. Use existing 3MF object-metadata
+construction patterns (`ares-cli/tests/orca_parity/runner/multi_object_skirt.rs`)
+and verify effective object options through the public project/config
+boundary before asserting output. `ProcessSeamPosition` wire values are
+defined at `options/process_options/object_source/enums.rs:67–78`.
+
+The nearest object must have competing candidates with different front
+exposure; adding a plain cube with an unchanged winning corner is not proof.
+Retain the original two-object whole-file mismatch and identify which
+object's path changes. Use sibling configurations with both objects nearest
+and with only the aligned_back object to separate global bias leakage from
+object labels/ordering and from C. Do not suppress object-id comment
+differences; classify an unstable Native object-id oracle separately.
+GREEN must match the complete mixed-object Native output.
+
+## B — angle arm comes from the region's external flow nozzle
+
+### Source discrepancy and precise port
+
+Upstream `.cpp:463–471` uses
+`region->flow(frExternalPerimeter).nozzle_diameter()` for polygon angle
+sampling; only a nullptr region gets0.5. `LayerRegion.cpp:21–28` delegates
+to region flow; `PrintRegion.cpp:12–13,50–53` selects the nozzle for that
+region's outer-wall role, not the first global nozzle unconditionally.
+
+Rust `seam_placement.rs:82–101` threads a single global first-nozzle value
+through all regions. `alignment/preparation.rs:113–124` already has the
+region's ext_perimeter_flow, but copies only its width. That flow contains
+nozzle_diameter (`perimeters/types.rs:7–11`). `seam_candidates.rs:36–50`
+then supplies one angle_arm_mm for every polygon.
+
+Included: carry the authoritative region external-flow nozzle through the
+existing RegionPerimeters/polygon association to angle sampling. Preserve
+external flow width and source ordering. Remove the obsolete global-nozzle
+threading where this change makes it unused. Preserve upstream null-region
+semantics only where a real corresponding sentinel polygon path exists;
+do not globally replace0.4 with0.5 as a shortcut.
+Deferred: flow generation, filament/nozzle mapping, tool scheduling, Arachne
+geometry, fallback flows and candidate-angle algorithm changes.
+
+### Reachability and RED
+
+Start from the existing two-physical-nozzle Snapmaker J1 reference setup
+(`ares-cli/tests/orca_parity/runner/compatible_regions/inherited_filament.rs`),
+assign different supported diameters (e.g. .4/.6), and make a non-first
+region's external wall use nozzle2. Verify Native's effective nozzle vector,
+outer-wall role assignment and Ares's public resolved configuration; same
+diameter multi-filament output does not exercise this discrepancy.
+
+Use a concave/short-edge contour sensitive to angle arm length. First prove
+both producers can slice the intended unequal-nozzle configuration without
+unrelated tool/flow differences. Capture whole-file RED and candidate-angle
+path context; a private parameter assertion or unknown Native mapping is
+insufficient. A same-diameter sibling input is the control. If a separate
+existing flow/mapping defect blocks the witness, report that boundary and
+skip this slice rather than absorb that implementation into B.
+
+## C — AlignedBack addition precedes occlusion decrements
+
+### Source discrepancy and precise port
+
+Upstream `.cpp:159–167` starts result at1, adds front_adjustment, then
+subtracts1/25 for each qualifying ray hit (`:184–185`). Rust
+`visibility.rs:32–35,109–116` completes the decrements first, then adds the
+adjustment. The real-number formula is equivalent; the f32 sequence differs.
+
+Included, **only after real RED**: move the existing bias contribution to
+the upstream point in that sample's accumulation. Preserve the bias formula,
+f32 decrement, ray order/hit predicate, normals, sample generation and
+neighbor interpolation. Deferred: exp/log/PI policy, SIMD/FMA decisions,
+mesh decimation, negative-volume ray behavior and alignment score grouping.
+
+### Reachability, RED or UNREACHABLE
+
+Use one aligned_back object so A cannot be the cause. Choose supported
+concave/occluded surfaces with nontrivial front-adjustment and ray hits;
+vary a documented finite set of tilt angles/notch depths/orientations.
+Prefer fewer than6 layers initially to avoid an alignment string hiding the
+candidate change. Retain exact geometry/config/producer hashes for each
+attempt. F32 scalar examples only explain risk; they do not establish RED.
+
+If no complete Native-visible mismatch attributable to C is found, record
+the searched input domain, attempts, whole-file verdicts and any masking
+conditions as **UNREACHABLE in the tested supported domain**, then skip C
+without production edits. This bounded result is not a proof over all
+possible meshes. Apply the same no-RED/no-edit disposition to D/A/B if
+their witness cannot be constructed.
+
+## Per-slice TDD, artifacts and merge gates
+
+1. After this spec is approved, rebase/recheck the current slice on latest
+   main, including earlier merged slices. Never reuse another slice's RED.
+   Keep worker1's small-loop/scarf region untouched until its merge signal.
+2. Build/retain exact 3MF witnesses with CLI-side fixture construction only;
+   compare the public byte slicing API against freshly generated identified
+   Native. Only `; generated by` may be normalized. Record input, output,
+   Native binary/resources/wrapper and Ares executable hashes, first byte
+   and raw line difference, command receipts and process deadlines.
+3. Commit RED separately before production edits and notify its hash. No
+   unsupported input, Native timeout, UB or nondeterministic oracle result
+   may be called the slice's successful RED. First explain unexpected
+   producer changes; do not select a favorable retry or weaken assertions.
+4. Implement only that approved source boundary. Require complete-byte
+   GREEN for the same input. If timing, wipe or other residual differences
+   remain, report them; do not turn a seam-only assertion into GREEN.
+5. For each implemented slice, run fmt, strict workspace/all-target/all-
+   feature clippy, workspace nextest and wasm32 check. Run same-round fresh
+   seeded and official base/candidate controls with independent caches,
+   worker6 target and16 threads; list every status and reason change and
+   require no unexplained candidate-only failure. Keep raw Native timeout
+   INCONCLUSIVE and oracle nondeterminism non-PASS. Use the corrected
+   official wrapper inheriting the pinned single CPU, not the old CPU1
+   wrapper; any infrastructure change must be recorded on both sides.
+6. Honor BROWSER-START/END and one-heavy-task limits. Request exact-hash
+   review with the evidence report. Await approval, rebase conflict-free
+   and push fast-forward only. Notify worker5 if a new slice changes his
+   seam/wipe/M73 witness. Scarf remains a separate approved pending slice.
+
+No preemptive helper framework, generic seam API, unit tests after
+implementation, unrelated cleanup or Ares-owned pipeline design is included.
