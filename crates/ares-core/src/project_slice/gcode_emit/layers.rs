@@ -215,6 +215,10 @@ pub(super) fn append(
         .unwrap_or_default();
 
     let mut phase_index = 0usize;
+    // `Skirt::make_skirt_loops_per_extruder_*`'s `skirt_done` (`GCode.cpp:
+    // 4286-4315`): the print z values the skirt already printed at, shared
+    // across the sequential by-object instances.
+    let mut skirt_done: Vec<f64> = Vec::new();
     let mut group_start = 0;
     let mut first_group = true;
     let mut last_object_copy: Option<(usize, usize)> = None;
@@ -352,14 +356,26 @@ pub(super) fn append(
         state.layer_index = cooling_layer_index;
         state.on_first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
         // The skirt prints once per layer before any object content
-        // (`GCode.cpp:4388+`), on the layers it covers. Raft chunks emit
-        // the skirt around the raft polygons (the skirt layer index is
-        // the raft layer index — with a raft, the covered layers start
-        // at the raft flange). Sequential by-object printing emits the
-        // skirt once, with the first instance's first layer — the
-        // covered-layer schedule is a by-layer z map and re-fires for
-        // every instance that restarts at the same z.
-        if !by_object || phase_index == 0 {
+        // (`GCode.cpp:4388+`), gated by the `skirt_done` vector:
+        // `Skirt::make_skirt_loops_per_extruder_1st_layer` emits when the
+        // vector is empty and records the print z
+        // (`GCode.cpp:4292-4295`); `..._other_layers` keeps emitting while
+        // `skirt_done.size() < skirt_height` (`GCode.cpp:4311-4315`). The
+        // vector is shared across the sequential by-object instances, so a
+        // later object restarting at the same z does not re-emit. Raft
+        // chunks emit the skirt around the raft polygons (the skirt layer
+        // index is the raft layer index — with a raft, the covered layers
+        // start at the raft flange).
+        let skirt_height = traversal
+            .resolved
+            .views
+            .full
+            .process
+            .print
+            .skirt_height
+            .0
+            .max(0) as usize;
+        if skirt_done.is_empty() || skirt_done.len() < skirt_height {
             skirt_emit::emit(
                 output,
                 state,
@@ -376,6 +392,7 @@ pub(super) fn append(
                     chunk_perimeter_spacing,
                 },
             );
+            skirt_done.push(layer_z);
         }
         // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
         // template insert fire once per layer inside the per-extruder loop
