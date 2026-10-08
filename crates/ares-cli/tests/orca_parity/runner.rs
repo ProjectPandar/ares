@@ -6,6 +6,9 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
 
+#[path = "runner/native_plate_origin_migration.rs"]
+mod native_plate_origin_migration;
+
 #[path = "runner/native_travel_reference_migration.rs"]
 mod native_travel_reference_migration;
 
