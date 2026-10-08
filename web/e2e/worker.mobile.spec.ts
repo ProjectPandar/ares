@@ -1,6 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
+import { act, choose, PRESETS } from "./lhPresets";
 
 // A closed cylinder (binary STL) whose slice takes seconds: 512 facets around, 60 mm tall.
 function cylinder(radius: number, height: number, segments: number): Buffer {
@@ -45,13 +46,28 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
     width: element.width,
     expected: Math.floor(element.clientWidth * Math.min(devicePixelRatio, 2)),
   }));
-  await expect.poll(async () => { const p = await pixels(); return p.width - p.expected; }, "canvas width is clientWidth x min(devicePixelRatio, 2)").toBe(0);
+  await expect.poll(async () => (await pixels()).width, "the 3D view has a drawing buffer").toBeGreaterThan(0);
+  const { width, expected } = await pixels();
+  expect.soft(width, "canvas width is clientWidth x min(devicePixelRatio, 2)").toBe(expected);
 
   const chooser = page.waitForEvent("filechooser");
   await page.getByRole("button", { name: "Import", exact: true }).tap();
   await (await chooser).setFiles(model);
   const status = page.getByTestId("status");
   await expect(status).toHaveText("Ready to slice", { timeout: 60_000 });
+  // The same LH presets as the touch flow; phones open the sidebar drawer first.
+  const panel = page.getByRole("button", { name: "Settings panel", exact: true });
+  if (await panel.isVisible()) await act("touch", panel);
+  await act("touch", page.getByRole("button", { name: "Printer preset", exact: true }));
+  await act("touch", page.getByRole("option", { name: "Select/Remove printers (system presets)" }));
+  const wizard = page.getByRole("dialog", { name: "System presets" });
+  await act("touch", wizard.getByRole("checkbox", { name: PRESETS.vendor, exact: true }));
+  await act("touch", wizard.getByRole("button", { name: "Done" }));
+  await choose(page, "touch", "Printer preset", "System presets", PRESETS.printer);
+  await choose(page, "touch", "Process preset", "System presets", PRESETS.process);
+  await choose(page, "touch", "Filament 1 preset", "System presets", PRESETS.filament);
+  await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
+  if (await panel.isVisible()) await act("touch", panel);
 
   await page.evaluate(() => {
     const beat = { start: performance.now(), last: performance.now(), maxGap: 0, beats: 0, end: 0 };

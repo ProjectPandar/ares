@@ -5,21 +5,11 @@ import { AxeBuilder } from "@axe-core/playwright";
 import { chromium, expect, type Locator, type Page, test } from "@playwright/test";
 import { moving, smallFonts, tabSweep } from "./a11y";
 import { chromiumLaunch } from "./chromiumLaunch";
+import { act, choose, type Input, PRESETS } from "./lhPresets";
 import { expectFits, pinch, swipe, undersized } from "./touch";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const MODEL = `${repositoryRoot}tests/parity/cube10.stl`;
-// LH system presets (OrcaSlicer/resources/profiles/LH.json), installed through the wizard.
-const PRESETS = {
-  vendor: "LH",
-  printer: "LH Stinger",
-  process: "0.20mm Daily @LH Stinger",
-  filament: "LHS PLA",
-};
-
-type Input = "mouse" | "touch";
-
-const act = (input: Input, control: Locator) => (input === "touch" ? control.tap() : control.click());
 
 /** axe-core WCAG A/AA scan of one step; serious and critical violations fail it. */
 async function axe(page: Page, directory: string, step: string) {
@@ -40,14 +30,6 @@ async function scan(page: Page, input: Input, directory: string, step: string) {
   await act(input, page.getByRole("button", { name: "Dark theme", exact: true }));
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   return [dark, light];
-}
-
-async function choose(page: Page, input: Input, combo: string, group: string, name: string) {
-  await act(input, page.getByRole("button", { name: combo, exact: true }));
-  await act(input, page.getByRole("listbox", { name: combo, exact: true }).getByRole("group", { name: group })
-    .getByRole("option", { name, exact: true }));
-  await expect(page.getByRole("button", { name: combo, exact: true })).toHaveText(name);
-  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }
 
 /**
