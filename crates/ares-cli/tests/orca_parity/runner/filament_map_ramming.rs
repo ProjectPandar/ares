@@ -103,86 +103,29 @@ fn orca_parity_filament_map_cross_map_matches_native() {
             h2d_filament(&profiles, "#0000FF", "1"),
         ],
     );
-    // `ToolOrdering.cpp:990` indexes `extruder_count` beyond its length for
-    // an out-of-range map, so the native reference SIGSEGVs before any
-    // comparison; either the reference crash or the ARES-side rejection
-    // documents the contract.
-    match runner.slice_case(&out_of_range) {
-        Err(_) => {}
-        Ok(sliced) => {
-            let outcome = parity::compare_case(&sliced);
-            assert_eq!(
-                outcome.status, "REJECTED",
-                "out-of-range extruder index must be rejected: {}",
-                outcome.detail
-            );
-        }
-    }
-}
-
-#[ignore = "the export pipeline assigns every object to filament 1, so the \
-    single-object fixture never reaches a tool change; unblock by adding an \
-    object→filament assignment to the export case inputs"]
-#[test]
-fn orca_parity_semm_ramming_profile_changes_tool_change_block() {
-    let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
-    let profiles = crate::presets::VendorProfiles::load(
-        &repo_root().join("OrcaSlicer/resources/profiles"),
-        "Creality",
-    )
-    .unwrap();
-    let selection =
-        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
-    let machine = profiles.machine(&selection.printer).unwrap();
-    // Two filaments on a single-extruder machine: the per-filament machine
-    // lists must match the filament count or the native export rejects the
-    // project (`filament_is_support's count 1 not equal to filament_colour's
-    // size 2`).
-    let mut machine = machine;
-    machine.insert("filament_is_support".into(), json!(["0", "0"]));
-    let mut process = profiles.process(&selection.process).unwrap();
-    parity::normalize_process_defaults(&machine, &mut process);
-    // SEMM ramming fires at multi-filament tool changes with the wipe tower
-    // (`WipeTower2.cpp:1378-1390` gated on `m_semm`).
-    process.insert("enable_prime_tower".into(), Value::String("1".into()));
-    process.insert("disable_m73".into(), Value::String("1".into()));
-    // The Ender-3 bed is 220×220 and its profile carries no tower position;
-    // the BBL-flavored default lands outside the bed and the native export
-    // rejects the project (`Print::validate`).
-    process.insert("wipe_tower_x".into(), Value::String("180".into()));
-    process.insert("wipe_tower_y".into(), Value::String("180".into()));
-    let default_profile = "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6";
-    let short_profile = "100 100 1 1|0.05 1 1";
-    let ramming_filament = |profile: &str, colour: &str| {
-        let mut filament = profiles.filament(&selection.filaments[0]).unwrap();
-        filament.insert("filament_colour".into(), json!([colour]));
-        filament.insert("filament_ramming_parameters".into(), json!([profile]));
-        filament
-    };
-    let filaments = vec![
-        ramming_filament(default_profile, "#F2754E"),
-        ramming_filament(short_profile, "#0000FF"),
-    ];
-    let exported = runner
-        .export_case(
-            &CaseInputs {
-                label: "semm-ramming/profile-variant",
-                machine: &machine,
-                process: &process,
-                filaments: &filaments,
-            },
-            &smoke_overrides(),
-            &repo_root().join("tests/parity/cube10.stl"),
-        )
-        .unwrap();
-    let sliced = runner.slice_case(&exported).unwrap();
-    let native = std::str::from_utf8(&sliced.reference).unwrap();
+    let sliced = runner.slice_case(&out_of_range);
+    // `ToolOrdering.cpp:990` indexes `extruder_count` past its length for
+    // an out-of-range map, so the native reference crashes before
+    // producing a stream. The crash is recorded as the upstream fact —
+    // it never serves as a comparison reference.
     assert!(
-        native.contains("\nM620\n") || native.contains("\nT1\n"),
-        "the SEMM fixture must contain a tool change for the ramming path to fire"
+        sliced.is_err(),
+        "the out-of-range map must fail the native reference (upstream SIGSEGV, ToolOrdering.cpp:990)"
     );
-    let outcome = parity::compare_case(&sliced);
-    assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+    // Ares rejects the same project through the typed option boundary
+    // (`resolve_filament_indices` bounds-checks the mapped slot).
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let Err(error) = runtime.block_on(ares_core::slice_project(
+        &out_of_range.project,
+        ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+        ares_core::SlicerContext::new(0),
+    )) else {
+        panic!("the out-of-range map must be rejected by the typed option boundary");
+    };
+    assert!(
+        error.to_string().contains("filament_map"),
+        "expected the filament_map typed rejection, got {error}"
+    );
 }

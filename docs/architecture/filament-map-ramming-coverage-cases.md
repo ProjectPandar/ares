@@ -66,10 +66,32 @@ Both cases are therefore implemented as dedicated runner E2E tests
 1. `filament_map` cross-map on the H2D Manual dual-extruder fixture
    (identity case already covered there): `['2','1']` and `['1','2']` move
    the tool-change/purge to the other extruder; out-of-range `['3','1']`
-   recorded REJECTED per native stderr.
+   recorded as: the native reference SIGSEGVs (`ToolOrdering.cpp:990`
+   indexes `extruder_count` past its length) — recorded as the upstream
+   fact, never used as a comparison reference — while Ares rejects the
+   same project through the typed option boundary
+   (`resolve_filament_indices` bounds-checks the mapped slot →
+   `InvalidInput("invalid Orca option filament_map")`).
 2. `filament_ramming_parameters` on a single-extruder multi-filament SEMM
-   fixture with the wipe tower: distinct per-filament profiles change the
-   tool-change ramming block; measured against native.
+   fixture: **未达成，待续**. The fixture reached the native export after
+   two fixes (below), but never reached a tool change: the export case
+   inputs (`CaseInputs`, `runner.rs:175`; `OrcaRunner::export_case` →
+   native `--export-3mf`) carry no object→filament assignment, and the
+   native export composes every object onto filament 1 — a single-object
+   fixture prints exactly one tool. On a 1-extruder machine the
+   `filament_map` slot lever cannot help either (a mapped slot beyond the
+   single extruder is rejected by the same boundary). Unblock: add an
+   object→filament assignment to the export case inputs (or a multi-part
+   model convention), then restore the test (two objects on filaments
+   1/2, `enable_prime_tower`, `single_extruder_multi_material` from the
+   Ender-3 profile) and assert the ramming block changes with the
+   per-filament profile.
+   Fixture learnings to reuse: (a) the native export rejects a project
+   whose `filament_is_support` list does not match the filament count
+   ("filament_is_support's count 1 not equal to filament_colour's size
+   2"); (b) a machine profile without a tower position needs one inside
+   the bed (the Ender-3 default lands outside the 220×220 bed and the
+   export rejects with an empty `-5`).
 
 If the ramming case is DIVERGENT/ARES_ERROR: record the first difference
 and report for assignment (the wipe tower region belongs to worker2) —
