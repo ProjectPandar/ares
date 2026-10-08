@@ -323,9 +323,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             region.map_or(full.process.region.seam_gap, |value| value.seam_gap),
             wipe_tail.nozzle_diameter,
         ),
-        seam_position: object.map_or(full.process.object.seam_position, |value| {
-            value.object.seam_position
-        }),
+        seam_position: full.process.object.seam_position,
         reduce_crossing_wall: full.process.print.reduce_crossing_wall.0,
         crossing_boundary_inset: crossing::boundary_inset(traversal),
         scarf: scarf::from_region(&full.process.region, region),
