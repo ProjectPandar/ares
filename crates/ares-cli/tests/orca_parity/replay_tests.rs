@@ -297,11 +297,15 @@ fn unset_replay_is_explicitly_offline_not_a_comparison() {
     let output = Command::new(std::env::current_exe().unwrap())
         .args(["--exact", "replay::orca_parity_replay_sweep", "--nocapture"])
         .env_remove("ARES_PARITY_REPLAY")
+        .env_remove("ARES_REQUIRE_ORCA")
         .env_remove("ARES_PARITY_ARTIFACT_ROOT")
         .current_dir(temp.path())
         .output()
         .unwrap();
     assert!(output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr).contains("OFFLINE SKIP"));
+    let diagnostic = String::from_utf8_lossy(&output.stderr);
+    assert!(diagnostic.contains("SKIPPED:"));
+    assert!(diagnostic.contains("ARES_PARITY_REPLAY"));
+    assert!(diagnostic.contains("Native comparison not executed"));
     assert_eq!(fs::read_dir(temp.path()).unwrap().count(), 0);
 }
