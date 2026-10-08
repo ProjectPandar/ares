@@ -1,0 +1,28 @@
+{
+  "label": "stock/FLSun/FLSun QQ-S Pro 0.4 nozzle",
+  "inputSha256": "17b8a73c70c9013ce0c89d67516ca36400d52d7201e11807de00df8e57e172a8",
+  "binary": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+  "binarySha256": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+  "wrapper": "/tmp/ares-pi-matrix-vendors/scripts/orca-seeded-parity.sh",
+  "wrapperSha256": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+  "args": [
+    "--slice",
+    "0",
+    "--outputdir",
+    "/tmp/worker4-100-native-UfhU0J/0/output",
+    "/tmp/worker4-100-native-UfhU0J/0/input.3mf"
+  ],
+  "cwd": "/tmp/ares-pi-matrix-vendors",
+  "seed": 0,
+  "cpu": 1,
+  "started": "2026-10-08T10:13:11.856Z",
+  "directory": "/tmp/worker4-100-native-UfhU0J/0",
+  "finished": "2026-10-08T10:13:13.304Z",
+  "exit": 156,
+  "signal": null,
+  "error": null,
+  "outputFiles": [
+    "result.json"
+  ],
+  "resultJson": "{\n\t\"error_string\": \"Failed slicing the model. Please verify the slicing of all plates on Orca Slicer before uploading.\",\n\t\"export_time\": 0,\n\t\"layer_height\": 0.20000000298023224,\n\t\"plate_index\": 1,\n\t\"prepare_time\": 0,\n\t\"return_code\": -100,\n\t\"sparse_infill_density\": 15.0,\n\t\"wall_loops\": 3\n}\n"
+}

@@ -1,0 +1,7 @@
+Failed to generate G-code for invalid custom G-code.
+
+machine_start_gcode Parsing error at line 51: Variable does not exist
+M117 Print [output_filename_format]; Display: Printing started...
+            ^
+
+Please check the custom G-code or use the default custom G-code.
