@@ -91,6 +91,9 @@ mod project_export_metadata;
 #[path = "runner/seam_layer_height.rs"]
 mod seam_layer_height;
 #[cfg(test)]
+#[path = "runner/seam_object_bias.rs"]
+mod seam_object_bias;
+#[cfg(test)]
 #[path = "runner/small_loop_speed.rs"]
 mod small_loop_speed;
 #[cfg(test)]
