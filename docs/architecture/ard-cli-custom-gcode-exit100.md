@@ -57,3 +57,35 @@ wasm32 check. Fresh paired full seeded/official per latest coordinator contract;
 serial sole heavy job. Same-label Ares RAW bytes/candidate-only failures and
 Native generator-only ND receipts required; no pass inferred from counts.
 Latest main rebase/gate scope, exact-hash REVIEW-REQUEST, approval then ff-only.
+
+## 2026-10-08 wall-clock comparison finding (seam prerequisite gates)
+
+The independent seam-radius candidate on production base `083cb1862` retained
+strict workspace exit **100**: 8131 PASS, 1 FAIL, 7 configured skips. The failed
+`cli_custom_gcode_ginger_8_0_matches_native` JSON differed only in
+`prepare_time`: Native **1**, Ares **0**. All other JSON fields, stdout, stderr,
+Unix156 and absence of final G-code retained their strict contract.
+
+At upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
+`OrcaSlicer.cpp:5540` computes prepare_time from the difference of two UTC
+wall-clock second readings, serialized at :436. Export_time similarly uses UTC
+seconds at :7104 and is serialized at :437. Neither field is a seeded slicing
+result or a seam-visibility value.
+
+Fresh isolated reruns were exactly three on baseline `083cb1862` and three on
+candidate `0d0b6f5d333dc32d4545f62c789645a9e3ce7ddd` (rebased onto test-only
+`eddfff507`). All six PASS with Native prepare_time/export_time **0/0**;
+no baseline instability was observed in these three reruns. This does not erase
+or turn the original strict workspace failure into PASS. The original loaded
+workspace Native value **1** versus fresh Native **0** and the upstream UTC
+producer establish the wall-clock dependence; coordinator explicitly ruled it
+non-blocking for the separate seam REVIEW, not a production-radius regression.
+
+Six attempts, fresh caches, owned deadlines, raw JSON and receipts remain in
+`/tmp/ares-seam-radius/ginger-nd-edd/`; audit SHA256
+`9c4e130eeeceeef7b39cacf8bdc749a94b79f735266cc64bf4910f14c30d0407`.
+Original strict gate records remain `/tmp/ares-seam-radius/green-083/`.
+A separately authorized test-only slice will normalize only prepare_time and
+export_time numeric values during the CLI JSON comparison, preserving every
+other byte and every other assertion. This finding does not implement that
+normalization and does not authorize ignoring unrelated failures.
