@@ -47,6 +47,34 @@ export bookkeeping with no consumption projection — no behavioral case to
 author. Recorded as INCOMPLETE-by-design (authored none) unless a consumer
 appears.
 
+## Case form: dedicated runner tests, not plan cases
+
+The sweep's plan schema is a single-filament/single-extruder fixture
+(Ender-3 default filament); neither key's full legal domain fits it:
+
+- `filament_map` cross-map cases need a dual-extruder machine
+  (`filament_map` assigns per-filament extruders).
+- `filament_ramming_parameters` is consumed only through the SEMM ramming
+  path — `WipeTower2.cpp:1378-1390` (`if (m_semm)` parses the profile into
+  `ramming_speed` per 0.25 s piece; the BBL `WipeTower.cpp:1593` copy is
+  `#if 0`-disabled), which fires at multi-filament tool changes with the
+  wipe tower — a flow the plan schema cannot express.
+
+Both cases are therefore implemented as dedicated runner E2E tests
+(the `filament_variant_zero_fill.rs` pattern):
+
+1. `filament_map` cross-map on the H2D Manual dual-extruder fixture
+   (identity case already covered there): `['2','1']` and `['1','2']` move
+   the tool-change/purge to the other extruder; out-of-range `['3','1']`
+   recorded REJECTED per native stderr.
+2. `filament_ramming_parameters` on a single-extruder multi-filament SEMM
+   fixture with the wipe tower: distinct per-filament profiles change the
+   tool-change ramming block; measured against native.
+
+If the ramming case is DIVERGENT/ARES_ERROR: record the first difference
+and report for assignment (the wipe tower region belongs to worker2) —
+not fixed in this slice.
+
 ## Acceptance
 
 Per ARD-0025: every selected domain PASS, complete-output byte comparison
