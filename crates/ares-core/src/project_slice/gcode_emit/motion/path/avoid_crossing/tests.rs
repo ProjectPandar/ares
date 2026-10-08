@@ -1,5 +1,6 @@
 mod boundary_parity;
 mod empty_boundary;
+mod integer_nudge;
 
 use super::{Request, rectangle_route};
 use crate::{

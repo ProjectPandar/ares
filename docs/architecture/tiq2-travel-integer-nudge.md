@@ -34,7 +34,7 @@ new_end_point = new_end_point +
 ```
 
 Rust instead casts the sum of the integer coordinate and fractional
- displacement. These operations differ for a negative fractional displacement
+displacement. These operations differ for a negative fractional displacement
 added to a positive coordinate. For the post-wipe approach, the closest end
 is (4400000,4400000). Its displacement is approximately (99.9999,-0.1402):
 upstream truncates displacement to (99,0), ending at (4400099,4400000).
