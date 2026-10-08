@@ -1,0 +1,17 @@
+{
+  "label": "close",
+  "binary": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+  "binarySha": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+  "wrapper": "/tmp/ares-pi-matrix-vendors/scripts/orca-seeded-parity.sh",
+  "args": [
+    "--slice",
+    "0",
+    "--outputdir",
+    "/tmp/worker4-s4-native-Y8RAZn/close/output",
+    "/tmp/worker4-s4-native-Y8RAZn/close/input.3mf"
+  ],
+  "seed": 0,
+  "cpu": 1,
+  "inputSha": "6062d606ff21af0b40c19f3967028bc960c15d1984fc0f9742ddd60e1d90f641",
+  "baseSha": "7fb06c23baed9c8e06757cc0f7128c827e0b232eaa2655af687e4708014037c5"
+}
