@@ -1,5 +1,7 @@
 //! STL Model import (`Format/STL.cpp:17-40`, `Model.cpp:485-500,1254-1264,2600-2615`).
 
+mod stl;
+
 use super::{
     Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
     ProjectVolumeType, Transform3d,
@@ -139,126 +141,6 @@ impl Project {
         project.documents.project_settings_raw = merged;
         project.initialize_cli_loaded_project_config();
         Ok((project, preparation))
-    }
-
-    pub(crate) fn from_stl_with_profiles(
-        input: &[u8],
-        filename: &str,
-        profile: SelectedProfile<'_>,
-        overrides: &crate::ConfigOverrides,
-    ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
-        let preparation = crate::options::flush_matrix::PreparationContext::capture(
-            &ProjectSettingsRaw::default(),
-            overrides,
-        )?;
-        // STL --load-settings is not the BBL 3MF filament-mapping branch
-        // (OrcaSlicer.cpp:2275–2277); apply user edits to the composed profile.
-        let (settings, raw) = if overrides.is_empty() {
-            // The composed profile raw is already the post-`handle_legacy`
-            // view (`Config.cpp:577-579` normalizes every loaded preset at
-            // compose, before any overlay).
-            (profile.settings.clone(), profile.profile_raw.clone())
-        } else {
-            let mut merged = profile.profile_raw.clone();
-            overrides.apply(&mut merged);
-            // `handle_legacy` on user edits (Config.cpp:577–579) precedes
-            // the typed settings rebuild.
-            merged.handle_legacy();
-            (
-                crate::options::json_deserialize::deserialize_preset_config::<ProjectSettingsBuilder>(merged.clone().into_object())
-                    .map_err(|error| {
-                        SliceError::InvalidInput(format!(
-                            "merged project settings are invalid: {error}"
-                        ))
-                    })?
-                    .resolve(),
-                merged,
-            )
-        };
-        let model = crate::load_model(input)?;
-        let (vertices, triangles) = index_stl_vertices(&model);
-        let mut min = [f64::INFINITY; 3];
-        let mut max = [f64::NEG_INFINITY; 3];
-        for vertex in &vertices {
-            for axis in 0..3 {
-                let coordinate = f64::from(vertex[axis]);
-                min[axis] = min[axis].min(coordinate);
-                max[axis] = max[axis].max(coordinate);
-            }
-        }
-        let center: [f64; 3] = std::array::from_fn(|axis| (min[axis] + max[axis]) * 0.5);
-        let vertices = vertices
-            .into_iter()
-            .map(|vertex| {
-                let shifted: [f64; 3] =
-                    std::array::from_fn(|axis| f64::from(vertex[axis] - center[axis] as f32));
-                Point3d::new(shifted[0], shifted[1], shifted[2])
-            })
-            .collect();
-        let transform =
-            Transform3d::IDENTITY.pretranslated(Point3d::new(center[0], center[1], center[2]));
-        let volume = ProjectVolume::new(
-            filename.to_owned(),
-            0,
-            ProjectMesh::new(vertices, triangles),
-            transform,
-            (
-                filename.to_owned(),
-                ProjectVolumeType::ModelPart,
-                Default::default(),
-                Transform3d::IDENTITY,
-            ),
-        );
-        // `ObjectID.hpp:86-87`: every default-constructed `ObjectBase`
-        // increments the process-global id counter (`ObjectBase(-1)`
-        // members do not). The CLI STL flow constructs, in order: the
-        // outer `Model` and its wipe tower (`OrcaSlicer.cpp:1612`), the
-        // `read_from_file` `Model` and its wipe tower (`Model.cpp:256`),
-        // this object's `ModelObject` + config + layer height profile
-        // (`Model.cpp:467-500`), the volume's `ModelVolume` + config + the
-        // four facet annotations (`Model.hpp:794,870-879`), and finally the
-        // instance (`Model.cpp:361,658`) — 2 + 2 + 3 + 6 + 1.
-        // `get_labeled_id` (`Model.hpp:1267-1273`) returns it while
-        // `loaded_id` stays 0 for STL inputs; the header emits it at
-        // `GCode.cpp:2594`.
-        let label_id = 2 + 2 + 3 + 6 + 1;
-        let instance = ProjectInstance::new([1, 0, label_id], true, false, Transform3d::IDENTITY);
-        let object = ProjectObject::new(
-            filename.to_owned(),
-            1,
-            (
-                filename.to_owned(),
-                String::new(),
-                Default::default(),
-                Default::default(),
-            ),
-            vec![volume],
-            vec![instance],
-        );
-        Ok((
-            Self::new(
-                vec![ProjectModel::new(filename.to_owned(), vec![1])],
-                vec![object],
-                vec![PlateMetadata::new(1, vec![[1, 0, label_id]])],
-                settings,
-                ProjectDocuments {
-                    model_settings: ModelSettings {
-                        objects: Vec::new(),
-                        plates: Vec::new(),
-                        assemble: None,
-                    },
-                    project_settings_raw: raw,
-                    slice_info: SliceInfo {
-                        header: SliceInfoHeader { items: Vec::new() },
-                    },
-                    filament_sequences: FilamentSequences(Default::default()),
-                    plate_documents: Vec::new(),
-                    has_painted_layer_height_profile: false,
-                    bbl_family_3mf: false,
-                },
-            ),
-            preparation,
-        ))
     }
 }
 
