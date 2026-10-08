@@ -94,6 +94,9 @@ mod overhang_reverse;
 #[path = "runner/path_tests.rs"]
 mod path_tests;
 #[cfg(test)]
+#[path = "runner/processor_migration.rs"]
+mod processor_migration;
+#[cfg(test)]
 #[path = "runner/profile_entry.rs"]
 mod profile_entry;
 #[cfg(test)]

@@ -1,0 +1,187 @@
+//! Runtime GCodeProcessor E2Es (hpp:887,905,914-915), not frozen Native output.
+//! Failure inventory: omitted postprocessing, dropped effective configuration,
+//! changed seam/time-cache attribution, and shortened whole-stream assertions.
+use super::{ExportedCase, OrcaRunner};
+use ares_core::ProjectSettings;
+use serde_json::{Map, Value};
+
+pub(super) fn slice(runner: &OrcaRunner, project: &[u8]) -> Vec<u8> {
+    let project_path = runner.work.join("input.3mf");
+    std::fs::write(&project_path, project).unwrap();
+    let output_dir = runner.work.join("native");
+    std::fs::create_dir(&output_dir).unwrap();
+    runner
+        .slice_case(&ExportedCase {
+            label: "processor/runtime-migration".into(),
+            project: project.to_vec(),
+            project_path,
+            output_dir,
+        })
+        .unwrap()
+        .reference
+}
+
+fn setting<'a>(reference: &'a str, key: &str) -> &'a str {
+    let prefix = format!("; {key} = ");
+    reference
+        .lines()
+        .find_map(|line| line.strip_prefix(&prefix))
+        .unwrap()
+}
+
+pub(super) fn settings(reference: &str) -> ProjectSettings {
+    let mut settings = ProjectSettings::default();
+    for (key, destination) in [
+        (
+            "filament_diameter",
+            &mut settings.filament.gcode.filament_diameter,
+        ),
+        (
+            "filament_density",
+            &mut settings.filament.gcode.filament_density,
+        ),
+        ("filament_cost", &mut settings.filament.gcode.filament_cost),
+    ] {
+        destination.0 = setting(reference, key)
+            .split(',')
+            .map(|value| ares_core::OrcaFloat(value.trim().parse().unwrap()))
+            .collect();
+    }
+    let mut machine = Map::new();
+    for key in ares_core::MachineEnvelopeOptions::DECLARATION_ORDER {
+        let prefix = format!("; {key} = ");
+        if let Some(value) = reference
+            .lines()
+            .find_map(|line| line.strip_prefix(&prefix))
+        {
+            let value = if key.starts_with("machine_max_") || key.starts_with("machine_min_") {
+                Value::Array(value.split(',').map(Value::from).collect())
+            } else {
+                Value::from(value)
+            };
+            machine.insert(key.to_owned(), value);
+        }
+    }
+    settings.printer.machine = serde_json::from_value(machine.into()).unwrap();
+    settings.printer.gcode.gcode_flavor =
+        serde_json::from_value(Value::from(setting(reference, "gcode_flavor"))).unwrap();
+    settings.printer.gcode.machine_load_filament_time.0 =
+        setting(reference, "machine_load_filament_time")
+            .parse()
+            .unwrap();
+    settings
+}
+
+pub(super) fn inverse(reference: &str, stops: bool) -> String {
+    let mut first = true;
+    let mut input = String::new();
+    for line in reference.split_inclusive('\n') {
+        let command = line.strip_suffix('\n').unwrap_or(line);
+        if command.starts_with("M73 P") && command != "M73 P100 R0" {
+            if first {
+                input.push_str("M73 P0 R0\n");
+                first = false;
+            }
+        } else if stops && command.starts_with("M73 C") {
+            continue;
+        } else if command.starts_with("; estimated printing time (normal mode) =") {
+            input.push_str("; estimated printing time (normal mode) = 0s\n");
+        } else if command.starts_with("; estimated first layer printing time (normal mode) =") {
+            input.push_str("; estimated first layer printing time (normal mode) = 0s\n");
+        } else {
+            input.push_str(line);
+        }
+    }
+    input
+}
+
+pub(super) fn strict(runner: &OrcaRunner, input: &str, reference: &[u8], actual: &[u8]) {
+    std::fs::write(runner.work.join("processor-input.gcode"), input).unwrap();
+    std::fs::write(runner.work.join("processor-native.gcode"), reference).unwrap();
+    std::fs::write(runner.work.join("processor-ares.gcode"), actual).unwrap();
+    assert!(
+        actual == reference,
+        "complete processor output differs: bytes {}/{}, first byte {:?}; artifacts {:?}",
+        actual.len(),
+        reference.len(),
+        actual.iter().zip(reference).position(|(a, b)| a != b),
+        runner.work
+    );
+}
+
+fn replay(project: &[u8], envelope: bool) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let reference = slice(&runner, project);
+    let text = std::str::from_utf8(&reference).unwrap();
+    let input = inverse(text, false);
+    let mut config = settings(text);
+    if !envelope {
+        // Preserve the old seam replay's initial ProcessorLimits exactly.
+        config.printer.machine = serde_json::from_value(serde_json::json!({
+            "machine_max_acceleration_extruding": [1100],
+            "machine_max_acceleration_retracting": [1100],
+            "machine_max_acceleration_travel": [1100],
+            "machine_max_acceleration_x": [0], "machine_max_acceleration_y": [0],
+            "machine_max_acceleration_z": [0], "machine_max_acceleration_e": [0],
+            "machine_max_speed_x": [0], "machine_max_speed_y": [0],
+            "machine_max_speed_z": [0], "machine_max_speed_e": [0],
+            "machine_max_jerk_x": [9], "machine_max_jerk_y": [9],
+            "machine_max_jerk_z": [3], "machine_max_jerk_e": [2.5]
+        }))
+        .unwrap();
+        config.printer.gcode.gcode_flavor = ares_core::GCodeFlavor::MarlinFirmware;
+        config.printer.gcode.machine_load_filament_time.0 = 0.0;
+    }
+    let processed = ares_core::gcode_processor::process_gcode(&input, &config, false);
+    strict(&runner, &input, &reference, &processed.gcode);
+}
+
+#[test]
+fn anchor_matches_actual_orca_output() {
+    replay(
+        include_bytes!("../../../../../tests/processor_seam_cache/anchor.3mf"),
+        false,
+    );
+}
+
+#[test]
+fn closed_external_wipe_off_matches_actual_orca_output() {
+    replay(
+        include_bytes!("../../../../../tests/processor_seam_cache/wipe-off.3mf"),
+        false,
+    );
+}
+
+#[test]
+fn closed_external_inward_before_m204_matches_actual_orca_output() {
+    replay(
+        include_bytes!("../../../../../tests/processor_seam_cache/solid-rectilinear.3mf"),
+        false,
+    );
+}
+
+#[test]
+fn two_walls_matches_actual_orca_output() {
+    replay(
+        include_bytes!("../../../../../tests/processor_seam_cache/two-walls.3mf"),
+        false,
+    );
+}
+
+#[test]
+fn open_closed_roles_and_first_moving_commands_match_actual_orca_output() {
+    replay(
+        include_bytes!("../../../../../tests/processor_seam_cache/classification.3mf"),
+        false,
+    );
+}
+
+#[test]
+fn positive_actual_orca_replay() {
+    replay(
+        include_bytes!("../../../../../tests/processor_seam_cache/anchor.3mf"),
+        true,
+    );
+}
