@@ -2,6 +2,58 @@
 use super::ExportedCase;
 use std::io::{Cursor, Read, Write};
 
+/// Retargets the first build item onto the second object so the project
+/// holds ONE print object with TWO instances (by-object M73 coverage:
+/// upstream accumulates `instances().size() * temp_layer_count`,
+/// `GCode.cpp:2505`).
+pub(crate) fn second_instance_of_first_object(mut exported: ExportedCase) -> ExportedCase {
+    let project = {
+        let mut input = zip::ZipArchive::new(Cursor::new(&exported.project)).unwrap();
+        let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        for index in 0..input.len() {
+            let mut file = input.by_index(index).unwrap();
+            let mut bytes = Vec::new();
+            file.read_to_end(&mut bytes).unwrap();
+            if file.name() == "3D/3dmodel.model" {
+                bytes = String::from_utf8(bytes)
+                    .unwrap()
+                    .replacen("objectid=\"2\"", "objectid=\"4\"", 1)
+                    .into_bytes();
+            } else if file.name() == "Metadata/model_settings.config" {
+                let mut xml = String::from_utf8(bytes).unwrap();
+                xml = xml.replacen(
+                    "<metadata key=\"object_id\" value=\"2\"/>",
+                    "<metadata key=\"object_id\" value=\"4\"/>",
+                    1,
+                );
+                if let Some(start) = xml.find("<metadata key=\"object_id\" value=\"4\"/>") {
+                    if let Some(offset) = xml[start..].find("<metadata key=\"instance_id\" value=\"0\"/>") {
+                        let at = start + offset;
+                        xml.replace_range(at..at + "<metadata key=\"instance_id\" value=\"0\"/>".len(),
+                            "<metadata key=\"instance_id\" value=\"1\"/>");
+                    }
+                }
+                xml = xml.replacen(
+                    "<metadata key=\"identify_id\" value=\"45\"/>",
+                    "<metadata key=\"identify_id\" value=\"145\"/>",
+                    1,
+                );
+                bytes = xml.into_bytes();
+            }
+            output
+                .start_file(file.name(), zip::write::SimpleFileOptions::default())
+                .unwrap();
+            output.write_all(&bytes).unwrap();
+        }
+        output.finish().unwrap().into_inner()
+    };
+    let loaded = ares_core::load_project(&project).unwrap();
+    assert_eq!(loaded.objects().len(), 1);
+    assert_eq!(loaded.objects()[0].instances().len(), 2);
+    exported.project = project;
+    exported
+}
+
 pub(crate) fn second_copy(mut exported: ExportedCase) -> ExportedCase {
     let project = {
         let mut input = zip::ZipArchive::new(Cursor::new(&exported.project)).unwrap();

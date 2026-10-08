@@ -8,7 +8,22 @@ use crate::runner::{OrcaRunner, repo_root};
 use crate::{self as parity, CaseInputs, smoke_overrides};
 use serde_json::Value;
 
-fn by_object_case(runner: &OrcaRunner, vendor: &str, printer: &str, label: &str) {
+fn by_object_case(
+    runner: &OrcaRunner,
+    vendor: &str,
+    printer: &str,
+    label: &str,
+) {
+    by_object_case_impl(runner, vendor, printer, label, false);
+}
+
+fn by_object_case_impl(
+    runner: &OrcaRunner,
+    vendor: &str,
+    printer: &str,
+    label: &str,
+    second_instance: bool,
+) {
     let profiles = crate::presets::VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         vendor,
@@ -36,6 +51,11 @@ fn by_object_case(runner: &OrcaRunner, vendor: &str, printer: &str, label: &str)
             &[],
         )
         .unwrap();
+    let exported = if second_instance {
+        super::type2_copies::second_instance_of_first_object(exported)
+    } else {
+        exported
+    };
     let sliced = runner.slice_case(&exported).unwrap();
     let native = std::str::from_utf8(&sliced.reference).unwrap();
     let native_layers: u32 = native
@@ -52,6 +72,28 @@ fn by_object_case(runner: &OrcaRunner, vendor: &str, printer: &str, label: &str)
     );
     let outcome = parity::compare_case(&sliced);
     assert_eq!(outcome.status, "PASS", "{label}: {}", outcome.detail);
+}
+
+#[test]
+fn orca_parity_print_sequence_by_object_single_object_two_instances_matches_native() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    // RED: one print object with two instances under `by object`. Upstream
+    // iterates print object INSTANCES sequentially (GCode.cpp:3279 loop),
+    // counts `instances().size() * temp_layer_count` (GCode.cpp:2505), and
+    // runs the full inter-instance transition per copy (GCode.cpp:3304
+    // gate, :3326-3327 hop/origin, :3333-3339 temps). Ares currently merges
+    // both copies into one chunk: the header layer count says 62 vs native
+    // 124 and the body is missing the inter-instance transition (RED log:
+    // /tmp/ares-w5-gates/m73-multi-red2.log).
+    by_object_case_impl(
+        &runner,
+        "Creality",
+        "Creality Ender-3 0.4 nozzle",
+        "by-object/ender3-one-object-two-instances",
+        true,
+    );
 }
 
 #[test]
