@@ -72,6 +72,24 @@ them. Banned config keys remain banned, empty vectors and singleton/multi-empty
 slots remain source-defined. No Stage2 region diff, numerical slicing change or
 new G-code placeholder semantics belongs to this prerequisite.
 
+## Empty coStrings profile JSON
+
+`Preset::save` delegates to `ConfigBase::save_to_json`
+(Preset.cpp:729-735). For vector options, Config.cpp:1483-1496 uses
+`vec->vserialize()` and constructs a JSON array without dropping empty vectors.
+`ConfigOptionStrings::vserialize` returns logical `values` unchanged
+(Config.hpp:1140-1151), so an empty coStrings option is JSON `[]`, not scalar
+`""`. This also applies to upward_compatible_machine generated for CLI import.
+
+The loader accepts both representations: Config.cpp:927-929 sends a scalar
+string to set_deserialize, while :950-1000 parses a Strings array into semicolon
+wire form before set_deserialize. An empty array produces empty wire text;
+ConfigOptionStrings::deserialize clears values (Config.hpp:1154-1159), and
+unescape_strings_cstyle returns on empty input (Config.cpp:146-149). Both `""`
+and `[]` therefore read as the same empty vector, even though profile JSON
+export must use the canonical array shape. Do not preserve the scalar export
+shape as a compatibility fallback.
+
 ## Verification conclusions required before acceptance
 
 Use the existing unmodified project-array.3mf (10mm cube) and runtime OrcaRunner
