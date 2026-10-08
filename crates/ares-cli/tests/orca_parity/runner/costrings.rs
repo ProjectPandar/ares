@@ -69,7 +69,11 @@ fn with_settings(changes: &serde_json::Value) -> Vec<u8> {
 }
 
 async fn compare(label: &str, input: &[u8]) {
+    if crate::native_environment::binary("ARES_ORCA_BIN").is_none() {
+        return;
+    }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        crate::native_environment::skipped("Native runner unavailable for coStrings comparison");
         return;
     };
     let mut builder = tempfile::Builder::new();
