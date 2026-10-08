@@ -14,11 +14,11 @@ pub(crate) mod vg1_inputs;
 #[path = "runner/application.rs"]
 pub(crate) mod application;
 #[cfg(test)]
-#[path = "runner/arachne_open_wall_order.rs"]
-mod arachne_open_wall_order;
-#[cfg(test)]
 #[path = "runner/application_tests.rs"]
 mod application_tests;
+#[cfg(test)]
+#[path = "runner/arachne_open_wall_order.rs"]
+mod arachne_open_wall_order;
 #[cfg(test)]
 #[path = "runner/cache_contract_tests.rs"]
 mod cache_contract_tests;
