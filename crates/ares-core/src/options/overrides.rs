@@ -30,7 +30,13 @@ pub struct ConfigOverrides {
     /// Per-key element tokens in the document's array-of-strings shape.
     /// Scalar options carry exactly one token; vector options carry one
     /// token per element.
-    values: BTreeMap<String, Vec<String>>,
+    values: BTreeMap<String, OverrideValue>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct OverrideValue {
+    tokens: Vec<String>,
+    cli_numbers: Vec<f64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -79,8 +85,9 @@ impl ConfigOverrides {
         let errors = self
             .values
             .iter()
-            .filter_map(|(key, tokens)| {
-                cli_threshold_error(key, tokens).map(|message| format!("{key}: {message}"))
+            .filter_map(|(key, value)| {
+                cli_threshold_error(key, &value.cli_numbers)
+                    .map(|message| format!("{key}: {message}"))
             })
             .collect::<Vec<_>>();
         if errors.is_empty() {
@@ -101,7 +108,8 @@ impl ConfigOverrides {
     /// Applies the overrides onto the raw project-settings view
     /// (`ConfigBase::apply_only`, `Config.cpp:461`: later values win).
     pub(crate) fn apply(&self, raw: &mut ProjectSettingsRaw) {
-        for (key, tokens) in &self.values {
+        for (key, override_value) in &self.values {
+            let tokens = &override_value.tokens;
             let definition = option_definition(key).expect("validated override key");
             let value = if is_scalar(definition.kind) {
                 RawConfigValue::Text(tokens[0].clone())
@@ -118,17 +126,13 @@ impl ConfigOverrides {
     }
 }
 
-fn cli_threshold_error(key: &str, tokens: &[String]) -> Option<String> {
+fn cli_threshold_error(key: &str, numbers: &[f64]) -> Option<String> {
     let threshold = match key {
         "filament_diameter" => Some(1.0),
         "filament_flow_ratio" => Some(0.0),
         _ => None,
     };
     if let Some(threshold) = threshold {
-        let numbers = tokens
-            .iter()
-            .map(|token| token.parse::<f64>().expect("validated numeric override"))
-            .collect::<Vec<_>>();
         if !numbers
             .iter()
             .any(|&value| value < threshold || (threshold == 0.0 && value == 0.0))
@@ -157,9 +161,7 @@ fn cli_threshold_error(key: &str, tokens: &[String]) -> Option<String> {
     ) {
         return None;
     }
-    let value = tokens[0]
-        .parse::<f64>()
-        .expect("validated numeric override");
+    let value = numbers[0];
     (value <= 0.0 || (key == "layer_height" && (value % 0.000001).abs() > 1e-4))
         .then(|| format!("invalid value {value:.6}"))
 }
@@ -167,7 +169,7 @@ fn cli_threshold_error(key: &str, tokens: &[String]) -> Option<String> {
 /// Validates one `{key: tokens}` entry and returns the per-element tokens
 /// to store (`Config.cpp set_deserialize` error ordering: unknown key →
 /// malformed token → out-of-range value → typed deserialize failure).
-fn validate_entry(key: &str, items: Vec<String>) -> Result<Vec<String>, SliceError> {
+fn validate_entry(key: &str, items: Vec<String>) -> Result<OverrideValue, SliceError> {
     // `transform_obsolete` mirrors the obsolete-key handling the document
     // deserializer applies; overrides must name live option keys.
     let Some(definition) = option_definition(key) else {
@@ -188,7 +190,7 @@ fn validate_entry(key: &str, items: Vec<String>) -> Result<Vec<String>, SliceErr
         }
         WireValue::Sequence(items)
     };
-    validate_numeric_range(key, definition.kind, &decoded)?;
+    let cli_numbers = validate_numeric_range(key, definition.kind, &decoded)?;
     let token = match &decoded {
         WireValue::Scalar(value) => value.clone(),
         WireValue::Sequence(values) => values.join(","),
@@ -200,10 +202,14 @@ fn validate_entry(key: &str, items: Vec<String>) -> Result<Vec<String>, SliceErr
     // Its errors already name the key (`InvalidInput`), matching the
     // upstream `BadOptionValueException`/`UnknownOptionException` surface.
     crate::options::model_config_deserialize::validate_model_config_value(key, &token)?;
-    match decoded {
-        WireValue::Scalar(value) => Ok(vec![value]),
-        WireValue::Sequence(values) => Ok(values),
-    }
+    let tokens = match decoded {
+        WireValue::Scalar(value) => vec![value],
+        WireValue::Sequence(values) => values,
+    };
+    Ok(OverrideValue {
+        tokens,
+        cli_numbers,
+    })
 }
 
 /// Port of `ConfigOptionDef::is_value_valid` (`Config.cpp:321-337`): NaN is
@@ -231,7 +237,7 @@ fn validate_numeric_range(
     key: &str,
     kind: OptionValueKind,
     decoded: &WireValue,
-) -> Result<(), SliceError> {
+) -> Result<Vec<f64>, SliceError> {
     let numeric = matches!(
         kind,
         OptionValueKind::Float
@@ -246,11 +252,25 @@ fn validate_numeric_range(
             | OptionValueKind::IntsNullable
     );
     if !numeric {
-        return Ok(());
+        return Ok(Vec::new());
     }
     let Some(metadata) = option_metadata(key) else {
-        return Ok(());
+        return Ok(Vec::new());
     };
+    let retain_cli_numbers = matches!(
+        key,
+        "filament_diameter"
+            | "filament_flow_ratio"
+            | "layer_height"
+            | "initial_layer_print_height"
+            | "bridge_flow"
+            | "internal_bridge_flow"
+            | "extruder_clearance_radius"
+            | "extruder_clearance_height_to_rod"
+            | "extruder_clearance_height_to_lid"
+            | "nozzle_height"
+    );
+    let mut cli_numbers = Vec::new();
     let raw_tokens: Vec<&str> = match decoded {
         WireValue::Scalar(value) => vec![value.as_str()],
         WireValue::Sequence(values) => values.iter().map(String::as_str).collect(),
@@ -275,8 +295,11 @@ fn validate_numeric_range(
             let max = metadata.max.unwrap_or(f32::MAX as f64);
             return Err(invalid(key, &format!("{token} not in range [{min},{max}]")));
         }
+        if retain_cli_numbers {
+            cli_numbers.push(parsed);
+        }
     }
-    Ok(())
+    Ok(cli_numbers)
 }
 
 const fn is_scalar(kind: OptionValueKind) -> bool {
