@@ -65,12 +65,12 @@ pub(super) fn avoid_perimeters(
                 let nudge = SCALED_EPSILON;
                 let unit = (direction.0 / length, direction.1 / length);
                 let nudged_start = Point::new(
-                    (new_start.x() as f64 - unit.0 * nudge) as Coord,
-                    (new_start.y() as f64 - unit.1 * nudge) as Coord,
+                    new_start.x() - (unit.0 * nudge) as Coord,
+                    new_start.y() - (unit.1 * nudge) as Coord,
                 );
                 let nudged_end = Point::new(
-                    (new_end.x() as f64 + unit.0 * nudge) as Coord,
-                    (new_end.y() as f64 + unit.1 * nudge) as Coord,
+                    new_end.x() + (unit.0 * nudge) as Coord,
+                    new_end.y() + (unit.1 * nudge) as Coord,
                 );
                 let retry = collect_intersections(boundary, nudged_start, nudged_end)?;
                 (start, end, intersections) = nudged_retry(
