@@ -231,6 +231,7 @@ pub enum SliceError {
     InvalidInput(String),
     ProjectSlicingIncomplete,
     UnsupportedProjectFeature(String),
+    ToolpathOutsidePrintableArea { error_code: u8, gcode: Vec<u8> },
 }
 
 impl fmt::Display for SliceError {
@@ -242,6 +243,7 @@ impl fmt::Display for SliceError {
             Self::UnsupportedProjectFeature(feature) => {
                 write!(f, "unsupported project feature: {feature}")
             }
+            Self::ToolpathOutsidePrintableArea { .. } => f.write_str("Found G-code in unprintable area of multi-extruder printers after slicing. Please make sure the 3mf file can be successfully sliced in the latest Orca Slicer."),
         }
     }
 }
