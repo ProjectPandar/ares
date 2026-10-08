@@ -203,6 +203,21 @@ async fn verify(fields: Value, expected_error: Option<&str>) {
     if let Ok(bytes) = &sliced {
         fs::write(directory.join("ares.gcode"), bytes).unwrap();
     }
+    let cli_directory = directory.join("cli");
+    fs::create_dir(&cli_directory).unwrap();
+    let cli = expected_error.map(|_| {
+        std::process::Command::new(assert_cmd::cargo::cargo_bin!("ares"))
+            .args([
+                "slice",
+                "--overrides",
+                &fields.to_string(),
+                "-o",
+                cli_directory.join("output.gcode").to_str().unwrap(),
+                input.to_str().unwrap(),
+            ])
+            .output()
+            .unwrap()
+    });
     let reference = fs::read(output.join("plate_1.gcode"));
     let comparison = match (&reference, &sliced) {
         (Ok(native), Ok(ares)) => Some(golden::compare_ordered_bytes_generator_only(native, ares)),
@@ -240,6 +255,7 @@ async fn verify(fields: Value, expected_error: Option<&str>) {
             "overrides":fields,"expected_error":expected_error,"native":native_evidence,
             "native_binary":std::env::var("ARES_ORCA_NATIVE_BIN").ok(),
             "resources":std::env::var("ARES_ORCA_RESOURCES_DIR").ok(),
+            "cli":cli.as_ref().map(|output|json!({"code":output.status.code(),"stderr":String::from_utf8_lossy(&output.stderr),"stdout":String::from_utf8_lossy(&output.stdout)})),
             "validation":validation.as_ref().map_err(ToString::to_string),
             "sliced":sliced.as_ref().map(Vec::len).map_err(ToString::to_string),
             "application":application.as_ref().map_err(ToString::to_string),
@@ -264,6 +280,22 @@ async fn verify(fields: Value, expected_error: Option<&str>) {
                 capture.stderr,
                 format!("Params in command line error: \n{expected}\nsetup params error\n")
                     .as_bytes(),
+                "{directory:?}"
+            );
+            let cli = cli.unwrap();
+            assert_eq!(cli.status.code(), capture.code, "CLI exit; {directory:?}");
+            assert_eq!(cli.stderr, capture.stderr, "CLI diagnostic; {directory:?}");
+            assert_eq!(cli.stdout, capture.stdout, "CLI stdout; {directory:?}");
+            assert!(
+                !output.join("result.json").exists(),
+                "Native setup result.json; {directory:?}"
+            );
+            assert!(
+                !cli_directory.join("result.json").exists(),
+                "CLI setup result.json; {directory:?}"
+            );
+            assert!(
+                !cli_directory.join("output.gcode").exists(),
                 "{directory:?}"
             );
             assert!(
