@@ -56,9 +56,6 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         return;
     }
 
-    let front_bias = placements.iter().any(|placement| {
-        placement.is_some_and(|mode| mode == crate::ProcessSeamPosition::AlignedBack)
-    });
     // `SeamPlacer.cpp:1442` — occlusion is computed per PrintObject, each
     // with its own `trafo_centered` frame; share one visibility model per
     // object index.
@@ -75,6 +72,8 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
                 traversal.scale,
             );
             (!mesh.triangles.is_empty()).then(|| {
+                let front_bias =
+                    placement.is_some_and(|mode| mode == crate::ProcessSeamPosition::AlignedBack);
                 visibility::GlobalVisibility::from_mesh(mesh, VISIBILITY_SAMPLE_COUNT, front_bias)
             })
         })
