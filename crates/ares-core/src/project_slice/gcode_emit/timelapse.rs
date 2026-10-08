@@ -120,14 +120,10 @@ fn append(
             ]),
         );
     }
-    // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`):
-    // the most-used PHYSICAL extruder is `filament_map[f] - 1` over the
-    // used filaments, counted once per layer; ties resolve to the HIGHEST
-    // index. With every configured filament used each layer, each distinct
-    // physical extruder weighs one layer-count, so the tie-to-highest rule
-    // decides. The placeholder id is then
+    // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`,
+    // `state.most_used_extruder`): the placeholder id is then
     // `physical_extruder_map.get_at(most_used)` (`GCode.cpp:5162`).
-    let most_used = insert_physical_extruder_ids(&mut config, traversal);
+    let most_used = insert_physical_extruder_ids(&mut config, traversal, state.most_used_extruder);
     let position = safe_position(traversal, most_used);
     config.insert(
         "has_timelapse_safe_pos",
@@ -175,35 +171,20 @@ fn append(
 }
 
 /// `GCode.cpp:5162-5163`: inserts `most_used_physical_extruder_id` and
-/// `curr_physical_extruder_id`, returning the most-used extruder index
-/// (used by the caller to resolve the timelapse snapshot position).
-pub(super) fn insert_physical_extruder_ids(
+/// `curr_physical_extruder_id`, where the placeholder id is the layer's
+/// most-used logical extruder mapped through `physical_extruder_map`.
+pub(in crate::project_slice::gcode_emit) fn insert_physical_extruder_ids(
     config: &mut value::Config,
     traversal: &PreparedPostClassicTraversal,
+    most_used_extruder: usize,
 ) -> Option<usize> {
     let runtime = &traversal.resolved.views.runtime_gcode;
-    let full = &traversal.resolved.views.full;
-    let map = &full.project.gcode.filament_map.0;
-    let most_used = map
-        .iter()
-        .filter(|entry| entry.0 >= 1)
-        .map(|entry| (entry.0 - 1) as usize)
-        .max();
-    let physical_extruder = match most_used {
-        Some(index) => runtime
-            .physical_extruder_map
-            .0
-            .get(index)
-            .or_else(|| runtime.physical_extruder_map.0.first())
-            .map_or(0, |value| value.0),
-        // An all-zero/empty map degenerates to the first physical entry
-        // (`physical_extruder_map.get_at(0)`).
-        None => runtime
-            .physical_extruder_map
-            .0
-            .first()
-            .map_or(0, |value| value.0),
-    };
+    let physical_extruder = runtime
+        .physical_extruder_map
+        .0
+        .get(most_used_extruder)
+        .or_else(|| runtime.physical_extruder_map.0.first())
+        .map_or(0, |value| value.0);
     config.insert(
         "most_used_physical_extruder_id",
         value::Value::number(physical_extruder as f64),
@@ -212,7 +193,7 @@ pub(super) fn insert_physical_extruder_ids(
         "curr_physical_extruder_id",
         value::Value::number(physical_extruder as f64),
     );
-    most_used
+    Some(most_used_extruder)
 }
 
 pub(super) fn last_motion_z(gcode: &str) -> Option<f64> {
