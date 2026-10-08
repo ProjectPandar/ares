@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 /** Visible text fields and selects under 16px, which iOS Safari zooms into on focus. */
 export const smallFonts = (page: Page) => page.evaluate(() =>
@@ -25,12 +25,13 @@ export const moving = (page: Page) => page.evaluate(() => {
 });
 
 /**
- * Tabs through the page from the top until focus repeats. Returns the names
+ * Tabs through the page from `start` until focus repeats. Returns the names
  * of the controls reached and of those whose focused look equals their
- * unfocused look (no visible focus indicator).
+ * unfocused look (no visible focus indicator). It starts on a control because
+ * Tab on the body switches Prepare/Preview (GLCanvas3D::on_key, Shell.tsx).
  */
-export async function tabSweep(page: Page) {
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+export async function tabSweep(page: Page, start: Locator) {
+  await start.focus();
   const reached: string[] = [];
   const invisible: string[] = [];
   for (let step = 0; step < 400; step += 1) {

@@ -76,7 +76,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
       expect.soft(await moving(page), `${step}: nothing moves under prefers-reduced-motion`).toEqual([]);
       return;
     }
-    const { reached, invisible } = await tabSweep(page);
+    const { reached, invisible } = await tabSweep(page, button("Import"));
     expect.soft(invisible, `${step}: every Tab stop shows its focus`).toEqual([]);
     for (const name of reach) expect.soft(reached, `${step}: Tab reaches ${name}`).toContain(name);
   };
