@@ -4,7 +4,7 @@ use serde_json::json;
 
 #[test]
 fn orca_parity_ironing_fan_preserves_complete_output_and_role_speed() {
-    if std::env::var("ARES_PARITY_IRONING_FAN_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_IRONING_FAN_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

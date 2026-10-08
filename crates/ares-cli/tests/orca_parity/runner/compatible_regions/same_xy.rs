@@ -13,7 +13,7 @@ fn thin_square_scarf_travel_preserves_complete_native_output() {
 }
 
 fn compare(scarf: &str) {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

@@ -15,7 +15,7 @@ mod nozzle;
 /// after seam-placement changes (env-gated, prints outcomes).
 #[test]
 fn orca_parity_nearest_cluster_check() {
-    if std::env::var("ARES_PARITY_CLUSTER").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_CLUSTER") {
         eprintln!("skipping: set ARES_PARITY_CLUSTER=1");
         return;
     }

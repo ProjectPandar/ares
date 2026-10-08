@@ -3,7 +3,7 @@ use serde_json::json;
 
 #[test]
 fn two_nozzle_auto_lift_preserves_native_overhang_spirals() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[("z_hop_types", json!(["Auto Lift"]))]);

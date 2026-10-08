@@ -1,6 +1,6 @@
 # ARD — Native oracle availability policy (slice A)
 
-Status: DRAFT / specification approval requested; no test implementation yet.
+Status: Accepted — slice A, test infrastructure only.
 Owner: worker4. User task: `/tmp/ares-native-artifact-cleanup-task.md`.
 Audit base: `7fc1c69e3cf860dbfa9f93bbeb539f2acc8da127`.
 Slice A must receive its own exact-hash REVIEW/approval before slice B starts.
@@ -28,7 +28,9 @@ optional skips. Native launch/parse/comparison failures never become skips.
 Rust libtest has no runtime ignored-test return state. We must NOT claim a
 runtime `return` changes nextest's PASS into its native SKIP status. The supported
 contract is explicit captured `SKIPPED:` output (task allows this), displayed by
-nextest `success-output = "immediate"`. Do not force `process::exit`, panic in
+nextest `success-output = "immediate"` scoped to Native-comparison binaries and
+excluding synthetic launcher/cache probes. Unrelated tests retain normal output
+policy. Do not force `process::exit`, panic in
 optional mode, or add a different test framework. Cargo/libtest users see markers
 with `--nocapture`; supported repository test entrypoint remains nextest.
 
@@ -96,19 +98,22 @@ Do not classify every `return;` in the repository as a Native skip.
 4. Independent procgcode-only paths obtain their own named executable through
    the shared policy: absence required→FAIL, optional→SKIPPED. Preserve exact
    stable-options/raw distinction; never substitute one for the other.
-5. Optional live branches within mixed frozen/local tests must likewise disclose
-   omitted comparison. In mandatory mode an actual optional live comparison's
-   required dependency may not be bypassed; the full workspace gate must supply
-   its named dependency and retain existing assertions. If role-map/dynamics
-   cannot be provisioned without changing assertions, report the blocker rather
-   than silently exempting it. Core Native subprocess removal remains B.
+5. Optional live branches within mixed frozen/local tests must disclose omitted
+   comparison in optional mode and fail on every missing prerequisite in
+   mandatory mode. Required dynamics needs ARES_PROCGCODE_DYNAMICS_BIN;
+   required role-map needs ARES_ROLE_ORACLE_LIVE and explicit ARES_GDB_BIN.
+   Invoke that GDB directly; implicit nix-shell tool resolution is not an
+   availability fallback. Preserve the existing reader's pinned raw Native ELF,
+   SHA and map layout and all assertions. Core subprocess removal remains B.
 6. Diagnostic runner path/initialization tests use explicit per-child environment
    isolation: synthetic non-Native launch probes remove inherited required mode,
    while policy probes set it explicitly. No global env::set_var / race-prone
    environment test mutation. No blanket exemption of real reference cases.
-7. `.config/nextest.toml`: default success-output="immediate", keep num-cpus
-   unchanged. This exposes offline markers; explicit user CLI overrides can
-   suppress output, but official gates must not override them to `never`.
+7. `.config/nextest.toml`: success-output="immediate" scoped to Native comparison
+   tests, not unrelated tests or synthetic probe bodies; keep num-cpus unchanged.
+   This exposes offline markers. Native-comparison assertions emit no new
+   success logs; explicit user CLI overrides may suppress output, but official
+   gates must not hide skip messages with `never`.
 
 ## Files and migration methods
 
@@ -135,9 +140,11 @@ files need their gate replaced, with oracle assertions untouched.
 | crates/ares-core/tests/processed_motion_attributes.rs | optional dynamics live branch is explicit; require named dynamics dependency for mandatory execution; frozen files remain for B |
 | crates/ares-core/tests/processed_role_filament_usage.rs | live-flag/Native/gdb environment visibility; provision or report blocker, no role-map assertion deletion |
 | crates/ares-cli/tests/orca_parity/replay.rs | explicitly selected legacy replay, not fresh Native evidence; missing replay selector visible SKIPPED; do not require a legacy replay inventory for unrelated mandatory live suite |
-| .config/nextest.toml | make captured optional skip markers visible |
-| new test-only shared policy/support module | implementation only after spec and isolated-seam RED approval |
-| new/extended subprocess policy E2E test | invokes actual test executable boundary, no Native output golden |
+| .config/nextest.toml | expose captured optional skips only in Native-comparison test scopes |
+| tests/support/native_environment.rs | shared test-only required/value/binary/visible-skip policy |
+| crates/ares-cli/tests/orca_parity/runner/environment.rs | bounded availability preflight and reference selection gates |
+| crates/ares-cli/tests/orca_parity/runner/native_availability_tests.rs | actual process-boundary initialization/selector/procgcode probes |
+| crates/ares-core/tests/support/native_policy_checks.rs | isolated child execution for mandatory mixed Native checks; migrate external core test work in B |
 
 Tests reading frozen Native gcode/maps and hand-written G-code inputs remain
 unchanged in A except optional live-check availability described above. B must
@@ -180,11 +187,12 @@ No cache/input/Native comparison flags or normalization changes.
 Workspace gates: add `ARES_REQUIRE_ORCA=1` to env before
 `cargo nextest run --workspace --test-threads 16`, while also supplying the full
 Native/procgcode resources/identity/reference-selector env already used by the
-corresponding controls. The audited extra live requirements are
-ARES_PROCGCODE_DYNAMICS_BIN and the role-map live producer/gdb prerequisites;
-current v2 refs array supplies raw+stable procgcode but NOT dynamics/role live.
-Provision explicit identity/path or resolve the boundary at spec review; do not
-call the existing incomplete refs set a complete required workspace environment.
+corresponding controls. Its additional shared environment must include
+ARES_PROCGCODE_DYNAMICS_BIN, ARES_ROLE_ORACLE_LIVE=1 and ARES_GDB_BIN.
+Mandatory mixed checks have no exemptions. Keep the role reader's existing
+pinned raw ELF/SHA and runtime libraries; it must not reinterpret the selected
+seeded/official ELF using different ABI assumptions. Per-test role input/output
+remains locally supplied, not a global resource substitution.
 Preserve actual replay seed0/runner one-CPU policy and Native ELF receipts.
 Optional visibility demo: no required flag, nextest success-output immediate.
 Mandatory absence demo: `env -u ARES_ORCA_NATIVE_BIN ARES_REQUIRE_ORCA=1 ...`
@@ -206,5 +214,5 @@ and optional absence demonstration must visibly declare no parity assertion.
 
 Then exact-hash independent slice-A REVIEW→approval→ff-only push→notify.
 Only afterward write slice-B deletion/runtime/cache/gdb migration spec.
-Spec review must resolve any unprovisioned optional role/dynamics Native branch
-before implementation; availability exemptions cannot be invented silently.
+Mandatory role/dynamics/gdb prerequisites are part of the gate contract:
+availability failures cannot be exempted because a frozen golden is present.

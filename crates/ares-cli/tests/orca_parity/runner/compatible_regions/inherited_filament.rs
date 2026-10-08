@@ -5,7 +5,7 @@ use std::io::{Cursor, Read};
 
 #[test]
 fn orca_parity_modifier_density_activates_inherited_second_filament() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

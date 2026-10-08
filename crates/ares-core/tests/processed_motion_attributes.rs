@@ -31,6 +31,9 @@ use ares_core::{
 };
 use std::path::PathBuf;
 
+#[path = "../../../tests/support/native_environment.rs"]
+mod native_environment;
+
 #[path = "support/native_policy_checks.rs"]
 mod native_policy_checks;
 
@@ -106,8 +109,8 @@ fn check(name: &str, output: &ProcessedGCode) {
             .map(|vertex| [vertex.time.to_bits()]),
     );
     std::fs::write(directory.join("ares.time.rle"), &time).unwrap();
-    if let Some(oracle) = std::env::var_os("ARES_PROCGCODE_DYNAMICS_BIN") {
-        check_native(&directory, &oracle, output);
+    if let Some(oracle) = native_environment::binary("ARES_PROCGCODE_DYNAMICS_BIN") {
+        check_native(&directory, oracle.as_os_str(), output);
     }
     let expected = |suffix: &str| {
         std::fs::read_to_string(workspace(&format!(

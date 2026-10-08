@@ -4,7 +4,7 @@ use std::io::{Cursor, Read};
 
 #[test]
 fn orca_parity_single_volume_offset_matches_complete_rotated_prism_output() {
-    if std::env::var("ARES_PARITY_VOLUME_OFFSETS_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_VOLUME_OFFSETS_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

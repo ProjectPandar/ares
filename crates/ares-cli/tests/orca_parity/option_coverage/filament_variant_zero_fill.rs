@@ -33,7 +33,7 @@ fn shorten_payloads(project: &[u8]) -> Vec<u8> {
 
 #[test]
 fn orca_parity_short_filament_variants_preserve_zero_slots_in_complete_output() {
-    if std::env::var("ARES_PARITY_FILAMENT_VARIANTS_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_FILAMENT_VARIANTS_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

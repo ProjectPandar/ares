@@ -80,7 +80,7 @@ fn verify_annotation(
     transforms: &[(f64, f64)],
     custom_end_tags: bool,
 ) {
-    if std::env::var("ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

@@ -4,7 +4,7 @@ use serde_json::json;
 
 #[test]
 fn orca_parity_lightning_preserves_complete_ordered_output() {
-    if std::env::var("ARES_PARITY_LIGHTNING_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_LIGHTNING_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

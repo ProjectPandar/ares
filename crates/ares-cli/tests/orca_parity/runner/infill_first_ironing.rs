@@ -13,7 +13,7 @@ fn orca_parity_infill_first_ironing_preserves_traditional_timelapse() {
 }
 
 fn assert_complete_output(time_lapse_gcode: &str) {
-    if std::env::var("ARES_PARITY_EMISSION_PHASES_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_EMISSION_PHASES_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

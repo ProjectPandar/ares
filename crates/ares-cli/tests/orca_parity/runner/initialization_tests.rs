@@ -7,6 +7,7 @@ fn invoke(selector: &str, root: Option<&Path>, cwd: &Path) -> std::process::Outp
         .args(["--exact", selector, "--nocapture"])
         .current_dir(cwd)
         .env("ARES_ORCA_BIN", std::env::current_exe().unwrap())
+        .env_remove("ARES_REQUIRE_ORCA")
         .env("ARES_PARITY_SWEEP", "1")
         .env("ARES_PARITY_CLUSTER", "1")
         .env("ARES_PARITY_OPTIONS", "1")

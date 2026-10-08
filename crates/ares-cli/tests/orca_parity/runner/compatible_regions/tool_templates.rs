@@ -27,7 +27,7 @@ mod cooling;
 
 #[test]
 fn printing_toolchange_restores_pressure_advance_after_filament_start() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs("; pressure start {filament_extruder_id}", "", false, &[]);
@@ -56,7 +56,7 @@ fn printing_toolchange_restores_pressure_advance_after_filament_start() {
 
 #[test]
 fn first_printing_toolchange_renders_old_end_then_new_start() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs(
@@ -86,7 +86,7 @@ fn first_printing_toolchange_renders_old_end_then_new_start() {
 
 #[test]
 fn printing_tool_templates_use_selected_cut_and_ec_aliases() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs(
@@ -124,7 +124,7 @@ fn printing_tool_templates_use_selected_cut_and_ec_aliases() {
 
 #[test]
 fn legacy_vectors_use_logical_tool_context_and_preserve_explicit_indices() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs(
@@ -162,7 +162,7 @@ fn legacy_vectors_use_logical_tool_context_and_preserve_explicit_indices() {
 
 #[test]
 fn printing_toolchange_retracts_old_nozzle_before_filament_end() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs(
@@ -199,7 +199,7 @@ fn printing_toolchange_retracts_old_nozzle_before_filament_end() {
 
 #[test]
 fn filament_header_lists_scheduled_logical_ids_not_their_count() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[]);
@@ -215,7 +215,7 @@ fn filament_header_lists_scheduled_logical_ids_not_their_count() {
 
 #[test]
 fn scheduled_toolchange_total_is_shared_by_templates_and_summary() {
-    if std::env::var("ARES_PARITY_REGION_FILAMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }
     let (reference, actual) = outputs(

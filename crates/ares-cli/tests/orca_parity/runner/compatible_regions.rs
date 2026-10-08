@@ -23,7 +23,7 @@ mod tool_templates;
 
 #[test]
 fn orca_parity_compatible_regions_with_later_higher_density_preserve_complete_output() {
-    if std::env::var("ARES_PARITY_REGION_PERIMETERS_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_PERIMETERS_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

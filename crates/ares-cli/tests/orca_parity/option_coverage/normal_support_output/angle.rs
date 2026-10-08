@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn orca_parity_rotated_normal_support_preserves_complete_output() {
-    if std::env::var("ARES_PARITY_SUPPORT_ANGLE_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_ANGLE_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn orca_parity_initialized_reference_repeats_complete_ksr_output() {
-    if std::env::var("ARES_PARITY_OBJECT_ID_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_OBJECT_ID_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

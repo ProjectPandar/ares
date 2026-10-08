@@ -138,7 +138,7 @@ fn vg1_x1c_dual_filament_without_virtual_moves_matches_native() {
 
 #[test]
 fn vg1_x1c_virtual_state_and_vertex_effects_match_native() {
-    if std::env::var_os("ARES_PROCGCODE_BIN").is_some() {
+    if crate::native_environment::binary("ARES_PROCGCODE_BIN").is_some() {
         check(
             "Bambu Lab X1 Carbon 0.4 nozzle",
             VIRTUAL_SEGMENT,
@@ -176,7 +176,7 @@ fn vg1_x1c_direct_command_matches_native() {
 
 #[test]
 fn vg1_x1c_global_relative_and_absent_feedrate_state_matches_native() {
-    if std::env::var_os("ARES_PROCGCODE_BIN").is_some() {
+    if crate::native_environment::binary("ARES_PROCGCODE_BIN").is_some() {
         check(
             "Bambu Lab X1 Carbon 0.4 nozzle",
             ";VG1 E4 F523\nG91\nM82\n;VG1 X2 Y3 E4\nG90\n",
@@ -187,7 +187,7 @@ fn vg1_x1c_global_relative_and_absent_feedrate_state_matches_native() {
 
 #[test]
 fn vg1_x1c_origin_and_inches_state_matches_native() {
-    if std::env::var_os("ARES_PROCGCODE_BIN").is_some() {
+    if crate::native_environment::binary("ARES_PROCGCODE_BIN").is_some() {
         check(
             "Bambu Lab X1 Carbon 0.4 nozzle",
             "G92 X5 Y5 E0\nG20\n;VG1 X2 Y3 E4 F523\n;VG1 E0 F261\nG21\n",
@@ -197,7 +197,7 @@ fn vg1_x1c_origin_and_inches_state_matches_native() {
 }
 
 fn volumes(segment: &str) {
-    if std::env::var_os("ARES_PROCGCODE_BIN").is_some() {
+    if crate::native_environment::binary("ARES_PROCGCODE_BIN").is_some() {
         check("Bambu Lab X1 Carbon 0.4 nozzle", segment, Oracle::Volumes);
     }
 }

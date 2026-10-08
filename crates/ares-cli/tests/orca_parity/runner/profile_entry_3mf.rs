@@ -15,7 +15,7 @@ use super::{
 
 #[test]
 fn orca_parity_profile_entry_3mf_load_settings() {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -168,7 +168,7 @@ fn orca_parity_profile_entry_3mf_load_settings() {
 /// must be byte-identical (generator line normalized).
 #[test]
 fn orca_parity_profile_entry_3mf_override_parity() {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -300,7 +300,7 @@ fn orca_parity_profile_entry_3mf_override_parity() {
 /// native default and diverge.
 #[test]
 fn orca_parity_profile_settings_view_round_trips_through_3mf() {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -466,7 +466,7 @@ fn rewrite_project_settings(archive_bytes: &[u8], settings: &[u8]) -> Vec<u8> {
 /// catalog/selection/override.
 #[test]
 fn orca_parity_profile_settings_view_round_trips_through_stl() {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -637,7 +637,7 @@ fn orca_parity_profile_settings_view_round_trips_through_stl() {
 /// by the native CLI with exit code -19 and by Ares with the same message.
 #[test]
 fn orca_parity_o5_mk3s_post_process_rejection() {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()

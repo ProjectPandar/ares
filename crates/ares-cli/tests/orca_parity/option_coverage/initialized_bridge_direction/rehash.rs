@@ -11,7 +11,7 @@ fn orca_parity_initialized_compressed_bridge_matches_complete_output() {
 }
 
 fn compare_polygon(label: &str, x_scale: f32) {
-    if std::env::var("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

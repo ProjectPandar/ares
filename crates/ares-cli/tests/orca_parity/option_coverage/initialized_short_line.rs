@@ -3,7 +3,7 @@ use crate::runner::CaseInputs;
 
 #[test]
 fn orca_parity_initialized_short_line_matches_complete_internal_fill_output() {
-    if std::env::var("ARES_PARITY_SHORT_LINE_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SHORT_LINE_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

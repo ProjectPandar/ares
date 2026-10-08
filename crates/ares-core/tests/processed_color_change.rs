@@ -9,6 +9,9 @@ use ares_core::{
     ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate_processed,
 };
 
+#[path = "../../../tests/support/native_environment.rs"]
+mod native_environment;
+
 #[path = "processed_color_change/native.rs"]
 mod native;
 use native::check_native_processor;

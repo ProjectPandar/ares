@@ -16,7 +16,7 @@ fn configure_different_settings(settings: &mut Value, supplied: bool) {
 
 #[test]
 fn orca_parity_bookkeeping_matches_complete_configured_filament_output() {
-    if std::env::var("ARES_PARITY_BOOKKEEPING_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_BOOKKEEPING_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

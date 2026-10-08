@@ -52,7 +52,7 @@ fn orca_parity_profile_entry_cli_config_presence() {
 }
 
 fn run_profile_entry(overrides: &[(&str, &str, Value)]) {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -251,7 +251,7 @@ pub(super) fn write_json(path: &Path, value: &Value) {
 /// G-code.
 #[test]
 fn orca_parity_profile_entry_stl_center_placement() {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()

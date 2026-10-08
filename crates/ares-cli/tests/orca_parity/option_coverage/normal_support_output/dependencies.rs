@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn orca_parity_support_flow_and_gap_dependencies_preserve_complete_raft_output() {
-    if std::env::var("ARES_PARITY_SUPPORT_FLOW_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_FLOW_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

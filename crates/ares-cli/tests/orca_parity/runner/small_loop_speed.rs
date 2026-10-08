@@ -18,7 +18,7 @@ fn check(
     small_perimeter: (&str, &str),
     skirt: bool,
 ) {
-    if std::env::var("ARES_PARITY_SMALL_LOOP_SPEED_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SMALL_LOOP_SPEED_REFERENCE") {
         return;
     }
     let (threshold, speed) = small_perimeter;

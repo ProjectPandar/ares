@@ -4,7 +4,7 @@ use serde_json::json;
 
 #[test]
 fn orca_parity_modifier_infill_first_preserves_region_wall_phases() {
-    if std::env::var("ARES_PARITY_REGION_PERIMETERS_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_PERIMETERS_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

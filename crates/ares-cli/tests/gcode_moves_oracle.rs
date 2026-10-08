@@ -10,6 +10,9 @@
 //! Artifacts land in `target/gcode-moves-oracle/<fixture>/`: both CSVs, the
 //! oracle input G-code, and `diff.csv` with every out-of-tolerance field.
 
+#[path = "../../../tests/support/native_environment.rs"]
+mod native_environment;
+
 use std::{
     fmt::Write as _,
     fs,
@@ -68,11 +71,7 @@ fn workspace_path(relative: &str) -> PathBuf {
 }
 
 fn oracle_bin() -> Option<PathBuf> {
-    let Some(bin) = std::env::var_os("ARES_PROCGCODE_BIN") else {
-        eprintln!("skipping: ARES_PROCGCODE_BIN is unset (see tools/chain-probe/procgcode.nix)");
-        return None;
-    };
-    Some(PathBuf::from(bin))
+    native_environment::binary("ARES_PROCGCODE_BIN")
 }
 
 #[test]

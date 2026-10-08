@@ -8,7 +8,7 @@ mod bridge_flow;
 
 #[test]
 fn orca_parity_support_modifier_regions_preserve_complete_output() {
-    if std::env::var("ARES_PARITY_SUPPORT_MODIFIER_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_MODIFIER_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

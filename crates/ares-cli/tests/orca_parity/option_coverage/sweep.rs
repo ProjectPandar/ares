@@ -7,7 +7,7 @@ mod tests;
 
 #[test]
 fn orca_parity_option_coverage() {
-    if std::env::var("ARES_PARITY_OPTIONS").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_OPTIONS") {
         eprintln!("skipping: set ARES_PARITY_OPTIONS=1 to run option coverage");
         return;
     }

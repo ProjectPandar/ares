@@ -90,7 +90,7 @@ fn compare_domain(key: &str) -> Option<BTreeMap<String, Vec<String>>> {
 }
 
 fn reference_runner() -> Option<OrcaRunner> {
-    if std::env::var("ARES_PARITY_TREE_SUPPORT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_TREE_SUPPORT_REFERENCE") {
         return None;
     }
     Some(OrcaRunner::from_env().unwrap().unwrap())

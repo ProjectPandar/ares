@@ -9,7 +9,7 @@ const ROOF_BASE_TALL_SKIRT: &[(&str, &str)] = &[
 
 #[test]
 fn single_cpu_slim_tree_concentric_hole_preserves_extrusion_direction() {
-    if std::env::var("ARES_PARITY_TREE_CONTAINMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
         return;
     }
     let case = super::overhang_case(
@@ -41,7 +41,7 @@ fn single_cpu_slim_tree_concentric_hole_preserves_extrusion_direction() {
 
 #[test]
 fn single_cpu_slim_tree_roof_slice_does_not_suppress_retraction() {
-    if std::env::var("ARES_PARITY_TREE_CONTAINMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
         return;
     }
     let case = super::overhang_case(
@@ -73,7 +73,7 @@ fn single_cpu_slim_tree_roof_slice_does_not_suppress_retraction() {
 
 #[test]
 fn single_cpu_slim_tree_roof_base_tall_skirt_preserves_complete_output() {
-    if std::env::var("ARES_PARITY_TREE_CONTAINMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
         return;
     }
     super::compare_overhang(
@@ -85,7 +85,7 @@ fn single_cpu_slim_tree_roof_base_tall_skirt_preserves_complete_output() {
 
 #[test]
 fn single_cpu_slim_tree_tall_skirt_preserves_complete_output() {
-    if std::env::var("ARES_PARITY_TREE_CONTAINMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
         return;
     }
     super::compare_overhang(
@@ -97,7 +97,7 @@ fn single_cpu_slim_tree_tall_skirt_preserves_complete_output() {
 
 #[test]
 fn single_cpu_slim_tree_contained_travel_does_not_retract() {
-    if std::env::var("ARES_PARITY_TREE_CONTAINMENT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
         return;
     }
     let case =

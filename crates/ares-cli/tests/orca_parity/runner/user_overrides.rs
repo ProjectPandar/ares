@@ -80,7 +80,7 @@ fn with_project_settings(project: &[u8], edits: &[(&str, Value)]) -> Vec<u8> {
 
 #[test]
 fn orca_parity_user_overrides_match_documented_project_settings_output() {
-    if std::env::var("ARES_PARITY_OVERRIDE_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_OVERRIDE_REFERENCE") {
         return;
     }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {

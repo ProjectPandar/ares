@@ -39,7 +39,7 @@ fn orca_parity_seeded_template_distributions_and_shared_stream() {
 
 #[test]
 fn orca_parity_seeded_template_file_start_has_no_rng_context() {
-    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -78,7 +78,7 @@ fn orca_parity_seeded_template_file_start_has_no_rng_context() {
 }
 
 fn verify(fixture: &str, probe: bool) {
-    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()

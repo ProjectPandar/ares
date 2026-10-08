@@ -19,7 +19,7 @@ fn orca_parity_no_skirt_per_object_preserves_complete_output() {
 }
 
 fn run(loops: &str, skirt_type: &str, height: &str, shield: &str, skirt_layers: usize) {
-    if std::env::var("ARES_PARITY_MULTIOBJECT_SKIRT_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_MULTIOBJECT_SKIRT_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

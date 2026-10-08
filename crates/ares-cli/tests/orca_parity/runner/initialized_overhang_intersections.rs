@@ -8,7 +8,7 @@ use std::io::{Cursor, Read, Write};
 
 #[test]
 fn orca_parity_initialized_overhang_intersections_match_complete_output() {
-    if std::env::var("ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE") {
         return;
     }
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");

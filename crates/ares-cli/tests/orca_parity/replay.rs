@@ -29,8 +29,11 @@ fn replay_one(case: &ReplayCase, root: &Path) -> parity::ParityOutcome {
 
 #[test]
 fn orca_parity_replay_sweep() {
+    if crate::native_environment::required() {
+        let _ = crate::runner::OrcaRunner::from_env().unwrap();
+    }
     let Some(root) = std::env::var_os("ARES_PARITY_REPLAY") else {
-        eprintln!("OFFLINE SKIP: ARES_PARITY_REPLAY unset; no parity comparison executed");
+        crate::native_environment::skipped("ARES_PARITY_REPLAY is unset");
         return;
     };
     run(&PathBuf::from(root)).unwrap_or_else(|error| panic!("replay failed: {error}"));

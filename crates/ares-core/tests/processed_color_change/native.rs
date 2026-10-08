@@ -1,6 +1,5 @@
 pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &str) {
-    let Some(oracle) = std::env::var_os("ARES_PROCGCODE_BIN") else {
-        eprintln!("native comparison requires ARES_PROCGCODE_BIN (procgcode.nix)");
+    let Some(oracle) = super::native_environment::binary("ARES_PROCGCODE_BIN") else {
         return;
     };
     let directory = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

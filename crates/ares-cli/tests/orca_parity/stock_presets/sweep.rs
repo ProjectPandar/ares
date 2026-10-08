@@ -7,7 +7,7 @@ mod discovery;
 mod tests;
 
 fn run() {
-    if std::env::var("ARES_PARITY_STOCK_SWEEP").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_STOCK_SWEEP") {
         return;
     }
     let root = crate::artifacts::root_from_env().unwrap();

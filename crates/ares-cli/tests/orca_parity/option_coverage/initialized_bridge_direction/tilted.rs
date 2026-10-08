@@ -3,7 +3,7 @@ use std::{fmt::Write as _, io::Write as _};
 
 #[test]
 fn orca_parity_initialized_tilted_mesh_matches_complete_output() {
-    if std::env::var("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

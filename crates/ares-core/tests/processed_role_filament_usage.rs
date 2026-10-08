@@ -9,6 +9,9 @@ use ares_core::{
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+#[path = "../../../tests/support/native_environment.rs"]
+mod native_environment;
+
 #[path = "support/native_policy_checks.rs"]
 mod native_policy_checks;
 
@@ -77,15 +80,17 @@ fn native_map() -> Value {
 #[test]
 fn native_role_map_is_bound_to_same_run_footer() {
     let frozen = native_map();
-    if std::env::var_os("ARES_ROLE_ORACLE_LIVE").is_some() {
+    if native_environment::value("ARES_ROLE_ORACLE_LIVE").is_some() {
+        let gdb = native_environment::binary("ARES_GDB_BIN")
+            .expect("ARES_GDB_BIN is required for the requested Native role comparison");
         let repo = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
         let stamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
         let output = repo.join(format!("target/role-filament-usage/native-live-{stamp}"));
-        let run = std::process::Command::new("nix")
-            .args(["shell", "nixpkgs#gdb", "-c", "gdb", "-nx", "-batch", "-x"])
+        let run = std::process::Command::new(gdb)
+            .args(["-nx", "-batch", "-x"])
             .arg(repo.join("tools/chain-probe/role-filament-map.py"))
             .env(
                 "ARES_ROLE_ORACLE_INPUT",

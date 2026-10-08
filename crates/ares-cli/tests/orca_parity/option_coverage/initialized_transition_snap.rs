@@ -6,7 +6,7 @@ use crate::runner::CaseInputs;
 
 #[test]
 fn orca_parity_initialized_transition_snap_matches_complete_internal_fill() {
-    if std::env::var("ARES_PARITY_TRANSITION_SNAP_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_TRANSITION_SNAP_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

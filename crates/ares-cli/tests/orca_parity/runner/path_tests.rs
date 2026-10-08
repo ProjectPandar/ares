@@ -17,7 +17,13 @@ fn relative_executable_survives_changed_command_cwd() {
             "--nocapture",
         ])
         .env("ARES_RUNNER_PATH_WORK", &work)
+        .env_remove("ARES_REQUIRE_ORCA")
         .env("ARES_ORCA_BIN", "./runner-helper.exe")
+        .env(
+            "ARES_ORCA_NATIVE_BIN",
+            temp.path().join("runner-helper.exe"),
+        )
+        .env("ARES_ORCA_RESOURCES_DIR", temp.path())
         .env(
             "ARES_PARITY_ARTIFACT_ROOT",
             temp.path().join("runner-artifacts"),

@@ -5,7 +5,7 @@ use serde_json::json;
 
 #[test]
 fn orca_parity_final_empty_geometry_layer_preserves_complete_output() {
-    if std::env::var("ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE").as_deref() != Ok("1") {
+    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();
