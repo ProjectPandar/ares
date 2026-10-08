@@ -22,6 +22,8 @@ mod brim_bed_region_controls;
 mod change_filament_flush_blocks;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
 mod cli_custom_gcode_exit;
+#[path = "orca_parity/cli_sequential_clearance.rs"]
+mod cli_sequential_clearance;
 
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;

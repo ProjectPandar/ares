@@ -11,11 +11,37 @@ fn run(case: &str, expected_code: i32) {
         .tempdir()
         .unwrap()
         .keep();
+    let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let project = fixtures.join(format!("{case}.3mf"));
+    let native = runner
+        .sequential_clearance_reference(&project, expected_code == 0)
+        .unwrap();
+    let hit = runner
+        .sequential_clearance_reference(&project, expected_code == 0)
+        .unwrap();
+    assert_eq!(native.directory, hit.directory);
+    assert_eq!(native.stdout, hit.stdout);
+    assert_eq!(native.stderr, hit.stderr);
+    assert_eq!(native.result_json, hit.result_json);
+    assert_eq!(native.gcode, hit.gcode);
+    fs::write(artifacts.join("native.stdout"), &native.stdout).unwrap();
+    fs::write(artifacts.join("native.stderr"), &native.stderr).unwrap();
+    fs::write(artifacts.join("native.result.json"), &native.result_json).unwrap();
+    fs::copy(
+        native.directory.join("receipt.json"),
+        artifacts.join("native.receipt.json"),
+    )
+    .unwrap();
+    if let Some(gcode) = &native.gcode {
+        fs::write(artifacts.join("native.gcode"), gcode).unwrap();
+    }
     let gcode = artifacts.join("plate_1.gcode");
     let output = Command::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "-o"])
         .arg(&gcode)
-        .arg(fixtures.join(format!("{case}.3mf")))
+        .arg(&project)
         .output()
         .unwrap();
     fs::write(artifacts.join("stdout"), &output.stdout).unwrap();
@@ -30,24 +56,23 @@ fn run(case: &str, expected_code: i32) {
         Some(expected_code),
         "{case}: {artifacts:?}"
     );
-    assert_eq!(
-        output.stderr,
-        fs::read(fixtures.join(format!("{case}.stderr"))).unwrap()
-    );
+    assert_eq!(output.stderr, native.stderr);
     if expected_code == 193 {
-        assert_eq!(
-            output.stdout,
-            fs::read(fixtures.join(format!("{case}.stdout"))).unwrap()
-        );
+        assert_eq!(output.stdout, native.stdout);
         assert_eq!(
             fs::read(artifacts.join("result.json")).unwrap(),
-            fs::read(fixtures.join(format!("{case}.result.json"))).unwrap()
+            native.result_json
         );
         assert!(!gcode.exists(), "rejected before emission");
+        assert!(native.gcode.is_none());
     } else {
         assert!(
             !fs::read(gcode).unwrap().is_empty(),
             "last object within printable_height must slice"
+        );
+        assert!(
+            !native.gcode.unwrap().is_empty(),
+            "Native last-object control must slice"
         );
     }
 }
@@ -57,7 +82,7 @@ fn sequential_clearance_reference_requires_native_not_frozen_channels() {
     let output = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
-            "cli_s4_rejects_horizontal_clearance_collision",
+            "cli_sequential_clearance::cli_s4_rejects_horizontal_clearance_collision",
             "--nocapture",
         ])
         .env("ARES_REQUIRE_ORCA", "1")
@@ -83,17 +108,14 @@ fn sequential_clearance_reference_requires_native_not_frozen_channels() {
 fn cli_s4_rejects_horizontal_clearance_collision() {
     run("close", 193);
 }
-
 #[test]
 fn cli_s4_rejects_tall_object_before_later_y_overlap() {
     run("rod-tall", 193);
 }
-
 #[test]
 fn cli_s4_rejects_tall_object_before_later_disjoint_y() {
     run("lid-tall", 193);
 }
-
 #[test]
 fn cli_s4_last_tall_object_uses_printable_height() {
     run("last-tall", 0);
