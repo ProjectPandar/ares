@@ -26,6 +26,8 @@ impl SliceOptions {
                 "bridge_flow".to_owned(),
                 invalid_float_value_message(bridge_flow),
             );
+        }
+        if internal_bridge_flow <= 0.0 {
             errors.insert(
                 "internal_bridge_flow".to_owned(),
                 invalid_float_value_message(internal_bridge_flow),

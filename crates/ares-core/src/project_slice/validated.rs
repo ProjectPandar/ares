@@ -33,6 +33,7 @@ pub async fn slice_project_plate_validated(
     overrides: &ConfigOverrides,
     context: SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
+    overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
             bytes: input.as_ref(),
@@ -55,6 +56,7 @@ pub async fn slice_project_plate_processed_validated(
     overrides: &ConfigOverrides,
     context: SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
+    overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
             bytes: input.as_ref(),

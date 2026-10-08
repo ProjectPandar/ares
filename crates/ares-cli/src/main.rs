@@ -81,6 +81,10 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
         Some(json) => ares_core::ConfigOverrides::from_json(json.as_bytes())
             .map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error.to_string()))?,
     };
+    if let Err(error) = overrides.validate_cli_config() {
+        eprintln!("Params in command line error: \n{error}\nsetup params error");
+        std::process::exit(-2);
+    }
     let input = fs::read(args.input)?;
     let output = match extension {
         Some(extension) if extension == "3mf" => {

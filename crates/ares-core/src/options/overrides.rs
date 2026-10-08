@@ -73,6 +73,58 @@ impl ConfigOverrides {
         Ok(Self { values })
     }
 
+    /// `OrcaSlicer.cpp:7198,7209-7214`: validate caller config before loading input.
+    /// C1 owns only these ten `PrintConfig.cpp:10340-10457` threshold keys.
+    pub fn validate_cli_config(&self) -> Result<(), SliceError> {
+        let values = self
+            .values
+            .iter()
+            .filter(|(key, _)| {
+                matches!(
+                    key.as_str(),
+                    "layer_height"
+                        | "initial_layer_print_height"
+                        | "filament_diameter"
+                        | "bridge_flow"
+                        | "internal_bridge_flow"
+                        | "extruder_clearance_radius"
+                        | "extruder_clearance_height_to_rod"
+                        | "extruder_clearance_height_to_lid"
+                        | "nozzle_height"
+                        | "filament_flow_ratio"
+                )
+            })
+            .map(|(key, tokens)| {
+                let definition = option_definition(key).expect("validated override key");
+                let value = if is_scalar(definition.kind) {
+                    serde_json::Value::String(tokens[0].clone())
+                } else {
+                    serde_json::json!(tokens)
+                };
+                (key.clone(), value)
+            })
+            .collect::<BTreeMap<_, _>>();
+        if values.is_empty() {
+            return Ok(());
+        }
+        let options = super::SliceOptions { values };
+        let mut errors = options.validate_basic_fdm_options()?;
+        errors.extend(options.validate_skirt_and_bridge_flow_options()?);
+        errors.extend(options.validate_extruder_clearance_options()?);
+        errors.extend(options.validate_filament_flow_ratio_options()?);
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(SliceError::InvalidInput(
+                errors
+                    .into_iter()
+                    .map(|(key, message)| format!("{key}: {message}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            ))
+        }
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
         self.values.is_empty()
     }

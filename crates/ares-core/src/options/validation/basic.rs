@@ -3,7 +3,9 @@ use std::collections::BTreeMap;
 use crate::SliceError;
 
 use super::super::SliceOptions;
-use super::helpers::{SCALING_FACTOR, invalid_value_message, serialize_numbers};
+use super::helpers::{
+    SCALING_FACTOR, invalid_float_value_message, invalid_value_message, serialize_numbers,
+};
 
 impl SliceOptions {
     pub fn validate_basic_fdm_options(&self) -> Result<BTreeMap<String, String>, SliceError> {
@@ -13,7 +15,7 @@ impl SliceOptions {
         if layer_height <= 0.0 || layer_height.rem_euclid(SCALING_FACTOR).abs() > 1e-4 {
             errors.insert(
                 "layer_height".to_owned(),
-                invalid_value_message(layer_height),
+                invalid_float_value_message(layer_height),
             );
         }
 
@@ -21,7 +23,7 @@ impl SliceOptions {
         if initial_layer_height <= 0.0 {
             errors.insert(
                 "initial_layer_print_height".to_owned(),
-                invalid_value_message(initial_layer_height),
+                invalid_float_value_message(initial_layer_height),
             );
         }
 

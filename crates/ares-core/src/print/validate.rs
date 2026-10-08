@@ -143,6 +143,7 @@ pub fn validate_project_plate(
     plate: Option<u32>,
     overrides: &ConfigOverrides,
 ) -> Result<(), SliceError> {
+    overrides.validate_cli_config()?;
     let mut project = crate::project::load_project_with(input, overrides)?;
     project
         .settings()
