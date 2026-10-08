@@ -117,3 +117,40 @@ loop. Every slice: source-cited spec note in this file, RED first
 (failing on the native comparison), fresh seeded base/cand before merge,
 clippy `-D warnings`, fmt, and the review gates. All fixture machinery
 already exists (`export_case_multi`).
+
+## S1 implementation map (staged, not yet landed)
+
+The Ares emit is one global Z-group loop (`layers.rs:144` over
+`schedule.merged`); every chunk already carries `object_index`
+(`layers/schedule.rs:14`) and `schedule.object_layer_counts` exists. The
+S1 restructure, in dependency order:
+
+1. Scope the schedule per object: a filtered `merged` (the chunks whose
+   entries' `object_index` match, Z-ordered), a per-object
+   `ToolOrdering` — `tool_ordering::build` restricted to that object's
+   layers with `final_extruder_id` seeded (the upstream
+   `ToolOrdering(object, final_extruder_id)` port, NOT a global-ordering
+   filter), and `layer_count` = the object's count.
+2. Parameterize the loop body (the `while group_start < merged.len()`
+   section) over the scoped schedule; the by-object driver calls it once
+   per instance in `sort_object_instances_by_model_order` order and
+   concatenates the output; the by-layer path keeps today's single call.
+3. Cross-object state that carries over the concatenation:
+   `max_layer_z` (running max), `second_layer_done`, the fan mover span
+   (constructed once outside the loop), the writer state; per-object
+   resets mirror GCode.cpp:3341 (cooling reset) — recorded, S2 lands the
+   templates.
+4. The `-1` skip: an object whose ordering yields no first extruder is
+   skipped entirely (GCode.cpp:3293-3296).
+5. `total_layer_count` (`gcode_file_start.rs:57`) sums the per-object
+   counts in by-object mode (the RED's line-3 assertion).
+6. The `!has_wipe_tower` guard (GCode.cpp:3284): with a tower, keep
+   today's by-layer path (assert the guard, do not exercise it — the
+   fixtures run towerless).
+
+Known interactions to verify during implementation: the avoid-crossing
+boundary cache (built per slice_z across every object today — in
+by-object mode upstream uses the object's own slices), the raft chunk
+interleave (first-layer only), the skirt/brim emission point (upstream
+keeps them at the true first layer), and `state.most_used_extruder`
+(S3 replaces the global count; until then the global value stays).
