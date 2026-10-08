@@ -20,6 +20,7 @@ pub(in crate::project_slice::gcode_emit) struct InitialFilaments {
     first: Vec<i32>,
     first_non_support: Vec<i32>,
     total_toolchanges: usize,
+    used_extruders: Option<value::Value>,
 }
 
 impl InitialFilaments {
@@ -36,6 +37,9 @@ impl InitialFilaments {
     }
 
     pub(in crate::project_slice::gcode_emit) fn insert(&self, config: &mut value::Config) {
+        if let Some(used) = &self.used_extruders {
+            config.insert("is_extruder_used", used.clone());
+        }
         config.insert(
             "total_toolchanges",
             value::Value::Integer(self.total_toolchanges as i64),
@@ -151,6 +155,20 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
         non_support_hotend: hotend(non_support),
         first,
         first_non_support,
+        // `GCode.cpp:2901-2904`: by-layer export uses finalized logical tools,
+        // not the configured object-extruder candidate set.
+        used_extruders: (settings.process.print.print_sequence
+            == crate::ProcessPrintSequence::ByLayer)
+            .then(|| {
+                let mut used = vec![
+                    value::Value::option_bool(false);
+                    settings.filament.gcode.filament_diameter.0.len().max(64)
+                ];
+                for &id in ordering.all_extruders() {
+                    used[id] = value::Value::option_bool(true);
+                }
+                value::Value::List(used)
+            }),
         // Sequential upstream leaves the global Print tool ordering empty.
         total_toolchanges: match settings.process.print.print_sequence {
             crate::ProcessPrintSequence::ByLayer => ordering.total_toolchanges(),
