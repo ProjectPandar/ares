@@ -26,6 +26,9 @@ mod clipped_loop_motion;
 #[path = "runner/compatible_regions.rs"]
 mod compatible_regions;
 #[cfg(test)]
+#[path = "runner/embedded_script_whole_file.rs"]
+mod embedded_script_whole_file;
+#[cfg(test)]
 #[path = "runner/empty_tools.rs"]
 mod empty_tools;
 #[path = "runner/filament_map.rs"]
