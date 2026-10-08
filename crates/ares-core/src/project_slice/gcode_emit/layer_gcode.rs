@@ -187,6 +187,24 @@ pub(super) fn append_layer_change(
             "max_additional_fan",
             value::Value::number(context.max_additional_fan),
         );
+        // `GCode.cpp:4679`: `most_used_physical_extruder_id` =
+        // `physical_extruder_map.get_at(most_used_extruder)` — the layer's
+        // most-used logical extruder mapped to its physical extruder
+        // (`ToolOrdering.cpp:955-976` counts; `state.most_used_extruder`).
+        let physical_extruder_map = &traversal
+            .resolved
+            .views
+            .runtime_gcode
+            .physical_extruder_map
+            .0;
+        let most_used_physical_extruder_id = physical_extruder_map
+            .get(state.most_used_extruder)
+            .or_else(|| physical_extruder_map.first())
+            .map_or(0, |value| value.0);
+        config.insert(
+            "most_used_physical_extruder_id",
+            value::Value::number(most_used_physical_extruder_id as f64),
+        );
         // The upstream parser exposes the running extrusion totals to the
         // layer-change template as well (`GCode.cpp:1652, 1689`); they are
         // re-scanned from the emitted G-code, which is the accumulated
