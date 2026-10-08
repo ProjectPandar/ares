@@ -61,6 +61,9 @@ mod initialized_loop_chain;
 #[path = "runner/initialized_overhang_intersections.rs"]
 mod initialized_overhang_intersections;
 #[cfg(test)]
+#[path = "runner/j1_runtime_used_mask.rs"]
+mod j1_runtime_used_mask;
+#[cfg(test)]
 #[path = "runner/lifecycle_tests.rs"]
 mod lifecycle_tests;
 #[cfg(test)]

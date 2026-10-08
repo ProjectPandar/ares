@@ -167,6 +167,22 @@ After approval:
    expose the intended branch; do not tune geometry/settings after Native
    comparison. If a required control has an unrelated residual, report it
    rather than relaxing assertions or promoting it to PASS.
+
+   **Coordinator ruling after the independent first RED run:** the three
+   frozen controls have unrelated existing whole-file differences. Role1
+   and by-object first differ at byte2449/line165 (Native M73 P41 versus
+   Ares WIPE_START); both-used first differs at byte2384/line189 (Native
+   FORCE_RESUME_FAN_SPEED versus Ares blank/change T0 -> T1). Retain those
+   exact inputs and outputs as separate findings. For these three controls
+   only, assert exact usage mask, initial logical tool and literal tool/flush
+   command sequence from the independently captured Native output; do not
+   perform a complete-byte comparison or label their whole streams PASS.
+   The primary role2 case MUST still assert complete bytes; if the mask fix
+   exposes a later residual, report it unchanged and stop rather than strip
+   any output. Frozen findings:
+   `/tmp/ares-j1-mask/findings/wipe-progress/FINDING.md` and
+   `/tmp/ares-j1-mask/findings/filament-start-transition/FINDING.md`.
+   By-object unchanged coverage here is witness-only, not full parity.
 4. Only after exact-hash RED approval implement the minimal runtime mask
    connection. Keep initial-tool expectations and stock template unchanged.
 5. Fresh base/candidate full seeded, directed RED+controls, strict Clippy

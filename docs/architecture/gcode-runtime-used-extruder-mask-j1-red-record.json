@@ -1,0 +1,356 @@
+{
+  "source_base": "0164565498d3cc49f087611b56ec66608705d64a",
+  "spec": "b7b5b9a277b266bdb640abea75716082c0e5ffb7",
+  "production_changed": false,
+  "rows": [
+    {
+      "witness": "/tmp/ares-j1-mask/red/directed-scoped/03-orca_parity_j1_by_object_usage_witness_unchanged/artifacts/j1-runtime-used-mask-ns9RRB/usage-witness.json",
+      "data": {
+        "ares": {
+          "initial_extruder": 0,
+          "tool_and_flush_commands": [
+            "T0",
+            "T0",
+            "G1 X0 E8.5437 F6840.0",
+            "T0"
+          ],
+          "usage": [
+            true,
+            false
+          ]
+        },
+        "ares_sha256": "c9936c46a575fdb6ad28b3fd17e5af34395d55d987674caec7581b19305b4c7c",
+        "assertion_scope": "exact usage, initial and tool/flush witness only; known unrelated complete-byte residual retained separately",
+        "complete_comparison": null,
+        "input_sha256": "828e4056bfdeaaed2f028fdbd596355a2f2fa56d0c8fab060f89268435823633",
+        "native": {
+          "initial_extruder": 0,
+          "tool_and_flush_commands": [
+            "T0",
+            "T0",
+            "G1 X0 E8.5437 F6840.0",
+            "T0"
+          ],
+          "usage": [
+            true,
+            false
+          ]
+        },
+        "native_sha256": "c609802cfc86dd3a761be04a30ab80c687a00ecc8b54475a4671e0d9e9cab468"
+      },
+      "receipt": "/tmp/ares-j1-mask/red/directed-scoped/03-orca_parity_j1_by_object_usage_witness_unchanged/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/a031d204ca889d66ffe72abe0e07de66da1c52c82ea35251758dc6d92d035947/receipt.json",
+      "producer": {
+        "components": {
+          "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+          "launcher": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+          "native": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+          "parallelism": 1,
+          "policy": {
+            "ARES_PARITY_SEEDED_REFERENCE": "1",
+            "LC_ALL": "C",
+            "ORCA_REPLAY_SEED": "0"
+          },
+          "resources": "286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69",
+          "schema": "native-cache-v2"
+        },
+        "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
+        "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+        "runtime_environment": {
+          "HOME": "/home/indexyz",
+          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
+          "ORCA_APPDIR": null,
+          "ORCA_LIB_CACHE": null,
+          "ORCA_REPLAY_CPU": "0",
+          "XDG_CACHE_HOME": null,
+          "XDG_CONFIG_HOME": null
+        }
+      }
+    },
+    {
+      "witness": "/tmp/ares-j1-mask/red/directed-scoped/02-orca_parity_j1_by_layer_role2_usage_matches_complete_output/artifacts/j1-runtime-used-mask-TL1U0L/usage-witness.json",
+      "data": {
+        "ares": {
+          "initial_extruder": 1,
+          "tool_and_flush_commands": [
+            "T1",
+            "T0",
+            "G1 X0 E8.5437 F6840.0",
+            "T1",
+            "G1 X324 E8.5437 F6840.0",
+            "T1"
+          ],
+          "usage": [
+            true,
+            true
+          ]
+        },
+        "ares_sha256": "009ef1fb2409d7e34064a949ae04f6fbff5af22995f0824c6603bc0a62ed0129",
+        "assertion_scope": "complete bytes; generated-by identity only; M73/footer retained",
+        "complete_comparison": [
+          "DIVERGENT",
+          "first difference at byte 461 (line 18, column 9; expected 38416 bytes, actual 39221 bytes)\ncontext:\n  line 17: \"; EXECUTABLE_BLOCK_START\"\n  line 18: expected \"M73 P0 R2\"; actual \"M73 P0 R3\"\n  line 19: \"M201 X10000 Y8000 Z100 E6000\"",
+          "/tmp/ares-j1-mask/red/directed-scoped/02-orca_parity_j1_by_layer_role2_usage_matches_complete_output/artifacts/case-0E2MRC"
+        ],
+        "input_sha256": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
+        "native": {
+          "initial_extruder": 1,
+          "tool_and_flush_commands": [
+            "T1",
+            "T1",
+            "G1 X324 E8.5437 F6840.0",
+            "T1"
+          ],
+          "usage": [
+            false,
+            true
+          ]
+        },
+        "native_sha256": "b7ad2150a33d18bd783ce657b36bc5c4dfa80013be181dae7e59b59433ff8325"
+      },
+      "receipt": "/tmp/ares-j1-mask/red/directed-scoped/02-orca_parity_j1_by_layer_role2_usage_matches_complete_output/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
+      "producer": {
+        "components": {
+          "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+          "launcher": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+          "native": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+          "parallelism": 1,
+          "policy": {
+            "ARES_PARITY_SEEDED_REFERENCE": "1",
+            "LC_ALL": "C",
+            "ORCA_REPLAY_SEED": "0"
+          },
+          "resources": "286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69",
+          "schema": "native-cache-v2"
+        },
+        "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
+        "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+        "runtime_environment": {
+          "HOME": "/home/indexyz",
+          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
+          "ORCA_APPDIR": null,
+          "ORCA_LIB_CACHE": null,
+          "ORCA_REPLAY_CPU": "0",
+          "XDG_CACHE_HOME": null,
+          "XDG_CONFIG_HOME": null
+        }
+      }
+    },
+    {
+      "witness": "/tmp/ares-j1-mask/red/directed-scoped/01-orca_parity_j1_by_layer_role1_usage_witness/artifacts/j1-runtime-used-mask-AuLAW7/usage-witness.json",
+      "data": {
+        "ares": {
+          "initial_extruder": 0,
+          "tool_and_flush_commands": [
+            "T0",
+            "T0",
+            "G1 X0 E8.5437 F6840.0",
+            "T0"
+          ],
+          "usage": [
+            true,
+            false
+          ]
+        },
+        "ares_sha256": "4121f9fab9e60b6d2680583a68a88c143cb85b5abf454a1c19d980eb0996bad9",
+        "assertion_scope": "exact usage, initial and tool/flush witness only; known unrelated complete-byte residual retained separately",
+        "complete_comparison": null,
+        "input_sha256": "e74bf5ed81edcf4c00ea36be06967e1447ee4d61d25cd20b23fd39f16f6227e5",
+        "native": {
+          "initial_extruder": 0,
+          "tool_and_flush_commands": [
+            "T0",
+            "T0",
+            "G1 X0 E8.5437 F6840.0",
+            "T0"
+          ],
+          "usage": [
+            true,
+            false
+          ]
+        },
+        "native_sha256": "a0f069f530ffe805d086236afffc01b9a93dc786b3d1b8e360308ec54caf96e9"
+      },
+      "receipt": "/tmp/ares-j1-mask/red/directed-scoped/01-orca_parity_j1_by_layer_role1_usage_witness/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/af3c785e1e9d4d8579b35ed6bcc87aad50b618ee1f01eadd4419927529166add/receipt.json",
+      "producer": {
+        "components": {
+          "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+          "launcher": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+          "native": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+          "parallelism": 1,
+          "policy": {
+            "ARES_PARITY_SEEDED_REFERENCE": "1",
+            "LC_ALL": "C",
+            "ORCA_REPLAY_SEED": "0"
+          },
+          "resources": "286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69",
+          "schema": "native-cache-v2"
+        },
+        "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
+        "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+        "runtime_environment": {
+          "HOME": "/home/indexyz",
+          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
+          "ORCA_APPDIR": null,
+          "ORCA_LIB_CACHE": null,
+          "ORCA_REPLAY_CPU": "0",
+          "XDG_CACHE_HOME": null,
+          "XDG_CONFIG_HOME": null
+        }
+      }
+    },
+    {
+      "witness": "/tmp/ares-j1-mask/red/directed-scoped/00-orca_parity_j1_by_layer_both_used_witness/artifacts/j1-runtime-used-mask-e7Dx6H/usage-witness.json",
+      "data": {
+        "ares": {
+          "initial_extruder": 1,
+          "tool_and_flush_commands": [
+            "T1",
+            "T0",
+            "G1 X0 E8.5437 F6840.0",
+            "T1",
+            "G1 X324 E8.5437 F6840.0",
+            "T1",
+            "T0",
+            "T1",
+            "T0"
+          ],
+          "usage": [
+            true,
+            true
+          ]
+        },
+        "ares_sha256": "b7a27005cfa825318278ef62b3c91706f92bc286227b3a081747a825ca366e28",
+        "assertion_scope": "exact usage, initial and tool/flush witness only; known unrelated complete-byte residual retained separately",
+        "complete_comparison": null,
+        "input_sha256": "12cf6020f118d5a2c5b5aa081f5dd9a4a3c043f0c3788558c13fa80687a4f3bd",
+        "native": {
+          "initial_extruder": 1,
+          "tool_and_flush_commands": [
+            "T1",
+            "T0",
+            "G1 X0 E8.5437 F6840.0",
+            "T1",
+            "G1 X324 E8.5437 F6840.0",
+            "T1",
+            "T0",
+            "T1",
+            "T0"
+          ],
+          "usage": [
+            true,
+            true
+          ]
+        },
+        "native_sha256": "a519b902d6f9baa7b2ce552cc5a1a045f20bea3a196bdb784943411ef40bbd7a"
+      },
+      "receipt": "/tmp/ares-j1-mask/red/directed-scoped/00-orca_parity_j1_by_layer_both_used_witness/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/e2eaaccce0118e52dcb27173e010c226ebafd3298832386868173ec077a6f298/receipt.json",
+      "producer": {
+        "components": {
+          "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
+          "launcher": "d964acb9083a25616a33a7abc18b92b60d821906a72e4c3a260e26b2dace4342",
+          "native": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+          "parallelism": 1,
+          "policy": {
+            "ARES_PARITY_SEEDED_REFERENCE": "1",
+            "LC_ALL": "C",
+            "ORCA_REPLAY_SEED": "0"
+          },
+          "resources": "286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69",
+          "schema": "native-cache-v2"
+        },
+        "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
+        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
+        "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
+        "runtime_environment": {
+          "HOME": "/home/indexyz",
+          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
+          "ORCA_APPDIR": null,
+          "ORCA_LIB_CACHE": null,
+          "ORCA_REPLAY_CPU": "0",
+          "XDG_CACHE_HOME": null,
+          "XDG_CONFIG_HOME": null
+        }
+      }
+    }
+  ],
+  "processes": [
+    {
+      "name": "orca_parity_j1_by_layer_both_used_witness",
+      "test": "runner::j1_runtime_used_mask::orca_parity_j1_by_layer_both_used_witness",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "owned_processes": {
+          "3812003": "372771171",
+          "3812020": "372771198",
+          "3812028": "372771218",
+          "3812043": "372771287"
+        }
+      },
+      "elapsed_seconds": 1.9060529340058565,
+      "directory": "/tmp/ares-j1-mask/red/directed-scoped/00-orca_parity_j1_by_layer_both_used_witness"
+    },
+    {
+      "name": "orca_parity_j1_by_layer_role1_usage_witness",
+      "test": "runner::j1_runtime_used_mask::orca_parity_j1_by_layer_role1_usage_witness",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "owned_processes": {
+          "3812070": "372771361",
+          "3812127": "372771387",
+          "3812147": "372771405",
+          "3812177": "372771465"
+        }
+      },
+      "elapsed_seconds": 1.741204506251961,
+      "directory": "/tmp/ares-j1-mask/red/directed-scoped/01-orca_parity_j1_by_layer_role1_usage_witness"
+    },
+    {
+      "name": "orca_parity_j1_by_layer_role2_usage_matches_complete_output",
+      "test": "runner::j1_runtime_used_mask::orca_parity_j1_by_layer_role2_usage_matches_complete_output",
+      "process": {
+        "exit_code": 100,
+        "timed_out": false,
+        "owned_processes": {
+          "3812206": "372771536",
+          "3812249": "372771562",
+          "3812257": "372771580",
+          "3812261": "372771644"
+        }
+      },
+      "elapsed_seconds": 2.2445696918293834,
+      "directory": "/tmp/ares-j1-mask/red/directed-scoped/02-orca_parity_j1_by_layer_role2_usage_matches_complete_output"
+    },
+    {
+      "name": "orca_parity_j1_by_object_usage_witness_unchanged",
+      "test": "runner::j1_runtime_used_mask::orca_parity_j1_by_object_usage_witness_unchanged",
+      "process": {
+        "exit_code": 0,
+        "timed_out": false,
+        "owned_processes": {
+          "3812267": "372771760",
+          "3812302": "372771814",
+          "3812339": "372771879"
+        }
+      },
+      "elapsed_seconds": 1.9213705817237496,
+      "directory": "/tmp/ares-j1-mask/red/directed-scoped/03-orca_parity_j1_by_object_usage_witness_unchanged"
+    }
+  ],
+  "bound_slice_receipts": 4,
+  "timeouts": 0,
+  "primary": "complete-byte RED; unchanged fixture",
+  "controls": "exact usage/initial/literal tool-flush witness PASS only, no complete comparison per coordinator",
+  "findings": [
+    "/tmp/ares-j1-mask/findings/wipe-progress/FINDING.md",
+    "/tmp/ares-j1-mask/findings/filament-start-transition/FINDING.md"
+  ]
+}
