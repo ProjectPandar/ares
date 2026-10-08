@@ -56,6 +56,18 @@ No coordinate-specific special case, output deduplication or tolerance is
 introduced. Other geometry residuals and complete TiQ2 closure remain
 unproven until the strict whole-byte comparison is rerun.
 
+## Bounded verification conclusion
+
+The complete-byte runtime RED fails before the change at line22564. With
+only the four retry-coordinate expressions corrected, all bytes agree
+through33323 lines; the next first difference is footer emission at33324:
+Native emits `; filament end gcode`, while Rust emits
+`G1 X-19 F3000 ; home X axis`. No output is filtered and complete TiQ2 parity
+is not claimed. Coordinator approved this bounded source-arithmetic slice;
+the still-failing whole-byte test remains on a local footer branch, not in
+the merge candidate. The six smooth Type2 groups and exhaustive fan command
+sequence comparison pass after the correction.
+
 ## Acceptance boundary
 
 Before production changes, restore the local complete-byte runtime-OrcaRunner
