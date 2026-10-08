@@ -241,3 +241,18 @@ Status: the `exported-project-profile-metadata` case (aligned commands,
 `embedded-script` case keeps its interim line comparisons until D4
 (`shrink_to_new_bed`) lands, since its residual is exactly the bed
 re-centering gap.
+
+## Known native nondeterminism (official 2.4.2)
+
+The official binary's reference output flips between two travel variants on
+identical inputs. Observed twice during the D5/D2/D6/D7 gate rounds, each
+time failing a different tree-family case while the input zip entries and
+the Ares bytes stayed identical across rounds:
+
+- `tree_support::…slim_tree_auto_overhang` (round 1) and
+  `support_annotations::…mirrored_support_blocker` (round 2) share the same
+  first-difference line — `G1 X113.388 Y113.135 F9000` vs
+  `G1 X113.244 Y113.297 F9000` — one native ND source, not per-case bugs.
+- Per-occurrence disposition evidence: input zip entries byte-identical,
+  Ares output byte-identical, native reference byte-different
+  (`/tmp/ares-w5-gates/EVIDENCE-D5D2D6D7-final2.md`).
