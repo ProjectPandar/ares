@@ -21,6 +21,9 @@ mod native_bbl_boundary_migration;
 #[path = "runner/native_jerk_semm_migration.rs"]
 mod native_jerk_semm_migration;
 
+#[path = "runner/object_range_epsilon.rs"]
+mod object_range_epsilon;
+
 #[path = "runner/adjacent_color.rs"]
 mod adjacent_color;
 #[path = "runner/adjacent_motion.rs"]
