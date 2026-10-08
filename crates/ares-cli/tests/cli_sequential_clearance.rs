@@ -53,6 +53,33 @@ fn run(case: &str, expected_code: i32) {
 }
 
 #[test]
+fn sequential_clearance_reference_requires_native_not_frozen_channels() {
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "cli_s4_rejects_horizontal_clearance_collision",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_ORCA_NATIVE_BIN")
+        .output()
+        .unwrap();
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        diagnostic.contains("running 1 test"),
+        "selector drift: {diagnostic}"
+    );
+    assert!(
+        !output.status.success() && diagnostic.contains("ARES_ORCA_NATIVE_BIN"),
+        "frozen sequential reference hid required Native absence: {diagnostic}"
+    );
+}
+
+#[test]
 fn cli_s4_rejects_horizontal_clearance_collision() {
     run("close", 193);
 }
