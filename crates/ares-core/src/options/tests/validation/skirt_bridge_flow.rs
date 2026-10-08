@@ -23,7 +23,7 @@ fn negative_skirt_height_is_reported() {
 }
 
 #[test]
-fn bridge_flow_zero_reports_bridge_and_internal_bridge_flow() {
+fn bridge_flow_zero_reports_only_invalid_bridge_flow() {
     let options: SliceOptions = serde_json::from_value(json!({
         "bridge_flow": 0
     }))
@@ -32,11 +32,11 @@ fn bridge_flow_zero_reports_bridge_and_internal_bridge_flow() {
     let errors = options.validate_skirt_and_bridge_flow_options().unwrap();
 
     assert_eq!(errors["bridge_flow"], "invalid value 0.000000");
-    assert_eq!(errors["internal_bridge_flow"], "invalid value 1.000000");
+    assert_eq!(errors.get("internal_bridge_flow"), None);
 }
 
 #[test]
-fn internal_bridge_flow_zero_alone_is_deferred_by_upstream_guard() {
+fn internal_bridge_flow_zero_is_rejected_independently() {
     let options: SliceOptions = serde_json::from_value(json!({
         "bridge_flow": 1,
         "internal_bridge_flow": 0
@@ -45,7 +45,8 @@ fn internal_bridge_flow_zero_alone_is_deferred_by_upstream_guard() {
 
     let errors = options.validate_skirt_and_bridge_flow_options().unwrap();
 
-    assert!(errors.is_empty());
+    assert_eq!(errors.len(), 1);
+    assert_eq!(errors["internal_bridge_flow"], "invalid value 0.000000");
 }
 
 #[test]
@@ -59,7 +60,7 @@ fn numeric_string_bridge_flow_values_use_same_predicate() {
     let errors = options.validate_skirt_and_bridge_flow_options().unwrap();
 
     assert_eq!(errors["bridge_flow"], "invalid value -0.500000");
-    assert_eq!(errors["internal_bridge_flow"], "invalid value 0.750000");
+    assert_eq!(errors.get("internal_bridge_flow"), None);
 }
 
 #[test]
