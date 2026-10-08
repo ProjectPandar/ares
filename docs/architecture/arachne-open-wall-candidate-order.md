@@ -1,6 +1,7 @@
 # Arachne available-wall candidate order: open before closed
 
-Status: proposed, awaiting coordinator approval before RED/GREEN.
+Status: approved scope (`26da8d624`); RED/GREEN and validation complete; awaiting final review.
+See [validation](2026-10-08-arachne-open-wall-order-validation.md).
 Baseline `113a351e3aedeab8c73fba7a9c4cb9dd78bdb837`.
 Pinned upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
