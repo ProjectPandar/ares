@@ -10,7 +10,7 @@ const PROCESS: &str = "0.2mm Standard @WEMAKE3D PhoenixProV1 0.4mm nozzle";
 const FILAMENT: &str = "Generic PLA @System";
 
 fn check(name: &str, filename: &str, none: bool) {
-    if std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() != Ok("1") {
+    if !super::environment::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
