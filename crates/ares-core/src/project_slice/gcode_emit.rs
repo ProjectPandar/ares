@@ -103,11 +103,22 @@ pub(super) fn emit(
     // (:2522) counts merged print-z across all objects once. Either way the
     // compatible tail (`GCode.cpp:3542`) prints the print-wide total, not a
     // single object's layer count.
-    let tail_layer_count = schedule
-        .object_layer_counts()
-        .iter()
-        .sum::<usize>()
-        .max(sliced_layer_count);
+    // `m_layer_count` is mode-dependent (`GCode.cpp:2487-2528`): the
+    // sequential by-object branch accumulates each object's layer count
+    // per instance (:2505), the by-layer branch counts merged print-z
+    // across all objects once (:2522). The compatible tail (:3542) and
+    // the `total_layer_count` placeholder (:2890) both print it.
+    let by_object = traversal.resolved.views.full.process.print.print_sequence
+        == crate::ProcessPrintSequence::ByObject;
+    let tail_layer_count = if by_object {
+        schedule
+            .object_layer_counts()
+            .iter()
+            .sum::<usize>()
+            .max(sliced_layer_count)
+    } else {
+        sliced_layer_count
+    };
     let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
     let first_layer_bounds = footprint::first_layer_bounds(
         traversal,
