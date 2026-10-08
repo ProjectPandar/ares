@@ -6,6 +6,9 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
 
+#[path = "runner/native_travel_reference_migration.rs"]
+mod native_travel_reference_migration;
+
 #[path = "runner/native_arachne_prisms_migration.rs"]
 mod native_arachne_prisms_migration;
 
