@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { AxeBuilder } from "@axe-core/playwright";
 import { chromium, expect, type Locator, type Page, test } from "@playwright/test";
+import { moving, smallFonts, tabSweep } from "./a11y";
 import { chromiumLaunch } from "./chromiumLaunch";
 import { expectFits, pinch, swipe, undersized } from "./touch";
 
@@ -20,12 +21,25 @@ type Input = "mouse" | "touch";
 
 const act = (input: Input, control: Locator) => (input === "touch" ? control.tap() : control.click());
 
-/** axe-core WCAG A/AA scan; reported now, asserted once the accessibility slice lands. */
-async function scan(page: Page, directory: string, step: string) {
+/** axe-core WCAG A/AA scan of one step; serious and critical violations fail it. */
+async function axe(page: Page, directory: string, step: string) {
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   const blocking = violations.filter(({ impact }) => impact === "serious" || impact === "critical");
   writeFileSync(`${directory}axe-${step}.json`, `${JSON.stringify(violations, null, 2)}\n`);
+  expect.soft(blocking.map(({ id, nodes }) => `${id}: ${nodes.map(({ target }) => target.join(" ")).join(", ")}`),
+    `${step}: no serious or critical axe violation`).toEqual([]);
   return { step, serious: blocking.map(({ id, impact, nodes }) => ({ id, impact, nodes: nodes.length })) };
+}
+
+/** Scans the dark (default) and the light theme, returning to dark. */
+async function scan(page: Page, input: Input, directory: string, step: string) {
+  const dark = await axe(page, directory, step);
+  await act(input, page.getByRole("button", { name: "Light theme", exact: true }));
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  const light = await axe(page, directory, `${step}-light`);
+  await act(input, page.getByRole("button", { name: "Dark theme", exact: true }));
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  return [dark, light];
 }
 
 async function choose(page: Page, input: Input, combo: string, group: string, name: string) {
@@ -55,6 +69,17 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   const targets = async (step: string) => {
     if (touch) expect.soft(await undersized(page), `${step}: every control is at least 44x44`).toEqual([]);
   };
+  // Touch: 16px fields and reduced motion. Mouse: a keyboard Tab sweep with a visible focus on every stop.
+  const access = async (step: string, reach: string[]) => {
+    if (touch) {
+      expect.soft(await smallFonts(page), `${step}: every field is at least 16px`).toEqual([]);
+      expect.soft(await moving(page), `${step}: nothing moves under prefers-reduced-motion`).toEqual([]);
+      return;
+    }
+    const { reached, invisible } = await tabSweep(page);
+    expect.soft(invisible, `${step}: every Tab stop shows its focus`).toEqual([]);
+    for (const name of reach) expect.soft(reached, `${step}: Tab reaches ${name}`).toContain(name);
+  };
   const look = (control: Locator) => control.evaluate((element) => {
     const { backgroundColor, borderColor, color } = getComputedStyle(element);
     return `${backgroundColor} ${borderColor} ${color}`;
@@ -66,6 +91,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
     await expect(panel).toHaveAttribute("aria-expanded", String(open));
   };
 
+  if (touch) await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await shot("1-start");
@@ -101,7 +127,8 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await shot("3-presets");
   await targets("presets");
-  audits.push(await scan(page, directory, "prepare"));
+  await access("presets", ['button "Slice plate"', 'button "Process preset"']);
+  audits.push(...await scan(page, input, directory, "prepare"));
   await settings(false);
 
   if (touch) await expectFits(page, [button("Slice plate")]);
@@ -112,7 +139,8 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await expect(page.getByTestId("layer-slider")).toBeVisible();
   await shot("4-preview");
   await targets("preview");
-  audits.push(await scan(page, directory, "preview"));
+  await access("preview", ['div "Top layer"', 'button "Export G-code file"']);
+  audits.push(...await scan(page, input, directory, "preview"));
 
   const gestures: Record<string, string> = {};
   if (touch) {
