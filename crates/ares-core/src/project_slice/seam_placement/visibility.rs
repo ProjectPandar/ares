@@ -40,7 +40,8 @@ impl GlobalVisibility {
             .collect();
         let density = sample_count as f32 / samples.total_area;
         let search_area = 4.0 / (-0.9_f32.ln() * density);
-        let radius = (search_area / PI).sqrt();
+        // SeamPlacer.cpp:685 promotes search_area through double PI before sqrt.
+        let radius = (f64::from(search_area) / std::f64::consts::PI).sqrt() as f32;
         let sample_tree = PointKdTree::new(&samples.positions);
         Self {
             samples,
