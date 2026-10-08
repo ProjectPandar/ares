@@ -25,6 +25,15 @@ pub(in crate::project_slice::gcode_emit) fn format_feedrate(value: f64) -> Strin
     super::format::axis(value)
 }
 
+/// The transition-boundary retract with the cooling markers off
+/// (`GCode.cpp:3308`, `:3325` `retract()`).
+pub(in crate::project_slice::gcode_emit) fn transition_retract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    super::travel::transition_retract(output, state)
+}
+
 pub(in crate::project_slice::gcode_emit) fn travel_to(
     output: &mut Vec<u8>,
     state: &mut EmitState,

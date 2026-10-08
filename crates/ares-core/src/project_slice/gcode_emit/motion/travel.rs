@@ -37,6 +37,17 @@ pub(in crate::project_slice::gcode_emit) fn effective_retraction_length(state: &
     }
 }
 
+/// The sequential by-object transition retract: `m_enable_cooling_markers
+/// = false` (`GCode.cpp:3308`) strips the `;_WIPE` marker from the wipe.
+pub(in crate::project_slice::gcode_emit) fn transition_retract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    wipe_sequence::retract_and_wipe_with(output, state, false);
+    schedule_normal(state);
+    state.extruder.retracted = true;
+}
+
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
     if state.spiral_vase {

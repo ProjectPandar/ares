@@ -8,7 +8,7 @@ use super::super::temperature::append as append_nozzle_temperature;
 #[cfg(test)]
 mod tests;
 
-fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
+pub(super) fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;
     let filament = &settings.filament.print;

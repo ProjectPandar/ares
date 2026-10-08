@@ -239,12 +239,17 @@ pub(super) fn append(
                     state,
                     transition::Transition {
                         traversal,
+                        metadata,
+                        first_layer_bounds,
                         finished_objects: phase_index,
                         initial_extruder: phase.tool_ordering.first_extruder.unwrap_or(0),
+                        printing_extruders: phase.tool_ordering.all_extruders().to_vec(),
                         lift_z: max_layer_z + state.options.z_hop,
                         origin,
+                        bed_cache,
                     },
-                );
+                )?;
+                let _ = _primed;
                 previous_layer_z = 0.0;
                 second_layer_done = false;
             }

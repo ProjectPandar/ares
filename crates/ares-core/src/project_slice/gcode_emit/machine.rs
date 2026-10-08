@@ -23,6 +23,14 @@ pub(in crate::project_slice::gcode_emit) fn initial_layer_nozzle_temperature(
     )
 }
 
+/// The first-layer bed temperature
+/// (`_print_first_layer_bed_temperature`, `GCode.cpp:3337`).
+pub(in crate::project_slice::gcode_emit) fn first_layer_bed_temperature(
+    traversal: &PreparedPostClassicTraversal,
+) -> i32 {
+    temperature::first_layer_bed_temperature(traversal)
+}
+
 /// The first-line M73 placeholder consumed by the G-code processor
 /// (`GCode.cpp:2700-2701`).
 pub(super) fn append_first_line_m73(output: &mut Vec<u8>) {
