@@ -162,11 +162,6 @@ pub(crate) fn slice_source(
     let staged = prepare_infill::surface_type_detection::prepare(
         perimeters::prepare_post_layer_region_perimeters(project, &mut context)?,
     )?;
-    // The avoid-crossing boundary subtracts the layer's top surfaces
-    // (`get_boundary`, `AvoidCrossingPerimeters.cpp:1122-1132`); the
-    // classified kinds live only in this stage's output, so carry them
-    // to the emit alongside the ordered islands.
-    let top_surfaces = extract_top_surfaces(&staged);
     let external = prepare_infill::external_surfaces::prepare(
         prepare_infill::horizontal_shell_propagation::prepare(
             prepare_infill::horizontal_shell_promotion::prepare(
@@ -189,6 +184,9 @@ pub(crate) fn slice_source(
     let candidates = prepare_infill::bridge_over_infill::prepare(external)?;
     let bridged = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
+    // `get_boundary` consumes current Top fill surfaces after prepare_infill
+    // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.
+    let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let filled = fill_entities::prepare(prepared)?;
     let support_layers = match support_material::generate(&filled, &mut context) {
         Ok(layers) => layers,
@@ -206,7 +204,7 @@ pub(crate) fn slice_source(
 }
 
 fn extract_top_surfaces(
-    staged: &prepare_infill::surface_type_detection::PreparedPostSurfaceTypeDetection,
+    staged: &prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
 ) -> Vec<Vec<Vec<crate::geometry::ExPolygon>>> {
     staged
         .objects
