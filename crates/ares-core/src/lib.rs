@@ -253,6 +253,13 @@ pub enum SliceError {
         wall_loops: i32,
         sparse_infill_density: f64,
     },
+    SequentialPrintCollision {
+        message: String,
+        plate_index: u32,
+        layer_height: f64,
+        wall_loops: i32,
+        sparse_infill_density: f64,
+    },
     CustomGCode {
         message: String,
         plate_index: u32,
@@ -282,7 +289,9 @@ impl fmt::Display for SliceError {
             }
             Self::NoSuitableObjects(message) => f.write_str(message),
             Self::InvalidValuesInProject(message) => f.write_str(message),
-            Self::Validate { message, .. } | Self::CustomGCode { message, .. } => f.write_str(message),
+            Self::Validate { message, .. }
+            | Self::SequentialPrintCollision { message, .. }
+            | Self::CustomGCode { message, .. } => f.write_str(message),
             Self::ProjectSlicingIncomplete => f.write_str("ProjectSlicingIncomplete"),
             Self::UnsupportedProjectFeature(feature) => {
                 write!(f, "unsupported project feature: {feature}")

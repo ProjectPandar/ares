@@ -224,6 +224,16 @@ fn select_width(
     selected
 }
 
+/// Print.cpp:2028-2049 validation consumes skirt width and spacing without emission.
+pub(crate) fn skirt_flow_width_spacing(
+    selected_width: FloatOrPercent,
+    height: f32,
+    nozzle_diameter: f32,
+) -> Result<(f32, f32), SliceError> {
+    let flow = build_nonbridging_flow(selected_width, height, nozzle_diameter)?;
+    Ok((flow.width, flow.spacing))
+}
+
 pub(in crate::project_slice) fn build_nonbridging_flow(
     selected_width: FloatOrPercent,
     height: f32,
