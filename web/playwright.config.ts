@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 import { chromiumLaunch as chromium } from "./e2e/chromiumLaunch";
 
-// Touch-emulated phones run only the mobile flow.
+// Touch-emulated phones and tablets run only the mobile flow.
+const webkit = { executablePath: process.env.ARES_E2E_WEBKIT || undefined };
 const mobileSpecs = /mobile\.spec\.ts$/;
 
 export default defineConfig({
@@ -23,12 +24,18 @@ export default defineConfig({
       // Bundled WebKit; on NixOS run through e2e/webkit-env.sh.
       name: "iphone",
       testMatch: mobileSpecs,
-      use: { ...devices["iPhone 15"], launchOptions: { executablePath: process.env.ARES_E2E_WEBKIT || undefined }, actionTimeout: 30_000 },
+      use: { ...devices["iPhone 15"], launchOptions: webkit, actionTimeout: 30_000 },
     },
     {
       name: "pixel",
       testMatch: mobileSpecs,
       use: { ...devices["Pixel 7"], launchOptions: chromium, actionTimeout: 30_000 },
+    },
+    {
+      // 810px wide: the tablet layout (641-1024px).
+      name: "ipad",
+      testMatch: mobileSpecs,
+      use: { ...devices["iPad (gen 7)"], launchOptions: webkit, actionTimeout: 30_000 },
     },
   ],
   webServer: {

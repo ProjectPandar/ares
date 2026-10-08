@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs a command with Playwright's bundled WebKit able to start on NixOS.
 # Builds e2e/webkit-libs.nix (from the nixpkgs in ARES_E2E_NIXPKGS) and points
-# the iphone project at e2e/webkit-run.sh, which starts the bundled headless
+# the WebKit projects at e2e/webkit-run.sh, which starts the bundled headless
 # (WPE) MiniBrowser with those libraries. Hosts with Playwright's WebKit
 # dependencies installed run the command directly instead.
 #

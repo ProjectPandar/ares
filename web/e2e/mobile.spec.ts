@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { AxeBuilder } from "@axe-core/playwright";
 import { chromium, expect, type Locator, type Page, test } from "@playwright/test";
 import { chromiumLaunch } from "./chromiumLaunch";
-import { expectFits, pinch, swipe } from "./touch";
+import { expectFits, pinch, swipe, undersized } from "./touch";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const MODEL = `${repositoryRoot}tests/parity/cube10.stl`;
@@ -49,8 +49,18 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   const button = (name: string) => page.getByRole("button", { name, exact: true });
   const tab = (name: string) => page.getByRole("link", { name });
   const panel = button("Settings panel");
+  // Phones fold the sidebar into a drawer; tablets keep it beside the 3D view.
+  const drawer = touch && page.viewportSize()!.width <= 640;
+  const toggle = drawer ? [panel] : [];
+  const targets = async (step: string) => {
+    if (touch) expect.soft(await undersized(page), `${step}: every control is at least 44x44`).toEqual([]);
+  };
+  const look = (control: Locator) => control.evaluate((element) => {
+    const { backgroundColor, borderColor, color } = getComputedStyle(element);
+    return `${backgroundColor} ${borderColor} ${color}`;
+  });
   const settings = async (open: boolean) => {
-    if (!touch) return;
+    if (!drawer) return;
     await expect(panel, "the phone layout has a settings panel toggle").toBeVisible();
     if ((await panel.getAttribute("aria-expanded")) !== String(open)) await act(input, panel);
     await expect(panel).toHaveAttribute("aria-expanded", String(open));
@@ -59,19 +69,27 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await shot("1-start");
-  if (touch) await expectFits(page, [button("Import"), tab("Prepare"), tab("Preview"), button("Slice plate"), panel]);
+  if (touch) await expectFits(page, [button("Import"), tab("Prepare"), tab("Preview"), button("Slice plate"), ...toggle]);
+  await targets("start");
 
+  const untapped = await look(button("Import"));
   const chooser = page.waitForEvent("filechooser");
   await act(input, button("Import"));
   await (await chooser).setFiles(MODEL);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
+  // Touch has no pointer to move away, so hover styles must not stick to a tapped control.
+  if (touch) expect.soft(await look(button("Import")), "a tapped control keeps no hover style").toBe(untapped);
   await shot("2-imported");
 
   await settings(true);
   if (touch) await expectFits(page, [button("Printer preset"), button("Process preset")]);
+  await targets("sidebar");
   await act(input, button("Printer preset"));
+  await targets("preset list");
   await act(input, page.getByRole("option", { name: "Select/Remove printers (system presets)" }));
   const wizard = page.getByRole("dialog", { name: "System presets" });
+  await expect(wizard).toBeVisible();
+  await targets("wizard");
   await act(input, wizard.getByRole("checkbox", { name: PRESETS.vendor, exact: true }));
   await expect(wizard.getByRole("checkbox", { name: PRESETS.vendor, exact: true })).toBeChecked();
   await act(input, wizard.getByRole("button", { name: "Done" }));
@@ -82,6 +100,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await choose(page, input, "Filament 1 preset", "System presets", PRESETS.filament);
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await shot("3-presets");
+  await targets("presets");
   audits.push(await scan(page, directory, "prepare"));
   await settings(false);
 
@@ -92,6 +111,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await expect(page.getByTestId("toolpaths-pending")).toHaveCount(0);
   await expect(page.getByTestId("layer-slider")).toBeVisible();
   await shot("4-preview");
+  await targets("preview");
   audits.push(await scan(page, directory, "preview"));
 
   const gestures: Record<string, string> = {};
@@ -132,7 +152,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   return { sha256, audits, gestures };
 }
 
-test("phone touch flow: import, presets, slice, preview and download match the desktop G-code", async ({ page }, info) => {
+test("touch flow: import, presets, slice, preview and download match the desktop G-code", async ({ page }, info) => {
   test.setTimeout(900_000);
   const artifacts = fileURLToPath(new URL(`../../target/web-e2e/mobile/${info.project.name}/`, import.meta.url));
   rmSync(artifacts, { recursive: true, force: true });

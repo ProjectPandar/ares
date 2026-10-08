@@ -61,6 +61,23 @@ export const pinch = (page: Page, center: Point, start: number, end: number) =>
 export const MIN_TARGET = 44;
 
 /**
+ * Every visible control on the page that is smaller than 44x44, as `name WxH`. A checkbox or
+ * radio counts its label, which activates it too.
+ */
+export const undersized = (page: Page) => page.evaluate((min) => {
+  const controls = document.querySelectorAll<HTMLElement>(
+    "button, a[href], input:not([type=hidden]), select, textarea, [role=slider], [role=option], [role=tab], [role=checkbox]");
+  return [...controls].flatMap((control) => {
+    const target = control.matches("input[type=checkbox], input[type=radio]") ? control.closest("label") ?? control : control;
+    const { width, height } = target.getBoundingClientRect();
+    if (!width || !height || getComputedStyle(target).visibility !== "visible") return [];
+    if (width >= min && height >= min) return [];
+    const name = control.getAttribute("aria-label") ?? control.textContent?.trim().slice(0, 30) ?? "";
+    return [`${control.tagName.toLowerCase()}.${control.className} "${name}" ${Math.round(width)}x${Math.round(height)}`];
+  });
+}, MIN_TARGET);
+
+/**
  * The page does not scroll sideways and every control is fully on screen, uncovered and at least
  * 44x44. Soft assertions, so one run reports every misfit.
  */

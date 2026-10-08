@@ -143,32 +143,34 @@ skipped.
 If Playwright's bundled Chromium cannot run on the host (for example on NixOS),
 set `ARES_E2E_CHROME` to a system Chrome/Chromium binary.
 
-### Phones
+### Phones and tablets
 
 The `desktop` project (Chromium, 1600x900) runs every spec except
-`e2e/mobile.spec.ts`, which runs in two touch-emulated phone projects:
-`iphone` (Playwright WebKit, iPhone 15) and `pixel` (Chromium, Pixel 7). The
+`e2e/mobile.spec.ts`, which runs in three touch-emulated projects: the phones
+`iphone` (Playwright WebKit, iPhone 15) and `pixel` (Chromium, Pixel 7), and
+the tablet `ipad` (Playwright WebKit, iPad gen 7, 810x1080). The
 spec imports `tests/parity/cube10.stl`, installs the LH system presets, slices,
 opens the preview, orbits and pinch-zooms the view, drags the layer slider and
-downloads the G-code by touch; the downloaded G-code must have the sha256 of
+downloads the G-code by touch, checking that every visible control is at
+least 44x44 and that a tapped control keeps no hover style; the downloaded G-code must have the sha256 of
 the same flow with desktop layout and mouse input. Artifacts go to
 `target/web-e2e/mobile/<project>/` (step screenshots, axe reports,
 `gcode.sha256`, `result.json`).
 
 ```sh
 npx playwright install webkit     # once
-npx playwright test --project=pixel --project=iphone
+npx playwright test --project=pixel --project=iphone --project=ipad
 ```
 
 Playwright's WebKit needs system libraries that NixOS does not provide on a
 library path. `e2e/webkit-env.sh` builds them from `e2e/webkit-libs.nix` with
-the nixpkgs named by `ARES_E2E_NIXPKGS` and points the `iphone` project at
+the nixpkgs named by `ARES_E2E_NIXPKGS` and points the WebKit projects at
 `e2e/webkit-run.sh`, which starts the bundled headless MiniBrowser with them:
 
 ```sh
 # same pinned nixpkgs as scripts/orca-replay/build.nix
 ARES_E2E_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source \
-  e2e/webkit-env.sh npx playwright test --project=iphone
+  e2e/webkit-env.sh npx playwright test --project=iphone --project=ipad
 ```
 
 The library list matches the WebKit revision of the pinned `@playwright/test`
