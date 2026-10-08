@@ -258,21 +258,23 @@ impl Project {
 /// `OrcaSlicer.cpp:3766-3796` classification with the `:4008-4021` plate-0
 /// center offset: `Some([dx, dy])` for `shrink = 1`, `None` otherwise
 /// (shrink 2/0 are deferred). Widths/heights truncate to int like upstream
-/// (`:1780`, `:1338`). The current height comes from the fully parsed
-/// config — `OrcaSlicer.cpp:3711` `opt_float("printable_height")` — with
-/// the `PrintConfigDef` default (`PrintConfig.cpp:785`, 100.0) when the
-/// presets lack the key. An unrecorded old bed dimension takes the current
-/// one (`:3729-3734`) and the classification proceeds.
+/// (`:1780`, `:1338`). The current bed comes from the fully parsed
+/// config — `OrcaSlicer.cpp:3708,3711` over the overlaid config, where
+/// missing keys carry the `PrintConfigDef` defaults and a default or wire
+/// value that fails to parse is a programming error. An unrecorded old bed
+/// dimension takes the current one (`:3729-3734`) and the classification
+/// proceeds.
 fn shrink_to_new_bed_offset(
     old: &ProjectSettingsRaw,
     new: &ProjectSettingsRaw,
 ) -> Option<[f64; 2]> {
-    let new_height = printable_height(new)
-        .or_else(default_printable_height)
-        .unwrap_or(0.0);
-    let (new_width, new_depth) = printable_bed_size(new).unwrap_or((0.0, 0.0));
-    let (mut old_width, mut old_depth) = printable_bed_size(old).unwrap_or((0.0, 0.0));
-    let mut old_height = printable_height(old).unwrap_or(0.0);
+    let (new_width, new_depth, new_height) = current_bed(new);
+    let old_area = old
+        .get("printable_area")
+        .cloned()
+        .unwrap_or(RawConfigValue::List(Vec::new()));
+    let (mut old_width, mut old_depth) = printable_bed_size(&old_area);
+    let mut old_height = printable_height(old.get("printable_height")?).unwrap_or(0.0);
     if old_width == 0.0 {
         old_width = new_width;
     }
@@ -302,33 +304,60 @@ fn shrink_to_new_bed_offset(
     ])
 }
 
-/// `PrintConfig.cpp:785`: the `printable_height` default for configs that
-/// lack the key.
-fn default_printable_height() -> Option<f64> {
-    crate::option_definition("printable_height")
-        .and_then(|definition| definition.default_value.parse().ok())
+/// `OrcaSlicer.cpp:3708,3711,3726-3728`: the current bed from the fully
+/// parsed config — missing keys carry the `PrintConfigDef` defaults
+/// (`printable_area` 200×200, `printable_height` 100), and a default or
+/// wire value that fails to parse is a programming error.
+fn current_bed(new: &ProjectSettingsRaw) -> (f64, f64, f64) {
+    let area = new
+        .get("printable_area")
+        .cloned()
+        .unwrap_or_else(|| default_value("printable_area"));
+    let (width, depth) = printable_bed_size(&area);
+    let height = printable_height(
+        &new.get("printable_height")
+            .cloned()
+            .unwrap_or_else(|| default_value("printable_height")),
+    )
+    .expect("printable_height parses as a number");
+    (width, depth, height)
+}
+
+/// The registry default as a raw text token.
+fn default_value(key: &str) -> RawConfigValue {
+    RawConfigValue::Text(
+        crate::option_definition(key)
+            .expect("option definition exists")
+            .default_value
+            .to_owned(),
+    )
 }
 
 /// `OrcaSlicer.cpp:1779-1780` (embedded) and `:3726` (overlaid): the
-/// diagonal-corner difference of `printable_area`.
-fn printable_bed_size(raw: &ProjectSettingsRaw) -> Option<(f64, f64)> {
-    let points = point_pairs(raw.get("printable_area")?)?;
-    let first = points.first()?;
-    let diagonal = points.get(2)?;
-    Some((diagonal.0 - first.0, diagonal.1 - first.1))
+/// diagonal-corner difference of `printable_area`; fewer than four points
+/// leave the bed size at zero (`:1778` guard) for the caller to substitute.
+fn printable_bed_size(area: &RawConfigValue) -> (f64, f64) {
+    let points = point_pairs(area);
+    if points.len() < 4 {
+        return (0.0, 0.0);
+    }
+    let first = &points[0];
+    let diagonal = &points[2];
+    (diagonal.0 - first.0, diagonal.1 - first.1)
 }
 
-fn printable_height(raw: &ProjectSettingsRaw) -> Option<f64> {
-    match raw.get("printable_height") {
-        Some(RawConfigValue::Text(token)) => token.trim().parse().ok(),
-        Some(RawConfigValue::Number(number)) => number.as_f64(),
+fn printable_height(value: &RawConfigValue) -> Option<f64> {
+    match value {
+        RawConfigValue::Text(token) => token.trim().parse().ok(),
+        RawConfigValue::Number(number) => number.as_f64(),
         _ => None,
     }
 }
 
-/// `ConfigOptionPoints` wire entries (`"0x0"`, `"220x220"`) as plain
-/// coordinate pairs.
-fn point_pairs(value: &RawConfigValue) -> Option<Vec<(f64, f64)>> {
+/// `ConfigOptionPoints` wire entries (`"0x0"`, `"220x220"`) as coordinate
+/// pairs; a malformed entry is a programming error (the wire form is
+/// machine-written).
+fn point_pairs(value: &RawConfigValue) -> Vec<(f64, f64)> {
     let tokens: Vec<String> = match value {
         RawConfigValue::List(items) => items
             .iter()
@@ -339,16 +368,20 @@ fn point_pairs(value: &RawConfigValue) -> Option<Vec<(f64, f64)>> {
             })
             .collect(),
         RawConfigValue::Text(token) => token.split(';').map(str::to_owned).collect(),
-        _ => return None,
+        _ => Vec::new(),
     };
-    let pairs = tokens
+    tokens
         .iter()
-        .filter_map(|token| {
-            let (x, y) = token.trim().split_once('x')?;
-            Some((x.trim().parse().ok()?, y.trim().parse().ok()?))
+        .map(|token| {
+            let (x, y) = token
+                .trim()
+                .split_once('x')
+                .expect("printable_area coordinates parse as x-y pairs");
+            let x = x.trim().parse().expect("printable_area x parses");
+            let y = y.trim().parse().expect("printable_area y parses");
+            (x, y)
         })
-        .collect::<Vec<_>>();
-    (!pairs.is_empty()).then_some(pairs)
+        .collect()
 }
 
 /// `OrcaSlicer.cpp:4038-4048`: the plate-0 wipe tower rides the
