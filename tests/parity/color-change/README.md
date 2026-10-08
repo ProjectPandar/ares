@@ -58,8 +58,12 @@ source display join needs a coordinator ruling before its Rust port.
 
 ## Native outcome and approved display boundary
 
-`oracle-cardinality.json` records the native probe: all nine cardinalities
-match the source-derived table above. Five fixtures require out-of-bounds
+The historical Native probe matched all nine cardinalities in the source-derived
+table above. Its frozen JSON summary has been removed; the CLI runtime E2E
+`runner::adjacent_color::committed_bbl_cardinality_fixtures_match_native_inside_start_templates`
+compares the original nine handwritten templates embedded in real slices against
+explicit raw/stable processor diagnostics. Native output and receipts stay in
+OrcaRunner runtime/cache directories. Five fixtures require out-of-bounds
 volume indices in the upstream display join. The coordinator approved:
 preserve raw statistics and ColorPrint segments; Rust reports partial usage
 unavailable when a required volume index is absent, and the frontend displays

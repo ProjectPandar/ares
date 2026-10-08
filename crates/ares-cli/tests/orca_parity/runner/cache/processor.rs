@@ -1,4 +1,7 @@
 //! Runtime Native GCodeProcessor oracle; outputs never enter the source tree.
+#[path = "processor_diagnostic.rs"]
+mod processor_diagnostic;
+
 use super::{OrcaRunner, Stage, StageError, cache_identity, fs, io, lock, publish, stages};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};

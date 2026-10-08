@@ -1,13 +1,16 @@
 pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &str) {
-    let Some(oracle) = super::native_environment::binary("ARES_PROCGCODE_BIN") else {
+    let Some(_) = crate::native_environment::binary("ARES_PROCGCODE_BIN") else {
         return;
     };
-    let directory = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../target/color-change-slice-oracle")
-        .join(name);
-    std::fs::create_dir_all(&directory).unwrap();
+    let Some(_) = crate::native_environment::binary("ARES_PROCGCODE_STABLE_BIN") else {
+        return;
+    };
+    let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let directory = &runner.work;
     let gcode = directory.join("input.gcode");
-    let native_json = directory.join("native.json");
+    std::fs::write(directory.join("scenario.txt"), name).unwrap();
     std::fs::write(&gcode, &output.gcode).unwrap();
     // Match the existing gcode_moves_oracle producer-only normalization:
     // process_file loads embedded printer config only for known producers
@@ -21,45 +24,21 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
     assert_ne!(renamed, text);
     let oracle_input = directory.join("oracle-input.gcode");
     std::fs::write(&oracle_input, renamed).unwrap();
-    let run = std::process::Command::new(oracle)
-        .arg("--process-gcode")
-        .arg(&oracle_input)
-        .arg("--dump-color-change")
-        .arg(&native_json)
-        .arg("--dump-moves")
-        .arg(directory.join("native.csv"))
-        .output()
+    let raw = runner
+        .processor_raw_color_reference(&oracle_input)
+        .unwrap()
         .unwrap();
-    std::fs::write(
-        directory.join("native.log"),
-        [&run.stdout[..], &run.stderr[..]].concat(),
-    )
-    .unwrap();
-    assert!(run.status.success(), "native processor: {:?}", run.status);
+    let native_json = raw.join("native.json");
     let native: serde_json::Value =
         serde_json::from_slice(&std::fs::read(native_json).unwrap()).unwrap();
     // Explicitly separate the operator-approved stable-index diagnostic from
     // the raw upstream oracle; never overwrite or silently substitute it.
-    let stable_oracle = std::env::var_os("ARES_PROCGCODE_STABLE_BIN").expect(
-        "move parity requires the separately labeled procgcode-stable-options.nix diagnostic",
-    );
-    let stable_json = directory.join("stable-options.json");
-    let stable_csv = directory.join("stable-options.csv");
-    let stable = std::process::Command::new(&stable_oracle)
-        .arg("--process-gcode")
-        .arg(&oracle_input)
-        .arg("--dump-color-change")
-        .arg(&stable_json)
-        .arg("--dump-moves")
-        .arg(&stable_csv)
-        .output()
+    let stable = runner
+        .processor_stable_color_reference(&oracle_input)
+        .unwrap()
         .unwrap();
-    std::fs::write(
-        directory.join("stable-options.log"),
-        [&stable.stdout[..], &stable.stderr[..]].concat(),
-    )
-    .unwrap();
-    assert!(stable.status.success());
+    let stable_json = stable.join("native.json");
+    let stable_csv = stable.join("native.csv");
     let stable_data: serde_json::Value =
         serde_json::from_slice(&std::fs::read(stable_json).unwrap()).unwrap();
     assert_eq!(
@@ -68,7 +47,7 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
     );
     if output.result.custom_gcode_per_print_z.is_empty() {
         assert_eq!(
-            std::fs::read(directory.join("native.csv")).unwrap(),
+            std::fs::read(raw.join("native.csv")).unwrap(),
             std::fs::read(&stable_csv).unwrap(),
             "untagged control must remain identical to unmodified native"
         );
@@ -76,7 +55,7 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
     std::fs::write(
         directory.join("oracle-identities.json"),
         serde_json::to_vec_pretty(&serde_json::json!({
-            "raw":std::env::var_os("ARES_PROCGCODE_BIN"), "stable_options":stable_oracle,
+            "raw":std::env::var_os("ARES_PROCGCODE_BIN"), "stable_options":std::env::var_os("ARES_PROCGCODE_STABLE_BIN"),
             "correction":"tools/chain-probe/procgcode-stable-options.patch",
         }))
         .unwrap(),
@@ -104,7 +83,7 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
             .collect::<Vec<_>>(),
         expected_z
     );
-    let raw_xyz = xyz_bits(&directory.join("native.csv"));
+    let raw_xyz = xyz_bits(&raw.join("native.csv"));
     let stable_xyz = xyz_bits(&stable_csv);
     let rust_xyz: Vec<_> = output
         .result

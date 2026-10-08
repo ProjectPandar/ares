@@ -9,14 +9,63 @@ use ares_core::{
     ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate_processed,
 };
 
-#[path = "../../../tests/support/native_environment.rs"]
-mod native_environment;
-
-#[path = "processed_color_change/native.rs"]
+#[path = "adjacent_color/native.rs"]
 mod native;
 use native::check_native_processor;
 
-const PROJECT: &[u8] = include_bytes!("../../../tests/parity/orca_cli_ender3.3mf");
+#[test]
+fn color_oracle_availability_follows_required_optional_policy() {
+    let directory = tempfile::Builder::new()
+        .prefix("color-policy-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    for key in ["ARES_PROCGCODE_BIN", "ARES_PROCGCODE_STABLE_BIN"] {
+        for required in [true, false] {
+            // Declared files only: the missing peer stops before either can launch.
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "runner::adjacent_color::no_change_slice_is_a_native_processor_control",
+                    "--nocapture",
+                ])
+                .env("ARES_REQUIRE_ORCA", if required { "1" } else { "0" })
+                .env("ARES_PROCGCODE_BIN", std::env::current_exe().unwrap())
+                .env(
+                    "ARES_PROCGCODE_STABLE_BIN",
+                    std::env::current_exe().unwrap(),
+                )
+                .env_remove(key)
+                .output()
+                .unwrap();
+            let diagnostic = format!(
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            std::fs::write(
+                directory.join(format!("{key}-required-{required}.log")),
+                &diagnostic,
+            )
+            .unwrap();
+            assert!(
+                diagnostic.contains("running 1 test") && diagnostic.contains(key),
+                "{diagnostic}; artifacts {directory:?}"
+            );
+            assert_eq!(
+                output.status.success(),
+                !required,
+                "{diagnostic}; artifacts {directory:?}"
+            );
+            assert_eq!(diagnostic.contains("SKIPPED:"), !required, "{diagnostic}");
+            if !required {
+                assert!(diagnostic.contains("not executed"), "{diagnostic}");
+            }
+        }
+    }
+}
+
+const PROJECT: &[u8] = include_bytes!("../../../../../tests/parity/orca_cli_ender3.3mf");
 
 #[tokio::test]
 async fn processed_layer_templates_preserve_ordered_color_change_items() {

@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
 
+#[path = "runner/adjacent_color.rs"]
+mod adjacent_color;
 #[path = "runner/adjacent_motion.rs"]
 mod adjacent_motion;
 

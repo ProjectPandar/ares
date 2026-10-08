@@ -20,16 +20,13 @@
 //! no-deceleration blocks; predecessor entry written for motion predecessors
 //! or same-type ones; seam not synchronized; f64 instead of f32 profile.
 //!
-//! The expected per-vertex bits are committed run-length encodings produced by
-//! the initialized-native oracle (`tools/chain-probe/procgcode-dynamics.nix`).
-//! With `ARES_PROCGCODE_DYNAMICS_BIN` set, the oracle is rerun on the same
-//! G-code and must reproduce the committed encoding and vertex identities.
+//! All expected bits come from runtime initialized-Native dynamics dumps.
 
+use crate::runner::OrcaRunner;
 use ares_core::{
     ConfigOverrides, GenerationMetadata, ProcessedGCode, SlicerContext,
     slice_project_plate_processed,
 };
-use std::path::PathBuf;
 
 use crate::native_environment;
 
@@ -81,12 +78,6 @@ fn optional_native_dynamics_does_not_read_frozen_encodings() {
 
 const PROJECT: &[u8] = include_bytes!("../../../../../tests/parity/orca_cli_ender3.3mf");
 
-fn workspace(relative: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join(relative)
-}
-
 async fn processed(overrides: &str) -> ProcessedGCode {
     slice_project_plate_processed(
         PROJECT.to_vec(),
@@ -116,9 +107,8 @@ fn encode<const N: usize>(values: impl Iterator<Item = [u32; N]>) -> String {
         .collect()
 }
 
-fn check(name: &str, output: &ProcessedGCode) {
-    let directory = workspace("target/motion-attributes").join(name);
-    std::fs::create_dir_all(&directory).unwrap();
+fn check(runner: &OrcaRunner, name: &str, output: &ProcessedGCode) {
+    let directory = &runner.work;
     let actual = encode(output.result.moves.iter().map(|vertex| {
         [
             vertex.pressure_advance.to_bits(),
@@ -143,15 +133,9 @@ fn check(name: &str, output: &ProcessedGCode) {
             .map(|vertex| [vertex.time.to_bits()]),
     );
     std::fs::write(directory.join("ares.time.rle"), &time).unwrap();
-    if let Some(oracle) = native_environment::binary("ARES_PROCGCODE_DYNAMICS_BIN") {
-        check_native(&directory, oracle.as_os_str(), output);
-    }
-    let expected = |suffix: &str| {
-        std::fs::read_to_string(workspace(&format!(
-            "tests/parity/motion-attributes/{name}{suffix}"
-        )))
-        .unwrap()
-    };
+    let capture = check_native(runner, output);
+    let expected =
+        |suffix: &str| std::fs::read_to_string(capture.join(format!("native{suffix}"))).unwrap();
     assert_eq!(
         actual,
         expected(".rle"),
@@ -171,7 +155,8 @@ fn check(name: &str, output: &ProcessedGCode) {
     );
 }
 
-fn check_native(directory: &std::path::Path, oracle: &std::ffi::OsStr, output: &ProcessedGCode) {
+fn check_native(runner: &OrcaRunner, output: &ProcessedGCode) -> std::path::PathBuf {
+    let directory = &runner.work;
     let text = std::str::from_utf8(&output.gcode).unwrap();
     // Producer-only rename so process_file loads the embedded config
     // (`GCodeProcessor.cpp:2620-2633`); line ids are unchanged.
@@ -183,22 +168,11 @@ fn check_native(directory: &std::path::Path, oracle: &std::ffi::OsStr, output: &
     assert_ne!(renamed, text);
     let input = directory.join("oracle-input.gcode");
     std::fs::write(&input, renamed).unwrap();
-    let csv = directory.join("native-dynamics.csv");
-    let run = std::process::Command::new(oracle)
-        .arg("--process-gcode")
-        .arg(&input)
-        .arg("--dump-move-dynamics")
-        .arg(&csv)
-        .arg("--dump-moves")
-        .arg(directory.join("native-moves.csv"))
-        .output()
+    let capture = runner
+        .processor_dynamics_reference(&input)
+        .unwrap()
         .unwrap();
-    std::fs::write(
-        directory.join("native.log"),
-        [&run.stdout[..], &run.stderr[..]].concat(),
-    )
-    .unwrap();
-    assert!(run.status.success(), "native processor: {:?}", run.status);
+    let csv = capture.join("native-dynamics.csv");
     let rows: Vec<Vec<String>> = std::fs::read_to_string(&csv)
         .unwrap()
         .lines()
@@ -230,7 +204,7 @@ fn check_native(directory: &std::path::Path, oracle: &std::ffi::OsStr, output: &
     std::fs::write(directory.join("native.rle"), native).unwrap();
     let native = encode(rows.iter().map(|row| [bits(row, 6)]));
     std::fs::write(directory.join("native.actual-speed.rle"), native).unwrap();
-    let moves = std::fs::read_to_string(directory.join("native-moves.csv")).unwrap();
+    let moves = std::fs::read_to_string(capture.join("native.csv")).unwrap();
     let moves: Vec<Vec<String>> = moves
         .lines()
         .skip(1)
@@ -239,13 +213,20 @@ fn check_native(directory: &std::path::Path, oracle: &std::ffi::OsStr, output: &
     assert_eq!(moves.len(), rows.len(), "native moves dump length");
     let native = encode(moves.iter().map(|row| [bits(row, 16)]));
     std::fs::write(directory.join("native.time.rle"), native).unwrap();
+    directory.clone()
 }
 
 macro_rules! case {
     ($name:ident, $overrides:expr) => {
         #[tokio::test]
         async fn $name() {
-            check(stringify!($name), &processed($overrides).await);
+            if native_environment::binary("ARES_PROCGCODE_DYNAMICS_BIN").is_none() {
+                return;
+            }
+            let Some(runner) = OrcaRunner::from_env().unwrap() else {
+                return;
+            };
+            check(&runner, stringify!($name), &processed($overrides).await);
         }
     };
 }
