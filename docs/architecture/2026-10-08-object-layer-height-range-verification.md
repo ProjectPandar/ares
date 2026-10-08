@@ -1,7 +1,7 @@
 # Stage1 object range-height verification
 
-Status: numerical GREEN and fresh full seeded gates complete; final CLI-only
-rebase/clippy/targeted receipt still pending. No Rust push or approval claimed.
+Status: numerical GREEN, fresh full seeded gates and authorized post-rebase
+checks complete. Coordinator review required before Rust push.
 Approved source spec and runtime RED remain in this branch's two-commit chain.
 
 ## Source slice and retained boundaries
@@ -91,6 +91,25 @@ and failure names retained in the machine record. No rerun to hide these failure
 An initial audit assumption that Native hashes would match failed; corrected
 read-only audit retained differing Native hashes instead of retrying Native.
 
+## Authorized evidence carry-forward through later main changes
+
+Coordinator authorizes retaining the completed bff fresh seeded round and1a8
+same-round official evidence for this slice after later rebase, with clippy
+`-D warnings` and this slice's targeted tests rerun. `3c1a79941` Arachne open-wall
+change affects only six narrow-neck cases (FAIL→PASS); no claim this report's
+bff full round scanned those new cases. `de57be8b0` J1 affects only six J1 cases
+(tool-use mask/initial template current_extruder/final fill-surface Top input).
+This slice does not edit avoid_crossing, and coordinator permits carry-forward
+for it. `dc8d7f00c` error/CLI typing, `92e9573df` test-only, `8264d38ab` web-only
+changes do not require new full numerical rounds under the same instruction.
+
+On3c1, clippy -D warnings/fmt exit0 and targeted4/4 PASS (5.405s) were verified.
+Candidate rebased on exactde57be8b00fb0e3028acb725cfdc85e74b2831e8:
+03922a6d387dff7eaad2c0ef3eb52a22603631b2 (before this final docs commit).
+Post-rebase clippy -D warnings/fmt exit0 and fresh targeted4/4 PASS (3.103s),
+681 other tests filtered, no ignored tests. These are slice-targeted receipts,
+not a fresh full de57 seeded or workspace claim.
+
 ## Durable receipts
 
 [Gate record](2026-10-08-object-layer-height-range-gate-record.json) binds full
@@ -99,6 +118,6 @@ log SHA256s. Original logs/artifacts `/tmp/worker3-layer-range-{1a8,016,bff}-*`.
 Original runtime RED `/tmp/worker3-layer-range-runtime-red.*` and independent
 Native single attempts `/tmp/worker3-layer-range-{native-red,boundary-native}/`.
 
-Pending final latest-main rebase, clippy/targeted and coordinator REVIEW-REQUEST;
-no Stage2 approval or implementation implied. Browser pauses prevented launching
+Submitting coordinator REVIEW-REQUEST; no Stage2 approval or implementation
+implied, and no Rust push before approval. Browser pauses prevented launching
 new heavy jobs; existing commands completed and all evidence stayed single-attempt.

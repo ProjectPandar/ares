@@ -29700,8 +29700,84 @@
     "/tmp/worker3-layer-range-bff-clippy.log": "75d82ea17fc388d2b73fb04a931f61fc427aa779f2ae1466c9ba79b510897507",
     "/tmp/worker3-layer-range-bff-fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "/tmp/worker3-layer-range-bff-wasm.log": "e496990fbab77eec63f0f851400c03b6f67597871cc88e5c705fc8b47c01a073",
-    "/tmp/worker3-layer-range-bff-targeted.log": "2aaf2565f8d965773b7089a256a17e4e6bbe62b645e7d405457d53895a6020b0"
+    "/tmp/worker3-layer-range-bff-targeted.log": "2aaf2565f8d965773b7089a256a17e4e6bbe62b645e7d405457d53895a6020b0",
+    "/tmp/worker3-layer-range-3c1-clippy.log": "a0f7989ac4a86b1697562889983908dda976853671e48797866c390393ed7ba4",
+    "/tmp/worker3-layer-range-3c1-fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/tmp/worker3-layer-range-3c1-targeted.log": "d993c808279647da96a5aa0e0263665a0c89050bc808aef13d7a36b36e962971",
+    "/tmp/worker3-layer-range-de57-clippy.log": "a0f7989ac4a86b1697562889983908dda976853671e48797866c390393ed7ba4",
+    "/tmp/worker3-layer-range-de57-fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/tmp/worker3-layer-range-de57-targeted.log": "a4fc9b2b5abfd7bb5d335288793071277be71284e347a8f3c06f3ad5156b8fd6"
   },
-  "pending": "after CLI-only/test-only rebase: clippy-Dwarnings and targeted",
-  "no_rust_push": true
+  "no_rust_push": true,
+  "final_base": "de57be8b00fb0e3028acb725cfdc85e74b2831e8",
+  "final_candidate_before_docs": "03922a6d387dff7eaad2c0ef3eb52a22603631b2",
+  "carry_forward_policy": "coordinator authorizes bff fresh fullseeded and1a8official;3c1Arachneonly6/de57J1only6; postrebaseclippy-Dwarnings+targeted",
+  "post_rebase_checks": {
+    "/tmp/worker3-layer-range-3c1-clippy": {
+      "exit": 0,
+      "log": "/tmp/worker3-layer-range-3c1-clippy.log"
+    },
+    "/tmp/worker3-layer-range-3c1-fmt": {
+      "exit": 0,
+      "log": "/tmp/worker3-layer-range-3c1-fmt.log"
+    },
+    "/tmp/worker3-layer-range-3c1-targeted": {
+      "exit": 0,
+      "log": "/tmp/worker3-layer-range-3c1-targeted.log"
+    },
+    "/tmp/worker3-layer-range-de57-clippy": {
+      "exit": 0,
+      "log": "/tmp/worker3-layer-range-de57-clippy.log"
+    },
+    "/tmp/worker3-layer-range-de57-fmt": {
+      "exit": 0,
+      "log": "/tmp/worker3-layer-range-de57-fmt.log"
+    },
+    "/tmp/worker3-layer-range-de57-targeted": {
+      "exit": 0,
+      "log": "/tmp/worker3-layer-range-de57-targeted.log"
+    }
+  },
+  "final_targeted_byte_rows": [
+    {
+      "case": "overhang-seam",
+      "input_sha256": "fc938f743bed802de2691134f232015e715d525fc87f9f4b33ce6a51785b9b5f",
+      "ares_sha256": "8ae951380be0edae4e5dabd8ab6dd321b8501e0a8c6af371c1abeb91c142e48f",
+      "native_sha256": "a7720150000370222f83c04fb51c9e40eea3148e6376ac70a6cf2f4a876292dc",
+      "generator_only_sha256": "f590cb5fd93aec525e550d3b7fd460ee2270236e4ced248828476891d9fdb306",
+      "ares_bytes": 26546,
+      "native_bytes": 26578,
+      "result": "/tmp/worker3-layer-range-de57-targeted-artifacts/object-range-height-BSZ2bk/result.json"
+    },
+    {
+      "case": "overlap",
+      "input_sha256": "7f078c18fa8eb8119f2215a5c98afbaa629e9946c430259ca962cd1c929bab11",
+      "ares_sha256": "32a30f16a67d1aebd367a822f2d6fe788d32cc65924010f0d54da60991721579",
+      "native_sha256": "05164df1983709a8ab910e149b7bd88c8a4148554689d56d49fe012498143a2b",
+      "generator_only_sha256": "cc1bc010d0e837dae4b81a8befe5b4a5097b947f72f4d1ea4962531e583a989c",
+      "ares_bytes": 26634,
+      "native_bytes": 26666,
+      "result": "/tmp/worker3-layer-range-de57-targeted-artifacts/object-range-height-o2JxFG/result.json"
+    },
+    {
+      "case": "gap-top",
+      "input_sha256": "9a03a0528b31b292a0494c76fdb985c788c91b3928f6176eadf6a85eeefc65c7",
+      "ares_sha256": "4f3ce80bd2588ceb4c6bd58325ce7de4c78f2992ad876397cda2efe53941871a",
+      "native_sha256": "4699654e9cb1cde542532fa7d1505c5919ff1c580e064cb1ca86b503ce9c1480",
+      "generator_only_sha256": "b6fda99aa4c23fd0e23f24be1e852a5c6d9313d90b7db3209b8ad9d57650f1c4",
+      "ares_bytes": 25708,
+      "native_bytes": 25740,
+      "result": "/tmp/worker3-layer-range-de57-targeted-artifacts/object-range-height-tFq5DN/result.json"
+    },
+    {
+      "case": "epsilon",
+      "input_sha256": "ea1ebb3e63343fb0ff3140623a15ea3553995093dbadbec670199778d4ab4099",
+      "ares_sha256": "4f3ce80bd2588ceb4c6bd58325ce7de4c78f2992ad876397cda2efe53941871a",
+      "native_sha256": "081a52c6f40155833fd66482a439ad2a455cd3e1faddfe696e7511e65f48aa75",
+      "generator_only_sha256": "b6fda99aa4c23fd0e23f24be1e852a5c6d9313d90b7db3209b8ad9d57650f1c4",
+      "ares_bytes": 25708,
+      "native_bytes": 25740,
+      "result": "/tmp/worker3-layer-range-de57-targeted-artifacts/object-range-height-1oi1pb/result.json"
+    }
+  ]
 }
