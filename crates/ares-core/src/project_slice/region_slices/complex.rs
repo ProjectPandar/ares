@@ -12,14 +12,25 @@ use super::{
 };
 use crate::project_slice::volume_regions::VolumeRegion;
 
+#[path = "range_lookup.rs"]
+mod range_lookup;
+
 pub(in crate::project_slice) fn compose_complex_region_slices(
     pending: PendingRegionSlices,
     scale: CoordinateScale,
 ) -> Result<PostRegionPrintObject, SliceError> {
     let (mut output, mut working, bounds, ranges, complex_layers) = pending.into_parts();
+    let Some(&first_layer) = complex_layers.first() else {
+        return Ok(output);
+    };
+    let mut range_index = range_lookup::first(
+        &ranges,
+        f64::from(output.plan.layers[first_layer].slice_z as f32),
+    );
     for layer_index in complex_layers {
         let z = f64::from(output.plan.layers[layer_index].slice_z as f32);
-        let records = super::records_at_z(&ranges, z);
+        range_index = range_lookup::next(&ranges, range_index, z);
+        let records = &ranges[range_index].volume_regions;
         let mut slices = records
             .iter()
             .map(|record| TempSlice {
