@@ -18,7 +18,12 @@ Status: proposed, spec review required before implementation.
    role with the upstream range-profile owner; do not maintain two competing
    algorithms or add a legacy fallback. Reuse `layers.rs` pair interpolation,
    precise-Z alignment and `PlannedLayer` only where their source semantics agree.
-4. Remove only the capability branch proved supported by independent Native RED
+4. Stage1 ports only explicit-height intervals. Mixed Some/None intervals retain
+   their existing unsupported range boundary: upstream dereferences a missing
+   `layer_height` option in Slicing.cpp:249 (`getFloat`), which is UB, not a
+   default-height rule. Do not imitate UB or fabricate defaults; pure None keeps
+   its pre-existing behavior. Coordinator confirmed this bounded scope.
+5. Remove only the capability branch proved supported by independent Native RED
    and subsequent strict GREEN. Painted and ZAA branches stay while deferred.
    Update earlier rejection tests before production changes, never after.
 5. ZAA exists in admitted OrcaSlicer2.4.2 libslic3r but is **not adaptive layer

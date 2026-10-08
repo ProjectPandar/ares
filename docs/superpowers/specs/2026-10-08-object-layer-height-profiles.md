@@ -72,6 +72,14 @@ Painted import/selection, automatic adaptive generation, smoothing/UI tools,
 texture generation and activeZAA are deferred. Unrelated slicing behavior does
 not get refactored. Existing public external-input limits remain.
 
+Coordinator confirmed the stage1 boundary: **mixed Some/None ranges retain
+UnsupportedProjectFeature("layer_config_ranges")** because the absent option
+is directly dereferenced upstream (UB). No implicit default or UB imitation.
+Pure None range collections preserve their pre-existing region-only behavior.
+Stage1 consumes explicit-height collections only; this is a narrowed existing
+unsupported boundary, not a new validation guard. Source property access is
+PrintConfig.hpp::ModelConfig::option forwarding to DynamicPrintConfig::option.
+
 Native range-profile code dereferences `option("layer_height")`; Rust stores an
 Option because region-only ranges are accepted by its archive parser. Before
 implementing, establish the admitted Native normalization/valid-input path for

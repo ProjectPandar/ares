@@ -111,7 +111,7 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
     chain.insert_text("Metadata/layer_config_ranges.xml", LAYER_HEIGHT_RANGE);
     assert_eq!(
         slice_error(&chain).await,
-        SliceError::UnsupportedProjectFeature("layer_height".to_owned())
+        SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned())
     );
     chain.replace_unique(
         "Metadata/layer_config_ranges.xml",

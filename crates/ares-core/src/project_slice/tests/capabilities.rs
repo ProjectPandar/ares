@@ -29,13 +29,13 @@ fn task22a_capability_gates_each_named_feature() {
     assert_unsupported(validate(true, &[], &[]), "layer_height_profile");
 
     let ranged = source_object(Default::default(), Vec::new(), one_layer_height_range());
-    assert_unsupported(
+    assert_eq!(
         validate(
             false,
             &[ranged],
             &[resolved(0, object_options(), Vec::new())],
         ),
-        "layer_height",
+        Ok(())
     );
 
     let source = source_object(Default::default(), Vec::new(), Vec::new());
@@ -69,7 +69,7 @@ fn task22a_capability_gate_order_is_project_key_major() {
         validate(true, &sources, &resolved_objects),
         "layer_height_profile",
     );
-    assert_unsupported(validate(false, &sources, &resolved_objects), "layer_height");
+    assert_eq!(validate(false, &sources, &resolved_objects), Ok(()));
 
     let sources = [
         source_object(Default::default(), Vec::new(), Vec::new()),
