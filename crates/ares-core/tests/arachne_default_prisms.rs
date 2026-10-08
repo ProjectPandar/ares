@@ -1,2 +1,2 @@
-#[path = "arachne_default_prisms/mod.rs"]
-mod tests;
+#[path = "arachne_default_prisms/strict.rs"]
+mod strict;

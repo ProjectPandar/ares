@@ -1,7 +1,13 @@
-use ares_core::{GenerationMetadata, slice_project};
-use std::{fs, path::Path};
+//! Runtime Native reference for the active default-prisms layout contract.
+//! GCode.cpp:2508-2527,2676-2693,5380-5385; bbs_3mf.cpp:3554-3560.
+//! Preserve layer/width/object/wipe-aware XY bounds checks, including 0.0015.
+//! Full byte-strict output is DEFERRED in the Arachne prism cleanup spec;
+//! the independent handwritten strict comparator remains active in core.
+//! OrcaRunner owns required/optional availability and slice_case caching.
 
-mod strict;
+use super::{ExportedCase, OrcaRunner, cache_identity, repo_root};
+use ares_core::{GenerationMetadata, SlicerContext, slice_project};
+use std::fs;
 
 /// Per-object extrusion XY bounds over extrusion moves (G1 with E) between
 /// the `; printing object` markers, keyed by object name. Wipe segments are
@@ -67,17 +73,30 @@ fn object_extrusion_bounds(
 
 #[tokio::test]
 async fn process_arachne_default_prisms_plate_layout() {
-    let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/parity/arachne");
-    let project = fs::read(directory.join("default-prisms.3mf")).unwrap();
-    let reference =
-        String::from_utf8(fs::read(directory.join("default-prisms.orca.gcode")).unwrap()).unwrap();
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let project = fs::read(repo_root().join("tests/parity/arachne/default-prisms.3mf")).unwrap();
+    let project_path = runner.work.join("default-prisms.3mf");
+    fs::write(&project_path, &project).unwrap();
+    let output_dir = runner.work.join("native");
+    fs::create_dir(&output_dir).unwrap();
+    let case = runner
+        .slice_case(&ExportedCase {
+            label: "arachne/default-prisms".to_owned(),
+            project: project.clone(),
+            project_path,
+            output_dir,
+        })
+        .unwrap();
     let metadata = GenerationMetadata::new_local(2026, 9, 8, 0, 0, 0).unwrap();
-    let actual = String::from_utf8(
-        slice_project(project, metadata, ares_core::SlicerContext::new(0))
-            .await
-            .expect("ARES_ERROR"),
-    )
-    .unwrap();
+    let actual = slice_project(project, metadata, SlicerContext::new(0))
+        .await
+        .expect("ARES_ERROR");
+    fs::write(runner.work.join("ares.gcode"), &actual).unwrap();
+    fs::write(runner.work.join("orca.gcode"), &case.reference).unwrap();
+    let actual = String::from_utf8(actual).unwrap();
+    let reference = String::from_utf8(case.reference.clone()).unwrap();
 
     // Plate-level layer count (`GCode.cpp:2513-2527` merges every object's
     // layer print_z set; per-object emission must not sum to 36).
@@ -108,7 +127,30 @@ async fn process_arachne_default_prisms_plate_layout() {
     // re-origins per print object like `GCode.cpp:5380` `set_origin`).
     let actual_bounds = object_extrusion_bounds(&actual);
     let reference_bounds = object_extrusion_bounds(&reference);
+    fs::write(
+        runner.work.join("arachne-prisms-comparison.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "input_sha256": cache_identity::raw_digest(&case.project),
+            "ares_sha256": cache_identity::raw_digest(actual.as_bytes()),
+            "native_sha256": cache_identity::raw_digest(&case.reference),
+            "ares_layer_number_12": actual.lines().any(|line| line == "; total layer number: 12"),
+            "ares_width_lines": width_lines,
+            "native_width_lines": reference_width_lines,
+            "ares_object_bounds": actual_bounds,
+            "native_object_bounds": reference_bounds,
+            "bounds_tolerance": 0.0015,
+            "comparison": "original active plate-layout projection; full byte-strict parity DEFERRED",
+            "artifacts": runner.work,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
     assert_eq!(actual_bounds.len(), 3, "all three objects must be printed");
+    assert!(
+        actual_bounds.keys().eq(reference_bounds.keys()),
+        "object-name key sets must match; artifacts {:?}",
+        runner.work
+    );
     for (
         name,
         [
@@ -137,22 +179,4 @@ async fn process_arachne_default_prisms_plate_layout() {
             );
         }
     }
-}
-
-// Tracks the unported `wall_generator: arachne` domain (see the
-// unported-option-domains spec): ares renders the fixture with classic
-// walls and the reference carries arachne walls (8402 vs 8926 lines; the
-// E/timing families diverge downstream). Re-enable when the arachne
-// wall-generator milestone lands.
-#[tokio::test]
-#[ignore = "arachne wall generator is an unported option domain"]
-async fn process_arachne_actual_default_prisms_full_output() {
-    let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/parity/arachne");
-    let project = fs::read(directory.join("default-prisms.3mf")).unwrap();
-    let reference = fs::read(directory.join("default-prisms.orca.gcode")).unwrap();
-    let metadata = GenerationMetadata::new_local(2026, 9, 8, 0, 0, 0).unwrap();
-    let actual = slice_project(project, metadata, ares_core::SlicerContext::new(0))
-        .await
-        .expect("ARES_ERROR");
-    strict::compare(&reference, &actual).unwrap();
 }
