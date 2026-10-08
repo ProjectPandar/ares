@@ -174,6 +174,69 @@ Wiring notes (observed, for the driver author):
   and take `.back()`; add `ToolOrdering::last_extruder()` in
   `statistics` alongside `collect` if absent.
 
+## S2 spec (staged for review)
+
+Upstream boundary: the per-instance transition inside the by-object
+loop, `GCode.cpp:3300-3372`, between the ordering rebuild (:3289-3297)
+and `process_layers` (:3349-3350). For every instance after the first
+(`finished_objects > 0`, :3309), in order:
+
+1. `set_origin(unscale(instance.shift))` (:3303) — already emitted per
+   chunk in Ares (the build-item placement); verify once, no change.
+2. Cooling markers off (:3308); `avoid_crossing_perimeters
+   .use_external_mp_once()` (:3309).
+3. The toolchange branch (:3310-3325): if
+   `need_toolchange(initial_extruder_id)` → `set_extruder(..., true)`
+   (prime) and `prime_extruder = true` for the instance's
+   `process_layers`; otherwise `retract()`. The exclude-object label
+   base64 rides on the toolchange when `support_object_skip_flush`
+   (:3313-3317).
+4. `travel_to_z(m_max_layer_z + z_hop[initial_extruder_id])` (:3326) —
+   the safety lift (the native's `G1 Z10.4`: max_layer_z 10.0 + z_hop
+   0.4). Ares has `max_layer_z` in the append locals.
+5. `travel_to(Point(0,0), erNone, "move to origin position for next
+   object")` (:3327); then `avoid_crossing_perimeters.disable_once()`
+   (:3329-3330).
+6. `current_object_idx = finished_objects` (:3333); the
+   `printing_by_object_gcode` custom template processed with
+   `initial_extruder_id` (:3334-3335); the first-layer bed and extruder
+   temperatures (no wait) (:3337-3338 — the native's `M104 S220`); the
+   template written (:3339).
+7. The cooling buffer reset at the current position + the current
+   extruder (:3341-3342).
+8. `process_layers(..., prime_extruder)` (:3349-3350) — in Ares, the
+   phase loop iteration.
+9. After the instance: the flush statistics (:3352-3359), the PLR
+   disable when `m_second_layer_things_done` (:3361-3367),
+   `++finished_objects`, `m_second_layer_things_done = false`
+   (:3369-3372).
+
+Deferred (not S2): `cal_most_used_extruder` per object (:3346 — S3),
+`m_printed_objects` (:3347), `m_sorted_layer_filaments` (:3356-3359),
+the statistics accumulators (:3352-3355).
+
+Ares mapping: the transition writes live in `layers.rs` between the
+phase loop iterations (after the previous phase's last chunk, before
+the next phase's first `boundary::append`). The state resets the
+boundary needs:
+
+- `previous_layer_z` resets per phase — the S1-introduced negative
+  `;HEIGHT:` (-9.8) comes from carrying object 1's top z (10.0) into
+  object 2's layer 1; the upstream recomputes the height inside each
+  object's `process_layers` from the object's own layers, so the per-
+  phase reset IS the upstream behavior, not a hack.
+- `second_layer_done` resets per phase (:3372).
+- The fan mover and the cooling state carry per the cooling-buffer
+  reset semantics (:3341-3342).
+- The transition block writes with the cooling markers off
+  (:3308) — in Ares the cooling rewrite windows must not swallow the
+  transition bytes (write them outside the `cooling.begin_layer`
+  window).
+
+Acceptance: both REDs reach PASS in full (the by-layer fixtures stay
+byte-identical, proven by a fresh seeded base/cand run over the by-
+layer suite); no assertion changes.
+
 Known interactions to verify during implementation: the avoid-crossing
 boundary cache (built per slice_z across every object today — in
 by-object mode upstream uses the object's own slices), the raft chunk
