@@ -13,7 +13,7 @@ body {
 
 button { font: inherit; color: inherit; }
 button:disabled { cursor: default; }
-a { color: var(--accent); }
+a { color: var(--accent-ink); }
 .orca-icon { flex: none; display: block; }
 
 .shell { display: grid; grid-template-rows: 32px 40px 1fr 22px; height: 100%; }
@@ -50,15 +50,15 @@ a { color: var(--accent); }
   color: var(--topbar-text); text-decoration: none; font-size: 13px;
 }
 @media (hover: hover) { .tab:hover { background: var(--topbar-hover); } }
-.tab.active { background: var(--accent); }
+.tab.active { background: var(--accent-fill); }
 .tabbar-actions { display: flex; align-items: center; gap: 8px; }
 .side-button {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; min-width: 110px;
-  padding: 0 14px; border: 1px solid var(--accent); border-radius: 4px; background: var(--accent);
+  padding: 0 14px; border: 1px solid var(--accent-fill); border-radius: 4px; background: var(--accent-fill);
   color: var(--accent-text); font-size: 13px; cursor: pointer;
 }
-@media (hover: hover) { .side-button:not(:disabled):hover { background: var(--accent-hover); border-color: var(--accent-hover); } }
-.side-button:not(:disabled):active { background: var(--accent-pressed); border-color: var(--accent-pressed); }
+@media (hover: hover) { .side-button:not(:disabled):hover { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); } }
+.side-button:not(:disabled):active { background: var(--accent-fill-pressed); border-color: var(--accent-fill-pressed); }
 .side-button:disabled { background: var(--disabled-bg); border-color: var(--disabled-bg); color: var(--disabled-text); }
 
 .tool-button, .icon-button, .view-button, .link-button {
@@ -67,7 +67,7 @@ a { color: var(--accent); }
 }
 @media (hover: hover) { .tool-button:not(:disabled):hover, .icon-button:hover { background: var(--panel-raised); border-color: var(--border); } }
 .icon-button { padding: 5px; }
-.link-button { padding: 0; color: var(--accent); }
+.link-button { padding: 0; color: var(--accent-ink); }
 
 /* Pages */
 .page { display: flex; height: 100%; min-height: 0; }
@@ -105,8 +105,13 @@ a { color: var(--accent); }
 }
 .shortcuts-header h2 { margin: 0; font-size: 13px; font-weight: 600; }
 .shortcuts-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 8px 24px; padding: 12px 16px 16px; }
-.shortcuts-groups h3 { margin: 4px 0 6px; font-size: 13px; color: var(--accent); }
+.shortcuts-groups h3 { margin: 4px 0 6px; font-size: 13px; color: var(--accent-ink); }
 .shortcuts-groups dl { margin: 0; }
 .shortcut-row { display: grid; grid-template-columns: 150px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--separator); font-size: 12px; }
 .shortcut-row dd { margin: 0; color: var(--label); }
 .shortcut-row kbd { font-family: inherit; font-weight: 600; }
+
+/* prefers-reduced-motion: nothing animates; the spinner stands still beside its status text. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

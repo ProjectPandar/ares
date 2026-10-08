@@ -8,7 +8,7 @@
 }
 .view-button { padding: 3px 10px; color: var(--text-dim); }
 @media (hover: hover) { .view-button:not(:disabled):hover { color: var(--text); background: var(--panel-raised); } }
-.view-button[aria-pressed="true"] { color: var(--accent-text); background: var(--accent); }
+.view-button[aria-pressed="true"] { color: var(--accent-text); background: var(--accent-fill); }
 .view-button:disabled { opacity: 0.4; }
 .view-separator { width: 1px; margin: 3px 2px; background: var(--separator); }
 .canvas-hint {

@@ -24,13 +24,18 @@
   --text: #262e30;
   --label: #363636;
   --text-dim: #6b6b6a;
-  --text-faint: #acacac;
+  --text-faint: #6e6e6e;
   --button: #dfdfdf;
   --button-hover: #d4d4d4;
   --accent: #009688;
   --accent-hover: #26a69a;
   --accent-pressed: #00897b;
   --accent-text: #fefefe;
+  /* WCAG AA text on and in the accent: filled controls carrying text, and accent-coloured text. */
+  --accent-fill: #00796b;
+  --accent-fill-hover: #00695c;
+  --accent-fill-pressed: #004d40;
+  --accent-ink: #00796b;
   --accent-soft: #e5f0ee;
   --accent-checked: #bfe1de;
   --disabled-bg: #6b6b6b;
@@ -64,13 +69,17 @@
   --text: #efeff0;
   --label: #b2b3b5;
   --text-dim: #b3b3b5;
-  --text-faint: #818183;
+  --text-faint: #9e9ea0;
   --button: #3e3e45;
   --button-hover: #4d4d54;
   --accent: #009688;
   --accent-hover: #26a69a;
   --accent-pressed: #00897b;
   --accent-text: #fefefe;
+  --accent-fill: #00796b;
+  --accent-fill-hover: #00695c;
+  --accent-fill-pressed: #004d40;
+  --accent-ink: #2bb3a6;
   --accent-soft: #283232;
   --accent-checked: #223c3c;
   --disabled-bg: #6b6b6b;
