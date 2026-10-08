@@ -88,6 +88,9 @@ mod profile_overlay_default_gcodes;
 #[path = "runner/project_export_metadata.rs"]
 mod project_export_metadata;
 #[cfg(test)]
+#[path = "runner/scarf_default_threshold.rs"]
+mod scarf_default_threshold;
+#[cfg(test)]
 #[path = "runner/seam_layer_height.rs"]
 mod seam_layer_height;
 #[cfg(test)]
