@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
-import { oraclePath } from "./oracleEnv";
+import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 import { checkToolpathPreview } from "./toolpathPreview";
 
@@ -94,6 +94,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
       ...process.env,
       ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1",
       ARES_ORCA_BIN: `${repositoryRoot}scripts/orca-parity.sh`,
+      ...nativeEnv(orca!),
       ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
     },
   });

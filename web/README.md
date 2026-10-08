@@ -128,6 +128,9 @@ Artifacts are written to `target/web-e2e/`:
   and `result.json` with catalog load and slice timings, with and without the BBL vendor.
   It needs `ORCA_APPDIR` set to an official OrcaSlicer 2.4.2 AppImage extraction
   (see `scripts/orca-parity.sh`).
+  The preset and profile slice specs run the `ares-cli` parity tests with
+  `ARES_REQUIRE_ORCA=1` and the Native binary and resources of that extraction, so
+  a missing Native fails them instead of skipping the comparison.
 
 The oracles are external binaries named by environment variables: `ORCA_APPDIR`
 above, and `ARES_PROCGCODE_BIN` for the OrcaSlicer `GCodeProcessor` build

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import { build, preview } from "vite";
-import { oraclePath } from "./oracleEnv";
+import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
@@ -14,7 +14,8 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/profile-slice/", i
 type Slice = { gcode: string; catalogBytes: number; loadMs: number; serializeMs: number; sliceMs: number };
 
 test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlicer --load-settings bytes, with and without overrides", async ({ page }) => {
-  if (!oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh")) test.skip();
+  const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
+  if (!orca) test.skip();
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -33,6 +34,7 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
       ...process.env,
       ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1",
       ARES_ORCA_BIN: `${repositoryRoot}scripts/orca-parity.sh`,
+      ...nativeEnv(orca!),
       ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
     },
   });

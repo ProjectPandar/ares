@@ -16,3 +16,16 @@ export function oraclePath(name: string, oracle: string, source: string): string
   test.info().annotations.push({ type: "skip", description: `${name} is unset: ${oracle} not checked` });
   return null;
 }
+
+/**
+ * Native OrcaSlicer environment of the `cargo nextest` parity tests for the
+ * official AppImage extraction `appdir` (tests/support/native_environment.rs):
+ * the tests must run Native, not skip it.
+ */
+export function nativeEnv(appdir: string) {
+  return {
+    ARES_REQUIRE_ORCA: "1",
+    ARES_ORCA_NATIVE_BIN: `${appdir}/bin/orca-slicer`,
+    ARES_ORCA_RESOURCES_DIR: `${appdir}/resources`,
+  };
+}
