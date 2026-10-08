@@ -364,3 +364,15 @@ emission layer must either (a) partition traversal regions per copy, or
 (b) emit local coordinates with a per-chunk origin offset. Decide (a)
 vs (b) when implementing; the transition, M73 count, and phase machinery
 findings above are unchanged.
+
+### Emission-side anchor: per-instance set_origin already exists
+
+`layers.rs:110-116` documents that each chunk already emits around its
+own build-item placement (`set_origin(unscale(instance.shift))`,
+`GCode.cpp:5380/5403/5437` port; copies share the layer layout, records
+matched by slice_z), and `tool_entry.rs:92` applies
+`bucket.instance.shift` per instance bucket. The per-instance split is
+therefore: carry `copy` on `DrivePhase`, thread it into the chunk
+emission, and filter the instance buckets to the phase's copy (the
+62-entry merged slice stays shared). The inter-phase transition and the
+M73 count findings above are unchanged.
