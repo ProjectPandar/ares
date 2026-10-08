@@ -66,6 +66,7 @@ impl CustomTag<'_> {
 pub(in crate::project_slice::gcode_emit::processor) struct ParsedLine<'a> {
     pub(in crate::project_slice::gcode_emit::processor) raw: &'a str,
     pub(in crate::project_slice::gcode_emit::processor) custom: Option<CustomTag<'a>>,
+    pub(in crate::project_slice::gcode_emit::processor) wiping: Option<bool>,
 }
 
 impl<'a> ParsedLine<'a> {
@@ -73,7 +74,28 @@ impl<'a> ParsedLine<'a> {
         Self {
             raw,
             custom: parse_custom_tag(raw, bbl),
+            wiping: parse_wipe_tag(raw, bbl),
         }
+    }
+}
+
+fn parse_wipe_tag(line: &str, bbl: bool) -> Option<bool> {
+    if bbl {
+        return match line.trim() {
+            "; WIPE_START" | ";WIPE_START" => Some(true),
+            "; WIPE_END" | ";WIPE_END" => Some(false),
+            _ => None,
+        };
+    }
+    // GCodeProcessor.hpp:375 selects compatible tokens (cpp:81-84);
+    // cpp:3146-3155 prefix-matches without stripping comment-leading spaces.
+    let comment = line.strip_prefix(';')?;
+    if comment.starts_with("WIPE_START") {
+        Some(true)
+    } else if comment.starts_with("WIPE_END") {
+        Some(false)
+    } else {
+        None
     }
 }
 

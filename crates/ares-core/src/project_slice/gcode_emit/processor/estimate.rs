@@ -73,9 +73,11 @@ impl Estimate {
             seams.role(line);
             used_filaments.tags(line, filaments.selection().1);
             printable_area.tag(line, limits.bbl_printer);
+            let parsed = ParsedLine::new(line, limits.bbl_printer);
+            if let Some(wiping) = parsed.wiping {
+                state.set_wiping(wiping);
+            }
             match line.trim() {
-                "; WIPE_START" | ";WIPE_START" => state.set_wiping(true),
-                "; WIPE_END" | ";WIPE_END" => state.set_wiping(false),
                 "; FEATURE: Custom" | ";TYPE:Custom" => prepare_stage = !saw_motion_command,
                 line if line.starts_with("; FEATURE:") || line.starts_with(";TYPE:") => {
                     prepare_stage = false
@@ -90,7 +92,6 @@ impl Estimate {
                 state.position[2],
                 state.e_position,
             ];
-            let parsed = ParsedLine::new(line, limits.bbl_printer);
             if let Some(recorder) = recorder.as_deref_mut() {
                 recorder.machine(&state);
                 recorder.line(index + 1, parsed, g1_line_id, line_start);
