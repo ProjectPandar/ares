@@ -53,7 +53,7 @@ const renderedFields = (scope: Locator) =>
       const label = element.closest(".option-subfield")?.querySelector(".option-sublabel") ?? element.closest(".option-row")!.querySelector(".option-label");
       return {
         key: element.getAttribute("data-option"), control: "point", label: label!.textContent,
-        unit: element.parentElement!.querySelector(".option-unit")?.textContent ?? null,
+        unit: element.closest(".option-value")!.querySelector(".option-unit")?.textContent ?? null,
         tooltip: element.getAttribute("title"), value: inputs.map((input) => input.value).join(","),
       };
     }
@@ -68,7 +68,7 @@ const renderedFields = (scope: Locator) =>
       key: element.getAttribute("data-option"),
       control: kind,
       label: label!.textContent,
-      unit: element.parentElement!.querySelector(".option-unit")?.textContent ?? null,
+      unit: element.closest(".option-value")!.querySelector(".option-unit")?.textContent ?? null,
       tooltip: element.getAttribute("title"),
     };
     if (control instanceof HTMLSelectElement) field.options = [...control.options].filter((option) => !option.hidden).map(({ value, text }) => ({ value, text }));

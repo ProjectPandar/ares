@@ -17,4 +17,18 @@
     background: var(--panel); border: 3px solid var(--accent); box-shadow: var(--shadow); box-sizing: border-box;
   }
   .layer-slider-track::before { inset: -8px -20px; }
+  .process-tab { min-height: 44px; }
+  .option-field, .option-select, .legend-view { height: 44px; }
+  .moves-slider input { height: 44px; margin: 0; }
+  /* The checkbox's label is its 44x44 target. */
+  .option-check-target { display: grid; place-items: center start; width: 44px; height: 44px; margin: 0 auto 0 0; }
+  .option-check-target .option-check { margin: 0; }
+  /* Three 44px dots on a wider track; each dot's target overflows the track vertically. */
+  .mode-switch { width: 134px; height: 24px; border-radius: 12px; }
+  .mode-switch::before { width: calc(35px + 44px * var(--mode)); border-radius: 12px; }
+  .mode-dot { margin: -11px 0; }
+}
+/* The taller Moves slider pushes the phone legend up by as much, keeping the 3D centre clear. */
+@media (pointer: coarse) and (max-width: 640px) {
+  .legend { bottom: 88px; max-height: calc(50% - 118px); }
 }

@@ -36,7 +36,7 @@ a { color: var(--accent); }
   display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px; border: none;
   border-radius: 4px; background: transparent; color: var(--topbar-text); cursor: pointer;
 }
-.bar-button:not(:disabled):hover { background: var(--topbar-hover); }
+@media (hover: hover) { .bar-button:not(:disabled):hover { background: var(--topbar-hover); } }
 .bar-button:disabled { opacity: 0.4; }
 
 /* MainFrame Notebook: tabs on the left, SideButtons on the right */
@@ -49,7 +49,7 @@ a { color: var(--accent); }
   display: flex; align-items: center; gap: 8px; padding: 0 20px; min-width: 120px; justify-content: center;
   color: var(--topbar-text); text-decoration: none; font-size: 13px;
 }
-.tab:hover { background: var(--topbar-hover); }
+@media (hover: hover) { .tab:hover { background: var(--topbar-hover); } }
 .tab.active { background: var(--accent); }
 .tabbar-actions { display: flex; align-items: center; gap: 8px; }
 .side-button {
@@ -57,7 +57,7 @@ a { color: var(--accent); }
   padding: 0 14px; border: 1px solid var(--accent); border-radius: 4px; background: var(--accent);
   color: var(--accent-text); font-size: 13px; cursor: pointer;
 }
-.side-button:not(:disabled):hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+@media (hover: hover) { .side-button:not(:disabled):hover { background: var(--accent-hover); border-color: var(--accent-hover); } }
 .side-button:not(:disabled):active { background: var(--accent-pressed); border-color: var(--accent-pressed); }
 .side-button:disabled { background: var(--disabled-bg); border-color: var(--disabled-bg); color: var(--disabled-text); }
 
@@ -65,7 +65,7 @@ a { color: var(--accent); }
   display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent;
   background: transparent; border-radius: 4px; padding: 4px 8px; cursor: pointer;
 }
-.tool-button:not(:disabled):hover, .icon-button:hover { background: var(--panel-raised); border-color: var(--border); }
+@media (hover: hover) { .tool-button:not(:disabled):hover, .icon-button:hover { background: var(--panel-raised); border-color: var(--border); } }
 .icon-button { padding: 5px; }
 .link-button { padding: 0; color: var(--accent); }
 

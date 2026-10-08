@@ -82,8 +82,10 @@ export function OptionControl({ def, index, label, original, edited, readOnly, c
   // CheckBox::set_value (Field.cpp:1097-1113): a nullable nil shows unchecked.
   if (control === "checkbox") {
     field = (
-      <input {...attributes} type="checkbox" className="option-check" checked={value === true} disabled={readOnly}
-        onChange={(event) => setOverride(def.key, event.target.checked, original)} />
+      <label className="option-check-target">
+        <input {...attributes} type="checkbox" className="option-check" checked={value === true} disabled={readOnly}
+          onChange={(event) => setOverride(def.key, event.target.checked, original)} />
+      </label>
     );
   }
   // PointCtrl (Field.cpp:2123-2245): x and y inputs; no editable tab binds a point.

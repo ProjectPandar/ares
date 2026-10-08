@@ -39,7 +39,8 @@
   cursor: pointer;
 }
 .combo.empty .combo-text { color: var(--text-faint); }
-.combo:not(:disabled):hover, .combo[aria-expanded="true"] { border-color: var(--accent); }
+.combo[aria-expanded="true"] { border-color: var(--accent); }
+@media (hover: hover) { .combo:not(:disabled):hover { border-color: var(--accent); } }
 .combo:disabled { cursor: default; }
 /* DropDown (Widgets/DropDown.cpp): bordered popup under the box, split-item group title. */
 .combo-popup {
@@ -50,7 +51,7 @@
   padding: 4px 8px 2px; color: var(--text-dim); font-size: 11px; border-bottom: 1px solid var(--separator);
 }
 .combo-option { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; cursor: pointer; }
-.combo-option:hover { background: var(--panel-raised); }
+@media (hover: hover) { .combo-option:hover { background: var(--panel-raised); } }
 .combo-option[aria-selected="true"] { background: var(--accent-checked); }
 .combo-option-swatch { width: 14px; height: 14px; border-radius: 2px; flex: none; border: 1px solid var(--border-strong); }
 .combo-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -67,7 +68,7 @@
 
 .object-list { border: 1px solid var(--border); border-radius: 4px; background: var(--panel-sunken); max-height: 180px; overflow-y: auto; }
 .object-row { display: flex; align-items: center; gap: 6px; padding: 3px 8px; cursor: pointer; }
-.object-row:hover { background: var(--panel-raised); }
+@media (hover: hover) { .object-row:hover { background: var(--panel-raised); } }
 .object-row.selected { background: var(--accent-checked); color: var(--text); }
 .object-row svg { color: var(--text-dim); flex: none; }
 .object-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -87,7 +88,7 @@
   background: none; border: none; border-bottom: 2px solid transparent; padding: 5px 7px;
   color: var(--label); cursor: pointer;
 }
-.process-tab:hover { color: var(--accent); }
+@media (hover: hover) { .process-tab:hover { color: var(--accent); } }
 .process-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .optgroup { margin-top: 8px; }
 .optgroup-title {
@@ -103,19 +104,21 @@
   white-space: nowrap; user-select: text; color: var(--text); font: inherit;
 }
 .option-field:focus { outline: none; border-color: var(--accent); }
-.option-field:hover { border-color: var(--accent); }
+@media (hover: hover) { .option-field:hover { border-color: var(--accent); } }
 .option-field:read-only { color: var(--text-dim); background: var(--field-disabled); }
 .option-select {
   flex: 1; min-width: 0; height: 22px; padding: 0 2px; background: var(--field); color: var(--text);
   border: 1px solid var(--border); border-radius: 3px; font: inherit;
 }
-.option-select:focus, .option-select:hover { outline: none; border-color: var(--accent); }
+.option-select:focus { outline: none; border-color: var(--accent); }
+@media (hover: hover) { .option-select:hover { outline: none; border-color: var(--accent); } }
 .option-select:disabled { color: var(--text-dim); background: var(--field-disabled); opacity: 1; }
 /* Field::show_error, inline under the field instead of a modal. */
 .option-value:has(.option-error) { flex-wrap: wrap; }
 .option-error { flex-basis: 100%; color: var(--danger); font-size: 11px; }
 .option-unit { color: var(--text-dim); width: 52px; flex: none; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .option-check { accent-color: var(--accent); margin: 0 auto 0 0; }
+.option-check-target { display: contents; }
 .option-point { flex: 1; display: flex; gap: 4px; min-width: 0; }
 .option-row.edited .option-label { color: var(--modified); }
 .option-reset { flex: none; background: none; border: none; cursor: pointer; padding: 0 2px; color: var(--modified); font-size: 13px; line-height: 1; }
@@ -129,7 +132,7 @@
   flex: none; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 1px solid transparent;
   border-radius: 4px; background: none; cursor: pointer;
 }
-.preset-edit:hover { border-color: var(--accent); }
+@media (hover: hover) { .preset-edit:hover { border-color: var(--accent); } }
 /* OptionsGroup lines: multi-option `Line`, `append_separator`, full-width code fields. */
 .option-line { flex-wrap: wrap; row-gap: 2px; }
 .option-line-fields { display: flex; flex-direction: column; gap: 2px; width: 100%; }
