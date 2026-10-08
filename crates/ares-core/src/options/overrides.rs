@@ -76,67 +76,17 @@ impl ConfigOverrides {
     /// `OrcaSlicer.cpp:7198,7209-7214`: validate caller config before loading input.
     /// C1 owns only these ten `PrintConfig.cpp:10340-10457` threshold keys.
     pub fn validate_cli_config(&self) -> Result<(), SliceError> {
-        let mut errors = BTreeMap::new();
-        for (key, tokens) in &self.values {
-            let vector_threshold = match key.as_str() {
-                "filament_diameter" => Some(1.0),
-                "filament_flow_ratio" => Some(0.0),
-                _ => None,
-            };
-            if let Some(threshold) = vector_threshold {
-                let numbers = tokens
-                    .iter()
-                    .map(|token| token.parse::<f64>().expect("validated numeric override"))
-                    .collect::<Vec<_>>();
-                if !numbers
-                    .iter()
-                    .any(|&value| value < threshold || (threshold == 0.0 && value == 0.0))
-                {
-                    continue;
-                }
-                errors.insert(
-                    key,
-                    format!(
-                        "invalid value {}",
-                        numbers
-                            .iter()
-                            .map(ToString::to_string)
-                            .collect::<Vec<_>>()
-                            .join(",")
-                    ),
-                );
-                continue;
-            }
-            if !matches!(
-                key.as_str(),
-                "layer_height"
-                    | "initial_layer_print_height"
-                    | "bridge_flow"
-                    | "internal_bridge_flow"
-                    | "extruder_clearance_radius"
-                    | "extruder_clearance_height_to_rod"
-                    | "extruder_clearance_height_to_lid"
-                    | "nozzle_height"
-            ) {
-                continue;
-            }
-            let value = tokens[0]
-                .parse::<f64>()
-                .expect("validated numeric override");
-            if value <= 0.0 || (key == "layer_height" && (value % 0.000001).abs() > 1e-4) {
-                errors.insert(key, format!("invalid value {value:.6}"));
-            }
-        }
+        let errors = self
+            .values
+            .iter()
+            .filter_map(|(key, tokens)| {
+                cli_threshold_error(key, tokens).map(|message| format!("{key}: {message}"))
+            })
+            .collect::<Vec<_>>();
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(SliceError::InvalidInput(
-                errors
-                    .into_iter()
-                    .map(|(key, message)| format!("{key}: {message}"))
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-            ))
+            Err(SliceError::InvalidInput(errors.join("\n")))
         }
     }
 
@@ -166,6 +116,52 @@ impl ConfigOverrides {
             raw.insert(key.clone(), value);
         }
     }
+}
+
+fn cli_threshold_error(key: &str, tokens: &[String]) -> Option<String> {
+    let threshold = match key {
+        "filament_diameter" => Some(1.0),
+        "filament_flow_ratio" => Some(0.0),
+        _ => None,
+    };
+    if let Some(threshold) = threshold {
+        let numbers = tokens
+            .iter()
+            .map(|token| token.parse::<f64>().expect("validated numeric override"))
+            .collect::<Vec<_>>();
+        if !numbers
+            .iter()
+            .any(|&value| value < threshold || (threshold == 0.0 && value == 0.0))
+        {
+            return None;
+        }
+        return Some(format!(
+            "invalid value {}",
+            numbers
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(",")
+        ));
+    }
+    if !matches!(
+        key,
+        "layer_height"
+            | "initial_layer_print_height"
+            | "bridge_flow"
+            | "internal_bridge_flow"
+            | "extruder_clearance_radius"
+            | "extruder_clearance_height_to_rod"
+            | "extruder_clearance_height_to_lid"
+            | "nozzle_height"
+    ) {
+        return None;
+    }
+    let value = tokens[0]
+        .parse::<f64>()
+        .expect("validated numeric override");
+    (value <= 0.0 || (key == "layer_height" && (value % 0.000001).abs() > 1e-4))
+        .then(|| format!("invalid value {value:.6}"))
 }
 
 /// Validates one `{key: tokens}` entry and returns the per-element tokens
