@@ -76,42 +76,59 @@ impl ConfigOverrides {
     /// `OrcaSlicer.cpp:7198,7209-7214`: validate caller config before loading input.
     /// C1 owns only these ten `PrintConfig.cpp:10340-10457` threshold keys.
     pub fn validate_cli_config(&self) -> Result<(), SliceError> {
-        let values = self
-            .values
-            .iter()
-            .filter(|(key, _)| {
-                matches!(
-                    key.as_str(),
-                    "layer_height"
-                        | "initial_layer_print_height"
-                        | "filament_diameter"
-                        | "bridge_flow"
-                        | "internal_bridge_flow"
-                        | "extruder_clearance_radius"
-                        | "extruder_clearance_height_to_rod"
-                        | "extruder_clearance_height_to_lid"
-                        | "nozzle_height"
-                        | "filament_flow_ratio"
-                )
-            })
-            .map(|(key, tokens)| {
-                let definition = option_definition(key).expect("validated override key");
-                let value = if is_scalar(definition.kind) {
-                    serde_json::Value::String(tokens[0].clone())
-                } else {
-                    serde_json::json!(tokens)
-                };
-                (key.clone(), value)
-            })
-            .collect::<BTreeMap<_, _>>();
-        if values.is_empty() {
-            return Ok(());
+        let mut errors = BTreeMap::new();
+        for (key, tokens) in &self.values {
+            let vector_threshold = match key.as_str() {
+                "filament_diameter" => Some(1.0),
+                "filament_flow_ratio" => Some(0.0),
+                _ => None,
+            };
+            if let Some(threshold) = vector_threshold {
+                let numbers = tokens
+                    .iter()
+                    .map(|token| token.parse::<f64>().expect("validated numeric override"))
+                    .collect::<Vec<_>>();
+                if numbers.iter().any(|&value| {
+                    if threshold == 1.0 {
+                        value < threshold
+                    } else {
+                        value <= threshold
+                    }
+                }) {
+                    errors.insert(
+                        key,
+                        format!(
+                            "invalid value {}",
+                            numbers
+                                .iter()
+                                .map(ToString::to_string)
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        ),
+                    );
+                }
+                continue;
+            }
+            if !matches!(
+                key.as_str(),
+                "layer_height"
+                    | "initial_layer_print_height"
+                    | "bridge_flow"
+                    | "internal_bridge_flow"
+                    | "extruder_clearance_radius"
+                    | "extruder_clearance_height_to_rod"
+                    | "extruder_clearance_height_to_lid"
+                    | "nozzle_height"
+            ) {
+                continue;
+            }
+            let value = tokens[0]
+                .parse::<f64>()
+                .expect("validated numeric override");
+            if value <= 0.0 || (key == "layer_height" && (value % 0.000001).abs() > 1e-4) {
+                errors.insert(key, format!("invalid value {value:.6}"));
+            }
         }
-        let options = super::SliceOptions { values };
-        let mut errors = options.validate_basic_fdm_options()?;
-        errors.extend(options.validate_skirt_and_bridge_flow_options()?);
-        errors.extend(options.validate_extruder_clearance_options()?);
-        errors.extend(options.validate_filament_flow_ratio_options()?);
         if errors.is_empty() {
             Ok(())
         } else {
