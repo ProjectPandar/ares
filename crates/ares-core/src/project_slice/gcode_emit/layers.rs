@@ -355,23 +355,28 @@ pub(super) fn append(
         // (`GCode.cpp:4388+`), on the layers it covers. Raft chunks emit
         // the skirt around the raft polygons (the skirt layer index is
         // the raft layer index — with a raft, the covered layers start
-        // at the raft flange).
-        skirt_emit::emit(
-            output,
-            state,
-            skirt_emit::SkirtEmission {
-                entries: &entries,
-                support: support_layers,
-                skirt,
-                raft: &raft,
-                print_z: layer_z,
-                schedule: &mut skirt_schedule,
-                entry_builder: &mut entry_builder,
-                traversal,
-                chunk_slices: &chunk_slices,
-                chunk_perimeter_spacing,
-            },
-        );
+        // at the raft flange). Sequential by-object printing emits the
+        // skirt once, with the first instance's first layer — the
+        // covered-layer schedule is a by-layer z map and re-fires for
+        // every instance that restarts at the same z.
+        if !by_object || phase_index == 0 {
+            skirt_emit::emit(
+                output,
+                state,
+                skirt_emit::SkirtEmission {
+                    entries: &entries,
+                    support: support_layers,
+                    skirt,
+                    raft: &raft,
+                    print_z: layer_z,
+                    schedule: &mut skirt_schedule,
+                    entry_builder: &mut entry_builder,
+                    traversal,
+                    chunk_slices: &chunk_slices,
+                    chunk_perimeter_spacing,
+                },
+            );
+        }
         // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
         // template insert fire once per layer inside the per-extruder loop
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the

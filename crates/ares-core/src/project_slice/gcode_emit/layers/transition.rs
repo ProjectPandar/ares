@@ -84,6 +84,7 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     // the Ares `cancelled_lift` branch in `move_emit.rs`).
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
+    eprintln!("T-DBG transition end: writer_z={:?}", state.writer_z);
     // `GCode.cpp:3330`: the instance's first travel runs once without the
     // crossing avoidance — the direct combined move to the first print
     // point (the native `G1 X… Y… Z.2 F9000`).
