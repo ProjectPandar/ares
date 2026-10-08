@@ -77,6 +77,13 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     state.x = origin[0];
     state.y = origin[1];
     state.positioned = true;
+    // The transition's hop leaves the nozzle lifted above the layer
+    // domain (`GCodeWriter` lifted state): the incoming instance's
+    // layer change then skips its own lift and the first travel merges
+    // the descent into the combined move (`GCodeWriter.cpp:782-806`,
+    // the Ares `cancelled_lift` branch in `move_emit.rs`).
+    state.lifted = true;
+    state.lifted_amount = state.options.z_hop;
     // `GCode.cpp:3330`: the instance's first travel runs once without the
     // crossing avoidance — the direct combined move to the first print
     // point (the native `G1 X… Y… Z.2 F9000`).
