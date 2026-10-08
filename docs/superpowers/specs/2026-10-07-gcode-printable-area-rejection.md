@@ -64,6 +64,38 @@ CLI boundary: `OrcaSlicer.cpp:6220-6227` checks the result's error code
 neither `-100` placeholder parsing nor an invalid enum option. Native
 emission followed by rejection is not a successful parity stream.
 
+## Retained emission on -102: source and additional RED
+
+`GCode.cpp:2176-2181` finishes statistics and extracts the processor result;
+`:2186-2194` renames the complete `.tmp` stream to the requested output file.
+`OrcaSlicer.cpp:6209-6215` selects `plate_1.gcode` and calls export; only then
+`:6218-6227` records the check failure and returns -102. The rename at
+`:6239-6247` is commented out. `flush_and_exit` at `:398-413` flushes streams
+and removes model backup directories, not the exported file;
+`Model.cpp:1001-1012` confines that cleanup to `backup_path`.
+Therefore the generated G-code remains available even though the final
+result is rejection, not a successful parity stream.
+
+Additional unchanged stock-circle input:
+`tests/parity/validation/o6-stock-circle-inward.3mf`, SHA256
+`8958ba6462946f57d1fc2d6443e6c7fac736a87be5e89dc68d2bbfc8837c1b13`.
+Center 50.9 gives maximum vertex radius 54.9, while bbox corner (54.9,4)
+has radius 55.04552661206903. Its single validated fresh Native run passed
+Model, retained 167943 G-code bytes (raw SHA256
+`cabb272d646a6404e88db9af3c1e7dd8966173aff96afb60b856a744948e1f4a`),
+then returned -102 / Unix154. Receipts and the construction-failure disclosure
+are in `tests/parity/validation/o6-stock-circle-inward.oracle.json`.
+The circle slice proved whole-byte emission equality before the export check
+was ported; the timelapse RED must retain that assertion against the error's
+owned output, as well as exact diagnostic and bit2 (`error_code=4`).
+
+The test-only runtime RED `124cebaf` already demonstrates that the current
+base returns successful bytes instead of -102. The strengthened RED will
+match the typed failure and assert its code and complete retained bytes,
+normalizing only the generator line, with no motion/M73 normalization.
+A minimal error-variant declaration may scaffold that RED's compilation;
+no check/return behavior is implemented until the RED fails at runtime.
+
 ## Rust destination and non-negotiable decisions
 
 Architectural authority: [the proposed ARD](../../architecture/2026-10-07-gcode-printable-area-boundary.md).
@@ -93,9 +125,12 @@ Concrete result/check destination:
    do not invent speculative configuration or viewer APIs.
 5. The shared core slice completion boundary, including byte-only,
    processed and profile entry paths, must not return successful G-code
-   for a failed active check. Native's temporary output artifact is useful
-   evidence, not a requirement to expose failure bytes or perform file I/O
-   in core. All four Tier1 platforms share this pure byte/data boundary.
+   for a failed active check. Its typed error must carry both `error_code`
+   and the complete already-generated `gcode: Vec<u8>`, transferring ownership
+   rather than copying the stream. Native preserves the exported output file
+   on -102; losing its bytes in core would drop upstream behavior. Core still
+   performs no file I/O; worker4 owns writing the retained bytes and mapping
+   the CLI status. All four Tier1 platforms share this pure byte/data boundary.
 6. worker4 owns typed-error→`-102` CLI mapping and adapter error/status
    tests. This slice must not duplicate it or change unrelated mappings.
    Until that dependent slice merges, core rejection is verified separately
