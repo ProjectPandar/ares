@@ -169,7 +169,7 @@ layers must not regenerate raft-only shell output.
 ## Evidence location
 
 Execution records belong in the
-[plan](../superpowers/plans/2026-10-01-normal-support-output-parity.md) and
-[historical checkpoints](../superpowers/plans/2026-10-01-normal-support-execution-history.md).
+plan and
+historical checkpoints.
 Finite test success does not close the all-printer/default/all-option matrix
 or approve the containing Normal support batch.

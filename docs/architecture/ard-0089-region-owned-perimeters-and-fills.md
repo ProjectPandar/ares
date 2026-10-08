@@ -122,5 +122,5 @@ every configuration. No unsupported guard or region0 fallback substitutes for
 included behavior; Normal/Tree merge together when their consumers are coupled.
 
 Final nextest, original/seeded output, clippy/fmt, WASM and independent review
-evidence belongs in the [plan](../superpowers/plans/2026-10-02-region-owned-perimeters-and-fills.md);
+evidence belongs in the plan;
 superseded slice-state notes are archived there.

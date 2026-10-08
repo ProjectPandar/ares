@@ -45,7 +45,7 @@ Port PresetBundle loading/inheritance/full_fff_config and Preset compatibility i
 `ares-core::profiles`, with byte/JSON WASM adapters and STL filename semantics.
 [ARD](architecture/ard-profile-slice-entry.md),
 [spec](superpowers/specs/2026-10-05-profile-slice-entry.md),
-[plan](superpowers/plans/2026-10-05-profile-slice-entry.md).
+plan.
 Native `--load-settings` complete-output RED precedes production changes. Exit:
 full-output native E2E, preserved embedded-3MF behavior, Rust compatibility/import,
 web filename callers updated, one real BBL filter timing recorded, four platform/
@@ -60,13 +60,13 @@ source-owned slices, never as a whole-branch merge. Adaptive PA starts at
 `GCode/AdaptivePAProcessor`, `AdaptivePAInterpolator`, `PchipInterpolatorHelper`
 and the `GCode.cpp` marker/filter call sites; see
 [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md) and
-[plan](superpowers/plans/2026-10-04-adaptive-pressure-advance-port.md).
+plan.
 The current region/tool emitter is preserved as a temporary compatibility shell.
 Adaptive PA is approved and integrated into main at `56e4da53` after rebase,
 7592 workspace tests and both live references passed; Clippy/fmt/WASM passed.
 The next branch `pi/smooth-type2-timelapse-tower` follows
 [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md) and its
-[plan](superpowers/plans/2026-10-04-smooth-type2-timelapse-port.md), beginning
+plan, beginning
 with the stock BBL timelapse Z-restatement handoff, approved and ff-integrated
 at `b1a5a84d` after all gates passed again. Type2 planning/emission and tower
 PA reset remain in progress. Coordinator selected complete Type2 activation:
@@ -92,9 +92,9 @@ Continue on `codex/printer-option-matrix`, not the long-lived tool branch.
 1. Establish stock-preset native saved-3MF/full-output coverage without smoke
    rewrites. The first Ender-3 tracer and source boundary are in
    [the spec](superpowers/specs/2026-10-04-stock-preset-parity.md) and
-   [plan](superpowers/plans/2026-10-04-stock-preset-parity.md), ARD-0096.
+   plan, ARD-0096.
    The unfiltered stock inventory entrypoint continues in
-   [the sweep plan](superpowers/plans/2026-10-04-stock-printer-sweep.md);
+   the sweep plan;
    live scans and correctly failing coverage are not accepted matrix completion.
 2. Execute the full stock printer inventory and every bool/enum value;
    retain complete input/output artifacts and truthful non-PASS rows.
@@ -112,7 +112,7 @@ modified-classic and sampled-domain summaries are not that exit evidence.
 Port `GCode.cpp:440-488 Wipe::wipe` and `Polyline.cpp:22-31` line retention
 into `motion/travel/wipe_path.rs`, replacing the zero-length segment filter.
 [Spec](superpowers/specs/2026-10-04-wipe-zero-length-segments.md),
-[plan](superpowers/plans/2026-10-04-wipe-zero-length-segments.md),
+plan,
 [ARD](architecture/ard-wipe-zero-length-segments.md).
 Exit: Prusa target/fresh original equality,68+823/re3D/extra-overhang controls,
 four gates and coordinator review. Other clipping, writer and wipe-tower changes
@@ -123,7 +123,7 @@ are deferred; retain source junction dedup and denominator floor.
 Port `AvoidCrossingPerimeters.cpp:190-216` end-first common-boundary selection
 into `gcode_emit/motion/path/avoid_crossing/router/closest_lines.rs`, replacing
 the first-start-only approximation. [Spec](superpowers/specs/2026-10-04-re3d-common-travel-boundary.md),
-[plan](superpowers/plans/2026-10-04-re3d-common-travel-boundary.md),
+plan,
 [ARD](architecture/ard-re3d-common-travel-boundary.md).
 Exit: three re3D full-output targets and fresh official references,68+823 and
 extra-overhang controls, four gates and coordinator review. Other routing,
@@ -136,7 +136,7 @@ and classic `apply_extra_perimeters` call:1672 into `perimeters/classic/
 extra_perimeters` and the existing infill-boundary seam. Replace the inactive
 compatibility guard with real path insertion and covered-fill subtraction.
 [Spec](superpowers/specs/2026-10-04-extra-overhang-perimeters.md),
-[plan](superpowers/plans/2026-10-04-extra-overhang-perimeters.md),
+plan,
 [ARD](architecture/ard-extra-overhang-perimeters.md).
 Coordinator authorized only the local BridgeDetector.hpp:122-126 adapter;
 shared bridge direction remains read-only. Exit:2stock and active on/off step
@@ -150,7 +150,7 @@ Port independent Grid ordering and non-reversal contracts (`FillBase.hpp:166`,
 using existing Oriented paths in a sortable collection; leave geometry,
 odd-layer generation reversal, bridge/cooling/M73 behavior unchanged.
 [Spec](superpowers/specs/2026-10-04-grid-collection-ordering.md),
-[plan](superpowers/plans/2026-10-04-grid-collection-ordering.md),
+plan,
 [ARD](architecture/ard-grid-collection-ordering.md).
 Exit:2/2 Qidi RED→GREEN,68/68 full inventory subset,823/823controls,8/8 official
 references and workspace/fmt/Clippy/WASM, then coordinator review. This bounded
@@ -162,7 +162,7 @@ Rewrite `Layer::generate_sparse_infill_polylines_for_anchoring` bbox-center
 selection (`Fill.cpp:1398,1442`, `Print.hpp:347`) in the Rust
 `prepare_infill/bridge_over_infill/sparse_anchoring` compatibility shell.
 [Spec](superpowers/specs/2026-10-04-sparse-anchoring-reference.md),
-[plan](superpowers/plans/2026-10-04-sparse-anchoring-reference.md),
+plan,
 [ARD](architecture/ard-sparse-anchoring-reference.md).
 Priority #10 before Qidi #9 and extra-overhang #11. Exit: strict16-case RED→GREEN
 assessment with all residuals retained,52+823 green controls, full68/official8
@@ -176,9 +176,9 @@ Port `PrintObject::bounding_box` → `Layer::make_fills` →
 `Fill::_infill_direction` centered reference into `fill_entities::generate_layer`;
 replace the slice-contour-center compatibility approximation at that boundary.
 [Spec](superpowers/specs/2026-10-04-print-object-fill-reference.md),
-[plan](superpowers/plans/2026-10-04-print-object-fill-reference.md),
+plan,
 [ARD](architecture/ard-print-object-fill-reference.md), and
-[triage](superpowers/plans/2026-10-04-vendor-stock-residual-triage.md).
+triage.
 Exit: the coordinator-approved52-case strict RED→GREEN slice (full68 retains
 16 failures:14 bridge handoffs and2 next-slice Qidi cases), green stock controls,
 fresh official representatives with remaining failures preserved, workspace
@@ -193,7 +193,7 @@ Rewrite `Fill/FillBase.cpp::mark_boundary_segments_overlapping_infill` in
 when the collision helper returns false, then still test contour departure.
 Both retained tip0.1 raw-Grid/explicit-Organic complete-output assertions pass.
 See [spec](superpowers/specs/2026-10-04-thin-tip-support-fill.md),
-[plan](superpowers/plans/2026-10-04-thin-tip-support-fill.md) and
+plan and
 [ARD](architecture/ard-thin-tip-support-fill.md). Fresh official full repeat and
 seeded each pass 28/28 complete pairs; workspace7618, Clippy, format and WASM
 compile pass. The official first run's separate Slim-model infill outlier is
@@ -230,7 +230,7 @@ Both official and seeded CPU0 references pass12 complete outputs each;
 workspace7593 PASS (9 existing skips), Clippy/fmt and WASM compilation pass.
 Coordinator review and latest-main revalidation/integration remain pending. See
 [the specification](architecture/support-interface-fan.md) and
-[the plan](superpowers/plans/2026-10-04-support-interface-fan.md).
+the plan.
 
 ### Ironing fan requests (2026-10-04, lint-integrated GREEN; review pending)
 
@@ -245,7 +245,7 @@ official/seeded CPU0 each pass44 complete outputs, including10 option domains
 (8 PASS,2 INCOMPLETE) and fan/speed controls. Workspace7597 PASS/9 existing
 skips, Clippy/fmt and WASM compilation pass; coordinator review remains
 pending. See [spec](architecture/ironing-fan.md) and
-[plan](superpowers/plans/2026-10-04-ironing-fan.md). This does not close the225
+plan. This does not close the225
 INCOMPLETE domains or establish global parity.
 
 ### Historical support bring-up notes (superseded by later checkpoints)
@@ -262,7 +262,7 @@ style/annotation/modifier E2E cases, Tier-1 checks and independent six-axis revi
 Unsupported guards or silent skips do not satisfy this gate. Only independently
 validated behavior-preserving slices may commit/push before Tree acceptance.
 See the [spec](superpowers/specs/2026-10-01-tree-support-output-parity.md) and
-[plan](superpowers/plans/2026-10-01-tree-support-output-parity.md).
+plan.
 
 Organic settings/radius and the initial single-outline collision cache are
 unsubmitted source-owned WIP, not a Tree generator. Collision now preserves
@@ -341,7 +341,7 @@ all option domains remain open. Immutable009d option scan completes386/650
 bounded domains (1661 generated,1519 strictly compared,1 rejected);264
 domains remain incomplete or failed. These scans predate the seam repair.
 See the [spec](superpowers/specs/2026-10-01-wasm-wipe-parity.md) and
-[plan](superpowers/plans/2026-10-01-wasm-wipe-parity.md).
+plan.
 
 KSR ordered acceptance (ARD-0081) promotes the existing CLI/browser output
 checks of `Print::export_gcode` / `GCode::do_export` from tolerant semantic
@@ -351,7 +351,7 @@ orphaned ID rewrite. Witness a sensitive object-ID RED/GREEN, retain all
 paired bytes and execute actual browser WASM. Any browser mismatch remains
 an open gate, not a reason to restore tolerances. Global coverage stays open.
 See the [spec](superpowers/specs/2026-10-01-ksr-ordered-acceptance.md) and
-[plan](superpowers/plans/2026-10-01-ksr-ordered-acceptance.md).
+plan.
 Native strict acceptance and the object-ID sensitivity RED/GREEN pass;
 final workspace7459PASS/9skip and all-target Clippy pass. Actual Chromium
 replays identically twice apart from its generator line, but is still RED
@@ -384,7 +384,7 @@ Independent preliminary six-axis review finds no required production fix;
 explicit classic activation and placement checks are added before final review.
 This investigation does not close global printer/default/option coverage.
 See the [spec](superpowers/specs/2026-10-01-ksr-island-order.md) and
-[plan](superpowers/plans/2026-10-01-ksr-island-order.md).
+plan.
 
 Floating overhang intersections (ARD-0079) ports the unscaled
 `ExtrusionProcessor.hpp`, `AABBTreeLines.hpp` and `Line.hpp` boundary into
@@ -405,7 +405,7 @@ still fails first at M73 line9946; diagnostic movement mismatch advances to
 Z52. M73, later path ordering and global
 all-printer/default/all-option parity remain open. See the
 [spec](superpowers/specs/2026-10-01-overhang-segmentation.md) and
-[plan](superpowers/plans/2026-10-01-overhang-segmentation.md).
+plan.
 
 Stitch candidate order (ARD-0078) rewrites the selected native libstdc++
 same-cell enumeration contract of `PolylineStitcher.hpp::stitch` and
@@ -3215,42 +3215,26 @@ Non-default `internal_bridge_density` now maps to concrete Ares dense middle-lay
 ## M1: Basic slicer framework skeleton
 Create the two-crate Rust workspace under `crates/`, define the first platform-neutral core API, keep file I/O in the CLI adapter, preserve all Orca options dynamically, and document crate boundaries.
 
-Exit criteria are tracked in `docs/milestones/m1-basic-slicer-framework.md`.
-
 ## M2: STL model import
 Parse STL bytes inside `ares-core` into model triangles, keep filesystem access in adapters, and surface imported model metadata through placeholder G-code. 3MF archive/XML geometry extraction is deferred to a later model-import milestone.
-
-Exit criteria are tracked in `docs/milestones/m2-stl-model-import.md`.
 
 ## M3: Layer planning and first typed options
 Map the first Orca-compatible options (`layer_height`, `initial_layer_height`) into typed accessors, compute STL model Z bounds, and generate deterministic layer plans plus layer-aware G-code metadata.
 
-Exit criteria are tracked in `docs/milestones/m3-layer-planning.md`.
-
 ## M4: XY slice segments
 Intersect imported STL triangles with planned layer Z planes and expose deterministic per-layer XY line segments through the core API and CLI output.
-
-Exit criteria are tracked in `docs/milestones/m4-xy-slice-segments.md`.
 
 ## M5: Contour stitching
 Stitch deterministic per-layer XY slice segments into simple closed contours, rejecting open or branching graphs until polygon repair milestones handle them explicitly.
 
-Exit criteria are tracked in `docs/milestones/m5-contour-stitching.md`.
-
 ## M6: Hardware option typing
 Map the first OrcaSlicer machine/filament vector options (`nozzle_diameter`, `filament_diameter`, `min_layer_height`, `max_layer_height`) into typed Rust accessors while preserving unknown keys.
-
-Exit criteria are tracked in `docs/milestones/m6-hardware-option-typing.md`.
 
 ## M7: Profile fragment inheritance
 Resolve OrcaSlicer-style in-memory process, filament, and machine profile fragments into `SliceOptions` through deterministic same-kind inheritance chains.
 
-Exit criteria are tracked in `docs/milestones/m7-profile-fragment-inheritance.md`.
-
 ## M8: Full profile composition and option groups
 Compose process, filament, and machine profile groups into full print configs while preserving unknown keys and preparing substitution/compatibility behavior.
-
-Exit criteria are tracked in `docs/milestones/m8-full-profile-composition-and-option-groups.md`.
 
 Task 20A.1 supersedes only the old M7/M8 dynamic contracts: profile merging
 and composition now reject unknown keys and return concrete typed owners rather
@@ -3261,1008 +3245,610 @@ compatibility behavior are still deferred to their source-cited tasks.
 ## M9: Slicing pipeline diagnostics
 Expose the current model import, layer planning, XY segment, and contour stitching stages as a reusable in-memory pipeline result with deterministic diagnostics.
 
-Exit criteria are tracked in `docs/milestones/m9-slicing-pipeline-diagnostics.md`.
-
 ## M10: Perimeter path generation
 Generate first external perimeter path artifacts from closed contours, starting with simple single-island contours before full polygon repair and offset parity.
-
-Exit criteria are tracked in `docs/milestones/m10-perimeter-path-generation.md`.
 
 ## M11: Infill path generation
 Generate first deterministic sparse rectilinear infill path artifacts inside simple contour boundaries before fill-surface, solid-infill, and extrusion milestones.
 
-Exit criteria are tracked in `docs/milestones/m11-infill-path-generation.md`.
-
 ## M12: Ordered print path artifacts
 Combine perimeter and sparse infill artifacts into deterministic layer-level print path artifacts using Orca-compatible wall/infill ordering before extrusion planning and support/skirt/brim milestones.
-
-Exit criteria are tracked in `docs/milestones/m12-ordered-print-path-artifacts.md`.
 
 ## M13: Toolpath move emission
 Convert ordered print path artifacts into deterministic travel/print moves and emit the first path-following `G0`/`G1` XY commands before extrusion values and speed planning.
 
-Exit criteria are tracked in `docs/milestones/m13-toolpath-move-emission.md`.
-
 ## M14: Extrusion value emission
 Attach deterministic absolute filament `E` values to current print moves using role line widths, layer heights, and filament diameter before speed and retraction planning.
-
-Exit criteria are tracked in `docs/milestones/m14-extrusion-value-emission.md`.
 
 ## M15: Speed / feedrate emission
 Attach deterministic movement speeds to current travel/print moves and emit first `F` feedrate values before support, retraction, acceleration, and full G-code parity.
 
-Exit criteria are tracked in `docs/milestones/m15-speed-feedrate-emission.md`.
-
 ## M16: Skirt path emission
 Generate deterministic first skirt path artifacts around current contours and route them through existing print path, move, extrusion, speed, and G-code output stages.
-
-Exit criteria are tracked in `docs/milestones/m16-skirt-path-emission.md`.
 
 ## M17: Brim path emission
 Generate deterministic first-layer brim path artifacts around current contours and route them through existing print path, move, extrusion, speed, and G-code output stages.
 
-Exit criteria are tracked in `docs/milestones/m17-brim-path-emission.md`.
-
 ## M18: Bridge option and role scaffold
 Add typed Orca bridge options plus bridge print-role flow and speed behavior before bridge geometry detection is implemented.
-
-Exit criteria are tracked in `docs/milestones/m18-bridge-option-role-scaffold.md`.
 
 ## M19: libslic3r/libvgcode architecture alignment
 Realign Ares around a Rust rewrite of OrcaSlicer's `libslic3r` and `libvgcode` boundaries before more slicing feature work. Inventory current modules, record the non-negotiable port boundary, and reject independent pipeline design.
 
-Exit criteria are tracked in `docs/milestones/m19-libslic3r-libvgcode-architecture-alignment.md`.
-
 ## M20: libslic3r crate boundary foundation
 Study `OrcaSlicer/src/libslic3r` and `OrcaSlicer/src/libvgcode`, record the Rust workspace crate boundary decision, keep active crates limited to `ares-core` and `ares-cli`, and preserve the simple async core slicing API plus CLI STL slicing command.
-
-Exit criteria are tracked in `docs/milestones/m20-libslic3r-geometry-model-config-boundary-port.md`.
 
 ## M21: libslic3r print domain foundation
 After the crate-boundary foundation, port the first behavior-preserving `libslic3r` print domain concepts from `Surface.hpp`, `ExtrusionEntity.hpp`, `ExtrusionEntityCollection.hpp`, `Layer.hpp`, and `Print.hpp` into `ares-core` while preserving the simple byte slicing API and current G-code output.
 
-Exit criteria are tracked in `docs/milestones/m21-libslic3r-print-layer-region-extrusion-entity-boundary-port.md`.
-
 ## M22: PrintConfig option registry foundation
 Port the first `libslic3r::PrintConfig` option-definition boundary into `ares-core` by adding source-cited metadata for currently parsed options, preparing later milestones to cover all OrcaSlicer options incrementally.
-
-Exit criteria are tracked in `docs/milestones/m22-libslic3r-gcode-writer-planner-parity.md`.
 
 ## M23: libvgcode rendering-neutral G-code data model port
 Create `crates/ares-vgcode` and port the first rendering-neutral data concepts from `OrcaSlicer/src/libvgcode`, including shared type vocabulary, `PathVertex`, `GCodeInputData`, `ColorPrint`, `Range`, `ViewRange`, and `Layers`, while deferring OpenGL/viewer runtime, parser runtime, `ExtrusionRoles.*` display metadata, and the full `ColorRange.*` object.
 
-Exit criteria are tracked in `docs/milestones/m23-libvgcode-rendering-neutral-gcode-data-model-port.md`.
-
 ## M24: libslic3r GCodeWriter boundary
 Port the first platform-neutral movement writer boundary from `OrcaSlicer/src/libslic3r/GCodeWriter.*` into `ares-core` and route existing executable G-code movement commands through that upstream-aligned writer without adding new Ares pipeline stages.
-
-Exit criteria are tracked in `docs/milestones/m24-libslic3r-gcode-writer-boundary.md`.
 
 ## M25: WASM/browser API over rewritten core boundaries
 Expose the already rewritten `libslic3r`-aligned core byte slicing API and rendering-neutral `libvgcode` data boundary through a browser WASM adapter crate without native filesystem, terminal, UI, OpenGL, or independent pipeline assumptions.
 
-Exit criteria are tracked in `docs/milestones/m25-wasm-browser-api-over-rewritten-core-boundaries.md`.
-
 ## M26: PrintConfig common params option registry
 Port the first common `libslic3r::PrintConfigDef::init_common_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:672-782` into `ares-core` registry metadata while deferring typed behavior.
-
-Exit criteria are tracked in `docs/milestones/m26-print-config-common-params-registry.md`.
 
 ## M27: PrintConfig physical printer option registry
 Port the physical-printer common `libslic3r::PrintConfigDef::init_common_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:786-894` into `ares-core` registry metadata while deferring typed behavior and network/UI integrations.
 
-Exit criteria are tracked in `docs/milestones/m27-print-config-physical-printer-registry.md`.
-
 ## M28: PrintConfig FFF travel avoidance option registry
 Port the first FFF-specific `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:897-921` into `ares-core` registry metadata while deferring typed behavior and travel-planning implementation.
-
-Exit criteria are tracked in `docs/milestones/m28-print-config-fff-travel-avoidance-registry.md`.
 
 ## M29: PrintConfig bed temperature other-layers option registry
 Port the FFF other-layer bed temperature `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:923-982` into `ares-core` registry metadata while deferring typed behavior and temperature G-code implementation.
 
-Exit criteria are tracked in `docs/milestones/m29-print-config-bed-temp-other-layers-registry.md`.
-
 ## M30: PrintConfig bed temperature initial-layer option registry
 Port the FFF first-layer bed temperature `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:984-1041` into `ares-core` registry metadata while deferring typed behavior and temperature G-code implementation.
-
-Exit criteria are tracked in `docs/milestones/m30-print-config-bed-temp-initial-layer-registry.md`.
 
 ## M31: PrintConfig bed type and filament sequence option registry
 Port the FFF bed type and filament sequence `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1043-1108` into `ares-core` registry metadata while deferring typed behavior, bed-selection behavior, print-order behavior, and G-code implementation.
 
-Exit criteria are tracked in `docs/milestones/m31-print-config-bed-type-sequence-registry.md`.
-
 ## M32: PrintConfig shell and gap-fill option registry
 Port the FFF before-layer-change G-code, bottom shell, and gap-fill target `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1110-1168` into `ares-core` registry metadata while deferring typed behavior, G-code hook execution, bottom-shell behavior, and gap-fill behavior.
-
-Exit criteria are tracked in `docs/milestones/m32-print-config-shell-gap-registry.md`.
 
 ## M33: PrintConfig overhang fan option registry
 Port the FFF overhang/bridge fan `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1170-1211` into `ares-core` registry metadata while deferring typed behavior, cooling behavior, bridge-detection behavior, and fan G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m33-print-config-overhang-fan-registry.md`.
-
 ## M34: PrintConfig bridge angle and density option registry
 Port the FFF bridge angle and bridge density `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1213-1264` into `ares-core` registry metadata while deferring typed behavior, bridge planning, bridge density spacing, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m34-print-config-bridge-angle-density-registry.md`.
 
 ## M35: PrintConfig solid infill flow ratio option registry
 Port the FFF top and bottom solid infill flow ratio `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1286-1305` into `ares-core` registry metadata while deferring typed behavior, flow planning, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m35-print-config-solid-infill-flow-registry.md`.
-
 ## M36: PrintConfig other-flow gate option registry
 Port the FFF `set_other_flow_ratios` and `first_layer_flow_ratio` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1307-1323` into `ares-core` registry metadata while deferring typed behavior, runtime flow scaling, preset behavior, object override behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m36-print-config-other-flow-gate-registry.md`.
 
 ## M37: PrintConfig wall flow ratio option registry
 Port the FFF `outer_wall_flow_ratio` and `inner_wall_flow_ratio` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1324-1343` into `ares-core` registry metadata while splitting the registry definition table and deferring typed behavior, runtime flow scaling, preset behavior, object override behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m37-print-config-wall-flow-ratio-registry.md`.
-
 ## M38: PrintConfig overhang and sparse infill flow ratio option registry
 Port the FFF `overhang_flow_ratio` and `sparse_infill_flow_ratio` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1344-1363` into `ares-core` registry metadata. This historical registry milestone deferred typed behavior and runtime flow scaling when it was completed. A later source-cited overhang slice now consumes `overhang_flow_ratio` for fully unsupported rectangular overhang perimeter extrusion when `set_other_flow_ratios` is enabled; sparse infill flow scaling, preset behavior, object override behavior, and runtime behavior outside that overhang perimeter path remain deferred.
-
-Exit criteria are tracked in `docs/milestones/m38-print-config-overhang-sparse-flow-ratio-registry.md`.
 
 ## M39: PrintConfig internal solid and gap-fill flow ratio option registry
 Port the FFF `internal_solid_infill_flow_ratio` and `gap_fill_flow_ratio` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1364-1383` into `ares-core` registry metadata. This historical registry milestone deferred typed/runtime behavior when it was completed. Later source-cited slices now consume `internal_solid_infill_flow_ratio` for solid-infill extrusion when `set_other_flow_ratios` is enabled, consume constructed `gap_fill` print paths through `ExtrusionRole::GapFill`, `gap_fill_flow_ratio`, and `gap_infill_speed` in G-code, and consume `filter_out_gap_fill` by dropping constructed `gap_fill` paths shorter than the configured millimeter threshold before downstream moves/extrusion/G-code. Full gap geometry generation, `gap_fill_target`, classic/Arachne gap detection, solid-surface gap generation, preset behavior, object override behavior beyond the existing `set_other_flow_ratios` gate, and runtime behavior outside constructed gap-fill paths remain deferred.
 
-Exit criteria are tracked in `docs/milestones/m39-print-config-internal-gap-flow-ratio-registry.md`.
-
 ## M40: PrintConfig support flow ratio option registry
 Port the FFF `support_flow_ratio` and `support_interface_flow_ratio` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1384-1403` into `ares-core` registry metadata. This historical registry milestone deferred typed/runtime behavior when it was completed. Later source-cited slices now consume `support_flow_ratio` for constructed `PrintPathRole::SupportMaterial` extrusion and `support_interface_flow_ratio` for constructed `PrintPathRole::SupportMaterialInterface` extrusion when `set_other_flow_ratios` is enabled. Support generation, support transition roles, preset behavior, object override behavior beyond the existing `set_other_flow_ratios` gate, and runtime behavior outside constructed support-material/support-interface paths remain deferred.
-
-Exit criteria are tracked in `docs/milestones/m40-print-config-support-flow-ratio-registry.md`.
 
 ## M41: PrintConfig one-wall quality option registry
 Port the FFF `precise_outer_wall`, `only_one_wall_top`, `min_width_top_surface`, `only_one_wall_first_layer`, and `extra_perimeters_on_overhangs` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1404-1444` into `ares-core` registry metadata. This historical registry milestone deferred typed behavior and all one-wall runtime behavior when it was completed. Later source-cited slices now consume `only_one_wall_first_layer` and `only_one_wall_top` perimeter/G-code behavior, and a rectangle-only `extra_perimeters_on_overhangs` slice adds one inset overhang perimeter for fully unsupported rectangular contours. A later rectangle-only `precise_outer_wall` classic perimeter slice consumes Orca's width-vs-spacing gate for `InnerOuter`, uses rounded-rectangle line spacing for non-precise and non-InnerOuter rectangular loop offsets, and shares the next-loop spacing with the rectangle-only `extra_perimeters_on_overhangs` path. A later rectangle-only `min_width_top_surface` slice parses Orca's default `300%` over effective internal perimeter width and suppresses top-surface infill for rectangular top contours narrower than the threshold while preserving zero-threshold and non-rectangular current behavior. Arachne wall spacing and thresholds, full `Flow` parity, variable-width paths, full Orca top/non-top polygon splitting, Arachne top-surface threshold behavior, full overhang polygon clipping, fill-surface subtraction, Orca binary E2E parity, and runtime behavior not covered by those later slices remain deferred.
 
-Exit criteria are tracked in `docs/milestones/m41-print-config-one-wall-quality-registry.md`.
-
 ## M42: PrintConfig overhang reversal option registry
 Port the FFF `overhang_reverse`, `overhang_reverse_internal_only`, `counterbore_hole_bridging`, and `overhang_reverse_threshold` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1446-1498` into `ares-core` registry metadata. This historical registry milestone deferred typed/runtime behavior when it was completed. Later source-cited overhang-reversal slices now consume `overhang_reverse` for already-classified rectangular `PerimeterRole::Overhang` paths on zero-based odd layer ids, matching Orca's `PerimeterGenerator.cpp` even-GUI-layer gate and changing downstream print path, toolpath move, and G-code order. `overhang_reverse_internal_only` is consumed for rectangular multi-wall overhang contours by preserving external overhang path direction while reversing generated internal perimeter paths. `overhang_reverse_threshold` is consumed for Ares' current rectangular overhang-reversal boundary: it parses Orca's default `50%` over external perimeter width, accepts mm or percent values up to 20 mm, gates reversal for fully unsupported rectangular contours by comparing against `max(width,height)`, and is ignored when `detect_overhang_wall` is disabled so zero-based odd layers still reverse external-role paths. `counterbore_hole_bridging = sacrificiallayer` is consumed in Ares' bridge/infill/gap-fill classification: the unsupported bottom-surface bridge override is suppressed so the layer remains bottom-surface density/pattern, keeps solid-surface gap-fill eligibility, and emits final G-code role/speed as bottom surface; `partiallybridge` remains parsed and default-equivalent pending Orca counterbore geometry parity. Partial overhang clipping, full loop-role `reorient_perimeters` parity, Arachne, fuzzy skin, holes, supports, raft gates, and full `detect_steep_overhang` parity remain deferred.
-
-Exit criteria are tracked in `docs/milestones/m42-print-config-overhang-reversal-registry.md`.
 
 ## M43: PrintConfig overhang speed option registry
 Port the FFF `enable_overhang_speed`, `slowdown_for_curled_perimeters`, `overhang_1_4_speed`, `overhang_2_4_speed`, `overhang_3_4_speed`, and `overhang_4_4_speed` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1500-1570` into `ares-core` registry metadata. This historical registry milestone deferred typed/runtime behavior when it was completed. Later source-cited overhang slices now consume `enable_overhang_speed`, all four overhang speed bands, and the `slowdown_for_curled_perimeters` final-bucket branch for fully unsupported rectangular overhang perimeter loops detected through the direct previous layer, using Ares' current whole-path unsupported-span estimate for band selection. Full Orca `ExtrusionQualityEstimator`, partial clipping, exact segment-level overhang percentage estimation, path subdivision, bridge dynamic speed bands, raft/object gates, and multi-object estimator state remain deferred.
 
-Exit criteria are tracked in `docs/milestones/m43-print-config-overhang-speed-registry.md`.
-
 ## M44: PrintConfig brim flow and combine option registry
 Port the FFF `brim_flow_ratio`, `brim_use_efc_outline`, and `combine_brims` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1637-1663` into `ares-core` registry metadata. This historical registry milestone deferred typed/runtime behavior when it was completed. Later source-cited slices now consume `brim_flow_ratio` for brim extrusion, `combine_brims` for first-layer outer brim envelopes, and `brim_use_efc_outline` for Orca-gated rectangle-scaffold outer brim bounds based on the active elephant-foot compensation offset. Full Orca EFC surface generation, polygon/ex-polygon outline selection, support brim EFC behavior, painted/ear EFC snapping, preset behavior, object override behavior, and runtime behavior outside those consumed paths remain deferred.
-
-Exit criteria are tracked in `docs/milestones/m44-print-config-brim-flow-combine-registry.md`.
 
 ## M45: PrintConfig brim ear option registry
 Port the FFF `brim_ears`, `brim_ears_max_angle`, and `brim_ears_detection_length` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1665-1693` into `ares-core` registry metadata while deferring typed behavior, brim-ear sharp-edge detection, detection-radius decimation, max-angle behavior, brim generation, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m45-print-config-brim-ear-registry.md`.
-
 ## M46: PrintConfig compatible profile option registry
 Port the FFF `compatible_printers`, `upward_compatible_machine`, `compatible_printers_condition`, `compatible_prints`, `compatible_prints_condition`, `compatible_machine_expression_group`, `compatible_process_expression_group`, `different_settings_to_system`, and `print_compatible_printers` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1695-1748` into `ares-core` registry metadata while deferring typed behavior, compatibility-expression evaluation, preset filtering, profile composition behavior changes, project-file persistence semantics, CLI no-CLI enforcement, UI behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m46-print-config-compatible-profile-registry.md`.
 
 ## M47: PrintConfig print sequence and order option registry
 Port the FFF `print_sequence` and `print_order` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1750-1770` into `ares-core` registry metadata while deferring typed behavior, print-sequence scheduling, object-by-object constraints, intra-layer object ordering, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m47-print-config-print-sequence-order-registry.md`.
-
 ## M48: PrintConfig cooling and default profile option registry
 Port the FFF `slow_down_for_layer_cooling`, `default_acceleration`, `default_filament_profile`, `default_print_profile`, `activate_air_filtration`, `activate_air_filtration_during_print`, `activate_air_filtration_on_completion`, `during_print_exhaust_fan_speed`, `complete_print_exhaust_fan_speed`, and `close_fan_the_first_x_layers` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1772-1845` into `ares-core` registry metadata while deferring typed behavior, cooling slowdown, acceleration planning, default profile selection, air-filtration/exhaust fan behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m48-print-config-cooling-default-profile-registry.md`.
 
 ## M49: PrintConfig internal bridge option registry
 Port the FFF bridge/internal-bridge `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1847-1938` into `ares-core` registry metadata while deferring typed behavior, bridge support decisions, internal bridge filtering, extra bridge layer generation, bridge geometry, slicing behavior, support generation, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m49-print-config-internal-bridge-registry.md`.
-
 ## M50: PrintConfig G-code and shell pattern option registry
 Port the FFF `machine_end_gcode`, `printing_by_object_gcode`, `filament_end_gcode`, `ensure_vertical_shell_thickness`, `top_surface_pattern`, `bottom_surface_pattern`, and `internal_solid_infill_pattern` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:1940-2025` into `ares-core` registry metadata while deferring typed behavior, custom G-code execution, object-by-object scheduling, vertical shell behavior, solid infill pattern generation, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m50-print-config-gcode-shell-pattern-registry.md`.
 
 ## M51: PrintConfig wall ordering and small perimeter option registry
 Port the adjacent FFF wall/small-perimeter `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2027-2110` into `ares-core` registry metadata by preserving already registered outer-wall/infill-first keys and adding missing `small_perimeter_speed`, `small_perimeter_threshold`, `wall_sequence`, and `wall_direction` metadata while deferring typed behavior, wall ordering, wall direction path generation, small-perimeter speed application, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m51-print-config-wall-small-perimeter-registry.md`.
-
 ## M52: PrintConfig extruder clearance option registry
 Port the adjacent FFF extruder-clearance and nozzle-height `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2127-2160` into `ares-core` registry metadata while splitting the registry definition table so Rust files remain under 400 LOC. Defer typed behavior, collision avoidance, by-object scheduling, nozzle-height behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m52-print-config-extruder-clearance-registry.md`.
 
 ## M53: PrintConfig bed mesh option registry
 Port the adjacent FFF adaptive bed mesh `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2162-2200` into `ares-core` registry metadata, including the `coPoint` value kind required by `bed_mesh_min`, `bed_mesh_max`, and `bed_mesh_probe_distance`. Defer adaptive mesh behavior, probing constraints, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m53-print-config-bed-mesh-registry.md`.
-
 ## M54: PrintConfig extruder visual and offset option registry
 Port the adjacent FFF extruder visual/offset `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2202-2225` into `ares-core` registry metadata. Defer UI color behavior, firmware/tool offset behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m54-print-config-extruder-visual-offset-registry.md`.
 
 ## M55: PrintConfig filament and print flow ratio option registry
 Port the adjacent FFF filament/print flow ratio `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2227-2250` into `ares-core` registry metadata, including an Ares `FloatsNullable` metadata kind for `filament_flow_ratio`, whose upstream definition is `coFloats` with `nullable = true` and a `ConfigOptionFloatsNullable` default. Defer flow scaling behavior, object/material override behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m55-print-config-flow-ratio-registry.md`.
-
 ## M56: PrintConfig pressure advance option registry
 Port the adjacent FFF pressure advance `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2252-2262` into `ares-core` registry metadata. Defer runtime pressure advance, firmware-specific linear advance behavior, adaptive pressure advance behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m56-print-config-pressure-advance-registry.md`.
 
 ## M57: PrintConfig adaptive pressure advance option registry
 Port the adjacent FFF adaptive pressure advance `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2264-2320` into `ares-core` registry metadata. Defer runtime adaptive pressure advance, calibration-model parsing/fitting, firmware-specific behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m57-print-config-adaptive-pressure-advance-registry.md`.
-
 ## M58: PrintConfig cooling slowdown option registry
 Port the adjacent FFF cooling-slowdown `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2334-2347` into `ares-core` registry metadata while splitting the registry definition table so Rust files remain under 400 LOC. Preserve existing metadata while moving sorted shards; defer fan runtime behavior, layer-time slowdown behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m58-print-config-cooling-slowdown-registry.md`.
 
 ## M59: PrintConfig fan cooling and filament color note option registry
 Port the adjacent FFF fan cooling layer time, default filament color, filament color, and filament notes `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2349-2382` into `ares-core` registry metadata. Defer fan runtime behavior, color UI behavior, note UI behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m59-print-config-fan-filament-color-note-registry.md`.
-
 ## M60: PrintConfig filament mapping and hardware flag option registry
 Port the adjacent FFF filament multi-color, filament mapping, nozzle hardness, and filament-switcher hardware flag `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2385-2440` into `ares-core` registry metadata. Defer filament mapping runtime behavior, dynamic map behavior, filament switcher behavior, nozzle-HRC validation, UI behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m60-print-config-filament-mapping-hardware-registry.md`.
 
 ## M61: PrintConfig filament flush and toolchange timing option registry
 Port the adjacent FFF filament flush temperature, flush volumetric speed, max volumetric speed, and filament/tool-change timing `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2442-2497` into `ares-core` registry metadata. Add an `IntsNullable` metadata kind for `filament_flush_temp`; defer flushing runtime behavior, volumetric speed limiting, tool-change timing behavior, UI behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m61-print-config-filament-flush-timing-registry.md`.
-
 ## M62: PrintConfig bed temperature and flush dataset option registry
 Port the adjacent FFF support skip-flush, bed temperature formula, nozzle flush dataset, and filament diameter source-refresh `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2500-2523` into `ares-core` registry metadata only. Preserve existing `filament_diameter` typed/runtime behavior while refreshing its source citation; defer bed-temperature selection behavior, nozzle flush dataset behavior, support-object skip-flush behavior, UI/runtime behavior, extrusion behavior, slicing behavior, G-code behavior, and the following `pellet_flow_coefficient`/adaptive-volumetric/shrink options.
-
-Exit criteria are tracked in `docs/milestones/m62-print-config-bed-flush-diameter-registry.md`.
 
 ## M63: PrintConfig pellet flow and shrinkage option registry
 Port the adjacent FFF pellet flow coefficient, adaptive volumetric speed metadata, volumetric speed coefficients, and filament shrinkage `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2551-2594` into `ares-core` registry metadata. Pellet-to-diameter conversion is now consumed by runtime `filament_diameters()` parsing; defer adaptive volumetric speed limiting, shrinkage scaling, UI/runtime behavior beyond this conversion, extrusion behavior beyond the existing diameter consumers, slicing behavior beyond the existing diameter consumers, G-code behavior beyond the existing diameter consumers, and following options.
 
-Exit criteria are tracked in `docs/milestones/m63-print-config-pellet-shrinkage-registry.md`.
-
 ## M64: PrintConfig filament load/unload speed option registry
 Port the adjacent FFF filament adhesiveness category and loading/unloading speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2596-2634` into `ares-core` registry metadata. Defer wipe-tower loading/unloading behavior, ramming/toolchange runtime, UI/runtime behavior, extrusion behavior, slicing behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m64-print-config-filament-load-unload-speed-registry.md`.
 
 ## M65: PrintConfig filament cooling and stamping option registry
 Port the adjacent FFF filament toolchange delay, cooling moves, stamping, and initial cooling speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2636-2676` into `ares-core` registry metadata. Defer wipe-tower cooling/stamping behavior, ramming/toolchange runtime, UI/runtime behavior, extrusion behavior, slicing behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m65-print-config-filament-cooling-stamping-registry.md`.
-
 ## M66: PrintConfig filament tower purge and interface option registry
 Port the adjacent FFF filament minimal purge, wipe-tower cooling, and tower interface pre-extrusion/ironing `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2678-2719` into `ares-core` registry metadata. Defer wipe-tower purge/cooling/interface runtime behavior, UI/runtime behavior, extrusion behavior, slicing behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m66-print-config-filament-tower-purge-interface-registry.md`.
 
 ## M67: PrintConfig filament tower temperature and final cooling option registry
 Port the adjacent FFF filament tower interface purge volume, tower interface print temperature, and final cooling speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2721-2743` into `ares-core` registry metadata while splitting the current `pre_middle` registry shard so Rust files remain under 400 LOC. Defer wipe-tower purge/temperature/final-cooling runtime behavior, UI/runtime behavior, extrusion behavior, slicing behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m67-print-config-filament-tower-temperature-final-cooling-registry.md`.
-
 ## M68: PrintConfig filament ramming option registry
 Port the adjacent FFF filament ramming parameters and multitool ramming `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2745-2774` into `ares-core` registry metadata. Defer ramming parameter parsing/editing/runtime, wipe-tower behavior, UI/runtime behavior, extrusion behavior, slicing behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m68-print-config-filament-ramming-registry.md`.
 
 ## M70: PrintConfig filament material and support option registry
 Port the adjacent FFF filament material/statistics/support `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2776-2826` into `ares-core` registry metadata. Defer material database enum population, density statistics behavior, soluble/support behavior, filament change-length behavior, extruder printability behavior, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m70-print-config-filament-material-support-registry.md`.
-
 ## M71: PrintConfig filament identity and statistics option registry
 Port the adjacent FFF filament softening-temperature, price/statistics, identity, and vendor `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2828-2859` into `ares-core` registry metadata. Defer softening-temperature behavior, filament price/statistics behavior, settings-id/ids identity behavior, vendor behavior, CLI/no-CLI behavior, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m71-print-config-filament-identity-statistics-registry.md`.
 
 ## M72: PrintConfig infill direction and extra solid option registry
 Port the adjacent FFF infill direction, sparse density, model-aligned direction, extra solid infill, and multiline infill `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2861-2913` into `ares-core` registry metadata. `extra_solid_infills` is now consumed by a source-cited runtime slice that ports the `check_layer_id_pattern()` schedule grammar and converts matching otherwise-sparse layers to internal solid infill. Defer remaining infill-angle behavior, model-aligned direction behavior, multiline infill behavior, UI/runtime behavior, adjacent slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m72-print-config-infill-direction-extra-solid-registry.md`.
-
 ## M73: PrintConfig gyroid optimization and sparse infill pattern option registry
 Port the adjacent FFF gyroid optimization and sparse infill pattern `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2915-2985` into `ares-core` registry metadata. Defer gyroid optimization behavior, sparse infill pattern runtime behavior, enum value storage, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m73-print-config-gyroid-sparse-pattern-registry.md`.
 
 ## M74: PrintConfig lateral lattice and infill anchor option registry
 Port the adjacent FFF lateral lattice angle, infill overhang angle, and infill anchor `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:2987-3066` into `ares-core` registry metadata. Defer lateral lattice behavior, infill overhang behavior, infill anchor behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3068+` acceleration/following options.
 
-Exit criteria are tracked in `docs/milestones/m74-print-config-lateral-lattice-infill-anchor-registry.md`.
-
 ## M75: PrintConfig acceleration option registry
 Port the adjacent FFF acceleration and accel-to-decel `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3068-3167` into `ares-core` registry metadata. Defer acceleration resolution, accel-to-decel behavior, ratio metadata/runtime behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3169+` jerk/following options.
-
-Exit criteria are tracked in `docs/milestones/m75-print-config-acceleration-registry.md`.
 
 ## M76: PrintConfig wall, infill, and travel jerk option registry
 Port the adjacent FFF wall, infill, top surface, first layer, travel, and first-layer travel jerk `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3188-3249` into `ares-core` registry metadata. Defer `default_jerk`, `default_junction_deviation`, jerk runtime behavior, ratio metadata/runtime behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3251+` initial-layer line-width/height/following options.
 
-Exit criteria are tracked in `docs/milestones/m76-print-config-jerk-registry.md`.
-
 ## M77: PrintConfig default jerk registry with pre-middle shard split
 Port the adjacent FFF `default_jerk` and `default_junction_deviation` `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3169-3186` into `ares-core` registry metadata while splitting the oversized pre-middle registry shard. Defer default jerk behavior, junction-deviation behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3251+` initial-layer line-width/height/following options.
-
-Exit criteria are tracked in `docs/milestones/m77-print-config-default-jerk-registry-shard-split.md`.
 
 ## M78: PrintConfig initial-layer line, speed, and slow-down registry
 Port the adjacent FFF initial-layer line width, print height, speed, travel speed, and slow-down `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3251-3314` into `ares-core` registry metadata. Defer initial-layer line-width resolution, print-height behavior, speed behavior, travel-speed ratio behavior, slow-down behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3316+` nozzle/fan/following options.
 
-Exit criteria are tracked in `docs/milestones/m78-print-config-initial-layer-line-speed-registry.md`.
-
 ## M79: PrintConfig first-layer temperature and fan-speed registry
 Port the adjacent FFF first-layer nozzle temperature and fan-speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3316-3370` into `ares-core` registry metadata. Defer nozzle-temperature behavior, fan-speed behavior, disable semantics, override behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3372+` filament-ironing/following options.
-
-Exit criteria are tracked in `docs/milestones/m79-print-config-first-layer-fan-temperature-registry.md`.
 
 ## M80: PrintConfig filament ironing override option registry
 Port the adjacent FFF filament-specific ironing override `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3372-3418` into `ares-core` registry metadata. Add metadata-only `PercentsNullable` for nullable percent-vector registry metadata; defer ironing runtime behavior, filament override resolution, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3420+` fuzzy-skin/following options.
 
-Exit criteria are tracked in `docs/milestones/m80-print-config-filament-ironing-registry.md`.
-
 ## M81: PrintConfig fuzzy-skin option registry
 Port the adjacent FFF fuzzy-skin `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3420-3576` into `ares-core` registry metadata. This historical registry milestone deferred runtime behavior when it was completed. A later source-cited slice now consumes `fuzzy_skin`, `fuzzy_skin_thickness`, `fuzzy_skin_point_distance`, and `fuzzy_skin_first_layer` for Ares' current external perimeter path boundary, using `PrintConfig.hpp:50-58,1108-1119`, `PrintConfig.cpp:192-200,3420-3566`, `PrintObject.cpp:3458-3459`, `PerimeterGenerator.cpp:150-163`, and `Feature/FuzzySkin/FuzzySkin.cpp:294-344,476-490,561-575` as the upstream boundary. The runtime slice validates finite thickness `0..=2` and point distance `0..=5`, preserves Orca's effective-disable gate for point distance below `0.01` or thickness below `0.001`, honors the first-layer gate, and applies a deterministic classic compatibility shell to external paths for `external`, `all`, and `allwalls` so final G-code path coordinates change. A subsequent slice consumes `allwalls` for Ares' generated rectangular internal wall loops by reusing the existing classic/ripple closed-polyline displacement before overhang reversal and seam positioning. Painted fuzzy-skin facets, hole-only ownership, exact Orca random/noise parity, broader ripple/noise module parity, Arachne width/extrusion modes, merge-region behavior, 3MF/UI behavior, multi-region config merging, and `PrintConfig.cpp:3578+` filter-out-gap-fill/following options remain deferred.
-
-Exit criteria are tracked in `docs/milestones/m81-print-config-fuzzy-skin-registry.md`.
 
 ## M82: PrintConfig process and G-code utility option registry
 Port the adjacent FFF process/G-code utility `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3578-3643` into `ares-core` registry metadata. Defer gap filtering, gap speed behavior, precise-Z behavior, arc fitting, line-number output, first-layer scan integration, power-loss recovery G-code behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code output behavior, and `PrintConfig.cpp:3652+` nozzle-type/following options.
 
-Exit criteria are tracked in `docs/milestones/m82-print-config-process-gcode-utility-registry.md`.
-
 ## M83: PrintConfig nozzle material and hardness option registry
 Port the adjacent FFF nozzle material/hardness `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3652-3679` into `ares-core` registry metadata. Add metadata-only `EnumsNullable` for nullable generic enum-vector registry metadata; defer nozzle material compatibility behavior, nozzle hardness validation, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3681+` printer-structure/following options.
-
-Exit criteria are tracked in `docs/milestones/m83-print-config-nozzle-material-hardness-registry.md`.
 
 ## M84: PrintConfig printer structure and fan speed-up option registry
 Port the adjacent FFF printer-structure, best-object-position, auxiliary-fan, and fan speed-up/kick-start `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3681-3738` into `ares-core` registry metadata. Defer printer-structure behavior, best-object-position/auto-arrange behavior, fan speed-up scheduling, fan kick-start G-code/PWM behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3740+` part-cooling PWM/following options.
 
-Exit criteria are tracked in `docs/milestones/m84-print-config-printer-structure-fan-speedup-registry.md`.
-
 ## M85: PrintConfig fan PWM, cost, and printer support option registry
 Port the adjacent FFF part-cooling PWM clamp, printer time-cost, chamber-temperature support, and air-filtration support `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3740-3783` into `ares-core` registry metadata. Defer fan PWM clamp behavior, time-cost calculation, chamber-temperature control, air-filtration G-code behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3785+` gcode-flavor/following options.
-
-Exit criteria are tracked in `docs/milestones/m85-print-config-fan-pwm-cost-printer-support-registry.md`.
 
 ## M86: PrintConfig G-code flavor and object-label option registry
 Port the adjacent FFF G-code flavor, pellet-printer, multi-bed, object-label, exclude-object, and verbose-G-code `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3785-3851` into `ares-core` registry metadata. G-code flavor runtime selection, object-label/exclude-object G-code emission, and pellet-printer effective-diameter behavior are now implemented; defer multi-bed behavior, verbose comment emission, typed accessors, UI/runtime behavior beyond this conversion, slicing behavior beyond the existing diameter consumers, extrusion behavior beyond the existing diameter consumers, remaining G-code behavior, and `PrintConfig.cpp:3853+` infill-combination/following options.
 
-Exit criteria are tracked in `docs/milestones/m86-print-config-gcode-flavor-object-label-registry.md`.
-
 ## M87: PrintConfig infill combination and rotation-template option registry
 Port the adjacent FFF infill-combination, infill-shift, sparse-infill rotation-template, and solid-infill rotation-template `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3853-3896` into `ares-core` registry metadata. Defer infill-combination behavior, infill-shift behavior, rotation-template parsing/application, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3898+` skeleton/skin infill/following options.
-
-Exit criteria are tracked in `docs/milestones/m87-print-config-infill-combination-rotation-registry.md`.
 
 ## M88: PrintConfig skin, skeleton, and combined-infill option registry
 Port the adjacent FFF skin/skeleton infill density, depth, line-width, symmetric-infill, and combined-infill max-layer-height `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3898-3984` into `ares-core` registry metadata. Defer skin/skeleton infill behavior, infill-lock behavior, skin/skeleton line-width resolution, symmetric-infill behavior, combined-infill max-layer-height behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:3986+` BBS clumping/wrapping detection/following options.
 
-Exit criteria are tracked in `docs/milestones/m88-print-config-skin-skeleton-infill-registry.md`.
-
 ## M89: PrintConfig wrapping detection and sparse-infill utility option registry
 Port the adjacent FFF clumping/wrapping detection, sparse-infill filament, sparse-infill line width, infill/wall overlap, top/bottom infill/wall overlap, and sparse-infill speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:3987-4061` into `ares-core` registry metadata while splitting the near-limit pre-middle process registry shard. Defer wrapping/clumping detection behavior, wrapping exclude geometry, sparse-infill filament routing, line-width resolution, speed behavior, typed accessors, UI/runtime behavior, slicing behavior outside the later rectangle-only overlap slice, extrusion behavior, G-code behavior outside that later slice, and `PrintConfig.cpp:4063+` inherits/inherits_group/following options. A later source-cited runtime slice now consumes `infill_wall_overlap` and `top_bottom_infill_wall_overlap` for rectangle-only infill clipping and G-code-visible print paths; full polygon fill-surface parity remains deferred.
-
-Exit criteria are tracked in `docs/milestones/m89-print-config-wrapping-sparse-infill-registry.md`.
 
 ## M90: PrintConfig inheritance, MMU interlocking, and calibration flag option registry
 Port the adjacent FFF profile inheritance, interface-shell, MMU segmented-region, interlocking, and flowrate-calibration flag `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4063-4159` into `ares-core` registry metadata while splitting the near-limit middle registry shard. Defer inheritance resolution, interface-shell behavior, segmented-region/interlocking geometry behavior, typed accessors, UI/runtime behavior beyond consumed slices, slicing behavior beyond consumed slices, extrusion behavior beyond consumed slices, G-code behavior beyond consumed slices, and `PrintConfig.cpp:4161+` ironing/following options. A later source-cited runtime slice now consumes `calib_flowrate_topinfill_special_order` from `OrcaSlicer/src/libslic3r/PrintConfig.hpp:1070`, `PrintConfig.cpp:4156-4159`, and `Fill/FillBase.cpp:166-183` by reversing Ares top-surface scanline segment direction after deterministic candidate sorting and existing pattern direction selection. This changes `LayerInfills`, `LayerPrintPaths`, and emitted `;INFILL:solid:` / `;PRINT_PATH:top_solid_infill:` G-code coordinates for top solid infill only. Full Orca `ExtrusionEntityCollection::no_sort`, Archimedean-chords center-spiral ordering from `FillPlanePath.cpp:133-155`, expolygon chaining, Arachne, and binary E2E geometry parity remain deferred.
 
-Exit criteria are tracked in `docs/milestones/m90-print-config-inheritance-interlocking-registry.md`.
-
 ## M91: PrintConfig ironing and Z contouring option registry
 Port the adjacent FFF ironing and Z-layer anti-aliasing / Z contouring `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4161-4293` into `ares-core` registry metadata. Defer ironing behavior, Z contouring behavior, slicing-plane changes, fill-direction alternation behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4295+` layer-change G-code/following options.
-
-Exit criteria are tracked in `docs/milestones/m91-print-config-ironing-zaa-registry.md`.
 
 ## M92: PrintConfig custom G-code, machine limit flag, and small-area flow option registry
 Port the adjacent FFF custom G-code, machine-limit emission flag, small-area infill flow compensation, and scarf-seam marker `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4295-4375` into `ares-core` registry metadata while splitting the near-limit tail registry shard. Defer custom G-code insertion, machine-limit emission, small-area flow compensation, scarf-seam behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4377+` machine-axis-limit-loop/following options.
 
-Exit criteria are tracked in `docs/milestones/m92-print-config-custom-gcode-small-area-registry.md`.
-
 ## M93: PrintConfig machine speed and acceleration limit option registry
 Port the adjacent machine XYZE maximum speed and maximum acceleration `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4377-4428` into `ares-core` registry metadata while splitting the near-limit late registry shard. Defer machine-limit emission, M201/M203 G-code output, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4429+` machine-jerk/junction/min-rate/acceleration PRT/resonance/input-shaping/following options.
-
-Exit criteria are tracked in `docs/milestones/m93-print-config-machine-speed-acceleration-registry.md`.
 
 ## M94: PrintConfig machine jerk, min-rate, and acceleration PRT option registry
 Port the adjacent machine XYZE jerk, junction deviation, minimum feedrate, and M204 P/R/T acceleration `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4429-4514` into `ares-core` registry metadata while splitting the near-limit registry key expectation test list. Defer machine-limit emission, M204/M205 G-code output, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4516+` resonance/input-shaping/following options.
 
-Exit criteria are tracked in `docs/milestones/m94-print-config-machine-jerk-rate-acceleration-registry.md`.
-
 ## M95: PrintConfig resonance avoidance and input shaping option registry
 Port the adjacent resonance avoidance and input shaping `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4516-4589` into `ares-core` registry metadata. Defer resonance speed behavior, input-shaping G-code emission, firmware override/disable behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4591+` fan/layer-height/extrusion-rate/nozzle/following options.
-
-Exit criteria are tracked in `docs/milestones/m95-print-config-resonance-input-shaping-registry.md`.
 
 ## M96: PrintConfig fan max and extrusion-rate smoothing option registry
 Port the adjacent fan maximum, max-layer-height citation, and extrusion-rate smoothing `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4591-4648` into `ares-core` registry metadata. Defer cooling behavior, extrusion-rate smoothing behavior, arc-fitting interaction, speed planning, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4651+` fan-min/additional-cooling/min-layer/nozzle/following options.
 
-Exit criteria are tracked in `docs/milestones/m96-print-config-fan-max-extrusion-smoothing-registry.md`.
-
 ## M97: PrintConfig auxiliary fan, min layer, and nozzle option registry
 Port the adjacent fan-minimum, auxiliary fan, min-layer/nozzle citation, and slow-down minimum speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4651-4721` into `ares-core` registry metadata while splitting the near-limit public count fixture. Defer cooling behavior, auxiliary fan G-code, adaptive layer-height behavior, speed planning, nozzle behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4723+` notes/host/following options.
-
-Exit criteria are tracked in `docs/milestones/m97-print-config-aux-fan-layer-nozzle-registry.md`.
 
 ## M98: PrintConfig notes, host, nozzle-volume, and MMU parking registry
 Port the adjacent FFF notes, printer-host type, nozzle-volume, cooling-tube, high-current filament swap, and parking-position `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4723-4810` into `ares-core` registry metadata. Defer printer-host upload/integration behavior, MMU cooling-tube loading/unloading behavior, high-current filament-swap behavior, parking-position runtime behavior, nozzle-volume runtime behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4812+` extra-loading/start-end/following options.
 
-Exit criteria are tracked in `docs/milestones/m98-print-config-host-mmu-parking-registry.md`.
-
 ## M99: PrintConfig loading move, start/end points, ooze, and filename registry
 Port the adjacent FFF extra-loading, start/end point, infill-retraction suppression flag, ooze-prevention flag, and filename-format `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4812-4848` into `ares-core` registry metadata while splitting the near-limit known-count fixture. Defer MMU loading/unloading behavior, cutter/start-end point runtime behavior, infill retraction suppression, ooze-prevention temperature behavior, filename template rendering, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:4850+` make-overhang/following options.
-
-Exit criteria are tracked in `docs/milestones/m99-print-config-loading-ooze-filename-registry.md`.
 
 ## M100: PrintConfig make-overhang and wall option registry
 Port the adjacent FFF make-overhang-printable, overhang-wall detection, wall-filament, and inner-wall width/speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4850-4916` into `ares-core` registry metadata. This historical registry milestone deferred runtime behavior when it was completed. A later source-cited overhang slice now consumes `detect_overhang_wall` for the first rectangular unsupported perimeter path; make-overhang geometry modification, wall-filament routing, inner-wall line-width resolution, inner-wall speed planning, full polygon overhang-wall detection, UI/runtime behavior outside that slice, and `PrintConfig.cpp:4918+` wall-loop/post-process/following options remain deferred.
 
-Exit criteria are tracked in `docs/milestones/m100-print-config-overhang-wall-registry.md`.
-
 ## M101: PrintConfig wall loop, post-process, and printer identity registry
 Port the adjacent FFF wall-loop, alternate-extra-wall, post-processing scripts, process role-change G-code, printer identity, and print/printer settings-id `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4918-4986` into `ares-core` registry metadata. Defer wall-loop generation, alternate-extra-wall planning, post-processing script execution, process role-change G-code insertion, printer identity/settings-id behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, filesystem script execution behavior, and `PrintConfig.cpp:4988+` raft/resolution/retraction/following options.
-
-Exit criteria are tracked in `docs/milestones/m101-print-config-wall-post-process-printer-registry.md`.
 
 ## M102: PrintConfig raft, resolution, and retraction trigger registry
 Port the adjacent FFF raft support, path resolution, and initial retraction trigger `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:4988-5066` into `ares-core` registry metadata. Defer raft generation/support geometry, contour simplification/path resolution behavior, retraction trigger planning, wipe planning, layer-change retraction behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5068+` retraction length/long retraction/toolchange/Z-hop/following options.
 
-Exit criteria are tracked in `docs/milestones/m102-print-config-raft-resolution-retraction-registry.md`.
-
 ## M103: PrintConfig retraction length, cut, and toolchange registry
 Port the adjacent FFF base retraction length, long retraction when cut/extruder-change, retraction distance, and toolchange retraction `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5068-5120` into `ares-core` registry metadata. Defer retraction planning, filament-cut long retraction behavior, extruder-change long retraction behavior, toolchange retraction behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5122+` Z-hop/extruder/nozzle-volume/following options.
-
-Exit criteria are tracked in `docs/milestones/m103-print-config-retraction-length-cut-toolchange-registry.md`.
 
 ## M104: PrintConfig Z-hop, lift-boundary, and extruder/nozzle type registry
 Port the adjacent FFF Z-hop, Z-hop boundary/type, travel-slope, lift-enforcement, extruder type, nozzle-volume type, and default nozzle-volume type `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5122-5237` plus enum maps in `PrintConfig.cpp:526-540` and `565-575` into `ares-core` registry metadata. Defer Z-hop movement behavior, slope/spiral lift behavior, lift-surface enforcement behavior, extruder/nozzle variant resolution, preset/project nozzle-volume synchronization, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5239+` extruder variant/AMS/following options.
 
-Exit criteria are tracked in `docs/milestones/m104-print-config-zhop-extruder-type-registry.md`.
-
 ## M105: PrintConfig extruder variant and ID registry
 Port the adjacent FFF extruder variant list, AMS count, printer/print/filament extruder IDs, and printer/print/filament extruder variant `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5239-5304` into `ares-core` registry metadata. Defer extruder variant normalization, AMS-count parsing helpers, printer/print/filament extruder mapping, preset compatibility behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5306+` restart/retraction speed/following options.
-
-Exit criteria are tracked in `docs/milestones/m105-print-config-extruder-variant-id-registry.md`.
 
 ## M106: PrintConfig restart, retraction speed, M73, and seam registry
 Port the adjacent FFF restart-extra, retraction/deretraction speed, firmware retraction, calibration mark, M73 disable, seam-position, staggered-inner-seam, and seam-gap `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5306-5390` plus `SeamPosition` enum map in `PrintConfig.hpp:211-213` and `PrintConfig.cpp:350-357` into `ares-core` registry metadata. Defer restart/retraction runtime behavior, firmware-retraction G10/G11 behavior, M73 suppression behavior, calibration mark generation, seam placement/staggering/gap geometry behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5392+` scarf seam/following options.
 
-Exit criteria are tracked in `docs/milestones/m106-print-config-restart-speed-seam-registry.md`.
-
 ## M107: PrintConfig scarf seam registry
 Port the adjacent FFF scarf-seam `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5392-5500` plus `SeamScarfType` enum map in `PrintConfig.hpp:216-220` and `PrintConfig.cpp:360-365` into `ares-core` registry metadata. Defer scarf seam planning, conditional scarf selection, overhang estimation, scarf speed/flow behavior, seam slope geometry, inner-wall scarf behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5502+` wipe-speed/following options.
-
-Exit criteria are tracked in `docs/milestones/m107-print-config-scarf-seam-registry.md`.
 
 ## M108: PrintConfig wipe speed and loop registry
 Port the adjacent FFF wipe-speed and loop-wipe `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5502-5538` into `ares-core` registry metadata. Defer role-based wipe speed selection, wipe speed calculation, loop-wipe movement, external-loop wipe placement, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5540+` skirt/draft-shield/following options.
 
-Exit criteria are tracked in `docs/milestones/m108-print-config-wipe-speed-loop-registry.md`.
-
 ## M109: PrintConfig skirt and draft-shield registry
 Port the adjacent FFF skirt and draft-shield `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5540-5627` plus `SkirtType`/`DraftShield` enum maps in `PrintConfig.hpp:286-292` and `PrintConfig.cpp:437-447` into `ares-core` registry metadata. Defer skirt generation behavior, skirt start-angle placement, draft-shield geometry, single-loop-after-first-layer behavior, combined/per-object skirt behavior, minimum-skirt-length loop calculation, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5629+` slowdown/minimum-sparse/following options.
-
-Exit criteria are tracked in `docs/milestones/m109-print-config-skirt-draft-shield-registry.md`.
 
 ## M110: PrintConfig slowdown and solid-infill registry
 Port the adjacent FFF layer-time slowdown, minimum sparse infill area, and solid-infill filament `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5629-5655` into `ares-core` registry metadata. Defer layer-time slowdown behavior, sparse-area solid-fill replacement behavior, solid-infill extruder selection behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5657+` internal-solid-infill/spiral/following options.
 
-Exit criteria are tracked in `docs/milestones/m110-print-config-slowdown-solid-infill-registry.md`.
-
 ## M111: PrintConfig internal solid infill and spiral registry
 Port the adjacent FFF internal-solid-infill line width/speed and spiral-vase `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5657-5726` into `ares-core` registry metadata. Defer internal-solid-infill runtime behavior, spiral-vase path generation, Z/XY smoothing behavior, spiral transition flow behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5728+` timelapse/standby/preheat/following options.
-
-Exit criteria are tracked in `docs/milestones/m111-print-config-internal-solid-spiral-registry.md`.
 
 ## M112: PrintConfig timelapse and preheat registry
 Port the adjacent FFF timelapse, standby temperature delta, and preheat `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5728-5774` plus `TimelapseType` enum map in `PrintConfig.hpp:281-284` and `PrintConfig.cpp:431-435` into `ares-core` registry metadata. Defer timelapse capture/validation behavior, ooze-prevention standby temperature behavior, preheat command insertion, remaining preheat post-processing behavior, timelapse warning/insertion behavior, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5777+` file/machine/filament start-G-code/following options. A mechanical registry-table shard split is allowed only to keep Rust files below 400 LOC.
 
-Exit criteria are tracked in `docs/milestones/m112-print-config-timelapse-preheat-registry.md`.
-
 ## M113: PrintConfig start G-code and filament-change registry
 Port the adjacent FFF file/machine/filament start G-code, single-extruder multi-material, and manual filament-change `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5777-5819` into `ares-core` registry metadata. Defer start-G-code emission, placeholder expansion, single-extruder multi-material behavior, manual filament-change Tx omission/M600 behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5821+` wipe-tower/ramming/tool-change/following options.
-
-Exit criteria are tracked in `docs/milestones/m113-print-config-start-gcode-filament-change-registry.md`.
 
 ## M114: PrintConfig wipe-tower and ramming registry
 Port the adjacent FFF wipe-tower type, purge-in-prime-tower, filament ramming, tool-change-on-wipe-tower, and sparse-layer wipe-tower `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5821-5861` plus `WipeTowerType` enum map in `PrintConfig.hpp:74-77` and `PrintConfig.cpp:212-216` into `ares-core` registry metadata. Defer wipe-tower implementation selection, prime-tower purge behavior, filament ramming behavior, tool-change travel behavior, sparse-layer wipe-tower suppression, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5863+` single-extruder priming/slice-closing/slicing-mode/support/following options. A mechanical registry-table shard split is allowed only to keep Rust files below 400 LOC.
 
-Exit criteria are tracked in `docs/milestones/m114-print-config-wipe-tower-ramming-registry.md`.
-
 ## M115: PrintConfig priming, slicing mode, Z offset, and support-enable registry
 Port the adjacent FFF single-extruder priming, slice gap closing, slicing mode, Z offset, and support-enable `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5863-5908` plus `SlicingMode` enum map in `PrintConfig.hpp:162-170` and `PrintConfig.cpp:305-310` into `ares-core` registry metadata. Defer single-extruder priming behavior, mesh gap-closing behavior, slicing-mode polygon rules, Z-offset application, support generation, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5910+` support-type/support-distance/following options.
-
-Exit criteria are tracked in `docs/milestones/m115-print-config-priming-slicing-support-registry.md`.
 
 ## M116: PrintConfig support type and support placement registry
 Port the adjacent FFF support type, support/object placement gap, support pattern angle, and support placement filter `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5910-5979` plus `SupportType` enum map in `PrintConfig.hpp:195-209` and `PrintConfig.cpp:342-348` into `ares-core` registry metadata. Defer support generation, tree/normal/manual support selection behavior, support enforcer/blocker handling, support geometry, support pattern placement, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:5981+` support top/bottom Z-distance/following options.
 
-Exit criteria are tracked in `docs/milestones/m116-print-config-support-type-placement-registry.md`.
-
 ## M117: PrintConfig support Z-distance and enforced layers registry
 Port the adjacent FFF support top/bottom Z-distance and enforced-support-layers `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5981-6025` into `ares-core` registry metadata. Defer support Z-gap application, independent support layer-height rounding, enforced support material generation, support geometry, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6027+` support-filament/following options.
-
-Exit criteria are tracked in `docs/milestones/m117-print-config-support-z-distance-enforce-registry.md`.
 
 ## M118: PrintConfig support filament registry
 Port the FFF support/raft base filament `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6027-6034` into `ares-core` registry metadata. Defer support/raft filament routing, support material selection, raft/support generation, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6036+` support-interface-not-for-body/support-line-width/following options.
 
-Exit criteria are tracked in `docs/milestones/m118-print-config-support-filament-registry.md`.
-
 ## M119: PrintConfig support interface base avoidance and line width registry
 Port the adjacent FFF support interface base-avoidance and support line-width `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6036-6053` into `ares-core` registry metadata, with a mechanical support registry shard split to keep Rust files below 400 LOC. Defer support interface filament routing, support/raft base material selection, support line-width resolution, nozzle-diameter ratio computation, support geometry, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6055+` support-interface-loop-pattern/following options.
-
-Exit criteria are tracked in `docs/milestones/m119-print-config-support-interface-line-width-registry.md`.
 
 ## M120: PrintConfig support interface loop, filament, layers, and spacing registry
 Port the adjacent FFF support interface loop-pattern, interface filament, top/bottom interface layer count, and top interface spacing `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6055-6112` into `ares-core` registry metadata. `support_interface_top_layers = 0` is now partially consumed for existing Ares `PrintPathRole::SupportMaterialInterface` paths through the source-cited `Support/SupportParameters.hpp` and `Support/SupportCommon.cpp` boundary: existing support-interface paths are routed to `SupportMaterial` before support ironing, so support speed/flow and the base layer fan baseline apply, support-interface role overrides no longer apply, and support-interface ironing duplication no longer applies. Defer full support interface loop generation, support interface filament routing, positive top-layer support contact generation, bottom interface layer-count behavior, top interface spacing geometry, solid interface forcing beyond this role rewrite, support geometry, typed accessors, UI/runtime behavior, and `PrintConfig.cpp:6114+` support-bottom-interface-spacing/support-interface-speed/following options.
 
-Exit criteria are tracked in `docs/milestones/m120-print-config-support-interface-layers-spacing-registry.md`.
-
 ## M121: PrintConfig support bottom interface spacing, interface speed, and patterns registry
 Port the adjacent FFF support bottom-interface spacing, support-interface speed, support base pattern, and support interface pattern `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6114-6176` plus `SupportMaterialPattern` and `SupportMaterialInterfacePattern` enum maps in `PrintConfig.hpp:172-177`, `PrintConfig.hpp:190-192`, `PrintConfig.cpp:312-320`, and `PrintConfig.cpp:333-340` into `ares-core` registry metadata. This historical registry milestone deferred typed/runtime behavior when it was completed. A later source-cited slice now consumes `support_interface_speed` for non-first-layer constructed `PrintPathRole::SupportMaterialInterface` print speed and G-code feedrate while preserving Ares's existing first-layer infill-speed policy. Support bottom-interface spacing behavior, support base/interface pattern selection behavior, support geometry, support transition speed behavior, preset/object override behavior, and `PrintConfig.cpp:6178+` support-base-pattern-spacing/support-expansion/support-speed/support-style/following options remain deferred.
-
-Exit criteria are tracked in `docs/milestones/m121-print-config-support-interface-pattern-speed-registry.md`.
 
 ## M122: PrintConfig support pattern spacing, speed, expansion, and style registry
 Port the adjacent FFF support base-pattern spacing, normal support expansion, support speed, and support style `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6178-6230` plus the `SupportMaterialStyle` enum map in `PrintConfig.hpp:179-181` and `PrintConfig.cpp:322-331` into `ares-core` registry metadata. This historical registry milestone deferred typed/runtime behavior when it was completed. A later source-cited slice now consumes `support_speed` for non-first-layer constructed `PrintPathRole::SupportMaterial` print speed and G-code feedrate while preserving Ares's existing first-layer infill-speed policy. Support spacing behavior, support expansion behavior, support style selection behavior, support geometry, support transition speed behavior, preset/object override behavior, and `PrintConfig.cpp:6232+` independent-support-layer-height/following options remain deferred.
 
-Exit criteria are tracked in `docs/milestones/m122-print-config-support-pattern-spacing-style-registry.md`.
-
 ## M123: PrintConfig support independent layer height and threshold registry
 Port the adjacent FFF independent support layer height, support threshold angle, and support threshold overlap `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6232-6262` into `ares-core` registry metadata. Defer independent support layer-height behavior, prime-tower invalidation behavior, support threshold angle/overlap behavior, support generation, support geometry, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6264+` tree-support/following options.
-
-Exit criteria are tracked in `docs/milestones/m123-print-config-support-threshold-layer-height-registry.md`.
 
 ## M124: PrintConfig tree support branch and tip registry
 Port the adjacent FFF tree-support branch angle, preferred branch angle, branch distance, branch density, auto brim, brim width, and tip diameter `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6264-6354` into `ares-core` registry metadata. Defer tree-support generation, organic support branch routing, branch-density behavior, auto-brim width calculation, tree-support brim geometry, support geometry, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6356+` branch-diameter/following options.
 
-Exit criteria are tracked in `docs/milestones/m124-print-config-tree-support-branch-tip-registry.md`.
-
 ## M125: PrintConfig tree support diameter, wall, and infill registry
 Port the adjacent FFF tree-support branch diameter, branch diameter angle, organic branch diameter, support wall count, and tree-support-with-infill `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6356-6404` into `ares-core` registry metadata. Defer tree-support generation, branch-diameter tapering, organic support branch routing, wall-loop generation, tree-support infill generation, support geometry, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6406+` support-ironing/following options.
-
-Exit criteria are tracked in `docs/milestones/m125-print-config-tree-support-diameter-wall-registry.md`.
 
 ## M126: PrintConfig support ironing registry
 Port the adjacent FFF support interface ironing enable, pattern, flow, and spacing `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6406-6446` plus the `InfillPattern` enum map in `PrintConfig.hpp:87-98` and `PrintConfig.cpp:225-255` into `ares-core` registry metadata. Defer support interface ironing behavior, pattern application, flow/spacing behavior, support geometry, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6448+` chamber-temperature/following options.
 
-Exit criteria are tracked in `docs/milestones/m126-print-config-support-ironing-registry.md`.
-
 ## M127: PrintConfig chamber temperature registry
 Port the adjacent FFF chamber-temperature control and chamber-temperature `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6448-6476` into `ares-core` registry metadata. Defer chamber temperature control behavior, M191/M141 command emission, chamber-temperature start-G-code variable handling, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6478+` nozzle-temperature/following options.
-
-Exit criteria are tracked in `docs/milestones/m127-print-config-chamber-temperature-registry.md`.
 
 ## M128: PrintConfig nozzle temperature registry
 Port the adjacent FFF nozzle temperature, nozzle temperature range high, and nozzle temperature range low `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6478-6501` into `ares-core` registry metadata. Defer nozzle temperature behavior, temperature-range validation, M104/M109 emission, start-G-code variable handling, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6503+` head-wrap/thin-wall/G-code/following options.
 
-Exit criteria are tracked in `docs/milestones/m128-print-config-nozzle-temperature-registry.md`.
-
 ## M129: PrintConfig head-wrap detect zone and thin-wall registry
 Port the adjacent FFF head-wrap detect zone and thin-wall detection `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6503-6514` into `ares-core` registry metadata. Defer head-wrap/clumping detection behavior, probe-zone behavior, thin-wall geometric detection, single-line thin-wall generation, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6516+` G-code/top-surface/following options.
-
-Exit criteria are tracked in `docs/milestones/m129-print-config-head-wrap-thin-wall-registry.md`.
 
 ## M130: PrintConfig change G-code registry
 Port the adjacent filament-change and extrusion-role-change G-code `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6516-6541` into `ares-core` registry metadata. Defer filament-change G-code insertion, extrusion-role-change G-code insertion, tool-change behavior, active-filament-specific behavior, placeholder expansion, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6543+` top-surface/following options.
 
-Exit criteria are tracked in `docs/milestones/m130-print-config-change-gcode-registry.md`.
-
 ## M131: PrintConfig top-surface and top-shell registry
 Port the adjacent FFF top-surface line-width/speed and top-shell layers/thickness `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6543-6584` into `ares-core` registry metadata. Defer top-surface line-width computation, top-surface speed planning, top-shell layer adjustment from thickness, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6586+` top/bottom surface-density/following options.
-
-Exit criteria are tracked in `docs/milestones/m131-print-config-top-surface-shell-registry.md`.
 
 
 ## M132: PrintConfig surface-density registry
 Port the adjacent FFF top and bottom surface-density `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6586-6607` into `ares-core` registry metadata. Defer top/bottom surface-density runtime interpretation, surface pattern behavior, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6610+` travel-speed/following options.
 
-Exit criteria are tracked in `docs/milestones/m132-print-config-surface-density-registry.md`.
-
 
 ## M133: PrintConfig travel-speed registry
 Port the adjacent FFF travel-speed and Z-travel-speed `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6610-6626` into `ares-core` registry metadata. Defer travel-speed/Z-travel runtime behavior, speed planning, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6628+` wipe/prime-tower/following options.
-
-Exit criteria are tracked in `docs/milestones/m133-print-config-travel-speed-registry.md`.
 
 
 ## M134: PrintConfig wipe and prime-tower base registry
 Port the adjacent FFF wipe and prime-tower base `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6628-6657` into `ares-core` registry metadata. Defer wipe movement behavior, wipe-distance movement planning, prime tower generation/internal-rib behavior, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6659+` flush-volume/prime-volume/wipe-tower/following options. A mechanical registry-table shard split is allowed only to keep Rust files below 400 LOC.
 
-Exit criteria are tracked in `docs/milestones/m134-print-config-wipe-prime-tower-base-registry.md`.
-
 
 ## M135: PrintConfig flush and prime-volume registry
 Port the adjacent FFF flush-volume and prime-volume `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6659-6692` into `ares-core` registry metadata. Defer flush-volume vector/matrix interpretation, flush multiplier application, prime-volume use, prime tower behavior, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6694+` wipe-tower placement/dimension/following options.
-
-Exit criteria are tracked in `docs/milestones/m135-print-config-flush-prime-volume-registry.md`.
 
 
 ## M136: PrintConfig wipe-tower placement and width registry
 Port the adjacent FFF wipe-tower X/Y placement and prime-tower width `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6694-6716` into `ares-core` registry metadata. Defer wipe-tower placement behavior, partplate placement logic, prime-tower width use, prime tower generation, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6718+` wipe-tower rotation/brim/cone/following options.
 
-Exit criteria are tracked in `docs/milestones/m136-print-config-wipe-tower-placement-width-registry.md`.
-
 
 ## M137: PrintConfig wipe-tower angle and brim registry
 Port the adjacent FFF wipe-tower rotation, prime-tower brim width, and wipe-tower cone angle `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6718-6744` into `ares-core` registry metadata. Defer wipe-tower rotation behavior, prime-tower brim width use/auto calculation, cone stabilization behavior, prime tower generation, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6746+` wipe-tower purge-speed/wall-type/following options.
-
-Exit criteria are tracked in `docs/milestones/m137-print-config-wipe-tower-angle-brim-registry.md`.
 
 
 ## M138: PrintConfig wipe-tower max purge speed registry
 Port the wipe-tower maximum purge speed `libslic3r::PrintConfigDef::init_fff_params` option definition from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6746-6757` into `ares-core` registry metadata. Defer wipe-tower purge-speed selection, sparse-layer speed fallback, filament max-volumetric-speed comparison, prime tower generation, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6759+` wipe-tower wall-type/extra-rib/following options.
 
-Exit criteria are tracked in `docs/milestones/m138-print-config-wipe-tower-max-purge-speed-registry.md`.
-
 
 ## M139: PrintConfig wipe-tower wall type registry
 Port the wipe-tower wall type `libslic3r::PrintConfigDef::init_fff_params` enum option definition from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6759-6773` plus `WipeTowerWallType` enum map from `PrintConfig.hpp:405-408` and `PrintConfig.cpp:558-563` into `ares-core` registry metadata. Defer runtime rectangle/cone/rib wall-shape selection, cone/fillet/rib geometry, prime tower generation, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6775+` extra-rib/rib-width/fillet/filament/following options.
-
-Exit criteria are tracked in `docs/milestones/m139-print-config-wipe-tower-wall-type-registry.md`.
 
 
 ## M140: PrintConfig wipe-tower rib and filament registry
 Port the adjacent FFF wipe-tower extra rib length, rib width, fillet wall, and perimeter filament `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6775-6808` into `ares-core` registry metadata. Include only the mechanical registry-table shard split needed to keep Rust files below 400 LOC. Defer rib sizing behavior, rib-width constraints, fillet wall geometry, wipe-tower filament selection, non-soluble preference, prime tower generation, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6810+` wiping-volumes/skip-points/following options.
 
-Exit criteria are tracked in `docs/milestones/m140-print-config-wipe-tower-rib-filament-registry.md`.
-
 ## M141: PrintConfig prime-tower interface registry
 Port the adjacent FFF wiping-volume and prime-tower interface `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6810-6845` into `ares-core` registry metadata. Defer wiping-volume interpretation, purge-volume computation, prime-tower skip-point behavior, flat-ironing behavior, tower-interface feature handling, interface cooldown, prime-tower infill-gap application, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6847+` flush-into/following options.
-
-Exit criteria are tracked in `docs/milestones/m141-print-config-prime-tower-interface-registry.md`.
 
 ## M142: PrintConfig flush-into registry
 Port the adjacent FFF flush-into `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6847-6870` into `ares-core` registry metadata. Defer purge routing into object infill/support/selected objects, prime-tower dependency behavior, color-mixing/object assignment behavior, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6872+` wipe-tower bridging/extra-spacing/extra-flow/idle-temperature/following options.
 
-Exit criteria are tracked in `docs/milestones/m142-print-config-flush-into-registry.md`.
-
 ## M143: PrintConfig wipe-tower extra and idle-temperature registry
 Port the adjacent FFF wipe-tower bridging, wipe-tower purge-line extra spacing/flow, and idle-temperature `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6872-6905` into `ares-core` registry metadata. Defer wipe-tower bridging distance behavior, purge-line spacing/flow application, idle-temperature/ooze-prevention behavior, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6907+` XY compensation/polyhole/following options.
-
-Exit criteria are tracked in `docs/milestones/m143-print-config-wipe-tower-extra-idle-temperature-registry.md`.
 
 ## M144: PrintConfig XY compensation and polyhole registry
 Port the adjacent FFF XY hole/contour compensation and polyhole `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6907-6954` into `ares-core` registry metadata. Defer XY compensation application, polyhole detection/conversion/twist behavior, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6956+` thumbnails/following options.
 
-Exit criteria are tracked in `docs/milestones/m144-print-config-xy-polyhole-registry.md`.
-
 ## M145: PrintConfig thumbnails registry
 Port the adjacent G-code thumbnail `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6956-6978` and `GCodeThumbnailsFormat` enum map from `PrintConfig.hpp:397-399` / `PrintConfig.cpp:542-549` into `ares-core` registry metadata. Defer thumbnail string validation/normalization, thumbnail image generation/encoding, G-code thumbnail embedding, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:6980+` use-relative-E/wall-generator/following options.
-
-Exit criteria are tracked in `docs/milestones/m145-print-config-thumbnails-registry.md`.
 
 ## M146: PrintConfig relative E and wall-generator registry
 Port the adjacent relative extrusion and wall-generator `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:6980-7001` and `PerimeterGeneratorType` enum map from `PrintConfig.hpp:294-300` / `PrintConfig.cpp:520-524` into `ares-core` registry metadata. Defer relative-E G-code behavior, wipe-tower relative-E validation, classic/Arachne perimeter generation, wall-transition behavior, typed accessors, UI/runtime behavior, slicing behavior, geometry behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7003+` wall-transition/following options.
 
-Exit criteria are tracked in `docs/milestones/m146-print-config-relative-e-wall-generator-registry.md`.
-
 ## M147: PrintConfig wall-transition registry
 Port the adjacent wall-transition `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7003-7049` and fields from `PrintConfig.hpp:1021-1024` into `ares-core` registry metadata. Defer Arachne/classic perimeter generation, wall-transition planning/geometry behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7051+` `min_feature_size`/following options.
 
-Exit criteria are tracked in `docs/milestones/m147-print-config-wall-transition-registry.md`.
-
 ## M148: PrintConfig minimum feature and wall-length registry
 Port the adjacent minimum feature and minimum wall-length `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7051-7074` and fields from `PrintConfig.hpp:1025` and `PrintConfig.hpp:1039` into `ares-core` registry metadata. Defer minimum feature filtering/widening, short wall pruning, Arachne/classic perimeter generation, wall-transition planning/geometry behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7076+` wall-resolution/bead-width/following options.
-
-Exit criteria are tracked in `docs/milestones/m148-print-config-min-feature-length-registry.md`.
 
 ## M149: PrintConfig wall maximum resolution registry
 Port the adjacent wall maximum resolution/deviation `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7076-7097` and fields from `PrintConfig.hpp:1030-1031` into `ares-core` registry metadata. Defer wall path simplification, maximum deviation enforcement, Arachne/classic perimeter generation, wall-transition planning/geometry behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7099+` bead-width/following options.
 
 2026-06-29 update: `wall_maximum_resolution` and `wall_maximum_deviation` now affect eligible Arachne closed-loop perimeter simplification in Ares and are visible in emitted perimeter/print-path G-code geometry. Exact Orca variable-width `ExtrusionLine` simplification metrics, scaled-coordinate rounding, junction-width/accumulated-area handling, and prepared-outline repair remain deferred.
 
-Exit criteria are tracked in `docs/milestones/m149-print-config-wall-maximum-registry.md`.
-
 ## M150: PrintConfig bead-width registry
 Port the adjacent first-layer minimum bead-width and minimum bead-width `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7099-7119` and fields from `PrintConfig.hpp:1026-1027` into `ares-core` registry metadata. Defer first-layer bead-width selection, minimum wall-width replacement, thin-feature widening, Arachne/classic perimeter generation, wall-transition planning/geometry behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7121+` filament override/following behavior.
-
-Exit criteria are tracked in `docs/milestones/m150-print-config-bead-width-registry.md`.
 
 ## M151: PrintConfig filament extruder override registry
 Port the generated filament extruder override `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7121-7156`, the key list from `PrintConfig.cpp:63-83`, and declaration from `PrintConfig.hpp:512` into `ares-core` registry metadata. Defer runtime filament override resolution/following behavior, retraction/z-hop/wipe/toolpath behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7158-7165` `detect_narrow_internal_solid_infill`.
 
-Exit criteria are tracked in `docs/milestones/m151-print-config-filament-extruder-override-registry.md`.
-
 ## M152: PrintConfig narrow internal solid infill registry
 Port the adjacent narrow internal solid infill detection `libslic3r::PrintConfigDef::init_fff_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7154-7161` and field from `PrintConfig.hpp:1017` into `ares-core` registry metadata. Defer narrow internal solid infill detection, concentric/rectilinear pattern selection, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7164+` extruder/filament option-key initialization behavior.
-
-Exit criteria are tracked in `docs/milestones/m152-print-config-narrow-internal-solid-infill-registry.md`.
 
 ## M153: PrintConfig extruder/filament option key lists
 Port the adjacent `PrintConfigDef` extruder and filament option-key list accessors from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7164-7227` and `PrintConfig.hpp:569-593` into `ares-core` read-only registry API data. Defer runtime array-option expansion by extruder count, filament override/following behavior, retraction/z-hop/wipe/toolpath behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7229+` SLA parameter definitions.
 
-Exit criteria are tracked in `docs/milestones/m153-print-config-extruder-filament-key-lists.md`.
-
 ## M154: PrintConfig SLA display and tilt registry
 Port the first SLA printer display/tilt `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7235-7310`, enum metadata from `PrintConfig.cpp:400-404` and `PrintConfig.hpp:260-263`, and fields from `PrintConfig.hpp:1830-1836` and `PrintConfig.hpp:1845-1847` into `ares-core` registry metadata. Defer SLA display orientation/mirroring/pixel behavior, tilt timing behavior, area-fill behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7312+` later SLA settings.
-
-Exit criteria are tracked in `docs/milestones/m154-print-config-sla-display-tilt-registry.md`.
 
 ## M155: PrintConfig SLA relative correction registry
 Port the next SLA printer correction `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7312-7318` and field from `PrintConfig.hpp:1837` into `ares-core` registry metadata. Defer SLA relative correction/scaling behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7320+` later SLA settings.
 
-Exit criteria are tracked in `docs/milestones/m155-print-config-sla-relative-correction-registry.md`.
-
 ## M156: PrintConfig SLA axis and absolute correction registry
 Port the next SLA printer correction `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7320-7349` and fields from `PrintConfig.hpp:1838-1841` into `ares-core` registry metadata. Defer SLA correction/scaling behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7351+` later SLA settings.
-
-Exit criteria are tracked in `docs/milestones/m156-print-config-sla-axis-absolute-correction-registry.md`.
 
 ## M157: PrintConfig SLA foot and gamma correction registry
 Port the next SLA printer correction `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7351-7367` and fields from `PrintConfig.hpp:1843-1844` into `ares-core` registry metadata. Defer SLA foot/gamma correction behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7370+` SLA material settings.
 
-Exit criteria are tracked in `docs/milestones/m157-print-config-sla-foot-gamma-registry.md`.
-
 ## M158: PrintConfig SLA material identity and cost registry
 Port the first SLA material settings from `libslic3r::PrintConfigDef::init_sla_params` in `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7370-7423` and fields from `PrintConfig.hpp:1811-1814` into `ares-core` registry metadata. Defer SLA material behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7425+` later SLA settings.
-
-Exit criteria are tracked in `docs/milestones/m158-print-config-sla-material-identity-cost-registry.md`.
 
 ## M159: PrintConfig SLA exposure time registry
 Port the next SLA faded-layer and exposure-time `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7425-7477`, material fields from `PrintConfig.hpp:1815-1816`, and printer exposure-bound fields from `PrintConfig.hpp:1848-1851` into `ares-core` registry metadata. Defer SLA exposure timing behavior, faded-layer behavior, material correction behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7479+` later SLA settings.
 
-Exit criteria are tracked in `docs/milestones/m159-print-config-sla-exposure-time-registry.md`.
-
 ## M160: PrintConfig SLA material correction registry
 Port the next SLA material correction `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7479-7505` and fields from `PrintConfig.hpp:1817-1820` into `ares-core` registry metadata, with a mechanical registry shard split to keep Rust files below 400 LOC. Defer SLA material correction/scaling behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, `material_print_speed`, and `PrintConfig.cpp:7507+` later SLA settings.
-
-Exit criteria are tracked in `docs/milestones/m160-print-config-sla-material-correction-registry.md`.
 
 ## M161: PrintConfig SLA profile identifiers registry
 Port the next SLA material/print profile identifier `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7507-7535` into `ares-core` registry metadata. Defer SLA profile-selection behavior, settings-id resolution, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, `material_print_speed`, and `PrintConfig.cpp:7537+` later SLA support settings.
 
-Exit criteria are tracked in `docs/milestones/m161-print-config-sla-profile-identifiers-registry.md`.
-
 ## M162: PrintConfig SLA support head and pillar registry
 Port the next SLA support head/pillar `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7537-7611`, enum metadata from `PrintConfig.hpp:265-269` / `PrintConfig.cpp:406-411`, and fields from `PrintConfig.hpp:1674-1696` into `ares-core` registry metadata. Defer SLA support generation, support-head geometry, pillar geometry, bridge planning, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, `material_print_speed`, and `PrintConfig.cpp:7613+` later SLA support settings.
-
-Exit criteria are tracked in `docs/milestones/m162-print-config-sla-support-head-pillar-registry.md`.
 
 ## M163: PrintConfig SLA support base and placement registry
 Port the next SLA support base/placement `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7613-7694` and fields from `PrintConfig.hpp:1698-1727` into `ares-core` registry metadata. Defer SLA support generation, support base geometry, support placement, pillar/link planning, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, `material_print_speed`, and `PrintConfig.cpp:7696+` support points/pad/later SLA settings.
 
-Exit criteria are tracked in `docs/milestones/m163-print-config-sla-support-base-placement-registry.md`.
-
 ## M164: PrintConfig SLA support points registry
 Port the next automatic SLA support-points `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7696-7710` and fields from `PrintConfig.hpp:1729-1731` into `ares-core` registry metadata. Defer automatic support-point placement, SLA support generation, support geometry, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, `material_print_speed`, and `PrintConfig.cpp:7712+` pad/later SLA settings.
-
-Exit criteria are tracked in `docs/milestones/m164-print-config-sla-support-points-registry.md`.
 
 ## M165: PrintConfig SLA pad base registry
 Port the next SLA pad/base-pool `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7712-7766` and fields from `PrintConfig.hpp:1733-1755` into `ares-core` registry metadata, with a mechanical expected-key shard split to keep Rust files below 400 LOC. Defer SLA pad generation, pad/base geometry, base-pool merging, wall slope behavior, zero-elevation pad mode, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7768+` zero-elevation pad/hollowing/material settings.
 
-Exit criteria are tracked in `docs/milestones/m165-print-config-sla-pad-base-registry.md`.
-
 ## M166: PrintConfig SLA zero-elevation pad registry
 Port the next SLA zero-elevation object-pad `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7768-7817` and fields from `PrintConfig.hpp:1757-1780` into `ares-core` registry metadata, with a mechanical registry definition shard split to keep Rust files below 400 LOC. Defer zero-elevation pad behavior, object-pad connector geometry, SLA pad generation, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7819+` hollowing/material/later SLA settings.
-
-Exit criteria are tracked in `docs/milestones/m166-print-config-sla-pad-zero-elevation-registry.md`.
 
 ## M167: PrintConfig SLA hollowing registry
 Port the next SLA hollowing `libslic3r::PrintConfigDef::init_sla_params` option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7819-7853` and fields from `PrintConfig.hpp:1791-1802` into `ares-core` registry metadata. Defer SLA hollowing runtime behavior, cavity generation, wall-thickness enforcement, drain-hole behavior, OpenVDB/voxel behavior, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7855+` material-speed/later SLA settings.
 
-Exit criteria are tracked in `docs/milestones/m167-print-config-sla-hollowing-registry.md`.
-
 ## M168: PrintConfig SLA material speed registry
 Port the final `init_sla_params` SLA material-speed option-definition slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7855-7864`, enum metadata from `PrintConfig.cpp:413-417` / `PrintConfig.hpp:1805`, and field from `PrintConfig.hpp:1821` into `ares-core` registry metadata. Defer SLA material-speed runtime behavior, SL1 export profile selection, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, G-code behavior, and `PrintConfig.cpp:7867+` legacy handling/later non-`init_sla_params` behavior.
-
-Exit criteria are tracked in `docs/milestones/m168-print-config-sla-material-speed-registry.md`.
 
 ## M169: PrintConfig legacy key aliases
 Port the first simple legacy-option normalization slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7867-7899` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:7900+` percentage-value erasure, cumulative-key renames, cooling/timelapse/support enum migrations, recursive `different_settings_to_system` normalization, later legacy handling, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m169-print-config-legacy-key-aliases.md`.
-
 ## M170: PrintConfig legacy simple value migrations
 Port the next simple legacy-option normalization slice from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7900-7932` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:7933+` recursive `different_settings_to_system`, overhang-fan threshold migration, wall sequence migration, nozzle/extruder variant value replacements, power-loss recovery enum migration, shell-thickness migration, later aliases/value migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m170-print-config-legacy-simple-value-migrations.md`.
 
 ## M171: PrintConfig legacy different-settings key-list normalization
 Port the `different_settings_to_system` recursive key-list normalization branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7933-7943` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:7944+` overhang-fan threshold migration, wall sequence migration, nozzle/extruder variant value replacements, power-loss recovery enum migration, shell-thickness migration, later aliases/value migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m171-print-config-legacy-different-settings-key-list.md`.
-
 ## M172: PrintConfig legacy wall sequence migrations
 Port the `overhang_fan_threshold` and `wall_infill_order` legacy normalization branches from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7944-7958` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:7959+` nozzle/extruder variant value replacements, extruder type migration, power-loss recovery enum migration, shell-thickness migration, later aliases/value migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m172-print-config-legacy-wall-sequence-migrations.md`.
 
 ## M173: PrintConfig legacy extruder variant values
 Port the nozzle/extruder variant string replacement and `extruder_type` legacy normalization branches from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7959-7970` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:7971+` power-loss recovery enum migration, shell-thickness migration, rotate solid infill migration, later aliases/value migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m173-print-config-legacy-extruder-variant-values.md`.
-
 ## M174: PrintConfig legacy recovery shell rotation migrations
 Port the `enable_power_loss_recovery`, `ensure_vertical_shell_thickness`, and `rotate_solid_infill_direction` legacy normalization branches from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7971-7991` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:7992+` infill-anchor aliases, chamber/thumbnail aliases, top-one-wall migration, ironing aliases/value migration, pattern migrations, filament migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m174-print-config-legacy-recovery-shell-rotation.md`.
 
 ## M175: PrintConfig legacy alias and top-wall migrations
 Port the next legacy alias and conditional top-wall branches from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:7992-8004` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8005+` `ironing_direction` alias, negative `ironing_angle` migration, counterbore spelling alias, draft-shield value migration, pattern migrations, filament migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m175-print-config-legacy-alias-top-wall.md`.
-
 ## M176: PrintConfig legacy ironing and draft-shield migrations
 Port the `ironing_direction`, negative `ironing_angle`, `counterbole_hole_bridging`, and `draft_shield` legacy branches from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8005-8012` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8013+` pattern migrations, filament migrations, prime-tower rib migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m176-print-config-legacy-ironing-draft-shield.md`.
 
 ## M177: PrintConfig legacy pattern migrations
 Port the six-key `zig-zag` to `rectilinear` legacy pattern branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8013-8019` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8020+` filament map/type migrations, prime-tower rib migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m177-print-config-legacy-pattern-migrations.md`.
-
 ## M178: PrintConfig legacy filament migrations
 Port the `filament_map_mode` and `filament_type` legacy branches from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8020-8045` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8046+` prime-tower rib migrations, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m178-print-config-legacy-filament-migrations.md`.
 
 ## M179: PrintConfig legacy prime-tower rib and hardware migrations
 Port the prime-tower rib aliases, `extruder_clearance_max_radius`, `machine_switch_extruder_time`, and `wall_direction` legacy branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8046-8067` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8069+` obsolete-key ignore handling, final key validation, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m179-print-config-legacy-prime-tower-rib-hardware.md`.
-
 ## M180: PrintConfig legacy obsolete-key ignore list
 Port the obsolete configuration key ignore set from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8069-8091` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8093+` final key validation, composite legacy handling, typed accessors, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m180-print-config-legacy-obsolete-key-ignore.md`.
 
 ## M181: PrintConfig legacy thumbnail composite normalization
 Port the thumbnail composite normalization branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8099-8130` plus `OrcaSlicer/src/libslic3r/GCode/Thumbnails.cpp:530-578` parser behavior into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8093-8096` final key validation until the registry can safely validate all Orca options, and defer `PrintConfig.cpp:8132+` wiping-volume matrix handling, thumbnail rendering, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m181-print-config-legacy-thumbnail-composite.md`.
-
 ## M182: PrintConfig legacy wiping-volumes matrix composite
 Port the wiping-volumes matrix composite inference branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8132-8150` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8093-8096` final key validation until the registry can safely validate all Orca options, and defer typed purge-volume behavior, prime tower behavior, UI/runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m182-print-config-legacy-wiping-volumes-composite.md`.
 
 ## M183: GCodeThumbnails definition parser API
 Port the rendering-neutral thumbnail definition parser boundary from `OrcaSlicer/src/libslic3r/GCode/Thumbnails.hpp:16-41`, `OrcaSlicer/src/libslic3r/GCode/Thumbnails.cpp:530-604`, `PrintConfig.hpp:397-399`, and `PrintConfig.cpp:542-549` into `ares-core` as a reusable API for option ingestion and future UI/adapter consumers. Defer compression, image generation, file/G-code export, UI runtime behavior, slicing behavior, extrusion behavior, and G-code writer behavior.
 
-Exit criteria are tracked in `docs/milestones/m183-gcode-thumbnails-definition-parser-api.md`.
-
 ## M184: PrintConfig variant option key sets
 Port the global variant-related `std::set<std::string>` option key sets from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8154-8287` into `ares-core` as read-only registry API data for future UI/API consumers and later source-cited variant-expansion milestones. Defer commented-out candidate keys, variant expansion/lookup behavior, silent-mode behavior, extruder-count expansion, filament override behavior, typed accessors, option parsing behavior, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m184-print-config-variant-option-sets.md`.
 
 ## M185: PrintConfig min object distance API
 Port `min_object_distance(const ConfigBase&)` from `OrcaSlicer/src/libslic3r/PrintConfig.hpp:602-603` and `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8305-8329` into `ares-core` as `SliceOptions::min_object_distance()` for future UI/arrange consumers. Defer object arrangement/placement algorithms, `PrintConfig.cpp:8332+` normalization/runtime behavior, variant expansion, silent-mode behavior, option parsing changes outside this API, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m185-print-config-min-object-distance-api.md`.
-
 ## M186: PrintConfig normalize_fdm extruder role propagation
 Port the first `DynamicPrintConfig::normalize_fdm` branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8332-8353` into `ares-core` as the initial explicit `SliceOptions::normalize_fdm(used_filaments)` API behavior. Defer commented-out support propagation, `PrintConfig.cpp:8355+` spiral-mode, resolution, prime-tower and later normalization branches, automatic deserialization normalization, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m186-print-config-normalize-fdm-extruder-roles.md`.
 
 ## M187: PrintConfig normalize_fdm spiral mode normalization
 Port the `spiral_mode` branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8355-8369` into the existing explicit `SliceOptions::normalize_fdm(used_filaments)` API. Defer `PrintConfig.cpp:8372+` resolution, prime-tower and later normalization branches, CLI spiral validation, automatic deserialization normalization, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m187-print-config-normalize-fdm-spiral-mode.md`.
-
 ## M188: PrintConfig normalize_fdm resolution clamp
 Port the optional `resolution` lower-bound clamp from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8372-8374` into the existing explicit `SliceOptions::normalize_fdm(used_filaments)` API. Defer `PrintConfig.cpp:8376+` prime-tower and later normalization branches, automatic deserialization normalization, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m188-print-config-normalize-fdm-resolution-clamp.md`.
 
 ## M189: PrintConfig normalize_fdm prime tower normalization
 Port the prime-tower normalization branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8376-8401` into the existing explicit `SliceOptions::normalize_fdm(used_filaments)` API. Defer commented-out adaptive-layer-height handling, commented-out independent-support-height re-enable behavior, `PrintConfig.cpp:8403+` split/duplicate normalization branches, automatic deserialization normalization, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m189-print-config-normalize-fdm-prime-tower.md`.
-
 ## M190: PrintConfig normalize_fdm_2 prime tower changed keys
 Port the changed-key-returning prime-tower normalization branch from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8452-8505` and declaration context from `PrintConfig.hpp:628-631` into `ares-core` as an explicit `SliceOptions::normalize_fdm_2(num_objects, used_filaments)` API for future UI/API consumers. Defer `normalize_fdm_1`, commented-out adaptive-layer-height handling, commented-out independent-support re-enable behavior, automatic `Print::Apply` integration, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m190-print-config-normalize-fdm-2-prime-tower.md`.
 
 ## M191: PrintConfig handle_legacy_sla correction expansion
 Port the SLA legacy correction-vector expansion from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8507-8527`, declaration context from `PrintConfig.hpp:693`, and call-site context from `Preset.cpp:486` / `Model.cpp:456` into `ares-core` `SliceOptions` ingestion. Defer `PrintConfig.cpp:8529+` parameter sizing and extruder-variant behavior, preset/model loading machinery, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m191-print-config-handle-legacy-sla-corrections.md`.
-
 ## M192: PrintConfig get_parameter_size API
 Port `DynamicPrintConfig::get_parameter_size` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8529-8556`, declaration context from `PrintConfig.hpp:633`, and already-ported M184 variant key-set context into `ares-core` as read-only `SliceOptions::parameter_size(param_name, extruder_nums)` for UI/config consumers. Defer `PrintConfig.cpp:8558+` extruder-variant extension, `set_num_extruders`, `set_num_filaments`, vector resizing, `FullPrintConfig::defaults`, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m192-print-config-parameter-size-api.md`.
 
 ## M193: PrintConfig extend_extruder_variant API
 Port `extend_extruder_variant` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8558-8591`, call-site context from `PrintConfig.cpp:8593-8596`, option-definition anchors from `PrintConfig.cpp:5239-5264`, and declaration context from `PrintConfig.hpp:634` into `ares-core` as explicit `SliceOptions::extend_extruder_variant(num_extruders)`. Defer `PrintConfig.cpp:8597+` generic option-vector resizing, `set_num_filaments`, validation, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m193-print-config-extend-extruder-variant-api.md`.
-
 ## M194: PrintConfig set_num_extruders vector resizing API
 Port `DynamicPrintConfig::set_num_extruders` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8593-8610`, using already-ported M193 `extend_extruder_variant`, already-ported M192 `get_parameter_size`, M184 `extruder_option_keys`, `Config.hpp:635-663` vector resize semantics, and `Config.cpp:295-315` default creation context into `ares-core` as explicit `SliceOptions::set_num_extruders(num_extruders)`. Defer `set_num_filaments`, validation, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m194-print-config-set-num-extruders-resize-api.md`.
 
 ## M195: PrintConfig set_num_filaments vector resizing API
 Port `DynamicPrintConfig::set_num_filaments` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8612-8627`, using M184 `filament_option_keys`, `Config.hpp:635-663` vector resize semantics, and `Config.cpp:295-315` default creation context into `ares-core` as explicit `SliceOptions::set_num_filaments(num_filaments)`. Defer validation, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m195-print-config-set-num-filaments-resize-api.md`.
-
 ## M196: PrintConfig validate basic dimension and count checks
 Port the initial validation checks from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10088-10128`, plus `libslic3r.h:60` scaling-factor context, into `ares-core` as explicit `SliceOptions::validate_basic_fdm_options()`. Defer full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, `PrintConfig.cpp:10131+` validation checks, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m196-print-config-validate-basic-dimensions.md`.
 
 ## M197: PrintConfig validate firmware retraction compatibility
 Port the firmware-retraction validation checks from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10131-10145`, plus `PrintConfig.cpp:161-176` and `PrintConfig.hpp:33-46` G-code flavor mapping context, into `ares-core` as explicit `SliceOptions::validate_firmware_retraction_options()`. Defer `PrintConfig.cpp:10147-10150` `gcode_flavor` enum validation, `PrintConfig.cpp:10152+` validation checks, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m197-print-config-validate-firmware-retraction.md`.
-
 ## M198: PrintConfig validate gcode flavor enum value
 Port the `gcode_flavor` enum validation check from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10147-10150`, plus `PrintConfig.cpp:3785-3817` / `PrintConfig.hpp:1355` active option enum-value context and `PrintConfig.cpp:161-176` / `PrintConfig.hpp:33-46` serialization mapping context, into `ares-core` as explicit `SliceOptions::validate_gcode_flavor_option()`. Defer `PrintConfig.cpp:10152+` validation checks, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m198-print-config-validate-gcode-flavor-enum.md`.
 
 ## M199: PrintConfig validate infill pattern enum values
 Port the infill-pattern enum validation checks from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10152-10170`, plus `PrintConfig.cpp:1986-2025` top/bottom/internal solid pattern option enum-value context, `PrintConfig.cpp:2928-2985` sparse infill pattern option enum-value context, and `PrintConfig.cpp:225-255` / `PrintConfig.hpp:87-98` `InfillPattern` serialization context, into `ares-core` as explicit `SliceOptions::validate_infill_pattern_options()`. Defer `PrintConfig.cpp:10172+` validation checks, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m199-print-config-validate-infill-pattern-enums.md`.
-
 ## M200: PrintConfig validate skirt height and bridge flow ratios
 Port the skirt-height and bridge-flow validation checks from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10172-10185`, plus `PrintConfig.cpp:1266-1284` / `PrintConfig.hpp:1083-1084` bridge-flow option context and `PrintConfig.cpp:5559-5565` / `PrintConfig.hpp:1553` skirt-height option context, into `ares-core` as explicit `SliceOptions::validate_skirt_and_bridge_flow_options()`. Preserve the upstream source behavior where the `internal_bridge_flow` error is also guarded by `cfg.bridge_flow <= 0`. Defer `PrintConfig.cpp:10187+` validation checks, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m200-print-config-validate-skirt-and-bridge-flow.md`.
 
 ## M201: PrintConfig validate extruder clearance dimensions
 Port the extruder-clearance validation checks from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10187-10198`, plus `PrintConfig.cpp:2127-2160` and `PrintConfig.hpp:1513-1516` option-definition/default context, into `ares-core` as explicit `SliceOptions::validate_extruder_clearance_options()`. Defer `PrintConfig.cpp:10200+` validation checks, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m201-print-config-validate-extruder-clearance.md`.
-
 ## M202: PrintConfig validate filament flow ratio
 Port the filament-flow-ratio validation check from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10200-10205`, plus `PrintConfig.cpp:2227-2237` / `PrintConfig.hpp:1301` option-definition/default context, into `ares-core` as explicit `SliceOptions::validate_filament_flow_ratio_options()`. Preserve existing Ares numeric-vector serialization for `invalid value {serialized_vector}` messages and split the growing validation implementation before adding new logic so modified Rust files remain under 400 LOC. Defer `PrintConfig.cpp:10207+` validation checks, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m202-print-config-validate-filament-flow-ratio.md`.
 
 ## M203: PrintConfig validate spiral vase CLI constraints
 Port the CLI-only spiral-vase validation block from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10207-10235`, plus `PrintConfig.cpp:2881-2889`, `4918-4924`, `5678-5684`, `5903-5908`, `6013-6025`, `6564-6573` and `PrintConfig.hpp:948`, `958`, `1101`, `1158`, `1167`, `1560` option-definition/default and field-type context, into `ares-core` as explicit `SliceOptions::validate_spiral_vase_cli_options()`. Preserve the upstream `cfg.spiral_mode && under_cli` scope and exact constrained-key predicates for `wall_loops`, `sparse_infill_density`, `top_shell_layers`, `enable_support`, and `enforce_support_layers`. Defer non-CLI popup correction behavior, `PrintConfig.cpp:10237+` validation checks, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m203-print-config-validate-spiral-vase-cli.md`.
-
 ## M204: PrintConfig validate extrusion width limit
 Port the extrusion-width upper-limit validation block from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10237-10261`, plus `libslic3r.h:68`, `Config.hpp:1259-1285`, `Config.cpp:690-743`, `Config.cpp:745-753`, `PrintConfig.cpp:2027-2037`, `3251-3261`, `3944-3962`, `4016-4026`, `4896-4906`, `5657-5667`, `6043-6053`, `6543-6553` and `PrintConfig.hpp:960`, `1093`, `1122`, `1130`, `1131`, `1155`, `1162`, `1166`, `1527` multiplier, FloatOrPercent, no-argument message-value lookup, option-definition/default, and field-type context, into `ares-core` as explicit `SliceOptions::validate_extrusion_width_options()`. Preserve the source `max_nozzle_diameter` computation, nine-key width list, strict `> 5 * max_nozzle_diameter` predicate, no-argument `cfg.get_abs_value(key)` message-value path where well-defined, and the documented explicit-base message deviation for percent line-width values affected by the upstream `XXX_extrusion_width` no-argument lookup FIXME. Defer `PrintConfig.cpp:10263+` generic out-of-range validation, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m204-print-config-validate-extrusion-width-limit.md`.
 
 ## M205: PrintConfig validate line-width numeric ranges
 Port the first bounded line-width slice of the generic numeric out-of-range validation loop from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10263-10294`, plus `Config.cpp:321-338`, `Config.hpp:2476-2481`, `Config.hpp:1259-1299`, `PrintConfig.cpp:2027-2037`, `2322-2332`, `3251-3261`, `4016-4026`, `4896-4906`, `5657-5667`, `6043-6053`, `6543-6553` and `PrintConfig.hpp:960`, `1093`, `1122`, `1155`, `1162`, `1166`, `1527` predicate, FloatOrPercent, option min/max/default, and field-type context, into `ares-core` as explicit `SliceOptions::validate_line_width_range_options()`. Preserve the upstream raw-value `coFloatOrPercent` range predicate, including the source 1e-4 approximate min/max boundary acceptance and source-style range message for `line_width` and the finite-max M204 line-width keys. Defer min-only `skin_infill_line_width` and `skeleton_infill_line_width`. Defer all other numeric keys/types in the generic range loop, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m205-print-config-validate-line-width-ranges.md`.
-
 ## M206: PrintConfig validate min-only line-width numeric ranges
 Port the two min-only line-width options deferred from M205 in the generic numeric out-of-range validation loop from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10263-10294`, plus `Config.cpp:321-338`, `Config.hpp:2476-2481`, `Config.hpp:1259-1299`, `PrintConfig.cpp:3944-3962`, and `PrintConfig.hpp:1130-1131` predicate, default `FLT_MAX` max, FloatOrPercent, option min/default, and field-type context, into the existing `ares-core` `SliceOptions::validate_line_width_range_options()` API. Preserve the upstream raw-value `coFloatOrPercent` range predicate, including source 1e-4 approximate min/max boundary acceptance and source-style range messages for `skin_infill_line_width` and `skeleton_infill_line_width` with range `[0,FLT_MAX]`. Defer all other numeric keys/types in the generic range loop, full `DynamicPrintConfig::validate` dispatch, `FullPrintConfig` materialization, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m206-print-config-validate-min-only-line-width-ranges.md`.
 
 ## M207: PrintConfig validate FFF aggregate API
 Port the source-order aggregation behavior of OrcaSlicer's FFF validation function from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10088-10308` into `ares-core` as `SliceOptions::validate_fff_options(under_cli)`, composing the already ported M196-M206 validation slices in source order. Preserve C++ `std::map::emplace` first-write-wins duplicate-key behavior, call the existing spiral-vase CLI slice only when aggregate `under_cli` is true, and preserve extrusion-width-before-generic-range same-key suppression. Defer `DynamicPrintConfig::validate` printer-technology dispatch, `FullPrintConfig` materialization, SLA/non-FFF behavior, unported generic numeric keys/types, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m207-print-config-validate-fff-aggregate-api.md`.
-
 ## M208: DynamicPrintConfig validate printer-technology dispatch
 Port the printer-technology dispatch shell from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8629-8647`, plus `PrintConfig.hpp:641`, `PrintConfig.cpp:131-135`, and `PrintConfig.cpp:676-682` declaration, enum mapping, and default/option-definition context, into `ares-core` as `SliceOptions::validate_print_config(under_cli)`. Preserve absent `printer_technology` defaulting to FFF, FFF dispatch to the existing M207 `validate_fff_options(under_cli)`, and non-FFF/SLA empty-map behavior. Defer `FullPrintConfig fpc; fpc.apply(*this, true)`, typed C++ enum storage/deserialization, future SLA validation, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m208-print-config-dynamic-validate-dispatch.md`.
 
 ## Support Z-distance runtime status
 Ares now parses and consumes `support_top_z_distance`, `support_bottom_z_distance`, and `enforce_support_layers` as crate-internal runtime state before support print-path finalization rewrites. This slice is source-cited to `OrcaSlicer/src/libslic3r/PrintConfig.hpp:956-958`, `OrcaSlicer/src/libslic3r/PrintConfig.cpp:5981-6025`, and the `zero_topZ_contact` derivation in `OrcaSlicer/src/libslic3r/Slicing.cpp:81-120`; `SupportZDistanceOptions::zero_top_contact()` is the Rust state mapping for that upstream predicate. Ares enforces finite/range checks at the input boundary according to the Orca option-definition limits, including `enforce_support_layers` in `0..=5000`.
@@ -4272,673 +3858,409 @@ This milestone does not change support geometry. Contact-layer topology, support
 ## M209: DynamicPrintConfig filament type display API
 Port the UI-facing support-filament display mapping from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8649-8714`, plus `PrintConfig.hpp:657`, `Config.hpp:624-630`, `Config.hpp:1886-1892`, `PrintConfig.cpp:2784-2797`, `PrintConfig.cpp:2812-2816`, and `PrintConfig.hpp:1322`, `1327` declaration, vector `get_at`, and filament option context, into `ares-core` as `SliceOptions::filament_type_display(id)`. Preserve source returned/displayed value distinctions, support IDs `GFS00`/`GFS01`, PLA/PA support fallbacks, and first-value vector fallback. Defer `PrintConfig.cpp:8716+`, plural `filament_ids` profile behavior, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m209-print-config-filament-type-display-api.md`.
-
 ## M210: DynamicPrintConfig different extruders API
 Port the different-extruder detection helper from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8716-8742`, plus `PrintConfig.hpp:660`, `Config.hpp:624-630`, `PrintConfig.hpp:412-421`, `PrintConfig.cpp:565-575`, `PrintConfig.cpp:5202-5225`, and `PrintConfig.hpp:1408-1409` declaration, vector `get_at`, enum serialization, and option context, into `ares-core` as `SliceOptions::is_using_different_extruders()`. Preserve source behavior where missing or single `nozzle_diameter` returns false, missing enum vectors return false, later `extruder_type` or `nozzle_volume_type` differences return true, and enum vectors use first-value fallback. Defer `PrintConfig.cpp:8744+`, `support_different_extruders`, `get_index_for_extruder`, variant lookup, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m210-print-config-different-extruders-api.md`.
 
 ## M211: DynamicPrintConfig support different extruders API
 Port the support-different-extruders helper from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8744-8766`, plus `PrintConfig.hpp:661`, `Config.hpp:624-630`, `PrintConfig.cpp:5239-5244`, and existing `nozzle_diameter` option context, into `ares-core` as `SliceOptions::support_different_extruders()`. Preserve source behavior where the resolved nozzle vector length becomes the returned extruder count, missing `extruder_variant_list` returns false, variant strings are split with source comma/token-compress semantics, unique variant tokens across nozzle-indexed `extruder_variant_list.get_at(index)` values determine support, and variant vectors use first-value fallback. Defer `PrintConfig.cpp:8768+`, `get_index_for_extruder`, generated variant IDs, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m211-print-config-support-different-extruders-api.md`.
-
 ## M212: DynamicPrintConfig get_index_for_extruder no-id lookup
 Port the no-id-map branch of `DynamicPrintConfig::get_index_for_extruder` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8768-8818`, plus `PrintConfig.hpp:662`, `PrintConfig.cpp:586-604`, `PrintConfig.hpp:412-421`, `PrintConfig.cpp:565-575`, `Config.hpp:624-630`, `PrintConfig.cpp:5252-5264`, `PrintConfig.cpp:5272-5284`, and `PrintConfig.cpp:5292-5304` declaration, variant-string, enum-map, vector `get_at`, and printer/print/filament ID option context, into `ares-core` as `SliceOptions::get_index_for_extruder_no_id(...)`. Preserve source missing-option `-1`, source-order first-match lookup, `index * stride` return including zero stride, and no-match `-1`. Defer the `id_opt` branch, generated extruder IDs, `extruder_variant_list` generated ID lookup, `extruder_or_filament_id` matching, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m212-print-config-get-index-for-extruder-no-id.md`.
 
 ## M213: DynamicPrintConfig get_index_for_extruder complete-id lookup
 Port the complete-ID-map branch of `DynamicPrintConfig::get_index_for_extruder` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8768-8818`, plus `PrintConfig.hpp:662`, `PrintConfig.cpp:586-604`, `PrintConfig.hpp:412-421`, `PrintConfig.cpp:565-575`, `Config.hpp:624-630`, `PrintConfig.cpp:5252-5264`, `PrintConfig.cpp:5272-5284`, and `PrintConfig.cpp:5292-5304` declaration, variant-string, enum-map, vector `get_at`, and printer/print/filament ID option context, into `ares-core` as `SliceOptions::get_index_for_extruder_complete_id_map(ExtruderIndexIdMapLookup { ... })`. Preserve source missing-variant-option `-1`, source-order first variant+ID match, `index * stride` return including zero stride, and no-match `-1`. Defer incomplete-ID generated extruder IDs, `extruder_variant_list` generated ID lookup, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m213-print-config-get-index-for-extruder-complete-id-map.md`.
-
 ## M214: DynamicPrintConfig get_index_for_extruder generated-ID lookup
 Port the incomplete-ID generated-extruder-ID branch of `DynamicPrintConfig::get_index_for_extruder` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8768-8818`, plus `PrintConfig.hpp:662`, `PrintConfig.cpp:586-604`, `PrintConfig.hpp:412-421`, `PrintConfig.cpp:565-575`, `Config.hpp:624-630`, `PrintConfig.cpp:5239-5244`, `PrintConfig.cpp:5252-5264`, `PrintConfig.cpp:5272-5284`, and `PrintConfig.cpp:5292-5304` declaration, variant-string, enum-map, vector `get_at`, `extruder_variant_list`, and representative option context, into `ares-core` as `SliceOptions::get_index_for_extruder_generated_id_map(ExtruderIndexIdMapLookup { ... })`. Preserve source missing-variant-option `-1`, source generated ID `0` when `extruder_variant_list` is absent or target index is beyond non-empty trimmed tokens, generated ID `extruder_index + 1` from comma-split/trimmed/non-empty variant-token order, source-order first variant+generated-ID match, `index * stride` return including zero stride, and no-match `-1`. Defer preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m214-print-config-get-index-for-extruder-generated-id.md`.
 
 ## M215: DynamicPrintConfig update_values_from_single_to_multi string/int copy
 Port the `coStrings` and `coInts` copy branches of `DynamicPrintConfig::update_values_from_single_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8824-8865`, plus `PrintConfig.hpp:670`, `PrintConfig.cpp:8826-8831`, `PrintConfig.cpp:8833-8843`, `PrintConfig.cpp:5252-5264`, `PrintConfig.cpp:5272-5284`, and `PrintConfig.cpp:5292-5304` declaration, missing-variant guard, option-definition lookup, and representative option context, into `ares-core` as `SliceOptions::update_values_from_single_to_multi_string_int_keys(...)`. Preserve source missing-variant `-1`, source-equivalent sorted/unique key processing, unknown-key skip, missing-source skip, and full string/int vector copy for supported source keys. Defer float, FloatOrPercent, bool resize branches, `update_values_from_multi_to_multi`, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m215-print-config-update-single-to-multi-string-int.md`.
-
 ## M216: DynamicPrintConfig update_values_from_single_to_multi float limit
 Port the `coFloats` resize-and-limit branch of `DynamicPrintConfig::update_values_from_single_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8824-8880`, plus `PrintConfig.hpp:670`, `PrintConfig.cpp:8826-8831`, `PrintConfig.cpp:8833-8843`, `PrintConfig.cpp:8866-8880`, `Config.hpp:635-662`, `Config.hpp:812-870`, and `PrintConfig.cpp:766-773`, `2349-2357`, `4591-4599` declaration, guard, option-definition lookup, float-vector branch, vector resize, and representative option context, into `ares-core` by extending the single-to-multi update helper with `OptionValueKind::Floats` behavior. Preserve source missing-variant `-1`, source-equivalent sorted/unique key processing, unknown-key skip, missing-source skip, target resize by truncating or duplicating the first/default value, and per-index target-value limiting only when the target is greater than the source. Defer FloatOrPercent, bool resize branches, `update_values_from_multi_to_multi`, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m216-print-config-update-single-to-multi-float-limit.md`.
 
 ## M217: DynamicPrintConfig update_values_from_single_to_multi FloatOrPercent limit
 Port the `coFloatsOrPercents` resize-and-limit branch of `DynamicPrintConfig::update_values_from_single_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8824-8896`, plus `PrintConfig.hpp:670`, `PrintConfig.cpp:8826-8831`, `PrintConfig.cpp:8833-8843`, `PrintConfig.cpp:8881-8896`, `Config.hpp:31-39`, `Config.hpp:635-662`, `Config.hpp:1318-1448`, and `PrintConfig.cpp:2027-2037`, `2322-2332`, `3104-3112` declaration, guard, option-definition lookup, FloatOrPercent branch, value/percent data shape, vector resize, parse/serialize, and representative option context, into `ares-core` by extending the single-to-multi update helper with `OptionValueKind::FloatOrPercent` behavior. Preserve source missing-variant `-1`, source-equivalent sorted/unique key processing, unknown-key skip, missing-source skip, target resize by truncating or duplicating the first/default value, and per-index target-value limiting only when the target numeric value is greater than the source numeric value while copying/preserving the complete percent flag. Defer bool resize branch, `update_values_from_multi_to_multi`, preset/model loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m217-print-config-update-single-to-multi-float-or-percent-limit.md`.
-
 ## M218: DynamicPrintConfig update_values_from_single_to_multi bool resize
 Port the `coBools` resize-only branch of `DynamicPrintConfig::update_values_from_single_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8824-8908`, plus `PrintConfig.hpp:670`, `PrintConfig.cpp:8826-8831`, `PrintConfig.cpp:8833-8843`, `PrintConfig.cpp:8897-8908`, `Config.hpp:635-662`, and representative bool option context from `PrintConfig.cpp:1800-1804`, `2252-2255`, `2812-2816`, and `6628-6633`, into `ares-core` by extending the single-to-multi update helper with `OptionValueKind::Bools` behavior. Preserve source missing-variant `-1`, source-equivalent sorted/unique key processing, unknown-key skip, missing-source skip, source bool-vector length assertion as an Ares `InvalidInput`, target resize by truncating or duplicating the first/default value, and the source branch's resize-only behavior where source bool values are not copied after resize. Defer `update_values_from_multi_to_multi`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m218-print-config-update-single-to-multi-bool-resize.md`.
 
 ## M219: DynamicPrintConfig update_values_from_multi_to_multi string/int copy
 Port the guard, variant-index preparation, and `coStrings`/`coInts` copy branches of `DynamicPrintConfig::update_values_from_multi_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8982-9064`, plus `PrintConfig.hpp:671`, `PrintConfig.cpp:8984-9017`, `PrintConfig.cpp:8988-8993`, `PrintConfig.cpp:9019-9031`, and representative string/int option context from `PrintConfig.cpp:5252-5264`, `5272-5284`, and `5292-5304`, into `ares-core` as `SliceOptions::update_values_from_multi_to_multi_string_int_keys(...)`. Preserve source missing current/new variant or new id `-1`, source-equivalent same-variant and new-variant-index preparation, sorted/unique key processing, unknown-key skip, missing-source skip, and full string/int vector copy for supported new-config source keys. Defer float, FloatOrPercent, and bool old-value merge branches, `update_values_from_multi_to_multi_2`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m219-print-config-update-multi-to-multi-string-int.md`.
-
 ## M220: DynamicPrintConfig update_values_from_multi_to_multi float merge
 Port the `coFloats` old-value merge branch of `DynamicPrintConfig::update_values_from_multi_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8982-9093`, plus `PrintConfig.hpp:671`, `PrintConfig.cpp:8984-9017`, `PrintConfig.cpp:8988-8993`, `PrintConfig.cpp:9019-9031`, existing string/int branch context from `PrintConfig.cpp:9032-9064`, `PrintConfig.cpp:9065-9093`, `Config.hpp:635-662`, and representative float option context from `PrintConfig.cpp:766-773`, `2349-2357`, and `4591-4599`, into `ares-core` by extending the multi-to-multi update helper with `OptionValueKind::Floats` behavior. Preserve source missing current/new variant or new id `-1`, source-equivalent same-variant and new-variant-index preparation, sorted/unique key processing, unknown-key skip, missing-source skip, full source float vector copy, and lower old same-variant value preservation at matching new variant indices. Defer FloatOrPercent and bool old-value merge branches, `update_values_from_multi_to_multi_2`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m220-print-config-update-multi-to-multi-float-merge.md`.
 
 ## M221: DynamicPrintConfig update_values_from_multi_to_multi FloatOrPercent merge
 Port the `coFloatsOrPercents` old-value merge branch of `DynamicPrintConfig::update_values_from_multi_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8982-9123`, plus `PrintConfig.hpp:671`, `PrintConfig.cpp:8984-9017`, `PrintConfig.cpp:8988-8993`, `PrintConfig.cpp:9019-9031`, existing string/int/float branch context from `PrintConfig.cpp:9032-9093`, `PrintConfig.cpp:9095-9123`, `Config.hpp:31-42`, `Config.hpp:1318-1448`, and representative FloatOrPercent option context from `PrintConfig.cpp:2027-2037`, `2322-2332`, and `3104-3112`, into `ares-core` by extending the multi-to-multi update helper with `OptionValueKind::FloatOrPercent` behavior. Preserve source missing current/new variant or new id `-1`, source-equivalent same-variant and new-variant-index preparation, sorted/unique key processing, unknown-key skip, missing-source skip, full source FloatOrPercent vector copy, and lower old same-variant numeric value preservation at matching new variant indices while preserving the selected value's percent flag. Defer bool old-value merge branch, `update_values_from_multi_to_multi_2`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m221-print-config-update-multi-to-multi-float-or-percent-merge.md`.
-
 ## M222: DynamicPrintConfig update_values_from_multi_to_multi bool merge
 Port the `coBools` old-value merge branch of `DynamicPrintConfig::update_values_from_multi_to_multi` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:8982-9155`, plus `PrintConfig.hpp:671`, `PrintConfig.cpp:8984-9017`, `PrintConfig.cpp:8988-8993`, `PrintConfig.cpp:9019-9031`, existing string/int/float/FloatOrPercent branch context from `PrintConfig.cpp:9032-9123`, `PrintConfig.cpp:9125-9155`, `Config.hpp:635-662`, and representative bool option context from `PrintConfig.cpp:1800-1804`, `2252-2255`, `2812-2816`, and `6628-6633`, into `ares-core` by extending the multi-to-multi update helper with `OptionValueKind::Bools` behavior. Preserve source missing current/new variant or new id `-1`, source-equivalent same-variant and new-variant-index preparation, sorted/unique key processing, unknown-key skip, missing-source skip, full source bool vector copy, and old same-variant true-value preservation at matching new variant indices. Defer `update_values_from_multi_to_multi_2`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m222-print-config-update-multi-to-multi-bool-merge.md`.
 
 ## M223: DynamicPrintConfig update_values_from_multi_to_multi_2 float nullable merge
 Port the first `coFloats` nullable branch of `DynamicPrintConfig::update_values_from_multi_to_multi_2` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9165-9221`, plus `PrintConfig.hpp:676`, `PrintConfig.cpp:9172-9190`, `PrintConfig.cpp:9191-9197`, `PrintConfig.cpp:9199-9221`, and nullable float nil semantics from `Config.hpp:837-838` and `Config.hpp:952`, into `ares-core` as a source/destination variant remap helper for float and nullable-float option vectors. Preserve source iteration over keys present in `self`, key-set filtering, same-variant index lookup without all-source fallback, destination-config baseline copy, missing destination key rejection, nil source skip, and minimum non-nil source value overwrite. Defer FloatOrPercent and bool branches, `update_values_from_multi_to_single_2`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
 
-Exit criteria are tracked in `docs/milestones/m223-print-config-update-multi-to-multi-2-float-nullable-merge.md`.
-
 ## M224: DynamicPrintConfig update_values_from_multi_to_multi_2 FloatOrPercent nullable merge
 Port the `coFloatsOrPercents` nullable branch of `DynamicPrintConfig::update_values_from_multi_to_multi_2` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9165-9246`, plus `PrintConfig.hpp:676`, `PrintConfig.cpp:9172-9197`, `PrintConfig.cpp:9223-9246`, `Config.hpp:31-42`, and nullable FloatOrPercent nil semantics from `Config.hpp:1344-1345` and `Config.hpp:1450`, into the existing `ares-core` source/destination variant remap helper. Preserve source iteration over keys present in `self`, key-set filtering, same-variant index lookup without all-source fallback, destination-config baseline copy, nil source skip, strict-`<` candidate overwrite from an initial `9999%` sentinel, equal-or-greater-than-sentinel behavior, and selected source percent-flag preservation only when a source value replaces the sentinel. Defer the bool branch, `update_values_from_multi_to_single_2`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, and G-code behavior.
-
-Exit criteria are tracked in `docs/milestones/m224-print-config-update-multi-to-multi-2-float-or-percent-nullable-merge.md`.
 
 ## M225: DynamicPrintConfig update_values_from_multi_to_multi_2 bool nullable merge
 Port the `coBools` nullable branch of `DynamicPrintConfig::update_values_from_multi_to_multi_2` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9165-9272`, plus `PrintConfig.hpp:676`, `PrintConfig.cpp:9172-9197`, `PrintConfig.cpp:9247-9272`, and nullable bool storage/nil semantics from `Config.hpp:1857-1967`, into the existing `ares-core` source/destination variant remap helper. Preserve source iteration over keys present in `self`, key-set filtering, same-variant index lookup without all-source fallback, destination-config baseline copy, nil source skip, first non-nil same-variant bool overwrite, and destination preservation when no non-nil match exists. Defer `update_values_from_multi_to_single_2`, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, G-code behavior, crate changes, and dependency changes.
 
-Exit criteria are tracked in `docs/milestones/m225-print-config-update-multi-to-multi-2-bool-nullable-merge.md`.
-
 ## M226: DynamicPrintConfig update_values_from_multi_to_single_2 float nullable collapse
 Port the first `coFloats` nullable branch of the commented `DynamicPrintConfig::update_values_from_multi_to_single_2` helper from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9286-9321`, plus `PrintConfig.hpp:673-674`, `PrintConfig.cpp:9290-9304`, `PrintConfig.cpp:9307-9325`, and nullable float nil semantics from `Config.hpp:837-838` and `Config.hpp:952`, into `ares-core` as a source-present key-set filtered helper that collapses float/nullable-float option vectors to one value. Preserve nil skip, the upstream `9999.0` strict-less sentinel minimum selection, collapse by erasing entries after index `0`, and original-first-entry preservation when no source value replaces the sentinel. Defer FloatOrPercent and bool branches, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, G-code behavior, crate changes, and dependency changes.
-
-Exit criteria are tracked in `docs/milestones/m226-print-config-update-multi-to-single-2-float-nullable-collapse.md`.
 
 ## M227: DynamicPrintConfig update_values_from_multi_to_single_2 FloatOrPercent nullable collapse
 Port the `coFloatsOrPercents` nullable branch of the commented `DynamicPrintConfig::update_values_from_multi_to_single_2` helper from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9286-9344`, plus `PrintConfig.hpp:673-674`, `PrintConfig.cpp:9290-9304`, `PrintConfig.cpp:9326-9344`, `Config.hpp:31-42`, and nullable FloatOrPercent nil semantics from `Config.hpp:1344-1345` and `Config.hpp:1450`, into the existing `ares-core` multi-to-single-2 helper. Preserve nil skip, the upstream `9999%` strict raw-value sentinel selection, selected source percent-flag preservation, collapse by erasing entries after index `0`, and original-first-entry preservation when no source value replaces the sentinel. Defer the bool branch, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, G-code behavior, crate changes, and dependency changes.
 
-Exit criteria are tracked in `docs/milestones/m227-print-config-update-multi-to-single-2-float-or-percent-nullable-collapse.md`.
-
 ## M228: DynamicPrintConfig update_values_from_multi_to_single_2 bool nullable collapse
 Port the `coBools` nullable branch of the commented `DynamicPrintConfig::update_values_from_multi_to_single_2` helper from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9286-9371`, plus `PrintConfig.hpp:673-674`, `PrintConfig.cpp:9290-9304`, `PrintConfig.cpp:9345-9363`, and nullable bool storage/nil semantics from `Config.hpp:1857-1967`, into the existing `ares-core` multi-to-single-2 helper. Preserve nil skip, first non-nil bool selection, `false` as a real selected value, collapse by erasing entries after index `0`, and original-first-entry preservation when no source bool is selected. Defer preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, G-code behavior, crate changes, and dependency changes.
-
-Exit criteria are tracked in `docs/milestones/m228-print-config-update-multi-to-single-2-bool-nullable-collapse.md`.
 
 ## M229: DynamicPrintConfig filament identity query API
 Port OrcaSlicer's zero-argument filament identity query helpers from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9373-9396`, plus declaration context from `PrintConfig.hpp:678-681`, `filament_type` option context from `PrintConfig.cpp:2784-2797` and `PrintConfig.hpp:1322`, and `filament_vendor` option context from `PrintConfig.cpp:2854-2859` and `PrintConfig.hpp:1326`, into `ares-core` as read-only `SliceOptions::filament_vendor()` and `SliceOptions::filament_type()` APIs. Preserve first-entry string-vector return behavior and empty-string fallback for absent or empty vectors. Defer `update_values_to_printer_extruders`, multiple-filament identity behavior, preset/profile loading, UI runtime behavior, slicing behavior, extrusion behavior, G-code behavior, crate changes, and dependency changes.
 
-Exit criteria are tracked in `docs/milestones/m229-print-config-filament-identity-query-api.md`.
-
 ## M230: DynamicPrintConfig update_values_to_printer_extruders string/int copy
 Port the guard, variant-index preparation, and `coStrings`/`coInts` copy branches of `DynamicPrintConfig::update_values_to_printer_extruders(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9398-9489`, plus declaration context from `PrintConfig.hpp:663`, prerequisite helper context from `PrintConfig.cpp:8744-8818`, vector `get_at` fallback semantics from `Config.hpp:624-630`, and representative string/int option context from `PrintConfig.cpp:5252-5264`, `5272-5284`, and `5292-5304`, into `ares-core` as `SliceOptions::update_values_to_printer_extruders_string_int_keys(...)`. Preserve the support-different-extruders guard, missing enum-vector skip, selected/all-extruder variant-index preparation, all-extruder negative-index fallback to zero, sorted/unique key processing, and string/int `get_at` copy semantics. Defer float, percent, FloatOrPercent, bool, enum, multiple-filament, preset/profile, UI runtime, slicing, extrusion, G-code, crate, and dependency changes.
-
-Exit criteria are tracked in `docs/milestones/m230-print-config-update-to-printer-extruders-string-int.md`.
 
 ## M231: DynamicPrintConfig update_values_to_printer_extruders float/percent copy
 Port the `coFloats` and `coPercents` copy branches of `DynamicPrintConfig::update_values_to_printer_extruders(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9491-9517`, plus setup context from `PrintConfig.cpp:9398-9462`, declaration context from `PrintConfig.hpp:663`, vector `get_at` fallback semantics from `Config.hpp:624-630`, float-vector context from `Config.hpp:812-870`, and representative float/percent option context from `PrintConfig.cpp:2227-2237`, `4591-4599`, `4651-4658`, `737-747`, and `6839-6845`, into `ares-core` by extending the existing `SliceOptions::update_values_to_printer_extruders_string_int_keys(...)` helper with float/percent copy behavior. Preserve the support-different-extruders guard, missing enum-vector skip, selected/all-extruder variant-index preparation, all-extruder negative-index fallback to zero, sorted/unique key processing, source `get_at` fallback, nullable `"nil"` preservation, finite numeric JSON copy, and no-partial-mutation behavior. Defer FloatOrPercent, bool, enum, multiple-filament, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m231-print-config-update-to-printer-extruders-float-percent.md`.
-
 ## M232: DynamicPrintConfig update_values_to_printer_extruders FloatOrPercent copy
 Port the `coFloatsOrPercents` copy branch of `DynamicPrintConfig::update_values_to_printer_extruders(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9519-9532`, plus setup context from `PrintConfig.cpp:9398-9462`, declaration context from `PrintConfig.hpp:663`, vector `get_at` fallback semantics from `Config.hpp:624-630`, FloatOrPercent storage/serialization context from `Config.hpp:31-42` and `Config.hpp:1318-1450`, and representative FloatOrPercent option context from `PrintConfig.cpp:3017-3043`, `3045-3066`, `3104-3112`, `4016-4026`, and `6936-6947`, into `ares-core` by extending the existing `SliceOptions::update_values_to_printer_extruders_string_int_keys(...)` helper with FloatOrPercent copy behavior. Preserve the support-different-extruders guard, missing enum-vector skip, selected/all-extruder variant-index preparation, all-extruder negative-index fallback to zero, sorted/unique key processing, source `get_at` fallback, absolute/percent representation, and no-partial-mutation behavior. Defer bool, enum, multiple-filament, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m232-print-config-update-to-printer-extruders-float-or-percent.md`.
 
 ## M233: DynamicPrintConfig update_values_to_printer_extruders bool copy
 Port the `coBools` copy branch of `DynamicPrintConfig::update_values_to_printer_extruders(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9534-9547`, plus setup context from `PrintConfig.cpp:9398-9462`, declaration context from `PrintConfig.hpp:663`, vector `get_at` fallback semantics from `Config.hpp:624-630`, bool vector and nullable bool context from `Config.hpp:1857-1967`, and representative bool-vector option context from `PrintConfig.cpp:1800-1804`, `2252-2255`, `2334-2338`, `5062-5066`, and `5081-5086`, into `ares-core` by extending the existing `SliceOptions::update_values_to_printer_extruders_string_int_keys(...)` helper with bool copy behavior. Preserve the support-different-extruders guard, missing enum-vector skip, selected/all-extruder variant-index preparation, all-extruder negative-index fallback to zero, sorted/unique key processing, source `get_at` fallback, nullable `"nil"` preservation for nullable bool vectors, and no-partial-mutation behavior. Defer enum, multiple-filament, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m233-print-config-update-to-printer-extruders-bool.md`.
-
 ## M234: DynamicPrintConfig update_values_to_printer_extruders enum copy
 Port the `coEnums` copy branch of `DynamicPrintConfig::update_values_to_printer_extruders(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9549-9560`, plus setup context from `PrintConfig.cpp:9398-9462`, declaration context from `PrintConfig.hpp:663`, vector `get_at` fallback semantics from `Config.hpp:624-630`, generic enum vector and nullable enum context from `Config.hpp:2101-2201`, and representative enum-vector option context from `PrintConfig.cpp:5149-5162`, `5187-5200`, `5215-5225`, `CommonDefs.hpp:12-20`, and `PrintConfig.cpp:3652-3669`, into `ares-core` by extending the existing `SliceOptions::update_values_to_printer_extruders_string_int_keys(...)` helper with enum copy behavior. Preserve the support-different-extruders guard, missing enum-vector skip, selected/all-extruder variant-index preparation, all-extruder negative-index fallback to zero, sorted/unique key processing, source `get_at` fallback, nullable `"nil"` preservation for nullable enum vectors, and no-partial-mutation behavior. Defer multiple-filament, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m234-print-config-update-to-printer-extruders-enum.md`.
 
 ## M235: DynamicPrintConfig update_values_to_printer_extruders_for_multiple_filaments string/int copy
 Port the guard, filament-map setup, per-filament variant-index preparation, and `coStrings`/`coInts` copy branches of `DynamicPrintConfig::update_values_to_printer_extruders_for_multiple_filaments(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9569-9675`, plus declaration context from `PrintConfig.hpp:664`, `filament_map` option context from `PrintConfig.cpp:2401-2405`, `filament_extruder_variant` / `filament_self_index` context from `PrintConfig.cpp:5292-5304`, vector `get_at` fallback semantics from `Config.hpp:624-630`, and lookup context from `PrintConfig.cpp:8744-8818`, into `ares-core` as a multiple-filament update helper. Preserve the support-different-extruders guard, missing-prerequisite skip behavior, `filament_map` mapped extruder lookup, per-filament `get_index_for_extruder` resolution, negative lookup fallback to matching id or zero, sorted/unique key processing, unknown/missing/unsupported key skip, default output slots for out-of-range variant indices, and no-partial-mutation behavior. Defer float, percent, FloatOrPercent, bool, enum, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m235-print-config-update-to-printer-extruders-multiple-filament-string-int.md`.
-
 ## M236: DynamicPrintConfig update_values_to_printer_extruders_for_multiple_filaments float/percent copy
 Port the `coFloats` and `coPercents` copy branches of `DynamicPrintConfig::update_values_to_printer_extruders_for_multiple_filaments(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9676-9717`, plus setup context from `PrintConfig.cpp:9569-9633`, declaration context from `PrintConfig.hpp:664`, vector `get_at` fallback semantics from `Config.hpp:624-630`, float/nullable float and percent vector context from `Config.hpp:812-1091 and Config.hpp:1204-1257`, and representative filament numeric option context from `PrintConfig.cpp:2462-2470`, `5055-5060`, and `5068-5075`, into `ares-core` by extending the existing multiple-filament update helper. Preserve M235 guard, missing-prerequisite skip behavior, `filament_map` mapped extruder lookup, per-filament variant-index preparation, negative lookup fallback, sorted/unique key processing, unknown/missing/unsupported key skip, numeric zero default output slots for out-of-range indices and empty source vectors, nullable `"nil"` preservation for nullable numeric kinds, and no-partial-mutation behavior. Defer FloatOrPercent, bool, enum, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m236-print-config-update-to-printer-extruders-multiple-filament-float-percent.md`.
 
 ## M237: DynamicPrintConfig update_values_to_printer_extruders_for_multiple_filaments FloatOrPercent copy
 Port the `coFloatsOrPercents` copy branch of `DynamicPrintConfig::update_values_to_printer_extruders_for_multiple_filaments(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9718-9738`, plus setup context from `PrintConfig.cpp:9569-9633`, declaration context from `PrintConfig.hpp:664`, vector `get_at` fallback semantics from `Config.hpp:624-630`, FloatOrPercent storage/serialization context from `Config.hpp:31-42` and `Config.hpp:1318-1450`, and representative FloatOrPercent option context from `PrintConfig.cpp:3017-3043`, `3045-3066`, `3104-3112`, `4016-4026`, and `6936-6947`, into `ares-core` by extending the existing multiple-filament update helper. Preserve M235/M236 guard, missing-prerequisite skip behavior, `filament_map` mapped extruder lookup, per-filament variant-index preparation, negative lookup fallback, sorted/unique key processing, unknown/missing/unsupported key skip, numeric zero default output slots for out-of-range indices and empty source vectors, absolute/percent representation, and no-partial-mutation behavior. Defer bool, enum, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m237-print-config-update-to-printer-extruders-multiple-filament-float-or-percent.md`.
-
 ## M238: DynamicPrintConfig update_values_to_printer_extruders_for_multiple_filaments bool copy
 Port the `coBools` copy branch of `DynamicPrintConfig::update_values_to_printer_extruders_for_multiple_filaments(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9739-9758`, plus setup context from `PrintConfig.cpp:9569-9633`, declaration context from `PrintConfig.hpp:664`, bool vector and nullable bool storage context from `Config.hpp:1857-1967`, and representative bool option context from `PrintConfig.cpp:2252-2255`, `2557-2565`, `5062-5066`, `5081-5086`, and `6628-6633`, into `ares-core` by extending the existing multiple-filament update helper. Preserve M235-M237 guard, missing-prerequisite skip behavior, `filament_map` mapped extruder lookup, per-filament variant-index preparation, negative lookup fallback, sorted/unique key processing, unknown/missing/unsupported key skip, `false` default output slots for out-of-range indices and empty source vectors, nullable `"nil"` preservation for nullable bool kinds, and no-partial-mutation behavior. Defer enum, default unsupported logging, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m238-print-config-update-to-printer-extruders-multiple-filament-bool.md`.
 
 ## M239: DynamicPrintConfig update_values_to_printer_extruders_for_multiple_filaments enum copy
 Port the `coEnums` copy branch of `DynamicPrintConfig::update_values_to_printer_extruders_for_multiple_filaments(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9760-9780`, plus setup context from `PrintConfig.cpp:9569-9633`, declaration context from `PrintConfig.hpp:664`, enum vector and nullable enum storage context from `Config.hpp:2101-2201`, and representative enum option context from `PrintConfig.cpp:5149-5162`, `5187-5200`, `5202-5213`, `5215-5225`, and `3652-3669`, into `ares-core` by extending the existing multiple-filament update helper. Preserve M235-M238 guard, missing-prerequisite skip behavior, `filament_map` mapped extruder lookup, per-filament variant-index preparation, negative lookup fallback, sorted/unique key processing, unknown/missing/unsupported key skip, empty-string default output slots for out-of-range indices and empty source vectors, nullable `"nil"` preservation for nullable enum kinds, and no-partial-mutation behavior. Defer default unsupported logging, preset/profile, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m239-print-config-update-to-printer-extruders-multiple-filament-enum.md`.
-
 ## M240: DynamicPrintConfig normalize stride-2 float vectors
 Port the anonymous-namespace `normalize_stride2_floats(...)` helper from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9789-9830`, plus downstream use context from `PrintConfig.cpp:9922-9942`, declaration context from `PrintConfig.hpp:666-668`, float vector storage context from `Config.hpp:812-870`, and machine-limit stride-2 key context from `PrintConfig.cpp:9925-9928`, into `ares-core` as an internal helper for later non-diff base-config update milestones. Preserve expected-size zero clearing, empty-vector zero filling, one-value pair creation, odd-length repair, truncation, pair replication, and odd expected-size integer-division behavior. Defer `log_normalize_legacy_vector_size`, `update_non_diff_values_to_base_config`, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m240-print-config-normalize-stride2-floats.md`.
 
 ## M241: DynamicPrintConfig non-diff base-config variant index setup
 Port the setup and `variant_index` calculation prefix of `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9844-9894`, plus declaration context from `PrintConfig.hpp:666-668`, downstream `set_with_restore` context from `PrintConfig.cpp:9918-9963`, M240 normalization context from `PrintConfig.cpp:9789-9830`, and `ConfigOptionInts` / `ConfigOptionStrings` storage context from `Config.hpp`, into `ares-core` as an internal helper for later non-diff base-config update milestones. Preserve optional id loading, variant-list loading, target-sized `-1` initialization, missing-current-variant first-target fallback, id/vector length mismatch behavior, nested variant/id matching, unmatched `-1` sentinels, and malformed vector rejection. Defer `log_normalize_legacy_vector_size`, key iteration, `different_keys`, scalar/vector branching, `set_with_restore`, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m241-print-config-non-diff-variant-index.md`.
-
 ## M242: DynamicPrintConfig non-diff base-config direct inheritance
 Port the key-loop entry and non-`different_keys` direct inheritance branch of `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9896-9904`, plus setup context from `PrintConfig.cpp:9844-9894`, declaration context from `PrintConfig.hpp:666-668`, and deferred `different_keys` handling context from `PrintConfig.cpp:9905-9964`, into `ares-core` as an internal helper for later full non-diff update assembly. Preserve ordered key iteration, source/target presence checks, equality skip, `different_keys` skip, target-value cloning, repeated-key idempotence, unknown-present JSON key copying, and unrelated-key preservation. Defer scalar `different_keys` no-op handling, vector `set_with_restore`, stride-1/stride-2 normalization, `log_normalize_legacy_vector_size`, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m242-print-config-non-diff-direct-inherit.md`.
 
 ## M243: DynamicPrintConfig non-diff different-key no-op classification
 Port the `different_keys` no-op condition of `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9905-9909`, plus direct-inheritance context from `PrintConfig.cpp:9896-9904`, declaration context from `PrintConfig.hpp:666-668`, deferred restore context from `PrintConfig.cpp:9910-9964`, and scalar/vector option context from `Config.hpp`, into `ares-core` as an internal helper for later full non-diff update assembly. Preserve scalar target no-op behavior, key-set absence no-op behavior, vector restore-needed classification for `key_set1` and `key_set2` members, unknown scalar JSON classification, unknown array JSON classification, and mutation-free operation. Defer vector `set_with_restore`, child-greater-than-parent guard, stride selection, stride-1/stride-2 normalization, `log_normalize_legacy_vector_size`, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m243-print-config-non-diff-different-key-noop.md`.
-
 ## M244: DynamicPrintConfig non-diff restore count guard
 Port the child-greater-than-parent restore guard inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9910-9916`, plus no-op predicate context from `PrintConfig.cpp:9905-9909`, deferred stride/restore context from `PrintConfig.cpp:9918-9964`, declaration context from `PrintConfig.hpp:666-668`, and variant-count setup context from `PrintConfig.cpp:9844-9864`, into `ares-core` as an internal helper for later full non-diff update assembly. Preserve strict `cur_variant_count > target_variant_count` skip behavior, equal-count no-skip behavior, fewer-current no-skip behavior, and zero-count edge cases. Defer stride selection, expected-size calculation, vector `set_with_restore`, stride-1/stride-2 normalization, `log_normalize_legacy_vector_size`, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m244-print-config-non-diff-restore-count-guard.md`.
 
 ## M245: DynamicPrintConfig non-diff restore stride and expected size
 Port the restore-branch stride selection and expected-size calculation inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9918-9923`, plus child-greater-than-parent guard context from `PrintConfig.cpp:9910-9916`, deferred stride-2 context from `PrintConfig.cpp:9925-9942`, deferred stride-1 context from `PrintConfig.cpp:9943-9963`, declaration context from `PrintConfig.hpp:666-668`, and variant-index setup context from `PrintConfig.cpp:9844-9894`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve stride 1 default behavior, stride 2 for keys in `key_set2`, `expected_size = restore_n * stride`, duplicate-membership behavior, and zero restore-count behavior. Defer stride-2 float type checks, vector normalization, vector resizing, temporary target cloning, vector `set_with_restore`, `log_normalize_legacy_vector_size`, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m245-print-config-non-diff-restore-stride-size.md`.
-
 ## M246: DynamicPrintConfig non-diff stride-2 float type check
 Port the stride-2 restore branch float-vector type check inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9925-9928`, plus stride and expected-size context from `PrintConfig.cpp:9918-9923`, deferred stride-2 restore context from `PrintConfig.cpp:9930-9942`, declaration context from `PrintConfig.hpp:666-668`, and `ConfigOptionFloats` storage context from `Config.hpp:812-870`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve rejection when either source or target is not float-vector shaped and preserve the key-bearing `ConfigOptionFloats for stride=2` error. Defer source/target cloning, size logging, vector normalization calls, vector `set_with_restore`, stride-1 restore behavior, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m246-print-config-non-diff-stride2-float-type-check.md`.
 
 ## M247: DynamicPrintConfig non-diff stride-2 size mismatch detection
 Port the stride-2 restore branch source/target size capture and mismatch predicate inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9933-9937`, plus float-vector type-check context from `PrintConfig.cpp:9925-9928`, deferred normalization and restore context from `PrintConfig.cpp:9939-9942`, logging helper context from `PrintConfig.cpp:9832-9841`, declaration context from `PrintConfig.hpp:666-668`, and `ConfigOptionFloats` storage context from `Config.hpp:812-870`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve source size, target size, and `src_size != expected_size || dest_size != expected_size` mismatch behavior. Defer `log_normalize_legacy_vector_size`, vector normalization calls, vector `set_with_restore`, stride-1 restore behavior, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m247-print-config-non-diff-stride2-size-mismatch.md`.
-
 ## M248: DynamicPrintConfig non-diff stride-2 source and target normalization
 Port the stride-2 restore branch source float access, target temporary float copy, and paired normalization calls inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9930-9941`, plus float-vector type-check context from `PrintConfig.cpp:9925-9928`, size mismatch context from `PrintConfig.cpp:9933-9937`, M240 normalization context from `PrintConfig.cpp:9789-9830`, deferred restore mutation context from `PrintConfig.cpp:9942`, declaration context from `PrintConfig.hpp:666-668`, and `ConfigOptionFloats` storage context from `Config.hpp:812-870`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve source in-place normalization, target temporary-clone normalization, shared expected-size use, and existing M240 stride-2 normalization semantics. Defer vector `set_with_restore`, `log_normalize_legacy_vector_size`, stride-1 restore behavior, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m248-print-config-non-diff-stride2-normalize-pair.md`.
 
 ## M249: DynamicPrintConfig non-diff stride-2 set_with_restore mapping
 Port the stride-2 restore mutation call inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9942`, plus `ConfigOptionVector<T>::set_with_restore(...)` semantics from `OrcaSlicer/src/libslic3r/Config.hpp:488-504`, M248 normalization context from `PrintConfig.cpp:9930-9941`, float-vector type-check context from `PrintConfig.cpp:9925-9928`, size mismatch context from `PrintConfig.cpp:9933-9937`, declaration context from `PrintConfig.hpp:666-668`, and `ConfigOptionFloats` storage context from `Config.hpp:812-870`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve source backup, source replacement with target temporary values, invalid restore-index-size rejection, `-1` skip behavior, and restoration of selected stride-2 source pairs by restore index. Defer `log_normalize_legacy_vector_size`, stride-1 restore behavior, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m249-print-config-non-diff-stride2-set-with-restore.md`.
-
 ## M250: DynamicPrintConfig non-diff stride-1 vector size mismatch detection
 Port the non-stride-2 restore branch vector access, source/target size capture, and mismatch predicate inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9943-9950`, plus stride-selection context from `PrintConfig.cpp:9918-9923`, stride-2 sibling context from `PrintConfig.cpp:9930-9942`, deferred resize/clone/restore context from `PrintConfig.cpp:9952-9963`, declaration context from `PrintConfig.hpp:666-668`, `ConfigOptionVectorBase` context from `Config.hpp:341-360`, and `ConfigOptionVector<T>::set_with_restore(...)` context from `Config.hpp:488-504`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve source size, target size, and `src_size != expected_size || dest_size != expected_size` mismatch behavior for the stride-1/general vector branch. Defer `log_normalize_legacy_vector_size`, source vector resize, target clone/resize normalization, vector `set_with_restore`, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m250-print-config-non-diff-stride1-size-mismatch.md`.
 
 ## M251: DynamicPrintConfig non-diff stride-1 source vector resize
 Port the non-stride-2 restore branch source resize inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9952-9953`, plus size-mismatch context from `PrintConfig.cpp:9943-9950`, deferred target clone/resize and restore context from `PrintConfig.cpp:9955-9963`, declaration context from `PrintConfig.hpp:666-668`, `ConfigOptionVectorBase::resize(...)` declaration/comment context from `Config.hpp:341-362`, and concrete `ConfigOptionVector<T>::resize(...)` behavior from `Config.hpp:632-664`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve no-op matching sizes, zero-size clear, truncation, first-source-value extension for non-empty sources, and first-target/default-value extension for empty sources. Defer target clone/resize normalization, vector `set_with_restore`, `log_normalize_legacy_vector_size`, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m251-print-config-non-diff-stride1-source-resize.md`.
-
 ## M252: DynamicPrintConfig non-diff stride-1 target temporary resize
 Port the non-stride-2 restore branch target clone, vector check, and target temporary resize inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9955-9961`, plus source resize context from `PrintConfig.cpp:9952-9953`, deferred restore context from `PrintConfig.cpp:9963`, declaration context from `PrintConfig.hpp:666-668`, `ConfigOptionVectorBase::resize(...)` declaration/comment context from `Config.hpp:341-362`, and concrete `ConfigOptionVector<T>::resize(...)` behavior from `Config.hpp:632-664`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve cloned-temporary semantics, no-op matching sizes, zero-size clear, truncation, and first-target-value extension for undersized non-empty targets. Defer vector `set_with_restore`, `log_normalize_legacy_vector_size`, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m252-print-config-non-diff-stride1-target-temp-resize.md`.
-
 ## M253: DynamicPrintConfig non-diff stride-1 set_with_restore mapping
 Port the non-stride-2 restore mutation call inside `DynamicPrintConfig::update_non_diff_values_to_base_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9963`, plus `ConfigOptionVector<T>::set_with_restore(...)` semantics from `OrcaSlicer/src/libslic3r/Config.hpp:488-504`, M250-M252 stride-1/general branch context from `PrintConfig.cpp:9943-9961`, declaration context from `PrintConfig.hpp:666-668`, and `ConfigOptionVectorBase` context from `Config.hpp:341-360`, into `ares-core` as an internal helper for later full non-diff restore assembly. Preserve source backup, source replacement with target temporary values, invalid restore-index-size rejection after replacement, `-1` skip behavior, and restoration of selected stride-1 source elements by restore index. Keep Rust files under 400 LOC by splitting staged restore-vector helpers if needed. Defer `log_normalize_legacy_vector_size`, full non-diff function assembly, `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m253-print-config-non-diff-stride1-set-with-restore.md`.
 
 
 ## M254: DynamicPrintConfig diff child-config variant index setup
 Port the setup and `variant_index` calculation prefix of `DynamicPrintConfig::update_diff_values_to_child_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9972-10022`, plus declaration context from `PrintConfig.hpp:667-668`, deferred key-loop/mutation context from `PrintConfig.cpp:10024-10103`, and `ConfigOptionInts` / `ConfigOptionStrings` storage context from `Config.hpp`, into `ares-core` as an internal helper for later full diff update assembly. Preserve optional id loading, variant-list loading, current-sized `-1` initialization or missing-current `[0]` initialization, missing-target first-current fallback to zero, id/vector length mismatch behavior, nested current-to-target variant/id matching, and unmatched `-1` sentinels. Defer key iteration, scalar direct set, vector `set_only_diff`, nil inheritance, full diff function assembly, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m254-print-config-diff-child-variant-index.md`.
-
 ## M255: DynamicPrintConfig diff child-config direct set branch
 Port the key iteration prefix, extruder id/variant key skip, source/target presence and inequality check, and direct `opt_src->set(opt_target)` branch inside `DynamicPrintConfig::update_diff_values_to_child_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10024-10037`, plus M254 variant-index setup context from `PrintConfig.cpp:9972-10022`, deferred vector branch context from `PrintConfig.cpp:10038-10045`, declaration context from `PrintConfig.hpp:668`, and scalar/vector option context from `Config.hpp`, into `ares-core` as an internal helper for later full diff update assembly. Preserve target/child key iteration, extruder metadata key skip, source/target existence checks, equality skip, scalar direct set, and vector-key direct set when absent from both key sets. Defer vector `set_only_diff`, stride selection, nil handling, full `update_diff_values_to_child_config`, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m255-print-config-diff-direct-child-set.md`.
 
 ## M256: DynamicPrintConfig diff vector set_only_diff branch
 Port the vector branch stride selection and `opt_vec_src->set_only_diff(opt_vec_dest, variant_index, stride)` call inside `DynamicPrintConfig::update_diff_values_to_child_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10038-10045`, plus `ConfigOptionVector<T>::set_only_diff(...)` semantics from `OrcaSlicer/src/libslic3r/Config.hpp:561-580`, M254 variant-index setup context from `PrintConfig.cpp:9972-10022`, M255 direct-set branch context from `PrintConfig.cpp:10024-10037`, and declaration context from `PrintConfig.hpp:668`, into `ares-core` as internal helpers for later full diff update assembly. Preserve stride 1 default, stride 2 for keys in `key_set2`, invalid source-size rejection, `-1` no-op entries, selected target-to-source stride segment copying, and nil target slot skip behavior. Defer full `update_diff_values_to_child_config`, JSON option type dispatch, concrete nullable option classes, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m256-print-config-diff-vector-set-only-diff.md`.
-
 ## M257: DynamicPrintConfig diff child-config update assembly
 Port the full staged body of `DynamicPrintConfig::update_diff_values_to_child_config(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:9972-10048`, plus declaration context from `PrintConfig.hpp:667-668`, M254 variant-index setup from `PrintConfig.cpp:9972-10022`, M255 direct-set branch from `PrintConfig.cpp:10024-10037`, M256 vector `set_only_diff` branch from `PrintConfig.cpp:10038-10045`, and `ConfigOptionVector<T>::set_only_diff(...)` semantics from `Config.hpp:561-580`, into `ares-core` as an internal helper for later public/profile API wiring. Preserve variant-index computation, child-key iteration, extruder metadata skips, source/target existence and equality checks, direct scalar/non-restore-vector copy, restore-vector `set_only_diff` mapping with stride 1 or 2, and staged nil target skip behavior. Defer public API wiring, exhaustive JSON option type dispatch, concrete nullable option classes, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m257-print-config-diff-child-update-assembly.md`.
 
 ## M258: compute_filament_override_value long-retraction override defaults
 Port the long-retraction special-case override-input substitution prefix of `compute_filament_override_value(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10051-10071`, plus declaration context from `PrintConfig.hpp:690-691`, enum context from `PrintConfig.hpp:183-188`, relevant option definitions from `PrintConfig.cpp:5077-5090`, and deferred clone/apply/change context from `PrintConfig.cpp:10073-10082`, into `ares-core` as an internal helper for later filament override resolution. Preserve replacing `long_retractions_when_cut` and `retraction_distances_when_cut` filament values with same-length nil arrays when `enable_long_retraction_when_cut != EnableFilament`, with the float branch documented as an upstream typo-intent inference, preserving filament values when it equals `EnableFilament`, and passing other keys through unchanged. Defer `ConfigOptionVector::apply_override`, changed-key insertion, `filament_overrides` mutation, full `compute_filament_override_value`, public API wiring, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m258-print-config-filament-override-long-retraction-defaults.md`.
-
 ## M259: ConfigOptionVector apply_override mapping
 Port `ConfigOptionVector<T>::apply_override(...)` from `OrcaSlicer/src/libslic3r/Config.hpp:713-753`, plus caller context from `PrintConfig.cpp:10073-10076`, M258 long-retraction input-preparation context from `PrintConfig.cpp:10051-10071`, and deferred changed-key/output context from `PrintConfig.cpp:10077-10082`, into `ares-core` as an internal helper for later `compute_filament_override_value` assembly. Preserve non-nullable vector replacement and modified flag behavior; nullable override nil handling with `default_index[i] - 1`, fallback to first original machine value, resize-to-override-length behavior, and zero-overlap no-op behavior. Defer full `compute_filament_override_value`, changed-key insertion, `filament_overrides` mutation, concrete `ConfigOption` dispatch, public API wiring, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m259-config-option-vector-apply-override.md`.
 
 ## M260: compute_filament_override_value update assembly
 Port the clone/apply/change/output suffix of `compute_filament_override_value(...)` from `OrcaSlicer/src/libslic3r/PrintConfig.cpp:10073-10082`, plus M258 input-preparation context from `PrintConfig.cpp:10051-10071`, declaration context from `PrintConfig.hpp:690-691`, and M259 vector override semantics from `Config.hpp:713-753`, into `ares-core` as an internal JSON-vector helper for later full filament override resolution. Preserve cloning the new machine value, applying the prepared filament override, comparing the computed value against the old machine value, appending the key and storing the computed override value only when changed, and leaving outputs untouched when unchanged. Defer concrete `ConfigOption` hierarchy dispatch, scalar option override dispatch, public API wiring, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m260-print-config-filament-override-update-assembly.md`.
-
 ## M261: Print filament override key-loop assembly
 Port the per-key filament override loop from `OrcaSlicer/src/libslic3r/Print.cpp:2976-2988`, plus equivalent call-loop context from `PrintApply.cpp:220-244`, M258-M260 `compute_filament_override_value(...)` context from `PrintConfig.cpp:10051-10082` / `PrintConfig.hpp:690-691`, and sorted retract-key context from `PrintConfig.cpp:7164-7195` / `PrintConfig.hpp:569-574`, into `ares-core` as an internal JSON-map helper for later print/config diff wiring. Preserve source-order `extruder_retract_keys` iteration, `filament_` prefix lookup, missing-prefixed-key skip behavior, unprefixed old/new machine value lookup for present filament overrides, and delegation to the staged M260 helper. Defer `Print::update_filament_maps_to_config` state mutation, printer-extruder expansion, config apply/apply_only, placeholder parser updates, full `PrintApply::print_config_diffs`, scalar/non-filament diffing, public API wiring, preset/profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m261-print-filament-override-key-loop.md`.
 
 ## M262: PrintApply print-config diff scalar branch
 Port the scalar/non-filament diff branch of `print_config_diffs(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:232-260`, plus return context from `PrintApply.cpp:262-264`, M261 filament override call-loop context from `PrintApply.cpp:240-244` / `Print.cpp:2976-2988`, and existing wipe tower option-definition context from `PrintConfig.cpp:6694-6708`, into `ares-core` as a private JSON-map diff helper for later full print config diff wiring. Preserve current-config key iteration, missing new option skip, filament override delegation for retract keys with present `filament_` values, plain changed-key insertion for non-filament changed options, and special `wipe_tower_x` / `wipe_tower_y` plate-index comparison semantics. Defer full `PrintApply::print_config_diffs` public wiring, `full_print_config_diffs`, placeholder parser updates, print config mutation, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m262-print-apply-print-config-diff-scalar-branch.md`.
-
 ## M263: PrintApply full print-config diff branch
 Port `full_print_config_diffs(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:269-294`, plus purpose comment context from `PrintApply.cpp:267-268`, M262 wipe-tower comparison context from `PrintApply.cpp:245-258`, and wipe tower option-definition context from `PrintConfig.cpp:6694-6708`, into `ares-core` as a private JSON-map helper for later full print config diff wiring. Preserve new-full-config key iteration, missing-old changed-key insertion, equal-value suppression, ordinary changed-key insertion, existing `diff_keys` append-only behavior, and `wipe_tower_x` / `wipe_tower_y` plate-index comparison semantics when old values exist. Defer public `full_print_config_diffs` wiring, public `PrintApply::print_config_diffs` wiring, print config mutation, config apply/apply_only, placeholder parser updates, profile loading, UI runtime, slicing, extrusion, G-code, crate, dependency, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m263-print-apply-full-print-config-diff-branch.md`.
 
 ## M264: PrintApply printable-filament change guard
 Port the entry guard of `is_printable_filament_changed(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:297-303`, plus deferred geometry context from `PrintApply.cpp:304-340` and `FilamentMapMode` option context from `PrintConfig.cpp:577-582`, `PrintConfig.cpp:2414-2428`, and `PrintConfig.hpp:424-428` / `PrintConfig.hpp:1335`, into `ares-core` as a private helper for later printable-area/extruder-area diff wiring. Preserve returning `false` when old and new polygons are equal, returning `false` when they differ but `filament_map_mode` is manual, and otherwise returning a staged `true` sentinel that represents the deferred geometry-comparison branch. Defer printable-area/extruder-area polygon construction, Clipper `diff`/`intersection`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m264-print-apply-printable-filament-change-guard.md`.
-
 ## M265: PrintApply printable-area polygon extraction
 Port the printable-area and extruder-area polygon construction prefix of `is_printable_filament_changed(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:304-315`, plus deferred geometry context from `PrintApply.cpp:316-340`, option default context from `PrintConfig.cpp:684-693`, and declaration context from `PrintConfig.hpp:1481-1482`, into `ares-core` as private JSON-to-`Point2` polygon extraction helpers for later printable-area/extruder-area diff wiring. Preserve required `printable_area` finite `[x, y]` point-pair parsing, optional `extruder_printable_area` finite `[x, y]` point-group parsing, printable point order, extruder group order, per-group point order, empty-default `extruder_printable_area` behavior, `SliceError::InvalidInput("printable_area must be an array of [x,y] points")` for malformed printable area, and `SliceError::InvalidInput("extruder_printable_area must be an array of point arrays")` for malformed extruder groups. Defer scaling to `coord_t`, Clipper `diff`/`intersection`, split polygon assembly, intersection-id comparison, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m265-print-apply-printable-area-polygon-extraction.md`.
 
 ## M266: PrintApply scaled printable-area polygons
 Port the `Point(scale_(pt.x()), scale_(pt.y()))` conversion loops for printable-area and extruder-area polygons from `OrcaSlicer/src/libslic3r/PrintApply.cpp:306-315`, plus deferred geometry context from `PrintApply.cpp:316-340`, scaling context from `libslic3r.h:40-43`, `libslic3r.h:60-64`, `libslic3r.h:92-94`, `libslic3r.cpp:3`, and `Point.hpp:190-205`, into `ares-core` as private staged integer-coordinate polygon helpers for later printable-area/extruder-area diff wiring. Preserve default Orca scaling by `SCALING_FACTOR_INTERNAL = 0.000001`, integer rounding through `Point(double, double)`, printable point order, extruder group order, per-group point order, and negative/fractional coordinate handling by the same scale-and-round rule. Defer large-printer scaling-factor selection, Clipper `diff`/`intersection`, split polygon assembly, intersection-id comparison, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m266-print-apply-scaled-printable-area-polygons.md`.
-
 ## M267: PrintApply extruder diff first-result collection
 Port the per-extruder `diff(printable_poly, poly)` loop and first-result collection from `OrcaSlicer/src/libslic3r/PrintApply.cpp:317-320`, plus deferred tail context from `PrintApply.cpp:323-340` and difference operation context from `ClipperUtils.hpp:429-433` and `ClipperUtils.cpp:676-679`, into `ares-core` as a private staged helper over scaled polygons and an injected difference callback. Preserve one diff call per extruder polygon in source order, `printable_poly` as subject, current extruder polygon as clip, empty-result skip behavior, `res[0]`-only append behavior, and append order. Defer Clipper `ctDifference`, fill rules, safety offsets, full split polygon assembly, all-extruder intersection, intersection-id comparison, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m267-print-apply-extruder-diff-first-results.md`.
 
 ## M268: PrintApply all-extruder intersection append
 Port the all-extruder `intersection({printable_poly}, extruder_polys)` first-result append branch from `OrcaSlicer/src/libslic3r/PrintApply.cpp:323-324`, plus deferred tail context from `PrintApply.cpp:326-340` and intersection operation context from `ClipperUtils.hpp:496-508` and `ClipperUtils.cpp:702-703`, into `ares-core` as a private staged helper over scaled polygons and an injected intersection callback. Preserve one intersection call with a single printable subject and all extruder clips, empty-result skip behavior, `all_extruder_polys[0]`-only append behavior, and preservation of existing split polygon order before appending. Defer Clipper `ctIntersection`, fill rules, safety offsets, intersection-id comparison, final printable-filament changed result, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m268-print-apply-all-extruder-intersection-append.md`.
-
 ## M269: PrintApply find_intersections control flow
 Port the local `find_intersections` lambda from `OrcaSlicer/src/libslic3r/PrintApply.cpp:326-333`, plus deferred final comparison context from `PrintApply.cpp:335-340` and polygon/polygon intersection backend context from `ClipperUtils.hpp:496-508` and `ClipperUtils.cpp:696-697`, into `ares-core` as a private staged helper over scaled polygons and an injected intersection callback. Preserve contour index-order traversal, one `intersection(poly, contours[i])` call per contour, empty-result skip behavior, non-empty index insertion, and sorted-set return semantics. Defer Clipper `ctIntersection`, fill rules, safety offsets, old/new id comparison, final printable-filament changed result, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m269-print-apply-find-intersections.md`.
 
 ## M270: PrintApply intersection-id set comparison
 Port the old/new `find_intersections(...)` call pair and final set comparison from `OrcaSlicer/src/libslic3r/PrintApply.cpp:335-337`, plus required predecessor context from `PrintApply.cpp:326-333` and deferred surrounding context from `PrintApply.cpp:297-324` / `PrintApply.cpp:339-340`, into `ares-core` as a private staged helper over scaled old/new polygons, existing split polygons, and an injected intersection callback. Preserve computing old ids first, computing new ids second with the same split polygons, and returning whether the sorted id sets differ. Defer concrete Clipper `ctIntersection`, fill rules, safety offsets, printable-area parsing/scaling, split polygon assembly, full `is_printable_filament_changed(...)`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m270-print-apply-intersection-id-set-comparison.md`.
-
 ## M271: PrintApply printable-filament staged assembly
 Port the full private `is_printable_filament_changed(...)` control-flow assembly from `OrcaSlicer/src/libslic3r/PrintApply.cpp:297-340`, using the already staged M264-M270 slices and boolean operation context from `ClipperUtils.hpp:429-433`, `ClipperUtils.cpp:676-679`, `ClipperUtils.hpp:496-508`, and `ClipperUtils.cpp:696-703`, into `ares-core` as a private helper over JSON config maps, old/new polygons, and injected diff/intersection callbacks. Preserve equal-polygon and manual-mode false exits, printable/extruder-area extraction and scaling from the new config, split polygon assembly from per-extruder diff first results plus all-extruder intersection first result, M269 `find_intersections` id-set construction, M270 `old_poly_ids != new_poly_ids` comparison, and final boolean return. Defer concrete Clipper `ctDifference`/`ctIntersection`, fill rules, safety offsets, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m271-print-apply-printable-filament-staged-assembly.md`.
 
 ## M272: PrintApply LayerRanges assign normalization
 Port `LayerRanges` storage context and `LayerRanges::assign(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:342-383`, with Orca tolerance context from `OrcaSlicer/src/libslic3r/libslic3r.h:52` and deferred lookup context from `PrintApply.cpp:385-395`, into `ares-core` as private interval normalization helpers over lightweight config identifiers. Preserve sorted-input traversal from `last_z = 0`, skipped covered ranges, negative-start clamping to zero, unconfigured gap insertion, configured interval insertion, Orca `EPSILON = 1e-4` comparisons, empty-input fallback to `[0, DBL_MAX]`, trailing unconfigured range extension to `DBL_MAX`, and trailing unconfigured range append after configured tails. Defer `LayerRanges::config(...)`, `DynamicPrintConfig`, `ModelConfig`, `ModelObjectStatus`, model-object apply logic, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m272-print-apply-layer-ranges-assign.md`.
-
 ## M273: PrintApply instance printable-filament invalidation
 Port the changed-instance synchronization loop body from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1505-1511`, plus branch/bounding-box context from `PrintApply.cpp:1487-1504`, apply-status context from `PrintApply.cpp:1231-1234`, staged printable-filament predicate context from `PrintApply.cpp:297-340`, print-step names from `Print.hpp:78-88`, and invalidation API context from `PrintBase.hpp:606-612`, into `ares-core` as a private staged helper over minimal instance state and injected M271 geometry callbacks. Preserve evaluating printable-filament change before copying instance fields, returning staged `{psWipeTower, psGCodeExport}` invalidation steps only when the predicate is true, copying transformation/print-volume/printable fields after successful predicate evaluation, and propagating predicate errors without mutation. Defer full `Print::apply`, real print-state invalidation, bounding-box invalidation, concrete Clipper operations, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m273-print-apply-instance-printable-filament-invalidation.md`.
 
 ## M274: PrintApply LayerRanges config lookup
 Port `LayerRanges::config(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:385-395`, plus M272 storage/normalization context from `PrintApply.cpp:342-383` and Orca `EPSILON` context from `libslic3r.h:52`, into `ares-core` as a private lookup helper over normalized layer ranges. Preserve adjusted lower-bound lookup using `{range.first - EPSILON, range.second - EPSILON}`, missing-range `nullptr` behavior, boundary mismatch tolerance checks, and returning the matched config identifier including unconfigured matched ranges. Defer `DynamicPrintConfig`, `ModelConfig`, model-object apply wiring, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m274-print-apply-layer-ranges-config-lookup.md`.
-
 ## M275: PrintApply ModelObjectStatus state
 Port `ModelObjectStatus` state declaration from `OrcaSlicer/src/libslic3r/PrintApply.cpp:407-440`, plus `ModelObjectStatusDB` operation context from `PrintApply.cpp:442-470`, into `ares-core` as private staged model-object status vocabulary and an id-keyed record. Preserve `Status` variants `Unknown`, `Old`, `New`, `Moved`, `Deleted`; `PrintObjectRegionsStatus` variants `Invalid`, `Valid`, `PartiallyValid`; constructor defaults; and id-based ordering semantics. Defer `ModelObjectStatusDB`, `PrintObjectStatus`, ref-counted regions, print object transformations, model-object apply wiring, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m275-print-apply-model-object-status-state.md`.
-
 ## M276: PrintApply ModelObjectStatusDB operations
 Port `ModelObjectStatusDB` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:442-470`, plus M275 `ModelObjectStatus` state context from `PrintApply.cpp:407-440`, into `ares-core` as private staged id-keyed status database operations. Preserve duplicate rejection in `add`, insert-or-skip return semantics in `add_if_new`, missing-id failure in `get`, deleted-record rejection in `reuse`, and deterministic id-keyed uniqueness/order. Defer `PrintObjectStatus`, `PrintObjectStatusDB`, ref-counted regions, print object transformations, model-object apply wiring, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m276-print-apply-model-object-status-db.md`.
 
 
 ## M277: PrintApply PrintObjectStatus state
 Port `PrintObjectStatus` state declaration from `OrcaSlicer/src/libslic3r/PrintApply.cpp:473-498`, plus `PrintObjectStatusDB` context from `PrintApply.cpp:500-540`, into `ares-core` as private staged print-object status vocabulary and an id-keyed record. Preserve `Status` variants `Unknown`, `Deleted`, `Reused`, `New`; constructor defaults for id-only records; and id-based ordering semantics. Defer `PrintObjectStatusDB`, real `PrintObject` pointers, concrete `Transform3d`, model-object apply wiring, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m277-print-apply-print-object-status-state.md`.
-
 
 ## M278: PrintApply PrintObjectStatusDB operations
 Port `PrintObjectStatusDB` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:500-540`, plus M277 `PrintObjectStatus` state context from `PrintApply.cpp:473-498`, into `ares-core` as private staged multiset-like print-object status database operations. Preserve constructor insertion from print-object ids, duplicate-id multiset behavior, id-keyed `get_range`, `count`, sorted iteration, and `clear`. Defer real `PrintObject` pointers, concrete `Transform3d`, model-object apply wiring, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m278-print-apply-print-object-status-db.md`.
-
 ## M279: PrintApply model-volume solid-or-modifier predicate
 Port `model_volume_solid_or_modifier(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:542-546`, plus `ModelVolumeType` enum context from `OrcaSlicer/src/libslic3r/Model.hpp:340-348` and downstream filtering context from `PrintApply.cpp:667-695`, into `ares-core` as private staged model-volume vocabulary and a boolean predicate. Preserve upstream discriminant order, return `true` only for `ModelPart`, `NegativeVolume`, and `ParameterModifier`, and return `false` for `Invalid`, `SupportBlocker`, and `SupportEnforcer`. Defer real `ModelVolume`, mesh data, transformations, bounding boxes, print-object-region invalidation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m279-print-apply-model-volume-solid-or-modifier.md`.
 
 ## M280: PrintApply bbox transform composition
 Port `trafo_for_bbox(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:548-554`, plus transform alias context from `OrcaSlicer/src/libslic3r/Point.hpp:79-85` and downstream bbox context from `PrintApply.cpp:582-606`, into `ares-core` as a private staged 3D affine transform helper. Preserve `object_trafo * volume_trafo` composition order, zeroing composed translation X/Y after multiplication, preserving translation Z and linear terms, and returning f32 matrix values equivalent to Orca's `m.cast<float>()`. Defer full Eigen-compatible transforms, inverse/rotation comparison, mesh vertex transformation, bounding boxes, print-object-region invalidation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m280-print-apply-trafo-for-bbox.md`.
-
 ## M281: PrintApply transform Z-rotation/mirroring predicate
 Port `trafos_differ_in_rotation_by_z_and_mirroring_by_xy_only(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:556-580`, plus `Transform3f` / `Transform3d` alias context from `OrcaSlicer/src/libslic3r/Point.hpp:79-85`, `coordf_t` / `EPSILON` context from `OrcaSlicer/src/libslic3r/libslic3r.h:46-52`, and downstream invalidation context from `PrintApply.cpp:667-695`, into `ares-core` as a private staged transform predicate. Preserve Z-translation mismatch rejection, `m2.inverse() * m1` relative linear transform construction, relative Z-column validation, X/Y Z-component rejection, X/Y over-unit-length checks, and the final perpendicularity expression. Defer full Eigen-compatible transforms, robust general-purpose matrix algebra, mesh vertex transformation, bounding boxes, print-object-region invalidation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m281-print-apply-transform-z-rotation-mirroring-predicate.md`.
 
 ## M282: PrintApply transformed indexed-triangle bbox2d
 Port `transformed_its_bbox2d(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:582-593`, plus indexed-triangle context from `OrcaSlicer/deps_src/admesh/stl.h:42-44` and `stl.h:219-235`, `PrintObjectRegions::BoundingBox` context from `OrcaSlicer/src/libslic3r/Print.hpp:216-223`, `Transform3f` context from `OrcaSlicer/src/libslic3r/Point.hpp:84`, and `coordf_t` / `EPSILON` context from `OrcaSlicer/src/libslic3r/libslic3r.h:46-52`, into `ares-core` as private staged indexed-triangle and bounding-box helpers. Preserve empty-index assertion behavior, bbox initialization from the first transformed vertex, extension over every transformed triangle vertex, and final min/max expansion by `[offset, offset, EPSILON]`. Defer full mesh import/storage, face properties, z-range clipping, print-object-region invalidation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m282-print-apply-transformed-its-bbox2d.md`.
-
 ## M283: PrintApply transformed indexed-triangle bboxes in Z ranges
 Port `transformed_its_bboxes_in_z_ranges(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:595-661`, plus predecessor bbox context from `PrintApply.cpp:582-593`, indexed-triangle context from `OrcaSlicer/deps_src/admesh/stl.h:42-44` and `stl.h:219-235`, `t_layer_height_range` context from `OrcaSlicer/src/libslic3r/Slicing.hpp:150`, `PrintObjectRegions::BoundingBox` context from `OrcaSlicer/src/libslic3r/Print.hpp:216-223`, `Transform3f` / vector interpolation context from `OrcaSlicer/src/libslic3r/Point.hpp:84` and `Point.hpp:136-144`, and `coordf_t` / `EPSILON` context from `OrcaSlicer/src/libslic3r/libslic3r.h:46-52`, into `ares-core` as private staged per-Z-range transformed bbox helpers. Preserve output assignment per Z range, transformed triangle point reuse, edge-order clipping, lower/upper/two-bound intersection handling, bbox init/extend flags, and final min/max expansion by `[offset, offset, EPSILON]`. Defer full mesh import/storage, face properties, print-object-region invalidation, volume filtering, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m283-print-apply-transformed-its-bboxes-in-z-ranges.md`.
 
 ## M284: PrintApply keep reusable cached volume ids
 Port `print_objects_regions_invalidate_keep_some_volumes(...)` cache-retention behavior from `OrcaSlicer/src/libslic3r/PrintApply.cpp:664-695`, plus model-volume sorting context from `OrcaSlicer/src/libslic3r/Model.hpp:1227-1230`, `ObjectID` ordering context from `OrcaSlicer/src/libslic3r/ObjectID.hpp:20-37`, `PrintObjectRegions::all_regions` / `cached_volume_ids` context from `OrcaSlicer/src/libslic3r/Print.hpp:291-296`, `ModelVolumeType` context from `OrcaSlicer/src/libslic3r/Model.hpp:340-348`, and M279 predicate context from `PrintApply.cpp:542-546`, into `ares-core` as private staged cache-retention helpers. Preserve clearing all regions, sorting old/new volumes by id, filtering new volumes to solid/modifier types, monotonic old-volume matching, transform-compatible reuse, cached-id forward scan with assertion, compaction of kept cached ids, and truncation of stale tail ids. Defer real `PrintObjectRegions`, `PrintRegion`, `ModelVolume` pointers, Eigen `isApprox`, bbox recomputation, layer-range region rebuilding, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m284-print-apply-keep-some-volume-cache.md`.
-
 ## M285: PrintApply find volume extents lookup
 Port `find_volume_extents(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:697-703`, plus `VolumeExtents` context from `OrcaSlicer/src/libslic3r/Print.hpp:224-228`, sorted `LayerRangeRegions::volumes` context from `OrcaSlicer/src/libslic3r/Print.hpp:271-278`, `ObjectID` ordering context from `OrcaSlicer/src/libslic3r/ObjectID.hpp:20-37`, lower-bound helper context from `OrcaSlicer/src/libslic3r/libslic3r.h:230-247`, and bounding-box context from `OrcaSlicer/src/libslic3r/Print.hpp:216-223`, into `ares-core` as a private staged lower-bound lookup over sorted volume extents. Preserve first-not-less-than lookup by volume id, exact-match-only bbox return, no-match `None` behavior, and first-equal duplicate behavior. Defer real `PrintObjectRegions::LayerRangeRegions`, `ModelVolume`, `ObjectID` wrapper types, bbox recalculation, modifier extents, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m285-print-apply-find-volume-extents.md`.
 
 ## M286: PrintApply find modifier volume extents
 Port `find_modifier_volume_extents(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:705-725`, plus predecessor `find_volume_extents(...)` context from `PrintApply.cpp:697-703`, `PrintObjectRegions::VolumeRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:229-240`, `LayerRangeRegions::volumes` / `volume_regions` context from `Print.hpp:271-282`, `ModelVolume::is_model_part()` context from `OrcaSlicer/src/libslic3r/Model.hpp:901-907`, and bounding-box context from `Print.hpp:216-223`, into `ares-core` as a private staged modifier bbox helper. Preserve current-region lookup, current volume extents assertion, output initialization from current bbox, model-part early return, modifier parent traversal, parent extent assertion, bbox extension through parent chain, and stop at the first model-part parent. Defer real `PrintObjectRegions::LayerRangeRegions`, real `VolumeRegion` pointers, `ModelVolume` pointers, `PrintRegion`, painted/fuzzy regions, region config merging, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m286-print-apply-find-modifier-volume-extents.md`.
-
 ## M287: PrintApply print region ref count helpers
 Port `print_region_ref_inc(...)`, `print_region_ref_reset(...)`, and `print_region_ref_cnt(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:729-731`, plus `PrintRegion::m_ref_cnt` and friend-helper context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, and downstream reset context from `PrintApply.cpp:746-747`, into `ares-core` as private staged print-region ref-count helpers. Preserve default zero count, increment by one, reset to zero, read without mutation, and signed `int`-like staged count behavior. Defer real `PrintRegion`, `PrintRegionConfig`, config hash/equality, `PrintObjectRegions::all_regions`, region validation, merging/splitting, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m287-print-apply-print-region-ref-count.md`.
 
 ## M288: PrintApply verify-update region initialization
 Port the initialization prefix of `verify_update_print_object_regions(...)` from `OrcaSlicer/src/libslic3r/PrintApply.cpp:743-747`, plus `model_volumes_sort_by_id(...)` context from `OrcaSlicer/src/libslic3r/Model.hpp:1227-1230`, `PrintObjectRegions::all_regions` context from `OrcaSlicer/src/libslic3r/Print.hpp:291-296`, and M287 `print_region_ref_reset(...)` context from `PrintApply.cpp:729-731`, into `ares-core` as a private staged verify-update initialization helper. Preserve sorting model volumes by ascending id before region processing, resetting every existing print-region ref count after sorting, duplicate-id behavior by id grouping only, and empty input behavior. Defer the layer-range loop, model-part/modifier filtering, model-volume lower-bound lookup, modifier override detection, config diff/apply, callback invalidation, painted/fuzzy painted regions, reslice return decisions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m288-print-apply-verify-update-region-init.md`.
-
 ## M289: PrintApply verify-update volume-region matching
 Port the `volume_regions` eligibility, sorted model-volume lookup, and first modifier visit detection prefix from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:755-766`, plus sorted model-volume context from `OrcaSlicer/src/libslic3r/Model.hpp:1227-1230`, `ModelVolume::is_model_part()` / `is_modifier()` context from `Model.hpp:905-907`, `VolumeRegion::model_volume` context from `OrcaSlicer/src/libslic3r/Print.hpp:229-240`, and `LayerRangeRegions::volume_regions` source-order context from `Print.hpp:271-282`, into `ares-core` as a private staged matching helper. Preserve skipping non-model-part/non-modifier regions, exact lower-bound lookup against sorted model volumes with assertion on missing ids, source-order output, and first-visit detection for modifier model volumes using last-visited modifier id only. Defer modifier parent-region creation checks, `next_region_id`, bbox lookup/intersection, config derivation, config diff/apply, callback invalidation, ref-count increment, painted/fuzzy painted regions, reslice return decisions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m289-print-apply-verify-update-volume-region-match.md`.
 
 ## M290: PrintApply verify-update parent scan existing overrides
 Port the first-modifier parent scan and existing override detection prefix after the current-modifier bbox lookup from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:766 and PrintApply.cpp:769-782`, plus `VolumeRegion::model_volume` / `parent` context from `OrcaSlicer/src/libslic3r/Print.hpp:229-240`, `LayerRangeRegions::volume_regions` source-order context from `Print.hpp:271-282`, and model-part/modifier predicate context from `OrcaSlicer/src/libslic3r/Model.hpp:905-907`, into `ares-core` as a private staged parent-scan helper. Preserve `next_region_id` initialization, descending parent scan, same-model-volume assertion, filtering to model-part/modifier parents, generated-region ordering assertion, and advancing `next_region_id` when an override for the current modifier and scanned parent already exists. Defer `find_volume_extents` / current-modifier bbox assertion from `PrintApply.cpp:767-768`, `find_modifier_volume_extents`, bbox intersection, config derivation/comparison/application, callback invalidation, ref-count increment, painted/fuzzy painted regions, reslice decisions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m290-print-apply-verify-update-parent-scan-existing-overrides.md`.
-
 ## M291: PrintApply verify-update current modifier bbox lookup
 Port the current first-visited modifier bbox lookup/assert from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:767-768`, plus M285 `find_volume_extents(...)` context from `PrintApply.cpp:697-703`, `VolumeExtents` context from `OrcaSlicer/src/libslic3r/Print.hpp:224-228`, and `LayerRangeRegions::volumes` context from `Print.hpp:271-278`, into `ares-core` as a private staged current-modifier bbox helper. Preserve exact lower-bound volume-id lookup, copied bbox return for matching ids, and assert/panic behavior for missing current modifier extents. Defer parent bbox lookup/intersection, `find_modifier_volume_extents` verify-update integration, config derivation/comparison/application, callback invalidation, ref-count increment, painted/fuzzy painted regions, reslice decisions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m291-print-apply-verify-update-current-modifier-bbox.md`.
 
 ## M292: PrintApply verify-update parent bbox intersection gate
 Port the missing-parent-override bbox intersection gate from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:783-789`, plus current modifier bbox context from `PrintApply.cpp:767-768`, `find_modifier_volume_extents(...)` context from `PrintApply.cpp:705-725`, `PrintObjectRegions::BoundingBox` / `VolumeExtents` / `VolumeRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:216-240`, and `LayerRangeRegions::volumes` / `volume_regions` context from `Print.hpp:271-282`, into `ares-core` as a private staged parent-bbox intersection gate. Preserve computing the candidate parent bbox via `find_modifier_volume_extents(...)`, closed-box intersection against the current modifier bbox, and staged output for the later config-comparison milestone. Defer `region_config_from_model_volume`, config comparison, `return false`, callback invalidation, ref-count increment, painted/fuzzy painted regions, reslice decisions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m292-print-apply-verify-update-parent-bbox-intersection-gate.md`.
-
 ## M293: PrintApply verify-update missing override config gate
 Port the missing-modifier-override config comparison/reslice gate from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:786-789`, plus `region_config_from_model_volume(...)` declaration context from `PrintApply.cpp:727` and implementation context from `OrcaSlicer/src/libslic3r/PrintObject.cpp:3430-3460`, into `ares-core` as a private staged config-difference gate. Preserve that a derived modifier config equal to the parent region config does not require reslice, while a differing derived config requires reslice for a newly needed missing override. Defer full `region_config_from_model_volume(...)` merge internals, `apply_to_print_region_config`, extruder clamping, sparse infill/fuzzy-skin normalization, callback invalidation, ref-count increment, painted/fuzzy painted regions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m293-print-apply-verify-update-missing-override-config-gate.md`.
 
 ## M294: PrintApply verify-update existing region config change gate
 Port the existing volume-region config change predicate from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:796`, plus derived config context from `PrintApply.cpp:793-795`, changed-region branch context from `PrintApply.cpp:798-806`, and `region_config_from_model_volume(...)` implementation context from `OrcaSlicer/src/libslic3r/PrintObject.cpp:3430-3460`, into `ares-core` as a private staged config-change gate. Preserve that equal derived/current configs do not enter the update/split branch, while differing configs do. Defer derived config source selection, real config merge internals, ref-count update/split behavior, callback invalidation, config diff/apply, painted/fuzzy painted regions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m294-print-apply-verify-update-existing-region-config-change-gate.md`.
-
 ## M295: PrintApply verify-update existing region ref-count split gate
 Port the changed existing-region ref-count decision from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:798-806`, plus M294 config-change context from `PrintApply.cpp:796`, M287 `print_region_ref_cnt(...)` context from `PrintApply.cpp:729-731`, and `PrintRegion::m_ref_cnt` / config mutation context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, into `ares-core` as a private staged update action gate. Preserve that unchanged configs do not enter the branch, changed configs with zero ref count are eligible for in-place update, and changed configs with nonzero ref count require reslice. Defer config diff key collection, callback invalidation, config apply, ref-count increment, derived config source selection, real config merge internals, painted/fuzzy painted regions, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m295-print-apply-verify-update-existing-region-ref-count-split-gate.md`.
 
 ## M296: PrintApply verify-update existing region config diff keys
 Port `t_config_option_keys diff = region.region->config().diff(cfg);` from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:801`, plus `ConfigBase::diff(...)` behavior from `OrcaSlicer/src/libslic3r/Config.cpp:518-528`, key/vector alias context from `OrcaSlicer/src/libslic3r/Config.hpp:73-75`, and update-in-place branch context from `PrintApply.cpp:798-803`, into `ares-core` as private staged config diff-key collection. Preserve current-config key order, intersection-only comparison, changed-value-only output, and no diff keys outside the M295 update-in-place action. Defer callback invalidation, config apply, real `ConfigBase` / `PrintRegionConfig`, option value typing, hashing, ref-count increment, derived config source selection, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m296-print-apply-verify-update-existing-region-config-diff-keys.md`.
-
 ## M297: PrintApply verify-update existing region invalidate callback
 Port `callback_invalidate(region.region->config(), cfg, diff);` from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:802`, plus callback purpose/signature context from `PrintApply.cpp:734-741`, diff-key context from `PrintApply.cpp:801`, and config-apply-after-callback context from `PrintApply.cpp:803`, into `ares-core` as private staged invalidation callback event data. Preserve callback argument order, diff-key order, update-in-place-only emission, unchanged/reslice suppression, and empty-diff update-in-place callback emission. Defer real callback invocation, background-process cancellation, config apply, real `ConfigBase` / `PrintRegionConfig`, hashing, ref-count increment, derived config source selection, real `PrintRegion`, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m297-print-apply-verify-update-existing-region-invalidate-callback.md`.
 
 ## M298: PrintApply verify-update existing region config apply-only
 Port `region.region->config_apply_only(cfg, diff, false);` from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:803`, plus `PrintRegion::config_apply_only(...)` context from `OrcaSlicer/src/libslic3r/Print.hpp:136-139`, `ConfigBase::apply_only(...)` behavior from `OrcaSlicer/src/libslic3r/Config.cpp:461-500`, M296 diff-key context from `PrintApply.cpp:801`, and M297 callback-before-apply context from `PrintApply.cpp:802`, into `ares-core` as private staged config apply-only state. Preserve invalidate-before-apply gating, diff-key order, copying derived values for matching keys, missing-derived-key no-op behavior, `ignore_nonexistent = false`, and staged hash refresh metadata. Defer vector `#` option handling, unknown-option exceptions, real `ConfigBase` / `PrintRegionConfig`, real config hash calculation, real `PrintRegion` mutation, ref-count increment, derived config source selection, real `PrintObjectRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m298-print-apply-verify-update-existing-region-config-apply-only.md`.
-
 ## M299: PrintApply verify-update existing region ref increment
 Port `print_region_ref_inc(*region.region);` from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:809`, plus `print_region_ref_inc(...)` helper context from `PrintApply.cpp:729`, `PrintRegion::m_ref_cnt` / friend-helper context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, changed-config branch context from `PrintApply.cpp:796-806`, M295 update-action context, and M298 apply-before-increment context from `PrintApply.cpp:803`, into `ares-core` as private staged ref-increment sequencing. Preserve unchanged-region increment, update-in-place increment only after staged config apply, requires-reslice no-increment behavior because upstream returns before line 809, and accumulated ref-count mutation through the M287 helper. Defer real `PrintRegion`, real `PrintObjectRegions`, loop integration, missing-override region creation, painted/fuzzy painted regions, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m299-print-apply-verify-update-existing-region-ref-increment.md`.
 
 ## M300: PrintApply painted region extruder config
 Port the color-painted region config derivation prefix from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:813-820`, plus `PrintObjectRegions::PaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:243-252`, `LayerRangeRegions::painted_regions` context from `Print.hpp:271-283`, parent `VolumeRegion` context from `Print.hpp:229-240`, and filament option fields from `OrcaSlicer/src/libslic3r/PrintConfig.hpp:1121,1154,1161`, into `ares-core` as private staged painted-region config derivation. Preserve copying parent config before overrides and assigning the painted extruder id to `wall_filament`, `solid_infill_filament`, and `sparse_infill_filament`, while preserving unrelated parent config fields. Defer comparison/update/reslice handling from `PrintApply.cpp:821-831`, ref-count increment from `PrintApply.cpp:834`, fuzzy painted regions from `PrintApply.cpp:837-856`, real `PrintRegionConfig`, real `PrintObjectRegions`, loop integration, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m300-print-apply-painted-region-filament-config.md`.
-
 ## M301: PrintApply painted region update gate
 Port the color-painted region config comparison and ref-count update/reslice decision from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:821-831`, plus M300 derived painted config context from `PrintApply.cpp:813-820`, existing-region update gate context from `PrintApply.cpp:796-806`, `print_region_ref_cnt(...)` context from `PrintApply.cpp:729-731`, `PrintRegion::m_ref_cnt` / config mutation context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, and `PrintObjectRegions::PaintedRegion` context from `Print.hpp:243-252`, into `ares-core` as a private staged painted-region update gate. Preserve unchanged config no-op behavior, changed zero-ref update-in-place eligibility, changed nonzero-ref reslice requirement, and comparison-result payload for later diff/callback/apply wiring. Defer concrete diff-key collection from `PrintApply.cpp:826`, invalidate callback from `PrintApply.cpp:827`, config apply-only from `PrintApply.cpp:828`, painted-region ref increment from `PrintApply.cpp:834`, fuzzy painted regions from `PrintApply.cpp:837-856`, real `PrintRegionConfig`, real `PrintObjectRegions`, loop integration, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m301-print-apply-painted-region-update-gate.md`.
 
 ## M302: PrintApply painted region config apply
 Port the color-painted region update-in-place diff, invalidate callback, and config-apply sequence from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:826-828`, plus M300 derived painted config context from `PrintApply.cpp:813-820`, M301 update gate context from `PrintApply.cpp:821-831`, existing-region diff/callback/apply context from `PrintApply.cpp:801-803`, `PrintRegion::config_apply_only(...)` context from `OrcaSlicer/src/libslic3r/Print.hpp:136-139`, and `ConfigBase::apply_only(...)` behavior from `OrcaSlicer/src/libslic3r/Config.cpp:461-500`, into `ares-core` as private staged painted-region config apply state. Preserve update-in-place-only diff collection, current-config key order, callback-before-apply sequencing, `ignore_nonexistent = false`, staged hash refresh metadata, and no-op behavior for unchanged/requires-reslice actions. Defer painted-region ref increment from `PrintApply.cpp:834`, fuzzy painted regions from `PrintApply.cpp:837-856`, real `PrintRegionConfig`, real `PrintObjectRegions`, real callback execution, real config hash calculation, vector `#` option handling, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m302-print-apply-painted-region-config-apply.md`.
-
 ## M303: PrintApply painted region ref increment
 Port `print_region_ref_inc(*region.region);` from the color-painted region loop in `verify_update_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:834`, plus M301 painted update gate context from `PrintApply.cpp:821-831`, M302 painted config-apply context from `PrintApply.cpp:826-828`, `print_region_ref_inc(...)` helper context from `PrintApply.cpp:729`, existing-region increment context from `PrintApply.cpp:809`, and `PrintRegion::m_ref_cnt` / helper access context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, into `ares-core` as private staged painted-region ref-increment sequencing. Preserve unchanged-region increment, update-in-place increment only after staged config apply, requires-reslice no-increment behavior because upstream returns before line 834, and accumulated ref-count mutation through the existing staged helper. Defer fuzzy painted regions from `PrintApply.cpp:837-856`, real `PrintRegion`, real `PrintObjectRegions`, loop integration, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m303-print-apply-painted-region-ref-increment.md`.
 
 ## M304: PrintApply fuzzy painted region config
 Port the fuzzy-skin painted-region config derivation prefix from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:837-842`, plus `PrintObjectRegions::FuzzySkinPaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:255-266`, `LayerRangeRegions` parent collections from `Print.hpp:271-283`, parent lookup implementation from `OrcaSlicer/src/libslic3r/Print.cpp:4932-4947`, and `FuzzySkinType` variants from `OrcaSlicer/src/libslic3r/PrintConfig.hpp:50-57`, into `ares-core` as private staged fuzzy-painted config derivation. Preserve resolving volume-region and painted-region parents, copying parent config before mutation, changing any non-`Disabled_fuzzy` fuzzy-skin value to `All`, preserving disabled fuzzy skin, source-order output, and fuzzy region/parent metadata. Defer fuzzy-painted config comparison/update/apply from `PrintApply.cpp:843-853`, ref-count increment from `PrintApply.cpp:856`, real `PrintRegionConfig`, real `PrintObjectRegions`, loop integration, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m304-print-apply-fuzzy-painted-region-config.md`.
-
 ## M305: PrintApply fuzzy painted region update/apply
 Port the fuzzy-skin painted-region config comparison and update/apply block from `verify_update_print_object_regions(...)` in `OrcaSlicer/src/libslic3r/PrintApply.cpp:843-853`, plus M304 derivation context from `PrintApply.cpp:837-842`, `PrintObjectRegions::FuzzySkinPaintedRegion` destination-region context from `OrcaSlicer/src/libslic3r/Print.hpp:255-266`, `PrintRegion` config/apply/ref-count context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, and the shared update pattern from `PrintApply.cpp:786-800` and `PrintApply.cpp:821-833`, into `ares-core` as private staged fuzzy-painted update/apply state. Preserve config comparison, unchanged no-op behavior, zero-ref update-in-place behavior, referenced-region requires-reslice behavior, diff/invalidate/apply-only sequencing, diff key order inherited from current config values, fuzzy painted region/parent/destination metadata, and focused test-file split below the 400 LOC threshold. Defer fuzzy-painted ref-count increment from `PrintApply.cpp:856`, real `PrintRegionConfig`, real `PrintObjectRegions`, loop integration, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m305-print-apply-fuzzy-painted-region-update-apply.md`.
 
 ## M306: PrintApply fuzzy painted region ref increment
 Port `print_region_ref_inc(*region.region);` from the fuzzy-skin painted region loop in `verify_update_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:856`, plus M304 fuzzy-painted derivation context from `PrintApply.cpp:837-842`, M305 fuzzy-painted update/apply context from `PrintApply.cpp:843-853`, `print_region_ref_inc(...)` helper context from `PrintApply.cpp:729`, existing-region increment context from `PrintApply.cpp:809`, color-painted increment context from `PrintApply.cpp:834`, and `PrintRegion::m_ref_cnt` / helper access context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, into `ares-core` as private staged fuzzy-painted ref-increment sequencing. Preserve unchanged-region increment, update-in-place increment only after staged config apply, requires-reslice no-increment behavior because upstream returns before line 856, accumulated ref-count mutation through the existing staged helper, and a focused fuzzy-painted state module because the prior painted-region state file reached the 400 LOC split threshold. Defer region merge verification after `PrintApply.cpp:860`, real `PrintRegion`, real `PrintObjectRegions`, loop integration, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m306-print-apply-fuzzy-painted-region-ref-increment.md`.
-
 ## M307: PrintApply region merge verification
 Port the final region-merge verification block from `verify_update_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:860-875`, plus ref-count prerequisite context from `PrintApply.cpp:809`, `PrintApply.cpp:834`, and `PrintApply.cpp:856`, ref helper context from `PrintApply.cpp:729-731`, and `PrintRegion::config()`, `config_hash()`, and `m_ref_cnt` context from `OrcaSlicer/src/libslic3r/Print.hpp:104-149`, into `ares-core` as private staged merge verification. Preserve positive-ref assertion for every all-regions entry, sorting by config hash before comparison, same-hash config equality requiring reslice, hash-collision unequal configs remaining valid, equal configs with different hashes not being compared by this upstream block, and empty/unique region success. Defer real `PrintRegion`, real `PrintObjectRegions`, loop integration, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m307-print-apply-region-merge-verification.md`.
 
 ## M308: PrintApply update_volume_bboxes volume order/cache ids
 Port the model-volume ordering/filtering and cached-volume-id refresh shell from `update_volume_bboxes(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:884-893` and `PrintApply.cpp:946-950`, plus existing staged `model_volume_solid_or_modifier(...)` eligibility context, into `ares-core` as private staged volume-cache state. Preserve sorting model volumes by `ObjectID`, processing only solid-or-modifier volumes, replacing stale cached ids with the current sorted eligible ids, preserving duplicate ids rather than inventing deduplication, clearing stale ids for empty eligible input, and keeping new tests in a focused file below the 400 LOC threshold. Defer single-layer bbox reuse/computation from `PrintApply.cpp:895-907`, multi-layer bbox behavior from `PrintApply.cpp:908-941`, real meshes/transforms/bounding boxes, real `ModelVolumePtrs`, real `LayerRangeRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m308-print-apply-update-volume-bboxes-volume-order-cache-ids.md`.
-
 ## M309: PrintApply update_volume_bboxes single-layer extents
 Port the single-layer `update_volume_bboxes(...)` branch from `OrcaSlicer/src/libslic3r/PrintApply.cpp:895-907`, plus M308 ordering/cache-id context from `PrintApply.cpp:884-893` and `PrintApply.cpp:946-950`, existing staged `StagedVolumeExtents` / `staged_find_volume_extents(...)` context, and staged `model_volume_solid_or_modifier(...)` eligibility context, into `ares-core` as private staged volume-cache state. Preserve processing only eligible model volumes, reusing old extents when an id is cached and present in old extents, inserting supplied new extents when an id is not cached, skipping cached ids missing old extents, preserving input model-volume order, and processing duplicate ids independently. Defer actual `transformed_its_bbox2d(...)`, real meshes/transforms/bounding boxes, multi-layer branch behavior from `PrintApply.cpp:908-941`, final cache-id refresh already staged in M308, real `ModelVolumePtrs`, real `LayerRangeRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m309-print-apply-update-volume-bboxes-single-layer.md`.
 
 ## M310: PrintApply update_volume_bboxes multi-layer old extents
 Port the multi-layer old-volume setup from `update_volume_bboxes(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:908-917`, plus M308 ordering/cache-id context from `PrintApply.cpp:884-893` and `PrintApply.cpp:946-950`, M309 single-layer context from `PrintApply.cpp:895-907`, and existing staged `StagedVolumeExtents` context, into `ares-core` as private staged volume-cache state. Preserve clearing every layer's current volumes when cached ids are empty, capturing every layer's old volumes in layer order when cached ids are non-empty, emptying each layer for later output population, preserving empty layer-range input, and preserving per-layer volume order. Defer layer-height range expansion from `PrintApply.cpp:919-927`, cached multi-layer extent reuse from `PrintApply.cpp:928-936`, uncached bbox generation/insertion from `PrintApply.cpp:937-941`, final cache-id refresh already staged in M308, real meshes/transforms/bounding boxes, real `ModelVolumePtrs`, real `LayerRangeRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m310-print-apply-update-volume-bboxes-multi-layer-old-extents.md`.
-
 ## M311: PrintApply update_volume_bboxes multi-layer expanded ranges
 Port the multi-layer range setup from `update_volume_bboxes(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:919-927`, plus M310 old-extents context from `PrintApply.cpp:908-917`, M308 ordering/cache-id context from `PrintApply.cpp:884-893` and `PrintApply.cpp:946-950`, into `ares-core` by reusing private staged layer-height range state. Preserve copying each layer height range, expanding lower bounds by subtracting `EPSILON`, expanding upper bounds by adding `EPSILON`, preserving layer order, preserving empty input, and not introducing an Ares-specific tolerance policy. Defer cached multi-layer extent reuse from `PrintApply.cpp:928-936`, uncached bbox generation/insertion from `PrintApply.cpp:937-941`, real bbox vector population, real meshes/transforms/bounding boxes, real `ModelVolumePtrs`, real `LayerRangeRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m311-print-apply-update-volume-bboxes-multi-layer-ranges.md`.
 
 ## M312: PrintApply update_volume_bboxes multi-layer cached reuse
 Port the cached-volume reuse branch inside the multi-layer `update_volume_bboxes(...)` loop from `OrcaSlicer/src/libslic3r/PrintApply.cpp:928-936`, plus M310 old-extents context from `PrintApply.cpp:908-917`, M311 expanded-range context from `PrintApply.cpp:919-927`, M308 ordering/cache-id context from `PrintApply.cpp:884-893` and `PrintApply.cpp:946-950`, and existing staged `StagedMultiLayerVolumeCacheLayer`, `StagedVolumeExtents`, and `staged_find_volume_extents(...)` context, into `ares-core` as private staged volume-cache state. Preserve processing only eligible model volumes, appending per-layer old extents only for cached ids present in that layer's old extents, skipping missing old extents without fallback computation, doing nothing for uncached ids, preserving model-volume loop order and layer order, and processing duplicate cached model-volume ids independently. Defer uncached bbox generation/insertion from `PrintApply.cpp:937-941`, real `transformed_its_bboxes_in_z_ranges(...)`, real bbox vector population, real meshes/transforms/bounding boxes, final cache-id refresh already staged in M308, real `ModelVolumePtrs`, real `LayerRangeRegions`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m312-print-apply-update-volume-bboxes-multi-layer-cached-reuse.md`.
-
 ## M313: PrintApply update_volume_bboxes multi-layer uncached insertion
 Port the uncached-volume insertion branch from the multi-layer `update_volume_bboxes(...)` loop at `OrcaSlicer/src/libslic3r/PrintApply.cpp:937-941`, plus M310 old-extents context from `PrintApply.cpp:908-917`, M311 range context from `PrintApply.cpp:919-927`, M312 cached reuse context from `PrintApply.cpp:928-936`, and M308 ordering/cache-id context from `PrintApply.cpp:884-893` and `PrintApply.cpp:946-950`, into `ares-core` as private staged multi-layer uncached bbox insertion state. Preserve filtering to solid-or-modifier model volumes, entering only uncached ids, appending only populated per-layer bboxes to corresponding layer outputs, skipping unpopulated per-layer bboxes, preserving existing output prefixes, preserving model-volume order, and processing duplicate uncached ids independently. Defer full integration with real `ModelVolumePtrs`, real mesh/transform/matrix orchestration, final cache-id refresh already staged in M308, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m313-print-apply-update-volume-bboxes-multi-layer-uncached-insertion.md`.
 
 ## M314: PrintApply generate_print_object_regions layer-range shell
 Port the object reuse/new allocation and layer-range shell from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:953-993`, plus `PrintObjectRegions::LayerRangeRegions`, `all_regions`, `layer_ranges`, `trafo_bboxes`, and `cached_volume_ids` context from `OrcaSlicer/src/libslic3r/Print.hpp:271-296`, into `ares-core` as private staged print-object-region shell state in a new focused module. Preserve clearing all regions, reuse detection when an old object has non-empty layer ranges, reused count/range assertions, reused config refresh, clearing reused volume/painted/fuzzy region lists while preserving existing volumes/cached ids/old transform, and fresh transform/layer-range initialization. Defer `is_mm_painted` / `update_volume_bboxes(...)` from `PrintApply.cpp:995-996`, `get_create_region` from `PrintApply.cpp:998-1010`, volume-region construction from `PrintApply.cpp:1012-1054`, painting/fuzzy construction from `PrintApply.cpp:1056-1101`, real `PrintObjectRegions`, real configs and transforms, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m314-print-apply-generate-object-regions-layer-range-shell.md`.
-
 ## M315: PrintApply generate_print_object_regions update_volume_bboxes call
 Port the MM-painted offset selection and `update_volume_bboxes(...)` call boundary from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:995-996`, plus M314 shell context from `PrintApply.cpp:953-993`, M308-M313 staged `update_volume_bboxes(...)` context, and `ModelVolume::is_mm_painted()` context from `OrcaSlicer/src/libslic3r/Model.hpp:1014`, into `ares-core` as private staged call-boundary state. Preserve `is_mm_painted = num_extruders > 1 && any(model_volume.is_mm_painted)`, preserve offset `0.0` for MM-painted otherwise `max(0.0, xy_contour_compensation)`, and preserve passing shell `trafo_bboxes`, cached volume ids, and layer ranges to the call record. Defer real `update_volume_bboxes(...)` orchestration, `get_create_region` from `PrintApply.cpp:998-1010`, volume-region construction from `PrintApply.cpp:1012-1054`, painting/fuzzy construction from `PrintApply.cpp:1056-1101`, real `PrintObjectRegions`, real configs/transforms, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m315-print-apply-generate-object-regions-update-volume-bboxes-call.md`.
 
 ## M316: PrintApply generate_print_object_regions region-set helper
 Port the local `region_set` and `get_create_region(...)` helper from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:998-1010`, plus M314 shell context from `PrintApply.cpp:953-993` and M315 call-boundary context from `PrintApply.cpp:995-996`, into `ares-core` as private staged region-set state. Preserve lookup ordering by `PrintRegion::config_hash()` and `PrintRegion::config()` ordering, reuse of equal hash/config regions, new-region id assignment from current `all_regions.size()`, append order in `all_regions`, and sorted lookup insertion in `region_set`. Defer volume-region construction from `PrintApply.cpp:1012-1054`, painted/fuzzy construction from `PrintApply.cpp:1056-1101`, real `PrintRegionConfig`, real `PrintRegion`, real config diffing, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m316-print-apply-generate-object-regions-region-set.md`.
-
 ## M317: PrintApply generate_print_object_regions model-part volume region
 Port the model-part `VolumeRegion` append branch from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1012-1024`, plus eligibility context from `PrintApply.cpp:542-546`, `VolumeRegion` field context from `OrcaSlicer/src/libslic3r/Print.hpp:229-240`, M314 layer-range shell context, and M316 staged region-set context, into `ares-core` as private staged model-part volume-region construction. Preserve model-volume iteration order, filtering to solid-or-modifier volume types before branch handling, per-layer `find_volume_extents(...)` gating, parent `-1`, non-null region id creation/reuse through the staged region-set helper, and bbox/extent identity. Defer negative-volume branch from `PrintApply.cpp:1025-1027`, modifier branch from `PrintApply.cpp:1028-1054`, painted/fuzzy construction from `PrintApply.cpp:1056-1101`, real `region_config_from_model_volume(...)`, real `PrintRegionConfig`, real `PrintRegion`, real `ModelVolumePtrs`, real bbox pointers, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m317-print-apply-generate-object-regions-model-part-volume-region.md`.
 
 ## M318: PrintApply generate_print_object_regions modifier parent scan
 Port the modifier parent-scan prefix from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1028-1037`, plus M317 model-part volume-region context from `PrintApply.cpp:1012-1024` and existing staged `find_modifier_volume_extents(...)` behavior, into `ares-core` as private staged modifier parent-scan state. Preserve modifier-only entry, initial `added = false` and `parent_model_part_id = -1`, descending parent scan order, parent eligibility for model-part or modifier regions only, index-preserving parent-region adaptation for staged modifier extents, and intersection gating against the current modifier bbox. Defer config merge and changed-config append from `PrintApply.cpp:1038-1042`, fallback parent-model-part selection and unchanged modifier append from `PrintApply.cpp:1043-1050`, painted/fuzzy construction from `PrintApply.cpp:1056-1101`, real configs/regions, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m318-print-apply-generate-object-regions-modifier-parent-scan.md`.
-
 ## M319: PrintApply generate_print_object_regions modifier changed-config append
 Port the changed-config append branch from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1038-1042`, plus M316 staged region-set context from `PrintApply.cpp:998-1010`, M318 intersecting parent context from `PrintApply.cpp:1028-1037`, and `PrintObjectRegions::VolumeRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:229-240`, into `ares-core` as private staged modifier changed-config append state. Preserve modifier-only entry, explicit derived-config versus parent-config comparison, append only for changed configs, `added = true` only when an append is produced, parent region index propagation, region id creation/reuse through the staged region set, current modifier bbox preservation, and candidate-order appends. Defer fallback parent-model-part selection and unchanged modifier append from `PrintApply.cpp:1043-1050`, painted/fuzzy construction from `PrintApply.cpp:1056-1101`, real `region_config_from_model_volume(...)`, real configs/regions, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m319-print-apply-generate-object-regions-modifier-changed-config-append.md`.
 
 
 ## M320: PrintApply generate_print_object_regions modifier unchanged fallback
 Port the unchanged modifier fallback branch from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1043-1050`, plus M318 intersecting parent context from `PrintApply.cpp:1028-1037`, M319 changed-config `added` context from `PrintApply.cpp:1038-1042`, and `PrintObjectRegions::VolumeRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:229-240`, into `ares-core` as private staged modifier unchanged-fallback state. Preserve selecting only the first unchanged model-part parent, skipping modifier parents for fallback selection, appending only when no changed-config append was produced and a model-part parent was selected, reusing the selected parent region index, current modifier bbox preservation, and modifier-only entry. Defer painted/fuzzy construction from `PrintApply.cpp:1056-1101`, real `region_config_from_model_volume(...)`, real configs/regions, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m320-print-apply-generate-object-regions-modifier-unchanged-fallback.md`.
-
 
 ## M321: PrintApply generate_print_object_regions painted region append
 Port the painted-region append loop from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1056-1067`, plus M316 staged region-set context from `PrintApply.cpp:998-1010`, M317-M320 generated volume-region context, and `PrintObjectRegions::PaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:243-251`, into `ares-core` as private staged generated painted-region append state. Preserve nested iteration order over layer ranges, painting extruders, and volume regions; preserve model-part/modifier parent eligibility; preserve parent config copy with wall, solid infill, and sparse infill filament values overwritten to the painted extruder id; preserve appended extruder id, parent volume-region index, and region id from the staged region set. Defer painted-region sorting from `PrintApply.cpp:1068-1072`, fuzzy painted construction from `PrintApply.cpp:1075-1101`, real `PrintRegionConfig`, real configs/regions/pointers, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m321-print-apply-generate-object-regions-painted-region-append.md`.
 
 
 ## M322: PrintApply generate_print_object_regions painted region sort
 Port the painted-region sort comparator from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1068-1072`, plus M321 painted-region append context from `PrintApply.cpp:1056-1067` and `PrintObjectRegions::PaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:243-251`, into `ares-core` as private staged generated painted-region sort state. Preserve sorting each layer range's painted regions by parent volume region `print_object_region_id()` and then by painted `extruder_id`, while preserving painted-region fields and leaving layer order untouched. Defer fuzzy painted construction from `PrintApply.cpp:1075-1101`, real `PrintRegion` pointers, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m322-print-apply-generate-object-regions-painted-region-sort.md`.
-
 
 ## M323: PrintApply generate_print_object_regions fuzzy volume-region append
 Port the fuzzy painted volume-region parent append loop from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1075-1086`, plus M316 staged region-set context from `PrintApply.cpp:998-1010`, M317-M320 generated volume-region context, and `PrintObjectRegions::FuzzySkinPaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:255-264`, into `ares-core` as private staged generated fuzzy volume-region append state. Preserve the `has_painted_fuzzy_skin` gate, volume-region parent iteration order, model-part/modifier parent eligibility, parent config copy with fuzzy skin changed to `All` unless disabled, appended parent type `VolumeRegion`, parent volume-region index, and region id from the staged region set. Defer painted-region parent fuzzy append from `PrintApply.cpp:1089-1095`, fuzzy painted sorting from `PrintApply.cpp:1097-1100`, real `PrintRegionConfig`, real configs/regions/pointers, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m323-print-apply-generate-object-regions-fuzzy-volume-region-append.md`.
 
 
 ## M324: PrintApply generate_print_object_regions fuzzy painted-region append
 Port the fuzzy painted-region parent append loop from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1089-1095`, plus M316 staged region-set context from `PrintApply.cpp:998-1010`, M321-M322 generated painted-region context, M323 generated fuzzy volume-region context, `PrintObjectRegions::PaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:243-251`, `PrintObjectRegions::FuzzySkinPaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:255-266`, and `FuzzySkinType` context from `OrcaSlicer/src/libslic3r/PrintConfig.hpp:50-57`, into `ares-core` as private staged generated fuzzy painted-region append state. Preserve the `has_painted_fuzzy_skin` gate, source-order iteration over existing painted-region parents, parent config copy with fuzzy skin changed to `All` unless disabled, appended parent type `PaintedRegion`, parent painted-region index, and region id from the staged region set. Defer fuzzy painted sorting from `PrintApply.cpp:1097-1100`, real `PrintRegionConfig`, real configs/regions/pointers, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m324-print-apply-generate-object-regions-fuzzy-painted-region-append.md`.
-
 
 ## M325: PrintApply generate_print_object_regions fuzzy painted-region sort
 Port the fuzzy painted-region sort comparator from `generate_print_object_regions(...)` at `OrcaSlicer/src/libslic3r/PrintApply.cpp:1097-1100`, plus `PrintObjectRegions::FuzzySkinPaintedRegion` context from `OrcaSlicer/src/libslic3r/Print.hpp:255-266`, parent resolution context from `OrcaSlicer/src/libslic3r/Print.cpp:4932-4947`, and M323-M324 generated fuzzy painted-region context, into `ares-core` as private staged generated fuzzy painted-region sort state. Preserve sorting each layer range's fuzzy painted regions by resolved parent `print_object_region_id()`, resolving volume parents through volume regions and painted parents through painted regions, while preserving fuzzy-region fields and leaving layer order untouched. Defer real `PrintRegion` pointers, real parent lookup methods, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m325-print-apply-generate-object-regions-fuzzy-painted-region-sort.md`.
 
 
 ## M326: PrintApply apply normalization prelude
 Port the `Print::apply(...)` normalization prelude from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1115-1127`, plus `normalize_fdm_1` / `normalize_fdm_2` declaration context from `OrcaSlicer/src/libslic3r/PrintConfig.hpp:629-631` and existing Ares normalization context, into `ares-core` as private staged apply-normalization state. Preserve materializing `print_settings_id`, `filament_settings_id`, and `printer_settings_id` before normalization, collecting `used_filaments` in source order from the caller and deriving a membership set, recording `normalize_fdm_1` before `normalize_fdm_2`, passing object count and used-filament vector length to `normalize_fdm_2`, and preserving changed-key output. Defer changed-key logging from `PrintApply.cpp:1127-1133`, support flag handling from `PrintApply.cpp:1134-1138`, scarf-seam handling, extruder variant expansion, real `DynamicPrintConfig`, real `Print`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m326-print-apply-apply-normalization-prelude.md`.
-
 ## M328: PrintApply apply support-used flag
 Port the `Print::apply(...)` support-used assignment from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1134-1138`, plus the preceding apply prelude and changed-key logging context from `PrintApply.cpp:1115-1133` and existing `enable_support` option metadata context, into `ares-core` as private staged apply support-used state. Preserve querying exactly `enable_support`, assigning true only when the option exists and its bool value is true, assigning false when the option is missing or false, and returning an assignment record for later staged apply behavior. Defer scarf-seam handling from `PrintApply.cpp:1140+`, extruder variant expansion, real `ConfigOption`, real `DynamicPrintConfig`, real `Print::m_support_used` mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m328-print-apply-apply-support-used-flag.md`.
 
 ## M329: PrintApply apply scarf joint seam flag
 Port the `Print::apply(...)` scarf joint seam detection and guarded config-set block from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1140-1154`, plus `SeamScarfType` enum mapping from `OrcaSlicer/src/libslic3r/PrintConfig.hpp:216-220` and `OrcaSlicer/src/libslic3r/PrintConfig.cpp:360-365`, into `ares-core` as private staged apply scarf joint seam state. Preserve detecting non-`None` `seam_slope_type` from object-level resolved config, volume override configs, and layer-range override configs; OR detection across all model objects; and conditional config-set intent for exact key `has_scarf_joint_seam` with value `true` only when found. Defer logging from `PrintApply.cpp:1155`, real logging backend, real `DynamicConfig`, `ModelObject`, `ModelVolume`, `ConfigOptionEnum<SeamScarfType>`, mutation of `new_full_config`, extruder variant expansion from `PrintApply.cpp:1157+`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m329-print-apply-apply-scarf-joint-seam-flag.md`.
-
 ## M335: PrintApply apply filament_map extraction
 Port the local `filament_map` option extraction from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1178-1179`, plus downstream `print_config_diffs(...)` consumer context from `PrintApply.cpp:1184` and option-definition context from `PrintConfig.cpp:2401-2405` / `PrintConfig.hpp:1336`, into `ares-core` as private staged apply filament-map extraction state. Preserve source identity `new_full_config`, option key `filament_map`, absent-option empty-vector behavior, present empty-vector behavior, source-order integer copying, and duplicate/negative values without validation or deduplication. Defer the commented else branch from `PrintApply.cpp:1168-1176`, `print_config_diffs(...)`, full/full-object/region diff computation, filament-map mode mutation logic from `PrintApply.cpp:1190+`, real `DynamicPrintConfig`, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m335-print-apply-apply-filament-map-extraction.md`.
 
 ## M337: PrintApply apply filament_map_mode guard
 Port the filament-map processing set setup and guard from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1190-1192`, plus the `print_diff` result context from `PrintApply.cpp:1184`, into `ares-core` as private staged apply filament-map-mode guard state. Preserve the BBS filament-map processing comment intent, `print_diff_set` construction from `print_diff`, unordered-set duplicate suppression, guard key `filament_map_mode`, and entry only when that key is absent. Defer map-mode lookup and `< fmmManual` branch from `PrintApply.cpp:1194-1204`, manual branch from `PrintApply.cpp:1205-1226`, `print_diff` reassignment from `PrintApply.cpp:1227-1228`, real config mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m337-print-apply-apply-filament-map-mode-guard.md`.
-
 ## M338: PrintApply apply filament_map auto-mode gate
 Port the `filament_map_mode` lookup and auto-mode branch gate from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1194-1195`, plus `FilamentMapMode` ordering from `PrintConfig.hpp:424-428` and enum name-map context from `PrintConfig.cpp:577-582`, into `ares-core` as private staged apply filament-map auto-mode gate state. Preserve source config `new_full_config`, option key `filament_map_mode`, required lookup flag `true`, local value identity `map_mode`, and branch entry only for modes ordered before `fmmManual` (`fmmAutoForFlush` / `Auto For Flush`, `fmmAutoForMatch` / `Auto For Match`). Defer the auto-mode inner `filament_map` branch from `PrintApply.cpp:1196-1203`, manual branch from `PrintApply.cpp:1205-1226`, `print_diff` reassignment from `PrintApply.cpp:1227-1228`, real config lookup/mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m338-print-apply-apply-filament-map-auto-mode-gate.md`.
 
 
 ## M339: PrintApply apply auto filament_map diff prune
 Port the auto-mode inner `filament_map` diff-prune branch from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1196-1203`, plus M337 `print_diff_set` context and M338 auto-mode gate context, into `ares-core` as private staged apply auto filament-map diff-prune state. Preserve branch entry only when `filament_map` is present in `print_diff_set`, active `print_diff_set.erase("filament_map")`, the commented `full_config_diff.erase("filament_map")` as a non-action, required `ConfigOptionInts` lookups for old/new `filament_map`, staged `old_opt->set(new_opt)`, and staged `m_config.filament_map = *new_opt`. Defer manual branch from `PrintApply.cpp:1205-1226`, `print_diff` reassignment from `PrintApply.cpp:1227-1228`, real config lookup/mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m339-print-apply-apply-auto-filament-map-diff-prune.md`.
-
 ## M340: PrintApply apply manual filament_map setup
 Port the manual-mode branch setup from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1205-1208`, plus M337 `print_diff_set` context and M338 manual branch context, into `ares-core` as private staged apply manual filament-map setup state. Preserve branch entry as an explicit gate, active `print_diff_set.erase("extruder_ams_count")`, duplicate-suppressed diff-set membership after erasure, old map copy from `m_config.filament_map.values` to `old_filament_map`, and required `ConfigOptionInts` lookup of `new_full_config` key `filament_map` values to `new_filament_map`. Defer same-size comparison and same-map loop from `PrintApply.cpp:1210-1224`, `print_diff` reassignment from `PrintApply.cpp:1227-1228`, real config lookup/mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m340-print-apply-apply-manual-filament-map-setup.md`.
 
 ## M341: PrintApply apply manual filament_map same-map prune
 Port the manual-mode same-size comparison, `same_map` loop, and conditional `filament_map` erase from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1210-1224`, plus M340 old/new map setup context and `used_filament_set` context from `PrintApply.cpp:1121-1122`, into `ares-core` as private staged apply manual filament-map same-map prune state. Preserve the equal-length guard, ordered index visits, continue-on-equal behavior, continue-on-unused-index behavior, break on the first used differing index, and erasing `filament_map` from `print_diff_set` only when `same_map` remains true. Defer `print_diff` reassignment from `PrintApply.cpp:1227-1228`, real config mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m341-print-apply-apply-manual-filament-map-same-map-prune.md`.
-
 ## M342: PrintApply apply print_diff set reassignment
 Port the size-gated `print_diff` reassignment from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1227-1228`, plus M337-M341 staged `print_diff_set` context, into `ares-core` as private staged apply print-diff set reassignment state. Preserve the exact `print_diff_set.size() != print_diff.size()` gate, no reassignment when sizes are equal, reassignment from duplicate-suppressed staged set contents when sizes differ, and unspecified set iteration order semantics. Defer apply-status handling from `PrintApply.cpp:1231-1239`, lock acquisition from `PrintApply.cpp:1241-1242`, real config mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m342-print-apply-apply-print-diff-set-reassign.md`.
 
 ## M343: PrintApply apply status initial diff update
 Port the initial `apply_status` setup, max-based `update_apply_status` helper semantics, and initial non-empty-diff changed update from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1231-1239`, plus M342 finalized `print_diff` context, into `ares-core` as private staged apply-status state. Preserve unchanged initialization, numeric max ordering, changed vs invalidated update mapping, any-diff gate over print/object/region diff lengths, and staged log metadata containing those diff sizes only when the gate fires. Defer lock acquisition from `PrintApply.cpp:1241-1242`, later print/object/region invalidation and status updates, real logging, real config mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m343-print-apply-apply-status-initial-diff-update.md`.
-
 ## M344: PrintApply print_diff config invalidation
 Port the lock-ordered `print_diff` config invalidation block from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1241-1246`, plus M343 max-based status-update context, into `ares-core` as private staged print-diff config invalidation state. Preserve staged lock acquisition before the gate, no invalidation call when `print_diff` is empty, a staged `invalidate_state_by_config_options(new_full_config, print_diff)` call when non-empty, and max-based status aggregation from the invalidation boolean result. Defer placeholder parser/full-config handling from `PrintApply.cpp:1248-1265`, real mutex locking, real background processing stop, real invalidation, real config mutation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
-
-Exit criteria are tracked in `docs/milestones/m344-print-apply-print-diff-config-invalidation.md`.
 
 ## M345: PrintApply full_config_diff placeholder entry
 Port the `full_config_diff` placeholder-parser entry slice from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1248-1256`, plus M343 max-based status-update context, into `ares-core` as private staged full-config placeholder entry state. Preserve current extruder-count capture from `m_config.filament_diameter.size()`, `num_extruders_changed = false`, branch entry only when `full_config_diff` is non-empty, staged changed-branch log metadata, staged `invalidate_step(psGCodeExport)`, max-based status aggregation from that invalidation result, and staged `m_placeholder_parser.clear_config()` after invalidation. Defer placeholder preset assignments from `PrintApply.cpp:1257-1260`, placeholder `apply_config(filament_overrides)` from `PrintApply.cpp:1261-1263`, config mutation from `PrintApply.cpp:1264-1275`, extruder-count change handling from `PrintApply.cpp:1276+`, real logging, real invalidation, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m345-print-apply-full-config-placeholder-entry.md`.
-
 ## M351: PrintApply extruder count change handling
 Port the extruder-count change handling slice from `OrcaSlicer/src/libslic3r/PrintApply.cpp:1276-1279`, plus the pre-branch count capture and full print config assignment context from `PrintApply.cpp:1248-1275`, into `ares-core` as private staged extruder-count change state. Preserve previous-count identity `num_extruders`, current-count source `m_config.filament_diameter.size()`, the inequality branch, no assignment/no changed flag when counts match, and assignment of `num_extruders` to the current count plus `num_extruders_changed = true` when counts differ. Defer full-config branch exit from `PrintApply.cpp:1280`, `ModelObjectStatusDB` construction from `PrintApply.cpp:1282`, model-object synchronization from `PrintApply.cpp:1284+`, real config mutation, real vector storage, public API wiring, profile loading, UI runtime, slicing, extrusion, G-code, crates, dependencies, and Ares-owned pipeline behavior.
 
-Exit criteria are tracked in `docs/milestones/m351-print-apply-extruder-count-change.md`.
-
 ## M852: OrcaSlicer source crate partition checkpoint
 Record the source-structure checkpoint for crate partitioning using `OrcaSlicer/src/CMakeLists.txt`, `OrcaSlicer/src/libslic3r/CMakeLists.txt`, `OrcaSlicer/src/libvgcode/CMakeLists.txt`, and `OrcaSlicer/src/slic3r/CMakeLists.txt` as evidence. Confirm that the active Rust workspace remains `ares-core`, `ares-vgcode`, `ares-cli`, and `ares-wasm`; do not create `ares-geometry`, `ares-config`, `ares-gcode`, `ares-support`, or UI crates without a future source-cited milestone that proves the boundary and updates `Cargo.toml` plus `AGENTS.md`. This milestone is an architecture/documentation gate for the full `libslic3r`/`libvgcode` rewrite, not an Ares-owned pipeline feature.
-
-Exit criteria are tracked in `docs/milestones/m852-orcaslicer-source-crate-partition-checkpoint.md`.
 
 ## Task 22O.1: Classic perimeter prelude
 
@@ -8965,7 +8287,7 @@ Tree style/manual dispatch, modifier region consumers and painted slab/vertical
 projection are integrated. Close the finite final gates in the Tree plan and
 merge the source-closed combined batch; do not indefinitely add painting cases.
 The active region-role rewrite boundary is the user-approved
-[region-role tool emission milestone](superpowers/plans/2026-10-03-region-role-tool-emission.md)
+region-role tool emission milestone
 ([ARD0094](architecture/ard-0094-region-role-tool-ordering-and-writer-state.md)):
 port ToolOrdering.cpp LayerTools/ToolOrdering and GCode.cpp process_layer /
 set_extruder, GCodeWriter and Extruder state into project_slice/gcode_emit.
@@ -9020,10 +8342,10 @@ merge gate, original KSR test, or global printer/option acceptance.
 The web frontend (ARD-0106, M1 merged) is unblocked by two source-cited
 slices. Each slice gets its own REVIEW-REQUEST:
 
-1. [M853](milestones/m853-gcode-processor-move-vertices.md):
+1. M853:
    `GCodeProcessorResult::moves` and `LibVGCodeWrapper::convert` →
    ares-core / ares-vgcode, for toolpath preview.
-2. [M854](milestones/m854-print-config-user-overrides.md):
+2. M854:
    `ConfigBase::set_deserialize` user overrides at the project slice
    boundary, for settings editing and re-slice.
 

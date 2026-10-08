@@ -167,6 +167,6 @@ Excluded: painting brush/UI, progress/debug SVG, OpenGL preview and viewer-only
 caches. Shared serialized paint decoding required for support is not excluded.
 
 Detailed slice history and superseded implementation-state notes are archived
-in the [plan](../superpowers/plans/2026-10-01-tree-support-output-parity.md).
+in the plan.
 The [spec](../superpowers/specs/2026-10-01-tree-support-output-parity.md) and
 ARD0084/0089 define the adjacent source boundaries.
