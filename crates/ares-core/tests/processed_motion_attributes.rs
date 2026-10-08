@@ -31,6 +31,17 @@ use ares_core::{
 };
 use std::path::PathBuf;
 
+#[path = "support/native_policy_checks.rs"]
+mod native_policy_checks;
+
+#[test]
+fn required_native_dynamics_cannot_fall_back_to_frozen_encodings() {
+    native_policy_checks::require_missing_dependencies_fail(
+        "marlin2_classic_jerk",
+        &["ARES_PROCGCODE_DYNAMICS_BIN"],
+    );
+}
+
 const PROJECT: &[u8] = include_bytes!("../../../tests/parity/orca_cli_ender3.3mf");
 
 fn workspace(relative: &str) -> PathBuf {

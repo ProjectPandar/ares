@@ -9,6 +9,17 @@ use ares_core::{
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+#[path = "support/native_policy_checks.rs"]
+mod native_policy_checks;
+
+#[test]
+fn required_native_role_map_cannot_fall_back_to_frozen_capture() {
+    native_policy_checks::require_missing_dependencies_fail(
+        "native_role_map_is_bound_to_same_run_footer",
+        &["ARES_ROLE_ORACLE_LIVE", "ARES_GDB_BIN"],
+    );
+}
+
 const PROJECT: &[u8] = include_bytes!("../../../tests/parity/validation/kobra3-centered/0.8.3mf");
 const NATIVE: &[u8] = include_bytes!("../../../tests/parity/role-filament-usage/native.gcode");
 const MAP: &[u8] = include_bytes!("../../../tests/parity/role-filament-usage/native-map.json");
