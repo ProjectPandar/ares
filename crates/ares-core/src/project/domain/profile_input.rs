@@ -151,28 +151,18 @@ impl Project {
             &ProjectSettingsRaw::default(),
             overrides,
         )?;
-        // With user edits the sparse profile raw cannot carry a full config;
-        // route through the same overlay machinery as the 3MF entry (an
-        // empty embedded view) so `ConfigOverrides` apply last and the typed
-        // settings re-resolve. The no-override path stays byte-identical to
-        // the proven entry.
+        // STL --load-settings is not the BBL 3MF filament-mapping branch
+        // (OrcaSlicer.cpp:2275–2277); apply user edits to the composed profile.
         let (settings, raw) = if overrides.is_empty() {
             // The composed profile raw is already the post-`handle_legacy`
             // view (`Config.cpp:577-579` normalizes every loaded preset at
             // compose, before any overlay).
             (profile.settings.clone(), profile.profile_raw.clone())
         } else {
-            let count = profile.settings.project.preset.filament_settings_id.0.len();
-            let mut merged = merged_profile_raw(
-                &ProjectSettingsRaw::default(),
-                ProjectSettingsRaw::default(),
-                &profile,
-                count,
-                count,
-            )?;
+            let mut merged = profile.profile_raw.clone();
             overrides.apply(&mut merged);
-            // `handle_legacy` on the overlay (`Config.cpp:577-579`) — same
-            // post-legacy contract as the 3MF branch.
+            // `handle_legacy` on user edits (Config.cpp:577–579) precedes
+            // the typed settings rebuild.
             merged.handle_legacy();
             (
                 crate::options::json_deserialize::deserialize_preset_config::<ProjectSettingsBuilder>(merged.clone().into_object())
