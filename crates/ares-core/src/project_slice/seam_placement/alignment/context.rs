@@ -1,4 +1,5 @@
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
+use crate::project_slice::layers::PlannedLayer;
 
 use super::LayerPlan;
 
@@ -6,6 +7,7 @@ pub(super) fn populate(
     layers: &mut [LayerPlan],
     compute_embedding: &[bool],
     layer_slices: &[Vec<ExPolygon>],
+    planned_layers: &[PlannedLayer],
     scale: CoordinateScale,
 ) {
     assert_eq!(layers.len(), compute_embedding.len());
@@ -15,12 +17,11 @@ pub(super) fn populate(
             populate_embedded_distance(&mut layers[layer_index], &layer_slices[layer_index], scale);
         }
         if layer_index > 0 {
-            let layer_height = layers[layer_index].z - layers[layer_index - 1].z;
             let (_, current) = layers.split_at_mut(layer_index);
             populate_overhang(
                 &layer_slices[layer_index - 1],
                 &mut current[0],
-                layer_height,
+                planned_layers[layer_index].height,
                 scale,
             );
         }
@@ -30,14 +31,20 @@ pub(super) fn populate(
 fn populate_overhang(
     previous_slices: &[ExPolygon],
     current: &mut LayerPlan,
-    layer_height: f32,
+    layer_height: f64,
     scale: CoordinateScale,
 ) {
+    // SeamPlacer.hpp:122 uses a float angle; tan(float) rounds before
+    // multiplication by Layer::height (double).
+    let threshold = 45.0_f32 * std::f32::consts::PI / 180.0;
+    let threshold_tangent = f64::from(f64::from(threshold).tan() as f32);
     for index in 0..current.candidates.points.len() {
         let point = position(current, index);
         let flow_width = flow_width(current, index);
         let distance = signed_distance_to_slices(previous_slices, point, scale);
-        current.overhangs[index] = (distance + 0.65 * flow_width - layer_height).max(0.0);
+        let overhang = (f64::from(distance) + f64::from(0.65 * flow_width)
+            - threshold_tangent * layer_height) as f32;
+        current.overhangs[index] = overhang.max(0.0);
     }
 }
 

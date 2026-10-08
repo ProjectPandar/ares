@@ -40,11 +40,13 @@ pub(in crate::project_slice::seam_placement) fn prepare(
             prepare_layer(&regions, z, traversal.scale, nozzle_diameter, visibility)
         })
         .collect::<Vec<_>>();
-    let layer_slices = input.object.as_parts().1;
+    let (post_region, layer_slices) = input.object.as_parts();
+    let (planned_object, _, _) = post_region.as_parts();
     context::populate(
         &mut plans,
         &embedding_layers(traversal, object_index, layers.len()),
         layer_slices,
+        &planned_object.layers,
         traversal.scale,
     );
     for plan in &mut plans {
