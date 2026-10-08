@@ -300,99 +300,23 @@ fn project_3mf_custom(model: &str, settings_config: &str, settings_json: &str) -
     buffer.into_inner()
 }
 
-/// Circle bed, cylinder model: the bounding-box corners fall outside the
-/// circle but all mesh vertices are inside (a cylinder centered near the
-/// bed edge). Upstream accepts (per-vertex test); the bbox-corner
-/// approximation would reject. This test locks in the per-vertex semantics.
+/// Stock-backed Model/BuildVolume rejection, not a bbox-corner approximation.
+/// CLI:5717-5723 -> Model.cpp:692-702/2370-2383/3423-3469 ->
+/// BuildVolume.cpp:377-410. Receipt: stock-circle-print-volume spec/ARD.
 #[tokio::test]
-async fn circle_bed_cylinder_bbox_outside_vertices_inside() {
-    // 72-corner circle bed of radius 55 centered at origin.
-    let mut area = Vec::new();
-    for i in 0..72 {
-        let angle = i as f64 * std::f64::consts::TAU / 72.0;
-        area.push(format!(
-            "{:.5}x{:.5}",
-            55.0 * angle.cos(),
-            55.0 * angle.sin()
-        ));
-    }
-    // Cylinder mesh: 16-segment prism of radius 4, height 10,
-    // centered at (51, 0, 0). All vertices are at distance ≤ 55 from
-    // origin (inside the radius-55 circle): the farthest vertex at
-    // (55, 0) is at distance 55 < 55 + SceneEpsilon. But the bbox
-    // corner (55, 4) is at sqrt(55² + 16) ≈ 55.15 > 55 (outside).
-    // Per-vertex → Inside; bbox-corner → Colliding.
-    let mut vertices = String::new();
-    let cx = 51.0;
-    let cy = 0.0;
-    let r = 4.0;
-    let segs = 16;
-    // bottom ring
-    for i in 0..segs {
-        let a = i as f64 * std::f64::consts::TAU / segs as f64;
-        vertices.push_str(&format!(
-            r#"<vertex x="{}" y="{}" z="0"/>"#,
-            cx + r * a.cos(),
-            cy + r * a.sin()
-        ));
-    }
-    // top ring
-    for i in 0..segs {
-        let a = i as f64 * std::f64::consts::TAU / segs as f64;
-        vertices.push_str(&format!(
-            r#"<vertex x="{}" y="{}" z="10"/>"#,
-            cx + r * a.cos(),
-            cy + r * a.sin()
-        ));
-    }
-    let mut triangles = String::new();
-    // side quads
-    for i in 0..segs {
-        let next = (i + 1) % segs;
-        let b = i;
-        let t = i + segs;
-        let tn = next + segs;
-        triangles.push_str(&format!(
-            r#"<triangle v1="{b}" v2="{next}" v3="{t}"/><triangle v1="{next}" v2="{tn}" v3="{t}"/>"#
-        ));
-    }
-    // bottom cap (fan from vertex 0)
-    for i in 1..segs - 1 {
-        triangles.push_str(&format!(r#"<triangle v1="0" v2="{i}" v3="{}"/>"#, i + 1));
-    }
-    // top cap (fan from vertex segs)
-    for i in 1..segs - 1 {
-        triangles.push_str(&format!(
-            r#"<triangle v1="{segs}" v2="{}" v3="{}"/>"#,
-            segs + i,
-            segs + i + 1
-        ));
-    }
-    let cylinder_model = format!(
-        r#"<?xml version="1.0" encoding="UTF-8"?>
-<model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">
- <metadata name="OrcaSlicer">2.4.2</metadata>
- <resources>
-  <object id="2" type="model"><mesh><vertices>{vertices}</vertices><triangles>{triangles}</triangles></mesh></object>
- </resources>
- <build><item objectid="2" transform="1 0 0 0 1 0 0 0 1 0 0 0" printable="1" auto_drop="1"/></build>
-</model>"#
-    );
-
-    let mut s: serde_json::Value = serde_json::from_str(&settings()).unwrap();
-    s["printable_area"] = json!(area);
-    let s = s.to_string();
-    let gcode = slice_project_plate(
-        project_3mf_custom(&cylinder_model, MODEL_SETTINGS_WITH_INSTANCE, &s),
+async fn circle_bed_cylinder_matches_native_no_suitable_rejection() {
+    let input = include_bytes!("../../../tests/parity/validation/o6-stock-circle-cylinder.3mf");
+    let error = slice_project_plate(
+        input,
         GenerationMetadata::default(),
         None,
         &ConfigOverrides::default(),
         SlicerContext::new(0),
     )
     .await
-    .unwrap();
-    assert!(
-        !gcode.is_empty(),
-        "cylinder with all vertices inside the circle must slice"
+    .unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading."
     );
 }
