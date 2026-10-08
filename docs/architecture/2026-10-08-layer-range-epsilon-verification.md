@@ -73,7 +73,14 @@ Post-edd rebase clippy (workspace/all-target/all-feature, warnings denied),
 core+ares-wasm all-feature wasm32 check, rustfmt and directed CLI binary
 compilation all exited0 at e15. Binary compilation is not Native execution.
 Coordinator subsequently authorized production-zero carry-forward through
-0588388e7 (travel fixture test migration/docs and Native-product deletion);
-final rebase and final test-source lint/compilation are pending.
-This is not a final REVIEW/approval/merge claim. All streams, process diagnostics,
-exact receipts and byte audits stay in /tmp.
+0588388e7 (travel fixture test migration/docs and Native-product deletion).
+Final production-zero rebase succeeded to implementation/documentation HEAD
+`38a040d1276b538c0f04612a88432d80c6386a88`; production-src diff from e15 is empty.
+Workspace/all-target/all-feature clippy with warnings denied, rustfmt and
+four-test directed CLI binary compilation all exited0 on that HEAD. Compilation
+is not Native execution. The core/WASM check at e15 is source-equal carry-forward,
+not a rerun on38a. The following final document-only revision changes no Rust,
+tests or fixtures; all historical run bindings above remain unchanged.
+
+Ready for sole-coordinator REVIEW; no approval, push or merge is claimed.
+All streams, process diagnostics, exact receipts and byte audits stay in /tmp.
