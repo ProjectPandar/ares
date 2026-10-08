@@ -1,6 +1,7 @@
 # Native 清理 B：processor 子片
 
-状态：待审；owner worker6，整体 B 与 runner 策略 owner worker4。
+状态：主体 spec 已批准（2e142621）；本次补充 worker4 核对的 gdb/runner 边界。
+owner worker6，整体 B 与 runner 策略 owner worker4。
 盘点基线：`2385598402cf9e341df7de798d04c268f254cd51`。
 片 A 合入前仅提交本文；实现须基于已合入 A，复用其 required/optional 策略。
 
@@ -25,7 +26,8 @@
 Rust 目标：`crates/ares-cli/tests/orca_parity/runner/` 下按 role、replay、stop
 分文件接入现有测试入口；复用 `runner/cache/processor.rs`，与 worker4 协调其扩展。
 唯一必要的生产边界扩展在 `ares-core` 现有公开 `gcode_processor::process_gcode`
-薄委托。现有 Estimate/processor 仍是上游 GCodeProcessor 的兼容壳，不增加第二循环。
+薄委托：`post_process` 是整体 B 唯一获准的生产 API 例外，owner worker6。
+现有 Estimate/processor 仍是上游 GCodeProcessor 的兼容壳，不增加第二循环。
 不改变 slicing、估时、seam、filament accounting 或标签语义。
 
 ## 公开 replay 边界缺口
@@ -98,24 +100,28 @@ PausePrint 和其相对运动位置，然后由既有 processor 重建 P/R/C。
 不能另起 process 读取切片结果后冒充同进程 footer 证明。
 复用已有 `tools/chain-probe/role-filament-map.py` 的 slice/process reader，保持
 既有 pinned ELF SHA/layout、节点计数/唯一有序 role/cache-reset/Native exit 校验。
-使用现有 Native 二进制，调试器通过 `nix shell nixpkgs#gdb -c gdb` 调用，不重编 Native。
+使用现有 Native 二进制，不重编 Native。gdb 一律直接调用显式 `ARES_GDB_BIN`，
+缺失即 FAIL；不经 nix shell 包环境，不从 PATH 取 gdb。
+若 reader 确需 nix 运行环境，仅允许调用显式 pinned launcher 路径；仍将显式 gdb 路径
+传入该 launcher，不允许它自行选择 gdb。launcher/gdb 路径均进入 cache key 与 receipt。
 选择的普通 Native producer 与 pinned gdb producer 身份分别记录，不能把两者混称。
 
 由 worker4 所有的 runner/cache 实现约定决定最终接线；在现有 processor cache 增加模式，
 不另造缓存框架。key 必须区分实际输入字节、slice/process 模式、选板/命令 recipe、
-实际 ELF、reader/launcher 和既有 producer/resource/replay 身份。
+实际 ELF、reader/launcher、显式 launcher/gdb 路径和既有 producer/resource/replay 身份。
 slice 模式的 G-code/map、process 模式的 map/CSV/metadata 按各自产品集发布；沿用
 现有锁、staging/原子发布及 processor 输出 SHA 校验。失败不发布成功缓存。
 冷缓存、命中和独立测试执行均保留身份/输出 SHA 与比较结果。
 
 完全复用 A 的 `tests/support/native_environment.rs` / runner 可用性边界：
-`ARES_REQUIRE_ORCA=1` 缺任何该例所需 Native/resources/artifact/gdb 前置项必须具名失败；
+`ARES_REQUIRE_ORCA=1` 缺任何该例所需 Native/resources/artifact 前置项必须具名失败；
 optional 缺失打印带 caller 的 `SKIPPED:`，明确比较未执行，不能记作 Native PASS。
 已配置但无效路径、launch/parse/比较失败不能变成 skip。gdb 仅由需要 map 的测试要求，
-其 `ARES_GDB_BIN` 检查复用 A helper；nix shell 内调用该明确指定的 gdb，不以另一
-个 PATH gdb 静默替代。缓存命中前也检查该例的前置条件，不能用缓存掩盖缺 Native。
-保留 nix 调用要求，不新增隐式 oracle 替代品。
-不新增 ARES_ROLE_ORACLE_LIVE 等二级 opt-in 绕开这 12 个比较。
+`ARES_GDB_BIN` 缺失在 required/optional 两种模式均具名 FAIL；该项不得沿用 optional
+缺失时 skip 的分支。已配置路径校验复用 A helper。缓存命中前也检查该例的前置条件，
+不能用缓存掩盖缺 Native/gdb；不新增隐式 oracle 替代品。
+迁移后取消旧 `ARES_ROLE_ORACLE_LIVE` opt-in：12 例默认执行运行时 Native 比较，
+不新增二级 selector；缺普通 Native 配置时仍遵循上述 A 的 required/optional 策略。
 最终 nextest 输出策略和 mandatory 门禁环境由 worker4/协调者统一配置。
 
 ## 两个旧 ignored envelope 诊断
