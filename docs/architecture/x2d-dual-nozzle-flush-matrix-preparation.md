@@ -360,13 +360,19 @@ each with its verifiable evidence — gaps stated explicitly:
    rebuild `0,102,186,0,0,339,621,0`; preserved custom
    `0,42,42,0,0,210,210,0` after one [0.3,1] scaling; multiplier
    prefix `0.3` + second-head default `1`. Whole-output PASS in the
-   seeded run below. **Open follow-up (next item after closure):** no
-   fixture pins a High Flow dataset end-to-end — a runtime Native E2E
-   with a legal two-value `nozzle_volume_type` High Flow input must
-   compare the prepared matrix and the complete G-code against Native
-   (no Native artifacts committed; RED then GREEN, or recorded as a
-   control if directly GREEN). Until it lands, High Flow coverage is
-   `dual-predictors` whole-output PASS only.
+   seeded run below. **High Flow end-to-end landed (2026-10-09):**
+   RED `147948913` exposed that Ares errored
+   `invalid Orca option filament_extruder_variant` where Native slices
+   — the variant-miss policies were not ported. GREEN `3c8ba32e4`
+   ports them: `update_values_to_printer_extruders` falls back to
+   variant index 0 silently (PrintConfig.cpp:9677-9681) and the
+   multiple-filaments overload rescans the id vector for the entry's
+   own id (PrintConfig.cpp:9849-9863). The control
+   `x2d_flush_matrix_high_flow_dataset_matches_native` (legal
+   [High Flow,High Flow] + absent matrix) now compares complete output
+   byte-exact: nozzle_flush_dataset=2,2, matrix
+   0,102,186,0,0,339,621,0, activate_air_filtration_during_print=1,0
+   via the id-position index.
 3. **Complete G-code equality.** Seeded v2 full run at `310f5ae9a`:
    **594/594 PASS, zero skipped** (`review-e0134/final/seeded-v2.log`);
    focused 48/48 incl. all x2d cases. Raw Ares byte comparison against
