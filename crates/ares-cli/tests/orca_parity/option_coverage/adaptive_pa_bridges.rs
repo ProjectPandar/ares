@@ -117,7 +117,11 @@ fn orca_parity_adaptive_pa_bridge_bounded_option_classification() {
                     .all(|line| line == "M900 K0.035; Override pressure advance value")
             );
         }
-        let outcome = crate::compare_case(&sliced);
+        let outcome = if label == "interior" {
+            crate::compare_exported(&runner, &exported)
+        } else {
+            crate::compare_case(&sliced)
+        };
         fs::write(
             case_dir.join("result.json"),
             serde_json::to_vec_pretty(&json!({
@@ -149,6 +153,20 @@ fn orca_parity_adaptive_pa_bridge_bounded_option_classification() {
         outcome.status, "PASS",
         "Native full comparisons passed, but bounded option classification remains {}: {}",
         outcome.status, outcome.detail
+    );
+    assert_eq!(
+        plan.cases
+            .iter()
+            .map(|case| (case.label.as_str(), case.value.clone()))
+            .collect::<Vec<_>>(),
+        [
+            ("disabled-override", Some(json!(["0"]))),
+            ("threshold-equal", Some(json!(["0.0001"]))),
+            ("threshold-above", Some(json!(["0.000101"]))),
+            ("interior", Some(json!(["0.06"]))),
+            ("probe-min", Some(json!(["0.5"]))),
+            ("probe-max", Some(json!(["2.0"]))),
+        ]
     );
     let mut unproven = plan.clone();
     unproven.provably_legal = false;

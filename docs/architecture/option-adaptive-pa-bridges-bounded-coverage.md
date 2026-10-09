@@ -172,6 +172,35 @@ Type2 activation remains worker2's work. Existing Ares scaffold is only the
 compatibility shell around the cited upstream options/consumer, never an
 independent pipeline design.
 
+## Admitted .06 Native nondeterminism (coordinator ruling)
+
+First runtime attempt `0bf96342-efc0-4adf-a0cf-46e8d2e2b67d`:
+8/9 contextual whole comparisons PASS; interior .06 differs at byte20964,
+line662 (internal-solid-infill travel): Native X113.388/Y113.135 versus
+Ares X113.244/Y113.297. Initial Native raw SHA
+`cc5769d8778be94ac91e89b293abccc731dc90185cf621cf4e5cc7baa8aee79f`.
+Classification assertion was not reached; this is not the metadata RED.
+
+Authorized read-only fixed-input investigation kept input raw SHA
+`622a00603557b44d5aec41c49fdeb093aaf01d338d5a1ee73b5267a0541eeb99`
+and every member byte fixed. Three cold Native processes, CPU39 as the original
+receipt, all match two raw-stable public Ares outputs under the existing whole
+stream generated-by-line identity policy. Three cold runs alone have one
+variant; including the initial independently captured Native yields two.
+Ares raw SHA both runs and the original failed case:
+`ed03e3a1d25f4a6a35da152aa1918e0cf8d21713745de91aa698ab98d16d43dd`.
+Original R1 .06 on af739's immutable binary also matches; input members exact.
+Evidence: `/tmp/ares-apa-g1-bridges/nd-diagnosis/{fixed-input-audit.json,original-and-main-control.json}`;
+first failure retained under `/tmp/ares-apa-g1-bridges/red-official`.
+
+Coordinator explicitly ruled Native ND and authorized ONLY this .06 context to
+use the existing `compare_exported` bounded Native retry path. Keep all observed
+variants and the first failure; no new tolerance, filter, comparator, run-budget
+change, chosen frozen authority or production fix. Every resulting PASS still
+requires a complete ordered comparison against a genuine Native output. Re-run
+RED to establish that only the incomplete-classification assertion fails before
+harness GREEN. Other contexts retain their original strict path.
+
 Approval requested: this bounded test-harness contract and Native-backed
 classification RED, followed by harness-only GREEN. No tests/implementation
 start before approval.
