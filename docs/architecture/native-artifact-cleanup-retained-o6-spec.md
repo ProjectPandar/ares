@@ -186,3 +186,23 @@ official pairs compared by test name, lint/fmt/WASM gates and coordinated web
 browser verification of shared WASM plate selection. Prior tests-only carry
 cannot replace these production gates. Other retained/core assertions, the six
 output deletions and the two new bounded retained recipes remain as specified.
+
+## Approved writer-offset supplement
+
+Live Native selected-plate2 retained E2E in independent tests-only commit
+`0a9c3ecd0` exposed skirt motion X differences of1.2 and consequent first-layer
+estimate differences, despite identical -102/index2/channels/full JSON.
+Source `b2a12cf2c` passes all24 bounded CLI/core Native controls on fresh seeded
+cache, including exact whole selected retained bytes; no additional normalizer.
+
+Print.cpp:2634-2637 -> GCode.hpp:218 sets the writer plate offset;
+GCodeWriter.cpp:608,715-716,789,873 subtracts it from every emitted point.
+Ares currently distributes this writer offset among individual emitters.
+SkirtPlan::emit omitted it; this source-cited supplement retains the project
+plate origin and subtracts it at that existing emission boundary. No geometry,
+prefix/mask, cache or early API changes. The existing private skirt unit fixture
+gets zero plate origin only; its assertions are unchanged, no new unit tests.
+No other path-type offset is modified without live runtime evidence.
+
+The coordinator requires complete production gates and coordinated web browser
+verification before deleting the six frozen products and submitting review.

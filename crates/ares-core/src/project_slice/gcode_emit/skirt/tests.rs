@@ -37,6 +37,7 @@ fn single_loop_draft_shield_keeps_only_the_innermost_later_loop() {
         layer_count: 3,
         start_angle_deg: 0.0,
         single_loop_draft_shield: true,
+        plate_origin: (0.0, 0.0),
     };
 
     assert_eq!(plan.loops_for_layer(0).len(), 2);
