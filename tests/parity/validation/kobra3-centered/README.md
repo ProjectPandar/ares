@@ -1,63 +1,59 @@
-# Kobra-3 centered stock-matrix coverage variants
+# Kobra 3 centered input contract
 
-Issue #37 is closed: the **four original inputs remain MATCH**. Their cube
-build translation `(5,-56,5)` produces world bbox `(0,-61,0)..(10,-51,10)`,
-outside plate 1's `(0,0)..(255,255)` bed (origin `(0,0,0)`). Both CLIs reject
-at the volume gate before `Print::validate`; those rows never cover slicing.
-Native records the same Empty text in `result.json.error_string` with
-`CLI_NO_SUITABLE_OBJECTS=-50` (`Utils.hpp:52`, `OrcaSlicer.cpp:5718-5724`).
-Exit 206 versus Ares 1 is the existing CLI-adapter category.
+These source inputs exercise the configured bed polygon and final brim printable-region
+subtraction. Native reference streams are generated at test runtime; this directory
+does not supply captured output receipts or historical comparison expectations.
 
-These additional variants change **only the build-item XY translation** to
-`(127.5,127.5,5)`, producing world bbox
-`(122.5,122.5,0)..(132.5,132.5,10)`. Mesh, component transform, all config,
-profiles, templates, IDs, and plate metadata are unchanged. The retained
-diagnostic authoring script compares every uncompressed ZIP entry and permits
-exactly this one replacement (no script or comparator change is included here):
+## Input provenance
 
-```sh
-perl /tmp/ares-kobra3-gate-order/center-variant.pl \
-  ORIGINAL.3mf VARIANT.3mf provenance.json
-```
+The four centered variants change only the build-item translation in
+`3D/3dmodel.model`: `(5,-56,5)` becomes `(127.5,127.5,5)`. Grounded Z,
+mesh/component transforms, profiles, templates, IDs, and the other eight ZIP
+members remain unchanged. Local mesh bounds are `(-5,-5,-5)..(5,5,5)`.
+Original world bounds are `(0,-61,0)..(10,-51,10)`; centered world bounds are
+`(122.5,122.5,0)..(132.5,132.5,10)`. Bed XY bounds are `(0,0)..(255,255)`
+and plate origin is `(0,0,0)`. The inputs use Klipper and relative E.
 
-All four original profiles are Klipper/relative-E. Missing `G92 E0` is not a
-reset violation: `Print.cpp:1732` requires reset only for Marlin flavors/non-BBL.
-Sources are OrcaSlicer v2.4.2, commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+The hashes below identify source inputs, not Native output.
 
-## Replay and findings (fresh base `818b414e81af271e6ab7edabae75040807b11bba`)
-
-The CLI was rebuilt on this base and all four variants replayed. Previous
-capture on `1c50bf50` gave the same behavioral results; the original four
-Empty replays remain retained separately.
-
-```sh
-ORCA_REPLAY_BIN=/path/to/seeded-orca ORCA_REPLAY_CPU=0 ORCA_REPLAY_SEED=0 \
-  scripts/orca-seeded-parity.sh --slice 0 --outputdir native-out \
-  tests/parity/validation/kobra3-centered/0.2.3mf
-target/debug/ares slice -o ares.gcode \
-  tests/parity/validation/kobra3-centered/0.2.3mf
-```
-
-Native and Ares both exit 0 and emit real G-code for every variant. Raw bytes
-are **not identical**, including the known generator identity/time line. The
-**unchanged** `tests/ksr_fdmtest_v4/golden.rs` ordered-byte comparator, using its
-existing generator-only policy, gives:
-
-| Nozzle | Comparison | First behavioral difference (line 37; pre-Brim travel) |
+| Centered input | Original input SHA-256 | Centered input SHA-256 |
 | --- | --- | --- |
-| 0.2 | DIVERGENT | Native `G1 X119.171 Y119.333 F21000`; Ares `G1 X119.474 Y119.028 F21000` |
-| 0.4 | PASS | None under existing generator-only policy |
-| 0.6 | DIVERGENT | Native `G1 X119.26 Y119.653 F21000`; Ares `G1 X119.359 Y119.553 F21000` |
-| 0.8 | DIVERGENT | Native `G1 X119.296 Y119.815 F21000`; Ares `G1 X119.343 Y119.751 F21000` |
+| `0.2.3mf` | `707ec7efeab7743a52cabc851a024c9408f32fd90e98d5abebceb1812ad341e7` | `d63ac67f57d8cfcc36d4c8cbf62fb11ad436f7893454c8bba2760f52ec61c51c` |
+| `0.4.3mf` | `831fba613b6ba23373fe884aa5abc5601f4d68d46da5f50c545e88c64a43f742` | `f1e8dfd94990ed53e5180e699e28cd460da9c315d7c8a2464af094f8481254cc` |
+| `0.6.3mf` | `9e763ea5197aaa396ee85236031695394422a7a251ef7e7f4b794eeac6f276cd` | `9bcf3a21d416f94a707eba82149fba6eb58cd815918a6369c98d5e345e3a3c06` |
+| `0.8.3mf` | `cfc7f9345ae29eabb4363ad118577d2893a0d0db2bc4bd71f404c0ae89918a14` | `0dc37a07daedf1aa01a48832a2ff3b4e70f6e367075274391e42884a98db1b0c` |
 
-`findings.json` retains original/variant hashes, source command directories,
-provenance, CLI outcomes, complete-stream hashes/lengths and first differences.
-Full raw replay artifacts: `/tmp/ares-kobra3-gate-order/`.
+`0.2.3mf`, `0.6.3mf`, and `0.8.3mf` select `brim_type=outer_only`.
+`0.4.3mf` retains `auto_brim`. Its explicit outer-only derivative changes only
+`Metadata/project_settings.config` key `brim_type` from `auto_brim` to
+`outer_only`; the other eight ZIP members remain unchanged. The handwritten
+recipe is retained in `0.4-outer-only-provenance.json`. The derivative
+`0.4-outer-only.3mf` SHA-256 is
+`7a6e8d8fb0eef2a5467f23ea979b9e9822c42b97b8cc97743ac29cb29080c49c`.
 
-These are **additional coverage fixtures**, not replacements for the four
-original rejection controls or asserted-pass regressions for divergent paths.
-No slicing code, diagnostics, comparators or gate ordering were changed.
-Follow-up assigned to lint **after O6 plate origin**: establish why 0.4 passes while the other three
-nozzles diverge. Trace actual Brim width/spacing/loop counts and the earliest
-differing upstream `Brim.cpp` data before writing a rewrite spec. The first
-G-code difference alone does not establish a root cause or owning function.
+## Source ownership and runtime verification
+
+Upstream revision: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+
+- `libslic3r/Model.cpp:2976,3014-3026`, `Model::setPrintSpeedTable`: configured
+  bed polygon with excluded regions subtracted.
+- `libslic3r/Brim.cpp:421,643-683`, `outer_inner_brim_area`: per-extruder
+  printable bed regions and final object/support brim subtraction.
+- `slic3r/GUI/PartPlate.cpp:2510-2520`, `PartPlate::set_print`, and
+  `libslic3r/Print.cpp:2618,2636-2638`, `Print::export_gcode`: plate origin
+  forwarded to G-code export offset.
+
+`crates/ares-cli/tests/orca_parity/brim_bed_region.rs` owns four runtime checks:
+
+- `brim_bed_region_kobra3_02_outer_matches_native`
+- `brim_bed_region_kobra3_04_outer_matches_native`
+- `brim_bed_region_kobra3_06_outer_matches_native`
+- `brim_bed_region_kobra3_08_outer_matches_native`
+
+Each checks its input SHA, generates a fresh Native stream using the existing
+`OrcaRunner`/`stages::run` adapter, asserts Native brim activation, and compares
+the entire stream using the existing generator-only normalization. The 0.4
+outer test uses `0.4-outer-only.3mf`. Missing Native follows the shared policy:
+required mode fails; optional mode reports a visible skip. Runtime artifacts
+remain outside the repository. Brim controls, processor tests, and WASM input
+consumers retain these same source inputs.
