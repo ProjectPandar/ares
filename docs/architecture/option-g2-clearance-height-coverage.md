@@ -1,6 +1,8 @@
 # G2: bounded extruder clearance and nozzle-height coverage
 
-Status: approved as `d3608b614`; implementation in progress on `af7398b78`.
+Status: harness-only GREEN; pending integration review. Approved spec `d3608b614`.
+Runtime evidence binds CAND `fcd50205a` / BASE `1151db4bc`; later pure-test/docs
+rebase onto `46443344d` carries that evidence, not new-HEAD execution.
 Worker3 owns
 `extruder_clearance_height_to_lid`, `extruder_clearance_height_to_rod`,
 `extruder_clearance_radius`, and `nozzle_height`. Starting main `0291338dc`.
@@ -216,4 +218,106 @@ the named control, mixed nozzles/SEMM/toolhead offsets, printer-specific physica
 safety maxima, malformed float strings/NaN/infinity, SLA and UI arrangement.
 No global boundedness claim, self-designed slicing feature or platform-specific
 core behavior is introduced. This spec is not a fresh 650-domain audit or proof
-that the proposed runtime witnesses have already succeeded.
+of all-printer/default safety. The observed finite witnesses below are narrower.
+
+## Observed verification and carry ledger
+
+No production file changed. The approved GREEN changes only four-key admission,
+its finite context, the key-local exact-f64 application proof and test wiring.
+Near-zero requests remain `"0.00001"`; no G-code numeric/ordering/footer tolerance
+was added. Worker6's bridge/filament-flow dispatch, metadata, exports and bounded
+admission remain intact through the `1151db4bc` and `46443344d` rebase unions.
+
+### Directed cold/hit evidence
+
+All four runs executed CAND `fcd50205a` on main `1151db4bc`, threads 2, load1 <60,
+without timeout. Each ran 8 tests, all PASS:
+
+| Mode | Run ID | Admission load1 |
+| --- | --- | --- |
+| Seeded cold | `a1faef62-4e81-4e4e-8f29-36c9bca08b5b` | 24.27 |
+| Seeded same-cache hit | `304c1831-b0a1-46c7-ba72-f23cc1221bb0` | 41.71 |
+| Official cold | `73501cd7-b2cd-40bf-a035-21998e216101` | 44.59 |
+| Official same-cache hit | `45f87583-7a68-47a9-be19-0bdfa2ff56c5` | 54.50 |
+
+Per stage: 12 canonical full-G-code matches, eight loaded -18 map witnesses;
+14 geometric controls comprise eight full-G-code matches and six validated API
+plus CLI exit 193/-63, diagnostic, stdout/stderr/result and no-output matches.
+The separate selected-key sweep generated/strictly compared all 12 requests,
+four plans PASS, zero rejected. Matching samples with explicitly unproved context
+still classify INCOMPLETE. Inventory contains 650 plans. Cold/hit geometry receipt
+paths are identical per mode: hits prove deliberate reuse, not fresh stability.
+Receipts: `/tmp/worker3-g2-green-directed-v4-{results,evidence}.json` and each
+`-seeded-{cold,hit}` / `-official-{cold,hit}` log, launch, cache and artifact root.
+
+The original inventory diff `004238789` → `ece997b23` proves the other 646 plans
+exactly unchanged: `/tmp/worker3-g2-inventory-diff.json`. Later main-owned bridge
+and filament-flow admissions are carried main changes, not attributed to G2;
+the diff against each new main preserves those branches and changes only G2.
+
+### Full isolated BASE–CAND controls
+
+BASE `1151db4bca5ad6ed1204ba544fe7f6e69fa80344` used clean worktree
+`/tmp/worker3-g2-base-1b1` and fresh independent target
+`/tmp/worker3-g2-base-1b1-target`; CAND
+`fcd50205a7e04b0f6383e70e88cd69f9ea20f650` used
+`/tmp/worker3-early-eight-cand-bfc-target`. Basename history is not the execution
+revision. All four caches were fresh and separate, threads 16/build jobs 8.
+
+| Mode/side | Run ID | Admission load1 | Actual result |
+| --- | --- | --- | --- |
+| Seeded BASE | `d848883b-f816-4f09-8172-0216011af4ad` | 22.94 | 882 PASS |
+| Seeded CAND | `f8524a29-06c9-4b43-a7e7-e4b694f1ef39` | 24.93 | 889 PASS |
+| Official BASE | `1fcbc392-7f8e-450c-97c3-a4c4c2b27a00` | 27.74 | 881 PASS, 1 FAIL |
+| Official CAND | `32deda5c-09f0-4a52-b89f-1264c6af343a` | 18.43 | 889 PASS |
+
+Official BASE failed
+`runner::compatible_regions::infill_first::orca_parity_modifier_infill_first_preserves_region_wall_phases`.
+It did not stop candidate pairing. CAND has no failed names, so its exact raw
+failure-name set is a baseline subset; no ND exemption was needed or granted.
+The coarse driver parser omitted padded first-99 counters and double-counted a
+failure footer. Independent unique-name parsing of untouched logs corrected the
+report, without retry or result alteration; use `-exact-results.json` and
+`-official-exact-failure-subset.json`, not its coarse counts.
+
+Seeded 705 and official 667 common full identity streams are unchanged (only
+entire generated-by lines ignored); zero changed/base-only/ambiguous streams.
+Each has 20 candidate-only streams: 12 canonical plus eight geometric accepts.
+Generic seeded manifests additionally retain 534 common logical labels' exact raw
+Ares SHA sets unchanged, 583 →595 records, and correct independent executable
+paths. All records live under `/tmp/worker3-g2-full-pairs-v2-*`, especially each
+`-{seeded,official}-common-byte-record.{json,stdout}` and launch/log/exit file.
+
+Every blocked preflight is retained. The monitor checked load1 every 180 seconds
+without Native, admitted only <30, and never reran completed phases. Official
+CAND started at local 22:16, overlapping the browser candidate window opened
+22:15. The operator allowed this run to finish; this overlap is retained, not
+hidden. Before any future full start, additionally check coordinator inbox for
+an unfinished `BROWSER-START`; load admission alone is insufficient.
+
+### Local gates, rebases and failed attempts
+
+Strict all-targets/all-features workspace clippy, fmt and WASM checks exited 0;
+default workspace run `ca53826c-dc7e-4b35-9e22-cc60377e55eb` executed
+`294b85448` on `1b1c38eb9`: 8255 PASS, five configuration skips, 691.992s.
+Native environment was removed and visible absence is not Native evidence.
+Files: `/tmp/worker3-g2-local-gates-v2-*`. Its prior clippy failure at `edfc21cfb`
+(regex construction inside ZIP traversal) remains under `-local-gates-v1-*`;
+`294b85448` only moved that construction before the loop.
+
+The `46443344d` pure-test/docs rebase carries local `294b85448` and Native
+`fcd50205a` execution evidence by explicit permission. It is not gate execution
+at the rebased HEAD. Historical execution is retained at
+`pi/worker3-g2-green-execution-fcd`; conflicts were branch unions only, preserving
+bridge/filament-flow and G2 paths; rebase fmt/diff checks pass.
+
+Retained non-GREEN attempts include loaded metadata RED (12 full matches/eight
+loaded-map matches, four final INCOMPLETE failures), metadata countercontrol RED,
+the missing-quick_xml build failure, duplicate-thread argument failure, CPU guard
+blocks, and the first scientific-notation string-check failure in
+`/tmp/worker3-g2-green-directed-v1-*`. The original geometric apparent discrepancy
+used unchecked `slice_project`; its success did not test print validation. That
+claim was retracted, no production RED was manufactured, and the corrected
+validated API/CLI run `e64355d2-9e95-494a-9295-406d8bcf90a4` passed all 14 controls.
+No rejection is counted as successful slicing, and no stock-signal case is
+readmitted by this slice. Integration remains subject to coordinator review.

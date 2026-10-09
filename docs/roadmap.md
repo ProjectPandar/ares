@@ -7,10 +7,11 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### G2 clearance/height coverage: spec pending review (2026-10-09)
+### G2 clearance/height coverage: harness GREEN, pending integration review (2026-10-09)
 
-Test-only bounded `PrintConfig::validate` / `Print` consumer witnesses precede harness classification; no production edits authorized.
-[Proposed scope and exit criteria](architecture/option-g2-clearance-height-coverage.md).
+Four bounded coFloat plans: seeded/official cold/hit 12 strict sweep matches; 14 sequential and 8 loaded-rejection witnesses; no production edits.
+Actual fcd50205a/1151db4bc full pairs: seeded 882→889 PASS, official 881 PASS/1 FAIL→889 PASS; 705/667 common streams unchanged.
+[Source boundary, exclusions and actual execution receipts](architecture/option-g2-clearance-height-coverage.md).
 
 ### Stock signal audit: all twelve cases docs only (2026-10-09)
 
