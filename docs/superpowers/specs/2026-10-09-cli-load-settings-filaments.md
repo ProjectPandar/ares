@@ -1,15 +1,32 @@
 # Spec: CLI `--load-settings` / `--load-filaments` port slice
 
 Date: 2026-10-09 · Status: PROPOSED (awaiting coordinator review; no RED yet)
-Upstream: pinned OrcaSlicer 2.4.2 (`/tmp/ares-orca-procgcode-source`),
-`src/OrcaSlicer.cpp`, `src/libslic3r/PrintConfig.cpp`, `src/libslic3r/Config.cpp`,
-`src/libslic3r/Utils.hpp` · ARD: `docs/architecture/ard-cli-load-settings-filaments.md`
+Upstream: pinned OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
+`src/OrcaSlicer.cpp`, `src/libslic3r/PrintConfig.cpp`,
+`src/libslic3r/Config.cpp`, `src/libslic3r/Utils.hpp` (line numbers below
+verified against that pin) ·
+ARD: `docs/architecture/ard-cli-load-settings-filaments.md`
 
 ## Goal
 
 `ares slice` accepts `--load-settings "machine.json;process.json"` and
 `--load-filaments "filament-0.json;filament-1.json"` with upstream-identical
 composition and error behavior, verified by same-argv runtime-Native E2E.
+
+## Relationship to the existing profile entry (single composition)
+
+The upstream merge below (`OrcaSlicer.cpp:1953-3495`) is THE composition
+boundary this slice ports. `ares-core::profiles` gains exactly one
+merge implementation shaped like it. The existing
+`entry.rs::ProfileSliceRequest` (catalog/selection JSON) keeps its public
+byte API, but its internal composition is refactored to call that same
+merge — its vendor catalog/selection parsing remains an input adapter
+that produces preset fields, not a second composition. Any existing
+overlap in the current private composition logic is replaced in this
+slice, not kept in parallel; where the first GREEN cannot finish that
+fold-in, the overlapping shell is explicitly marked temporary in-code
+and removed before the slice closes. Two parallel compositions are not
+an acceptable end state.
 
 ## Upstream boundary (source-cited)
 
@@ -66,7 +83,9 @@ composition and error behavior, verified by same-argv runtime-Native E2E.
 
 - Input files seed `m_print_config` first: per input file
   `config += std::move(m_print_config); m_print_config = std::move(config)`
-  (`:1870-1871`), so for a bare STL the loaded presets ARE the config.
+  (`:1870-1871`), so an embedded-3MF project config is overlaid by the
+  accumulated print config (and, for a bare STL, the loaded presets ARE
+  the config).
 - Machine merge `:2826-2954`, process merge `:2956-3110` via
   `update_full_config` (`:2744+`), `compute_variant_index`
   (`:2707-2742`), `load_default_gcodes_to_config` (`:2850`, `:2994`),
@@ -115,12 +134,11 @@ flags' codes are pinned the same way.
   `--load-settings <a;b>` and `--load-filaments <a;b;c>` (`;`-split),
   file reads, exit-code/stderr mapping through the existing
   `CliFailure` path. Argv only — no config semantics.
-- `ares-core::profiles`: byte/JSON composition API (pure, WASM-safe)
-  mirroring the merge order above, producing the same
-  `ProjectSettings`-level input the existing profile entry
-  (`entry.rs::ProfileSliceRequest`) produces. Reuses
-  `project_variants` (variant/miss policies), `flush_matrix.rs`
-  (colour/flush recompute) and the existing `composition` module.
+- `ares-core::profiles`: the single byte/JSON composition described
+  above (pure, WASM-safe), producing the `ProjectSettings`-level input
+  the slicing path consumes. Reuses `project_variants` (variant/miss
+  policies), `flush_matrix.rs` (colour/flush recompute) and the existing
+  `composition` module internals it replaces where they overlap.
 - `ares-wasm`: unaffected (no new surface; the byte API is shared).
 
 ## Included
@@ -139,7 +157,9 @@ flags' codes are pinned the same way.
 5. Same-argv E2E harness + controls (below), including error-path
    exit-code/stderr parity assertions.
 
-## Deferred (explicit, no silent acceptance)
+## Deferred (explicit; none of these flags exist in Ares' CLI — clap
+rejects them with an unknown-argument error, matching the "not
+implemented, not silently accepted" rule)
 
 - `--export-3mf`, `--arrange`, `--uptodate-settings`,
    `--uptodate-filaments`, `--downward-check`, upward/downward
@@ -152,7 +172,7 @@ flags' codes are pinned the same way.
    (`:1567-1589`, `:1801-1803`) — separate object-listing slice.
 - GUI load paths (`GUI_App.cpp`).
 
-## E2E plan (RED first; no production change before the RED is recorded)
+## E2E plan (RED first; the only RED is a compiling, failing E2E test)
 
 Harness: `orca_parity` test(s) alongside `stock_validation`, reusing its
 preset reconstruction (vendor machine/process/filament JSON →
@@ -167,19 +187,23 @@ preset reconstruction (vendor machine/process/filament JSON →
    exercising resize/`set_at` and flush recompute.
 3. **Empty-slot default reuse**: `f0.json;;`-shaped list → default
    filament fills slot 1 (upstream `:2202-2214`).
-4. **Error parity**: duplicate machine file; unknown `type`; bad `from`;
+4. **3MF input + `--load-settings` control**: an embedded-project 3MF
+   (existing parity fixture) sliced with `--load-settings` overrides,
+   covering the `:1870-1871` project-config overlay order feeding
+   `update_full_config`.
+5. **Error parity**: duplicate machine file; unknown `type`; bad `from`;
    unloadable JSON — each pins native stderr text + exit code and the
    identical Ares failure (no reference stream exists).
-5. **Prior load-settings cases folded in**: the `stock_validation`
-   matrix (28 pinned vendors incl. the loaded-error family) and the
-   `o8_cubicon_empty_vector.rs` Cubicon vector shape run through the
+6. **Existing load-settings cases**: the `stock_validation` matrix cases
+   whose Native exits normally (success or error code) run through the
    same-argv harness; VENDOR_INCOMPLETE preset-missing errors keep
-   error-text parity.
-6. Modes: strict in both seeded and official for non-`random()` printers
+   error-text parity. Native-crash shapes (e.g. the Cubicon SIGABRT
+   family, `o8_cubicon_empty_vector.rs` vector shape) are documented
+   only — no runtime test, per the established native-crash rule.
+7. Modes: strict in both seeded and official for non-`random()` printers
    (the RNG SKIP rule from the stock sweep applies unchanged if a
    random()-start-gcode printer is ever added).
 
-RED shape: (a) E2E RED — the ares argv does not exist today, so the
-control fails at arg parsing while native produces the reference;
-(b) core composition RED — public API for the merge is absent. Both REDs
-land as failing tests before any production change.
+RED shape: one same-argv E2E RED — the ares argv does not exist today,
+so the control fails at arg parsing while native produces the reference;
+the RED commit compiles (test-only change). No separate core-API RED.
