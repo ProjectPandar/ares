@@ -36,6 +36,26 @@ pub(super) fn emit(
     filament: usize,
     context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
+    // GCode.cpp:5289-5299 runs before set_extruder increments the change count.
+    let settings = &context.traversal.resolved.views.full;
+    let current_extruder = settings
+        .project
+        .gcode
+        .filament_map
+        .0
+        .get(state.extruders.active_id())
+        .map_or(0, |value| (value.0 - 1).max(0) as usize);
+    if state.traditional_timelapse
+        && !state.has_insert_timelapse_gcode
+        && state.extruder_selected
+        && settings.project.print.nozzle_diameter.0.len() == 2
+        && current_extruder == state.most_used_extruder
+    {
+        motion::prepare_traditional_timelapse(output, state);
+        motion::append_exclude_end(output, state);
+        timelapse::append_and_track(output, state, context)?;
+        state.has_insert_timelapse_gcode = true;
+    }
     emit_inner(
         output,
         state,
@@ -99,35 +119,6 @@ fn emit_inner(
         return Ok(());
     }
     state.toolchange_count += 1;
-    // `GCode.cpp:5289-5297`: on dual-nozzle printers the traditional-timelapse
-    // insert fires at the pending toolchange while the current extruder is
-    // the most-used one. Its `retract(false, …, apply_instantly=true)`
-    // no-ops on the retraction itself here (the layer-tail retract at the
-    // instance end already retracted and lifted), leaving the
-    // `add_object_change_labels` flush: the object-end marker (M625,
-    // queued when the instance content ended, `GCode.cpp:5482-5486`)
-    // renders BEFORE `set_extruder`'s toolchange top-up retract
-    // (`GCode.cpp:7754`).
-    let map = &context
-        .traversal
-        .resolved
-        .views
-        .full
-        .project
-        .gcode
-        .filament_map
-        .0;
-    let current_extruder = map
-        .get(state.extruders.active_id())
-        .map_or(0, |value| (value.0 - 1).max(0) as usize);
-    if state.traditional_timelapse
-        && !state.has_insert_timelapse_gcode
-        && map.len() == 2
-        && current_extruder == state.most_used_extruder
-    {
-        motion::append_exclude_end(output, state);
-        state.has_insert_timelapse_gcode = true;
-    }
     motion::retract_for_toolchange(output, state);
     if state.extruder_selected {
         append_filament(output, state, state.extruders.active_id(), false, context)?;

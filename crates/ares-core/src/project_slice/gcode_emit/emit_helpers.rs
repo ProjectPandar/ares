@@ -97,10 +97,10 @@ pub(super) fn append_layer_end_timelapse(
     traditional: bool,
     context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
-    if inserted {
+    if inserted || state.has_insert_timelapse_gcode {
         return Ok(());
     }
-    if traditional && !state.has_insert_timelapse_gcode {
+    if traditional {
         // `GCode.cpp:5538-5546` `add_object_change_labels`: pending
         // object-end labels flush before the layer-end template. When the
         // mid-layer insert already ran, the tail block is skipped
