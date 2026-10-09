@@ -16,6 +16,11 @@ Original official failures remain visible; candidate-only Native path-order ND w
 No comparator change or reruns.
 [Source boundaries, four-leg receipts, raw inventory and adjudication](architecture/g4-manual-map-review.md).
 
+### Printable-height coverage: selected, bounded spec pending review (2026-10-09)
+
+Source-owned scalar range / rectangular BuildVolume Z / last-instance sequential-limit witnesses; reuse G2 fixture, no new validator.
+[Proposed context, phase distinctions and exclusions](architecture/option-printable-height-bounded-coverage.md); no Native or production edits before approval.
+
 ### G2 clearance/height coverage: harness GREEN, pending integration review (2026-10-09)
 
 Four bounded coFloat plans: seeded/official cold/hit 12 strict sweep matches; 14 sequential and 8 loaded-rejection witnesses; no production edits.
