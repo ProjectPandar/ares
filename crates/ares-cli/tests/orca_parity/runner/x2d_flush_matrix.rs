@@ -378,7 +378,7 @@ fn x2d_flush_matrix_high_flow_dataset_matches_native() {
             ),
             ("flush_volumes_matrix", None),
         ],
-        None,
+        Some("; flush_volumes_matrix = 0,102,186,0,0,339,621,0\n"),
     );
 }
 

@@ -29,11 +29,14 @@ pub(super) fn resolve_printer_indices(
     active: &ActiveVariants,
 ) -> Result<Vec<usize>, SliceError> {
     resolve_requests(
-        &source.printer.gcode.printer_extruder_id.0,
-        &source.printer.gcode.printer_extruder_variant.0,
+        &Requests {
+            ids: &source.printer.gcode.printer_extruder_id.0,
+            variants: &source.printer.gcode.printer_extruder_variant.0,
+            groups: &source.printer.remaining.extruder_variant_list.0,
+            key: "printer_extruder_variant",
+            miss_scans_ids: false,
+        },
         physical_requests(&active.0),
-        &source.printer.remaining.extruder_variant_list.0,
-        "printer_extruder_variant",
     )
 }
 
@@ -62,11 +65,14 @@ pub(super) fn resolve_process_indices(
     active: &ActiveVariants,
 ) -> Result<Vec<usize>, SliceError> {
     resolve_requests(
-        &source.process.region.print_extruder_id.0,
-        &source.process.region.print_extruder_variant.0,
+        &Requests {
+            ids: &source.process.region.print_extruder_id.0,
+            variants: &source.process.region.print_extruder_variant.0,
+            groups: &source.printer.remaining.extruder_variant_list.0,
+            key: "print_extruder_variant",
+            miss_scans_ids: false,
+        },
         physical_requests(&active.0),
-        &source.printer.remaining.extruder_variant_list.0,
-        "print_extruder_variant",
     )
 }
 
@@ -98,11 +104,14 @@ pub(super) fn resolve_filament_indices(
         .collect::<Result<Vec<_>, SliceError>>()?;
 
     resolve_requests(
-        &source.project.preset.filament_self_index.0,
-        variants,
+        &Requests {
+            ids: &source.project.preset.filament_self_index.0,
+            variants,
+            groups: &source.printer.remaining.extruder_variant_list.0,
+            key: "filament_extruder_variant",
+            miss_scans_ids: true,
+        },
         requests,
-        &source.printer.remaining.extruder_variant_list.0,
-        "filament_extruder_variant",
     )
 }
 
@@ -167,13 +176,29 @@ fn physical_requests(active_variants: &[String]) -> impl Iterator<Item = (i32, &
         .map(|(index, variant)| ((index + 1) as i32, variant.as_str()))
 }
 
+/// The variant table one `update_values_to_printer_extruders*` overload
+/// resolves against; `miss_scans_ids` selects the overload's miss policy.
+struct Requests<'a> {
+    ids: &'a [OrcaInt],
+    variants: &'a [String],
+    groups: &'a [String],
+    key: &'a str,
+    miss_scans_ids: bool,
+}
+
 fn resolve_requests<'a>(
-    ids: &[OrcaInt],
-    variants: &[String],
+    table: &Requests<'_>,
     requests: impl IntoIterator<Item = (i32, &'a str)>,
-    variant_groups: &[String],
-    variant_key: &str,
 ) -> Result<Vec<usize>, SliceError> {
+    let Requests {
+        ids,
+        variants,
+        groups,
+        key,
+        miss_scans_ids,
+    } = table;
+    let variant_key = key;
+    let variant_groups = groups;
     if variants.is_empty() {
         return Err(invalid(variant_key));
     }
@@ -196,6 +221,13 @@ fn resolve_requests<'a>(
     let indices = requests
         .into_iter()
         .map(|(requested_id, requested_variant)| {
+            // `update_values_to_printer_extruders` falls back to variant
+            // index 0 silently on a miss — "expected during transient UI
+            // states" (PrintConfig.cpp:9677-9681, the extruder loop
+            // branch the CLI slicing path takes). A miss is not an error.
+            // The multiple-filaments overload additionally rescans the
+            // id vector for this entry's own id and prefers that
+            // position (PrintConfig.cpp:9849-9863).
             get_index_for_extruder(
                 (requested_id, requested_variant),
                 Some(ids),
@@ -203,9 +235,15 @@ fn resolve_requests<'a>(
                 variant_groups,
                 1,
             )
-            .ok_or_else(|| invalid(variant_key))
+            .unwrap_or_else(|| {
+                if *miss_scans_ids {
+                    ids.iter().position(|id| id.0 == requested_id).unwrap_or(0)
+                } else {
+                    0
+                }
+            })
         })
-        .collect::<Result<Vec<_>, SliceError>>()?;
+        .collect::<Vec<_>>();
     select_stride(variants, &indices, 1, variant_key)?;
     Ok(indices)
 }

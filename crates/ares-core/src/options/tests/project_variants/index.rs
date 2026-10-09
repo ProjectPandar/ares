@@ -236,7 +236,7 @@ fn empty_boundary_vectors_name_their_orca_keys() {
 }
 
 #[test]
-fn active_branch_invalid_selector_missing_match_and_map_name_keys() {
+fn active_branch_invalid_selector_empty_vectors_and_map_name_keys() {
     let mut source = active_source();
     source.printer.gcode.printer_extruder_variant.0.clear();
     assert_invalid_key(
@@ -244,12 +244,12 @@ fn active_branch_invalid_selector_missing_match_and_map_name_keys() {
         "printer_extruder_variant",
     );
 
+    // PrintConfig.cpp:9677-9681: a selector MISS is not an error — the
+    // printer overload falls back to variant index 0 silently. The
+    // High Flow E2E pins the values this produces end-to-end.
     let mut source = active_source();
     source.printer.gcode.printer_extruder_variant.0[1] = "missing".to_owned();
-    assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
-        "printer_extruder_variant",
-    );
+    assert!(materialize_project_variants(&source, &ints(&[1, 2])).is_ok());
 
     let mut source = active_source();
     source.process.region.print_extruder_variant.0.clear();
