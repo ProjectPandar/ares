@@ -12,9 +12,7 @@ fn official_mode_marks_random_start_gcode_printers_skip() {
         .unwrap();
     assert_eq!(
         super::random_start_gcode_skip(&random, false),
-        Some(
-            "seeded-only: random() in machine_start_gcode, PlaceholderParser.cpp:2319"
-        )
+        Some("seeded-only: random() in machine_start_gcode, PlaceholderParser.cpp:2319")
     );
     // Seeded mode pins the RNG (ORCA_REPLAY_SEED=0); those printers stay on
     // the strict whole-file comparison path.

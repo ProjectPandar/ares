@@ -6,6 +6,26 @@ mod discovery;
 #[path = "sweep_tests.rs"]
 mod tests;
 
+/// Official-only visible skip for printers whose inheritance-resolved
+/// `machine_start_gcode` contains a `{random(min,max)}` draw
+/// (`PlaceholderParser.cpp:2319`): the official reference binary re-rolls
+/// the purge-line coordinates on every run, so whole-file comparison is
+/// nondeterministic there. Seeded mode pins the RNG
+/// (`ORCA_REPLAY_SEED=0`) and keeps the strict comparison path.
+fn random_start_gcode_skip(
+    machine: &serde_json::Map<String, serde_json::Value>,
+    seeded: bool,
+) -> Option<&'static str> {
+    if seeded {
+        return None;
+    }
+    machine
+        .get("machine_start_gcode")?
+        .as_str()? // resolved gcode value, not a filename
+        .contains("random(")
+        .then_some("seeded-only: random() in machine_start_gcode, PlaceholderParser.cpp:2319")
+}
+
 fn run() {
     if !crate::runner::reference_enabled("ARES_PARITY_STOCK_SWEEP") {
         return;
@@ -14,6 +34,7 @@ fn run() {
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     let profiles_root = crate::runner::repo_root().join("OrcaSlicer/resources/profiles");
     let model = crate::runner::repo_root().join("tests/parity/cube10.stl");
+    let seeded = std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() == Ok("1");
     let mut outcomes = Vec::new();
     let vendors = match discovery::vendors(&profiles_root) {
         Ok(vendors) => vendors,
@@ -36,6 +57,20 @@ fn run() {
         };
         for printer in profiles.instantiated_machine_names() {
             let label = format!("stock/{vendor}/{printer}");
+            if let Some(reason) = profiles
+                .machine(&printer)
+                .ok()
+                .and_then(|machine| random_start_gcode_skip(&machine, seeded))
+            {
+                outcomes.push(ParityOutcome {
+                    label: label.clone(),
+                    status: "SKIP",
+                    detail: reason.to_owned(),
+                    artifacts: None,
+                });
+                eprintln!("[stock {}/sweep] SKIP {label}", outcomes.len());
+                continue;
+            }
             let exported = crate::select_printer(&profiles, &vendor, &printer)
                 .and_then(|selection| super::export(&runner, &profiles, &selection, &model));
             let outcome = match exported {
