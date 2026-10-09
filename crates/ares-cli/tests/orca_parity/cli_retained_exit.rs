@@ -14,11 +14,7 @@ fn fixtures() -> std::path::PathBuf {
 
 type NativeChannels = (Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>);
 
-fn native_reference(
-    input: &Path,
-    second: bool,
-    artifacts: &Path,
-) -> Option<NativeChannels> {
+fn native_reference(input: &Path, second: bool, artifacts: &Path) -> Option<NativeChannels> {
     let runner = crate::runner::OrcaRunner::from_env().unwrap()?;
     let native = runner.retained_cli_reference(input, second).unwrap();
     let hit = runner.retained_cli_reference(input, second).unwrap();
