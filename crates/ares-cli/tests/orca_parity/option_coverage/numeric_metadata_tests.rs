@@ -70,7 +70,6 @@ fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
     };
     for key in [
         "layer_height",
-        "extruder_printable_area",
         "skin_infill_line_width",
         "filament_map",
         "filament_self_index",
@@ -79,6 +78,18 @@ fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
         assert!(!plan.provably_legal, "{key}");
         assert!(plan.omission.is_some(), "{key}");
     }
+    let grouped = plans
+        .iter()
+        .find(|plan| plan.key == "extruder_printable_area")
+        .unwrap();
+    assert!(
+        grouped.provably_legal,
+        "extruder_printable_area bounded authored scope"
+    );
+    assert!(
+        grouped.omission.is_none(),
+        "extruder_printable_area is not numeric"
+    );
 }
 
 #[test]

@@ -80,7 +80,12 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             option_type.as_str(),
             "coString" | "coStrings" | "coPoint" | "coPoints"
         );
-        provably_legal = unbounded_schema || key == "enable_long_retraction_when_cut";
+        // PrintConfig.cpp:692-696 / Config.hpp:1605-1717: the admitted
+        // grouped polygons cover this bounded authored scope, not numeric endpoints.
+        let grouped_printable_area =
+            option_type == "coPointsGroups" && key == "extruder_printable_area";
+        provably_legal =
+            unbounded_schema || grouped_printable_area || key == "enable_long_retraction_when_cut";
         (
             authored
                 .iter()

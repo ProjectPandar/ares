@@ -301,7 +301,15 @@ fn serialize_percent_probe(value: f64) -> String {
 
 pub(super) fn case(label: &str, value: &str, entry: &Value) -> OptionCase {
     let scalar = Value::String(value.to_owned());
-    let value = if entry.get("wire_shape").and_then(Value::as_str) == Some("array") {
+    let value = if entry.get("key").and_then(Value::as_str) == Some("extruder_printable_area") {
+        // Config.hpp:1638-1647::vserialize emits one string per polygon group.
+        Value::Array(
+            value
+                .split('#')
+                .map(|group| Value::String(group.into()))
+                .collect(),
+        )
+    } else if entry.get("wire_shape").and_then(Value::as_str) == Some("array") {
         Value::Array(vec![scalar])
     } else {
         scalar

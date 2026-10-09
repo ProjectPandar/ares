@@ -96,8 +96,16 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         // model, so probe the whole Ender-3 envelope rather than a sub-rect.
         "printable_area" => &[("probe-bed", "0x0,220x0,220x220,0x220")],
         // `extruder_printable_area` (coPointsGroups): one polygon per
-        // extruder; the single-extruder profile takes one bed-sized group.
-        "extruder_printable_area" => &[("probe-bed", "0x0,220x0,220x220,0x220")],
+        // extruder; bounded single-nozzle admission covers one/two overlapping
+        // polygons, not shared-bed or per-head routing geometry.
+        "extruder_printable_area" => &[
+            ("probe-bed", "0x0,220x0,220x220,0x220"),
+            ("probe-inset", "10x10,210x10,210x210,10x210"),
+            (
+                "probe-overlap",
+                "0x0,220x0,220x220,0x220#10x10,210x10,210x210,10x210",
+            ),
+        ],
         // Infill rotation templates take a comma list of degrees.
         "solid_infill_rotate_template" | "sparse_infill_rotate_template" => &[("probe", "30,60")],
         // Explicit formats survive handle_legacy_composite unchanged.
