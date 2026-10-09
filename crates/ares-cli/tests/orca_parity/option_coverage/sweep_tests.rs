@@ -102,3 +102,38 @@ fn wall_proofs(root: &std::path::Path) -> std::collections::BTreeMap<PathBuf, St
         })
         .collect()
 }
+
+// PrintConfig.cpp:5879-5894: both enum values need successful full-stream
+// coverage, not merely a legal schema value followed by Native rejection.
+#[test]
+fn orca_parity_timelapse_type_compares_both_values_as_complete_domain() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
+    let selection =
+        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
+    let machine = profiles.machine(&selection.printer).unwrap();
+    let mut process = profiles.process(&selection.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    let mut filaments = selection
+        .filaments
+        .iter()
+        .map(|name| profiles.filament(name).unwrap())
+        .collect::<Vec<_>>();
+    parity::normalize_filament_defaults(&mut filaments);
+    let plan = domains::load(&runner::repo_root())
+        .into_iter()
+        .find(|plan| plan.key == "timelapse_type")
+        .unwrap();
+    assert_eq!(
+        plan.cases
+            .iter()
+            .map(|case| case.label.as_str())
+            .collect::<Vec<_>>(),
+        ["0", "1"]
+    );
+    let outcome = execute_plan(&runner, &plan, &machine, &process, &filaments);
+    assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+    assert_eq!(outcome.compared, 2, "{}", outcome.detail);
+}
