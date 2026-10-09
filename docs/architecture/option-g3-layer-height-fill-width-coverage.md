@@ -1,6 +1,6 @@
 # G3: bounded layer-height and LockedZag width coverage
 
-Status: SPEC-REQUEST. Worker6 owns four test-harness domains:
+Status: approved specification `94682fffb`. Worker6 owns four test-harness domains:
 `layer_height`, `initial_layer_print_height`, `skin_infill_line_width`, and
 `skeleton_infill_line_width`. Base main `bc78d50bd`. This slice does not
 authorize changes to production validation, slicing, Flow or fill generation.
@@ -17,7 +17,7 @@ Pinned OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 | Loaded configuration | `PrintConfig.cpp:10337-10351,10488-10517::validate` | Reject nonpositive heights; normal height also has the scaling-remainder predicate; width maximum is five times maximum nozzle diameter |
 | Applied print validation | `Print.cpp:1543-1556,1639-1672::validate` | Height may equal the relevant minimum used nozzle diameter; nonzero absolute width must exceed layer height and be at most five times maximum used nozzle diameter |
 | Layer parameters | `Slicing.cpp:69-146::slicing_parameters`, `:809-868::generate_object_layers` | Store configured normal/first heights, construct object layers; profile limits also incorporate configured normal height |
-| Actual LockedZag flow | `Fill/Fill.cpp:990-1000::group_fills`, `Flow.cpp:129-143,200-206` | Nonbridge LockedZag builds skin/skeleton flows from region width and actual surface/layer height; literal nonpercent zero selects auto width, while zero percent is not that auto branch |
+| Actual LockedZag flow | `Fill/Fill.cpp:990-1000::group_fills`, `Flow.cpp:21-34,129-143,200-206` | Nonbridge LockedZag builds skin/skeleton flows from region width and actual surface/layer height; literal nonpercent zero selects auto width, while zero percent is not that auto branch |
 
 The schema's inherited `FLT_MAX` ceiling (`Config.hpp:2475-2479`) is not a
 legal physical endpoint. `MAX_LINE_WIDTH_MULTIPLIER` is 5
@@ -145,3 +145,28 @@ malformed values, all printer geometries and arbitrary Flow feasibility.
 G2 clearance/height domains and printer_technology remain separate assignments.
 Any unexpected Native admission or production parity failure requires reporting;
 this spec does not authorize reducing requests or repairing core behavior.
+
+## Width slice conclusion
+
+RED `8c0179910` and GREEN `dc968c79c` establish the two width domains' declared
+bounded scope. Each canonical seven-request set and the ten-request second
+context produce actual sparse extrusion and complete Native/Ares equality.
+Runtime Native retains all five rejection controls per key, including the
+distinction between literal-zero auto width and zero-percent Flow failure.
+Seeded and official cold/hot runs also execute both unfiltered domain sweeps:
+14 generated, 14 strictly compared, zero rejected; both scoped rows are PASS.
+
+The 650-row plan inventory changes only these two classifications; all authored
+case values and the other 648 rows are unchanged. Width metadata names the
+physical context and deferred behavior. The negative metadata lock for skin
+width becomes a bounded-positive assertion, alongside skeleton width; normal
+layer height, filament map/self-index and the printable-area control retain
+their previous expectations. The explicitly limited/unproven countercontrols
+still assert INCOMPLETE and cannot become an empty loop.
+
+Fresh base/candidate controls preserve every common Ares raw stream: 533
+seeded keys and 522 official keys. Each producer's sole existing test-state
+change is the selected width sweep FAIL to PASS; the additional second-context
+test passes. No production source, comparator, cache or input fixture changes.
+This is not a fresh 650-domain execution or a claim about all Flow contexts.
+The two layer-height domains remain for their separate Native-backed slice.
