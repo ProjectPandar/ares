@@ -2,6 +2,7 @@ mod arc_accounting;
 mod delays;
 mod envelope;
 mod estimate;
+mod estimated_stats;
 mod export_lines;
 pub(super) mod filament_change;
 mod material_statistics;
@@ -50,6 +51,8 @@ pub(super) struct ProcessorConfig<'a> {
     /// `GCodeProcessorResult::extruder_colors`
     /// (`GCodeProcessor.cpp:2321-2343`).
     extruder_colors: Vec<String>,
+    /// `m_writer.extruders()` ids, sorted (`GCode.cpp:1904-1940`).
+    writer_extruders: Vec<usize>,
 }
 
 impl ProcessorLimits {
@@ -59,6 +62,7 @@ impl ProcessorLimits {
             settings,
             record_moves: false,
             extruder_colors: Vec::new(),
+            writer_extruders: Vec::new(),
         }
     }
 }
@@ -74,6 +78,13 @@ impl ProcessorConfig<'_> {
     pub(super) fn extruder_colors(self, extruder_colors: Vec<String>) -> Self {
         Self {
             extruder_colors,
+            ..self
+        }
+    }
+
+    pub(super) fn writer_extruders(self, writer_extruders: Vec<usize>) -> Self {
+        Self {
+            writer_extruders,
             ..self
         }
     }
@@ -253,6 +264,13 @@ pub(super) fn process(
         .map(|(recorder, line_map)| recorder.finish(&line_map))
         .unwrap_or_default();
     let mut statistics = estimate.print_statistics;
+    // `GCodeProcessor::get_time` returns the float machine time.
+    statistics.normal_time = estimate.total as f32;
+    let print_statistics = estimated_stats::update_print_estimated_stats(
+        &statistics,
+        &config.writer_extruders,
+        config.settings,
+    );
     statistics.volumes_per_color_change =
         std::mem::take(&mut processor_result.print_statistics.volumes_per_color_change);
     processor_result.print_statistics = statistics;
@@ -262,7 +280,7 @@ pub(super) fn process(
         crate::ProcessedGCode {
             gcode,
             result: processor_result,
-            print_statistics: crate::PrintStatistics::default(),
+            print_statistics,
         },
         estimate.printable_area,
     )

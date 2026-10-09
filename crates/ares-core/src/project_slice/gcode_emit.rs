@@ -389,6 +389,7 @@ pub(super) fn emit(
         processor::ProcessorLimits::from_traversal(traversal, state.tags.is_bbl())
             .with_settings(&traversal.resolved.views.full)
             .extruder_colors(extruder_colors)
+            .writer_extruders(state.extruders.ids().to_vec())
             .recording_moves(record_moves),
     );
     retained_output::check(processed, printable_area, traversal)
