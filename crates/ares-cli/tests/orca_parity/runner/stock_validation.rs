@@ -6,7 +6,8 @@ use ares_core::{
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
-use super::{OrcaRunner, stages, vendor, write_json};
+use super::profile_entry::{vendor, write_json};
+use super::{OrcaRunner, stages};
 
 #[path = "stock_validation/cases.rs"]
 mod cases;
