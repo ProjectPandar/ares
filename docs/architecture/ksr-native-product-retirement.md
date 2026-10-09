@@ -1,7 +1,7 @@
 # KSR historical Native product retirement
 
-Prepared locally under P3. Browser runtime migration and all final gates must be
-GREEN before review or push; this document does not claim those pending results.
+KSR, CONFIG_BLOCK, classic mutation and browser consumers now obtain their
+Native reference at runtime. The retired files have no executable consumers.
 
 The source boundary remains Print.cpp:2618-2638 Print::export_gcode,
 GCode::do_export, and GCode.cpp:5591-5643 GCode::append_full_config. See
@@ -142,8 +142,24 @@ fn config_export_fixture_freezes_the_committed_reference_block_contract() {
 
 ## Reference audit and exclusions
 
-All executable frozen reads in crates/, scripts/, web/ and tests/ must be absent
-before review. Architecture/history documents may still name retired products
+The executable-reference audit in crates/, scripts/, web/ and tests/ found zero
+remaining reads of the four deleted products. Architecture/history documents may
+still name retired products
 as evidence, without acting as reference readers. No production, shared cache,
 web's Ender3 roundtrip or worker4 consumer groups are changed. No new ignore,
 probe, normalization rule, Native output or fixed output hash is introduced.
+
+## Browser authority
+
+The active browser consumer compares actual WASM-produced KSR bytes with the
+runtime initialized Native producer using the unchanged full ordered comparator.
+Only the generated-by line is normalized; no CLI capture substitutes for browser
+output. The system Chrome run passed all three browser tests, including complete
+Native equality and repeat-slice equality. The earlier bundled-headless-shell
+launch failure is INCONCLUSIVE: missing NixOS shared libraries prevented every
+test body from running. It is neither RED nor GREEN.
+
+Without Native dependencies the browser consumer follows the shared visible
+SKIPPED policy; required mode fails. With Native available, a missing actual
+browser capture fails. The default-environment policy test itself remains active
+and does not require an external artifact root.
