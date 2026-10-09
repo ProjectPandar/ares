@@ -12,11 +12,13 @@ fn fixtures() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/parity/validation")
 }
 
+type NativeChannels = (Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>);
+
 fn native_reference(
     input: &Path,
     second: bool,
     artifacts: &Path,
-) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>)> {
+) -> Option<NativeChannels> {
     let runner = crate::runner::OrcaRunner::from_env().unwrap()?;
     let native = runner.retained_cli_reference(input, second).unwrap();
     let hit = runner.retained_cli_reference(input, second).unwrap();
@@ -155,6 +157,7 @@ async fn circle_bed_per_vertex_accepts_inward_cylinder_then_rejects_export() {
     let Some((_, _, _, expected)) = native_reference(&input, false, &artifacts) else {
         return;
     };
+    let expected = expected.as_slice();
     let result = slice_project_plate(
         fs::read(&input).unwrap(),
         GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
@@ -189,7 +192,7 @@ async fn circle_bed_per_vertex_accepts_inward_cylinder_then_rejects_export() {
     };
     assert_eq!(
         normalized(&gcode),
-        normalized(&expected),
+        normalized(expected),
         "rejected output must retain Native whole bytes; only generator line may differ"
     );
 }
