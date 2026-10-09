@@ -64,8 +64,14 @@ fn circle_plate_origin_matches_native_empty_selected_plate() {
     );
     assert_eq!(output.stdout, captured.stdout);
     assert_eq!(output.stderr, captured.stderr);
+    let ares_json = fs::read(artifacts.join("result.json")).unwrap();
+    let ares_parsed: serde_json::Value = serde_json::from_slice(&ares_json).unwrap();
     assert_eq!(
-        result_comparison_bytes(&fs::read(artifacts.join("result.json")).unwrap()),
+        ares_parsed["plate_index"], parsed["plate_index"],
+        "Native -50 reports the actually selected plate: {artifacts:?}"
+    );
+    assert_eq!(
+        result_comparison_bytes(&ares_json),
         result_comparison_bytes(&native_json)
     );
     assert!(!output_path.exists());
