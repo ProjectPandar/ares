@@ -75,8 +75,9 @@ Ares matrix entry boundary is the existing
 `option_coverage/sweep.rs::export_case→runner::application::verify_value→compare_exported_for`;
 Ares selected-profile/core slicing boundary is `project_slice/profile_entry.rs`
 and `project_slice/state.rs`, not an SLA pipeline port in this report.
-ARD0022 explicitly reserves both SLA/FDM concepts to core, and roadmap:549
-retains this historical SLA→FFF mismatch as a failure. Do not modify the harness
+ARD0022 explicitly reserves both SLA/FDM concepts to core, and the roadmap's
+historical option-coverage checkpoint (trimmed from the live document;
+see git history) retains this historical SLA→FFF mismatch as a failure. Do not modify the harness
 status, add an invented technology fallback or declare broader scope exclusions.
 
 ## Native timelapse rejection, not a new missing Ares detector
