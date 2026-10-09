@@ -68,5 +68,12 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   44px camera toolbar touches the summary card and the layer label.
 - Lighthouse targets. `web/e2e/lighthouse.mjs` gates the median
   Accessibility >= 95, Best Practices >= 95 and SEO >= 90 of three runs per
-  preset; SEO (no meta description, no `robots.txt`) and the desktop
-  `target-size` audit are the next slices, Performance is tracked per slice.
+  preset; the desktop `target-size` audit is the next slice. Performance is
+  recorded, not optimised for the score: observed mobile LCP equals FCP
+  (461 ms, the canvas-hint text in the first frame), and Lighthouse's
+  simulated LCP is set by the three.js Viewport chunk (149 KB gzip) that
+  `ViewportView.tsx` starts downloading at about 80 ms so it overlaps the
+  shell. Deferring that download would only make the 3D view ready later on
+  real devices, so it is not done. Pre-linking the bed shaders
+  (`compileAsync`) gave no measurable gain: the first synchronous WebGL call
+  pays the GPU-process start-up wait wherever it happens.
