@@ -1,5 +1,11 @@
 # KSR Native references and CONFIG_BLOCK consumer migration
 
+The post-preflight authority ruling in
+[KSR runtime Native authority](ard-ksr-initialized-runtime-authority.md)
+supersedes preservation of original frozen-file self-checks below. Ares output
+comparisons retain their strictness against runtime initialized bytes; original
+capture self-checks retire with that capture, without rebinding their hashes.
+
 ## Source classification
 
 Upstream is OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
