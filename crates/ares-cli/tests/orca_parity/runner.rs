@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
 
+#[path = "runner/config_block_roundtrip.rs"]
+mod config_block_roundtrip;
 #[path = "runner/native_plate_origin_migration.rs"]
 mod native_plate_origin_migration;
 
