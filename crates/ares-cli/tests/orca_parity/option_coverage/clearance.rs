@@ -11,6 +11,84 @@ use serde_json::json;
 #[path = "clearance/geometry.rs"]
 mod geometry;
 
+pub(in crate::option_coverage) fn metadata(key: &str) -> serde_json::Value {
+    json!({
+        "claim":"finite samples and named sequential witnesses; not a global float/geometric domain",
+        "source":["PrintConfig.cpp:10436-10447", "Print.cpp:613-930,1284-1306", "Print.hpp:1120-1122"],
+        "loaded_lower_bound":{"value":0,"inclusive":false},
+        "global_upper_bound":"unproved; neither 250/400 nor FLT_MAX is a physical safety maximum",
+        "canonical":{"nozzle_diameter":["0.4"],"print_sequence":"by layer","near_zero_sample":"0.00001",
+            "retained_samples":if key == "nozzle_height" { ["1","400"] } else { ["0.5","250"] }},
+        "loaded_rejections":["0","-0.00001"],
+        "sequential":{"model":"two separate cube10 objects, bottom Z=0","print_sequence":"by object",
+            "nozzle_diameter":["0.4"],"skirt_loops":0,"raft_layers":0,"enable_support":false,
+            "draft_shield":"disabled","enable_prime_tower":false,"timelapse":"traditional",
+            "enable_wrapping_detection":false,"disable_m73":true,
+            "witnesses":"lid/rod 9.99999,10,10.00001; radius20.19999,20.2,20.20001; nozzle9.99999,10,10.00001; tall-last/reverse",
+            "entry":"slice_project_plate_validated; rejected CLI channels/result/code also compared"},
+        "deferred":"global upper bound; arbitrary meshes, nonzero Z, rotations, skirts/draft-shield, mixed nozzles, support/raft, compensation"
+    })
+}
+
+#[test]
+fn orca_parity_g2_inventory_record() {
+    let Some(plans) = domains::try_load(&runner::repo_root()) else {
+        return;
+    };
+    if std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_none() {
+        crate::native_environment::skipped("offline G2 inventory artifact root is unset");
+        return;
+    }
+    let records = plans.iter().map(|plan| json!({
+        "key":plan.key,"type":plan.option_type,"scope":plan.raw_scope,"source":plan.source,
+        "cases":plan.cases.iter().map(|case|json!({"label":case.label,"value":case.value})).collect::<Vec<_>>(),
+        "omission":plan.omission,"provably_legal":plan.provably_legal,
+        "width_domain":plan.width_domain.as_ref().map(|domain|json!({"metadata":domain.metadata,"probes":domain.probes}))
+    })).collect::<Vec<_>>();
+    crate::artifacts::overwrite(
+        &crate::artifacts::root_from_env()
+            .unwrap()
+            .join("g2-all-650-plans.json"),
+        &serde_json::to_vec_pretty(&records).unwrap(),
+    )
+    .unwrap();
+}
+
+#[test]
+fn orca_parity_g2_bounded_metadata_and_unproved_countercontrol() {
+    let Some(plans) = domains::try_load(&runner::repo_root()) else {
+        return;
+    };
+    for key in [
+        "extruder_clearance_height_to_lid",
+        "extruder_clearance_height_to_rod",
+        "extruder_clearance_radius",
+        "nozzle_height",
+    ] {
+        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+        let mut unproved = plan.clone();
+        unproved.provably_legal = false;
+        unproved.omission =
+            Some("matching samples without sequential consumer admission remain unproved");
+        let outcome = OptionOutcome::executed(&unproved, unproved.cases.len(), Vec::new(), 0, None);
+        assert_eq!(outcome.status, "INCOMPLETE");
+        assert!(!outcome.detail.is_empty());
+        assert!(
+            plan.provably_legal,
+            "{key}: finite consumer context not admitted"
+        );
+        assert!(plan.omission.is_none());
+        assert_eq!(
+            plan.cases
+                .iter()
+                .map(|case| case.label.as_str())
+                .collect::<Vec<_>>(),
+            ["probe-min", "probe-max", "near-zero"]
+        );
+        assert_eq!(metadata(key)["loaded_lower_bound"]["inclusive"], false);
+    }
+}
+
 #[test]
 fn orca_parity_g2_lid_loaded_and_complete_output() {
     loaded_and_complete(

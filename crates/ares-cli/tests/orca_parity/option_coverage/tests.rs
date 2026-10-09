@@ -2,7 +2,7 @@ use super::{OptionOutcome, domains, inject_case};
 use crate::runner;
 
 #[path = "clearance.rs"]
-mod clearance;
+pub(super) mod clearance;
 
 #[test]
 fn option_domain_plan_is_complete_and_source_cited() {
