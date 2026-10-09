@@ -5,6 +5,8 @@ use super::super::{OptionOutcome, domains, inject_case};
 use crate::runner::{self, CaseInputs, OrcaRunner};
 use serde_json::json;
 
+#[path = "printable_height/loaded.rs"]
+mod loaded;
 #[path = "printable_height/scene.rs"]
 mod scene;
 
