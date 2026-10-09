@@ -39,6 +39,7 @@ pub(super) struct SkirtPlan {
     /// Seam target angle in degrees (`skirt_start_angle`).
     start_angle_deg: f64,
     single_loop_draft_shield: bool,
+    plate_origin: (f64, f64),
 }
 
 impl SkirtPlan {
@@ -180,6 +181,7 @@ impl SkirtPlan {
             layer_count,
             start_angle_deg,
             single_loop_draft_shield: print.single_loop_draft_shield.0,
+            plate_origin: traversal.project.plate_origin(),
         }))
     }
 
@@ -220,7 +222,10 @@ impl SkirtPlan {
         if layer.index >= self.layer_count {
             return;
         }
-        motion::set_origin(state, (0.0, 0.0));
+        // Print.cpp:2634-2637 -> GCode.hpp:218 -> GCodeWriter.cpp:608,
+        // 715-716,789,873 subtracts plate offset at the writer. Ares currently
+        // distributes that writer offset among path emitters; skirt needs it too.
+        motion::set_origin(state, (-self.plate_origin.0, -self.plate_origin.1));
         let height = layer.height_mm as f32;
         let rounded_rectangle = 1.0 - 0.25 * std::f64::consts::PI;
         let mm3_per_mm = f64::from(
