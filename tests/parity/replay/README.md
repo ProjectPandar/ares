@@ -30,10 +30,11 @@ of live slicing. The divergence regression still mutates exactly one `M104 S`
 to `M104 S9` in a temporary real Native stream, requires DIVERGENT and checks
 retention of both complete streams.
 
-One historical product remains temporarily for a separately owned consumer;
-replay tests do not read it. `ender3-classic.orca.gcode` remains for
-`crates/ares-cli/tests/ksr_fdmtest_v4/ordered_bytes_tests.rs`; deletion waits for
-worker4's KSR migration. It is not a replay fallback. The CONFIG_BLOCK encode
+The classic comparator's eleven categories and 33 mutation checks now use
+runtime initialized Native in
+`crates/ares-cli/tests/orca_parity/runner/native_ksr_reference_migration/classic.rs`.
+`ender3-classic.orca.gcode` remains until worker6's final P3 deletion audit;
+replay and comparator tests do not read it. It is not a replay fallback. The CONFIG_BLOCK encode
 round trip slices `../orca_cli_ender3.3mf` with runtime Native
 (`crates/ares-cli/tests/orca_parity/runner/config_block_roundtrip.rs`).
 

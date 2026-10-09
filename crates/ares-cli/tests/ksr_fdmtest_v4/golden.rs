@@ -4,7 +4,7 @@ use std::fmt;
 
 #[cfg(test)]
 #[path = "ordered_bytes_tests.rs"]
-mod ordered_bytes_tests;
+pub(crate) mod ordered_bytes_tests;
 
 const MAX_CONTEXT_LINE_BYTES: usize = 160;
 

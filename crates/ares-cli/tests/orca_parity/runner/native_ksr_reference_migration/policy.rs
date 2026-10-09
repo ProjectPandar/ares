@@ -17,7 +17,7 @@ fn optional_missing_native_never_consumes_frozen_ksr_config_block() {
 #[test]
 fn optional_missing_native_never_consumes_frozen_classic_records() {
     missing_native(
-        "golden::ordered_bytes_tests::gcode_writer_and_do_export_real_records_reject_33_mutations",
+        "runner::native_ksr_reference_migration::classic::gcode_writer_and_do_export_real_records_reject_33_mutations",
     );
 }
 
