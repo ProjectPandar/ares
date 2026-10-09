@@ -30,14 +30,12 @@ of live slicing. The divergence regression still mutates exactly one `M104 S`
 to `M104 S9` in a temporary real Native stream, requires DIVERGENT and checks
 retention of both complete streams.
 
-Two historical products remain temporarily for separately owned consumers;
-replay tests do not read either. The sole remaining consumer of
-`ender3.orca.gcode` is `crates/ares-wasm/tests/encode_roundtrip.rs`, which supplies
-Native CONFIG_BLOCK cases to `web/e2e/package.spec.ts`. Its deletion is deferred
-until pi-worker-web migrates that reader to runtime Native.
-`ender3-classic.orca.gcode` remains for
+One historical product remains temporarily for a separately owned consumer;
+replay tests do not read it. `ender3-classic.orca.gcode` remains for
 `crates/ares-cli/tests/ksr_fdmtest_v4/ordered_bytes_tests.rs`; deletion waits for
-worker4's KSR migration. Neither file is a replay fallback.
+worker4's KSR migration. It is not a replay fallback. The CONFIG_BLOCK encode
+round trip slices `../orca_cli_ender3.3mf` with runtime Native
+(`crates/ares-cli/tests/orca_parity/runner/config_block_roundtrip.rs`).
 
 The replay entrypoint itself consumes a supplied external layout: `case.3mf`
 and `case/plate_1.gcode`. Set `ARES_PARITY_REPLAY` to that input directory and

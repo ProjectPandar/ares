@@ -43,7 +43,7 @@ consumer assertions and owner approval. Source/manual inputs are listed below.
 | `tests/parity/motion-attributes/marlin_classic_jerk.time.rle` | worker6 (adjacent spec) | runtime dynamics process CSV→three exact RLE projections | Delete after runtime consumer migration |
 | `tests/parity/processor-wipe-tower/native.json` | worker4 | runtime full five filament maps; existing VG1 volume oracle | Delete after runtime consumer migration |
 | `tests/parity/replay/ender3-classic.orca.gcode` | worker4 | runtime Ender3/classic reference; replay tests mutate Native result | Delete after runtime consumer migration |
-| `tests/parity/replay/ender3.orca.gcode` | worker4 | runtime Ender3/classic reference; replay tests mutate Native result | Delete after runtime consumer migration |
+| `tests/parity/replay/ender3.orca.gcode` | worker4 | runtime Ender3/classic reference; replay tests mutate Native result | Deleted: replay and CONFIG_BLOCK round trip (`runner/config_block_roundtrip.rs`) slice the 3MF with runtime Native |
 | `tests/parity/role-filament-usage/cache-boundaries-map.json` | worker6 | processor approved12 mappings; existing cache typed slice/process | Delete after runtime consumer migration |
 | `tests/parity/role-filament-usage/cache-boundaries.gcode` | worker6 | processor approved12 mappings; existing cache typed slice/process | Delete after runtime consumer migration |
 | `tests/parity/role-filament-usage/native-map.json` | worker6 | processor approved12 mappings; existing cache typed slice/process | Delete after runtime consumer migration |
