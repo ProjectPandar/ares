@@ -66,6 +66,7 @@ pub(super) fn prepare(
         "first_layer_sequence_choice":"Customize","other_layers_sequence_choice":"Customize",
         "print_sequence":"by layer", "filament_map_mode":"Manual", "filament_map":["1","1"],
         "single_extruder_multi_material":"1", "use_relative_e_distances":"1",
+        "filament_is_support":["0","0"],
         "nozzle_diameter":["0.4"], "nozzle_volume_type":["Standard"],
         "outer_wall_filament_id":"1", "inner_wall_filament_id":"1",
         "sparse_infill_filament_id":"2", "internal_solid_filament_id":"2",
