@@ -85,3 +85,18 @@ Native consumers follow shared required/optional availability policy before
 cache use. Policy tests run in default environments using a temporary external
 directory. Browser comparison retains actual WASM bytes, loses its old ignore
 attribute, and receives explicit Native environment and artifact destination.
+## Browser frozen-consumer policy RED
+
+The old ignored browser consumer still compares the initialized frozen file
+when every Native dependency is absent. A retained actual Chromium capture
+from ARD-0082 (`/tmp/ares-wasm-gcode-dYmH9A/browser.gcode`) reproduces this:
+the child completes the whole ordered comparison, writes comparison artifacts,
+and reports no SKIPPED. Its historical dated Ares generator line alone is
+adapted to the current undated Ares header contract; body bytes are untouched.
+This is a missing-dependency policy RED, not fresh browser GREEN evidence.
+Audit and child logs are outside Git at
+`/tmp/worker6-ksr-p3-browser-policy-red/`; policy result is exit100.
+The new browser consumer must generate Native through initialized
+`OrcaRunner::slice_case`, visibly skip when dependencies are optional and
+absent, fail when required, and require an actual browser capture once Native
+is available. Fresh Chromium runs remain mandatory before final deletion review.
