@@ -12,10 +12,32 @@ pub(crate) struct CliResultReference {
 }
 
 #[derive(Clone, Copy)]
+pub(crate) enum EarlyExit {
+    InvalidValues,
+    Postprocess,
+    EmptyPlate,
+    Validation,
+    NotFound,
+}
+
+impl EarlyExit {
+    pub(crate) fn code(self) -> i32 {
+        match self {
+            Self::InvalidValues => -18,
+            Self::Postprocess => -19,
+            Self::EmptyPlate => -50,
+            Self::Validation => -51,
+            Self::NotFound => -3,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
 enum ResultKind {
     CustomGCode,
     SequentialCollision,
     SequentialLast,
+    Early(EarlyExit),
 }
 
 impl ResultKind {
@@ -24,6 +46,7 @@ impl ResultKind {
             Self::CustomGCode => -100,
             Self::SequentialCollision => -63,
             Self::SequentialLast => 0,
+            Self::Early(early) => early.code(),
         }
     }
 
@@ -32,18 +55,27 @@ impl ResultKind {
             Self::CustomGCode => "custom-gcode-failure-v1",
             Self::SequentialCollision => "sequential-collision-v1",
             Self::SequentialLast => "sequential-last-v1",
+            Self::Early(_) => "early-cli-failure-v1",
         }
     }
 
     fn native_products(self) -> &'static [&'static str] {
         match self {
-            Self::CustomGCode | Self::SequentialCollision => &["result.json"],
+            Self::CustomGCode | Self::SequentialCollision | Self::Early(_) => &["result.json"],
             Self::SequentialLast => &["plate_1.gcode", "result.json"],
         }
     }
 }
 
 impl OrcaRunner {
+    pub(crate) fn early_cli_reference(
+        &self,
+        project: &Path,
+        rejection: EarlyExit,
+    ) -> Result<CliResultReference, StageError> {
+        self.cli_result_reference(project, ResultKind::Early(rejection))
+    }
+
     pub(crate) fn custom_gcode_reference(
         &self,
         project: &Path,
@@ -74,13 +106,23 @@ impl OrcaRunner {
         // Cached references cannot hide a removed mandatory producer declaration.
         super::super::environment::available()?;
         let stage = Stage::Slice;
-        let project = project.canonicalize().map_err(|error| io(stage, error))?;
+        let (project, mut components) = if matches!(kind, ResultKind::Early(EarlyExit::NotFound)) {
+            let project = std::path::absolute(project).map_err(|error| io(stage, error))?;
+            if project.try_exists().map_err(|error| io(stage, error))? {
+                return Err(io(stage, "Native missing-file input must remain absent"));
+            }
+            let components = json!({"input_kind":"absent", "input_path":project});
+            (project, components)
+        } else {
+            let project = project.canonicalize().map_err(|error| io(stage, error))?;
+            let components = json!({
+                "input":cache_identity::raw_digest(&stages::read(&project, stage)?),
+                "input_name":project.file_name(),
+            });
+            (project, components)
+        };
         let producer = self.producer()?;
-        let components = json!({
-            "recipe":format!("{}/slice-0/{}", kind.schema(), kind.code()),
-            "input":cache_identity::raw_digest(&stages::read(&project, stage)?),
-            "input_name":project.file_name(),
-        });
+        components["recipe"] = json!(format!("{}/slice-0/{}", kind.schema(), kind.code()));
         let request = cache_identity::digest(&[&serde_json::to_vec(&components).unwrap()]);
         let parent = self
             .cache
@@ -119,7 +161,9 @@ impl OrcaRunner {
                 ResultKind::SequentialLast => {
                     Some(stages::read(&entry.join("plate_1.gcode"), stage)?)
                 }
-                ResultKind::CustomGCode | ResultKind::SequentialCollision => None,
+                ResultKind::CustomGCode
+                | ResultKind::SequentialCollision
+                | ResultKind::Early(_) => None,
             },
             directory: entry,
         })

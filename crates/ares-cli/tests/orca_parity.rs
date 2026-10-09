@@ -22,6 +22,8 @@ mod brim_bed_region_controls;
 mod change_filament_flush_blocks;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
 mod cli_custom_gcode_exit;
+#[path = "orca_parity/cli_exit_channels.rs"]
+mod cli_exit_channels;
 #[path = "orca_parity/cli_sequential_clearance.rs"]
 mod cli_sequential_clearance;
 #[path = "orca_parity/native_wall_clock.rs"]
@@ -395,32 +397,6 @@ pub(crate) fn compare_exported_for(
     outcome
 }
 
-pub(crate) fn vendors(root: &std::path::Path) -> Vec<String> {
-    let Ok(entries) = std::fs::read_dir(root) else {
-        return Vec::new();
-    };
-    let mut vendors = Vec::new();
-    for entry in entries.flatten() {
-        // Only directories that carry a `machine/` inventory contribute
-        // printers — filament-only collections like `OrcaFilamentLibrary`
-        // have no machine presets and previously produced a fake
-        // ARES_ERROR row in the printer denominator.
-        if let Some(name) = entry
-            .path()
-            .join("machine")
-            .is_dir()
-            .then(|| entry.file_name())
-            .and_then(|name| name.to_str().map(ToOwned::to_owned))
-        {
-            vendors.push(name);
-        }
-    }
-    vendors.sort();
-    vendors
-}
-
-#[allow(dead_code)]
-fn _type_assertions(map: &BTreeMap<String, Value>) {
-    let _ = map.len();
-    let _: Option<&Runner> = None;
-}
+#[path = "orca_parity/vendor_inventory.rs"]
+mod vendor_inventory;
+pub(crate) use vendor_inventory::vendors;

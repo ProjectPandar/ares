@@ -232,6 +232,7 @@ mod environment;
 pub(crate) use environment::reference_enabled;
 #[path = "runner/cache.rs"]
 mod cache;
+pub(crate) use cache::EarlyExit;
 #[path = "runner/cache_identity.rs"]
 mod cache_identity;
 #[path = "runner/native_replay_reference_migration.rs"]

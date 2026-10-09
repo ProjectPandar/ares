@@ -14,8 +14,9 @@ use super::{
 use serde_json::{Map, Value, json};
 use std::{fs, path::Path};
 
-#[path = "cache/custom_gcode.rs"]
-mod custom_gcode;
+#[path = "cache/cli_result.rs"]
+mod cli_result;
+pub(crate) use cli_result::EarlyExit;
 #[path = "cache/plate_selection.rs"]
 mod plate_selection;
 #[path = "cache/print_statistics.rs"]
