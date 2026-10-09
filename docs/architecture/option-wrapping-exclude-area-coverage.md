@@ -6,7 +6,8 @@ records `wrapping_exclude_area` INCOMPLETE, baseline-only with no injection.
 Current `domains/probes.rs` still excludes it, citing a rectangle rejection
 without establishing its context. This proposal is not a fresh full audit.
 The coordinator approved this selection: single nozzle, single filament,
-no tower, by-layer. No production changes are authorized.
+no tower, by-layer. Initially harness-only; after the fixed-pose Native -64 / Ares acceptance RED,
+the coordinator authorized the production wrapping-admission port described below.
 
 ## Source boundary
 
@@ -17,6 +18,7 @@ OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 | `libslic3r/PrintConfig.cpp:4120-4125`, `PrintConfig.hpp:1358` | `wrapping_exclude_area` is coPoints, default empty; individual XY points, not coPointsGroups polygons or a numeric endpoint domain |
 | `libslic3r/Config.hpp:1487-1550::ConfigOptionPoints`, `Config.cpp:976-1000` | vserialize emits one XY string per point; JSON arrays join with commas before deserialize. Preserve requested point order and coordinates |
 | `libslic3r/Print.cpp:932-979::layered_print_cleareance_valid` | Add plate origin to wrapping points, scale them into a polygon, and reject its intersection with an instance volume hull when detection is enabled |
+| `slic3r/GUI/PartPlate.cpp:5454-5485`, `OrcaSlicer.cpp:4761,4789,5717-5724` | Arrange treats wrapping as a virtual obstacle; an enclosing polygon can relocate the instance outside the bed and cause pre-apply -50, before Print hull admission |
 | `Print.cpp:1304-1310::Print::validate` | By-layer path invokes the preceding validation and assigns `STRING_EXCEPT_OBJECT_COLLISION_IN_LAYER_PRINT` |
 | `Print.cpp:1324-1333` | Detection with prime tower disabled produces a warning, not this branch's fatal rejection |
 | `PrintConfig.cpp:8688-8712::normalize_fdm_2`, `Print.cpp:3290-3303::has_wipe_tower` | Tower activation is separately gated; keep enable_prime_tower=0 and verify no tower is emitted |
@@ -76,12 +78,19 @@ ordered marker lines and layer-count evidence externally.
 
 Rejection witness: detection enabled with bed-enclosing rectangle
 `(0,0),(220,0),(220,220),(0,220)`, after proving the cube footprint lies inside
-it. Record Native actual Slice rejection, expected -64 (Unix 192), structured
+it. Use detection-disabled runtime Native export to lock its pose, then the existing
+3MF fixture-adapter pattern changes only enable_wrapping_detection to 1; all
+other settings and member payloads remain identical, without arrange. A
+dedicated runner transport helper owns private ExportedCase paths; it reuses
+slice_case and does not change cache recipes. Record Native actual Slice rejection, expected -64 (Unix 192), structured
 CLI text and the Print validation diagnostic; compare the same exported 3MF
 through public Ares validation and validated slicing. Repeat with detection
 disabled as an accepted full-output control. Do not invent a processor -102
 rejection, invoke script/template motion, or mask a mismatch with a capability
-guard. Any actual Ares acceptance/error/byte discrepancy remains RED and is
+guard. Retain the original enabled-export arrange rejection as an additional
+-50 control: verify its relocated footprint and actual CLI result.json, and
+require the identical Ares validated-slice diagnostic. It is not a Print hull
+rejection witness. Any actual Ares acceptance/error/byte discrepancy remains RED and is
 reported for coordinator ownership; no production repair is included.
 
 ## Harness destination, RED and GREEN
@@ -122,3 +131,30 @@ and epsilon collision boundaries, real detection motion, physical-tool
 placeholders, APA, GUI warning policy, commented processor collision code,
 and legacy STL postprocessing. Existing Ares scaffold remains unchanged;
 this slice establishes only the cited project/Print boundary's finite contract.
+
+## Authorized production admission slice
+
+The fixed-pose RED invokes Native `Print.cpp:932-979/1304-1310`, which rejects
+with -64/192 and the exact clumping diagnostic; Ares public validation accepts
+and validated slicing emits 86190 bytes. This is independent of tool-transition
+emission. The original enabled arrange case instead relocates the cube outside
+the bed and both slicers reject with -50; preserve it as a separate control.
+
+Port only the enable_wrapping_detection + by-layer wrapping polygon collision
+branch into `ares-core/src/print/validate/layered_wrapping.rs`, with minimal
+`validate.rs` wiring. Add plate origin before scaling wrapping points. Iterate
+model-part volumes of printable instances, produce each transformed XY convex
+hull, and preserve the upstream scaled linear-hull/translation order
+(`Model.cpp:2625-2644`). Intersection returns the exact object-name diagnostic
+and the layer-collision error family; map it to CLI -64 and the upstream
+result metadata/generic error (`OrcaSlicer.cpp:6083-6084`, `:138`).
+Deferred adjacent exclusion-area rejection, inter-object warnings, arbitrary
+transform/touching precision probes and all previously deferred emission paths
+remain outside this port. No tool_transition/emit_helpers changes.
+
+Native-backed RED precedes production. GREEN must compare public validation,
+validated slicing and CLI status/channels/result.json, retain whole successful
+streams, and close only this key's harness classification. Fresh workspace and
+full seeded/official base/candidate controls run on the production tree, with
+raw changes listed; full-pair queue is after worker4. Earlier positive streams
+are directed evidence only, not a substitute for the final production gates.

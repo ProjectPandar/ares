@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/wrapping_exclude_coverage.rs"]
+mod wrapping_exclude_coverage;
+
+#[cfg(test)]
 #[path = "option_coverage/filament_flow_coverage.rs"]
 mod filament_flow_coverage;
 

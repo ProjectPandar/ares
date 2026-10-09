@@ -386,3 +386,6 @@ fn content_digest(
 pub(super) fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
+
+#[path = "runner/wrapping_input.rs"]
+pub(crate) mod wrapping_input;
