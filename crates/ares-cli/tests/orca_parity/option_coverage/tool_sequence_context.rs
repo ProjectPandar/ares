@@ -4,6 +4,21 @@ use crate::runner::{CaseInputs, ExportedCase};
 use serde_json::json;
 use std::io::{Cursor, Read, Write};
 
+fn bind_plate(body: &str, fields: &[(&str, String)]) -> String {
+    let mut body = body.to_owned();
+    for (key, value) in fields {
+        let start = format!("<metadata key=\"{key}\" value=\"");
+        let metadata = format!("{start}{value}\"/>");
+        if let Some((_, tail)) = body.split_once(&start) {
+            let old = tail.split_once('"').unwrap().0;
+            body = body.replacen(&format!("{start}{old}\"/>"), &metadata, 1);
+        } else {
+            body.push_str(&format!("\n    {metadata}"));
+        }
+    }
+    body
+}
+
 // Failure inventory: export may shrink the palette or replace plate sequences;
 // first-layer IDs are zero-based, range IDs one-based; comments alone do not
 // prove usage. Never classify export/application/observer errors as production RED.
@@ -143,17 +158,7 @@ pub(super) fn prepare(
                 let (prefix, tail) = xml.split_once("<plate>").unwrap();
                 let (body, suffix) = tail.split_once("</plate>").unwrap();
                 plate_before = body.to_owned();
-                let mut body = body.to_owned();
-                for (key, value) in &plate {
-                    let start = format!("<metadata key=\"{key}\" value=\"");
-                    let metadata = format!("{start}{value}\"/>");
-                    if let Some((_, tail)) = body.split_once(&start) {
-                        let old = tail.split_once('"').unwrap().0;
-                        body = body.replacen(&format!("{start}{old}\"/>"), &metadata, 1);
-                    } else {
-                        body.push_str(&format!("\n    {metadata}"));
-                    }
-                }
+                let body = bind_plate(body, &plate);
                 plate_after = body.clone();
                 bytes = format!("{prefix}<plate>{body}</plate>{suffix}").into_bytes();
             }
@@ -191,8 +196,11 @@ pub(super) fn prepare(
     drop(original);
     drop(actual);
     exported.project = project;
-    exported.project_path = root.join(format!("{stem}-bound.3mf"));
-    parity::artifacts::overwrite(&exported.project_path, &exported.project).unwrap();
+    exported = runner
+        .bind_filament_map_mode(exported, &json!("Manual"))
+        .unwrap();
+    parity::artifacts::overwrite(&root.join(format!("{stem}-bound.3mf")), &exported.project)
+        .unwrap();
     let proofs = fields
         .iter()
         .map(|(key, value)| {
