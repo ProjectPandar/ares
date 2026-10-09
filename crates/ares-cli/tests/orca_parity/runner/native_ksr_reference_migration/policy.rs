@@ -14,6 +14,13 @@ fn optional_missing_native_never_consumes_frozen_ksr_config_block() {
     );
 }
 
+#[test]
+fn optional_missing_native_never_consumes_frozen_classic_records() {
+    missing_native(
+        "golden::ordered_bytes_tests::gcode_writer_and_do_export_real_records_reject_33_mutations",
+    );
+}
+
 fn missing_native(test: &str) {
     let artifacts = match std::env::var_os("ARES_PARITY_ARTIFACT_ROOT") {
         Some(_) => tempfile::Builder::new()
