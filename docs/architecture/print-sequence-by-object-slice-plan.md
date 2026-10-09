@@ -423,3 +423,25 @@ duplicate the header width-block emission to each by-object phase's
 first chunk. The earlier EPSILON and loader-split notes in this file
 are superseded by this section; the bbs_3mf loader split remains a
 separate gated slice for third-party 3MFs only.
+
+### Final region-count analysis (evidence-backed)
+
+- The two width sets carry IDENTICAL values (diff clean): two
+  PrintRegions with the same config, not two different regions.
+- The native markers are ALL "id:0 copy 0" (200 = 100 layers x
+  start/stop): ONE PrintObject, two PrintInstances, 51 layers each
+  (102 LAYER_CHANGE).
+- The fixture 3MF defines TWO objects (id 2 unreferenced after the
+  retarget, id 4 with both build items); model_settings.config shows
+  4 name entries (both defined objects).
+
+Conclusion: the shared PrintObjectRegions (ref-counted per
+ModelObject, PrintApply.cpp:425/:434-436) accumulates all_regions per
+INSTANCE apply (2 instances -> 2 identical region entries ->
+num_print_regions() == 2), while the ares region table dedupes per
+object (1 entry). Fix direction: the ares all_regions accumulation
+must insert per instance apply (or m_print_regions must not dedupe
+identical per-instance configs) - implemented in the ares
+load/region-set path, verified by the two_instances width blocks
+1 -> 2 and the full-file parity. The by-object phases and the skirt
+per-group accounting stay as landed.
