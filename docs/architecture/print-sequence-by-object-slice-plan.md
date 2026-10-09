@@ -402,3 +402,24 @@ Consequences:
 - The per-instance by-object phases work in this repo targets the
   Orca-produced shape (1 ModelObject x N instances) and stays as
   implemented in the WIP phases/bucket filter.
+
+### REVISED root cause: the width block is per-instance under by-object
+
+Evidence (two_instances fixture):
+- The native output is byte-identical with and without the Application
+  metadata (sha 325fb2c3..., 173177B) - the loader split premise is
+  REFUTED; the native never took the third-party path.
+- The two build items differ ONLY in XY (identity rotation/scale, both
+  Z=5) -> per PrintApply.cpp:146-152 one PrintObject with two
+  PrintInstances; the native markers are all "id:0 copy 0" (200 = 100
+  layers x start/stop).
+- The native top carries TWO width sets (per instance first layer);
+  ares emits ONE (stream start). -237 bytes = exactly one width set.
+
+Root cause: under by-object, upstream re-runs the slicing-parameter
+block (GCode.cpp:2676-2693) at every instance's first layer; ares emits
+it once per stream (the by-layer behavior). Fix direction: move/
+duplicate the header width-block emission to each by-object phase's
+first chunk. The earlier EPSILON and loader-split notes in this file
+are superseded by this section; the bbs_3mf loader split remains a
+separate gated slice for third-party 3MFs only.
