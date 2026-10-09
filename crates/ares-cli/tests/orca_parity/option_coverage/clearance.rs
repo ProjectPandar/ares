@@ -8,6 +8,9 @@ use crate::{
 };
 use serde_json::json;
 
+#[path = "clearance/geometry.rs"]
+mod geometry;
+
 #[test]
 fn orca_parity_g2_lid_loaded_and_complete_output() {
     loaded_and_complete(
