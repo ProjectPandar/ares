@@ -168,6 +168,8 @@ fn execute_plan(
             let application = runner::application::verify_value(project, &plan.key, value)?;
             Ok(serde_json::json!({"application":application,
                 "domain":super::filament_flow_coverage::input::metadata()}))
+        } else if super::tests::clearance::owns(&plan.key) {
+            super::tests::clearance::verify_application(project, &plan.key, value)
         } else {
             runner::application::verify_value(project, &plan.key, value)
         }

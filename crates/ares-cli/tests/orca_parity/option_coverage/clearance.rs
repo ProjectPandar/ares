@@ -11,14 +11,50 @@ use serde_json::json;
 #[path = "clearance/geometry.rs"]
 mod geometry;
 
-pub(in crate::option_coverage) fn admit(key: &str, cases: &mut Vec<domains::OptionCase>) -> bool {
-    if !matches!(
+pub(in crate::option_coverage) fn owns(key: &str) -> bool {
+    matches!(
         key,
         "extruder_clearance_height_to_lid"
             | "extruder_clearance_height_to_rod"
             | "extruder_clearance_radius"
             | "nozzle_height"
-    ) {
+    )
+}
+
+pub(in crate::option_coverage) fn verify_application(
+    project: &[u8],
+    key: &str,
+    requested: &serde_json::Value,
+) -> Result<serde_json::Value, runner::stages::StageError> {
+    let mismatch = |detail| {
+        runner::stages::StageError::new(
+            runner::stages::Stage::Application,
+            runner::stages::FailureKind::ApplicationMismatch,
+            detail,
+        )
+    };
+    let effective = runner::application::settings(project)?;
+    let actual = effective
+        .get(key)
+        .ok_or_else(|| mismatch(format!("missing {key}")))?;
+    let actual_number = actual
+        .as_str()
+        .ok_or_else(|| mismatch(format!("{key}: expected coFloat scalar string")))?
+        .parse::<f64>()
+        .map_err(|error| mismatch(format!("{key}: {error}")))?;
+    let requested_number = requested.as_str().unwrap().parse::<f64>().unwrap();
+    if !actual_number.is_finite() || actual_number != requested_number {
+        return Err(mismatch(format!(
+            "{key}: requested {requested}, effective {actual}"
+        )));
+    }
+    Ok(
+        json!({"key":key,"requested":requested,"effective":actual,"comparison":"exact finite f64, no epsilon","source":"Config.hpp::ConfigOptionFloat::serialize"}),
+    )
+}
+
+pub(in crate::option_coverage) fn admit(key: &str, cases: &mut Vec<domains::OptionCase>) -> bool {
+    if !owns(key) {
         return false;
     }
     // PrintConfig::validate's open-positive loaded domain plus the named

@@ -72,6 +72,15 @@ rebase, reread the minimal hooks and inventory baseline, and resolve only the
 G2 wiring. Never change worker6's requests, metadata, assertions or results.
 No worker4 plate-origin/cache changes belong to this slice.
 
+Approved application-check correction: upstream `ConfigOptionFloat::serialize`
+(`Config.hpp:777-781`) uses stream number formatting, so the requested decimal
+`"0.00001"` exports as `"1e-05"`. These are the same finite f64 value. The first
+GREEN four-key sweep failed string application checks before comparing these
+four streams; retain that attempt. `clearance.rs` now verifies exact finite f64
+application for its four coFloat keys, with no epsilon; `sweep.rs` has only a
+key-local dispatch hook. The other 646 plans retain the shared verifier.
+Requested wires and strict whole-G-code comparison are unchanged.
+
 ## Declared finite coverage, not a global numeric-domain claim
 
 ### A. Canonical selected-key sweep
