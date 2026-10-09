@@ -2,11 +2,15 @@ use std::{fs, process::Command};
 
 #[test]
 fn optional_missing_native_never_consumes_frozen_range_reference() {
-    let artifacts = tempfile::Builder::new()
-        .prefix("object-range-height-policy-")
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
+    let artifacts = if std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some() {
+        tempfile::Builder::new()
+            .prefix("object-range-height-policy-")
+            .tempdir_in(crate::artifacts::root_from_env().unwrap())
+    } else {
+        tempfile::tempdir()
+    }
+    .unwrap()
+    .keep();
     let child_root = artifacts.join("child");
     fs::create_dir(&child_root).unwrap();
     let output = Command::new(std::env::current_exe().unwrap())
