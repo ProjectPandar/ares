@@ -26,8 +26,14 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
 - **Touch targets.** `@media (pointer: coarse)` raises every control to
   44×44 CSS px (WCAG 2.5.5); the touch E2E sweeps all visible controls at each
   flow step. A checkbox's target is its wrapping label (`display: contents`
-  for fine pointers). The settings mode switch widens to three 44px dots.
+  for fine pointers). The settings mode switch widens to three 44px stops.
   Fine pointers keep the desktop sizes.
+- **Mode switch is one widget.** As upstream `ModeSwitchButton`
+  (`SwitchButton.cpp:293`, `:423-428`), it is a single `role="slider"` whose
+  click picks the mode under its x third; arrows and Home/End step it. The
+  48×18 track is unchanged; 3px of transparent padding above and below make
+  it a 48×24 target (WCAG 2.5.8), 44px high on touch. The settings E2E runs
+  axe `target-size` on the sidebar.
 - **Hover only where a pointer hovers.** Every `:hover` rule sits in
   `@media (hover: hover)`, so a tapped control keeps no stuck hover style.
 - **Tablet project.** `ipad` (WebKit, iPad gen 7, 810×1080) covers the
@@ -72,7 +78,7 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   alternative yet; they are the remaining hover-only information.
 - Lighthouse targets. `web/e2e/lighthouse.mjs` gates the median
   Accessibility >= 95, Best Practices >= 95 and SEO >= 90 of three runs per
-  preset; the desktop `target-size` audit is the next slice. Performance is
+  preset. Performance is
   recorded, not optimised for the score: observed mobile LCP equals FCP
   (461 ms, the canvas-hint text in the first frame), and Lighthouse's
   simulated LCP is set by the three.js Viewport chunk (149 KB gzip) that

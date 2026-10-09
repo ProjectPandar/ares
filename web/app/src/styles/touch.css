@@ -24,10 +24,10 @@
   /* The checkbox's label is its 44x44 target. */
   .option-check-target { display: grid; place-items: center start; width: 44px; height: 44px; margin: 0 auto 0 0; }
   .option-check-target .option-check { margin: 0; }
-  /* Three 44px dots on a wider track; each dot's target overflows the track vertically. */
-  .mode-switch { width: 134px; height: 24px; border-radius: 12px; }
-  .mode-switch::before { width: calc(35px + 44px * var(--mode)); border-radius: 12px; }
-  .mode-dot { margin: -11px 0; }
+  /* Three 44px stops on a wider track; the widget's 44px-high target overflows the track vertically. */
+  .mode-switch { width: 134px; height: 24px; padding: 10px 0; margin: -10px 0; }
+  .mode-track, .mode-track::before { border-radius: 12px; }
+  .mode-track::before { width: calc(35px + 44px * var(--mode)); }
 }
 /* The taller Moves slider pushes the phone and tablet legend up by as much, keeping the 3D centre clear. */
 @media (pointer: coarse) and (max-width: 1024px) {

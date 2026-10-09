@@ -84,8 +84,11 @@ async function checkTab(page: Page, scope: Locator, scroller: Locator, name: key
   expect(layouts.filter((layout) => pageVisible(defs, layout, "expert")).map((layout) => layout.title)).toEqual(EXPERT_TITLES[name]);
   const coverage: Record<string, Record<string, number>> = {};
   for (const mode of MODES) {
-    await scope.getByRole("radio", { name: MODE_NAMES[mode] }).click();
-    await expect(scope.getByRole("radio", { name: MODE_NAMES[mode] })).toBeChecked();
+    // One widget; a click picks the mode under its x third (ModeSwitchButton::hit_test_selection).
+    const switcher = scope.getByRole("slider", { name: "Settings mode" });
+    const { width, height } = (await switcher.boundingBox())!;
+    await switcher.click({ position: { x: (width * (2 * MODES.indexOf(mode) + 1)) / 6, y: height / 2 } });
+    await expect(switcher).toHaveAttribute("aria-valuetext", MODE_NAMES[mode]);
     const pages = layouts.filter((layout) => pageVisible(defs, layout, mode));
     await expect(scope.getByRole("tab")).toHaveText(pages.map((layout) => layout.title));
     coverage[mode] = {};
@@ -124,7 +127,8 @@ test("OrcaSlicer settings tabs render PrintConfigDef metadata per mode; unedited
 
   // OrcaSlicer starts in simple mode (MainFrame.cpp:325-326, GUI_App::get_saved_mode).
   const sidebar = page.getByTestId("sidebar");
-  await expect(sidebar.getByRole("radio", { name: "Simple settings" })).toBeChecked();
+  const modes = sidebar.getByRole("slider", { name: "Settings mode" });
+  await expect(modes).toHaveAttribute("aria-valuetext", "Simple settings");
   // WCAG 2.5.8: every sidebar target, the mode switch included, is at least 24x24 CSS px.
   const { violations } = await new AxeBuilder({ page }).include("[data-testid=sidebar]").withRules(["target-size"]).analyze();
   expect(violations.flatMap((rule) => rule.nodes.map((node) => node.target.join(" "))), "undersized sidebar targets").toEqual([]);
@@ -199,7 +203,12 @@ test("OrcaSlicer settings tabs render PrintConfigDef metadata per mode; unedited
   await filament.getByRole("button", { name: "Close" }).click();
 
   // The mode is one app setting (GUI_App::save_mode), shared by the sidebar and the dialogs.
-  await expect(sidebar.getByRole("radio", { name: "Expert settings" })).toBeChecked();
+  await expect(modes).toHaveAttribute("aria-valuetext", "Expert settings");
+  // The keyboard steps the same widget (slider keys).
+  await modes.press("ArrowLeft");
+  await expect(modes).toHaveAttribute("aria-valuetext", "Advanced settings");
+  await modes.press("End");
+  await expect(modes).toHaveAttribute("aria-valuetext", "Expert settings");
 
   // Browsing settings must not change the slice: bytes equal native ares-cli.
   await page.getByRole("button", { name: "Slice plate" }).click();
