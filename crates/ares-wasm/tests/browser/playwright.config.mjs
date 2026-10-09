@@ -11,6 +11,10 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:4173",
     browserName: "chromium",
     headless: true,
+    launchOptions: {
+      executablePath: process.env.ARES_E2E_CHROME || undefined,
+      args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+    },
   },
   webServer: {
     command: "node server.mjs",
