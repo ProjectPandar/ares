@@ -2,6 +2,19 @@ use std::{fs, process::Command};
 
 #[test]
 fn optional_missing_native_never_consumes_frozen_ksr_reference() {
+    missing_native(
+        "runner::native_ksr_reference_migration::project_matches_initialized_orca_242_ordered_bytes",
+    );
+}
+
+#[test]
+fn optional_missing_native_never_consumes_frozen_ksr_config_block() {
+    missing_native(
+        "runner::native_ksr_reference_migration::config_block::config_export_fixture_matches_resolved_task19b3_views_byte_for_byte",
+    );
+}
+
+fn missing_native(test: &str) {
     let artifacts = match std::env::var_os("ARES_PARITY_ARTIFACT_ROOT") {
         Some(_) => tempfile::Builder::new()
             .prefix("ksr-reference-policy-")
@@ -13,11 +26,7 @@ fn optional_missing_native_never_consumes_frozen_ksr_reference() {
     let child_root = artifacts.join("child");
     fs::create_dir(&child_root).unwrap();
     let output = Command::new(std::env::current_exe().unwrap())
-        .args([
-            "--exact",
-            "runner::native_ksr_reference_migration::project_matches_initialized_orca_242_ordered_bytes",
-            "--nocapture",
-        ])
+        .args(["--exact", test, "--nocapture"])
         .env("ARES_REQUIRE_ORCA", "0")
         .env_remove("ARES_ORCA_NATIVE_BIN")
         .env_remove("ARES_ORCA_BIN")
