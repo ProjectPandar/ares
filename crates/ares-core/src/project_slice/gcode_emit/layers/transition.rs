@@ -143,7 +143,10 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     let bed_set_by_gcode = machine_sets_temperature(&rendered, &["M140", "M190"], false);
     let bed_temperature = super::super::machine::first_layer_bed_temperature(traversal);
     if bed_temperature != *bed_cache {
-        if !bed_set_by_gcode && bed_temperature > 0 {
+        // No `> 0` guard on the bed path: `set_bed_temperature` emits
+        // M140 S0 when the cache holds a nonzero value (the nozzle path
+        // keeps its own `temp > 0` gate, `GCode.cpp:4058-4064`).
+        if !bed_set_by_gcode {
             output.extend_from_slice(
                 format!("M140 S{bed_temperature} ; set bed temperature\n").as_bytes(),
             );

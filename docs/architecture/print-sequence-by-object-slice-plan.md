@@ -464,7 +464,8 @@ ecommit each:
    both on the global chunk index. `begin_layer` takes a `LayerBegin`
    struct; the layer-index advance stays with `advance_for_layer`
    (GCode.cpp:5690-5696).
-2. Live writer bed-temperature cache (`699235793`).
+2. Live writer bed-temperature cache (`cb84e3a07`, plus the
+   zero-guard removal).
    `GCodeWriter::set_bed_temperature` refreshes
    `m_last_bed_temperature` on every changed value
    (GCodeWriter.cpp:168-175), so the object-2 transition
@@ -472,8 +473,16 @@ ecommit each:
    against the value the object-1 second layer wrote (:4820). Ares
    passed the startup snapshot; Klipper startup leaves it 0, so ares
    re-emitted M140 S35 twice. The cache now threads as `&mut i32`
-   through `LayerBoundary`/`Transition`.
-3. Transition travel acceleration (`3101a8edd`). The origin move
+   through `LayerBoundary`/`Transition`. The follow-up (`2f7d9a990`)
+   drops a non-upstream `bed_temperature > 0` guard on the transition
+   write: `_print_first_layer_bed_temperature` always calls
+   `set_bed_temperature` (GCode.cpp:4023-4050) and the writer emits
+   M140 S0 against a nonzero cache — only the nozzle path keeps a
+   `temp > 0` gate (GCode.cpp:4058-4064). Covered by the public-API
+   RED/GREEN (`b5a485a84`): a two-instance ksr project with
+   first-layer bed 0 / other layers 55 writes M140 S0 at the
+   transition.
+3. Transition travel acceleration (`e14d9d0ee`). The origin move
    runs through `GCode::travel_to` (GCode.cpp:3327 -> :7350), which
    selects the travel acceleration/jerk BEFORE the writer hop
    (erNone + the previous object's layer -> plain travel values). The
@@ -486,7 +495,7 @@ ecommit each:
 
 Acceptance: ender3 / kobra3 / single_object_two_instances all PASS
 (seeded, byte-exact); by-layer guards re-verified by the full seeded
-control set after the rebase. One clippy-hygiene commit (`d98ac7535`)
+control set after the rebase. One clippy-hygiene commit (`8ae49a00f`)
 clears pre-existing findings on the branch (dead skirt_height
 binding, map_or, range loop, nested metadata rewrite).
 
