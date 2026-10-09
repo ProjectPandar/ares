@@ -376,3 +376,25 @@ therefore: carry `copy` on `DrivePhase`, thread it into the chunk
 emission, and filter the instance buckets to the phase's copy (the
 62-entry merged slice stays shared). The inter-phase transition and the
 M73 count findings above are unchanged.
+
+### SPEC: 3MF loader multi-instance split (bbs_3mf.cpp:2002-2032)
+
+Upstream splits multi-instance objects at LOAD time: for each instance
+after the 1st, `m_model->add_object(*model_object)` clones the object,
+moves the last instance into it, and regenerates its volumes
+(`_generate_volumes_new`) - bbs_3mf.cpp:2002-2032. Every instance then
+becomes its own ModelObject -> its own PrintObject
+(PrintApply.cpp:130-172) with its own PrintObjectRegions
+(:418-436), so `num_print_regions()` counts per-instance regions
+(GCode.cpp:2676-2693).
+
+Ares gap: the 3MF loader keeps 1 ModelObject x N instances, so the
+one-object-two-instances fixture yields 1 region (1 width block) vs
+the native's 2, and every per-PrintObject downstream structure (regions,
+skirt grouping) is under-split.
+
+Plan: implement the loader split (clone + move instance +
+volumes regeneration) in the ares 3MF/project load path; acceptance =
+the two_instances width blocks 2=2 and the full-file parity on the
+fixture; the existing single/multi-object fixtures must not change
+(the split only fires for instances.size() > 1).
