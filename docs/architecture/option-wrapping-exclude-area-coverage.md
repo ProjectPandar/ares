@@ -1,6 +1,6 @@
 # Bounded wrapping-exclude-area option coverage
 
-Status: implemented bounded harness and authorized wrapping-admission port; final production gates pending.
+Status: implemented bounded harness and authorized wrapping-admission port; production-tree gates passed, review pending.
 The historical [full Option audit](2026-10-09-option-full-current-audit.md)
 records `wrapping_exclude_area` INCOMPLETE, baseline-only with no injection.
 The preceding harness excluded it, citing a rectangle rejection without
@@ -176,5 +176,71 @@ streams in the directed tests (ten enable/disable witnesses plus the disabled
 intersection control) and five in the sweep, totaling 64 comparisons with only
 the existing generated-by normalization. Declared request values must equal
 the five runtime witnesses. No existing numeric-metadata lock asserted this
-key; other keys' expectation assertions remain unchanged. The 650-plan diff
-and full production-tree gates are still required before review.
+key; other keys' expectation assertions remain unchanged. The final 650-plan diff and production-tree gates below complete the acceptance
+evidence; these earlier directed runs do not substitute for them.
+
+## Final production-tree review evidence
+
+Base is `880a6c8d5`; candidate execution is `1bd8a5ce4` on `b0b7905fa`
+(the intervening commit changes only web documentation). Base executes its own
+production **and test tree**, not candidate tests against base production.
+Both legs explicitly set `ARES_PARITY_OPTIONS=1` and
+`ARES_OPTION_KEYS=wrapping_exclude_area`. Base compares its one default stream
+successfully but retains INCOMPLETE and fails the unmodified sweep's completion
+assertion. Worker5's 895/895 run on 880a did not enable this sweep:
+`/tmp/ares-w5-gates/t2-seeded-cand.log:2182-2192` reports the test as PASS with
+explicit SKIPPED because ARES_PARITY_OPTIONS is disabled. That result is not
+credited as wrapping-domain coverage.
+
+All final evidence is outside the repository at
+`/tmp/worker6-wrapping-pairs-880a/`; four independent cold caches, two threads,
+load1 below 30 and no open browser window at every leg's start. START/END
+notifications are retained in `/tmp/ares-coord-inbox.log`.
+
+| Leg log | Result | Start load1 | Sweep |
+| --- | --- | --- | --- |
+| `seeded-base.log` | 894/895 PASS; exit100 | 10.37 | Only FAIL: INCOMPLETE, 1 generated / 1 compared / 0 rejected |
+| `seeded-cand.log` | 898/898 PASS; exit0 | 4.92 | PASS, 5 generated / 5 compared / 0 rejected |
+| `official-base.log` | 894/895 PASS; exit100 | 2.27 | Only FAIL: INCOMPLETE, 1 generated / 1 compared / 0 rejected |
+| `official-cand.log` | 898/898 PASS; exit0 | 29.30 | PASS, 5 generated / 5 compared / 0 rejected |
+
+The complete `option-coverage-summary.md` and `option-domain-plans.json` are
+in each leg's `*-artifacts` directory. `plan-diff.json` proves that only
+wrapping changes among 650 plans; the other 649 are identical, and the five
+canonical arrays equal the runtime witnesses. Each candidate's dedicated
+wrapping evidence retains ten enabled/disabled full-stream controls, fifty
+layers, marker counts, the disabled intersection full-stream control, the
+fixed-pose API/CLI -64 rejection and the separately arranged -50 rejection.
+CLI channels and result metadata remain exact apart from the shared
+prepare/export wall-clock normalization.
+
+Both `seeded-comparison.json` and `official-comparison.json` retain all original
+statuses and strict subset results; their companion comparison exits are 0.
+Every test-status change, in both modes, is:
+
+- `option_coverage::sweep::orca_parity_option_coverage`: FAIL → PASS.
+- `option_coverage::wrapping_exclude_coverage::orca_parity_wrapping_exclude_area_bounded_project_output`: absent → PASS.
+- `option_coverage::wrapping_exclude_coverage::rejections::original_orca_and_ares_reject_arranged_wrapping_object_outside_bed`: absent → PASS.
+- `option_coverage::wrapping_exclude_coverage::rejections::original_orca_and_ares_reject_wrapping_polygon_intersection`: absent → PASS.
+
+Candidate failures are empty, a strict subset of each base's singleton sweep
+failure. Common input identities use complete ZIP member-name/member-byte SHA
+sets, preserving repeated captures. Seeded has 601 common label/input keys
+(617 → 632 full-stream captures); official has 590 (606 → 621 captures).
+Every common Ares **raw** SHA set is unchanged, with no Ares normalization.
+Every common Native generated-by-normalized SHA set and manifest status is
+also unchanged; no nondeterminism adjudication is needed in this round. The
+only base-only key is the superseded default wrapping baseline; sixteen
+candidate-only keys per producer are eleven dedicated wrapping controls plus
+the five canonical sweep inputs, all complete-stream PASS. Native producer
+component sets are identical between each mode's base and candidate:
+`producer-components-audit.json` records all receipt components.
+
+Fresh default-environment `default-workspace.log`: 8270/8270 PASS, five existing
+nextest skips, exit0. `clippy.log` (workspace/all-targets/all-features,
+-D warnings), `fmt.log` and `wasm.log` (core+wasm wasm32) all exit0. Default
+workspace began on 4ff5a2164/880a and carries across the authorized docs-only
+rebase; strict and full pairs ran on 1bd8a5ce4/b0b. No old production-tree
+full evidence is carried. The paused ee277 workspace was terminated, and the
+later ee277 attempt was terminated on production main advancement; both
+INTERRUPTED records and original logs remain, neither credited.
