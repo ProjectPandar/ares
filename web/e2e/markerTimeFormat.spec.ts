@@ -16,7 +16,7 @@ test("missing Native cannot become frozen formatter parity", async () => {
     reporter: "line",
     timeout: 300_000,
   })}`);
-  const env = { ...process.env, ARES_REQUIRE_ORCA: "1", FORCE_COLOR: "0" };
+  const env: NodeJS.ProcessEnv = { ...process.env, ARES_REQUIRE_ORCA: "1", FORCE_COLOR: "0" };
   delete env.ARES_MARKER_TIME_BIN;
   const output = spawnSync(process.execPath, [
     fileURLToPath(new URL("../node_modules/@playwright/test/cli.js", import.meta.url)),

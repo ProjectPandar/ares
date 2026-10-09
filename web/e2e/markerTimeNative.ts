@@ -8,6 +8,7 @@ import { test } from "@playwright/test";
 function missing(tool: string): null {
   const message = `missing ${tool}; Native comparison not executed`;
   if (process.env.ARES_REQUIRE_ORCA === "1") throw new Error(`ARES_REQUIRE_ORCA=1: ${message}`);
+  console.error(`SKIPPED: ${message}`);
   test.skip(true, `SKIPPED: ${message}`);
   return null;
 }
