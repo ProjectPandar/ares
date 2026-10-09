@@ -164,10 +164,20 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
             ("flow-1.5", "1.5"),
             ("flow-2", "2"),
         ],
-        "filament_flow_ratio" => &[("probe-min", "0.5"), ("probe-max", "1.5")],
+        "filament_flow_ratio" => &[
+            ("flow-0.5", "0.5"),
+            ("flow-1", "1"),
+            ("flow-1.5", "1.5"),
+            ("flow-2", "2"),
+        ],
         // `filament_diameter` 0.5mm is rejected by upstream validation
         // (standard sizes only).
-        "filament_diameter" => &[("probe-min", "1.0"), ("probe-max", "3.0")],
+        "filament_diameter" => &[
+            ("diameter-1", "1"),
+            ("diameter-1.75", "1.75"),
+            ("diameter-2.85", "2.85"),
+            ("diameter-3", "3"),
+        ],
         "adaptive_pressure_advance_bridges" => &[("probe-min", "0.5"), ("probe-max", "2.0")],
         _ => return None,
     };

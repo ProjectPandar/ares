@@ -87,10 +87,13 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         let bounded_height = matches!(key.as_str(), "layer_height" | "initial_layer_print_height");
         // Runtime-witnessed bridge roles, single nozzle/filament finite scope.
         let bounded_bridge = matches!(key.as_str(), "bridge_flow" | "internal_bridge_flow");
+        // GCode.cpp:6467-6513 / Extruder.hpp:61: finite single-filament witnesses.
+        let bounded_filament = matches!(key.as_str(), "filament_flow_ratio" | "filament_diameter");
         provably_legal = unbounded_schema
             || grouped_printable_area
             || bounded_height
             || bounded_bridge
+            || bounded_filament
             || key == "enable_long_retraction_when_cut";
         (
             authored

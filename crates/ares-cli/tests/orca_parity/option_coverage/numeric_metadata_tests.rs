@@ -90,6 +90,21 @@ fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
             ["0.5", "1", "1.5", "2"]
         );
     }
+    for (key, wires) in [
+        ("filament_flow_ratio", ["0.5", "1", "1.5", "2"]),
+        ("filament_diameter", ["1", "1.75", "2.85", "3"]),
+    ] {
+        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+        assert!(plan.provably_legal, "{key}: bounded single-filament scope");
+        assert!(plan.omission.is_none(), "{key}");
+        assert_eq!(
+            plan.cases
+                .iter()
+                .map(|case| case.value.clone().unwrap())
+                .collect::<Vec<_>>(),
+            wires.map(|wire| json!([wire]))
+        );
+    }
     for key in ["skin_infill_line_width", "skeleton_infill_line_width"] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
         assert!(plan.provably_legal, "{key}: bounded LockedZag context");

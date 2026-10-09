@@ -161,6 +161,13 @@ fn execute_plan(
             let application = runner::application::verify_value(project, &plan.key, value)?;
             Ok(serde_json::json!({"application":application,
                 "domain":super::bridge_flow_coverage::input::metadata(&plan.key, true)}))
+        } else if matches!(
+            plan.key.as_str(),
+            "filament_flow_ratio" | "filament_diameter"
+        ) {
+            let application = runner::application::verify_value(project, &plan.key, value)?;
+            Ok(serde_json::json!({"application":application,
+                "domain":super::filament_flow_coverage::input::metadata()}))
         } else {
             runner::application::verify_value(project, &plan.key, value)
         }
@@ -190,6 +197,16 @@ fn execute_plan(
                 &plan.key,
                 case.value.as_ref().unwrap().as_str().unwrap(),
                 true,
+                &label,
+            )
+        } else if matches!(
+            plan.key.as_str(),
+            "filament_flow_ratio" | "filament_diameter"
+        ) {
+            super::filament_flow_coverage::input::export(
+                runner,
+                &plan.key,
+                case.value.as_ref().unwrap()[0].as_str().unwrap(),
                 &label,
             )
         } else {
