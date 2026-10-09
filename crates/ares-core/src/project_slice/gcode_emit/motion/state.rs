@@ -1,3 +1,6 @@
+mod object_labels;
+pub(in crate::project_slice::gcode_emit) use object_labels::*;
+
 use super::{
     MotionOptions, arc, extruder_state, set_accel_and_jerk, set_layer_acceleration_and_jerk,
 };
@@ -129,6 +132,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) support_interface_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) ironing_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) pending_object_start: Option<(u32, [u8; 12])>,
+    pub(in crate::project_slice::gcode_emit) filament_instances_code: Option<[u8; 12]>,
     pub(in crate::project_slice::gcode_emit) last_travel_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_start: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
@@ -304,29 +308,6 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     }
 }
 
-pub(in crate::project_slice::gcode_emit) fn queue_object_start(
-    state: &mut EmitState,
-    label_id: u32,
-    encoded_labels: [u8; 12],
-) {
-    state.pending_object_start = Some((label_id, encoded_labels));
-}
-
-pub(in crate::project_slice::gcode_emit) fn queue_exclude_start(
-    state: &mut EmitState,
-    text: String,
-) {
-    state.pending_exclude_start = Some(text);
-}
-
-/// Mirrors `GCode.cpp:5478-5494`: an unflushed start label is dropped
-/// (empty instance) and only then does the end label get armed.
-pub(in crate::project_slice::gcode_emit) fn queue_exclude_end(state: &mut EmitState, text: String) {
-    if state.pending_exclude_start.take().is_none() {
-        state.pending_exclude_end = Some(text);
-    }
-}
-
 impl EmitState {
     pub(in crate::project_slice::gcode_emit) fn extrusion_totals(
         &self,
@@ -351,54 +332,6 @@ impl EmitState {
     /// `will_move_z` check (`GCode.cpp:4417`) both read this current Z.
     pub(in crate::project_slice::gcode_emit) fn record_z(&mut self, z: f64) {
         self.writer_z = Some(z);
-    }
-}
-
-pub(in crate::project_slice::gcode_emit) fn queue_object_stop_label(
-    state: &mut EmitState,
-    label_id: u32,
-) {
-    state.pending_object_stop_label = Some(label_id);
-}
-
-pub(in crate::project_slice::gcode_emit) fn append_exclude_end(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-) {
-    if let Some(label_id) = state.pending_object_stop_label.take() {
-        output.extend_from_slice(
-            format!("; stop printing object, unique label id: {label_id}\nM625\n").as_bytes(),
-        );
-    }
-    if let Some(text) = state.pending_exclude_end.take() {
-        output.extend_from_slice(text.as_bytes());
-        if !state.options.use_relative_e_distances && text.lines().any(|line| line == "G92 E0") {
-            state.extruder.e_position = 0.0;
-        }
-    }
-}
-
-pub(in crate::project_slice::gcode_emit) fn append_object_start(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-) {
-    // `add_object_change_labels` writes the end label before the start label
-    // (`GCodeWriter.cpp:1197-1201`).
-    append_exclude_end(output, state);
-    if let Some((label_id, encoded_labels)) = state.pending_object_start.take() {
-        output.extend_from_slice(
-            format!("; start printing object, unique label id: {label_id}\nM624 ").as_bytes(),
-        );
-        output.extend_from_slice(&encoded_labels);
-        output.push(b'\n');
-    }
-    if let Some(text) = state.pending_exclude_start.take() {
-        if !state.options.use_relative_e_distances && state.extruder.e_position.abs() > f64::EPSILON
-        {
-            output.extend_from_slice(b"G92 E0\n");
-            state.extruder.e_position = 0.0;
-        }
-        output.extend_from_slice(text.as_bytes());
     }
 }
 

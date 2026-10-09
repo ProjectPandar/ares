@@ -1,9 +1,7 @@
 //! Layer-end timelapse + retraction tail for a chunk's last object entry
 //! (`GCode.cpp:5527-5546`).
 
-use super::super::{
-    SliceError, append_layer_end_timelapse, motion, object::ObjectLabels, timelapse,
-};
+use super::super::{SliceError, append_layer_end_timelapse, motion, timelapse};
 
 /// Start-insert result and traditional-mode gate for the layer-end
 /// `insert_timelapse_gcode` path (`GCode.cpp:5171-5178`).
@@ -15,7 +13,6 @@ pub(super) struct LayerTimelapse {
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    object_labels: Option<&ObjectLabels>,
     LayerTimelapse {
         timelapse_inserted,
         traditional_timelapse,
@@ -24,9 +21,9 @@ pub(super) fn emit(
 ) -> Result<(), SliceError> {
     // The layer-end timelapse sequence closes every layer chunk
     // (`GCode.cpp:5527-5546`), after all of the chunk's objects.
-    if object_labels.is_none() && timelapse_inserted {
+    if timelapse_inserted || state.has_insert_timelapse_gcode {
         motion::defer_layer_retraction(state);
-    } else if object_labels.is_none() {
+    } else {
         motion::end_layer_for_timelapse(output, state);
     }
     append_layer_end_timelapse(

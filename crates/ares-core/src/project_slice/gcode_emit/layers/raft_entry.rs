@@ -60,7 +60,7 @@ pub(super) fn emit(
     if let Some(labels) = &labels[object_index] {
         labels.queue_start(output, state, emit_labels);
     }
-    let timelapse_inserted = motion::emit_layer(
+    motion::emit_layer(
         output,
         layer,
         (motion_geometry, first_layer, |_| {
@@ -78,12 +78,7 @@ pub(super) fn emit(
         },
     )?;
     if let Some(labels) = &labels[object_index] {
-        labels.queue_stop(
-            output,
-            state,
-            emit_labels,
-            timelapse_inserted && is_group_end,
-        );
+        labels.queue_stop(output, state, emit_labels);
     }
     if is_group_end {
         motion::end_layer_for_timelapse(output, state);

@@ -132,6 +132,22 @@ pub(super) fn append(
         layer_count,
         ..
     } = schedule;
+    let filament_instances = (state.tags.is_bbl()
+        && traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .gcode
+            .support_object_skip_flush
+            .0
+        && traversal.resolved.views.full.process.print.print_sequence
+            == crate::ProcessPrintSequence::ByLayer)
+        .then(|| {
+            super::object::FilamentInstances::new(
+                instances.iter().flatten().map(|instance| instance.label_id),
+            )
+        });
     // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`) —
     // consumed by the toolchange-boundary timelapse insert gate
     // (`GCode.cpp:5292-5297`).
@@ -436,6 +452,14 @@ pub(super) fn append(
         let mut final_entry = entries[0];
         for (tool, tool_entries) in &mut by_tool {
             wrapping::emit(output, state, &timelapse_context)?;
+            if let Some(instances) = &filament_instances
+                && (chunk_index == 0
+                    || traversal.resolved.views.full.process.print.exclude_object.0)
+            {
+                state.filament_instances_code = Some(
+                    instances.encode(tool_entries.iter().map(|entry| entry.instance.label_id)),
+                );
+            }
             let needs_change = !state.extruder_selected || state.extruders.active_id() != *tool;
             if has_tower {
                 tower::emit(

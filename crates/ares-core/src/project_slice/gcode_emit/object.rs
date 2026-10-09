@@ -1,3 +1,6 @@
+mod filament_instances;
+pub(super) use filament_instances::FilamentInstances;
+
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 pub(super) fn append_definitions(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
@@ -122,15 +125,9 @@ impl ObjectLabels {
         output: &mut Vec<u8>,
         state: &mut super::motion::EmitState,
         emit_comments: bool,
-        defer_retraction: bool,
     ) {
         if emit_comments {
             self.append_stopping(output);
-        }
-        if defer_retraction {
-            super::motion::defer_layer_retraction(state);
-        } else {
-            super::motion::end_layer_for_timelapse(output, state);
         }
         if state.tags.is_bbl() {
             super::motion::queue_object_stop_label(state, self.label_id);

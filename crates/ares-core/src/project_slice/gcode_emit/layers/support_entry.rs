@@ -104,13 +104,12 @@ pub(super) fn emit(
     );
     if standalone {
         if let Some(labels) = &labels[object_index] {
-            labels.queue_stop(output, state, emit_labels, false);
+            labels.queue_stop(output, state, emit_labels);
         }
         if is_group_end {
             layer_end::emit(
                 output,
                 state,
-                labels[object_index].as_ref(),
                 layer_end::LayerTimelapse {
                     timelapse_inserted: false,
                     traditional_timelapse,

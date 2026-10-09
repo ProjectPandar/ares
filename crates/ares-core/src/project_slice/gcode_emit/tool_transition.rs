@@ -113,17 +113,32 @@ fn emit_inner(
     context: change::Context<'_>,
 ) -> Result<(), SliceError> {
     if !state.extruders.multiple() {
-        append_filament(output, state, filament, true, context)?;
+        append_filament(
+            output,
+            state,
+            filament,
+            FilamentTemplate::Start { close_mask: false },
+            context,
+        )?;
         super::pressure_advance::append(output, state, context.traversal, filament);
         motion::tool_selection::toolchange(output, state, context.traversal, filament, "");
         return Ok(());
     }
     state.toolchange_count += 1;
     motion::retract_for_toolchange(output, state);
-    if state.extruder_selected {
-        append_filament(output, state, state.extruders.active_id(), false, context)?;
+    let close_mask = if state.extruder_selected {
+        let inserted = append_filament(
+            output,
+            state,
+            state.extruders.active_id(),
+            FilamentTemplate::End,
+            context,
+        )?;
         temperature::pre(output, state, context);
-    }
+        inserted
+    } else {
+        false
+    };
     let custom = change::append(output, state, filament, context)?;
     motion::tool_selection::toolchange(output, state, context.traversal, filament, &custom);
     // `GCode.cpp:8000-8004` (`set_extruder` tail): SEMM without a prime
@@ -161,20 +176,32 @@ fn emit_inner(
             None,
         );
     }
-    append_filament(output, state, filament, true, context)?;
+    append_filament(
+        output,
+        state,
+        filament,
+        FilamentTemplate::Start { close_mask },
+        context,
+    )?;
     temperature::post(output, state, context);
     super::pressure_advance::append(output, state, context.traversal, filament);
     state.last_scaled_position = None;
     Ok(())
 }
 
+enum FilamentTemplate {
+    End,
+    Start { close_mask: bool },
+}
+
 fn append_filament(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     filament: usize,
-    start: bool,
+    invocation: FilamentTemplate,
     context: change::Context<'_>,
-) -> Result<(), SliceError> {
+) -> Result<bool, SliceError> {
+    let start = matches!(invocation, FilamentTemplate::Start { .. });
     let runtime = &context.traversal.resolved.views.runtime_gcode;
     let (name, sources) = if start {
         ("filament_start_gcode", &runtime.filament_start_gcode.0)
@@ -183,8 +210,17 @@ fn append_filament(
     };
     let source = sources.get(filament).unwrap_or(&sources[0]);
     if source.is_empty() {
-        return Ok(());
+        return Ok(false);
     }
+    // GCode.cpp:7775-7779 consumes the mask only at an old end invocation.
+    let inserted_mask = if !start && let Some(code) = state.filament_instances_code.take() {
+        output.extend_from_slice(b"M624 ");
+        output.extend_from_slice(&code);
+        output.push(b'\n');
+        true
+    } else {
+        false
+    };
     let mut config = placeholders::base_config(
         context.traversal,
         context.metadata,
@@ -245,5 +281,8 @@ fn append_filament(
             format!("\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n").as_bytes(),
         ),
     }
-    Ok(())
+    if let FilamentTemplate::Start { close_mask: true } = invocation {
+        output.extend_from_slice(b"M625\n");
+    }
+    Ok(inserted_mask)
 }

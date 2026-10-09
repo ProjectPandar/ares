@@ -96,18 +96,12 @@ pub(super) fn emit(
     )?;
     let is_last_entry = Some((object_index, layer_index)) == last_entry;
     if let Some(labels) = &labels[object_index] {
-        labels.queue_stop(
-            output,
-            state,
-            emit_labels,
-            timelapse_inserted && is_group_end,
-        );
+        labels.queue_stop(output, state, emit_labels);
     }
     if is_group_end {
         layer_end::emit(
             output,
             state,
-            labels[object_index].as_ref(),
             layer_end::LayerTimelapse {
                 timelapse_inserted,
                 traditional_timelapse,

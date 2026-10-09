@@ -211,7 +211,7 @@ pub(super) fn emit(
             && let Some(labels) = &labels[object_index]
         {
             labels.queue_start(output, state, emit_labels);
-            labels.queue_stop(output, state, emit_labels, false);
+            labels.queue_stop(output, state, emit_labels);
         }
         return Ok(());
     };

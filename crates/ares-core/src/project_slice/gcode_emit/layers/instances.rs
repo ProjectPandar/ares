@@ -5,6 +5,7 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 #[derive(Clone, Copy)]
 pub(in crate::project_slice::gcode_emit) struct Instance {
     pub(super) copy: usize,
+    pub(in crate::project_slice::gcode_emit) label_id: u32,
     pub(in crate::project_slice::gcode_emit) shift: crate::geometry::Point,
     pub(super) position: usize,
 }
@@ -44,6 +45,9 @@ pub(super) fn collect(traversal: &PreparedPostClassicTraversal) -> Vec<Vec<Insta
                 centers.push((shift.x(), shift.y()));
                 Instance {
                     copy,
+                    label_id: object.instances()[source_instance]
+                        .loaded_label_id()
+                        .unwrap_or(0),
                     shift,
                     position: 0,
                 }
