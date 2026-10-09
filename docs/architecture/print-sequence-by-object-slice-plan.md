@@ -445,3 +445,52 @@ identical per-instance configs) - implemented in the ares
 load/region-set path, verified by the two_instances width blocks
 1 -> 2 and the full-file parity. The by-object phases and the skirt
 per-group accounting stay as landed.
+
+## S2 completion: the kobra3 by-object object-boundary blocks
+
+The last failing fixture (kobra3) missed four byte groups at every
+object boundary after the transition; all three are
+`m_second_layer_things_done` / writer-cache ports, landed as one
+ecommit each:
+
+1. Per-object first/second-layer gating
+   (`588ccf1f1`). `first_layer` is per-object
+   (`layer.id()==0 && |bottom_z|<EPSILON`, GCode.cpp:4589, writer
+   `m_is_first_layer` :4590), so after the per-object flag reset
+   (GCode.cpp:3367) EVERY object re-runs the layer-0 block
+   (initial acceleration/jerk + initial travel speed, :4762-4771)
+   and the `!first_layer && !m_second_layer_things_done` block
+   (:4777-4797: default acceleration/jerk, nozzle temps). Ares gated
+   both on the global chunk index. `begin_layer` takes a `LayerBegin`
+   struct; the layer-index advance stays with `advance_for_layer`
+   (GCode.cpp:5690-5696).
+2. Live writer bed-temperature cache (`699235793`).
+   `GCodeWriter::set_bed_temperature` refreshes
+   `m_last_bed_temperature` on every changed value
+   (GCodeWriter.cpp:168-175), so the object-2 transition
+   (_print_first_layer_bed_temperature, GCode.cpp:3332) must compare
+   against the value the object-1 second layer wrote (:4820). Ares
+   passed the startup snapshot; Klipper startup leaves it 0, so ares
+   re-emitted M140 S35 twice. The cache now threads as `&mut i32`
+   through `LayerBoundary`/`Transition`.
+3. Transition travel acceleration (`3101a8edd`). The origin move
+   runs through `GCode::travel_to` (GCode.cpp:3327 -> :7350), which
+   selects the travel acceleration/jerk BEFORE the writer hop
+   (erNone + the previous object's layer -> plain travel values). The
+   ares transition wrote the second hop directly: the kobra3 output
+   missed `SET_VELOCITY_LIMIT ACCEL=15000 ACCEL_TO_DECEL=7500
+   SQUARE_CORNER_VELOCITY=12` between `G1 Z10.36` and `G1 Z10.76`,
+   and the stale jerk cache suppressed the object-2 layer-0
+   `SQUARE_CORNER_VELOCITY=9` line. Fixed by running
+   `begin_path_travel` between the two `writer_z` hops.
+
+Acceptance: ender3 / kobra3 / single_object_two_instances all PASS
+(seeded, byte-exact); by-layer guards re-verified by the full seeded
+control set after the rebase. One clippy-hygiene commit (`d98ac7535`)
+clears pre-existing findings on the branch (dead skirt_height
+binding, map_or, range loop, nested metadata rewrite).
+
+Known deferred nuance: `begin_path_travel`'s first-layer branch keys
+on `state.layer_index == 0` (global) while upstream uses
+`on_first_layer()`; kobra3/ender3 set `initial_layer_travel_*` to 0
+so no current fixture distinguishes them.
