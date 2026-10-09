@@ -90,7 +90,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     // is fully inside the plate's print volume, reject with the upstream
     // -50 text (`Model.cpp:692-702 update_print_volume_state`).
     if print_volume::count_inside_instances(&project)? == 0 {
-        return Err(SliceError::InvalidInput(
+        return Err(SliceError::NoSuitableObjects(
             "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading."
                 .to_owned(),
         ));
