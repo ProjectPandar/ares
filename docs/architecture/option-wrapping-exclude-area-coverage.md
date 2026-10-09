@@ -1,0 +1,124 @@
+# Bounded wrapping-exclude-area option coverage
+
+Status: proposed worker6 harness-only slice after flow coverage `46443344d`.
+The historical [full Option audit](2026-10-09-option-full-current-audit.md)
+records `wrapping_exclude_area` INCOMPLETE, baseline-only with no injection.
+Current `domains/probes.rs` still excludes it, citing a rectangle rejection
+without establishing its context. This proposal is not a fresh full audit.
+The coordinator approved this selection: single nozzle, single filament,
+no tower, by-layer. No production changes are authorized.
+
+## Source boundary
+
+OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
+
+| Upstream boundary | Contract |
+| --- | --- |
+| `libslic3r/PrintConfig.cpp:4120-4125`, `PrintConfig.hpp:1358` | `wrapping_exclude_area` is coPoints, default empty; individual XY points, not coPointsGroups polygons or a numeric endpoint domain |
+| `libslic3r/Config.hpp:1487-1550::ConfigOptionPoints`, `Config.cpp:976-1000` | vserialize emits one XY string per point; JSON arrays join with commas before deserialize. Preserve requested point order and coordinates |
+| `libslic3r/Print.cpp:932-979::layered_print_cleareance_valid` | Add plate origin to wrapping points, scale them into a polygon, and reject its intersection with an instance volume hull when detection is enabled |
+| `Print.cpp:1304-1310::Print::validate` | By-layer path invokes the preceding validation and assigns `STRING_EXCEPT_OBJECT_COLLISION_IN_LAYER_PRINT` |
+| `Print.cpp:1324-1333` | Detection with prime tower disabled produces a warning, not this branch's fatal rejection |
+| `PrintConfig.cpp:8688-8712::normalize_fdm_2`, `Print.cpp:3290-3303::has_wipe_tower` | Tower activation is separately gated; keep enable_prime_tower=0 and verify no tower is emitted |
+| `GCode.cpp:5215-5236,5302-5305` | Once-per-layer wrapping retract/template insertion gates on enable_wrapping_detection; the no-tower insertion does not require area point count >2 |
+| `GCode/GCodeProcessor.cpp:2193-2202::apply_config` | Carries wrapping points into result metadata |
+| `GCode/GCodeProcessor.cpp:1866-1999` | Wrapping-polygon collision code is commented out; do not claim it enforces the active Print hull contract |
+| `OrcaSlicer.cpp:6083-6084`, `libslic3r/Utils.hpp:66` | Layered object collision maps to CLI -64; preserve actual Native stage, result.json, status and diagnostic |
+
+Rust counterparts are existing `options/printer_options/gcode_source.rs`
+Point2dList, `options/gcode_fields.rs`, project/effective-config resolution,
+`project_slice/gcode_emit/layers/wrapping.rs`, and the public
+`validate_project_plate` / `slice_project_plate_validated` boundaries.
+`print/validate.rs` currently calls sequential_clearance, whose entry returns
+for by-layer; the wrapping hull rejection is not evident in that path. This
+read-only observation is a RED candidate, not proof of a production defect.
+Legacy STL `gcode_wrapping_detection.rs` postprocessing and its point-count
+suppression tests are a different boundary; they do not define project slicing
+or Native expectations for this slice.
+
+## Included finite contract
+
+Reuse existing cube10 STL, runtime Native export to 3MF, then project slicing.
+Ender-3 0.4mm, exactly one nozzle/filament/object/instance, first plate,
+by-layer, 0.2mm initial/ordinary height, relative E, no support/raft/tower,
+ordinary filament ratio 1 and diameter 1.75. Verify exported settings and
+cardinalities; no physical mapping or tool ordering overrides. Detection uses
+an inert comment template `;W6_WRAP {layer_num} {layer_z} {max_layer_z}`,
+which avoids physical-tool placeholders and commanded motion. Preserve the
+standard start/end templates and complete M73/footer bytes.
+
+Canonical detection-enabled requests use one string per point (`"XxY"`),
+with an actual empty array for the empty list, matching ConfigOptionPoints
+vserialize. The existing generic harness array carrier uses one string for a
+whole authored value; authorize a key-only `bounds.rs::case` conversion here,
+without changing any other coPoints key. Requests:
+
+- Empty point list.
+- One point `(0,0)`.
+- Two points `(0,0),(10,0)`.
+- Off-object triangle `(0,0),(10,0),(0,10)`.
+- Off-object rectangle `(0,0),(10,0),(10,10),(0,10)`.
+
+Prove at runtime that the exported cube is clear of the two polygon interiors.
+Native must actually accept each request and retain its requested points.
+If a request is rejected, rewritten, or fails to emit the wrapping witness,
+retain its evidence and report it before narrowing or promoting anything.
+Empty/one/two-point requests do not inherit the legacy STL suppression rule:
+observe Native and require project output equality, with one actual wrapping
+marker per emitted layer when detection remains enabled. Compare complete
+ordered output with only the existing generated-by normalization.
+
+Dedicated detection-disabled controls repeat the same five requests, prove
+marker absence and compare whole output. The enable=1 versus enable=0 controls
+provide a real emitted-path witness; a CONFIG_BLOCK alone is insufficient.
+Record exact point lists, effective flag, template, positive extrusion,
+ordered marker lines and layer-count evidence externally.
+
+Rejection witness: detection enabled with bed-enclosing rectangle
+`(0,0),(220,0),(220,220),(0,220)`, after proving the cube footprint lies inside
+it. Record Native actual Slice rejection, expected -64 (Unix 192), structured
+CLI text and the Print validation diagnostic; compare the same exported 3MF
+through public Ares validation and validated slicing. Repeat with detection
+disabled as an accepted full-output control. Do not invent a processor -102
+rejection, invoke script/template motion, or mask a mismatch with a capability
+guard. Any actual Ares acceptance/error/byte discrepancy remains RED and is
+reported for coordinator ownership; no production repair is included.
+
+## Harness destination, RED and GREEN
+
+Only CLI Option coverage: new `wrapping_exclude_coverage` test/context files,
+parent test-module registration, and this key's probes, key-local point conversion in `bounds.rs::case`,
+activation/context, sweep hook and metadata expectation if runtime proof permits. Reuse existing
+OrcaRunner export/slice and caches; no producer/cache/CLI-result infrastructure
+changes, inputs or Native outputs committed. Keep modules below 400 LOC.
+
+RED first executes actual Native success/rejection controls and strict Ares
+comparisons, then asserts bounded classification. Genuine byte or rejection
+mismatches precede the classification assertion and block GREEN. If any
+positive contract lacks proof, keep INCOMPLETE; no rejected case is excused
+into a compared PASS. GREEN only promotes these witnessed successful requests,
+with canonical enable=1 context and separate rejection controls. Verify the
+650-plan diff changes only this key; preserve all other expectations and
+negative controls, and separately report any required expectation update.
+
+GCode tool_transition/emit_helpers neighbors belong to worker2. If RED points
+there, freeze evidence and report for transfer; do not change their production
+paths. Print hull-admission differences are likewise reported without repair.
+
+## Acceptance and deferred scope
+
+Required seeded/official directed cold/hot, fresh unfiltered selected-key
+sweep and full base/candidate controls; list every status change and common
+complete Ares raw hashes. Native-only variation needs separate input/producer/
+output evidence. Default-environment workspace, strict clippy, fmt, wasm.
+Directed Native runs: load1<60, two threads; timeouts invalid and retained for
+lower-load rerun. Full pairs: load1<30, one heavy job, 16 threads. Shared
+native_environment optional visible SKIPPED / required FAIL policy applies.
+
+Deferred: towers, SEMM, multiple nozzles/filaments, physical mappings and G4
+IDs; by-object/G2 clearance, nonzero plate origins, extra plates/instances,
+arbitrary/self-intersecting polygons, arbitrary coordinates, touching-only
+and epsilon collision boundaries, real detection motion, physical-tool
+placeholders, APA, GUI warning policy, commented processor collision code,
+and legacy STL postprocessing. Existing Ares scaffold remains unchanged;
+this slice establishes only the cited project/Print boundary's finite contract.
