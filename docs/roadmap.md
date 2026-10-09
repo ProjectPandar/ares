@@ -7,6 +7,15 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### G4 Manual-map slice (2026-10-10)
+
+`ToolOrdering` physical-map consumers and `GCode` timelapse/label/M624-M625 lifecycle are rewritten in core.
+Only four coherent two-nozzle Manual `filament_map` cases are promoted; other five keys/by-object masks are deferred.
+Fresh workspace8265/8265 and strict Clippy/fmt/WASM passed; seeded full893→894 PASS.
+Original official failures remain visible; candidate-only Native path-order ND was explicitly owner-adjudicated.
+No comparator change or reruns.
+[Source boundaries, four-leg receipts, raw inventory and adjudication](architecture/g4-manual-map-review.md).
+
 ### G2 clearance/height coverage: harness GREEN, pending integration review (2026-10-09)
 
 Four bounded coFloat plans: seeded/official cold/hit 12 strict sweep matches; 14 sequential and 8 loaded-rejection witnesses; no production edits.

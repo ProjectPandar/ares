@@ -1,6 +1,21 @@
 # G4: bounded tool and multi-filament option coverage
 
-Status: proposed; source/spec approval required before Native-backed RED.
+Status: approved source slice; only the four coherent Manual `filament_map`
+cases are GREEN. The other five keys remain INCOMPLETE and unexecuted.
+
+## Bounded conclusion
+
+The Rust destination remains the source-cited `ToolOrdering` physical-map
+consumers and `GCode` traditional timelapse/object-label/template lifecycle,
+not an Ares-owned tool pipeline. Two complete Standard selectors, two
+filaments, wall1/infill2 and four Manual maps establish this finite scope only.
+The original singleton-selector input remains preserved as O8 UB_ADJACENT.
+Automatic grouping, arbitrary vector/project shapes, by-object mask production
+and the other five G4 contracts are not promoted by this result.
+
+Review evidence and the owner's Native-only nondeterminism adjudication are
+recorded in `g4-manual-map-review.md`; raw failures remain visible and the
+whole-output comparator is unchanged.
 Worker2 owns the six keys below. Base main `016dfc86f`. This is a harness
 admission slice around upstream configuration consumers, not permission to
 change production ToolOrdering, WipeTower, GCode or CLI normalization.

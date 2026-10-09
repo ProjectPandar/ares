@@ -1,6 +1,9 @@
 # G4 dual-nozzle traditional timelapse at logical tool changes
 
-Status: bounded production RED/GREEN authorized after read-only diagnosis.
+Status: bounded four-map whole-output/consumer GREEN; production-containing
+workspace and strict gates passed. Review scope excludes the other five G4 keys.
+The source ownership and deferred behavior below remain binding; acceptance
+receipts and the Native-only ordering adjudication are in `g4-manual-map-review.md`.
 This is a `libslic3r/GCode.cpp` lifecycle rewrite, not a new G-code pipeline.
 The original six-key harness specification remains
 [the G4 coverage boundary](option-g4-tool-multifilament-coverage.md).
