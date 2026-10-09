@@ -1,0 +1,39 @@
+use std::{fs, process::Command};
+
+#[test]
+fn optional_missing_native_never_fabricates_replay_comparison() {
+    let artifacts = tempfile::Builder::new()
+        .prefix("replay-reference-policy-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let child_root = artifacts.join("child");
+    fs::create_dir(&child_root).unwrap();
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "replay_tests::unchanged_classic_replays_byte_identical_with_complete_paired_bytes_and_hashes",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "0")
+        .env_remove("ARES_ORCA_NATIVE_BIN")
+        .env("ARES_PARITY_ARTIFACT_ROOT", &child_root)
+        .output()
+        .unwrap();
+    fs::write(artifacts.join("child.stdout"), &output.stdout).unwrap();
+    fs::write(artifacts.join("child.stderr"), &output.stderr).unwrap();
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(diagnostic.contains("running 1 test"), "{diagnostic}");
+    assert!(output.status.success(), "{diagnostic}");
+    assert_eq!(
+        fs::read_dir(&child_root).unwrap().count(),
+        0,
+        "missing Native fabricated replay comparison artifacts: {child_root:?}"
+    );
+    assert!(diagnostic.contains("SKIPPED:"), "{diagnostic}");
+    assert!(diagnostic.contains("Native comparison not executed"), "{diagnostic}");
+}

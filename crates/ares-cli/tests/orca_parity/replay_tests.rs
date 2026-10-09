@@ -1,4 +1,7 @@
 //! Behavioral regressions invoke the actual replay entrypoint in this build.
+#[path = "replay_tests/native_reference.rs"]
+mod native_reference;
+
 use std::{fs, path::Path, process::Command};
 
 use serde_json::Value;
@@ -111,7 +114,11 @@ fn unchanged_classic_replays_byte_identical_with_complete_paired_bytes_and_hashe
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
     fixture(&input, true);
-    let artifacts = temp.path().join("artifacts");
+    let artifacts = tempfile::Builder::new()
+        .prefix("classic-replay-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
     let output = replay(&input, &artifacts, temp.path());
     assert!(
         output.status.success(),
