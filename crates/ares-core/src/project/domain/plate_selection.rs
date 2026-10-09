@@ -90,20 +90,19 @@ fn compute_colum_count(count: usize) -> usize {
     }
 }
 
-/// The plate grid origin (`PartPlate.cpp:3914-3921` `compute_origin` +
-/// `:3952-3962` `compute_shape_position` with `LOGICAL_PART_PLATE_GAP =
-/// 1/5` from `:55`): stride = bed bounding box × 1.2, row-major columns
-/// with negative-Y rows. The functions live in `slic3r/GUI/PartPlate`
-/// upstream but the CLI path uses this same grid geometry; the port stays
-/// in the project/plate layer without GUI dependencies.
+/// `OrcaSlicer.cpp:1775-1778,3726,3805` initializes CLI plate dimensions
+/// from ordered printable-area points [2]-[0], truncated to integers.
+/// `PartPlate.cpp:4836-4849,3952-3962` applies the 1/5 gap and grid offsets;
+/// this deliberately does not substitute the polygon bounding box.
 fn plate_grid_origin(index: usize, plate_count: usize, settings: &ProjectSettings) -> (f64, f64) {
     let area = &settings.printer.remaining.printable_area.0;
-    let width = area.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max)
-        - area.iter().map(|p| p.x).fold(f64::INFINITY, f64::min);
-    let depth = area.iter().map(|p| p.y).fold(f64::NEG_INFINITY, f64::max)
-        - area.iter().map(|p| p.y).fold(f64::INFINITY, f64::min);
+    let width = (area[2].x - area[0].x) as i32;
+    let depth = (area[2].y - area[0].y) as i32;
     let cols = compute_colum_count(plate_count);
     let row = index / cols;
     let col = index % cols;
-    (col as f64 * width * 1.2, -(row as f64) * depth * 1.2)
+    (
+        col as f64 * f64::from(width) * 1.2,
+        -(row as f64) * f64::from(depth) * 1.2,
+    )
 }
