@@ -25,6 +25,10 @@ mod layer_heights;
 #[path = "option_coverage/height_context.rs"]
 mod height_context;
 
+#[cfg(test)]
+#[path = "option_coverage/print_compatible_printers.rs"]
+mod print_compatible_printers;
+
 #[path = "option_coverage/adaptive_pa_bridges.rs"]
 mod adaptive_pa_bridges;
 

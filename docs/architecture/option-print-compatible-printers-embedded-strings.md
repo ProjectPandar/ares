@@ -91,6 +91,27 @@ after load-settings, and is **deferred here**. This is an explicitly authorized
 new matrix, not an unnoticed success-seeking retry of the failed sample. Further
 Native admission waits for re-approval of this revision. No new probe tools.
 
+Approved revised admission (existing Native only),
+`/tmp/ares-pcp-embedded/admission-r2`: both `--slice 0` and `--export-3mf`
+exit0. Footer carries the exact serialized M/B/A/B sequence; the actual
+roundtrip `Metadata/project_settings.config` vector equals the requested
+ordered four elements. `native-observability.json` and command/load/input-member
+receipts retain the observations. This proves these existing channels exist,
+not that the remaining cases or classification already passed.
+
+The first test attempt (`red-official`, run
+`1f7aff1c-b4ca-4f73-887c-5edf099d4610`) stopped on a **harness adapter error**:
+direct `OrcaStrings` Serde expects a JSON sequence, not the Native footer's scalar
+serialization token. This is neither fidelity RED nor classification RED.
+Do not reinterpret that exit100 as desired RED. Retain it separately.
+The footer is compared as serialized bytes in the unchanged complete-stream
+comparison, while Native writer JSON (`ConfigOptionStrings::vserialize`) is
+the independent vector/cardinality witness. In particular `Config.cpp:72–120`
+does not quote semicolons in otherwise-simple elements, so parsing its footer
+as a reversible vector is not an upstream guarantee. Keep the semicolon sample;
+do not change the serializer or assert invented roundtrip-token semantics.
+Further Native test execution waits for worker2's full-pair END.
+
 ## Inventory evidence and honest coverage meaning
 
 `/tmp/ares-apa-g1-bridges/other-plan-inventory-audit.json` is an invariance audit,
