@@ -213,6 +213,7 @@ impl Catalog {
                 // (`OrcaSlicer.cpp:3150,587-606`): an empty filament
                 // start/end G-code vector is resized to one empty slot.
                 insert_default_gcodes(&mut filament_raw, &FILAMENT_GCODE_KEYS);
+                resize_empty_filament_gcodes(&mut filament_raw);
                 raw.extend_raw(&filament_raw);
                 filament_raws.push(filament_raw);
                 Ok(merged)
@@ -545,6 +546,26 @@ fn invalid_json(error: serde_json::Error) -> SliceError {
     invalid(format!(
         "invalid profile catalog or selection JSON: {error}"
     ))
+}
+
+/// OrcaSlicer.cpp:588-605, `load_default_gcodes_to_config(TYPE_FILAMENT)`:
+/// resize empty start/end G-code vectors to one empty string.
+fn resize_empty_filament_gcodes(raw: &mut ProjectSettingsRaw) {
+    for key in FILAMENT_GCODE_KEYS {
+        let empty = match raw.get(key).unwrap() {
+            RawConfigValue::Text(token) => matches!(
+                crate::options::json_deserialize::decode(crate::OptionValueKind::Strings, token)
+                    .unwrap(),
+                RawConfigValue::List(values) if values.is_empty()
+            ),
+            RawConfigValue::List(values) => values.is_empty(),
+            _ => unreachable!("loaded filament G-code is a string vector"),
+        };
+        if !empty {
+            continue;
+        }
+        raw.insert_strings(key, &[String::new()]);
+    }
 }
 
 /// `option(key, true)` with the option default (`Config.hpp` create path):

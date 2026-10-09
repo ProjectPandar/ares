@@ -68,12 +68,10 @@ async fn composed_profile_has_one_empty_filament_gcode_slot() {
     let catalog_json = catalog.to_string();
     let selection_json = selection.to_string();
     let overrides = ConfigOverrides::default();
-    let settings = ares_core::profile_settings(
-        stl(),
-        request(&catalog_json, &selection_json, &overrides),
-    )
-    .await
-    .unwrap();
+    let settings =
+        ares_core::profile_settings(stl(), request(&catalog_json, &selection_json, &overrides))
+            .await
+            .unwrap();
     let settings = serde_json::to_value(settings).unwrap();
     assert_eq!(settings["filament_end_gcode"], json!([""]));
     assert_eq!(settings["filament_start_gcode"], json!([""]));

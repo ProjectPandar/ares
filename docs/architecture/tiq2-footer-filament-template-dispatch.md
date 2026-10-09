@@ -88,6 +88,23 @@ whitespace relaxation or output deduplication is used. This establishes the
 observed whole-file result for this input, not parity for arbitrary projects.
 Full default and fresh paired reference gates remain required before merge.
 
+## Loaded-filament precondition
+
+The default workspace exposed a missing upstream prerequisite: the public
+profile entry with omitted filament G-code keys reached an empty vector.
+The overrides case already failed before applying its layer-height override.
+The independent public `profile_settings` RED confirms the composed value is
+not the required single empty-string slot. This is not a footer fallback case:
+`ConfigOptionVector::get_at` asserts nonempty (`Config.hpp:624-628`).
+
+`OrcaSlicer.cpp:588-605`, `load_default_gcodes_to_config(TYPE_FILAMENT)`,
+resizes empty filament-start/end vectors to one empty string after option
+creation. Rust `profiles/catalog.rs` created the registry defaults but omitted
+that resize. The corrected load boundary decodes these two string-vector
+values and resizes only empty vectors, preserving nonempty values. Footer
+dispatch keeps its nonempty precondition; no empty-string return is invented.
+The public composition and slice-override REDs both pass after this correction.
+
 ## Test boundary before production
 
 Restore the complete-byte TiQ2 runtime-OrcaRunner RED on merged main. Use the
