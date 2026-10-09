@@ -13,7 +13,8 @@ fn bind_plate(body: &str, fields: &[(&str, String)]) -> String {
             let old = tail.split_once('"').unwrap().0;
             body = body.replacen(&format!("{start}{old}\"/>"), &metadata, 1);
         } else {
-            body.push_str(&format!("\n    {metadata}"));
+            let (prefix, instances) = body.split_once("<model_instance>").unwrap();
+            body = format!("{prefix}\n    {metadata}\n    <model_instance>{instances}");
         }
     }
     body
@@ -104,7 +105,15 @@ pub(super) fn prepare(
     )
     .unwrap();
     let before = runner::application::settings(&exported.project).unwrap();
-    let mut fields = dependencies.as_object().unwrap().clone();
+    let mut fields = before
+        .iter()
+        .filter_map(|(key, value)| {
+            let values = value.as_array()?;
+            (key.starts_with("filament_") && values.len() == 1)
+                .then(|| (key.clone(), json!([values[0], values[0]])))
+        })
+        .collect::<serde_json::Map<String, Value>>();
+    fields.extend(dependencies.as_object().unwrap().clone());
     fields.insert("filament_is_support".into(), json!(["0", "0"]));
     fields.insert("filament_colour".into(), json!(["#F2754E", "#0000FF"]));
     fields.insert("filament_self_index".into(), json!(["1", "2"]));
@@ -203,6 +212,16 @@ pub(super) fn prepare(
         .unwrap();
     parity::artifacts::overwrite(&root.join(format!("{stem}-bound.3mf")), &exported.project)
         .unwrap();
+    let effective = runner::application::settings(&exported.project).unwrap();
+    let filament_lengths = effective
+        .iter()
+        .filter(|(key, _)| key.starts_with("filament_"))
+        .filter_map(|(key, value)| value.as_array().map(|values| (key.clone(), values.len())))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    assert!(
+        filament_lengths.values().all(|&length| length == 2),
+        "{filament_lengths:?}"
+    );
     let proofs = fields
         .iter()
         .map(|(key, value)| {
