@@ -50,6 +50,7 @@ pub(super) fn prepare(
         .iter_mut()
         .zip([("#F2754E", "211"), ("#0000FF", "233")])
     {
+        filament.insert("filament_is_support".into(), json!(["0"]));
         filament.insert("filament_colour".into(), json!([colour]));
         filament.insert("nozzle_temperature".into(), json!([temperature]));
         filament.insert(
@@ -66,7 +67,6 @@ pub(super) fn prepare(
         "first_layer_sequence_choice":"Customize","other_layers_sequence_choice":"Customize",
         "print_sequence":"by layer", "filament_map_mode":"Manual", "filament_map":["1","1"],
         "single_extruder_multi_material":"1", "use_relative_e_distances":"1",
-        "filament_is_support":["0","0"],
         "nozzle_diameter":["0.4"], "nozzle_volume_type":["Standard"],
         "outer_wall_filament_id":"1", "inner_wall_filament_id":"1",
         "sparse_infill_filament_id":"2", "internal_solid_filament_id":"2",
@@ -105,6 +105,7 @@ pub(super) fn prepare(
     .unwrap();
     let before = runner::application::settings(&exported.project).unwrap();
     let mut fields = dependencies.as_object().unwrap().clone();
+    fields.insert("filament_is_support".into(), json!(["0", "0"]));
     fields.insert("filament_colour".into(), json!(["#F2754E", "#0000FF"]));
     fields.insert("filament_self_index".into(), json!(["1", "2"]));
     fields.insert("nozzle_temperature".into(), json!(["211", "233"]));
