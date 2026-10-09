@@ -129,23 +129,9 @@ pub(crate) fn artifact_error(label: &str, error: String) -> ParityOutcome {
     }
 }
 
-pub(crate) fn pass(label: &str) -> ParityOutcome {
-    ParityOutcome {
-        label: label.to_owned(),
-        status: "PASS",
-        detail: String::new(),
-        artifacts: None,
-    }
-}
-
-pub(crate) fn divergence(label: &str, difference: String) -> ParityOutcome {
-    ParityOutcome {
-        label: label.to_owned(),
-        status: "DIVERGENT",
-        detail: difference,
-        artifacts: None,
-    }
-}
+#[path = "orca_parity/outcomes.rs"]
+mod outcomes;
+pub(crate) use outcomes::{divergence, pass};
 
 pub(crate) fn ares_error(label: &str, error: String) -> ParityOutcome {
     // The upstream OrcaSlicer 2.4.2 binary itself failed (crash or nonzero
