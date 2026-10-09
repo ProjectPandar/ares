@@ -62,6 +62,7 @@ fn orca_parity_printable_height_canonical_complete_output_red() {
                     filaments: &case_filaments,
                 },
                 &crate::smoke_overrides(),
+                &runner::repo_root().join("tests/parity/cube10.stl"),
             )
             .unwrap();
         runner::application::verify_value(&exported.project, "printable_height", &json!(wire))
