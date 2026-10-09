@@ -278,12 +278,13 @@ fn limited_width_contexts_stay_incomplete_when_all_samples_match() {
         None => return,
     };
     // Even all matching streams cannot close an explicitly limited context.
-    for plan in plans
-        .iter()
-        .filter(|plan| plan.width_domain.is_some() && !plan.provably_legal)
-    {
-        let outcome = OptionOutcome::executed(plan, plan.cases.len(), vec![], 0, None);
-        assert_eq!(outcome.status, "INCOMPLETE", "{}", plan.key);
+    for key in ["skin_infill_line_width", "skeleton_infill_line_width"] {
+        let mut limited = plans.iter().find(|plan| plan.key == key).unwrap().clone();
+        assert!(limited.width_domain.is_some(), "{key}");
+        limited.provably_legal = false;
+        limited.omission = Some("limited context without endpoint/admission proof");
+        let outcome = OptionOutcome::executed(&limited, limited.cases.len(), vec![], 0, None);
+        assert_eq!(outcome.status, "INCOMPLETE", "{key}");
         assert!(!outcome.detail.is_empty());
     }
 }

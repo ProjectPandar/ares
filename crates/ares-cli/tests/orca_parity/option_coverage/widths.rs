@@ -1,4 +1,5 @@
 //! Bounded PrintConfig/Print::validate width candidates, not Flow success claims.
+//! Locked widths additionally carry the finite actual-flow E2E scope below.
 //!
 //! `probes` are RECORDED-EXPECTATION entries (`execute:false`) documenting
 //! the predicted oracle rejection for out-of-context / sentinel values;
@@ -82,19 +83,31 @@ pub(in crate::option_coverage) fn generate(
         dependencies["sparse_infill_pattern"] = json!("lockedzag");
         dependencies["sparse_infill_density"] = json!("40%");
     }
-    (
-        WidthDomain {
-            metadata: json!({
-                "scope": "single-nozzle validation candidates; not actual-default or slicing coverage",
-                "gui_missing_percent_threshold": 10, "units": units,
-                "dependencies": dependencies,
-                "export_required": ["nozzle_diameter", "layer_height", "thick_bridges", "thick_internal_bridges", "internal_solid_infill_line_width"],
-                "deferred": ["mixed nozzles", "object/region overrides", "Flow/slicing feasibility", "tolerance edges"]
-            }),
-            probes,
-        },
-        cases,
-    )
+    let mut metadata = json!({
+        "scope": "single-nozzle validation candidates; not actual-default or slicing coverage",
+        "gui_missing_percent_threshold": 10, "units": units,
+        "dependencies": dependencies,
+        "export_required": ["nozzle_diameter", "layer_height", "thick_bridges", "thick_internal_bridges", "internal_solid_infill_line_width"],
+        "deferred": ["mixed nozzles", "object/region overrides", "Flow/slicing feasibility", "tolerance edges"]
+    });
+    if locked {
+        metadata["scope"] = json!(
+            "bounded LockedZag 40% admission and actual sparse flow; one 0.4mm nozzle, 0.2mm layers"
+        );
+        metadata["dependency_control"] = json!({
+            "nozzle_diameter": ["0.6"], "layer_height": "0.3",
+            "test": "orca_parity_locked_width_upper_bound_tracks_single_nozzle_diameter"
+        });
+        metadata["deferred"] = json!([
+            "mixed nozzles",
+            "object/region overrides",
+            "bridge LockedZag flow reuse",
+            "adaptive/painted layer heights",
+            "arbitrary Flow feasibility",
+            "tolerance edges"
+        ]);
+    }
+    (WidthDomain { metadata, probes }, cases)
 }
 
 fn render(value: f64, suffix: &str) -> String {

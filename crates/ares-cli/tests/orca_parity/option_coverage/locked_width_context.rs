@@ -27,26 +27,7 @@ fn orca_parity_locked_width_upper_bound_tracks_single_nozzle_diameter() {
             let exported =
                 locked_widths::export_width_context(&runner, plan, &case, "0.6", "0.3").unwrap();
             let sliced = runner.slice_case(&exported).unwrap();
-            let mut sparse = false;
-            let mut current_width = 0.0_f64;
-            let mut extrusions = 0;
-            for line in std::str::from_utf8(&sliced.reference).unwrap().lines() {
-                if let Some(role) = line.strip_prefix(";TYPE:") {
-                    sparse = role == "Sparse infill";
-                } else if let Some(value) = line.strip_prefix(";WIDTH:") {
-                    current_width = value.parse().unwrap();
-                } else if sparse
-                    && (current_width - width).abs() < 1e-6
-                    && (line.starts_with("G1 X") || line.starts_with("G1 Y"))
-                    && line.split_whitespace().any(|word| {
-                        word.strip_prefix('E')
-                            .and_then(|value| value.parse::<f64>().ok())
-                            .is_some_and(|value| value > 0.0)
-                    })
-                {
-                    extrusions += 1;
-                }
-            }
+            let extrusions = sparse_extrusions(&sliced.reference, width);
             assert!(extrusions > 0, "{key}={wire} must drive sparse extrusion");
             let outcome = parity::compare_case(&sliced);
             assert_eq!(outcome.status, "PASS", "{key}={wire}: {}", outcome.detail);
@@ -66,4 +47,28 @@ fn orca_parity_locked_width_upper_bound_tracks_single_nozzle_diameter() {
         .unwrap(),
     )
     .unwrap();
+}
+
+fn sparse_extrusions(reference: &[u8], width: f64) -> usize {
+    let mut sparse = false;
+    let mut current_width = 0.0_f64;
+    let mut extrusions = 0;
+    for line in std::str::from_utf8(reference).unwrap().lines() {
+        if let Some(role) = line.strip_prefix(";TYPE:") {
+            sparse = role == "Sparse infill";
+        } else if let Some(value) = line.strip_prefix(";WIDTH:") {
+            current_width = value.parse().unwrap();
+        } else if sparse
+            && (current_width - width).abs() < 1e-6
+            && (line.starts_with("G1 X") || line.starts_with("G1 Y"))
+            && line.split_whitespace().any(|word| {
+                word.strip_prefix('E')
+                    .and_then(|value| value.parse::<f64>().ok())
+                    .is_some_and(|value| value > 0.0)
+            })
+        {
+            extrusions += 1;
+        }
+    }
+    extrusions
 }

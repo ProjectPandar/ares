@@ -29,9 +29,16 @@ fn locked_width_plans_cover_context_edges_and_seeded_interiors() {
                 "{key}: missing seeded interior, percent={percent}"
             );
         }
+        assert!(plan.provably_legal, "{key}: bounded LockedZag context");
+        assert!(plan.omission.is_none(), "{key}");
+        let metadata = &plan.width_domain.as_ref().unwrap().metadata;
+        assert_eq!(metadata["dependencies"]["nozzle_diameter"], json!(["0.4"]));
+        assert_eq!(metadata["dependencies"]["layer_height"], "0.2");
         assert!(
-            !plan.provably_legal,
-            "one context cannot close the global range"
+            metadata["deferred"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("mixed nozzles"))
         );
     }
 }

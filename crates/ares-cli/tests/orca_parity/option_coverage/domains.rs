@@ -106,13 +106,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         };
         let (domain, values) = widths::generate(&key, entry, raw, false, true);
         width_domain = Some(domain);
-        provably_legal = !locked;
-        (
-            values,
-            locked.then_some(
-                "single-nozzle context covered; global range endpoints remain unverified",
-            ),
-        )
+        // Print.cpp:1543-1556 / Fill.cpp:990-1000: locked-width E2Es
+        // close the declared single-nozzle context, not a global width range.
+        provably_legal = true;
+        (values, None)
     } else if matches!(option_type.as_str(), "coBool" | "coBools") {
         // A boolean domain is exactly {0,1}; both cases are legal by
         // construction, so full comparison is the legality proof.
