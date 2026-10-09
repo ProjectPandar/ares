@@ -24,12 +24,16 @@ mod change_filament_flush_blocks;
 mod cli_custom_gcode_exit;
 #[path = "orca_parity/cli_exit_channels.rs"]
 mod cli_exit_channels;
+#[path = "orca_parity/cli_retained_input.rs"]
+mod cli_retained_input;
 #[path = "orca_parity/cli_sequential_clearance.rs"]
 mod cli_sequential_clearance;
 #[path = "orca_parity/load_settings_cli.rs"]
 mod load_settings_cli;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
+#[path = "orca_parity/plate_origin_cli.rs"]
+mod plate_origin_cli;
 #[path = "orca_parity/residual_stock_cli.rs"]
 mod residual_stock_cli;
 #[path = "orca_parity/stock_early_cli.rs"]
