@@ -519,3 +519,35 @@ state changes. `/tmp/worker6-object-height-official-raw-lifecycle-audit.json`
 records 597 direct/other raw streams unchanged and nine processor outputs
 whose only differences inherit Native generated-by timestamps. The original
 all-raw failure remains retained as well.
+
+## P3 KSR browser/runtime retirement: repeated Native point order changes
+
+The test/document-only P3 candidate `1ca175c4f` was compared freshly with
+`5c9e69226`: seeded 838/838 → 840/840 PASS, 531 common captured Ares raw
+streams unchanged; official 827 PASS/11 FAIL → 829 PASS/11 FAIL. The two new
+browser/runtime policy tests PASS. Production source and comparators are
+unchanged. Subsequent main changes through `b3f8894fd` are tests/documents only;
+the coordinator permits carrying this evidence after a git-only rebase.
+
+Two existing official tests exchange status, repeating the previously recorded
+Native internal-solid-infill point-order behavior. This is Native nondeterminism;
+no UB cause is assigned. Both pairs have identical ZIP member names/bytes and
+identical Native producer components. The ZIP containers themselves have different
+raw hashes; that packaging difference is recorded rather than hidden. In each
+pair Ares raw SHA is identical, while Native remains different even after only
+the generated-by line is normalized.
+
+| Case | Status | First Native content difference (original line numbers) | Complete Ares raw SHA256 in both rounds |
+| --- | --- | --- | --- |
+| `option_coverage::tree_activation::orca_parity_classic_tree_dependencies_activate_support_moves_and_preserve_complete_output`, variant `tree_support_branch_distance/tree_slim/min` | PASS → FAIL | line1202: `G1 X113.244 Y113.297 F9000` → `G1 X113.388 Y113.135 F9000`, before Internal solid infill | `e920e3db4fac297b900ec0eaa4bc2d437111a35e1fe13c2258557ecbe56d3dd5` |
+| `runner::compatible_regions::infill_first::orca_parity_modifier_infill_first_preserves_region_wall_phases` | FAIL → PASS | line507: `G1 X113.388 Y113.135 F9000` → `G1 X113.244 Y113.297 F9000`, before Internal solid infill | `96dafeb637d36e0f7c1e00f451d00129a7e77a75b72d6de24d3a14f6d4d088e9` |
+
+The complete producer/input/SHA bindings and first-difference evidence are in
+`/tmp/worker6-ksr-p3-final-r2/official-nd-audit.json`. Raw comparison is retained
+in `/tmp/worker6-ksr-p3-final-r2/official-comparison.json`; the unchanged strict
+comparison remains **FAIL, exit1**. It also observes seven missing candidate
+captures: the candidate tree-dependency test panics at the variant above before
+reaching its seven later variants. These are unexecuted cases, not claimed PASS.
+All 513 common captured Ares raw streams (498 distinct keys) are identical;
+the missing seven variants are present and PASS in the fresh seeded pair.
+The complete raw logs and both original official exit100 results are retained.
