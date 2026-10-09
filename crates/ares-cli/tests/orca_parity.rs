@@ -26,6 +26,8 @@ mod cli_custom_gcode_exit;
 mod cli_sequential_clearance;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
+#[path = "orca_parity/residual_stock_cli.rs"]
+mod residual_stock_cli;
 
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
