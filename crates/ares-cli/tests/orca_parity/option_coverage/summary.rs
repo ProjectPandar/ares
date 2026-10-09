@@ -126,11 +126,17 @@ pub(super) fn write_summary(outcomes: &[OptionOutcome]) {
             "options": boundaries
         })).unwrap(),
     ).unwrap();
-    let inventory = plans.iter().map(|plan| serde_json::json!({
-        "key": plan.key, "type": plan.option_type, "source": plan.source,
-        "declared_scope_complete": plan.provably_legal, "omission": plan.omission,
-        "cases": plan.cases.iter().map(|case| serde_json::json!({"label":case.label,"value":case.value})).collect::<Vec<_>>()
-    })).collect::<Vec<_>>();
+    let inventory = plans.iter().map(|plan| {
+        let mut row = serde_json::json!({
+            "key": plan.key, "type": plan.option_type, "source": plan.source,
+            "declared_scope_complete": plan.provably_legal, "omission": plan.omission,
+            "cases": plan.cases.iter().map(|case| serde_json::json!({"label":case.label,"value":case.value})).collect::<Vec<_>>()
+        });
+        if plan.key == super::adaptive_pa_bridges::KEY {
+            row["bounded_domain"] = super::adaptive_pa_bridges::metadata();
+        }
+        row
+    }).collect::<Vec<_>>();
     parity::artifacts::overwrite(
         &root.join("option-domain-plans.json"),
         &serde_json::to_vec_pretty(&inventory).unwrap(),

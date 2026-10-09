@@ -69,7 +69,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let block = definition_block(lines, &key, line);
     let mut width_domain = None;
     let mut provably_legal = false;
-    let (values, omission) = if let Some(authored) = authored_probes(&key) {
+    let (values, omission) = if key == super::adaptive_pa_bridges::KEY {
+        provably_legal = true;
+        (super::adaptive_pa_bridges::cases(), None)
+    } else if let Some(authored) = authored_probes(&key) {
         // Per-key legal domains: free-form `coString`/`coPoint(s)`
         // probes cover an unbounded schema domain completely; NUMERIC
         // authored probes only sample the legal interior (the schema

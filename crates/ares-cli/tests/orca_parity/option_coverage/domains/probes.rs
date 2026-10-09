@@ -178,7 +178,6 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
             ("diameter-2.85", "2.85"),
             ("diameter-3", "3"),
         ],
-        "adaptive_pressure_advance_bridges" => &[("probe-min", "0.5"), ("probe-max", "2.0")],
         _ => return None,
     };
     Some(probes)

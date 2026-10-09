@@ -152,6 +152,8 @@ fn execute_plan(
     let verify_application = |project: &[u8], value: &Value| {
         if plan.key == "filament_map_mode" {
             runner::filament_map::verify(project, value)
+        } else if plan.key == super::adaptive_pa_bridges::KEY {
+            super::adaptive_pa_bridges::verify(project, value)
         } else if matches!(
             plan.key.as_str(),
             "layer_height" | "initial_layer_print_height"
@@ -220,13 +222,17 @@ fn execute_plan(
                     filaments: &case_filaments,
                 },
                 &overrides,
-                &runner::repo_root().join(if support_geometry_option(&plan.key) {
-                    // Support-family options are inert on a solid cube —
-                    // the T-shape produces real support + interface layers.
-                    "tests/parity/overhang.stl"
-                } else {
-                    "tests/parity/cube10.stl"
-                }),
+                &runner::repo_root().join(
+                    if plan.key == super::adaptive_pa_bridges::KEY
+                        || support_geometry_option(&plan.key)
+                    {
+                        // Support-family options are inert on a solid cube —
+                        // the T-shape produces real support + interface layers.
+                        "tests/parity/overhang.stl"
+                    } else {
+                        "tests/parity/cube10.stl"
+                    },
+                ),
             )
         };
         let built = exported
@@ -271,7 +277,15 @@ fn execute_plan(
             });
         match built {
             Ok(exported) => {
-                let outcome = parity::compare_exported_for(runner, &exported, Some(&plan.key));
+                let outcome = if plan.key == super::adaptive_pa_bridges::KEY {
+                    super::adaptive_pa_bridges::compare(
+                        runner,
+                        &exported,
+                        case.value.as_ref().unwrap(),
+                    )
+                } else {
+                    parity::compare_exported_for(runner, &exported, Some(&plan.key))
+                };
                 // Only genuine byte divergence is excused — build/artifact
                 // errors (ARES_ERROR, ORCA_ERROR, INPUT_REJECTED, ...) must
                 // still surface as failures.

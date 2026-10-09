@@ -67,6 +67,9 @@ fn normalize_case_dependencies(
 ) {
     super::preset_identity::activate(plan, case, machine, process, filaments);
     super::height_context::activate(&plan.key, machine, process);
+    if plan.key == super::adaptive_pa_bridges::KEY {
+        super::adaptive_pa_bridges::activate(process, filaments);
+    }
     support::activate(&plan.key, case.value.as_ref(), process);
     if matches!(
         plan.key.as_str(),

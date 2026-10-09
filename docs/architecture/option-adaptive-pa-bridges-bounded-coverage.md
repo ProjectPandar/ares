@@ -201,6 +201,27 @@ requires a complete ordered comparison against a genuine Native output. Re-run
 RED to establish that only the incomplete-classification assertion fails before
 harness GREEN. Other contexts retain their original strict path.
 
+## Native-backed classification RED and harness GREEN checkpoint
+
+Accepted admission run `fb395a3f-47e4-4b7f-bf19-579cfdcbfdff`,
+`/tmp/ares-apa-g1-bridges/red-classification-official`: all nine full comparisons
+and application/BR1/BR0 checks PASS, then only the classification assertion
+fails (INCOMPLETE versus PASS). Independent RED commit `70145c3f4`; the authorized
+pure-test main advance to `1b1c38eb9` was carried git-only to `c59d8132b` without
+claiming new runtime evidence.
+
+Harness implementation is key-local: six cases preserve old probe-min .5 and
+probe-max 2.0 labels, fixed dependency activation, applied-value receipts before
+Native reachability and full comparison, one bounded metadata row. Cold/hot
+seeded and official directed runs each PASS both the nine-context classification
+test and selected-key six-case unfiltered-value sweep. Evidence directories:
+`/tmp/ares-apa-g1-bridges/{green-first-official,green-hot-official,green-cold-seeded,green-hot-seeded}`.
+Inventory audit `other-plan-inventory-audit.json`: 650 rows in each tree,
+only adaptive_pressure_advance_bridges differs; all other 649 rows exact.
+Targeted strict Clippy exit0. These checkpoints do not substitute for the final
+workspace/full controls and exact-hash combined review; no production PA,
+geometry, writer, processor or comparator change.
+
 Approval requested: this bounded test-harness contract and Native-backed
 classification RED, followed by harness-only GREEN. No tests/implementation
 start before approval.
