@@ -107,3 +107,35 @@ export async function expectFits(page: Page, controls: Locator[]) {
     expect.soft(covered, `${name} is not covered`).toBe(false);
   }
 }
+
+/** The 3D view overlays a touch layout must keep apart (GCodeViewer stacks its windows, never overlapping them). */
+const OVERLAYS = ["view-toolbar", "preview-card", "legend", "moves-slider", "layer-slider", "gcode-panel"];
+
+/**
+ * Every preview overlay is shown, lies inside the 3D view, no two overlap except the pairs in
+ * `allowed` (`"over/under"` test ids), and nothing covers the 3D view centre, where gestures start.
+ */
+export async function expectNoOverlap(page: Page, allowed: string[]) {
+  const viewport = (await page.locator(".viewport").boundingBox())!;
+  const boxes: { id: string; x: number; y: number; width: number; height: number }[] = [];
+  for (const id of OVERLAYS) {
+    const overlay = page.locator(`.viewport > .${id}`);
+    await expect.soft(overlay, `${id} is shown`).toBeVisible();
+    if (!(await overlay.isVisible())) continue;
+    const box = (await overlay.boundingBox())!;
+    boxes.push({ id, ...box });
+    expect.soft(box.x >= viewport.x && box.y >= viewport.y && box.x + box.width <= viewport.x + viewport.width
+      && box.y + box.height <= viewport.y + viewport.height, `${id} lies inside the 3D view`).toBe(true);
+  }
+  for (const [index, a] of boxes.entries()) {
+    for (const b of boxes.slice(index + 1)) {
+      if (allowed.includes(`${a.id}/${b.id}`) || allowed.includes(`${b.id}/${a.id}`)) continue;
+      const width = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+      const height = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+      expect.soft(width > 0 && height > 0 ? `${Math.round(width)}x${Math.round(height)}` : "none", `${a.id} and ${b.id} overlap`).toBe("none");
+    }
+  }
+  const centre = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName, [viewport.x + viewport.width / 2, viewport.y + viewport.height / 2]);
+  expect.soft(centre, "nothing covers the 3D view centre").toBe("CANVAS");
+  return boxes.map(({ id }) => id);
+}

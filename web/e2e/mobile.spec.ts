@@ -6,7 +6,7 @@ import { chromium, expect, type Locator, type Page, test } from "@playwright/tes
 import { moving, smallFonts, tabSweep } from "./a11y";
 import { chromiumLaunch } from "./chromiumLaunch";
 import { act, choose, type Input, PRESETS } from "./lhPresets";
-import { expectFits, pinch, swipe, undersized } from "./touch";
+import { expectFits, expectNoOverlap, pinch, swipe, undersized } from "./touch";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const MODEL = `${repositoryRoot}tests/parity/cube10.stl`;
@@ -151,6 +151,14 @@ async function mainFlow(page: Page, input: Input, directory: string) {
     await expect.poll(async () => Number(await top.getAttribute("aria-valuenow")), "the layer thumb follows the finger").toBeLessThan(layer);
     await expect(page.locator(".layer-slider-label.top span").first()).toHaveText(await top.getAttribute("aria-valuenow") ?? "");
     await shot("7-layer");
+
+    // Scrubbing moves opens the G-code window; every preview overlay stays clear of the others and
+    // of the centre. The G-code window is the five-line band over the summary card (slice 3b, P).
+    const moves = page.getByRole("slider", { name: "Moves" });
+    await moves.fill(String(Math.floor(Number(await moves.getAttribute("max")) / 2)));
+    await expect(page.getByTestId("gcode-panel")).toBeVisible();
+    gestures.overlays = (await expectNoOverlap(page, ["gcode-panel/preview-card"])).join(",");
+    await shot("7b-moves");
   }
 
   const download = page.waitForEvent("download");
