@@ -452,10 +452,7 @@ pub(super) fn append(
         let mut final_entry = entries[0];
         for (tool, tool_entries) in &mut by_tool {
             wrapping::emit(output, state, &timelapse_context)?;
-            if let Some(instances) = &filament_instances
-                && (chunk_index == 0
-                    || traversal.resolved.views.full.process.print.exclude_object.0)
-            {
+            if let Some(instances) = &filament_instances {
                 state.filament_instances_code = Some(
                     instances.encode(tool_entries.iter().map(|entry| entry.instance.label_id)),
                 );
