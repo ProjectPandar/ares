@@ -7,14 +7,17 @@ use std::fs;
 
 #[test]
 fn browser_output_matches_initialized_orca_242_ordered_bytes() {
+    let Some(capture) = std::env::var_os("ARES_BROWSER_GCODE") else {
+        crate::native_environment::skipped(
+            "browser capture absent; run via project-slice.spec.mjs",
+        );
+        return;
+    };
     let Some(runner) = producer::runner(
         "runner::native_ksr_reference_migration::browser::browser_output_matches_initialized_orca_242_ordered_bytes",
     ) else {
         return;
     };
-    let capture = std::env::var_os("ARES_BROWSER_GCODE").expect(
-        "Native available: actual candidate browser capture ARES_BROWSER_GCODE is required",
-    );
     let actual = fs::read(capture).unwrap();
     let source = repo_root().join("tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
     let project = fs::read(&source).unwrap();

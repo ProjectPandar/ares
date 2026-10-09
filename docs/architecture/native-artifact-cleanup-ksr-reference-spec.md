@@ -101,11 +101,15 @@ unchanged complete ordered comparator. Retain paired input/Native/browser bytes
 and receipt outside Git. Missing Native fails in required mode; optional mode
 reports SKIPPED via tests/support/native_environment. No new ignore attributes.
 
-Required control runs containing this browser test must provide a real browser
-capture from that candidate; a missing browser artifact cannot be reported as
-browser parity PASS. Default workspace has no ARES_* and visibly skips Native
-comparisons. Pure comparator tests continue to run. The unrelated ignored
-Elegoo diagnostic does not read these products and is not newly ignored here.
+Browser parity evidence requires a real browser capture from the candidate.
+Ordinary seeded/official controls without `ARES_BROWSER_GCODE` report visible
+SKIPPED: "browser capture absent; run via project-slice.spec.mjs", including
+required mode, and return before starting Native. They cannot claim browser
+parity PASS. With capture present, Native dependencies retain the shared
+optional/required policy. Default workspace has no ARES_* and visibly skips
+Native comparisons; its capture-absence policy test actively executes. Pure
+comparator tests continue to run. The unrelated ignored Elegoo diagnostic does
+not read these products and is not newly ignored here.
 
 ## Producer preflight and RED
 

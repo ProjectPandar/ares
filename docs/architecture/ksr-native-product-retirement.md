@@ -159,7 +159,10 @@ Native equality and repeat-slice equality. The earlier bundled-headless-shell
 launch failure is INCONCLUSIVE: missing NixOS shared libraries prevented every
 test body from running. It is neither RED nor GREEN.
 
-Without Native dependencies the browser consumer follows the shared visible
-SKIPPED policy; required mode fails. With Native available, a missing actual
-browser capture fails. The default-environment policy test itself remains active
-and does not require an external artifact root.
+Without `ARES_BROWSER_GCODE`, the browser consumer reports shared visible
+SKIPPED: "browser capture absent; run via project-slice.spec.mjs" and returns
+before starting Native, including in required ordinary control runs. This is
+not browser parity PASS. With capture present, missing Native follows the shared
+optional/required dependency policy and the complete ordered comparator remains
+unchanged. An unreadable configured capture still fails. The capture-absence
+policy test remains active in the default environment without an artifact root.
