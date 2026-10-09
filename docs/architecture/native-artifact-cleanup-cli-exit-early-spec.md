@@ -1,6 +1,6 @@
 # B CLI-exit six early rejection families — runtime Native contract
 
-Status: proposed next bounded B slice; implementation waits for approval.
+Status: approved spec4ae3914b2; implemented as a bounded B slice.
 Source owner: upstream CLI adapter around libslic3r validation/model/Print APIs,
 not a new Ares pipeline. Production Rust/API behavior is unchanged.
 
@@ -40,10 +40,12 @@ scaffolding only; replace their consumption, not underlying core error behavior.
 | cli_exit_empty_plate_family_matches_native | empty-plate.3mf | -50 /206 |
 | cli_exit_validate_family_matches_native | validate.3mf | -51 /205 |
 | cli_exit_postprocess_family_matches_native | postprocess.3mf | -19 /237 |
-| cli_exit_notfound_family_matches_native | absent /tmp/definitely-missing.3mf | -3 /253 |
+| cli_exit_notfound_family_matches_native | absent artifact directory/definitely-missing.3mf | -3 /253 |
 
-All present3mf inputs remain byte-identical. The missing path remains exactly
-that literal and must remain absent; never create a stand-in empty input or
+All present3mf inputs remain byte-identical. The approved missing-path supplement
+uses a fresh test artifact directory's definitely-missing.3mf instead of the old
+/tmp literal. Assert absence before invoking Native; Native and Ares receive the
+same absolute path so stderr stays byte-exact. Never create a stand-in input or
 canonicalize an absent path via fallback. Existing stdout-derived return-code
 assertion, precise channels and whole result JSON byte comparisons are retained.
 Applied layer-height f32 text, density/wall count, generic error string, plate
@@ -62,6 +64,10 @@ are unmodified. No stdout/stderr normalization or regex mismatch suppression.
   ONLY that module registration in runner/cache.rs. No duplicate cache/producer,
   alternate prewarm or uncontrolled generic allowed-nonzero command helper.
   Keep files below400LOC by minimal bounded recipe/input split if necessary.
+- runner.rs exports the finite EarlyExit test adapter enum; early_cli_reference
+  and its fields are pub(crate), including Postprocess(-19) for sibling modules.
+- Root module index's unchanged vendors/type-assertion helpers are moved to
+  vendor_inventory.rs because the previous424-line index exceeded400LOC.
 - Existing native_wall_clock.rs consumed unchanged; no copied comparator.
 - Delete18 frozen Native products: under tests/parity/validation/cli-exit,
   {values,range,empty-plate,validate,postprocess,notfound} x
@@ -131,3 +137,20 @@ Deferred: two cli_retained_exit -102 controls/full exported stream + selected
 nonminimum plate; corresponding four path-outside products and core O6 partial
 stream; marker source-kernel/browser adapter and last authorized Native build.
 No new Native build required by this early-error slice. No milestone/plan added.
+
+## Implementation conclusion
+
+All six original named cases use Native runtime output through the existing
+bounded CLI-result cache; all18 frozen early products are removed after real
+runtime GREEN. Mandatory Native absence is exposed by the independent child
+regression rather than hidden by a frozen expectation. Existing100/63/0 recipes
+and request identities remain unchanged. Early rejection types are finite;
+missing-path identity binds actual absence and exact path, with availability and
+absence checked before hits. An input appearing after publication is rejected
+without consulting its cached missing-file result. No fake input SHA or fallback.
+
+The two allowed wall-clock integer literals use the unchanged shared comparator.
+All remaining JSON bytes, channels, signed/POSIX code and no-export assertions
+remain exact. Native cold/hot raw captures and receipts stay unnormalized.
+Retained output, nonminimum selected plate, core O6, KSR and marker are deferred.
+This is test-reference scaffolding replacement only, not production pipeline work.
