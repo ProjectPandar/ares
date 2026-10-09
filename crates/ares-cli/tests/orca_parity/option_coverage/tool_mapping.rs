@@ -114,7 +114,7 @@ fn observe(native: &str) -> BTreeSet<(usize, usize, usize, String)> {
                 nozzle.parse::<usize>().unwrap(),
             ));
         }
-        if let Some(value) = line.strip_prefix(";TYPE:") {
+        if let Some(value) = line.strip_prefix("; FEATURE: ") {
             role = value;
         }
         if line.starts_with("G1 ") && matches!(role, "Outer wall" | "Inner wall" | "Sparse infill")

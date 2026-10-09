@@ -50,13 +50,21 @@ pub(super) fn mapping(runner: &OrcaRunner, label: &str, requested: &Value) -> Ex
     let mut overrides = parity::smoke_overrides();
     let dependencies = json!({
         "filament_map":requested, "filament_map_mode":"Manual",
-        "nozzle_diameter":["0.4","0.4"], "use_relative_e_distances":"1",
+        "nozzle_diameter":["0.4","0.4"], "nozzle_volume_type":["Standard","Standard"], "use_relative_e_distances":"1",
         "retract_length_toolchange":["1","1","2","2"],
-        "wall_filament":"1", "sparse_infill_filament":"2", "solid_infill_filament":"2",
+        "outer_wall_filament_id":"1", "inner_wall_filament_id":"1", "sparse_infill_filament_id":"2",
+        "internal_solid_filament_id":"2", "top_surface_filament_id":"2", "bottom_surface_filament_id":"2",
         "sparse_infill_density":"40%", "layer_height":"0.2", "initial_layer_print_height":"0.2",
         "enable_support":"0", "raft_layers":"0", "enable_prime_tower":"0",
         "disable_m73":"1"
     });
+    for key in [
+        "wall_filament",
+        "sparse_infill_filament",
+        "solid_infill_filament",
+    ] {
+        overrides.remove(key);
+    }
     for (key, value) in dependencies.as_object().unwrap() {
         overrides.insert(key.clone(), value.clone());
     }
