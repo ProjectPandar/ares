@@ -1,6 +1,7 @@
 # Bounded flow-ratio and filament-diameter option coverage
 
-Status: proposed worker6 harness slice, following G3. Latest full observation
+Status: bridge-ratio bounded contract verified; filament ratio/diameter pending.
+Latest full observation
 is [the current option audit](2026-10-09-option-full-current-audit.md): these
 four domains are INCOMPLETE. This proposal does not claim a fresh 650-domain
 execution. G2 belongs to worker3; APA bridge options belong to worker1.
@@ -124,3 +125,50 @@ print/role ratios, volumetric E modes and extreme positive numeric feasibility.
 APA and `adaptive_pressure_advance_bridges` are explicitly excluded. A bounded
 PASS closes only the declared finite contract; it does not certify every
 schema value or constitute a fresh full-option audit.
+
+## Bridge-ratio conclusion
+
+RED `3ab5db697` executes all 16 thick/thin successful requests against runtime
+Native complete output, witnesses positive extrusion in the intended role,
+then fails the four INCOMPLETE classification assertions. Its fifth test
+passes the two zero-value rejection witnesses: Native Export returns -18
+(Unix status 238), matching both public Ares validation and validated slicing.
+Earlier test-observer failures are retained outside the repository and are not
+claimed as RED evidence. GREEN `b8da6c998` promotes only these two bounded plans;
+no production code, Native artifacts, or comparison normalization changes.
+
+Metadata expectations add `provably_legal=true`, `omission=None`, and exact
+requests `[0.5, 1, 1.5, 2]` for `bridge_flow` and `internal_bridge_flow`.
+Existing partial/rejection negative controls and all prior expectation loops
+remain unchanged. The 650-plan comparison changes exactly these two keys;
+the other 648 plans are identical. This is inventory comparison, not a fresh
+execution of all 650 domains.
+
+Required seeded and official cold/hot directed runs each pass 9/9 tests:
+24 complete streams per run, 96 total equal, with activation and rejection
+witnesses. For each producer, cold has 48 cache misses and two within-run hits;
+hot has 50 hits. Fresh full controls on baseline `016dfc86f` produce:
+
+| Control | Base | Candidate | Common Ares raw SHA sets |
+| --- | --- | --- | --- |
+| seeded | 871/872 PASS | 877/877 PASS | 541 keys, unchanged |
+| official | 871/872 PASS | 877/877 PASS | 530 keys, unchanged |
+
+In both controls the only existing-test change is
+`option_coverage::sweep::orca_parity_option_coverage` FAIL→PASS.
+The five added tests PASS: external bridge thick, external bridge thin,
+internal bridge thick, internal bridge thin, and zero bridge-ratio rejection.
+There are no candidate-only failures, common Native generator-normalized SHA
+changes, or common manifest-status changes. Official base/candidate started
+at load1 26.78/29.19, below the required 30 threshold, using fresh separate
+caches. Default-environment workspace passes 8248/8248 (five existing skipped);
+strict workspace clippy, fmt, and core/wasm wasm32 checks pass.
+
+Evidence remains outside the repository:
+`/tmp/worker6-flow-bridge-red/r3/seeded.log`,
+`/tmp/worker6-flow-bridge-red/r3/stream-audit.json`, and
+`/tmp/worker6-flow-bridge-green/{directed-audit,plan-diff,seeded-comparison,official-comparison}.json`;
+engineering logs and original exit codes are in the same GREEN directory.
+Later-main changes follow the coordinator's test/docs-only evidence-carry
+rule; rebase is required before merge. Filament ratio and diameter remain
+unpromoted pending their own runtime RED→GREEN slice.
