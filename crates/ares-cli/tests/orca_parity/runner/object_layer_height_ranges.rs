@@ -1,4 +1,7 @@
 //! Slicing.cpp:234-305,807-870 and PrintObject.cpp:3805-3834, object range heights.
+#[path = "object_layer_height_ranges_runtime.rs"]
+mod runtime;
+
 use std::fs;
 
 use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
