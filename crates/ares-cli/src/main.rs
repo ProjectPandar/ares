@@ -157,7 +157,17 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .await
         {
             Ok(gcode) => gcode,
-            Err(error) => return Err(slice_error_to_failure(error, &args.output)),
+            Err(error) => {
+                return Err(slice_error_to_failure(
+                    error,
+                    &args.output,
+                    #[cfg(target_os = "linux")]
+                    // The request above selects args.plate; CLI :5681-5690
+                    // selects that same one-based plate (default first), and
+                    // :5723/:433 records index+1 for the -50 result.
+                    args.plate.unwrap_or(1),
+                ));
+            }
         };
         fs::write(&args.output, gcode)?;
         return Ok(());
