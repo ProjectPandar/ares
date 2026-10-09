@@ -7,9 +7,38 @@ use ares_core::{
 };
 use ares_wasm::SliceOutput;
 
+#[path = "../../../tests/support/marker_time.rs"]
+mod marker_time_native;
+
+#[test]
+fn required_missing_native_cannot_pass_from_frozen_transport() {
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "marker_time_transport_preserves_native_bits_after_buffer_transfer",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_MARKER_TIME_BIN")
+        .output()
+        .unwrap();
+    assert!(
+        !output.status.success(),
+        "transport used frozen authority without Native"
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("ARES_REQUIRE_ORCA=1: missing ARES_MARKER_TIME_BIN")
+    );
+}
+
 #[test]
 fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
-    let moves = include_str!("../../../tests/parity/marker-time/moves.csv")
+    let Some(root) = marker_time_native::raw_fixture() else {
+        return;
+    };
+    let moves_csv = std::fs::read_to_string(root.join("moves.csv")).unwrap();
+    let moves = moves_csv
         .lines()
         .skip(1)
         .map(|line| {
@@ -63,9 +92,8 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
     vertices.take_values();
     vertices.take_ids();
     vertices.take_tags();
-    let records: Vec<_> = include_str!("../../../tests/parity/marker-time/vertices.tsv")
-        .lines()
-        .collect();
+    let records_tsv = std::fs::read_to_string(root.join("vertices.tsv")).unwrap();
+    let records: Vec<_> = records_tsv.lines().collect();
     assert_eq!(vertices.count(), records.len());
     for line in records.into_iter().rev() {
         let fields: Vec<_> = line.split('\t').collect();

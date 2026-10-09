@@ -135,6 +135,7 @@ dependencies = [
  "ares-vgcode",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "wasm-bindgen",
  "wasm-bindgen-futures",
