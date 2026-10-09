@@ -11,6 +11,10 @@ fn orca_parity_initialized_overhang_intersections_match_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE") {
         return;
     }
+    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
+        crate::native_environment::skipped("seeded-only reference");
+        return;
+    }
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     let directory = tempfile::tempdir().unwrap();

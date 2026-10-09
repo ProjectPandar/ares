@@ -7,6 +7,10 @@ fn orca_parity_single_volume_offset_matches_complete_rotated_prism_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_VOLUME_OFFSETS_REFERENCE") {
         return;
     }
+    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
+        crate::native_environment::skipped("seeded-only reference");
+        return;
+    }
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();

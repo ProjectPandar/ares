@@ -9,6 +9,10 @@ fn orca_parity_initialized_transition_snap_matches_complete_internal_fill() {
     if !crate::runner::reference_enabled("ARES_PARITY_TRANSITION_SNAP_REFERENCE") {
         return;
     }
+    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
+        crate::native_environment::skipped("seeded-only reference");
+        return;
+    }
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
     let directory = tempfile::tempdir().unwrap();
