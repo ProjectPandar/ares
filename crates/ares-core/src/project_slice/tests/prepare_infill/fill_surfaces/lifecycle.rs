@@ -7,7 +7,7 @@ use super::super::super::support::{KsrArchive, metadata};
 async fn task22o18_earlier_errors_leave_invocations_zero() {
     for (from, to, error) in [(
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
         "counterbore_hole_bridging",
     )] {
         let mut archive = KsrArchive::new();

@@ -96,7 +96,7 @@ async fn task22o25_public_parse_error_disposes_o24_and_preserves_error() {
 async fn task22o25_every_earlier_capability_error_precedes_promotion() {
     for (from, to, feature) in [(
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
         "counterbore_hole_bridging",
     )] {
         let mut archive = KsrArchive::new();

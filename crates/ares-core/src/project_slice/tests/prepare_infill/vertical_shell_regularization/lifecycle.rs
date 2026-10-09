@@ -33,7 +33,7 @@ fn task22o22_inactive_typed_mode_produces_empty_sidecars_without_geometry() {
 async fn task22o22_earlier_capability_errors_have_precedence() {
     for (from, to, expected) in [(
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
         SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
     )] {
         let mut archive = KsrArchive::new();

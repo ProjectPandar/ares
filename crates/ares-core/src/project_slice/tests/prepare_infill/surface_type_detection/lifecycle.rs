@@ -11,7 +11,7 @@ async fn task22o17_counterbore_fails_before_detection() {
     archive.replace_unique(
         "Metadata/project_settings.config",
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
     );
     reset_invocations();
     assert_eq!(

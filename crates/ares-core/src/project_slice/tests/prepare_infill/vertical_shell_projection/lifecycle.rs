@@ -14,7 +14,7 @@ use super::fixture;
 async fn task22o20_earlier_errors_have_precedence_and_zero_invocations() {
     for (from, to, expected) in [(
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
         SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
     )] {
         let mut archive = KsrArchive::new();

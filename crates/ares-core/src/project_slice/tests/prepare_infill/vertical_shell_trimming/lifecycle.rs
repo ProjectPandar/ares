@@ -13,7 +13,7 @@ use crate::{SliceError, slice_project};
 async fn task22o21_earlier_capability_errors_have_precedence() {
     for (from, to, expected) in [(
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
         SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
     )] {
         let mut archive = KsrArchive::new();

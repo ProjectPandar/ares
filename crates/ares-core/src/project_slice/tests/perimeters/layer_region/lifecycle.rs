@@ -10,7 +10,7 @@ async fn task22o16_counterbore_preflight_precedes_layer_region_lifecycle() {
     archive.replace_unique(
         CONFIG,
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
     );
     layer_region::reset_finish_invocations();
     assert_eq!(

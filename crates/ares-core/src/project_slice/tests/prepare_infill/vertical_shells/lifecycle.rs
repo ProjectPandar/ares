@@ -8,7 +8,7 @@ use crate::{SliceError, slice_project};
 async fn task22o19_earlier_capability_errors_have_precedence() {
     for (from, to, feature) in [(
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
         "counterbore_hole_bridging",
     )] {
         let mut archive = KsrArchive::new();

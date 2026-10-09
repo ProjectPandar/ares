@@ -14,7 +14,7 @@ use crate::{
 async fn task22o23_all_earlier_capability_errors_keep_filtering_uninvoked() {
     for (from, to, expected) in [(
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
         "counterbore_hole_bridging",
     )] {
         let mut archive = KsrArchive::new();

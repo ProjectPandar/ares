@@ -19,12 +19,12 @@ async fn fuzzy_skin_reaches_active_classic_output() {
 }
 
 #[tokio::test]
-async fn partially_bridged_counterbore_hole_remains_out_of_scope() {
+async fn sacrificial_layer_counterbore_hole_remains_out_of_scope() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
         "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
     );
     assert_eq!(
         slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
