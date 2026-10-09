@@ -3,6 +3,8 @@
 use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::{Map, Value, json};
 
+#[path = "adaptive_pressure_advance/residual_witness.rs"]
+mod residual_witness;
 #[path = "adaptive_pressure_advance/tools.rs"]
 mod tools;
 
