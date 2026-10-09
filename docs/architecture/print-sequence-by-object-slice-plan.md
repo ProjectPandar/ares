@@ -377,24 +377,28 @@ emission, and filter the instance buckets to the phase's copy (the
 62-entry merged slice stays shared). The inter-phase transition and the
 M73 count findings above are unchanged.
 
-### SPEC: 3MF loader multi-instance split (bbs_3mf.cpp:2002-2032)
+### SPEC: 3MF loader multi-instance split (bbs_3mf.cpp:1996-2032, revised)
 
-Upstream splits multi-instance objects at LOAD time: for each instance
-after the 1st, `m_model->add_object(*model_object)` clones the object,
-moves the last instance into it, and regenerates its volumes
-(`_generate_volumes_new`) - bbs_3mf.cpp:2002-2032. Every instance then
-becomes its own ModelObject -> its own PrintObject
-(PrintApply.cpp:130-172) with its own PrintObjectRegions
-(:418-436), so `num_print_regions()` counts per-instance regions
-(GCode.cpp:2676-2693).
+Upstream gates the load-time split on the producer tag:
+`m_is_bbl_3mf` is set when the 3MF's Application metadata starts with
+`BambuStudio-` or `OrcaSlicer-` (bbs_3mf.cpp:3947-3961); the split
+("if the 3mf was not produced by OrcaSlicer and there is more than one
+instance, split the object in as many objects as instances") runs only
+when `!m_is_bbl_3mf` (bbs_3mf.cpp:1996-2032). BBL/Orca-produced 3MFs
+keep 1 ModelObject x N instances and take the per-instance sequential
+path (GCode.cpp:3279-3339); third-party 3MFs are split at load into
+N ModelObjects x 1 instance.
 
-Ares gap: the 3MF loader keeps 1 ModelObject x N instances, so the
-one-object-two-instances fixture yields 1 region (1 width block) vs
-the native's 2, and every per-PrintObject downstream structure (regions,
-skirt grouping) is under-split.
-
-Plan: implement the loader split (clone + move instance +
-volumes regeneration) in the ares 3MF/project load path; acceptance =
-the two_instances width blocks 2=2 and the full-file parity on the
-fixture; the existing single/multi-object fixtures must not change
-(the split only fires for instances.size() > 1).
+Consequences:
+- The hand-built two_instances fixture MUST carry the OrcaSlicer-
+  Application metadata, otherwise the native takes the third-party
+  split (2 ModelObjects x 1 instance) and the fixture never exercises
+  the per-instance path it targets. The fixture helper now inserts
+  `<metadata name="Application">OrcaSlicer-2.4.2</metadata>`.
+- The ares loader split is a SEPARATE slice: port the third-party
+  load-time split behind the same producer gate, verified with a
+  no-metadata fixture (its acceptance = the native's split behavior:
+  N ModelObjects x 1 instance, num_print_regions = N).
+- The per-instance by-object phases work in this repo targets the
+  Orca-produced shape (1 ModelObject x N instances) and stays as
+  implemented in the WIP phases/bucket filter.

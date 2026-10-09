@@ -18,6 +18,16 @@ pub(crate) fn second_instance_of_first_object(mut exported: ExportedCase) -> Exp
                 bytes = String::from_utf8(bytes)
                     .unwrap()
                     .replacen("objectid=\"2\"", "objectid=\"4\"", 1)
+                    // Mark the 3MF as OrcaSlicer-produced (bbs_3mf.cpp:3947-3961):
+                    // without it the loader takes the third-party path and
+                    // splits multi-instance objects at load
+                    // (bbs_3mf.cpp:1996-2032), hiding the true
+                    // one-object-two-instance shape this fixture targets.
+                    .replacen(
+                        "<resources",
+                        "<metadata name=\"Application\">OrcaSlicer-2.4.2</metadata><resources",
+                        1,
+                    )
                     .into_bytes();
             } else if file.name() == "Metadata/model_settings.config" {
                 let mut xml = String::from_utf8(bytes).unwrap();
