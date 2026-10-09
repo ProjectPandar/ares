@@ -72,6 +72,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let (values, omission) = if key == super::adaptive_pa_bridges::KEY {
         provably_legal = true;
         (super::adaptive_pa_bridges::cases(), None)
+    } else if let Some(values) = tool_domains::generate(&key) {
+        // Native-witnessed H2D, two complete selectors, Manual mode, wall1/infill2.
+        provably_legal = true;
+        (values, None)
     } else if let Some(authored) = authored_probes(&key) {
         // Per-key legal domains: free-form `coString`/`coPoint(s)`
         // probes cover an unbounded schema domain completely; NUMERIC
@@ -176,6 +180,8 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
 #[path = "numeric_boundaries.rs"]
 pub(super) mod numeric_boundaries;
 mod numeric_domains;
+#[path = "tool_domains.rs"]
+mod tool_domains;
 
 #[cfg(test)]
 #[path = "numeric_metadata_tests.rs"]

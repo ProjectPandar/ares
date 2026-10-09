@@ -1,13 +1,17 @@
 //! G4 admission input: Manual maps belong to the project and plate owners.
 use super::*;
-use crate::runner::{CaseInputs, ExportedCase};
+use crate::runner::{CaseInputs, ExportedCase, stages::StageError};
 use serde_json::json;
 use std::io::{Cursor, Read, Write};
 
 // Failure inventory: export can shrink the palette/map or overwrite plate mode;
 // two configured filaments need real wall/infill usage, not config-only proof.
 // Keep the stock tool-change commands: their mapped retraction is the witness.
-pub(super) fn mapping(runner: &OrcaRunner, label: &str, requested: &Value) -> ExportedCase {
+pub(super) fn mapping(
+    runner: &OrcaRunner,
+    label: &str,
+    requested: &Value,
+) -> Result<ExportedCase, StageError> {
     let profiles = VendorProfiles::load(&profiles_root(), "BBL").unwrap();
     let selection = parity::select_printer(&profiles, "BBL", "Bambu Lab H2D 0.4 nozzle").unwrap();
     let mut machine = profiles.machine(&selection.printer).unwrap();
@@ -76,19 +80,17 @@ pub(super) fn mapping(runner: &OrcaRunner, label: &str, requested: &Value) -> Ex
         "change_filament_gcode".into(),
         machine["change_filament_gcode"].clone(),
     );
-    let mut exported = runner
-        .export_case(
-            &CaseInputs {
-                label,
-                machine: &machine,
-                process: &process,
-                filaments: &filaments,
-            },
-            &overrides,
-            &runner::repo_root().join("tests/parity/cube10.stl"),
-        )
-        .unwrap();
-    let before = runner::application::settings(&exported.project).unwrap();
+    let mut exported = runner.export_case(
+        &CaseInputs {
+            label,
+            machine: &machine,
+            process: &process,
+            filaments: &filaments,
+        },
+        &overrides,
+        &runner::repo_root().join("tests/parity/cube10.stl"),
+    )?;
+    let before = runner::application::settings(&exported.project)?;
     // Native export can emit only one map/colour despite two filament payloads.
     // Bind coherent logical identity before either slicer consumes this project.
     let mut fields = dependencies.as_object().unwrap().clone();
@@ -100,19 +102,15 @@ pub(super) fn mapping(runner: &OrcaRunner, label: &str, requested: &Value) -> Ex
     );
     fields.insert("flush_multiplier".into(), json!(["1", "1"]));
     bind_settings(&mut exported, &fields);
-    exported = runner
-        .bind_filament_map_mode(exported, &json!("Manual"))
-        .unwrap();
+    exported = runner.bind_filament_map_mode(exported, &json!("Manual"))?;
     let proofs = fields
         .iter()
         .map(|(key, value)| {
-            (
-                key.clone(),
-                runner::application::verify_value(&exported.project, key, value).unwrap(),
-            )
+            runner::application::verify_value(&exported.project, key, value)
+                .map(|proof| (key.clone(), proof))
         })
-        .collect::<Map<_, _>>();
-    runner::filament_map::verify(&exported.project, &json!("Manual")).unwrap();
+        .collect::<Result<Map<_, _>, _>>()?;
+    runner::filament_map::verify(&exported.project, &json!("Manual"))?;
     let artifact_root = parity::artifacts::root_from_env().unwrap();
     parity::artifacts::overwrite(
         &artifact_root.join(format!("{}-application.json", label.replace('/', "-"))),
@@ -125,7 +123,7 @@ pub(super) fn mapping(runner: &OrcaRunner, label: &str, requested: &Value) -> Ex
         .unwrap(),
     )
     .unwrap();
-    exported
+    Ok(exported)
 }
 
 fn bind_settings(exported: &mut ExportedCase, fields: &Map<String, Value>) {

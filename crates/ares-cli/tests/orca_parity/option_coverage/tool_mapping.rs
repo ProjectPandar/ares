@@ -31,7 +31,7 @@ fn orca_parity_g4_manual_filament_maps_consume_both_nozzles_and_cover_finite_sco
             .map(|value| value.as_str().unwrap().parse::<usize>().unwrap())
             .collect::<Vec<_>>();
         let label = format!("g4-mapping/manual-{}-{}", map[0], map[1]);
-        let exported = tool_context::mapping(&runner, &label, requested);
+        let exported = tool_context::mapping(&runner, &label, requested).unwrap();
         let sliced = runner.slice_case(&exported).unwrap();
         let native = std::str::from_utf8(&sliced.reference).unwrap();
         let observations = observe(native);

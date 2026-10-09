@@ -195,7 +195,9 @@ fn execute_plan(
         let label = format!("option/{}/{}", plan.key, case.label);
         let mut overrides = parity::smoke_overrides();
         overrides.remove(&plan.key);
-        let exported = if matches!(plan.key.as_str(), "bridge_flow" | "internal_bridge_flow") {
+        let exported = if plan.key == "filament_map" {
+            tool_context::mapping(runner, &label, case.value.as_ref().unwrap())
+        } else if matches!(plan.key.as_str(), "bridge_flow" | "internal_bridge_flow") {
             super::bridge_flow_coverage::input::export(
                 runner,
                 &plan.key,
