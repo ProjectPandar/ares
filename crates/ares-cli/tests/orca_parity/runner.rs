@@ -28,6 +28,8 @@ mod native_jerk_semm_migration;
 mod modifier_wall_loops;
 #[path = "runner/object_range_epsilon.rs"]
 mod object_range_epsilon;
+#[path = "runner/stock_validation.rs"]
+mod stock_validation;
 
 #[path = "runner/adjacent_color.rs"]
 mod adjacent_color;
