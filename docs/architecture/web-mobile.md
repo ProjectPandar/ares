@@ -32,6 +32,13 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   `@media (hover: hover)`, so a tapped control keeps no stuck hover style.
 - **Tablet project.** `ipad` (WebKit, iPad gen 7, 810×1080) covers the
   641–1024px layout with the same flow and checks as the phones.
+- **Tablet preview overlays stack.** At 641–1024px the 3D view is about 530px
+  wide, so the overlays take the phone positions: camera toolbar left-aligned
+  and scrolling, summary and layer slider below it, legend above the Moves
+  slider, and the G-code window as the five-line band over the summary card
+  (upstream stacks its windows, `GCodeViewer.cpp:957-972`; a 52-column side
+  column would cut every line at this width). The touch E2E requires the
+  overlays inside the view, pairwise apart and the centre free on every device.
 - **WCAG AA contrast without moving the brand colour.** `#009688` stays the
   accent for borders, sliders, swatches and the logo mark (non-text, 3:1).
   Text on the accent uses `--accent-fill` (`#00796b`, 5.28:1 with white;
@@ -63,9 +70,6 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
 
 - Option tooltips (`title`, from the option definitions) have no touch
   alternative yet; they are the remaining hover-only information.
-- Tablet preview overlays (slice 3b). At 810px the G-code window covers the
-  3D centre and the summary, the legend sits under the moves slider, and the
-  44px camera toolbar touches the summary card and the layer label.
 - Lighthouse targets. `web/e2e/lighthouse.mjs` gates the median
   Accessibility >= 95, Best Practices >= 95 and SEO >= 90 of three runs per
   preset; the desktop `target-size` audit is the next slice. Performance is

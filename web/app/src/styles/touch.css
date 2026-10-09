@@ -29,7 +29,7 @@
   .mode-switch::before { width: calc(35px + 44px * var(--mode)); border-radius: 12px; }
   .mode-dot { margin: -11px 0; }
 }
-/* The taller Moves slider pushes the phone legend up by as much, keeping the 3D centre clear. */
-@media (pointer: coarse) and (max-width: 640px) {
+/* The taller Moves slider pushes the phone and tablet legend up by as much, keeping the 3D centre clear. */
+@media (pointer: coarse) and (max-width: 1024px) {
   .legend { bottom: 88px; max-height: calc(50% - 118px); }
 }

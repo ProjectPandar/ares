@@ -6,6 +6,18 @@
   .sidebar { width: 280px; }
 }
 
+/* Tablets: the 3D view is about 530px wide, so the preview overlays stack instead of keeping their
+   desktop corners (GCodeViewer stacks its windows, GCodeViewer.cpp:957-972). */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .view-toolbar { top: 8px; left: 10px; right: 86px; transform: none; overflow-x: auto; scrollbar-width: none; }
+  .view-button { flex: none; }
+  .preview-card, .layer-slider { top: 66px; }
+  .preview-card { width: min(250px, calc(50% - 20px)); max-height: calc(50% - 96px); overflow: auto; }
+  /* GCodeWindow is the phones' five-line band over the summary card. */
+  .gcode-panel { top: 66px; bottom: auto; left: 10px; right: 86px; width: auto; height: 106px; z-index: 1; }
+  .legend { bottom: 64px; width: min(200px, calc(50% - 20px)); max-height: calc(50% - 94px); }
+}
+
 /* Phones: one column, plate actions in a bottom bar, sidebar as a drawer. */
 @media (max-width: 640px) {
   .shell {
