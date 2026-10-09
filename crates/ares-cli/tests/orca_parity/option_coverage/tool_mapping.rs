@@ -3,6 +3,10 @@ use super::*;
 use serde_json::json;
 use std::collections::BTreeSet;
 
+#[path = "tool_observation.rs"]
+mod observation;
+use observation::{motion_lines, observe};
+
 #[test]
 fn orca_parity_g4_manual_filament_maps_consume_both_nozzles_and_cover_finite_scope() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
@@ -38,13 +42,12 @@ fn orca_parity_g4_manual_filament_maps_consume_both_nozzles_and_cover_finite_sco
         }));
         write_proofs(&proofs);
         assert_eq!(outcome.status, "PASS", "{label}: {}", outcome.detail);
-        let motion = native.split("; CONFIG_BLOCK_START").next().unwrap();
         assert!(
-            motion.contains(&format!("M620.10 R{}", map[0])),
+            motion_lines(native).any(|line| line == format!("M620.10 R{}", map[0])),
             "{label}: mapped slot0 retract not consumed"
         );
         assert!(
-            motion.contains(&format!("M620.10 R{}", map[1])),
+            motion_lines(native).any(|line| line == format!("M620.10 R{}", map[1])),
             "{label}: mapped slot1 retract not consumed"
         );
         let mut used = BTreeSet::new();
@@ -94,44 +97,4 @@ fn write_proofs(proofs: &[Value]) {
         &serde_json::to_vec_pretty(proofs).unwrap(),
     )
     .unwrap();
-}
-
-// Observe only genuine wall/sparse XY extrusion, excluding startup/flush moves
-// and CONFIG_BLOCK template literals. Full comparison above is never filtered.
-fn observe(native: &str) -> BTreeSet<(usize, usize, usize, String)> {
-    let mut layer = 0;
-    let mut active = None;
-    let mut role = "";
-    let mut observations = BTreeSet::new();
-    for line in native.split("; CONFIG_BLOCK_START").next().unwrap().lines() {
-        if line == "; CHANGE_LAYER" {
-            layer += 1;
-        }
-        if let Some(marker) = line.strip_prefix("; G4_ACTIVE F") {
-            let (filament, nozzle) = marker.split_once(" N").unwrap();
-            active = Some((
-                filament.parse::<usize>().unwrap(),
-                nozzle.parse::<usize>().unwrap(),
-            ));
-        }
-        if let Some(value) = line.strip_prefix("; FEATURE: ") {
-            role = value;
-        }
-        if line.starts_with("G1 ") && matches!(role, "Outer wall" | "Inner wall" | "Sparse infill")
-        {
-            let fields = line.split_ascii_whitespace().collect::<Vec<_>>();
-            let xy = fields
-                .iter()
-                .any(|field| field.starts_with('X') || field.starts_with('Y'));
-            let extrusion = fields
-                .iter()
-                .filter_map(|field| field.strip_prefix('E'))
-                .any(|value| value.parse::<f64>().unwrap() > 0.0);
-            if xy && extrusion {
-                let (filament, nozzle) = active.unwrap();
-                observations.insert((layer, filament, nozzle, role.to_owned()));
-            }
-        }
-    }
-    observations
 }
