@@ -26,7 +26,10 @@ pub(super) struct Boundary {
     bounds: (Point, Point),
 }
 
-#[expect(clippy::large_enum_variant, reason = "avoid a transient allocation")]
+#[cfg_attr(
+    not(target_arch = "wasm32"),
+    expect(clippy::large_enum_variant, reason = "avoid a transient allocation")
+)]
 pub(super) enum BuildResult {
     Unavailable,
     Empty,
