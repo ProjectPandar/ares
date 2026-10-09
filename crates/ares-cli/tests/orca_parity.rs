@@ -24,6 +24,8 @@ mod change_filament_flush_blocks;
 mod cli_custom_gcode_exit;
 #[path = "orca_parity/cli_sequential_clearance.rs"]
 mod cli_sequential_clearance;
+#[path = "orca_parity/native_wall_clock.rs"]
+mod native_wall_clock;
 
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;

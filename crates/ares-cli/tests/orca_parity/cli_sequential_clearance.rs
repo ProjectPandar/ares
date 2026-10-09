@@ -3,6 +3,8 @@
 
 use std::{fs, path::Path, process::Command};
 
+use crate::native_wall_clock::result_comparison_bytes;
+
 fn run(case: &str, expected_code: i32) {
     let fixtures = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/parity/validation/sequential-clearance");
@@ -60,8 +62,8 @@ fn run(case: &str, expected_code: i32) {
     if expected_code == 193 {
         assert_eq!(output.stdout, native.stdout);
         assert_eq!(
-            fs::read(artifacts.join("result.json")).unwrap(),
-            native.result_json
+            result_comparison_bytes(&fs::read(artifacts.join("result.json")).unwrap()),
+            result_comparison_bytes(&native.result_json)
         );
         assert!(!gcode.exists(), "rejected before emission");
         assert!(native.gcode.is_none());
