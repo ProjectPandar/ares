@@ -451,3 +451,39 @@ Retained evidence and repeatable readers use `/tmp/worker6-arachne-prisms-s2-`:
 `official-extra-raw-audit.json`, `official-extra-raw-after-duplicate-audit.json`
 and `official-raw-lifecycle-after-duplicate-audit.json`. Original rounds,
 DIVERGENT output and retry remain available; none are overwritten by this audit.
+
+## Selected plate-2 reference migration: repeated oracle variation
+
+The O6 test-only migration has fresh controls on `977c6e923`: seeded
+758/758 → 759/759 PASS; official 748 PASS/10 FAIL → 750 PASS/9 FAIL.
+The only new test is `plate_two_min_slices_like_native`. No production source
+changes. The coordinator accepts the following oracle variations; neither is
+claimed as an Ares fix or an upstream UB diagnosis.
+
+`option/top_surface_pattern/concentric` repeats the previously recorded
+line149 Native split: baseline `G1 X111.401 Y106.013 E.11356`, first candidate
+`M73 P10 R7`. The existing forced rerun then matches the complete baseline
+Native stream under generated-by-only comparison. Input ZIP member names and
+bytes and producer components agree. All three Ares raw SHA256 values remain
+`fe41e0cf51ac3bbcf2a6a33c6925c76a126c43e7e0318794702496573df25101`.
+The original manifest audit remains **FAIL, exit1** for 516 versus 517 captures;
+all 501 common key-to-Ares-raw-SHA sets agree. The surplus record has identical
+Ares bytes. The existing force mechanism overwrote the initial receipt; the
+first manifest/raw bytes remain retained and the final receipt binds the retry.
+
+`cli_custom_gcode_ginger_5_0_matches_native` changes FAIL → PASS solely because
+Native `result.json.prepare_time` changes 1 → 0, while complete Ares JSON SHA256,
+input identity and producer components agree. `OrcaSlicer.cpp:5539-5541` assigns
+this field from the UTC wall-clock difference. The coordinator classifies it
+as Native timing nondeterminism; its separate test-only normalization belongs
+to worker1 and is outside this migration.
+
+External evidence: `/tmp/worker6-plate-origin-r702-oracle-variation-audit.json`
+binds the inputs, producer receipts, first difference and complete output hashes.
+The original strict results remain in
+`/tmp/worker6-plate-origin-r702-official-comparison.json` and
+`/tmp/worker6-plate-origin-r702-official-compare.exit`.
+`/tmp/worker6-plate-origin-r702-official-repeat-lifecycle-audit.json` separately
+accounts for the duplicate capture and nine processor outputs inheriting only
+Native generated-by timestamp differences; 596 direct/other raw streams agree.
+No test assertion, comparison rule or original failure result is changed.
