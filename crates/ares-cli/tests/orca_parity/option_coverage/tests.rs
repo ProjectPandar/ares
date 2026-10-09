@@ -3,6 +3,8 @@ use crate::runner;
 
 #[path = "clearance.rs"]
 pub(super) mod clearance;
+#[path = "printable_height.rs"]
+mod printable_height;
 
 #[test]
 fn option_domain_plan_is_complete_and_source_cited() {
