@@ -7,6 +7,11 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### G2 clearance/height coverage: spec pending review (2026-10-09)
+
+Test-only bounded `PrintConfig::validate` / `Print` consumer witnesses precede harness classification; no production edits authorized.
+[Proposed scope and exit criteria](architecture/option-g2-clearance-height-coverage.md).
+
 ### Stock signal audit: all twelve cases docs only (2026-10-09)
 
 Native nondeterministic crashes rule out runtime-test admission; no tests or production changes remain.
