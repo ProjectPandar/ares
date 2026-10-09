@@ -108,9 +108,17 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   const fitCoverage = await modelCoverage(page);
   await page.screenshot({ path: `${artifacts}prepare-fit.png` });
 
-  // GLCanvas3D::on_char Ctrl+digit view keys: 1 top, 3 front, 0 plate.
+  // GLCanvas3D::on_char Ctrl+digit view keys: 1 top, 3 front, 0 plate. The Top button presses
+  // before the top frame draws, so wait for a settled frame that differs from the fit one
+  // (data-drawing marks a queued render, Viewport.render).
+  const viewport = page.getByTestId("viewport");
+  await expect(viewport).not.toHaveAttribute("data-drawing");
+  const fitFrame = await canvasFingerprint(page);
   await page.keyboard.press("ControlOrMeta+1");
   await expect(page.getByTestId("view-toolbar").getByRole("button", { name: "Top", pressed: true })).toBeVisible();
+  await expect
+    .poll(async () => (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== fitFrame)
+    .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-top.png` });
   await page.getByRole("button", { name: "Front" }).click();
   await expect(page.getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true })).toBeVisible();
@@ -119,8 +127,7 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
 
   // Selecting in the list highlights the object and its row. The row commits before the
   // viewport effect queues the highlight frame, so wait for a settled frame that differs
-  // from the unselected one (data-drawing marks a queued render, Viewport.render).
-  const viewport = page.getByTestId("viewport");
+  // from the unselected one.
   await expect(viewport).not.toHaveAttribute("data-drawing");
   const unselected = await canvasFingerprint(page);
   await rows.filter({ hasText: "neck.stl" }).click();
