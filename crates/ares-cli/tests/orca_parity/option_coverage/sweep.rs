@@ -176,6 +176,10 @@ fn execute_plan(
             let application = runner::application::verify_value(project, &plan.key, value)?;
             Ok(serde_json::json!({"application":application,
                 "domain":super::filament_flow_coverage::input::metadata()}))
+        } else if plan.key == "timelapse_type" {
+            let application = runner::application::verify_value(project, &plan.key, value)?;
+            Ok(serde_json::json!({"application":application,
+                "domain":super::timelapse_coverage::input::metadata()}))
         } else if plan.key == "wrapping_exclude_area" {
             let application = runner::application::verify_value(project, &plan.key, value)?;
             Ok(serde_json::json!({"application":application,
@@ -205,7 +209,14 @@ fn execute_plan(
         let label = format!("option/{}/{}", plan.key, case.label);
         let mut overrides = parity::smoke_overrides();
         overrides.remove(&plan.key);
-        let exported = if plan.key == "filament_map" {
+        let exported = if plan.key == "timelapse_type" {
+            super::timelapse_coverage::input::export(
+                runner,
+                case.value.as_ref().unwrap(),
+                true,
+                &label,
+            )
+        } else if plan.key == "filament_map" {
             tool_context::mapping(runner, &label, case.value.as_ref().unwrap())
         } else if matches!(plan.key.as_str(), "bridge_flow" | "internal_bridge_flow") {
             super::bridge_flow_coverage::input::export(
@@ -296,7 +307,13 @@ fn execute_plan(
             });
         match built {
             Ok(exported) => {
-                let outcome = if plan.key == super::adaptive_pa_bridges::KEY {
+                let outcome = if plan.key == "timelapse_type" {
+                    super::timelapse_coverage::compare(
+                        runner,
+                        &exported,
+                        case.value.as_ref().unwrap(),
+                    )
+                } else if plan.key == super::adaptive_pa_bridges::KEY {
                     super::adaptive_pa_bridges::compare(
                         runner,
                         &exported,
