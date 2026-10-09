@@ -90,13 +90,29 @@ fn loaded_and_complete(key: &str, values: &[&str]) {
         );
         proofs.push(json!({"rejected":wire,"stage":"Export","code":captured.code,"evidence":error.evidence,"validation":errors}));
     }
-    let outcome = OptionOutcome::executed(&plan, values.len(), Vec::new(), 0, None);
+    let mut observed_plan = plan.clone();
+    observed_plan.cases = values
+        .iter()
+        .map(|wire| domains::OptionCase {
+            label: format!("loaded-{wire}"),
+            value: Some(json!(wire)),
+        })
+        .collect();
+    let outcome = OptionOutcome::executed(&observed_plan, values.len(), Vec::new(), 0, None);
     let root = crate::artifacts::root_from_env().unwrap();
     crate::artifacts::overwrite(&root.join(format!("g2-{key}-loaded.json")), &serde_json::to_vec_pretty(&json!({
         "scope":"one object, by layer, 0.4mm nozzle; sequential consumers require separate witnesses",
         "proofs":proofs,"classification":outcome.status,"detail":outcome.detail
     })).unwrap()).unwrap();
     assert_eq!(outcome.status, "PASS", "{key}: {}", outcome.detail);
+    let authored = plan
+        .cases
+        .iter()
+        .map(|case| case.value.as_ref().unwrap().as_str().unwrap())
+        .collect::<Vec<_>>();
+    for wire in values {
+        assert!(authored.contains(wire), "{key}: missing canonical {wire}");
+    }
 }
 
 fn export(
