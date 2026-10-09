@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { FILAMENT_PAGES, PRINTER_PAGES } from "../app/src/sidebar/presetLayout";
 import { PROCESS_PAGES } from "../app/src/sidebar/processLayout";
@@ -124,6 +125,9 @@ test("OrcaSlicer settings tabs render PrintConfigDef metadata per mode; unedited
   // OrcaSlicer starts in simple mode (MainFrame.cpp:325-326, GUI_App::get_saved_mode).
   const sidebar = page.getByTestId("sidebar");
   await expect(sidebar.getByRole("radio", { name: "Simple settings" })).toBeChecked();
+  // WCAG 2.5.8: every sidebar target, the mode switch included, is at least 24x24 CSS px.
+  const { violations } = await new AxeBuilder({ page }).include("[data-testid=sidebar]").withRules(["target-size"]).analyze();
+  expect(violations.flatMap((rule) => rule.nodes.map((node) => node.target.join(" "))), "undersized sidebar targets").toEqual([]);
   const process = page.getByTestId("process-settings");
   const processCoverage = await checkTab(page, sidebar, sidebar, "process", PROCESS_PAGES);
 
