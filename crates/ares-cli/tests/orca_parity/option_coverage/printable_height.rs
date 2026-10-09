@@ -5,6 +5,9 @@ use super::super::{OptionOutcome, domains, inject_case};
 use crate::runner::{self, CaseInputs, OrcaRunner};
 use serde_json::json;
 
+#[path = "printable_height/scene.rs"]
+mod scene;
+
 // PrintConfig.cpp:779-787 accepts zero; BuildVolume.cpp:383-384 disables
 // only its scene ceiling. Print.cpp:1378-1396 still validates generated layers.
 #[test]

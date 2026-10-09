@@ -9,7 +9,7 @@ use crate::{
 use serde_json::json;
 
 #[path = "clearance/geometry.rs"]
-mod geometry;
+pub(in crate::option_coverage) mod geometry;
 
 pub(in crate::option_coverage) fn owns(key: &str) -> bool {
     matches!(

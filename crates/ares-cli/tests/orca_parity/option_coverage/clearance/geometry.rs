@@ -226,7 +226,7 @@ fn orca_parity_g2_sequential_consumer_boundaries() {
     .unwrap();
 }
 
-fn scene(
+pub(in crate::option_coverage) fn scene(
     input: &[u8],
     key: &str,
     wire: &str,
@@ -296,7 +296,14 @@ fn scene(
                     if key == "nozzle_height" { "20" } else { "10" },
                 ),
                 ("extruder_clearance_height_to_rod", "40"),
-                ("extruder_clearance_height_to_lid", "120"),
+                (
+                    "extruder_clearance_height_to_lid",
+                    if key == "printable_height" {
+                        "10"
+                    } else {
+                        "120"
+                    },
+                ),
                 ("nozzle_height", "2.5"),
             ] {
                 settings[key] = json!(value);
