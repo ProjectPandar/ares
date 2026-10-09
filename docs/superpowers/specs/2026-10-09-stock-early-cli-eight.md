@@ -1,9 +1,11 @@
 # Follow-up: eight stock early CLI rejection cases (#30)
 
-Preparation only. This is the remaining eight-case partition of approved spec
-02ffadb9c; the five -100 cases merged as95eb301e4. No new Native execution or
-production RED is claimed. Wait for worker4's cli-exit merge before registering
-and executing the test skeleton; no heavy job during this preparation.
+Historical preparation record for the remaining eight-case partition of approved
+spec 02ffadb9c; the five -100 cases merged as95eb301e4. Runtime execution now
+found and corrected one phase-owned variant mismatch; see the actual RED/GREEN,
+full gates, failed-attempt preservation and conditional official ND ruling in
+[the verification/ARD](../../architecture/2026-10-09-stock-early-cli-eight-verification.md).
+The preparation requirements below remain the original admission contract.
 
 ## Exact stock selectors and upstream boundary
 
@@ -80,4 +82,5 @@ execution bindings; docs-only carry is not execution on rebased HEAD.
 
 Eight admitted matching CLI channel outcomes (or honest failed/inconclusive
 records), source-owned conclusion, external review receipt → REVIEW-REQUEST →
-sole APPROVED → fetch/rebase and ordinary ff-only push. No execution yet.
+sole APPROVED → fetch/rebase and ordinary ff-only push. Actual executions and
+subsequent git-only evidence carry are separately bound in the verification.
