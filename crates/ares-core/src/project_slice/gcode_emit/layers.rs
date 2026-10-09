@@ -47,7 +47,7 @@ pub(super) fn append(
     let Context {
         metadata,
         first_layer_bounds,
-        bed_cache,
+        mut bed_cache,
         brim,
         skirt,
         schedule,
@@ -264,7 +264,7 @@ pub(super) fn append(
                         printing_extruders: phase.tool_ordering.all_extruders().to_vec(),
                         lift_z: max_layer_z + state.options.z_hop,
                         origin,
-                        bed_cache,
+                        bed_cache: &mut bed_cache,
                     },
                 )?;
                 let _ = _primed;
@@ -367,7 +367,7 @@ pub(super) fn append(
                 layer_height,
                 first_layer,
                 second_layer_done: &mut second_layer_done,
-                bed_cache,
+                bed_cache: &mut bed_cache,
             },
         )?;
         let timelapse_context = boundary.timelapse_context;

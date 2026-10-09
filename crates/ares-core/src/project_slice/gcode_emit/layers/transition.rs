@@ -17,7 +17,11 @@ pub(in crate::project_slice::gcode_emit) struct Transition<'a> {
     pub(in crate::project_slice::gcode_emit) printing_extruders: Vec<usize>,
     pub(in crate::project_slice::gcode_emit) lift_z: f64,
     pub(in crate::project_slice::gcode_emit) origin: [f64; 2],
-    pub(in crate::project_slice::gcode_emit) bed_cache: i32,
+    /// The live writer bed-temperature cache
+    /// (`GCodeWriter::m_last_bed_temperature`, GCodeWriter.cpp:168-175):
+    /// `set_bed_temperature` refreshes it even when the custom G-code
+    /// suppresses the write.
+    pub(in crate::project_slice::gcode_emit) bed_cache: &'a mut i32,
 }
 
 /// `GCode.cpp:3309-3342`: the transition block for the instance about to
@@ -124,13 +128,21 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     // `GCode.cpp:3337` (`_print_first_layer_bed_temperature`): the
     // first-layer bed temperature, skipped when the custom G-code already
     // sets it or the writer cache holds it (`set_bed_temperature`).
+    // `GCodeWriter::set_bed_temperature` (`GCodeWriter.cpp:168-175`)
+    // refreshes the writer cache even when the custom G-code suppresses
+    // the write, so the NEXT object's transition compares against the
+    // live value (the native skips object 2's M140 because object 1's
+    // second layer already wrote it).
     let include_g10 = settings.printer.gcode.gcode_flavor == crate::GCodeFlavor::RepRapFirmware;
     let bed_set_by_gcode = machine_sets_temperature(&rendered, &["M140", "M190"], false);
     let bed_temperature = super::super::machine::first_layer_bed_temperature(traversal);
-    if !bed_set_by_gcode && bed_temperature != bed_cache && bed_temperature > 0 {
-        output.extend_from_slice(
-            format!("M140 S{bed_temperature} ; set bed temperature\n").as_bytes(),
-        );
+    if bed_temperature != *bed_cache {
+        if !bed_set_by_gcode && bed_temperature > 0 {
+            output.extend_from_slice(
+                format!("M140 S{bed_temperature} ; set bed temperature\n").as_bytes(),
+            );
+        }
+        *bed_cache = bed_temperature;
     }
     // `GCode.cpp:3338` (`_print_first_layer_extruder_temperatures`): the
     // first-layer nozzle temperatures without waiting — the current

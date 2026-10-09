@@ -93,7 +93,7 @@ pub(super) fn append_second_layer_transition(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     state: &motion::EmitState,
-    cached_bed_temperature: i32,
+    bed_cache: &mut i32,
 ) {
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;
@@ -160,8 +160,12 @@ pub(super) fn append_second_layer_transition(
         crate::BedTemperatureFormula::FirstFilament => temps.first().copied().unwrap_or(0),
         crate::BedTemperatureFormula::HighestTemp => temps.iter().copied().max().unwrap_or(0),
     };
-    if bed_temp != cached_bed_temperature {
+    // `GCodeWriter::set_bed_temperature` (`GCodeWriter.cpp:168-175`)
+    // refreshes the writer cache on every changed value, so the next
+    // sequential-object transition compares against the live value.
+    if bed_temp != *bed_cache {
         output.extend_from_slice(format!("M140 S{bed_temp} ; set bed temperature\n").as_bytes());
+        *bed_cache = bed_temp;
     }
 }
 

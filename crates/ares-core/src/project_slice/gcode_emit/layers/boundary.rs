@@ -75,7 +75,11 @@ pub(super) struct LayerBoundary<'a> {
     /// printing every object's layer 0 qualifies.
     pub(super) first_layer: bool,
     pub(super) second_layer_done: &'a mut bool,
-    pub(super) bed_cache: i32,
+    /// The live writer bed-temperature cache
+    /// (`GCodeWriter::m_last_bed_temperature`, GCodeWriter.cpp:168-175) —
+    /// mutable so the second-layer M140 refreshes it for the next
+    /// sequential-object transition.
+    pub(super) bed_cache: &'a mut i32,
 }
 
 /// Emits the `change_layer` block for `layer_index` (`GCode.cpp:5685-5718`
