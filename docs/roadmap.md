@@ -49,201 +49,49 @@ lint/test gates and full official/seeded controls. No caching or TS config logic
 This precedes multi-transform membership/shared centering; it is not a completed
 stock inventory or an Ares-owned pipeline milestone.
 
-### Selective WIP port: timelapse tower / adaptive PA / bridge (2026-10-04)
+### Selective WIP ports: completed boundaries
 
-Branch `pi/timelapse-tower-adaptive-pa` ports WIP `a53bc00c` in independent,
-source-owned slices, never as a whole-branch merge. Adaptive PA starts at
-`GCode/AdaptivePAProcessor`, `AdaptivePAInterpolator`, `PchipInterpolatorHelper`
-and the `GCode.cpp` marker/filter call sites; see
-[ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md) and
-plan.
-The current region/tool emitter is preserved as a temporary compatibility shell.
-Adaptive PA is approved and integrated into main at `56e4da53` after rebase,
-7592 workspace tests and both live references passed; Clippy/fmt/WASM passed.
-The next branch `pi/smooth-type2-timelapse-tower` follows
-[ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md) and its
-plan, beginning
-with the stock BBL timelapse Z-restatement handoff, approved and ff-integrated
-at `b1a5a84d` after all gates passed again. Type2 planning/emission and tower
-PA reset remain in progress. Coordinator selected complete Type2 activation:
-include multi-tool partitions, raft-gap layers and adjacent shapes before
-integrated E2E review; no standalone dead writer/geometry slice and no old WIP
-unsupported-feature guards. The plan lists source-owned sub-boundaries and
-required official/seeded complete-output witnesses. Bridge candidate traversal
-and slicing affine arithmetic are already represented by ARD-0075/0076 in main;
-revalidate rather than overwrite those implementations. Each slice requires
-fresh official complete-output RED/GREEN, separate seeded-reference checks,
-workspace Nextest, Clippy, rustfmt and WASM compilation before commit/push.
-Then request coordinator Claude review and stop for matching approval before
-rebase/revalidation and ff-only main integration; no external review gate.
-No all-printer/option or completed-tower claim is made by this planned port.
+- Adaptive PA emitter/filter — DONE `56e4da53e`; `AdaptivePAProcessor` / interpolators and `GCode.cpp` marker consumers, within [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md)'s bounded port.
+- BBL timelapse forced-Z handoff — DONE `b1a5a84d4`; `GCodeWriter::travel_to_xyz` force-Z state, within [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md).
+- Type2 tower planning/emission, PA restore/reset and live geometry consumers — DONE `c53be4fe9`, `ff2a912e0`; `Print::_make_wipe_tower`, `WipeTower2` and `WipeTowerIntegration`, within [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md).
+- Initialized bridge candidate traversal and mesh affine arithmetic — DONE `50fe97a6e`; [ARD-0075](architecture/ard-0075-initialized-bridge-candidate-direction.md) / [ARD-0076](architecture/ard-0076-slicing-mesh-affine-rounding.md).
 
-### Current acceptance priorities (2026-10-04)
+### Selective WIP ports: remaining boundaries (open)
 
-ToolOrdering/region-role's finite initial dual-tool milestone is integrated
-into remote main at `76916d01`; final workspace7591PASS, fmt/Clippy and WASM
-compilation passed. This does not close all printers/options/platform runs.
-Continue on `codex/printer-option-matrix`, not the long-lived tool branch.
+- Type2 `enable_prime_tower=1` activation verification — OPEN `21c18b79d`; the original ZIP had enable=0, so [the corrected activation spec](architecture/type2-tower-activation.md) still requires the real enable=1 witness and upstream gate identification. This belongs to worker2's tower boundary after its footer slice.
+- Adaptive PA deferred upstream behavior — OPEN `2863ef3ea`; retain [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md)'s multipath/sloped suppression, activation/calibration gates, source-specific reset sequencing and lookahead stream-position obligations. Landed bounded ports do not close full Adaptive PA or printer/Option coverage.
 
-1. Establish stock-preset native saved-3MF/full-output coverage without smoke
-   rewrites. The first Ender-3 tracer and source boundary are in
-   [the spec](superpowers/specs/2026-10-04-stock-preset-parity.md) and
-   plan, ARD-0096.
-   The unfiltered stock inventory entrypoint continues in
-   the sweep plan;
-   live scans and correctly failing coverage are not accepted matrix completion.
-2. Execute the full stock printer inventory and every bool/enum value;
-   retain complete input/output artifacts and truthful non-PASS rows.
-3. Complete range min/max/seeded interiors with active dependency fixtures;
-   repair real divergences through their upstream owning rewrite boundaries.
-4. Remove obsolete implementation-source pinning where public behavior
-   coverage replaces it; retain schema inventory, not source structure tests.
+### Current acceptance priorities: completed subitems
 
-Exit remains a fresh nonempty all-PASS full inventory with unchanged complete
-comparisons, Tier-1 verification and independent six-axis review. Historical
-modified-classic and sampled-domain summaries are not that exit evidence.
+- Initial ToolOrdering/region-role dual-tool milestone — DONE `76916d01`; bounded initial-tool integration, not global printer/Option acceptance.
+- Stock saved-3MF/full-output harness preserving original preset settings — DONE `eb65bca35`; [source boundary and contract](superpowers/specs/2026-10-04-stock-preset-parity.md).
+- Full stock execution and outcome classification — DONE `362e4847a`; [latest complete stock audit](architecture/2026-10-09-stock-full-current-audit.md) records 929 PASS and zero DIVERGENT while retaining raw non-PASS outcomes.
+- Full Option execution and outcome classification — DONE `d3ecda964`; [latest complete Option audit](architecture/2026-10-09-option-full-current-audit.md) records zero byte divergences without declaring incomplete/failed domains covered.
+- Obsolete implementation-source pinning removal — DONE `2439f9d10`; retain schema inventory and public behavior coverage.
 
-### Prusa terminal wipe segments (in progress)
+### Current acceptance priorities: full acceptance (open)
 
-Port `GCode.cpp:440-488 Wipe::wipe` and `Polyline.cpp:22-31` line retention
-into `motion/travel/wipe_path.rs`, replacing the zero-length segment filter.
-[Spec](superpowers/specs/2026-10-04-wipe-zero-length-segments.md),
-plan,
-[ARD](architecture/ard-wipe-zero-length-segments.md).
-Exit: Prusa target/fresh original equality,68+823/re3D/extra-overhang controls,
-four gates and coordinator review. Other clipping, writer and wipe-tower changes
-are deferred; retain source junction dedup and denominator floor.
+Range min/max/interior and active dependency coverage still require their complete
+source-owned witnesses. The fresh nonempty all-PASS full-inventory exit, unchanged
+complete comparators, Tier-1 verification and independent six-axis review remain
+OPEN. Completed executions/classifications and individual domain closures are not
+that global exit; raw Native errors, crashes and incomplete domains are not PASS.
 
-### re3D common travel boundary (in progress)
+### Completed rewrite slices
 
-Port `AvoidCrossingPerimeters.cpp:190-216` end-first common-boundary selection
-into `gcode_emit/motion/path/avoid_crossing/router/closest_lines.rs`, replacing
-the first-start-only approximation. [Spec](superpowers/specs/2026-10-04-re3d-common-travel-boundary.md),
-plan,
-[ARD](architecture/ard-re3d-common-travel-boundary.md).
-Exit: three re3D full-output targets and fresh official references,68+823 and
-extra-overhang controls, four gates and coordinator review. Other routing,
-geometry and timing changes are deferred; no independently designed planner.
+- Prusa terminal wipe segments — DONE `aa52ef2b7`; `GCode.cpp::Wipe::wipe` / `Polyline::append` → `motion/travel/wipe_path.rs`, [ARD](architecture/ard-wipe-zero-length-segments.md).
+- re3D common travel boundary — DONE `31996f489`; `AvoidCrossingPerimeters.cpp` end-first common-boundary selection → `router/closest_lines.rs`, [ARD](architecture/ard-re3d-common-travel-boundary.md).
+- Classic extra-overhang perimeters — DONE `931691eb4`; `PerimeterGenerator::apply_extra_perimeters` → `perimeters/classic/extra_perimeters` and infill-boundary subtraction, [ARD](architecture/ard-extra-overhang-perimeters.md).
+- Qidi Grid collection ordering — DONE `e865eb2a4`; `Fill::no_sort` / `Layer::make_fills` sorting and non-reversal → `fill_entities/grid.rs`, [ARD](architecture/ard-grid-collection-ordering.md).
+- Sparse-anchoring centered reference — DONE `7cfa0b33b`; `Layer::generate_sparse_infill_polylines_for_anchoring` / `PrintObject::bounding_box` → `bridge_over_infill/sparse_anchoring`, [ARD](architecture/ard-sparse-anchoring-reference.md).
+- Vendor stock fill-reference repair — DONE `94a0a6295`; `PrintObject::bounding_box` / `Fill::_infill_direction` → `fill_entities/generate.rs`, [ARD](architecture/ard-print-object-fill-reference.md).
+- Thin-tip support fill connection — DONE `7ac555551`; `FillBase::mark_boundary_segments_overlapping_infill` default collision interval → `fill/base_support/mark.rs`, [ARD](architecture/ard-thin-tip-support-fill.md).
+- Filament ironing speed emission — DONE `f10c3b172`; `GCode::_extrude` region/process speed selection → `motion/options/build/fields/assemble.rs`, [bounded analysis](architecture/option-incomplete-coverage.md).
+- Support-interface fan requests — DONE `16ac907b9`; `GCode::_extrude` / `CoolingBuffer` START/END → `motion/fan.rs` / `cooling/role_fans.rs`, [spec](architecture/support-interface-fan.md).
+- Ironing fan requests — DONE `bf7f17d45`; `GCode::_extrude` / `CoolingBuffer` priority/restoration → `motion/fan.rs` / `cooling/role_fans.rs`, [spec](architecture/ironing-fan.md).
 
-### Classic extra-overhang perimeters (in progress)
-
-Port `PerimeterGenerator.cpp:677-1109` generation/reconnection/dependency ordering
-and classic `apply_extra_perimeters` call:1672 into `perimeters/classic/
-extra_perimeters` and the existing infill-boundary seam. Replace the inactive
-compatibility guard with real path insertion and covered-fill subtraction.
-[Spec](superpowers/specs/2026-10-04-extra-overhang-perimeters.md),
-plan,
-[ARD](architecture/ard-extra-overhang-perimeters.md).
-Coordinator authorized only the local BridgeDetector.hpp:122-126 adapter;
-shared bridge direction remains read-only. Exit:2stock and active on/off step
-full-output parity,68+823controls, four gates and coordinator review. Arachne and
-other perimeter features remain deferred; never delete the guard alone.
-
-### Qidi Grid collection ordering (in progress)
-
-Port independent Grid ordering and non-reversal contracts (`FillBase.hpp:166`,
-`Fill.cpp:1325`, `FillBase.cpp:164,183-185`) into `fill_entities/grid.rs::append`
-using existing Oriented paths in a sortable collection; leave geometry,
-odd-layer generation reversal, bridge/cooling/M73 behavior unchanged.
-[Spec](superpowers/specs/2026-10-04-grid-collection-ordering.md),
-plan,
-[ARD](architecture/ard-grid-collection-ordering.md).
-Exit:2/2 Qidi RED→GREEN,68/68 full inventory subset,823/823controls,8/8 official
-references and workspace/fmt/Clippy/WASM, then coordinator review. This bounded
-slice does not declare full printer inventory completion.
-
-### Sparse-anchoring reference follow-up (in progress)
-
-Rewrite `Layer::generate_sparse_infill_polylines_for_anchoring` bbox-center
-selection (`Fill.cpp:1398,1442`, `Print.hpp:347`) in the Rust
-`prepare_infill/bridge_over_infill/sparse_anchoring` compatibility shell.
-[Spec](superpowers/specs/2026-10-04-sparse-anchoring-reference.md),
-plan,
-[ARD](architecture/ard-sparse-anchoring-reference.md).
-Priority #10 before Qidi #9 and extra-overhang #11. Exit: strict16-case RED→GREEN
-assessment with all residuals retained,52+823 green controls, full68/official8
-receipts, workspace/fmt/Clippy/WASM and coordinator approval. Bridge math and
-extended box sizing remain deferred; this is not full matrix completion.
-
-### Vendor stock fill-reference repair (in progress)
-
-Priority tracer: the60 Snapmaker cubic residuals, with8 Qidi grid controls.
-Port `PrintObject::bounding_box` → `Layer::make_fills` →
-`Fill::_infill_direction` centered reference into `fill_entities::generate_layer`;
-replace the slice-contour-center compatibility approximation at that boundary.
-[Spec](superpowers/specs/2026-10-04-print-object-fill-reference.md),
-plan,
-[ARD](architecture/ard-print-object-fill-reference.md), and
-triage.
-Exit: the coordinator-approved52-case strict RED→GREEN slice (full68 retains
-16 failures:14 bridge handoffs and2 next-slice Qidi cases), green stock controls,
-fresh official representatives with remaining failures preserved, workspace
-Nextest/Clippy/fmt/WASM, coordinator approval before fast-forward main integration.
-Bridge sparse-anchoring and extended box sizing
-remain deferred; this is not full printer-matrix completion.
-
-### Thin-tip support fill connection follow-up (feature gates passed)
-
-Rewrite `Fill/FillBase.cpp::mark_boundary_segments_overlapping_infill` in
-`ares-core::fill::base_support::mark`: preserve the default zero interval end
-when the collision helper returns false, then still test contour departure.
-Both retained tip0.1 raw-Grid/explicit-Organic complete-output assertions pass.
-See [spec](superpowers/specs/2026-10-04-thin-tip-support-fill.md),
-plan and
-[ARD](architecture/ard-thin-tip-support-fill.md). Fresh official full repeat and
-seeded each pass 28/28 complete pairs; workspace7618, Clippy, format and WASM
-compile pass. The official first run's separate Slim-model infill outlier is
-retained with unchanged-baseline and same-input native-instability evidence,
-not hidden or spliced into the passing repeat. Main integration requires the
-user's latest-main rebase and repeated four quality gates. Matrix cleanup,
-tower/AdaptivePA and Arachne remain separate; no global parity claim is made.
-
-### Filament ironing speed emission (2026-10-04, branch validation)
-
-`Fill/Fill.cpp::Layer::make_ironing` retains the filament speed parameter,
-but `GCode.cpp::_extrude` selects region/process `ironing_speed` for the
-emitted path. Follow that owner in
-`gcode_emit/motion/options/build/fields/assemble.rs`, retaining region data
-and grouping identity. Activate the previously inert filament-speed probes;
-do not invent a native behavior or change comparison/completeness rules.
-Official/seeded each pass2 public active-path outputs plus21 matrix outputs
-(6 bounded PASS domains,2 INCOMPLETE speed domains). Workspace7596 PASS/9
-existing skips, Clippy/fmt and WASM compilation pass. Branch review remains
-pending and main is frozen. The225-domain inventory is classified, not closed.
-See [analysis and plan](architecture/option-incomplete-coverage.md).
-
-### Support-interface fan requests (2026-10-04, coordinator review pending)
-
-Rewrite the support-interface START/END owner in `GCode.cpp::_extrude` and
-`GCode/CoolingBuffer.cpp::{parse_layer_gcode,apply_layer_cooldown}` through
-`project_slice/gcode_emit/{motion/fan,cooling/role_fans}.rs` and typed option
-assembly. The internal deferred marker format remains a temporary transport
-shell around those source requests. Fixed speed below baseline, explicit zero,
-independence from overhang-fan enablement, closed-layer behavior and native
-inactive-END comment retention are included. Ironing fan activation,
-multifilament fan lifecycle and global Option coverage remain deferred.
-Both official and seeded CPU0 references pass12 complete outputs each;
-workspace7593 PASS (9 existing skips), Clippy/fmt and WASM compilation pass.
-Coordinator review and latest-main revalidation/integration remain pending. See
-[the specification](architecture/support-interface-fan.md) and
-the plan.
-
-### Ironing fan requests (2026-10-04, lint-integrated GREEN; review pending)
-
-Port `GCode.cpp::_extrude` ironing START/END and
-`GCode/CoolingBuffer.cpp::apply_layer_cooldown` request priority into
-`project_slice/gcode_emit/{motion/fan,cooling/role_fans}.rs` with typed
-option/state fields. Unlike support END, inactive ironing END is consumed
-and forces restoration even in closed layers. No geometry, tower or
-AdaptivePA changes are included; deferred markers remain only an internal
-transport around the upstream requests. After lint rebase onto f10c3b17,
-official/seeded CPU0 each pass44 complete outputs, including10 option domains
-(8 PASS,2 INCOMPLETE) and fan/speed controls. Workspace7597 PASS/9 existing
-skips, Clippy/fmt and WASM compilation pass; coordinator review remains
-pending. See [spec](architecture/ironing-fan.md) and
-plan. This does not close the225
-INCOMPLETE domains or establish global parity.
-
+These are completed bounded source slices; adjacent behavior deferred by their
+ARD/spec remains separate, without a full printer/Option parity claim.
 
 ## Completed milestones
 
