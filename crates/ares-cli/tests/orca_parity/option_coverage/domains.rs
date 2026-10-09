@@ -14,6 +14,7 @@ pub(super) struct OptionPlan {
     pub(super) cases: Vec<OptionCase>,
     pub(super) omission: Option<&'static str>,
     pub(super) width_domain: Option<widths::WidthDomain>,
+    pub(super) tool_metadata: Option<Value>,
     /// Whether the generated cases provably cover the option's legal domain:
     /// bool/enum exhaust their declared value set, schema-bounded numerics
     /// cover `min`/`max`/interior, and width options carry a context-bound
@@ -68,11 +69,13 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let source = format!("{}:{}", definition.get("path")?.as_str()?, line);
     let block = definition_block(lines, &key, line);
     let mut width_domain = None;
+    let mut tool_metadata = None;
     let mut provably_legal = false;
     let (values, omission) = if key == super::adaptive_pa_bridges::KEY {
         provably_legal = true;
         (super::adaptive_pa_bridges::cases(), None)
-    } else if let Some(values) = tool_domains::generate(&key) {
+    } else if let Some((values, metadata)) = tool_domains::generate(&key) {
+        tool_metadata = Some(metadata);
         // Native-witnessed H2D, two complete selectors, Manual mode, wall1/infill2.
         provably_legal = true;
         (values, None)
@@ -173,6 +176,7 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         cases: values,
         omission,
         width_domain,
+        tool_metadata,
         provably_legal,
     })
 }

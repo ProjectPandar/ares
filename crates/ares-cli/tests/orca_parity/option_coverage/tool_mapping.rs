@@ -72,6 +72,7 @@ fn orca_parity_g4_manual_filament_maps_consume_both_nozzles_and_cover_finite_sco
         &root.join("g4-mapping-bounded.json"),
         &serde_json::to_vec_pretty(&json!({
             "cases":proofs,"classification":outcome.status,"detail":outcome.detail,
+            "domain":plan.tool_metadata,
             "scope":"four coherent Manual maps, two 0.4mm nozzles, wall1/infill2",
             "deferred":["automatic grouping","dynamic mapping","all vector shapes"]
         }))

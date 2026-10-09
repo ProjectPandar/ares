@@ -68,11 +68,57 @@ fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
     let Some(plans) = super::try_load(&crate::runner::repo_root()) else {
         return;
     };
-    for key in ["filament_map", "filament_self_index"] {
-        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
-        assert!(!plan.provably_legal, "{key}");
-        assert!(plan.omission.is_some(), "{key}");
-    }
+    let identity = plans
+        .iter()
+        .find(|plan| plan.key == "filament_self_index")
+        .unwrap();
+    assert!(!identity.provably_legal, "filament_self_index");
+    assert!(identity.omission.is_some(), "filament_self_index");
+
+    let mapping = plans
+        .iter()
+        .find(|plan| plan.key == "filament_map")
+        .unwrap();
+    assert!(
+        mapping.provably_legal,
+        "filament_map: bounded G4 Manual scope"
+    );
+    assert!(mapping.omission.is_none(), "filament_map");
+    assert_eq!(
+        mapping.tool_metadata,
+        Some(json!({
+            "domain":"G4 bounded Manual filament maps",
+            "definition":"PrintConfig.cpp:2489",
+            "consumer":"ToolOrdering.cpp:1275-1312",
+            "input":"tool_context::mapping",
+            "mode":"Manual",
+            "nozzle_diameter":["0.4","0.4"],
+            "nozzle_volume_type":["Standard","Standard"],
+            "wall_filament":1,"sparse_infill_filament":2,
+            "deferred":["automatic grouping","dynamic mapping","all vector shapes"]
+        }))
+    );
+    assert_eq!(
+        mapping
+            .cases
+            .iter()
+            .map(|case| case.value.clone().unwrap())
+            .collect::<Vec<_>>(),
+        [
+            json!(["1", "1"]),
+            json!(["1", "2"]),
+            json!(["2", "1"]),
+            json!(["2", "2"])
+        ]
+    );
+    assert_eq!(
+        mapping
+            .cases
+            .iter()
+            .map(|case| case.label.as_str())
+            .collect::<Vec<_>>(),
+        ["manual-1-1", "manual-1-2", "manual-2-1", "manual-2-2"]
+    );
     for key in ["layer_height", "initial_layer_print_height"] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
         assert!(plan.provably_legal, "{key}: bounded one-nozzle context");
