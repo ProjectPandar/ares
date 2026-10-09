@@ -2,6 +2,7 @@
 //! `BuildVolume.hpp:15-30,91-106`; `Model.cpp:692-702,2370-2379,3423-3469`).
 
 mod circle;
+mod height;
 
 use crate::{Point3d, Project, ProjectObject, SliceError, Transform3d, geometry::CoordinateScale};
 use circle::fit_circle;
@@ -70,7 +71,7 @@ impl PrintVolume {
     pub(crate) fn new(project: &Project) -> Result<Self, SliceError> {
         let printer = &project.settings().printer.remaining;
         let area = &printer.printable_area.0;
-        let max_z = printer.printable_height.0;
+        let max_z = height::scene_limit(printer.printable_height.0);
         // The bed shape is translated to the plate's grid position before
         // the gate (`PartPlate.cpp:3179-3187` `set_shape` adds the position
         // to every point) so the still-global instance coordinates are

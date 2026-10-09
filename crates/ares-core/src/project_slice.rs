@@ -41,6 +41,8 @@ pub(crate) use perimeters::classic::shortest_path::{
 mod perimeters;
 pub(crate) use perimeters::flow::skirt_flow_width_spacing;
 mod planning;
+mod print_height;
+pub(crate) use print_height::validate as validate_print_height;
 mod pre_closing_unions;
 mod prepare_infill;
 mod pressure_equalizer;

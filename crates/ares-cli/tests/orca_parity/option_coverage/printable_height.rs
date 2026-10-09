@@ -93,6 +93,11 @@ fn orca_parity_printable_height_zero_endpoint_validated_cli() {
         &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     ));
+    let public_matches_native = matches!(
+        &actual,
+        Err(ares_core::SliceError::Validate { message, .. })
+            if message.as_bytes() == native.stderr.strip_suffix(b"\n").unwrap()
+    );
     let public_outcome = match actual {
         Ok(gcode) => {
             crate::artifacts::write(&directory.join("ares.validated.gcode"), &gcode).unwrap();
@@ -123,6 +128,10 @@ fn orca_parity_printable_height_zero_endpoint_validated_cli() {
         .unwrap(),
     )
     .unwrap();
+    assert!(
+        public_matches_native,
+        "validated API must match the Native Validate diagnostic"
+    );
     assert_eq!(cli.status.code(), Some(if cfg!(unix) { 205 } else { -51 }));
     assert_eq!(cli.stdout, native.stdout);
     assert_eq!(cli.stderr, native.stderr);

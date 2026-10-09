@@ -199,6 +199,7 @@ pub(crate) fn validate_applied_project(
     let into_validate = |error: SliceError| into_validate_message(error, settings);
     layered_wrapping::validate(project, resolved, plate_number)?;
     sequential_clearance::validate(project, resolved, plate_number)?;
+    crate::project_slice::validate_print_height(project, resolved, plate_number)?;
     extrusion_width::applied(resolved).map_err(into_validate)?;
     let bbl = project_is_bbl(
         settings,

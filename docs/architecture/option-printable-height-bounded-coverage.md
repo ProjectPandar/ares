@@ -155,3 +155,10 @@ forced last-layer overruns, post-GCodeProcessor multi-extruder height/path check
 max_print_height template arithmetic, printer resizing/auto arrangement, SLA and UI. No schema-global physical safety
 claim. Milestone integration requires coordinator REVIEW-REQUEST/APPROVED and
 ordinary ff-only push; source/geometry/phase disparities remain blockers.
+
+## Authorized zero-endpoint rewrite decision (RED 139a7d1dc)
+
+- Native run `1efab6af-ee54-420f-9c80-19c3e4c23168` rejects the identical zero-height cube at generated-layer validation (-51/205); validated Ares and its CLI incorrectly reject earlier at scene admission (-50/206). Raw evidence remains `/tmp/worker3-printable-height-zero-red-v1-discrepancy.json`.
+- Non-negotiable: `BuildVolume.cpp:377-421` zero is unbounded only for scene containment; `Print.cpp:1354-1396` still checks generated layer pairs against the literal printable height plus `libslic3r.h:52` EPSILON. Do not apply the sentinel to Print or sequential limits.
+- Reuse the existing source-cited `project_slice::planning::plan_project`/layer pairs for Print validation, not mesh height, emitted G-code, legacy STL validation, or an independently designed schedule. New scene-height and generated-layer modules get minimal owner hooks; keep worker6 wrapping hooks intact.
+- The demonstrated fixed, unpainted, no-raft/no-shrinkage request is the GREEN obligation. Adjacent painted, material shrinkage, forced-overrun and mixed-tool witnesses remain deferred; no extra coverage claim follows from shared planner reuse. Full verification queues after worker6; no integration before review.
