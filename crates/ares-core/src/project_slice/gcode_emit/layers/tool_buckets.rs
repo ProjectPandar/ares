@@ -47,6 +47,10 @@ pub(super) struct Input<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) entries: &'a [LayerToPrint],
     pub(super) instances: &'a [Vec<super::instances::Instance>],
+    /// By object, the phase drives one instance: only that copy's buckets
+    /// are built, so the consuming adapter's clone/replay path keeps the
+    /// last copy's in-place move for the phase that owns it.
+    pub(super) copy_filter: Option<usize>,
     pub(super) tools: &'a [usize],
     pub(super) wiping: &'a super::super::tool_ordering::wiping::WipingExtrusions,
     pub(super) objects: &'a mut [Vec<OrderedExtrusionLayer>],
@@ -59,6 +63,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
     for (source, instance) in input.entries.iter().flat_map(|&source| {
         input.instances[source.object_index]
             .iter()
+            .filter(move |&instance| input.copy_filter.map_or(true, |copy| instance.copy == copy))
             .map(move |&instance| (source, instance))
     }) {
         let position = instance.position;

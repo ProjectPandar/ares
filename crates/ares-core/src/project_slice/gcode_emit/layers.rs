@@ -430,6 +430,7 @@ pub(super) fn append(
             traversal,
             entries: &entries,
             instances: &instances,
+            copy_filter: phase.copy_filter,
             tools: tool_ordering.tools_for_layer(group_z),
             wiping,
             objects,
@@ -437,15 +438,6 @@ pub(super) fn append(
             raft: &mut raft_layers,
         });
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
-        // By object, a phase drives ONE instance: the same-object copies
-        // split into consecutive phases with the :3304 transition between
-        // them (`GCode.cpp:3279-3304`), so the bucket set shrinks to the
-        // phase's copy. By layer keeps every copy.
-        if let Some(copy) = phase.copy_filter {
-            for (_, tool_entries) in by_tool.iter_mut() {
-                tool_entries.retain(|bucket| bucket.instance.copy == copy);
-            }
-        }
         let mut final_entry = entries[0];
         for (tool, tool_entries) in &mut by_tool {
             wrapping::emit(output, state, &timelapse_context)?;
