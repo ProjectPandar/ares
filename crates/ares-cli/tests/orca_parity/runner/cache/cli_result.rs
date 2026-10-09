@@ -38,6 +38,8 @@ enum ResultKind {
     SequentialCollision,
     SequentialLast,
     Early(EarlyExit),
+    RetainedFirst,
+    RetainedSecond,
 }
 
 impl ResultKind {
@@ -47,6 +49,7 @@ impl ResultKind {
             Self::SequentialCollision => -63,
             Self::SequentialLast => 0,
             Self::Early(early) => early.code(),
+            Self::RetainedFirst | Self::RetainedSecond => -102,
         }
     }
 
@@ -56,18 +59,47 @@ impl ResultKind {
             Self::SequentialCollision => "sequential-collision-v1",
             Self::SequentialLast => "sequential-last-v1",
             Self::Early(_) => "early-cli-failure-v1",
+            Self::RetainedFirst => "retained-first-v1",
+            Self::RetainedSecond => "retained-second-v1",
         }
     }
 
     fn native_products(self) -> &'static [&'static str] {
         match self {
             Self::CustomGCode | Self::SequentialCollision | Self::Early(_) => &["result.json"],
-            Self::SequentialLast => &["plate_1.gcode", "result.json"],
+            Self::SequentialLast | Self::RetainedFirst => &["plate_1.gcode", "result.json"],
+            Self::RetainedSecond => &["plate_2.gcode", "result.json"],
+        }
+    }
+
+    fn slice(self) -> u32 {
+        match self {
+            Self::RetainedSecond => 2,
+            Self::CustomGCode
+            | Self::SequentialCollision
+            | Self::SequentialLast
+            | Self::Early(_)
+            | Self::RetainedFirst => 0,
         }
     }
 }
 
 impl OrcaRunner {
+    pub(crate) fn retained_cli_reference(
+        &self,
+        project: &Path,
+        second_plate: bool,
+    ) -> Result<CliResultReference, StageError> {
+        self.cli_result_reference(
+            project,
+            if second_plate {
+                ResultKind::RetainedSecond
+            } else {
+                ResultKind::RetainedFirst
+            },
+        )
+    }
+
     pub(crate) fn early_cli_reference(
         &self,
         project: &Path,
@@ -122,7 +154,12 @@ impl OrcaRunner {
             (project, components)
         };
         let producer = self.producer()?;
-        components["recipe"] = json!(format!("{}/slice-0/{}", kind.schema(), kind.code()));
+        components["recipe"] = json!(format!(
+            "{}/slice-{}/{}",
+            kind.schema(),
+            kind.slice(),
+            kind.code()
+        ));
         let request = cache_identity::digest(&[&serde_json::to_vec(&components).unwrap()]);
         let parent = self
             .cache
@@ -158,8 +195,11 @@ impl OrcaRunner {
             stderr: stages::read(&entry.join("stderr"), stage)?,
             result_json: stages::read(&entry.join("result.json"), stage)?,
             gcode: match kind {
-                ResultKind::SequentialLast => {
+                ResultKind::SequentialLast | ResultKind::RetainedFirst => {
                     Some(stages::read(&entry.join("plate_1.gcode"), stage)?)
+                }
+                ResultKind::RetainedSecond => {
+                    Some(stages::read(&entry.join("plate_2.gcode"), stage)?)
                 }
                 ResultKind::CustomGCode
                 | ResultKind::SequentialCollision
@@ -191,7 +231,7 @@ impl OrcaRunner {
             &self.bin,
             [
                 "--slice".to_owned(),
-                "0".to_owned(),
+                kind.slice().to_string(),
                 "--outputdir".to_owned(),
                 output.to_string_lossy().into_owned(),
                 project.to_string_lossy().into_owned(),
@@ -278,6 +318,14 @@ impl OrcaRunner {
             }
             fs::write(staging.path().join("plate_1.gcode"), gcode)
                 .map_err(|error| io(stage, error))?;
+        }
+        if matches!(kind, ResultKind::RetainedFirst | ResultKind::RetainedSecond) {
+            let filename = kind.native_products()[0];
+            let gcode = stages::read(&output.join(filename), stage)?;
+            if gcode.is_empty() || parsed["plate_index"] != if kind.slice() == 2 { 2 } else { 1 } {
+                return Err(io(stage, "Native retained output/plate identity mismatch"));
+            }
+            fs::write(staging.path().join(filename), gcode).map_err(|error| io(stage, error))?;
         }
         fs::write(staging.path().join("stdout"), &captured.stdout)
             .map_err(|error| io(stage, error))?;

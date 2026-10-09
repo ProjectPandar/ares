@@ -19,7 +19,7 @@ fn circle_plate_origin_matches_native_empty_selected_plate() {
         .unwrap()
         .keep();
     let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/parity/validation");
-    let input = crate::cli_retained_input::second_plate(&artifacts, &fixtures);
+    let input = crate::cli_retained_input::second_plate(&artifacts, &fixtures, "131.9");
     let native_dir = artifacts.join("native");
     fs::create_dir(&native_dir).unwrap();
     let failure = stages::run(

@@ -1,7 +1,7 @@
 # B retained-output / O6 inward-circle runtime Native reference slice
 
-Status: proposed spec, implementation/RED waits for APPROVED.
-Owner worker4; Native reference migration only, no production Rust/API changes.
+Status: approved; runtime diagnosis authorized the production amendment below.
+Owner worker4; retained migration plus the source-cited CLI plate-origin rewrite.
 
 ## Owning upstream boundary
 
@@ -156,3 +156,33 @@ actual failure and sameinput/raw/receipt evidence; no freeze/retry/mask workarou
 
 Do not implement or delete until this bounded spec is approved. This is retained
 Native test artifact elimination, not completion of all B or marker authorization.
+
+## Approved production amendment: runtime plate2 discovery
+
+The original selected-plate transform X131.9 is a legal two-plate project, but
+Native actually returns -50/206, plate_index2, without export. Its old -102
+expectation was manufactured from plate1 JSON and is removed, not preserved.
+Independent runtime RED `2c3b9b734` compares actual Native --slice2 against
+Ares on the same derived bytes, including channels, full JSON and no-export.
+
+OrcaSlicer.cpp:1775-1778,3726,3805 derives CLI width/depth from ordered
+printable_area[2]-printable_area[0], truncated to integers, then resets PartPlate
+size. PartPlate.cpp:4836-4849,3952-3962 multiplies those dimensions by1.2 and
+computes grid origins. For this circle width=-1/depth9, so plate2 originX=-1.2,
+not Ares's bbox-derived132. The Rust destination is existing core
+project/domain/plate_selection.rs::plate_grid_origin: replace bbox computation
+entirely, preserving point order and integer truncation for all bed shapes.
+No circle special case, dual path or new API. The count==0 typed -50 variant in
+project_slice/state.rs belongs to worker3 and is not changed by this slice.
+
+The retained -102 selected-plate case now derives X=-1.3 (=Native origin-0.1),
+with the same valid bbs_3mf.cpp:1593-1613,4404-4406,4489-4502,4665,4689-4700
+plate/instance mapping. Both engines consume identical derived ZIP bytes;
+actual Native --slice2 drives complete retained output and JSON comparisons.
+The original X131.9 remains the separate production -50 regression.
+
+Production changes require new-tree default workspace, complete seeded and
+official pairs compared by test name, lint/fmt/WASM gates and coordinated web
+browser verification of shared WASM plate selection. Prior tests-only carry
+cannot replace these production gates. Other retained/core assertions, the six
+output deletions and the two new bounded retained recipes remain as specified.

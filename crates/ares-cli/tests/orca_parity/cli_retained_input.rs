@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) fn second_plate(temp: &Path, fixtures: &Path) -> PathBuf {
+pub(super) fn second_plate(temp: &Path, fixtures: &Path, translation_x: &str) -> PathBuf {
     let input = temp.join("selected-plate.3mf");
     let original = fs::read(fixtures.join("o6-stock-circle-inward.3mf")).unwrap();
     let mut archive = zip::ZipArchive::new(Cursor::new(original)).unwrap();
@@ -25,12 +25,15 @@ pub(super) fn second_plate(temp: &Path, fixtures: &Path) -> PathBuf {
                 )
                 .into_bytes();
         } else if entry.name() == "3D/3dmodel.model" {
-            // PartPlate::compute_origin: second plate's X origin is 110 * 1.2.
+            // CLI ordered-point integer width=-1 => Native plate2 origin=-1.2.
             let xml = String::from_utf8(bytes).unwrap();
             let transform = "transform=\"1 0 0 0 1 0 0 0 1 -0.1 0 0\"";
             assert_eq!(xml.matches(transform).count(), 1);
             bytes = xml
-                .replace(transform, "transform=\"1 0 0 0 1 0 0 0 1 131.9 0 0\"")
+                .replace(
+                    transform,
+                    &format!("transform=\"1 0 0 0 1 0 0 0 1 {translation_x} 0 0\""),
+                )
                 .into_bytes();
         } else if entry.name() == "Metadata/filament_sequence.json" {
             bytes = br#"{"plate_2":{"nozzle_sequence":[],"optimal_assignment":[],"sequence":[]},"plate_1":{"nozzle_sequence":[],"optimal_assignment":[],"sequence":[]}}"#.to_vec();
