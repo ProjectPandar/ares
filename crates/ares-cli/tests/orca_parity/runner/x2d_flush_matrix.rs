@@ -361,6 +361,27 @@ fn x2d_flush_matrix_scalar_four_cell_input_fails_exactly_at_the_cli() {
     );
 }
 
+/// FM closure follow-up (GAP-1, coordinator ruling 2026-10-09): a legal
+/// two-value `nozzle_volume_type=[High Flow,High Flow]` input with an
+/// absent matrix — the reconstruction runs through the High Flow flush
+/// dataset end-to-end, compared against complete Native output (the
+/// whole-output `check` compare; the matrix string is pinned from the
+/// Native-observed line like the Standard control).
+#[test]
+fn x2d_flush_matrix_high_flow_dataset_matches_native() {
+    check(
+        "high-flow-rebuild",
+        &[
+            (
+                "nozzle_volume_type",
+                Some(json!(["High Flow", "High Flow"])),
+            ),
+            ("flush_volumes_matrix", None),
+        ],
+        None,
+    );
+}
+
 /// The scalar CLI control above must FAIL (not silently pass) when a
 /// Native is required but absent (the requires-native meta-test
 /// precedent from `cli_custom_gcode_exit`).
