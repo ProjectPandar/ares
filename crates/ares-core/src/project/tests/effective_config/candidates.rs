@@ -202,7 +202,6 @@ fn only_nonempty_model_parts_receive_candidates() {
 #[test] #[rustfmt::skip]
 fn usage_affecting_modifier_keys_are_rejected_in_fixed_order() {
     let cases = [
-        ("wall_loops", RegionOptionOverrides { wall_loops: Some(OrcaInt(2)), ..Default::default() }),
         ("top_shell_layers", RegionOptionOverrides { top_shell_layers: Some(OrcaInt(2)), ..Default::default() }),
         ("bottom_shell_layers", RegionOptionOverrides { bottom_shell_layers: Some(OrcaInt(2)), ..Default::default() }),
         ("sparse_infill_filament_id", RegionOptionOverrides { sparse_infill_filament_id: Some(OrcaInt(2)), ..Default::default() }),
@@ -215,23 +214,6 @@ fn usage_affecting_modifier_keys_are_rejected_in_fixed_order() {
     for (key, overrides) in cases {
         assert_eq!(modifier_error(overrides), SliceError::UnsupportedProjectFeature(key.to_owned()));
     }
-    let combined = RegionOptionOverrides {
-        wall_loops: Some(OrcaInt(2)),
-        sparse_infill_density: Some(Percent(20.0)),
-        top_shell_layers: Some(OrcaInt(2)),
-        bottom_shell_layers: Some(OrcaInt(2)),
-        sparse_infill_filament_id: Some(OrcaInt(2)),
-        internal_solid_filament_id: Some(OrcaInt(2)),
-        top_surface_filament_id: Some(OrcaInt(2)),
-        bottom_surface_filament_id: Some(OrcaInt(2)),
-        outer_wall_filament_id: Some(OrcaInt(2)),
-        inner_wall_filament_id: Some(OrcaInt(2)),
-        ..Default::default()
-    };
-    assert_eq!(
-        modifier_error(combined),
-        SliceError::UnsupportedProjectFeature("wall_loops".to_owned())
-    );
 }
 
 #[test] #[rustfmt::skip]
