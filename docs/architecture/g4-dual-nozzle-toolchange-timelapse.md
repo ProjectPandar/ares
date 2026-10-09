@@ -23,6 +23,18 @@ OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
   then mark inserted. `:5308` calls `set_extruder` afterwards.
 - `GCode.cpp:5145-5202`: `insert_timelapse_gcode` renders the template and marks
   position unclear, adopting its last Z as appropriate.
+- `GCode.cpp:5478-5494`: per-instance completion only updates object-stop
+  labels. It does not retract. `ObjectLabels::queue_stop` must not preempt the
+  later tool-change or layer-tail owner with an eager lift.
+- `GCode.cpp:5255-5258,7331-7346`: by-layer exclude-object +
+  `support_object_skip_flush` derives a 64-bit per-tool mask from the actual
+  instances in `filament_to_print_instances`, locating IDs in the sorted unique
+  label list and base64-encoding its little-endian bytes. The protocol's fewer
+  than64 label restriction is not a new Ares allocation/pipeline policy.
+- `GCode.cpp:7775-7779,8037-8041`: a nonempty old filament-end invocation
+  consumes the pending mask as M624; the corresponding nonempty new start
+  invocation closes it with M625. Neither command is a per-instance start/stop
+  marker; empty templates do not manufacture invocations or consume a mask.
 - `GCode.cpp:5527-5546`: an already inserted block skips the entire tail
   retract/label/template sequence; it does not merely skip labels.
 - `GCode.cpp:7710-7714`: `need_toolchange(new_filament_id)` uses logical identity.
@@ -44,6 +56,34 @@ change speed, time estimation/formatting, logical/physical IDs, retraction
 magnitudes, template language, cache behavior or comparison normalization.
 The source tower branch `GCode.cpp:5264-5277` is deferred unless independently
 admitted; `Print.cpp:3443-3448` tower map wiring is inactive in this reproducer.
+
+The destination also includes `object.rs`, `layers/layer_end.rs`, the existing
+per-tool bucket iteration and the transition's filament-template seam. Replace
+`queue_stop`'s premature `end_layer_for_timelapse`/defer call with label-only
+queuing; remove that obsolete parameter from its callers. The actual final
+layer owner retracts once before labels/template, without depending on whether
+an object label exists. The existing raft final-entry tail remains its own
+retraction owner; do not introduce retracts for intermediate tool entries.
+
+Port pending `m_filament_instances_code` in the label state, deriving each
+by-layer tool group's mask from actual source-instance membership. Reuse the
+existing64-bit little-endian base64 encoder; do not hardcode AQ, expand the mask
+from configured filaments, reuse the previous object's mask or disable skip
+flush. Add M624 only before an invoked old end template, consume its pending
+mask, and add the paired M625 only after an invoked new start template. Startup
+without an old filament must not consume the mask. Source `:3312-3313` by-object
+mask production remains deferred; the by-layer consumer rewrite is not a claim
+that the independent sequential-print path is ported.
+
+Failure modes to exclude before implementation: double eager lifts from both
+instance completion and process-layer insertion; missing tail retract when
+labels exist; premature labels before retract; rendering a second timelapse at
+the tail; wrong logical-to-physical selection; wrong per-tool membership or
+copy identity in the mask; mask consumption on empty templates; an unmatched
+M625 or hardcoded single-instance mask. Existing legal whole-output RED covers
+the active timelapse and mask invocation witnesses; full controls must reveal
+any other changed stream. Do not edit `start_travel`/`restate` or retained/O6
+owners as part of this slice.
 
 ## Legal E2E boundary and retained original
 
