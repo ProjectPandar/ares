@@ -8,6 +8,9 @@ use sha2::{Digest, Sha256};
 
 use super::{ExportedCase, OrcaRunner};
 
+#[path = "modifier_wall_loops/variants.rs"]
+mod variants;
+
 #[tokio::test]
 async fn classic_modifier_wall_loops_match_complete_native_output() {
     let Some(runner) = native_runner() else {
