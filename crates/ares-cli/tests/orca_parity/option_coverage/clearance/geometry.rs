@@ -266,44 +266,21 @@ fn scene(
             settings[key] = json!(wire);
             bytes = serde_json::to_vec(&settings).unwrap();
         } else if file.name() == "3D/3dmodel.model" {
-            let xml = String::from_utf8(bytes).unwrap();
-            let mut reader = quick_xml::Reader::from_str(&xml);
-            let mut writer = quick_xml::Writer::new(Vec::new());
-            let mut in_build = false;
+            let mut xml = String::from_utf8(bytes).unwrap();
+            let start = xml.find("<build").unwrap();
+            let end = start + xml[start..].find("</build>").unwrap();
             let mut item = 0;
-            loop {
-                match reader.read_event().unwrap() {
-                    quick_xml::events::Event::Eof => break,
-                    quick_xml::events::Event::Start(ref e)
-                        if e.local_name().as_ref() == b"build" =>
-                    {
-                        in_build = true;
-                        writer
-                            .write_event(quick_xml::events::Event::Start(e.clone()))
-                            .unwrap();
-                    }
-                    quick_xml::events::Event::Empty(e)
-                        if in_build && e.local_name().as_ref() == b"item" =>
-                    {
-                        let mut replacement = e.to_owned();
-                        replacement.clear_attributes();
-                        for attribute in e.attributes() {
-                            let attribute = attribute.unwrap();
-                            if attribute.key.as_ref() != b"transform" {
-                                replacement.push_attribute(attribute);
-                            }
-                        }
-                        replacement.push_attribute(("transform", transforms[item].as_str()));
-                        item += 1;
-                        writer
-                            .write_event(quick_xml::events::Event::Empty(replacement))
-                            .unwrap();
-                    }
-                    event => writer.write_event(event).unwrap(),
-                }
-            }
+            let attribute = regex::Regex::new(r#"transform="[^"]*""#).unwrap();
+            let build = attribute
+                .replace_all(&xml[start..end], |_: &regex::Captures<'_>| {
+                    let transform = format!("transform=\"{}\"", transforms[item]);
+                    item += 1;
+                    transform
+                })
+                .into_owned();
             assert_eq!(item, 2);
-            bytes = writer.into_inner();
+            xml.replace_range(start..end, &build);
+            bytes = xml.into_bytes();
         }
         output
             .start_file(file.name(), zip::write::SimpleFileOptions::default())
