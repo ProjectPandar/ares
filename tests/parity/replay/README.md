@@ -33,9 +33,8 @@ retention of both complete streams.
 The classic comparator's eleven categories and 33 mutation checks now use
 runtime initialized Native in
 `crates/ares-cli/tests/orca_parity/runner/native_ksr_reference_migration/classic.rs`.
-`ender3-classic.orca.gcode` remains until worker6's final P3 deletion audit;
-replay and comparator tests do not read it. It is not a replay fallback. The CONFIG_BLOCK encode
-round trip slices `../orca_cli_ender3.3mf` with runtime Native
+The historical classic Native product is removed; no frozen fallback remains.
+The CONFIG_BLOCK encode round trip slices `../orca_cli_ender3.3mf` with runtime Native
 (`crates/ares-cli/tests/orca_parity/runner/config_block_roundtrip.rs`).
 
 The replay entrypoint itself consumes a supplied external layout: `case.3mf`

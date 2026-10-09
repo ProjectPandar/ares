@@ -85,6 +85,7 @@ Native consumers follow shared required/optional availability policy before
 cache use. Policy tests run in default environments using a temporary external
 directory. Browser comparison retains actual WASM bytes, loses its old ignore
 attribute, and receives explicit Native environment and artifact destination.
+
 ## Browser frozen-consumer policy RED
 
 The old ignored browser consumer still compares the initialized frozen file
