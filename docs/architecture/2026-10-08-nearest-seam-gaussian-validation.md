@@ -487,3 +487,35 @@ The original strict results remain in
 accounts for the duplicate capture and nine processor outputs inheriting only
 Native generated-by timestamp differences; 596 direct/other raw streams agree.
 No test assertion, comparison rule or original failure result is changed.
+
+
+## Object-height ranges reference migration: X2D oracle UB
+
+Fresh controls for the test-only object-height ranges cleanup use base
+`c5a70eecf`, candidate `d500852a5`: seeded 759/759 → 760/760 PASS;
+official 750 PASS/9 FAIL → 750 PASS/10 FAIL. The new policy test PASS checks
+that optional missing Native returns without consuming frozen references.
+No production source changes. Four range inputs, complete layer vectors and
+complete Ares/Native output content agree across both paired modes.
+
+The sole candidate-only failure is
+`bridge_over_infill_filament::orca_parity_bridge_over_infill_multi_filament_x2d`.
+The retained failure bytes bind the candidate capture
+`/tmp/bridge-multi-UOWeVc`; baseline is `/tmp/bridge-multi-4HI5CQ`.
+The first difference is original line1097 (1096 after removing the generator
+line): Native object id `4552471185119256362`, baseline/Ares id `0`.
+Both complete Ares raw SHA256 values equal
+`520b3da57f8276bad8488cf73150512ee7b0a608bfb88bdeda2673879df9c938`.
+Original input bytes, command launcher/environment and control producer
+components agree. The coordinator classifies this as the previously recorded
+`Print.hpp:582 m_id` uninitialized Native oracle UB, not an Ares regression.
+
+The strict failure-subset result remains **FAIL, exit1** in
+`/tmp/worker6-object-height-official-compare.exit`; no comparison is relaxed.
+Detailed binding evidence is `/tmp/worker6-object-height-bridge-audit.json`.
+`/tmp/worker6-object-height-official-comparison.json` separately establishes
+516 common manifest Ares raw streams unchanged, no Native content or manifest
+state changes. `/tmp/worker6-object-height-official-raw-lifecycle-audit.json`
+records 597 direct/other raw streams unchanged and nine processor outputs
+whose only differences inherit Native generated-by timestamps. The original
+all-raw failure remains retained as well.
