@@ -15,6 +15,9 @@ mod layer_heights;
 #[path = "option_coverage/height_context.rs"]
 mod height_context;
 
+#[path = "option_coverage/adaptive_pa_bridges.rs"]
+mod adaptive_pa_bridges;
+
 #[cfg(test)]
 #[path = "option_coverage/locked_width_context.rs"]
 mod locked_width_context;
