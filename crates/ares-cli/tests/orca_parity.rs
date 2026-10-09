@@ -30,6 +30,8 @@ mod cli_sequential_clearance;
 mod native_wall_clock;
 #[path = "orca_parity/residual_stock_cli.rs"]
 mod residual_stock_cli;
+#[path = "orca_parity/stock_early_cli.rs"]
+mod stock_early_cli;
 
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
