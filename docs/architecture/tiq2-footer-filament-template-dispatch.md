@@ -67,6 +67,27 @@ Defer unrelated start/toolchange template dispatch, statistics/footer timing,
 other placeholder-language gaps and any later complete-output residual.
 No new pipeline abstraction or generalized template framework is needed.
 
+## Runtime verification conclusion
+
+The independent runtime RED (`4f9e63b2f` before rebase) confirms Native
+footer records with writer `current_extruder=0` for both invocations,
+`filament_extruder_id=0/1`, and implicit `[nozzle_temperature]=211/233`.
+Ares initially emits only slot0 and the machine template, omitting slot1.
+The local dispatch/context correction makes those same records equal.
+
+Additional runtime Native controls pass for a nonzero active SEMM filament,
+an unused configured filament template and writer-position assignment flowing
+from slot0 to slot1 to machine-end. The first SEMM attempt selected slot0 in
+both implementations; that was a fixture failure, not a production RED.
+The corrected input assigns wall/infill/support to slot2 and disables the
+tower; it retains the strict Native slot1/temperature233 assertions.
+
+The original committed TiQ2 input now passes the complete-byte runtime
+comparator, with generated-by banner normalization only. No footer filtering,
+whitespace relaxation or output deduplication is used. This establishes the
+observed whole-file result for this input, not parity for arbitrary projects.
+Full default and fresh paired reference gates remain required before merge.
+
 ## Test boundary before production
 
 Restore the complete-byte TiQ2 runtime-OrcaRunner RED on merged main. Use the
