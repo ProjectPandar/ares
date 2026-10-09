@@ -54,7 +54,7 @@ spacing, support-layer geometry and cache lifecycle remain unchanged.
 The current Rust retry arithmetic is replaced, not retained as a fallback.
 No coordinate-specific special case, output deduplication or tolerance is
 introduced. Other geometry residuals and complete TiQ2 closure remain
-unproven until the strict whole-byte comparison is rerun.
+unproven beyond the explicitly recorded next residual.
 
 ## Bounded verification conclusion
 
@@ -68,18 +68,30 @@ the still-failing whole-byte test remains on a local footer branch, not in
 the merge candidate. The six smooth Type2 groups and exhaustive fan command
 sequence comparison pass after the correction.
 
-## Acceptance boundary
+## Verification boundary
 
-Before production changes, restore the local complete-byte runtime-OrcaRunner
-TiQ2 RED, using the shared required-Native environment contract and no checked-in
-Native stream. Also establish an isolated source-boundary RED for the exact
-post-wipe start/end and square above: it must return a direct route, and must
-fail with current arithmetic. Failure modes to cover before implementation
-are negative fractional displacement on a positive coordinate, its symmetric
-start/end operation, and preserving genuine intersecting detours.
+The independent route RED uses the Native-captured square and exact post-wipe
+endpoints. It fails with five route points before the correction and passes
+for both travel directions afterward. Existing crossing-detour controls remain
+unchanged; avoidance and cooling directed controls pass29/29.
 
-After the arithmetic correction, rerun the complete generated-by-only
-comparison without filtering residuals, affected avoidance controls and
-Type2/fan controls, then paired seeded and workspace/fmt/clippy/wasm gates.
-A later first residual is reported explicitly rather than asserted away.
+Fresh seeded v2 base/candidate gates on977c6e923 pass758/758 on both sides,
+with0 skipped. All605 common runtime streams are accounted for:604 Ares raw
+streams are identical, and only the target TiQ2 travel stream changes. All605
+Native streams remain identical after generated-by banner normalization.
+The target stream's next first difference remains the footer documented above.
+
+Subsequent authorized evidence carry-forward covers the seam visibility
+first-layer-hole correction (89549ca11, new E2E coverage), modifier/range
+wall_loops and Arachne zero-wall correction (844633cb7), and the added
+PrintStatistics result field (8a0116f54, no G-code change). Default-environment
+workspace verification was refreshed after these production changes on
+16e222917:8182/8182 pass,6 skipped, with no ARES environment overrides and
+no fail-fast. The latest required-Native v2 control set passes807/807 with
+0 skipped, including initialized-KSR and PrintStatistics environment bindings.
+Later main rebases are test/tool/document-only and preserve these conclusions.
+
+Workspace all-targets/all-features clippy with warnings denied passes.
+WASM core/adapter check and formatting check also pass.
 Debugging receipts and generated streams remain runtime artifacts only.
+
