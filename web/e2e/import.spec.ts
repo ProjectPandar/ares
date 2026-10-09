@@ -47,6 +47,21 @@ function modelCoverage(page: Page) {
   });
 }
 
+/** FNV-1a of the full-resolution canvas pixels: changes whenever a new frame differs. */
+function canvasFingerprint(page: Page) {
+  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+    const copy = document.createElement("canvas");
+    copy.width = canvas.width;
+    copy.height = canvas.height;
+    const context = copy.getContext("2d")!;
+    context.drawImage(canvas, 0, 0);
+    const pixels = context.getImageData(0, 0, copy.width, copy.height).data;
+    let hash = 0x811c9dc5;
+    for (let index = 0; index < pixels.length; index++) hash = Math.imul(hash ^ pixels[index], 0x01000193);
+    return hash >>> 0;
+  });
+}
+
 test("drag-drop import, object list, camera views", async ({ page }) => {
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
@@ -102,9 +117,17 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   await page.keyboard.press("ControlOrMeta+0");
   await expect.poll(() => modelCoverage(page)).toBeLessThan(fitCoverage / 4);
 
-  // Selecting in the list highlights the object and its row.
+  // Selecting in the list highlights the object and its row. The row commits before the
+  // viewport effect queues the highlight frame, so wait for a settled frame that differs
+  // from the unselected one (data-drawing marks a queued render, Viewport.render).
+  const viewport = page.getByTestId("viewport");
+  await expect(viewport).not.toHaveAttribute("data-drawing");
+  const unselected = await canvasFingerprint(page);
   await rows.filter({ hasText: "neck.stl" }).click();
   await expect(rows.filter({ hasText: "neck.stl" })).toHaveAttribute("aria-selected", "true");
+  await expect
+    .poll(async () => (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== unselected)
+    .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-selected.png` });
 
   // Multi-object plate slices byte-identical to native ares-cli.
