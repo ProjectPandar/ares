@@ -25,11 +25,15 @@ pub(crate) fn reference(source: &str) -> Option<Vec<u8>> {
 
 #[test]
 fn optional_missing_native_never_fabricates_replay_comparison() {
-    let artifacts = tempfile::Builder::new()
-        .prefix("replay-reference-policy-")
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
+    let artifacts = if std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some() {
+        tempfile::Builder::new()
+            .prefix("replay-reference-policy-")
+            .tempdir_in(crate::artifacts::root_from_env().unwrap())
+    } else {
+        tempfile::tempdir()
+    }
+    .unwrap()
+    .keep();
     let child_root = artifacts.join("child");
     fs::create_dir(&child_root).unwrap();
     let output = Command::new(std::env::current_exe().unwrap())
