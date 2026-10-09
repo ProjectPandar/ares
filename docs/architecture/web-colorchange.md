@@ -200,9 +200,13 @@ propagation is explicitly approved, not a general timing tolerance or an XYZ
 waiver. Any difference outside these boundaries must stop validation.
 
 Reproduction: `marker-time-stable-options.nix`, `marker-time-pair.mjs`, and
-`marker-time-bounds.mjs` under `tools/chain-probe/`; committed native-derived
-`tests/parity/marker-time/tagged-stable.tsv` and overrides; integration test
-`crates/ares-wasm/tests/marker_time_tagged.rs`. Full records, correspondence,
+`marker-time-bounds.mjs` under `tools/chain-probe/`; genuine committed
+`tests/parity/marker-time/tagged-overrides.json` input; integration test
+`crates/ares-wasm/tests/marker_time_tagged.rs` now generates raw/stable Native
+JSON and `stable.tsv` into a printed unique external artifact directory at runtime
+(see `tests/parity/marker-time/README.md`). The former committed Native projections
+and run logs were removed after live GREEN; they remain in git history, never a
+fallback. Historical full records, correspondence,
 first differences/counts and propagation evidence are retained under
 `target/marker-time-final-9e/tagged-time/normal/` and
 `target/marker-time-stable-proof/`. Diagnostics print bounded summaries, not

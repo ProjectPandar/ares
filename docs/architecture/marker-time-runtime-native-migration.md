@@ -1,6 +1,6 @@
 # ARD / spec: marker-time Native artifacts → runtime authority
 
-Status: **SPEC approved at c53de9921 with coordinator corrections below; enter RED after applying them, no second spec review required**. Native projection/log deletion scope and optional missing-Node policy are corrected here. No artifact deletion before actual GREEN.
+Status: **SPEC approved at c53de9921 with coordinator corrections; RED→GREEN→DELETE implemented, awaiting combined exact-hash REVIEW**. No production code or Native arithmetic changes. Every original consumer assertion remains intact; seven Native JSON/projections and four logs were deleted only after live GREEN.
 
 Analysis base: `104599195e032b8977f3cc4258625376b3704584`; worker1 branch `pi/marker-time-runtime-spec`. Subsequent test/docs-only main updates (including4e6417427) may be git-only rebased under coordinator carry authorization. This slice does not touch worker6 KSR/ender3-classic or worker4 cli-exit.
 
@@ -97,5 +97,17 @@ Only after reviewed RED and fresh GREEN, delete `native.json`, `oracle.json`, `t
 ## 6. Exit / deferred
 
 Exit: independently approved spec + archived missing-Native/Node RED; all original assertions preserved and fresh runtime Native-backed GREEN; visible optional SKIPPED and strict require FAIL; all seven Native JSON/projections and four logs deleted, genuine inputs retained; engineering gates, exact-hash REVIEW, authorized rebase/nonforceFF/remote verification.
+
+## Runtime migration record
+
+- Coordinator confirmed RED `9ec51103b`: required missing Native silently passed old frozen vgcode assertions; new required/optional contracts failed. Subsequent transport, tagged and numeric formatter REDs likewise preserve the old PASS/new-contract FAIL. Initial formatter selector/color harness failures are retained separately, NOT Native/parity evidence.
+- Source unchanged: pinned raw diagnostic was provisioned using the existing `marker-time.nix`/eight-core build outside test deadlines; original executable SHA `ba90ceb881adb8bc6f0a26fdd87393b526104eb2b8bdfce3f11c21088c88f2c9` restored. No stable-for-raw substitution, Native patch or source-arithmetic edits.
+- Fresh runtime gate: all nine Rust tests PASS/zero skips and numeric Playwright two PASS. Original 13 vgcode + two transport + seven tagged assertion sites and the formatter expect loop retained verbatim. Fresh tagged pair is 7348/7347 with unchanged five-field/phantom/order/full-prefix bounded-impact checks.
+- Test-only ownership: `tests/support/marker_time.rs` calls the shared Node producers; tempfile is dev-only. Production core/vgcode/WASM/display code unchanged. `marker-time-runner.mjs` owns one shared 300s deadline, descendants and failed receipts; short timeout/nonzero controls are protocol tests, NOT numerical Native evidence.
+- Missing/invalid controls: 14 Rust and eight numeric-browser isolated child controls verify visible optional Native/Node SKIPPED, strict required failure even CI, configured invalid/non-executable/empty paths and Native nonzero/zero-exit-without-output failure. No global env mutation or frozen output admission.
+- Before DELETE, strict workspace/all-target/all-feature Clippy, fmt, WASM checks exit0; default workspace 8204 PASS/six configured skips/exit0. Default environment is NOT full required-Native coverage. An offline historical-byte audit reports all raw Native JSON/CSV/TSV and tagged stable projection invariant; historical bytes never become runtime assertion input.
+- After these GREEN gates, physically deleted the exact seven JSON/projection files and four run logs. Kept only manual `path.gcode`, unchanged `tagged-overrides.json`, runtime README. Repeat after deletion: nine Rust PASS/zero skips, formatter two PASS. Consumer grep contains no reads of any deleted product; inventory paths are explicitly marked historical/deleted. First web typecheck found one new env inference error (fixed by typing the new subprocess env), plus missing installed existing axe dependency; locked npm ci provisioned that dependency without manifest/lock change. Full web typecheck and lint now exit0.
+- Repeatable logs, JSON results, lifecycle receipts and raw outputs live outside Git under `/tmp/ares-marker-time/` and printed unique `/tmp/marker-time-live-*` / `/tmp/marker-time-format-live-*` paths. Final latest-main browser gate, exact-hash combined REVIEW and authorized integration remain separate barriers; no RED-only merge or numerical waiver.
+
 
 Deferred: new timing/formatting algorithms, marker selections, extra numeric inputs, GL viewer/browser screenshot parity, new processor/slicer patches, full Native builds during tests, all KSR/ender3-classic/cli-exit migration, general oracle framework, and deletion of unrelated Native artifacts. Any new tagged difference outside the already-approved five fields/phantom boundary blocks this task; do not expand the exception.
