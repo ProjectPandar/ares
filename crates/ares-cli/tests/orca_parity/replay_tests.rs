@@ -1,7 +1,5 @@
 //! Behavioral regressions invoke the actual replay entrypoint in this build.
-#[path = "replay_tests/native_reference.rs"]
-mod native_reference;
-
+use crate::runner::native_replay_reference_migration as native_reference;
 use std::{fs, path::Path, process::Command};
 
 use serde_json::Value;
@@ -17,20 +15,26 @@ fn replay(fixtures: &Path, artifacts: &Path, cwd: &Path) -> std::process::Output
         .unwrap()
 }
 
-fn fixture(root: &Path, reference: bool) {
+fn fixture(root: &Path, reference: bool) -> bool {
+    let native = if reference {
+        let Some(bytes) = native_reference::reference("tests/parity/replay/ender3-classic.3mf")
+        else {
+            return false;
+        };
+        Some(bytes)
+    } else {
+        None
+    };
     fs::create_dir_all(root.join("ender3")).unwrap();
     fs::copy(
         crate::runner::repo_root().join("tests/parity/replay/ender3-classic.3mf"),
         root.join("ender3.3mf"),
     )
     .unwrap();
-    if reference {
-        fs::copy(
-            crate::runner::repo_root().join("tests/parity/replay/ender3-classic.orca.gcode"),
-            root.join("ender3/plate_1.gcode"),
-        )
-        .unwrap();
+    if let Some(bytes) = native {
+        fs::write(root.join("ender3/plate_1.gcode"), bytes).unwrap();
     }
+    true
 }
 
 fn assert_failed(output: std::process::Output) {
@@ -74,7 +78,7 @@ fn explicit_missing_reference_fails() {
 fn explicit_unwritable_artifact_root_fails() {
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
-    fixture(&input, true);
+    fixture(&input, false);
     let artifacts = temp.path().join("artifacts");
     fs::write(&artifacts, "not a directory").unwrap();
     assert_failed(replay(&input, &artifacts, temp.path()));
@@ -84,7 +88,9 @@ fn explicit_unwritable_artifact_root_fails() {
 fn explicit_divergent_orca_output_fails() {
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
-    fixture(&input, true);
+    if !fixture(&input, true) {
+        return;
+    }
     let reference = input.join("ender3/plate_1.gcode");
     let original = fs::read_to_string(&reference).unwrap();
     // One observable mutation to a real independently generated Orca artifact.
@@ -105,15 +111,13 @@ fn explicit_divergent_orca_output_fails() {
 
 #[test]
 fn unchanged_classic_replays_byte_identical_with_complete_paired_bytes_and_hashes() {
-    // DIVERGENT until the block_time distance-based trapezoid port removed
-    // the negative-decel time deficit that lagged the M73 stream one move
-    // (first difference was line 121: `M73 P10 R8` expected after
-    // `G1 X114.27 Y114.23 E.26118`, actual one line later); the replay now
-    // matches the stored Orca artifact byte-for-byte under the
-    // generator/timestamp-only normalization.
+    // The complete current Native stream is replayed with validated
+    // generator-only normalization, retaining every timing/config/footer byte.
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
-    fixture(&input, true);
+    if !fixture(&input, true) {
+        return;
+    }
     let artifacts = tempfile::Builder::new()
         .prefix("classic-replay-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -217,17 +221,16 @@ fn original_orca_project_matches_after_classic_convergence() {
     // wall_generator detail) pinned the pre-convergence behavior.
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
-    fixture(&input, true);
+    let Some(reference) = native_reference::reference("tests/parity/orca_cli_ender3.3mf") else {
+        return;
+    };
+    fs::create_dir_all(input.join("ender3")).unwrap();
     fs::copy(
         crate::runner::repo_root().join("tests/parity/orca_cli_ender3.3mf"),
         input.join("ender3.3mf"),
     )
     .unwrap();
-    fs::copy(
-        crate::runner::repo_root().join("tests/parity/replay/ender3.orca.gcode"),
-        input.join("ender3/plate_1.gcode"),
-    )
-    .unwrap();
+    fs::write(input.join("ender3/plate_1.gcode"), reference).unwrap();
     let artifacts = temp.path().join("artifacts");
     assert!(replay(&input, &artifacts, temp.path()).status.success());
     let (_case, manifest) = saved_case(&artifacts);
@@ -238,7 +241,9 @@ fn original_orca_project_matches_after_classic_convergence() {
 fn explicit_unreadable_project_fails_and_preserves_reference() {
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
-    fixture(&input, true);
+    if !fixture(&input, true) {
+        return;
+    }
     fs::remove_file(input.join("ender3.3mf")).unwrap();
     fs::create_dir(input.join("ender3.3mf")).unwrap();
     let artifacts = temp.path().join("artifacts");
@@ -254,7 +259,9 @@ fn explicit_unreadable_project_fails_and_preserves_reference() {
 fn explicit_unwritable_report_fails_after_saving_paired_bytes() {
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
-    fixture(&input, true);
+    if !fixture(&input, true) {
+        return;
+    }
     let artifacts = temp.path().join("artifacts");
     fs::create_dir_all(artifacts.join("replay-summary.json")).unwrap();
     let output = replay(&input, &artifacts, temp.path());
@@ -286,7 +293,7 @@ fn explicit_missing_inventory_fails() {
 fn explicit_request_without_artifact_destination_fails() {
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("input");
-    fixture(&input, true);
+    fixture(&input, false);
     let output = Command::new(std::env::current_exe().unwrap())
         .args(["--exact", "replay::orca_parity_replay_sweep", "--nocapture"])
         .env("ARES_PARITY_REPLAY", &input)

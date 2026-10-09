@@ -226,6 +226,8 @@ pub(crate) use environment::reference_enabled;
 mod cache;
 #[path = "runner/cache_identity.rs"]
 mod cache_identity;
+#[path = "runner/native_replay_reference_migration.rs"]
+pub(super) mod native_replay_reference_migration;
 
 pub(super) struct ExportedCase {
     pub(super) label: String,

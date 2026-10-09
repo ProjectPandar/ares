@@ -12,7 +12,7 @@ finalization. These boundaries require retaining executable commands, timing,
 configuration and statistics when comparing streams.
 
 The Rust destination is `ares-cli/tests/orca_parity/replay_tests.rs` and its
-exclusive `replay_tests/native_reference.rs` helper. Existing `runner::OrcaRunner`
+exclusive `runner/native_replay_reference_migration.rs` helper. Existing `runner::OrcaRunner`
 and `slice_case` remain the Native adapter and cache owner. Existing
 `replay.rs` and `artifacts.rs` continue exercising public `ares_core::slice_project`
 and `golden::compare_ordered_bytes_generator_only` without behavior changes.
@@ -33,7 +33,8 @@ effective `wall_generator` to `classic`, with JSON whitespace reserialization.
 Both current positive replay cases require complete stream parity.
 
 Writable scope: replay tests and exclusive helper, replay README and this spec.
-No root registration is needed with the helper under the existing module.
+`runner.rs` adds only this helper's module registration: placing it under the
+runner keeps private work paths and `ExportedCase` construction private.
 Production, `replay.rs`, shared caches, `.config`, KSR and
 `ksr_fdmtest_v4/ordered_bytes_tests.rs` remain untouched.
 

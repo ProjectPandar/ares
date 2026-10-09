@@ -1,5 +1,28 @@
 use std::{fs, process::Command};
 
+// GCode.cpp:2030,2461 exports the complete stream; slice_case retains the
+// producer-bound receipt while the legacy replay manifest remains unchanged.
+pub(crate) fn reference(source: &str) -> Option<Vec<u8>> {
+    use crate::runner::{ExportedCase, OrcaRunner, repo_root};
+
+    let runner = OrcaRunner::from_env().unwrap()?;
+    let source = repo_root().join(source);
+    let project = fs::read(&source).unwrap();
+    let project_path = runner.work.join(source.file_name().unwrap());
+    fs::write(&project_path, &project).unwrap();
+    let output_dir = runner.work.join("native");
+    fs::create_dir(&output_dir).unwrap();
+    let case = runner
+        .slice_case(&ExportedCase {
+            label: format!("replay/{}", source.file_name().unwrap().to_str().unwrap()),
+            project,
+            project_path,
+            output_dir,
+        })
+        .unwrap();
+    Some(case.reference)
+}
+
 #[test]
 fn optional_missing_native_never_fabricates_replay_comparison() {
     let artifacts = tempfile::Builder::new()
@@ -35,5 +58,8 @@ fn optional_missing_native_never_fabricates_replay_comparison() {
         "missing Native fabricated replay comparison artifacts: {child_root:?}"
     );
     assert!(diagnostic.contains("SKIPPED:"), "{diagnostic}");
-    assert!(diagnostic.contains("Native comparison not executed"), "{diagnostic}");
+    assert!(
+        diagnostic.contains("Native comparison not executed"),
+        "{diagnostic}"
+    );
 }
