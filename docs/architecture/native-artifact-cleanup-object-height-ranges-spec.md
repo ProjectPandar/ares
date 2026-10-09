@@ -116,7 +116,7 @@ M73、travel、seam、footer；不增加归一、容差、排序、过滤或只�
 不自写 skip，不在缺 Native 时调用 Ares 再伪称 parity，不写 native.gcode/result.json。
 纯 mixed rejection case 不经过这个入口。
 
-沿用既有 fixture adapter 模式：原 3MF 字节复制到 runner work，使用原 basename，
+沿用既有 fixture adapter 模式：原 3MF 字节复制到既有 artifact work，使用 adapter 原 basename `input.3mf`，
 构造既有 `ExportedCase` 并调用 `slice_case`。不使用目前绕过命中的 `rerun_reference`，
 不修改 cache recipe。producer/Native/launcher/resources/replay/input SHA、lock、
 staging、receipt、publish 与完整输出哈希验证都归现有缓存所有；无第二缓存或预热。
