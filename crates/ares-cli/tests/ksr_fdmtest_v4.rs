@@ -42,25 +42,3 @@ fn count_bytes(haystack: &[u8], needle: &[u8]) -> usize {
         .filter(|window| *window == needle)
         .count()
 }
-
-fn compare_actual(actual: &[u8]) -> Result<(), String> {
-    let directory = tempfile::Builder::new()
-        .prefix("ares-ksr-ordered-")
-        .tempdir()
-        .unwrap()
-        .keep();
-    for (source, destination) in [
-        ("ksr_fdmtest_v4.project.3mf", "input.3mf"),
-        ("ksr_fdmtest_v4.initialized-orca.gcode", "orca.gcode"),
-        ("initialized-reference.json", "reference.json"),
-    ] {
-        fs::copy(fixture_path(source), directory.join(destination)).unwrap();
-    }
-    fs::write(directory.join("ares.gcode"), actual).unwrap();
-    eprintln!("complete KSR artifacts: {directory:?}");
-    golden::compare_ordered_bytes_generator_only(
-        &fs::read(directory.join("orca.gcode")).unwrap(),
-        actual,
-    )
-    .map_err(|error| format!("{error}; complete artifacts {directory:?}"))
-}

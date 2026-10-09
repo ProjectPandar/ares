@@ -1,6 +1,8 @@
 //! Print::export_gcode / GCode::do_export full output against initialized Native.
 //! See ARD KSR runtime Native authority; only existing generator rules normalize.
 
+#[path = "native_ksr_reference_migration/browser.rs"]
+mod browser;
 #[path = "native_ksr_reference_migration/classic.rs"]
 mod classic;
 #[path = "native_ksr_reference_migration/config_block.rs"]

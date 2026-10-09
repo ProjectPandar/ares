@@ -21,6 +21,13 @@ fn optional_missing_native_never_consumes_frozen_classic_records() {
     );
 }
 
+#[test]
+fn optional_missing_native_never_consumes_frozen_browser_reference() {
+    missing_native(
+        "runner::native_ksr_reference_migration::browser::browser_output_matches_initialized_orca_242_ordered_bytes",
+    );
+}
+
 fn missing_native(test: &str) {
     let artifacts = match std::env::var_os("ARES_PARITY_ARTIFACT_ROOT") {
         Some(_) => tempfile::Builder::new()

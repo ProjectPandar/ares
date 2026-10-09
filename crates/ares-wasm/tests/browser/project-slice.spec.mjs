@@ -11,7 +11,6 @@ const repositoryRoot = fileURLToPath(new URL("../../../../", import.meta.url));
 async function expectOrderedParity(gcode) {
   const directory = await mkdtemp(join(tmpdir(), "ares-wasm-gcode-"));
   const output = join(directory, "browser.gcode");
-  console.log(`complete browser output: ${output}`);
   await writeFile(output, gcode, "utf8");
   const comparison = spawnSync(
     "cargo",
@@ -20,20 +19,33 @@ async function expectOrderedParity(gcode) {
       "run",
       "-p",
       "ares-cli",
-      "browser_output_matches_initialized_orca_242_ordered_bytes",
-      "--run-ignored",
-      "all",
+      "--test",
+      "orca_parity",
+      "--test-threads",
+      "16",
+      "-E",
+      "test(runner::native_ksr_reference_migration::browser::browser_output_matches_initialized_orca_242_ordered_bytes)",
     ],
     {
       cwd: repositoryRoot,
       encoding: "utf8",
-      env: { ...process.env, ARES_BROWSER_GCODE: output },
+      env: {
+        ...process.env,
+        ARES_BROWSER_GCODE: output,
+        ARES_REQUIRE_ORCA: "1",
+        ARES_PARITY_ARTIFACT_ROOT: process.env.ARES_PARITY_ARTIFACT_ROOT ?? directory,
+        ARES_ORCA_BIN: join(repositoryRoot, "scripts/orca-seeded-parity.sh"),
+        ARES_ORCA_NATIVE_BIN: process.env.ARES_KSR_INITIALIZED_NATIVE_BIN,
+        ARES_ORCA_RESOURCES_DIR: process.env.ARES_KSR_INITIALIZED_RESOURCES_DIR,
+        ORCA_REPLAY_BIN: process.env.ARES_KSR_INITIALIZED_BIN,
+        ORCA_REPLAY_SEED: "0",
+      },
       timeout: 300_000,
     },
   );
   expect(
     comparison.status,
-    `${comparison.stdout ?? ""}\n${comparison.stderr ?? ""}`,
+    `actual browser capture ${output}\n${comparison.stdout ?? ""}\n${comparison.stderr ?? ""}`,
   ).toBe(0);
 }
 

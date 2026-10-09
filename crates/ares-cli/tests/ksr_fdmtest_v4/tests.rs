@@ -134,14 +134,6 @@ fn first_difference_truncates_long_context_lines() {
         3
     );
 }
-#[test]
-#[ignore = "invoked by the Playwright browser parity test"]
-fn browser_output_matches_initialized_orca_242_ordered_bytes() {
-    let path = std::env::var_os("ARES_BROWSER_GCODE").unwrap();
-    let actual = fs::read(path).unwrap();
-    compare_actual(&actual).unwrap();
-}
-
 /// Diagnostic dump (env-gated): per-layer deposition lists for the Elegoo
 /// parity case, to trace the missing gap-fill line. Run with
 /// `ARES_ELEGOO_DUMP=<case-dir> cargo nextest run ... --ignored`.
