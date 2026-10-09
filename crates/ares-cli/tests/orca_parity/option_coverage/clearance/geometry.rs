@@ -274,6 +274,7 @@ fn scene(
         .collect::<Vec<_>>();
     let mut input = zip::ZipArchive::new(Cursor::new(input)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    let attribute = regex::Regex::new(r#"transform="[^"]*""#).unwrap();
     for index in 0..input.len() {
         let mut file = input.by_index(index).unwrap();
         let mut bytes = Vec::new();
@@ -307,7 +308,6 @@ fn scene(
             let start = xml.find("<build").unwrap();
             let end = start + xml[start..].find("</build>").unwrap();
             let mut item = 0;
-            let attribute = regex::Regex::new(r#"transform="[^"]*""#).unwrap();
             let build = attribute
                 .replace_all(&xml[start..end], |_: &regex::Captures<'_>| {
                     let transform = format!("transform=\"{}\"", transforms[item]);
