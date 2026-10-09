@@ -39,8 +39,9 @@ the existing complete ordered-byte generator-only comparison. The harness is
 an admission adapter around the cited upstream boundary.
 
 Existing core counterparts remain unchanged:
-`project_slice/perimeters/flow.rs::resolve_fill_bridge_flow` and thick bridge
-resolution, `project_slice/group_fills/projection.rs` role projection,
+`project_slice/perimeters/flow/fill.rs::resolve_fill_bridge_flow` and
+`perimeters/flow.rs` thick bridge resolution,
+`project_slice/group_fills/params/projection.rs` role projection,
 `extrusions/options/accessors.rs` filament-area and role multipliers,
 `extrusions/options/hardware.rs`, and existing options validation. No production
 API, cache recipe, comparison normalization, routing, or general context

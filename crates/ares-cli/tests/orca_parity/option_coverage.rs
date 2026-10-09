@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/bridge_flow_coverage.rs"]
+mod bridge_flow_coverage;
+
+#[cfg(test)]
 #[path = "option_coverage/layer_heights.rs"]
 mod layer_heights;
 
