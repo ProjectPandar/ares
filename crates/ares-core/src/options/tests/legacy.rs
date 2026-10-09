@@ -86,12 +86,12 @@ fn drops_legacy_percentage_values_for_now_absolute_options() {
         "initial_layer_speed",
         "internal_solid_infill_speed",
         "top_surface_speed",
+        "support_interface_speed",
         "outer_wall_speed",
         "support_object_xy_distance",
     ] {
         assert!(!options.values().contains_key(key));
     }
-    assert_eq!(options.values()["support_interface_speed"], json!("60%"));
     assert_eq!(options.values()["future_orca_key"], json!("preserved"));
 }
 

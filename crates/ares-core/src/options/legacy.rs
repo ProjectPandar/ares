@@ -10,7 +10,10 @@ mod sla;
 mod thumbnails;
 mod wiping_volumes;
 
-pub(crate) use self::token::{handle_legacy, handle_legacy_derived, handle_legacy_dest_bool};
+pub(crate) use self::token::{
+    erases_percentage_for_absolute_keys, handle_legacy, handle_legacy_derived,
+    handle_legacy_dest_bool,
+};
 
 impl<'de> Deserialize<'de> for SliceOptions {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

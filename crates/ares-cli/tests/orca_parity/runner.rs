@@ -153,6 +153,7 @@ mod processor_migration;
 #[cfg(test)]
 #[path = "runner/profile_entry.rs"]
 mod profile_entry;
+pub(crate) use profile_entry::placed_cube;
 #[cfg(test)]
 #[path = "runner/profile_entry_3mf.rs"]
 mod profile_entry_3mf;

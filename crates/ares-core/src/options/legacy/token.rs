@@ -18,6 +18,21 @@ use std::collections::BTreeSet;
 ///
 /// Mirrors the upstream if-else chain; unknown keys are left to the
 /// `print_config_def.has` terminal check the caller performs.
+/// The now-absolute keys whose old-profile percentage values are erased
+/// at load (`PrintConfig.cpp:8087-8094`).
+pub(crate) fn erases_percentage_for_absolute_keys(opt_key: &str) -> bool {
+    matches!(
+        opt_key,
+        "initial_layer_print_height"
+            | "initial_layer_speed"
+            | "internal_solid_infill_speed"
+            | "top_surface_speed"
+            | "support_interface_speed"
+            | "outer_wall_speed"
+            | "support_object_xy_distance"
+    )
+}
+
 pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
     if opt_key == "curr_bed_type" && value == "SuperTack Plate" {
         *value = "Supertack Plate".to_owned();
@@ -49,17 +64,7 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
         *opt_key = "support_angle".to_owned();
     } else if opt_key == "support_material_enforce_layers" {
         *opt_key = "enforce_support_layers".to_owned();
-    } else if [
-        "initial_layer_print_height",
-        "initial_layer_speed",
-        "internal_solid_infill_speed",
-        "top_surface_speed",
-        "outer_wall_speed",
-        "support_object_xy_distance",
-    ]
-    .contains(&opt_key.as_str())
-        && value.contains('%')
-    {
+    } else if erases_percentage_for_absolute_keys(opt_key) && value.contains('%') {
         // Old profiles expressed these as percentages; the current keys are
         // absolute, so the entry is dropped to avoid a parse error.
         opt_key.clear();

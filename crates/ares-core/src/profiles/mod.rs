@@ -3,6 +3,7 @@ pub(crate) mod compatible;
 mod composition;
 mod entry;
 mod import;
+mod load_settings;
 
 mod fragment;
 mod inheritance;
@@ -16,10 +17,12 @@ pub use composition::{
     ComposedProfile, ProfileGroupMetadata, ProfileSelection, compose_profile_fragments,
 };
 pub use entry::{
-    Placement, ProfileSettings, ProfileSliceRequest, profile_placed_project, profile_settings,
-    slice_with_profiles, slice_with_profiles_processed, slice_with_profiles_processed_validated,
+    LoadSettingsSliceRequest, Placement, ProfileSettings, ProfileSliceRequest,
+    profile_placed_project, profile_settings, slice_with_load_settings, slice_with_profiles,
+    slice_with_profiles_processed, slice_with_profiles_processed_validated,
     slice_with_profiles_validated, validate_with_profiles,
 };
 pub use fragment::{ProfileFragment, ProfileKind, merge_profile_fragments};
 pub use import::{ParsedPresetBundle, parse_preset_bundle};
 pub use inheritance::{MergedProfile, MergedProfileMetadata};
+pub use load_settings::{LoadSettingsFile, LoadSettingsRequest};

@@ -161,7 +161,7 @@ fn run_profile_entry(overrides: &[(&str, &str, Value)]) {
     comparison.unwrap();
 }
 
-pub(super) fn placed_cube(source: &[u8]) -> Vec<u8> {
+pub(crate) fn placed_cube(source: &[u8]) -> Vec<u8> {
     // Both slicers receive the identical pre-positioned STL; arrangement is
     // outside the profile-entry contract. LH's bed center is (118, 138).
     let mut bytes = source.to_vec();

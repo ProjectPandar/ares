@@ -4,6 +4,7 @@ use crate::{
 };
 
 use super::catalog::{Catalog, selection};
+use super::load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_load_settings};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
 /// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the
@@ -159,6 +160,71 @@ pub async fn profile_settings(
         Ok(ProfileSettings(
             project.documents().project_settings_raw.clone(),
         ))
+    })
+}
+
+/// Model identity and preset files supplied by the native
+/// `--load-settings`/`--load-filaments` CLI lists.
+#[derive(Clone, Copy, Debug)]
+pub struct LoadSettingsSliceRequest<'a> {
+    pub filename: &'a str,
+    pub settings: &'a [LoadSettingsFile<'a>],
+    pub filaments: &'a [LoadSettingsFile<'a>],
+    pub plate: Option<u32>,
+    pub overrides: &'a crate::ConfigOverrides,
+    pub placement: Placement,
+}
+
+/// Slices through the project Print lifecycle with the loaded preset
+/// files composed by the same single merge as the profile entry
+/// (`OrcaSlicer.cpp:1953-3495`).
+pub async fn slice_with_load_settings(
+    input: impl AsRef<[u8]>,
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext,
+) -> Result<Vec<u8>, SliceError> {
+    with_load_settings_source(input.as_ref(), request, |source| {
+        slice_source(source, metadata, false, context)
+    })
+    .map(|processed| processed.gcode)
+}
+
+fn with_load_settings_source<T>(
+    input: &[u8],
+    request: LoadSettingsSliceRequest<'_>,
+    body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
+) -> Result<T, SliceError> {
+    let LoadSettingsSliceRequest {
+        filename,
+        settings,
+        filaments,
+        plate,
+        overrides,
+        placement,
+    } = request;
+    if filename.is_empty() {
+        return Err(SliceError::InvalidInput(
+            "model filename is required".to_owned(),
+        ));
+    }
+    let composed = compose_load_settings(&LoadSettingsRequest {
+        settings,
+        filaments,
+    })?;
+    body(ProjectSource {
+        bytes: input,
+        plate,
+        profile: Some(ProfileInput {
+            filename,
+            composed: &composed.profile,
+            raw: &composed.raw,
+            filament_raws: &composed.filament_raws,
+            placement,
+            validate_print: false,
+        }),
+        overrides,
+        validate_print: false,
     })
 }
 

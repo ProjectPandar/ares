@@ -175,12 +175,13 @@ pub(crate) use print_paths::{
 };
 pub use profiles::Placement;
 pub use profiles::{
-    ComposedProfile, CurrentPrinter, FilteredPresets, MergedProfile, MergedProfileMetadata,
-    MissingParent, ParsedPresetBundle, PresetCatalogHandle, ProfileFragment, ProfileGroupMetadata,
-    ProfileKind, ProfileSelection, ProfileSettings, ProfileSliceRequest, SelectablePrinter,
+    ComposedProfile, CurrentPrinter, FilteredPresets, LoadSettingsFile, LoadSettingsRequest,
+    LoadSettingsSliceRequest, MergedProfile, MergedProfileMetadata, MissingParent,
+    ParsedPresetBundle, PresetCatalogHandle, ProfileFragment, ProfileGroupMetadata, ProfileKind,
+    ProfileSelection, ProfileSettings, ProfileSliceRequest, SelectablePrinter,
     compose_profile_fragments, filter_compatible_presets, merge_profile_fragments,
-    parse_preset_bundle, profile_placed_project, profile_settings, slice_with_profiles,
-    slice_with_profiles_processed, validate_with_profiles,
+    parse_preset_bundle, profile_placed_project, profile_settings, slice_with_load_settings,
+    slice_with_profiles, slice_with_profiles_processed, validate_with_profiles,
 };
 pub use profiles::{slice_with_profiles_processed_validated, slice_with_profiles_validated};
 pub use project::{

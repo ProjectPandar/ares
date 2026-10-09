@@ -145,6 +145,19 @@ impl Catalog {
         crate::options::json_deserialize::normalize_empty_vector_strings(&mut document.fields);
         crate::options::json_deserialize::normalize_numeric_scalar_arrays(&mut document.fields)
             .map_err(invalid)?;
+        // Old-profile percentage values for now-absolute keys are erased at
+        // file load (`PrintConfig.cpp:8087-8094`, via `set_deserialize`'
+        // `handle_legacy`, `Config.cpp:577-579`) — BEFORE the fragments
+        // merge into the typed profile, so a `"35%"` `initial_layer_speed`
+        // or `"100%"` `support_interface_speed` must never reach the typed
+        // composition (the late `raw`-only pass in `compose` cannot undo
+        // an already-typed value). Key renames and alias collisions stay
+        // in the fragment merge, where the native-anchored alias tests
+        // pin them.
+        document.fields.retain(|key, value| {
+            !(crate::options::legacy::erases_percentage_for_absolute_keys(key)
+                && value.token().is_some_and(|token| token.contains('%')))
+        });
         let position = self.records.len();
         let key = (kind, document.name.clone());
         if self

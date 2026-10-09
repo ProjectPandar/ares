@@ -207,7 +207,6 @@ fn invalid_support_interface_speed_values_reach_slice_error() {
         json!(0.5),
         json!("0"),
         json!("0.5"),
-        json!("80%"),
         json!("fast"),
         json!([]),
         json!(true),
@@ -215,6 +214,18 @@ fn invalid_support_interface_speed_values_reach_slice_error() {
     ] {
         assert_invalid_option("support_interface_speed", value);
     }
+}
+
+/// `"80%"` is not an error: old-profile percentages for now-absolute keys
+/// are erased at load and reset to the option default
+/// (`PrintConfig.cpp:8087-8094`); the Ender-3 load-settings E2E observed
+/// Native's `"100%"` `support_interface_speed` resolving to the 80 default
+/// (footer `; support_interface_speed = 80`).
+#[test]
+fn support_interface_speed_percentage_resets_to_default() {
+    let options = options(json!({ "support_interface_speed": "80%" }));
+    let speeds = options.speed_options().unwrap();
+    assert!(format!("{speeds:?}").contains("support_interface_speed_mm_s: 80.0"));
 }
 
 #[test]

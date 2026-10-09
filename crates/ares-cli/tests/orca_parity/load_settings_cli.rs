@@ -70,9 +70,17 @@ async fn orca_parity_load_settings_cli_ender3_whole_file() {
     let presets = preset_files(&directory, "Creality", "Creality Ender-3 0.4 nozzle");
     let machine_process = format!("{};{}", presets[0], presets[1]);
     let filaments = presets[2..].join(";");
-    fs::copy(
-        crate::runner::repo_root().join("tests/parity/cube10.stl"),
+    fs::write(
         directory.join("cube10.stl"),
+        // Identical pre-positioned STL for both slicers (bed-center shift;
+        // `--arrange 0` keeps the model's own coordinates — the arrange
+        // port is a deferred upstream slice, same convention as
+        // runner/profile_entry.rs). Raw cube10 sits outside Ender-3's bed
+        // and Native would reject it with CLI_NO_SUITABLE_OBJECTS (-50,
+        // Utils.hpp:52).
+        crate::runner::placed_cube(
+            &fs::read(crate::runner::repo_root().join("tests/parity/cube10.stl")).unwrap(),
+        ),
     )
     .unwrap();
 

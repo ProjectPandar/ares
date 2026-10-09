@@ -34,6 +34,16 @@ struct SliceArgs {
     /// applied on the project-settings layer (3MF input only; M854)
     #[arg(long)]
     overrides: Option<String>,
+    /// OrcaSlicer-native preset files, `;` separated (machine;process;
+    /// `PrintConfig.cpp:10890-10895`)
+    #[arg(long)]
+    load_settings: Option<String>,
+    /// OrcaSlicer-native filament preset files, `;` separated
+    /// (`PrintConfig.cpp:10896-10901`); empty slots are dropped like
+    /// `OrcaSlicer.cpp:2202-2215` with the CLI-default
+    /// `use_first_fila_as_default=false`
+    #[arg(long)]
+    load_filaments: Option<String>,
     #[arg(short = 'o')]
     output: PathBuf,
     input: PathBuf,
@@ -98,6 +108,60 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
+    let load_settings = args
+        .load_settings
+        .as_deref()
+        .map(split_native_list)
+        .unwrap_or_default();
+    let load_filaments = args
+        .load_filaments
+        .as_deref()
+        .map(split_native_list)
+        .unwrap_or_default();
+    if !load_settings.is_empty() || !load_filaments.is_empty() {
+        if extension.as_deref() == Some("3mf") {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "--load-settings with 3MF input is not supported yet",
+            )
+            .into());
+        }
+        let settings = read_preset_files(&load_settings)?;
+        let filaments = read_preset_files(&load_filaments)?;
+        let settings = settings
+            .iter()
+            .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
+            .collect::<Vec<_>>();
+        let filaments = filaments
+            .iter()
+            .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
+            .collect::<Vec<_>>();
+        let filename = args
+            .input
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
+        let gcode = match ares_core::slice_with_load_settings(
+            &input,
+            ares_core::LoadSettingsSliceRequest {
+                filename,
+                settings: &settings,
+                filaments: &filaments,
+                plate: args.plate,
+                overrides: &overrides,
+                placement: ares_core::Placement::None,
+            },
+            ares_core::GenerationMetadata::default(),
+            ares_core::SlicerContext::new(0),
+        )
+        .await
+        {
+            Ok(gcode) => gcode,
+            Err(error) => return Err(slice_error_to_failure(error, &args.output)),
+        };
+        fs::write(&args.output, gcode)?;
+        return Ok(());
+    }
     let output = match extension {
         Some(extension) if extension == "3mf" => {
             let metadata = ares_core::GenerationMetadata::default();
@@ -149,6 +213,33 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     fs::write(&args.output, output)?;
 
     Ok(())
+}
+
+/// Splits one native coStrings CLI value (`"a;b;c"`, `PrintConfig.cpp:10890-10901`).
+fn split_native_list(value: &str) -> Vec<&str> {
+    value.split(';').collect()
+}
+
+/// Reads the referenced preset files, keeping the path for upstream error
+/// text (`Loading setting file "x" failed: ...`, `OrcaSlicer.cpp:2021-2023`).
+/// Empty labels stay empty (dropped list slots).
+fn read_preset_files(labels: &[&str]) -> Result<Vec<(String, String)>, CliFailure> {
+    labels
+        .iter()
+        .map(|label| {
+            let json = if label.is_empty() {
+                String::new()
+            } else {
+                fs::read_to_string(label).map_err(|error| {
+                    io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        format!("Loading setting file \"{label}\" failed: {error}"),
+                    )
+                })?
+            };
+            Ok(((*label).to_owned(), json))
+        })
+        .collect()
 }
 
 fn ensure_supported_input(path: &Path) -> Result<(), io::Error> {
