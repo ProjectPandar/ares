@@ -78,7 +78,9 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   alternative yet; they are the remaining hover-only information.
 - Lighthouse targets. `web/e2e/lighthouse.mjs` gates the median
   Accessibility >= 95, Best Practices >= 95 and SEO >= 90 of three runs per
-  preset. Performance is
+  preset. All three are met: median Accessibility, Best Practices and SEO are
+  100 on both presets (desktop Accessibility was 96 until the mode switch
+  became one 48×24 target). Performance (median 65 mobile, 71 desktop) is
   recorded, not optimised for the score: observed mobile LCP equals FCP
   (461 ms, the canvas-hint text in the first frame), and Lighthouse's
   simulated LCP is set by the three.js Viewport chunk (149 KB gzip) that
