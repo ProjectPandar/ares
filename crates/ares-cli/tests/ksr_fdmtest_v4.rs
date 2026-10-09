@@ -1,5 +1,7 @@
 #[path = "ksr_fdmtest_v4/golden.rs"]
 mod golden;
+#[path = "ksr_fdmtest_v4/native_reference_policy_tests.rs"]
+mod native_reference_policy_tests;
 // Diagnostic-only parsers and behavioral tests, never acceptance fallback.
 #[path = "ksr_fdmtest_v4/semantic.rs"]
 mod semantic;
