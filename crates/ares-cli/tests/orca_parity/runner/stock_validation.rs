@@ -119,13 +119,25 @@ async fn compare(vendor_name: &str, printer: &str, expected: &str, loaded_error:
         placement: Placement::None,
     };
     let validated = ares_core::validate_with_profiles(&input, request);
-    let sliced = ares_core::slice_with_profiles_validated(
-        &input,
-        request,
-        GenerationMetadata::default(),
-        SlicerContext::new(0),
-    )
-    .await;
+    let sliced = if loaded_error {
+        ares_core::slice_with_profiles_validated(
+            &input,
+            request,
+            GenerationMetadata::default(),
+            SlicerContext::new(0),
+        )
+        .await
+    } else {
+        let project = fs::read(directory.join("native.3mf")).unwrap();
+        ares_core::slice_project_plate_validated(
+            &project,
+            GenerationMetadata::default(),
+            None,
+            &overrides,
+            SlicerContext::new(0),
+        )
+        .await
+    };
     if let Ok(bytes) = &sliced {
         fs::write(directory.join("ares.gcode"), bytes).unwrap();
     }
