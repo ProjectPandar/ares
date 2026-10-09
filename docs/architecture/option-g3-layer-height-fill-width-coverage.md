@@ -169,4 +169,68 @@ seeded keys and 522 official keys. Each producer's sole existing test-state
 change is the selected width sweep FAIL to PASS; the additional second-context
 test passes. No production source, comparator, cache or input fixture changes.
 This is not a fresh 650-domain execution or a claim about all Flow contexts.
-The two layer-height domains remain for their separate Native-backed slice.
+The two layer-height domains have their separate Native-backed slice below.
+
+## Height slice conclusion
+
+RED `e44c8d28a` exercises all five approved requests per height key before
+asserting their classification. All ten complete Native/Ares streams match;
+only the two INCOMPLETE-to-PASS expectations fail. In particular, runtime
+Native accepts both 0.4mm nozzle-equality requests, and preserves 0.39999mm.
+The emitted HEIGHT/Z sequences are recorded with each complete comparison.
+
+GREEN `8eca81a39` changes only the two height domains' finite authoring and
+classification. Their dedicated activation sets one 0.4mm nozzle, ordinary
+widths 0.6mm, bridge width 0.4mm, thick bridges, no support/raft, and the other
+height 0.2mm. Both dedicated comparisons and the unfiltered selected sweep
+verify the exported dependencies. The 650-plan inventory has exactly two
+changed rows; all other 648 remain identical. This closes the declared finite
+scope, not all physical layer heights or the entire 650-domain matrix.
+
+Runtime rejection witnesses remain separate from successful comparison counts.
+For each key, zero fails Native Export with -18 and its exact
+`key: invalid value 0.000000` diagnostic; 0.40001mm fails Slice with -51 and
+`Layer height cannot exceed nozzle diameter.`. On Unix the captured statuses
+are 238 and 205. Existing public Ares validation and validated slicing reject
+the corresponding override with the same diagnostic. No production guard,
+validation relaxation or narrower request set is introduced.
+
+Seeded and official required cold/hot directed runs each pass all five tests,
+including the two-domain sweep's ten strict comparisons and four rejection
+witnesses. Cold runs have 42 misses and two within-run hits from reusing the
+successful 0.2mm baselines; hot runs have 44 hits. Every common Ares raw stream
+is unchanged across RED and GREEN, both producers, and the assertion-helper
+extraction needed to pass strict clippy. That extraction preserves both public
+rejection checks and their exact error-type/message assertions.
+
+The `layer_height` negative metadata lock becomes a bounded-positive assertion
+alongside `initial_layer_print_height`. Filament map/self-index negative locks,
+the two LockedZag width assertions, and the printable-area positive control
+remain unchanged. The existing coupled-width/nozzle validation controls also
+remain active and unchanged. Native outputs, cache receipts and execution
+reports stay outside the repository.
+
+Fresh base `a96afc3aa` / GREEN controls give 863/864 to 867/867 PASS for
+both seeded and official. Their 530 seeded and 519 official common input
+keys have unchanged Ares raw SHA sets. The only existing test-state change
+is the selected height sweep FAIL to PASS; the three new height tests pass.
+Default environment workspace passes 8237/8237, and strict clippy, fmt and
+wasm check pass. Docs-only main `0291338dc` permits carrying this evidence.
+
+Official concentric Native M73 ND (accepted independently of tree): normalized Native SHA `5da48f589ee04c6ec39a2e07ed5d55fd14fe90b2b77a4ba12d2d844c8731d908` / `7af8c7aaad37fc66287511c7284318241a7a9523d34ad57d17f658a8ad8b71a5`; first difference line149 (`G1 X111.401 Y106.013 E.11356` / `M73 P10 R7`), all seven Ares raw captures identical; evidence `/tmp/worker6-g3-heights/concentric-repeat-audit.json`.
+
+The external `/tmp/worker6-g3-heights/compare.py` originally compared raw
+SHA lists including repeated captures. One base capture versus two identical
+candidate Ares captures therefore falsely reported a byte change. Its corrected
+audit compares distinct raw SHA sets and retains capture counts and Native
+variants separately; the original script, strict exit1 and captures remain
+preserved. No repository comparator changes. Independent cold base/candidate
+concentric repeats use budget one: base PASS/PASS, candidate PASS/DIVERGENT,
+same producer components and identical 3MF member bytes. Ares independently
+slices the Native-exported 3MF (`artifacts.rs:131-140`); it never consumes the
+reference G-code, and Native does not consume candidate code. Native's original
+candidate capture diverges, then its unchanged-project retry matches in full.
+Full Native diff also changes final top-surface concentric traversal and a tiny
+center-path survivor; M73 placement is the earliest difference, not the only
+difference. `/tmp/worker6-g3-heights/concentric-non-m73.diff` retains those
+motion differences. Their upstream root cause is not established or labeled UB.
