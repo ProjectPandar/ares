@@ -23,6 +23,9 @@ mod tool_context;
 #[cfg(test)]
 #[path = "option_coverage/tool_mapping.rs"]
 mod tool_mapping;
+#[cfg(test)]
+#[path = "option_coverage/tool_sequences.rs"]
+mod tool_sequences;
 
 #[cfg(test)]
 #[path = "option_coverage/layer_heights.rs"]
