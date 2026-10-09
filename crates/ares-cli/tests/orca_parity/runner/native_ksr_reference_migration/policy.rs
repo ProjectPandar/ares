@@ -28,6 +28,52 @@ fn optional_missing_native_never_consumes_frozen_browser_reference() {
     );
 }
 
+#[test]
+fn required_without_browser_capture_is_visibly_skipped() {
+    let artifacts = match std::env::var_os("ARES_PARITY_ARTIFACT_ROOT") {
+        Some(_) => tempfile::Builder::new()
+            .prefix("ksr-browser-capture-policy-")
+            .tempdir_in(crate::artifacts::root_from_env().unwrap()),
+        None => tempfile::tempdir(),
+    }
+    .unwrap()
+    .keep();
+    let child_root = artifacts.join("child");
+    fs::create_dir(&child_root).unwrap();
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "runner::native_ksr_reference_migration::browser::browser_output_matches_initialized_orca_242_ordered_bytes",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_BROWSER_GCODE")
+        .env("ARES_PARITY_ARTIFACT_ROOT", &child_root)
+        .output()
+        .unwrap();
+    fs::write(artifacts.join("child.stdout"), &output.stdout).unwrap();
+    fs::write(artifacts.join("child.stderr"), &output.stderr).unwrap();
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        diagnostic.contains("running 1 test"),
+        "{artifacts:?}: {diagnostic}"
+    );
+    assert!(output.status.success(), "{artifacts:?}: {diagnostic}");
+    assert!(
+        diagnostic.contains("SKIPPED: browser capture absent; run via project-slice.spec.mjs"),
+        "{artifacts:?}: {diagnostic}"
+    );
+    assert_eq!(
+        fs::read_dir(&child_root).unwrap().count(),
+        0,
+        "{artifacts:?}"
+    );
+}
+
 fn missing_native(test: &str) {
     let artifacts = match std::env::var_os("ARES_PARITY_ARTIFACT_ROOT") {
         Some(_) => tempfile::Builder::new()
