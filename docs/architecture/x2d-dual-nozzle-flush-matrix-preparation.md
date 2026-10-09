@@ -339,6 +339,87 @@ would be reused by other cases and set a relaxation precedent):
 
 This is tests-only; no production or comparator change.
 
+## Closure record: exit-condition evidence (coordinator-approved plan, 2026-10-09)
+
+Landed chain on main: RED `ab6d7d2e1` → GREEN `e0134bcd7` → review
+fixes `f14c02af6`/`0c6e3ccf8` → dependency rule `310f5ae9a` → generated-id
+reselection RED `1c3a64a59` → GREEN `cbee83539`. Roadmap exit conditions,
+each with its verifiable evidence — gaps stated explicitly:
+
+1. **Fresh same-input Native RED (hash).** Admitted RED `ab6d7d2e1`
+   (`red/admitted-red.json`: base `9e3e81837`, spec tree `33f240f3`,
+   seeded `case-LqoYic` + official `case-bMQWtU`, verified native-cache-v2
+   receipts, input SHA `b980548a…`, reference SHA `b566726656…`).
+   Qualification: that input is the scalar UB shape later reclassified by
+   the O8 contract and retired from acceptance; the accepted
+   fully-specified missing-matrix shape is exercised by the live control
+   `x2d_flush_matrix_missing_matrix_rebuilds_without_nozzle_type_change`
+   (test-lineage RED at `256d17990`, flipped GREEN by `e0134bcd7`).
+2. **Prepared nozzle-major matrices exactly equal.** The live controls
+   assert the full-line bytes against complete Native output:
+   rebuild `0,102,186,0,0,339,621,0`; preserved custom
+   `0,42,42,0,0,210,210,0` after one [0.3,1] scaling; multiplier
+   prefix `0.3` + second-head default `1`. Whole-output PASS in the
+   seeded run below. **Open follow-up (next item after closure):** no
+   fixture pins a High Flow dataset end-to-end — a runtime Native E2E
+   with a legal two-value `nozzle_volume_type` High Flow input must
+   compare the prepared matrix and the complete G-code against Native
+   (no Native artifacts committed; RED then GREEN, or recorded as a
+   control if directly GREEN). Until it lands, High Flow coverage is
+   `dual-predictors` whole-output PASS only.
+3. **Complete G-code equality.** Seeded v2 full run at `310f5ae9a`:
+   **594/594 PASS, zero skipped** (`review-e0134/final/seeded-v2.log`);
+   focused 48/48 incl. all x2d cases. Raw Ares byte comparison against
+   the previous 594-run candidate: **500/500 complete streams
+   identical** (`final/previous-candidate-raw-byte-comparison.json`).
+   Current main (`b3f8894fd`-lineage, 104599195-rebased tree): seeded
+   full 830/830 PASS (2026-10-09) incl. the x2d family; x2d_flush_matrix
+   11/11 after the O8 closure fixup.
+4. **Nontrigger rejection and control bytes preserved.**
+   `x2d_flush_matrix_no_trigger_keeps_malformed_matrix_rejected`
+   (Native reject + exact Ares error, both live);
+   `x2d_flush_matrix_unchanged_nozzle_types_preserve_custom_matrix`
+   (custom matrix retained, scaled once); seven seeded template-RNG and
+   BBL SYNC controls retained `flush_volumes_matrix=0,0` /
+   multiplier `0.3,1` per the diagonal ruling (`fresh-d789-identified`,
+   `rebase-1b175/prior-failure-inventory.json`).
+5. **Reference/workspace/Tier1 gates.** At `310f5ae9a`: seeded 594/594,
+   focused 48/48, strict clippy/fmt (`review-e0134/final/clippy.log`).
+   The workspace/WASM/browser trio was recorded on the e0134-era
+   candidate (`final-21c-ctx`, `final-b610/REVIEW.md`: workspace
+   7969/7969, WASM32/release/web builds, browser 15 PASS) and is
+   **covered by later main gates**: every post-e0134 production merge
+   ran the full default workspace on a tree containing this slice —
+   e.g. the by-object merge `5c9e69226` ran workspace 8203 passed /
+   6 skipped on its 104599195-rebased tree
+   (`/tmp/ares-w5-gates/ws-default-c10.log`, 2026-10-09) and the
+   ares-wasm crate compiled clean on the same branch lineage
+   (`/tmp/ares-w5-gates/wasm-check-final.log`, 2026-10-08); the web
+   browser gate ran on later main per coordinator confirmation
+   (2026-10-09). The `310f5ae9a` bridge is
+   `final/source-equality.json` (only `flush_matrix.rs` changed).
+6. **Coordinator exact-hash approval.** Spec admission: tree `33f240f3`
+   (bound in `admitted-red.json`). GREEN review: exact candidate
+   `310f5ae9a2c1ee510e89396335d876629eac86a4` per
+   `review-e0134/REVIEW.md` (supersedes the e0134bcd7 request); the
+   commit is on main. The coordinator's own approval ledger is outside
+   this repository — the hashes above are the reviewable objects.
+
+Boundary-table ↔ module checklist (static, 2026-10-09):
+`OrcaSlicer.cpp:1708-1718,3022-3047` → `flush_matrix/context.rs`;
+`:3340-3351` predicate, `:3412-3465` resize/dataset, `:3467-3503`
+recompute → `options/flush_matrix.rs` (191 LOC); `FlushVolCalc.cpp` +
+predictor/colour math + datasets → `options/flush_volume/` (273 LOC +
+`data/flush_data_{standard,dual_standard,dual_highflow}.txt`);
+`Plater.cpp:764-835` minima → `flush_matrix.rs::minimum_volumes`;
+`PrintConfig.cpp:9004-9060` → `project_variants::get_index_for_extruder`;
+`GCode.cpp:5596-5614` export scale/round → the unchanged
+`config_export/transform.rs::scale_flush_matrix` (the temporary
+one-palette matrix shell is gone from `prepare_multi_extruder_cli_defaults`,
+which now only carries the `:5993-6022` AMS default). Seams verified in
+`project/effective_config/phases.rs` (single preparation call before the
+first normalize pass). Scalar UB inputs follow the closed O8 contract.
+
 ## Sequence, validation and exit
 
 1. Submit this spec and wait for exact-hash coordinator approval.

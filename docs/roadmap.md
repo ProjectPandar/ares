@@ -7,20 +7,18 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### X2D dual-nozzle flush-matrix preparation (#55, GREEN paused)
+### X2D-FM #55 dual-nozzle flush-matrix preparation: closed (2026-10-09)
 
-After integrated VG1/UsedFilaments `9e3e81837`, port the upstream preparation
-slice `OrcaSlicer.cpp:3340–3503`, `PrintConfig.hpp:2130–2153` and required
-`libslic3r::FlushVolCalculator`/`FlushVolPredictor` dependencies, retaining
-`GCode.cpp:5596–5614` export scaling and rejection. See
-[spec/ARD](architecture/x2d-dual-nozzle-flush-matrix-preparation.md).
-Rust destination: core typed flush preparation before existing apply-like
-normalization, with the export-only one-palette matrix shell replaced, not an
-independent Ares purge pipeline. Exit: fresh identified same-input Native RED,
-exact prepared nozzle-major matrices and complete G-code equality, preserved
-nontrigger rejection/control bytes, full reference/workspace/Tier1 gates and
-exact-hash coordinator approval. Processor timing, emitter ordering/geometry and
-external X2D fixtures are deferred. No heavy gates during web's browser window.
+Landed on main (RED `ab6d7d2e1` → GREEN `e0134bcd7` → review fixes
+`f14c02af6`/`0c6e3ccf8` → dependency rule `310f5ae9a` → generated-id
+`1c3a64a59`/`cbee83539`). Exit-condition evidence is itemized per
+condition — matrices, whole-output equality (seeded 594/594,
+byte-stability 500/500), nontrigger preservation, gates and approval
+hashes, with stated gaps (workspace/WASM/browser recorded on the
+e0134-era candidate, covered by later main gates) — in the
+closure record of
+[the spec](architecture/x2d-dual-nozzle-flush-matrix-preparation.md).
+Scalar UB inputs follow the closed O8 contract.
 
 ### O8-X2D-SCALAR: closed as a documented unsupported-input contract (2026-10-09)
 
