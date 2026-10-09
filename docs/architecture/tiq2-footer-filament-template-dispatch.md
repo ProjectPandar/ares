@@ -86,7 +86,8 @@ The original committed TiQ2 input now passes the complete-byte runtime
 comparator, with generated-by banner normalization only. No footer filtering,
 whitespace relaxation or output deduplication is used. This establishes the
 observed whole-file result for this input, not parity for arbitrary projects.
-Full default and fresh paired reference gates remain required before merge.
+Fresh full default and both paired reference gates pass; complete equality
+is verified for this input, not arbitrary projects.
 
 ## Loaded-filament precondition
 
@@ -105,21 +106,26 @@ values and resizes only empty vectors, preserving nonempty values. Footer
 dispatch keeps its nonempty precondition; no empty-string return is invented.
 The public composition and slice-override REDs both pass after this correction.
 
-## Test boundary before production
+## Final verification boundary
 
-Restore the complete-byte TiQ2 runtime-OrcaRunner RED on merged main. Use the
-shared Native environment contract; missing Native must fail when required,
-and optional absence must produce visible SKIPPED evidence.
+Fresh full paired controls on `d491b01b5` pass for both Native modes:
+seeded base863/863 and candidate868/868; official base863/863 and
+candidate868/868. The only five name-level additions are the four footer
+semantic controls and the strict original TiQ2 whole-file comparator. No
+baseline test is lost, and both failure sets are empty in each mode.
+The required environment uses the current v2 control script. Official
+seeded-only references retain their visible SKIPPED contract; a nextest
+PASS for such a wrapper is not a claim of Native execution.
 
-Add a runtime Native E2E with distinguishable filament-end scripts so the
-assertions distinguish slot order, inclusion of an unused configured slot,
-`current_extruder` versus `filament_extruder_id`, and machine-end ordering.
-Include a SEMM control with a nonzero active filament to reject hardcoded
-slot0 or unconditional all-slot iteration. Include writer-state assignment
-between invocations to reject rendering every template from a stale snapshot.
-All expectations come from runtime Native, not an Ares-generated golden.
+Default-environment workspace on the same production tree passes8239/8239,
+with5 nextest skips and visible optional-Native SKIPPED notices. All-targets,
+all-features workspace clippy with warnings denied, core/adapter WASM check
+and formatting pass. Subsequent main updates through `1b20d0d08` are
+approved test/document-only carry-forward; rebasing preserves their active
+roadmap records and does not restore deleted history.
 
-Only after semantic RED, implement the cited dispatch and invocation context,
-then rerun strict complete-byte comparison, affected template/Type2/fan controls
-and required paired/control/workspace/clippy/wasm/fmt gates. If another residual
-remains, report it without filtering or claiming complete parity.
+The original dispatch RED and the independent public loaded-slot RED remain
+in history before their production corrections. Earlier interrupted or failing
+gates do not stand in for these fresh complete results. Native streams and
+comparison receipts remain runtime artifacts, not checked-in goldens.
+

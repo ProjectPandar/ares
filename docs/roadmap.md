@@ -12,7 +12,7 @@ This applies to every later milestone: the default design target is an upstream 
 Native nondeterministic crashes rule out runtime-test admission; no tests or production changes remain.
 [Audit, retained failures and verification](architecture/2026-10-09-stock-signal-runtime-admission.md).
 
-### TiQ2 complete-output parity (whole-file GREEN, gates in progress)
+### TiQ2 complete-output parity (whole-file GREEN, review pending)
 
 The committed `tests/parity/validation/tiq2-type2-enabled.3mf` now produces
 complete G-code equal to the runtime seeded OrcaSlicer oracle, with only the
@@ -23,9 +23,11 @@ vector indexing uses the invocation filament index while `current_extruder`
 remains writer-active. Rust destination: existing `gcode_emit/finish.rs`.
 [Source boundary](architecture/tiq2-footer-filament-template-dispatch.md).
 Runtime controls cover nonzero SEMM active slot, unused configured slot and
-assignment write-back between templates. Full default/control and fresh
-seeded/official paired gates remain required before final merge approval;
-this result does not establish parity for unrelated projects.
+assignment write-back between templates. Fresh default workspace passes
+8239/8239; seeded and official paired controls each pass863/863 base and
+868/868 candidate, including the strict original whole-file comparison.
+Clippy, formatting and core/adapter WASM checks pass. Final merge approval
+remains pending; this result does not establish parity for unrelated projects.
 
 ### X2D-FM #55 dual-nozzle flush-matrix preparation: closed (2026-10-09)
 
