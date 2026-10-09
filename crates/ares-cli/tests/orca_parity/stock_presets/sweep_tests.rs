@@ -1,5 +1,32 @@
 use super::{ParityOutcome, finish};
 
+fn profiles_root() -> std::path::PathBuf {
+    crate::runner::repo_root().join("OrcaSlicer/resources/profiles")
+}
+
+#[test]
+fn official_mode_marks_random_start_gcode_printers_skip() {
+    let profiles = crate::presets::VendorProfiles::load(&profiles_root(), "Flashforge").unwrap();
+    let random = profiles
+        .machine("Flashforge Guider 3 Ultra 0.4 Nozzle")
+        .unwrap();
+    assert_eq!(
+        super::random_start_gcode_skip(&random, false),
+        Some(
+            "seeded-only: random() in machine_start_gcode, PlaceholderParser.cpp:2319"
+        )
+    );
+    // Seeded mode pins the RNG (ORCA_REPLAY_SEED=0); those printers stay on
+    // the strict whole-file comparison path.
+    assert_eq!(super::random_start_gcode_skip(&random, true), None);
+    let plain = profiles.machine("Flashforge Guider4 0.25 nozzle").unwrap();
+    assert!(plain.get("machine_start_gcode").is_some());
+    assert_eq!(super::random_start_gcode_skip(&plain, false), None);
+    // A machine without the key must not skip.
+    let bare = serde_json::Map::new();
+    assert_eq!(super::random_start_gcode_skip(&bare, false), None);
+}
+
 #[test]
 fn orca_parity_stock_printer_sweep() {
     super::run();
