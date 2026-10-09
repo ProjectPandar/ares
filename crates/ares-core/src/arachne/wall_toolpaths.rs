@@ -108,6 +108,13 @@ pub(crate) fn generate(
     outline: &[Polygon],
     config: RawWallToolPathConfig,
 ) -> Result<GeneratedWallToolPaths, WallToolPathError> {
+    // `WallToolPaths.cpp:778-789::getInnerContour`: zero walls retain the outline.
+    if config.inset_count == 0 {
+        return Ok(GeneratedWallToolPaths {
+            toolpaths: Vec::new(),
+            inner_contour: outline.to_vec(),
+        });
+    }
     let prepared_outline = outline::prepare(outline, config)?;
     let mut toolpaths = generate_raw(&prepared_outline, config)?;
     stitch::stitch_toolpaths(
