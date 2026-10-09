@@ -329,7 +329,7 @@ fn scene(
     for (index, object) in loaded.objects().iter().enumerate() {
         assert_eq!(object.instances().len(), 1);
         let volume = &object.volumes()[0];
-        let transform = volume.transform().then(object.instances()[0].transform());
+        let transform = object.instances()[0].transform().then(volume.transform());
         let points = volume
             .mesh()
             .vertices()

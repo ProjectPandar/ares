@@ -1,6 +1,7 @@
 # G2: bounded extruder clearance and nozzle-height coverage
 
-Status: proposed; awaiting coordinator approval. Worker3 owns
+Status: approved as `d3608b614`; implementation in progress on `af7398b78`.
+Worker3 owns
 `extruder_clearance_height_to_lid`, `extruder_clearance_height_to_rod`,
 `extruder_clearance_radius`, and `nozzle_height`. Starting main `0291338dc`.
 Follow the approved G3 workflow, not its nozzle/width physical limits. This
@@ -57,7 +58,8 @@ clearances and 1/400 for nozzle height; these are samples, not proven bounds.
 `domains.rs::plan` retains the authored-numeric omission and false
 `provably_legal`. Existing matching sample bytes do not justify changing it.
 
-New logic belongs in **`crates/ares-cli/tests/orca_parity/option_coverage/clearance.rs`**:
+New logic belongs in **`crates/ares-cli/tests/orca_parity/option_coverage/clearance.rs`**
+and its `clearance/geometry.rs` child (the combined module exceeds 400 LOC):
 key-local plan authoring, explicit context/deferred descriptions, runtime
 boundary controls and classification assertions. `domains.rs` and `tests.rs`
 receive only minimal wiring and the four keys' retained expectation updates.
@@ -144,8 +146,11 @@ model order should reject the first 20mm object's lid limit. Verify actual
 order and geometry; do not rely on the disabled source sorter.
 
 Successful controls require complete Native/Ares byte equality. Collision
-controls compare the same exported project at public `ares_core::slice_project`
-and retain the existing typed `SequentialPrintCollision` diagnostic. Capture
+controls compare the same exported project at public `ares_core::slice_project_plate_validated`
+and retain the existing typed `SequentialPrintCollision` diagnostic. The owning
+entry is `ares_core::slice_project_plate_validated`, also used by the CLI;
+`slice_project` explicitly disables print validation and is not a rejection oracle.
+Capture
 Native's -63 phase/status/text separately from loaded -18 rejection; no G-code
 is expected from a pre-emission validation rejection. Rejections are not added
 to the successful comparison denominator or relabeled as successful slicing.

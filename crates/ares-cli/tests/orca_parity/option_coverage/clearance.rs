@@ -11,6 +11,25 @@ use serde_json::json;
 #[path = "clearance/geometry.rs"]
 mod geometry;
 
+pub(in crate::option_coverage) fn admit(key: &str, cases: &mut Vec<domains::OptionCase>) -> bool {
+    if !matches!(
+        key,
+        "extruder_clearance_height_to_lid"
+            | "extruder_clearance_height_to_rod"
+            | "extruder_clearance_radius"
+            | "nozzle_height"
+    ) {
+        return false;
+    }
+    // PrintConfig::validate's open-positive loaded domain plus the named
+    // Print::validate consumer witnesses, not the inherited FLT_MAX ceiling.
+    cases.push(domains::OptionCase {
+        label: "near-zero".to_owned(),
+        value: Some(json!("0.00001")),
+    });
+    true
+}
+
 pub(in crate::option_coverage) fn metadata(key: &str) -> serde_json::Value {
     json!({
         "claim":"finite samples and named sequential witnesses; not a global float/geometric domain",
@@ -136,6 +155,50 @@ fn loaded_and_complete(key: &str, values: &[&str]) {
         };
         let exported = export(&runner, &plan, &case).unwrap();
         let effective = runner::application::settings(&exported.project).unwrap();
+        for dependency in [
+            "extruder_clearance_height_to_lid",
+            "extruder_clearance_height_to_rod",
+            "extruder_clearance_radius",
+            "nozzle_height",
+        ] {
+            assert!(
+                effective[dependency]
+                    .as_str()
+                    .unwrap()
+                    .parse::<f64>()
+                    .unwrap()
+                    > 0.0
+            );
+        }
+        let loaded = ares_core::load_project(&exported.project).unwrap();
+        assert_eq!(loaded.objects().len(), 1);
+        let object = &loaded.objects()[0];
+        assert_eq!(object.instances().len(), 1);
+        assert_eq!(object.volumes().len(), 1);
+        let volume = &object.volumes()[0];
+        let matrix = object.instances()[0].transform().then(volume.transform());
+        let points = volume
+            .mesh()
+            .vertices()
+            .iter()
+            .map(|point| matrix.transform_point(*point))
+            .collect::<Vec<_>>();
+        let min = [0, 1, 2].map(|axis| {
+            points
+                .iter()
+                .map(|p| [p.x, p.y, p.z][axis])
+                .fold(f64::INFINITY, f64::min)
+        });
+        let max = [0, 1, 2].map(|axis| {
+            points
+                .iter()
+                .map(|p| [p.x, p.y, p.z][axis])
+                .fold(f64::NEG_INFINITY, f64::max)
+        });
+        assert_eq!(
+            [max[0] - min[0], max[1] - min[1], min[2], max[2]],
+            [10., 10., 0., 10.]
+        );
         // Float serialization may use scientific notation; equality is exact, not a tolerance.
         assert_eq!(
             effective[key].as_str().unwrap().parse::<f64>().unwrap(),
@@ -183,6 +246,7 @@ fn loaded_and_complete(key: &str, values: &[&str]) {
     let root = crate::artifacts::root_from_env().unwrap();
     crate::artifacts::overwrite(&root.join(format!("g2-{key}-loaded.json")), &serde_json::to_vec_pretty(&json!({
         "scope":"one object, by layer, 0.4mm nozzle; sequential consumers require separate witnesses",
+        "domain":metadata(key),
         "proofs":proofs,"classification":outcome.status,"detail":outcome.detail
     })).unwrap()).unwrap();
     assert_eq!(outcome.status, "PASS", "{key}: {}", outcome.detail);
