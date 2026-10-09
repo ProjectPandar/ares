@@ -143,11 +143,7 @@ fn bind_settings(exported: &mut ExportedCase, fields: &Map<String, Value>) {
                 .0;
             let old = plate
                 .split_once("<metadata key=\"filament_maps\" value=\"")
-                .unwrap()
-                .1
-                .split_once('"')
-                .unwrap()
-                .0;
+                .map(|(_, tail)| tail.split_once('"').unwrap().0);
             let requested = fields["filament_map"]
                 .as_array()
                 .unwrap()
@@ -155,9 +151,16 @@ fn bind_settings(exported: &mut ExportedCase, fields: &Map<String, Value>) {
                 .map(|value| value.as_str().unwrap())
                 .collect::<Vec<_>>()
                 .join(" ");
-            let before = format!("<metadata key=\"filament_maps\" value=\"{old}\"/>");
             let after = format!("<metadata key=\"filament_maps\" value=\"{requested}\"/>");
-            bytes = xml.replacen(&before, &after, 1).into_bytes();
+            bytes = match old {
+                Some(old) => xml.replacen(
+                    &format!("<metadata key=\"filament_maps\" value=\"{old}\"/>"),
+                    &after,
+                    1,
+                ),
+                None => xml.replacen("<plate>", &format!("<plate>\n    {after}"), 1),
+            }
+            .into_bytes();
         }
         output
             .start_file(
