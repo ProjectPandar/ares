@@ -7,6 +7,20 @@ use std::fs;
 
 #[test]
 fn orca_parity_adaptive_pa_sloped_loop_native_witness() {
+    check("all", "1");
+}
+
+#[test]
+fn orca_parity_adaptive_pa_non_sloped_loop_control() {
+    check("none", "1");
+}
+
+#[test]
+fn orca_parity_adaptive_pa_sloped_loop_disabled_control() {
+    check("all", "0");
+}
+
+fn check(scarf: &str, adaptive: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };
@@ -23,7 +37,7 @@ fn orca_parity_adaptive_pa_sloped_loop_native_witness() {
         ("layer_height", "0.2"),
         ("initial_layer_print_height", "0.2"),
         ("outer_wall_line_width", "0.4"),
-        ("seam_slope_type", "all"),
+        ("seam_slope_type", scarf),
         ("seam_slope_conditional", "0"),
         ("seam_slope_inner_walls", "0"),
         ("seam_slope_entire_loop", "0"),
@@ -47,7 +61,7 @@ fn orca_parity_adaptive_pa_sloped_loop_native_witness() {
     let filament_values = [
         ("enable_pressure_advance", "1"),
         ("pressure_advance", "0.035"),
-        ("adaptive_pressure_advance", "1"),
+        ("adaptive_pressure_advance", adaptive),
         ("adaptive_pressure_advance_overhangs", "0"),
         ("adaptive_pressure_advance_bridges", "0"),
         (
@@ -66,7 +80,7 @@ fn orca_parity_adaptive_pa_sloped_loop_native_witness() {
     let exported = runner
         .export_case(
             &CaseInputs {
-                label: "adaptive-pa/residual-r1-sloped-witness",
+                label: &format!("adaptive-pa/residual-r1/scarf-{scarf}/adaptive-{adaptive}"),
                 machine: &machine,
                 process: &process,
                 filaments: &filaments,
@@ -99,10 +113,7 @@ fn orca_parity_adaptive_pa_sloped_loop_native_witness() {
         "Adaptive PA Native witness artifacts: {}",
         directory.display()
     );
-    assert!(
-        native.contains("; PA_CHANGE:T0 "),
-        "Native PA activation absent"
-    );
+    assert_eq!(native.contains("; PA_CHANGE:T0 "), adaptive == "1");
     assert!(!native.contains(";TYPE:Prime tower\n"));
     let layer = native.split(";LAYER_CHANGE\n").nth(2).unwrap();
     let markers: Vec<_> = layer
@@ -127,16 +138,26 @@ fn orca_parity_adaptive_pa_sloped_loop_native_witness() {
                 .map(|value| value.parse().unwrap())
         })
         .collect();
-    assert!(rising_z.len() > 1, "Native sloped starts absent");
-    assert!(rising_z.windows(2).all(|pair| pair[0] < pair[1]));
-    assert!(moves.len() > rising_z.len(), "Native flat/ends absent");
-    assert!(moves.last().unwrap().contains(" E0 "));
-    assert_eq!(markers.len(), 1, "Native same-role suppression absent");
-    assert!(layer.find(markers[0]).unwrap() < layer.find(moves[0]).unwrap());
+    if scarf == "all" {
+        assert!(rising_z.len() > 1, "Native sloped starts absent");
+        assert!(rising_z.windows(2).all(|pair| pair[0] < pair[1]));
+        assert!(moves.len() > rising_z.len(), "Native flat/ends absent");
+        assert!(moves.last().unwrap().contains(" E0 "));
+    } else {
+        assert!(
+            rising_z.is_empty(),
+            "Native non-sloped control has slope moves"
+        );
+    }
+    assert_eq!(markers.len(), usize::from(adaptive == "1"));
+    if adaptive == "1" {
+        assert!(layer.find(markers[0]).unwrap() < layer.find(moves[0]).unwrap());
+    }
     fs::write(
         directory.join("reachability.json"),
         serde_json::to_vec_pretty(&json!({
-            "layer": 1, "pa_markers": markers, "rising_z": rising_z, "moves": moves,
+            "layer": 1, "scarf": scarf, "adaptive": adaptive,
+            "pa_markers": markers, "rising_z": rising_z, "moves": moves,
             "source": "ExtrusionEntity.cpp:426-525 starts/flat/ends; GCode.cpp:5951-5966,6720-6745",
             "scope": "uniform-width no-tower same-role slope; not heterogeneous-flow or role-change proof"
         }))
