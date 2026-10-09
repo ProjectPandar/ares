@@ -1,6 +1,7 @@
 //! GCode.cpp:5591-5643 GCode::append_full_config, through public CLI slicing.
 
-use crate::runner::repo_root;
+use super::producer;
+use crate::runner::{ExportedCase, cache_identity, repo_root};
 use std::{fs, path::Path};
 
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
@@ -8,32 +9,45 @@ const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
 
 #[test]
 fn config_export_fixture_matches_resolved_task19b3_views_byte_for_byte() {
-    let artifacts = if std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some() {
-        tempfile::Builder::new()
-            .prefix("ksr-config-")
-            .tempdir_in(crate::artifacts::root_from_env().unwrap())
-    } else {
-        tempfile::tempdir()
-    }
-    .unwrap()
-    .keep();
+    let Some(runner) = producer::runner(
+        "runner::native_ksr_reference_migration::config_block::config_export_fixture_matches_resolved_task19b3_views_byte_for_byte",
+    ) else {
+        return;
+    };
     let source = repo_root().join("tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
-    let output = artifacts.join("ares.gcode");
+    let project = fs::read(&source).unwrap();
+    assert_eq!(
+        cache_identity::raw_digest(&project),
+        "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9",
+        "{:?}",
+        runner.work
+    );
+    let project_path = runner.work.join(source.file_name().unwrap());
+    fs::write(&project_path, &project).unwrap();
+    let output_dir = runner.work.join("native");
+    fs::create_dir(&output_dir).unwrap();
+    let case = runner
+        .slice_case(&ExportedCase {
+            label: "ksr/config-block".to_owned(),
+            project,
+            project_path: project_path.clone(),
+            output_dir,
+        })
+        .unwrap();
+    fs::write(runner.work.join("orca.gcode"), &case.reference).unwrap();
+    let output = runner.work.join("ares.gcode");
     assert_cmd::Command::cargo_bin("ares")
         .unwrap()
         .args([
             "slice",
             "-o",
             output.to_str().unwrap(),
-            source.to_str().unwrap(),
+            project_path.to_str().unwrap(),
         ])
         .assert()
         .success();
     let actual = fs::read(output).unwrap();
-    let initialized =
-        fs::read(repo_root().join("tests/ksr_fdmtest_v4/ksr_fdmtest_v4.initialized-orca.gcode"))
-            .unwrap();
-    compare(block(&initialized), block(&actual), &artifacts);
+    compare(block(&case.reference), block(&actual), &runner.work);
 }
 
 fn block(bytes: &[u8]) -> &[u8] {
