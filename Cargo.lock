@@ -124,6 +124,7 @@ name = "ares-vgcode"
 version = "0.1.0"
 dependencies = [
  "ares-core",
+ "tempfile",
 ]
 
 [[package]]

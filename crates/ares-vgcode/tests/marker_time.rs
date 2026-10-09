@@ -8,17 +8,16 @@ use ares_vgcode::{
     GCodeExtrusionRole, GCodeInputData, MoveType, PathVertex, SequentialView, ViewType, ViewerImpl,
 };
 
+#[path = "../../../tests/support/marker_time.rs"]
+mod marker_time_native;
+
 struct Record {
     vertex: PathVertex,
     elapsed: [u32; 2],
 }
 
-fn records(name: &str) -> Vec<Record> {
-    let root = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../tests/parity/marker-time/"
-    );
-    std::fs::read_to_string(format!("{root}{name}.tsv"))
+fn records(root: &std::path::Path, name: &str) -> Vec<Record> {
+    std::fs::read_to_string(root.join(format!("{name}.tsv")))
         .unwrap()
         .lines()
         .enumerate()
@@ -102,6 +101,30 @@ fn optional_missing_native_reports_skipped_instead_of_frozen_parity() {
     );
 }
 
+#[test]
+fn missing_node_is_visible_optional_skip_and_required_failure() {
+    for required in [false, true] {
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "native_prefix_bits_survive_visibility_changes_reverse_seeks_and_reload",
+                "--nocapture",
+            ])
+            // Protocol-only executable placeholder; it must never run without Node.
+            .env("ARES_MARKER_TIME_BIN", std::env::current_exe().unwrap())
+            .env("PATH", "")
+            .env("ARES_REQUIRE_ORCA", if required { "1" } else { "0" })
+            .output()
+            .unwrap();
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(output.status.success(), !required);
+        assert!(stderr.contains("node"));
+        if !required {
+            assert!(stderr.contains("SKIPPED:"));
+        }
+    }
+}
+
 fn load(viewer: &mut ViewerImpl, records: &[Record]) {
     viewer.load(GCodeInputData {
         vertices: records.iter().map(|r| r.vertex.clone()).collect(),
@@ -133,7 +156,10 @@ fn check(viewer: &ViewerImpl, records: &[Record]) {
 
 #[test]
 fn native_prefix_bits_survive_visibility_changes_reverse_seeks_and_reload() {
-    let native = records("vertices");
+    let Some(root) = marker_time_native::raw_fixture() else {
+        return;
+    };
+    let native = records(&root, "vertices");
     assert!(native.iter().any(|r| r.vertex.move_type == MoveType::Seam));
     assert!(
         native
@@ -146,7 +172,7 @@ fn native_prefix_bits_survive_visibility_changes_reverse_seeks_and_reload() {
     viewer.set_layers_view_range(1, 1);
     viewer.toggle_extrusion_role_visibility(GCodeExtrusionRole::ExternalPerimeter);
     check(&viewer, &native);
-    let synthetic = records("synthetic");
+    let synthetic = records(&root, "synthetic");
     load(&mut viewer, &synthetic);
     check(&viewer, &synthetic);
     // Native ordered f32 loses unit additions here; f64 final-cast must fail.
@@ -163,7 +189,10 @@ fn native_prefix_bits_survive_visibility_changes_reverse_seeks_and_reload() {
 
 #[test]
 fn seam_time_describes_the_existing_property_window_vertex() {
-    let native = records("vertices");
+    let Some(root) = marker_time_native::raw_fixture() else {
+        return;
+    };
+    let native = records(&root, "vertices");
     let seam = native
         .iter()
         .position(|r| r.vertex.move_type == MoveType::Seam)
