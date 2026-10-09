@@ -22,22 +22,20 @@ nontrigger rejection/control bytes, full reference/workspace/Tier1 gates and
 exact-hash coordinator approval. Processor timing, emitter ordering/geometry and
 external X2D fixtures are deferred. No heavy gates during web's browser window.
 
-### O8-X2D-SCALAR: original flush-context divergence (open, pi-lint)
+### O8-X2D-SCALAR: closed as a documented unsupported-input contract (2026-10-09)
 
-Original admitted `case-LqoYic` still has Native success versus Ares's exact
-matrix-size error on fresh main plus the calculator-dependency safety boundary. Two Native
-diagnostics demonstrate out-of-bounds nozzle-type reads; stable observed bytes
-do not make that behavior defined. Preserve the original RED and explicitly
-track the unresolved difference, not a silent exemption or a claimed FM fix.
-[Follow-up spec](architecture/o8-x2d-scalar-flush-context.md) cites
-`OrcaSlicer.cpp:1708–1718,3022–3047,3340–3351,3457–3462`,
-`PrintConfig.cpp:9004–9060` and `GCode.cpp:5596–5614`.
-Rust destination: existing raw/CLI configuration preparation and core
-`options/flush_matrix.rs`; included work begins with an approved handling
-contract and same-input RED. Generic materialization, timing and emitter
-geometry/order are deferred. Exit requires an explicit accepted resolution of
-this original discrepancy with complete-stream and unchanged-control evidence;
-no UB emulation, numeric patch or relaxed size guard.
+Closed by coordinator ruling: the original `case-LqoYic` divergence (Native
+success via the out-of-bounds per-nozzle selector read versus Ares's exact
+upstream matrix-size error, `GCode.cpp:5596-5614`) is a documented
+unsupported-input contract — `UB_ADJACENT`, `parity_pass=false`, not a
+parity PASS. The admitted RED and all artifacts are retained; pinned
+closure controls live in `runner/x2d_flush_matrix.rs` (the
+runtime-constructed original shape asserting the exact CLI
+error/exit-1/no-output and a requires-native guard); the legal-size
+eight-cell scalar shape is recorded as UB_ADJACENT runtime evidence
+with both observed values, not an Ares-side contract.
+Full record: [closure spec](architecture/o8-x2d-scalar-flush-context.md).
+No UB emulation, numeric patch or relaxed size guard.
 
 ### Profile-based slicing entry (2026-10-05, interface approved)
 

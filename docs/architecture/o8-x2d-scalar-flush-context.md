@@ -250,6 +250,44 @@ Raw stacks/commands/receipts: `/tmp/worker3-native-crash-triage/`.
 Cubicon's three export aborts are separate and not included in this group;
 their reconstructed-input backtraces remain a separate follow-up.
 
+## Closure: documented unsupported-input contract (coordinator ruling 2026-10-09)
+
+Closed as a **documented unsupported-input contract**. Native's success on
+the original input depends on the out-of-bounds per-nozzle selector read
+(`OrcaSlicer.cpp:3457-3462`) and is not a parity PASS; Ares reports the
+upstream error verbatim at the unchanged size guard
+(`GCode.cpp:5596-5614`), exit 1, no G-code. `UB_ADJACENT`,
+`parity_pass=false`, the admitted RED `65336cb5` and every `case-LqoYic`
+artifact are retained unchanged. No UB emulation, matrix-guard relaxation,
+`-1→0` import, vector extension or numeric expectation was introduced.
+
+Current-main re-verification (`a105509fb`, zero production change since
+`cbee8353`): the preserved input bytes (SHA `b980548a…`) through the fresh
+public CLI return exactly `Flush volumes matrix do not match to the correct
+size!`, exit 1, no output (`/tmp/x2d-official-probe/o8-{stdout,stderr}.log`).
+
+Pinned controls (`runner/x2d_flush_matrix.rs`):
+
+- `x2d_flush_matrix_scalar_four_cell_input_fails_exactly_at_the_cli` —
+  the original UB shape (scalar type + four-entry matrix) reconstructed
+  at runtime through the same Native export path; asserts the exact CLI
+  error text, exit 1 and no exported G-code.
+- `x2d_flush_matrix_scalar_controls_require_native` — the control FAILs
+  (not silently passes) when a Native is required but absent.
+
+The legal-size eight-cell scalar shape is recorded as **runtime
+UB_ADJACENT evidence, not a pinned Ares contract**: the reconstruction
+predicate fires for the changed one-entry type vector
+(`OrcaSlicer.cpp:3340-3351`), so Native crosses the undefined
+per-nozzle selector read (`:3457-3462`) and rebuilds — the seeded
+replay produced `0,102,186,0,0,339,621,0` (coincidentally the defined
+[Standard,Standard] values; `/tmp/vg1-two-filament-EtKlB8`) — while
+the observed Ares run preserved the supplied matrix and scaled it once
+(`0,42,43,0,0,143,144,0`). The input is outside the defined upstream
+domain on both sides, so neither behavior is asserted as a contract
+(coordinator review 2026-10-09: pinning Ares's own behavior on a UB
+input would fix self-designed behavior against the rewrite gate).
+
 ## Included, deferred and exit
 
 Included: original-input fresh-main E2E RED, precise current/new context and
