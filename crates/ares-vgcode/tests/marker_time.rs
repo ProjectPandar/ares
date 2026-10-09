@@ -9,7 +9,7 @@ use ares_vgcode::{
 };
 
 #[path = "../../../tests/support/marker_time.rs"]
-mod marker_time_native;
+pub mod marker_time_native;
 
 struct Record {
     vertex: PathVertex,

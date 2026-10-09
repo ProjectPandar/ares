@@ -8,7 +8,7 @@ use ares_core::{
 use ares_wasm::SliceOutput;
 
 #[path = "../../../tests/support/marker_time.rs"]
-mod marker_time_native;
+pub mod marker_time_native;
 
 #[test]
 fn required_missing_native_cannot_pass_from_frozen_transport() {
