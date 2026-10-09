@@ -4,6 +4,9 @@
 
 use std::path::{Path, PathBuf};
 
+#[path = "runner/native_ksr_reference_migration.rs"]
+mod native_ksr_reference_migration;
+
 use serde_json::{Map, Value};
 
 #[path = "runner/config_block_roundtrip.rs"]

@@ -3,9 +3,9 @@ use std::{fs, process::Command};
 #[test]
 fn optional_missing_native_never_consumes_frozen_ksr_reference() {
     let artifacts = match std::env::var_os("ARES_PARITY_ARTIFACT_ROOT") {
-        Some(root) => tempfile::Builder::new()
+        Some(_) => tempfile::Builder::new()
             .prefix("ksr-reference-policy-")
-            .tempdir_in(root),
+            .tempdir_in(crate::artifacts::root_from_env().unwrap()),
         None => tempfile::tempdir(),
     }
     .unwrap()
@@ -15,7 +15,7 @@ fn optional_missing_native_never_consumes_frozen_ksr_reference() {
     let output = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
-            "tests::project_matches_initialized_orca_242_ordered_bytes",
+            "runner::native_ksr_reference_migration::project_matches_initialized_orca_242_ordered_bytes",
             "--nocapture",
         ])
         .env("ARES_REQUIRE_ORCA", "0")
@@ -37,7 +37,10 @@ fn optional_missing_native_never_consumes_frozen_ksr_reference() {
         "{artifacts:?}: {diagnostic}"
     );
     assert!(output.status.success(), "{artifacts:?}: {diagnostic}");
-    assert!(diagnostic.contains("SKIPPED:"), "{artifacts:?}: {diagnostic}");
+    assert!(
+        diagnostic.contains("SKIPPED:"),
+        "{artifacts:?}: {diagnostic}"
+    );
     assert!(
         diagnostic.contains("Native comparison not executed"),
         "{artifacts:?}: {diagnostic}"
@@ -46,5 +49,9 @@ fn optional_missing_native_never_consumes_frozen_ksr_reference() {
         !diagnostic.contains("complete KSR artifacts:"),
         "missing Native fabricated KSR comparison artifacts: {artifacts:?}: {diagnostic}"
     );
-    assert_eq!(fs::read_dir(&child_root).unwrap().count(), 0, "{artifacts:?}");
+    assert_eq!(
+        fs::read_dir(&child_root).unwrap().count(),
+        0,
+        "{artifacts:?}"
+    );
 }
