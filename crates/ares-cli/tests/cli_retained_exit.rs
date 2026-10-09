@@ -5,6 +5,30 @@
 use std::{fs, path::Path, process::Command};
 
 #[test]
+fn retained_reference_requires_native_not_frozen_outputs() {
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "cli_unprintable_area_retains_complete_native_gcode_before_exit_154",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_ORCA_NATIVE_BIN")
+        .output()
+        .unwrap();
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(diagnostic.contains("running 1 test"), "selector drift: {diagnostic}");
+    assert!(
+        !output.status.success() && diagnostic.contains("ARES_ORCA_NATIVE_BIN"),
+        "frozen retained reference hid required Native absence: {diagnostic}"
+    );
+}
+
+#[test]
 fn cli_unprintable_area_retains_complete_native_gcode_before_exit_154() {
     let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/parity/validation");
     let expected = fixtures.join("cli-exit");
