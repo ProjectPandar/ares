@@ -89,3 +89,25 @@ A separately authorized test-only slice will normalize only prepare_time and
 export_time numeric values during the CLI JSON comparison, preserving every
 other byte and every other assertion. This finding does not implement that
 normalization and does not authorize ignoring unrelated failures.
+
+## Independent test-only wall-clock comparison slice
+
+Authorized scope: `OrcaSlicer.cpp:5540/436` prepare_time and :7104/437
+export_time are UTC second differences serialized as unsigned integers.
+Only `crates/ares-cli/tests/orca_parity/cli_custom_gcode_exit.rs` comparison
+bytes change; production JSON, raw retained artifacts and Native cache receipts
+remain untouched. Replace only those two integer lexemes with zero on each side,
+not a parsed/re-serialized JSON object, so every other byte stays observable.
+Keep raw cache-hit equality, Unix156, complete stdout/stderr and no final G-code
+assertions unchanged. No broader generator/timing/config normalization.
+
+Isolated comparator failure modes, specified before test implementation:
+clock-only differences still fail; a non-clock value difference becomes equal;
+JSON whitespace/order differences disappear through re-serialization; replacement
+accidentally touches error text or another key; cache/native/CLI channel assertions
+are weakened. Deterministic synthetic byte contracts must catch the first three;
+review the exact replacement boundary and retain fresh five-case runtime Native
+E2E artifacts for the remaining channel/cache contract. Synthetic contract inputs
+are handwritten test data, not frozen Native outputs. The initial extracted
+comparison is identity (existing strict semantics), so the clock-only contract
+must run RED before adding the two local replacements.

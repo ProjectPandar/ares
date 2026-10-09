@@ -51,14 +51,43 @@ fn assert_native_failure(case: &str) {
     assert_eq!(output.stdout, native.stdout);
     assert_eq!(output.stderr, native.stderr);
     assert_eq!(
-        fs::read(artifacts.join("result.json")).unwrap(),
-        native.result_json,
+        result_comparison_bytes(&fs::read(artifacts.join("result.json")).unwrap()),
+        result_comparison_bytes(&native.result_json),
         "complete native JSON: generic error, applied metadata"
     );
     assert!(
         !retained.exists(),
         "no final exported G-code on custom-template failure"
     );
+}
+
+fn result_comparison_bytes(bytes: &[u8]) -> Vec<u8> {
+    bytes.to_vec()
+}
+
+#[test]
+fn custom_gcode_json_comparison_ignores_only_wall_clock_values() {
+    let actual = br#"{"prepare_time": 0, "export_time": 0, "return_code": -100}"#;
+    let native = br#"{"prepare_time": 27, "export_time": 12, "return_code": -100}"#;
+    assert_eq!(
+        result_comparison_bytes(actual),
+        result_comparison_bytes(native)
+    );
+}
+
+#[test]
+fn custom_gcode_json_comparison_preserves_other_bytes() {
+    let actual = br#"{"prepare_time": 0, "export_time": 0, "return_code": -100}"#;
+    for different in [
+        br#"{"prepare_time": 0, "export_time": 0, "return_code": -101}"#.as_slice(),
+        br#"{"prepare_time": 0, "export_time": 0, "return_code":  -100}"#.as_slice(),
+        br#"{"export_time": 0, "prepare_time": 0, "return_code": -100}"#.as_slice(),
+    ] {
+        assert_ne!(
+            result_comparison_bytes(actual),
+            result_comparison_bytes(different)
+        );
+    }
 }
 
 #[test]
