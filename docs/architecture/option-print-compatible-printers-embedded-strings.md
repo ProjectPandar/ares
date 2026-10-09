@@ -1,6 +1,8 @@
 # SPEC / ARD: bounded embedded print_compatible_printers coStrings fidelity
 
-Status: **SPEC ONLY — approval requested before RED or implementation.**
+Status: **REVISED SPEC ONLY — re-approval requested before further Native runs,
+RED or implementation.** Original spec `310d6b32a` was approved; the first
+read-only admission failure and owner-authorized revision are recorded below.
 Owner: worker1; coordinator explicitly confirmed this key unclaimed and assigned
 it to worker1. Read base: main `b1b958e17f23becfdd9923ee8b5a3c9a25427d1c`.
 Upstream pin: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
@@ -58,10 +60,36 @@ Also excluded: worker3 printable_height/G2 clearance; worker6 wrapping geometry;
 worker2 G4 IDs/mapping; worker5 load-settings areas. Avoid their shared-file
 writer windows and retain all existing bridge/filament/G2/APA dispatches.
 
-If an observable Native route requires entering compatibility decisions or
-changes this field through process loading/overlay, **STOP and ask the owner**.
-No substitution of `compatible_printers`, no profile edits, no adding/removing
-names to pass admission, and no new compatibility rules to rescue this spec.
+The existing Native CLI compatibility gate may execute as an admission
+precondition only. The owner explicitly authorized the current machine's
+`printer_settings_id` as a fixed element of every nonempty witness vector;
+compatibility PASS is not a fidelity assertion or a new worker1-owned feature.
+No substitution of `compatible_printers`, profile edits, load-settings overlay,
+filtering implementation or compatibility validation assertions. Unexpected
+field replacement or rejection after this fixed revision still means STOP and
+ask the owner; do not iteratively tune names or reorder/drop difficult elements.
+
+## Retained initial admission and owner ruling
+
+The first authorized short `--slice 0` invocation used
+`["Embedded Printer B", "Embedded Printer A", "Embedded Printer B"]` with no
+current machine name. Native returned **-17**, shell exit239; its `result.json`
+says `The selected printer is not compatible with the process preset in the 3mf.`
+No G-code was generated. Sources: `OrcaSlicer.cpp:2653–2654` reports/exits
+`CLI_PROCESS_NOT_COMPATIBLE`; `libslic3r/Utils.hpp:42` defines that code as -17.
+This is genuine upstream behavior, not missing Native or classification RED.
+The second planned `--export-3mf` invocation was not executed after the stop.
+Evidence: `/tmp/ares-pcp-embedded/admission/{input-receipt.json,native-slice/command.txt,native-slice/exit,native-slice/result.json}`.
+The initial mistaken tower-enabled fixture was rejected during offline preflight
+before any Native invocation and is retained separately; no Native retry used it.
+
+Coordinator ruled: preserve -17 evidence; revise the seven fixed witnesses so
+all nonempty vectors contain the current machine's `printer_settings_id`,
+preserving the other order/duplicate/escaped/Unicode elements. Absent and `[]`
+stay unchanged. The nonmatching-machine -17 rejection slice belongs to worker5
+after load-settings, and is **deferred here**. This is an explicitly authorized
+new matrix, not an unnoticed success-seeking retry of the failed sample. Further
+Native admission waits for re-approval of this revision. No new probe tools.
 
 ## Inventory evidence and honest coverage meaning
 
@@ -85,28 +113,36 @@ an absent/default case cannot substitute for explicit cases.
 
 ## Fixed witness matrix (declare before running)
 
-Use one established classic `cube10.stl` project with a single logical filament,
-no prime tower, default layer/process settings. Start from a Native-produced
-3MF and inject only this key in `Metadata/project_settings.config` for each
+Use the established Native-produced classic `cube10.stl` single-logical-filament,
+no-prime-tower project retained in `/tmp/ares-pcp-embedded/admission/original.3mf`
+(source: prior `case-1D75FV`, adaptive-pa/no-cooling). Keep its fixed process
+settings rather than claiming untouched profile defaults. Inject only this key
+in `Metadata/project_settings.config` for each
 case. No `--load-settings` or `--load-filaments` during witness replay. Keep all
 other named archive members byte-exact to the fixed initial project. Retain
 raw ZIP/member SHA receipts; changing this JSON key is deliberate, not a claim
 of whole-archive equality across cases.
 
-| Case | Embedded JSON value | Fidelity assertion |
+`M` below is the original archive's unchanged typed `printer_settings_id`,
+verified as `"Creality Ender-3 0.4 nozzle"`. It is not resolved by preset lookup,
+loaded from another profile, renamed, or inserted into any other field. Capture
+and assert this exact fixture receipt before executing the revised matrix.
+
+| Case | Embedded JSON value (`M` substituted literally) | Fidelity assertion |
 | --- | --- | --- |
 | missing-default | key absent | Existing typed default is an empty vector; do not claim absent raw key equals explicitly present empty key |
-| explicit-empty | `[]` | Zero elements; not one empty string |
-| lone-empty | `[""]` | One empty element; distinct from `[]` |
-| one-label | `["Embedded Printer A"]` | Single string with whitespace preserved |
-| ordered-duplicates | `["Embedded Printer B", "Embedded Printer A", "Embedded Printer B"]` | Preserve order, duplicates and length; no deduplication or catalog lookup |
-| escaped-elements | `["semi;colon", "quote\"slash\\", "line\nnext", "tab\tvalue"]` | JSON string characters/element boundaries preserved through typed read and vector JSON serialization |
-| unicode-label | `["打印机 Ω"]` | Preserve UTF-8 text; no normalization or name validation |
+| explicit-empty | `[]` | Zero elements; distinct from a vector carrying an empty element |
+| empty-element | `[M, ""]` | Two elements including the empty string; this is NOT a lone-empty singleton test |
+| one-label | `[M, "Embedded Printer A"]` | Whitespace and both elements preserved |
+| ordered-duplicates | `[M, "Embedded Printer B", "Embedded Printer A", "Embedded Printer B"]` | Preserve order, duplicate nonmachine labels and length; no deduplication |
+| escaped-elements | `[M, "semi;colon", "quote\"slash\\", "line\nnext", "tab\tvalue"]` | JSON string characters/element boundaries preserved through typed read and vector JSON serialization |
+| unicode-label | `[M, "打印机 Ω"]` | Preserve UTF-8 text and both elements; no normalization or name validation |
 
-These are opaque configuration strings, not real preset names and not user
-input to a compatibility predicate. No assertion says that these printers
-exist or are accepted. The seven cases are fixed before admission; failures
-must not lead to value/count/escaping tuning or dropping a difficult case.
+Only `M` is a real fixture machine identifier, admitted by explicit owner ruling.
+Other elements remain opaque text, not required to identify real presets. No
+assertion establishes name validity or filters compatible printers. The revised
+seven cases are fixed before renewed admission; failures must not lead to
+further value/count/escaping tuning or dropping a difficult case.
 
 Included observables, in order:
 
@@ -120,9 +156,12 @@ Included observables, in order:
    JSON representation preserves the same ordered vector. If config serialization
    is exposed, compare it to actual `ConfigOptionStrings::serialize` as a separate
    observable, not as a replacement for the embedded JSON vector.
-5. Where the existing Native route can slice the untouched embedded project
-   without compatibility selection/overlay, compare complete G-code via the
-   repository's unchanged ordered comparator/ND path. Whole G-code equality alone
+5. Slice the fixed embedded project without preset selection/overlay, admitting
+   the CLI's existing compatibility gate only as explicitly ruled above; compare
+   complete G-code via the repository's unchanged ordered comparator/ND path.
+   Inspect the runtime footer's `print_compatible_printers` serialization as a
+   keyed Native observable, and observe the existing `--export-3mf` JSON roundtrip.
+   Whole G-code equality alone
    cannot prove this metadata key was retained; observations 1–4 precede it.
 
 Do not promise an Ares full 3MF writer API that does not exist. The included
@@ -130,14 +169,20 @@ Ares serialization observation is its existing typed settings/config surface;
 Native's own writer supplies the upstream roundtrip witness. Adding a new
 3MF-export API is out of scope. If the necessary Native typed/read-write
 observable cannot be obtained with existing runtime facilities, return a
-blocked spec/admission result and seek approval for a source-kernel probe
-before provisioning or extending tools. Do not substitute frozen JSON or
+blocked spec/admission result. No source-kernel probe provisioning or new probe
+tools are authorized; seek an owner ruling, not an implicit tooling fallback.
+Do not substitute frozen JSON or
 post-hoc parsing of the input for Native execution.
 
 ## Deferred behavior
 
-- Any preset compatibility decision, filtering, machine selection, name
-  existence check, inherited profile resolution or load-settings merge.
+- Worker5's nonmatching-machine -17 rejection behavior
+  (`OrcaSlicer.cpp:2653–2654`, `Utils.hpp:42`), preset compatibility decisions,
+  filtering, machine selection, name existence checks, inherited profile
+  resolution and load-settings merge. Passing the admitted fixed-machine gate
+  does not transfer ownership or claim decision coverage.
+- Lone-empty singleton `[""]` without `M` is deferred with that rejection branch;
+  the revised empty-element witness only covers `[M, ""]`.
 - JSON scalar legacy vector syntax, nested arrays, non-string/mixed/null
   elements, invalid UTF-8/JSON, malformed/truncated ZIP and archive path rules.
 - Arbitrary vector cardinalities/string sizes, controls outside the fixed cases,
@@ -154,8 +199,9 @@ After approval only:
 1. Establish read-only Native route/receipts. Required missing Native FAIL;
    optional missing Native visible SKIP. Invalid configured producer, nonzero,
    timeout or missing output is failure, not absence. Prove keyed typed retention
-   before comparison. A field erased by CLI/profile logic is an admission blocker,
-   not permission to enter worker5's scope.
+   before comparison. A field erased by CLI/profile logic, unexpected -17 after
+   this fixed revision, or absence of keyed footer/roundtrip observability is an
+   admission blocker, not permission to enter worker5's scope or invent a probe.
 2. Write Native-backed E2E tests BEFORE implementation. Record possible failures
    first: absent/empty conflation, singleton-empty collapse, order/duplicate loss,
    delimiter splitting, quote/backslash/control corruption, UTF-8 corruption,
