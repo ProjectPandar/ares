@@ -347,6 +347,9 @@ pub(super) fn append(
         // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
         // f64 print_z for template comparisons.
         let layer_height = f64::from(layer_z as f32) - f64::from(previous_layer_z as f32);
+        // `GCode.cpp:4589`: `first_layer` is per-object — the leading
+        // object/support/raft layer sitting on the plate.
+        let first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
         let boundary = boundary::append(
             output,
             state,
@@ -362,13 +365,14 @@ pub(super) fn append(
                 object_layer_over_raft,
                 layer_z,
                 layer_height,
+                first_layer,
                 second_layer_done: &mut second_layer_done,
                 bed_cache,
             },
         )?;
         let timelapse_context = boundary.timelapse_context;
         state.layer_index = cooling_layer_index;
-        state.on_first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
+        state.on_first_layer = first_layer;
         // The skirt prints once per layer before any object content
         // (`GCode.cpp:4388+`), gated by the `skirt_done` vector:
         // `Skirt::make_skirt_loops_per_extruder_1st_layer` emits when the

@@ -16,7 +16,16 @@ fn third_layer_does_not_reassert_default_kinematics() {
     };
     let mut output = Vec::new();
 
-    super::begin_layer(&mut output, &mut state, 2, 0.6, 0.2);
+    super::begin_layer(
+        &mut output,
+        &mut state,
+        super::LayerBegin {
+            layer_z: 0.6,
+            layer_height: 0.2,
+            first_layer: false,
+            second_layer_reset: false,
+        },
+    );
 
     assert!(output.is_empty());
 }

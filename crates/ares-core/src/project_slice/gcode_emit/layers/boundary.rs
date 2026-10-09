@@ -70,6 +70,10 @@ pub(super) struct LayerBoundary<'a> {
     pub(super) object_layer_over_raft: bool,
     pub(super) layer_z: f64,
     pub(super) layer_height: f64,
+    /// The per-object `first_layer` (`GCode.cpp:4589`): the leading
+    /// object/support/raft layer sitting on the plate — under sequential
+    /// printing every object's layer 0 qualifies.
+    pub(super) first_layer: bool,
     pub(super) second_layer_done: &'a mut bool,
     pub(super) bed_cache: i32,
 }
@@ -92,6 +96,7 @@ pub(super) fn append<'a>(
         object_layer_over_raft,
         layer_z,
         layer_height,
+        first_layer,
         second_layer_done,
         bed_cache,
     }: LayerBoundary<'_>,
@@ -260,8 +265,13 @@ pub(super) fn append<'a>(
     // The BBL first-layer-inspection scan (`GCode.cpp:4780-4790`) opens
     // between the layer-change gcode and the acceleration reset, so it
     // precedes `begin_layer`'s M204.
-    if layer_index == 1
-        && !*second_layer_done
+    // `GCode.cpp:4777`: the second-layer block gates on
+    // `!first_layer && !m_second_layer_things_done` with the PER-OBJECT
+    // `first_layer` (`GCode.cpp:4589`) — sequential printing resets the
+    // flag at every object boundary (`GCode.cpp:3367`), so each object's
+    // first non-first layer runs the block once, not just global chunk 1.
+    let second_layer_reset = !first_layer && !*second_layer_done;
+    if second_layer_reset
         && state.tags.is_bbl()
         && traversal
             .resolved
@@ -274,10 +284,20 @@ pub(super) fn append<'a>(
     {
         motion::scan_first_layer_block(output, state);
     }
-    motion::begin_layer(output, state, layer_index, layer_z, layer_height);
+    motion::begin_layer(
+        output,
+        state,
+        motion::LayerBegin {
+            layer_z,
+            layer_height,
+            first_layer,
+            second_layer_reset,
+        },
+    );
     // Second-layer transition: bed temperature for the remaining
-    // layers (`GCode.cpp:4777-4830`), once per slice.
-    if layer_index == 1 && !*second_layer_done {
+    // layers (`GCode.cpp:4777-4830`), once per object under sequential
+    // printing (`GCode.cpp:3367`).
+    if second_layer_reset {
         *second_layer_done = true;
         machine::append_second_layer_transition(output, traversal, state, bed_cache);
     }

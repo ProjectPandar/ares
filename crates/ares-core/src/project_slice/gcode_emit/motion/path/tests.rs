@@ -1,7 +1,7 @@
 use super::{MotionOptions, begin_layer, path};
 use crate::geometry::CoordinateScale;
 use crate::project_slice::gcode_emit::motion::{
-    EmitState, LayerGeometry, features::PathProperties, state::AvoidCrossingGeometry,
+    EmitState, LayerBegin, LayerGeometry, features::PathProperties, state::AvoidCrossingGeometry,
 };
 
 /// `GCode.cpp:6469-6471` builds `_mm3_per_mm = path.mm3_per_mm *
@@ -20,7 +20,16 @@ fn volumetric_speed_cap_divides_by_print_and_filament_flow_ratios() {
         },
         ..EmitState::default()
     };
-    begin_layer(&mut Vec::new(), &mut state, 1, 0.4, 0.2);
+    begin_layer(
+        &mut Vec::new(),
+        &mut state,
+        LayerBegin {
+            layer_z: 0.4,
+            layer_height: 0.2,
+            first_layer: false,
+            second_layer_reset: false,
+        },
+    );
     let mut output = Vec::new();
 
     path::emit(
@@ -69,7 +78,16 @@ fn zero_max_volumetric_speed_leaves_the_role_speed_uncapped() {
         },
         ..EmitState::default()
     };
-    begin_layer(&mut Vec::new(), &mut state, 1, 0.4, 0.2);
+    begin_layer(
+        &mut Vec::new(),
+        &mut state,
+        LayerBegin {
+            layer_z: 0.4,
+            layer_height: 0.2,
+            first_layer: false,
+            second_layer_reset: false,
+        },
+    );
     let mut output = Vec::new();
 
     path::emit(

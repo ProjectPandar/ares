@@ -39,7 +39,7 @@ pub(super) use layer::emit_layer;
 pub(super) use origin::set_origin;
 pub(super) use skirt_brim::{SkirtLoopParameters, emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
-    AvoidCrossingGeometry, EmitState, LayerGeometry, LiftMode, append_exclude_end,
+    AvoidCrossingGeometry, EmitState, LayerBegin, LayerGeometry, LiftMode, append_exclude_end,
     append_object_start, begin_layer, begin_path_travel, queue_exclude_end, queue_exclude_start,
     queue_object_start, queue_object_stop_label,
 };
