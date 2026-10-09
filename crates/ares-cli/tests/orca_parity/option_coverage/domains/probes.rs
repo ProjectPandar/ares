@@ -123,9 +123,15 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
             &[("disabled", "0"), ("machine", "1"), ("filament", "2")]
         }
         // Polygon point lists (`XxY` pairs) — a legal small rectangle.
-        // `wrapping_exclude_area` rejected by the oracle (orca rejects the
-        // rect probe upstream), so it keeps its unexercised baseline.
         "bed_exclude_area" | "head_wrap_detect_zone" | "start_end_points" => POLYGON,
+        // Config.hpp:1516-1530; finite project wrapping admission and emission.
+        "wrapping_exclude_area" => &[
+            ("probe-empty", ""),
+            ("probe-one", "0x0"),
+            ("probe-two", "0x0,10x0"),
+            ("probe-triangle", "0x0,10x0,0x10"),
+            ("probe-rectangle", "0x0,10x0,10x10,0x10"),
+        ],
         // `extruder_offset`: one offset per extruder — a shifted probe
         // stays legal for a single-extruder profile.
         "extruder_offset" => &[("probe-zero", "0x0"), ("probe-shift", "1x0.5")],

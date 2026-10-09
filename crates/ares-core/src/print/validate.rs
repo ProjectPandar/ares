@@ -3,6 +3,7 @@
 mod bed_filament;
 mod extrusion_width;
 mod identity;
+mod layered_wrapping;
 mod sequential_clearance;
 
 pub(crate) use identity::project_is_bbl;
@@ -196,6 +197,7 @@ pub(crate) fn validate_applied_project(
 ) -> Result<(), SliceError> {
     let settings = &resolved.views.full;
     let into_validate = |error: SliceError| into_validate_message(error, settings);
+    layered_wrapping::validate(project, resolved, plate_number)?;
     sequential_clearance::validate(project, resolved, plate_number)?;
     extrusion_width::applied(resolved).map_err(into_validate)?;
     let bbl = project_is_bbl(

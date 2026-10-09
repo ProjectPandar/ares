@@ -170,6 +170,10 @@ fn execute_plan(
             let application = runner::application::verify_value(project, &plan.key, value)?;
             Ok(serde_json::json!({"application":application,
                 "domain":super::filament_flow_coverage::input::metadata()}))
+        } else if plan.key == "wrapping_exclude_area" {
+            let application = runner::application::verify_value(project, &plan.key, value)?;
+            Ok(serde_json::json!({"application":application,
+                "domain":super::wrapping_exclude_coverage::input::metadata()}))
         } else if super::tests::clearance::owns(&plan.key) {
             super::tests::clearance::verify_application(project, &plan.key, value)
         } else {
@@ -213,6 +217,13 @@ fn execute_plan(
                 runner,
                 &plan.key,
                 case.value.as_ref().unwrap()[0].as_str().unwrap(),
+                &label,
+            )
+        } else if plan.key == "wrapping_exclude_area" {
+            super::wrapping_exclude_coverage::input::export(
+                runner,
+                case.value.as_ref().unwrap(),
+                true,
                 &label,
             )
         } else {

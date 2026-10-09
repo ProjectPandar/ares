@@ -309,6 +309,16 @@ pub(super) fn case(label: &str, value: &str, entry: &Value) -> OptionCase {
                 .map(|group| Value::String(group.into()))
                 .collect(),
         )
+    } else if entry.get("key").and_then(Value::as_str) == Some("wrapping_exclude_area") {
+        // ConfigOptionPoints::vserialize: one string per point; no points is [].
+        Value::Array(if value.is_empty() {
+            Vec::new()
+        } else {
+            value
+                .split(',')
+                .map(|point| Value::String(point.into()))
+                .collect()
+        })
     } else if entry.get("wire_shape").and_then(Value::as_str) == Some("array") {
         Value::Array(vec![scalar])
     } else {

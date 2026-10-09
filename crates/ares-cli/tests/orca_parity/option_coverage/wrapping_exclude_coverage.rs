@@ -3,7 +3,7 @@ use super::*;
 use serde_json::json;
 
 #[path = "wrapping_exclude_coverage/input.rs"]
-mod input;
+pub(super) mod input;
 #[path = "wrapping_exclude_coverage/rejections.rs"]
 mod rejections;
 
@@ -68,6 +68,14 @@ fn orca_parity_wrapping_exclude_area_bounded_project_output() {
             );
         }
     }
+    assert_eq!(
+        plan.cases
+            .iter()
+            .map(|case| case.value.clone())
+            .collect::<Vec<_>>(),
+        requests.into_iter().map(Some).collect::<Vec<_>>(),
+        "declared requests must match runtime witnesses"
+    );
     let outcome = OptionOutcome::executed(&plan, plan.cases.len(), Vec::new(), 0, None);
     parity::artifacts::overwrite(
         &evidence,

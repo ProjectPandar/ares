@@ -235,6 +235,31 @@ pub(super) fn slice_error_to_failure(error: SliceError, output: &Path) -> CliFai
             "Object conflicts were detected when using print-by-object mode. Please verify the slicing of all plates in Orca Slicer before uploading.",
             format!("{message}\n"),
         ),
+        SliceError::LayeredPrintCollision {
+            message,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density,
+            ..
+        } => family(
+            -64,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density,
+            #[cfg(target_os = "linux")]
+            "Object conflicts were detected. Please verify the slicing of all plates in Orca Slicer before uploading.",
+            format!("{message}\n"),
+        ),
         SliceError::CustomGCode {
             message,
             #[cfg(target_os = "linux")]

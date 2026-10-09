@@ -1,10 +1,10 @@
 # Bounded wrapping-exclude-area option coverage
 
-Status: proposed worker6 harness-only slice after flow coverage `46443344d`.
+Status: implemented bounded harness and authorized wrapping-admission port; final production gates pending.
 The historical [full Option audit](2026-10-09-option-full-current-audit.md)
 records `wrapping_exclude_area` INCOMPLETE, baseline-only with no injection.
-Current `domains/probes.rs` still excludes it, citing a rectangle rejection
-without establishing its context. This proposal is not a fresh full audit.
+The preceding harness excluded it, citing a rectangle rejection without
+establishing its context. This slice is not a fresh full Option audit.
 The coordinator approved this selection: single nozzle, single filament,
 no tower, by-layer. Initially harness-only; after the fixed-pose Native -64 / Ares acceptance RED,
 the coordinator authorized the production wrapping-admission port described below.
@@ -91,7 +91,8 @@ guard. Retain the original enabled-export arrange rejection as an additional
 -50 control: verify its relocated footprint and actual CLI result.json, and
 require the identical Ares validated-slice diagnostic. It is not a Print hull
 rejection witness. Any actual Ares acceptance/error/byte discrepancy remains RED and is
-reported for coordinator ownership; no production repair is included.
+reported for coordinator ownership. The authorized Print admission repair below
+closes the observed fixed-pose rejection discrepancy.
 
 ## Harness destination, RED and GREEN
 
@@ -112,7 +113,8 @@ negative controls, and separately report any required expectation update.
 
 GCode tool_transition/emit_helpers neighbors belong to worker2. If RED points
 there, freeze evidence and report for transfer; do not change their production
-paths. Print hull-admission differences are likewise reported without repair.
+paths. The observed Print hull-admission difference is covered only by the authorized
+production slice below.
 
 ## Acceptance and deferred scope
 
@@ -129,8 +131,8 @@ IDs; by-object/G2 clearance, nonzero plate origins, extra plates/instances,
 arbitrary/self-intersecting polygons, arbitrary coordinates, touching-only
 and epsilon collision boundaries, real detection motion, physical-tool
 placeholders, APA, GUI warning policy, commented processor collision code,
-and legacy STL postprocessing. Existing Ares scaffold remains unchanged;
-this slice establishes only the cited project/Print boundary's finite contract.
+and legacy STL postprocessing. Emission scaffolding remains unchanged; this slice establishes only the cited
+project/Print boundary's finite contract.
 
 ## Authorized production admission slice
 
@@ -158,3 +160,21 @@ streams, and close only this key's harness classification. Fresh workspace and
 full seeded/official base/candidate controls run on the production tree, with
 raw changes listed; full-pair queue is after worker4. Earlier positive streams
 are directed evidence only, not a substitute for the final production gates.
+
+## Directed GREEN observations
+
+RED `69a015f6d` retains the actual fixed-pose Native -64 / Ares acceptance
+difference. The production port now returns the same named diagnostic through
+public validation and validated slicing; CLI exit/status/channels/result.json
+match Native, using only the shared prepare/export wall-clock normalization
+for result.json. The separately arranged -50 control remains active.
+
+Seeded and official each completed cold and hot directed runs, and separate
+canonical sweep runs, under `/tmp/worker6-wrapping-green`. Every run exited 0;
+no timeout was counted. Each producer/temperature has eleven full successful
+streams in the directed tests (ten enable/disable witnesses plus the disabled
+intersection control) and five in the sweep, totaling 64 comparisons with only
+the existing generated-by normalization. Declared request values must equal
+the five runtime witnesses. No existing numeric-metadata lock asserted this
+key; other keys' expectation assertions remain unchanged. The 650-plan diff
+and full production-tree gates are still required before review.

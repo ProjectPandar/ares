@@ -107,3 +107,14 @@ pub(in super::super) fn export(
     );
     Ok(exported)
 }
+
+pub(in super::super) fn metadata() -> Value {
+    json!({"scope":"finite empty/one/two/off-object triangle/rectangle; single nozzle/filament no tower by_layer",
+        "source":"PrintConfig.cpp:4120-4125; Config.hpp:1487-1550; Print.cpp:932-979,1304-1310; GCode.cpp:5215-5236,5302-5305",
+        "fixture":"cube10.stl", "enable_wrapping_detection":"1",
+        "wrapping_detection_gcode":";W6_WRAP {layer_num} {layer_z} {max_layer_z}",
+        "layer_height":"0.2","initial_layer_print_height":"0.2",
+        "nozzle_diameter":["0.4"],"filament_flow_ratio":["1"],"filament_diameter":["1.75"],
+        "support":"disabled","raft_layers":"0","enable_prime_tower":"0","print_sequence":"by layer",
+        "deferred":["towers","SEMM","multi-nozzle/filament","by_object","arbitrary polygon or transforms","touching/epsilon","detection motion","tool placeholders","APA"]})
+}
