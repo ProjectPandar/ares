@@ -7,6 +7,11 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Stock signal audit: all twelve cases docs only (2026-10-09)
+
+Native nondeterministic crashes rule out runtime-test admission; no tests or production changes remain.
+[Audit, retained failures and verification](architecture/2026-10-09-stock-signal-runtime-admission.md).
+
 ### X2D-FM #55 dual-nozzle flush-matrix preparation: closed (2026-10-09)
 
 Landed on main (RED `ab6d7d2e1` → GREEN `e0134bcd7` → review fixes
