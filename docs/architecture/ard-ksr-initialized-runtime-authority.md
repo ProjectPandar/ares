@@ -35,6 +35,36 @@ first differences are retained outside Git in
 `/tmp/worker6-ksr-p3-preflight/hash-audit.json` and its capture directories.
 No Native output or generated receipt is added to the repository.
 
+## Reconstructible producer source
+
+The historical derivation's source was a content-addressed directory import,
+not a fetch derivation. A fresh `git archive` of upstream revision
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`, followed by the committed
+`tools/orca-probes/ksr-initialized-source.patch`, reproduces its NAR SHA-256:
+`1fbg964by6qdk22cx5c6anfr9jxkb6zgv0q0inhbpfgd87683phs`.
+This verification reads Git and computes a hash only; it neither realizes
+Native nor writes the reconstructed source into the system store.
+
+The patch changes exactly `Feature/FuzzySkin/FuzzySkin.cpp`,
+`Fill/FillConcentric.cpp`, `Fill/FillConcentricInternal.cpp` and `Print.hpp`.
+The historical source does not include the current replay patch's `GCode.cpp`
+placeholder-RNG change. Source import name
+`orca-slicer-2.4.2-seed-replay-source` and the reproduced NAR hash identify
+`/nix/store/hxvv0g1qlw9lwimj2km3ghxphrl9p4qf-orca-slicer-2.4.2-seed-replay-source`.
+
+`tools/orca-probes/ksr-initialized.nix` requires this reconstructed source as
+`ORCA_KSR_INITIALIZED_SOURCE`; it does not fall back to the historical store
+source. It inherits the original patches, configure flags, dependencies and
+wrapping from pinned nixpkgs `9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source`.
+Instantiation with the reconstructed source reproduces exact derivation
+`4n1w0b6jgnfcwb6m9jfssndribyyg3v6-orca-slicer-seed-replay-2.4.2.drv`,
+whose package output is
+`jqfsg42f6xzq3krnf5scm6w4g1z4kz4c-orca-slicer-seed-replay-2.4.2`.
+The existing package remains protected by
+`/tmp/worker6-ksr-initialized-producer-root`.
+[tools/README](../../tools/README.md) records the reconstruction and
+instantiate-only commands. No realization is authorized by this decision.
+
 ## Consumer contract
 
 All Ares-versus-reference comparisons migrate to freshly generated initialized
