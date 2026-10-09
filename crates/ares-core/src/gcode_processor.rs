@@ -119,6 +119,10 @@ pub struct PrintEstimatedStatistics {
     /// `modes[Normal].time`: `GCodeProcessor::get_time` narrows the
     /// machine time to float (`GCodeProcessor.cpp:2722-2725, 6019-6020`).
     pub normal_time: f32,
+    /// `modes[Normal].prepare_time`: f32 sum of the `flags.prepare_stage`
+    /// block times (`GCodeProcessor.cpp:475-476`), copied by
+    /// `update_estimated_times_stats` (`:6016-6022`).
+    pub normal_prepare_time: f32,
 }
 
 /// `CustomGCode::Type` (`CustomGCode.hpp:14-22`).

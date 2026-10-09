@@ -1,6 +1,6 @@
 --- a/src/OrcaSlicer.cpp
 +++ b/src/OrcaSlicer.cpp
-@@ -6213,6 +6213,28 @@
+@@ -6213,6 +6213,48 @@
                                      BOOST_LOG_TRIVIAL(info) << "process finished, will export gcode temporarily to " << outfile << std::endl;
                                      temp_time = (long long)Slic3r::Utils::get_current_time_utc();
                                      outfile = print_fff->export_gcode(outfile, gcode_result, nullptr);
@@ -16,14 +16,34 @@
 +                                        const PrintEstimatedStatistics& es = gcode_result->print_statistics;
 +                                        fprintf(out, "{\"total_extruded_volume\":%.17g,\"total_used_filament\":%.17g,\"total_weight\":%.17g,\"total_cost\":%.17g,",
 +                                                ps.total_extruded_volume, ps.total_used_filament, ps.total_weight, ps.total_cost);
-+                                        fprintf(out, "\"normal_time\":%.9g,\"stealth_time\":%.9g,\"total_volumes_per_extruder\":{",
-+                                                es.modes[0].time, es.modes[1].time);
-+                                        bool first = true;
-+                                        for (const auto& [id, volume] : es.total_volumes_per_extruder) {
-+                                            fprintf(out, "%s\"%zu\":%.17g", first ? "" : ",", static_cast<size_t>(id), volume);
-+                                            first = false;
++                                        fprintf(out, "\"normal_time\":%.9g,\"normal_prepare_time\":%.9g,\"stealth_time\":%.9g",
++                                                es.modes[0].time, es.modes[0].prepare_time, es.modes[1].time);
++                                        // The legend footer's Normal-mode time texts (GCodeViewer.cpp:4633, 4639, 4644).
++                                        fprintf(out, ",\"footer_times\":[\"%s\",\"%s\",\"%s\"]",
++                                                short_time(get_time_dhms(es.modes[0].prepare_time)).c_str(),
++                                                short_time(get_time_dhms(es.modes[0].time - es.modes[0].prepare_time)).c_str(),
++                                                short_time(get_time_dhms(es.modes[0].time)).c_str());
++                                        // The legend's per-extruder volumes (GCodeViewer.cpp:3541-3625) and the float metadata it converts them with.
++                                        for (const auto& [name, volumes] : {std::pair{"total_volumes_per_extruder", &es.total_volumes_per_extruder},
++                                                                            std::pair{"support_volumes_per_extruder", &es.support_volumes_per_extruder},
++                                                                            std::pair{"flush_per_filament", &es.flush_per_filament},
++                                                                            std::pair{"wipe_tower_volumes_per_extruder", &es.wipe_tower_volumes_per_extruder}}) {
++                                            fprintf(out, ",\"%s\":{", name);
++                                            bool first = true;
++                                            for (const auto& [id, volume] : *volumes) {
++                                                fprintf(out, "%s\"%zu\":%.17g", first ? "" : ",", static_cast<size_t>(id), volume);
++                                                first = false;
++                                            }
++                                            fprintf(out, "}");
 +                                        }
-+                                        fprintf(out, "}}\n");
++                                        for (const auto& [name, values] : {std::pair{"filament_diameters", &gcode_result->filament_diameters},
++                                                                           std::pair{"filament_densities", &gcode_result->filament_densities}}) {
++                                            fprintf(out, ",\"%s\":[", name);
++                                            for (size_t i = 0; i < values->size(); ++i)
++                                                fprintf(out, "%s%.9g", i == 0 ? "" : ",", (*values)[i]);
++                                            fprintf(out, "]");
++                                        }
++                                        fprintf(out, "}\n");
 +                                        fclose(out);
 +                                    }
                                      time_using_cache = time_using_cache + ((long long)Slic3r::Utils::get_current_time_utc() - temp_time);

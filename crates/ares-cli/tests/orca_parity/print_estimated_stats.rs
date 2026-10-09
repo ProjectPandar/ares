@@ -57,6 +57,19 @@ fn assert_native(fixture: &str) {
         "{fixture}: modes[Normal].time {}; {entry:?}",
         statistics.normal_time
     );
+    // The footer's Prepare and Model printing time rows
+    // (`GCodeViewer.cpp:4627-4640`); only Normal mode is ported.
+    let native_prepare = native["normal_prepare_time"].as_f64().unwrap() as f32;
+    assert!(
+        native_prepare > 0.0 && native["stealth_time"].as_f64().unwrap() == 0.0,
+        "{fixture}: fixture must have a prepare stage and no stealth machine; {entry:?}"
+    );
+    assert_eq!(
+        statistics.normal_prepare_time.to_bits(),
+        native_prepare.to_bits(),
+        "{fixture}: modes[Normal].prepare_time {} != native {native_prepare}; {entry:?}",
+        statistics.normal_prepare_time
+    );
     let actual = output.print_statistics;
     for (field, value) in [
         ("total_extruded_volume", actual.total_extruded_volume),

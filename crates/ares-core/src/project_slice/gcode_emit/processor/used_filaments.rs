@@ -58,6 +58,7 @@ impl<'a> UsedFilaments<'a> {
                 flush_per_filament: vec![0.0; count],
                 total_used_filament: 0.0,
                 normal_time: 0.0,
+                normal_prepare_time: 0.0,
             },
         }
     }
