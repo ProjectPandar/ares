@@ -54,6 +54,54 @@ fn records(name: &str) -> Vec<Record> {
         .collect()
 }
 
+#[test]
+fn required_missing_native_cannot_pass_from_frozen_marker_time() {
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "native_prefix_bits_survive_visibility_changes_reverse_seeks_and_reload",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_MARKER_TIME_BIN")
+        .env_remove("ARES_MARKER_TIME_STABLE_BIN")
+        .output()
+        .unwrap();
+    assert!(
+        !output.status.success(),
+        "required Native comparison silently passed without Native: {}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("ARES_REQUIRE_ORCA=1: missing ARES_MARKER_TIME_BIN"),
+        "required failure did not identify the missing Native producer",
+    );
+}
+
+#[test]
+fn optional_missing_native_reports_skipped_instead_of_frozen_parity() {
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "native_prefix_bits_survive_visibility_changes_reverse_seeks_and_reload",
+            "--nocapture",
+        ])
+        .env_remove("ARES_REQUIRE_ORCA")
+        .env_remove("ARES_MARKER_TIME_BIN")
+        .env_remove("ARES_MARKER_TIME_STABLE_BIN")
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("SKIPPED:"),
+        "omitted Native comparison was not visibly declared: {}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+}
+
 fn load(viewer: &mut ViewerImpl, records: &[Record]) {
     viewer.load(GCodeInputData {
         vertices: records.iter().map(|r| r.vertex.clone()).collect(),
