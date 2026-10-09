@@ -551,3 +551,28 @@ reaching its seven later variants. These are unexecuted cases, not claimed PASS.
 All 513 common captured Ares raw streams (498 distinct keys) are identical;
 the missing seven variants are present and PASS in the fresh seeded pair.
 The complete raw logs and both original official exit100 results are retained.
+
+## Bounded filament-flow harness: Native-only support entry-point observation
+
+Fresh official controls on `1151db4bc` → `073a12d43` (test-only changes) observe
+`runner::support_annotations::orca_parity_overlapping_support_blockers_preserve_complete_output`
+FAIL→PASS. For `normal-support/annotation/support_blocker/[(0.6, -6.0), (0.6, 6.0)]`,
+the complete input bytes match, SHA256
+`c20a1b19a33af586bf6f743b779cb24ab3a1d7798b0b77b32f47895d7ea152b7`.
+Slice receipts bind the same request components and Native producer digest
+`43726c33484bde9635272bb7c9a41b49c42dee9a9ed7027f7b63bb8f1aeaa7d1`.
+Complete Ares raw SHA256 in both legs is
+`adb5f07104c782e8bbeb6607807ee97162613312f3ab12e9d7210aa0febfda5d`.
+
+The first Native content difference is line 508, before
+`;TYPE:Internal solid infill`: base `G1 X113.388 Y113.135 F9000`, candidate
+`G1 X113.244 Y113.297 F9000`, the endpoint pair recorded above for the other
+support-blocker input. Native generator-only SHA256 changes from
+`ebe9e34e1b5db698233795c3c7cf2a8e4c37d7f8b07a2d9f02edba8b5bb9b2fd` to
+`c4a538d0ec72cf13a6a5a7f9c115ec1deb6a0154dd8a80e11f8b529caf2e46da`.
+This records a Native-only order variation without asserting a specific upstream
+function or UB cause. All 557 common official Ares raw SHA sets are unchanged;
+strict candidate-failure-subset checking passes, exit0, without any exception.
+Evidence, including matching-input receipt selection:
+`/tmp/worker6-flow-filament-green/support-blocker-native-audit.json` and
+`/tmp/worker6-flow-filament-green/official-comparison.json`.

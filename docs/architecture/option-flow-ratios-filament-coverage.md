@@ -1,6 +1,6 @@
 # Bounded flow-ratio and filament-diameter option coverage
 
-Status: bridge-ratio bounded contract verified; filament ratio/diameter pending.
+Status: all four bounded contracts verified in separate RED→GREEN slices.
 Latest full observation
 is [the current option audit](2026-10-09-option-full-current-audit.md): these
 four domains are INCOMPLETE. This proposal does not claim a fresh 650-domain
@@ -171,4 +171,59 @@ Evidence remains outside the repository:
 engineering logs and original exit codes are in the same GREEN directory.
 Later-main changes follow the coordinator's test/docs-only evidence-carry
 rule; rebase is required before merge. Filament ratio and diameter remain
-unpromoted pending their own runtime RED→GREEN slice.
+unpromoted at the bridge slice's boundary; their subsequent evidence follows.
+
+## Filament-ratio and diameter conclusion
+
+RED `030d375ce` runs all eight successful requests against runtime Native,
+including diameter 1mm, and witnesses positive ordinary outer-wall extrusion
+that changes across requests. Every complete output matches before the two
+INCOMPLETE classification assertions fail. The third test passes: Native
+rejects ratio `[0]` and diameter `[0.99999]` at Export with -18 (Unix 238);
+diagnostics match both public Ares validation and validated slicing. No
+request is rejected unexpectedly or rewritten to a different numeric value.
+The RED starts at load1 54.13, with two test threads and a fresh cache, under
+the coordinator's universal directed-run threshold of 60; no timeout occurs.
+
+GREEN `073a12d43` changes only these two harness plans and their sweep hook.
+Their metadata expectations add `provably_legal=true`, `omission=None`, and
+exact one-element vectors: ratio `[0.5]`, `[1]`, `[1.5]`, `[2]`; diameter
+`[1]`, `[1.75]`, `[2.85]`, `[3]`. All prior expectation loops and negative
+controls remain unchanged. The 650-plan comparison changes exactly these two
+keys, leaving the other 648 identical, including the already completed bridge
+plans. This does not claim a fresh full-option execution.
+
+Required seeded/official cold and hot directed runs each pass 7/7 tests,
+with 16 complete comparisons per round (64 total equal). Each producer's cold
+cache has 32 misses and two within-run hits; hot has 34 hits. Fresh full
+controls compare baseline `1151db4bc` with GREEN:
+
+| Control | Base | Candidate | Common Ares raw SHA sets |
+| --- | --- | --- | --- |
+| seeded | 881/882 PASS | 885/885 PASS | 568 keys, unchanged |
+| official | 880/882 PASS | 885/885 PASS | 557 keys, unchanged |
+
+Both controls change sweep FAIL→PASS and add three PASS tests: filament ratio
+bounded output, filament diameter bounded output, and invalid filament
+ratio/diameter rejection. Official additionally changes
+`runner::support_annotations::orca_parity_overlapping_support_blockers_preserve_complete_output`
+FAIL→PASS. Its identical input bytes and producer/request components yield
+identical complete Ares raw output; only Native selects a different internal
+solid-infill entry point at line 508. See the Native-only observation in
+[the existing nondeterminism record](2026-10-08-nearest-seam-gaussian-validation.md).
+Strict candidate-failure-subset checks pass unchanged in both controls.
+There are no candidate-only failures or Ares byte differences. Seeded has no
+Native content changes; official has this one Native-only change.
+
+Full-pair starting loads are 22.95/28.11 (seeded) and 23.67/23.36 (official),
+all below 30, with separate fresh caches. Default-environment workspace passes
+8256/8256 (five existing skipped); strict workspace clippy, fmt, and core/wasm
+wasm32 checks pass. Production code, cache recipes, input fixtures and
+comparison normalization are unchanged; no Native output is committed.
+
+External evidence:
+`/tmp/worker6-flow-filament-red/{seeded.log,stream-audit.json}` and
+`/tmp/worker6-flow-filament-green/{directed-audit,plan-diff,seeded-comparison,official-comparison,support-blocker-native-audit}.json`.
+Original logs and exit codes remain alongside these audits. Completion closes
+only the finite single-filament contracts above; all listed adjacent behavior
+remains deferred.
