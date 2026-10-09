@@ -152,6 +152,11 @@ fn execute_plan(
     let verify_application = |project: &[u8], value: &Value| {
         if plan.key == "filament_map_mode" {
             runner::filament_map::verify(project, value)
+        } else if matches!(
+            plan.key.as_str(),
+            "layer_height" | "initial_layer_print_height"
+        ) {
+            height_context::verify(project, &plan.key, value)
         } else {
             runner::application::verify_value(project, &plan.key, value)
         }

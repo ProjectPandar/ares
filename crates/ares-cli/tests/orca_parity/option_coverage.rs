@@ -4,6 +4,9 @@
 #[path = "option_coverage/layer_heights.rs"]
 mod layer_heights;
 
+#[path = "option_coverage/height_context.rs"]
+mod height_context;
+
 #[cfg(test)]
 #[path = "option_coverage/locked_width_context.rs"]
 mod locked_width_context;

@@ -84,8 +84,11 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         // grouped polygons cover this bounded authored scope, not numeric endpoints.
         let grouped_printable_area =
             option_type == "coPointsGroups" && key == "extruder_printable_area";
-        provably_legal =
-            unbounded_schema || grouped_printable_area || key == "enable_long_retraction_when_cut";
+        let bounded_height = matches!(key.as_str(), "layer_height" | "initial_layer_print_height");
+        provably_legal = unbounded_schema
+            || grouped_printable_area
+            || bounded_height
+            || key == "enable_long_retraction_when_cut";
         (
             authored
                 .iter()

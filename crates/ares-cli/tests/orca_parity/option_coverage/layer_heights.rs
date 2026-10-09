@@ -17,18 +17,17 @@ fn compare_height(key: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let mut plan = domains::load(&runner::repo_root())
+    let plan = domains::load(&runner::repo_root())
         .into_iter()
         .find(|plan| plan.key == key)
         .unwrap();
-    // RED exercises all approved requests before testing their classification.
-    plan.cases = ["0.05", "0.2", "0.36", "0.39999", "0.4"]
-        .into_iter()
-        .map(|wire| domains::OptionCase {
-            label: format!("height-{wire}"),
-            value: Some(json!(wire)),
-        })
-        .collect();
+    assert_eq!(
+        plan.cases
+            .iter()
+            .map(|case| case.value.as_ref().unwrap().as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["0.05", "0.2", "0.36", "0.39999", "0.4"]
+    );
     let mut proofs = Vec::new();
     for case in &plan.cases {
         let wire = case.value.as_ref().unwrap().as_str().unwrap();
@@ -65,6 +64,14 @@ fn compare_height(key: &str) {
         assert_eq!(outcome.status, "PASS", "{key}={wire}: {}", outcome.detail);
     }
     let outcome = OptionOutcome::executed(&plan, proofs.len(), Vec::new(), 0, None);
+    let root = parity::artifacts::root_from_env().unwrap();
+    parity::artifacts::overwrite(
+        &root.join(format!("{key}-bounded.json")),
+        &serde_json::to_vec_pretty(&json!({"domain":height_context::metadata(),
+            "cases":proofs,"classification":outcome.status,"detail":outcome.detail}))
+        .unwrap(),
+    )
+    .unwrap();
     assert_eq!(outcome.status, "PASS", "{key}: {}", outcome.detail);
 }
 
@@ -151,7 +158,7 @@ fn export_height(
 
 #[test]
 fn original_orca_and_ares_reject_layer_height_boundaries() {
-    use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
+    use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
     use runner::stages::{FailureKind, Stage};
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -217,17 +224,8 @@ fn original_orca_and_ares_reject_layer_height_boundaries() {
                 &overrides,
                 SlicerContext::new(0),
             ));
-            for result in [validation, sliced.map(|_| ())] {
-                match result {
-                    Err(SliceError::InvalidInput(message)) if wire == "0" => {
-                        assert_eq!(message, diagnostic)
-                    }
-                    Err(SliceError::Validate { message, .. }) if wire == "0.40001" => {
-                        assert_eq!(message, diagnostic)
-                    }
-                    other => panic!("{key}={wire}: public rejection disagrees: {other:?}"),
-                }
-            }
+            assert_public_rejection(validation, key, wire, &diagnostic);
+            assert_public_rejection(sliced.map(|_| ()), key, wire, &diagnostic);
             proofs.push(
                 json!({"key":key,"requested":wire,"native_stage":format!("{stage:?}"),
                 "native_code":captured.code,"diagnostic":diagnostic,"evidence":error.evidence,
@@ -241,4 +239,20 @@ fn original_orca_and_ares_reject_layer_height_boundaries() {
         &serde_json::to_vec_pretty(&proofs).unwrap(),
     )
     .unwrap();
+}
+
+fn assert_public_rejection(
+    result: Result<(), ares_core::SliceError>,
+    key: &str,
+    wire: &str,
+    diagnostic: &str,
+) {
+    use ares_core::SliceError;
+    match result {
+        Err(SliceError::InvalidInput(message)) if wire == "0" => assert_eq!(message, diagnostic),
+        Err(SliceError::Validate { message, .. }) if wire == "0.40001" => {
+            assert_eq!(message, diagnostic)
+        }
+        other => panic!("{key}={wire}: public rejection disagrees: {other:?}"),
+    }
 }

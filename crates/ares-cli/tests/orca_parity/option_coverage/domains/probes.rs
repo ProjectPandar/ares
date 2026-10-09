@@ -148,11 +148,15 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
         "nozzle_height" => &[("probe-min", "1"), ("probe-max", "400")],
         // `printable_height` below the object height aborts the slice.
         "printable_height" => &[("probe-min", "50"), ("probe-max", "400")],
-        // `0.4` nozzle caps layer heights strictly below nozzle_diameter
-        // (the 0.4 equal-to-nozzle probe is rejected at slice time).
-        "layer_height" | "initial_layer_print_height" => {
-            &[("probe-min", "0.05"), ("probe-max", "0.36")]
-        }
+        // Print.cpp:1639-1694 permits nozzle equality with isolated widths.
+        // These finite requests use the declared single-nozzle height context.
+        "layer_height" | "initial_layer_print_height" => &[
+            ("height-0.05", "0.05"),
+            ("height-0.2", "0.2"),
+            ("height-0.36", "0.36"),
+            ("height-0.39999", "0.39999"),
+            ("height-0.4", "0.4"),
+        ],
         "bridge_flow" | "internal_bridge_flow" => &[("probe-min", "0.5"), ("probe-max", "2.0")],
         "filament_flow_ratio" => &[("probe-min", "0.5"), ("probe-max", "1.5")],
         // `filament_diameter` 0.5mm is rejected by upstream validation

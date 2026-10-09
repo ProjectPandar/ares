@@ -68,10 +68,15 @@ fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
     let Some(plans) = super::try_load(&crate::runner::repo_root()) else {
         return;
     };
-    for key in ["layer_height", "filament_map", "filament_self_index"] {
+    for key in ["filament_map", "filament_self_index"] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
         assert!(!plan.provably_legal, "{key}");
         assert!(plan.omission.is_some(), "{key}");
+    }
+    for key in ["layer_height", "initial_layer_print_height"] {
+        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+        assert!(plan.provably_legal, "{key}: bounded one-nozzle context");
+        assert!(plan.omission.is_none(), "{key}");
     }
     for key in ["skin_infill_line_width", "skeleton_infill_line_width"] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
