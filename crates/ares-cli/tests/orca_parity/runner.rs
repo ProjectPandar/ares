@@ -35,6 +35,8 @@ mod modifier_wall_loops;
 mod object_range_epsilon;
 #[path = "runner/stock_validation.rs"]
 mod stock_validation;
+#[path = "runner/vendor_profile_compatibility.rs"]
+mod vendor_profile_compatibility;
 
 #[path = "runner/adjacent_color.rs"]
 mod adjacent_color;
