@@ -26,7 +26,7 @@ fn emit_z_restate(output: &mut Vec<u8>, state: &mut EmitState, z: f64, comment: 
 }
 
 pub(super) struct RestateContext {
-    pub(super) slope_start_z: Option<f64>,
+    pub(super) is_sloped: bool,
     pub(super) never_positioned: bool,
     pub(super) travel_set_layer_z: bool,
     pub(super) eager_lifted_travel: bool,
@@ -35,7 +35,7 @@ pub(super) struct RestateContext {
 
 pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: RestateContext) {
     let RestateContext {
-        slope_start_z,
+        is_sloped,
         never_positioned,
         travel_set_layer_z,
         eager_lifted_travel,
@@ -54,7 +54,9 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // the reset must run to restore `m_nominal_z` (`GCode.cpp:6396-6400`).
     let suppressed =
         state.extruder.retracted && (state.lifted_amount > 0.0 || state.template_lifted);
-    if slope_start_z.is_none()
+    // `GCode.cpp:6396-6401`: sloped paths never enter the post-contour
+    // nominal-Z reset, including slope ends with constant Z ratios.
+    if !is_sloped
         && !suppressed
         && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
     {
@@ -82,8 +84,14 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // `GCodeWriter.cpp:1084-1092`) — a template that cleared
     // `e_retracted` after the lift was scheduled must still descend.
     {
-        if state.lifted_amount > 0.0 && !travel_set_layer_z {
-            let z = slope_start_z.unwrap_or(state.layer_z);
+        if is_sloped {
+            // `GCode.cpp:6407-6408`, `GCodeWriter.cpp:1084-1092`: the
+            // sloped descent is writer unlift, with Z = m_pos.z - m_lifted,
+            // not a forced reset to the path's requested slope start.
+            travel::unlift(output, state);
+            state.scarf_z = state.writer_z;
+        } else if state.lifted_amount > 0.0 && !travel_set_layer_z {
+            let z = state.layer_z;
             // `_extrude` re-states Z: on the print's first extrusion
             // (`_last_pos_undefined`) the comment is "ensure Z matches planned
             // layer height" (`GCode.cpp:6382`); otherwise the post-contour
@@ -95,7 +103,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
             };
             let reset_comment = travel::gcode_comment(state, reset_comment);
             emit_z_restate(output, state, z, reset_comment);
-            state.scarf_z = slope_start_z;
+            state.scarf_z = None;
         }
         travel::unretract(output, state);
         state.lifted = false;

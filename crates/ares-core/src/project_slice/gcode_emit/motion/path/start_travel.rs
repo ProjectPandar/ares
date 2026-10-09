@@ -149,7 +149,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         output,
         state,
         restate::RestateContext {
-            slope_start_z,
+            is_sloped: properties.slope.is_some(),
             never_positioned,
             travel_set_layer_z,
             eager_lifted_travel,
