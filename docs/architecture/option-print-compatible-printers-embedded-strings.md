@@ -110,7 +110,32 @@ the independent vector/cardinality witness. In particular `Config.cpp:72–120`
 does not quote semicolons in otherwise-simple elements, so parsing its footer
 as a reversible vector is not an upstream guarantee. Keep the semicolon sample;
 do not change the serializer or assert invented roundtrip-token semantics.
-Further Native test execution waits for worker2's full-pair END.
+Further Native test execution waited for worker2's full-pair END.
+
+## Established Native-backed classification RED
+
+After production advances, the test was rebuilt on `880a6c8d5` (candidate
+`a6717131011295206602ab3872a1c2b07b75fb54`). Owner authorized the later
+web/docs-only `b0b7905fa` git-only carry to `89d8c07d6`; the Native run uses the
+completed 880 archive, not an assertion that a new archive was built on b0.
+Read-only directed official run `4d38b40f-14f5-47f7-bcba-98476e2a5100`,
+`/tmp/ares-pcp-embedded/red-880-official`, admitted at load1=2.71<30 after
+worker6 END and before worker3 full START, 2 nextest threads, fresh cache/dir.
+No Native timeout or retries. Retained baseline plus **all seven revised cases**
+PASS public Ares typed/Serde checks, live Native footer presence, actual Native
+`--export-3mf` vector JSON equality and complete ordered G-code comparison.
+Only the final bounded classification assertion fails:
+INCOMPLETE versus PASS (baseline plan still contains noninjected null).
+Exit100 is therefore classification RED, not the earlier adapter failure or -17.
+`context-results.json` and all eight per-case Native/3MF/input/results remain
+outside Git. Original assertions, escaped/empty/Unicode samples and deferred
+worker5 rejection boundary are unchanged. No GREEN implementation yet.
+
+Cancelled new-tree compilation windows `red-ee277-official` and
+`red-ee277-built` never started Native and are not RED evidence. The 880 archive
+build completed before worker6's exclusive full window; no Native was executed
+in that window. Scheduling/admission receipts and original cancellation logs
+are retained rather than overwritten.
 
 ## Inventory evidence and honest coverage meaning
 
