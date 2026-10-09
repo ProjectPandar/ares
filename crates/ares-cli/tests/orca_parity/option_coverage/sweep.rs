@@ -157,6 +157,10 @@ fn execute_plan(
             "layer_height" | "initial_layer_print_height"
         ) {
             height_context::verify(project, &plan.key, value)
+        } else if matches!(plan.key.as_str(), "bridge_flow" | "internal_bridge_flow") {
+            let application = runner::application::verify_value(project, &plan.key, value)?;
+            Ok(serde_json::json!({"application":application,
+                "domain":super::bridge_flow_coverage::input::metadata(&plan.key, true)}))
         } else {
             runner::application::verify_value(project, &plan.key, value)
         }
@@ -180,8 +184,16 @@ fn execute_plan(
         let label = format!("option/{}/{}", plan.key, case.label);
         let mut overrides = parity::smoke_overrides();
         overrides.remove(&plan.key);
-        let built = runner
-            .export_case(
+        let exported = if matches!(plan.key.as_str(), "bridge_flow" | "internal_bridge_flow") {
+            super::bridge_flow_coverage::input::export(
+                runner,
+                &plan.key,
+                case.value.as_ref().unwrap().as_str().unwrap(),
+                true,
+                &label,
+            )
+        } else {
+            runner.export_case(
                 &CaseInputs {
                     label: &label,
                     machine: &case_machine,
@@ -197,6 +209,8 @@ fn execute_plan(
                     "tests/parity/cube10.stl"
                 }),
             )
+        };
+        let built = exported
             .and_then(|exported| {
                 if plan.key == "filament_map_mode" {
                     runner.bind_filament_map_mode(exported, case.value.as_ref().unwrap())

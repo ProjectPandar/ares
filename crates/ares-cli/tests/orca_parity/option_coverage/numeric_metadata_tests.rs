@@ -78,6 +78,18 @@ fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
         assert!(plan.provably_legal, "{key}: bounded one-nozzle context");
         assert!(plan.omission.is_none(), "{key}");
     }
+    for key in ["bridge_flow", "internal_bridge_flow"] {
+        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+        assert!(plan.provably_legal, "{key}: bounded activated bridge scope");
+        assert!(plan.omission.is_none(), "{key}");
+        assert_eq!(
+            plan.cases
+                .iter()
+                .map(|case| case.value.as_ref().unwrap().as_str().unwrap())
+                .collect::<Vec<_>>(),
+            ["0.5", "1", "1.5", "2"]
+        );
+    }
     for key in ["skin_infill_line_width", "skeleton_infill_line_width"] {
         let plan = plans.iter().find(|plan| plan.key == key).unwrap();
         assert!(plan.provably_legal, "{key}: bounded LockedZag context");

@@ -13,11 +13,24 @@ fn original_orca_and_ares_reject_zero_bridge_ratios() {
         .unwrap();
     let mut proofs = Vec::new();
     for key in ["bridge_flow", "internal_bridge_flow"] {
-        let baseline = input::export(&runner, key, "1", true).unwrap();
-        let error = input::export(&runner, key, "0", true)
-            .and_then(|exported| runner.slice_case(&exported))
-            .err()
-            .expect("zero bridge ratio must be rejected");
+        let baseline = input::export(
+            &runner,
+            key,
+            "1",
+            true,
+            &format!("bounded-flow/{key}/1/thick-true"),
+        )
+        .unwrap();
+        let error = input::export(
+            &runner,
+            key,
+            "0",
+            true,
+            &format!("bounded-flow/{key}/0/thick-true"),
+        )
+        .and_then(|exported| runner.slice_case(&exported))
+        .err()
+        .expect("zero bridge ratio must be rejected");
         assert_eq!(error.stage, Stage::Export, "{key}: {error}");
         assert_eq!(error.kind, FailureKind::Process);
         let captured = error.captured.as_ref().unwrap();

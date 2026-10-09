@@ -3,7 +3,7 @@ use super::*;
 use serde_json::json;
 
 #[path = "bridge_flow_coverage/input.rs"]
-mod input;
+pub(super) mod input;
 
 #[path = "bridge_flow_coverage/rejections.rs"]
 mod rejections;
@@ -46,7 +46,14 @@ fn compare(key: &str, thick: bool) {
     let mut proofs = Vec::new();
     let mut amounts = Vec::new();
     for wire in ["0.5", "1", "1.5", "2"] {
-        let exported = input::export(&runner, key, wire, thick).unwrap();
+        let exported = input::export(
+            &runner,
+            key,
+            wire,
+            thick,
+            &format!("bounded-flow/{key}/{wire}/thick-{thick}"),
+        )
+        .unwrap();
         let sliced = runner.slice_case(&exported).unwrap();
         let native = std::str::from_utf8(&sliced.reference).unwrap();
         let amount = role_extrusion(native, role);
@@ -92,7 +99,8 @@ fn compare(key: &str, thick: bool) {
     parity::artifacts::overwrite(
         &evidence,
         &serde_json::to_vec_pretty(&json!({
-        "key":key,"thick":thick,"cases":proofs,"classification":outcome.status,
+        "key":key,"thick":thick,"domain":input::metadata(key, thick),
+        "cases":proofs,"classification":outcome.status,
         "detail":outcome.detail}))
         .unwrap(),
     )

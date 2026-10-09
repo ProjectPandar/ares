@@ -157,7 +157,13 @@ pub(super) fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'st
             ("height-0.39999", "0.39999"),
             ("height-0.4", "0.4"),
         ],
-        "bridge_flow" | "internal_bridge_flow" => &[("probe-min", "0.5"), ("probe-max", "2.0")],
+        // LayerRegion.cpp:31-58 / GCode.cpp:6478: bounded activated bridge roles.
+        "bridge_flow" | "internal_bridge_flow" => &[
+            ("flow-0.5", "0.5"),
+            ("flow-1", "1"),
+            ("flow-1.5", "1.5"),
+            ("flow-2", "2"),
+        ],
         "filament_flow_ratio" => &[("probe-min", "0.5"), ("probe-max", "1.5")],
         // `filament_diameter` 0.5mm is rejected by upstream validation
         // (standard sizes only).

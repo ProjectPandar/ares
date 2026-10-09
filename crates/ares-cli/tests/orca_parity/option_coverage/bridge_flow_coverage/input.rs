@@ -2,11 +2,12 @@ use super::super::*;
 use crate::runner::CaseInputs;
 use serde_json::json;
 
-pub(super) fn export(
+pub(in super::super) fn export(
     runner: &OrcaRunner,
     key: &str,
     wire: &str,
     thick: bool,
+    label: &str,
 ) -> Result<runner::ExportedCase, runner::stages::StageError> {
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
@@ -60,7 +61,7 @@ pub(super) fn export(
     };
     let exported = runner.export_case(
         &CaseInputs {
-            label: &format!("bounded-flow/{key}/{wire}/thick-{thick}"),
+            label,
             machine: &machine,
             process: &process,
             filaments: &filaments,
@@ -96,4 +97,24 @@ pub(super) fn export(
         runner::application::verify_value(&exported.project, field, &filaments[0][field])?;
     }
     Ok(exported)
+}
+
+pub(in super::super) fn metadata(key: &str, thick: bool) -> Value {
+    json!({
+        "scope":"finite 0.5/1/1.5/2 requests; single 0.4mm nozzle and filament; not all positive ratios",
+        "source":"LayerRegion.cpp:31-58; Fill/Fill.cpp:904-958; GCode.cpp:6467-6513",
+        "fixture":if key == "bridge_flow" {"overhang.stl"} else {"cube10.stl"},
+        "thick_bridges":if key == "bridge_flow" && !thick {"0"} else {"1"},
+        "thick_internal_bridges":if key == "internal_bridge_flow" && !thick {"0"} else {"1"},
+        "layer_height":"0.2","initial_layer_print_height":"0.2",
+        "filament_flow_ratio":["1"],"filament_diameter":["1.75"],
+        "use_relative_e_distances":"1","print_flow_ratio":"1","set_other_flow_ratios":"0",
+        "support":"disabled","raft_layers":"0","prime_tower":"disabled",
+        "sparse_infill_pattern":"rectilinear","sparse_infill_density":"15%",
+        "top_shell_layers":"3","bottom_shell_layers":"3",
+        "top_shell_thickness":"0","bottom_shell_thickness":"0",
+        "other_bridge_ratio":"1",
+        "deferred":["arbitrary bridge geometries", "mixed nozzles/filaments", "support flows",
+            "object/region ranges", "APA", "all ratio combinations", "minimum positive float"]
+    })
 }
