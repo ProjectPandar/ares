@@ -12,6 +12,7 @@ mod bounds;
 mod capabilities;
 mod chained_intersections;
 mod closing;
+mod compatibility;
 mod compensation;
 mod conical_overhang;
 mod elephant_foot;

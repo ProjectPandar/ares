@@ -53,6 +53,9 @@ pub(super) fn prepare_project_source(
     if source.validate_print {
         super::validated::validate_post_process(&project)?;
     }
+    // `OrcaSlicer.cpp:2653-2654`: the plain-3MF compatible-printers gate
+    // fires after load and before parameter validation.
+    super::compatibility::reject_incompatible_process(&project.documents().project_settings_raw)?;
     project
         .settings()
         .validate_loaded_config(&project.documents().project_settings_raw)?;

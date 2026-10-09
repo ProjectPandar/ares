@@ -161,6 +161,20 @@ pub(super) fn slice_error_to_failure(
             "post_process is not supported under CLI.",
             String::new(),
         ),
+        SliceError::ProcessNotCompatible => family(
+            -17,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            "The selected printer is not compatible with the process preset in the 3mf.",
+            String::new(),
+        ),
         // OrcaSlicer.cpp:5681-5690 selects the active plate; :5723 passes
         // index+1 to record_exit_reson, and :433 writes that plate_id.
         // The progress callback's m_plate_index (:218,:232) is separate.

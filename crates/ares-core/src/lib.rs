@@ -234,6 +234,10 @@ pub enum SliceError {
     /// embedded `post_process` array is non-empty is rejected under the CLI
     /// (`OrcaSlicer.cpp:1682-1690`).
     PostProcessNotSupported,
+    /// `CLI_PROCESS_NOT_COMPATIBLE` (`Utils.hpp:42`): a plain CLI 3MF slice
+    /// whose embedded process `print_compatible_printers` does not contain
+    /// the current printer's system name (`OrcaSlicer.cpp:2653-2654`).
+    ProcessNotCompatible,
     /// `CLI_NO_SUITABLE_OBJECTS` (`Utils.hpp:61`): the selected plate is
     /// empty or has no object fully inside it. The payload keeps the
     /// model-read detail for the stderr channel.
@@ -295,6 +299,9 @@ impl fmt::Display for SliceError {
             Self::PostProcessNotSupported => {
                 f.write_str("post_process is not supported under CLI.")
             }
+            Self::ProcessNotCompatible => f.write_str(
+                "The selected printer is not compatible with the process preset in the 3mf.",
+            ),
             Self::NoSuitableObjects(message) => f.write_str(message),
             Self::InvalidValuesInProject(message) => f.write_str(message),
             Self::Validate { message, .. }
