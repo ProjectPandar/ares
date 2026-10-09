@@ -18,6 +18,7 @@ pub(crate) enum EarlyExit {
     EmptyPlate,
     Validation,
     NotFound,
+    ProcessNotCompatible,
 }
 
 impl EarlyExit {
@@ -28,6 +29,7 @@ impl EarlyExit {
             Self::EmptyPlate => -50,
             Self::Validation => -51,
             Self::NotFound => -3,
+            Self::ProcessNotCompatible => -17,
         }
     }
 }

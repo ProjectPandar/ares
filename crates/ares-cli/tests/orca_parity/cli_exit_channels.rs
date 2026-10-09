@@ -161,3 +161,8 @@ fn cli_exit_postprocess_family_matches_native() {
 fn cli_exit_notfound_family_matches_native() {
     assert_family("notfound", EarlyExit::NotFound);
 }
+
+#[test]
+fn cli_exit_process_compatible_family_matches_native() {
+    assert_family("process-not-compatible", EarlyExit::ProcessNotCompatible);
+}
