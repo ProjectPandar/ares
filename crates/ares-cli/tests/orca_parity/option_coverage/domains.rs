@@ -74,6 +74,9 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let (values, omission) = if key == super::adaptive_pa_bridges::KEY {
         provably_legal = true;
         (super::adaptive_pa_bridges::cases(), None)
+    } else if key == super::print_compatible_printers::KEY {
+        provably_legal = true;
+        (super::print_compatible_printers::cases(), None)
     } else if let Some((values, metadata)) = tool_domains::generate(&key) {
         tool_metadata = Some(metadata);
         // Native-witnessed H2D, two complete selectors, Manual mode, wall1/infill2.

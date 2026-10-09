@@ -137,6 +137,34 @@ build completed before worker6's exclusive full window; no Native was executed
 in that window. Scheduling/admission receipts and original cancellation logs
 are retained rather than overwritten.
 
+## Harness GREEN implementation checkpoint
+
+Only this key's bounded plan/classification metadata is promoted. Its seven
+canonical plan values are **expected typed vectors**, not a claim that a
+missing raw key was injected: `missing-default` has expected `[]` with raw
+`remove_key` action, while `explicit-empty` has `[]` with raw `set_empty_array`.
+Metadata exposes this distinction. The retained original baseline remains an
+extra E2E control; it does not turn a baseline-only null plan into complete
+coverage. `OptionOutcome::executed`'s global null/unproven rules are unchanged.
+
+The sweep delegates only this key to the exact existing eight-witness E2E
+routine (seven revised cases plus retained baseline), instead of preset export
+with load-settings. All typed, writer JSON and complete-stream assertions are
+preserved verbatim; no comparator, tolerance, string parser or production code
+changes. An unproven clone remains INCOMPLETE. A value-filtered plan retains the
+harness's normal incomplete flag; exercising the extra baseline cannot certify
+unexecuted required values. Other bridge/filament/G2/G4/wrapping hooks remain.
+
+Directed official and seeded cold/warm runs each PASS both tests: bounded
+classification and selected-key unfiltered-value sweep. Evidence:
+`/tmp/ares-pcp-embedded/{green-first-official,green-official-hot,green-seeded-cold,green-seeded-hot}`.
+Warm runs share only the original-project export cache; the footer slice and
+Native 3MF roundtrip commands are still live/fresh per witness. Do not claim
+these are cached Native fidelity results. The key-local module remains under
+400LOC. New-tree workspace/strict and queued independent full control pairs
+remain required before exact-hash review/integration; this checkpoint is not
+approval to push.
+
 ## Inventory evidence and honest coverage meaning
 
 `/tmp/ares-apa-g1-bridges/other-plan-inventory-audit.json` is an invariance audit,

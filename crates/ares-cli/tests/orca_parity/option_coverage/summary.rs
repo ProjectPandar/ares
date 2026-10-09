@@ -134,6 +134,8 @@ pub(super) fn write_summary(outcomes: &[OptionOutcome]) {
         });
         if plan.key == super::adaptive_pa_bridges::KEY {
             row["bounded_domain"] = super::adaptive_pa_bridges::metadata();
+        } else if plan.key == super::print_compatible_printers::KEY {
+            row["bounded_domain"] = super::print_compatible_printers::metadata();
         }
         row
     }).collect::<Vec<_>>();

@@ -138,6 +138,12 @@ fn execute_plan(
     if plan.cases.is_empty() {
         return OptionOutcome::omitted(plan);
     }
+    if plan.key == super::print_compatible_printers::KEY {
+        // Replay embedded requests, never load this metadata key as a preset.
+        // All seven witnesses and the retained baseline must pass before credit.
+        super::print_compatible_printers::witnesses(runner);
+        return OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
+    }
     let mut first_failure = None;
     let mut compared = 0;
     let mut excused = 0;

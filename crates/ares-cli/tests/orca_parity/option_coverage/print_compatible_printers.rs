@@ -8,7 +8,7 @@ use std::{
     io::{Cursor, Read, Write},
 };
 
-const KEY: &str = "print_compatible_printers";
+pub(super) const KEY: &str = "print_compatible_printers";
 const MACHINE: &str = "Creality Ender-3 0.4 nozzle";
 
 #[test]
@@ -16,12 +16,35 @@ fn orca_parity_embedded_compatible_printer_strings_bounded_classification() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };
+    witnesses(&runner);
+    let plans = domains::load(&runner::repo_root());
+    let plan = plans.iter().find(|plan| plan.key == KEY).unwrap();
+    let outcome = OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
+    assert_eq!(
+        outcome.status, "PASS",
+        "Native fidelity and full comparisons passed; bounded classification remains {}: {}",
+        outcome.status, outcome.detail
+    );
+    assert_eq!(plan.cases.len(), 7);
+    assert_eq!(plan.cases[0].label, "missing-default");
+    assert_eq!(plan.cases[0].value, Some(json!([])));
+    assert_eq!(plan.cases[1].label, "explicit-empty");
+    assert_eq!(plan.cases[1].value, Some(json!([])));
+    let mut unproven = plan.clone();
+    unproven.provably_legal = false;
+    assert_eq!(
+        OptionOutcome::executed(&unproven, unproven.cases.len(), Vec::new(), 0, None).status,
+        "INCOMPLETE"
+    );
+}
+
+pub(super) fn witnesses(runner: &OrcaRunner) {
     let root = tempfile::Builder::new()
         .prefix("embedded-pcp-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    let original = original(&runner);
+    let original = original(runner);
     let settings = runner::application::settings(&original).unwrap();
     assert_eq!(settings["printer_settings_id"], json!(MACHINE));
     assert_eq!(settings["enable_prime_tower"], json!("0"));
@@ -131,20 +154,55 @@ fn orca_parity_embedded_compatible_printer_strings_bounded_classification() {
         compared, 8,
         "retained baseline plus all seven revised witnesses"
     );
-    let plans = domains::load(&runner::repo_root());
-    let plan = plans.iter().find(|plan| plan.key == KEY).unwrap();
-    let outcome = OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
-    assert_eq!(
-        outcome.status, "PASS",
-        "Native fidelity and full comparisons passed; bounded classification remains {}: {}",
-        outcome.status, outcome.detail
-    );
-    let mut unproven = plan.clone();
-    unproven.provably_legal = false;
-    assert_eq!(
-        OptionOutcome::executed(&unproven, unproven.cases.len(), Vec::new(), 0, None).status,
-        "INCOMPLETE"
-    );
+}
+
+pub(super) fn cases() -> Vec<domains::OptionCase> {
+    [
+        ("missing-default", json!([])),
+        ("explicit-empty", json!([])),
+        ("empty-element", json!([MACHINE, ""])),
+        ("one-label", json!([MACHINE, "Embedded Printer A"])),
+        (
+            "ordered-duplicates",
+            json!([
+                MACHINE,
+                "Embedded Printer B",
+                "Embedded Printer A",
+                "Embedded Printer B"
+            ]),
+        ),
+        (
+            "escaped-elements",
+            json!([
+                MACHINE,
+                "semi;colon",
+                "quote\"slash\\",
+                "line\nnext",
+                "tab\tvalue"
+            ]),
+        ),
+        ("unicode-label", json!([MACHINE, "打印机 Ω"])),
+    ]
+    .into_iter()
+    .map(|(label, value)| domains::OptionCase {
+        label: label.into(),
+        value: Some(value),
+    })
+    .collect()
+}
+
+pub(super) fn metadata() -> Value {
+    json!({
+        "scope":"seven finite embedded typed coStrings fidelity witnesses; not global string/vector domain or compatibility decisions",
+        "source":"PrintConfig.cpp:1832-1834; bbs_3mf.cpp:2632-2653,7722-7727; Config.hpp:1118-1158; Config.cpp:1464-1504",
+        "printer_settings_id":MACHINE,
+        "case_value_meaning":"expected typed vector; missing-default means remove raw key, explicit-empty means set raw key to []",
+        "raw_input_actions":{"missing-default":"remove_key", "explicit-empty":"set_empty_array", "other_five":"set_exact_array"},
+        "additional_control":"retained original baseline, executed separately; not used as a noninjected complete plan",
+        "footer":"actual serialized token compared in complete output; not assumed reversible for semicolons",
+        "native_vector_authority":"actual --export-3mf Metadata/project_settings.config via ConfigOptionStrings::vserialize",
+        "deferred":["worker5 nonmatching-machine -17 rejection/compatibility filtering/load-settings", "lone empty singleton without machine ID", "arbitrary string/array domain", "scalar/nested/malformed JSON", "other coStrings keys"],
+    })
 }
 
 fn original(runner: &OrcaRunner) -> Vec<u8> {
