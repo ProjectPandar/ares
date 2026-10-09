@@ -64,6 +64,18 @@ pub(crate) fn second_instance_of_first_object(mut exported: ExportedCase) -> Exp
     let loaded = ares_core::load_project(&project).unwrap();
     assert_eq!(loaded.objects().len(), 1);
     assert_eq!(loaded.objects()[0].instances().len(), 2);
+    let stem = exported
+        .project_path
+        .file_stem()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
+    exported.project_path = exported
+        .project_path
+        .with_file_name(format!("{stem}-two-instances.3mf"));
+    exported.output_dir = exported.output_dir.join("two-instances");
+    std::fs::create_dir_all(&exported.output_dir).unwrap();
+    std::fs::write(&exported.project_path, &project).unwrap();
     exported.project = project;
     exported
 }
