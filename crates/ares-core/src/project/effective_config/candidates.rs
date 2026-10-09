@@ -158,9 +158,7 @@ fn reject_unsupported_object_sources(object: &ProjectObject) -> Result<(), Slice
 }
 
 fn first_unsupported_modifier_key(overrides: &RegionOptionOverrides) -> Option<&'static str> {
-    if overrides.wall_loops.is_some() {
-        Some("wall_loops")
-    } else if overrides.top_shell_layers.is_some() {
+    if overrides.top_shell_layers.is_some() {
         Some("top_shell_layers")
     } else if overrides.bottom_shell_layers.is_some() {
         Some("bottom_shell_layers")
