@@ -159,26 +159,63 @@ fn orca_parity_g2_sequential_consumer_boundaries() {
             .unwrap();
         let result: serde_json::Value = serde_json::from_slice(&native.result_json).unwrap();
         assert_eq!(result["return_code"], if accepted { 0 } else { -63 });
+        crate::artifacts::write(&directory.join("native.stdout"), &native.stdout).unwrap();
+        crate::artifacts::write(&directory.join("native.stderr"), &native.stderr).unwrap();
+        crate::artifacts::write(&directory.join("native.result.json"), &native.result_json)
+            .unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
+        let actual = runtime.block_on(ares_core::slice_project_plate_validated(
+            &project,
+            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            None,
+            &ares_core::ConfigOverrides::default(),
+            ares_core::SlicerContext::new(0),
+        ));
         if accepted {
-            let outcome = crate::artifacts::compare(&root, &label, Ok(&project), Ok(native.gcode.as_ref().unwrap()),
-                json!({"kind":"runtime_sequential_clearance","receipt":native.directory.join("receipt.json")})).unwrap();
-            assert_eq!(outcome.status, "PASS", "{label}: {}", outcome.detail);
+            let actual = actual.unwrap();
+            crate::artifacts::write(&directory.join("ares.gcode"), &actual).unwrap();
+            let reference = native.gcode.as_ref().unwrap();
+            crate::artifacts::write(&directory.join("native.gcode"), reference).unwrap();
+            crate::golden::compare_ordered_bytes_generator_only(reference, &actual)
+                .unwrap_or_else(|difference| panic!("{label}: {difference}"));
         } else {
-            let runtime = tokio::runtime::Builder::new_current_thread()
-                .build()
-                .unwrap();
-            let error = runtime
-                .block_on(ares_core::slice_project(
-                    &project,
-                    ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-                    ares_core::SlicerContext::new(0),
-                ))
-                .unwrap_err();
+            let error = actual.unwrap_err();
+            crate::artifacts::write(
+                &directory.join("ares.validation.txt"),
+                format!("{error:?}\n").as_bytes(),
+            )
+            .unwrap();
             let ares_core::SliceError::SequentialPrintCollision { message, .. } = error else {
                 panic!("{label}: wrong public rejection {error:?}");
             };
             assert_eq!(native.stderr, format!("{message}\n").as_bytes(), "{label}");
             assert!(native.gcode.is_none());
+            let gcode = directory.join("plate_1.gcode");
+            let cli = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+                .args(["slice", "-o"])
+                .arg(&gcode)
+                .arg(&path)
+                .output()
+                .unwrap();
+            crate::artifacts::write(&directory.join("ares.stdout"), &cli.stdout).unwrap();
+            crate::artifacts::write(&directory.join("ares.stderr"), &cli.stderr).unwrap();
+            crate::artifacts::write(
+                &directory.join("ares.exit"),
+                format!("{:?}\n", cli.status.code()).as_bytes(),
+            )
+            .unwrap();
+            assert_eq!(cli.status.code(), Some(if cfg!(unix) { 193 } else { -63 }));
+            assert_eq!(cli.stdout, native.stdout);
+            assert_eq!(cli.stderr, native.stderr);
+            assert_eq!(
+                crate::native_wall_clock::result_comparison_bytes(
+                    &std::fs::read(directory.join("result.json")).unwrap()
+                ),
+                crate::native_wall_clock::result_comparison_bytes(&native.result_json)
+            );
+            assert!(!gcode.exists());
         }
         proofs.push(json!({"label":label,"key":key,"requested":wire,"centers":centers,"heights":heights,"accepted":accepted,"Native_receipt":native.directory.join("receipt.json"),"input":path}));
     }
