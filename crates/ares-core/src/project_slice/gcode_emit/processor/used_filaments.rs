@@ -57,6 +57,7 @@ impl<'a> UsedFilaments<'a> {
                 total_volumes_per_extruder: vec![0.0; count],
                 flush_per_filament: vec![0.0; count],
                 total_used_filament: 0.0,
+                normal_time: 0.0,
             },
         }
     }

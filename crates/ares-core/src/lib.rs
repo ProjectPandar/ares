@@ -106,7 +106,7 @@ pub use extrusions::{
 pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
 pub(crate) use gap_fills::{SolidSurfaceGapFillInput, append_solid_surface_gap_fills};
 pub use gcode_processor::{
-    GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, ProcessedGCode,
+    GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
 };
 pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailParseError,

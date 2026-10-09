@@ -113,3 +113,19 @@ checks; preserve both hashes and outputs. See
 `docs/architecture/web-colorchange.md` for the approved difference and exact
 raw→Rust versus raw→stable ordinal/XYZ difference-set requirement. G-code
 and M73 byte comparisons continue to use the unmodified official slicer.
+
+## Print statistics (Summary legend)
+
+`print-statistics.nix` builds the seeded replay producer from the
+`g3wj93ly…-orca-slicer-2.4.2-seed-replay-source` source tree with
+`print-statistics.patch` applied. With `--outputdir <dir>` it also writes
+`<dir>/plate_<n>.print_statistics.json` after `export_gcode`. The file
+contains:
+
+- the `PrintStatistics` totals set by `update_print_estimated_stats`
+  (`GCode.cpp:1904-1940`), printed with `%.17g`;
+- `modes[Normal|Stealth].time`, printed with `%.9g`;
+- the `total_volumes_per_extruder` map.
+
+Tests run it as `ARES_PRINT_STATISTICS_BIN` through `OrcaRunner`, pinned to
+one CPU; see `tests/parity/summary/README.md`.

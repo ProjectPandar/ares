@@ -24,6 +24,7 @@ fn processed_buffers_preserve_ids_and_owned_data() {
             extruder_colors: vec!["#FF0000".into()],
             ..Default::default()
         },
+        print_statistics: Default::default(),
     });
     assert_eq!(output.take_gcode(), b"G1 X1\n");
     assert!(output.take_gcode().is_empty());
@@ -76,6 +77,7 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
             spiral_vase_mode: false,
             ..Default::default()
         },
+        print_statistics: Default::default(),
     });
     let mut vertices = output.take_vertices();
     assert_eq!(
@@ -111,6 +113,7 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
             spiral_vase_mode: false,
             ..Default::default()
         },
+        print_statistics: Default::default(),
     });
     let mut vertices = output.take_vertices();
     let tags = vertices.take_tags();

@@ -1,0 +1,31 @@
+--- a/src/OrcaSlicer.cpp
++++ b/src/OrcaSlicer.cpp
+@@ -6213,6 +6213,28 @@
+                                     BOOST_LOG_TRIVIAL(info) << "process finished, will export gcode temporarily to " << outfile << std::endl;
+                                     temp_time = (long long)Slic3r::Utils::get_current_time_utc();
+                                     outfile = print_fff->export_gcode(outfile, gcode_result, nullptr);
++                                    // <outputdir>/plate_<n>.print_statistics.json: the PrintStatistics the GUI legend reads
++                                    // (DoExport::update_print_estimated_stats, GCode.cpp:1904-1940, run after finalize)
++                                    // and their sources. %.17g round-trips double, %.9g round-trips float.
++                                    if (!outfile_dir.empty()) {
++                                        const std::string path = outfile_dir + "/plate_" + std::to_string(index + 1) + ".print_statistics.json";
++                                        FILE* out = fopen(path.c_str(), "w");
++                                        if (out == nullptr)
++                                            flush_and_exit(1);
++                                        const PrintStatistics& ps = print_fff->print_statistics();
++                                        const PrintEstimatedStatistics& es = gcode_result->print_statistics;
++                                        fprintf(out, "{\"total_extruded_volume\":%.17g,\"total_used_filament\":%.17g,\"total_weight\":%.17g,\"total_cost\":%.17g,",
++                                                ps.total_extruded_volume, ps.total_used_filament, ps.total_weight, ps.total_cost);
++                                        fprintf(out, "\"normal_time\":%.9g,\"stealth_time\":%.9g,\"total_volumes_per_extruder\":{",
++                                                es.modes[0].time, es.modes[1].time);
++                                        bool first = true;
++                                        for (const auto& [id, volume] : es.total_volumes_per_extruder) {
++                                            fprintf(out, "%s\"%zu\":%.17g", first ? "" : ",", static_cast<size_t>(id), volume);
++                                            first = false;
++                                        }
++                                        fprintf(out, "}}\n");
++                                        fclose(out);
++                                    }
+                                     time_using_cache = time_using_cache + ((long long)Slic3r::Utils::get_current_time_utc() - temp_time);
+                                     BOOST_LOG_TRIVIAL(info) << "export_gcode finished: time_using_cache update to " << time_using_cache << " secs.";
+                                     if (gcode_result && gcode_result->gcode_check_result.error_code) {

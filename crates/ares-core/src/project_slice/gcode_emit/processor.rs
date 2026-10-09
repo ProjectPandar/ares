@@ -262,6 +262,7 @@ pub(super) fn process(
         crate::ProcessedGCode {
             gcode,
             result: processor_result,
+            print_statistics: crate::PrintStatistics::default(),
         },
         estimate.printable_area,
     )

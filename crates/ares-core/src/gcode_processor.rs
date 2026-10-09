@@ -116,6 +116,9 @@ pub struct PrintEstimatedStatistics {
     pub flush_per_filament: Vec<f64>,
     /// `PrintStatistics::total_used_filament` (mm).
     pub total_used_filament: f64,
+    /// `modes[Normal].time`: `GCodeProcessor::get_time` narrows the
+    /// machine time to float (`GCodeProcessor.cpp:2722-2725, 6019-6020`).
+    pub normal_time: f32,
 }
 
 /// `CustomGCode::Type` (`CustomGCode.hpp:14-22`).
@@ -193,9 +196,26 @@ impl GCodeProcessorResult {
     }
 }
 
+/// The `PrintStatistics` totals (`Print.hpp:789-816`) that
+/// `DoExport::update_print_estimated_stats` writes after
+/// `GCodeProcessor::finalize` (`GCode.cpp:1904-1940, 2176`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize)]
+pub struct PrintStatistics {
+    /// mm³, every `total_volumes_per_extruder` entry.
+    pub total_extruded_volume: f64,
+    /// mm, writer extruders only.
+    pub total_used_filament: f64,
+    /// g, writer extruders only.
+    pub total_weight: f64,
+    /// Filament cost of writer extruders plus `time_cost` per normal-mode hour.
+    pub total_cost: f64,
+}
+
 /// Exported G-code together with the processor result of the same pass.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProcessedGCode {
     pub gcode: Vec<u8>,
     pub result: GCodeProcessorResult,
+    /// `Print::print_statistics()` after export.
+    pub print_statistics: PrintStatistics,
 }

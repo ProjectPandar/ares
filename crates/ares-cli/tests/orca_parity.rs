@@ -49,6 +49,8 @@ mod narrowed_x2d_whole_file;
 mod option_coverage;
 #[path = "orca_parity/presets.rs"]
 mod presets;
+#[path = "orca_parity/print_estimated_stats.rs"]
+mod print_estimated_stats;
 #[path = "orca_parity/print_validation.rs"]
 mod print_validation;
 #[path = "orca_parity/replay.rs"]

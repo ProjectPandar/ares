@@ -163,7 +163,37 @@ pub(super) fn run_with_timeout(
     work: &Path,
     timeout: Duration,
 ) -> Result<(), StageError> {
-    super::command::run(bin, args, stage, work, timeout)
+    super::command::run(
+        bin,
+        args,
+        &[],
+        super::command::Limits {
+            stage,
+            work,
+            timeout,
+        },
+    )
+}
+
+/// `run` with `envs` set on the child only (the parent environment is shared by parallel tests).
+pub(crate) fn run_with_env(
+    bin: &Path,
+    args: impl IntoIterator<Item = String>,
+    envs: &[(&str, &str)],
+    stage: Stage,
+    work: &Path,
+) -> Result<(), StageError> {
+    let timeout = Duration::from_secs(300);
+    super::command::run(
+        bin,
+        args,
+        envs,
+        super::command::Limits {
+            stage,
+            work,
+            timeout,
+        },
+    )
 }
 
 pub(super) fn capture_error(failure: &mut Option<(FailureKind, String)>, detail: String) {

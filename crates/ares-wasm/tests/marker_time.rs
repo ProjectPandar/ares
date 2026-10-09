@@ -57,6 +57,7 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
             extruder_colors: vec!["#F2754E".into()],
             ..Default::default()
         },
+        print_statistics: Default::default(),
     });
     let mut vertices = output.take_vertices();
     vertices.take_values();

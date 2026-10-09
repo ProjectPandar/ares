@@ -18,6 +18,8 @@ use std::{fs, path::Path};
 mod custom_gcode;
 #[path = "cache/plate_selection.rs"]
 mod plate_selection;
+#[path = "cache/print_statistics.rs"]
+mod print_statistics;
 #[path = "cache/processor.rs"]
 mod processor;
 

@@ -8,12 +8,22 @@ use std::{
     time::{Duration, Instant},
 };
 
+/// Where and how long one command runs.
+pub(super) struct Limits<'a> {
+    pub(super) stage: Stage,
+    pub(super) work: &'a Path,
+    pub(super) timeout: Duration,
+}
+
 pub(super) fn run(
     bin: &Path,
     args: impl IntoIterator<Item = String>,
-    stage: Stage,
-    work: &Path,
-    timeout: Duration,
+    envs: &[(&str, &str)],
+    Limits {
+        stage,
+        work,
+        timeout,
+    }: Limits,
 ) -> Result<(), StageError> {
     let io_error = |error| StageError::new(stage, FailureKind::Io, error);
     let requested_bin = bin;
@@ -43,7 +53,7 @@ pub(super) fn run(
     std::fs::write(directory.join("command.json"), serde_json::to_vec_pretty(&serde_json::json!({
         "binary": bin, "requested_binary": requested_bin, "args": args, "stage": format!("{stage:?}"),
         "cwd": work, "timeout_millis": timeout.as_millis(), "shutdown_grace_millis": 2000,
-        "environment": environment,
+        "environment": environment, "set_environment": envs,
         "capture_policy": "file-backed; immutable length-bounded snapshots; no inherited-pipe EOF wait",
         "process_tree_termination": "not guaranteed",
     })).unwrap()).map_err(io_error)?;
@@ -53,6 +63,7 @@ pub(super) fn run(
     let stderr_file = File::create(&stderr_path).map_err(io_error)?;
     let mut child = match Command::new(&bin)
         .args(&args)
+        .envs(envs.iter().copied())
         .current_dir(work)
         .stdin(Stdio::null())
         .stdout(Stdio::from(stdout_file))

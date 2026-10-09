@@ -62,6 +62,7 @@ fn actual_speed_view_types_expose_processor_values_and_ranges() {
             extruder_colors: vec!["#FF0000".into()],
             ..Default::default()
         },
+        print_statistics: Default::default(),
     });
     let mut vertices = output.take_vertices();
     let values = vertices.take_values();

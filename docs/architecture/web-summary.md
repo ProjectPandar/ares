@@ -96,17 +96,22 @@ output.
    2.4.2 source of the seeded replay producer (`1k0p5nlb…`, source store path
    `g3wj93ly…-orca-slicer-2.4.2-seed-replay-source`; its `GCode.cpp` and
    `OrcaSlicer.cpp` match `OrcaSlicer/src`), with `--cores 8`. It patches the CLI after export to dump
-   `print.print_statistics()` (the four fields, `%.17g`) plus the normal time.
-   The store path and sha are recorded here.
+   `print.print_statistics()` (the four fields, `%.17g`) plus the normal time
+   into the `--outputdir`. Its output is never committed: tests run it
+   through `OrcaRunner` (`ARES_PRINT_STATISTICS_BIN`, cached under
+   `ARES_ORCA_CACHE_DIR`) in a process pinned to one CPU, since a
+   multi-threaded Native takes a different travel order than the single-CPU
+   reference Ares matches.
 2. **Fixtures:**
    - The existing preset-slice 3MF.
    - A two-filament plate with non-zero `filament_cost`, distinct densities
      and `time_cost > 0`.
    - A plate where one configured filament is unused, to cover the skip
      branch.
-3. **Core check:** an integration test in `crates/ares-core/tests/` compares the
-   four totals bit for bit (f64) against native `PrintStatistics` from the
-   probe. RED covers at least the `time_cost > 0` fixture and the
+3. **Core check:** `crates/ares-cli/tests/orca_parity/print_estimated_stats.rs`
+   compares the four totals bit for bit (f64) against native `PrintStatistics`
+   from the probe; `ARES_REQUIRE_ORCA=1` fails without the probe, otherwise
+   it prints `SKIPPED`. RED covers at least the `time_cost > 0` fixture and the
    unused-filament fixture. RED is an
    assertion failure on missing or zero values, not a compile failure.
 4. **WASM check:** a wasm test asserts the JSON round-trips the exact f64 bits.
