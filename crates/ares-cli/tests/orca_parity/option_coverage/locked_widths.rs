@@ -55,6 +55,7 @@ fn compare_width(key: &str) {
         .find(|plan| plan.key == key)
         .unwrap();
     let mut prior_extrusions: Option<(f64, Vec<String>)> = None;
+    let mut proofs = Vec::new();
     for case in &plan.cases {
         let value = case.value.as_ref().unwrap();
         let wire = value.as_str().unwrap();
@@ -100,10 +101,27 @@ fn compare_width(key: &str) {
                 "width probes must change actual extrusion"
             );
         }
-        prior_extrusions = Some((width, extrusions));
         let outcome = parity::compare_case(&sliced);
         assert_eq!(outcome.status, "PASS", "{key}={wire}: {}", outcome.detail);
+        proofs.push(json!({"label": case.label, "requested": value,
+            "effective_width_mm": width, "sparse_extrusions": extrusions.len(),
+            "full_output_status": outcome.status}));
+        prior_extrusions = Some((width, extrusions));
     }
+    let outcome = OptionOutcome::executed(&plan, proofs.len(), Vec::new(), 0, None);
+    let root = parity::artifacts::root_from_env().unwrap();
+    parity::artifacts::overwrite(
+        &root.join(format!("{key}-bounded.json")),
+        &serde_json::to_vec_pretty(&json!({
+            "scope": "LockedZag 40%, one 0.4mm nozzle, 0.2mm layers; not global width coverage",
+            "domain": plan.width_domain.as_ref().unwrap().metadata,
+            "cases": proofs, "classification": outcome.status, "detail": outcome.detail,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(outcome.status, "PASS", "{key}: {}", outcome.detail);
+    assert!(plan.omission.is_none(), "{key}");
 }
 
 #[test]
@@ -176,6 +194,16 @@ fn export_width(
     plan: &domains::OptionPlan,
     case: &domains::OptionCase,
 ) -> Result<runner::ExportedCase, runner::stages::StageError> {
+    export_width_context(runner, plan, case, "0.4", "0.2")
+}
+
+pub(super) fn export_width_context(
+    runner: &OrcaRunner,
+    plan: &domains::OptionPlan,
+    case: &domains::OptionCase,
+    nozzle: &str,
+    height: &str,
+) -> Result<runner::ExportedCase, runner::stages::StageError> {
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
@@ -189,9 +217,14 @@ fn export_width(
         .collect::<Vec<_>>();
     parity::normalize_filament_defaults(&mut filaments);
     inject_case(plan, case, &mut machine, &mut process, &mut filaments);
+    machine.insert("nozzle_diameter".into(), json!([nozzle]));
+    process.insert("layer_height".into(), json!(height));
     let exported = runner.export_case(
         &CaseInputs {
-            label: &format!("locked-width/{}/{}", plan.key, case.label),
+            label: &format!(
+                "locked-width/{nozzle}/{}/{}/{}",
+                height, plan.key, case.label
+            ),
             machine: &machine,
             process: &process,
             filaments: &filaments,
@@ -205,8 +238,8 @@ fn export_width(
         ("sparse_infill_pattern", json!("lockedzag")),
         ("sparse_infill_density", json!("40%")),
         ("use_relative_e_distances", json!("1")),
-        ("nozzle_diameter", json!(["0.4"])),
-        ("layer_height", json!("0.2")),
+        ("nozzle_diameter", json!([nozzle])),
+        ("layer_height", json!(height)),
     ] {
         runner::application::verify_value(&exported.project, option, &value).unwrap();
     }

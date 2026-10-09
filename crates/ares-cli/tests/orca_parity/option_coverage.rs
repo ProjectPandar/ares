@@ -1,6 +1,10 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
 #[cfg(test)]
+#[path = "option_coverage/locked_width_context.rs"]
+mod locked_width_context;
+
+#[cfg(test)]
 #[path = "option_coverage/extruder_printable_area.rs"]
 mod extruder_printable_area;
 
