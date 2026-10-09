@@ -300,6 +300,60 @@ async fn project_import_slice_project_emits_after_typed_loading() {
     );
 }
 
+/// `print_sequence="by object"` with a first-layer bed temperature of 0:
+/// the inter-object transition must write `M140 S0` when the writer
+/// cache holds the other-layers value. Upstream always calls
+/// `GCodeWriter::set_bed_temperature` from
+/// `_print_first_layer_bed_temperature` (`GCode.cpp:4023-4050`) and the
+/// writer emits whenever the cached temperature differs
+/// (`GCodeWriter.cpp:168-175`) — there is no `> 0` guard for the bed,
+/// unlike the nozzle path (`GCode.cpp:4058-4064`).
+#[tokio::test]
+async fn slice_project_by_object_transition_writes_zero_first_layer_bed_temperature() {
+    let mut parts = ProjectParts::fixture();
+    // Two print instances of the one object, 100mm apart on X.
+    parts.replace(
+        "3D/3dmodel.model",
+        "printable=\"1\" auto_drop=\"1\"/>",
+        "printable=\"1\" auto_drop=\"1\"/>\n  <item objectid=\"2\" p:UUID=\"00000002-b1ec-4553-aec9-835e5b72500\" transform=\"1 0 0 0 1 0 0 0 1 43.039205 115.992105 46\" printable=\"1\" auto_drop=\"1\"/>",
+    );
+    parts.replace(
+        "Metadata/model_settings.config",
+        "</model_instance>",
+        "</model_instance>\n    <model_instance><metadata key=\"object_id\" value=\"2\"/><metadata key=\"instance_id\" value=\"1\"/><metadata key=\"identify_id\" value=\"134\"/></model_instance>",
+    );
+    parts.replace(
+        "Metadata/project_settings.config",
+        "\"print_sequence\": \"by layer\"",
+        "\"print_sequence\": \"by object\"",
+    );
+    // First-layer bed 0, other layers 55: the object-1 second layer
+    // writes M140 S55 into the writer cache, so the object-2 transition
+    // re-reads a first-layer temperature of 0 against that cache.
+    parts.replace(
+        "Metadata/project_settings.config",
+        "\"hot_plate_temp_initial_layer\": [\r\n\t\t\"55\",\r\n\t\t\"55\"\r\n\t]",
+        "\"hot_plate_temp_initial_layer\": [\r\n\t\t\"0\",\r\n\t\t\"0\"\r\n\t]",
+    );
+    let output = slice_project(
+        &parts.bytes(),
+        GenerationMetadata::deterministic(2026, 7, 12, 3, 4, 5),
+        crate::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    let text = std::str::from_utf8(&output).unwrap();
+    assert_eq!(
+        text.match_indices("M140 S55 ; set bed temperature").count(),
+        2,
+        "both sequential instances run the per-object second-layer bed step"
+    );
+    assert!(
+        text.contains("M140 S0 ; set bed temperature"),
+        "the inter-object transition writes M140 S0 when the first-layer bed temperature is 0 and the writer cache holds 55"
+    );
+}
+
 #[test]
 fn project_import_generation_metadata_validates_local_calendar_fields() {
     assert!(GenerationMetadata::new_local(2026, 7, 12, 23, 59, 59).is_ok());
