@@ -1,6 +1,6 @@
 # #7 stock validation: current runtime conclusion
 
-Status: REVIEW, no production change; spec ffe9db96d approved. Base8a0116f54.
+Status: REVIEW, no production change; spec ffe9db96d approved. Final base88832f9bf.
 Owners and per-stock exact error texts/line numbers remain in
 [the approved spec](../superpowers/specs/2026-10-09-stock-config-validation-parity.md).
 
@@ -79,8 +79,18 @@ production addition (new field, zero G-code byte change) while requiring fresh
 rebuild/directed tests; the latter completed above. Default workspace is not
 attributed to299 or8a. The conclusion is the only later change.
 
+Coordinator merged worker6's tests-only hotfix88832f9bf and authorized carrying
+other8a evidence. After rebase, exact
+`b9bd46d33286c9efc43327d9c83557876022a929` ran default/no-ARES directed29
+(new28 plus that previously failing policy), run
+`efe2bf77-20fb-434a-a882-12f0d0801eaa`:29PASS, exit0. The policy now passes;
+all28 new tests visibly print SKIPPED. This is not a rerun of the full workspace
+and does not erase its historical failure. Inspected8a→888 production src delta
+is empty; clippy/fmt and control28 retain their actual299 bindings with
+coordinator-authorized carry-forward, not fabricated execution onb9.
+
 Evidence: `/tmp/worker3-stock-validation-{current-v3,rebased,rebased-record.json,
-default-workspace,default-environment.json,clippy,fmt}`; artifact roots retain
+default-workspace,default-environment.json,hotfix-default,clippy,fmt}`; artifact roots retain
 full inputs, selection, receipts, command/status/stdout/stderr and SHA256s.
 Seeded Native SHA256 remains
 `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`.
