@@ -166,6 +166,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         Some(extension) if extension == "3mf" => {
             let metadata = ares_core::GenerationMetadata::default();
             let context = ares_core::SlicerContext::new(0);
+            // OrcaSlicer.cpp:5681-5690 iterates from plate index0 when
+            // --slice0 is used, or selects the explicit one-based plate.
+            // This byte API slices one view; its default is that first plate.
             match &args.dump_moves {
                 Some(path) => {
                     let processed = match ares_core::slice_project_plate_processed_validated(
@@ -175,7 +178,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed,
                         Err(error) => {
-                            return Err(slice_error_to_failure(error, &args.output));
+                            return Err(slice_error_to_failure(
+                                error,
+                                &args.output,
+                                #[cfg(target_os = "linux")]
+                                args.plate.unwrap_or(1),
+                            ));
                         }
                     };
                     fs::write(path, moves_csv::format(&processed.result))?;
@@ -189,7 +197,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(gcode) => gcode,
                         Err(error) => {
-                            return Err(slice_error_to_failure(error, &args.output));
+                            return Err(slice_error_to_failure(
+                                error,
+                                &args.output,
+                                #[cfg(target_os = "linux")]
+                                args.plate.unwrap_or(1),
+                            ));
                         }
                     }
                 }
@@ -204,7 +217,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             match ares_core::slice_stl_validated(input, options).await {
                 Ok(gcode) => gcode,
                 Err(error) => {
-                    return Err(slice_error_to_failure(error, &args.output));
+                    return Err(slice_error_to_failure(
+                        error,
+                        &args.output,
+                        #[cfg(target_os = "linux")]
+                        1,
+                    ));
                 }
             }
         }

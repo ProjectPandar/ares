@@ -206,3 +206,22 @@ No other path-type offset is modified without live runtime evidence.
 
 The coordinator requires complete production gates and coordinated web browser
 verification before deleting the six frozen products and submitting review.
+
+## Approved selected -50 CLI metadata supplement
+
+After worker3's count==0 NoSuitableObjects port, runtime RED `f18b8b25c`
+compares actual Native --slice2 -50/206 against Ares: status/channels match,
+but Ares's old family adapter hardcodes plate_index1 instead of Native2.
+The full JSON comparison remains mandatory, with no index rewriting.
+
+OrcaSlicer.cpp:213-232's m_plate_index is progress notification state, not the
+exit-result source. The plate loop :5681-5690 starts index0 for --slice0 or
+selects index+1 matching the explicit plate, setting model.curr_plate_index.
+The count==0 branch :5714-5724 passes index+1 to record_exit_reson; :433 writes
+that parameter to result.json. Ares's private CLI adapter now receives the
+selected one-based plate from args.plate, defaulting to the first plate1 for
+its existing single-view byte API, and uses it only for NoSuitableObjects.
+STL's single-view adapter supplies1. Core SliceError/API and all other family
+metadata are unchanged. Scoped regression includes the eight stock_early_cli
+cases (especially default Kobra3 -50/index1), empty_selected_plate families,
+and retained/default/explicit plate2 controls on both Native modes.

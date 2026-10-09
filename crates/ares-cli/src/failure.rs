@@ -117,7 +117,11 @@ impl From<serde_json::Error> for CliFailure {
 /// family variants carry the result.json payload; everything else keeps
 /// the legacy `Error:` channel — those surfaces have no native family
 /// emulation in this slice (recorded in clusters.md).
-pub(super) fn slice_error_to_failure(error: SliceError, output: &Path) -> CliFailure {
+pub(super) fn slice_error_to_failure(
+    error: SliceError,
+    output: &Path,
+    #[cfg(target_os = "linux")] selected_plate_index: u32,
+) -> CliFailure {
     let family = |return_code,
                   #[cfg(target_os = "linux")] plate_index,
                   #[cfg(target_os = "linux")] layer_height,
@@ -157,10 +161,13 @@ pub(super) fn slice_error_to_failure(error: SliceError, output: &Path) -> CliFai
             "post_process is not supported under CLI.",
             String::new(),
         ),
+        // OrcaSlicer.cpp:5681-5690 selects the active plate; :5723 passes
+        // index+1 to record_exit_reson, and :433 writes that plate_id.
+        // The progress callback's m_plate_index (:218,:232) is separate.
         SliceError::NoSuitableObjects(_) => family(
             -50,
             #[cfg(target_os = "linux")]
-            1,
+            selected_plate_index,
             #[cfg(target_os = "linux")]
             0.0,
             #[cfg(target_os = "linux")]
