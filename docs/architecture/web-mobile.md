@@ -89,3 +89,19 @@ rewrite gate in `AGENTS.md` applies to domain slices and is not used here.
   real devices, so it is not done. Pre-linking the bed shaders
   (`compileAsync`) gave no measurable gain: the first synchronous WebGL call
   pays the GPU-process start-up wait wherever it happens.
+- Total Blocking Time (simulated 1338-1802 ms mobile) is not JavaScript CPU
+  work. Unthrottled, the page runs 0.8-1 s of main-thread tasks, and one of
+  them (572-671 ms) is the `WebGLRenderer` context creation in the Viewport
+  mount, which waits for the GPU process to start. A DevTools profile under
+  4x CPU throttle shows the same wait at about 590 ms, so it does not scale
+  with CPU speed. Lighthouse's simulated throttling multiplies it by 4 anyway
+  and charges it to the `index` chunk, whose React scheduler task mounts the
+  Viewport, and to the Viewport chunk. The `index` chunk itself is ordinary:
+  373 KB, of which react-dom is 207 KB, the router 69 KB and app code about
+  90 KB, with no catalog built at start when no vendors are installed.
+  Trimming or splitting it would not change TBT.
+- Rendering the viewport in a worker (`transferControlToOffscreen` with
+  three.js in a Worker) is the only change that would take that wait off the
+  main thread. It is deferred: Viewport input, picking, resize and
+  screenshots would all move behind messages, and iOS needs OffscreenCanvas
+  WebGL (Safari 17+).
