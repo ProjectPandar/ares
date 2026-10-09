@@ -302,6 +302,43 @@ candidate, inventory and explain any changes, and require seeded all PASS.
 Focused/source-equality evidence alone cannot prove this stricter guard inert.
 Official need not rerun; retain its previously accepted evidence.
 
+## Official-mode whole-file case disposition (coordinator ruling 2026-10-09)
+
+The two official-control failures (`bridge_over_infill_multi_filament`,
+`bridge_over_infill_multi_filament_x2d`, `narrowed_x2d_whole_file`) are
+not byte divergences: both trees fail with `StageError::Timeout` — under
+the official control set's 32-way parallelism the appimage wrote only
+53KB of the 6.4MB stream before the shared 300s stage timeout killed it
+(`/tmp/narrowed-x2d-whole-file-rqnfpn/orca/plate_1.gcode.tmp`, command
+evidence `/tmp/narrowed-x2d-whole-file-rqnfpn/command-kCX0RF`, bridge
+counterpart `/tmp/bridge-multi-i4pIxg/command-kKsHJu`). Standalone the
+same fixtures complete quickly: narrowed X2D 4.2s unpinned / 12-13s
+pinned to one CPU, K3M 0.6s (probes under `/tmp/x2d-official-probe/`).
+
+The stock official appimage additionally labels objects from an
+uninitialized id: three probes on the same input and CPU pin produced
+`id:0` twice and `id:9223372037920129024` once (1424 label lines,
+`/tmp/x2d-official-probe/{out,out1,out2}/plate_1.gcode`). The `id:0`
+run is byte-identical to the seeded reference modulo the `; generated
+by` banner (diff: 0 lines); the garbage-id run differs only in those
+label lines. The seeded replay binary initializes ids (the
+`initialized_object_id` precedent, `ARES_PARITY_OBJECT_ID_REFERENCE`),
+which is why the seeded control set passes these cases byte-exact.
+
+Disposition (option ii, not comparator normalization — normalization
+would be reused by other cases and set a relaxation precedent):
+
+- The two whole-file tests keep the byte comparison for the seeded
+  reference only.
+- Their native stage timeout extends to 1800s (test-local, not the
+  shared default), citing the 53KB/300s contention evidence.
+- Under official the cases assert the native completed and produced a
+  complete stream (`; CONFIG_BLOCK_END`, `; total layer number:`).
+- Under `ARES_REQUIRE_ORCA=1` a missing native must still FAIL (the
+  runner `from_env` error path is unchanged).
+
+This is tests-only; no production or comparator change.
+
 ## Sequence, validation and exit
 
 1. Submit this spec and wait for exact-hash coordinator approval.
