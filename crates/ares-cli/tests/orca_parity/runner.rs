@@ -46,6 +46,9 @@ mod adjacent_motion;
 #[cfg(test)]
 #[path = "runner/tiq2_retained_fan.rs"]
 mod tiq2_retained_fan;
+#[cfg(test)]
+#[path = "runner/tiq2_footer_templates.rs"]
+mod tiq2_footer_templates;
 #[path = "runner/type2_copies.rs"]
 pub(crate) mod type2_copies;
 #[path = "runner/vg1_inputs.rs"]

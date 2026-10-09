@@ -27,7 +27,12 @@ Each parser invocation refreshes live writer position/E state and applies
 successful assignment output back to the writer. Machine-end follows the
 filament templates with the writer's active filament as parser index.
 `current_extruder` remains the active writer/parser placeholder, not the
-loop index. This distinction matters for the TiQ2 scripts: both slot templates
+loop index. The third parser argument becomes `ctx->current_extruder_id`
+(`PlaceholderParser.cpp:827/915`); it selects implicit vector subscripts and
+also participates in filament_map/extrusion_width resolution (:841/:1052).
+It must use the loop index even though `current_extruder` stays writer-active.
+The RED includes `[nozzle_temperature]` with distinct slot values to separate
+these concepts. This distinction matters for the TiQ2 scripts: both slot templates
 execute their `current_extruder==0` branch even while the second invocation's
 `filament_extruder_id` is1.
 
