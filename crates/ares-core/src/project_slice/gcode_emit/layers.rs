@@ -169,7 +169,7 @@ pub(super) fn append(
     let mut phase_meta: Vec<(usize, usize, usize)> = Vec::new();
     if by_object {
         let mut final_extruder_id = None;
-        for object in 0..objects.len() {
+        for (object, object_instances) in instances.iter().enumerate() {
             let ordering = super::tool_ordering::build(
                 traversal,
                 objects,
@@ -194,7 +194,7 @@ pub(super) fn append(
                 .filter(|(_, entry)| entry.object_index == object)
                 .copied()
                 .collect();
-            for copy in 0..instances[object].len() {
+            for copy in 0..object_instances.len() {
                 phase_meta.push((object, copy, ordering_index));
                 scoped_chunks.push(object_chunks.clone());
             }
@@ -384,15 +384,6 @@ pub(super) fn append(
         // NEW print z to advance past the last recorded one
         // (`skirt_done.back() < print_z - EPSILON`) — a later object
         // restarting at a lower z neither re-emits nor consumes budget.
-        let skirt_height = traversal
-            .resolved
-            .views
-            .full
-            .process
-            .print
-            .skirt_height
-            .0
-            .max(0) as usize;
         // The per-group accounting drives emission: `m_skirt_group_done[group_idx]`
         // (`GCode.cpp:5240-5250`, cleared once per export at :2036) is
         // threaded through `generate_skirt`, whose `make_skirt_extrusion`

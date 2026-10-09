@@ -63,7 +63,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
     for (source, instance) in input.entries.iter().flat_map(|&source| {
         input.instances[source.object_index]
             .iter()
-            .filter(move |&instance| input.copy_filter.map_or(true, |copy| instance.copy == copy))
+            .filter(move |&instance| input.copy_filter.is_none_or(|copy| instance.copy == copy))
             .map(move |&instance| (source, instance))
     }) {
         let position = instance.position;

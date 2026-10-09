@@ -2,6 +2,32 @@
 use super::ExportedCase;
 use std::io::{Cursor, Read, Write};
 
+/// Rewrites `Metadata/model_settings.config`: the volume entry joins the
+/// retargeted object and its second instance gets `instance_id` 1.
+fn retarget_model_settings(mut xml: String) -> String {
+    xml = xml.replacen(
+        "<metadata key=\"object_id\" value=\"2\"/>",
+        "<metadata key=\"object_id\" value=\"4\"/>",
+        1,
+    );
+    let object_id = "<metadata key=\"object_id\" value=\"4\"/>";
+    let instance_id = "<metadata key=\"instance_id\" value=\"0\"/>";
+    if let Some(start) = xml.find(object_id)
+        && let Some(offset) = xml[start..].find(instance_id)
+    {
+        let at = start + offset;
+        xml.replace_range(
+            at..at + instance_id.len(),
+            "<metadata key=\"instance_id\" value=\"1\"/>",
+        );
+    }
+    xml.replacen(
+        "<metadata key=\"identify_id\" value=\"45\"/>",
+        "<metadata key=\"identify_id\" value=\"145\"/>",
+        1,
+    )
+}
+
 /// Retargets the first build item onto the second object so the project
 /// holds ONE print object with TWO instances (by-object M73 coverage:
 /// upstream accumulates `instances().size() * temp_layer_count`,
@@ -30,29 +56,7 @@ pub(crate) fn second_instance_of_first_object(mut exported: ExportedCase) -> Exp
                     )
                     .into_bytes();
             } else if file.name() == "Metadata/model_settings.config" {
-                let mut xml = String::from_utf8(bytes).unwrap();
-                xml = xml.replacen(
-                    "<metadata key=\"object_id\" value=\"2\"/>",
-                    "<metadata key=\"object_id\" value=\"4\"/>",
-                    1,
-                );
-                if let Some(start) = xml.find("<metadata key=\"object_id\" value=\"4\"/>") {
-                    if let Some(offset) =
-                        xml[start..].find("<metadata key=\"instance_id\" value=\"0\"/>")
-                    {
-                        let at = start + offset;
-                        xml.replace_range(
-                            at..at + "<metadata key=\"instance_id\" value=\"0\"/>".len(),
-                            "<metadata key=\"instance_id\" value=\"1\"/>",
-                        );
-                    }
-                }
-                xml = xml.replacen(
-                    "<metadata key=\"identify_id\" value=\"45\"/>",
-                    "<metadata key=\"identify_id\" value=\"145\"/>",
-                    1,
-                );
-                bytes = xml.into_bytes();
+                bytes = retarget_model_settings(String::from_utf8(bytes).unwrap()).into_bytes();
             }
             output
                 .start_file(file.name(), zip::write::SimpleFileOptions::default())
