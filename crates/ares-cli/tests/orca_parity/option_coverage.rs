@@ -7,6 +7,12 @@ mod filament_flow_coverage;
 #[cfg(test)]
 #[path = "option_coverage/bridge_flow_coverage.rs"]
 mod bridge_flow_coverage;
+#[cfg(test)]
+#[path = "option_coverage/tool_context.rs"]
+mod tool_context;
+#[cfg(test)]
+#[path = "option_coverage/tool_mapping.rs"]
+mod tool_mapping;
 
 #[cfg(test)]
 #[path = "option_coverage/layer_heights.rs"]
