@@ -11,6 +11,13 @@
 //! (the EXCLUDE_OBJECT_DEFINE vertex outline is a separate upstream
 //! divergence — see /tmp/ares-matrix-clusters.md) and the source input
 //! already disables the prime tower.
+//!
+//! Official-mode disposition (coordinator ruling 2026-10-09): the byte
+//! comparison runs only against the seeded replay binary (which
+//! initializes object ids); the stock official appimage carries an
+//! uninitialized object id (see the probe note at the native invocation)
+//! and can write garbage label ids, so the official case asserts native
+//! completion and a complete stream instead.
 
 use std::fs;
 
@@ -56,7 +63,13 @@ fn assert_parity(input_bytes: &[u8], input_sha256: &str) {
     fs::write(&input, input_bytes).unwrap();
     let output = directory.join("orca");
     fs::create_dir(&output).unwrap();
-    stages::run(
+    // 1800s instead of the shared 300s default: under the official control
+    // set's 32-way parallel run the appimage wrote only 53KB of the ~6.4MB
+    // stream before the default timeout killed it
+    // (/tmp/narrowed-x2d-whole-file-rqnfpn/orca/plate_1.gcode.tmp), while the
+    // same fixture completes standalone in 4.2s unpinned / 12-13s pinned to
+    // one CPU (official probes /tmp/x2d-official-probe/{out,out1,out2}).
+    stages::run_with_timeout(
         runner.bin(),
         [
             "--slice".to_owned(),
@@ -67,9 +80,34 @@ fn assert_parity(input_bytes: &[u8], input_sha256: &str) {
         ],
         stages::Stage::Slice,
         &directory,
+        std::time::Duration::from_secs(1800),
     )
     .unwrap();
     let reference = stages::read(&output.join("plate_1.gcode"), stages::Stage::Slice).unwrap();
+
+    // The stock official appimage labels objects from an uninitialized id:
+    // three probes on the same input and CPU pin produced id:0 twice and
+    // id:9223372037920129024 once (1424 label lines, probe directories
+    // /tmp/x2d-official-probe/{out,out1,out2}); the seeded replay binary
+    // initializes ids (the initialized_object_id precedent). The byte
+    // comparison therefore runs only against the deterministic seeded
+    // reference; under official the case asserts the native completed and
+    // produced the full stream instead (coordinator ruling 2026-10-09).
+    if std::env::var("ORCA_REPLAY_SEED").is_err() {
+        assert!(
+            reference
+                .windows(b"; CONFIG_BLOCK_END".len())
+                .any(|window| window == b"; CONFIG_BLOCK_END"),
+            "official native output must carry the trailing config block"
+        );
+        assert!(
+            String::from_utf8_lossy(&reference)
+                .lines()
+                .any(|line| line.starts_with("; total layer number: ")),
+            "official native output must be a complete sliced stream"
+        );
+        return;
+    }
 
     let actual_bytes = tokio::runtime::Builder::new_current_thread()
         .build()

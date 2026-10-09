@@ -156,7 +156,7 @@ pub(crate) fn run(
     run_with_timeout(bin, args, stage, work, Duration::from_secs(300))
 }
 
-pub(super) fn run_with_timeout(
+pub(crate) fn run_with_timeout(
     bin: &Path,
     args: impl IntoIterator<Item = String>,
     stage: Stage,
