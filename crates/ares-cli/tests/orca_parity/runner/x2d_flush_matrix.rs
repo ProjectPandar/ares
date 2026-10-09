@@ -304,3 +304,85 @@ fn x2d_flush_matrix_no_trigger_keeps_malformed_matrix_rejected() {
     })).unwrap()).unwrap();
     eprintln!("nontrigger rejection artifacts {directory:?}");
 }
+
+/// O8-X2D-SCALAR closure control: the original UB shape (scalar
+/// `nozzle_volume_type` with the four-entry matrix) constructed at
+/// runtime from the same export path as the admitted `case-LqoYic`
+/// witness. The public ares CLI must fail with the exact upstream
+/// matrix-size error (GCode.cpp:5596-5614), exit 1, and produce no
+/// G-code. The Native success-on-UB divergence stays recorded in
+/// docs/architecture/o8-x2d-scalar-flush-context.md with
+/// parity_pass=false; no Native output is committed or asserted here.
+#[test]
+fn x2d_flush_matrix_scalar_four_cell_input_fails_exactly_at_the_cli() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let exported = project(
+        &runner,
+        "scalar-four-cell",
+        &[
+            ("nozzle_volume_type", Some(json!(["Standard"]))),
+            (
+                "flush_volumes_matrix",
+                Some(json!(["0", "140", "140", "0"])),
+            ),
+        ],
+    );
+    let directory = tempfile::Builder::new()
+        .prefix("x2d-fm-scalar-cli-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    std::fs::write(directory.join("input.3mf"), &exported.project).unwrap();
+    let retained = directory.join("plate_1.gcode");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+        .args(["slice", "-o"])
+        .arg(&retained)
+        .arg(directory.join("input.3mf"))
+        .output()
+        .unwrap();
+    std::fs::write(directory.join("stdout"), &output.stdout).unwrap();
+    std::fs::write(directory.join("stderr"), &output.stderr).unwrap();
+    std::fs::write(
+        directory.join("exit"),
+        format!("{:?}\n", output.status.code()),
+    )
+    .unwrap();
+    assert_eq!(output.status.code(), Some(1), "{directory:?}");
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "Error: InvalidInput(\"Flush volumes matrix do not match to the correct size!\")\n",
+        "{directory:?}"
+    );
+    assert!(
+        !retained.exists(),
+        "no exported G-code on the matrix-size error"
+    );
+}
+
+/// The scalar CLI control above must FAIL (not silently pass) when a
+/// Native is required but absent (the requires-native meta-test
+/// precedent from `cli_custom_gcode_exit`).
+#[test]
+fn x2d_flush_matrix_scalar_controls_require_native() {
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "runner::x2d_flush_matrix::x2d_flush_matrix_scalar_four_cell_input_fails_exactly_at_the_cli",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_ORCA_NATIVE_BIN")
+        .output()
+        .unwrap();
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        !output.status.success(),
+        "require mode without a native must fail: {diagnostic}"
+    );
+}
