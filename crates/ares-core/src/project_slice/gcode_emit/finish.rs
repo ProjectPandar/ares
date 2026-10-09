@@ -84,17 +84,30 @@ pub(super) fn append(
         output.extend_from_slice(b"M981 S0 P20000 ; close spaghetti detector\n");
     }
     output.extend_from_slice(custom.as_bytes());
-    if let Some(filament_end) = gcode.filament_end_gcode.0.first() {
+    if state.options.single_extruder_multi_material {
+        let filament = state.extruders.active_id();
+        let source = gcode
+            .filament_end_gcode
+            .0
+            .get(filament)
+            .unwrap_or(&gcode.filament_end_gcode.0[0]);
         append_template(
             output,
             state,
-            filament_end,
+            source,
             &mut config,
-            EndTemplate::Filament,
+            EndTemplate::Filament(filament),
         )?;
-        // The machine-end template reseeds from the post-assignment
-        // writer state (`GCode.cpp:3896` refresh per process call).
-        super::motion::refresh_writer_state(&mut config, state);
+    } else {
+        for (filament, source) in gcode.filament_end_gcode.0.iter().enumerate() {
+            append_template(
+                output,
+                state,
+                source,
+                &mut config,
+                EndTemplate::Filament(filament),
+            )?;
+        }
     }
     append_template(
         output,
@@ -186,21 +199,21 @@ fn float_at(values: &crate::OrcaFloats, index: usize) -> f64 {
 
 #[derive(Clone, Copy)]
 enum EndTemplate {
-    Filament,
+    Filament(usize),
     Machine,
 }
 
 impl EndTemplate {
     fn name(self) -> &'static str {
         match self {
-            Self::Filament => "filament-end",
+            Self::Filament(_) => "filament-end",
             Self::Machine => "machine-end",
         }
     }
 
     fn template_name(self) -> &'static str {
         match self {
-            Self::Filament => "filament_end_gcode",
+            Self::Filament(_) => "filament_end_gcode",
             Self::Machine => "machine_end_gcode",
         }
     }
@@ -218,9 +231,20 @@ fn append_template(
     if source.is_empty() {
         return Ok(());
     }
+    super::motion::refresh_writer_state(config, state);
+    let filament = match template {
+        EndTemplate::Filament(filament) => filament,
+        EndTemplate::Machine => state.extruders.active_id(),
+    };
+    if matches!(template, EndTemplate::Filament(_)) {
+        config.insert(
+            "filament_extruder_id",
+            value::Value::Integer(filament as i64),
+        );
+    }
     // Render or write-back failure emits only the inline report — the
     // rendered text is discarded (`GCode.cpp:3920-3933`).
-    let rendered = match template::render(source, config) {
+    let rendered = match template::render_for_filament(source, config, filament) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
             let error = error.to_string();
