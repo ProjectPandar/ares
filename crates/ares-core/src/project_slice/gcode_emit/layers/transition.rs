@@ -61,6 +61,12 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     motion::tower::transition_retract(output, state);
     // `GCode.cpp:3326`: the safety lift above every printed layer.
     motion::tower::writer_z(output, state, lift_z, "", true);
+    // `GCode.cpp:3327` runs `GCode::travel_to` (GCode.cpp:7350) for the
+    // origin move: it selects the travel acceleration/jerk BEFORE the
+    // writer performs the hop — `erNone` with the previous object's
+    // layer active takes the plain travel values (the native
+    // `SET_VELOCITY_LIMIT` between `G1 Z10.36` and `G1 Z10.76`).
+    motion::begin_path_travel(output, state, "", f64::INFINITY);
     // `GCode.cpp:3327-3330`: the travel to the incoming instance's origin
     // with the external motion planner once; the writer lifts again for
     // the planar move (the native pair `G1 Z10.4` / `G1 Z10.8` /

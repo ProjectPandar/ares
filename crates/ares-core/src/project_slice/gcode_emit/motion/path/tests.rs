@@ -20,6 +20,9 @@ fn volumetric_speed_cap_divides_by_print_and_filament_flow_ratios() {
         },
         ..EmitState::default()
     };
+    // `advance_for_layer` owns the layer index advance
+    // (`GCode.cpp:5690-5696`); the tests set it directly.
+    state.layer_index = 1;
     begin_layer(
         &mut Vec::new(),
         &mut state,
@@ -78,6 +81,9 @@ fn zero_max_volumetric_speed_leaves_the_role_speed_uncapped() {
         },
         ..EmitState::default()
     };
+    // `advance_for_layer` owns the layer index advance
+    // (`GCode.cpp:5690-5696`); the tests set it directly.
+    state.layer_index = 1;
     begin_layer(
         &mut Vec::new(),
         &mut state,
