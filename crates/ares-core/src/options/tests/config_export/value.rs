@@ -146,7 +146,9 @@ fn config_export_value_preserves_explicit_nullable_state() {
         Nullable::Value(OrcaFloat(2.0)),
     ];
     assert_config_value(&NullableVectorRef::new(&all_values), "1,2", false);
-    assert_config_value(&OrcaFloats(Vec::new()), "", false);
+    // Config.hpp:837: an empty float vector has no non-nil member,
+    // so is_nil returns true regardless of NULLABLE.
+    assert_config_value(&OrcaFloats(Vec::new()), "", true);
     assert_config_value(&Nullable::<OrcaFloat>::Nil, "nil", true);
     assert_config_value(&NullableFloats(Vec::new()), "", true);
     assert_config_value(

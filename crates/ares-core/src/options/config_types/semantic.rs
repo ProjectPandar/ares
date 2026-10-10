@@ -2,6 +2,8 @@ use serde::{Serialize, Serializer};
 
 use super::Nullable;
 
+pub(crate) const CONFIG_OPTION_NUMERIC_VECTOR: &str = "ConfigOptionNumericVector";
+pub(crate) const CONFIG_OPTION_INTS: &str = "ConfigOptionInts";
 pub(crate) const CONFIG_OPTION_STRINGS: &str = "ConfigOptionStrings";
 pub(crate) const CONFIG_OPTION_POINTS_GROUPS: &str = "ConfigOptionPointsGroups";
 pub(crate) const CONFIG_OPTION_NULLABLE_VECTOR: &str = "ConfigOptionNullableVector";

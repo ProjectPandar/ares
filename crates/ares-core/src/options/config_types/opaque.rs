@@ -61,8 +61,19 @@ impl Serialize for FlatMatrix {
     where
         S: Serializer,
     {
+        serializer.serialize_newtype_struct(
+            super::semantic::CONFIG_OPTION_NUMERIC_VECTOR,
+            &MatrixValues(&self.0),
+        )
+    }
+}
+
+struct MatrixValues<'a>(&'a [f64]);
+
+impl Serialize for MatrixValues<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
-        for value in &self.0 {
+        for value in self.0 {
             if !value.is_finite() {
                 return Err(serde::ser::Error::custom(
                     "Orca numeric value must be finite",

@@ -11,6 +11,8 @@ use super::{
 #[derive(Clone, Copy)]
 pub(super) enum SequenceKind {
     Ordinary,
+    Numeric,
+    Ints,
     Strings,
     PointGroups,
     Nullable,
@@ -48,8 +50,15 @@ impl ConfigSequence {
                 is_nil: false,
             },
             SequenceKind::PointGroups => joined(self.values, "#", false),
-            SequenceKind::Nullable => {
+            SequenceKind::Nullable | SequenceKind::Numeric => {
                 let is_nil = self.values.iter().all(|value| value.is_nil);
+                joined(self.values, ",", is_nil)
+            }
+            SequenceKind::Ints => {
+                let is_nil = self
+                    .values
+                    .iter()
+                    .all(|value| value.is_nil || value.token == "2147483647");
                 joined(self.values, ",", is_nil)
             }
             SequenceKind::Ordinary => joined(self.values, ",", false),

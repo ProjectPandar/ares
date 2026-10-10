@@ -195,6 +195,11 @@ pub(crate) fn write_canonical_entries(
         }) {
             continue;
         }
+        if entries.iter().any(|entry| entry.key == key && entry.is_nil) {
+            // GCode.cpp:5632-5633: nil canonical options cannot be reinserted
+            // by retained raw input after the type-owned echo filter.
+            continue;
+        }
         if lines.iter().any(|(existing, _)| existing.as_str() == key) {
             continue;
         }
@@ -208,7 +213,27 @@ pub(crate) fn write_canonical_entries(
         let Some(rendered) = token else {
             continue;
         };
-        emit(&mut lines, key, rendered.to_owned(), false);
+        let raw_is_nil =
+            crate::options::registry::option_definition(key).is_some_and(|definition| {
+                use crate::options::registry::OptionValueKind as Kind;
+                matches!(
+                    definition.kind,
+                    Kind::Ints
+                        | Kind::IntsNullable
+                        | Kind::Floats
+                        | Kind::FloatsNullable
+                        | Kind::Percents
+                        | Kind::PercentsNullable
+                        | Kind::Bools
+                        | Kind::BoolsNullable
+                ) && (rendered.is_empty()
+                    || rendered.split(';').all(|value| {
+                        value == "nil"
+                            || (matches!(definition.kind, Kind::Ints | Kind::IntsNullable)
+                                && value == "2147483647")
+                    }))
+            });
+        emit(&mut lines, key, rendered.to_owned(), raw_is_nil);
     }
     // OrcaSlicer.cpp:2815-2818 creates the absent CLI bookkeeping vector
     // at filament_count + 2 before GCode::append_full_config serializes it.

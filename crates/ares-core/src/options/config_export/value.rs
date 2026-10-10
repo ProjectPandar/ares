@@ -9,8 +9,8 @@ use serde::{Serialize, Serializer, ser::Impossible};
 use super::super::config_types::{
     format_number,
     semantic::{
-        CONFIG_OPTION_NIL, CONFIG_OPTION_NULLABLE_VECTOR, CONFIG_OPTION_POINTS_GROUPS,
-        CONFIG_OPTION_STRINGS,
+        CONFIG_OPTION_INTS, CONFIG_OPTION_NIL, CONFIG_OPTION_NULLABLE_VECTOR,
+        CONFIG_OPTION_NUMERIC_VECTOR, CONFIG_OPTION_POINTS_GROUPS, CONFIG_OPTION_STRINGS,
     },
 };
 use sequence::{ConfigSequence, SequenceKind};
@@ -196,6 +196,10 @@ impl Serializer for ConfigValueSerializer {
         T: Serialize + ?Sized,
     {
         match name {
+            CONFIG_OPTION_NUMERIC_VECTOR => {
+                value.serialize(Self::with_sequence_kind(SequenceKind::Numeric))
+            }
+            CONFIG_OPTION_INTS => value.serialize(Self::with_sequence_kind(SequenceKind::Ints)),
             CONFIG_OPTION_STRINGS => {
                 value.serialize(Self::with_sequence_kind(SequenceKind::Strings))
             }
