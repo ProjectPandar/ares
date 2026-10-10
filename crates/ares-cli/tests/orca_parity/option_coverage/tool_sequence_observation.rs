@@ -24,7 +24,8 @@ pub(super) fn observe(gcode: &str) -> Value {
             _ if config => continue,
             ";LAYER_CHANGE" | "; CHANGE_LAYER" => {
                 layer += 1;
-                role = "";
+                // GCode.cpp:6788-6791 emits TYPE only when the role changes;
+                // the last role therefore remains active across layer boundaries.
             }
             _ => {}
         }
