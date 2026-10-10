@@ -19,6 +19,10 @@ pub(crate) enum EarlyExit {
     Validation,
     NotFound,
     ProcessNotCompatible,
+    /// Absent `--load-settings` entry: the 3MF admission gate
+    /// (`OrcaSlicer.cpp:1682-1690`) fires before the file reads
+    /// (`:1953-2024`), so the native outcome stays `-19`.
+    MissingSettingsFile,
 }
 
 /// Joined `--load-settings`/`--load-filaments` preset lists for the CLI
@@ -40,10 +44,17 @@ fn digest_paths(stage: Stage, paths: &[String]) -> Result<Vec<String>, StageErro
     paths
         .iter()
         .map(|path| {
-            Ok(cache_identity::raw_digest(&stages::read(
-                Path::new(path),
-                stage,
-            )?))
+            let path = Path::new(path);
+            if path.try_exists().map_err(|error| io(stage, error))? {
+                Ok(cache_identity::raw_digest(&stages::read(path, stage)?))
+            } else {
+                // Absent entries stay argv-real but identity-stable: the
+                // file name (not the tempdir path) keys the cache.
+                Ok(format!(
+                    "absent:{}",
+                    path.file_name().unwrap().to_string_lossy()
+                ))
+            }
         })
         .collect()
 }
@@ -57,6 +68,7 @@ impl EarlyExit {
             Self::Validation => -51,
             Self::NotFound => -3,
             Self::ProcessNotCompatible => -17,
+            Self::MissingSettingsFile => -19,
         }
     }
 }

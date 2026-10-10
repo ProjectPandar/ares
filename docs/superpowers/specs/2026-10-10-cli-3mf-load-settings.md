@@ -127,3 +127,34 @@ BLOCKED and not merged (the guard stays).
 - Native exit code/channels are generated at runtime; only the input
   fixture is committed.
 - No changes to worker1's PCP serialization or sweep files.
+
+## Addendum: `-5`/`-19` read-ordering slice (2026-10-11)
+
+Upstream stage order: the 3MF load block admits the project first —
+the embedded `post_process` gate (`OrcaSlicer.cpp:1682-1690`, `-19`)
+fires during `load_3mf` — and only afterwards does the producer read
+the `--load-settings`/`--load-filaments` files (`:1953-2024`, `-5`
+`CLI_CONFIG_FILE_ERROR`). The Ares CLI adapter reads the preset files
+before calling core, so a missing file shadows the `-19` rejection.
+
+- **RED** (`orca_parity_load_settings_3mf_missing_file_post_process_order`):
+  witness `input.3mf` (embedded `post_process [""]`) with
+  `--load-settings <absent machine.json>;<real process.json>` and the
+  witness `--load-filaments` list. Native references the argv with a
+  new `EarlyExit::MissingSettingsFile` runner kind (absent settings
+  entries enter the cache identity as an `absent:<name>` marker, argv
+  keeps the raw path); expected native outcome is `-19`/exit 237
+  because the 3MF admission precedes the file reads. Ares today exits
+  1 (legacy `Loading setting file … failed`) — the ordering RED.
+- **GREEN** (adapter-ordering only): before `read_preset_files`, the
+  CLI adapter probes 3MF admission through a thin public core entry
+  `validate_load_settings_input` that composes `load_project` with the
+  existing `validate_post_process` gate — the same O5 check the
+  composite slice entry runs; no new pipeline branch, error mapped by
+  the existing `slice_error_to_failure` (keeps exit 237 and the exact
+  `-19` channels). Files present + clean 3MF keep the existing
+  behavior.
+- **Deferred** (not this slice): `-5` exit fidelity for the clean case
+  (native `-5`/251 family vs the adapter's legacy exit 1) — separate
+  CLI failure-mapping slice; the control for it stays out until that
+  slice lands.
