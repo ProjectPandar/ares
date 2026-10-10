@@ -1,4 +1,4 @@
-mod adaptive_pa;
+pub(super) mod adaptive_pa;
 mod inward;
 mod small_perimeter;
 use inward::{append_inward_move, ccw_angle, loop_is_counter_clockwise, path_length};

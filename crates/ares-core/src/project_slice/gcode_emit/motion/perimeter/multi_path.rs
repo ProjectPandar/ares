@@ -20,6 +20,12 @@ pub(super) fn emit(
             .curl
             .collect_entity(state.layer_index, paths, &geometry);
     }
+    if state.options.adaptive_pa.enabled {
+        // This typed producer carries ordinary extruding paths, not force-no-extrusion paths.
+        state.adaptive_pa_flow =
+            super::super::loop_paths::adaptive_pa::mean(paths, 0.0, geometry.scale);
+        state.adaptive_pa_emitted = false;
+    }
     for path in paths {
         super::super::materialized::emit(
             output,
@@ -32,7 +38,10 @@ pub(super) fn emit(
                 inside_loop: true,
             },
         );
+        state.adaptive_pa_emitted = true;
     }
+    state.adaptive_pa_flow = None;
+    state.adaptive_pa_emitted = false;
     if state.options.wipe {
         let mut wipe = Vec::new();
         for path in paths {

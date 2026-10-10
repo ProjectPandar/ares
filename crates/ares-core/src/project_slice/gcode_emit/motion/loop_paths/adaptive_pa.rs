@@ -5,7 +5,11 @@ use std::borrow::Cow;
 use crate::geometry::CoordinateScale;
 use crate::project_slice::perimeters::classic::materialize::{ExtrusionPath, Point3};
 
-pub(super) fn mean(paths: &[ExtrusionPath], end_clip: f64, scale: CoordinateScale) -> Option<f64> {
+pub(in crate::project_slice::gcode_emit::motion) fn mean(
+    paths: &[ExtrusionPath],
+    end_clip: f64,
+    scale: CoordinateScale,
+) -> Option<f64> {
     let mut distance = end_clip / scale.factor();
     let mut count = paths.len();
     // `ExtrusionLoop::clip_end` consumes complete paths in scaled space
