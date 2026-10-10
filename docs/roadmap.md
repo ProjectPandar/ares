@@ -102,7 +102,7 @@ stock inventory or an Ares-owned pipeline milestone.
 
 ### Selective WIP ports: remaining boundaries (open)
 
-- Type2 `enable_prime_tower=1` activation verification — OPEN `21c18b79d`; the original ZIP had enable=0, so [the corrected activation spec](architecture/type2-tower-activation.md) still requires the real enable=1 witness and upstream gate identification. This belongs to worker2's tower boundary after its footer slice.
+- Type2 `enable_prime_tower=1` activation verification — OPEN `21c18b79d`; the original ZIP had enable=0, so [the corrected activation spec](architecture/type2-tower-activation.md) still requires the real enable=1 witness and upstream gate identification. This belongs to worker1's Type2 activation verification boundary; worker2 owns G4 only and does not change tower activation.
 - Adaptive PA deferred upstream behavior — OPEN `2863ef3ea`; retain [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md)'s multipath/sloped suppression, activation/calibration gates, source-specific reset sequencing and lookahead stream-position obligations. Landed bounded ports do not close full Adaptive PA or printer/Option coverage.
 
 ### Current acceptance priorities: completed subitems

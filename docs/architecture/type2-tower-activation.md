@@ -36,7 +36,8 @@ Compare `_make_skirt`'s pre-offset occupied hull and support_fills points
 (`Print.cpp:2646-2760`, especially `:2691`) before deciding whether it
 shares pi-arachne's SupportSpots point-insertion cause.
 
-Owner: pi-tower (wipe-tower emission lives in this area). Divergence found
+Owner: worker1 (reassigned 2026-10-10); worker2 owns G4 only and does not
+change tower activation. Divergence found
 during pi-arachne's bridge_over_infill multi-filament E2E (`clusters.md`,
 `DIVERGENT — Type2 wipe-tower activation`).
 
@@ -174,6 +175,38 @@ The RED must show, for the TiQ2 fixture, which of
 `layers[0].extruders` / `has_object` / `object_bottom_z` /
 `wipe_tower_partitions` differs from the upstream `m_layer_tools.front()`
 record, before any production change.
+
+## Current verification slice (2026-10-10)
+
+The enable=1 result is unknown: do not encode zero Native tower sections as an
+expected outcome before running the corrected input. Worker1 first verifies
+activation through the public CLI complete-output seam, without production edits.
+Repack the original project at runtime, change only enable_prime_tower to 1,
+reopen the ZIP and record configuration, whole ZIP and member hashes. Preserve
+all other settings and geometry. Run live Native first, then Ares on those exact
+bytes; preserve channels, exits, result JSON and complete G-code outside Git.
+Missing or rejected inputs are an admission blocker, not activation RED.
+
+Localization starts at the first complete-output difference, not tower counts.
+Trace `Print::{has_wipe_tower,_make_wipe_tower}`, ToolOrdering front-layer
+state, `WipeTower2.cpp` planning/generation and `GCode.cpp::WipeTowerIntegration`
+consumers as reached by that witness. Existing Rust `gcode_emit::{tool_ordering,
+wipe_tower,motion::tower}` remains the private upstream rewrite destination;
+no new Ares pipeline, synthetic suppression or guessed gate is permitted.
+If Native and Ares already match, record verification GREEN without inventing a
+RED or fix. If they diverge, commit a genuine test-first whole-output RED, record
+measured upstream/Rust state at one owning site, and tighten the implementation
+spec before changing production. ToolOrdering probes are diagnostic evidence;
+an isolated test needs an independently measured Native expectation and approval.
+
+Keep the existing tower-emitting positive control and its full-output assertions.
+K3M normalization, Type1, general multi-transform preparation and unrelated skirt
+geometry remain adjacent/deferred unless the first difference identifies a
+required dependency, which must be reported rather than silently bundled.
+
+Directed Native starts require load<60, jobs2/threads2. Yield all heavy work at
+any worker's exclusive full START; current full queue W2→W5→W3→web. No Native
+products are committed, and no full slot is implied by this verification slice.
 
 ## Included in this slice
 
