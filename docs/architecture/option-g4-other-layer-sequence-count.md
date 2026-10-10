@@ -185,7 +185,7 @@ validation on the bound count0 input before one fresh E2E on the current
 production tree. Preserve the -62 receipt and every subsequent raw artifact;
 export alone does not certify slice validation or sequence consumption.
 
-## Empty-sequence footer GREEN extension — approval requested
+## Type-owned vector footer GREEN extension — approval requested
 
 Production RED accepted by owner: candidate `24ffe3628` on production
 `626ed1738`, fresh seeded run `3566b0df-5299-4c45-ac76-088a6e5f66da`, root
@@ -195,58 +195,85 @@ line6442: Ares emits one extra 33-byte `; other_layers_print_sequence = \n`
 line in CONFIG; Native omits it. Reverse-row control and final classification
 were not reached. This is production output RED, not metadata RED.
 
-### Upstream owner and exact Rust destination
+### Upstream type owner and Rust boundary
 
-- `PrintConfig.cpp:1115-1119` defines this key as `coInts` / `ConfigOptionInts`.
-- `Config.hpp:1015` implements `ConfigOptionIntsTempl::is_nil()` by returning
-  true when no vector member differs from its nil sentinel. An **empty** int
-  vector is therefore nil, even for a nonnullable instance. This is not a
-  rule that every empty serialized string is nil.
-- `Config.hpp:1023-1032::serialize()` iterates the int vector and returns the
-  joined token; an empty vector alone would produce an empty token. Omission
-  happens earlier in `GCode.cpp:5632-5643::append_full_config`, which skips
-  `cfg.option(key)->is_nil()`. Non-BBL footer invokes it at `3549-3554`.
-- Rust destination: `crates/ares-core/src/options/config_export/writer.rs`,
-  local `write_canonical_entries::emit` (`130-136`). Both canonical entries
-  and retained raw-key entries call this helper. Current ordinary serializer
-  `value/sequence.rs:55` always returns `is_nil=false`; that mismatch permits
-  the empty int vector line and a raw fallback must not reinsert it.
+- `Config.hpp:837`, `1015`, `1344`, `1878` implement vector `is_nil` for
+  Floats/Percents, Ints, FloatsOrPercents and Bools respectively: no nonnil
+  member means nil, including an empty vector. Strings/Points retain the
+  base `ConfigOption::is_nil=false` (`284`); empty token alone is not nil.
+- `PrintConfig.cpp:1115-1119` defines the failing option as coInts;
+  `Config.hpp:1023-1032` serializes the vector. Omission is the type-owned nil
+  filter in `GCode.cpp:5632-5633::append_full_config`; non-BBL footer invokes
+  that owner at `3549-3554`.
+- Rust `options/config_export/value/sequence.rs:45-55` currently handles
+  nullable vectors correctly, but treats all ordinary vectors as nonnil.
+  `config_types/vector.rs` serializes numeric/bool vector wrappers transparently,
+  losing the family distinction from ordinary Point lists/tuples. `FlatMatrix`
+  is another float-vector representation (`config_types/opaque.rs`).
+- `config_export/writer.rs::write_canonical_entries` already filters entry
+  `is_nil`, but its raw fallback must not reinsert a known nil canonical entry.
 
-### Requested minimal production scope
+### Requested production design (supersedes the rejected key exception)
 
-Specialize the existing echo emission filter **only** for this admitted key's
-empty token, reflecting its proven `coInts` nil semantics. It must suppress
-both canonical and raw-key fallback emission through the existing common
-helper. Preserve nonempty count vectors byte-for-byte; do not alter settings,
-plate importer, tool ordering, generic sequence serializer, schema, counts,
-other integer vectors, string/point/group vectors, or whole comparator.
-This is a bounded application of the upstream nil filter, not a claim of
-complete generic vector `is_nil` parity. No generalized `token.is_empty()`
-filter is permitted.
+1. Carry option-family nil semantics at the typed config-export serialization
+   boundary for OrcaInts, OrcaFloats, OrcaPercents, OrcaFloatOrPercents and
+   OrcaBools (and FlatMatrix's coFloats representation). Use explicit serde
+   semantic newtype markers, as already used for Strings and nullable vectors;
+   normal JSON remains the same array. Do not change generic ordinary sequence
+   handling: Point lists/tuples, groups, Strings and enum families remain distinct.
+2. Numeric/bool vector export is nil iff empty or every member is upstream nil.
+   Preserve existing Nullable semantic markers and mixed nil/nonnil behavior;
+   integer sentinel treatment belongs to the Ints family, not arbitrary scalar
+   values or other vector families. Floats/Percents/FloatsOrPercents use their
+   nil semantics, not zero, false or empty string as a nil value. No key names
+   may select this rule.
+3. The writer filters the resulting type-owned `ConfigEntry::is_nil` and skips
+   raw fallback for a known canonical nil entry. Retained raw options without
+   a canonical entry use their registry option family, not a key allowlist or
+   a blanket empty-token filter. Scalar/string/point raw entries stay unchanged.
 
-### Impact inventory and acceptance
+This touches only option export type semantics and its writer, not project
+settings, importer, source ordering/solve, metadata promotion or comparator.
+The registry currently has no coFloatsOrPercents option entry, although the
+Rust wrapper exists: exercise that family's export semantics in a test-first
+isolated serialization witness rather than inventing a new option or schema.
 
-Only `other_layers_print_sequence` when empty is an affected output key.
-`first_layer_print_sequence` and every other key remain outside the patch.
-Offline audit `/tmp/worker2-g4-sequence-empty-vector-impact-audit.json` lists
-all actual empty arrays in all four executed inputs. These six other empty
-keys have **identical, present empty footer lines** in Native/Ares in all four:
-`extruder_ams_count` (coStrings), `parallel_printheads_bed_exclude_areas`
-(coStrings), `post_process` (coStrings), `extruder_printable_area`
-(coPointsGroups), `head_wrap_detect_zone` (coPoints), `wrapping_exclude_area`
-(coPoints). A global empty-token filter would break those existing PASS cases.
-Removing only the one admitted extra line from retained empty-control Ares
-output matches Native exactly under the existing banner-only policy; this is
-an offline diagnosis, not a comparator modification or GREEN receipt.
+### Type impact inventory and verification
 
-After approval, repair only that emission predicate, then run the unchanged
-five-case directed E2E. Keep all actual consumption assertions before final
-classification. If five whole/consumer witnesses pass and only terminal
-INCOMPLETE remains, request single-plan metadata/sweep GREEN as a distinct
-step; no preemptive classification promotion. Seeded/official cold/hit and
-fresh engineering plus full base/candidate gates follow the production-change
-contract. Report literal outcomes, other empty-vector lines, raw common-input
-SHA inventory and any ND; no output stripping or guard changes.
+[Complete candidate-key inventory](g4-sequence-vector-nil-impact.md) lists all
+164 numeric/bool vector registry keys by family, including nullable kinds.
+Any empty/all-nil member of these families may have changed echo behavior;
+nonempty vectors containing a nonnil member must remain byte-for-byte stable.
+This is broader than one key and does not certify all empty inputs slice-legal.
+
+Offline audit of 1211 retained paired streams from historical seeded/official
+G4 full receipts plus current RED finds zero Native empty numeric/bool echo
+lines; the only Ares empty/all-nil line found is this current sequence RED.
+Those historical observations are NOT fresh production-626 acceptance gates.
+The six other empty-vector keys in all four current inputs remain present and
+identical in Native/Ares: `extruder_ams_count`,
+`parallel_printheads_bed_exclude_areas`, `post_process` (Strings),
+`extruder_printable_area` (PointsGroups), `head_wrap_detect_zone`,
+`wrapping_exclude_area` (Points). Their existing PASS output must remain intact.
+Machine-readable evidence: `/tmp/worker2-g4-numeric-vector-nil-impact.json`
+and `/tmp/worker2-g4-sequence-empty-vector-impact-audit.json`.
+
+Before production edits, write a bounded type-table regression witness:
+empty, all nil, mixed nil+nonnil, ordinary nonempty numeric/bool vectors;
+all five families including FloatsOrPercents; empty Strings/Points/groups;
+known nil raw-fallback suppression and retained unknown/raw type handling.
+Failure inventory: global-empty suppression breaks Points/Strings; numeric
+false/zero must not become nil; mixed vectors must not disappear; nullable
+sentinels must retain their semantics; raw fallback must not resurrect nil;
+semantic serde markers must not change ordinary JSON array representation.
+
+Only after owner approval AND full-queue END implement the type-owned repair.
+Run unchanged five-case directed E2E: keep consumer assertions before terminal
+classification. If all five whole/consumer witnesses pass and only INCOMPLETE
+remains, request metadata/sweep GREEN separately. Seeded/official cold/hit and
+fresh engineering/full base-candidate gates remain required for production
+changes, including raw common-input SHA inventory and literal ND adjudication.
+No stripping output, nil-key exemptions or guard changes.
 
 ## Exit / deferral
 
