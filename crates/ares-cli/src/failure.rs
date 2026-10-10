@@ -27,7 +27,6 @@ pub(super) struct FamilyFailure {
     sparse_infill_density: f64,
     #[cfg(target_os = "linux")]
     error_string: &'static str,
-    #[cfg(target_os = "linux")]
     upward_machines: Vec<String>,
     stderr: String,
     #[cfg(target_os = "linux")]
@@ -48,7 +47,6 @@ impl CliFailure {
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
             error_string: "The input files to the slicer are not found.",
-            #[cfg(target_os = "linux")]
             upward_machines: Vec::new(),
             stderr: format!("No such file: {}\n", input.display()),
             #[cfg(target_os = "linux")]
@@ -56,25 +54,11 @@ impl CliFailure {
         }))
     }
 
-    pub(super) fn project_error(
-        error: SliceError,
-        output: &Path,
-        #[cfg(target_os = "linux")] plate: u32,
-        #[cfg(target_os = "linux")] upward: Vec<String>,
-    ) -> Self {
-        let failure = slice_error_to_failure(
-            error,
-            output,
-            #[cfg(target_os = "linux")]
-            plate,
-        );
-        #[cfg(target_os = "linux")]
-        let mut failure = failure;
-        #[cfg(target_os = "linux")]
-        if let Self::Family(family) = &mut failure {
+    pub(super) fn with_upward_report(mut self, upward: Vec<String>) -> Self {
+        if let Self::Family(family) = &mut self {
             family.upward_machines = upward;
         }
-        failure
+        self
     }
 
     pub(super) fn report(self) -> ! {
@@ -182,7 +166,6 @@ pub(super) fn slice_error_to_failure(
             sparse_infill_density: sparse,
             #[cfg(target_os = "linux")]
             error_string,
-            #[cfg(target_os = "linux")]
             upward_machines: Vec::new(),
             stderr,
             #[cfg(target_os = "linux")]

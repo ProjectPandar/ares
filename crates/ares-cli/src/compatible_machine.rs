@@ -30,8 +30,10 @@ pub(super) fn load(
             }
         };
         let path = resources
-            .join("profiles/BBL/machine_full")
-            .join(format!("./{}.json", original.system_printer()));
+            .join("profiles")
+            .join("BBL")
+            .join("machine_full")
+            .join(format!("{}.json", original.system_printer()));
         match fs::read(path) {
             Ok(bytes) => Some(bytes),
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,

@@ -1,4 +1,3 @@
-#[cfg(target_os = "linux")]
 mod compatible_machine;
 mod failure;
 mod moves_csv;
@@ -181,19 +180,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         Some(extension) if extension == "3mf" => {
             let metadata = ares_core::GenerationMetadata::default();
             let context = ares_core::SlicerContext::new(0);
-            #[cfg(target_os = "linux")]
             let (source, machine_full) =
                 compatible_machine::load(&input, args.resources_dir.as_deref())?;
             let mut upward_report = Vec::new();
             let upward = ares_core::CliUpwardMachine {
-                #[cfg(target_os = "linux")]
                 source,
-                #[cfg(not(target_os = "linux"))]
-                source: None,
-                #[cfg(target_os = "linux")]
                 input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
-                #[cfg(not(target_os = "linux"))]
-                input: ares_core::UpwardMachineInput::Embedded,
                 report: &mut upward_report,
             };
             // OrcaSlicer.cpp:5681-5690 iterates from plate index0 when
@@ -216,14 +208,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed,
                         Err(error) => {
-                            return Err(CliFailure::project_error(
+                            return Err(slice_error_to_failure(
                                 error,
                                 &args.output,
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
-                                #[cfg(target_os = "linux")]
-                                upward_report,
-                            ));
+                            )
+                            .with_upward_report(upward_report));
                         }
                     };
                     fs::write(path, moves_csv::format(&processed.result))?;
@@ -245,14 +236,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed.gcode,
                         Err(error) => {
-                            return Err(CliFailure::project_error(
+                            return Err(slice_error_to_failure(
                                 error,
                                 &args.output,
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
-                                #[cfg(target_os = "linux")]
-                                upward_report,
-                            ));
+                            )
+                            .with_upward_report(upward_report));
                         }
                     }
                 }

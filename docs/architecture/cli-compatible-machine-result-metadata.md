@@ -9,8 +9,8 @@ pipeline. The SPEC commit does not itself establish RED/GREEN evidence.
 
 Source pin: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Primary owner is `src/OrcaSlicer.cpp`, with configuration and geometry inputs
-from existing libslic3r concepts; the adapter's Linux filesystem/output behavior
-stays outside ares-core.
+from existing libslic3r concepts; the adapter's cross-platform filesystem and
+platform-specific output behavior stay outside ares-core.
 
 The owner reports worker3 master A1's stock **Bambu Lab H2D 0.4 nozzle**
 input with upward target **Bambu Lab H2D Pro 0.4 nozzle** as the live residual.
@@ -55,7 +55,9 @@ replace with another pipeline.
   a vector containing one empty string is nonempty and must be emitted.
 - Preserve the existing Linux-only result.json behavior, sorted JSON keys,
   tab-indented serialization/trailing newline and existing stdout/stderr/exit
-  channels. Do not broaden non-Linux filesystem behavior to satisfy this slice.
+  channels. Original-machine resource loading (`:2517–2536`) has no OS guard:
+  use CLI-owned std::fs and component-wise Path::join on all native Tier1
+  platforms, with identical source selection and no platform Embedded downgrade.
 
 ### Upward: source selection, not final effective printer settings
 

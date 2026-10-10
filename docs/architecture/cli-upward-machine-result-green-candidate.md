@@ -1,6 +1,11 @@
 # Upward result metadata — implementation candidate
 
-Status: **bounded first upward E2E GREEN; not reviewed/integrated**. Product
+Status: **platform correction pending fresh gates; not reviewed/integrated**.
+Owner rejected product905213f16 for introduced OS gates/non-Linux Embedded
+downgrade. The correction removes those conditions, uses component-wise
+Path::join on all native platforms and stores reached upward metadata without
+OS gating. Existing Linux-only upstream result-file emission is unchanged.
+The receipts below describe the superseded product, not correction acceptance. Product
 `905213f16b313cadafec45517f32aabc00d79309` is rebased onto main
 `73e78279d766f8d500757204f505e1d43356b72a`. Owner requested consolidation
 of local WIP `7bc55ddc4` and candidate `3469dedde`; rejected isolated tests are
@@ -48,7 +53,9 @@ This is a source-cited metadata rewrite slice, not a new Ares pipeline.
 
 No worker3 grouping/master-extruder implementation is imported. Existing core
 byte/profile APIs keep their old report-free behavior. Core remains usable on
-WASM, Windows, macOS and Linux; new filesystem/result behavior remains Linux-only.
+WASM, Windows, macOS and Linux. Original-machine filesystem loading runs on
+all native CLI platforms; only existing upstream Linux result-file emission
+remains platform-specific.
 
 ## Evidence and remaining gates
 
