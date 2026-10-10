@@ -185,6 +185,69 @@ validation on the bound count0 input before one fresh E2E on the current
 production tree. Preserve the -62 receipt and every subsequent raw artifact;
 export alone does not certify slice validation or sequence consumption.
 
+## Empty-sequence footer GREEN extension — approval requested
+
+Production RED accepted by owner: candidate `24ffe3628` on production
+`626ed1738`, fresh seeded run `3566b0df-5299-4c45-ac76-088a6e5f66da`, root
+`/tmp/worker2-g4-sequence-role-fresh-e2e.PwYHy6`. Count0/1/2 whole outputs and
+all consumer assertions passed. Empty-vector control stopped at byte157227,
+line6442: Ares emits one extra 33-byte `; other_layers_print_sequence = \n`
+line in CONFIG; Native omits it. Reverse-row control and final classification
+were not reached. This is production output RED, not metadata RED.
+
+### Upstream owner and exact Rust destination
+
+- `PrintConfig.cpp:1115-1119` defines this key as `coInts` / `ConfigOptionInts`.
+- `Config.hpp:1015` implements `ConfigOptionIntsTempl::is_nil()` by returning
+  true when no vector member differs from its nil sentinel. An **empty** int
+  vector is therefore nil, even for a nonnullable instance. This is not a
+  rule that every empty serialized string is nil.
+- `Config.hpp:1023-1032::serialize()` iterates the int vector and returns the
+  joined token; an empty vector alone would produce an empty token. Omission
+  happens earlier in `GCode.cpp:5632-5643::append_full_config`, which skips
+  `cfg.option(key)->is_nil()`. Non-BBL footer invokes it at `3549-3554`.
+- Rust destination: `crates/ares-core/src/options/config_export/writer.rs`,
+  local `write_canonical_entries::emit` (`130-136`). Both canonical entries
+  and retained raw-key entries call this helper. Current ordinary serializer
+  `value/sequence.rs:55` always returns `is_nil=false`; that mismatch permits
+  the empty int vector line and a raw fallback must not reinsert it.
+
+### Requested minimal production scope
+
+Specialize the existing echo emission filter **only** for this admitted key's
+empty token, reflecting its proven `coInts` nil semantics. It must suppress
+both canonical and raw-key fallback emission through the existing common
+helper. Preserve nonempty count vectors byte-for-byte; do not alter settings,
+plate importer, tool ordering, generic sequence serializer, schema, counts,
+other integer vectors, string/point/group vectors, or whole comparator.
+This is a bounded application of the upstream nil filter, not a claim of
+complete generic vector `is_nil` parity. No generalized `token.is_empty()`
+filter is permitted.
+
+### Impact inventory and acceptance
+
+Only `other_layers_print_sequence` when empty is an affected output key.
+`first_layer_print_sequence` and every other key remain outside the patch.
+Offline audit `/tmp/worker2-g4-sequence-empty-vector-impact-audit.json` lists
+all actual empty arrays in all four executed inputs. These six other empty
+keys have **identical, present empty footer lines** in Native/Ares in all four:
+`extruder_ams_count` (coStrings), `parallel_printheads_bed_exclude_areas`
+(coStrings), `post_process` (coStrings), `extruder_printable_area`
+(coPointsGroups), `head_wrap_detect_zone` (coPoints), `wrapping_exclude_area`
+(coPoints). A global empty-token filter would break those existing PASS cases.
+Removing only the one admitted extra line from retained empty-control Ares
+output matches Native exactly under the existing banner-only policy; this is
+an offline diagnosis, not a comparator modification or GREEN receipt.
+
+After approval, repair only that emission predicate, then run the unchanged
+five-case directed E2E. Keep all actual consumption assertions before final
+classification. If five whole/consumer witnesses pass and only terminal
+INCOMPLETE remains, request single-plan metadata/sweep GREEN as a distinct
+step; no preemptive classification promotion. Seeded/official cold/hit and
+fresh engineering plus full base/candidate gates follow the production-change
+contract. Report literal outcomes, other empty-vector lines, raw common-input
+SHA inventory and any ND; no output stripping or guard changes.
+
 ## Exit / deferral
 
 This closes only count0/1/2 in the stated coherent by-layer, one-nozzle context.
