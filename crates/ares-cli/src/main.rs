@@ -1,3 +1,5 @@
+#[cfg(target_os = "linux")]
+mod compatible_machine;
 mod failure;
 mod moves_csv;
 
@@ -27,6 +29,9 @@ struct SliceArgs {
     /// 1-based plate number to slice for multi-plate 3MF projects
     #[arg(long)]
     plate: Option<u32>,
+    /// Resource root containing profiles/BBL/machine_full (default: resources beside the executable)
+    #[arg(long)]
+    resources_dir: Option<PathBuf>,
     /// Write the G-code processor move vertices as CSV (3MF input only)
     #[arg(long)]
     dump_moves: Option<PathBuf>,
@@ -176,23 +181,48 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         Some(extension) if extension == "3mf" => {
             let metadata = ares_core::GenerationMetadata::default();
             let context = ares_core::SlicerContext::new(0);
+            #[cfg(target_os = "linux")]
+            let (source, machine_full) =
+                compatible_machine::load(&input, args.resources_dir.as_deref())?;
+            let mut upward_report = Vec::new();
+            let upward = ares_core::CliUpwardMachine {
+                #[cfg(target_os = "linux")]
+                source,
+                #[cfg(not(target_os = "linux"))]
+                source: None,
+                #[cfg(target_os = "linux")]
+                input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
+                #[cfg(not(target_os = "linux"))]
+                input: ares_core::UpwardMachineInput::Embedded,
+                report: &mut upward_report,
+            };
             // OrcaSlicer.cpp:5681-5690 iterates from plate index0 when
             // --slice0 is used, or selects the explicit one-based plate.
             // This byte API slices one view; its default is that first plate.
             match &args.dump_moves {
                 Some(path) => {
-                    let processed = match ares_core::slice_project_plate_processed_validated(
-                        input, metadata, args.plate, &overrides, context,
+                    let processed = match ares_core::slice_cli_project_plate_validated(
+                        &input,
+                        ares_core::CliProjectSliceRequest {
+                            plate: args.plate,
+                            overrides: &overrides,
+                            record_moves: true,
+                            upward,
+                        },
+                        metadata,
+                        context,
                     )
                     .await
                     {
                         Ok(processed) => processed,
                         Err(error) => {
-                            return Err(slice_error_to_failure(
+                            return Err(CliFailure::project_error(
                                 error,
                                 &args.output,
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
+                                #[cfg(target_os = "linux")]
+                                upward_report,
                             ));
                         }
                     };
@@ -200,18 +230,28 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     processed.gcode
                 }
                 None => {
-                    match ares_core::slice_project_plate_validated(
-                        input, metadata, args.plate, &overrides, context,
+                    match ares_core::slice_cli_project_plate_validated(
+                        &input,
+                        ares_core::CliProjectSliceRequest {
+                            plate: args.plate,
+                            overrides: &overrides,
+                            record_moves: false,
+                            upward,
+                        },
+                        metadata,
+                        context,
                     )
                     .await
                     {
-                        Ok(gcode) => gcode,
+                        Ok(processed) => processed.gcode,
                         Err(error) => {
-                            return Err(slice_error_to_failure(
+                            return Err(CliFailure::project_error(
                                 error,
                                 &args.output,
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
+                                #[cfg(target_os = "linux")]
+                                upward_report,
                             ));
                         }
                     }

@@ -14,7 +14,7 @@ use super::{
     super::{
         PreparedPostClosing,
         closing::{PostClosingLayer, PostClosingPrintObject, PostClosingVolume},
-        prepare_post_simplification,
+        load_stages::prepare_post_simplification,
         state::prepare_project_slice,
         volume_bounds::build_volume_bounds,
         volume_regions::{VolumeRegionGraph, build_volume_region_graph},

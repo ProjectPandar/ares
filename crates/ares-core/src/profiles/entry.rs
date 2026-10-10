@@ -225,6 +225,7 @@ fn with_load_settings_source<T>(
         }),
         overrides,
         validate_print: false,
+        upward: None,
     })
 }
 
@@ -264,5 +265,6 @@ fn with_profile_source<T>(
         }),
         overrides,
         validate_print: false,
+        upward: None,
     })
 }

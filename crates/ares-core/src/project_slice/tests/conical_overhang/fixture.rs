@@ -1,8 +1,8 @@
 use crate::{OrcaBool, OrcaFloat, OrcaInt, Percent, SliceError, slice_project};
 
-use super::super::super::prepare_post_top_empty_layers;
 use super::super::support::{KsrArchive, metadata};
 use crate::project_slice::ProjectSource;
+use crate::project_slice::load_stages::prepare_post_top_empty_layers;
 
 const PROCESS: &str = "Metadata/project_settings.config";
 const DISABLED: &str = r#""make_overhang_printable": "0""#;

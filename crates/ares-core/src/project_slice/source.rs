@@ -2,7 +2,6 @@ use crate::{ConfigOverrides, project::raw_settings::ProjectSettingsRaw};
 
 /// Input bytes and caller-selected plate/config. Loading occurs only at the
 /// existing project-state seam; no intermediate archive is serialized.
-#[derive(Clone, Copy)]
 pub(crate) struct ProjectSource<'a> {
     pub(crate) bytes: &'a [u8],
     pub(crate) plate: Option<u32>,
@@ -11,6 +10,15 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) overrides: &'a ConfigOverrides,
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
     pub(crate) validate_print: bool,
+    pub(crate) upward: Option<CliUpwardMachine<'a>>,
+}
+
+/// CLI byte resources and the report snapshot written at CLI:2656. The
+/// source is obtained from core before the adapter reads its resource file.
+pub struct CliUpwardMachine<'a> {
+    pub source: Option<crate::UpwardMachineSource>,
+    pub input: crate::UpwardMachineInput<'a>,
+    pub report: &'a mut Vec<String>,
 }
 
 #[derive(Clone, Copy)]
@@ -50,6 +58,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             profile: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
+            upward: None,
         }
     }
 }
@@ -64,6 +73,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             profile: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
+            upward: None,
         }
     }
 }

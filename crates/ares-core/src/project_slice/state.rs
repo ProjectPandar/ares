@@ -60,6 +60,14 @@ pub(super) fn prepare_project_source(
         .settings()
         .validate_loaded_config(&project.documents().project_settings_raw)?;
     project.initialize_cli_loaded_project_config();
+    // CLI:2656 commits the original-machine report before plate selection
+    // and Print::validate. Early load/config failures above cannot leak it.
+    if let Some(upward) = source.upward {
+        *upward.report = match upward.source {
+            Some(original) => original.select(upward.input)?,
+            None => Vec::new(),
+        };
+    }
     prepare_loaded_project_slice_with_validation(
         project,
         source.plate,

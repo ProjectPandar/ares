@@ -15,6 +15,8 @@ pub(crate) mod region_graph;
 mod relationships;
 mod slice_info;
 mod transform;
+mod upward_machine;
+pub use upward_machine::{UpwardMachineInput, UpwardMachineSource};
 mod xml;
 mod xml_characters;
 

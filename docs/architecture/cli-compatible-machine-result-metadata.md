@@ -148,12 +148,14 @@ printer settings, or eagerly attach future-stage values to early errors.
 An error at profile-source load before2656 has no copied upward report. An
 error during downward checking may already have upward but not downward.
 
-Source paths1769/2301/2385/2534 must all be represented in source-selection
-witnesses. This does **not** authorize implementing unrelated up-to-date preset
-overlays or worker5 compatibility decisions in order to exercise a branch.
-Where an upstream control is not available in the existing public Ares entry,
-prove its pure source-selection boundary using supplied source bytes and state,
-and label the unavailable public path deferred, not end-to-end-complete.
+Owner's bounded upward checkpoint requires only the approved first CLI E2E
+witness, comparing complete runtime Native and Ares channels/result JSON.
+Coverage of source paths1769/2301/2385/2534 remains a subsequent CLI E2E
+requirement, not an isolated/unit-test substitute. Future witnesses must exercise
+the public source controls and compare runtime Native outputs in full; absent
+public controls remain deferred. This does **not** authorize implementing
+unrelated up-to-date overlays or worker5 compatibility decisions merely to
+exercise a branch. No four-branch acceptance claim is made by this checkpoint.
 
 ### ares-cli: resources/filesystem and JSON serialization only
 
@@ -230,9 +232,10 @@ assertions and the whole result comparison; only existing integer prepare_time/
 export_time adaptation is allowed. Then add bounded active-downward RED before
 its implementation; cover surviving/rejected/all-rejected, multiple plates,
 exclusion/wrapping and multi-extruder/tower source conditions with fixed inputs.
-Prefer public E2E. If an isolated source-selection test is necessary because
-its CLI control is absent, use the failure model above first and explicitly
-separate that evidence from public CLI parity.
+Use public CLI E2E with complete runtime Native comparison as the primary
+verification mechanism. For this bounded upward checkpoint only the approved
+first witness is required. Missing source controls remain subsequent E2E work;
+do not add implementation-following isolated/unit tests as substitute coverage.
 
 Retain repeatable external artifacts: original input and every ZIP member SHA,
 profile/discovery bytes and SHA, original/selected machine identity, source

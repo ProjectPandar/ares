@@ -1,4 +1,5 @@
 //! Adapter orchestration of `Print.hpp:911,935`: apply once, validate, process.
+use super::source::CliUpwardMachine;
 use super::{ProjectSource, slice_source};
 use crate::{
     ConfigOverrides, GenerationMetadata, Project, SliceError, SlicerContext,
@@ -24,6 +25,44 @@ pub(crate) fn validate_post_process(project: &Project) -> Result<(), SliceError>
     Ok(())
 }
 
+/// CLI report-aware entry: early errors leave the caller's empty report
+/// untouched; later errors preserve the snapshot committed by project state.
+pub struct CliProjectSliceRequest<'a> {
+    pub plate: Option<u32>,
+    pub overrides: &'a ConfigOverrides,
+    pub record_moves: bool,
+    pub upward: CliUpwardMachine<'a>,
+}
+
+pub async fn slice_cli_project_plate_validated(
+    input: impl AsRef<[u8]>,
+    request: CliProjectSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext,
+) -> Result<ProcessedGCode, SliceError> {
+    let CliProjectSliceRequest {
+        plate,
+        overrides,
+        record_moves,
+        upward,
+    } = request;
+    upward.report.clear();
+    overrides.validate_cli_config()?;
+    slice_source(
+        ProjectSource {
+            bytes: input.as_ref(),
+            plate,
+            profile: None,
+            overrides,
+            validate_print: true,
+            upward: Some(upward),
+        },
+        metadata,
+        record_moves,
+        context,
+    )
+}
+
 pub async fn slice_project_plate_validated(
     input: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
@@ -39,6 +78,7 @@ pub async fn slice_project_plate_validated(
             profile: None,
             overrides,
             validate_print: true,
+            upward: None,
         },
         metadata,
         false,
@@ -62,6 +102,7 @@ pub async fn slice_project_plate_processed_validated(
             profile: None,
             overrides,
             validate_print: true,
+            upward: None,
         },
         metadata,
         true,

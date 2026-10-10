@@ -186,10 +186,14 @@ pub use profiles::{
 pub use profiles::{slice_with_profiles_processed_validated, slice_with_profiles_validated};
 pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
-    ProjectObject, ProjectVolume, ProjectVolumeType, Transform3d, load_project,
+    ProjectObject, ProjectVolume, ProjectVolumeType, Transform3d, UpwardMachineInput,
+    UpwardMachineSource, load_project,
+};
+pub use project_slice::{
+    CliProjectSliceRequest, CliUpwardMachine, slice_cli_project_plate_validated,
+    slice_project_plate_processed_validated, slice_project_plate_validated,
 };
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
-pub use project_slice::{slice_project_plate_processed_validated, slice_project_plate_validated};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use slicer_context::SlicerContext;

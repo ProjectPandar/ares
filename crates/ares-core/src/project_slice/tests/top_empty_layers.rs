@@ -10,7 +10,7 @@ use super::{
     super::{
         closing::{PostClosingLayer, PostClosingPrintObject, PostClosingVolume},
         layers::{PlannedLayer, PlannedPrintObject},
-        prepare_post_regions,
+        load_stages::prepare_post_regions,
         region_slices::{
             PostRegion, PostRegionPrintObject, RegionLayer, RegionSurface, prepare_region_slices,
         },

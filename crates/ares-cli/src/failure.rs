@@ -27,6 +27,8 @@ pub(super) struct FamilyFailure {
     sparse_infill_density: f64,
     #[cfg(target_os = "linux")]
     error_string: &'static str,
+    #[cfg(target_os = "linux")]
+    upward_machines: Vec<String>,
     stderr: String,
     #[cfg(target_os = "linux")]
     output: PathBuf,
@@ -46,10 +48,33 @@ impl CliFailure {
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
             error_string: "The input files to the slicer are not found.",
+            #[cfg(target_os = "linux")]
+            upward_machines: Vec::new(),
             stderr: format!("No such file: {}\n", input.display()),
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
         }))
+    }
+
+    pub(super) fn project_error(
+        error: SliceError,
+        output: &Path,
+        #[cfg(target_os = "linux")] plate: u32,
+        #[cfg(target_os = "linux")] upward: Vec<String>,
+    ) -> Self {
+        let failure = slice_error_to_failure(
+            error,
+            output,
+            #[cfg(target_os = "linux")]
+            plate,
+        );
+        #[cfg(target_os = "linux")]
+        let mut failure = failure;
+        #[cfg(target_os = "linux")]
+        if let Self::Family(family) = &mut failure {
+            family.upward_machines = upward;
+        }
+        failure
     }
 
     pub(super) fn report(self) -> ! {
@@ -81,10 +106,26 @@ impl FamilyFailure {
     #[cfg(target_os = "linux")]
     fn record_exit_reason(&self) -> Result<(), serde_json::Error> {
         let json_error_string = serde_json::to_string(self.error_string)?;
+        let upward = if self.upward_machines.is_empty() {
+            String::new()
+        } else {
+            use serde::Serialize;
+            let mut bytes = Vec::new();
+            let formatter = serde_json::ser::PrettyFormatter::with_indent(b"\t");
+            self.upward_machines
+                .serialize(&mut serde_json::Serializer::with_formatter(
+                    &mut bytes, formatter,
+                ))?;
+            let array = String::from_utf8(bytes).expect("JSON serializer emits UTF-8");
+            format!(
+                "\t\"upward_compatible_machine\": {},\n",
+                array.replace('\n', "\n\t")
+            )
+        };
         let body = format!(
             "{{\n\t\"error_string\": {json_error_string},\n\t\"export_time\": 0,\n\t\
              \"layer_height\": {:?},\n\t\"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\
-             \"return_code\": {},\n\t\"sparse_infill_density\": {:?},\n\t\"wall_loops\": {}\n}}\n",
+             \"return_code\": {},\n\t\"sparse_infill_density\": {:?},\n{upward}\t\"wall_loops\": {}\n}}\n",
             self.layer_height,
             self.plate_index,
             self.return_code,
@@ -141,6 +182,8 @@ pub(super) fn slice_error_to_failure(
             sparse_infill_density: sparse,
             #[cfg(target_os = "linux")]
             error_string,
+            #[cfg(target_os = "linux")]
+            upward_machines: Vec::new(),
             stderr,
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
