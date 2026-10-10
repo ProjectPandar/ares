@@ -58,6 +58,9 @@ pub(crate) mod type2_copies;
 pub(crate) mod vg1_inputs;
 
 #[cfg(test)]
+#[path = "runner/apa_m_active.rs"]
+mod apa_m_active;
+#[cfg(test)]
 #[path = "runner/apa_m_pa_off.rs"]
 mod apa_m_pa_off;
 #[path = "runner/application.rs"]
