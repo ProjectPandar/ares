@@ -144,6 +144,9 @@ fn execute_plan(
         super::print_compatible_printers::witnesses(runner);
         return OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
     }
+    if plan.key == "other_layers_print_sequence_nums" {
+        return super::tool_sequences::execute_plan(runner, plan);
+    }
     let mut first_failure = None;
     let mut compared = 0;
     let mut excused = 0;

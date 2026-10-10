@@ -14,6 +14,60 @@ struct SequenceCase {
     expected: &'static [(usize, [usize; 2])],
 }
 
+pub(super) fn execute_plan(runner: &OrcaRunner, plan: &domains::OptionPlan) -> OptionOutcome {
+    let root = parity::artifacts::root_from_env().unwrap();
+    let mut proofs = Vec::new();
+    for case in &plan.cases {
+        let count: usize = case
+            .value
+            .as_ref()
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .parse()
+            .unwrap();
+        let vector: &[usize] = match count {
+            0 | 1 => &[2, 5, 2, 1],
+            2 => &[2, 5, 1, 2, 4, 6, 2, 1],
+            _ => unreachable!("bounded admitted count plan"),
+        };
+        let expected: &[(usize, [usize; 2])] = match count {
+            0 => &[],
+            1 => &[(2, [1, 0]), (3, [1, 0]), (4, [1, 0]), (5, [1, 0])],
+            2 => &[
+                (2, [0, 1]),
+                (3, [0, 1]),
+                (4, [1, 0]),
+                (5, [1, 0]),
+                (6, [1, 0]),
+            ],
+            _ => unreachable!("bounded admitted count plan"),
+        };
+        let label = format!("option/{}/{}", plan.key, case.label);
+        let exported = context::prepare(runner, &label, count, vector);
+        let sliced = runner.slice_case(&exported).unwrap();
+        let native = observation::observe(std::str::from_utf8(&sliced.reference).unwrap());
+        let outcome = parity::compare_case(&sliced);
+        let ares = observation::observe(
+            &std::fs::read_to_string(outcome.artifacts.as_ref().unwrap().join("ares.gcode"))
+                .unwrap(),
+        );
+        proofs.push(json!({"label":label,"count":count,"vector":vector,
+            "native":native,"ares":ares,"full_output_status":outcome.status,
+            "artifacts":outcome.artifacts,"detail":outcome.detail}));
+        parity::artifacts::overwrite(
+            &root.join("g4-sequence-sweep-cases.json"),
+            &serde_json::to_vec_pretty(&proofs).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(outcome.status, "PASS", "{label}: {}", outcome.detail);
+        observation::verify(&native, &label, expected);
+        observation::verify(&ares, &label, expected);
+        assert_eq!(native, ares, "{label}: actual per-layer consumption");
+    }
+    OptionOutcome::executed(plan, proofs.len(), Vec::new(), 0, None)
+}
+
 #[test]
 fn orca_parity_g4_other_layer_sequence_count_consumes_ranges_and_last_row_priority() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
