@@ -51,7 +51,7 @@ away a mismatch.
 ## Finite context and canonical requests
 
 One Ender-3 0.4mm nozzle, relative extrusion, SEMM, two distinguishable PLA
-logical filaments (colours differ, temperatures211/233), Manual physical map
+logical filaments (colours differ, temperatures211/223 after approved revision), Manual physical map
 `[1,1]`, coherent Standard selector, baseline identity `[1,2]` and four-cell
 supplied flush matrix. Identity/variant classification is not promoted here.
 No support, raft, skirt or prime tower; cube10,
@@ -151,9 +151,10 @@ sets and distinct/repeated capture inventory. Report ND to the owner; no
 implicit waiver, tolerance or comparator change. Review binds exact final hash;
 latest allowed rebase then non-force FF push only after APPROVED.
 
-## Temperature fixture revision — approval requested
+## Temperature fixture revision — approved
 
-The approved fixture above fixes 211/233. Do not silently substitute it.
+The originally approved fixture above fixed 211/233; the owner approved this
+revision to 211/223 after retaining the rejection below.
 On production base `626ed1738`, standalone Native export succeeded
 (`/tmp/worker2-g4-sequence-626-export-validation.HMwcXl`, exit0), but the single
 fresh E2E (`/tmp/worker2-g4-sequence-626-fresh-e2e.k8K9V3`, run
@@ -169,7 +170,7 @@ and sets `STRING_EXCEPT_FILAMENTS_DIFFERENT_TEMP` at `1273-1277`.
 `OrcaSlicer.cpp:6077-6078` maps this to `CLI_FILAMENTS_DIFFERENT_TEMP` (-62).
 These lines also match the seeded replay source used for the receipt.
 
-**Requested sole spec change:** fixture nozzle and initial-layer temperatures
+**Approved sole spec change:** fixture nozzle and initial-layer temperatures
 211/**223**, rather than 211/233. Retain the same two PLA presets, their actual
 recommended `[190,230]` ranges, distinct colors, one Standard nozzle, Manual
 map, role allocation, first-layer order, all count/vector requests and controls.
@@ -177,8 +178,8 @@ Both 211 and 223 lie within both ranges; temperature distinction is retained.
 No production changes, preference override, range widening, guard bypass,
 comparator normalization or new consumer scope is permitted.
 
-Pending owner approval: no temperature code change or further Native launch.
-After approval, audit both actual preset/project temperature arrays and mutual
+Owner approved the revision; retain the original -62 as a rejection witness.
+Audit both actual preset/project temperature arrays and mutual
 bounds offline, then perform one standalone export **and slice** admission
 validation on the bound count0 input before one fresh E2E on the current
 production tree. Preserve the -62 receipt and every subsequent raw artifact;

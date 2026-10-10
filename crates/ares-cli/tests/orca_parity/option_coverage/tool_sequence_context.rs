@@ -49,7 +49,7 @@ pub(super) fn prepare(
     parity::normalize_filament_defaults(&mut filaments);
     for (filament, (colour, temperature)) in filaments
         .iter_mut()
-        .zip([("#F2754E", "211"), ("#0000FF", "233")])
+        .zip([("#F2754E", "211"), ("#0000FF", "223")])
     {
         filament.insert("filament_is_support".into(), json!(["0"]));
         filament.insert("filament_colour".into(), json!([colour]));
@@ -117,10 +117,10 @@ pub(super) fn prepare(
     fields.insert("filament_is_support".into(), json!(["0", "0"]));
     fields.insert("filament_colour".into(), json!(["#F2754E", "#0000FF"]));
     fields.insert("filament_self_index".into(), json!(["1", "2"]));
-    fields.insert("nozzle_temperature".into(), json!(["211", "233"]));
+    fields.insert("nozzle_temperature".into(), json!(["211", "223"]));
     fields.insert(
         "nozzle_temperature_initial_layer".into(),
-        json!(["211", "233"]),
+        json!(["211", "223"]),
     );
     fields.insert(
         "flush_volumes_matrix".into(),
