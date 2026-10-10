@@ -7,6 +7,14 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### SAFC coupled model: source-slice SPEC request (2026-10-11)
+
+Select `small_area_infill_flow_compensation` + `_model`; current model probe is empty-only, not active-curve proof.
+Admit upstream SmallAreaInfillFlowCompensator/PCHIP and `_needSAFC` in a finite single-region linear-extrusion context.
+Seven paired enable/model/pattern controls require actual solid-role E effects and unchanged whole comparison.
+APA, load-settings and owned matrix DIVERGENT work stay excluded; no Native or production edit before approval.
+[Source ownership, lawful curves, Rust destination and test-first exit gates](architecture/option-safc-coupled-model-coverage.md).
+
 ### G4 other-layer sequence count: bounded GREEN (2026-10-11)
 
 Admit upstream sequence count0/1/2 plus empty/reverse-priority consumers; other G4 domains stay deferred.
