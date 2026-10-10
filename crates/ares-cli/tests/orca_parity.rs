@@ -32,12 +32,12 @@ mod cli_retained_input;
 mod cli_sequential_clearance;
 #[path = "orca_parity/load_settings_cli.rs"]
 mod load_settings_cli;
-#[path = "orca_parity/option_coverage/post_process.rs"]
-mod post_process_cli;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
 #[path = "orca_parity/plate_origin_cli.rs"]
 mod plate_origin_cli;
+#[path = "orca_parity/option_coverage/post_process.rs"]
+mod post_process_cli;
 #[path = "orca_parity/residual_stock_cli.rs"]
 mod residual_stock_cli;
 #[path = "orca_parity/stock_early_cli.rs"]

@@ -1,9 +1,9 @@
 # post_process: bounded CLI admission and execution-ownership spec
 
-Date: 2026-10-10. Status: proposed, approval required before tests/implementation.
+Date: 2026-10-10. Status: approved spec `6a7a293ea`; ordinary CLI witnesses verified.
 Base: `a539f1ff03f0094a856ac9fedeb742ee42877746`.
-This is an offline source audit and a source-cited rewrite slice, not a new
-Ares script-running feature. No cargo, Native, browser, or process probe ran.
+This is a source-cited admission/data rewrite slice, not a new Ares
+script-running feature. The original spec audit was entirely offline.
 
 ## Upstream owners and distinct meanings
 
@@ -120,6 +120,24 @@ verifies retained option values and typed admission where that API promises
 validated CLI compatibility, never requires a child process. Invalid value
 shapes follow existing input/deserialization boundaries; do not invent
 private defensive checks or alter accepted serialization speculatively.
+
+## Ordinary CLI witness execution
+
+Actual `b9e802ed1e51c5a15241a0b09e21b7cb7865fc30`, seeded and official
+fresh caches: each **3/3 PASS**, two test threads. Nonempty owned command and
+`[""]` both match Native -19/Unix237, exact channels/full JSON/plate0,
+no export and absent execution marker. `[]` matches successful complete
+G-code bytes, generator-only normalization. Same authored 3MF input is used
+for both slicers; every non-post_process setting and other ZIP payload is
+proved unchanged. No core/CLI production changes were required.
+Evidence: `/tmp/worker4-post-process-bounded-v2-{seeded,official}{.log,-status,-paths}`.
+External script execution remains INCOMPLETE, and the combined load-settings
+RED stays on its blocked branch; neither is promoted by these six PASS tests.
+Initial ordinary harness compile101 (`b337896da`, incorrect assumption that
+`stages::run` returns captured output) is preserved as an engineering failure,
+not RED. Test-only fix reads the existing file-backed status/channel receipts.
+Clippy CLI parity test allfeatures `-D warnings` passed on `b9e802ed1`;
+initial fmt failed only module ordering, corrected with no behavior change.
 
 ## TDD, failure modes and evidence
 
