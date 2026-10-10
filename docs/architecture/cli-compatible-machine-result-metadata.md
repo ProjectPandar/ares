@@ -1,9 +1,9 @@
 # SPEC — CLI compatible-machine result metadata
 
-Status: proposed, **awaiting owner approval before RED/GREEN**.
+Status: approved at `d8b155d79`; **upward merges first**, downward is a
+separate later RED/GREEN checkpoint under this same SPEC.
 This document ports an upstream CLI metadata slice, not an Ares-owned slicing
-pipeline. No production implementation or Native acceptance run belongs to this
-SPEC commit.
+pipeline. The SPEC commit does not itself establish RED/GREEN evidence.
 
 ## 1. Upstream ownership and observed residual
 
@@ -12,13 +12,22 @@ Primary owner is `src/OrcaSlicer.cpp`, with configuration and geometry inputs
 from existing libslic3r concepts; the adapter's Linux filesystem/output behavior
 stays outside ares-core.
 
-The owner reports worker3 master A1's stock **Bambu Lab H2D Pro 0.4 nozzle**
-custom-template rejection (`CLI_SLICING_ERROR`, -100) as a live residual: Native
-result.json contains compatible-machine metadata that Ares CLI cannot emit.
-This is the required starting witness, **not yet this worker's classification
-RED**. Obtain its exact input/producer/command/result receipts from worker3
-before writing/running the RED; do not substitute a frozen stock result or
-alter the stock custom G-code to obtain a more convenient failure.
+The owner reports worker3 master A1's stock **Bambu Lab H2D 0.4 nozzle**
+input with upward target **Bambu Lab H2D Pro 0.4 nozzle** as the live residual.
+Its -100 channel depends on worker3's unmerged `SliceError::Slicing` layer.
+Exact handoff: `/tmp/worker3-master-A1-worker1-upward-compatible-handoff.md`;
+input SHA `6ac0d84efe4010ee563aebb4a17f13c4f15af896377e693c0125ef5e507f4b67`.
+Do not relabel Pro as its input machine, or call this execution on our main.
+
+Owner subsequently ruled **do not import worker3's unmerged layer**. The first
+independent upward witness must instead use main's existing
+`SliceError::CustomGCode`/-100 channel on a BBL stock H2D/H2D Pro machine with
+nonempty upward data and a fixed custom-G-code error. Require runtime Native
+-100 plus nonempty upward metadata; independently prove current Ares's same
+exit/stdout/stderr before accepting the missing-header-only RED. Preserve
+worker3's original A1 assertions unchanged; after upward merges, worker3 rebase
+can close that original header residual without bundling grouping/map changes.
+Neither historical receipt nor a failed Native admission establishes our RED.
 
 Current Ares has the typed input option
 `PrinterRemainingOptions::upward_compatible_machine`, and
@@ -208,8 +217,9 @@ Before implementation, write source-backed E2E failures for these risks:
 7. Missing/invalid configured Native falsely marked SKIP, partial channels
    accepted, or normalization removing the new fields to make comparison pass.
 
-First RED: reproduce worker3 A1's unchanged H2D Pro0.4 input with live pinned
-Native and public Ares CLI; prove matching exit family/stdout/stderr first,
+First RED: use the owner-revised independent stock BBL custom-G-code error
+witness on main; runtime pinned Native must prove -100 plus nonempty upward.
+Prove matching exit family/stdout/stderr first,
 then retain full result.json bytes with the missing fields as the only intended
 repair boundary. If other semantic discrepancies occur, diagnose instead of
 calling them this slice's RED. Do not delete either field in the comparator.
