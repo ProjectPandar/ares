@@ -8,13 +8,13 @@ use std::{fs, process::Command};
 
 use crate::load_settings_cli::{banner_normalized, stages_run};
 
-fn load_settings_3mf_fixture(name: &str) -> std::path::PathBuf {
+pub(crate) fn load_settings_3mf_fixture(name: &str) -> std::path::PathBuf {
     crate::runner::repo_root()
         .join("tests/parity/validation/load-settings-3mf")
         .join(name)
 }
 
-fn parse_return_code(stdout: &[u8]) -> i32 {
+pub(crate) fn parse_return_code(stdout: &[u8]) -> i32 {
     // "run found error, return -19, exit...\n"
     let text = std::str::from_utf8(stdout).unwrap();
     text.split("return ")

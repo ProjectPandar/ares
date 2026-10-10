@@ -36,6 +36,8 @@ mod cli_sequential_clearance;
 mod cli_upward_machine_result;
 #[path = "orca_parity/load_settings_3mf.rs"]
 mod load_settings_3mf;
+#[path = "orca_parity/load_settings_3mf_partial.rs"]
+mod load_settings_3mf_partial;
 #[path = "orca_parity/load_settings_cli.rs"]
 mod load_settings_cli;
 #[path = "orca_parity/native_wall_clock.rs"]
