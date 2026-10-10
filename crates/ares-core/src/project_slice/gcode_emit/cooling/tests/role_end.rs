@@ -1,6 +1,7 @@
 //! `CoolingBuffer.cpp:780,856–869,984–1006`: END emission survives an inactive
 //! conditional START; the final layer baseline still selects the fan speed.
 use super::super::*;
+use crate::options::PartCoolingFanRampConfig;
 
 pub(super) fn cooling_state() -> CoolingState {
     CoolingState {

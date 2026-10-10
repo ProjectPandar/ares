@@ -2,6 +2,7 @@
 //! to reset it; an active request loses precedence over FORCE_RESUME.
 //! `CoolingBuffer.cpp:808-812,984-1005` owns these distinct state writes.
 use super::super::*;
+use crate::options::PartCoolingFanRampConfig;
 use super::role_end::cooling_state;
 
 #[test]

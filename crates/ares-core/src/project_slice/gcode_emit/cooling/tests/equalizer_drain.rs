@@ -2,6 +2,7 @@
 //! `PressureEqualizer.cpp:174-200` holds each layer back until the next
 //! arrives; the trailing NOP layer result drains the last one.
 use super::super::*;
+use crate::options::PartCoolingFanRampConfig;
 use super::role_end::cooling_state;
 use crate::project_slice::pressure_equalizer::PressureEqualizerPass;
 
