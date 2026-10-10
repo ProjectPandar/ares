@@ -78,9 +78,7 @@ pub(super) fn linear_segment(
         state.options.filament_flow_ratio,
         state.options.print_flow_ratio,
         state.options.filament_area,
-    ) * state
-        .small_area_flow
-        .multiplier_for_feature(properties.feature, length);
+    ) * small_area_multiplier(state, properties.feature, length);
     if extrusion.abs() <= f64::EPSILON {
         output.extend_from_slice(
             format!("G1 X{} Y{}\n", format_axis(end.x), format_axis(end.y)).as_bytes(),
@@ -110,6 +108,15 @@ pub(super) fn linear_segment(
     state.x = end.x;
     state.y = end.y;
     state.wipe_start = Some(end);
+}
+
+pub(super) fn small_area_multiplier(state: &EmitState, feature: &str, length: f64) -> f64 {
+    if !state.small_area_gate.needs(feature, state.on_first_layer) {
+        return 1.0;
+    }
+    state
+        .small_area_flow
+        .multiplier_for_feature(feature, state.on_first_layer, length)
 }
 
 pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {

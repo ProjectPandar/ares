@@ -82,7 +82,16 @@ pub(super) fn emit(
         layer,
         (motion_geometry, first_layer, |region: usize| {
             let options = &regions[region].options;
-            (options.sparse_infill_density.0, options.is_infill_first.0)
+            (
+                options.sparse_infill_density.0,
+                options.is_infill_first.0,
+                super::super::small_area::Gate {
+                    enabled: options.small_area_infill_flow_compensation.0,
+                    bottom: options.bottom_surface_pattern,
+                    internal: options.internal_solid_infill_pattern,
+                    top: options.top_surface_pattern,
+                },
+            )
         }),
         state,
         |output, state| {

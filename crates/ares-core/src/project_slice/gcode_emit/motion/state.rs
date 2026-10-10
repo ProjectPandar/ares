@@ -61,6 +61,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) active_layer_print_z: f64,
     pub(in crate::project_slice::gcode_emit) small_area_flow:
         crate::extrusions::SmallAreaInfillFlowCompensation,
+    pub(in crate::project_slice::gcode_emit) small_area_gate: super::super::small_area::Gate,
     /// Active layer id — upstream's `layer->id()`
     /// (`GCode.cpp:5689`, `GCode.hpp:671-676`): raft layers occupy ids
     /// `0..raft_count`, so the first object layer after a raft has id

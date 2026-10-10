@@ -3,6 +3,13 @@ use super::{EmitState, PathProperties, arc, linear_segment};
 #[test]
 fn active_small_area_model_scales_solid_segment_extrusion() {
     let mut state = EmitState {
+        // GCode.cpp:6318: BottomSurface needs the first-layer bottom pattern gate.
+        on_first_layer: true,
+        small_area_gate: super::super::super::small_area::Gate {
+            enabled: true,
+            bottom: crate::ProcessInfillPattern::Rectilinear,
+            ..super::super::super::small_area::Gate::default()
+        },
         options: super::super::MotionOptions {
             filament_flow_ratio: 1.0,
             print_flow_ratio: 1.0,

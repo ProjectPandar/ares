@@ -65,7 +65,16 @@ pub(super) fn emit(
         layer,
         (motion_geometry, first_layer, |_| {
             let region = &traversal.resolved.views.full.process.region;
-            (region.sparse_infill_density.0, region.is_infill_first.0)
+            (
+                region.sparse_infill_density.0,
+                region.is_infill_first.0,
+                super::super::small_area::Gate {
+                    enabled: region.small_area_infill_flow_compensation.0,
+                    bottom: region.bottom_surface_pattern,
+                    internal: region.internal_solid_infill_pattern,
+                    top: region.top_surface_pattern,
+                },
+            )
         }),
         state,
         |output, state| {

@@ -73,18 +73,19 @@ impl SmallAreaInfillFlowCompensation {
         model.multiplier(line_length_mm)
     }
 
-    pub(crate) fn multiplier_for_feature(&self, feature: &str, line_length_mm: f64) -> f64 {
-        let Some(model) = &self.model else {
-            return 1.0;
+    pub(crate) fn multiplier_for_feature(
+        &self,
+        feature: &str,
+        is_first_layer: bool,
+        line_length_mm: f64,
+    ) -> f64 {
+        let role = match feature {
+            "Internal solid infill" => PrintPathRole::SolidInfill,
+            "Top surface" => PrintPathRole::TopSolidInfill,
+            "Bottom surface" => PrintPathRole::BottomSurface,
+            _ => return 1.0,
         };
-        if matches!(
-            feature,
-            "Internal solid infill" | "Top surface" | "Bottom surface"
-        ) {
-            model.multiplier(line_length_mm)
-        } else {
-            1.0
-        }
+        self.multiplier(role, is_first_layer, line_length_mm)
     }
 }
 

@@ -98,9 +98,7 @@ pub(super) fn emit(command: Emission<'_>) {
                 state.options.print_flow_ratio,
                 state.options.filament_area,
             ) * slope.flow_ratio
-                * state
-                    .small_area_flow
-                    .multiplier_for_feature(properties.feature, length)
+                * extrusion::small_area_multiplier(state, properties.feature, length)
                 * e_ratio;
             extrusion::extrude_to_xyz(
                 output,
