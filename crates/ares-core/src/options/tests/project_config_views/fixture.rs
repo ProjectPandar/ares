@@ -3,7 +3,7 @@ use crate::{
     options::{
         Nullable, OrcaFloat, OrcaInts, ProjectSettings, ZHopType,
         project_config_views::{ProjectConfigViews, resolve_project_config_views},
-        project_variants::materialize_project_variants,
+        project_variants::materialize_project_variants_full,
     },
 };
 
@@ -11,11 +11,10 @@ use super::support::{assert_all_twelve_runtime_gcode_fields, floats, ints, z_hop
 
 #[test]
 fn project_config_views_fixture_preserves_full_and_resolves_runtime_retracts() {
-    let project = load_project(crate::test_fixtures::ksr_project())
-    .unwrap();
+    let project = load_project(crate::test_fixtures::ksr_project()).unwrap();
     let raw = project.settings().clone();
     let original_raw = raw.clone();
-    let full = materialize_project_variants(&raw, &raw.project.gcode.filament_map).unwrap();
+    let full = materialize_project_variants_full(&raw, &raw.project.gcode.filament_map).unwrap();
 
     let views = resolve_project_config_views(full).unwrap();
 
@@ -52,10 +51,7 @@ fn project_config_views_fixture_preserves_full_and_resolves_runtime_retracts() {
         views.runtime.project.gcode.retraction_speed,
         floats(&[30.0, 30.0])
     );
-    assert_eq!(
-        views.full.project.print.wipe_distance,
-        floats(&[2.0, 2.0])
-    );
+    assert_eq!(views.full.project.print.wipe_distance, floats(&[2.0, 2.0]));
     assert_eq!(
         views.runtime.project.print.wipe_distance,
         floats(&[1.0, 1.0])
@@ -73,8 +69,7 @@ fn project_config_views_fixture_preserves_full_and_resolves_runtime_retracts() {
 
 #[test]
 fn project_config_views_rematerializes_each_map_from_original_raw_source() {
-    let project = load_project(crate::test_fixtures::ksr_project())
-    .unwrap();
+    let project = load_project(crate::test_fixtures::ksr_project()).unwrap();
     let raw = project.settings().clone();
     let original_raw = raw.clone();
 
@@ -105,10 +100,7 @@ fn project_config_views_rematerializes_each_map_from_original_raw_source() {
         first_a.runtime.project.gcode.retraction_length,
         floats(&[0.4, 0.4])
     );
-    assert_eq!(
-        first_a.runtime_gcode.retraction_length,
-        floats(&[0.4, 0.4])
-    );
+    assert_eq!(first_a.runtime_gcode.retraction_length, floats(&[0.4, 0.4]));
     assert_eq!(
         result_b.full.project.gcode.retraction_length,
         floats(&[0.8, 2.0])
@@ -135,6 +127,6 @@ fn project_config_views_rematerializes_each_map_from_original_raw_source() {
 }
 
 fn resolve_from_raw(raw: &ProjectSettings, filament_map: &OrcaInts) -> ProjectConfigViews {
-    let full = materialize_project_variants(raw, filament_map).unwrap();
+    let full = materialize_project_variants_full(raw, filament_map).unwrap();
     resolve_project_config_views(full).unwrap()
 }

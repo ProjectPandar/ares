@@ -1,6 +1,5 @@
 use crate::options::{
-    Nullable, OrcaBool,
-    project_variants::materialize_project_variants,
+    Nullable, OrcaBool, project_variants::materialize_project_variants_full,
     registry::filament_options_with_variant,
 };
 
@@ -14,7 +13,7 @@ fn filament_selects_all_fields_at_raw_index_six_and_preserves_source() {
     let source = filament_sentinel_source();
     let original = source.clone();
 
-    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
 
     assert_eq!(source, original);
     assert_eq!(filament_options_with_variant().len(), 37);
@@ -38,9 +37,9 @@ fn filament_selects_all_fields_at_raw_index_six_and_preserves_source() {
 fn rematerializing_same_raw_source_is_deterministic_and_map_changes_exact_family() {
     let source = filament_sentinel_source();
 
-    let first = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
-    let repeated = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
-    let remapped = materialize_project_variants(&source, &ints(&[2, 1])).unwrap();
+    let first = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
+    let repeated = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
+    let remapped = materialize_project_variants_full(&source, &ints(&[2, 1])).unwrap();
 
     assert_eq!(first, repeated);
     assert_changed_keys(
@@ -63,14 +62,10 @@ fn short_filament_payload_keeps_the_missing_slot_zero() {
         .0
         .truncate(6);
 
-    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
 
     assert_eq!(
-        materialized
-            .filament
-            .gcode
-            .filament_max_volumetric_speed
-            .0,
+        materialized.filament.gcode.filament_max_volumetric_speed.0,
         [
             source.filament.gcode.filament_max_volumetric_speed.0[0],
             crate::OrcaFloat(0.0),

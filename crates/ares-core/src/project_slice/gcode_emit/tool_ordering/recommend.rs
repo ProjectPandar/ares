@@ -2,7 +2,7 @@
 use super::{OrderingScope, RaftSchedule, ToolOrdering, collect_layers, finish_layers};
 use crate::{
     ProcessPrintSequence, SliceError,
-    options::{filament_map_recommend, write_config_block},
+    options::{filament_map_recommend, refresh_filament_map, write_config_block},
     project_slice::{
         island_print_order::OrderedExtrusionLayer,
         perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -39,6 +39,21 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             &used,
             is_bbl,
         );
+        if changed {
+            // Print.cpp:3166-3200 refreshes from the PrintApply.cpp:1165-1172 checkpoint.
+            traversal.resolved.views = refresh_filament_map(
+                &traversal.resolved.filament_variant_checkpoint,
+                &traversal.resolved.views.full.project.gcode.filament_map,
+            )?;
+            let mut block = Vec::new();
+            write_config_block(
+                &traversal.resolved.views,
+                &traversal.project.documents().project_settings_raw,
+                0,
+                &mut block,
+            )?;
+            traversal.config_block = (!block.is_empty()).then_some(block);
+        }
         if let Err(message) = filament_map_recommend::check_filament_printable_after_group(
             &traversal.resolved.views.full,
             &used,
@@ -55,21 +70,6 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
                     settings.process.region.sparse_infill_density.0 as f32,
                 ),
             });
-        }
-        if changed {
-            // Map publication only; Print.cpp:3166-3200 variant/retract refresh is separate.
-            let views = &mut traversal.resolved.views;
-            views.runtime.project.gcode.filament_map =
-                views.full.project.gcode.filament_map.clone();
-            views.runtime_gcode.filament_map = views.full.project.gcode.filament_map.clone();
-            let mut block = Vec::new();
-            write_config_block(
-                views,
-                &traversal.project.documents().project_settings_raw,
-                0,
-                &mut block,
-            )?;
-            traversal.config_block = (!block.is_empty()).then_some(block);
         }
     }
     finish_layers(traversal, layers, bottom_z, max_height, false)

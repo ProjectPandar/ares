@@ -1,11 +1,12 @@
 use crate::{
-    ObjectOptions, OrcaInts, RegionOptions, options::project_config_views::ProjectConfigViews,
-    project::transform::Transform3d,
+    ObjectOptions, OrcaInts, ProjectSettings, RegionOptions,
+    options::project_config_views::ProjectConfigViews, project::transform::Transform3d,
 };
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct BoundedResolvedProjectConfig {
     pub(crate) views: ProjectConfigViews,
+    pub(crate) filament_variant_checkpoint: ProjectSettings,
     pub(crate) applied_filament_map: OrcaInts,
     pub(crate) logical_filament_count: usize,
     pub(crate) usage: BoundedProjectUsage,

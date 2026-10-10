@@ -1,7 +1,7 @@
 use crate::options::{
     ExtruderType, ExtruderTypes, ExtruderVariantLists, NozzleVolumeType, NozzleVolumeTypes,
     OrcaFloats, OrcaStrings, VariantStride,
-    project_variants::{inspect_printer_indices_for_test, materialize_project_variants},
+    project_variants::{inspect_printer_indices_for_test, materialize_project_variants_full},
 };
 
 use super::support::{active_source, assert_invalid_key, ints, one_extruder_source};
@@ -17,7 +17,7 @@ fn complete_id_map_uses_first_exact_pair_and_allows_trailing_ids() {
     ]);
     let original = source.clone();
 
-    materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+    materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
     let indices = inspect_printer_indices_for_test(&source).unwrap();
 
     assert_eq!(indices.unwrap(), vec![0, 2]);
@@ -48,7 +48,7 @@ fn guard_uses_only_physical_groups_repeats_first_and_ignores_trailing() {
     let mut repeated = active_source();
     repeated.printer.remaining.extruder_variant_list =
         ExtruderVariantLists(vec!["Direct Drive Standard".to_owned()]);
-    materialize_project_variants(&repeated, &ints(&[1, 2])).unwrap();
+    materialize_project_variants_full(&repeated, &ints(&[1, 2])).unwrap();
     let indices = inspect_printer_indices_for_test(&repeated).unwrap();
     assert_eq!(indices.unwrap(), vec![0, 1]);
 
@@ -59,7 +59,7 @@ fn guard_uses_only_physical_groups_repeats_first_and_ignores_trailing() {
         .extruder_variant_list
         .0
         .push("Bowden Standard".to_owned());
-    materialize_project_variants(&trailing, &ints(&[0, 99])).unwrap();
+    materialize_project_variants_full(&trailing, &ints(&[0, 99])).unwrap();
     let indices = inspect_printer_indices_for_test(&trailing).unwrap();
     assert_eq!(indices, None);
 }
@@ -76,8 +76,7 @@ fn one_shared_variant_broadcasts_across_identical_physical_extruders() {
     source.printer.remaining.extruder_variant_list =
         ExtruderVariantLists(vec!["Direct Drive Standard".to_owned()]);
     source.printer.gcode.extruder_type = ExtruderTypes(vec![ExtruderType::DirectDrive]);
-    source.project.gcode.nozzle_volume_type =
-        NozzleVolumeTypes(vec![NozzleVolumeType::Standard]);
+    source.project.gcode.nozzle_volume_type = NozzleVolumeTypes(vec![NozzleVolumeType::Standard]);
     source.printer.gcode.printer_extruder_id = ints(&[1]);
     source.printer.gcode.printer_extruder_variant =
         OrcaStrings(vec!["Direct Drive Standard".to_owned()]);
@@ -90,8 +89,8 @@ fn one_shared_variant_broadcasts_across_identical_physical_extruders() {
     source.project.gcode.filament_map = ints(&[1]);
 
     let indices = inspect_printer_indices_for_test(&source).unwrap().unwrap();
-    let once = materialize_project_variants(&source, &ints(&[1])).unwrap();
-    let twice = materialize_project_variants(&once, &ints(&[1])).unwrap();
+    let once = materialize_project_variants_full(&source, &ints(&[1])).unwrap();
+    let twice = materialize_project_variants_full(&once, &ints(&[1])).unwrap();
 
     assert_eq!(indices, [0, 0, 0, 0]);
     assert_eq!(twice, once);
@@ -108,7 +107,7 @@ fn guard_preserves_edge_empty_and_whitespace_tokens() {
             ExtruderVariantLists(vec![group.to_owned()]);
         source.printer.gcode.printer_extruder_variant.0.clear();
         assert_invalid_key(
-            materialize_project_variants(&source, &ints(&[1])),
+            materialize_project_variants_full(&source, &ints(&[1])),
             "printer_extruder_variant",
         );
     }
@@ -117,13 +116,12 @@ fn guard_preserves_edge_empty_and_whitespace_tokens() {
 #[test]
 fn one_extruder_multiple_variants_activates_materialization() {
     let mut source = one_extruder_source();
-    source.printer.remaining.extruder_variant_list = ExtruderVariantLists(vec![
-        "Direct Drive Standard,Bowden Standard".to_owned(),
-    ]);
+    source.printer.remaining.extruder_variant_list =
+        ExtruderVariantLists(vec!["Direct Drive Standard,Bowden Standard".to_owned()]);
     source.project.gcode.filament_map = ints(&[99]);
     let original = source.clone();
 
-    let materialized = materialize_project_variants(&source, &ints(&[1])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1])).unwrap();
     let indices = inspect_printer_indices_for_test(&source).unwrap();
 
     assert_eq!(indices.unwrap(), vec![0]);
@@ -140,7 +138,7 @@ fn one_physical_extruder_map_broadcasts_to_all_logical_filaments() {
         crate::OrcaFloat(1.75),
     ]);
 
-    let materialized = materialize_project_variants(&source, &ints(&[1])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1])).unwrap();
 
     assert_eq!(materialized.project.gcode.filament_map, ints(&[1, 1, 1]));
 }
@@ -160,7 +158,7 @@ fn one_extruder_one_variant_replaces_only_map_without_validation() {
     let invalid_map = ints(&[0, 99]);
     let original = source.clone();
 
-    let materialized = materialize_project_variants(&source, &invalid_map).unwrap();
+    let materialized = materialize_project_variants_full(&source, &invalid_map).unwrap();
 
     assert_eq!(materialized.project.gcode.filament_map, invalid_map);
     assert_eq!(source, original);
@@ -173,17 +171,14 @@ fn one_extruder_one_variant_replaces_only_map_without_validation() {
 #[test]
 fn short_nonempty_typed_controls_repeat_first() {
     let mut repeated_type = active_source();
-    repeated_type.printer.gcode.extruder_type =
-        ExtruderTypes(vec![ExtruderType::DirectDrive]);
-    repeated_type.project.gcode.nozzle_volume_type = NozzleVolumeTypes(vec![
-        NozzleVolumeType::Standard,
-        NozzleVolumeType::HighFlow,
-    ]);
+    repeated_type.printer.gcode.extruder_type = ExtruderTypes(vec![ExtruderType::DirectDrive]);
+    repeated_type.project.gcode.nozzle_volume_type =
+        NozzleVolumeTypes(vec![NozzleVolumeType::Standard, NozzleVolumeType::HighFlow]);
     set_variants(
         &mut repeated_type,
         &["Direct Drive Standard", "Direct Drive High Flow"],
     );
-    materialize_project_variants(&repeated_type, &ints(&[1, 2])).unwrap();
+    materialize_project_variants_full(&repeated_type, &ints(&[1, 2])).unwrap();
     assert_eq!(
         inspect_printer_indices_for_test(&repeated_type)
             .unwrap()
@@ -198,7 +193,7 @@ fn short_nonempty_typed_controls_repeat_first() {
         &mut repeated_volume,
         &["Direct Drive High Flow", "Bowden High Flow"],
     );
-    materialize_project_variants(&repeated_volume, &ints(&[1, 2])).unwrap();
+    materialize_project_variants_full(&repeated_volume, &ints(&[1, 2])).unwrap();
     assert_eq!(
         inspect_printer_indices_for_test(&repeated_volume)
             .unwrap()
@@ -211,26 +206,29 @@ fn short_nonempty_typed_controls_repeat_first() {
 fn empty_boundary_vectors_name_their_orca_keys() {
     let mut source = active_source();
     source.project.print.nozzle_diameter.0.clear();
-    assert_invalid_key(materialize_project_variants(&source, &ints(&[1])), "nozzle_diameter");
+    assert_invalid_key(
+        materialize_project_variants_full(&source, &ints(&[1])),
+        "nozzle_diameter",
+    );
 
     let mut source = active_source();
     source.printer.remaining.extruder_variant_list.0.clear();
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
+        materialize_project_variants_full(&source, &ints(&[1, 2])),
         "extruder_variant_list",
     );
 
     let mut source = active_source();
     source.printer.gcode.extruder_type.0.clear();
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
+        materialize_project_variants_full(&source, &ints(&[1, 2])),
         "extruder_type",
     );
 
     let mut source = active_source();
     source.project.gcode.nozzle_volume_type.0.clear();
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
+        materialize_project_variants_full(&source, &ints(&[1, 2])),
         "nozzle_volume_type",
     );
 }
@@ -240,7 +238,7 @@ fn active_branch_invalid_selector_empty_vectors_and_map_name_keys() {
     let mut source = active_source();
     source.printer.gcode.printer_extruder_variant.0.clear();
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
+        materialize_project_variants_full(&source, &ints(&[1, 2])),
         "printer_extruder_variant",
     );
 
@@ -249,29 +247,29 @@ fn active_branch_invalid_selector_empty_vectors_and_map_name_keys() {
     // High Flow E2E pins the values this produces end-to-end.
     let mut source = active_source();
     source.printer.gcode.printer_extruder_variant.0[1] = "missing".to_owned();
-    assert!(materialize_project_variants(&source, &ints(&[1, 2])).is_ok());
+    assert!(materialize_project_variants_full(&source, &ints(&[1, 2])).is_ok());
 
     let mut source = active_source();
     source.process.region.print_extruder_variant.0.clear();
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
+        materialize_project_variants_full(&source, &ints(&[1, 2])),
         "print_extruder_variant",
     );
 
     let mut source = active_source();
     source.filament.gcode.filament_extruder_variant = VariantStride(Vec::new());
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
+        materialize_project_variants_full(&source, &ints(&[1, 2])),
         "filament_extruder_variant",
     );
 
     let source = active_source();
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[0, 2])),
+        materialize_project_variants_full(&source, &ints(&[0, 2])),
         "filament_map",
     );
     assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 3])),
+        materialize_project_variants_full(&source, &ints(&[1, 3])),
         "filament_map",
     );
 }

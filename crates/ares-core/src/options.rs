@@ -118,7 +118,8 @@ use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{
     InternalBridgeFanSpeed, LayerRoleFanControl, PartCoolingFanRamp, PartCoolingFanRampConfig,
 };
-pub(crate) use project_variants::materialize_project_variants;
+pub(crate) use project_variants::refresh_filament_map;
+pub(crate) use project_variants::{MaterializedProjectVariants, materialize_project_variants};
 #[cfg_attr(not(test), allow(unused_imports))]
 pub(crate) use region_options::{RegionBase, RegionOptionOverrides, RegionOverrideSources};
 pub use support_different_extruders::DifferentExtrudersSupport;

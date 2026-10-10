@@ -2,16 +2,13 @@ use serde_json::{Value, json};
 
 use crate::options::{
     ProjectSettings,
-    project_variants::{inspect_printer_indices_for_test, materialize_project_variants},
+    project_variants::{inspect_printer_indices_for_test, materialize_project_variants_full},
     registry::{
-        print_options_with_variant, printer_options_with_variant_1,
-        printer_options_with_variant_2,
+        print_options_with_variant, printer_options_with_variant_1, printer_options_with_variant_2,
     },
 };
 
-use super::support::{
-    active_source, flat_settings, ints, source_with_overrides,
-};
+use super::support::{active_source, flat_settings, ints, source_with_overrides};
 
 #[test]
 fn printer_variant_one_and_process_select_exact_base_indices() {
@@ -22,7 +19,7 @@ fn printer_variant_one_and_process_select_exact_base_indices() {
         inspect_printer_indices_for_test(&source).unwrap().unwrap(),
         [0, 2]
     );
-    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
 
     assert_eq!(source, original);
     assert_eq!(
@@ -33,10 +30,7 @@ fn printer_variant_one_and_process_select_exact_base_indices() {
         materialized.printer.gcode.printer_extruder_variant.0,
         ["Direct Drive Standard", "Bowden Standard"]
     );
-    assert_eq!(
-        materialized.process.region.print_extruder_id,
-        ints(&[1, 2])
-    );
+    assert_eq!(materialized.process.region.print_extruder_id, ints(&[1, 2]));
     assert_eq!(
         materialized.process.region.print_extruder_variant.0,
         ["Direct Drive Standard", "Bowden Standard"]
@@ -60,11 +54,7 @@ fn printer_variant_one_and_process_select_exact_base_indices() {
 
     assert_eq!(printer_options_with_variant_1().len(), 24);
     assert_eq!(print_options_with_variant().len(), 2);
-    assert_selected_keys(
-        &source,
-        &materialized,
-        printer_options_with_variant_1(),
-    );
+    assert_selected_keys(&source, &materialized, printer_options_with_variant_1());
     assert_selected_keys(&source, &materialized, print_options_with_variant());
 }
 
@@ -77,7 +67,7 @@ fn printer_variant_two_reresolves_after_variant_one_and_selects_all_machine_limi
         inspect_printer_indices_for_test(&source).unwrap().unwrap(),
         [0, 2]
     );
-    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
 
     assert_eq!(source, original);
     assert_eq!(
@@ -87,19 +77,11 @@ fn printer_variant_two_reresolves_after_variant_one_and_selects_all_machine_limi
         [0, 1]
     );
     assert_eq!(
-        materialized
-            .printer
-            .machine
-            .machine_max_acceleration_e
-            .0,
+        materialized.printer.machine.machine_max_acceleration_e.0,
         source.printer.machine.machine_max_acceleration_e.0[..4]
     );
     assert_eq!(printer_options_with_variant_2().len(), 15);
-    assert_stride_two_selected_keys(
-        &source,
-        &materialized,
-        printer_options_with_variant_2(),
-    );
+    assert_stride_two_selected_keys(&source, &materialized, printer_options_with_variant_2());
 }
 
 #[test]
@@ -113,7 +95,7 @@ fn short_printer_payloads_broadcast_the_first_value() {
         .truncate(2);
     source.project.gcode.retraction_length.0.truncate(2);
 
-    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
 
     assert_eq!(
         materialized.printer.machine.machine_max_acceleration_e.0,
@@ -142,7 +124,7 @@ fn incomplete_process_ids_are_generated_from_variant_groups() {
     ];
     source.process.region.print_extruder_id = ints(&[1, 1]);
 
-    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+    let materialized = materialize_project_variants_full(&source, &ints(&[1, 2])).unwrap();
 
     assert_eq!(materialized.process.region.print_extruder_id, ints(&[1, 1]));
     assert_eq!(

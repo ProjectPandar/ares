@@ -1,7 +1,7 @@
 use crate::{
     Project, ProjectSettings, SliceError,
     options::{
-        materialize_project_variants,
+        MaterializedProjectVariants, materialize_project_variants,
         project_config_views::resolve_project_config_views,
         project_fdm_normalization::{ProjectFdmNormalizationKey, normalize_fdm_1, normalize_fdm_2},
     },
@@ -67,7 +67,11 @@ fn resolve_with_observer(
 
     let mut first = normalized_source;
     call_normalize_fdm_2(&mut first, NormalizeFdm2Pass::ColdFirst, 0, 0, observer);
-    first = materialize(first, MaterializationPass::First, observer)?;
+    let MaterializedProjectVariants {
+        full: materialized,
+        checkpoint: filament_variant_checkpoint,
+    } = materialize(first, MaterializationPass::First, observer)?;
+    first = materialized;
     let first_validated = validate_materialized_project(&first, project)?;
     let grouped = group_print_object_transforms(project.objects());
     observer.validate_and_group(MaterializationPass::First, &grouped);
@@ -125,6 +129,7 @@ fn resolve_with_observer(
 
     Ok(BoundedResolvedProjectConfig {
         views,
+        filament_variant_checkpoint,
         applied_filament_map,
         logical_filament_count: first_validated.logical_filament_count,
         usage,
@@ -149,9 +154,9 @@ fn materialize(
     source: ProjectSettings,
     pass: MaterializationPass,
     observer: &mut impl PhaseObserver,
-) -> Result<ProjectSettings, SliceError> {
+) -> Result<MaterializedProjectVariants, SliceError> {
     let materialized = materialize_project_variants(&source, &source.project.gcode.filament_map)?;
-    observer.materialize(pass, &source, &materialized);
+    observer.materialize(pass, &source, &materialized.full);
     Ok(materialized)
 }
 

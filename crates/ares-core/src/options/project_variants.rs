@@ -8,19 +8,28 @@ pub(crate) use index::get_index_for_extruder;
 
 use crate::{
     SliceError,
-    options::{OrcaInts, ProjectSettings},
+    options::{OrcaInts, ProjectSettings, project_config_views::ProjectConfigViews},
 };
+
+pub(crate) struct MaterializedProjectVariants {
+    pub(crate) full: ProjectSettings,
+    pub(crate) checkpoint: ProjectSettings,
+}
 
 pub(crate) fn materialize_project_variants(
     source: &ProjectSettings,
     filament_map: &OrcaInts,
-) -> Result<ProjectSettings, SliceError> {
+) -> Result<MaterializedProjectVariants, SliceError> {
     let mut materialized = source.clone();
     let filament_map = expanded_filament_map(source, filament_map);
     materialized.project.gcode.filament_map = filament_map.clone();
 
     let Some(active) = index::resolve_activation(&materialized)? else {
-        return Ok(materialized);
+        let checkpoint = materialized.clone();
+        return Ok(MaterializedProjectVariants {
+            full: materialized,
+            checkpoint,
+        });
     };
 
     let printer_indices = index::resolve_printer_indices(&materialized, &active)?;
@@ -32,9 +41,38 @@ pub(crate) fn materialize_project_variants(
     let process_indices = index::resolve_process_indices(&materialized, &active)?;
     printer::materialize_process(&mut materialized, &process_indices)?;
 
+    // PrintApply.cpp:1165-1172 preserves this post-printer/process snapshot
+    // before the multiple-filament variant materialization below.
+    let checkpoint = materialized.clone();
     let filament_indices = index::resolve_filament_indices(source, &filament_map, &active)?;
     filament::materialize(&mut materialized, &filament_indices)?;
-    Ok(materialized)
+    Ok(MaterializedProjectVariants {
+        full: materialized,
+        checkpoint,
+    })
+}
+
+#[cfg(test)]
+pub(crate) fn materialize_project_variants_full(
+    source: &ProjectSettings,
+    filament_map: &OrcaInts,
+) -> Result<ProjectSettings, SliceError> {
+    materialize_project_variants(source, filament_map).map(|value| value.full)
+}
+
+pub(crate) fn refresh_filament_map(
+    checkpoint: &ProjectSettings,
+    filament_map: &OrcaInts,
+) -> Result<ProjectConfigViews, SliceError> {
+    let filament_map = expanded_filament_map(checkpoint, filament_map);
+    let mut refreshed = checkpoint.clone();
+    refreshed.project.gcode.filament_map = filament_map.clone();
+    let Some(active) = index::resolve_activation(&refreshed)? else {
+        return crate::options::project_config_views::resolve_project_config_views(refreshed);
+    };
+    let filament_indices = index::resolve_filament_indices(checkpoint, &filament_map, &active)?;
+    filament::materialize(&mut refreshed, &filament_indices)?;
+    crate::options::project_config_views::resolve_project_config_views(refreshed)
 }
 
 fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {
