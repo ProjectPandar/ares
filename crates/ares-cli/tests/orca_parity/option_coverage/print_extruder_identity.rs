@@ -106,7 +106,7 @@ async fn compare_identity(
         serde_json::to_vec_pretty(&settings).unwrap(),
     )
     .unwrap();
-    let types = if vendor == "BBL" {
+    let types = if printer == "Bambu Lab H2D 0.4 nozzle" {
         json!(["Direct Drive", "Direct Drive"])
     } else {
         json!(["Direct Drive"])
@@ -201,8 +201,8 @@ async fn print_process_identity_complete_physical_order_is_preserved() {
 async fn print_process_identity_default_singleton_exports_complete_output() {
     compare_identity(
         "print-process-identity/default",
-        "RH3D",
-        "E3NG v1.2S - 0.4 nozzle",
+        "BBL",
+        "Bambu Lab X1 Carbon 0.4 nozzle",
         json!(["1"]),
         json!(["Direct Drive Standard"]),
         "1",
