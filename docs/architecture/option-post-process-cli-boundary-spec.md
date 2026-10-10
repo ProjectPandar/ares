@@ -63,6 +63,15 @@ Ares script-running feature. No cargo, Native, browser, or process probe ran.
 
 ## Ares scaffold audit (observations, not runtime findings)
 
+2026-10-10 disposition: combined 3MF + load-settings tracer is retained on
+`pi/post-process-load-settings-3mf-red` (`c4a9afa20`) but excluded from this
+slice's merge branch. Native -19/237 versus Ares's explicit unsupported-route
+exit1 is real runtime disagreement; it is **blocked-by load-settings-3mf**,
+owned by worker5, not permission to alter that entry guard here. Initial
+`f60235f7f` failure occurred before either slicer and is not a behavioral RED.
+Report `/tmp/worker4-post-process-tracer-v2-disposition.md`. This slice now
+closes ordinary embedded nonempty / `[""]` / `[]` CLI witnesses first.
+
 - `options/process_options/print_source.rs:32` stores `OrcaStrings`, empty
   default; wire/export and registry retain the option. No execution found.
 - `project_slice/validated.rs:12-25` checks embedded raw list length and
