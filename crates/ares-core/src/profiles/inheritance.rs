@@ -28,6 +28,29 @@ pub struct MergedProfileMetadata {
 }
 
 impl MergedProfileMetadata {
+    /// A not-loaded load-settings kind: the upstream file loop runs its
+    /// machine/process arms per loaded file only
+    /// (`OrcaSlicer.cpp:2009-2106`), so a missing kind keeps the empty
+    /// name the upstream variables retain.
+    pub(crate) fn unselected(kind: ProfileKind) -> Self {
+        Self {
+            kind,
+            name: String::new(),
+            inherits: None,
+            from: None,
+            version: None,
+            setting_id: None,
+            instantiation: None,
+            description: None,
+            url: None,
+            renamed_from: None,
+            filament_id: None,
+            compatible_printers: None,
+            compatible_printers_condition: None,
+            compatible_prints: None,
+            compatible_prints_condition: None,
+        }
+    }
     pub const fn kind(&self) -> ProfileKind {
         self.kind
     }
@@ -120,6 +143,35 @@ impl MergedProfile {
         if metadata.kind == ProfileKind::Filament {
             metadata.filament_id = filament_id;
         }
+    }
+}
+
+/// A not-loaded load-settings kind: option defaults with unselected
+/// metadata — a missing kind contributes no overlay fields, matching the
+/// per-loaded-file arms of `OrcaSlicer.cpp:2009-2106`. Only machine and
+/// process can be partial; filament lists are never partial in the
+/// load-settings entry (a settings-only list stays rejected until its own
+/// RED covers it), so the kind set is closed here.
+#[derive(Clone, Copy)]
+pub enum UnselectedKind {
+    Machine,
+    Process,
+}
+
+pub fn unselected_profile(kind: UnselectedKind) -> MergedProfile {
+    let metadata = MergedProfileMetadata::unselected(match kind {
+        UnselectedKind::Machine => ProfileKind::Machine,
+        UnselectedKind::Process => ProfileKind::Process,
+    });
+    match kind {
+        UnselectedKind::Machine => MergedProfile::Machine {
+            metadata,
+            options: PrinterOptionsBuilder::default().resolve(),
+        },
+        UnselectedKind::Process => MergedProfile::Process {
+            metadata,
+            options: ProcessOptionsBuilder::default().resolve(),
+        },
     }
 }
 

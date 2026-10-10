@@ -40,8 +40,8 @@ fn public_profile_api_is_externally_usable() {
     }
 
     let selection = ProfileSelection::new("p", "m", ["f"]).unwrap();
-    assert_eq!(selection.process(), "p");
-    assert_eq!(selection.machine(), "m");
+    assert_eq!(selection.process(), Some("p"));
+    assert_eq!(selection.machine(), Some("m"));
     assert_eq!(selection.filaments(), ["f"]);
     let composed: ComposedProfile = compose_profile_fragments(&fragments, &selection).unwrap();
     let settings: &ProjectSettings = composed.settings();

@@ -3,7 +3,7 @@ mod metadata;
 
 use super::{
     fragment::{ProfileFragment, ProfileKind, merge_profile_fragments},
-    inheritance::{MergedProfile, MergedProfileMetadata},
+    inheritance::{MergedProfile, MergedProfileMetadata, UnselectedKind, unselected_profile},
 };
 use crate::{
     OrcaInt, OrcaInts, OrcaString, OrcaStrings, PresetMetadata, ProjectRuntimeOptions,
@@ -15,8 +15,8 @@ pub use self::metadata::ProfileGroupMetadata;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProfileSelection {
-    process: String,
-    machine: String,
+    process: Option<String>,
+    machine: Option<String>,
     filaments: Vec<String>,
 }
 
@@ -26,11 +26,25 @@ impl ProfileSelection {
         machine: impl Into<String>,
         filaments: impl IntoIterator<Item = impl Into<String>>,
     ) -> Result<Self, SliceError> {
-        let process = process.into();
-        let machine = machine.into();
+        Self::new_partial(Some(process), Some(machine), filaments)
+    }
+
+    /// A load-settings selection: `None` machine/process marks the kind
+    /// as not loaded — it contributes no overlay and the embedded config
+    /// of that kind is retained (`OrcaSlicer.cpp:2009-2106` arms run per
+    /// loaded file only). Filament lists are never partial in the
+    /// load-settings entry (a settings-only list stays rejected until its
+    /// own RED covers it).
+    pub fn new_partial(
+        process: Option<impl Into<String>>,
+        machine: Option<impl Into<String>>,
+        filaments: impl IntoIterator<Item = impl Into<String>>,
+    ) -> Result<Self, SliceError> {
+        let process = process.map(Into::into);
+        let machine = machine.map(Into::into);
         let filaments = filaments.into_iter().map(Into::into).collect::<Vec<_>>();
-        if process.is_empty()
-            || machine.is_empty()
+        if process.as_ref().is_some_and(String::is_empty)
+            || machine.as_ref().is_some_and(String::is_empty)
             || filaments.is_empty()
             || filaments.iter().any(String::is_empty)
         {
@@ -46,12 +60,12 @@ impl ProfileSelection {
         })
     }
 
-    pub fn process(&self) -> &str {
-        &self.process
+    pub fn process(&self) -> Option<&str> {
+        self.process.as_deref()
     }
 
-    pub fn machine(&self) -> &str {
-        &self.machine
+    pub fn machine(&self) -> Option<&str> {
+        self.machine.as_deref()
     }
 
     pub fn filaments(&self) -> &[String] {
@@ -98,8 +112,14 @@ pub fn compose_profile_fragments(
     fragments: &[ProfileFragment],
     selection: &ProfileSelection,
 ) -> Result<ComposedProfile, SliceError> {
-    let machine = merge_profile_fragments(fragments, ProfileKind::Machine, selection.machine())?;
-    let process = merge_profile_fragments(fragments, ProfileKind::Process, selection.process())?;
+    let machine = match selection.machine() {
+        Some(name) => merge_profile_fragments(fragments, ProfileKind::Machine, name)?,
+        None => unselected_profile(UnselectedKind::Machine),
+    };
+    let process = match selection.process() {
+        Some(name) => merge_profile_fragments(fragments, ProfileKind::Process, name)?,
+        None => unselected_profile(UnselectedKind::Process),
+    };
     let filaments = selection
         .filaments()
         .iter()
@@ -169,8 +189,8 @@ pub(super) fn compose_resolved_profiles(
             metadata: PresetMetadata::default(),
         },
         metadata,
-        process: selection.process().to_owned(),
-        machine: selection.machine().to_owned(),
+        process: selection.process().unwrap_or_default().to_owned(),
+        machine: selection.machine().unwrap_or_default().to_owned(),
         filaments: selection.filaments().to_vec(),
     }
 }
@@ -182,8 +202,10 @@ fn project_options(
     variant_cardinalities: Vec<usize>,
     mut project: ProjectRuntimeOptions,
 ) -> ProjectRuntimeOptions {
-    project.preset.print_settings_id = OrcaString(selection.process().to_owned());
-    project.preset.printer_settings_id = OrcaString(selection.machine().to_owned());
+    project.preset.print_settings_id =
+        OrcaString(selection.process().unwrap_or_default().to_owned());
+    project.preset.printer_settings_id =
+        OrcaString(selection.machine().unwrap_or_default().to_owned());
     project.preset.filament_settings_id = OrcaStrings(selection.filaments().to_vec());
     project.gcode.filament_map =
         OrcaInts(std::iter::repeat_n(OrcaInt(1), selection.filaments().len()).collect());

@@ -181,31 +181,45 @@ fn overlay_rejects_more_selected_filaments_than_embedded() {
 }
 
 #[test]
-fn overlay_overwrites_print_compatible_printers_unconditionally() {
+fn overlay_print_compatible_printers_follows_process_load() {
     // OrcaSlicer.cpp:2980-2984: the loaded process's compatible_printers
-    // replaces print_compatible_printers even when it is absent or empty.
+    // replaces print_compatible_printers even when it is absent or empty;
+    // with no process loaded the embedded list is retained — the file
+    // loop's arms run per loaded file only (:2009-2106).
     let settings = r#"{
             "printer_settings_id": "M", "print_settings_id": "P",
             "filament_settings_id": ["F"],
             "print_compatible_printers": ["Embedded Machine"]
         }"#;
-    let project = overlay(
+    let loaded = overlay(
         settings,
-        "{\"filament_settings_id\":[\"F\"]}",
+        "{\"printer_settings_id\":\"M\",\"print_settings_id\":\"P\",\"filament_settings_id\":[\"F\"]}",
         "{}",
         &["{}"],
     )
     .unwrap();
-    let merged = project.documents().project_settings_raw.clone();
+    let merged = loaded.documents().project_settings_raw.clone();
     assert!(merged.get("print_compatible_printers").unwrap().len() == 0);
     assert!(
-        project
+        loaded
             .settings()
             .project
             .preset
             .print_compatible_printers
             .0
             .is_empty()
+    );
+    let not_loaded = overlay(
+        settings,
+        "{\"filament_settings_id\":[\"F\"]}",
+        "{}",
+        &["{}"],
+    )
+    .unwrap();
+    let merged = not_loaded.documents().project_settings_raw.clone();
+    assert_eq!(
+        text(merged.get("print_compatible_printers"), 0),
+        "Embedded Machine"
     );
 }
 

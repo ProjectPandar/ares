@@ -23,12 +23,73 @@ pub(crate) struct SelectedProfile<'a> {
 /// the identity/dynamic-group keys are rebuilt (`OrcaSlicer.cpp:2750-2812,
 /// 3155-3161,3259-3271,3301`). `merged` seeds from the embedded view and
 /// is returned with every profile-supplied key applied.
+/// The `machine_switch` state the merge consumes
+/// (`OrcaSlicer.cpp:2622-2640`): an incompatible loaded machine with no
+/// loaded process forces compatibility, and the config-application stage
+/// records the switch. `rename_process` carries the `is_bbl_3mf` gate of
+/// the `"(auto)"` preset rename (`:2660-2702`).
+pub(super) struct MachineSwitch {
+    pub(super) system_name: String,
+    pub(super) rename_process: bool,
+}
+
+/// `OrcaSlicer.cpp:2622-2640,2585-2596`: the merge-side machine-switch —
+/// a loaded machine (typed `printer_settings_id` non-empty) with no
+/// loaded process, differing from the embedded printer, and not already
+/// listed in the embedded `print_compatible_printers`. The `-17`
+/// rejection adjudication itself stays in `project_slice/compatibility.rs`.
+pub(super) fn machine_switch(
+    embedded_raw: &ProjectSettingsRaw,
+    settings: &ProjectSettings,
+    bbl_family_3mf: bool,
+) -> Option<MachineSwitch> {
+    let loaded_machine = settings.project.preset.printer_settings_id.0.as_str();
+    if loaded_machine.is_empty() || !settings.project.preset.print_settings_id.0.is_empty() {
+        return None;
+    }
+    let embedded_printer = embedded_raw
+        .get("printer_settings_id")
+        .and_then(|value| value.element(0))
+        .and_then(|value| match value {
+            crate::project::raw_settings::RawConfigValue::Text(text) => Some(text),
+            _ => None,
+        })?;
+    if embedded_printer.is_empty() || embedded_printer == loaded_machine {
+        return None;
+    }
+    let embedded_compatible = embedded_raw
+        .get("print_compatible_printers")
+        .is_some_and(|value| {
+            (0..value.len()).any(|index| {
+                matches!(
+                    value.element(index),
+                    Some(crate::project::raw_settings::RawConfigValue::Text(name))
+                        if name == loaded_machine
+                )
+            })
+        });
+    if embedded_compatible {
+        return None;
+    }
+    Some(MachineSwitch {
+        system_name: loaded_machine.to_owned(),
+        rename_process: bbl_family_3mf,
+    })
+}
+
+/// The counts and machine-switch state the overlay needs beyond the
+/// selected profile itself.
+pub(super) struct OverlayContext {
+    pub(super) selected: usize,
+    pub(super) embedded_count: usize,
+    pub(super) machine_switch: Option<MachineSwitch>,
+}
+
 pub(super) fn merged_profile_raw(
     embedded_raw: &ProjectSettingsRaw,
     mut merged: ProjectSettingsRaw,
     profile: &SelectedProfile<'_>,
-    selected: usize,
-    embedded_count: usize,
+    context: OverlayContext,
 ) -> Result<ProjectSettingsRaw, SliceError> {
     let SelectedProfile {
         settings,
@@ -36,6 +97,11 @@ pub(super) fn merged_profile_raw(
         filament_raws,
         validate_print: _,
     } = profile;
+    let OverlayContext {
+        selected,
+        embedded_count,
+        machine_switch,
+    } = context;
     let filament_keys: std::collections::BTreeSet<&String> = filament_raws
         .iter()
         .flat_map(|raw| raw.entries().map(|(key, _)| key))
@@ -74,15 +140,43 @@ pub(super) fn merged_profile_raw(
     }
 
     // Settings IDs (`:2048,:2088,:3155-3158`) carry the selected names into
-    // the covered slots; the tail keeps embedded entries.
-    inserts.push((
-        "printer_settings_id".to_owned(),
-        RawConfigValue::Text(settings.project.preset.printer_settings_id.0.clone()),
-    ));
-    inserts.push((
-        "print_settings_id".to_owned(),
-        RawConfigValue::Text(settings.project.preset.print_settings_id.0.clone()),
-    ));
+    // the covered slots; the tail keeps embedded entries. A not-loaded
+    // kind keeps its empty name (`:2009-2106` arms run per loaded file),
+    // so the embedded identity entry is retained untouched.
+    if !settings.project.preset.printer_settings_id.0.is_empty() {
+        inserts.push((
+            "printer_settings_id".to_owned(),
+            RawConfigValue::Text(settings.project.preset.printer_settings_id.0.clone()),
+        ));
+    }
+    if !settings.project.preset.print_settings_id.0.is_empty() {
+        inserts.push((
+            "print_settings_id".to_owned(),
+            RawConfigValue::Text(settings.project.preset.print_settings_id.0.clone()),
+        ));
+    } else if machine_switch
+        .as_ref()
+        .is_some_and(|switch| switch.rename_process)
+    {
+        // `OrcaSlicer.cpp:2660-2702`: the bbl machine-switch renames the
+        // retained embedded process preset with the `"(auto)"` suffix and
+        // writes it into the config (`:2700-2702`).
+        let renamed = (0..embedded_count)
+            .map(|index| name_slot(embedded_raw, "print_settings_id", &[], index))
+            .map(|slot| match slot {
+                RawConfigValue::Text(name) if !name.is_empty() => {
+                    RawConfigValue::Text(format!("{name}(auto)"))
+                }
+                other => other,
+            })
+            .collect::<Vec<_>>();
+        if !renamed.is_empty() {
+            inserts.push((
+                "print_settings_id".to_owned(),
+                RawConfigValue::List(renamed),
+            ));
+        }
+    }
     for (key, loaded) in [
         (
             "filament_settings_id",
@@ -98,20 +192,46 @@ pub(super) fn merged_profile_raw(
         inserts.push((key.to_owned(), RawConfigValue::List(values)));
     }
     // `:2980-2984`: the loaded process's `compatible_printers` overwrites
-    // `print_compatible_printers` even when it is absent or empty.
-    inserts.push((
-        "print_compatible_printers".to_owned(),
-        RawConfigValue::List(
-            settings
-                .project
-                .preset
-                .print_compatible_printers
-                .0
-                .iter()
-                .map(|value| RawConfigValue::Text(value.clone()))
-                .collect(),
-        ),
-    ));
+    // `print_compatible_printers` even when it is absent or empty; with no
+    // process loaded the embedded list is retained untouched — except the
+    // machine-switch append (`:3051`), which pushes the loaded machine's
+    // system name onto the embedded list.
+    if !settings.project.preset.print_settings_id.0.is_empty() {
+        inserts.push((
+            "print_compatible_printers".to_owned(),
+            RawConfigValue::List(
+                settings
+                    .project
+                    .preset
+                    .print_compatible_printers
+                    .0
+                    .iter()
+                    .map(|value| RawConfigValue::Text(value.clone()))
+                    .collect(),
+            ),
+        ));
+    } else if let Some(system_name) = machine_switch
+        .as_ref()
+        .map(|switch| switch.system_name.clone())
+    {
+        let len = embedded_raw
+            .get("print_compatible_printers")
+            .map_or(0, RawConfigValue::len);
+        let mut values = (0..len)
+            .map(|index| {
+                embedded_raw
+                    .get("print_compatible_printers")
+                    .and_then(|value| value.element(index))
+                    .cloned()
+                    .unwrap_or_else(|| RawConfigValue::Text(String::new()))
+            })
+            .collect::<Vec<_>>();
+        values.push(RawConfigValue::Text(system_name));
+        inserts.push((
+            "print_compatible_printers".to_owned(),
+            RawConfigValue::List(values),
+        ));
+    }
     // `:3117-3337`: single-variant selections rebuild `filament_self_index`
     // as a plain 1..=filament_count identity.
     inserts.push((
@@ -189,17 +309,14 @@ pub(super) fn merged_profile_raw(
     }
     {
         let len = embedded_count + 2;
-        let values = (0..len)
-            .map(|index| {
-                different_settings_slot(
-                    embedded_raw.get("different_settings_to_system"),
-                    index,
-                    len,
-                    selected,
-                    prime_tower_disabled,
-                )
-            })
-            .collect();
+        let context = DifferentSettingsContext {
+            embedded: embedded_raw.get("different_settings_to_system"),
+            len,
+            selected,
+            prime_tower_disabled,
+            switch_compatible_printers: machine_switch.is_some(),
+        };
+        let values = (0..len).map(|index| context.slot(index)).collect();
         inserts.push((
             "different_settings_to_system".to_owned(),
             RawConfigValue::List(values),
@@ -326,29 +443,51 @@ fn inherits_slot(
 }
 
 /// One slot of the `different_settings_to_system` vector
-/// (`OrcaSlicer.cpp:2838,:2978,:3161,:3680-3699`).
-fn different_settings_slot(
-    embedded: Option<&RawConfigValue>,
-    index: usize,
+/// (`OrcaSlicer.cpp:2838,:2978,:3161,:3680-3699`). Slot 0 accumulates the
+/// machine-switch `compatible_printers` marker (`:3056-3070`) before the
+/// prime-tower marker (`:3688-3698`), each with the upstream dedup.
+struct DifferentSettingsContext<'a> {
+    embedded: Option<&'a RawConfigValue>,
     len: usize,
     selected: usize,
     prime_tower_disabled: bool,
-) -> RawConfigValue {
-    if index == 0 {
-        let text = if prime_tower_disabled {
-            "enable_prime_tower"
-        } else {
-            ""
-        };
-        return RawConfigValue::Text(text.to_owned());
+    switch_compatible_printers: bool,
+}
+
+impl DifferentSettingsContext<'_> {
+    fn slot(&self, index: usize) -> RawConfigValue {
+        if index == 0 {
+            let existing = self
+                .embedded
+                .and_then(|value| value.element(0))
+                .and_then(|value| match value {
+                    RawConfigValue::Text(text) => Some(text.as_str()),
+                    _ => None,
+                })
+                .unwrap_or("");
+            let mut keys: Vec<String> = existing
+                .split(';')
+                .filter(|key| !key.is_empty())
+                .map(str::to_owned)
+                .collect();
+            if self.switch_compatible_printers
+                && !keys.iter().any(|key| key == "compatible_printers")
+            {
+                keys.insert(0, "compatible_printers".to_owned());
+            }
+            if self.prime_tower_disabled && !keys.iter().any(|key| key == "enable_prime_tower") {
+                keys.push("enable_prime_tower".to_owned());
+            }
+            return RawConfigValue::Text(keys.join(";"));
+        }
+        if index == self.len - 1 || index <= self.selected {
+            return RawConfigValue::Text(String::new());
+        }
+        self.embedded
+            .and_then(|value| value.element(index))
+            .cloned()
+            .unwrap_or_else(|| RawConfigValue::Text(String::new()))
     }
-    if index == len - 1 || index <= selected {
-        return RawConfigValue::Text(String::new());
-    }
-    embedded
-        .and_then(|value| value.element(index))
-        .cloned()
-        .unwrap_or_else(|| RawConfigValue::Text(String::new()))
 }
 
 /// One slot of a `compatible_*_expression_group` vector

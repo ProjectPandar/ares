@@ -81,6 +81,75 @@ fn orca_parity_load_settings_3mf_machine_only_whole_file() {
     );
 }
 
+/// Process-only `--load-settings` + the compatible witness 3MF: the
+/// loaded process's `compatible_printers` names the EMBEDDED machine
+/// (`OrcaSlicer.cpp:2597-2606` branch 3), so Native admits it and the
+/// embedded machine is retained. The composition accepted this shape
+/// from the start of the partial-list GREEN, so this is an always-green
+/// control (no RED phase exists for it).
+#[test]
+fn orca_parity_load_settings_3mf_process_only_whole_file() {
+    let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let directory = tempfile::Builder::new()
+        .prefix("load-settings-3mf-process-only-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    let project = load_settings_3mf_fixture("compatible-input.3mf");
+    let process = load_settings_3mf_fixture("prusa-process.json")
+        .to_string_lossy()
+        .into_owned();
+    let filaments = load_settings_3mf_fixture("compatible-filament-0.json")
+        .to_string_lossy()
+        .into_owned();
+    stages_run(
+        &runner,
+        &directory,
+        &[
+            "--slice",
+            "0",
+            "--load-settings",
+            &process,
+            "--load-filaments",
+            &filaments,
+            "--arrange",
+            "0",
+            "--outputdir",
+            "native-output",
+            project.to_str().unwrap(),
+        ],
+    );
+    let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+        .current_dir(&directory)
+        .args([
+            "slice",
+            "--load-settings",
+            &process,
+            "--load-filaments",
+            &filaments,
+            "-o",
+            "ares.gcode",
+        ])
+        .arg(&project)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "ares rejected the process-only --load-settings argv:\n{}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let ares = fs::read(directory.join("ares.gcode")).unwrap();
+    assert_eq!(
+        banner_normalized(&native),
+        banner_normalized(&ares),
+        "process-only load-settings whole-file divergence; artifacts {}",
+        directory.display(),
+    );
+}
+
 /// Filament-only `--load-filaments` (no settings files) + the
 /// compatible witness 3MF: the filament overlay applies and the
 /// embedded machine and process are retained. Native slices

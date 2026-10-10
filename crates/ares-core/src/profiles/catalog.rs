@@ -10,7 +10,9 @@ use serde::Deserialize;
 
 use super::{
     ComposedProfile, MergedProfile, ProfileFragment, ProfileKind, ProfileSelection,
-    composition::compose_resolved_profiles, merge_profile_fragments,
+    composition::compose_resolved_profiles,
+    inheritance::{UnselectedKind, unselected_profile},
+    merge_profile_fragments,
 };
 use crate::{
     FilteredPresets, SliceError,
@@ -193,25 +195,26 @@ impl Catalog {
         let mut raw = ProjectSettingsRaw::default();
         let mut runtime = ProjectRuntimeOptionsBuilder::default();
         // OrcaSlicer.cpp:2849-2867,2993-3011 applies machine, then process.
-        let machine = self.merge(
-            ProfileKind::Machine,
-            selection.machine(),
-            &mut raw,
-            &mut runtime,
-        )?;
-        // `load_default_gcodes_to_config(load_machine_config, TYPE_PRINTER)`
-        // (`OrcaSlicer.cpp:2850,548-586`): every printer G-code option
-        // exists on the machine config, created with the option default —
-        // empty except the two templates (PrintConfig.cpp:5947,2035) —
-        // before `update_full_config` overlays the machine onto the
-        // embedded project settings.
-        insert_default_gcodes(&mut raw, &PRINTER_GCODE_KEYS);
-        let process = self.merge(
-            ProfileKind::Process,
-            selection.process(),
-            &mut raw,
-            &mut runtime,
-        )?;
+        let machine = match selection.machine() {
+            Some(name) => {
+                let merged = self.merge(ProfileKind::Machine, name, &mut raw, &mut runtime)?;
+                // `load_default_gcodes_to_config(load_machine_config,
+                // TYPE_PRINTER)` (`OrcaSlicer.cpp:2850,548-586`): every
+                // printer G-code option exists on the machine config,
+                // created with the option default — empty except the two
+                // templates (PrintConfig.cpp:5947,2035) — before
+                // `update_full_config` overlays the machine onto the
+                // embedded project settings. With no machine loaded
+                // there is no machine config to default (`:2009-2106`).
+                insert_default_gcodes(&mut raw, &PRINTER_GCODE_KEYS);
+                merged
+            }
+            None => unselected_profile(UnselectedKind::Machine),
+        };
+        let process = match selection.process() {
+            Some(name) => self.merge(ProfileKind::Process, name, &mut raw, &mut runtime)?,
+            None => unselected_profile(UnselectedKind::Process),
+        };
         // Each filament keeps its own merged raw for the 3MF per-slot overlay
         // (`OrcaSlicer.cpp:3301` set_at per loaded filament index).
         let mut filament_raws = Vec::with_capacity(selection.filaments().len());

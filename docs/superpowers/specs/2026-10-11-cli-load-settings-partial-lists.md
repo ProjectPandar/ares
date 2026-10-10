@@ -76,6 +76,63 @@ loaded, process embedded) is blocked on this gap.
   resolution gap (worker4 compat17 finding) — separate slice after
   this one, owner worker5 (compose).
 
+## Addendum: machine-switch merge semantics (2026-10-11)
+
+The machine-only RED exposed three output-side semantics of the
+upstream `machine_switch` path; all three belong to this slice
+(coordinator ruling), while the `-17` rejection adjudication stays
+in `project_slice/compatibility.rs` (worker4):
+
+- **`(auto)` process rename** (`OrcaSlicer.cpp:2660-2702`, gated
+  `is_bbl_3mf && machine_switch`): the retained embedded process
+  name gains the `"(auto)"` suffix in the merged
+  `print_settings_id` (covered slots). Computed on
+  `project.documents.bbl_family_3mf`.
+- **Compatible-printer append** (`:3050-3051`, `machine_switch`
+  without the bbl gate): the merged `print_compatible_printers`
+  keeps the embedded list and pushes the loaded machine's system
+  name (upstream pushes unconditionally).
+- **`different_settings_to_system` marker** (`:3056-3070`): slot 0
+  gains the `compatible_printers` key (upstream dedup) before the
+  existing prime-tower marker append (`:3688-3698`), producing
+  `compatible_printers;enable_prime_tower` in the single slot.
+
+`machine_switch` (merge-side port of `:2622-2640,2585-2596`)
+requires: a loaded machine, no loaded process, an embedded printer
+  name differing from the loaded one, and the loaded name absent
+  from the embedded `print_compatible_printers`. GREEN = the two
+  REDs converge whole-file under these semantics; the compatible
+  (machine+process) and STL surfaces stay byte-identical
+  (no `machine_switch` on those paths).
+
+## Addendum: review-confirmation notes (2026-10-11)
+
+1. **Process-only control**: the composition accepted a process-only
+   list from the start of the GREEN
+   (`orca_parity_load_settings_3mf_process_only_whole_file`, fixture
+   `prusa-process.json` whose `compatible_printers` names the embedded
+   machine, branch 3 `:2597-2606`); it converged whole-file without a
+   production change, so no RED phase exists for it — recorded here
+   as an always-green control.
+2. **Unselected typed defaults never overwrite embedded values**:
+   `unselected_profile` fills the not-loaded kind's typed options with
+   registry defaults only to satisfy the `ProjectSettings` type. In
+   the 3MF composite path those typed options are never read for the
+   overlay: `merged_profile_raw` consumes the composed profile's
+   `settings.project.preset` fields only (identity names, filament
+   counts, `print_compatible_printers`), and every option value flows
+   from the RAW view — `profile_raw` carries only the loaded files'
+   keys (`Catalog::merge` extends `raw` per merged record), applied
+   per-key onto the embedded base exactly like upstream
+   `update_full_config` (`OrcaSlicer.cpp:2750-2812`), where an empty
+   `load_machine_config`/`load_process_config` simply contributes no
+   keys. The typed rebuild (bed classification, legacy handling)
+   reads the merged raw, not the composed typed options — the same
+   separation as the from:system composition.
+3. `unselected_profile` takes a closed `UnselectedKind` (machine /
+   process) — filament lists are never partial in this entry, so no
+   panic branch exists (type-level exclusion).
+
 ## Controls
 
 - No `dbg!`/`println!`, no `#[ignore]`, no `allow`/`expect`, no

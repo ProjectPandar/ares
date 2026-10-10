@@ -84,6 +84,7 @@ impl Project {
             )));
         }
 
+        let switch = machine_switch(&embedded_raw, settings, project.documents.bbl_family_3mf);
         let mut merged = merged_profile_raw(
             &embedded_raw,
             embedded_raw.clone(),
@@ -93,8 +94,11 @@ impl Project {
                 filament_raws,
                 validate_print,
             },
-            selected,
-            embedded_count,
+            OverlayContext {
+                selected,
+                embedded_count,
+                machine_switch: switch,
+            },
         )?;
         // M854 edit order: user overrides apply last (`Config.cpp:461`).
         overrides.apply(&mut merged);
@@ -282,5 +286,5 @@ mod stl_mesh;
 mod tests;
 
 pub(crate) use overlay::SelectedProfile;
-use overlay::merged_profile_raw;
+use overlay::{OverlayContext, machine_switch, merged_profile_raw};
 use stl_mesh::index_stl_vertices;

@@ -116,11 +116,7 @@ pub fn compose_load_settings(
         filament_names.push(document.name.clone());
         catalog.push_import(document)?;
     }
-    let selection = ProfileSelection::new(
-        process.unwrap_or_default(),
-        machine.unwrap_or_default(),
-        filament_names,
-    )?;
+    let selection = ProfileSelection::new_partial(process, machine, filament_names)?;
     catalog.compose(&selection)
 }
 
