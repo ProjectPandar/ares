@@ -151,6 +151,39 @@ sets and distinct/repeated capture inventory. Report ND to the owner; no
 implicit waiver, tolerance or comparator change. Review binds exact final hash;
 latest allowed rebase then non-force FF push only after APPROVED.
 
+## Temperature fixture revision — approval requested
+
+The approved fixture above fixes 211/233. Do not silently substitute it.
+On production base `626ed1738`, standalone Native export succeeded
+(`/tmp/worker2-g4-sequence-626-export-validation.HMwcXl`, exit0), but the single
+fresh E2E (`/tmp/worker2-g4-sequence-626-fresh-e2e.k8K9V3`, run
+`1239a398-31c7-4b75-94a7-4db0b2241bcd`) stopped at Native Slice -62/exit194:
+both actual PLA recommended ranges are `[190,230]`, and 233 is outside the
+other filament's range. This is admitted upstream validation, not Ares RED.
+
+`libslic3r/Print.cpp:1052-1106::check_multi_filaments_compatibility` resolves
+ranges and tests both temperatures against the other filament's inclusive
+bounds (`1092-1102`). The by-layer caller gathers actual used filament fields
+at `1217-1240`; `Print::validate` invokes it for one nozzle/multiple filaments
+and sets `STRING_EXCEPT_FILAMENTS_DIFFERENT_TEMP` at `1273-1277`.
+`OrcaSlicer.cpp:6077-6078` maps this to `CLI_FILAMENTS_DIFFERENT_TEMP` (-62).
+These lines also match the seeded replay source used for the receipt.
+
+**Requested sole spec change:** fixture nozzle and initial-layer temperatures
+211/**223**, rather than 211/233. Retain the same two PLA presets, their actual
+recommended `[190,230]` ranges, distinct colors, one Standard nozzle, Manual
+map, role allocation, first-layer order, all count/vector requests and controls.
+Both 211 and 223 lie within both ranges; temperature distinction is retained.
+No production changes, preference override, range widening, guard bypass,
+comparator normalization or new consumer scope is permitted.
+
+Pending owner approval: no temperature code change or further Native launch.
+After approval, audit both actual preset/project temperature arrays and mutual
+bounds offline, then perform one standalone export **and slice** admission
+validation on the bound count0 input before one fresh E2E on the current
+production tree. Preserve the -62 receipt and every subsequent raw artifact;
+export alone does not certify slice validation or sequence consumption.
+
 ## Exit / deferral
 
 This closes only count0/1/2 in the stated coherent by-layer, one-nozzle context.
