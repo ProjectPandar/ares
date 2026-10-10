@@ -41,6 +41,25 @@ impl Project {
         true
     }
 
+    /// `OrcaSlicer.cpp:4013` `plate_obj_size_infos` object bbox: the world
+    /// bounding box over every model-part instance (`Model.cpp:1603-1618`).
+    pub(crate) fn instances_world_bbox(&self) -> ([f64; 3], [f64; 3]) {
+        let mut min = [f64::INFINITY; 3];
+        let mut max = [f64::NEG_INFINITY; 3];
+        let instances = self.objects.iter().flat_map(|object| {
+            object
+                .instances
+                .iter()
+                .map(move |instance| (object, instance.transform))
+        });
+        for (object, transform) in instances {
+            for point in world_vertices(object, transform) {
+                merge_bbox_point(&mut min, &mut max, point);
+            }
+        }
+        (min, max)
+    }
+
     /// `PartPlate::translate_all_instance` (`OrcaSlicer.cpp:4037`): shift
     /// every instance offset by the shrink_to_new_bed plate re-centering
     /// delta.

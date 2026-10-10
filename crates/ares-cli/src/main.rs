@@ -123,13 +123,6 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .map(split_native_list)
         .unwrap_or_default();
     if !load_settings.is_empty() || !load_filaments.is_empty() {
-        if extension.as_deref() == Some("3mf") {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "--load-settings with 3MF input is not supported yet",
-            )
-            .into());
-        }
         let settings = read_preset_files(&load_settings)?;
         let filaments = read_preset_files(&load_filaments)?;
         let settings = settings

@@ -122,7 +122,9 @@ impl Project {
         let offset = project
             .documents
             .bbl_family_3mf
-            .then(|| shrink_to_new_bed_offset(&embedded_raw, &resolved))
+            .then(|| {
+                shrink_to_new_bed_offset(&embedded_raw, &resolved, project.instances_world_bbox())
+            })
             .flatten();
         if let Some(offset) = offset {
             project.translate_all_instances(offset);
@@ -144,9 +146,11 @@ impl Project {
     }
 }
 
-/// `OrcaSlicer.cpp:3766-3796` classification with the `:4008-4021` plate-0
-/// center offset: `Some([dx, dy])` for `shrink = 1`, `None` otherwise
-/// (shrink 2/0 are deferred). Widths/heights truncate to int like upstream
+/// `OrcaSlicer.cpp:3766-3796` classification with the `:3990-4021` plate-0
+/// offsets: `Some([dx, dy])` for shrink 1 (bed-center delta) and shrink 2
+/// (plain object-bbox centering), `None` otherwise (shrink 0). The
+/// shared-center, exclude-area, and wipe-tower-inclusive-bbox refinements
+/// of shrink 2 are deferred. Widths/heights truncate to int like upstream
 /// (`:1780`, `:1338`). The current bed comes from the fully parsed typed
 /// config — `OrcaSlicer.cpp:3708,3711` `opt<ConfigOptionPoints>(
 /// "printable_area")`/`opt_float("printable_height")` over a config that
@@ -155,6 +159,7 @@ impl Project {
 fn shrink_to_new_bed_offset(
     old: &ProjectSettingsRaw,
     settings: &crate::ProjectSettings,
+    (bbox_min, bbox_max): ([f64; 3], [f64; 3]),
 ) -> Option<[f64; 2]> {
     let area = &settings.printer.remaining.printable_area.0;
     let new_width = (area[2].x - area[0].x) as i32;
@@ -184,8 +189,15 @@ fn shrink_to_new_bed_offset(
     } else {
         0
     };
-    if shrink != 1 {
+    if shrink == 0 {
         return None;
+    }
+    if shrink == 2 {
+        // `:4008-4021`: center the object bbox on the new bed center.
+        return Some([
+            new_width as f64 / 2.0 - (bbox_min[0] + bbox_max[0]) * 0.5,
+            new_depth as f64 / 2.0 - (bbox_min[1] + bbox_max[1]) * 0.5,
+        ]);
     }
     Some([
         new_width as f64 / 2.0 - old_width as f64 / 2.0,

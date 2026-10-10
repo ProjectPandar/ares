@@ -212,6 +212,10 @@ fn with_load_settings_source<T>(
         settings,
         filaments,
     })?;
+    // `OrcaSlicer.cpp:1682-1690`: the embedded `post_process` check lives
+    // in the 3MF load block, so the composite entry validates 3MF inputs
+    // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
+    let validate_print = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
     body(ProjectSource {
         bytes: input,
         plate,
@@ -221,10 +225,10 @@ fn with_load_settings_source<T>(
             raw: &composed.raw,
             filament_raws: &composed.filament_raws,
             placement,
-            validate_print: false,
+            validate_print,
         }),
         overrides,
-        validate_print: false,
+        validate_print,
         upward: None,
     })
 }
