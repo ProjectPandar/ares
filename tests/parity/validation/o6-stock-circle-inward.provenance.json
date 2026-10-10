@@ -1,0 +1,18 @@
+{
+  "parent": "/tmp/worker3-o6-stock-circle/stock-circle-cylinder.3mf",
+  "parent_sha256": "446e19e8f8dc9443c68774bc31fca6d0187798e41031882919cf0930362be8f6",
+  "input": "/tmp/worker3-o6-stock-circle-inward/input.3mf",
+  "input_sha256": "8958ba6462946f57d1fc2d6443e6c7fac736a87be5e89dc68d2bbfc8837c1b13",
+  "only_changed_entry": [
+    "3D/3dmodel.model"
+  ],
+  "change": "only build item x translation=-0.1 mm; mesh/config entries byte-identical",
+  "center_x": 50.9,
+  "maximum_vertex_radius_mm": 54.9,
+  "bbox_corner": [
+    54.9,
+    4
+  ],
+  "bbox_corner_radius_mm": 55.04552661206903,
+  "mesh_sha256": "fe62df76656d86789c033580373d6352b2d6a77307c2c415bef447d3b22cb1b2"
+}

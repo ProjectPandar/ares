@@ -83,8 +83,11 @@ Center 50.9 gives maximum vertex radius 54.9, while bbox corner (54.9,4)
 has radius 55.04552661206903. Its single validated fresh Native run passed
 Model, retained 167943 G-code bytes (raw SHA256
 `cabb272d646a6404e88db9af3c1e7dd8966173aff96afb60b856a744948e1f4a`),
-then returned -102 / Unix154. Receipts and the construction-failure disclosure
-are in `tests/parity/validation/o6-stock-circle-inward.oracle.json`.
+then returned -102 / Unix154. Input-authoring provenance is retained in
+`tests/parity/validation/o6-stock-circle-inward.provenance.json`; historical
+Native captures remain `/tmp/worker3-o6-stock-circle-inward/`, not as repository
+oracles. The same-named byte-API E2E now acquires complete retained bytes from
+runtime Native in `crates/ares-cli/tests/orca_parity/cli_retained_exit.rs`.
 The circle slice proved whole-byte emission equality before the export check
 was ported; the timelapse RED must retain that assertion against the error's
 owned output, as well as exact diagnostic and bit2 (`error_code=4`).
