@@ -130,12 +130,26 @@ fn compare(scripts: Option<Value>) {
             serde_json::to_vec(&args).unwrap(),
         )
         .unwrap();
-        let capture = stages::run(runner.bin(), args, stages::Stage::Slice, &directory).unwrap();
-        assert_eq!(capture.code, Some(0));
+        stages::run(runner.bin(), args, stages::Stage::Slice, &directory).unwrap();
+        let captures = fs::read_dir(&directory)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| {
+                path.file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .starts_with("command-")
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(captures.len(), 1);
+        let status: Value =
+            serde_json::from_slice(&fs::read(captures[0].join("status.json")).unwrap()).unwrap();
+        assert_eq!(status["code"], 0);
         (
             0,
-            capture.stdout,
-            capture.stderr,
+            fs::read(captures[0].join("stdout.bin")).unwrap(),
+            fs::read(captures[0].join("stderr.bin")).unwrap(),
             fs::read(native.join("result.json")).unwrap(),
             Some(fs::read_to_string(native.join("plate_1.gcode")).unwrap()),
         )
