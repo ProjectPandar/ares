@@ -7,12 +7,14 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### G4 other-layer sequence count: planned source slice (2026-10-10)
+### G4 other-layer sequence count: bounded GREEN (2026-10-11)
 
-Port/admit `ParameterUtils::get_other_layers_print_sequence` and `ToolOrdering::get_custom_seq` boundaries only.
-Proposed one-nozzle by-layer count0/1/2 with coherent plate vectors, inclusive ranges and last-row-wins controls.
-Spec approval precedes Native RED or code; other G4 keys/by-object masks and load-settings/PCP remain outside.
-[Source ownership, finite controls, proof obligations and exit gate](architecture/option-g4-other-layer-sequence-count.md).
+Admit upstream sequence count0/1/2 plus empty/reverse-priority consumers; other G4 domains stay deferred.
+Port type-owned numeric/bool vector nil footer semantics, without String/Point suppression or key exceptions.
+Fresh workspace8295/8295, strict/fmt/WASM and seeded full923→924 PASS; official base923 PASS.
+Official candidate923 PASS/1 FAIL: owner exempts only the observed Native internal-solid path-order outlier.
+Native nondeterminism remains a separate OPEN item; no comparator relaxation or automatic full rerun.
+[Source scope, gate receipts and exact one-time adjudication](architecture/g4-sequence-review.md).
 
 ### G4 Manual-map slice (2026-10-10)
 

@@ -1,6 +1,6 @@
 # G4 other-layer sequence-count bounded coverage
 
-Status: SPEC-REQUEST only; no Native admission, RED, implementation or classification promotion yet.
+Status: bounded GREEN; fresh gates and the sole owner-adjudicated Native outlier are recorded in [the review receipt](g4-sequence-review.md). Historical request/RED sections below remain chronological evidence, not the current status.
 Base: merged G4 Manual-map `ee277389dfa0fe8664caa2bf490ddf0cdda3d362`.
 This is a narrower next vertical under the approved six-key G4 source boundary,
 not a new Ares tool-ordering pipeline.
