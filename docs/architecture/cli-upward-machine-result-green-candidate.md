@@ -1,9 +1,10 @@
 # Upward result metadata — implementation candidate
 
-Status: **implementation candidate, not verified GREEN**. Owner requested
-consolidation of local WIP `7bc55ddc4` and candidate `3469dedde` after early
-feedback. No check, Clippy, fmt or Native execution was performed during
-worker5's exclusive four-leg full.
+Status: **bounded first upward E2E GREEN; not reviewed/integrated**. Product
+`905213f16b313cadafec45517f32aabc00d79309` is rebased onto main
+`73e78279d766f8d500757204f505e1d43356b72a`. Owner requested consolidation
+of local WIP `7bc55ddc4` and candidate `3469dedde`; rejected isolated tests are
+absent. No gates ran during worker5's exclusive four-leg full.
 
 ## Upstream boundary
 
@@ -77,8 +78,48 @@ Implementation of explicit/automatic source selection does not certify those
 public CLI paths; they require the subsequent E2E witnesses above.
 The existing first E2E witness alone does not certify additional source controls.
 
-After worker5's four-leg END and owner scheduling permits, run check, strict
-Clippy and fmt, then fresh directed seeded and official Native
-comparisons at admitted actual-start load. Retain any compilation/runtime
-failures without relabelling them RED/GREEN. Exact-hash review/integration remains
-separate; no push is authorized by this candidate record.
+## Fresh 73e GREEN receipts and remaining gates
+
+Production main advance invalidated all d4 engineering gates:
+`/tmp/ares-cli-upward/gates-b7/void-main-73e.json`. The incomplete d4 archive
+was cancelled; it is not a completed archive or acceptance result. Compilation
+and lint errors were retained and fixed without suppression. Rebase was clean;
+worker5's -17 compatibility rejection is before upward report assignment.
+
+Fresh workspace/all-target/all-feature `cargo check`, strict Clippy `-D warnings`,
+fmt check and WASM-target check all exited 0. Logs and stage admissions:
+`/tmp/ares-cli-upward/gates-73e/`. Build jobs were 2; check/strict actual-start
+loads were below 30. This is not a workspace nextest/full-pair result.
+
+Per owner direction, final directed evidence uses **direct** cargo nextest, not
+an archive adapter:
+
+```sh
+cargo nextest run -p ares-cli --test orca_parity \
+  cli_custom_gcode_failure_preserves_nonempty_upward_machine_header \
+  --test-threads 2 --success-output immediate
+```
+
+- Seeded: `207e3ab1-10b3-4053-a55e-0aee4abbae49`, 1 PASS, exit0,
+  actual-start load6.52. Root `/tmp/ares-cli-upward/green-73e-direct-seeded/`.
+- Official: `87e6a036-2f9f-4b58-a5d3-c00ba7fd3c9c`, 1 PASS, exit0,
+  actual-start load7.88. Root `/tmp/ares-cli-upward/green-73e-direct-official/`.
+
+Both retain runtime Native -100/nonempty upward, CLI156/-100, whole exact
+stdout/stderr/result JSON and no final G-code. Only existing integer
+prepare_time/export_time adaptation is used; downward remains absent. Input
+ZIP bytes and every member SHA, raw results and Native receipts are retained in
+`/tmp/ares-cli-upward/green-73e-direct-audit.json`. Fresh exported ZIP SHAs differ
+from the original RED; each run compares its own exact input against live Native,
+not a frozen RED output. Original RED artifacts/assertions remain unchanged.
+
+Earlier archive launches failed before test/Native execution, with exit2
+argument parsing (including filter `-F` interpreted as features) and exit96
+missing extraction directory. Original logs/outcomes remain in green-73e-*;
+build-environment hypotheses were not acceptance evidence. Completed archive
+seeded/official comparisons also passed but are separately inventoried in
+`green-73e-audit.json`, not substituted for the owner-directed final runs.
+
+Four-branch E2E, workspace nextest/full independent BASE/CAND controls and exact-
+hash review/integration remain separate and require owner scheduling. No push
+has been performed or authorized by these directed GREEN receipts.
