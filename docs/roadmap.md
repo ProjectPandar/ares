@@ -16,10 +16,12 @@ Original official failures remain visible; candidate-only Native path-order ND w
 No comparator change or reruns.
 [Source boundaries, four-leg receipts, raw inventory and adjudication](architecture/g4-manual-map-review.md).
 
-### Printable-height coverage: selected, bounded spec pending review (2026-10-09)
+### Printable-height coverage: bounded GREEN, pending integration review (2026-10-10)
 
-Source-owned scalar range / rectangular BuildVolume Z / last-instance sequential-limit witnesses; reuse G2 fixture, no new validator.
-[Proposed context, phase distinctions and exclusions](architecture/option-printable-height-bounded-coverage.md); no Native or production edits before approval.
+Source-owned BuildVolume zero-height scene sentinel and Print::validate generated-layer ceiling are ported; G2 sequential fixtures are reused.
+Seeded/official fresh cold witnesses passed; other 649 plans unchanged. Fresh full BASE626/CAND5572: seeded898→903 and official898→903 PASS, both failure subsets pass.
+The concentric Native capture multiplicity disclosure is retained and owner-accepted; no comparator change or rerun.
+[Source boundaries, bounded context and exclusions](architecture/option-printable-height-bounded-coverage.md).
 
 ### G2 clearance/height coverage: harness GREEN, pending integration review (2026-10-09)
 
