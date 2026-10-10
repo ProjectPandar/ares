@@ -51,6 +51,7 @@ function sceneResult(data: SceneData): [Scene, Transferable[]] {
 function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
   const gcode = owned(output.takeGcode());
   const vertices = output.takeVertices();
+  const estimation = JSON.parse(output.estimation);
   output.free();
   const toolpaths: Toolpaths = {
     vertexCount: vertices.count,
@@ -69,6 +70,7 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
     layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
     spiralVaseMode: vertices.spiralVaseMode,
     filamentLegend: JSON.parse(vertices.filamentLegend()),
+    estimation,
   };
   replaceViewer(vertices);
   const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs } = toolpaths;

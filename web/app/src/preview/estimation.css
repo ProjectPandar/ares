@@ -1,0 +1,6 @@
+.legend-estimation { border-top: 1px solid var(--border); margin-top: 6px; padding: 6px 4px 0; font-variant-numeric: tabular-nums; }
+.legend-estimation h3 { margin: 0 0 4px; font: inherit; font-weight: 600; }
+.legend-estimation dl { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; margin: 0; }
+.legend-estimation dl > div { display: contents; }
+.legend-estimation dt { color: var(--text-dim); }
+.legend-estimation dd { margin: 0; text-align: right; white-space: pre; }

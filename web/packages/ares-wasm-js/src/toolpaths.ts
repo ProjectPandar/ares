@@ -35,6 +35,18 @@ export interface Toolpaths {
   spiralVaseMode: boolean;
   /** Engine-selected ColorPrint legend columns and used filament volumes. */
   filamentLegend: FilamentLegend;
+  estimation: Estimation;
+}
+
+/** Legend estimation footer inputs (GCodeViewer.cpp:4547-4644). */
+export interface Estimation {
+  /** `PrintStatistics` after export (Print.hpp:789-816): mm, g and cost. */
+  totalUsedFilament: number;
+  totalWeight: number;
+  totalCost: number;
+  /** `modes[Normal]` float `time` and `prepare_time`, seconds. */
+  time: number;
+  prepareTime: number;
 }
 
 export interface FilamentLegend {
