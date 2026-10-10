@@ -99,10 +99,14 @@ stock inventory or an Ares-owned pipeline milestone.
 - BBL timelapse forced-Z handoff — DONE `b1a5a84d4`; `GCodeWriter::travel_to_xyz` force-Z state, within [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md).
 - Type2 tower planning/emission, PA restore/reset and live geometry consumers — DONE `c53be4fe9`, `ff2a912e0`; `Print::_make_wipe_tower`, `WipeTower2` and `WipeTowerIntegration`, within [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md).
 - Initialized bridge candidate traversal and mesh affine arithmetic — DONE `50fe97a6e`; [ARD-0075](architecture/ard-0075-initialized-bridge-candidate-direction.md) / [ARD-0076](architecture/ard-0076-slicing-mesh-affine-rounding.md).
+- Type2 `enable_prime_tower=1` verification — GREEN, docs-only review pending;
+  [measured gate and exact output](architecture/type2-tower-activation.md).
+  Resolves bounded `21c18b79d`: apply-time normalization disables the effective
+  tower flag despite two emitted tools / 68 changes; no fix/new test, not active
+  tower geometry coverage.
 
 ### Selective WIP ports: remaining boundaries (open)
 
-- Type2 `enable_prime_tower=1` activation verification — OPEN `21c18b79d`; the original ZIP had enable=0, so [the corrected activation spec](architecture/type2-tower-activation.md) still requires the real enable=1 witness and upstream gate identification. This belongs to worker1's Type2 activation verification boundary; worker2 owns G4 only and does not change tower activation.
 - Adaptive PA deferred upstream behavior — OPEN `2863ef3ea`; retain [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md)'s multipath/sloped suppression, activation/calibration gates, source-specific reset sequencing and lookahead stream-position obligations. Landed bounded ports do not close full Adaptive PA or printer/Option coverage.
 
 ### Current acceptance priorities: completed subitems
