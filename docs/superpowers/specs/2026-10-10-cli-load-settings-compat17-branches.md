@@ -126,6 +126,10 @@ fires when a machine preset file comes in through `--load-settings`.
 - The `:2624-2647` relaxation only insofar as it gates branch 2
   (`new_printer_name != current_printer_name` ⇒ compatible, no `-17`
   from this slice).
+- Machine-switch `upward_compatible_printers` reads **reuse worker1's
+  `project/upward_machine.rs`** once merged (owner addendum): this
+  slice adds no second parser; until that module exists the witness
+  fixtures simply avoid the non-empty upward path (see case 4).
 - E2E RED witness: same argv on Native vs Ares, all channels
   (`exit/stdout/stderr/result.json`):
   1. **Branch-1 reject**: BBL 3MF + `--load-settings` list = one
@@ -142,7 +146,8 @@ fires when a machine preset file comes in through `--load-settings`.
      name than embedded → both accept (upstream `machine_switch`;
      fixtures chosen so `upward_compatible_printers` is empty or
      contains the new system name, keeping the deferred `-16` path out
-     of the witness).
+     of the witness — the list itself comes from worker1's
+     `project/upward_machine.rs` reader, not a new parse here).
 - Native exit/channel fixtures generated at runtime; only input
   fixtures (crafted 3MF + preset JSONs) are committed.
 
@@ -159,6 +164,13 @@ fires when a machine preset file comes in through `--load-settings`.
   `CLI_CONFIG_FILE_ERROR`, and read-ordering vs the 3MF block —
   worker5 boundary (`OrcaSlicer.cpp:1953-2024`, `:1682-1690`).
 - `-18/-19/-51` validation family interactions; unchanged.
+
+## Schedule
+
+- Implementation (RED first) starts only after **both** worker5's
+  3MF+load-settings slice and worker1's `project/upward_machine.rs`
+  land on main. Before that, only non-Native artifacts may be
+  committed (input fixture JSONs/3MF, no receipts).
 
 ## Controls
 
