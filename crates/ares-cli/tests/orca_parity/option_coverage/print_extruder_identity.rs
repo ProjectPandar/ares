@@ -6,7 +6,7 @@ use std::{
     io::{Cursor, Read, Write},
 };
 
-fn reversed_process_ids(project: &[u8]) -> Vec<u8> {
+fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
     let mut before = zip::ZipArchive::new(Cursor::new(project)).unwrap();
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..before.len() {
@@ -15,9 +15,8 @@ fn reversed_process_ids(project: &[u8]) -> Vec<u8> {
         file.read_to_end(&mut bytes).unwrap();
         if file.name() == "Metadata/project_settings.config" {
             let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
-            settings["print_extruder_id"] = json!(["2", "1"]);
-            settings["print_extruder_variant"] =
-                json!(["Direct Drive Standard", "Direct Drive Standard"]);
+            settings["print_extruder_id"] = ids.clone();
+            settings["print_extruder_variant"] = variants.clone();
             bytes = serde_json::to_vec_pretty(&settings).unwrap();
         }
         writer
@@ -31,10 +30,10 @@ fn reversed_process_ids(project: &[u8]) -> Vec<u8> {
     let result = writer.finish().unwrap().into_inner();
     let mut original = crate::runner::application::settings(project).unwrap();
     let mut actual = crate::runner::application::settings(&result).unwrap();
-    assert_eq!(actual.remove("print_extruder_id"), Some(json!(["2", "1"])));
+    assert_eq!(actual.remove("print_extruder_id"), Some(ids.clone()));
     assert_eq!(
         actual.remove("print_extruder_variant"),
-        Some(json!(["Direct Drive Standard", "Direct Drive Standard"]))
+        Some(variants.clone())
     );
     original.remove("print_extruder_id");
     original.remove("print_extruder_variant");
@@ -59,13 +58,20 @@ fn reversed_process_ids(project: &[u8]) -> Vec<u8> {
     result
 }
 
-#[tokio::test]
-async fn print_process_identity_materializes_reversed_complete_map_without_master_changes() {
+async fn compare_identity(
+    label: &str,
+    vendor: &str,
+    printer: &str,
+    ids: Value,
+    variants: Value,
+    expected_ids: &str,
+    expected_variants: &str,
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let profiles = VendorProfiles::load(&profiles_root(), "BBL").unwrap();
-    let selected = parity::select_printer(&profiles, "BBL", "Bambu Lab H2D 0.4 nozzle").unwrap();
+    let profiles = VendorProfiles::load(&profiles_root(), vendor).unwrap();
+    let selected = parity::select_printer(&profiles, vendor, printer).unwrap();
     let machine = profiles.machine(&selected.printer).unwrap();
     let mut process = profiles.process(&selected.process).unwrap();
     parity::normalize_process_defaults(&machine, &mut process);
@@ -78,7 +84,7 @@ async fn print_process_identity_materializes_reversed_complete_map_without_maste
     let exported = runner
         .export_case(
             &crate::runner::CaseInputs {
-                label: "print-process-identity/stock-h2d",
+                label,
                 machine: &machine,
                 process: &process,
                 filaments: &filaments,
@@ -93,21 +99,20 @@ async fn print_process_identity_materializes_reversed_complete_map_without_maste
         .unwrap()
         .keep();
     fs::write(directory.join("original.3mf"), &exported.project).unwrap();
-    let project = reversed_process_ids(&exported.project);
+    let project = authored_identity(&exported.project, &ids, &variants);
     let settings = crate::runner::application::settings(&project).unwrap();
     fs::write(
         directory.join("requested-settings.json"),
         serde_json::to_vec_pretty(&settings).unwrap(),
     )
     .unwrap();
-    assert_eq!(
-        settings["extruder_type"],
+    let types = if vendor == "BBL" {
         json!(["Direct Drive", "Direct Drive"])
-    );
-    assert_eq!(
-        settings["nozzle_volume_type"],
-        json!(["Standard"])
-    );
+    } else {
+        json!(["Direct Drive"])
+    };
+    assert_eq!(settings["extruder_type"], types);
+    assert_eq!(settings["nozzle_volume_type"], json!(["Standard"]));
     let input = directory.join("input.3mf");
     fs::write(&input, &project).unwrap();
     let native_dir = directory.join("native");
@@ -136,22 +141,22 @@ async fn print_process_identity_materializes_reversed_complete_map_without_maste
     // The appended full Print config is an independent consumption witness,
     // not a raw input roundtrip (GCode.cpp:5591-5644 append_full_config).
     assert!(
-        native.contains("\n; print_extruder_id = 1,2\n"),
+        native.contains(&format!("\n; print_extruder_id = {expected_ids}\n")),
         "Native must materialize physical request order before Ares comparison: {directory:?}"
     );
-    assert!(
-        native
-            .contains("\n; print_extruder_variant = \"Direct Drive Standard\";\"Direct Drive Standard\"\n")
-    );
-    let ares = ares_core::slice_project_plate(
+    assert!(native.contains(&format!(
+        "\n; print_extruder_variant = {expected_variants}\n"
+    )));
+    let result = ares_core::slice_project_plate(
         &project,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         None,
         &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     )
-    .await
-    .unwrap();
+    .await;
+    fs::write(directory.join("ares.result.txt"), format!("{result:?}")).unwrap();
+    let ares = result.unwrap();
     fs::write(directory.join("ares.gcode"), &ares).unwrap();
     assert_eq!(fs::read(&input).unwrap(), project);
     let ares = String::from_utf8(ares).unwrap();
@@ -160,4 +165,99 @@ async fn print_process_identity_materializes_reversed_complete_map_without_maste
         crate::cli_retained_input::normalize_generator(&native, "OrcaSlicer"),
         "complete process identity stream: {directory:?}"
     );
+}
+
+const STANDARD_PAIR: &str = "\"Direct Drive Standard\";\"Direct Drive Standard\"";
+
+#[tokio::test]
+async fn print_process_identity_materializes_reversed_complete_map_without_master_changes() {
+    compare_identity(
+        "print-process-identity/reversed",
+        "BBL",
+        "Bambu Lab H2D 0.4 nozzle",
+        json!(["2", "1"]),
+        json!(["Direct Drive Standard", "Direct Drive Standard"]),
+        "1,2",
+        STANDARD_PAIR,
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn print_process_identity_complete_physical_order_is_preserved() {
+    compare_identity(
+        "print-process-identity/ordered",
+        "BBL",
+        "Bambu Lab H2D 0.4 nozzle",
+        json!(["1", "2"]),
+        json!(["Direct Drive Standard", "Direct Drive Standard"]),
+        "1,2",
+        STANDARD_PAIR,
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn print_process_identity_default_singleton_exports_complete_output() {
+    compare_identity(
+        "print-process-identity/default",
+        "RH3D",
+        "E3NG v1.2S - 0.4 nozzle",
+        json!(["1"]),
+        json!(["Direct Drive Standard"]),
+        "1",
+        "\"Direct Drive Standard\"",
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn print_process_identity_repeated_ids_select_matching_variants() {
+    compare_identity(
+        "print-process-identity/repeated",
+        "BBL",
+        "Bambu Lab H2D 0.4 nozzle",
+        json!(["1", "1", "2"]),
+        json!([
+            "Direct Drive High Flow",
+            "Direct Drive Standard",
+            "Direct Drive Standard"
+        ]),
+        "1,2",
+        STANDARD_PAIR,
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn print_process_identity_short_ids_use_generated_group_identity() {
+    compare_identity(
+        "print-process-identity/short",
+        "BBL",
+        "Bambu Lab H2D 0.4 nozzle",
+        json!(["7"]),
+        json!([
+            "Direct Drive High Flow",
+            "Direct Drive Standard",
+            "Direct Drive High Flow",
+            "Direct Drive Standard"
+        ]),
+        "7,7",
+        STANDARD_PAIR,
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn print_process_identity_unmatched_variant_uses_native_materialized_view() {
+    compare_identity(
+        "print-process-identity/unmatched",
+        "BBL",
+        "Bambu Lab H2D 0.4 nozzle",
+        json!(["1", "2"]),
+        json!(["Bowden Standard", "Bowden Standard"]),
+        "1,1",
+        "\"Bowden Standard\";\"Bowden Standard\"",
+    )
+    .await;
 }
