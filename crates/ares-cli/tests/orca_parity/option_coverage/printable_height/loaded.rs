@@ -43,7 +43,8 @@ fn orca_parity_printable_height_loaded_range_rejections() {
         .unwrap();
     let root = crate::artifacts::root_from_env().unwrap();
     let mut proofs = Vec::new();
-    for wire in ["-0.00001", "214700.00001"] {
+    // Config.cpp:321-337 accepts values within 1e-4 of the upper bound.
+    for wire in ["-0.00001", "214700.0002"] {
         let mut reader = zip::ZipArchive::new(Cursor::new(&exported.project)).unwrap();
         let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
         for index in 0..reader.len() {
