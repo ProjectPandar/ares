@@ -130,6 +130,22 @@ pub fn validate_with_profiles(
     })
 }
 
+/// `OrcaSlicer.cpp:1682-1690`: the 3MF load block admits the project
+/// before the CLI adapter reads the `--load-settings` files
+/// (`:1953-2024`); this admission probe runs the same embedded
+/// `post_process` gate the composite slice entry runs, so the `-19`
+/// rejection wins over the adapter's missing-file `-5`.
+pub fn validate_load_settings_input(input: impl AsRef<[u8]>) -> Result<(), SliceError> {
+    // The gate lives in the 3MF load block, so other input formats take
+    // the adapter path unchanged (the same keying the composite entry
+    // applies to its `validate_print` flag).
+    if crate::InputFormat::detect(input.as_ref()) != crate::InputFormat::ThreeMf {
+        return Ok(());
+    }
+    let project = crate::project::load_project(input)?;
+    crate::project_slice::validate_post_process(&project)
+}
+
 fn slice_profile_source(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,

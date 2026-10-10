@@ -123,6 +123,23 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .map(split_native_list)
         .unwrap_or_default();
     if !load_settings.is_empty() || !load_filaments.is_empty() {
+        let filename = args
+            .input
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
+        // `OrcaSlicer.cpp:1682-1690`: the 3MF load block admits the
+        // project before `:1953-2024` reads the preset files — probe the
+        // admission first so the embedded `-19` gate wins over the
+        // adapter's missing-file `-5`.
+        if let Err(error) = ares_core::validate_load_settings_input(&input) {
+            return Err(slice_error_to_failure(
+                error,
+                &args.output,
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            ));
+        }
         let settings = read_preset_files(&load_settings)?;
         let filaments = read_preset_files(&load_filaments)?;
         let settings = settings
@@ -133,11 +150,6 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             .iter()
             .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
             .collect::<Vec<_>>();
-        let filename = args
-            .input
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
         let gcode = match ares_core::slice_with_load_settings(
             &input,
             ares_core::LoadSettingsSliceRequest {
