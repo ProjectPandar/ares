@@ -21,6 +21,33 @@ pub(crate) enum EarlyExit {
     ProcessNotCompatible,
 }
 
+/// Joined `--load-settings`/`--load-filaments` preset lists for the CLI
+/// argv variant (`PrintConfig.cpp:10890-10901`); the file digests enter
+/// the cache identity, not the paths.
+struct LoadSettingsLists<'a> {
+    settings: &'a [String],
+    filaments: &'a [String],
+}
+
+/// One cached CLI-reference request: the result kind plus the optional
+/// `--load-settings`/`--load-filaments` argv lists.
+struct ReferenceRequest<'a> {
+    kind: ResultKind,
+    load_settings: Option<LoadSettingsLists<'a>>,
+}
+
+fn digest_paths(stage: Stage, paths: &[String]) -> Result<Vec<String>, StageError> {
+    paths
+        .iter()
+        .map(|path| {
+            Ok(cache_identity::raw_digest(&stages::read(
+                Path::new(path),
+                stage,
+            )?))
+        })
+        .collect()
+}
+
 impl EarlyExit {
     pub(crate) fn code(self) -> i32 {
         match self {
@@ -94,10 +121,13 @@ impl OrcaRunner {
     ) -> Result<CliResultReference, StageError> {
         self.cli_result_reference(
             project,
-            if second_plate {
-                ResultKind::RetainedSecond
-            } else {
-                ResultKind::RetainedFirst
+            ReferenceRequest {
+                kind: if second_plate {
+                    ResultKind::RetainedSecond
+                } else {
+                    ResultKind::RetainedFirst
+                },
+                load_settings: None,
             },
         )
     }
@@ -107,14 +137,46 @@ impl OrcaRunner {
         project: &Path,
         rejection: EarlyExit,
     ) -> Result<CliResultReference, StageError> {
-        self.cli_result_reference(project, ResultKind::Early(rejection))
+        self.cli_result_reference(
+            project,
+            ReferenceRequest {
+                kind: ResultKind::Early(rejection),
+                load_settings: None,
+            },
+        )
+    }
+
+    /// The `--load-settings`/`--load-filaments` argv variant.
+    pub(crate) fn load_settings_early_reference(
+        &self,
+        project: &Path,
+        settings: &[String],
+        filaments: &[String],
+        rejection: EarlyExit,
+    ) -> Result<CliResultReference, StageError> {
+        self.cli_result_reference(
+            project,
+            ReferenceRequest {
+                kind: ResultKind::Early(rejection),
+                load_settings: Some(LoadSettingsLists {
+                    settings,
+                    filaments,
+                }),
+            },
+        )
     }
 
     pub(crate) fn custom_gcode_reference(
         &self,
         project: &Path,
     ) -> Result<CliResultReference, StageError> {
-        self.cli_result_reference(project, ResultKind::CustomGCode)
+        self.cli_result_reference(
+            project,
+            ReferenceRequest {
+                kind: ResultKind::CustomGCode,
+                load_settings: None,
+            },
+        )
     }
 
     pub(crate) fn sequential_clearance_reference(
@@ -124,10 +186,13 @@ impl OrcaRunner {
     ) -> Result<CliResultReference, StageError> {
         self.cli_result_reference(
             project,
-            if last {
-                ResultKind::SequentialLast
-            } else {
-                ResultKind::SequentialCollision
+            ReferenceRequest {
+                kind: if last {
+                    ResultKind::SequentialLast
+                } else {
+                    ResultKind::SequentialCollision
+                },
+                load_settings: None,
             },
         )
     }
@@ -135,10 +200,14 @@ impl OrcaRunner {
     fn cli_result_reference(
         &self,
         project: &Path,
-        kind: ResultKind,
+        request: ReferenceRequest<'_>,
     ) -> Result<CliResultReference, StageError> {
         // Cached references cannot hide a removed mandatory producer declaration.
         super::super::environment::available()?;
+        let ReferenceRequest {
+            kind,
+            load_settings,
+        } = request;
         let stage = Stage::Slice;
         let (project, mut components) = if matches!(kind, ResultKind::Early(EarlyExit::NotFound)) {
             let project = std::path::absolute(project).map_err(|error| io(stage, error))?;
@@ -156,6 +225,12 @@ impl OrcaRunner {
             (project, components)
         };
         let producer = self.producer()?;
+        if let Some(lists) = &load_settings {
+            components["load_settings"] = json!({
+                "settings": digest_paths(stage, lists.settings)?,
+                "filaments": digest_paths(stage, lists.filaments)?,
+            });
+        }
         components["recipe"] = json!(format!(
             "{}/slice-{}/{}",
             kind.schema(),
@@ -172,7 +247,15 @@ impl OrcaRunner {
         let entry = parent.join(&request);
         let _lock = lock(&entry.with_extension("lock"), stage)?;
         if !entry.join("receipt.json").is_file() {
-            self.create_cli_result_reference(&project, kind, &entry, &components)?;
+            self.create_cli_result_reference(
+                &project,
+                ReferenceRequest {
+                    kind,
+                    load_settings,
+                },
+                &entry,
+                &components,
+            )?;
         }
         let receipt: Value =
             serde_json::from_slice(&stages::read(&entry.join("receipt.json"), stage)?)
@@ -214,11 +297,15 @@ impl OrcaRunner {
     fn create_cli_result_reference(
         &self,
         project: &Path,
-        kind: ResultKind,
+        request: ReferenceRequest<'_>,
         entry: &Path,
         components: &Value,
     ) -> Result<(), StageError> {
         let stage = Stage::Slice;
+        let ReferenceRequest {
+            kind,
+            load_settings,
+        } = request;
         let producer = self.producer()?;
         let request = cache_identity::digest(&[&serde_json::to_vec(components).unwrap()]);
         let staging = tempfile::Builder::new()
@@ -229,18 +316,17 @@ impl OrcaRunner {
         fs::create_dir(&output).map_err(|error| io(stage, error))?;
         let command_work = staging.path().join("command");
         fs::create_dir(&command_work).map_err(|error| io(stage, error))?;
-        let outcome = stages::run(
-            &self.bin,
-            [
-                "--slice".to_owned(),
-                kind.slice().to_string(),
-                "--outputdir".to_owned(),
-                output.to_string_lossy().into_owned(),
-                project.to_string_lossy().into_owned(),
-            ],
-            stage,
-            &command_work,
-        );
+        let mut argv = vec!["--slice".to_owned(), kind.slice().to_string()];
+        if let Some(lists) = load_settings {
+            argv.push("--load-settings".to_owned());
+            argv.push(lists.settings.join(";"));
+            argv.push("--load-filaments".to_owned());
+            argv.push(lists.filaments.join(";"));
+        }
+        argv.push("--outputdir".to_owned());
+        argv.push(output.to_string_lossy().into_owned());
+        argv.push(project.to_string_lossy().into_owned());
+        let outcome = stages::run(&self.bin, argv, stage, &command_work);
         let expected = if cfg!(unix) {
             kind.code().rem_euclid(256)
         } else {
