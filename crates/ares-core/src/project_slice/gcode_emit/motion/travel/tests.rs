@@ -329,6 +329,7 @@ fn wipe_distribution_uses_configured_distance_when_clipping_rounds_long() {
         options: MotionOptions {
             wipe: true,
             wipe_distance: 1.0,
+            retraction_during_wipe_distance: 1.0,
             ..MotionOptions::default()
         },
         wipe_start: Some(arc::Point { x: 0.0, y: 0.0 }),
@@ -358,6 +359,7 @@ fn wipe_clip_end_empties_the_path_without_panicking() {
         options: MotionOptions {
             wipe: true,
             wipe_distance: 0.0005,
+            retraction_during_wipe_distance: 0.0005,
             ..MotionOptions::default()
         },
         wipe_start: Some(arc::Point { x: 0.0, y: 0.0 }),

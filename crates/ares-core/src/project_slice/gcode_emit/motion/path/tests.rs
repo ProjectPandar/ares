@@ -218,6 +218,7 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
                 wipe_speed: 40.0,
                 retraction_length: 0.8,
                 retraction_during_wipe_speed: 40.0,
+                retraction_during_wipe_distance: 1.0,
                 ..MotionOptions::default()
             },
             ..EmitState::default()

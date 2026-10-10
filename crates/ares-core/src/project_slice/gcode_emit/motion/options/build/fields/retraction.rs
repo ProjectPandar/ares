@@ -31,7 +31,10 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime:
     options.retract_restart_extra = float(&gcode.retract_restart_extra, filament);
     options.deretraction_feedrate = deretraction_speed * 60.0;
     options.retraction_feedrate = retraction_speed * 60.0;
-    options.retraction_during_wipe_speed = float(&gcode.retraction_speed, filament);
+    // Wipe::calculateWipeRetractionLengths uses extruder_id(), not filament id().
+    options.retraction_during_wipe_speed = float(&gcode.retraction_speed, *physical);
+    options.retraction_during_wipe_distance =
+        float(&runtime.project.print.wipe_distance, *physical);
     options.z_hop = float(&gcode.z_hop, filament);
     options.retract_lift_above = float(&gcode.retract_lift_above, *physical);
     options.retract_lift_below = float(&gcode.retract_lift_below, *physical);

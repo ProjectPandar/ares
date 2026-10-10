@@ -61,7 +61,9 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
     // `scale_(x)` is plain division (`libslic3r.h:93`); assigned to
     // `double wipe_dist` upstream so no int truncation applies.
     let configured_distance = state.options.wipe_distance / state.scale_factor;
-    let retraction_distance = total_length.min(configured_distance) * state.scale_factor;
+    // GCode.cpp:342-350 caps the budget at the physical extruder's distance.
+    let budget_distance = state.options.retraction_during_wipe_distance / state.scale_factor;
+    let retraction_distance = total_length.min(budget_distance) * state.scale_factor;
     let mut clip = total_length - configured_distance;
     // `set_origin(0, 0)` for skirt/brim changes the coordinate frame in
     // which `Polyline::clip_end` truncates. Keep local storage, but cast
