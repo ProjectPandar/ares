@@ -1,6 +1,6 @@
 # Upward result metadata — implementation candidate
 
-Status: **platform correction bounded GREEN; not reviewed/integrated**.
+Status: **platform correction, workspace and standard full GREEN; REVIEW pending**.
 Owner rejected product905213f16 for introduced OS gates/non-Linux Embedded
 downgrade. The correction removes those conditions, uses component-wise
 Path::join on all native platforms and stores reached upward metadata without
@@ -12,8 +12,9 @@ checks each exited0 (`/tmp/ares-cli-upward/platform-fix/`). Direct seeded and
 official witness reruns each passed once, load9.18/9.46, threads2, preserving
 whole channels/result and no-Gcode assertions. New full raw ZIP/member/result
 and receipt audit: `/tmp/ares-cli-upward/green-platform-audit.json`. Windows and
-macOS runtime execution was not performed on this Linux host. Workspace/full
-are queued after W6 then W2, not started or certified. The historical receipts
+macOS runtime execution was not performed on this Linux host. Workspace and
+standard independent full controls subsequently passed; see the d5b acceptance
+section below. The historical receipts
 below describe the superseded product, not correction acceptance. Product
 `905213f16b313cadafec45517f32aabc00d79309` is rebased onto main
 `73e78279d766f8d500757204f505e1d43356b72a`. Owner requested consolidation
@@ -136,6 +137,60 @@ build-environment hypotheses were not acceptance evidence. Completed archive
 seeded/official comparisons also passed but are separately inventoried in
 `green-73e-audit.json`, not substituted for the owner-directed final runs.
 
-Four-branch E2E, workspace nextest/full independent BASE/CAND controls and exact-
-hash review/integration remain separate and require owner scheduling. No push
-has been performed or authorized by these directed GREEN receipts.
+Four-branch E2E and exact-hash review/integration remain separate. No push has
+been performed or authorized by these GREEN receipts.
+
+## Standard full on d5b — review binding
+
+- BASE: `d5b554b886e3f4d2b493b0bde0e61c212c7ec272`.
+- Tested CAND/code+docs: `ebcfe03816609406beaf7106da433bb1cfb31231`.
+- Final production-code commit: `23af32a4e989d622146a2f4cc01c8262f6b5dc12`
+  (platform correction), above `b43e611e5a8e6350e3148a5137bf21ac0348e391`
+  (staged upward metadata). This evidence update changes documentation only.
+- Owner authorized carry of 73e engineering/directed gates to d5b, whose main
+  advance contains only worker6 timelapse tests/docs. Clean rebase preserved
+  production and approved witness assertions.
+- Workspace run `69138d92-039a-47e6-b881-fed21b4611e4`: 8289 PASS,
+  5 skipped, exit0; `/tmp/ares-cli-upward/workspace-de7-after-w6/`.
+  The prior workspace interrupted for worker6 exclusive START remains VOID.
+
+Four standard full legs finished using the owner-directed worker6 `run.py`
+layout, jobs2/threads2, fresh per-leg Native caches and independent BASE/CAND
+build targets. Both detached source trees bind the ignored OrcaSlicer source
+resources to the verified upstream pin8500. No `ARES_PARITY_OPTIONS` or option
+key filter is set: upward does not own an option domain. Actual d5b harness
+counts are BASE922 and CAND923, not a filter forcing the older 919 count.
+
+| Provider | BASE | CAND | Failure sets |
+| --- | --- | --- | --- |
+| Seeded | 922/922 PASS, exit0 | 923/923 PASS, exit0 | both empty |
+| Official | 922/922 PASS, exit0 | 923/923 PASS, exit0 | both empty |
+
+Evidence root: `/tmp/ares-cli-upward/standard-d5-resources.ViAmJ7/`.
+`subset-audit.py`, `subset-audit.json`, `subset-audit.log` and exit0 verify the
+exact named BASE test set is contained in CAND, all existing statuses remain
+PASS, candidate-only failures are empty, and the sole new test is the approved
+`cli_upward_machine_result::cli_custom_gcode_failure_preserves_nonempty_upward_machine_header`.
+The audit records distinct BASE/CAND test and CLI binary SHAs, complete log SHAs
+and run IDs. Both added live witnesses independently verify whole stdout/stderr
+and result bytes (only existing integer times adapted), Native-100/Ares156,
+ordered H2D Pro upward vector, absent downward, no final G-code, input ZIP/member
+and all witness-file SHAs and Native receipts. No frozen RED output is used.
+
+Infra attempts are preserved, never called parity RED/GREEN:
+
+- `full-d5-fresh.Z8kZuF/infra-void.json`: custom archive driver expected the
+  nonexistent `target/debug/ares-cli` binary; exit1, zero Native executions.
+  Its pre-Native full650 configuration correction and script hashes remain.
+- `standard-d5-worker6.qd94dU/infra-void.json`: interrupted seeded BASE lacked
+  ignored source-resource binding. Eighteen partial Native receipt files were
+  observed; zero Native execution is **not** claimed for this attempt. Owner
+  authorized matching resource symlinks and a fresh restart. Partial output is
+  retained separately, not substituted into final receipts.
+
+This is completed standard-full test/failure subset validation, not a full650
+option scan, cross-platform runtime certification or new source-branch coverage.
+Cross-tree fixed-input raw-stream inventory beyond the named subset/witness
+remains unaudited here. Four upward source-branch public CLI E2Es, loader-error
+parity and downward geometry remain explicitly deferred. Review and integration
+approval are still required; nothing has been pushed.
