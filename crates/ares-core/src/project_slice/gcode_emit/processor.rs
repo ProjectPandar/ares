@@ -266,6 +266,8 @@ pub(super) fn process(
     let mut statistics = estimate.print_statistics;
     // `GCodeProcessor::get_time` returns the float machine time.
     statistics.normal_time = estimate.total as f32;
+    // `estimate.prepare` is the f32 prepare-stage sum widened to f64.
+    statistics.normal_prepare_time = estimate.prepare as f32;
     let print_statistics = estimated_stats::update_print_estimated_stats(
         &statistics,
         &config.writer_extruders,

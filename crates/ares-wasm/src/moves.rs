@@ -15,6 +15,7 @@ pub struct SliceOutput {
     moves: MoveBuffers,
     vertices: VertexBuffers,
     print_statistics: Vec<u8>,
+    estimation: String,
     extruder_colors: Vec<String>,
     filament_diameters: Vec<f32>,
     filament_densities: Vec<f32>,
@@ -33,11 +34,14 @@ impl SliceOutput {
         // mm³ dense-indexed by filament id; `total_used_filament` in mm.
         let print_statistics = serde_json::to_vec(&output.result.print_statistics)
             .expect("PrintEstimatedStatistics serializes");
+        let estimation = serde_json::to_string(&crate::estimation::Estimation::from(&output))
+            .expect("Estimation serializes");
         Self {
             gcode: output.gcode,
             moves: MoveBuffers::pack(&output.result.moves),
             vertices,
             print_statistics,
+            estimation,
             extruder_colors: output.result.extruder_colors,
             filament_diameters: output.result.filament_diameters,
             filament_densities: output.result.filament_densities,
@@ -67,6 +71,12 @@ impl SliceOutput {
     #[wasm_bindgen(js_name = takePrintStatistics)]
     pub fn take_print_statistics(&mut self) -> Vec<u8> {
         std::mem::take(&mut self.print_statistics)
+    }
+
+    /// Legend estimation footer inputs as JSON (`GCodeViewer.cpp:4547-4644`).
+    #[wasm_bindgen(getter)]
+    pub fn estimation(&self) -> String {
+        self.estimation.clone()
     }
 
     /// `GCodeProcessorResult::extruder_colors`

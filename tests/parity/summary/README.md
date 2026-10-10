@@ -15,6 +15,11 @@ the `PrintStatistics` totals that the preview Summary legend reads.
   - Producer: `ARES_PRINT_STATISTICS_BIN`, the `bin/orca-slicer` of
     `tools/chain-probe/print-statistics.nix`, which writes
     `<outputdir>/plate_1.print_statistics.json` (`%.17g` doubles, `%.9g` floats).
+    Besides the totals it holds `modes[Normal]` `time` and `prepare_time`,
+    the per-extruder total, support, flush and wipe-tower volume maps, the
+    filament diameters and densities, and `footer_times`: the legend footer's
+    `short_time(get_time_dhms(...))` texts (`GCodeViewer.cpp:4633`, `4639`,
+    `4644`). `web/e2e/estimation.spec.ts` reads the same dump.
   - The test process must be pinned to one CPU (the `ares-pin-runner.sh`
     target runner). A multi-threaded Native picks a different travel order
     than the single-CPU reference Ares matches, so its time and totals differ.
