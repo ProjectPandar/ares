@@ -11,7 +11,7 @@
 
 use super::ProfileSelection;
 use super::catalog::{Catalog, ComposedSelection, ProfileDocument};
-use crate::SliceError;
+use crate::{SliceError, project::raw_settings::RawConfigValue};
 
 /// One `--load-settings`/`--load-filaments` list entry: the file label
 /// (path, for upstream error text) and its JSON text. An empty JSON
@@ -122,4 +122,74 @@ pub fn compose_load_settings(
         filament_names,
     )?;
     catalog.compose(&selection)
+}
+
+/// Extracts the adjudication inputs of the `--load-settings` file loop
+/// (`OrcaSlicer.cpp:2034-2098`): the first machine and process
+/// descriptors (`config_name`/`from`/`inherits`/`compatible_printers`).
+/// Reuses `parse_file` so per-file validation errors are identical to
+/// `compose_load_settings`; duplicate-kind lists surface the same
+/// duplicate error (`:2035-2038,:2074-2078`).
+pub(crate) fn load_settings_preset_names(
+    request: &LoadSettingsRequest<'_>,
+) -> Result<crate::project_slice::compatibility::LoadedPresetNames, SliceError> {
+    use crate::project_slice::compatibility::LoadedPresetNames;
+    let mut machine = None;
+    let mut process = None;
+    let mut machine_seen = false;
+    let mut process_seen = false;
+    for file in request.settings {
+        let (kind, document) = parse_file(file)?;
+        match kind.as_str() {
+            "machine" => {
+                if machine_seen {
+                    return Err(invalid(format!(
+                        "duplicate machine config file: {}",
+                        file.label
+                    )));
+                }
+                machine_seen = true;
+                machine = Some(descriptor(&document));
+            }
+            "process" => {
+                if process_seen {
+                    return Err(invalid(format!(
+                        "duplicate process config file: {}",
+                        file.label
+                    )));
+                }
+                process_seen = true;
+                process = Some(descriptor(&document));
+            }
+            _ => {}
+        }
+    }
+    Ok(LoadedPresetNames { machine, process })
+}
+
+fn descriptor(document: &ProfileDocument) -> crate::project_slice::compatibility::PresetDescriptor {
+    crate::project_slice::compatibility::PresetDescriptor {
+        name: document.name.clone(),
+        from: document
+            .fields
+            .get("from")
+            .and_then(|value| value.token())
+            .unwrap_or_default(),
+        inherits: document.inherits.clone(),
+        compatible_printers: document
+            .fields
+            .get("compatible_printers")
+            .map(|value| match value {
+                RawConfigValue::List(values) => values
+                    .iter()
+                    .map(|item| match item {
+                        RawConfigValue::Text(text) => text.clone(),
+                        _ => String::new(),
+                    })
+                    .collect(),
+                RawConfigValue::Text(text) => vec![text.clone()],
+                _ => Vec::new(),
+            })
+            .unwrap_or_default(),
+    }
 }

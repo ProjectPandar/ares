@@ -93,6 +93,17 @@ pub(super) fn prepare_profile_slice(
     profile: ProfileInput<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
     let (loaded, preparation) = load_and_place_with_preparation(project, profile)?;
+    // `OrcaSlicer.cpp:2575-2620,:2653-2654`: the compatible-printers
+    // gate fires after load and before parameter validation —
+    // loaded-names adjudication for the `--load-settings` composite
+    // (branches 1-2); the catalog/profile entry has no CLI file loop
+    // (its adjudication semantics are a deferred slice — no gate).
+    if let Some(names) = profile.load_names {
+        super::compatibility::reject_incompatible_load_settings(
+            &loaded.documents().project_settings_raw,
+            names,
+        )?;
+    }
     loaded
         .settings()
         .validate_loaded_config(&loaded.documents().project_settings_raw)?;

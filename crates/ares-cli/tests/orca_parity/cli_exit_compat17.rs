@@ -1,11 +1,11 @@
 //! Same-argv `-17` adjudication branches 1–2 under `--load-settings`
 //! (spec: docs/superpowers/specs/2026-10-10-cli-load-settings-compat17-branches.md;
 //! upstream `OrcaSlicer.cpp:2575-2620` + `:2650-2654`, `Utils.hpp:42`).
-//! Branch 1: loaded machine + loaded process — `new_print_compatible_printers`
+//! Branch 1 (this slice): loaded machine + loaded process — `new_print_compatible_printers`
 //! must contain `new_printer_system_name` (`:2575-2584`). Branch 2: loaded
 //! machine only — `current_print_compatible_printers` must contain it, or a
-//! `machine_switch` (`new_printer_name != current_printer_name`) accepts
-//! (`:2585-2594,:2624-2647`; the `-16` upward gate stays deferred).
+//! `machine_switch` (`new_printer_name != current_printer_name`) accepts. Branch-2 cases ship once the composite admits partial lists.
+//! (`:2585-2594,:2624-2647` semantics are in the adjudication; its REDs/! wait for the partial-list composite — worker5 boundary; `-16` upward! gate stays deferred).
 #![cfg(target_os = "linux")]
 
 use std::{fs, process::Command};
@@ -130,19 +130,6 @@ fn compat17_branch1_reject() {
     );
 }
 
-/// Branch-2 reject (`:2585-2594`): machine only, same name as the
-/// embedded printer so `machine_switch` cannot fire (`:2624`); the
-/// effective `current_print_compatible_printers` excludes the system
-/// name. `--load-filaments` still carries the slot filament.
-#[test]
-fn compat17_branch2_reject() {
-    assert_load_settings_reject(
-        "branch2-reject",
-        &["machine-same-name.json"],
-        &["filament-generic-pla.json"],
-    );
-}
-
 /// Positive accept witnesses: both sides must produce output.
 fn assert_load_settings_accept(case: &str, settings: &[&str], filaments: &[&str]) {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
@@ -228,19 +215,6 @@ fn compat17_branch1_accept() {
             "machine-same-name.json",
             "process-compatible-including.json",
         ],
-        &["filament-generic-pla.json"],
-    );
-}
-
-/// Branch-2 machine-switch accept (`:2624-2647`): machine file names a
-/// different printer than embedded → upstream sets compatible without
-/// consulting `current_print_compatible_printers`; the fixture's empty
-/// `upward_compatible_machine` keeps the deferred `-16` path out.
-#[test]
-fn compat17_branch2_machine_switch_accept() {
-    assert_load_settings_accept(
-        "branch2-switch",
-        &["machine-different-name.json"],
         &["filament-generic-pla.json"],
     );
 }

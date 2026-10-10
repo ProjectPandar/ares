@@ -208,10 +208,12 @@ fn with_load_settings_source<T>(
             "model filename is required".to_owned(),
         ));
     }
-    let composed = compose_load_settings(&LoadSettingsRequest {
+    let request = LoadSettingsRequest {
         settings,
         filaments,
-    })?;
+    };
+    let load_names = super::load_settings::load_settings_preset_names(&request)?;
+    let composed = compose_load_settings(&request)?;
     // `OrcaSlicer.cpp:1682-1690`: the embedded `post_process` check lives
     // in the 3MF load block, so the composite entry validates 3MF inputs
     // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
@@ -224,6 +226,7 @@ fn with_load_settings_source<T>(
             composed: &composed.profile,
             raw: &composed.raw,
             filament_raws: &composed.filament_raws,
+            load_names: Some(&load_names),
             placement,
             validate_print,
         }),
@@ -264,6 +267,7 @@ fn with_profile_source<T>(
             composed: &composed.profile,
             raw: &composed.raw,
             filament_raws: &composed.filament_raws,
+            load_names: None,
             placement,
             validate_print: false,
         }),

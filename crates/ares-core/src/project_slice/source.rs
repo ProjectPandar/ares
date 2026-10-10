@@ -28,6 +28,10 @@ pub(crate) struct ProfileInput<'a> {
     pub(crate) raw: &'a ProjectSettingsRaw,
     /// Merged raw per selected filament (`OrcaSlicer.cpp:3301` slot overlay).
     pub(crate) filament_raws: &'a [ProjectSettingsRaw],
+    /// Loaded `--load-settings` machine/process descriptors for the
+    /// `OrcaSlicer.cpp:2575-2620` loaded-names adjudication; `None` on
+    /// the catalog/profile paths.
+    pub(crate) load_names: Option<&'a super::compatibility::LoadedPresetNames>,
     pub(crate) placement: crate::profiles::Placement,
     /// CLI composite entries set this; the profile path checks the
     /// embedded `post_process` on it before overlay (O5).

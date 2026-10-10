@@ -1,5 +1,5 @@
-//! Plain-3MF `print_compatible_printers` load gate
-//! (`OrcaSlicer.cpp:2562-2620` fourth branch; `-17` exit at `:2653-2654`).
+//! `print_compatible_printers` load gates
+//! (`OrcaSlicer.cpp:2575-2620`; `-17` exit at `:2650-2654`).
 
 use crate::{
     SliceError,
@@ -25,6 +25,95 @@ pub(super) fn reject_incompatible_process(raw: &ProjectSettingsRaw) -> Result<()
     } else {
         Err(SliceError::ProcessNotCompatible)
     }
+}
+
+/// Loaded `--load-settings` preset descriptor: only the fields the
+/// adjudication reads (`OrcaSlicer.cpp:2034-2098`).
+#[derive(Clone)]
+pub(crate) struct PresetDescriptor {
+    /// `config_name` (`load_config_file` result).
+    pub name: String,
+    /// `from`: `system` names itself the system preset
+    /// (`:2041-2044,:2081-2084`).
+    pub from: String,
+    /// `inherits`: the system name for user/User-scoped files
+    /// (`:2045,:2085`).
+    pub inherits: Option<String>,
+    /// `compatible_printers` (`:2090`), process files only.
+    pub compatible_printers: Vec<String>,
+}
+
+impl PresetDescriptor {
+    /// `new_*_system_name` (`OrcaSlicer.cpp:2041-2046,:2081-2086`).
+    fn system_name(&self) -> &str {
+        if self.from == "system" {
+            &self.name
+        } else {
+            self.inherits.as_deref().unwrap_or_default()
+        }
+    }
+}
+
+/// The `new_*` names the `--load-settings` file loop produced
+/// (`OrcaSlicer.cpp:2023-2106`): `None` when the list carried no file of
+/// that kind.
+#[derive(Clone)]
+pub(crate) struct LoadedPresetNames {
+    pub machine: Option<PresetDescriptor>,
+    pub process: Option<PresetDescriptor>,
+}
+
+/// Loaded-names adjudication (`OrcaSlicer.cpp:2575-2620` branches 1–2;
+/// `-17` at `:2650-2654`). Branches 3–4 and the `-16` upward gate are
+/// handled elsewhere/deferred: branch 3 (process file only) currently
+/// cannot arrive because the composition accepts only complete lists —
+/// treat it like branch 2's "same-name machine" path is impossible, and
+/// branch 4 is `reject_incompatible_process` for the plain path.
+///
+/// With a loaded machine file (`!new_printer_name.empty()`):
+/// - branch 1 (`:2576-2584`): `new_process_name` non-empty →
+///   `new_print_compatible_printers ∋ new_printer_system_name`;
+/// - branch 2 (`:2586-2594`): process empty →
+///   `current_print_compatible_printers ∋ new_printer_system_name`;
+/// - the `machine_switch` relaxation (`:2624-2627`) then accepts any
+///   `new_printer_name != current_printer_name` — the upward `-16`
+///   check (`:2630-2643`) is deferred.
+pub(super) fn reject_incompatible_load_settings(
+    raw: &ProjectSettingsRaw,
+    names: &LoadedPresetNames,
+) -> Result<(), SliceError> {
+    let Some(machine) = &names.machine else {
+        // No machine file: only branch 4 applies today (process-only
+        // lists are rejected by composition upstream-adjacent — branch 3
+        // deferred).
+        return reject_incompatible_process(raw);
+    };
+    let new_printer_system_name = machine.system_name();
+    let compatible = if let Some(process) = &names.process {
+        process
+            .compatible_printers
+            .iter()
+            .any(|entry| entry == new_printer_system_name)
+    } else {
+        text_list(raw, "print_compatible_printers")
+            .is_some_and(|list| list.iter().any(|entry| entry == new_printer_system_name))
+    };
+    if compatible {
+        return Ok(());
+    }
+    // `OrcaSlicer.cpp:2624-2627`: a different named machine file switches
+    // the printer; the upward `-16` sub-path stays deferred.
+    let current_printer_name = raw
+        .get("printer_settings_id")
+        .and_then(scalar_text)
+        .unwrap_or_default();
+    if !machine.name.is_empty()
+        && !current_printer_name.is_empty()
+        && machine.name != current_printer_name
+    {
+        return Ok(());
+    }
+    Err(SliceError::ProcessNotCompatible)
 }
 
 /// The printer's system name: the printer slot of `inherits_group` — the
