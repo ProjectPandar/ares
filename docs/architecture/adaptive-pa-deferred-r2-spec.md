@@ -1,12 +1,15 @@
 # Adaptive PA residual boundary continuation — APA-R2 SPEC
 
-Status: **SPEC-REQUEST / awaiting owner approval**. Owner: worker1.
+Status: **SPEC approved `cf4146f9d`; M producer amendment approved by owner**.
+Owner: worker1.
 Roadmap parent: OPEN `2863ef3ea`; [ARD-0104](ard-0104-adaptive-pressure-advance-port.md).
 Analysis main: `eade4762ab168297620395b6afbdc852779735e0`.
 Upstream pin verified: OrcaSlicer 2.4.2
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-This commit contains documents only; no new tests, Native runs, probes,
-production edits or RED/GREEN claims. Approval is required before execution.
+This original SPEC commit contained documents only. Owner subsequently approved
+M→A→R, test-first execution and one REVIEW-REQUEST per group. The producer
+amendment below is docs-only and must be committed before its tests/runs; no
+production change or parity RED is claimed by that amendment.
 
 ## 1. Rewrite boundary and non-negotiable decisions
 
@@ -56,12 +59,42 @@ and unchanged `OrcaRunner::{export_case,slice_case}` / `compare_case`.
 
 ### M — standalone multipath / residual sloped suppression
 
-Start with existing deterministic admitted perimeter/overhang geometry and the
+First execution uses the existing deterministic admitted geometry and the
 landed nonconstant multi-acceleration model in
 `ares-cli/tests/orca_parity/adaptive_pressure_advance/residual_witness.rs`.
-Fixed baseline: classic, ordinary non-vase, comments1, PA+adaptive1, no tower;
-bridge override0. Freeze complete numeric settings and input hashes in the RED
-request before comparison, reusing source-admitted fixture values.
+For **sloped/loop cases**, fixed baseline is classic, ordinary non-vase,
+comments1, PA+adaptive1, no tower; bridge override0. Freeze complete numeric
+settings and input hashes in the RED request before comparison, reusing
+source-admitted fixture values.
+
+### Approved M producer amendment — standalone case only
+
+Source tracing established that `PerimeterGenerator.cpp:370::traverse_extrusions`
+is the Arachne producer and its open entities become `ExtrusionMultiPath` at
+`555–566`, dispatched through `GCode.cpp:6092–6095` to `6038::extrude_multi_path`.
+Classic thin walls instead call `variable_width` at `PerimeterGenerator.cpp:
+231–233`; `VariableWidth.cpp:216–233` emits open children as individual paths.
+Owner approves **only the standalone M producer context** changing from classic
+to this already-admitted Arachne fixture:
+`tests/parity/validation/arachne-open-wall-order/C0-neck0.25-r0.3mf`, SHA256
+`6c5c67976071ea79e663b8a4d428f3f51202b3fb9821a49fbe6b9da1f399a07d`.
+No new mesh, geometry edits, seam/open-wall production changes or cached-entity
+JSON producer. Keep the original geometry/options and modify only PA-related
+settings at runtime, reopen/hash/verify the actual repacked input and unchanged
+non-config ZIP members. The sloped/loop producer remains classic.
+
+Before the active case, commit and run **PA-off baseline control** with
+`enable_pressure_advance=0` and `adaptive_pressure_advance=0` (preserving all
+other original settings). Its official Native/Ares complete-output comparison
+must PASS; if it differs, retain raw input/channels/products/first-difference
+and refer the Arachne geometry baseline to its owner, **stop this subcase**.
+Do not repair geometry here or call that mismatch PA RED. Only after that
+control admits the producer, commit the active PA tracer before running it.
+Both variants must keep identical geometry and non-PA settings. A subsequent
+implementation RED must be attributable to the PA activation delta and cited
+PA sites, not an incidental geometric difference. Native runtime must still
+prove standalone multipath and heterogeneous positive flow; Arachne option
+retention alone does not admit this branch.
 
 Request Native branch evidence for standalone `extrude_multi_path`: actual
 entity/children, roles, force-no-extrusion flags, lengths/mm3_per_mm, weighted
@@ -174,7 +207,9 @@ CARGO_INCREMENTAL=0/jobs2/threads2; honor HOLD/browser flags. SPEC stage is
 read-only source work and docs, with zero heavy work. Exact-hash REVIEW approval
 is required before later integration.
 
-Approval requested: **APA-R2 bounded M/A/R witness-first execution**, with
-calibration-mode/API and first/Type1 tower reset explicitly deferred, no production
-repair permission until genuine RED localization. Parent OPEN remains until its
-separate deferred obligations have admitted evidence and approval.
+Approved execution: **APA-R2 bounded M→A→R witness-first execution**, with one
+REVIEW-REQUEST per group. Calibration-mode/API and first/Type1 tower reset remain
+deferred; production repair still requires genuine RED localization. The M
+producer amendment requires PA-off admission before its active tracer. Parent
+OPEN remains until its separate deferred obligations have admitted evidence and
+approval.
