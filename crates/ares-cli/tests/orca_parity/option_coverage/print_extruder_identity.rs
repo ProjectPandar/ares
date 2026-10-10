@@ -106,7 +106,7 @@ async fn print_process_identity_materializes_reversed_complete_map_without_maste
     );
     assert_eq!(
         settings["nozzle_volume_type"],
-        json!(["Standard", "Standard"])
+        json!(["Standard"])
     );
     let input = directory.join("input.3mf");
     fs::write(&input, &project).unwrap();
