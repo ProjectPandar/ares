@@ -62,6 +62,23 @@ impl State {
             position,
         }
     }
+
+    /// `CoolingBuffer`'s `m_current_extruder`: the last `T<tool>` seen while
+    /// parsing layer G-code (`CoolingBuffer.cpp:840-850`), retained across
+    /// layers. Fan options index this logical filament id.
+    pub(super) fn current_tool(&self) -> usize {
+        self.current_tool
+    }
+
+    pub(super) const fn toolchange_prefix(&self) -> &'static str {
+        self.toolchange_prefix
+    }
+
+    /// Accepted tool id bound, matching `parse::layer`'s
+    /// `tool < tool_map.len()` gate.
+    pub(super) fn tool_bound(&self) -> usize {
+        self.tool_map.len()
+    }
 }
 
 #[derive(Clone, Copy)]

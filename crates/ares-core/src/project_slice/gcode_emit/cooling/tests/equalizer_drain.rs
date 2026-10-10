@@ -2,8 +2,8 @@
 //! `PressureEqualizer.cpp:174-200` holds each layer back until the next
 //! arrives; the trailing NOP layer result drains the last one.
 use super::super::*;
-use crate::options::PartCoolingFanRampConfig;
 use super::role_end::cooling_state;
+use crate::options::PartCoolingFanRampConfig;
 use crate::project_slice::pressure_equalizer::PressureEqualizerPass;
 
 #[test]
@@ -96,7 +96,7 @@ fn final_empty_tool_result_flushes_preceding_support_chunk() {
 #[test]
 fn final_empty_tool_result_applies_fan_without_a_marker() {
     let mut cooling = cooling_state();
-    cooling.part_fan_ramp = PartCoolingFanRamp::new(PartCoolingFanRampConfig {
+    cooling.part_fan_ramp = vec![PartCoolingFanRamp::new(PartCoolingFanRampConfig {
         min_speed: 100.0,
         max_speed: 100.0,
         full_speed_layer: 0,
@@ -104,7 +104,7 @@ fn final_empty_tool_result_applies_fan_without_a_marker() {
         layer_times_s: [5.0, 10.0],
         fan_kickstart_s: 0.0,
         reduce_fan_stop_start_freq: false,
-    });
+    })];
     cooling.part_speed = Some(0);
     cooling.physical_part_speed = 0;
     let mut output = Vec::new();

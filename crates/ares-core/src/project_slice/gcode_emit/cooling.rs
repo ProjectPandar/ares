@@ -52,9 +52,12 @@ pub(super) struct CoolingState {
     /// The layer the equalizer is holding back.
     equalized_layer_result: Option<(usize, bool)>,
     buffered_gcode: Vec<u8>,
-    part_fan_ramp: PartCoolingFanRamp,
+    /// Per-filament fan ramps; indexed by the buffered tool id
+    /// (`CoolingBuffer.cpp:739` `EXTRUDER_CONFIG` reads
+    /// `get_at(m_current_extruder)`).
+    part_fan_ramp: Vec<PartCoolingFanRamp>,
     additional_speed: Option<u8>,
-    additional_fan_speed: u8,
+    additional_fan_speed: Vec<u8>,
     auxiliary_fan: bool,
     part_cooling_fan_min_pwm: u8,
     gcode_comments: bool,
@@ -66,7 +69,7 @@ impl CoolingState {
     pub(super) fn begin_layer(&mut self, output: &mut Vec<u8>, layer_index: usize) {
         self.pending_layer_index = Some(layer_index);
         self.provisional_part_speed = self
-            .part_fan_ramp
+            .ramp(self.feedrate.current_tool())
             .speed_for_layer_time(layer_index, Some(0.0))
             .unwrap_or(0);
         output.extend_from_slice(PART_FAN_MARKER);
@@ -143,14 +146,20 @@ impl CoolingState {
         }
         let mut layer = std::mem::take(&mut self.buffered_gcode);
         let layer_start = output.len();
+        // `CoolingBuffer.cpp:824` calls `change_extruder_set_fan(true)`
+        // before iterating the layer's lines: the layer baseline uses
+        // `m_current_extruder` at layer entry (the previous layer's last
+        // tool), not the tool this layer's text ends on.
+        let entry_tool = self.feedrate.current_tool();
         let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
         if equalized {
             let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));
             layer = stripped.into_bytes();
         }
         output.extend_from_slice(&layer);
+        let tool = entry_tool;
         let part_speed = self
-            .part_fan_ramp
+            .ramp(tool)
             .speed_for_layer_time(layer_index, Some(f64::from(layer_time)))
             .unwrap_or(0);
         let mut replacement = if self.part_speed != Some(part_speed) {
@@ -182,11 +191,14 @@ impl CoolingState {
         if !replacement.is_empty() {
             self.physical_part_speed = part_speed;
         }
-        let additional_speed = if layer_index < self.part_fan_ramp.close_fan_first_layers() as usize
-        {
+        let additional_speed = if layer_index < self.ramp(tool).close_fan_first_layers() as usize {
             0
         } else {
             self.additional_fan_speed
+                .get(tool)
+                .or_else(|| self.additional_fan_speed.first())
+                .copied()
+                .unwrap_or(0)
         };
         if self.auxiliary_fan && self.additional_speed != Some(additional_speed) {
             self.additional_speed = Some(additional_speed);
@@ -211,26 +223,35 @@ impl CoolingState {
             let start = layer_start + offset;
             output.drain(start..start + PART_FAN_MARKER.len());
         }
-        self.resolve_role_fans(output, layer_start, part_speed, layer_index);
-        self.part_speed = Some(part_speed);
+        self.resolve_role_fans(
+            output,
+            layer_start,
+            role_fans::RoleFanContext {
+                baseline: part_speed,
+                layer_index,
+                tool: entry_tool,
+                layer_time: f64::from(layer_time),
+            },
+        );
+        // `CoolingBuffer.cpp:840-850`: after TYPE_SET_TOOL, the retained
+        // baseline follows the last buffered tool of this layer.
+        let end_tool = self.feedrate.current_tool();
+        self.part_speed = Some(
+            self.ramp(end_tool)
+                .speed_for_layer_time(layer_index, Some(f64::from(layer_time)))
+                .unwrap_or(0),
+        );
         self.provisional_part_speed = part_speed;
     }
-}
 
-fn first_percent(values: &[crate::OrcaFloat]) -> f64 {
-    values
-        .first()
-        .map_or(0.0, |value| value.0.clamp(0.0, 100.0))
-}
-
-fn first_percent_int(values: &[crate::OrcaInt]) -> u8 {
-    values
-        .first()
-        .map_or(0, |value| value.0.clamp(0, 100) as u8)
-}
-
-fn first_non_negative(values: &[crate::OrcaInt]) -> usize {
-    values.first().map_or(0, |value| value.0.max(0) as usize)
+    /// The buffered tool's ramp (`EXTRUDER_CONFIG` in
+    /// `CoolingBuffer.cpp:739`), falling back to slot 0 like `get_at`.
+    fn ramp(&self, tool: usize) -> &PartCoolingFanRamp {
+        self.part_fan_ramp
+            .get(tool)
+            .or_else(|| self.part_fan_ramp.first())
+            .expect("fan ramps are built for at least one filament")
+    }
 }
 
 fn clamped_part_speed(speed: u8, minimum: u8) -> u8 {

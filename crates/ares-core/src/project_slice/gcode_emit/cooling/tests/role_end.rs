@@ -12,7 +12,7 @@ pub(super) fn cooling_state() -> CoolingState {
         pending_layer_index: None,
         equalized_layer_result: None,
         buffered_gcode: Vec::new(),
-        part_fan_ramp: PartCoolingFanRamp::new(PartCoolingFanRampConfig {
+        part_fan_ramp: vec![PartCoolingFanRamp::new(PartCoolingFanRampConfig {
             min_speed: 100.0,
             max_speed: 100.0,
             full_speed_layer: 0,
@@ -20,9 +20,9 @@ pub(super) fn cooling_state() -> CoolingState {
             layer_times_s: [0.0, 0.0],
             fan_kickstart_s: 0.0,
             reduce_fan_stop_start_freq: false,
-        }),
+        })],
         additional_speed: Some(0),
-        additional_fan_speed: 0,
+        additional_fan_speed: vec![0],
         auxiliary_fan: false,
         part_cooling_fan_min_pwm: 0,
         gcode_comments: false,
@@ -56,7 +56,16 @@ fn cooling_buffer_inactive_start_then_forced_end_restores_explicit_internal_spee
             DeferredRoleFan::Conditional { speed: 100, force },
         );
     }
-    cooling.resolve_role_fans(&mut output, 0, 100, 0);
+    cooling.resolve_role_fans(
+        &mut output,
+        0,
+        role_fans::RoleFanContext {
+            baseline: 100,
+            layer_index: 0,
+            tool: 0,
+            layer_time: 0.0,
+        },
+    );
     assert_eq!(output, b"M106 S255\n");
     assert_eq!(cooling.physical_part_speed, 50);
 }
@@ -74,7 +83,16 @@ fn cooling_buffer_role_end_emits_even_when_conditional_speed_does_not_exceed_bas
         cooling.physical_part_speed = baseline;
         let mut output = Vec::new();
         append_deferred_role_fan(&mut output, DeferredRoleFan::Conditional { speed, force });
-        cooling.resolve_role_fans(&mut output, 0, baseline, 0);
+        cooling.resolve_role_fans(
+            &mut output,
+            0,
+            role_fans::RoleFanContext {
+                baseline,
+                layer_index: 0,
+                tool: 0,
+                layer_time: 0.0,
+            },
+        );
         assert_eq!(
             output,
             expected.as_bytes(),

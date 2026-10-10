@@ -6,15 +6,37 @@ use super::{
 
 const FORCE_RESUME_FAN: &str = ";_FORCE_RESUME_FAN_SPEED\n";
 
+/// The flushing layer's fan context: computed baseline speed, layer id and
+/// the buffered tool id (`CoolingBuffer`'s `m_current_extruder`).
+pub(super) struct RoleFanContext {
+    pub(super) baseline: u8,
+    pub(super) layer_index: usize,
+    /// Tool active at the start of the flushed span
+    /// (`CoolingBuffer.cpp:824` initial `change_extruder_set_fan`).
+    pub(super) tool: usize,
+    /// Adjusted layer time used to evaluate a ramp for a mid-layer
+    /// tool change (`CoolingBuffer.cpp:840-850`).
+    pub(super) layer_time: f64,
+}
+
 impl CoolingState {
     pub(super) fn resolve_role_fans(
         &mut self,
         output: &mut Vec<u8>,
         layer_start: usize,
-        baseline: u8,
-        layer_index: usize,
+        context: RoleFanContext,
     ) {
-        let layer_open = layer_index >= self.part_fan_ramp.close_fan_first_layers() as usize;
+        let RoleFanContext {
+            baseline,
+            layer_index,
+            tool,
+            layer_time,
+        } = context;
+        let prefix = self.feedrate.toolchange_prefix().as_bytes().to_vec();
+        let tool_bound = self.feedrate.tool_bound();
+        let mut baseline = baseline;
+        let mut tool = tool;
+        let mut layer_open = layer_index >= self.ramp(tool).close_fan_first_layers() as usize;
         let mut role_speed = None;
         let mut support_speed = None;
         let mut ironing_speed = None;
@@ -26,9 +48,42 @@ impl CoolingState {
             let resume = output[cursor..]
                 .windows(FORCE_RESUME_FAN.len())
                 .position(|window| window == FORCE_RESUME_FAN.as_bytes());
-            let Some(offset) = role.into_iter().chain(resume).min() else {
+            // `find_set_tool` returns an absolute position; marker scans
+            // are relative to `cursor`. Normalize so `.min()` compares
+            // like units and `start = cursor + offset` stays valid.
+            let set_tool = find_set_tool(output, cursor, &prefix, tool, tool_bound)
+                .map(|(offset, _)| offset - cursor);
+            let Some(offset) = role.into_iter().chain(resume).chain(set_tool).min() else {
                 break;
             };
+            let start = cursor + offset;
+            if set_tool == Some(offset) {
+                let end = output[start..]
+                    .iter()
+                    .position(|byte| *byte == b'\n')
+                    .map_or(output.len(), |offset| start + offset + 1);
+                let (_, new_tool) = find_set_tool(output, cursor, &prefix, tool, tool_bound)
+                    .expect("matched event is a tool change");
+                tool = new_tool;
+                layer_open = layer_index >= self.ramp(tool).close_fan_first_layers() as usize;
+                // CoolingBuffer.cpp:840-850: TYPE_SET_TOOL runs
+                // change_extruder_set_fan(true), emitting part then
+                // auxiliary fan at the tool change's own position.
+                let (replacement, part_speed) = self.set_tool_fan(
+                    SetToolContext {
+                        layer_index,
+                        layer_time,
+                        baseline,
+                        layer_open,
+                    },
+                    tool,
+                );
+                baseline = part_speed;
+                let inserted = replacement.len();
+                output.splice(start..start, replacement);
+                cursor = end + inserted;
+                continue;
+            }
             let start = cursor + offset;
             let end = output[start..]
                 .iter()
@@ -77,7 +132,7 @@ impl CoolingState {
                     .strip_prefix("FORCE_")
                     .map_or((value, false), |value| (value, true));
                 let requested = self
-                    .part_fan_ramp
+                    .ramp(tool)
                     .role_speed_for_layer(layer_index, value.parse::<u8>().unwrap())
                     .unwrap_or(0);
                 role_speed = (requested > baseline).then_some(requested);
@@ -114,6 +169,101 @@ impl CoolingState {
             cursor = start + replacement.len();
             output.splice(start..end, replacement);
         }
+    }
+}
+
+/// Inputs for `set_tool_fan`: layer coordinates shared by every ramp
+/// evaluation plus the running baseline of the current tool.
+struct SetToolContext {
+    layer_index: usize,
+    layer_time: f64,
+    baseline: u8,
+    layer_open: bool,
+}
+
+/// Next `T<tool>`-style toolchange line at or after `cursor` whose parsed
+/// tool differs from `current` — the `TYPE_SET_TOOL` gate in
+/// `CoolingBuffer.cpp:506-510` / `840-850` (`tool < tool_map.len()`,
+/// `tool != current`).
+fn find_set_tool(
+    output: &[u8],
+    cursor: usize,
+    prefix: &[u8],
+    current: usize,
+    tool_bound: usize,
+) -> Option<(usize, usize)> {
+    let mut line_start = cursor;
+    while line_start < output.len() {
+        if output[line_start..].starts_with(prefix) {
+            let digits = &output[line_start + prefix.len()..];
+            let length = digits.iter().take_while(|b| b.is_ascii_digit()).count();
+            if length > 0
+                && let Ok(tool) = std::str::from_utf8(&digits[..length])
+                    .unwrap()
+                    .parse::<usize>()
+                && tool < tool_bound
+                && tool != current
+            {
+                return Some((line_start, tool));
+            }
+        }
+        line_start += output[line_start..]
+            .iter()
+            .position(|byte| *byte == b'\n')?
+            + 1;
+    }
+    None
+}
+
+impl CoolingState {
+    /// `change_extruder_set_fan` for a mid-layer `TYPE_SET_TOOL`
+    /// (`CoolingBuffer.cpp:733-822`): part then auxiliary commands, part
+    /// speed first like `set_fan` then `set_additional_fan`. Returns the
+    /// bytes to insert at the `T` line and the tool's baseline speed.
+    fn set_tool_fan(&mut self, context: SetToolContext, tool: usize) -> (Vec<u8>, u8) {
+        let SetToolContext {
+            layer_index,
+            layer_time,
+            baseline,
+            layer_open,
+        } = context;
+        let part_speed = if layer_open {
+            self.ramp(tool)
+                .speed_for_layer_time(layer_index, Some(layer_time))
+                .unwrap_or(0)
+        } else {
+            0
+        };
+        let additional_speed = if layer_open {
+            self.additional_fan_speed
+                .get(tool)
+                .or_else(|| self.additional_fan_speed.first())
+                .copied()
+                .unwrap_or(0)
+        } else {
+            0
+        };
+        let mut replacement = Vec::new();
+        if baseline != part_speed {
+            replacement.extend_from_slice(&self.part_fan_command(part_speed));
+            self.physical_part_speed = part_speed;
+        }
+        if self.auxiliary_fan && self.additional_speed != Some(additional_speed) {
+            let comment = match (self.gcode_comments, additional_speed == 0) {
+                (false, _) => "",
+                (true, true) => " ; disable additional fan ",
+                (true, false) => " ; enable additional fan ",
+            };
+            replacement.extend_from_slice(
+                format!(
+                    "M106 P2 S{}{comment}\n",
+                    additional_fan_pwm(additional_speed)
+                )
+                .as_bytes(),
+            );
+        }
+        self.additional_speed = Some(additional_speed);
+        (replacement, part_speed)
     }
 
     fn resume_fan_commands(
