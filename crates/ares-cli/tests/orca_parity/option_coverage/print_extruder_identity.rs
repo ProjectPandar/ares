@@ -60,13 +60,13 @@ fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
 
 async fn compare_identity(
     label: &str,
-    vendor: &str,
-    printer: &str,
+    context: (&str, &str),
     ids: Value,
     variants: Value,
-    expected_ids: &str,
-    expected_variants: &str,
+    expected: (&str, &str),
 ) {
+    let (vendor, printer) = context;
+    let (expected_ids, expected_variants) = expected;
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -173,12 +173,10 @@ const STANDARD_PAIR: &str = "\"Direct Drive Standard\";\"Direct Drive Standard\"
 async fn print_process_identity_materializes_reversed_complete_map_without_master_changes() {
     compare_identity(
         "print-process-identity/reversed",
-        "BBL",
-        "Bambu Lab H2D 0.4 nozzle",
+        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
         json!(["2", "1"]),
         json!(["Direct Drive Standard", "Direct Drive Standard"]),
-        "1,2",
-        STANDARD_PAIR,
+        ("1,2", STANDARD_PAIR),
     )
     .await;
 }
@@ -187,12 +185,10 @@ async fn print_process_identity_materializes_reversed_complete_map_without_maste
 async fn print_process_identity_complete_physical_order_is_preserved() {
     compare_identity(
         "print-process-identity/ordered",
-        "BBL",
-        "Bambu Lab H2D 0.4 nozzle",
+        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
         json!(["1", "2"]),
         json!(["Direct Drive Standard", "Direct Drive Standard"]),
-        "1,2",
-        STANDARD_PAIR,
+        ("1,2", STANDARD_PAIR),
     )
     .await;
 }
@@ -201,12 +197,10 @@ async fn print_process_identity_complete_physical_order_is_preserved() {
 async fn print_process_identity_default_singleton_exports_complete_output() {
     compare_identity(
         "print-process-identity/default",
-        "BBL",
-        "Bambu Lab X1 Carbon 0.4 nozzle",
+        ("BBL", "Bambu Lab X1 Carbon 0.4 nozzle"),
         json!(["1"]),
         json!(["Direct Drive Standard"]),
-        "1",
-        "\"Direct Drive Standard\"",
+        ("1", "\"Direct Drive Standard\""),
     )
     .await;
 }
@@ -215,16 +209,14 @@ async fn print_process_identity_default_singleton_exports_complete_output() {
 async fn print_process_identity_repeated_ids_select_matching_variants() {
     compare_identity(
         "print-process-identity/repeated",
-        "BBL",
-        "Bambu Lab H2D 0.4 nozzle",
+        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
         json!(["1", "1", "2"]),
         json!([
             "Direct Drive High Flow",
             "Direct Drive Standard",
             "Direct Drive Standard"
         ]),
-        "1,2",
-        STANDARD_PAIR,
+        ("1,2", STANDARD_PAIR),
     )
     .await;
 }
@@ -233,8 +225,7 @@ async fn print_process_identity_repeated_ids_select_matching_variants() {
 async fn print_process_identity_short_ids_use_generated_group_identity() {
     compare_identity(
         "print-process-identity/short",
-        "BBL",
-        "Bambu Lab H2D 0.4 nozzle",
+        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
         json!(["7"]),
         json!([
             "Direct Drive High Flow",
@@ -242,8 +233,7 @@ async fn print_process_identity_short_ids_use_generated_group_identity() {
             "Direct Drive High Flow",
             "Direct Drive Standard"
         ]),
-        "7,7",
-        STANDARD_PAIR,
+        ("7,7", STANDARD_PAIR),
     )
     .await;
 }
@@ -252,12 +242,10 @@ async fn print_process_identity_short_ids_use_generated_group_identity() {
 async fn print_process_identity_unmatched_variant_uses_native_materialized_view() {
     compare_identity(
         "print-process-identity/unmatched",
-        "BBL",
-        "Bambu Lab H2D 0.4 nozzle",
+        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
         json!(["1", "2"]),
         json!(["Bowden Standard", "Bowden Standard"]),
-        "1,1",
-        "\"Bowden Standard\";\"Bowden Standard\"",
+        ("1,1", "\"Bowden Standard\";\"Bowden Standard\""),
     )
     .await;
 }
