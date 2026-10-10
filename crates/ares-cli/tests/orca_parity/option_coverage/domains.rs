@@ -82,6 +82,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         // Native-witnessed H2D, two complete selectors, Manual mode, wall1/infill2.
         provably_legal = true;
         (values, None)
+    } else if let Some((values, metadata)) = tool_sequence_domains::generate(&key) {
+        tool_metadata = Some(metadata);
+        provably_legal = true;
+        (values, None)
     } else if let Some(authored) = authored_probes(&key) {
         // Per-key legal domains: free-form `coString`/`coPoint(s)`
         // probes cover an unbounded schema domain completely; NUMERIC
@@ -192,6 +196,8 @@ pub(super) mod numeric_boundaries;
 mod numeric_domains;
 #[path = "tool_domains.rs"]
 mod tool_domains;
+#[path = "tool_sequence_domains.rs"]
+mod tool_sequence_domains;
 
 #[cfg(test)]
 #[path = "numeric_metadata_tests.rs"]
