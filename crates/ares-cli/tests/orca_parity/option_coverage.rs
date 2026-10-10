@@ -21,11 +21,15 @@ mod filament_flow_coverage;
 #[path = "option_coverage/bridge_flow_coverage.rs"]
 mod bridge_flow_coverage;
 #[cfg(test)]
+#[path = "option_coverage/safc_coverage.rs"]
+mod safc_coverage;
+#[cfg(test)]
 #[path = "option_coverage/tool_context.rs"]
 mod tool_context;
 #[cfg(test)]
 #[path = "option_coverage/tool_mapping.rs"]
 mod tool_mapping;
+
 #[cfg(test)]
 #[path = "option_coverage/tool_sequences.rs"]
 mod tool_sequences;
