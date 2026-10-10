@@ -5,6 +5,8 @@ mod first_layer;
 mod initialize;
 use initialize::{initialize_layers, initialize_layers_scoped, layer_index};
 mod partitions;
+mod recommend;
+pub(super) use recommend::build_recommended;
 mod reorder;
 mod statistics;
 pub(super) mod wiping;
@@ -192,6 +194,18 @@ pub(super) fn build(
     raft: Option<&RaftSchedule>,
     scope: OrderingScope,
 ) -> Result<ToolOrdering, crate::SliceError> {
+    let scoped = matches!(scope, OrderingScope::Object { .. });
+    let (layers, bottom_z, max_height) = collect_layers(traversal, objects, support, raft, scope)?;
+    finish_layers(traversal, layers, bottom_z, max_height, scoped)
+}
+
+fn collect_layers(
+    traversal: &PreparedPostClassicTraversal,
+    objects: &[Vec<OrderedExtrusionLayer>],
+    support: &[Vec<InstalledSupportLayer>],
+    raft: Option<&RaftSchedule>,
+    scope: OrderingScope,
+) -> Result<(Vec<LayerTools>, f64, f64), crate::SliceError> {
     let (scoped_object, seed_extruder) = match scope {
         OrderingScope::All => (None, None),
         OrderingScope::Object {
@@ -283,12 +297,22 @@ pub(super) fn build(
         }
         None => first_layer::handle_dontcare(&mut layers, &first_order, traversal),
     }
-    reorder::apply(&mut layers, traversal, scoped_object.is_some());
+    Ok((layers, object_bottom_z, max_object_layer_height))
+}
+
+fn finish_layers(
+    traversal: &PreparedPostClassicTraversal,
+    mut layers: Vec<LayerTools>,
+    object_bottom_z: f64,
+    max_object_layer_height: f64,
+    scoped: bool,
+) -> Result<ToolOrdering, crate::SliceError> {
+    reorder::apply(&mut layers, traversal, scoped);
     let settings = &traversal.resolved.views.full;
     let max_height = max_layer_height(settings, max_object_layer_height);
     partitions::fill(&mut layers, settings, object_bottom_z, max_height);
     if partitions::insert_extruder(&mut layers, settings) {
-        reorder::apply(&mut layers, traversal, scoped_object.is_some());
+        reorder::apply(&mut layers, traversal, scoped);
         partitions::fill(&mut layers, settings, object_bottom_z, max_height);
     }
     let prime =

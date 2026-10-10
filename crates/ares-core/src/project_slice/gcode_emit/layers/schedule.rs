@@ -1,11 +1,7 @@
 //! `GCode.cpp::collect_layers_to_print` object/support pairs and plate chunks.
 
 use super::{object::ObjectLabels, raft_schedule};
-use crate::project_slice::{
-    island_print_order::OrderedExtrusionLayer,
-    perimeters::classic::traversal::PreparedPostClassicTraversal,
-    support_material::InstalledSupportLayer,
-};
+use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 const EPSILON: f64 = 1e-4;
 
@@ -67,12 +63,19 @@ impl Schedule {
 }
 
 pub(in crate::project_slice::gcode_emit) fn build(
-    traversal: &PreparedPostClassicTraversal,
-    objects: &[Vec<OrderedExtrusionLayer>],
-    support: &mut [Vec<InstalledSupportLayer>],
-    original: &crate::project_slice::extrusion_islands::PreparedPostExtrusionIslands,
+    prepared: &mut crate::project_slice::island_print_order::PreparedPostIslandPrintOrder,
     context: &mut crate::SlicerContext,
 ) -> Result<Schedule, crate::SliceError> {
+    let objects = &prepared.objects;
+    let support = &mut prepared.support_layers;
+    let original = &mut prepared.predecessor;
+    let traversal = &original
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor;
     let object_count = objects.len();
     let settings = &traversal.resolved.views.full;
     let object_options = traversal
@@ -120,13 +123,26 @@ pub(in crate::project_slice::gcode_emit) fn build(
         traversal.scale,
         context,
     )?;
-    let mut tool_ordering = super::super::tool_ordering::build(
-        traversal,
+    let mut tool_ordering = super::super::tool_ordering::build_recommended(
+        &mut original
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor,
         objects,
         support,
         raft.as_ref(),
-        super::super::tool_ordering::OrderingScope::All,
     )?;
+    let traversal = &original
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor;
+    let settings = &traversal.resolved.views.full;
     tool_ordering.install_tower_support_layers(support);
     let mut merged = Vec::new();
     let mut raw_zs = Vec::new();

@@ -283,6 +283,14 @@ pub enum SliceError {
         wall_loops: i32,
         sparse_infill_density: f64,
     },
+    /// OrcaSlicer.cpp:6286-6291: a slicing/export exception, returned as CLI -100.
+    Slicing {
+        message: String,
+        plate_index: u32,
+        layer_height: f64,
+        wall_loops: i32,
+        sparse_infill_density: f64,
+    },
     ProjectSlicingIncomplete,
     UnsupportedProjectFeature(String),
     ToolpathOutsidePrintableArea {
@@ -311,7 +319,9 @@ impl fmt::Display for SliceError {
             Self::Validate { message, .. }
             | Self::SequentialPrintCollision { message, .. }
             | Self::LayeredPrintCollision { message, .. }
-            | Self::CustomGCode { message, .. } => f.write_str(message),
+            | Self::CustomGCode { message, .. }
+            // OrcaSlicer.cpp:6286-6291 forwards ex.what() without decoration.
+            | Self::Slicing { message, .. } => f.write_str(message),
             Self::ProjectSlicingIncomplete => f.write_str("ProjectSlicingIncomplete"),
             Self::UnsupportedProjectFeature(feature) => {
                 write!(f, "unsupported project feature: {feature}")

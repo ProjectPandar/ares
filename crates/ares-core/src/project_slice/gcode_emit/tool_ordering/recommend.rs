@@ -1,0 +1,76 @@
+//! ToolOrdering.cpp:1278-1316: actual layer usage precedes grouping and reorder.
+use super::{OrderingScope, RaftSchedule, ToolOrdering, collect_layers, finish_layers};
+use crate::{
+    ProcessPrintSequence, SliceError,
+    options::{filament_map_recommend, write_config_block},
+    project_slice::{
+        island_print_order::OrderedExtrusionLayer,
+        perimeters::classic::traversal::PreparedPostClassicTraversal,
+        support_material::InstalledSupportLayer,
+    },
+};
+
+pub(in crate::project_slice::gcode_emit) fn build_recommended(
+    traversal: &mut PreparedPostClassicTraversal,
+    objects: &[Vec<OrderedExtrusionLayer>],
+    support: &[Vec<InstalledSupportLayer>],
+    raft: Option<&RaftSchedule>,
+) -> Result<ToolOrdering, SliceError> {
+    let (layers, bottom_z, max_height) =
+        collect_layers(traversal, objects, support, raft, OrderingScope::All)?;
+    if traversal.resolved.views.full.process.print.print_sequence != ProcessPrintSequence::ByObject
+        || traversal.objects.len() == 1
+    {
+        let mut used = layers
+            .iter()
+            .flat_map(|layer| layer.extruders.iter().copied())
+            .collect::<Vec<_>>();
+        used.sort_unstable();
+        used.dedup();
+        // The existing identity adapter calls is_bbl_printer(model, selected, system)
+        // and decodes inherited system identity (OrcaSlicer.cpp:6043-6059).
+        let is_bbl = crate::print::validate::project_is_bbl(
+            &traversal.resolved.views.full,
+            &traversal.project.documents().project_settings_raw,
+            None,
+        )?;
+        let changed = filament_map_recommend::apply_used_tpu_map(
+            &mut traversal.resolved.views.full,
+            &used,
+            is_bbl,
+        );
+        if let Err(message) = filament_map_recommend::check_filament_printable_after_group(
+            &traversal.resolved.views.full,
+            &used,
+            is_bbl,
+        ) {
+            // OrcaSlicer.cpp:6286-6291 catches slicing exceptions, not Print::validate.
+            let settings = &traversal.resolved.views.full;
+            return Err(SliceError::Slicing {
+                message,
+                plate_index: crate::project_slice::state::first_plate_id(&traversal.project),
+                layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+                wall_loops: settings.process.region.wall_loops.0,
+                sparse_infill_density: f64::from(
+                    settings.process.region.sparse_infill_density.0 as f32,
+                ),
+            });
+        }
+        if changed {
+            // Map publication only; Print.cpp:3166-3200 variant/retract refresh is separate.
+            let views = &mut traversal.resolved.views;
+            views.runtime.project.gcode.filament_map =
+                views.full.project.gcode.filament_map.clone();
+            views.runtime_gcode.filament_map = views.full.project.gcode.filament_map.clone();
+            let mut block = Vec::new();
+            write_config_block(
+                views,
+                &traversal.project.documents().project_settings_raw,
+                0,
+                &mut block,
+            )?;
+            traversal.config_block = (!block.is_empty()).then_some(block);
+        }
+    }
+    finish_layers(traversal, layers, bottom_z, max_height, false)
+}

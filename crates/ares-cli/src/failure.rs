@@ -307,7 +307,20 @@ pub(super) fn slice_error_to_failure(
             "Object conflicts were detected. Please verify the slicing of all plates in Orca Slicer before uploading.",
             format!("{message}\n"),
         ),
-        SliceError::CustomGCode {
+        // OrcaSlicer.cpp:6286-6291: generic slicing/export exceptions share -100.
+        SliceError::Slicing {
+            message,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density,
+            ..
+        }
+        | SliceError::CustomGCode {
             message,
             #[cfg(target_os = "linux")]
             plate_index,

@@ -35,3 +35,71 @@ pub(crate) fn apply_recommended_filament_map(settings: &mut ProjectSettings) {
     };
     settings.project.gcode.filament_map.0 = map;
 }
+
+/// ToolOrdering.cpp:1171-1173,1200-1206 and FilamentGroup.cpp:40-50.
+/// Used IDs have already passed collect_extruders and handle_dontcare.
+pub(crate) fn apply_used_tpu_map(
+    settings: &mut ProjectSettings,
+    used: &[usize],
+    is_bbl: bool,
+) -> bool {
+    if settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual
+        || settings.project.print.nozzle_diameter.0.len() != 2
+        || !is_bbl
+    {
+        return false;
+    }
+    let types = &settings.filament.gcode.filament_type.0;
+    let tpu = used
+        .iter()
+        .copied()
+        .filter(|&id| types.get(id).unwrap_or(&types[0]) == "TPU")
+        .collect::<Vec<_>>();
+    if tpu.is_empty() {
+        return false;
+    }
+    let master = settings.printer.gcode.master_extruder_id.0;
+    let mut map = vec![OrcaInt(3 - master); settings.filament.gcode.filament_colour.0.len()];
+    for id in tpu {
+        map[id] = OrcaInt(master);
+    }
+    if settings.project.gcode.filament_map.0 == map {
+        return false;
+    }
+    settings.project.gcode.filament_map.0 = map;
+    true
+}
+
+/// ToolOrdering.cpp:67-82,1304-1308: check used filaments only, on BBL only.
+pub(crate) fn check_filament_printable_after_group(
+    settings: &ProjectSettings,
+    used: &[usize],
+    is_bbl: bool,
+) -> Result<(), String> {
+    if !is_bbl {
+        return Ok(());
+    }
+    let filament = &settings.filament.gcode;
+    for &id in used {
+        let nozzle = settings.project.gcode.filament_map.0[id].0 - 1;
+        // ConfigOptionVector::get_at falls back to the first value beyond its vector.
+        let status = filament
+            .filament_printable
+            .0
+            .get(id)
+            .unwrap_or(&filament.filament_printable.0[0])
+            .0;
+        if status >> nozzle & 1 == 0 {
+            let kind = filament
+                .filament_type
+                .0
+                .get(id)
+                .unwrap_or(&filament.filament_type.0[0]);
+            let name = if nozzle == 0 { "left" } else { "right" };
+            return Err(format!(
+                "Grouping error: {kind} can not be placed in the {name} nozzle"
+            ));
+        }
+    }
+    Ok(())
+}

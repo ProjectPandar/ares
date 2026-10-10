@@ -1,9 +1,6 @@
 use super::*;
+use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
-use crate::project_slice::{
-    island_print_order::PreparedPostIslandPrintOrder,
-    perimeters::classic::traversal::PreparedPostClassicTraversal,
-};
 
 pub(in crate::project_slice) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
@@ -11,6 +8,7 @@ pub(in crate::project_slice) fn emit(
     record_moves: bool,
     context: &mut crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
+    let mut schedule = layers::build_schedule(prepared, context)?;
     let traversal = &prepared
         .predecessor
         .predecessor
@@ -19,13 +17,6 @@ pub(in crate::project_slice) fn emit(
         .predecessor
         .predecessor
         .predecessor;
-    let mut schedule = layers::build_schedule(
-        traversal,
-        &prepared.objects,
-        &mut prepared.support_layers,
-        &prepared.predecessor,
-        context,
-    )?;
     let brim = brim::BrimPlan::generate(traversal)?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         tower.first_layer_corners(&traversal.resolved.views.full, traversal.scale)

@@ -1,8 +1,8 @@
-use crate::{GenerationMetadata, SliceError};
 use crate::project_slice::{
     island_print_order::PreparedPostIslandPrintOrder,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
+use crate::{GenerationMetadata, SliceError};
 
 mod adaptive_pa;
 mod brim;
@@ -43,11 +43,11 @@ mod timelapse_pos;
 mod tool_ordering;
 mod tool_transition;
 
+mod orchestration;
 #[cfg(test)]
 mod timelapse_tests;
 pub(crate) mod value;
 mod wipe_tower;
-mod orchestration;
 pub(super) use orchestration::emit;
 
 pub(in crate::project_slice) use emit_helpers::format_processor_float;
