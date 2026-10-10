@@ -141,7 +141,7 @@ async fn print_process_identity_materializes_reversed_complete_map_without_maste
     );
     assert!(
         native
-            .contains("\n; print_extruder_variant = Direct Drive Standard;Direct Drive Standard\n")
+            .contains("\n; print_extruder_variant = \"Direct Drive Standard\";\"Direct Drive Standard\"\n")
     );
     let ares = ares_core::slice_project_plate(
         &project,
