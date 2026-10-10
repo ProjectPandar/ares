@@ -5,6 +5,19 @@ use super::super::super::{OptionOutcome, domains};
 use crate::runner;
 use serde_json::json;
 
+pub(in crate::option_coverage) fn admit(key: &str, cases: &mut Vec<domains::OptionCase>) -> bool {
+    if key != "printable_height" {
+        return false;
+    }
+    // Zero is a loaded endpoint, but rejects this cube at generated-layer validation.
+    // Its scene sentinel and sequential consumer are witnessed separately.
+    cases.push(domains::OptionCase {
+        label: "schema-max".to_owned(),
+        value: Some(json!("214700")),
+    });
+    true
+}
+
 #[test]
 fn orca_parity_printable_height_bounded_metadata_and_inventory() {
     let Some(plans) = domains::try_load(&runner::repo_root()) else {

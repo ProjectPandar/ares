@@ -104,12 +104,15 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             .map(|&(label, value)| case(label, value, entry))
             .collect();
         let bounded_clearance = super::tests::clearance::admit(&key, &mut values);
+        let bounded_printable_height =
+            super::tests::printable_height::admission::admit(&key, &mut values);
         provably_legal = unbounded_schema
             || grouped_printable_area
             || bounded_height
             || bounded_bridge
             || bounded_filament
             || bounded_clearance
+            || bounded_printable_height
             || key == "enable_long_retraction_when_cut";
         (
             values,
