@@ -1,0 +1,89 @@
+{
+  "scope": "input only; no Native golden committed",
+  "input": "P0.3mf",
+  "input_sha256": "bc8798e5b984ecd394f44bdb0dbf501791d60ef09ec2c4ecba4d12e8ca42a869",
+  "source_input": "/tmp/worker3-master-full-496-v1-seeded-cand-artifacts/case-rdg7o7/input.3mf",
+  "source_input_sha256": "0e44706e5fc06599cc4de6652d0022543c04af0f60b3105f1ba7f3a2e40bedf9",
+  "source_label": "g4-mapping/manual-1-2",
+  "shared_edits": [
+    "machine_start_gcode append diagnostic marker",
+    "layer_change_gcode append diagnostic marker"
+  ],
+  "approval": "b5737f235",
+  "native_admission_execution": "b5737f2353f59b0cf67fa2ed342c4da45e0c670b",
+  "native_admission_root": "/tmp/worker3-printer-physical-admission-e6-v2",
+  "native_sha256": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
+  "cases": {
+    "P0": {
+      "sha256": "bc8798e5b984ecd394f44bdb0dbf501791d60ef09ec2c4ecba4d12e8ca42a869",
+      "bytes": 15088,
+      "ids": [
+        "1",
+        "1",
+        "2",
+        "2"
+      ],
+      "physical": [
+        "0",
+        "1"
+      ]
+    },
+    "P1": {
+      "sha256": "c939a163948baf3b1e15532d2820687537d440f2ef47edbefe4f63f19585a0aa",
+      "bytes": 15093,
+      "ids": [
+        "2",
+        "2",
+        "1",
+        "1"
+      ],
+      "physical": [
+        "0",
+        "1"
+      ]
+    },
+    "P2": {
+      "sha256": "5e8e909ce446844d254c2bb39e57e13e02e8ce1b71a18f557b2c610e1a2d6201",
+      "bytes": 15088,
+      "ids": [
+        "1",
+        "2"
+      ],
+      "physical": [
+        "0",
+        "1"
+      ]
+    },
+    "M0": {
+      "sha256": "27e1957f9fa482cf3eb163896887019cdc41daf34502c62b25406ead6927ae70",
+      "bytes": 15086,
+      "ids": [
+        "1",
+        "1",
+        "2",
+        "2"
+      ],
+      "physical": [
+        "1",
+        "0"
+      ]
+    },
+    "M1": {
+      "sha256": "da113ec6983aadf4932d04bf338c98878655029b5cda215e15f4735986afe5fe",
+      "bytes": 15091,
+      "ids": [
+        "2",
+        "2",
+        "1",
+        "1"
+      ],
+      "physical": [
+        "1",
+        "0"
+      ]
+    }
+  },
+  "control_proof": "all non-settings ZIP entries unchanged; only named key varies in each pair; requested settings fully equal verified re-read",
+  "activation": "P0/P1 99 nonheader E-motion differences; M0/M1 first-tools and 50 layer physical markers flip; both logical0/1 map to nozzle1/2; all five Native exit0/result0",
+  "builder_v1": "ZipInfo reuse CRC proof failure before Native; original partial root and tool4207 retained; v2 copies ZipInfo before writing"
+}

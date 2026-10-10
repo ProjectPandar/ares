@@ -3,6 +3,9 @@
 #[path = "option_coverage/print_extruder_identity.rs"]
 mod print_extruder_identity;
 
+#[path = "option_coverage/printer_physical_identity.rs"]
+mod printer_physical_identity;
+
 #[path = "option_coverage/timelapse_coverage.rs"]
 mod timelapse_coverage;
 

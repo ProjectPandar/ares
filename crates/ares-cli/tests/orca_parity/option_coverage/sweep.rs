@@ -144,6 +144,12 @@ fn execute_plan(
         super::print_compatible_printers::witnesses(runner);
         return OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None);
     }
+    if matches!(
+        plan.key.as_str(),
+        "printer_extruder_id" | "physical_extruder_map"
+    ) {
+        return super::printer_physical_identity::execute_plan(runner, plan);
+    }
     if plan.key == "other_layers_print_sequence_nums" {
         return super::tool_sequences::execute_plan(runner, plan);
     }
