@@ -22,13 +22,19 @@ generated at runtime (nothing here is a receipt).
 Cases (argv = `ares slice --load-settings "<m>[;<p>]" [--arrange 0]
 -o out.gcode process-not-compatible.3mf`):
 
-| case | files | expected |
+| case | --load-settings | expected |
 |---|---|---|
-| branch1-reject | machine-same-name;process-compatible-excluding | `-17` (exit 239) |
-| branch1-accept | machine-same-name;process-compatible-including | slices |
-| branch2-reject | machine-same-name | `-17` |
-| branch2-machine-switch-accept | machine-different-name | accepted (`machine_switch`, no `-17`) |
+|---|---|---|
+| branch1-reject | `machine-same-name;process-compatible-excluding` | `-17` (exit 239) |
+| branch1-accept | `machine-same-name;process-compatible-including` | slices |
+| branch2-reject | `machine-same-name` | `-17` |
+| branch2-machine-switch-accept | `machine-different-name` | accepted (`machine_switch`, no `-17`) |
 
 Both process clones carry `use_relative_e_distances: "0"` (the
 stock/embedded `"1"` plus empty `layer_change_gcode` trips `-51`
 before the adjudication is exercised).
+
+`filament-generic-pla.json` goes in `--load-filaments` for every case
+(Ares composition requires a filament slot). All preset files are
+flattened (inherits parents inlined, `inherits` cleared) so the
+single-file composition resolves without a catalog.

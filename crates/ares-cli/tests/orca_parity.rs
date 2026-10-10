@@ -24,6 +24,8 @@ mod change_filament_flush_blocks;
 mod cli_custom_gcode_exit;
 #[path = "orca_parity/cli_exit_channels.rs"]
 mod cli_exit_channels;
+#[path = "orca_parity/cli_exit_compat17.rs"]
+mod cli_exit_compat17;
 #[path = "orca_parity/cli_retained_exit.rs"]
 mod cli_retained_exit;
 #[path = "orca_parity/cli_retained_input.rs"]
