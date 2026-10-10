@@ -1,11 +1,20 @@
 # Upward result metadata — implementation candidate
 
-Status: **platform correction pending fresh gates; not reviewed/integrated**.
+Status: **platform correction bounded GREEN; not reviewed/integrated**.
 Owner rejected product905213f16 for introduced OS gates/non-Linux Embedded
 downgrade. The correction removes those conditions, uses component-wise
 Path::join on all native platforms and stores reached upward metadata without
 OS gating. Existing Linux-only upstream result-file emission is unchanged.
-The receipts below describe the superseded product, not correction acceptance. Product
+Product `de7fbc8e38e96c0f5627b62bcc77c0ee1a94f208` removes all added
+target_os conditions relative to main73e; no computation/resource-loading OS
+branch or Embedded downgrade remains. New check, strict Clippy, fmt and WASM
+checks each exited0 (`/tmp/ares-cli-upward/platform-fix/`). Direct seeded and
+official witness reruns each passed once, load9.18/9.46, threads2, preserving
+whole channels/result and no-Gcode assertions. New full raw ZIP/member/result
+and receipt audit: `/tmp/ares-cli-upward/green-platform-audit.json`. Windows and
+macOS runtime execution was not performed on this Linux host. Workspace/full
+are queued after W6 then W2, not started or certified. The historical receipts
+below describe the superseded product, not correction acceptance. Product
 `905213f16b313cadafec45517f32aabc00d79309` is rebased onto main
 `73e78279d766f8d500757204f505e1d43356b72a`. Owner requested consolidation
 of local WIP `7bc55ddc4` and candidate `3469dedde`; rejected isolated tests are
