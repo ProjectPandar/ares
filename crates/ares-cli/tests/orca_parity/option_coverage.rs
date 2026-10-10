@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "option_coverage/print_extruder_identity.rs"]
+mod print_extruder_identity;
+
 #[cfg(test)]
 #[path = "option_coverage/wrapping_exclude_coverage.rs"]
 mod wrapping_exclude_coverage;

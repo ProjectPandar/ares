@@ -1,0 +1,159 @@
+//! PrintConfig.cpp:9004-9055,9634-9683; PrintApply.cpp:1169.
+use super::*;
+use std::io::{Cursor, Read, Write};
+
+fn reversed_process_ids(project: &[u8]) -> Vec<u8> {
+    let mut before = zip::ZipArchive::new(Cursor::new(project)).unwrap();
+    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..before.len() {
+        let mut file = before.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
+            settings["print_extruder_id"] = json!(["2", "1"]);
+            settings["print_extruder_variant"] =
+                json!(["Direct Drive Standard", "Direct Drive Standard"]);
+            bytes = serde_json::to_vec_pretty(&settings).unwrap();
+        }
+        writer
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
+            )
+            .unwrap();
+        writer.write_all(&bytes).unwrap();
+    }
+    let result = writer.finish().unwrap().into_inner();
+    let mut original = crate::runner::application::settings(project).unwrap();
+    let mut actual = crate::runner::application::settings(&result).unwrap();
+    assert_eq!(actual.remove("print_extruder_id"), Some(json!(["2", "1"])));
+    assert_eq!(
+        actual.remove("print_extruder_variant"),
+        Some(json!(["Direct Drive Standard", "Direct Drive Standard"]))
+    );
+    original.remove("print_extruder_id");
+    original.remove("print_extruder_variant");
+    assert_eq!(
+        actual, original,
+        "all other settings, including master and physical maps, are frozen"
+    );
+    let mut after = zip::ZipArchive::new(Cursor::new(&result)).unwrap();
+    assert_eq!(before.len(), after.len());
+    for index in 0..before.len() {
+        let mut a = before.by_index(index).unwrap();
+        if a.name() == "Metadata/project_settings.config" {
+            continue;
+        }
+        let mut b = after.by_name(a.name()).unwrap();
+        let mut aa = Vec::new();
+        let mut bb = Vec::new();
+        a.read_to_end(&mut aa).unwrap();
+        b.read_to_end(&mut bb).unwrap();
+        assert_eq!(aa, bb, "{}", a.name());
+    }
+    result
+}
+
+#[tokio::test]
+async fn print_process_identity_materializes_reversed_complete_map_without_master_changes() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let profiles = VendorProfiles::load(&profiles_root(), "BBL").unwrap();
+    let selected = parity::select_printer(&profiles, "BBL", "Bambu Lab H2D 0.4 nozzle").unwrap();
+    let machine = profiles.machine(&selected.printer).unwrap();
+    let mut process = profiles.process(&selected.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    let mut filaments = selected
+        .filaments
+        .iter()
+        .map(|name| profiles.filament(name).unwrap())
+        .collect::<Vec<_>>();
+    parity::normalize_filament_defaults(&mut filaments);
+    let exported = runner
+        .export_case(
+            &crate::runner::CaseInputs {
+                label: "print-process-identity/stock-h2d",
+                machine: &machine,
+                process: &process,
+                filaments: &filaments,
+            },
+            &parity::smoke_overrides(),
+            &crate::runner::repo_root().join("tests/parity/cube10.stl"),
+        )
+        .unwrap();
+    let directory = tempfile::Builder::new()
+        .prefix("print-process-identity-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    fs::write(directory.join("original.3mf"), &exported.project).unwrap();
+    let project = reversed_process_ids(&exported.project);
+    let settings = crate::runner::application::settings(&project).unwrap();
+    fs::write(
+        directory.join("requested-settings.json"),
+        serde_json::to_vec_pretty(&settings).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        settings["extruder_type"],
+        json!(["Direct Drive", "Direct Drive"])
+    );
+    assert_eq!(
+        settings["nozzle_volume_type"],
+        json!(["Standard", "Standard"])
+    );
+    let input = directory.join("input.3mf");
+    fs::write(&input, &project).unwrap();
+    let native_dir = directory.join("native");
+    fs::create_dir(&native_dir).unwrap();
+    let args = vec![
+        "--slice".into(),
+        "0".into(),
+        "--outputdir".into(),
+        native_dir.to_str().unwrap().into(),
+        input.to_str().unwrap().into(),
+    ];
+    fs::write(
+        directory.join("native.args.json"),
+        serde_json::to_vec_pretty(&args).unwrap(),
+    )
+    .unwrap();
+    crate::runner::stages::run(
+        runner.bin(),
+        args,
+        crate::runner::stages::Stage::Slice,
+        &directory,
+    )
+    .unwrap();
+    let native = fs::read_to_string(native_dir.join("plate_1.gcode")).unwrap();
+    fs::write(directory.join("native.gcode"), &native).unwrap();
+    // The appended full Print config is an independent consumption witness,
+    // not a raw input roundtrip (GCode.cpp:5591-5644 append_full_config).
+    assert!(
+        native.contains("\n; print_extruder_id = 1,2\n"),
+        "Native must materialize physical request order before Ares comparison: {directory:?}"
+    );
+    assert!(
+        native
+            .contains("\n; print_extruder_variant = Direct Drive Standard;Direct Drive Standard\n")
+    );
+    let ares = ares_core::slice_project_plate(
+        &project,
+        ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+        None,
+        &ares_core::ConfigOverrides::default(),
+        ares_core::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    fs::write(directory.join("ares.gcode"), &ares).unwrap();
+    assert_eq!(fs::read(&input).unwrap(), project);
+    let ares = String::from_utf8(ares).unwrap();
+    assert_eq!(
+        crate::cli_retained_input::normalize_generator(&ares, "Ares"),
+        crate::cli_retained_input::normalize_generator(&native, "OrcaSlicer"),
+        "complete process identity stream: {directory:?}"
+    );
+}
