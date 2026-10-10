@@ -165,6 +165,25 @@ fires when a machine preset file comes in through `--load-settings`.
   worker5 boundary (`OrcaSlicer.cpp:1953-2024`, `:1682-1690`).
 - `-18/-19/-51` validation family interactions; unchanged.
 
+## Deferred parity gaps (measured 2026-10-10)
+
+- **`inherits` resolution in `--load-settings` files (worker5
+  boundary).** Native `load_config_file` reads the `inherits` field
+  directly as `new_printer_system_name` (`OrcaSlicer.cpp:2081-2086`)
+  without resolving a preset parent; Ares `parse_file`→`Catalog`
+  requires a resolvable parent, so an unflattened machine file
+  (`from:"user"`, `inherits:"<system name>"`) exits with
+  `InvalidInput("profile inheritance cycle")` where Native adjudicates
+  `-17` (measured: Native 239 vs Ares non-239 on
+  `machine-inherits.json`, probe `/tmp/compat17-probe/`). Compat17
+  fixtures ship flattened (`inherits:""`, parents inlined) so the
+  adjudication itself is covered; the gap stays worker5's
+  composite/catalog slice. Recorded in `/tmp/ares-matrix-findings.md`.
+- **`use_relative_e_distances:"0"` pin.** Measured redundant: Native
+  still exits 239 with the key removed from the process clone
+  (probe `/tmp/compat17-probe/B`). Kept as an explicit pin, no parity
+  gap.
+
 ## Schedule
 
 - Implementation (RED first) starts only after **both** worker5's
