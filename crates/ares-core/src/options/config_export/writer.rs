@@ -163,10 +163,14 @@ pub(crate) fn write_canonical_entries(
         }
         // Nullable per-filament overrides echo only when the project set
         // them (`GCode.cpp:5642` `is_nil` filter over the full config,
-        // vectors trimmed to the active filament count).
+        // vectors trimmed to the active filament count). The slot count
+        // comes from the typed filament vector (`ConfigOptionVector::size`),
+        // never from splitting the serialized token: nullable vectors join
+        // with ',' while coStrings join with ';' and elements may contain
+        // separators (`Config.hpp` `ConfigOptionVector::serialize`).
         if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&entry.key.as_str())
             && raw_settings
-                .token_prefix(&entry.key, entry.token.split(';').count().max(1))
+                .token_prefix(&entry.key, filament_count)
                 .is_none()
         {
             continue;
