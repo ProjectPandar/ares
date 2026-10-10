@@ -43,6 +43,12 @@ hardware operation and exhaustive printer/option coverage remain unclaimed.
 
 ## Deferred upstream boundaries (explicitly verified present, not yet ported)
 
+Worker1's [APA-R2 continuation SPEC](adaptive-pa-deferred-r2-spec.md) is awaiting
+approval for the remaining source-cited witness groups. R1 already verified a
+bounded uniform-width same-role sloped loop; the historical inventory below is
+not a claim that every listed mechanism is still wholly absent. Calibration
+mode admission, source-specific resets and unexercised residuals remain OPEN.
+
 The following upstream sites exist in the pinned 2.4.2 source but are deferred
 for later slices; none is silently omitted from the port's accounting:
 

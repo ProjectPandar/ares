@@ -132,7 +132,12 @@ stock inventory or an Ares-owned pipeline milestone.
 
 ### Selective WIP ports: remaining boundaries (open)
 
-- Adaptive PA deferred upstream behavior — OPEN `2863ef3ea`; retain [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md)'s multipath/sloped suppression, activation/calibration gates, source-specific reset sequencing and lookahead stream-position obligations. Landed bounded ports do not close full Adaptive PA or printer/Option coverage.
+- Adaptive PA deferred upstream behavior — OPEN `2863ef3ea`, worker1;
+  [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md) /
+  [APA-R2 SPEC-REQUEST](architecture/adaptive-pa-deferred-r2-spec.md): residual
+  multipath/sloped suppression, activation/calibration, source-specific resets
+  and lookahead; calibration admission and Type1 remain explicit deferred gates.
+  Landed bounded ports do not close full Adaptive PA or printer/Option coverage.
 
 ### Current acceptance priorities: completed subitems
 
