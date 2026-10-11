@@ -161,6 +161,7 @@ jobs:
       - run: npm ci --prefix web
       - run: npm exec --prefix web playwright install --with-deps chromium webkit
       - run: npm run lint --prefix web
+      - run: npm run build:wasm --prefix web/packages/ares-wasm-js
       - run: npm run typecheck --prefix web
       - run: npm run test:e2e --prefix web
 
