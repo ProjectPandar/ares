@@ -127,16 +127,22 @@ pub(super) fn build(
     }
     flats.extend(original[index..].iter().cloned());
 
-    let front_clip = if first.role == ExtrusionRole::Perimeter {
-        starts
-            .iter()
-            .map(|path| path_length(&path.path.polyline.points))
-            .sum::<f64>()
-            * 0.4
-    } else {
-        seam_gap * 2.0
-    };
-    clip_front_paths(&mut starts, front_clip);
+    // `ExtrusionEntity.cpp:527-563`: `clip_front` is entered with
+    // `distance = seam_gap * 2`; the erPerimeter `0.4 * slope_path_length`
+    // clip_dist is only effective while that distance is positive — at
+    // `seam_gap = 0` upstream emits the full slope head unclipped.
+    if seam_gap * 2.0 > 0.0 {
+        let front_clip = if first.role == ExtrusionRole::Perimeter {
+            starts
+                .iter()
+                .map(|path| path_length(&path.path.polyline.points))
+                .sum::<f64>()
+                * 0.4
+        } else {
+            seam_gap * 2.0
+        };
+        clip_front_paths(&mut starts, front_clip);
+    }
     clip_end_paths(&mut ends, seam_gap);
 
     let mut paths = Vec::with_capacity(starts.len() + flats.len() + ends.len());
