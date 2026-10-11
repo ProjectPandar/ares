@@ -3,8 +3,9 @@
 ## Status and roadmap selection
 
 Worker3; base main `10058be78`, after the approved inner-only merge.
-This submission is docs only. Claude is the sole reviewer; SPEC approval
-precedes fixtures/Native RED, and a separate RED commit precedes implementation.
+Claude approved SPEC53b22ddc9. A separate admitted Native fixtures/tests RED
+precedes implementation; see [RED evidence](outer-inner-brim-red-evidence.md).
+Claude remains the sole reviewer.
 
 Selected from roadmap **Current acceptance priorities: full acceptance (open)**:
 active selector dependencies need source-owned, nonempty complete-output

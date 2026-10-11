@@ -9,6 +9,9 @@ use crate::runner::{OrcaRunner, stages};
 #[path = "inner_only_brim.rs"]
 mod inner_only;
 
+#[path = "outer_inner_brim.rs"]
+mod outer_inner;
+
 #[test]
 fn brim_bed_region_kobra3_02_outer_matches_native() {
     verify(
