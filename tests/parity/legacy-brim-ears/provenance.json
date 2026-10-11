@@ -1,0 +1,36 @@
+{
+  "source": "/tmp/worker3-brim-baseline-v1-seeded-artifacts/case-nrnEEB/input.3mf",
+  "source_sha256": "2ff24b19f73b7a07c90f1a2d910a5fe2b24f2c3b7e1b12e6667b3cff8c129cb9",
+  "common_changes": {
+    "brim_object_gap": "0.1",
+    "brim_width": "4",
+    "enable_prime_tower": "0",
+    "single_extruder_multi_material": "0"
+  },
+  "cases": {
+    "N0": {
+      "input_sha256": "bcdfd47974cea40b0db5893b995de8e714a20d653aa8660de85d711d54d295a0",
+      "selector": "no_brim",
+      "bool": "0"
+    },
+    "N1": {
+      "input_sha256": "6ea18ba1127d7989f2f9aa4de86d42f26087670352d4cb39603b3e8cc8a7d120",
+      "selector": "no_brim",
+      "bool": "1"
+    },
+    "O0": {
+      "input_sha256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
+      "selector": "outer_only",
+      "bool": "0"
+    },
+    "O1": {
+      "input_sha256": "30bb0b3c962d909a0aba7cbfc6b9b2918369095d8f567cb622cb90eed06c9c7a",
+      "selector": "outer_only",
+      "bool": "1"
+    }
+  },
+  "all_other_members_equal": true,
+  "actual_native_commit": "b09dd730dd2b2088bc24841eb1903bd8ddc73eac",
+  "artifact_root": "/tmp/worker3-brim-admission-v1",
+  "scope": "four non-ear inputs only; six-case historical proof and ear RED retained on worker3-brim-six-case-red-archive"
+}

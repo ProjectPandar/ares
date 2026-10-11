@@ -12,6 +12,9 @@ mod semm_ramming;
 #[path = "option_coverage/nozzle_dataset.rs"]
 mod nozzle_dataset;
 
+#[path = "option_coverage/legacy_brim_ears.rs"]
+mod legacy_brim_ears;
+
 #[path = "option_coverage/timelapse_coverage.rs"]
 mod timelapse_coverage;
 

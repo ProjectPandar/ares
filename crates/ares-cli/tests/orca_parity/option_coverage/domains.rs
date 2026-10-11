@@ -42,10 +42,15 @@ pub(super) fn try_load(repo: &Path) -> Option<Vec<OptionPlan>> {
 }
 
 pub(super) fn load(repo: &Path) -> Vec<OptionPlan> {
-    let inventory: Value = serde_json::from_str(
+    let mut inventory: Value = serde_json::from_str(
         &std::fs::read_to_string(repo.join("tests/ksr_fdmtest_v4/options-v242.json")).unwrap(),
     )
     .unwrap();
+    // The historical inventory omits this live standalone bool (not the enum token).
+    inventory.as_array_mut().unwrap().push(serde_json::json!({
+        "key":"brim_ears","option_type":"coBool","raw_scope":"process",
+        "upstream_definition":{"path":"OrcaSlicer/src/libslic3r/PrintConfig.cpp","line":1751}
+    }));
     let source =
         std::fs::read_to_string(repo.join("OrcaSlicer/src/libslic3r/PrintConfig.cpp")).unwrap();
     let lines = source.lines().collect::<Vec<_>>();
@@ -77,6 +82,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     } else if key == super::print_compatible_printers::KEY {
         provably_legal = true;
         (super::print_compatible_printers::cases(), None)
+    } else if let Some((values, metadata)) = super::legacy_brim_ears::generate(&key) {
+        tool_metadata = Some(metadata);
+        provably_legal = true;
+        (values, None)
     } else if let Some((values, metadata)) = super::nozzle_dataset::generate(&key) {
         tool_metadata = Some(metadata);
         provably_legal = true;
