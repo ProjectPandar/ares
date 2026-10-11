@@ -77,6 +77,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     } else if key == super::print_compatible_printers::KEY {
         provably_legal = true;
         (super::print_compatible_printers::cases(), None)
+    } else if let Some((values, metadata)) = super::nozzle_dataset::generate(&key) {
+        tool_metadata = Some(metadata);
+        provably_legal = true;
+        (values, None)
     } else if let Some((values, metadata)) = super::semm_ramming::generate(&key) {
         tool_metadata = Some(metadata);
         provably_legal = true;

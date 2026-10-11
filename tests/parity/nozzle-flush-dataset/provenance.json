@@ -1,0 +1,88 @@
+{
+  "source": "/tmp/worker3-dataset-baseline-admission-v1-seeded-artifacts/case-Lx9w4s/input.3mf",
+  "source_sha256": "d80b6905cf7f074d2333ed8db077a94a57f937368a067024659936e67ab7cc17",
+  "cases": {
+    "D0": {
+      "input_sha256": "6d576ce9d4835dfae9ec5edacf9c215d7d6893ce097606f06f987db98261ff34",
+      "changed_keys": [],
+      "requested_dataset": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "explicit_matrix": false
+    },
+    "D1": {
+      "input_sha256": "1a278f7fcef1f0b243d7d2872d1ac989554857d26480e5a7a99728ac1bdf549d",
+      "changed_keys": [
+        "nozzle_flush_dataset"
+      ],
+      "requested_dataset": [
+        "1",
+        "1",
+        "1",
+        "1"
+      ],
+      "explicit_matrix": false
+    },
+    "D2": {
+      "input_sha256": "706f2d67509038feb0c48b38368e9da07d3ef42e7a2740d8268a1eae4923071a",
+      "changed_keys": [
+        "nozzle_flush_dataset"
+      ],
+      "requested_dataset": [
+        "2",
+        "2",
+        "2",
+        "2"
+      ],
+      "explicit_matrix": false
+    },
+    "DM": {
+      "input_sha256": "b8d9726ac372e5b26187f85b3bed6aaed7f7ede6f51935c8f0f5724ba1f695af",
+      "changed_keys": [
+        "nozzle_flush_dataset"
+      ],
+      "requested_dataset": [
+        "1",
+        "2",
+        "2",
+        "1"
+      ],
+      "explicit_matrix": false
+    },
+    "C1": {
+      "input_sha256": "5b8fbb4f95efccc0ef971a6f33ba8f8a2014881e1c9d9e7c3a79204adb7d31db",
+      "changed_keys": [
+        "flush_volumes_matrix",
+        "nozzle_flush_dataset"
+      ],
+      "requested_dataset": [
+        "1",
+        "1",
+        "1",
+        "1"
+      ],
+      "explicit_matrix": true
+    },
+    "C2": {
+      "input_sha256": "efc6d3ea961a6e07d01af7e0dc289efee8cff59bf2fd5430f983a1014af33580",
+      "changed_keys": [
+        "flush_volumes_matrix",
+        "nozzle_flush_dataset"
+      ],
+      "requested_dataset": [
+        "2",
+        "2",
+        "2",
+        "2"
+      ],
+      "explicit_matrix": true
+    }
+  },
+  "all_other_members_equal": true,
+  "actual_native_commit": "3d6de0318ee3534c54fda1bb0c4790cd8a0f9cbc",
+  "artifact_root": "/tmp/worker3-dataset-admission-v1",
+  "scope": "input only, not output golden; full settings/member proofs external"
+}
