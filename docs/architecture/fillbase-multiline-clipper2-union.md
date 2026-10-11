@@ -1,7 +1,7 @@
 # SPEC: FillBase multiline Clipper2 Positive union
 
-Status: numeric-only GREEN submitted for code review; workspace/full pending.
-RED baseline `48821ce89`, current integration baseline `4650357d2`; upstream `8500fcdcc`. Stars mode2 WIP is saved locally as `6f3066116`
+Status: numeric-only GREEN code approved; all acceptance gates green, MERGE-READY.
+RED baseline `48821ce89`, current integration baseline `36ed482eb`; upstream `8500fcdcc`. Stars mode2 WIP is saved locally as `6f3066116`
 on `worker6/stars-mode2-wip`, not pushed or stashed.
 
 ## Owning upstream boundary
@@ -359,31 +359,32 @@ retain requested values and first-difference receipts. The earlier true RED is
 No tolerance, assertion change or production dispatch repair absorbs these
 findings into the current union slice.
 
-Initial10-control integration gates: option_coverage seeded210/210 (452.736s)
-and official210/210 (354.564s), both exit0; shared-input raw invariance is
-362/362 seeded and354/354 official against765ae4964's registered full captures.
-Only the ten new control labels lack a baseline counterpart. Artifacts and
-member-hash/raw audits are under `/tmp/worker6-union-option-gates.xxJi4P`.
-Sorted assertion/require lines are identical to RED; the only removed test
-registrations are coordinator-deferred R2/G2 (`assertion-audit.json`).
+Initial10-control gates: both modes210/210; raw invariance362/362 seeded354/354
+official versus765, evidence `/tmp/worker6-union-option-gates.xxJi4P`.
+Sorted assertion/require lines equal RED; only coordinator-deferred R2/G2
+registrations were removed (`assertion-audit.json`).
 
 The first strict run rejected excessive_nesting in the scanbeam correction.
 It was flattened into root-level lets and early returns, without suppression
 or changed arithmetic. Fresh strict/fmt/wasm32 all exit0 under
 `/tmp/worker6-union-engineering-flat.NWezRA`.
 
-Current chain on4650357d2: SPEC7e40abdae, RED9dceff73a (original50544582c),
-Positive-only failed trial022bcbec8, numeric attribution2ae742de9, GREEN4f9f96b16.
-Both rebases (765 to5fc560ca0 to4650357d2) were conflict-free, with no brim or
-profiles file overlap; all five range-diff entries were unchanged.
-Fresh option_coverage on GREEN passed212/212 in each mode (seeded485.730s,
-official567.793s); each mode used its own fresh cache/artifact root under
-`/tmp/worker6-union-465-option.Vbi74Q`. Its member-hash/raw audits retain
-362/362 seeded and354/354 official unchanged common-input streams versus765.
-Only the ten added control labels have no corresponding baseline stream.
-New-head strict clippy(-D warnings), fmt and wasm32 checks all exited0 under
-`/tmp/worker6-union-465-engineering.orDJLn`. No workspace/full pass is claimed;
-workspace waits the preceding worker1 END and load<30, full awaits approval.
+Final chain on36ed482eb: SPEC7de103ab2, RED0ce527c24 (original50544582c),
+Positive-only failed7286ca137, attributionb4adf22c0, GREENfae032eed;
+reviewed code plus the bot_y_ comment is40b24ba0d. Rebases were conflict-free,
+with no brim/profiles/machine.rs overlap; all seven latest range-diff entries=.
+Directed option_coverage on465 passed212/212 each mode (fresh root/cache each):
+`/tmp/worker6-union-465-option.Vbi74Q`; new-head full covers directed by permission.
+Both full modes on40b24 passed984/984, exit0, zero skips under
+`/tmp/worker6-union-full-36e.BgajSl/{seeded,official}` (full.log/full.exit).
+Each used a fresh cache, artifact root and target with control-set-v2 unchanged.
+raw-audit.json compares actual main36ed full captures from worker2:665/665 seeded,
+654/654 official same-input Ares raw unchanged, only ten new labels unmatched.
+Default-env workspace:8357/8357 PASS, exit0 (six slow, five pre-existing skips),
+`/tmp/worker6-union-workspace.5CK4rb/{workspace.log,workspace.exit}`.
+New-head strict clippy(-D warnings), fmt and wasm32 all exit0 under
+`/tmp/worker6-union-36e-engineering.Janl7F/{clippy,fmt,wasm}.{log,exit}`.
+All final code gates executed40b24; this final documentation update changes no code.
 
 The preceding5fc560ca0 official run was211/212, preserved without rewriting:
 `/tmp/worker6-union-rebase-option.6umZUs`. The failed interface_fan below-baseline
