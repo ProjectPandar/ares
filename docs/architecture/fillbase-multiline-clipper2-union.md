@@ -195,3 +195,42 @@ kernel and change only the multiline round offset's union fill rule to
 Positive. No private Clipper2 kernel or external crate may be introduced before
 this experiment and a report of any remaining concrete difference. No claim
 is made that selecting Positive reproduces Clipper2 numeric/order semantics.
+
+## Positive-only experiment: not GREEN
+
+The authorized minimal trial selects existing Clipper1 Positive fill for the
+round offset's final union. Its private geometry types cannot be imported by
+fill, so the trial adds one crate-private Positive union helper with two thin
+re-exports; the original NonZero helper and all its other callers are unchanged.
+No external crate, new kernel, assertion change or other generator edit occurs.
+
+Fresh seeded trial `/tmp/worker6-multiline-union-positive.hw7nBU` still yields
+4 PASS /8 DIVERGENT (14.707s, exit100). All12 Ares raw outputs are byte-identical
+to RED; all Native generator-normalized outputs and all corresponding 3MF
+member bytes are also equal. `/tmp/worker6-union-positive-audit.json` records
+each label, status, hashes, comparisons, first difference and artifact paths.
+This rules out changing only the winding fill selection as a sufficient repair.
+The earlier privacy compile failure ran no Native and remains separately
+recorded under `/tmp/worker6-multiline-union-positive.wG4Umy` (exit101).
+
+Concrete C2 residual: whole first difference remains line204 M73 placement;
+first sparse path remains Native layer4 line1425 X138.625 Y126.024 E.22346
+versus Ares line1423 X140.369 Y119.517 E.22346. The RED stage captures show
+identical pre-union arrays,93 result paths on each side, and first union
+coordinate Native(2578819,-23832823) versus Ares(2578820,-23832823).
+Clipper2 `clipper.engine.cpp:131-138` uses nearbyint in TopX and
+`:2350-2382` uses its segment intersection/clamping pipeline; existing Clipper1
+`geometry/clipper/predicates.rs:8-15/:33-104` has its own rounding/intersection
+arithmetic. Both kernels also own output joining/cleanup/traversal. A fill-rule
+flag does not port these contracts. This is a source-boundary explanation,
+not a claim that one rounding edit alone fixes the complete difference.
+
+The trial remains local WIP, not an accepted GREEN or a push candidate. Before
+further code, request coordinator approval for a private closed Positive union
+rewrite (the original Rust target above). Exact round-input equality justifies
+retaining the existing round generation and focusing on the union dependency;
+it does not justify globally changing Clipper1. R2/G2 need separately recorded
+dispatch findings rather than retained unrelated failing acceptance tests;
+report their active-test disposition before preparing a mergeable GREEN.
+Engineering and option_coverage regression gates are pending a real GREEN;
+there is no PASS claim or gate exemption for this failed experiment.

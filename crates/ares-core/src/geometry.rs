@@ -51,8 +51,8 @@ pub(crate) use clipper::{
     offset_open_paths, offset_paths, offset_paths_tree, offset2_ex, offset2_ex_with_interstage,
     open_polyline_inside_expolygon, opening_ex, opening_paths, point_in_polygon,
     union_even_odd_polygons_paths, union_ex, union_expolygons, union_polygons_paths,
-    union_polygons_paths_pair, union_safety_offset_ex, union_safety_offset_expolygons,
-    union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
+    union_polygons_paths_pair, union_positive_polygons_paths, union_safety_offset_ex,
+    union_safety_offset_expolygons, union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use convex_hull::convex_hull;
 pub(crate) use coord::{Coord, CoordinateScale, Point};

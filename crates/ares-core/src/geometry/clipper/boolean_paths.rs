@@ -9,6 +9,14 @@ pub(crate) fn union_polygons_paths(paths: &[Polygon]) -> Result<Vec<Polygon>, Cl
     execute(paths, &[], ClipOperation::Union)
 }
 
+pub(crate) fn union_positive_polygons_paths(
+    paths: &[Polygon],
+) -> Result<Vec<Polygon>, ClipperError> {
+    let mut clipper = Clipper::new(ClipperOptions::default());
+    clipper.add_closed_paths(paths, PathRole::Subject)?;
+    clipper.execute_paths(ClipOperation::Union, FillRule::Positive, FillRule::Positive)
+}
+
 pub(crate) fn union_polygons_paths_pair(
     first: &[Polygon],
     second: &[Polygon],

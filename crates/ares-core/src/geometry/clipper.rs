@@ -41,7 +41,7 @@ pub(crate) use boolean_paths::{
     difference_polygons_paths, difference_polygons_paths_with_safety_offset,
     intersection_polygons_paths, intersection_polygons_paths_with_safety_offset,
     union_even_odd_polygons_paths, union_polygons_paths, union_polygons_paths_pair,
-    union_safety_offset_polygons,
+    union_positive_polygons_paths, union_safety_offset_polygons,
 };
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
