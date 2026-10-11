@@ -114,11 +114,6 @@ fn task22o71_adaptive_pattern_on_an_empty_object_is_a_noop() {
 #[test]
 fn task22o71_unported_anchor_lengths_fail_without_fallback() {
     assert_unsupported_mutation(
-        "\"infill_anchor_max\": \"20\"",
-        "\"infill_anchor_max\": \"0\"",
-        "infill_anchor_max",
-    );
-    assert_unsupported_mutation(
         "\"infill_anchor\": \"400%\"",
         "\"infill_anchor\": \"-1\"",
         "infill_anchor",

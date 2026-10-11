@@ -100,7 +100,11 @@ pub(super) fn validate(
     // `internal_solid_filament_id` / `top_surface_filament_id` are
     // admitted here; role→filament resolution happens downstream.
     let (anchor, anchor_max) = projected_anchor_lengths(options, f64::from(spacing));
-    if !anchor_max.is_finite() || anchor_max < 0.05 {
+    // `anchor_length_max < 0.05` is upstream's supported `dont_connect()`
+    // selection (`FillBase.hpp:52`; `FillRectilinear.cpp:3366-3373`,
+    // `FillBase.cpp:1820-1828`), not an unsupported input — the connect
+    // asserts (`FillBase.cpp:1584-1585,2251-2252`) are unreachable there.
+    if !anchor_max.is_finite() {
         return unsupported("infill_anchor_max");
     }
     if !anchor.is_finite() || anchor < 0.0 {
