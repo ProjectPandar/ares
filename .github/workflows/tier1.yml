@@ -102,7 +102,11 @@ jobs:
           targets: wasm32-unknown-unknown
           components: rustfmt
       - uses: taiki-e/install-action@nextest
-      - uses: taiki-e/install-action@wasm-bindgen
+      # wasm-bindgen-cli must match the crate's schema version exactly.
+      - name: Install wasm-bindgen-cli matching Cargo.lock
+        run: |
+          version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
+          cargo install wasm-bindgen-cli --version "$version" --locked
       - uses: Swatinem/rust-cache@v2
       - uses: NixOS/nix-installer-action@main
       - uses: Mic92/hestia@v3
@@ -136,7 +140,7 @@ jobs:
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$(nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath' NIX_PATH=nixpkgs=$nixpkgs)/lib/locale/locale-archive"
+            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath')/lib/locale/locale-archive"
           } >> "$GITHUB_ENV"
       - name: Verify generated PrintConfigDef metadata is in sync with upstream
         run: |
@@ -233,7 +237,7 @@ jobs:
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
             echo "ARES_ORCA_BIN=$PWD/scripts/orca-seeded-parity.sh"
-            echo "ORCA_REPLAY_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ORCA_REPLAY_BIN=$ORACLE_seed_replay/bin/orca-slicer"
             echo "ARES_ORCA_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_ORCA_RESOURCES_DIR=$ksr/share/OrcaSlicer"
             echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
@@ -248,7 +252,7 @@ jobs:
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$(nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath' NIX_PATH=nixpkgs=$nixpkgs)/lib/locale/locale-archive"
+            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
@@ -343,7 +347,7 @@ jobs:
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$(nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath' NIX_PATH=nixpkgs=$nixpkgs)/lib/locale/locale-archive"
+            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8

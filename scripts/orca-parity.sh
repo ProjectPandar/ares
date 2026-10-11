@@ -21,7 +21,7 @@ fi
 
 # The nix eval is expensive and flaky under repeated invocations; cache the
 # resolved library paths across runs (force a refresh with ORCA_LIB_REFRESH=1).
-CACHE="${ORCA_LIB_CACHE:-/tmp/orca-parity-libs.cache}"
+CACHE="${ORCA_LIB_CACHE:-/tmp/orca-parity-libs-v2.cache}"
 cache_valid=0
 if [ -s "$CACHE" ] && [ -z "${ORCA_LIB_REFRESH:-}" ]; then
     cache_valid=1
@@ -37,7 +37,7 @@ fi
 if [ "$cache_valid" -eq 1 ]; then
     extra="$(cat "$CACHE")"
 else
-    extra="$(nix build --no-link --print-out-paths --impure --expr 'with import <nixpkgs> {}; builtins.map lib.getLib [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret ]' | sed 's#$#/lib#' | paste -sd:)"
+    extra="$(nix build --no-link --print-out-paths --impure --expr 'with import <nixpkgs> {}; builtins.map lib.getLib [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret glibc ]' | sed 's#$#/lib#' | paste -sd:)"
     printf '%s' "$extra" > "$CACHE"
 fi
 
@@ -45,4 +45,21 @@ export LD_LIBRARY_PATH="$APPDIR/lib/orca-runtime:$APPDIR/bin:$extra${LD_LIBRARY_
 export LC_ALL=C
 export APPDIR
 
-exec "$APPDIR/bin/orca-slicer" "$@"
+# The nixpkgs runtime libraries may need a newer glibc than the host provides
+# (Ubuntu CI image vs nixpkgs pin). Prefer the nix glibc's loader so the
+# versioned glibc symbols resolve; fall back to the host loader when none is
+# in the resolved set (e.g. wrapper tests with a synthetic library path).
+ld=""
+IFS=: read -r -a libdirs <<< "$extra"
+for dir in "${libdirs[@]}"; do
+    if [ -x "$dir/ld-linux-x86-64.so.2" ]; then
+        ld="$dir/ld-linux-x86-64.so.2"
+        break
+    fi
+done
+
+if [ -n "$ld" ]; then
+    exec "$ld" "$APPDIR/bin/orca-slicer" "$@"
+else
+    exec "$APPDIR/bin/orca-slicer" "$@"
+fi

@@ -299,6 +299,25 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
 `ARES_PRINT_STATISTICS_BIN` 仍指 v9ydlg，未改（待协调者确认换 v4zhqnbm
 或 merged）。
 
+### B.3b CI-环境修复（已执行）
+
+首个 cold run (38161090181) 暴露三个 VM 环境问题，全部修复：
+
+1. `nix-collect-garbage` 在 hestia drain 前删掉 oracle 输出 → 消费 job 缓存 miss。已删除该步骤。
+2. nix 构建的 orca-slicer 在 VM 上 abort `locale::_S_create_c_locale`：
+   `LC_ALL=C.UTF-8` + `LOCALE_ARCHIVE`（nixpkgs glibcLocales，env 前缀传递 NIX_PATH）。
+3. `scripts/orca-parity.sh` 向 AppImage 注入 nixpkgs 运行时库，但 Ubuntu 24
+   glibc 2.39 < nixpkgs glibc 2.42 → `GLIBC_ABI_GNU2_TLS not found`。修复：
+   解析的库集中找到 nix glibc `ld-linux-x86-64.so.2` 时用其作 loader 启动
+   AppImage（找不到则回退 host loader，wrapper_tests 语义不变）。
+4. web job 的 `wasm-bindgen-cli` 须与 Cargo.lock 的 wasm-bindgen 版本严格
+   一致；改为从 Cargo.lock 读版本后 `cargo install`。
+5. `ORCA_REPLAY_BIN` 误指 merged-oracle（其 print-statistics patch 产生
+   plate_1.print_statistics.json 副作用并改变 G-code）：seeded parity 挂
+   25 个（cli_retained_exit、wipe_tags、vendor_profile_compatibility、
+   owner_pair、adjacent_color、roles 等）。矩阵加入 seed-replay 变体，
+   `ORCA_REPLAY_BIN=$ORACLE_seed_replay/…`。
+
 ### B.4 风险
 
 - 补丁语义交叉：dynamics 的 travel-accel 对齐在 `process_file` 路径
