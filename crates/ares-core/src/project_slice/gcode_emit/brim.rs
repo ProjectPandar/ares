@@ -27,7 +27,11 @@ impl BrimPlan {
             return Ok(None);
         };
         let options = &resolved.object;
-        if options.brim_type != ProcessBrimType::OuterOnly || options.brim_width.0 <= 0.0 {
+        if !matches!(
+            options.brim_type,
+            ProcessBrimType::OuterOnly | ProcessBrimType::BrimEars
+        ) || options.brim_width.0 <= 0.0
+        {
             return Ok(None);
         }
         let source = traversal
@@ -90,11 +94,28 @@ impl BrimPlan {
         let brim_width = scaled_f32(scale, brim_width_mm)?;
         let spacing = scaled_f32(scale, spacing_mm)?;
         let resolution = scaled_f64(scale, 0.0125)?;
-        let inner = offset_expolygons(&source, gap, JoinType::Round, resolution)
-            .map_err(brim_geometry_error)?;
-        let outer = offset_expolygons(&inner, brim_width, JoinType::Round, resolution)
-            .map_err(brim_geometry_error)?;
-        let brim_area = difference_ex(&outer, &inner).map_err(brim_geometry_error)?;
+        let (brim_area, inner) = if options.brim_type == ProcessBrimType::BrimEars {
+            crate::brims::ears::area(
+                &source,
+                crate::brims::ears::AreaParameters {
+                    gap,
+                    width: brim_width,
+                    spacing,
+                    resolution,
+                    detection_length: scale
+                        .checked_scale(options.brim_ears_detection_length.0)
+                        .expect("validated brim detection length"),
+                    max_angle: options.brim_ears_max_angle.0,
+                },
+            )?
+        } else {
+            let inner = offset_expolygons(&source, gap, JoinType::Round, resolution)
+                .map_err(brim_geometry_error)?;
+            let outer = offset_expolygons(&inner, brim_width, JoinType::Round, resolution)
+                .map_err(brim_geometry_error)?;
+            let brim_area = difference_ex(&outer, &inner).map_err(brim_geometry_error)?;
+            (brim_area, inner)
+        };
         let brim_area = bed_area::clip(
             traversal,
             resolved.source_object_index,

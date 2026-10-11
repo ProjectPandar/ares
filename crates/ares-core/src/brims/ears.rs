@@ -1,181 +1,142 @@
-use crate::{BrimOptions, BrimPath, Point2, SliceError};
+//! Source-owned Brim.cpp automatic ear area shared by both Rust adapters.
+use crate::geometry::{
+    CoordinateScale, ExPolygon, JoinType, Point, Polygon, difference_ex, intersection_ex,
+    offset_expolygons,
+};
+use crate::{BrimOptions, BrimPath, LayerContours, Point2, SliceError};
 
+mod auto;
 pub(crate) mod paths;
 
+pub(crate) struct AreaParameters {
+    pub(crate) gap: f32,
+    pub(crate) width: f32,
+    pub(crate) spacing: f32,
+    pub(crate) resolution: f64,
+    pub(crate) detection_length: i64,
+    pub(crate) max_angle: f64,
+}
+
+pub(crate) fn area(
+    source: &[ExPolygon],
+    parameters: AreaParameters,
+) -> Result<(Vec<ExPolygon>, Vec<ExPolygon>), SliceError> {
+    let AreaParameters {
+        gap,
+        width,
+        spacing,
+        resolution,
+        detection_length,
+        max_angle,
+    } = parameters;
+    let mut result = Vec::new();
+    for poly in source {
+        let contour = ExPolygon::new(poly.contour().clone(), Vec::new());
+        let inner = offset_expolygons(&[contour], gap, JoinType::Round, resolution)
+            .map_err(geometry_error)?;
+        let radius = (width - gap - spacing) as i64;
+        let outer = auto::make_auto(&inner, radius, detection_length, max_angle, true);
+        result.extend(difference_ex(&outer, &inner).map_err(geometry_error)?);
+        let holes: Vec<_> = poly
+            .holes()
+            .iter()
+            .map(|hole| {
+                let mut reversed = hole.clone();
+                reversed.reverse();
+                ExPolygon::new(reversed, Vec::new())
+            })
+            .collect();
+        let inset = offset_expolygons(&holes, -width - gap, JoinType::Round, resolution)
+            .map_err(geometry_error)?;
+        let ear_source =
+            offset_expolygons(&holes, -gap, JoinType::Round, resolution).map_err(geometry_error)?;
+        let ears = auto::make_auto(&ear_source, radius, detection_length, max_angle, false);
+        let inner_ears = difference_ex(&ears, &inset).map_err(geometry_error)?;
+        result.extend(intersection_ex(&inner_ears, &holes).map_err(geometry_error)?);
+    }
+    let footprint =
+        offset_expolygons(source, gap, JoinType::Round, resolution).map_err(geometry_error)?;
+    Ok((result, footprint))
+}
+
 pub(super) fn brim_ear_paths(
-    contour: &crate::Contour,
+    layer: &LayerContours,
     options: BrimOptions,
     effective_line_width: f64,
-    loop_count: u32,
 ) -> Result<Vec<BrimPath>, SliceError> {
-    let mut paths = Vec::new();
-    for corner in ear_candidate_vertices(
-        contour,
-        options.brim_ears_max_angle_degrees(),
-        options.brim_ears_detection_length_mm(),
-    ) {
-        for loop_index in 0..loop_count {
-            let brim_offset =
-                (f64::from(loop_index + 1) * effective_line_width).min(options.width_mm());
-            paths.push(square_ear_path(
-                corner,
-                options.object_gap_mm() + brim_offset,
-            )?);
-        }
-    }
-    Ok(paths)
-}
-
-fn ear_candidate_vertices(
-    contour: &crate::Contour,
-    max_angle_degrees: f64,
-    detection_length_mm: f64,
-) -> Vec<Point2> {
-    if max_angle_degrees <= 0.0 {
-        return Vec::new();
-    }
-    let points = simplified_closed_points(contour.points(), detection_length_mm);
-    ear_candidate_points(&points, max_angle_degrees)
-}
-
-fn ear_candidate_points(points: &[Point2], max_angle_degrees: f64) -> Vec<Point2> {
-    if points.len() < 3 {
-        return Vec::new();
-    }
-
-    let winding = contour_signed_area(points).signum();
-    let mut candidates = Vec::new();
-    for index in 0..points.len() {
-        let previous = points[(index + points.len() - 1) % points.len()];
-        let current = points[index];
-        let next = points[(index + 1) % points.len()];
-        if interior_angle_degrees(previous, current, next, winding) <= max_angle_degrees {
-            candidates.push(current);
-        }
-    }
-    candidates
-}
-
-fn interior_angle_degrees(previous: Point2, current: Point2, next: Point2, winding: f64) -> f64 {
-    let ax = previous.x() - current.x();
-    let ay = previous.y() - current.y();
-    let bx = next.x() - current.x();
-    let by = next.y() - current.y();
-    let a_len = ax.hypot(ay);
-    let b_len = bx.hypot(by);
-    if a_len == 0.0 || b_len == 0.0 {
-        return 180.0;
-    }
-    let cosine = ((ax * bx + ay * by) / (a_len * b_len)).clamp(-1.0, 1.0);
-    let smaller_angle = cosine.acos().to_degrees();
-    let cross = ax * by - ay * bx;
-    if winding != 0.0 && cross.signum() == winding {
-        360.0 - smaller_angle
-    } else {
-        smaller_angle
-    }
-}
-
-fn contour_signed_area(points: &[Point2]) -> f64 {
-    points
+    let scale = CoordinateScale::Normal;
+    let mut source = Vec::new();
+    for contour in layer
+        .contours()
         .iter()
-        .zip(points.iter().cycle().skip(1))
-        .map(|(a, b)| a.x() * b.y() - b.x() * a.y())
-        .sum::<f64>()
-        * 0.5
-}
-
-fn simplified_closed_points(points: &[Point2], tolerance: f64) -> Vec<Point2> {
-    if tolerance <= 0.0 || points.len() < 4 {
-        return points.to_vec();
-    }
-    let (start, end) = farthest_vertex_pair(points);
-    let mut first = douglas_peucker(&ring_chain(points, start, end), tolerance);
-    let mut second = douglas_peucker(&ring_chain(points, end, start), tolerance);
-    first.pop();
-    second.pop();
-    first.extend(second);
-    if first.len() < 4 {
-        points.to_vec()
-    } else {
-        first
-    }
-}
-
-fn farthest_vertex_pair(points: &[Point2]) -> (usize, usize) {
-    let mut pair = (0, 1);
-    let mut max_distance = 0.0;
-    for first in 0..points.len() {
-        for second in (first + 1)..points.len() {
-            let distance = squared_distance(points[first], points[second]);
-            if distance > max_distance {
-                max_distance = distance;
-                pair = (first, second);
+        .filter(|c| layer.is_outer_contour(c))
+    {
+        let polygon = scaled_contour(contour, scale)?;
+        let holes = layer
+            .contours()
+            .iter()
+            .filter(|c| !layer.is_outer_contour(c))
+            .map(|c| scaled_contour(c, scale))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut holes = holes
+            .into_iter()
+            .filter(|h| polygon.contains(&h.points()[0]))
+            .collect::<Vec<_>>();
+        for hole in &mut holes {
+            if hole.is_counter_clockwise() {
+                hole.reverse();
             }
         }
+        let mut polygon = polygon;
+        if !polygon.is_counter_clockwise() {
+            polygon.reverse();
+        }
+        source.push(ExPolygon::new(polygon, holes));
     }
-    pair
+    let spacing = scaled(scale, effective_line_width)? as f32;
+    let spacing_mm = f64::from(spacing) * scale.factor();
+    let width = (options.width_mm() / spacing_mm / 2.0).floor() * spacing_mm * 2.0;
+    let gap = scaled(scale, options.object_gap_mm())? as f32;
+    let resolution = scale.scaled_delta(0.0125);
+    let (area, footprint) = area(
+        &source,
+        AreaParameters {
+            gap,
+            width: scaled(scale, width)? as f32,
+            spacing,
+            resolution,
+            detection_length: scaled(scale, options.brim_ears_detection_length_mm())?,
+            max_angle: options.brim_ears_max_angle_degrees(),
+        },
+    )?;
+    let area = difference_ex(&area, &footprint).map_err(geometry_error)?;
+    paths::from_area(area, spacing, resolution)?
+        .into_iter()
+        .map(|points| {
+            BrimPath::new(
+                points
+                    .into_iter()
+                    .map(|p| Point2::new(scale.unscale(p.x()), scale.unscale(p.y())))
+                    .collect(),
+            )
+        })
+        .collect()
 }
 
-fn ring_chain(points: &[Point2], start: usize, end: usize) -> Vec<Point2> {
-    let mut chain = vec![points[start]];
-    let mut index = start;
-    while index != end {
-        index = (index + 1) % points.len();
-        chain.push(points[index]);
-    }
-    chain
+fn scaled_contour(contour: &crate::Contour, scale: CoordinateScale) -> Result<Polygon, SliceError> {
+    Ok(Polygon::new(
+        contour
+            .points()
+            .iter()
+            .map(|p| Ok(Point::new(scaled(scale, p.x())?, scaled(scale, p.y())?)))
+            .collect::<Result<Vec<_>, SliceError>>()?,
+    ))
 }
-
-fn douglas_peucker(points: &[Point2], tolerance: f64) -> Vec<Point2> {
-    if points.len() <= 2 {
-        return points.to_vec();
-    }
-    let (index, distance) = farthest_point_from_segment(points);
-    if distance <= tolerance {
-        vec![points[0], points[points.len() - 1]]
-    } else {
-        let mut first = douglas_peucker(&points[..=index], tolerance);
-        let second = douglas_peucker(&points[index..], tolerance);
-        first.pop();
-        first.extend(second);
-        first
-    }
+fn scaled(scale: CoordinateScale, value: f64) -> Result<i64, SliceError> {
+    scale
+        .checked_scale(value)
+        .ok_or_else(|| SliceError::InvalidInput("brim coordinate is out of range".into()))
 }
-
-fn farthest_point_from_segment(points: &[Point2]) -> (usize, f64) {
-    let start = points[0];
-    let end = points[points.len() - 1];
-    (1..points.len() - 1)
-        .map(|index| (index, point_segment_distance(points[index], start, end)))
-        .max_by(|(_, a), (_, b)| a.total_cmp(b))
-        .unwrap()
-}
-
-fn point_segment_distance(point: Point2, start: Point2, end: Point2) -> f64 {
-    let dx = end.x() - start.x();
-    let dy = end.y() - start.y();
-    let length_squared = dx * dx + dy * dy;
-    if length_squared == 0.0 {
-        return squared_distance(point, start).sqrt();
-    }
-    let t = (((point.x() - start.x()) * dx + (point.y() - start.y()) * dy) / length_squared)
-        .clamp(0.0, 1.0);
-    let projection = Point2::new(start.x() + t * dx, start.y() + t * dy);
-    squared_distance(point, projection).sqrt()
-}
-
-fn squared_distance(first: Point2, second: Point2) -> f64 {
-    let dx = first.x() - second.x();
-    let dy = first.y() - second.y();
-    dx * dx + dy * dy
-}
-
-fn square_ear_path(center: Point2, radius: f64) -> Result<BrimPath, SliceError> {
-    BrimPath::new(vec![
-        Point2::new(center.x() - radius, center.y() - radius),
-        Point2::new(center.x() + radius, center.y() - radius),
-        Point2::new(center.x() + radius, center.y() + radius),
-        Point2::new(center.x() - radius, center.y() + radius),
-    ])
+fn geometry_error(_: crate::geometry::ClipperError) -> SliceError {
+    SliceError::InvalidInput("brim generation failed".into())
 }

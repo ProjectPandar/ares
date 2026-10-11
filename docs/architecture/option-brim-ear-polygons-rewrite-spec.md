@@ -18,6 +18,12 @@ code or transport/API changes belong here.
 
 ## Upstream owners and Rust destinations
 
+Runtime correction accepted by coordinator: validated project slicing is owned
+by `project_slice/gcode_emit/brim.rs::BrimPlan::generate` (currently BrimEars
+returns None), not the square adapter. GREEN adds its BrimEars branch calling
+the shared `brims/ears` kernel; the old adapter calls the same kernel, with no
+parallel square implementation or fallback.
+
 | Upstream rewrite slice | Rust destination / scaffold disposition |
 |---|---|
 | Brim.cpp:310-352 `make_brim_ears_auto` | Replace `crates/ares-core/src/brims/ears.rs::brim_ear_paths`, including square_ear_path172; generate scaled circular ear polygons, not independent square loops |
@@ -35,7 +41,8 @@ owns Native admission and verifiable artifacts.
 ## Included behavior
 
 - Match upstream scaled-coordinate circle construction with POLY_SIDE_COUNT,
-  cos/sin vertex order, coordinate truncation and per-corner translation.
+  cos/sin vertex order, Point.hpp:197 round-to-coordinate construction and
+  per-corner translation (ear size assignment itself still truncates to coord_t).
 - Follow angle threshold `(180-max_angle)*PI/180`, nextafter/cos comparison,
   signed convex/concave predicates, normalized adjacent-vector direction.
 - Match closed-contour Douglas-Peucker preparation and the >4-point admission

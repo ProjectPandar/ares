@@ -35,7 +35,7 @@ refactor is needed. ExPolygon geometry, clipping and integer coordinate
 rounding must stay source-owned. E0/E1 RED and six-case sweep stay intact.
 
 The original approved spec named brims/ears.rs etc but did not identify this
-actual project runtime dispatch. Coordinator has been asked to confirm this
-exact destination amendment before production edits; meanwhile only read-only
-mapping and documentation are performed. Native/admission and source audits
+actual project runtime dispatch. Coordinator accepted this exact destination
+amendment: GREEN must use a shared auto kernel from both adapters, replacing
+the square implementation entirely; other brim modes are not expanded. Native/admission and source audits
 must distinguish historical and newly executed hashes.

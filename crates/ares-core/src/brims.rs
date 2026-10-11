@@ -185,6 +185,10 @@ fn generate_layer_brims(
         return Ok(Vec::new());
     }
 
+    if options.brim_type() == BrimType::BrimEars {
+        brim_loop_count(options.width_mm(), effective_line_width)?;
+        return ears::brim_ear_paths(layer, options, effective_line_width);
+    }
     let loop_count = brim_loop_count(options.width_mm(), effective_line_width)?;
     let mut paths = Vec::new();
     if options.combine_brims()
@@ -230,21 +234,12 @@ fn extend_outer_brim_paths(
     effective_line_width: f64,
     loop_count: u32,
 ) -> Result<(), SliceError> {
-    if options.brim_type() == BrimType::BrimEars {
-        paths.extend(brim_ear_paths(
-            contour,
-            options,
-            effective_line_width,
-            loop_count,
-        )?);
-    } else {
-        paths.extend(outer_brim_paths(
-            contour,
-            options,
-            effective_line_width,
-            loop_count,
-        )?);
-    }
+    paths.extend(outer_brim_paths(
+        contour,
+        options,
+        effective_line_width,
+        loop_count,
+    )?);
     Ok(())
 }
 
@@ -279,15 +274,6 @@ fn outer_brim_paths(
     };
 
     combine::outer_brim_bounds_paths(bounds, options, effective_line_width, loop_count)
-}
-
-fn brim_ear_paths(
-    contour: &crate::Contour,
-    options: BrimOptions,
-    effective_line_width: f64,
-    loop_count: u32,
-) -> Result<Vec<BrimPath>, SliceError> {
-    ears::brim_ear_paths(contour, options, effective_line_width, loop_count)
 }
 
 fn inner_brim_paths(

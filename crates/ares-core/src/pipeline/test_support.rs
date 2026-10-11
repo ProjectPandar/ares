@@ -36,21 +36,6 @@ pub fn narrow_rectangular_gap_fill_pipeline(options: &SliceOptions) -> SlicingPi
     )
 }
 
-pub fn kinked_brim_pipeline(options: &SliceOptions) -> SlicingPipeline {
-    contours_pipeline(
-        options,
-        vec![Contour::new(vec![
-            Point2::new(0.0, 0.0),
-            Point2::new(4.0, 0.0),
-            Point2::new(4.0, 4.0),
-            Point2::new(2.1, 4.0),
-            Point2::new(2.0, 4.2),
-            Point2::new(1.9, 4.0),
-            Point2::new(0.0, 4.0),
-        ])],
-    )
-}
-
 pub fn contours_pipeline(options: &SliceOptions, contours: Vec<Contour>) -> SlicingPipeline {
     contour_layers_pipeline(options, contours, 1)
 }
