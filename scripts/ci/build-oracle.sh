@@ -29,10 +29,10 @@ git -C "$repo/OrcaSlicer" worktree add --detach "$src" HEAD >/dev/null
 case "$variant" in
   merged-oracle)
     git -C "$src" apply --unidiff-zero \
-      "$repo/scripts/orca-replay/seed-only.patch"
-    git -C "$src" apply \
+      "$repo/scripts/orca-replay/seed-only.patch" \
       "$repo/scripts/orca-replay/concentric-initialization.patch" \
-      "$repo/scripts/orca-replay/object-id-initialization.patch" \
+      "$repo/scripts/orca-replay/object-id-initialization.patch"
+    git -C "$src" apply \
       "$repo/tools/chain-probe/procgcode.patch" \
       "$repo/tools/chain-probe/procgcode-stable-options.patch" \
       "$repo/tools/chain-probe/procgcode-dynamics.patch" \
