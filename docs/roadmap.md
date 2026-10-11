@@ -7,6 +7,14 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### G4 first-layer sequence: SPEC request (2026-10-11)
+
+Witness upstream `ToolOrdering::apply_first_layer_order` with two actual outer-wall tools, not only wall/infill sharing.
+Five finite one-based configured-vector controls cover size gating, reversal and first-occurrence duplicate handling.
+Existing first-layer Rust ordering stays the source rewrite boundary; no assumed production RED.
+Other-layer count is already merged; SAFC Native nondeterminism is owned by worker6.
+[Sources, Rust destinations, failure inventory and test-first exits](architecture/option-g4-first-layer-sequence-coverage.md).
+
 ### Adaptive volumetric fit: coupled-family SPEC request (2026-10-11)
 
 Port witnesses for `GCode::calc_max_volumetric_speed` and `_extrude` current-filament fitted/user cap intersection.
