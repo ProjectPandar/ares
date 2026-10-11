@@ -24,8 +24,11 @@ pub(super) fn verify(runner: &OrcaRunner, root: &Path, project: &[u8], keys: &[&
         writer.write_all(&bytes).unwrap();
     }
     let project = writer.finish().unwrap().into_inner();
-    let directory = root.join("adaptive-volumetric-zero-rejection");
-    std::fs::create_dir(&directory).unwrap();
+    let directory = tempfile::Builder::new()
+        .prefix("adaptive-volumetric-zero-rejection-")
+        .tempdir_in(root)
+        .unwrap()
+        .keep();
     let input = directory.join("input.3mf");
     std::fs::write(&input, &project).unwrap();
     let error = runner::stages::run(
