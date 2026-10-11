@@ -54,7 +54,7 @@ pub(super) fn prepare(runner: &OrcaRunner, label: &str, first: &[usize]) -> Expo
             json!([temperature]),
         );
     }
-    let count = 0;
+    let count: usize = 0;
     let sequence: &[usize] = &[];
     let vector = Vec::<String>::new();
     let dependencies = json!({

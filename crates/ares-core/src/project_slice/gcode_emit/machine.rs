@@ -183,11 +183,12 @@ pub(super) fn append_start(
         let mut config =
             start_config::self_start_config(traversal, state, metadata, first_layer_bounds)?;
         let name = "machine_start_gcode";
-        let result = template::render(template, &mut config)
-            .map_err(|error| error.to_string())
-            .and_then(|rendered| {
-                motion::apply_writer_state(name, &config, state).map(|()| rendered)
-            });
+        let result =
+            template::render_for_filament(template, &mut config, state.initial_filaments.initial())
+                .map_err(|error| error.to_string())
+                .and_then(|rendered| {
+                    motion::apply_writer_state(name, &config, state).map(|()| rendered)
+                });
         match result {
             Ok(rendered) => rendered,
             Err(error) => {
