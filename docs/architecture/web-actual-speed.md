@@ -65,7 +65,8 @@ types, legend ranges and the Actual Speed Travel row.
 
 Deferred to their own slices:
 - The ToolPosition "actual speed profile" table and plot
-  (`GCodeViewer.cpp:152-200,519-600,1686-1745`, `ActualSpeedImguiWidget`).
+  (`GCodeViewer.cpp:152-200,519-600,1686-1745`, `ActualSpeedImguiWidget`),
+  now `web-actual-speed-profile.md`.
 - The Summary view.
 - The `Tool` view (commented out upstream).
 - Stealth time mode.
