@@ -6,6 +6,32 @@ use serde_json::json;
 #[path = "tri_hexagon_multiline_observation.rs"]
 mod observation;
 
+const FIXED: [(&str, &str); 24] = [
+    ("layer_height", "0.2"),
+    ("initial_layer_print_height", "0.2"),
+    ("wall_generator", "classic"),
+    ("wall_loops", "2"),
+    ("sparse_infill_pattern", "tri-hexagon"),
+    ("bottom_surface_pattern", "rectilinear"),
+    ("top_surface_pattern", "rectilinear"),
+    ("internal_solid_infill_pattern", "rectilinear"),
+    ("bottom_shell_layers", "3"),
+    ("top_shell_layers", "3"),
+    ("enable_support", "0"),
+    ("raft_layers", "0"),
+    ("brim_type", "no_brim"),
+    ("skirt_loops", "0"),
+    ("enable_prime_tower", "0"),
+    ("enable_arc_fitting", "0"),
+    ("spiral_mode", "0"),
+    ("seam_slope_type", "none"),
+    ("fuzzy_skin", "none"),
+    ("small_area_infill_flow_compensation", "0"),
+    ("xy_contour_compensation", "0"),
+    ("xy_hole_compensation", "0"),
+    ("elefant_foot_compensation", "0"),
+];
+
 fn compare(label: &str, count: &str, density: &str, angle: &str, hole: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -23,32 +49,7 @@ fn compare(label: &str, count: &str, density: &str, angle: &str, hole: bool) {
         .map(|name| profiles.filament(name).unwrap())
         .collect::<Vec<_>>();
     parity::normalize_filament_defaults(&mut filaments);
-    let fixed = [
-        ("layer_height", "0.2"),
-        ("initial_layer_print_height", "0.2"),
-        ("wall_generator", "classic"),
-        ("wall_loops", "2"),
-        ("sparse_infill_pattern", "tri-hexagon"),
-        ("bottom_surface_pattern", "rectilinear"),
-        ("top_surface_pattern", "rectilinear"),
-        ("internal_solid_infill_pattern", "rectilinear"),
-        ("bottom_shell_layers", "3"),
-        ("top_shell_layers", "3"),
-        ("enable_support", "0"),
-        ("raft_layers", "0"),
-        ("brim_type", "no_brim"),
-        ("skirt_loops", "0"),
-        ("enable_prime_tower", "0"),
-        ("enable_arc_fitting", "0"),
-        ("spiral_mode", "0"),
-        ("seam_slope_type", "none"),
-        ("fuzzy_skin", "none"),
-        ("small_area_infill_flow_compensation", "0"),
-        ("xy_contour_compensation", "0"),
-        ("xy_hole_compensation", "0"),
-        ("elefant_foot_compensation", "0"),
-    ];
-    for (key, value) in fixed {
+    for (key, value) in FIXED {
         process.insert(key.into(), json!(value));
     }
     let variable = [
@@ -73,7 +74,7 @@ fn compare(label: &str, count: &str, density: &str, angle: &str, hole: bool) {
             &runner::repo_root().join(format!("tests/parity/tri-hexagon-multiline/{mesh}.stl")),
         )
         .unwrap();
-    for (key, value) in fixed.into_iter().chain(variable) {
+    for (key, value) in FIXED.into_iter().chain(variable) {
         runner::application::verify_value(&exported.project, key, &json!(value)).unwrap();
     }
     let sliced = runner.slice_case(&exported).unwrap();

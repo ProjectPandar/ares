@@ -26,8 +26,8 @@ fn task22o76_crosshatch_group_becomes_owned_flow_annotated_entities() {
     options_mut(&mut graph, LAYER).sparse_infill_pattern = ProcessInfillPattern::CrossHatch;
     let before = graph_snapshot(&graph);
 
-    let first = generate_layer(external(&graph), 0, LAYER, None).unwrap();
-    let second = generate_layer(external(&graph), 0, LAYER, None).unwrap();
+    let first = generate_layer(external(&graph), 0, LAYER, None, None).unwrap();
+    let second = generate_layer(external(&graph), 0, LAYER, None, None).unwrap();
 
     assert_eq!(first, second);
     assert_eq!(graph_snapshot(&graph).bytes, before.bytes);

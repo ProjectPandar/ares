@@ -17,6 +17,7 @@ pub(in crate::project_slice) fn generate_layer(
     object_index: usize,
     layer_index: usize,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<crate::geometry::BoundingBox>,
 ) -> Result<LayerFillEntities, SliceError> {
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
@@ -183,7 +184,16 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
                 // `tri-hexagon` maps to `ipStars` (`PrintConfig.cpp:238`).
-                super::stars::append(&mut output, fill, traversal.scale, object_reference)?;
+                super::stars::append(
+                    &mut output,
+                    fill,
+                    traversal.scale,
+                    object_reference,
+                    super::stars::LayerGeometry {
+                        layer_id: layer.id,
+                        bounds: stars_bounds,
+                    },
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {
                 super::tpms_fk::append(&mut output, fill, layer.print_z, traversal.scale)?;

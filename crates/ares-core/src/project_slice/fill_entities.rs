@@ -18,6 +18,7 @@ mod plane_path;
 mod quartercubic;
 mod simplify;
 mod stars;
+mod stars_bounds;
 mod tpms_d;
 mod tpms_fk;
 
@@ -77,6 +78,30 @@ pub(in crate::project_slice) fn prepare(
                 let (compensated, _) = prelude.as_parts();
                 let (post_regions, _) = compensated.as_parts();
                 let (plan, _, _) = post_regions.as_parts();
+                let Some(resolved) = traversal
+                    .resolved
+                    .objects
+                    .iter()
+                    .find(|resolved| resolved.source_object_index == plan.source_object_index)
+                else {
+                    unreachable!("fill object retains its resolved configuration");
+                };
+                // Fill.cpp:1224/1237 -> PrintObject::bounding_box, once per object.
+                // Only Stars multiline reads this box; other generators keep their adapters.
+                let stars_bounds = resolved
+                    .all_regions
+                    .iter()
+                    .any(|region| {
+                        region.sparse_infill_pattern == crate::ProcessInfillPattern::TriHexagon
+                            && region.fill_multiline.0 > 1
+                    })
+                    .then(|| {
+                        stars_bounds::extended(
+                            &traversal.project.objects()[plan.source_object_index],
+                            resolved.print_objects[plan.transform_index].transform,
+                            traversal.scale,
+                        )
+                    });
                 // `prepare_lightning_infill_data` — reuse the generator built
                 // in `bridge_over_infill` on the expanded surfaces
                 // (`PrintObject.cpp:2711` builds it once, `make_fills` reuses).
@@ -92,6 +117,7 @@ pub(in crate::project_slice) fn prepare(
                             object_index,
                             layer_index,
                             lightning_generator.map(|g| g.as_ref()),
+                            stars_bounds,
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()

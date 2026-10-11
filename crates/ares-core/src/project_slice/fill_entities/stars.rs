@@ -2,8 +2,8 @@
 //! (`FillRectilinear.cpp:3487-3504`): three 60° scanline families; the third
 //! is shifted by `(3/2) * spacing * multiline / density` so the stars nest.
 //!
-//! Only the `multiline == 1` `fill_surface_by_multilines` path is ported; the
-//! `multiline > 1` `fill_surface_trapezoidal` branch is deferred.
+//! Count1 keeps `fill_surface_by_multilines`; count>1 uses mode2
+//! `fill_surface_trapezoidal` (`FillRectilinear.cpp:3487-3505`).
 
 use crate::{
     SliceError,
@@ -14,11 +14,17 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
+pub(super) struct LayerGeometry {
+    pub(super) layer_id: usize,
+    pub(super) bounds: Option<crate::geometry::BoundingBox>,
+}
+
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
+    geometry: LayerGeometry,
 ) -> Result<(), SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
     let sweeps =
@@ -36,7 +42,24 @@ pub(super) fn append(
     };
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(fill_surface(expolygon, params, &sweeps, scale).map_err(stars_error)?);
+        let lines = if params.multiline > 1 {
+            let Some(bounds) = geometry.bounds else {
+                unreachable!("Stars multiline bounds are prepared once per object");
+            };
+            crate::fill::stars_trapezoidal::fill_surface(
+                expolygon,
+                params,
+                crate::fill::stars_trapezoidal::SurfaceGeometry {
+                    layer_id: geometry.layer_id,
+                    thickness_layers: fill.representative.thickness_layers,
+                    bounds,
+                },
+                scale,
+            )
+        } else {
+            fill_surface(expolygon, params, &sweeps, scale)
+        };
+        polylines.extend(lines.map_err(stars_error)?);
     }
     if polylines.is_empty() {
         return Ok(());

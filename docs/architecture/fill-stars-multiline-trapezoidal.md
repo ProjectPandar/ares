@@ -1,7 +1,8 @@
 # SPEC: FillStars sparse multiline trapezoidal branch
 
-Status: SPEC-REVIEW-REQUEST. Baseline `c2de7a2e4`. This commit is documentation
-only: no Native execution, test, production edit or new coverage claim.
+Status: approved spec; implementation WIP retained locally on baseline
+`48821ce89`. Five byte REDs remain pending the separately specified FillBase
+multiline Clipper2 union prerequisite. No GREEN acceptance or push is claimed.
 
 ## Priority and ownership
 
@@ -53,6 +54,13 @@ coordinates, a per-surface grid or a synthesized approximate star pattern.
   mode2 rows and finalization. Reuse the existing `fill::multiline_offset`,
   checked rotation, ordered open-path clipping and `fill::connect` primitives;
   do not create another geometry/cache framework or public API.
+- Coordinator-approved narrow object-once wiring in
+  `project_slice/fill_entities.rs::prepare` and `fill_entities/stars_bounds.rs`:
+  `Fill.cpp:1624/1637` set_bounding_box(object()->bounding_box()),
+  `PrintObject.cpp:96-112`, `Model.cpp:1586-1599`,
+  `TriangleMesh.cpp:440-446` and `Print.hpp:347` provide source model-part mesh
+  dimensions. Compute once only for Stars count>1 and pass Option to the layers;
+  count1 and all other patterns do not compute this box or change their X adapter.
 - Minimal Stars-specific wiring in `project_slice/fill_entities/generate.rs`
   carries layer id, surface thickness_layers and the required object-wide
   extended bbox. Existing `ObjectFillGeometry`/X-bound adapters are temporary
@@ -61,6 +69,13 @@ coordinates, a per-surface grid or a synthesized approximate star pattern.
   legacy bbox callers or reinterpret compensated slice bounds as mesh size.
   If correct provenance requires a wider traversal change, report that boundary
   before editing it. The finite inputs below disable XY compensation.
+- Coordinator-approved additional Stars consumer:
+  `project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/arms_tail.rs:43-60`.
+  Upstream `Fill.cpp:1394-1501` creates the same FillStars generator, sets the
+  PrintObject bbox (:1398/:1443), forwards multiline (:1489), and invokes
+  fill_surface (:1497). For Stars count>1 this caller must share the new mode2
+  generator, layer phase and object box; count1 and other patterns retain their
+  current dispatch. This wiring is included when the Stars WIP resumes.
 - `ares-cli/tests/orca_parity/option_coverage/tri_hexagon_multiline.rs` and
   dedicated helpers: runtime Native admission, complete-output RED and controls.
   A registration line is the only intended shared test-module edit. No domain
@@ -200,3 +215,18 @@ case directory and log; v2 audit.json includes the explicit error). No guard
 change, ignore, skip or retained failing S2N test belongs to this Stars branch.
 The subsequent slice must reuse this real RED and port no-connect admission
 before removing the guard; no scope expansion is implied here.
+
+### Deferred shared union prerequisite (coordinator ruling)
+
+The first Stars mode2 WIP produces exact Native row arrays and exact round
+offset polygons before union on all13 emitted S2 layers. Differences first
+appear at union: Native uses Clipper2 Positive union
+(`deps_src/clipper2/Clipper2Lib/src/clipper.offset.cpp:604-630`), while the shared
+Ares `fill/multiline_offset/round.rs:57` uses the Clipper1 NonZero union helper.
+Evidence: `/tmp/worker6-stars-union-stage-audit.json` and
+`/tmp/worker6-stars-union-boundary.md` reference both raw stage captures.
+This is a common `FillBase.cpp:2712-2784` dependency, not a Stars-local algorithm.
+Coordinator ruling: preserve this GREEN as a local WIP, do not push it; specify
+and prove a non-Stars Native-backed RED on baseline48821ce89 before any shared
+union change. If those controls already match, report rather than widening
+the Stars slice or silently changing Clipper1 semantics.
