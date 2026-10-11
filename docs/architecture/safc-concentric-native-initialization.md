@@ -234,3 +234,47 @@ its already-used common KSR initialized three paths, ordinary Native/artifact
 configuration, and inherited replay CPU from the existing runner. The internal
 ARES_SAFC_CONCENTRIC_REQUEST variable carries the paired child request and does
 not select a producer or require control/CI configuration.
+
+## Revised harness acceptance
+
+RED f5569c187 ran the real seven-scenario official harness; the new authority
+policy failed because the old report lacked producer identity. Its exit100
+log is /tmp/worker6-safc-stage2/red-official-v2/run.log. The earlier compile
+errors are retained but are not credited as RED. The independent eight-run
+preflight above retains the official whole-byte UB divergence.
+
+GREEN 50948f7b0 changes only the harness: the five non-concentric cases retain
+the caller producer, and the two concentric cases use the admitted common
+KSR producer through a child and existing from_env/slice_case/cache identity.
+No production code, comparison rule, shared cache or control script changed.
+No Native artifact is committed. The previous global replay-variable routing
+is superseded and not credited.
+
+| Revised gate | Result | Retained log root |
+| --- | --- | --- |
+| seeded cold/hot entire option_coverage |200/200 each, exit0 |/tmp/worker6-safc-stage2/gates-v3-directed/seeded-{cold,hot}/run.log |
+| official cold/hot entire option_coverage |200/200 each, exit0 |/tmp/worker6-safc-stage2/gates-v3-directed/official-{cold,hot}/run.log |
+| strict clippy / fmt / wasm32 |all exit0 |/tmp/worker6-safc-stage2/gates-v2/{strict,fmt,wasm32}/run.log |
+| fresh default workspace |8339/8339, exit0 |/tmp/worker6-safc-stage2/gates-v4-default-workspace/run.log |
+
+All gates ran on 50948f7b0 with jobs2/threads2. Default workspace removed
+ARES_/ORCA_ and runner variables and started after the coordinator released
+the W5 full slot. The interrupted v2 seeded cold and superseded workspace
+remain outside git as non-evidence. Cold caches were fresh and separate by
+mode; each hot run reused only its mode cache. The group includes non-Native
+option_coverage tests; no new full scan was authorized or claimed.
+
+/tmp/worker6-safc-stage2/gates-v3-directed/producer-audit.json checks eight
+seven-case reports: first five cases retain each caller ELF and official has
+no replay seed/endpoint; only the concentric pair uses jqfsg42. The adjacent
+ares-raw-audit.json proves the same seven labels' raw Ares SHA across all
+56 records. All whole-byte and segment comparisons remain PASS.
+
+Original nine assertion texts sort to SHA256
+509ab2013415cc7bba584a5e94014b5200a2e706e0cfc941c312ee61212f195a
+in both versions; assertions.diff is empty. Seven case/five coupled-pair
+definitions and the observation module are byte-identical. Original
+application checks, role requirements, whole-output and coupled-consumer
+calls are unchanged; evidence is /tmp/worker6-safc-stage2/assertion-audit.json
+and original-consumer-calls-*.txt. Official's retained UB failure is not
+reclassified as an untouched official PASS.
