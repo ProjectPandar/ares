@@ -252,3 +252,40 @@ line16684 `G1 E-2.8 F3600`, Ares line16686 `G1 X140.608 Y133.201 F9000`).
 Solid extrusion commands agree in all seven controls. This does not establish
 anchoring as the cause; the approved anchoring mode2 caller is connected next
 and must be tested separately without changing comparison or assertions.
+
+### Anchoring follow-up and remaining union input mismatch
+
+Anchoring WIP `2a0f0b5f0` ran the same seven controls with fresh caches/roots
+under `/tmp/worker6-stars-anchoring-trial.f0TdJ3`. Both modes exited100:
+S3 became whole-output PASS; S1/H1/S2A stayed PASS with unchanged Ares raw.
+S2/H2/S10 remain DIVERGENT, with their first sparse differences still at
+layers5/5/4 respectively. `anchoring-before-after-audit.json` verifies equal
+input members and records all status/byte changes. No GREEN is claimed.
+
+Read-only gdb evidence `/tmp/worker6-stars-resumed-gdb.0fu8lY/stage-audit.json`
+compares14 S2 calls (one anchoring,13 emitted fills) against earlier initialized
+Native captures with identical input members. All ordered rows and raw offset
+polygons match; union phase0 matches, phase1/2 differ before clipping/connection
+(`FillRectilinear.cpp:3345/3351/3357/3366-3373`). Phase1 Native13489 versus
+Ares13459 points; phase2 Native13492 versus Ares13461. The union belongs to
+`FillBase.cpp:2712-2784` through `clipper.offset.cpp:604-630`.
+
+All30 phase1 Native-only points exist in the equal raw input. After adjacent
+duplicate removal each is exactly collinear with its raw neighbors, verified
+in `raw-collinear-points-audit.json`. Clipper2 `clipper.engine.cpp:615-661`
+AddPaths_ skips duplicates but retains these vertices. Ares
+`geometry/clipper/input/path.rs:114-127` clean_path removes them before union
+when preserve_collinear is false. Native only cleans collinearity after union
+(`clipper.engine.cpp:1531-1565`); intersections can change their neighbors by
+integer truncation, making the retained vertex noncollinear. Example raw
+point(36252936,31786081): raw cross0, Native final neighbors give cross-740788.
+This is distinct from the already-ported intersection arithmetic.
+
+Proposed narrow follow-up, awaiting shared-primitive scope approval: only the
+multiline Positive helper preserves input collinear vertices during AddPaths,
+then uses preserve_collinear=false during execution/output cleanup. Keep all
+default Clipper1 callers unchanged; no new sweep or external crate. Revalidate
+the ten union controls, seven Stars controls and whole option_coverage in both
+modes. The existing flags may still remove input spikes; this finite witness
+does not claim complete Clipper2 input/event semantics. No follow-up code has
+been written or accepted.
