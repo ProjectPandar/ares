@@ -28,7 +28,15 @@ jobs:
         with:
           components: clippy
       - uses: taiki-e/install-action@nextest
-      - run: cargo nextest run --workspace
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # v2.4.2
+          path: OrcaSlicer
+          sparse-checkout: |
+            resources/profiles
+            src/libslic3r
+      - run: cargo nextest run --workspace --no-fail-fast
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   format:
