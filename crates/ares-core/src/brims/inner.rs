@@ -20,23 +20,8 @@ pub(crate) fn area(
     let mut area = Vec::new();
     let mut forbidden = Vec::new();
     for polygon in source {
-        let holes: Vec<_> = polygon
-            .holes()
-            .iter()
-            .map(|hole| {
-                let mut reversed = hole.clone();
-                reversed.reverse();
-                ExPolygon::new(reversed, Vec::new())
-            })
-            .collect();
-        // Brim.cpp:547-558 uses the original paired width and default
-        // jtMiter / limit3, independently of the outer brim_width_mod.
-        let inset = offset_expolygons(&holes, -width - gap, JoinType::Miter, 3.0)
-            .map_err(geometry_error)?;
-        let outer =
-            offset_expolygons(&holes, -gap, JoinType::Miter, 3.0).map_err(geometry_error)?;
-        let ring = difference_ex(&outer, &inset).map_err(geometry_error)?;
-        area.extend(intersection_ex(&ring, &holes).map_err(geometry_error)?);
+        let holes = reversed_holes(polygon);
+        area.extend(hole_area(&holes, gap, width)?);
         let contour = ExPolygon::new(polygon.contour().clone(), Vec::new());
         let expanded =
             offset_expolygons(&[contour], spacing, JoinType::Miter, 3.0).map_err(geometry_error)?;
@@ -50,6 +35,32 @@ pub(crate) fn area(
         forbidden,
         object_islands,
     })
+}
+
+pub(crate) fn reversed_holes(polygon: &ExPolygon) -> Vec<ExPolygon> {
+    polygon
+        .holes()
+        .iter()
+        .map(|hole| {
+            let mut reversed = hole.clone();
+            reversed.reverse();
+            ExPolygon::new(reversed, Vec::new())
+        })
+        .collect()
+}
+
+pub(crate) fn hole_area(
+    holes: &[ExPolygon],
+    gap: f32,
+    width: f32,
+) -> Result<Vec<ExPolygon>, SliceError> {
+    // Brim.cpp:547-558 uses the original paired width and default
+    // jtMiter / limit3, independently of the outer brim_width_mod.
+    let inset =
+        offset_expolygons(holes, -width - gap, JoinType::Miter, 3.0).map_err(geometry_error)?;
+    let outer = offset_expolygons(holes, -gap, JoinType::Miter, 3.0).map_err(geometry_error)?;
+    let ring = difference_ex(&outer, &inset).map_err(geometry_error)?;
+    intersection_ex(&ring, holes).map_err(geometry_error)
 }
 
 pub(crate) fn retain_contact(

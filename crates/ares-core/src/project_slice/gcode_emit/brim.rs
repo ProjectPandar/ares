@@ -29,7 +29,10 @@ impl BrimPlan {
         let options = &resolved.object;
         if !matches!(
             options.brim_type,
-            ProcessBrimType::OuterOnly | ProcessBrimType::InnerOnly | ProcessBrimType::BrimEars
+            ProcessBrimType::OuterOnly
+                | ProcessBrimType::InnerOnly
+                | ProcessBrimType::OuterAndInner
+                | ProcessBrimType::BrimEars
         ) || options.brim_width.0 <= 0.0
         {
             return Ok(None);
@@ -99,6 +102,12 @@ impl BrimPlan {
             let area = crate::brims::inner::area(&source, gap, brim_width, spacing, resolution)?;
             object_islands = area.object_islands;
             (area.area, area.forbidden)
+        } else if options.brim_type == ProcessBrimType::OuterAndInner {
+            let area = crate::brims::combined::area(&source, gap, brim_width, spacing, resolution)?;
+            object_islands = area.object_islands;
+            // Both predicates are true: only objectIsland is forbidden,
+            // without the no-inner/no-outer masks (Brim.cpp:560-570).
+            (area.area, object_islands.clone())
         } else if options.brim_type == ProcessBrimType::BrimEars {
             crate::brims::ears::area(
                 &source,
@@ -128,7 +137,10 @@ impl BrimPlan {
             (brim_area, inner),
             resolution,
         )?;
-        let brim_area = if options.brim_type == ProcessBrimType::InnerOnly {
+        let brim_area = if matches!(
+            options.brim_type,
+            ProcessBrimType::InnerOnly | ProcessBrimType::OuterAndInner
+        ) {
             crate::brims::inner::retain_contact(brim_area, &object_islands, spacing, resolution)?
         } else {
             brim_area

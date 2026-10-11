@@ -24,14 +24,16 @@ Full evidence is the actual `4650357d2`-based candidate: seeded974/974 PASS, off
 Other-layer count is already merged; SAFC Native nondeterminism is owned by worker6.
 [Sources, Rust destinations, failure inventory and test-first exits](architecture/option-g4-first-layer-sequence-coverage.md).
 
-### OuterAndInner combined brim: SPEC request (2026-10-12)
+### OuterAndInner combined brim: bounded GREEN, review pending (2026-10-12)
 
 Next worker3 source slice: `Brim.cpp::outer_inner_brim_area` combined selector,
 contour Round outer area + original-width Miter3 hole area, shared masks/contact
 and existing `tryExPolygonOffset`/`makeBrimInfillImpl` paths. One object/instance/
 volume/group/tool; EFC, supports, painting, cross-object composition and the
-rectangular public adapter remain deferred. Docs only; Native-admitted input-only
-fixtures and separate reported RED precede implementation after SPEC approval.
+rectangular public adapter remain deferred. SPEC53b22ddc9 approved; ten input-only
+fixtures/Native-admitted REDb35dc2bd5 committed/reported before implementation.
+Finite GREEN25/25 both modes; all nine InnerOnly API/CLI outputs byte-identical
+across both modes (36 streams). Directed/engineering/workspace/full review pending.
 [SPEC](architecture/outer-inner-brim-rewrite-spec.md),
 [runtime ARD](architecture/ard-outer-inner-brim-runtime-boundary.md).
 

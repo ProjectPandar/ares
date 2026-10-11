@@ -1,6 +1,6 @@
 # ARD: Brim.cpp combined outer/inner runtime boundary
 
-Status: proposed, docs-only SPEC awaiting Claude's approval.
+Status: SPEC53b22ddc9 approved by Claude; REDb35dc2bd5 reported before code.
 
 ## Source and destination
 
@@ -10,7 +10,7 @@ area construction, exclusions and contact policy. `tryExPolygonOffset` /
 Rust destination: private `brims/combined.rs`, the shared hole calculation in
 `brims/inner.rs`, and existing project `BrimPlan::generate` dispatch.
 
-## Non-negotiable proposed decisions
+## Non-negotiable approved decisions
 
 1. Port explicit OuterAndInner for one object/instance/volume/group/tool.
    The existing BrimPlan is a compatibility shell around those upstream

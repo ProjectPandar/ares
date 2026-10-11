@@ -1,6 +1,7 @@
 use crate::{LayerContours, Point2, SliceError};
 
 mod combine;
+pub(crate) mod combined;
 pub(crate) mod ears;
 mod efc_outline;
 pub(crate) mod inner;

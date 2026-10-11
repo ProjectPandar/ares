@@ -137,4 +137,9 @@ A RED whose first cause belongs there must be reported, not repaired here.
    Rebase/carry, Native instability adjudication and final merge remain Claude's
    decisions; SPEC approval does not authorize push or merge.
 
-No fixtures, Native execution, tests or Rust implementation accompany this SPEC.
+The original SPEC submission was docs only. Separate REDb35dc2bd5 was reported
+to inbox before production edits. Finite GREEN now passes25/25 in both modes,
+including all ten combined cases and fifteen unchanged controls. Each of the
+nine InnerOnly controls has byte-identical API and CLI output against RED in
+both modes (36 raw stream comparisons). Latest-head directed/engineering,
+workspace, full and exact code/merge review remain separate required gates.
