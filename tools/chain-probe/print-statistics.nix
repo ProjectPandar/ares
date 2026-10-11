@@ -7,12 +7,18 @@
 #   ORCA_PRINT_STATISTICS_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source \
 #   nix build --impure --cores 8 --no-link --print-out-paths --file tools/chain-probe/print-statistics.nix
 let
+  source = builtins.getEnv "ORCA_PRINT_STATISTICS_SOURCE";
   nixpkgs = builtins.getEnv "ORCA_PRINT_STATISTICS_NIXPKGS";
   pkgs = import nixpkgs {};
 in
+assert source != "";
 assert nixpkgs != "";
 pkgs.orca-slicer.overrideAttrs (old: {
   pname = "orca-slicer-print-statistics";
-  src = builtins.storePath /nix/store/g3wj93lyhjsvc32fmgvw0cdbd6191q55-orca-slicer-2.4.2-seed-replay-source;
+  src = builtins.path {
+    path = builtins.toPath source;
+    name = "orca-slicer-${old.version}-seed-replay-source";
+    filter = path: type: builtins.baseNameOf path != ".git";
+  };
   patches = (old.patches or []) ++ [ ./print-statistics.patch ];
 })

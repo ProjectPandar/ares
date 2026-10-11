@@ -6,10 +6,16 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Pinned nixpkgs == local gate store path
+  # /nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source (narHash verified).
+  ORCA_REF: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # OrcaSlicer v2.4.2
 
 jobs:
   native:
@@ -28,10 +34,11 @@ jobs:
         with:
           components: clippy
       - uses: taiki-e/install-action@nextest
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
-          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # v2.4.2
+          ref: ${{ env.ORCA_REF }}
           path: OrcaSlicer
           sparse-checkout: |
             resources/profiles
@@ -48,27 +55,95 @@ jobs:
           components: rustfmt
       - run: cargo fmt --check
 
-  wasm:
+  native-oracle-build:
+    name: oracle-${{ matrix.variant }}
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - seed-replay
+          - procgcode
+          - procgcode-stable-options
+          - procgcode-dynamics
+          - marker-time
+          - marker-time-stable-options
+          - print-statistics
+          - ksr-initialized
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: ${{ env.ORCA_REF }}
+          path: OrcaSlicer
+      - uses: NixOS/nix-installer-action@main
+      - uses: Mic92/hestia@v3
+        with:
+          upstream-cache-filter: true
+      - run: bash scripts/ci/build-oracle.sh ${{ matrix.variant }}
+      - run: nix-collect-garbage -d || true
+
+  web:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: ${{ env.ORCA_REF }}
+          path: OrcaSlicer
+          sparse-checkout: |
+            resources/profiles
+            src/libslic3r
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: crates/ares-wasm/tests/browser/package-lock.json
+          cache-dependency-path: web/package-lock.json
       - uses: dtolnay/rust-toolchain@1.99.0
         with:
           targets: wasm32-unknown-unknown
           components: rustfmt
       - uses: taiki-e/install-action@nextest
-      - run: cargo nextest --version
-      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@wasm-bindgen
+      - uses: Swatinem/rust-cache@v2
+      - uses: NixOS/nix-installer-action@main
+      - uses: Mic92/hestia@v3
         with:
-          repository: SoftFever/OrcaSlicer
-          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # v2.4.2
-          path: OrcaSlicer
-          sparse-checkout: src/libslic3r
+          upstream-cache-filter: true
+      - name: Substitute Native oracles
+        run: |
+          set -euo pipefail
+          for v in procgcode procgcode-stable-options procgcode-dynamics \
+                   marker-time marker-time-stable-options \
+                   print-statistics seed-replay; do
+            out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
+            name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
+            echo "$v -> $out"
+          done
+      - name: Fetch official OrcaSlicer AppImage
+        run: bash scripts/ci/fetch-orca-appimage.sh "$RUNNER_TEMP/orca-appdir"
+      - name: Export oracle env
+        run: |
+          set -euo pipefail
+          nixpkgs="$(nix build --no-link --print-out-paths \
+            github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce)"
+          {
+            echo "NIX_PATH=nixpkgs=$nixpkgs"
+            echo "ORCA_SLICER_DIR=$PWD/OrcaSlicer"
+            echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
+            echo "ORCA_REPLAY_SEED=0"
+            echo "ARES_WASM_PKG=$PWD/target/wasm-browser"
+            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_BIN=$ORACLE_marker_time/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_marker_time_stable_options/bin/orca-slicer"
+            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
+            echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
+          } >> "$GITHUB_ENV"
       - name: Verify generated PrintConfigDef metadata is in sync with upstream
         run: |
           node scripts/gen-configdef.mjs --check
@@ -77,19 +152,202 @@ jobs:
           node scripts/verify-configdef.mjs target/print-config-def.json --report target/configdef-verification.json
       - run: cargo check -p ares-core --target wasm32-unknown-unknown
       - run: cargo check -p ares-wasm --target wasm32-unknown-unknown
-      - run: cargo install --locked wasm-bindgen-cli --version 0.2.121
       - run: cargo build -p ares-wasm --target wasm32-unknown-unknown --release --target-dir target/wasm-browser
       - run: wasm-bindgen target/wasm-browser/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
-      - name: Audit generated browser exports
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
+      - run: npm ci --prefix web
+      - run: npm exec --prefix web playwright install --with-deps chromium webkit
+      - run: npm run lint --prefix web
+      - run: npm run typecheck --prefix web
+      - run: npm run test:e2e --prefix web
+
+  parity-seeded:
+    runs-on: self-hosted
+    env:
+      ARES_REQUIRE_ORCA: "1"
+      ARES_PARITY_SEEDED_REFERENCE: "1"
+      ARES_ROLE_ORACLE_LIVE: "1"
+      ARES_PARITY_BOOKKEEPING_REFERENCE: "1"
+      ARES_PARITY_BRIDGE_DIRECTION_REFERENCE: "1"
+      ARES_PARITY_CLIPPED_LOOP_REFERENCE: "1"
+      ARES_PARITY_EMISSION_PHASES_REFERENCE: "1"
+      ARES_PARITY_FILAMENT_STATS_REFERENCE: "1"
+      ARES_PARITY_FILAMENT_VARIANTS_REFERENCE: "1"
+      ARES_PARITY_HONEYCOMB_MULTILINE: "1"
+      ARES_PARITY_IRONING_FAN_REFERENCE: "1"
+      ARES_PARITY_LIGHTNING_REFERENCE: "1"
+      ARES_PARITY_LOOP_CHAIN_REFERENCE: "1"
+      ARES_PARITY_MULTIOBJECT_SKIRT_REFERENCE: "1"
+      ARES_PARITY_NORMAL_SUPPORT_REFERENCE: "1"
+      ARES_PARITY_OBJECT_ID_REFERENCE: "1"
+      ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE: "1"
+      ARES_PARITY_OVERRIDE_REFERENCE: "1"
+      ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1"
+      ARES_PARITY_REGION_FILAMENT_REFERENCE: "1"
+      ARES_PARITY_REGION_PERIMETERS_REFERENCE: "1"
+      ARES_PARITY_SHORT_LINE_REFERENCE: "1"
+      ARES_PARITY_SMALL_LOOP_SPEED_REFERENCE: "1"
+      ARES_PARITY_STITCH_JUNCTION_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_ANGLE_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_FLOW_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_MODIFIER_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_STYLE_REFERENCE: "1"
+      ARES_PARITY_TRANSITION_SNAP_REFERENCE: "1"
+      ARES_PARITY_TREE_CONTAINMENT_REFERENCE: "1"
+      ARES_PARITY_TREE_SUPPORT_REFERENCE: "1"
+      ARES_PARITY_VOLUME_OFFSETS_REFERENCE: "1"
+      ARES_PARITY_WIDTH_OWNER_PAIR: "1"
+      ORCA_REPLAY_SEED: "0"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: ${{ env.ORCA_REF }}
+          path: OrcaSlicer
+          sparse-checkout: |
+            resources/profiles
+            src/libslic3r
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - uses: taiki-e/install-action@nextest
+      - uses: Swatinem/rust-cache@v2
+      - uses: NixOS/nix-installer-action@main
+      - uses: Mic92/hestia@v3
+        with:
+          upstream-cache-filter: true
+      - name: Substitute Native oracles
         run: |
-          node --input-type=module -e '
-            const exports = Object.keys(await import("./target/wasm-browser/ares_wasm.js"));
-            const hooks = exports.filter((name) => name.startsWith("task22")).sort();
-            if (hooks.length !== 0) throw new Error(`bindings expose obsolete checkpoint hooks: ${hooks}`);
-          '
-      - run: npm --prefix crates/ares-wasm/tests/browser ci
-      - run: node --check crates/ares-wasm/tests/browser/project-slice-page.mjs
-      - run: node --check crates/ares-wasm/tests/browser/project-slice.spec.mjs
-      - run: node --check crates/ares-wasm/tests/browser/server.mjs
-      - run: npx --prefix crates/ares-wasm/tests/browser playwright install --with-deps chromium
-      - run: npm --prefix crates/ares-wasm/tests/browser test
+          set -euo pipefail
+          for v in seed-replay procgcode procgcode-stable-options \
+                   procgcode-dynamics marker-time marker-time-stable-options \
+                   print-statistics ksr-initialized gdb; do
+            out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
+            name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
+            echo "$v -> $out"
+          done
+      - name: Export oracle env
+        run: |
+          set -euo pipefail
+          nixpkgs="$(nix build --no-link --print-out-paths \
+            github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce)"
+          ksr="$ORACLE_ksr_initialized"
+          {
+            echo "NIX_PATH=nixpkgs=$nixpkgs"
+            echo "ARES_ORCA_BIN=$PWD/scripts/orca-seeded-parity.sh"
+            echo "ORCA_REPLAY_BIN=$ORACLE_seed_replay/bin/orca-slicer"
+            echo "ARES_ORCA_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
+            echo "ARES_ORCA_RESOURCES_DIR=$ksr/share/OrcaSlicer"
+            echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
+            echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
+            echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
+            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
+            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_BIN=$ORACLE_marker_time/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_marker_time_stable_options/bin/orca-slicer"
+            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
+            echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
+            echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
+            echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
+          } >> "$GITHUB_ENV"
+      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
+
+  parity-official:
+    runs-on: self-hosted
+    env:
+      ARES_REQUIRE_ORCA: "1"
+      ARES_ROLE_ORACLE_LIVE: "1"
+      ARES_PARITY_BOOKKEEPING_REFERENCE: "1"
+      ARES_PARITY_BRIDGE_DIRECTION_REFERENCE: "1"
+      ARES_PARITY_CLIPPED_LOOP_REFERENCE: "1"
+      ARES_PARITY_EMISSION_PHASES_REFERENCE: "1"
+      ARES_PARITY_FILAMENT_STATS_REFERENCE: "1"
+      ARES_PARITY_FILAMENT_VARIANTS_REFERENCE: "1"
+      ARES_PARITY_HONEYCOMB_MULTILINE: "1"
+      ARES_PARITY_IRONING_FAN_REFERENCE: "1"
+      ARES_PARITY_LIGHTNING_REFERENCE: "1"
+      ARES_PARITY_LOOP_CHAIN_REFERENCE: "1"
+      ARES_PARITY_MULTIOBJECT_SKIRT_REFERENCE: "1"
+      ARES_PARITY_NORMAL_SUPPORT_REFERENCE: "1"
+      ARES_PARITY_OBJECT_ID_REFERENCE: "1"
+      ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE: "1"
+      ARES_PARITY_OVERRIDE_REFERENCE: "1"
+      ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1"
+      ARES_PARITY_REGION_FILAMENT_REFERENCE: "1"
+      ARES_PARITY_REGION_PERIMETERS_REFERENCE: "1"
+      ARES_PARITY_SHORT_LINE_REFERENCE: "1"
+      ARES_PARITY_SMALL_LOOP_SPEED_REFERENCE: "1"
+      ARES_PARITY_STITCH_JUNCTION_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_ANGLE_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_FLOW_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_MODIFIER_REFERENCE: "1"
+      ARES_PARITY_SUPPORT_STYLE_REFERENCE: "1"
+      ARES_PARITY_TRANSITION_SNAP_REFERENCE: "1"
+      ARES_PARITY_TREE_CONTAINMENT_REFERENCE: "1"
+      ARES_PARITY_TREE_SUPPORT_REFERENCE: "1"
+      ARES_PARITY_VOLUME_OFFSETS_REFERENCE: "1"
+      ARES_PARITY_WIDTH_OWNER_PAIR: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: ${{ env.ORCA_REF }}
+          path: OrcaSlicer
+          sparse-checkout: |
+            resources/profiles
+            src/libslic3r
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - uses: taiki-e/install-action@nextest
+      - uses: Swatinem/rust-cache@v2
+      - uses: NixOS/nix-installer-action@main
+      - uses: Mic92/hestia@v3
+        with:
+          upstream-cache-filter: true
+      - name: Substitute Native oracles
+        run: |
+          set -euo pipefail
+          for v in procgcode procgcode-stable-options procgcode-dynamics \
+                   marker-time marker-time-stable-options \
+                   print-statistics ksr-initialized gdb; do
+            out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
+            name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
+            echo "$v -> $out"
+          done
+      - name: Fetch official OrcaSlicer AppImage
+        run: bash scripts/ci/fetch-orca-appimage.sh "$RUNNER_TEMP/orca-appdir"
+      - name: Export oracle env
+        run: |
+          set -euo pipefail
+          nixpkgs="$(nix build --no-link --print-out-paths \
+            github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce)"
+          ksr="$ORACLE_ksr_initialized"
+          {
+            echo "NIX_PATH=nixpkgs=$nixpkgs"
+            echo "ARES_ORCA_BIN=$PWD/scripts/orca-parity.sh"
+            echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
+            echo "ARES_ORCA_NATIVE_BIN=$RUNNER_TEMP/orca-appdir/bin/orca-slicer"
+            echo "ARES_ORCA_RESOURCES_DIR=$RUNNER_TEMP/orca-appdir/resources"
+            echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
+            echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
+            echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
+            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
+            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_BIN=$ORACLE_marker_time/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_marker_time_stable_options/bin/orca-slicer"
+            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
+            echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
+            echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
+            echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
+          } >> "$GITHUB_ENV"
+      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8

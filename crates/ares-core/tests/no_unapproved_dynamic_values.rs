@@ -75,20 +75,6 @@ fn profile_modules_use_only_typed_shells() {
 }
 
 #[test]
-#[ignore = "print-only migration aid; never writes files"]
-fn print_current_dynamic_value_baseline() {
-    let repo = repo_root();
-    let (findings, sources) = scan_repository(&repo).unwrap();
-    let allowlist = allowlist::parse(
-        &fs::read_to_string(repo.join("scripts/dynamic_value_allowlist.toml")).unwrap(),
-    )
-    .unwrap();
-    for fingerprint in render_findings(&allowlist::apply(findings, &allowlist, &sources).unwrap()) {
-        println!("{fingerprint}");
-    }
-}
-
-#[test]
 fn project_resolver_follows_reexport_into_consumer() {
     let sources = BTreeMap::from([
         (

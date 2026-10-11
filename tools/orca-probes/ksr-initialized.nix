@@ -3,9 +3,11 @@
 # Upstream 8500fcdcc + ksr-initialized-source.patch (not current seed-only.patch).
 let
   source = builtins.getEnv "ORCA_KSR_INITIALIZED_SOURCE";
-  pkgs = import (builtins.storePath /nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source) {};
+  nixpkgs = builtins.getEnv "ORCA_KSR_INITIALIZED_NIXPKGS";
+  pkgs = import nixpkgs {};
 in
 assert source != "";
+assert nixpkgs != "";
 pkgs.orca-slicer.overrideAttrs (old: {
   pname = "orca-slicer-seed-replay";
   src = builtins.path {

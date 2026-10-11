@@ -1,0 +1,250 @@
+# CI Tier 1 修复 / 提速 / skipped 处理方案（worker4，SPEC v2 待批准）
+
+范围：`.github/workflows/`。不改断言语义、不新增 `#[ignore]`、不提交
+Native 产物。runner 为 org 级 ephemeral VM
+（`shaula-project-pandar-pve-*`，每 job 不同），任何 host 路径（本机
+/tmp、/nix/store）均不可用——Native 一律在 CI 内用仓库内 Nix 表达式
+现场构建或下载官方 AppImage。
+
+## 1. 失败清单与根因（不变）
+
+- run 38145688037：`embedded_script_whole_file` 2 测试读
+  `repo_root()/OrcaSlicer/resources/profiles` 失败（os error 2）。
+  native job 无 OrcaSlicer checkout → 环境缺资源，非回归；fail-fast
+  掩盖其余 7712 测试。
+- **第二处环境缺失（step1 run 38147360608 发现）**：wasm job 的
+  `project-slice.spec.mjs` 设置 `ARES_REQUIRE_ORCA=1` 并透传
+  `ARES_KSR_INITIALIZED_{BIN,NATIVE_BIN,RESOURCES_DIR}`——CI 未提供 →
+  `browser_output_matches_initialized_orca_242_ordered_bytes` 红。
+  结论：wasm job 同样需要 ksr-initialized Native（复用
+  native-oracle-build 输出的 hestia substitute，不需重复构建）。
+- 历史 3s 失败（38142910641 等）：ubuntu-latest billing，切
+  self-hosted 已解决。
+
+**已执行（step1，批准部分）**：分支 `worker4/ci-tier1-fix` @ c6b36592d，
+native job 加 OrcaSlicer sparse checkout（`resources/profiles` +
+`src/libslic3r`，pin v2.4.2 `8500fcdcc`）+ `nextest --no-fail-fast`；
+CI run 38147360608 验证中。
+
+## 2. Job 拓扑（v2）
+
+```
+native   (self-hosted) : checkout + OrcaSlicer sparse + rust-cache
+                         + nextest --workspace --no-fail-fast + clippy
+format   (self-hosted) : 不变
+web      (self-hosted) : 原 wasm job 改名/重构，见 §2a
+native-oracle-build (matrix, self-hosted): Nix + hestia，
+                  每 job 一个变体，构建上传
+parity-seeded   (self-hosted): hestia substitute + seeded env
+                  + nextest -p ares-cli orca_parity
+parity-official (self-hosted): hestia substitute + AppImage 解包
+                  + official env + nextest -p ares-cli orca_parity
+```
+
+### 2a. `web` job（原 wasm job 重构，用户指令）
+
+保留的 Tier1 WASM 检查（不变）：`cargo check -p ares-core
+--target wasm32`、`cargo check -p ares-wasm --target wasm32`、
+`node scripts/gen-configdef.mjs --check` +
+`cargo run -p ares-core --release --example print_config_def` +
+`scripts/verify-configdef.mjs`、wasm-bindgen 产物构建（`cargo build
+-p ares-wasm --target wasm32` + wasm-bindgen，改用
+`taiki-e/install-action@wasm-bindgen`）。
+
+移除：旧 `crates/ares-wasm/tests/browser` 全套（npm ci/test、
+node --check ×3、export audit 步骤——export audit 逻辑可移入 web
+lint/构建脚本，见 §6 待确认）。
+
+替换为 web/ 工作区：
+```
+npm ci --prefix web           （setup-node cache: web/package-lock.json）
+npm run lint                  （oxlint packages app e2e）
+npm run typecheck             （tsc）
+npm run test:e2e              （cargo nextest ares-wasm 三 test +
+                               build:wasm/build + playwright test）
+```
+Playwright 浏览器缓存：`actions/cache@v4` `~/.cache/ms-playwright`，
+key 含 `web/package-lock.json` hash（内含 @playwright/test 版本）。
+config 含 chromium(桌面)+webkit(iphone/pixel) 三 project → 安装
+`playwright install --with-deps chromium webkit`。
+
+**web job oracle env（对齐 `web/e2e/oracleEnv.ts` + 各 spec 调用，
+CI 未设即 skip 的那批，必须全部注入使其真跑）**：
+
+| env | 来源 | 消费的 spec |
+|---|---|---|
+| `ORCA_APPDIR` | 官方 v2.4.2 AppImage 解包 squashfs-root | colorChange / slice / presetSlice / profileSlice / configRoundTrip |
+| `ARES_PROCGCODE_BIN` | `tools/chain-probe/procgcode.nix` | colorChange 等 |
+| `ARES_PROCGCODE_DYNAMICS_BIN` | procgcode-dynamics.nix | dynamics 对比 |
+| `ARES_MARKER_TIME_BIN` | `tools/chain-probe/marker-time.nix` | markerTimeFormat/Native |
+| `ARES_MARKER_TIME_STABLE_BIN` | `marker-time-stable-options.nix` | toolPosition |
+| `ARES_PRINT_STATISTICS_BIN` | `print-statistics.nix` | estimation/summary |
+| `ARES_KSR_INITIALIZED_*` | ksr-initialized.nix（原 wasm browser 测试需要；web e2e 是否还用待核 —— project-slice.spec 语义并入哪支 spec 需 w2D 确认） | 旧 browser 路线 |
+| `ORCA_SLICER_DIR` | checkout 的 `OrcaSlicer/`（web job 已有 sparse checkout） | profiles/presetImport |
+| `ORCA_REPLAY_SEED=0` | 固定 | estimation |
+
+矩阵 build job 需新增 `marker-time` + `marker-time-stable-options`
+两个变体（合计 8 个）。web job 的 oracle 全走 hestia substitute +
+AppImage 解包步骤（与 parity-official 共用同一解包脚本
+`scripts/ci/fetch-orca-appimage.sh`，入仓）。
+
+### 2b. 旧 `crates/ares-wasm/tests/browser/` 处置（决策点 F）
+
+覆盖对照：
+
+| 旧 spec（project-slice.spec.mjs） | web/e2e 对应 |
+|---|---|
+| browser project route emits complete finite KSR G-code（KSR initialized Native 对比） | 无直接对应——web 有 profileSlice/presetSlice（official AppImage oracle），但 **KSR initialized 路线的 browser 对比仅此一处**。删除会丢失该覆盖，除非 w2D 已在 web/ 重写等价 spec |
+| bindings expose no internal checkpoint hooks | 无（旧 export audit 的 spec 版） |
+| repeated project slicing identical bytes | 无直接对应 |
+
+**裁决（v4）**：旧 `crates/ares-wasm/tests/browser` 不在 CI 中保留；
+其独有的 KSR initialized 浏览器对比由 **w2D 移植到 web/e2e**，移植
+合入后 w2D 提交删除旧目录（no legacy）。本分支不删该目录，仅将
+web job 切到 web/ 工作区；删除与移植是 w2D 提交的依赖项。
+
+- 三个 job 并行；`native` 不注入任何 `ARES_*` parity env（普通 workspace
+  标准环境，SKIPPED 仍按 stderr 显式记录）。
+- parity jobs `env: ARES_REQUIRE_ORCA=1`：任何 gate env 缺失 → 显式
+  panic 红（B2 语义），绝不静默。
+- parity job runner label：ephemeral VM 即 self-hosted（同 label 会与
+  native 抢 runner？ephemeral 每 job 独立 VM，无争抢问题）。
+  **待确认**：self-hosted VM 是否有 Nix daemon/磁盘余量跑 Orca 构建；
+  若无，parity jobs 用 `ubuntu-latest`（billing 问题需账号先恢复；
+  fallback 记录）。**决策点 E**。
+
+## 3. Native 构建与缓存
+
+### 3.1 Nix 安装 + hestia 缓存（用户指定）
+
+```yaml
+permissions:
+  contents: read
+  actions: read        # hestia 预检 evicted cache entries
+steps:
+  - uses: NixOS/nix-installer-action@main
+  - uses: Mic92/hestia@v3
+```
+
+- 另在默认分支新增每日 GC workflow：复制
+  `Mic92/hestia` `.github/workflows/gc.yml`，permissions `actions: write`
+  （删除过期 cache entries 需要）。
+- 约束：
+  - **hestia cache token ~6h**：单次 job 内全部构建必须 6h 内完成。
+    **裁决（v3）**：`native-oracle-build` 拆为**矩阵 job**，每 job
+    一个变体（seed-replay / procgcode / procgcode-stable /
+    procgcode-dynamics / print-statistics / ksr-initialized +
+    gdb），各自构建并上传 hestia；parity-seeded、parity-official、
+    wasm 三 job 只 substitute+test。每 build job 内 `--cores 4
+    --max-jobs 1`（7GB 内存防 OOM），job 尾 `nix-collect-garbage`
+    回收构建树（矩阵并行下仅防单 job 超盘）。单变体估算
+    40–60min（冷）→ 远低于 6h；矩阵并行不受 token 约束。
+    gdb 体量小，并入任一 job 或单独小变体。
+  - **10GB 配额与 rust-cache 共享**：orca-slicer 单变体输出
+    ~350–500MB，5 变体 ≈ 2GB + 其 nixpkgs deps 闭包。启用
+    `upstream-cache-filter: true`（hestia input）只存非
+    cache.nixos.org 路径——deps 直接从上游 substitute，配额压力
+    降到 <1GB。GC workflow 兜底。
+  - **PR 语义**：默认分支缓存对 PR 只读；PR 写自己 scope——与本
+    workflow 无冲突。
+
+### 3.2 Native 产物清单（对照 `/tmp/ares-parity-control-set-v2.sh`）
+
+| env | 构建来源 | 模式 |
+|---|---|---|
+| `ARES_ORCA_BIN` + `ORCA_REPLAY_*` | `scripts/orca-replay/build.nix`（seed-only.patch，`ORCA_REPLAY_SOURCE`=上游 checkout、`ORCA_REPLAY_NIXPKGS`=pinned nixpkgs） | seeded |
+| `ARES_ORCA_BIN`/`ARES_ORCA_NATIVE_BIN`/`ARES_ORCA_RESOURCES_DIR` | 官方 OrcaSlicer v2.4.2 AppImage 下载 + `--appimage-extract` → `squashfs-root`（等价本机 `/tmp/orca-official-242`） | official |
+| `ARES_PROCGCODE_BIN` | `tools/chain-probe/procgcode.nix` + procgcode.patch | 两 job 共用 |
+| `ARES_PROCGCODE_STABLE_BIN` | `tools/chain-probe/procgcode-stable-options.nix` | 共用 |
+| `ARES_PROCGCODE_DYNAMICS_BIN` | `tools/chain-probe/procgcode-dynamics.nix` | 共用 |
+| `ARES_PRINT_STATISTICS_BIN` | `tools/chain-probe/print-statistics.nix`（src 为 seed-replay source store path → CI 内改为 `builtins.path` 包装变量，需小改 nix 或提供 source 目录） | 共用 |
+| `ARES_KSR_INITIALIZED_{BIN,NATIVE_BIN,RESOURCES_DIR}` | `tools/orca-probes/ksr-initialized.nix`（历史初始化源，需 `ORCA_KSR_INITIALIZED_SOURCE`——该源的生成方式需确认，见 §6 风险） | 共用 |
+| `ARES_GDB_BIN` | `nix build nixpkgs#gdb` 或直接 nix profile | 共用 |
+
+### 3.3 pinned nixpkgs
+
+本机 `.nix` 均用 store path `/nix/store/9qzkr0n…-source`
+（`lib.version = 26.11pre-git`）。store path 无 rev 元数据；CI 中改
+用 `pkgs.fetchFromGitHub`/`fetchTarball` pin **nixpkgs 具体 commit**。
+不同 rev → orca-slicer 依赖版本可能漂移，seeded 模式逐字节 parity 有
+漂移风险。**需要确定等价 rev**：从本机 `nixos-unstable` channel
+snapshot 反查（spec 批准后我定位 rev 写入 workflow pin）。
+
+### 3.4 env 注入
+
+parity job 步骤末尾把 control-set-v2 refs 全集写入 step env：
+26 个 `ARES_PARITY_*_REFERENCE=1` + `ARES_PARITY_{SWEEP,CLUSTER,
+OPTIONS}`（后三个按 seeded/official 各取）+ `ARES_PARITY_ARTIFACT_ROOT=
+$RUNNER_TEMP/parity-artifacts`（绝对路径、repo 外）+ `ARES_REQUIRE_ORCA=1`
++ `ARES_ROLE_ORACLE_LIVE=1` + seeded 的 `ARES_PARITY_SEEDED_REFERENCE=1`
+/`ORCA_REPLAY_SEED=0`/`ORCA_REPLAY_CPU=<n>`。
+CPU pin：本机用 `CARGO_TARGET_X86_64_..._RUNNER` + 仓外脚本；CI 改为
+仓内脚本 `scripts/ci/pin-runner.sh`（移植 `/tmp/ares-pin-runner.sh`，
+5 行 taskset 逻辑），或 parity run 用 `--test-threads N` + 不 pin
+（seeded 连续流需单 CPU——**必须 pin**，故提交该脚本入仓）。
+AppImage 在 CI 需 `squashfs`/FUSE：ubuntu 镜像自带 fuse，用
+`--appimage-extract` 无需挂载。
+
+## 4. 提速（ephemeral runner 版）
+
+| 措施 | 位置 | 效果 |
+|---|---|---|
+| `Swatinem/rust-cache@v2`（GHA cache，ephemeral 可读写） | native + wasm job | 消除全量冷编译；warm run 预计 native 14min→3–5min |
+| hestia | parity jobs | 见 §3 |
+| `taiki-e/install-action@wasm-bindgen`（pin 0.2.121）替 `cargo install` | wasm job | 省编译 ~1–3min |
+| `actions/cache@v4` 缓存 `~/.cache/ms-playwright`（key 含 lock hash） | wasm job | 省浏览器下载 ~1min |
+| `--no-fail-fast` | native | 完整性（非提速） |
+
+估算对比（待 CI 实测回填）：native before 14m11s（截断），warm
+cache 预计 3–5min；parity-seeded/official 首次 60–90min（Orca 构建）
+→ 缓存命中后仅 Rust 编译+测试 ~5–15min；wasm 预计 16→12min。
+
+## 5. `#[ignore]` 5 测试处置（A：删除或改真断言）
+
+| 测试 | 性质 | 处置 |
+|---|---|---|
+| `ares-core` `gt_oracle_tests::toolchange_tail_delays_match_gt_oracle` (:60) | 断言 ares 5.8204 vs GT 5.6211 的**已知发散**；且注释自述 oracle SEGFAULT 部分流不可信 | **删除**（发散探针，非 gate；残差事实移入模块注释） |
+| `gt_oracle_tests` :243 `prefix probe` | 打印探针 | **删除**（连同 println 探针体） |
+| `gt_oracle_tests` :284 `ladder probe` | 打印探针 | **删除** |
+| `ares-cli` `ksr_fdmtest_v4::dump_elegoo_depositions` (:123) | ARES_ELEGOO_DUMP 诊断 dump | **删除** |
+| `ares-core` `no_unapproved_dynamic_values::print_current_dynamic_value_baseline` (:78) | print-only 迁移辅助，输出已固化在 `scripts/dynamic_value_baseline.txt` | **删除** |
+
+删除后 nextest "skipped" 应为 0（仅 env-gated 的 stderr SKIPPED 在
+parity jobs 全 env 下清零；native job 仍记录 SKIPPED 属预期）。
+
+## 6. 风险 / 待确认
+
+- E：parity job runner（self-hosted ephemeral 有 Nix? vs ubuntu-latest
+  billing）。
+- `ARES_KSR_INITIALIZED_*` 源（`ORCA_KSR_INITIALIZED_SOURCE`）的生成
+  方式待查 `tools/orca-probes/README.md`；若是历史独有 patch 源，
+  需把其 source 构造脚本一并入仓。
+- `print-statistics.nix` 硬编码本机 store path → 需小改为 env 传入
+  （同 procgcode.nix 模式）。
+- nixpkgs pin rev 待定（§3.3）。
+- Orca 冷构建逼近 6h token 上限风险 → build job 拆分缓解（§3.1）。
+- 10GB 配额：5 变体 ~2GB + drv closures；`upstream-cache-filter` +
+  daily GC 控制。
+
+## 附录 A：VM 探测结果（ci-probe run 38148271502，绿）
+
+- runner：`shaula-project-pandar-pve-03b34a46`，Ubuntu kernel 6.8，x86_64
+- **8 CPU / 7GB RAM + 3GB swap / 30G 盘（23G 可用）**
+- `NixOS/nix-installer-action@main` 正常（Nix 2.35.2，KVM enable，
+  trusted-users root runner）；`Mic92/hestia@v3`（v3.1.0）daemon 正常，
+  substituter 于 127.0.0.1 可用，cache token 捕获成功
+- `github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce`
+  → narHash `sha256-dveqXShac4ZH9whSBeFyP8GY4iQU6zpMIkyCgPUdLOY=`，
+  store path `/nix/store/9qzkr0n…-source` 与本机完全一致（校验通过）
+- `nix build nixpkgs#hello` 成功（cache.nixos.org substitute 正常）
+- 资源评估（v3 裁决已采纳）：矩阵 build job 每 job 一个变体，
+  `--cores 4 --max-jobs 1` 防 OOM，job 尾 nix-collect-garbage
+
+## 7. 实施顺序
+
+1. ~~step1 sparse checkout + --no-fail-fast~~（已推 c6b36592d 验证中）
+2. spec 批准 → `worker4/ci-tier1` 分支：workflow 重构 + hestia + gc.yml
+   + `scripts/ci/pin-runner.sh` + print-statistics.nix 参数化 + 5 个
+   `#[ignore]` 删除。
+3. 推分支触发 CI：记录首跑（冷）与第二跑（缓存）各 job 耗时。
+4. REVIEW-REQUEST 附 run 链接 + 前后耗时 + skipped 清零证据。
