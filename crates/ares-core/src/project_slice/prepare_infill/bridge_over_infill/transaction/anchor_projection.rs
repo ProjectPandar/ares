@@ -99,7 +99,12 @@ pub(super) fn validate(
     if !anchor_max.is_finite() {
         return unsupported("infill_anchor_max");
     }
-    if !anchor.is_finite() || anchor < 0.0 {
+    // `infill_anchor < 0` is a schema-legal input upstream
+    // (`PrintConfig.cpp:3137-3160` has no `min` bound; `Fill.cpp:984-988`
+    // projects `min(anchor, anchor_max)` with no sign check). The
+    // `anchor_length >= 0.` asserts (`FillBase.cpp:1584-1585,2251-2252`)
+    // are debug-only — the release oracle defines the behavior.
+    if !anchor.is_finite() {
         return unsupported("infill_anchor");
     }
     let density = projected_sparse_density(options);
