@@ -3,6 +3,10 @@
 // marker latch of `GCodeViewer::render` (`:1594-1601`) and the vertex
 // `Marker::render_position_window` describes (`:345-352`).
 
+mod actual_speed_profile;
+
+pub use actual_speed_profile::{ActualSpeedItem, ActualSpeedProfile};
+
 use crate::{MoveType, ViewType, ViewerImpl};
 
 /// The tool marker of a shown `SequentialView`: the current vertex it is drawn
@@ -21,10 +25,11 @@ pub struct MarkerTime {
 }
 
 /// `GCodeViewer::SequentialView::m_show_marker`, false for a new load
-/// (`GCodeViewer.cpp:1388`).
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+/// (`GCodeViewer.cpp:1388`), and the marker's actual speed profile.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SequentialView {
     show_marker: bool,
+    actual_speed: ActualSpeedProfile,
 }
 
 impl SequentialView {

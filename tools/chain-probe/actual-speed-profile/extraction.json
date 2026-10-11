@@ -1,0 +1,29 @@
+{
+  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "conversion": {
+    "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
+    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+  },
+  "label": "native source-kernel oracle; not full native viewer execution",
+  "adaptations": [
+    "ENABLE_ACTUAL_SPEED_DEBUG block wrapped in a free function",
+    "viewer vertices, enabled range, visible range end and ActualSpeed color range supplied as parameters",
+    "Marker::set_actual_speed_* setters (GCodeViewer.hpp:93-101) become assignments to the output widget"
+  ],
+  "upstream": [
+    {
+      "path": "src/slic3r/GUI/GCodeViewer.cpp",
+      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "lines": [
+        1682,
+        1752
+      ],
+      "excerptSha256": "a8570b751b81173d6dd6365f43db9db31d7448adb8b823f090068f56d86c8c57"
+    }
+  ],
+  "files": {
+    "kernel.upstream.hpp": "a8570b751b81173d6dd6365f43db9db31d7448adb8b823f090068f56d86c8c57",
+    "kernel.hpp": "9b8e05fa36dc9c75266c06ebd19cc9776ffa485acd28df8b10364956974ab4b2",
+    "kernel.diff": "0c5e893621ba739617f4ec6af00f857114996d18be0c87f0c1c888a71caf6c59"
+  }
+}

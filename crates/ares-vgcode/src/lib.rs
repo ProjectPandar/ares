@@ -20,7 +20,9 @@ pub use layers::Layers;
 pub use moves_slider::MovesSlider;
 pub use path_vertex::PathVertex;
 pub use range::{Range, ViewRange};
-pub use sequential_view::{MarkerTime, SequentialView, ToolMarker};
+pub use sequential_view::{
+    ActualSpeedItem, ActualSpeedProfile, MarkerTime, SequentialView, ToolMarker,
+};
 pub use settings::Settings;
 pub use types::{
     AABox, Color, ColorRangeType, DEFAULT_TRAVELS_RADIUS_MM, DEFAULT_WIPES_RADIUS_MM, DUMMY_COLOR,
