@@ -150,6 +150,9 @@ fn execute_plan(
     ) {
         return super::printer_physical_identity::execute_plan(runner, plan);
     }
+    if plan.key == "filament_ramming_parameters" {
+        return super::semm_ramming::execute_plan(runner, plan);
+    }
     if plan.key == "other_layers_print_sequence_nums" {
         return super::tool_sequences::execute_plan(runner, plan);
     }

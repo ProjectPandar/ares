@@ -1,0 +1,78 @@
+{
+  "approved_spec": "664b387d8beb7c5ae5d42c4c8ba3e7485cabfe23",
+  "phase": "7 Native exit0 at actual664b387d8; off-total-motion equality expectation failed795XY differences retained, owner source-cited correction approved. Original input/profile/gates unchanged.",
+  "source_input": "/tmp/worker3-master-full-496-v1-seeded-cand-artifacts/case-PhFtBr/input.3mf",
+  "source_sha256": "ed6913c385172728c1623f4fd51971c23d8c72939d7fcd44cbf20039c482fb37",
+  "source_historical_execution": "f1db83f31 full retained SEMM distinct-profile input, not current admission/golden",
+  "cases": {
+    "R0": {
+      "input_sha256": "26813259bd47b42153232f573126e26bd7d6aee430d2b34baf2dbb76f34f47ad",
+      "bytes": 10541,
+      "profiles": [
+        "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6",
+        "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6"
+      ],
+      "enable_filament_ramming": "1"
+    },
+    "R1": {
+      "input_sha256": "0b765abbf5dcc3d7196a5555dba9241fc6c5d55830e0b986cf9fbc9a62b00b9f",
+      "bytes": 10544,
+      "profiles": [
+        "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6",
+        "100 100 1 1|0.05 1 1"
+      ],
+      "enable_filament_ramming": "1"
+    },
+    "R2": {
+      "input_sha256": "5a82659482d9e63501d80cc095b1e5e9fd3475d7b88614e569a3ae1dacc54a0b",
+      "bytes": 10541,
+      "profiles": [
+        "100 100 1 1|0.05 1 1",
+        "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6"
+      ],
+      "enable_filament_ramming": "1"
+    },
+    "R3": {
+      "input_sha256": "f1d95d5e32e59308af66072dd1dd9cf60fadc6e42e63392d93e2271e73cdb1af",
+      "bytes": 10460,
+      "profiles": [
+        "100 100 1 1|0.05 1 1",
+        "100 100 1 1|0.05 1 1"
+      ],
+      "enable_filament_ramming": "1"
+    },
+    "R4": {
+      "input_sha256": "a49270a82ab625f15d97a5a28523b2003495269970cd7060f14b21423b7d64b2",
+      "bytes": 10544,
+      "profiles": [
+        "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6",
+        "120 100 1 1|0.05 1 1"
+      ],
+      "enable_filament_ramming": "1"
+    },
+    "C1": {
+      "input_sha256": "55c979e04ee89c7743c627ad313a0dde0922aa02e780dd14cb603789cd8c9afb",
+      "bytes": 10542,
+      "profiles": [
+        "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6",
+        "100 100 1 1|0.05 1 1"
+      ],
+      "enable_filament_ramming": "0"
+    },
+    "C2": {
+      "input_sha256": "e95c6d85405b326bf4323853b3d75df9f1e31d625f6fd71d623a57fcab55b744",
+      "bytes": 10539,
+      "profiles": [
+        "100 100 1 1|0.05 1 1",
+        "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6"
+      ],
+      "enable_filament_ramming": "0"
+    }
+  },
+  "proof": "every non-settings entry byte-identical; whole settings differs only profile vector/gate; controlled pairs vary exactly one key",
+  "ownership": "WipeTower2 production differences record/report only, worker2-owned; no worker3 repair",
+  "input": "R1.3mf",
+  "input_sha256": "0b765abbf5dcc3d7196a5555dba9241fc6c5d55830e0b986cf9fbc9a62b00b9f",
+  "artifact_root": "/tmp/worker3-semm-admission-6e-v1",
+  "scope": "input only, no Native golden"
+}
