@@ -5,6 +5,7 @@ import { expect, type Page } from "@playwright/test";
 import { checkColorRanges, type RangeMove } from "./colorRanges";
 import { checkFilamentView } from "./filamentView";
 import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
+import { checkActualSpeedProfile } from "./actualSpeedProfile";
 
 /** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current and drawn. */
 export async function canvasDigest(page: Page) {
@@ -370,6 +371,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   // Fresh load: the marker is not latched yet (`GCodeViewer.cpp:1388`).
   const movesSlider = { 1: await checkMovesSlider(page, gcode, moves, 0, artifacts, false) };
   const toolPosition = await checkToolPosition(page, moves, 0, artifacts);
+  const actualSpeedProfile = await checkActualSpeedProfile(page, moves, artifacts);
   await top.focus();
   await page.keyboard.press("PageUp");
   await page.keyboard.press("PageUp");
@@ -398,7 +400,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, movesSlider, toolPosition, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges, filamentView,
+      moves: moves.length, layers, movesSlider, toolPosition, actualSpeedProfile, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges, filamentView,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,
