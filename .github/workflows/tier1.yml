@@ -86,6 +86,7 @@ jobs:
 
   web:
     runs-on: self-hosted
+    needs: native-oracle-build
     steps:
       - uses: actions/checkout@v4
         with:
@@ -117,6 +118,7 @@ jobs:
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
+          export ORACLE_SUBSTITUTE_ONLY=1
           for v in procgcode procgcode-stable-options procgcode-dynamics \
                    marker-time marker-time-stable-options \
                    print-statistics seed-replay; do
@@ -165,6 +167,7 @@ jobs:
 
   parity-seeded:
     runs-on: self-hosted
+    needs: native-oracle-build
     env:
       ARES_REQUIRE_ORCA: "1"
       ARES_PARITY_SEEDED_REFERENCE: "1"
@@ -223,6 +226,7 @@ jobs:
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
+          export ORACLE_SUBSTITUTE_ONLY=1
           for v in seed-replay procgcode procgcode-stable-options \
                    procgcode-dynamics marker-time marker-time-stable-options \
                    print-statistics ksr-initialized gdb; do
@@ -258,6 +262,7 @@ jobs:
 
   parity-official:
     runs-on: self-hosted
+    needs: native-oracle-build
     env:
       ARES_REQUIRE_ORCA: "1"
       ARES_ROLE_ORACLE_LIVE: "1"
@@ -314,6 +319,7 @@ jobs:
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
+          export ORACLE_SUBSTITUTE_ONLY=1
           for v in procgcode procgcode-stable-options procgcode-dynamics \
                    marker-time marker-time-stable-options \
                    print-statistics ksr-initialized gdb; do

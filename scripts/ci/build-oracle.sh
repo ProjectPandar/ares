@@ -7,6 +7,13 @@ set -euo pipefail
 variant="${1:?usage: build-oracle.sh <variant>}"
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 
+# Consumer jobs set ORACLE_SUBSTITUTE_ONLY=1: every path must come from the
+# hestia cache; a cache miss fails instead of compiling Orca locally.
+jobs_flag=(--cores 4 --max-jobs 1)
+if [ "${ORACLE_SUBSTITUTE_ONLY:-0}" = "1" ]; then
+  jobs_flag=(--max-jobs 0)
+fi
+
 # Pinned nixpkgs identical to the local gate store path
 # /nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source
 # (narHash sha256-dveqXShac4ZH9whSBeFyP8GY4iQU6zpMIkyCgPUdLOY=).
@@ -23,28 +30,28 @@ case "$variant" in
   seed-replay)
     git -C "$src" apply --unidiff-zero "$repo/scripts/orca-replay/seed-only.patch"
     ORCA_REPLAY_SOURCE="$src" ORCA_REPLAY_NIXPKGS="$nixpkgs" \
-      nix build --impure --cores 4 --max-jobs 1 --no-link --print-out-paths \
+      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/scripts/orca-replay/build.nix"
     ;;
   procgcode|procgcode-stable-options|procgcode-dynamics|marker-time|marker-time-stable-options)
     ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
-      nix build --impure --cores 4 --max-jobs 1 --no-link --print-out-paths \
+      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"
     ;;
   print-statistics)
     git -C "$src" apply --unidiff-zero "$repo/scripts/orca-replay/seed-only.patch"
     ORCA_PRINT_STATISTICS_SOURCE="$src" ORCA_PRINT_STATISTICS_NIXPKGS="$nixpkgs" \
-      nix build --impure --cores 4 --max-jobs 1 --no-link --print-out-paths \
+      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/print-statistics.nix"
     ;;
   ksr-initialized)
     git -C "$src" apply --unidiff-zero "$repo/tools/orca-probes/ksr-initialized-source.patch"
     ORCA_KSR_INITIALIZED_SOURCE="$src" ORCA_KSR_INITIALIZED_NIXPKGS="$nixpkgs" \
-      nix build --impure --cores 4 --max-jobs 1 --no-link --print-out-paths \
+      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/orca-probes/ksr-initialized.nix"
     ;;
   gdb)
-    nix build --cores 4 --max-jobs 1 --no-link --print-out-paths "$NIXPKGS_URL#gdb"
+    nix build "${jobs_flag[@]}" --no-link --print-out-paths "$NIXPKGS_URL#gdb"
     ;;
   *)
     echo "unknown variant: $variant" >&2
