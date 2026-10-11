@@ -79,13 +79,28 @@ function expected(stats: Native, featureType: boolean) {
   return { rows, excludeM };
 }
 
-/** Non-waiting reads: a missing footer is an assertion diff, not a timeout. */
+/** `view_type_items` (GCodeViewer.cpp:1076-1093): Summary first. */
+const VIEW_TYPE_ORDER = [
+  "Summary", "FeatureType", "ColorPrint", "Speed", "ActualSpeed", "Acceleration", "Jerk", "Height", "Width",
+  "VolumetricFlowRate", "ActualVolumetricFlowRate", "LayerTimeLinear", "LayerTimeLogarithmic", "FanSpeed",
+  "Temperature", "PressureAdvance",
+];
+
+/** Summary legend rows (GCodeViewer.cpp:4003-4024), `koef` 1000 (:3559), Normal mode. */
+const summaryRows = (stats: Native) => [
+  ["Total:", `${printf(stats.total_used_filament / 1000, 2)} m / ${weight(stats.total_weight)}`],
+  ["Cost:", printf(stats.total_cost, 2)],
+  ["Total time:", stats.footer_times[2]],
+];
+
+/** Non-waiting reads: missing rows are an assertion diff, not a timeout. */
+const dlRows = (page: Page, testId: string) => page.getByTestId(testId).locator("dl > div").evaluateAll((items) =>
+  items.map((item) => [item.querySelector("dt")!.textContent!, item.querySelector("dd")!.textContent!]));
+
 async function footer(page: Page) {
   const section = page.getByTestId("legend-estimation");
   const [title = null] = await section.getByRole("heading").allTextContents();
-  const rows = await section.locator("dl > div").evaluateAll((items) =>
-    items.map((item) => [item.querySelector("dt")!.textContent!, item.querySelector("dd")!.textContent!]));
-  return { title, rows };
+  return { title, rows: await dlRows(page, "legend-estimation") };
 }
 
 test("legend estimation footer matches GCodeViewer::render_legend over Native statistics", async ({ page }) => {
@@ -108,8 +123,14 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
     await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
     await page.getByRole("link", { name: "Preview", exact: true }).click();
     await expect(page.getByTestId("toolpaths-pending")).toHaveCount(0);
+    await expect(page.getByTestId("view-type")).toBeVisible();
+    expect(await page.getByTestId("view-type").locator("option").evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value)), "view type combo").toEqual(VIEW_TYPE_ORDER);
     const views: Record<string, unknown> = {};
-    for (const [view, title] of [["FeatureType", "Total Estimation"], ["Speed", "Time Estimation"]] as const) {
+    const summary = { expected: summaryRows(stats), actual: null as string[][] | null };
+    for (const [view, title] of [
+      ["FeatureType", "Total Estimation"], ["Speed", "Time Estimation"], ["Summary", "Time Estimation"],
+    ] as const) {
       await page.getByTestId("view-type").selectOption(view);
       const want = expected(stats, view === "FeatureType");
       excluded ||= want.excludeM > 0;
@@ -120,8 +141,14 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
         writeFileSync(`${artifacts}/${name}/rows.json`, `${JSON.stringify(views, null, 2)}\n`);
         return actual;
       }).toEqual({ title, rows: want.rows });
+      if (view === "Summary")
+        await expect.poll(async () => {
+          summary.actual = await dlRows(page, "legend-summary");
+          writeFileSync(`${artifacts}/${name}/summary.json`, `${JSON.stringify(summary, null, 2)}\n`);
+          return summary.actual;
+        }).toEqual(summary.expected);
     }
-    report[name] = { native: stats, views };
+    report[name] = { native: stats, views, summary };
   }
   // Model Filament must differ from Total Filament on some fixture.
   expect(excluded, "a fixture with support, flushed or wipe-tower filament").toBe(true);
@@ -131,6 +158,13 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
       await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
     await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-estimation-${theme}.png` });
+  }
+  await page.getByTestId("view-type").selectOption("Summary");
+  for (const theme of ["light", "dark"] as const) {
+    if (await page.locator("html").getAttribute("data-theme") !== theme)
+      await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-summary-${theme}.png` });
   }
   writeFileSync(`${artifacts}/result.json`, `${JSON.stringify(report, null, 2)}\n`);
 });

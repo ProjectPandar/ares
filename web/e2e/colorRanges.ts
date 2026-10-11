@@ -119,6 +119,7 @@ function rangeInputs(moves: RangeMove[], travels: boolean) {
  * (`GCodeViewer.cpp:3911-3986`; layer times pass `true`, i.e. 1).
  */
 const VIEWS = [
+  { view: "Summary", label: "Summary" },
   { view: "FeatureType", label: "Line Type" },
   { view: "ColorPrint", label: "Filament" },
   { view: "Speed", label: "Speed", decimals: 0 },

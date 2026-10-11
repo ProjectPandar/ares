@@ -19,6 +19,7 @@ fn motion_view_types_expose_processor_values_and_ranges() {
     assert_eq!(
         view_types(),
         [
+            "Summary",
             "FeatureType",
             "ColorPrint",
             "Speed",
