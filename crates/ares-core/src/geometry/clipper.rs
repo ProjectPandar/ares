@@ -17,6 +17,7 @@ mod point_in_polygon;
 mod polyline;
 mod polytree;
 mod predicates;
+mod round_policy;
 mod simplify;
 mod strictly_simple;
 mod types;
@@ -72,6 +73,7 @@ pub(crate) use polyline::{
 pub(crate) use polytree::PolyNode;
 pub(crate) use polytree::{PolyTree, union_contours, union_ex};
 pub(crate) use predicates::{fixed_round, slopes_equal};
+pub(crate) use round_policy::{IntersectionEdge, RoundPolicy};
 pub(super) use simplify::{simplify_polygons, simplify_polygons_with_mode};
 #[cfg(test)]
 pub(crate) use strictly_simple::MaximaCursor;

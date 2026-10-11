@@ -1,3 +1,4 @@
+mod numerics;
 mod round;
 
 use crate::geometry::{ClipperError, CoordinateScale, Polygon, Polyline};

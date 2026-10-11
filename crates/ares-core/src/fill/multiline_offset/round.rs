@@ -1,3 +1,4 @@
+use super::numerics::Clipper2Truncate;
 use crate::geometry::{ClipperError, Point, Polygon, union_positive_polygons_paths};
 use std::f64::consts::{PI, TAU};
 
@@ -55,7 +56,7 @@ pub(super) fn offset(paths: &[Polygon], delta: f64) -> Result<Vec<Polygon>, Clip
         output.push(Polygon::new(ring));
     }
     // Clipper2 clipper.offset.cpp:604-630 uses Positive for open round groups.
-    union_positive_polygons_paths(&output)
+    union_positive_polygons_paths::<Clipper2Truncate>(&output)
 }
 
 fn negate(n: Normal) -> Normal {

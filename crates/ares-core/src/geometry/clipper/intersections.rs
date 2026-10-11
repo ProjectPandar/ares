@@ -5,7 +5,8 @@ mod top;
 pub(in crate::geometry) use top::top_updates_for_test;
 
 use super::ordering::fixed_msvc_sort_by;
-use super::predicates::{intersect_point, top_x};
+use super::predicates::top_x;
+use super::round_policy::RoundPolicy;
 use super::types::{Edge, EdgeId, ExecutionConfig, IntersectionNode, OutputIndex};
 use super::z::KernelPoint;
 use super::{ClipOperation, Clipper, FillRule, PathRole};
@@ -108,11 +109,15 @@ impl Clipper {
         }
     }
 
-    pub(super) fn process_intersections(&mut self, top_y: i64, config: ExecutionConfig) -> bool {
+    pub(super) fn process_intersections<P: RoundPolicy>(
+        &mut self,
+        top_y: i64,
+        config: ExecutionConfig,
+    ) -> bool {
         if self.active_edges.is_none() {
             return true;
         }
-        self.build_intersection_list(top_y);
+        self.build_intersection_list::<P>(top_y);
         if self.intersections.len() > 1 && !self.fix_intersection_order() {
             return false;
         }
@@ -126,7 +131,7 @@ impl Clipper {
         true
     }
 
-    fn build_intersection_list(&mut self, top_y: i64) {
+    fn build_intersection_list<P: RoundPolicy>(&mut self, top_y: i64) {
         self.intersections.clear();
         self.copy_ael_to_sel();
         let mut edge = self.sorted_edges;
@@ -135,7 +140,7 @@ impl Clipper {
             self.edges.edge_mut(id).current = snapshot.current.with_x(top_x(snapshot, top_y));
             edge = snapshot.next_in_ael;
         }
-        while let Some((modified, edge)) = self.sort_intersection_pass(top_y) {
+        while let Some((modified, edge)) = self.sort_intersection_pass::<P>(top_y) {
             if let Some(previous) = self.edges.edge(edge).previous_in_sel {
                 self.edges.edge_mut(previous).next_in_sel = None;
             } else {
@@ -148,7 +153,7 @@ impl Clipper {
         self.sorted_edges = None;
     }
 
-    fn sort_intersection_pass(&mut self, top_y: i64) -> Option<(bool, EdgeId)> {
+    fn sort_intersection_pass<P: RoundPolicy>(&mut self, top_y: i64) -> Option<(bool, EdgeId)> {
         let mut edge = self.sorted_edges?;
         let mut modified = false;
         while let Some(next) = self.edges.edge(edge).next_in_sel {
@@ -156,10 +161,12 @@ impl Clipper {
                 edge = next;
                 continue;
             }
-            let mut point = intersect_point(*self.edges.edge(edge), *self.edges.edge(next));
-            if point.y() < top_y {
-                point = KernelPoint::new(top_x(*self.edges.edge(edge), top_y), top_y, 0);
-            }
+            let point = P::intersection(
+                (*self.edges.edge(edge)).into(),
+                (*self.edges.edge(next)).into(),
+                top_y,
+            )
+            .into();
             self.intersections.push(IntersectionNode {
                 first: edge,
                 second: next,

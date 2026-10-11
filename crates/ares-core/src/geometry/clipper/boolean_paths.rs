@@ -3,18 +3,22 @@ use super::{
     boolean_ex::{SAFETY_MITER_LIMIT, SAFETY_OFFSET, safety_offset_polygons},
     offset::offset_paths,
 };
-use crate::geometry::Polygon;
+use crate::geometry::{Polygon, RoundPolicy};
 
 pub(crate) fn union_polygons_paths(paths: &[Polygon]) -> Result<Vec<Polygon>, ClipperError> {
     execute(paths, &[], ClipOperation::Union)
 }
 
-pub(crate) fn union_positive_polygons_paths(
+pub(crate) fn union_positive_polygons_paths<P: RoundPolicy>(
     paths: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
     let mut clipper = Clipper::new(ClipperOptions::default());
     clipper.add_closed_paths(paths, PathRole::Subject)?;
-    clipper.execute_paths(ClipOperation::Union, FillRule::Positive, FillRule::Positive)
+    clipper.execute_paths_with_policy::<P>(
+        ClipOperation::Union,
+        FillRule::Positive,
+        FillRule::Positive,
+    )
 }
 
 pub(crate) fn union_polygons_paths_pair(

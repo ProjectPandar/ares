@@ -1,8 +1,7 @@
 # SPEC: FillBase multiline Clipper2 Positive union
 
-Status: SPEC-REVIEW-REQUEST. Baseline `48821ce89` (upstream `8500fcdcc`).
-This branch contains only this spec. Native execution, tests and production
-changes begin after approval. Stars mode2 WIP is saved locally as `6f3066116`
+Status: approved numeric-only slice, GREEN candidate; gates pending.
+RED baseline `48821ce89`, integration baseline `765ae4964`; upstream `8500fcdcc`. Stars mode2 WIP is saved locally as `6f3066116`
 on `worker6/stars-mode2-wip`, not pushed or stashed.
 
 ## Owning upstream boundary
@@ -14,7 +13,7 @@ caller of multiline_fill; it must not become a Stars-specific approximation.
 The existing Ares round offset is a temporary compatibility shell around this
 source operation until its union matches the cited Clipper2 implementation.
 
-| Upstream source | Included contract |
+| Upstream source | Source contract (numeric slice inclusion below) |
 | --- | --- |
 | `Fill/FillBase.cpp:2712-2740` | Count<=1 returns; remove invalid centerlines; convert ordered source paths; odd count retains original centerlines. |
 | `Fill/FillBase.cpp:2742-2784` | Ordered odd/even ring distances, float spacing boundary, one round offset group, ring order, skip empty/degenerate results, append closing point exactly once. |
@@ -48,26 +47,26 @@ Clipper1 consumers. Changing it globally is outside scope.
 
 ## Rust destination
 
-Included only after an attributable non-Stars RED:
+The initially proposed complete private union kernel is not authorized and is
+not implemented. After the attributable C2 RED and the failed Positive-only
+trial, the coordinator approved only a generic numeric strategy:
 
-- `crates/ares-core/src/fill/multiline_offset/union.rs` and private children,
-  each<=400 lines: source-cited Rust rewrite of the closed Paths64 Positive
-  union used inside ClipperOffset::ExecuteInternal. Retain upstream ordering,
-  winding, collinear cleanup and intersection semantics. No public API,
-  filesystem, Native process, C++/FFI dependency or platform-only implementation.
-- `fill/multiline_offset.rs`: one private module registration if needed.
-- `fill/multiline_offset/round.rs::offset`: replace only its final Clipper1
-  union call with the new Clipper2 operation. Preserve round generation and
-  bundle caller behavior; do not globally replace geometry::Clipper.
-- `ares-cli/tests/orca_parity/option_coverage/multiline_union.rs` and dedicated
-  helpers: whole-output runtime Native controls and stage-attribution evidence.
-  `option_coverage.rs` gains only the module registration. No domain plan,
-  inventory count, producer config or comparator modification.
+- `fill/multiline_offset/numerics.rs`: private default Clipper2 segment arithmetic
+  and scanbeam correction; each new file<=400 lines.
+- `geometry/clipper/round_policy.rs`: immutable numeric edge inputs and a trait
+  with the unchanged Clipper1 default; `engine.rs`/`intersections.rs` thread the
+  type parameter. No runtime function pointer, state field or public API.
+- `geometry/clipper/boolean_paths.rs`: one multiline-only Positive helper;
+  `fill/multiline_offset/round.rs` selects its private numeric strategy, preserving
+  raw round geometry and all other helpers/callers.
+- `ares-cli/tests/orca_parity/option_coverage/multiline_union.rs` and its observer:
+  whole-output runtime Native controls; one module registration only. No domain
+  plan, inventory, producer config or comparator change.
 
-The new module is a bounded Clipper2 rewrite, not a second slicing pipeline or
-an adapter selecting union semantics by pattern. All multiline callers share
-the same source operation. If proving or implementing the boundary requires
-broader changes, report before editing them.
+The shared operation is selected by its multiline source boundary, not pattern.
+Complete sweep, event order, joins, cleanup and traversal ports remain deferred
+unless residual whole-byte evidence requires them and the coordinator approves.
+The current numerical experiment does not redesign union as an Ares pipeline.
 
 ## Native-backed RED admission and attribution
 
@@ -276,24 +275,101 @@ to the runtime C2 reference and the completed Ares diagnostic output is raw
 byte-equal to runtime C2. The earlier broad-breakpoint Ares run was manually
 interrupted and is not complete-run evidence.
 
-## Narrow numeric integration proposed; pending boundary approval
+## Approved narrow numeric integration
 
-The first implementation experiment should port only the default segment
-intersection arithmetic and its scanbeam correction into a private
-`fill/multiline_offset/numerics.rs`, retaining Positive union and the unchanged
-round inputs. No coordinate postprocessing, alternate assertions, new crate or
-complete Clipper2 sweep is proposed.
+The coordinator approved a numeric-only experiment, replacing the proposed
+runtime function pointer with a zero-cost generic trait strategy. There is no
+complete Clipper2 sweep, output-coordinate postprocessing, new crate or change
+to the comparator.
 
-Current Clipper1 directly calls `intersect_point` from
-`geometry/clipper/intersections.rs:159`, and has no numeric callback boundary.
-A fill-private function cannot affect that call without explicit internal
-routing. Proposed narrow integration: an explicit function pointer carried by
-the multiline-only Positive helper to the intersection calculation, with every
-existing Clipper1 constructor and caller retaining the current implementation.
-Only immutable edge endpoints/slopes and scanbeam bounds cross that boundary;
-Clipper1 types do not become fill-facing API. The upstream numeric code stays
-in the fill-private file. No global/thread-local mode or Z callback is used.
-This requires small wiring in the shared Clipper implementation, so approval
-is requested before editing it under the instruction to leave generic
-Clipper1 unchanged. If approved, first rerun the existing whole-output controls
-and stage capture; any remaining divergence is reported before widening scope.
+`fill/multiline_offset/numerics.rs` owns the default Clipper2 segment-intersection
+arithmetic (`clipper.core.h:898-917`), the scanbeam correction
+(`clipper.engine.cpp:2350-2382`), and the correction's numeric dependencies
+TopX (`:131-138`) and integral closest-point projection
+(`clipper.core.h:971-990`). The default branch casts doubles toward zero;
+nearbyint in the correction uses ties-to-even under the default rounding mode.
+This does not change shared Clipper1 TopX scanbeam sorting or event ordering.
+
+`geometry/clipper/round_policy.rs` defines the crate-private `RoundPolicy` and
+immutable numeric edge snapshot, plus the default `Clipper1Round` strategy.
+The latter retains the existing slope/intercept/fixed_round calculation and
+its final top_y clamp. `engine.rs` threads a type parameter through execution;
+`intersections.rs` calls the statically selected strategy. Existing paths,
+PolyTree and Z executions explicitly use the default. The multiline-only
+Positive helper uses `Clipper2Truncate`. No runtime function pointer or policy
+field is added to Clipper; its state layout is unchanged. The upstream numeric
+implementation remains fill-private, and internal Edge/KernelPoint types are
+not exposed outside geometry. Both new files stay below400 lines.
+
+The initial12 complete-output controls were run in both modes with fresh
+caches; the approved acceptance set now contains ten, with R2/G2 deferred. These are implementation experiments
+until whole outputs pass. Default-policy callers require raw-byte invariance
+proof and full option_coverage in both modes; workspace waits for its resource
+slot, with strict/fmt/wasm32 required before review. Any residual sweep or output
+traversal difference must be attributed and reported before widening scope.
+
+## Numeric experiment result; unrelated dispatch controls still open
+
+Fresh seeded and official runs each produce10 PASS /2 DIVERGENT, with no
+rejection, skip or timeout. C2/C3/H2/H3/HC2/HH2 become whole-byte PASS in both
+modes. R1/G1/C1/H1 remain PASS and each Ares raw output is byte-identical to the
+Positive-only trial. All12 Native generator-normalized outputs in both modes
+are also equal to that trial. Evidence:
+`/tmp/worker6-union-numerics-trial.yr9Ms7/{seeded,official}.log` and
+`/tmp/worker6-union-numerics-trial.yr9Ms7/control-audit.json`.
+
+R2/G2 remain actual failing controls: Rectilinear's multiline dispatch and
+Grid's mode0 dispatch are outside this union boundary. R2 Ares raw is unchanged;
+G2 Ares raw changes because its anchoring stage already calls shared multiline
+expansion, while its emission dispatch remains incomplete. Their first whole
+Native/Ares differences are both line18 M73: R2 R38/R37 and G2 R45/R46.
+These failures are not timeout, nondeterminism or accepted union GREEN.
+The coordinator subsequently approved moving R2/G2 out of this union
+acceptance registration, preserving them as Deferred findings below. The ten
+remaining tests keep every existing assertion and the comparator is unchanged.
+Full option_coverage and engineering gates remain pending.
+
+
+## Deferred findings
+
+R2 and G2 are real DIVERGENT findings, not accepted PASS or union RED. Their
+registered test functions are removed only under the coordinator's explicit
+scope decision; their authored input, runtime references and complete failed
+comparisons remain reproducible outside git. They follow Stars mode2 as the
+Rectilinear/Grid multiline dispatch rewrite slice.
+
+Both use unchanged `tests/parity/multiline-union/prism.stl` and the fixed22
+requests in `option_coverage/multiline_union.rs`: count2, 30% density, 45 degrees,
+classic2 walls, three top/bottom layers, standard positive anchors, single
+Ender3 PLA .4mm nozzle and .2mm layers. Pattern is respectively rectilinear/grid.
+The mesh SHA is1d50f639d940e2a95c324b8f7ef1a33ba9bcf7e83706ba3cf0669f67f6feae7e.
+Effective requests were verified against the runtime Native exported project.
+
+| Finding | Native/Ares first whole line | Upstream target | Ares target |
+| --- | --- | --- | --- |
+| R2 | line18 `M73 P0 R38` / `M73 P0 R37` | `FillRectilinear.cpp:3387-3399`, Rectilinear main multiline dispatch | `project_slice/fill_entities/monotonic.rs:97-107`, multiline missing from ordinary parameters |
+| G2 | line18 `M73 P0 R45` / `M73 P0 R46` | `FillRectilinear.cpp:3422-3446`, Grid multiline>1 trapezoidal mode0 dispatch | `fill/grid.rs:62-86`, ordinary sweeps |
+
+Evidence root `/tmp/worker6-union-numerics-trial.yr9Ms7` contains both original
+12-test logs with exit100 unchanged. `control-audit.json` lists the exact
+per-case artifact directories containing the Native-exported3MF and complete
+outputs; `seeded-artifacts/multiline-union-{R2,G2}.json` and official equivalents
+retain requested values and first-difference receipts. The earlier true RED is
+`/tmp/worker6-multiline-union-red.1zTTQm`. No Native artifact is committed.
+No tolerance, assertion change or production dispatch repair absorbs these
+findings into the current union slice.
+
+Initial10-control integration gates: option_coverage seeded210/210 (452.736s)
+and official210/210 (354.564s), both exit0; shared-input raw invariance is
+362/362 seeded and354/354 official against765ae4964's registered full captures.
+Only the ten new control labels lack a baseline counterpart. Artifacts and
+member-hash/raw audits are under `/tmp/worker6-union-option-gates.xxJi4P`.
+Sorted assertion/require lines are identical to RED; the only removed test
+registrations are coordinator-deferred R2/G2 (`assertion-audit.json`).
+
+The first strict run rejected excessive_nesting in the scanbeam correction.
+It was flattened into root-level lets and early returns, without suppression
+or changed arithmetic. Fresh strict/fmt/wasm32 all exit0 under
+`/tmp/worker6-union-engineering-flat.NWezRA`. Fresh two-mode option_coverage
+revalidation of this final structure and queued default workspace are pending;
+no merge approval or workspace pass is claimed.

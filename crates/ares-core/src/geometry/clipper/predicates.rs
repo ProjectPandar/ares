@@ -1,5 +1,5 @@
 use super::super::Point;
-use super::{types::Edge, z::KernelPoint};
+use super::{round_policy::IntersectionEdge, z::KernelPoint};
 
 pub(crate) const LO_RANGE: i64 = 0x3fff_ffff;
 pub(crate) const HI_RANGE: i64 = 0x3fff_ffff_ffff_ffff;
@@ -30,7 +30,8 @@ pub(crate) fn get_dx(point1: KernelPoint, point2: KernelPoint) -> f64 {
     }
 }
 
-pub(super) fn top_x(edge: Edge, current_y: i64) -> i64 {
+pub(super) fn top_x(edge: impl Into<IntersectionEdge>, current_y: i64) -> i64 {
+    let edge = edge.into();
     if current_y == edge.top.y() {
         edge.top.x()
     } else {
@@ -38,7 +39,7 @@ pub(super) fn top_x(edge: Edge, current_y: i64) -> i64 {
     }
 }
 
-pub(super) fn intersect_point(first: Edge, second: Edge) -> KernelPoint {
+pub(super) fn intersect_point(first: IntersectionEdge, second: IntersectionEdge) -> KernelPoint {
     if first.dx == second.dx {
         return KernelPoint::new(top_x(first, first.current.y()), first.current.y(), 0);
     }

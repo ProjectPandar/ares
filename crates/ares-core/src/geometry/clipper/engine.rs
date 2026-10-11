@@ -1,4 +1,5 @@
 use super::polytree::PolyTree;
+use super::round_policy::{Clipper1Round, RoundPolicy};
 use super::types::ExecutionConfig;
 use super::z::ZPath;
 use super::{ClipOperation, Clipper, FillRule};
@@ -6,6 +7,15 @@ use crate::geometry::Polygon;
 
 impl Clipper {
     pub(crate) fn execute_paths(
+        &mut self,
+        operation: ClipOperation,
+        subject_fill: FillRule,
+        clip_fill: FillRule,
+    ) -> Result<Vec<Polygon>, super::ClipperError> {
+        self.execute_paths_with_policy::<Clipper1Round>(operation, subject_fill, clip_fill)
+    }
+
+    pub(super) fn execute_paths_with_policy<P: RoundPolicy>(
         &mut self,
         operation: ClipOperation,
         subject_fill: FillRule,
@@ -20,7 +30,7 @@ impl Clipper {
             subject_fill,
             clip_fill,
         };
-        let succeeded = self.execute_internal(config);
+        let succeeded = self.execute_internal::<P>(config);
         let paths = if succeeded {
             self.build_paths()
         } else {
@@ -39,7 +49,7 @@ impl Clipper {
         debug_assert!(self.z_intersections.is_none());
         self.z_intersections = Some(Vec::new());
         self.using_polytree = true;
-        let succeeded = self.execute_internal(ExecutionConfig {
+        let succeeded = self.execute_internal::<Clipper1Round>(ExecutionConfig {
             operation,
             subject_fill,
             clip_fill,
@@ -79,7 +89,7 @@ impl Clipper {
         self.z_intersections = Some(Vec::new());
         self.z_fill_mark = Some(mark);
         self.using_polytree = false;
-        let succeeded = self.execute_internal(ExecutionConfig {
+        let succeeded = self.execute_internal::<Clipper1Round>(ExecutionConfig {
             operation,
             subject_fill,
             clip_fill,
@@ -102,7 +112,7 @@ impl Clipper {
         clip_fill: FillRule,
     ) -> PolyTree {
         self.using_polytree = true;
-        let succeeded = self.execute_internal(ExecutionConfig {
+        let succeeded = self.execute_internal::<Clipper1Round>(ExecutionConfig {
             operation,
             subject_fill,
             clip_fill,
@@ -138,7 +148,7 @@ impl Clipper {
         self.simple_repairs_for_test.clear();
     }
 
-    pub(super) fn execute_internal(&mut self, config: ExecutionConfig) -> bool {
+    pub(super) fn execute_internal<P: RoundPolicy>(&mut self, config: ExecutionConfig) -> bool {
         #[cfg(test)]
         self.simple_repairs_for_test.clear();
         self.reset_for_execute();
@@ -156,7 +166,7 @@ impl Clipper {
             let Some(top_y) = self.pop_scanbeam() else {
                 break;
             };
-            if !self.process_intersections(top_y, config) {
+            if !self.process_intersections::<P>(top_y, config) {
                 succeeded = false;
                 break;
             }

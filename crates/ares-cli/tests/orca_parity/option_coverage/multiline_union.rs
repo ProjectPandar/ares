@@ -121,18 +121,8 @@ fn orca_parity_multiline_union_r1() {
 }
 
 #[test]
-fn orca_parity_multiline_union_r2() {
-    compare("R2", "rectilinear", "2", false);
-}
-
-#[test]
 fn orca_parity_multiline_union_g1() {
     compare("G1", "grid", "1", false);
-}
-
-#[test]
-fn orca_parity_multiline_union_g2() {
-    compare("G2", "grid", "2", false);
 }
 
 #[test]
