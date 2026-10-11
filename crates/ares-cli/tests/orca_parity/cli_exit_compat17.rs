@@ -205,6 +205,28 @@ fn assert_load_settings_accept(case: &str, settings: &[&str], filaments: &[&str]
     );
 }
 
+/// Machine+process reject through the switch path (`:2624-2647`):
+/// the machine file names a different printer and the process's
+/// `compatible_printers` excludes its system name, so upstream still
+/// exits `-17` — the `:2625-2627` auto-accept needs a machine-only
+/// list, and the upward `-16` sub-path stays deferred (spec
+/// `2026-10-11-cli-load-settings-compat17-branch3-upward16.md`).
+/// Regression control: on the merged-raw implementation the `-17`
+/// verdict holds via a coincidental equal-name path; the deferred
+/// embedded-raw correction keeps the same verdict for the right
+/// reason — this test pins both.
+#[test]
+fn compat17_branch1_switch_reject() {
+    assert_load_settings_reject(
+        "branch1-switch-reject",
+        &[
+            "machine-different-name.json",
+            "process-compatible-excluding.json",
+        ],
+        &["filament-generic-pla.json"],
+    );
+}
+
 /// Branch-1 accept: the process's `compatible_printers` contains the
 /// machine's system name — both sides slice (`:2576-2583`).
 #[test]
