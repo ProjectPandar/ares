@@ -29,6 +29,7 @@ impl IntersectionEdge {
 pub(crate) trait RoundPolicy {
     const REMOVE_INPUT_COLLINEAR: bool = true;
     const PRESERVE_OUTPUT_FRONT: bool = false;
+    const SORT_MINIMA_BY_X: bool = false;
 
     fn intersection(first: IntersectionEdge, second: IntersectionEdge, top_y: i64) -> Point;
 }

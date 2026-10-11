@@ -1,14 +1,32 @@
 use super::Clipper;
 use super::ordering::fixed_gcc_sort_by;
 use super::predicates::slopes_equal_four;
+use super::round_policy::RoundPolicy;
 use super::types::{EdgeId, ExecutionConfig, Join, LocalMinimum, OutputIndex};
 
 impl Clipper {
-    pub(super) fn reset_for_execute(&mut self) {
+    pub(super) fn reset_for_execute<P: RoundPolicy>(&mut self) {
         self.maxima.clear();
         #[cfg(test)]
         self.collected_maxima_for_test.clear();
-        fixed_gcc_sort_by(&mut self.minima, |first, second| first.y < second.y);
+        if P::SORT_MINIMA_BY_X {
+            // Clipper2 Reset/LocMinSorter (:53-60, :788-796) consumes a stable
+            // Y-descending/X-ascending sequence. This engine consumes from back.
+            self.minima.reverse();
+            let edges = &self.edges;
+            self.minima.sort_by(|first, second| {
+                let x = |minimum: &LocalMinimum| match (minimum.left, minimum.right) {
+                    (Some(edge), _) | (_, Some(edge)) => edges.edge(edge).bottom.x(),
+                    (None, None) => unreachable!("local minimum has a bound"),
+                };
+                first
+                    .y
+                    .cmp(&second.y)
+                    .then_with(|| x(second).cmp(&x(first)))
+            });
+        } else {
+            fixed_gcc_sort_by(&mut self.minima, |first, second| first.y < second.y);
+        }
         for minimum in self.minima.iter().copied() {
             if let Some(left_id) = minimum.left {
                 let left_bottom = self.edges.edge(left_id).bottom;

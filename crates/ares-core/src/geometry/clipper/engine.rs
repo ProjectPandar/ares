@@ -151,7 +151,7 @@ impl Clipper {
     pub(super) fn execute_internal<P: RoundPolicy>(&mut self, config: ExecutionConfig) -> bool {
         #[cfg(test)]
         self.simple_repairs_for_test.clear();
-        self.reset_for_execute();
+        self.reset_for_execute::<P>();
         if self.minima.is_empty() {
             return true;
         }
