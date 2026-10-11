@@ -282,6 +282,23 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
   `--slice`（输出 G-code SHA256）与全部 dump flag 输出 SHA256 对照
   表，写回本节。
 
+### B.3a directed 结果（已执行，/tmp/worker4-ps-check/）
+
+`print_estimated_stats` ×2 对三个 producer 各 seeded/official ×3：
+
+| producer | seeded | official |
+|---|---|---|
+| `v9ydlg…`（控制脚本现状，旧 patch rev） | FAIL×3 | FAIL×3 |
+| `v4zhqnbm…`（当前 patch rev） | PASS×3 | PASS×3 |
+| `m20g9jgc…`（merged） | PASS×3 | PASS×3 |
+
+首个差异：两测试在 `print_estimated_stats.rs:62` unwrap
+`normal_prepare_time` → v9ydlg 的 `plate_1.print_statistics.json`
+缺该字段（旧 patch 只有 `normal_time`）。**基线 print_estimated_stats
+×2 失败 = 过期 oracle，不是 Ares 问题**。控制脚本 v2 的
+`ARES_PRINT_STATISTICS_BIN` 仍指 v9ydlg，未改（待协调者确认换 v4zhqnbm
+或 merged）。
+
 ### B.4 风险
 
 - 补丁语义交叉：dynamics 的 travel-accel 对齐在 `process_file` 路径
