@@ -76,7 +76,6 @@ jobs:
         with:
           upstream-cache-filter: true
       - run: bash scripts/ci/build-oracle.sh ${{ matrix.variant }}
-      - run: nix-collect-garbage -d || true
 
   web:
     runs-on: self-hosted

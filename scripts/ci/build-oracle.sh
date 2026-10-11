@@ -20,11 +20,15 @@ fi
 NIXPKGS_URL="github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce"
 nixpkgs="$(nix eval --raw --expr "(builtins.getFlake \"$NIXPKGS_URL\").outPath")"
 
-# Fresh source tree from the pinned upstream checkout (actions/checkout into
-# $repo/OrcaSlicer, sparse-checkout src + resources). git worktree gives the
-# full tree each recipe needs.
+# Fresh source tree from the pinned upstream tarball. Fetching the archive
+# keeps the nix src (and therefore the derivation hash) identical whether the
+# job checked out OrcaSlicer sparsely or not at all.
+ORCA_REV="8500fcdccaa10b5099ac20d252af3a7c560046f1" # v2.4.2
 src="$(mktemp -d /tmp/orca-src-XXXXXX)"
-git -C "$repo/OrcaSlicer" worktree add --detach "$src" HEAD >/dev/null
+curl --proto '=https' --tlsv1.2 -fL --retry 3 \
+  "https://github.com/SoftFever/OrcaSlicer/archive/$ORCA_REV.tar.gz" \
+  | tar xz --strip-components=1 -C "$src"
+git -C "$src" init -q .
 
 case "$variant" in
   merged-oracle)
