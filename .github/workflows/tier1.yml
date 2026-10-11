@@ -64,6 +64,7 @@ jobs:
         variant:
           - merged-oracle
           - ksr-initialized
+          - seed-replay
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -224,7 +225,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb; do
+          for v in merged-oracle ksr-initialized gdb seed-replay; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -317,7 +318,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb; do
+          for v in merged-oracle ksr-initialized gdb seed-replay; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
