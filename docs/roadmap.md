@@ -7,6 +7,14 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Adaptive volumetric fit: coupled-family SPEC request (2026-10-11)
+
+Port witnesses for `GCode::calc_max_volumetric_speed` and `_extrude` current-filament fitted/user cap intersection.
+Eight finite enable/model controls must prove actual positive-XYE role/F effects, not empty probes or footer presence.
+Existing typed speed algebra is a compatibility scaffold until project-emission reachability is proven.
+No Native or production changes before SPEC approval; arbitrary strings and multi-filament contexts remain deferred.
+[Source ownership, Rust destinations, failure checklist and test-first gates](architecture/option-adaptive-volumetric-fit-coverage.md).
+
 ### SAFC coupled model: source-slice SPEC request (2026-10-11)
 
 Select `small_area_infill_flow_compensation` + `_model`; current model probe is empty-only, not active-curve proof.
