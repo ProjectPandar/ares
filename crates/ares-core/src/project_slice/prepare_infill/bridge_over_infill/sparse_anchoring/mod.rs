@@ -46,6 +46,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     object_index: usize,
     layer_index: usize,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<crate::geometry::BoundingBox>,
 ) -> Result<Vec<Polyline>, SliceError> {
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
@@ -81,6 +82,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             object_reference,
             object_bounding_box,
             lightning_generator,
+            stars_bounds.map(|bounds| (bounds, plan.layers[layer_index].id)),
             &mut result,
         )?;
     }

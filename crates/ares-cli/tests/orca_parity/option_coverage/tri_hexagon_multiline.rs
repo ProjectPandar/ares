@@ -6,7 +6,7 @@ use serde_json::json;
 #[path = "tri_hexagon_multiline_observation.rs"]
 mod observation;
 
-const FIXED: [(&str, &str); 24] = [
+const FIXED: [(&str, &str); 23] = [
     ("layer_height", "0.2"),
     ("initial_layer_print_height", "0.2"),
     ("wall_generator", "classic"),

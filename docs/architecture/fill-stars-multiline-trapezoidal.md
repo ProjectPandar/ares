@@ -1,8 +1,8 @@
 # SPEC: FillStars sparse multiline trapezoidal branch
 
-Status: approved spec; implementation WIP retained locally on baseline
-`48821ce89`. Five byte REDs remain pending the separately specified FillBase
-multiline Clipper2 union prerequisite. No GREEN acceptance or push is claimed.
+Status: approved spec; implementation WIP resumed on `aeb2ff618` after the
+multiline union prerequisite merged. Remaining byte differences are under
+diagnosis; no GREEN acceptance or push is claimed.
 
 ## Priority and ownership
 
@@ -76,6 +76,11 @@ coordinates, a per-surface grid or a synthesized approximate star pattern.
   fill_surface (:1497). For Stars count>1 this caller must share the new mode2
   generator, layer phase and object box; count1 and other patterns retain their
   current dispatch. This wiring is included when the Stars WIP resumes.
+  `transaction/candidate_expansion/layers.rs::prepare_infill_lines` computes
+  the source mesh box once per object only for Stars count>1, then threads it
+  through private `sparse_anchoring::{mod,arms,arms_tail}` calls. Planned
+  Layer.id and each fill's thickness_layers reach mode2. Reuse the same
+  `fill_entities/stars_bounds.rs` helper; no traversal data model is expanded.
 - `ares-cli/tests/orca_parity/option_coverage/tri_hexagon_multiline.rs` and
   dedicated helpers: runtime Native admission, complete-output RED and controls.
   A registration line is the only intended shared test-module edit. No domain
@@ -230,3 +235,20 @@ Coordinator ruling: preserve this GREEN as a local WIP, do not push it; specify
 and prove a non-Stars Native-backed RED on baseline48821ce89 before any shared
 union change. If those controls already match, report rather than widening
 the Stars slice or silently changing Clipper1 semantics.
+
+### Resumed trial after the union prerequisite
+
+The numeric union slice merged as `aeb2ff618`. WIP rebased with only the test
+registration conflict, preserving both G4 and Stars modules. Seven runtime
+controls ran with fresh cache/root per mode under
+`/tmp/worker6-stars-union-trial.L3W1yh`; both exited100, three PASS/four FAIL.
+S1/H1/S2A passed; S2/S3/S10/H2 remain whole-byte DIVERGENT. First whole lines:
+S2 line135 M73 placement, S3 line38 remaining time, S10 line131 M73 placement,
+H2 line18 remaining time. `remaining-divergence-audit.json` retains artifacts
+and first positive-extrusion differences: S2/H2 sparse layer5(Z1.0), S10
+sparse layer4(Z0.8). S3's14457 sparse extrusion commands agree, but its first
+machine-command difference is layer17 Outer wall retract/travel (Native
+line16684 `G1 E-2.8 F3600`, Ares line16686 `G1 X140.608 Y133.201 F9000`).
+Solid extrusion commands agree in all seven controls. This does not establish
+anchoring as the cause; the approved anchoring mode2 caller is connected next
+and must be tested separately without changing comparison or assertions.

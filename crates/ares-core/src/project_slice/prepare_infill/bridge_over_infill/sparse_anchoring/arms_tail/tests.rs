@@ -92,6 +92,7 @@ fn tpmsfk_sparse_dispatch_clips_to_the_half_spacing_inset() {
         8.6,
         Point::new(0, 0),
         None,
+        None,
         &mut result,
     )
     .unwrap();
@@ -137,6 +138,7 @@ fn lightning_sparse_dispatch_connects_clipped_boundary_endpoints() {
         1.2,
         Point::new(0, 0),
         Some(&generator),
+        None,
         &mut result,
     )
     .unwrap();

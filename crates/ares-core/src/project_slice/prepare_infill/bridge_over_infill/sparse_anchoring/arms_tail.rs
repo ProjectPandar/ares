@@ -25,6 +25,7 @@ pub(super) fn dispatch_tail(
     z: f64,
     object_reference: Point,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<(crate::geometry::BoundingBox, usize)>,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     let multiline_params =
@@ -49,15 +50,29 @@ pub(super) fn dispatch_tail(
                 (0.01_f64 * f64::from(fill.params.density)) as f32,
             );
             for expolygon in fill.expolygons {
-                result.extend(
+                let lines = if fill.params.multiline > 1 {
+                    let Some((bounds, layer_id)) = stars_bounds else {
+                        unreachable!("Stars anchoring retains its PrintObject bounds");
+                    };
+                    crate::fill::stars_trapezoidal::fill_surface(
+                        &expolygon,
+                        multiline_params(fill.params),
+                        crate::fill::stars_trapezoidal::SurfaceGeometry {
+                            layer_id,
+                            thickness_layers: fill.representative.thickness_layers,
+                            bounds,
+                        },
+                        traversal.scale,
+                    )
+                } else {
                     fill_multiline_surface(
                         &expolygon,
                         multiline_params(fill.params),
                         &sweeps,
                         traversal.scale,
                     )
-                    .map_err(super::super::transaction::geometry_error)?,
-                );
+                };
+                result.extend(lines.map_err(super::super::transaction::geometry_error)?);
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::QuarterCubic) => {

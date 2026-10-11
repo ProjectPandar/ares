@@ -30,6 +30,7 @@ pub(super) fn dispatch(
     object_reference: Point,
     object_bounding_box: crate::geometry::BoundingBox,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<(crate::geometry::BoundingBox, usize)>,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     match fill.params.pattern {
@@ -371,6 +372,7 @@ pub(super) fn dispatch(
                 z,
                 object_reference,
                 lightning_generator,
+                stars_bounds,
                 result,
             );
         }

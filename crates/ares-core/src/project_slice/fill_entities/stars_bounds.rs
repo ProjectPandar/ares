@@ -4,7 +4,7 @@ use crate::{
     geometry::{BoundingBox, CoordinateScale, Point},
 };
 
-pub(super) fn extended(
+pub(in crate::project_slice) fn extended(
     object: &ProjectObject,
     transform: Transform3d,
     scale: CoordinateScale,

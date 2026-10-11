@@ -51,15 +51,31 @@ pub(super) fn prepare_infill_lines(
         nozzles,
         scale,
     } = view;
-    let object_options = &predecessor
+    let resolved = predecessor
         .predecessor
         .predecessor
         .resolved
         .objects
         .iter()
         .find(|object| object.source_object_index == prelude.identity().0)
-        .expect("bridge transaction retains its resolved object")
-        .object;
+        .expect("bridge transaction retains its resolved object");
+    let object_options = &resolved.object;
+    let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
+    // Fill.cpp:1398/1443 gives the anchoring filler the same PrintObject box.
+    let stars_bounds = resolved
+        .all_regions
+        .iter()
+        .any(|region| {
+            region.sparse_infill_pattern == crate::ProcessInfillPattern::TriHexagon
+                && region.fill_multiline.0 > 1
+        })
+        .then(|| {
+            crate::project_slice::fill_entities::extended_stars_bounds(
+                &predecessor.predecessor.predecessor.project.objects()[plan.source_object_index],
+                resolved.print_objects[plan.transform_index].transform,
+                scale,
+            )
+        });
     let (_, inputs) = prelude.as_parts();
     let region_count = prelude.as_parts().0.as_parts().0.as_parts().2.len();
     let mut result = BTreeMap::new();
@@ -94,6 +110,7 @@ pub(super) fn prepare_infill_lines(
             object_index,
             lower_layer,
             lightning_generator,
+            stars_bounds,
         )?;
         result.insert(lower_layer, lines);
     }
