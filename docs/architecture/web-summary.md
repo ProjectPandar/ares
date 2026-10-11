@@ -25,7 +25,7 @@ table and plot, and Summary.
 | `Print.hpp:789-816` `PrintStatistics` | Only the fields above; the rest is deferred | ares-core struct, serialized through the existing `takePrintStatistics` JSON (`crates/ares-wasm/src/moves.rs:65-68`) or a sibling getter |
 | `GCodeViewer.cpp:4003-4024` legend `case EViewType::Summary` | Rows `Total: %.2f m / <weight>`, `Cost: %.2f`, `Total time: short_time(get_time_dhms(time_mode.time))` | `web/app/src/preview/` legend, in the lazy preview chunk |
 | `GCodeViewer.cpp:128-150` `format_compact_weight` | Metric weight format | Existing `LegendFilament.tsx` port, reused |
-| `Utils.hpp:494-537` `short_time` and `:540-` `get_time_dhms` (f32) | Time format | Core has a `get_time_dhms` port (`processor/time.rs::duration`), but it is private to the processor. A Rust `short_time(get_time_dhms(t))` will be exposed through wasm so JS does not reimplement the f32 arithmetic. |
+| `Utils.hpp:494-537` `short_time` and `:540-` `get_time_dhms` (f32) | Time format | Superseded by the estimation footer ruling (`web-estimation.md`): `short_time`/`get_time_dhms` are display-only TS ports in `toolPositionFormat.ts`; there is no Rust binding. |
 | `ViewerImpl.cpp:1543-1548` / `crates/ares-vgcode/src/viewer/colors.rs:243` | Summary colors vertices like ColorPrint | Already ported; `VIEW_TYPES` already has Summary at slot 0 |
 | `GCodeViewer.cpp:66-69` | Label "Summary" | `VIEW_TYPE_ITEMS` entry, first in combo order |
 
@@ -137,3 +137,72 @@ output.
 - **Skip branch:** counting volume from unused extruders in weight or cost.
 - **Formatting:** JS rounding at the `%.2f` boundary. `printf` uses the
   existing port in `toolPositionFormat.ts`.
+
+## Web slice: Summary combo entry and legend rows
+
+Status: approved, with the view type ruling below. Branch
+`pi/web-summary-legend` from `574cbdfd6`. Web plus the ares-wasm adapter's
+`VIEW_TYPES`; no ares-core or ares-vgcode change.
+
+The core part above is merged (`c3e84118a..8a0116f54`). The legend
+estimation footer slice (`web-estimation.md`) delivers
+`Toolpaths.estimation` with `totalUsedFilament`, `totalWeight`, `totalCost`
+(`PrintStatistics`) and `time` (`modes[Normal].time`). ares-vgcode already
+colors Summary like ColorPrint (`crates/ares-vgcode/src/viewer/colors.rs:243`,
+`:276`), but the wasm adapter does not offer it: `viewTypes()` and
+`vertexColors` come from `crates/ares-wasm/src/colors.rs` `VIEW_TYPES`, which
+has 15 entries without Summary, and the web combo filters `VIEW_TYPE_ITEMS`
+by `viewTypes()`. The web app has no Summary entry and no Summary rows.
+
+View type ruling: `VIEW_TYPES` gains `ViewType::Summary` first (`EViewType`
+order, `GCodeViewer.cpp:1076-1077`). `crates/ares-wasm/src` is production
+Rust (the wasm adapter), but orca_parity does not depend on ares-wasm, so the
+exclusive full is waived.
+
+| Upstream | What | Ares destination |
+|---|---|---|
+| `GCodeViewer.cpp:66-69` `get_view_type_string` | Label "Summary" | `VIEW_TYPE_ITEMS` entry |
+| `GCodeViewer.cpp:1076-1077` `view_type_items` | Summary is first in the combo | First in `VIEW_TYPE_ITEMS` |
+| `GCodeViewer.cpp:1049` | The default view stays FeatureType | Unchanged |
+| `GCodeViewer.cpp:4003-4024` `case EViewType::Summary` | `Total:` `"%.2f m / %s"` (`ps.total_used_filament / koef`, `format_compact_weight(ps.total_weight)`), `Cost:` `"%.2f"`, `Total time:` `short_time(get_time_dhms(time_mode.time))` | `web/app/src/preview/LegendSummary.tsx`, lazy preview chunk |
+| `:3558` `ps`, `:3559` `koef`, `:3147` `time_mode` | Inputs | `toolpaths.estimation` |
+| `:4547-4644` footer | Drawn for every view (`show_estimated_time`, `:3152`, is never read). Outside FeatureType it is "Time Estimation" with the time rows only | Existing `EstimationRows`, unchanged |
+
+**Included:** the Summary combo entry, first; the three rows, metric; Normal
+mode; Summary in the wasm `VIEW_TYPES`, so `vertexColors("Summary")` uses the
+ported vgcode colors.
+
+**Deferred:** imperial units, stealth mode and the mode button, the
+multi-nozzle block (`:4683`), the all-plates Total Estimation
+(`:2550-2810`), the Time Estimation window.
+
+### Evidence
+
+`web/e2e/estimation.spec.ts` with the Native probe
+(`ARES_PRINT_STATISTICS_BIN`) and the two `tests/parity/summary` fixtures (`time-cost`, `unused-filament`),
+per fixture:
+
+1. The `view-type` option values, read without waiting, equal upstream's
+   `view_type_items` order filtered to the engine's `viewTypes`. RED is a
+   deep-equality failure, not a `selectOption` timeout.
+2. With Summary selected, the `legend-summary` rows equal `Total:`
+   `printf(total_used_filament / 1000, 2) m / weight(total_weight)`, `Cost:`
+   `printf(total_cost, 2)` and `Total time:` Native `footer_times[2]`
+   (upstream's own `short_time(get_time_dhms(...))` from the probe).
+3. The footer for Summary is "Time Estimation" with time rows only.
+4. Artifacts: `summary` rows in `result.json`, `legend-summary-{dark,light}.png`.
+
+Ways it could fail: `"  "` instead of `" / "`; Summary appended last or made
+the default; the model time (`time - prepare`) or stealth time instead of
+the total; `toFixed` instead of the printf port at `%.2f`; missing rows
+surfacing as a timeout; the new code landing in the initial chunk
+(`bundle.spec`, gzip < 125000).
+
+The wasm tests that pin `view_types()` (`crates/ares-wasm/tests/actual_speed.rs`,
+`motion_attributes.rs`) expect Summary first; on the old `VIEW_TYPES` that is an
+assertion failure. Their other assertions are unchanged.
+
+Gates (ruled): fmt, clippy `--workspace --all-targets -D warnings`, wasm32
+check, `nextest -p ares-wasm -p ares-vgcode`; web build, lint and
+typecheck; the web RED window; browser base and candidate with identical
+arguments (the full web E2E). No workspace and no exclusive full.
