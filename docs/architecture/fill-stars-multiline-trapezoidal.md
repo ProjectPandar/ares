@@ -319,3 +319,57 @@ Proposed next scope, not implemented: first port only the cleanup/front cursor
 contract for this private Positive policy, then diagnose the minima ordering
 if permutations remain. Keep default Clipper1 output/minima behavior and strict
 assertions intact; no whole sweep port or coordinate-based output sorting.
+
+### Approved Positive output order follow-up, step 1
+
+The coordinator approved private CleanCollinear/front-cursor alignment first,
+then stable minima source order only if permutations remain. Both are selected
+by Clipper2 policy; default Clipper1 remains unchanged. Output-coordinate sorting
+and comparator changes are excluded.
+
+Step 1 WIP `5f4f8f69f`, based on `10058be78`, keeps the outrec front unless
+that node is removed. The arena's previous link corresponds to Clipper2 next,
+so cleanup follows that link and updates a removed front to the other neighbor.
+`output/clipper2_front.rs` cites CleanCollinear `:1531-1565`; existing output
+collection follows BuildPath64 `:2885-2921` in the same mapped direction.
+Core strict clippy and fmt passed. This is not an acceptance claim.
+
+Fresh `/tmp/worker6-stars-positive-front-trial.sTXEOD` preserves both exit100
+runs and `17-controls-audit.json`/`17-controls-table.md`. Both modes are 16/17:
+all ten union controls PASS, Stars S1/H1/S2/S3/S2A/H2 PASS, S10 DIVERGENT.
+S10 first difference is line 131, Native M73 P3 R36 before the extrusion versus
+Ares after it. The unchanged strict comparator still rejects the whole file.
+
+Existing-binary S10 captures under
+`/tmp/worker6-stars-front-s10-stage.cGAWqY/order-audit.json` contain all 14 calls.
+Ordered input rows match. Phase 1 shows paired path permutations; phase 1/2
+point counts are Native 5876/5878 versus Ares 5878/5879. Some paths therefore
+still differ geometrically, rather than only in their front or permutation.
+These observations do not authorize a broader sweep or output normalization.
+Step 2 WIP `dabe72ada` implements only the approved source minima ordering;
+its fresh 17-control two-mode trial is required before any GREEN claim.
+
+Step 2 fresh `/tmp/worker6-stars-positive-minima-trial.xDPbI7` also gives
+16/17 in both modes, with only S10 DIVERGENT. The step 1/2 raw audit confirms
+34/34 Ares G-code outputs unchanged. S10 stage audit
+`/tmp/worker6-stars-minima-s10-stage.OKxdRk/step1-step2-stage-diff.json`
+shows changed union ordering in phase 1 calls 2/5/8/11; all other calls are
+unchanged. `native-order-after-step2.json` shows every geometrically matching
+polygon now has the same Native/Ares index, with no remaining matched-path
+permutation. Post-clipping arrays are unchanged across all 14 calls. Thus
+minima sorting has a source-stage effect, but has not repaired the S10 bytes.
+Its inclusion remains subject to coordinator review; no GREEN is claimed.
+
+The next read-only numerical lead is FillBase.cpp:2744/2749: `i * spacing`
+is a float multiplication before promotion into the double offsets vector.
+Ares `fill/multiline_offset.rs:37-39` currently multiplies in f64. Existing
+Native ABI capture under `/tmp/worker6-stars-native-spacing-abi.1CZgFf`,
+and Ares capture under
+`/tmp/worker6-stars-minima-s10-stage.OKxdRk`, each contain 14 calls with the
+same spacing 0.40707963705062866. For even count 10 and index 3, the upstream
+expression gives 1.4247786700725555 versus Ares 1.4247787296772003, a scaled
+offset difference of 0.059604644775390625. These expression values are derived
+from the captured spacing, not a capture of the actual Execute delta. This
+lead requires further stage proof and scope approval before a production edit.
+The first Native named-parameter attempt had no debug symbols and is excluded;
+the successful capture uses the x86_64 float argument register explicitly.
