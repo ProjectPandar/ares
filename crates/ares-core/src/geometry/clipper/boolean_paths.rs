@@ -13,7 +13,7 @@ pub(crate) fn union_positive_polygons_paths<P: RoundPolicy>(
     paths: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
     let mut clipper = Clipper::new(ClipperOptions::default());
-    clipper.add_closed_paths(paths, PathRole::Subject)?;
+    clipper.add_closed_paths_with_policy::<P>(paths, PathRole::Subject)?;
     clipper.execute_paths_with_policy::<P>(
         ClipOperation::Union,
         FillRule::Positive,

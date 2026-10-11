@@ -1,4 +1,5 @@
 use super::super::predicates::{HI_RANGE, LO_RANGE, slopes_equal};
+use super::super::round_policy::{Clipper1Round, RoundPolicy};
 use super::super::types::{Edge, EdgeId, OutputIndex};
 use super::super::{Clipper, ClipperError, PathRole, z::KernelPoint};
 
@@ -10,6 +11,15 @@ enum DuplicateStep {
 
 impl Clipper {
     pub(in crate::geometry) fn add_path<P: Copy + Into<KernelPoint>>(
+        &mut self,
+        points: &[P],
+        role: PathRole,
+        closed: bool,
+    ) -> Result<bool, ClipperError> {
+        self.add_path_with_policy::<P, Clipper1Round>(points, role, closed)
+    }
+
+    pub(super) fn add_path_with_policy<P: Copy + Into<KernelPoint>, R: RoundPolicy>(
         &mut self,
         points: &[P],
         role: PathRole,
@@ -30,7 +40,7 @@ impl Clipper {
         }
 
         let start = EdgeId(checkpoint);
-        let Some(start) = self.clean_path(start, closed) else {
+        let Some(start) = self.clean_path::<R>(start, closed) else {
             self.edges.truncate(checkpoint);
             return Ok(false);
         };
@@ -81,7 +91,7 @@ impl Clipper {
         Ok(())
     }
 
-    fn clean_path(&mut self, mut start: EdgeId, closed: bool) -> Option<EdgeId> {
+    fn clean_path<R: RoundPolicy>(&mut self, mut start: EdgeId, closed: bool) -> Option<EdgeId> {
         let mut edge = start;
         let mut loop_stop = start;
         loop {
@@ -104,7 +114,8 @@ impl Clipper {
             if previous == next {
                 break;
             }
-            if closed
+            if R::REMOVE_INPUT_COLLINEAR
+                && closed
                 && self.is_collinear(previous, edge, next)
                 && (!self.options.preserve_collinear
                     || !between(

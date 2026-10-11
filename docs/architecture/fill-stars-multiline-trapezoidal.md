@@ -281,11 +281,41 @@ integer truncation, making the retained vertex noncollinear. Example raw
 point(36252936,31786081): raw cross0, Native final neighbors give cross-740788.
 This is distinct from the already-ported intersection arithmetic.
 
-Proposed narrow follow-up, awaiting shared-primitive scope approval: only the
-multiline Positive helper preserves input collinear vertices during AddPaths,
-then uses preserve_collinear=false during execution/output cleanup. Keep all
-default Clipper1 callers unchanged; no new sweep or external crate. Revalidate
-the ten union controls, seven Stars controls and whole option_coverage in both
-modes. The existing flags may still remove input spikes; this finite witness
-does not claim complete Clipper2 input/event semantics. No follow-up code has
-been written or accepted.
+Coordinator-approved narrow follow-up: only the Clipper2Truncate/Positive
+helper retains all input collinear vertices, including spikes; duplicate
+removal remains. A compile-time RoundPolicy constant selects input cleanup,
+with the existing default Clipper1 behavior intact. Output cleanup still uses
+preserve_collinear=false. No runtime hooks, new sweep or external crate.
+Revalidate ten union controls, seven Stars controls and whole option_coverage
+in both modes. Rebased to36125a678 before this implementation; no conflicts.
+Fresh direct Native/Ares H2 capture also reproduces the same14-call phase
+mismatch, `/tmp/worker6-stars-h2-stage-gdb.0kjxSu/stage-audit.json`.
+This is a WIP implementation; no GREEN or acceptance is claimed yet.
+
+### Input-only-dedup trial: geometry restored, order remains different
+
+`/tmp/worker6-stars-input-policy-trial.lE1PaS` preserves both exit100 runs:
+ten union controls PASS, Stars S1/H1 PASS, S2/S3/S10/S2A/H2 DIVERGENT (12/17).
+`17-controls-table.md` and `17-controls-audit.json` give every result and first
+difference. All five remaining first sparse differences are now layer4(Z0.8).
+S3/S2A changed from PASS to FAIL; no result or assertion is suppressed.
+
+S2 read-only capture `/tmp/worker6-stars-input-policy-stage.yt6R1i`
+phase-audit.json confirms all14
+row arrays equal Native, phase0 union13104 points, phase1 N13489/A13489 and
+phase2 N13492/A13492. Each phase has24 closed paths and identical point sets.
+Diagnostic cyclic/path-order comparison finds all polygons geometrically
+identical but different start vertices; phase1/2 additionally permute paths.
+This diagnostic does not normalize or relax the whole-output comparator.
+
+Remaining source boundaries: Clipper2 CleanCollinear (`clipper.engine.cpp:
+1531-1565`) preserves outrec->pts unless that node is removed; Ares
+`geometry/clipper/output/fixup.rs:8-43` assigns the final cleanup cursor as
+the output front. Native BuildPath64 (`:2885-2921`) versus Ares collect_out_paths
+(`fixup.rs:60-83`) makes the cursor observable. Native minima Reset (`:53-60/
+:788-796`) stably sorts descendingY/ascendingX; Ares `minima.rs:7-12` uses the
+Clipper1 unstableY-only sort and consumes from the vector back.
+Proposed next scope, not implemented: first port only the cleanup/front cursor
+contract for this private Positive policy, then diagnose the minima ordering
+if permutations remain. Keep default Clipper1 output/minima behavior and strict
+assertions intact; no whole sweep port or coordinate-based output sorting.

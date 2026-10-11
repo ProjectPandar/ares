@@ -4,6 +4,7 @@ mod path;
 #[cfg(test)]
 pub(in crate::geometry) use bounds::reverse_horizontal_for_test;
 
+use super::round_policy::{Clipper1Round, RoundPolicy};
 use super::{Clipper, ClipperError, PathRole};
 use crate::geometry::{Polygon, Polyline};
 
@@ -24,9 +25,17 @@ impl Clipper {
         paths: &[Polygon],
         role: PathRole,
     ) -> Result<bool, ClipperError> {
+        self.add_closed_paths_with_policy::<Clipper1Round>(paths, role)
+    }
+
+    pub(crate) fn add_closed_paths_with_policy<R: RoundPolicy>(
+        &mut self,
+        paths: &[Polygon],
+        role: PathRole,
+    ) -> Result<bool, ClipperError> {
         let mut accepted_any = false;
         for path in paths {
-            accepted_any |= self.add_closed_path(path, role)?;
+            accepted_any |= self.add_path_with_policy::<_, R>(path.points(), role, true)?;
         }
         Ok(accepted_any)
     }

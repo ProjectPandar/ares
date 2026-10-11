@@ -49,11 +49,13 @@ pub(super) fn dispatch_tail(
                 fill.params.multiline,
                 (0.01_f64 * f64::from(fill.params.density)) as f32,
             );
+            let geometry = match (fill.params.multiline > 1, stars_bounds) {
+                (true, Some(bounds)) => Some(bounds),
+                (true, None) => unreachable!("Stars anchoring retains its PrintObject bounds"),
+                (false, _) => None,
+            };
             for expolygon in fill.expolygons {
-                let lines = if fill.params.multiline > 1 {
-                    let Some((bounds, layer_id)) = stars_bounds else {
-                        unreachable!("Stars anchoring retains its PrintObject bounds");
-                    };
+                let lines = if let Some((bounds, layer_id)) = geometry {
                     crate::fill::stars_trapezoidal::fill_surface(
                         &expolygon,
                         multiline_params(fill.params),
