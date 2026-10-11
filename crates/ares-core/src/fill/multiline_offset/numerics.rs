@@ -7,6 +7,7 @@ impl RoundPolicy for Clipper2Truncate {
     fn intersection(first: IntersectionEdge, second: IntersectionEdge, top_y: i64) -> Point {
         let point =
             segment_intersection(first, second).unwrap_or(Point::new(first.current.x(), top_y));
+        // BuildIntersectList updates only current.x; current.y remains Clipper2's bot_y_.
         if point.y() <= first.current.y() && point.y() >= top_y {
             return point;
         }
