@@ -1,5 +1,7 @@
 use crate::{BrimOptions, BrimPath, Point2, SliceError};
 
+pub(crate) mod paths;
+
 pub(super) fn brim_ear_paths(
     contour: &crate::Contour,
     options: BrimOptions,

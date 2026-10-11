@@ -1,7 +1,7 @@
 use crate::{LayerContours, Point2, SliceError};
 
 mod combine;
-mod ears;
+pub(crate) mod ears;
 mod efc_outline;
 
 const DEFAULT_BRIM_EARS_MAX_ANGLE_DEGREES: f64 = 125.0;
