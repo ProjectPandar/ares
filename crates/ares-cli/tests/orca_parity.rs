@@ -69,6 +69,8 @@ mod flow_errors;
 mod gcode_printable_area;
 #[path = "orca_parity/honeycomb_multiline.rs"]
 mod honeycomb_multiline;
+#[path = "orca_parity/infill_anchor_dont_connect.rs"]
+mod infill_anchor_dont_connect;
 #[path = "orca_parity/klipper_velocity_limit.rs"]
 mod klipper_velocity_limit;
 #[path = "orca_parity/m205.rs"]
