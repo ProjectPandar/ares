@@ -226,6 +226,71 @@ parity jobs 全 env 下清零；native job 仍记录 SKIPPED 属预期）。
 - 10GB 配额：5 变体 ~2GB + drv closures；`upstream-cache-filter` +
   daily GC 控制。
 
+## 附录 B：合并 oracle 构建方案（后续任务，SPEC 待审）
+
+背景（已调查）：上游最新 release 仍为 v2.4.2（当前 pin
+`8500fcdcc`）；main@cab7a7d75 的 GCodeProcessor.cpp:7750-7792 只重
+映射 `TimeBlock.move_id`，`OptionsZCorrector::m_move_id`
+（GCodeProcessor.hpp:1042-1075）仍未重映射 —— stale-index bug 依
+旧，pin 不变。
+
+### B.1 合并目标
+
+一个构建 = 上游 8500fcdcc + 顺序应用：
+1. `scripts/orca-replay/seed-only.patch`（FuzzySkin/GCode seeded RNG）
+2. `scripts/orca-replay/concentric-initialization.patch`
+3. `scripts/orca-replay/object-id-initialization.patch`（Print.hpp m_id）
+4. `tools/chain-probe/procgcode.patch`（`--process-gcode`/`--dump-moves`）
+5. `tools/chain-probe/procgcode-stable-options.patch`（OptionsZCorrector m_move_id remap 修正）
+6. `tools/chain-probe/procgcode-dynamics.patch`（`--dump-move-dynamics` + travel accel flavor 对齐 + m_pressure_advance 初始化）
+7. `tools/chain-probe/marker-time.patch`（`--dump-marker-time`，依赖 marker-time.nix 的 postPatch：cp marker-time-oracle.hpp + kernel.hpp）
+8. `tools/chain-probe/print-statistics.patch`（`plate_N.print_statistics.json`）
+
+新增 `scripts/ci/merged-oracle.patch`（或 `tools/chain-probe/merged.nix`
+串列 patches + postPatch）。patches 全部 apply 于同一 src，文件
+级冲突仅 OrcaSlicer.cpp（6213/7533/7566/7587 不同 hunks）与
+GCodeProcessor.cpp（2445/2524/6006 不同 hunks），顺序 apply
+预期无冲突；若冲突则生成单个 merged patch 提交。
+
+`ksr-initialized` 保持独立（FuzzySkin RNG 取 ORCA_REPLAY_SEED 的
+ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
+
+### B.2 合并后 env 映射（消费方不变，值改为同一路径）
+
+`ORCA_REPLAY_BIN`、`ARES_PROCGCODE_BIN`、`ARES_PROCGCODE_STABLE_BIN`、
+`ARES_PROCGCODE_DYNAMICS_BIN`、`ARES_MARKER_TIME_BIN`、
+`ARES_MARKER_TIME_STABLE_BIN`、`ARES_PRINT_STATISTICS_BIN` →
+`$MERGED/bin/orca-slicer`；`ARES_ORCA_{NATIVE_BIN,RESOURCES_DIR}`（seeded
+模式）→ `$MERGED/bin/.orca-slicer-wrapped` / `$MERGED/share/OrcaSlicer`。
+
+矩阵 build job 从 8 变体收敛为：`merged`、`ksr-initialized`、`gdb`。
+
+### B.3 验收（逐字节/逐测试相同）
+
+- 同一 main hash 上用原 8 构建 和 merged oracle 各跑一次 seeded
+  四段 full（排队，W5→worker3→worker1→worker2 之后）：FAIL 集合
+  必须相等（已知基线 print_estimated_stats×2）。
+- SHA 对照表覆盖 SAFC/concentric fixture 与 seed-replay 原切片；
+  任何不等即停下报告，不调整测试。
+- procgcode / procgcode-stable / dynamics / marker-time /
+  marker-time-stable / print-statistics / seed-replay 的所有
+  原测试输出 SHA 与原独立构建**逐一相同**（关键：stable-options 的
+  m_move_id remap 与 dynamics 的 m_pressure_advance 初始化不得改变
+  切片导出 G-code/M73 —— 两者仅在 `--process-gcode` 分支生效，
+  理论无影响，但**任何差异即停下报告，不调整测试**）。
+- 验证方式：merged 构建 vs 原 8 构建各跑同一 fixture 集合的
+  `--slice`（输出 G-code SHA256）与全部 dump flag 输出 SHA256 对照
+  表，写回本节。
+
+### B.4 风险
+
+- 补丁语义交叉：dynamics 的 travel-accel 对齐在 `process_file` 路径
+  （非切片）；seed-only 的 GCode.cpp 改动与 print-statistics 的
+  OrcaSlicer.cpp 无重叠。切片路径新增代码仅为惰性 flag 分支。
+- 若 merged 切片 SHA ≠ 原 seed-replay 切片 SHA：停下报告（可能是
+  concentric/object-id 初始化改变了默认填充行为 —— 这正是 worker6
+  SAFC 调查的 UB 面，差异本身是有价值证据，不得调测试消化）。
+
 ## 附录 A：VM 探测结果（ci-probe run 38148271502，绿）
 
 - runner：`shaula-project-pandar-pve-03b34a46`，Ubuntu kernel 6.8，x86_64

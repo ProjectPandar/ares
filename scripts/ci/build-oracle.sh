@@ -27,6 +27,24 @@ src="$(mktemp -d /tmp/orca-src-XXXXXX)"
 git -C "$repo/OrcaSlicer" worktree add --detach "$src" HEAD >/dev/null
 
 case "$variant" in
+  merged-oracle)
+    git -C "$src" apply --unidiff-zero \
+      "$repo/scripts/orca-replay/seed-only.patch"
+    git -C "$src" apply \
+      "$repo/scripts/orca-replay/concentric-initialization.patch" \
+      "$repo/scripts/orca-replay/object-id-initialization.patch" \
+      "$repo/tools/chain-probe/procgcode.patch" \
+      "$repo/tools/chain-probe/procgcode-stable-options.patch" \
+      "$repo/tools/chain-probe/procgcode-dynamics.patch" \
+      "$repo/tools/chain-probe/marker-time.patch" \
+      "$repo/tools/chain-probe/print-statistics.patch"
+    cp "$repo/tools/chain-probe/marker-time-oracle.hpp" "$src/src/marker-time-oracle.hpp"
+    mkdir -p "$src/src/marker-time"
+    cp "$repo/tools/chain-probe/marker-time/kernel.hpp" "$src/src/marker-time/kernel.hpp"
+    ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
+      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
+      --file "$repo/tools/chain-probe/merged-oracle.nix"
+    ;;
   seed-replay)
     git -C "$src" apply --unidiff-zero "$repo/scripts/orca-replay/seed-only.patch"
     ORCA_REPLAY_SOURCE="$src" ORCA_REPLAY_NIXPKGS="$nixpkgs" \
