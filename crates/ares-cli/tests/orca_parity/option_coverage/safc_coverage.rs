@@ -4,6 +4,9 @@ use serde_json::json;
 #[path = "safc_observation.rs"]
 mod observation;
 
+#[path = "safc_authority_tests.rs"]
+mod authority_tests;
+
 const ENABLE: &str = "small_area_infill_flow_compensation";
 const MODEL: &str = "small_area_infill_flow_compensation_model";
 
