@@ -186,8 +186,34 @@ pub fn merge_profile_fragments(
     };
     let mut chain = Vec::new();
     resolver.collect_chain(target_kind, target_name, &mut BTreeSet::new(), &mut chain)?;
+    merge_chain(&chain, target_kind)
+}
+
+/// Single-record composition for the CLI import path: `load_config_file`
+/// never resolves `inherits` (the chain reads are commented out upstream,
+/// `OrcaSlicer.cpp:1987,1991`), so an imported preset composes as its own
+/// chain of one while keeping its `inherits` value as metadata
+/// (`:2038-2041,2084-2087` capture it as the system name for `from: user`).
+pub(super) fn merge_direct_profile_fragment(
+    fragments: &[ProfileFragment],
+    target_kind: ProfileKind,
+    target_name: &str,
+) -> Result<MergedProfile, SliceError> {
+    let index = build_index(fragments)?;
+    let selected = *index
+        .get(&(target_kind, target_name.to_owned()))
+        .ok_or_else(|| {
+            SliceError::InvalidInput(format!("profile '{target_name}' was not found"))
+        })?;
+    merge_chain(&[&fragments[selected]], target_kind)
+}
+
+fn merge_chain(
+    chain: &[&ProfileFragment],
+    target_kind: ProfileKind,
+) -> Result<MergedProfile, SliceError> {
     let selected = chain[chain.len() - 1];
-    let metadata = merge_metadata(&chain, selected);
+    let metadata = merge_metadata(chain, selected);
 
     match target_kind {
         ProfileKind::Machine => {
@@ -223,7 +249,7 @@ pub fn merge_profile_fragments(
             })
         }
         ProfileKind::Filament => {
-            let mut chain = chain.into_iter();
+            let mut chain = chain.iter();
             let ProfilePayload::Filament(root) = chain
                 .next()
                 .expect("collected profile chain contains its selected root")

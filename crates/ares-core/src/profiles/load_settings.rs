@@ -70,6 +70,7 @@ pub fn compose_load_settings(
     request: &LoadSettingsRequest<'_>,
 ) -> Result<ComposedSelection, SliceError> {
     let mut catalog = Catalog::empty();
+    catalog.enable_direct_imports();
     let mut machine: Option<String> = None;
     let mut process: Option<String> = None;
     for file in request.settings {

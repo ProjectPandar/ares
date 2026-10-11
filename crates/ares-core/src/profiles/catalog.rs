@@ -11,7 +11,7 @@ use serde::Deserialize;
 use super::{
     ComposedProfile, MergedProfile, ProfileFragment, ProfileKind, ProfileSelection,
     composition::compose_resolved_profiles,
-    inheritance::{UnselectedKind, unselected_profile},
+    inheritance::{UnselectedKind, merge_direct_profile_fragment, unselected_profile},
     merge_profile_fragments,
 };
 use crate::{
@@ -66,6 +66,12 @@ pub(super) struct Catalog {
     selectable: BTreeMap<(ProfileKind, String), usize>,
     /// Vendor index name per vendor scope (`VendorProfile::name`).
     vendor_names: Vec<String>,
+    /// Set only by the `--load-settings` entry: every import composes
+    /// as its own single record (`load_config_file` direct-load,
+    /// `OrcaSlicer.cpp:1953-2010`; the chain reads are commented out,
+    /// `:1987,1991`). The preset-bundle/catalog entry keeps the full
+    /// `PresetBundle` chain walk for its user imports.
+    direct_imports: bool,
 }
 
 struct Record {
@@ -95,7 +101,15 @@ impl Catalog {
             index: BTreeMap::new(),
             selectable: BTreeMap::new(),
             vendor_names: Vec::new(),
+            direct_imports: false,
         }
+    }
+
+    /// Marks this imports-only catalog as the `--load-settings` entry:
+    /// every record composes as its own single chain (direct-load,
+    /// `OrcaSlicer.cpp:1953-2010`).
+    pub(super) fn enable_direct_imports(&mut self) {
+        self.direct_imports = true;
     }
 
     /// `PresetBundle::load_presets` holding semantics: one vendor scope per
@@ -270,7 +284,16 @@ impl Catalog {
             .get(&(kind, name.to_owned()))
             .ok_or_else(|| invalid(format!("selectable profile '{name}' was not found")))?;
         let mut chain = Vec::new();
-        self.collect_positions(position, &mut BTreeSet::new(), &mut chain)?;
+        // The `--load-settings` entry never resolves `inherits`
+        // (`OrcaSlicer.cpp:1953-2010` loads each file's fields directly;
+        // `inherits` is a value, not a link): each import composes as
+        // its own single record. The preset-bundle/catalog entry keeps
+        // the full `PresetBundle` chain walk.
+        if self.direct_imports {
+            chain.push(position);
+        } else {
+            self.collect_positions(position, &mut BTreeSet::new(), &mut chain)?;
+        }
         let mut fragments = Vec::with_capacity(chain.len());
         for position in chain {
             let record = &self.records[position];
@@ -287,7 +310,11 @@ impl Catalog {
                     .map(|(key, value)| (key.clone(), value.clone())),
             );
         }
-        let mut merged = merge_profile_fragments(&fragments, kind, name)?;
+        let mut merged = if self.direct_imports {
+            merge_direct_profile_fragment(&fragments, kind, name)?
+        } else {
+            merge_profile_fragments(&fragments, kind, name)?
+        };
         if !self.is_user_scope(position) {
             let filament_id = fragments
                 .iter()
