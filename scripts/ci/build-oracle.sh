@@ -11,7 +11,7 @@ repo="$(cd "$(dirname "$0")/../.." && pwd)"
 # /nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source
 # (narHash sha256-dveqXShac4ZH9whSBeFyP8GY4iQU6zpMIkyCgPUdLOY=).
 NIXPKGS_URL="github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce"
-nixpkgs="$(nix build --no-link --print-out-paths "$NIXPKGS_URL")"
+nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "$NIXPKGS_URL").outPath')"
 
 # Fresh source tree from the pinned upstream checkout (actions/checkout into
 # $repo/OrcaSlicer, sparse-checkout src + resources). git worktree gives the

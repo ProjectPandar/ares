@@ -129,8 +129,7 @@ jobs:
       - name: Export oracle env
         run: |
           set -euo pipefail
-          nixpkgs="$(nix build --no-link --print-out-paths \
-            github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce)"
+          nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
             echo "ORCA_SLICER_DIR=$PWD/OrcaSlicer"
@@ -234,8 +233,7 @@ jobs:
       - name: Export oracle env
         run: |
           set -euo pipefail
-          nixpkgs="$(nix build --no-link --print-out-paths \
-            github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce)"
+          nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
           ksr="$ORACLE_ksr_initialized"
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
@@ -328,8 +326,7 @@ jobs:
       - name: Export oracle env
         run: |
           set -euo pipefail
-          nixpkgs="$(nix build --no-link --print-out-paths \
-            github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce)"
+          nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
           ksr="$ORACLE_ksr_initialized"
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
