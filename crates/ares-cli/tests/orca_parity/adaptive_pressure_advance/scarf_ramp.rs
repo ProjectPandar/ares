@@ -14,20 +14,31 @@ const MODEL: &str = "0.015,1,100\n0.045,5,100\n0.09,20,100\n0.02,1,1000\n0.08,5,
 
 #[test]
 fn orca_parity_adaptive_pa_scarf_ramp_s0() {
-    check("all", "0", "0");
+    check("all", "0", "0", "1", "0");
 }
 
 #[test]
 fn orca_parity_adaptive_pa_scarf_ramp_s1() {
-    check("all", "1", "0");
+    check("all", "1", "0", "1", "0");
 }
 
 #[test]
 fn orca_parity_adaptive_pa_scarf_ramp_s2() {
-    check("all", "1", "1");
+    check("all", "1", "1", "1", "0");
 }
 
-fn check(scarf: &str, adaptive: &str, overhang: &str) {
+/// Independent defect: upstream `ExtrusionLoopSloped::clip_front`
+/// (`ExtrusionEntity.cpp:547-563`) only front-clips `starts` while
+/// `distance = seam_gap * 2 > 0`; Ares clips 40% of slope length for
+/// `erPerimeter` even at `seam_gap = 0`. This fixture puts the scarf on an
+/// inner `erPerimeter` loop (`wall_loops = 2`, `seam_slope_inner_walls = 1`,
+/// `seam_gap = 0`) where upstream emits the full unclipped slope head.
+#[test]
+fn orca_parity_adaptive_pa_scarf_ramp_inner_perimeter() {
+    check("all", "0", "0", "2", "1");
+}
+
+fn check(scarf: &str, adaptive: &str, overhang: &str, wall_loops: &str, inner_walls: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };
@@ -40,13 +51,13 @@ fn check(scarf: &str, adaptive: &str, overhang: &str) {
     let (machine, mut process, mut filaments) = settings();
     let process_values = [
         ("wall_generator", "classic"),
-        ("wall_loops", "1"),
+        ("wall_loops", wall_loops),
         ("layer_height", "0.2"),
         ("initial_layer_print_height", "0.2"),
         ("outer_wall_line_width", "0.4"),
         ("seam_slope_type", scarf),
         ("seam_slope_conditional", "0"),
-        ("seam_slope_inner_walls", "0"),
+        ("seam_slope_inner_walls", inner_walls),
         ("seam_slope_entire_loop", "0"),
         ("seam_slope_start_height", "0%"),
         ("seam_slope_min_length", "10"),
