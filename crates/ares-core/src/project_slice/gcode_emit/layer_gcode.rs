@@ -125,14 +125,16 @@ pub(super) fn append_before_layer_change_gcode(
     // `record_template_failure` abort the export at the end).
     let name = "before_layer_change_gcode";
     let mut failure_error = String::new();
-    let rendered = match template::render(template, &mut config) {
-        Ok(rendered) => Some(rendered),
-        Err(error) => {
-            failure_error = error.to_string();
-            state.record_template_failure(name, &failure_error);
-            None
-        }
-    };
+    // GCode.cpp:4639-4641 renders with the current logical writer filament.
+    let rendered =
+        match template::render_for_filament(template, &mut config, state.extruders.active_id()) {
+            Ok(rendered) => Some(rendered),
+            Err(error) => {
+                failure_error = error.to_string();
+                state.record_template_failure(name, &failure_error);
+                None
+            }
+        };
     let failed = rendered.is_none()
         || super::motion::apply_writer_state(name, &config, state)
             .map_err(|error| failure_error = error)
@@ -220,14 +222,17 @@ pub(super) fn append_layer_change(
         // Render or write-back failure both produce only the inline
         // report (`GCode.cpp:3920-3933`).
         let mut failure_error = String::new();
-        let rendered = match template::render(template, &mut config) {
-            Ok(rendered) => Some(rendered),
-            Err(error) => {
-                failure_error = error.to_string();
-                state.record_template_failure("layer_change_gcode", &failure_error);
-                None
-            }
-        };
+        // GCode.cpp:4682-4684 keeps the current logical writer filament.
+        let rendered =
+            match template::render_for_filament(template, &mut config, state.extruders.active_id())
+            {
+                Ok(rendered) => Some(rendered),
+                Err(error) => {
+                    failure_error = error.to_string();
+                    state.record_template_failure("layer_change_gcode", &failure_error);
+                    None
+                }
+            };
         let name = "layer_change_gcode";
         let failed = rendered.is_none()
             || super::motion::apply_writer_state(name, &config, state)
