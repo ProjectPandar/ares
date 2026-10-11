@@ -2,5 +2,10 @@
 .legend-estimation h3 { margin: 0 0 4px; font: inherit; font-weight: 600; }
 .legend-estimation dl { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; margin: 0; }
 .legend-estimation dl > div { display: contents; }
-.legend-estimation dt { color: var(--text-dim); }
 .legend-estimation dd { margin: 0; text-align: right; white-space: pre; }
+:is(.legend-estimation, .legend-summary) dt { color: var(--text-dim); }
+/* Summary rows are label then value on one line (`ImGui::SameLine`, GCodeViewer.cpp:4006-4023). */
+.legend-summary { padding: 2px 4px; font-variant-numeric: tabular-nums; }
+.legend-summary dl { display: grid; gap: 3px; margin: 0; }
+.legend-summary dl > div { display: flex; gap: 6px; white-space: nowrap; }
+.legend-summary dd { margin: 0; }

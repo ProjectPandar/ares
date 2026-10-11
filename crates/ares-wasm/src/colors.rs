@@ -5,9 +5,9 @@ use ares_vgcode::{
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
-/// View types exposed in `EViewType` order; tool and summary views are not
-/// ported yet.
-const VIEW_TYPES: [ViewType; 15] = [
+/// View types exposed in `EViewType` order; the tool view is not ported yet.
+const VIEW_TYPES: [ViewType; 16] = [
+    ViewType::Summary,
     ViewType::FeatureType,
     ViewType::ColorPrint,
     ViewType::Speed,

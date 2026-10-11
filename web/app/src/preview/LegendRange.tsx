@@ -8,6 +8,7 @@ import type { ColorRange } from "@ares-slicer/wasm";
  * offers; the others have no data source yet.
  */
 export const VIEW_TYPE_ITEMS: { view: string; label: string; decimals?: number }[] = [
+  { view: "Summary", label: "Summary" },
   { view: "FeatureType", label: "Line Type" },
   { view: "ColorPrint", label: "Filament" },
   { view: "Speed", label: "Speed", decimals: 0 },

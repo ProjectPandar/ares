@@ -4,6 +4,7 @@ import { EXTRUSION_ROLES, MOVE_TYPES } from "@ares-slicer/wasm";
 import type { PreviewView } from "../state/store";
 import { css, RangeRows, VIEW_TYPE_ITEMS } from "./LegendRange";
 import { EstimationRows } from "./LegendEstimation";
+import { SummaryRows } from "./LegendSummary";
 
 const FilamentRows = lazy(() => import("./LegendFilament"));
 
@@ -109,6 +110,8 @@ export function Legend({ roles, options, toolpaths, range, view, onChange }: {
         <Suspense fallback={<p role="status">Loading filament legend…</p>}>
           <FilamentRows legend={toolpaths.filamentLegend} />
         </Suspense>
+      ) : view.viewType === "Summary" ? (
+        <SummaryRows estimation={toolpaths.estimation} />
       ) : view.viewType !== "FeatureType" ? (
         <>
           {range && item?.decimals !== undefined && <RangeRows range={range} decimals={item.decimals} />}
