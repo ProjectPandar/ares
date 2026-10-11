@@ -22,7 +22,7 @@ import init, {
 } from "./wasm/ares_wasm.js";
 import type { PrintConfigDef } from "./configDef.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
+import type { ActualSpeedProfile, ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
 import type { Scene } from "./types.js";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -191,9 +191,11 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
         marker: null,
       };
       const [vertex, windowVertex] = viewer.toolMarker();
+      // Runs on every range change, as update_sequential_view_current does, shown or not.
+      const actualSpeed = JSON.parse(viewer.actualSpeedProfile()) as ActualSpeedProfile;
       if (vertex !== undefined) {
         const [elapsedSeconds, vertexSeconds] = viewer.markerTime(windowVertex);
-        value.marker = { vertex, windowVertex, time: { elapsedSeconds, vertexSeconds } };
+        value.marker = { vertex, windowVertex, time: { elapsedSeconds, vertexSeconds }, actualSpeed };
       }
       return [value, [value.segments.buffer, value.options.buffer, value.colors.buffer]];
     }

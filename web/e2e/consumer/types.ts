@@ -27,6 +27,7 @@ import {
   type MovesSlider,
   type MovesView,
   type ToolMarker,
+  type ActualSpeedProfile,
   type OptionMap,
   type OptionValue,
   type ParsedPresetBundle,
@@ -143,7 +144,12 @@ export const checks = [
   assert<Equal<MovesView["segments"] | MovesView["options"], Uint32Array<ArrayBuffer>>>(),
   assert<Equal<MovesView["colors"], Uint8Array<ArrayBuffer>>>(),
   assert<Equal<MovesView["marker"], ToolMarker | null>>(),
-  assert<Equal<ToolMarker, { vertex: number; windowVertex: number; time: { elapsedSeconds: number; vertexSeconds: number } }>>(),
+  assert<Equal<ToolMarker, { vertex: number; windowVertex: number; time: { elapsedSeconds: number; vertexSeconds: number }; actualSpeed: ActualSpeedProfile }>>(),
+  assert<Equal<ActualSpeedProfile, {
+    yRange: [number, number];
+    levels: { value: number; color: [number, number, number, number] }[];
+    data: { pos: number; speed: number; internal: boolean }[];
+  }>>(),
   assert<Equal<MoveType, (typeof MOVE_TYPES)[number]>>(),
   assert<Equal<ExtrusionRole, (typeof EXTRUSION_ROLES)[number]>>(),
   assert<Equal<MoveTypeId | ExtrusionRoleId, number>>(),

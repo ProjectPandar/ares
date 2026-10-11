@@ -166,7 +166,7 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
   const marker = applied?.slider.toolpaths === toolpaths ? applied.marker : null;
   const { stops } = live;
   return (<>
-    {marker && <ToolPosition toolpaths={toolpaths} vertex={marker.windowVertex} viewType={applied!.viewType} time={marker.time} />}
+    {marker && <ToolPosition toolpaths={toolpaths} vertex={marker.windowVertex} viewType={applied!.viewType} time={marker.time} actualSpeed={marker.actualSpeed} />}
     <div className="moves-slider" data-testid="moves-slider" aria-busy={busy}>
       <input type="range" aria-label="Moves" min={0} max={stops.gcodeIds.length - 1} step={1} value={high}
         aria-valuemax={stops.gcodeIds.length - 1}

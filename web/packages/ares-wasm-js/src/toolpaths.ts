@@ -199,6 +199,20 @@ export interface ToolMarker {
   windowVertex: number;
   /** Engine-selected inclusive time and this window vertex's duration, in seconds. */
   time: { elapsedSeconds: number; vertexSeconds: number };
+  /** The engine's actual speed profile; kept from an earlier vertex when the engine skipped the update. */
+  actualSpeed: ActualSpeedProfile;
+}
+
+/**
+ * `SequentialView::ActualSpeedImguiWidget` data (`GCodeViewer.hpp:47-59`): the
+ * ActualSpeed color range, its levels with RGBA colors in 0..1, and the
+ * compressed profile of the current G-code line (`GCodeViewer.cpp:1681-1753`).
+ */
+export interface ActualSpeedProfile {
+  yRange: [number, number];
+  levels: { value: number; color: [number, number, number, number] }[];
+  /** Distance along the line (mm), actual speed (mm/s), and whether it is a point inside a G-code move. */
+  data: { pos: number; speed: number; internal: boolean }[];
 }
 
 /** The view between the moves slider thumbs. */

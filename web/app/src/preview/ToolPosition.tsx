@@ -1,6 +1,8 @@
 import { EXTRUSION_ROLES, MOVE_TYPES, type ExtrusionRole, type MoveType, type ToolMarker, type Toolpaths, VERTEX_VALUES, type VertexValue } from "@ares-slicer/wasm";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { formatMarkerTime, printf } from "./toolPositionFormat";
+
+const ActualSpeedWindow = lazy(() => import("./ActualSpeedProfile").then((module) => ({ default: module.ActualSpeedWindow })));
 
 /** `to_string(EMoveType)` (`GCodeViewer.cpp:277-294`). */
 const TYPE_LABELS: Record<MoveType, string> = {
@@ -46,16 +48,21 @@ const AXES = [["X", "#ff3c5b"], ["Y", "#64c818"], ["Z", "#2f88e9"]] as const;
  * GCodeViewer `Marker::render_position_window` (`GCodeViewer.cpp:325-690`)
  * for vertex `vertex` of `toolpaths`: the fold button shows the properties
  * table (`:420-454`), the bottom row the colored X/Y/Z with fewer decimals on big
- * prints (`:651-674`), the speed and the view type detail (`:676-683`).
+ * prints (`:651-674`), the speed and the view type detail (`:676-683`). Below
+ * the properties, the actual speed profile toggle and its window (`:518-614`).
  */
-export function ToolPosition({ toolpaths, vertex, viewType, time }: { toolpaths: Toolpaths; vertex: number; viewType: string; time: ToolMarker["time"] }) {
+export function ToolPosition({ toolpaths, vertex, viewType, time, actualSpeed }: {
+  toolpaths: Toolpaths; vertex: number; viewType: string; time: ToolMarker["time"]; actualSpeed: ToolMarker["actualSpeed"];
+}) {
   const [shown, setShown] = useState(false);
+  const [profileShown, setProfileShown] = useState(false);
   const value = (name: VertexValue) => toolpaths.values[vertex * VERTEX_VALUES.length + VERTEX_VALUES.indexOf(name)];
   const type = MOVE_TYPES[toolpaths.tags[4 * vertex + 1]];
   const role = ROLE_LABELS[EXTRUSION_ROLES[toolpaths.tags[4 * vertex]]];
   // PathVertex::is_extrusion.
   const extrusion = type === "Extrude";
   const label = extrusion ? role : type === "Noop" ? NA : TYPE_LABELS[type];
+  const actualSpeedExist = extrusion || type === "Travel" || type === "Wipe";
   const position = [value("x"), value("y"), value("z")];
   const max = Math.round(Math.max(...position));
   const decimals = max > 9999 ? 1 : max > 999 ? 2 : 3;
@@ -85,6 +92,13 @@ export function ToolPosition({ toolpaths, vertex, viewType, time }: { toolpaths:
           </tbody>
         </table>
       )}
+      {shown && (
+        <div className="tool-position-profile">
+          <button disabled={!actualSpeedExist} onClick={() => setProfileShown(!profileShown)}>{profileShown ? "Hide" : "Show"}</button>
+          <span>Actual speed profile</span>
+        </div>
+      )}
+      {shown && actualSpeedExist && profileShown && <Suspense fallback={null}><ActualSpeedWindow profile={actualSpeed} /></Suspense>}
       <div className="tool-position-row">
         <button className="tool-position-fold" aria-label="Properties" aria-expanded={shown} onClick={() => setShown(!shown)}>
           {shown ? "▾" : "▸"}
