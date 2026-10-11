@@ -225,12 +225,75 @@ arithmetic. Both kernels also own output joining/cleanup/traversal. A fill-rule
 flag does not port these contracts. This is a source-boundary explanation,
 not a claim that one rounding edit alone fixes the complete difference.
 
-The trial remains local WIP, not an accepted GREEN or a push candidate. Before
-further code, request coordinator approval for a private closed Positive union
-rewrite (the original Rust target above). Exact round-input equality justifies
-retaining the existing round generation and focusing on the union dependency;
-it does not justify globally changing Clipper1. R2/G2 need separately recorded
+The trial remains local WIP, not an accepted GREEN or a push candidate. The coordinator has declined a complete private union kernel pending numeric
+attribution. Exact round-input equality justifies retaining the existing round
+generation and focusing on the union dependency; it does not justify globally
+changing Clipper1. R2/G2 need separately recorded
 dispatch findings rather than retained unrelated failing acceptance tests;
 report their active-test disposition before preparing a mergeable GREEN.
 Engineering and option_coverage regression gates are pending a real GREEN;
 there is no PASS claim or gate exemption for this failed experiment.
+
+
+## First coordinate attributed to segment-intersection conversion
+
+Read-only gdb of the existing Native binary captures the actual edge pair in
+`ClipperBase::AddNewIntersectNode` and its resulting `IntersectEdges` argument.
+The same pair is captured in Ares `predicates::intersect_point` and
+`Clipper::intersect_edges`. Both have identical endpoints, slopes and current X:
+
+| Edge | Bottom | Top | Current X |
+| --- | --- | --- | --- |
+| First | (2556061,-23829565) | (2581534,-23833212) | 2581115 |
+| Second | (2585889,-23832438) | (2560194,-23833839) | 2572794 |
+
+Native's actual SSE conversion operands are X=2578819.991888218 and
+Y=-23832823.43219944. Both conversion instructions are `cvttsd2si`, producing
+(2578819,-23832823). This implements the default
+`clipper.core.h:898-917 GetSegmentIntersectPt`, specifically the truncating
+`static_cast<T>` at lines914-915. It is not the alternate high-precision branch
+and does not round X to nearest. Ares `predicates.rs:67-78` uses slope/intercept
+arithmetic and `fixed_round` (`:8-15`), producing (2578820,-23832823).
+Ares gdb also captures the Y quotient -23832823.432199441 before rounding.
+The coordinate difference is therefore attributable to numeric semantics, not
+an assumed input, slope or event-order difference.
+
+The scanbeam bottom is -23832438 and top is -23833152. The intersection lies
+inside it, so Native `clipper.engine.cpp:2358-2379` does not clamp through TopX.
+This point does not justify changing TopX, event sorting, output traversal or
+porting the complete sweep. It also does not prove that fixing this one numeric
+routine will repair every result path; runtime whole-byte comparisons remain
+the acceptance gate.
+
+Evidence: `/tmp/worker6-union-native-intersection.AbbOTx/hits.json` contains the
+actual registers/instructions and converted point;
+`/tmp/worker6-union-c2-ares-gdb.IScnod/stages.json` contains the matching Ares
+edges, locals and converted point. Two inlined `value` locals are unavailable
+in DWARF, recorded explicitly as diagnostic errors; caller locals and the
+resulting point are captured. `/tmp/worker6-union-numeric-attribution.json`
+verifies the completed Native diagnostic output is generator-only byte-equal
+to the runtime C2 reference and the completed Ares diagnostic output is raw
+byte-equal to runtime C2. The earlier broad-breakpoint Ares run was manually
+interrupted and is not complete-run evidence.
+
+## Narrow numeric integration proposed; pending boundary approval
+
+The first implementation experiment should port only the default segment
+intersection arithmetic and its scanbeam correction into a private
+`fill/multiline_offset/numerics.rs`, retaining Positive union and the unchanged
+round inputs. No coordinate postprocessing, alternate assertions, new crate or
+complete Clipper2 sweep is proposed.
+
+Current Clipper1 directly calls `intersect_point` from
+`geometry/clipper/intersections.rs:159`, and has no numeric callback boundary.
+A fill-private function cannot affect that call without explicit internal
+routing. Proposed narrow integration: an explicit function pointer carried by
+the multiline-only Positive helper to the intersection calculation, with every
+existing Clipper1 constructor and caller retaining the current implementation.
+Only immutable edge endpoints/slopes and scanbeam bounds cross that boundary;
+Clipper1 types do not become fill-facing API. The upstream numeric code stays
+in the fill-private file. No global/thread-local mode or Z callback is used.
+This requires small wiring in the shared Clipper implementation, so approval
+is requested before editing it under the instruction to leave generic
+Clipper1 unchanged. If approved, first rerun the existing whole-output controls
+and stage capture; any remaining divergence is reported before widening scope.
