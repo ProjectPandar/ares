@@ -1,6 +1,6 @@
 # ARD: Brim.cpp inner-only runtime boundary
 
-Status: proposed with the [SPEC](inner-only-brim-rewrite-spec.md), not approved.
+Status: SPEC `696cd308a` approved by Claude. Tests/RED precede implementation.
 
 ## Source and observed boundary
 
@@ -11,7 +11,7 @@ At main5fc560ca0 the actual project `BrimPlan::generate` excludes InnerOnly.
 The independent public LayerContours adapter's rectangular hole paths are
 not that observed runtime call stack and are not Native parity evidence.
 
-## Non-negotiable proposed decisions
+## Non-negotiable approved decisions
 
 1. Rewrite the named upstream project boundary, not a new adhesion pipeline.
    A private `ares-core::brims::inner` owns hole-area geometry; the existing
@@ -21,7 +21,9 @@ not that observed runtime call stack and are not Native parity evidence.
    no public API or candidate crate is added.
 3. Reuse the existing shared source area-to-path port and emitter. Pass the
    upstream Miter limit3 for hole offsets; never change a global geometry
-   default to repair this slice. Include single-object masks/contact rules.
+   default to repair this slice. Use the original paired-quantized brim_width,
+   not the outer branch's brim_width_mod. Only objectIsland uses Round.
+   Include single-object masks/contact rules.
 4. Defer public generate_brims replacement and its assertion disposition.
    No retired square assertion or existing guard is removed by this SPEC.
    The real project implementation never calls that scaffold as fallback.

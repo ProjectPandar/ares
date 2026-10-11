@@ -1,0 +1,329 @@
+{
+  "base": "tests/parity/legacy-brim-ears/O0.3mf",
+  "base_sha256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
+  "source": "libslic3r/Brim.cpp:448-458,529-570,678-711,903-904",
+  "scope": "input-only single watertight model part, z=0..1, center=110,110",
+  "common_settings": {
+    "brim_type": "inner_only",
+    "brim_ears": "0",
+    "brim_use_efc_outline": "0",
+    "elefant_foot_compensation": "0",
+    "combine_brims": "0",
+    "skirt_loops": "0",
+    "skirt_height": "0",
+    "sparse_infill_density": "0%",
+    "top_shell_layers": "0",
+    "bottom_shell_layers": "0"
+  },
+  "cases": {
+    "rectangle": {
+      "input_sha256": "ca1198c5060e5f825ccb17f4470972aa89db07ce506f1c16a600cb858fe2db17",
+      "brim_width": "4",
+      "brim_object_gap": "0",
+      "holes_local_mm": [
+        [
+          [
+            -6,
+            -6
+          ],
+          [
+            6,
+            -6
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            -6,
+            6
+          ]
+        ]
+      ],
+      "vertices": 32,
+      "triangles": 64,
+      "signed_volume_mm3": 756.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": true
+    },
+    "concave": {
+      "input_sha256": "a71756699ad2dfd24c3090ddfff525c11aaf8dadb60f8aa0b5d81dc97d83f9f7",
+      "brim_width": "4",
+      "brim_object_gap": "0",
+      "holes_local_mm": [
+        [
+          [
+            -7,
+            -7
+          ],
+          [
+            7,
+            -7
+          ],
+          [
+            7,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            7
+          ],
+          [
+            -7,
+            7
+          ]
+        ]
+      ],
+      "vertices": 50,
+      "triangles": 100,
+      "signed_volume_mm3": 752.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": true
+    },
+    "two-holes": {
+      "input_sha256": "8b5d28703fd9178dea37b32d3e7c9ea002f16bf01ce425335e56fe4ba028f92f",
+      "brim_width": "2",
+      "brim_object_gap": "0",
+      "holes_local_mm": [
+        [
+          [
+            -11,
+            -5
+          ],
+          [
+            -3,
+            -5
+          ],
+          [
+            -3,
+            5
+          ],
+          [
+            -11,
+            5
+          ]
+        ],
+        [
+          [
+            3,
+            -5
+          ],
+          [
+            11,
+            -5
+          ],
+          [
+            11,
+            5
+          ],
+          [
+            3,
+            5
+          ]
+        ]
+      ],
+      "vertices": 48,
+      "triangles": 100,
+      "signed_volume_mm3": 740.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": true
+    },
+    "narrow-neck": {
+      "input_sha256": "7ed90f0a3ea9db3b79a411df1b8b92567aec8f038a97cb2c8f1d23b32533c6f3",
+      "brim_width": "2",
+      "brim_object_gap": "0",
+      "holes_local_mm": [
+        [
+          [
+            -11,
+            -6
+          ],
+          [
+            -3,
+            -6
+          ],
+          [
+            -3,
+            -1
+          ],
+          [
+            3,
+            -1
+          ],
+          [
+            3,
+            -6
+          ],
+          [
+            11,
+            -6
+          ],
+          [
+            11,
+            6
+          ],
+          [
+            3,
+            6
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            -3,
+            1
+          ],
+          [
+            -3,
+            6
+          ],
+          [
+            -11,
+            6
+          ]
+        ]
+      ],
+      "vertices": 72,
+      "triangles": 144,
+      "signed_volume_mm3": 696.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": true
+    },
+    "positive-gap": {
+      "input_sha256": "87b349ebfc217b14a6222860a2d7756745afcdd0b2a9828cbe97dfc65072c052",
+      "brim_width": "4",
+      "brim_object_gap": "0.1",
+      "holes_local_mm": [
+        [
+          [
+            -6,
+            -6
+          ],
+          [
+            6,
+            -6
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            -6,
+            6
+          ]
+        ]
+      ],
+      "vertices": 32,
+      "triangles": 64,
+      "signed_volume_mm3": 756.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": true
+    },
+    "collapsed-inset": {
+      "input_sha256": "c1d229911a51c585075c40b9c3998e5eacc031e217a1f2ffd7c404fb98c272bd",
+      "brim_width": "8",
+      "brim_object_gap": "0",
+      "holes_local_mm": [
+        [
+          [
+            -6,
+            -6
+          ],
+          [
+            6,
+            -6
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            -6,
+            6
+          ]
+        ]
+      ],
+      "vertices": 32,
+      "triangles": 64,
+      "signed_volume_mm3": 756.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": true
+    },
+    "zero-width": {
+      "input_sha256": "77c595b177eefa8d6edc9b3691973f343fcbbe2455bbed60b47a50f105066071",
+      "brim_width": "0",
+      "brim_object_gap": "0",
+      "holes_local_mm": [
+        [
+          [
+            -6,
+            -6
+          ],
+          [
+            6,
+            -6
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            -6,
+            6
+          ]
+        ]
+      ],
+      "vertices": 32,
+      "triangles": 64,
+      "signed_volume_mm3": 756.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": false
+    },
+    "sub-pair-width": {
+      "input_sha256": "d23365dfc0e981e704a5079834643495928a5fad74163df3ef30c03c00a0fd87",
+      "brim_width": "0.1",
+      "brim_object_gap": "0",
+      "holes_local_mm": [
+        [
+          [
+            -6,
+            -6
+          ],
+          [
+            6,
+            -6
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            -6,
+            6
+          ]
+        ]
+      ],
+      "vertices": 32,
+      "triangles": 64,
+      "signed_volume_mm3": 756.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": false
+    },
+    "no-hole": {
+      "input_sha256": "84646ac4ad63a33ebdee52fef4fb1d04e5f653bdf9f8f11f16837f0caf599cba",
+      "brim_width": "4",
+      "brim_object_gap": "0",
+      "holes_local_mm": [],
+      "vertices": 8,
+      "triangles": 12,
+      "signed_volume_mm3": 900.0,
+      "every_directed_edge_once_with_reverse": true,
+      "expect_brim": false
+    }
+  }
+}
