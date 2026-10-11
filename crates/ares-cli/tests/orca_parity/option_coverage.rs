@@ -37,6 +37,10 @@ mod bridge_flow_coverage;
 #[path = "option_coverage/first_layer_sequence.rs"]
 mod first_layer_sequence;
 #[cfg(test)]
+#[path = "option_coverage/tri_hexagon_multiline.rs"]
+mod tri_hexagon_multiline;
+
+#[cfg(test)]
 #[path = "option_coverage/safc_coverage.rs"]
 mod safc_coverage;
 #[cfg(test)]

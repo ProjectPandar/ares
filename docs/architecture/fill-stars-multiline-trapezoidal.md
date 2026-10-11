@@ -90,7 +90,6 @@ exported project bytes. Keep input/archive-member hashes in runtime receipts.
 | S3 | prism |3 |30% |45deg |stock anchors |
 | S10 | prism |10 |30% |45deg |stock anchors |
 | S2A | prism |2 |15% |0deg |stock anchors |
-| S2N | prism |2 |30% |45deg |infill_anchor_max=0 |
 | H1 | holed prism |1 |30% |45deg |stock anchors |
 | H2 | holed prism |2 |30% |45deg |stock anchors |
 
@@ -98,8 +97,7 @@ After approval, freeze Native/Ares requests and all first outcomes. Require
 successful Native slicing and unchanged effective requested values. Prove
 actual positive-XYE sparse extrusion, at least three reached source infill-layer
 phases and both odd/even bundle witnesses. Hole case must reach clipping on
-both exterior and hole boundaries. The anchor-zero request must actually reach
-the source no-connect branch. A Native rejection, timeout, rewritten request,
+both exterior and hole boundaries. S2N is excluded from this slice by the coordinator ruling below. A Native rejection, timeout, rewritten request,
 absent consumer, unstable Native output or unrelated first difference is not
 this port's RED; report it without changing context to manufacture a PASS.
 
@@ -119,7 +117,7 @@ or Native runs are authorized by this spec submission itself.
 ## Included, deferred and acceptance
 
 Included: sparse Stars mode2 row generation and source finalization for the
-finite1/2/3/10, angle/density, hole and connect/no-connect witnesses; unchanged
+finite1/2/3/10, angle/density, hole and connected witnesses; unchanged
 count1 behavior and role-specific count routing. Source connection primitives
 remain the single implementation. Core stays byte/geometry-only and portable
 to WASM, Windows, macOS and Linux; filesystem/Native work stays in CLI E2E.
@@ -141,3 +139,64 @@ parallel with distinct fresh roots/caches, each threads2. Require cand.fail to
 be a subset of the corresponding shared base.fail (currently both empty).
 No inherited print-statistics failure exception. Audit changed raw streams and
 retain all failures before REVIEW-REQUEST; no automatic reruns or push.
+
+## Native-backed RED observation
+
+Both seeded and official fresh runs on the unchanged `c2de7a2e4` production
+code give the same classification: S1/H1 whole-output PASS; S2/S3/S10/S2A/H2
+whole-output DIVERGENT; S2N Native success but Ares admission error. All Native
+requests retain the requested effective values, positive-E sparse extrusion
+and all three layer phases. Hole controls reach both clipping boundary classes.
+No timeout, rejection, ignore, filtered comparison or production edit occurred.
+
+The earliest normalized difference in the five byte REDs is line18 M73 remaining
+time (Native/Ares: S2 and H2 47/46, S3 44/41, S10 38/37, S2A 36/35). First
+sparse XY+E commands prove the actual geometry difference on layer4 (Z0.8):
+
+| Case | Native first sparse line | Ares first sparse line |
+| --- | --- | --- |
+| S2 |1419: X135.227 Y133.02 E.01663 |1418: X134.974 Y133.02 E.01315 |
+| S3 |1418: X141.02 Y127.924 E.01708 |1420: X133.595 Y133.02 E.05401 |
+| S10 |1416: X141.02 Y133.02 E.0035 |1424: X135.61 Y133.02 E.05401 |
+| S2A |1425: X138.724 Y133.02 E.02779 |1425: X137.851 Y126.08 E.28846 |
+| H2 |1705: X141.02 Y128.255 E.00723 |1705: X134.974 Y133.02 E.01315 |
+
+The whole-output comparator still requires PASS; the XY+E table is diagnostic,
+not another acceptance comparator. First captures and logs remain under
+`/tmp/worker6-stars-red-v1/{seeded,official}`. Initial S2N observation attempted
+reading absent Ares output after the real error; the corrected RED records
+ARES_ERROR explicitly and retains the PASS assertion. All eight cases were
+then run with independent fresh caches under `/tmp/worker6-stars-red-v2`, with
+identical classifications. Logs are `seeded.log` / `official.log`; `audit.json`
+records per-case hashes, complete line counts and differences. No first record
+was overwritten and no Native artifact is tracked.
+
+S2N is not silently removed: its effective absolute `infill_anchor_max=0`
+projects to 0.0, rejected by
+`prepare_infill/bridge_over_infill/transaction/anchor_projection.rs:102-104`
+(`!anchor_max.is_finite() || anchor_max < 0.05`). Upstream `Fill.cpp:978-989`
+projects/clamps sparse anchors and `:1286-1287` forwards them. Zero selects
+`FillBase.hpp:52` dont_connect, so `FillRectilinear.cpp:3366-3373` chains/appends
+instead of calling connect_infill; `FillBase.cpp:1820-1828` has the same split.
+`FillBase.cpp:1580-1587` connection assertions apply to the connecting branch.
+The cited `:2712-2784` only expands bundles, not anchors. Generator finalization
+was included in this spec, but the bridge transaction admission edit is outside
+its listed Rust targets. Coordinator ruling: the zero-anchor admission is the general rectilinear-family
+no-connect slice, not Stars mode2. S2N is removed from this branch's active
+controls, preserving the five real byte REDs and two count1 controls.
+
+### Deferred zero-anchor admission (coordinator ruling)
+
+S2N (`infill_anchor_max=0`, count2) is deferred to the next separately specified
+rectilinear-family no-connect port. The existing guard is
+`anchor_projection.rs:102-104`, rejecting finite projected values below0.05.
+Upstream references: `Fill.cpp:978-989/:1286-1287`, `FillBase.hpp:52`,
+`FillRectilinear.cpp:3366-3373`, `FillBase.cpp:1820-1828/:1580-1587`.
+This is not `multiline_fill` (`FillBase.cpp:2712-2784`). Native accepts in both
+modes; Ares reports UnsupportedProjectFeature. Frozen first evidence and
+corrected-harness evidence remain outside git under
+`/tmp/worker6-stars-red-v1` and `/tmp/worker6-stars-red-v2` (each mode's S2N
+case directory and log; v2 audit.json includes the explicit error). No guard
+change, ignore, skip or retained failing S2N test belongs to this Stars branch.
+The subsequent slice must reuse this real RED and port no-connect admission
+before removing the guard; no scope expansion is implied here.
