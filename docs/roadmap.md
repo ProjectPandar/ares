@@ -24,7 +24,18 @@ Full evidence is the actual `4650357d2`-based candidate: seeded974/974 PASS, off
 Other-layer count is already merged; SAFC Native nondeterminism is owned by worker6.
 [Sources, Rust destinations, failure inventory and test-first exits](architecture/option-g4-first-layer-sequence-coverage.md).
 
-### Inner-only hole brim: approved source slice (2026-10-12)
+### OuterAndInner combined brim: SPEC request (2026-10-12)
+
+Next worker3 source slice: `Brim.cpp::outer_inner_brim_area` combined selector,
+contour Round outer area + original-width Miter3 hole area, shared masks/contact
+and existing `tryExPolygonOffset`/`makeBrimInfillImpl` paths. One object/instance/
+volume/group/tool; EFC, supports, painting, cross-object composition and the
+rectangular public adapter remain deferred. Docs only; Native-admitted input-only
+fixtures and separate reported RED precede implementation after SPEC approval.
+[SPEC](architecture/outer-inner-brim-rewrite-spec.md),
+[runtime ARD](architecture/ard-outer-inner-brim-runtime-boundary.md).
+
+### Inner-only hole brim: merged bounded source slice (2026-10-12)
 
 Next worker3 slice of the open active-dependency/complete-output priority:
 `Brim.cpp::outer_inner_brim_area` InnerOnly hole offsets/masks/contact rules
@@ -35,7 +46,11 @@ Exit: admitted Native-backed RED before code, both-mode finite hole witnesses
 and whole option_coverage, unchanged full comparisons, Tier1/engineering gates,
 then reviewed canonical candidate full with0FAIL. SPEC696cd308a approved;
 test-first RED063a161bc reported before implementation. Finite Native/API/CLI
-GREEN15/15 in both modes; latest-head directed/workspace/full review pending.
+GREEN15/15 in both modes; merged `10058be78` after Claude's approval.
+Workspace8356/8356 and directed222/222 both modes passed; strict/fmt/WASM green.
+Full executed38@oldbaseaeb: seeded993/993 PASS; official991 PASS/2 known Native
+variants accepted only after each fresh3 PASS and identical Ares SHA. Raw FAIL
+evidence is retained; rebase-carry accepted, old-base full not registered anew.
 [SPEC](architecture/inner-only-brim-rewrite-spec.md),
 [runtime ARD](architecture/ard-inner-only-brim-runtime-boundary.md),
 [RED evidence](architecture/inner-only-brim-red-evidence.md).
