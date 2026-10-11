@@ -1,4 +1,4 @@
-//! Explicit outer brim for a single object, rewriting the simple
+//! Explicit outer/inner brim for a single object, rewriting the simple
 //! `outer_inner_brim_area` + `makeBrimInfillImpl` path
 //! (`Brim.cpp:421-570,819-878`).
 
@@ -29,7 +29,7 @@ impl BrimPlan {
         let options = &resolved.object;
         if !matches!(
             options.brim_type,
-            ProcessBrimType::OuterOnly | ProcessBrimType::BrimEars
+            ProcessBrimType::OuterOnly | ProcessBrimType::InnerOnly | ProcessBrimType::BrimEars
         ) || options.brim_width.0 <= 0.0
         {
             return Ok(None);
@@ -94,7 +94,12 @@ impl BrimPlan {
         let brim_width = scaled_f32(scale, brim_width_mm)?;
         let spacing = scaled_f32(scale, spacing_mm)?;
         let resolution = scaled_f64(scale, 0.0125)?;
-        let (brim_area, inner) = if options.brim_type == ProcessBrimType::BrimEars {
+        let mut object_islands = Vec::new();
+        let (brim_area, inner) = if options.brim_type == ProcessBrimType::InnerOnly {
+            let area = crate::brims::inner::area(&source, gap, brim_width, spacing, resolution)?;
+            object_islands = area.object_islands;
+            (area.area, area.forbidden)
+        } else if options.brim_type == ProcessBrimType::BrimEars {
             crate::brims::ears::area(
                 &source,
                 crate::brims::ears::AreaParameters {
@@ -123,6 +128,11 @@ impl BrimPlan {
             (brim_area, inner),
             resolution,
         )?;
+        let brim_area = if options.brim_type == ProcessBrimType::InnerOnly {
+            crate::brims::inner::retain_contact(brim_area, &object_islands, spacing, resolution)?
+        } else {
+            brim_area
+        };
         if brim_area.is_empty() {
             return Ok(None);
         }

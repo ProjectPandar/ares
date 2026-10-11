@@ -2,8 +2,10 @@
 
 ## Status and roadmap selection
 
-Worker3, docs only, based on main `5fc560ca0`. Await Claude's SPEC approval
-before tests, Native execution or production changes. No RED is claimed.
+Worker3, original SPEC based on main `5fc560ca0`; Claude approved `696cd308a`.
+The independent test-first commit is `063a161bc`; see
+[RED evidence](inner-only-brim-red-evidence.md). Exact-head engineering/full
+review remains required before merge.
 
 Selected from roadmap **Current acceptance priorities: full acceptance (open)**:
 source-owned active dependencies and strict complete-output witnesses remain
@@ -130,6 +132,5 @@ do not remove its guard or fix an owned neighboring slice.
    Latest-main rebase/carry and merge follow Claude's ruling; no automatic
    push, merge or base registration from SPEC approval.
 
-No Native/cargo execution, tests or implementation are part of this docs-only
-SPEC submission. Endpoint completeness beyond these finite witnesses remains
+The original SPEC submission was docs only. Endpoint completeness beyond these finite witnesses remains
 open; this slice does not close the seven-value brim_type domain globally.

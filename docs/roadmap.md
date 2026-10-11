@@ -15,7 +15,7 @@ Existing first-layer Rust ordering stays the source rewrite boundary; no assumed
 Other-layer count is already merged; SAFC Native nondeterminism is owned by worker6.
 [Sources, Rust destinations, failure inventory and test-first exits](architecture/option-g4-first-layer-sequence-coverage.md).
 
-### Inner-only hole brim: source-slice SPEC request (2026-10-12)
+### Inner-only hole brim: approved source slice (2026-10-12)
 
 Next worker3 slice of the open active-dependency/complete-output priority:
 `Brim.cpp::outer_inner_brim_area` InnerOnly hole offsets/masks/contact rules
@@ -24,9 +24,12 @@ area producer and real project BrimPlan dispatch. One object/group/tool;
 public rectangular adapter, OuterAndInner, painting and EFC remain deferred.
 Exit: admitted Native-backed RED before code, both-mode finite hole witnesses
 and whole option_coverage, unchanged full comparisons, Tier1/engineering gates,
-then reviewed canonical candidate full with0FAIL. Docs only pending approval.
+then reviewed canonical candidate full with0FAIL. SPEC696cd308a approved;
+test-first RED063a161bc reported before implementation. Finite Native/API/CLI
+GREEN15/15 in both modes; latest-head directed/workspace/full review pending.
 [SPEC](architecture/inner-only-brim-rewrite-spec.md),
-[runtime ARD](architecture/ard-inner-only-brim-runtime-boundary.md).
+[runtime ARD](architecture/ard-inner-only-brim-runtime-boundary.md),
+[RED evidence](architecture/inner-only-brim-red-evidence.md).
 
 ### Adaptive volumetric fit: coupled-family SPEC request (2026-10-11)
 
