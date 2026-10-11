@@ -71,6 +71,8 @@ mod gcode_printable_area;
 mod honeycomb_multiline;
 #[path = "orca_parity/infill_anchor_dont_connect.rs"]
 mod infill_anchor_dont_connect;
+#[path = "orca_parity/infill_anchor_negative.rs"]
+mod infill_anchor_negative;
 #[path = "orca_parity/infill_rotate_template.rs"]
 mod infill_rotate_template;
 #[path = "orca_parity/klipper_velocity_limit.rs"]
