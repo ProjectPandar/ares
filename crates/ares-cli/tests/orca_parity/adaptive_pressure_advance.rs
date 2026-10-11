@@ -7,6 +7,8 @@ use serde_json::{Map, Value, json};
 mod bridge_domain;
 #[path = "adaptive_pressure_advance/residual_witness.rs"]
 mod residual_witness;
+#[path = "adaptive_pressure_advance/scarf_ramp.rs"]
+mod scarf_ramp;
 #[path = "adaptive_pressure_advance/sloped_loop.rs"]
 mod sloped_loop;
 #[path = "adaptive_pressure_advance/tools.rs"]
