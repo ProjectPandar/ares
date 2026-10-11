@@ -179,7 +179,7 @@ impl Clipper {
 
         self.maxima.clear();
         if succeeded {
-            self.finish_output();
+            self.finish_output::<P>();
         }
         self.joins.clear();
         self.ghost_joins.clear();
@@ -209,11 +209,11 @@ impl Clipper {
         }
     }
 
-    fn finish_output(&mut self) {
+    fn finish_output<P: RoundPolicy>(&mut self) {
         self.fix_output_orientations();
         self.join_common_edges();
         for index in 0..self.out_recs.len() {
-            self.fixup_output_record(index);
+            self.fixup_output_record::<P>(index);
         }
         if self.options.strictly_simple {
             self.do_simple_polygons();
@@ -230,13 +230,15 @@ impl Clipper {
         self.z_intersections = Some(Vec::new());
     }
 
-    fn fixup_output_record(&mut self, index: usize) {
+    fn fixup_output_record<P: RoundPolicy>(&mut self, index: usize) {
         if self.out_recs[index].points.is_none() {
             return;
         }
         let out_rec = super::types::OutRecId(index);
         if self.out_recs[index].is_open {
             self.fixup_out_polyline(out_rec);
+        } else if P::PRESERVE_OUTPUT_FRONT {
+            self.fixup_positive_front(out_rec);
         } else {
             self.fixup_out_polygon(out_rec);
         }

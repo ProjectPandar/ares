@@ -5,6 +5,7 @@ pub(super) struct Clipper2Truncate;
 impl RoundPolicy for Clipper2Truncate {
     // clipper.engine.cpp:615-661 AddPaths_ skips duplicates, not collinear vertices.
     const REMOVE_INPUT_COLLINEAR: bool = false;
+    const PRESERVE_OUTPUT_FRONT: bool = true;
 
     // clipper.engine.cpp:2350-2382 AddNewIntersectNode, restricted to XY.
     fn intersection(first: IntersectionEdge, second: IntersectionEdge, top_y: i64) -> Point {

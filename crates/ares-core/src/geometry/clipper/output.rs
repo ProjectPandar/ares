@@ -1,4 +1,5 @@
 mod append;
+mod clipper2_front;
 mod fixup;
 mod join_points;
 mod joins;
