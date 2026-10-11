@@ -169,3 +169,29 @@ workspace/strict load<30/jobs2. Production GREEN also queues fresh full accordin
 to coordinator slots and shared-base policy; each leg has its own fresh cache
 and artifact root. Require cand.fail subset of corresponding exact-main base.
 Report spec/RED/GREEN commits and all evidence via REVIEW-REQUEST before push.
+
+## Attributable non-Stars RED
+
+Fresh seeded and official runs each give4 PASS /8 DIVERGENT for the12 controls,
+without rejection, dependency failure or timeout. Count1 R1/G1/C1/H1 all pass.
+R2/G2 remain unrelated dispatch findings and do not authorize this union port.
+Evidence root: `/tmp/worker6-multiline-union-red.1zTTQm` (`seeded.log`,
+`official.log`, each mode's per-case receipts and complete outputs outside git).
+
+C2 is an attributable shared-union RED: read-only gdb of existing seeded Native
+and unchanged Ares captures14 multiline calls (anchoring plus emission). Every
+ordered centerline array and every ordered raw round-offset polygon array is
+exactly equal. Each post-union array differs. Native gdb output is independently
+whole generator-only equal to the runtime Native C2 output; Ares gdb output is
+raw-byte equal to the runtime Ares output. The stage audit is
+`/tmp/worker6-union-c2-stage-audit.json`, with both complete captures referenced.
+Runtime C2's first whole difference is line204 M73 placement; its first sparse
+path difference is layer4: Native line1425 `G1 X138.625 Y126.024 E.22346`, Ares
+line1423 `G1 X140.369 Y119.517 E.22346`. The whole-output comparator requires
+PASS throughout; these are diagnostics, not filtered acceptance comparisons.
+
+Coordinator-approved first GREEN experiment: retain the existing Clipper1
+kernel and change only the multiline round offset's union fill rule to
+Positive. No private Clipper2 kernel or external crate may be introduced before
+this experiment and a report of any remaining concrete difference. No claim
+is made that selecting Positive reproduces Clipper2 numeric/order semantics.
