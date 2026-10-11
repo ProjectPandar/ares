@@ -1,6 +1,7 @@
 # SAFC concentric Native authority and short-line initialization
 
-Status: SPEC proposed; no Rust or production change. Worker6 owns this bounded
+Status: stage1 preflight approved and completed; revised stage2 SPEC proposed.
+No Rust or production change. Worker6 owns this bounded
 Native-determinism investigation. Stock rescan remains HOLD; no full run is
 part of this slice. Source pin: OrcaSlicer8500fcdcc.
 
@@ -107,12 +108,21 @@ SAFC formula, input geometry/options, shared cache or production API change.
   Parent retains the seven-case inventory and separately reports the selected
   producer per case; official-mode reporting must identify five official cases
   plus two initialized cases, not claim seven untouched official comparisons.
-- Use explicit dedicated producer paths supplied through the control environment
-  (proposed ARES_SAFC_INITIALIZED_BIN/NATIVE_BIN/RESOURCES_DIR), with a dedicated
-  child process invoking existing OrcaRunner::from_env. Do not mutate process
-  environment in concurrent tests, add a constructor bypass or create a second
-  cache. Reuse slice_case's existing producer/request/lock/receipt machinery.
-  Both concentric cases use the same producer and original inputs.
+- Reuse the control script's existing seeded producer configuration, not new
+  SAFC environment variables or the historical KSR producer. The concentric
+  child in both modes receives the same seeded tuple: ARES_ORCA_BIN selects
+  scripts/orca-seeded-parity.sh, ORCA_REPLAY_BIN selects the admitted 1k0p5
+  endpoint, ORCA_REPLAY_SEED=0, ARES_PARITY_SEEDED_REFERENCE=1, and
+  ARES_ORCA_NATIVE_BIN/ARES_ORCA_RESOURCES_DIR identify that installation's
+  existing ELF/resources. Invoke the same OrcaRunner::from_env path in the
+  child; no constructor bypass, process-wide set_var or second cache.
+  The official parent's existing tuple continues to serve the other five
+  cases. Control configuration must supply the existing replay endpoint/seed
+  for this child in official mode too; currently those two variables are set
+  only in the seeded branch. Reuse those names and the same producer selection,
+  rather than discover an arbitrary store build or fall back after failure.
+  Reuse slice_case's existing producer/request/lock/receipt machinery. Both
+  concentric cases use the same producer and original inputs.
 - Missing dependencies use tests/support/native_environment: required FAIL;
   optional visible SKIPPED with precise reason. No ignore, silent success,
   synthetic output, frozen output, comparison relaxation or assertions removed.
@@ -124,7 +134,7 @@ SAFC formula, input geometry/options, shared cache or production API change.
 ## Approval-stage diagnostic and RED/GREEN gates
 
 Before consumer edits, use a fixed finite same-input preflight: two official
-runs and two initialized runs, each fresh cache/receipt, sequential at
+runs and two initialized runs per on/off case, each fresh cache/output directory, sequential at
 load<60/jobs2/test-threads2, keeping every result. Use the actual on-concentric
 input plus off control. No retries until PASS, no stress/full run and no Native
 rebuild. Official repeats may coincide; that cannot erase the retained ND.
@@ -145,3 +155,52 @@ then the entire option_coverage test group (including non-Native tests), fresh
 default workspace, strict clippy/fmt/wasm gates as scheduled. No new full scan
 is authorized here. Report every producer and test-status change, retaining
 source/build conventions and all untouched official failures as evidence.
+
+## Approved stage1 results
+
+Eight fixed sequential direct Native CLI executions completed with exit0, no
+timeout, retry, Native build or consumer edit. Each used --slice 0 on an exact
+copy of its captured input, a new output directory and empty ARES_ORCA_CACHE_DIR,
+seed0 for initialized runs, and existing ares-pin-runner.sh pinned to CPU4.
+These are uncached diagnostic executions, not OrcaRunner cache receipts.
+Official's existing runtime-library cache was checked before execution so its
+wrapper did not evaluate/build missing dependencies. Start load was 9.586-9.638.
+Every request, stdout/stderr, result, input, Native output and segment list is
+retained outside git at /tmp/worker6-safc-nd/preflight-v1; the exact command
+script is /tmp/worker6-safc-nd/preflight.py and aggregate is summary.json.
+The repeatable post-run integrity/pair audit is
+/tmp/worker6-safc-nd/preflight-audit.py; its audit.json verifies the input and
+producer file hashes, empty caches and complete initialized comparisons.
+
+| Case | Producer | Repeat | Segments / Top | Generator-only SHA256 | Equal to retained Ares |
+| --- | --- | --- | --- | --- | --- |
+| on-concentric | official |1 |1622 /49 |2d04dbb0ebdb97744bf69540be0d93d6f1f67cf8bfb7c1fd286c2ca916e16ce1 |yes |
+| on-concentric | official |2 |1617 /44 |c3e916db3b6a40fc64bae87dd928027a089b5e87529ed03bed35c9432d839012 |no |
+| on-concentric | initialized |1 |1622 /49 |2d04dbb0ebdb97744bf69540be0d93d6f1f67cf8bfb7c1fd286c2ca916e16ce1 |yes |
+| on-concentric | initialized |2 |1622 /49 |2d04dbb0ebdb97744bf69540be0d93d6f1f67cf8bfb7c1fd286c2ca916e16ce1 |yes |
+| off-concentric | official |1 |1622 /49 |883f67d254a67796a8a0c0f073d0b3a26f69d99548b4016b8ed84d136155204c |yes |
+| off-concentric | official |2 |1622 /49 |883f67d254a67796a8a0c0f073d0b3a26f69d99548b4016b8ed84d136155204c |yes |
+| off-concentric | initialized |1 |1622 /49 |883f67d254a67796a8a0c0f073d0b3a26f69d99548b4016b8ed84d136155204c |yes |
+| off-concentric | initialized |2 |1622 /49 |883f67d254a67796a8a0c0f073d0b3a26f69d99548b4016b8ed84d136155204c |yes |
+
+The official on pair reproduces the retained failure: first normalized line
+1009 is Outer wall versus M73 P32 R5; first motion difference is line3360,
+X110.037 Y109.936 versus X105.955 Y105.955. Both initialized self-replays are fully
+equal after replacing exactly one generated-by line. Both initialized on/off
+pairs also preserve every observed segment's layer, role, XY endpoints, order
+and exact E, not merely their counts. On/off full files differ in the requested
+configuration flag; no claim that their configuration blocks are identical.
+
+Full comparisons above use the existing worker3 c02 retained Ares bytes from
+case-T8w6q0 and case-0ylXAs, not a fresh current-main Ares execution or a current
+gate. Stage2 must perform that fresh comparison through the unchanged harness.
+The observed initialized result supports bounded authority routing; it does
+not prove the exact uninitialized values in each official process. No extra
+debugger execution or inferred stack-field measurement is credited.
+
+Per-execution raw hashes and launcher/endpoint/ELF hashes are in result.json.
+Official ELF is 64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60;
+initialized ELF is the 59fb88a2 hash above. The two source inputs remain exactly
+the captured bytes throughout all four executions of each case. Source-owned
+UB diagnosis and stage2 approval remain distinct from these finite observations;
+the official failure is retained and is not relabeled PASS.
