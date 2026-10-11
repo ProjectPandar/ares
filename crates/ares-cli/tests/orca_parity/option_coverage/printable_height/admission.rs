@@ -38,7 +38,7 @@ fn orca_parity_printable_height_bounded_metadata_and_inventory() {
         )
         .unwrap();
     }
-    assert_eq!(plans.len(), 650);
+    assert_eq!(plans.len(), 651);
     let plan = plans
         .iter()
         .find(|plan| plan.key == "printable_height")

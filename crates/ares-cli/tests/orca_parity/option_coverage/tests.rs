@@ -13,7 +13,8 @@ fn option_domain_plan_is_complete_and_source_cited() {
         None => return,
     };
 
-    assert_eq!(plans.len(), 650);
+    // 650 historical inventory plans plus the live standalone brim_ears bool.
+    assert_eq!(plans.len(), 651);
     assert!(plans.iter().all(|plan| {
         plan.source.starts_with("src/libslic3r/PrintConfig.cpp:")
             || plan.source.starts_with("src/libslic3r/PrintConfig.hpp:")

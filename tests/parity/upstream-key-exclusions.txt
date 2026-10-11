@@ -32,7 +32,6 @@ avoid_extrusion_cali_region
 bottle_cost
 bottle_volume
 bottle_weight
-brim_ears
 center
 clone_objects
 compatible_machine_expression_group

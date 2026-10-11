@@ -49,7 +49,7 @@ pub(super) fn load(repo: &Path) -> Vec<OptionPlan> {
     // The historical inventory omits this live standalone bool (not the enum token).
     inventory.as_array_mut().unwrap().push(serde_json::json!({
         "key":"brim_ears","option_type":"coBool","raw_scope":"process",
-        "upstream_definition":{"path":"OrcaSlicer/src/libslic3r/PrintConfig.cpp","line":1751}
+        "upstream_definition":{"path":"src/libslic3r/PrintConfig.cpp","line":1751}
     }));
     let source =
         std::fs::read_to_string(repo.join("OrcaSlicer/src/libslic3r/PrintConfig.cpp")).unwrap();
