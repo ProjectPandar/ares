@@ -7,11 +7,20 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### G4 first-layer sequence: SPEC request (2026-10-11)
+### G4 layer-template current-filament context: SPEC request (2026-10-12)
+
+Port `GCode::process_layer` before/after layer-template invocation context from `GCode.cpp:4639-4641,4682-4684`: unindexed legacy vectors use the current logical writer filament.
+Rust boundary is existing `gcode_emit/layer_gcode.rs`; reuse the parser and writer registry, preserve hook timing/write-back and explicit indexes.
+Six finite Native/API/CLI controls distinguish nonzero/current/upcoming tools through actual M104 and wall-tool consumption. Other template owners and printer/option completeness remain deferred.
+No tests, Native execution or production change before SPEC approval; no overlap with APA/anchor, brim, profiles, multiline geometry, CI/oracle or viewer runtime claims.
+[SPEC and test-first gates](architecture/layer-template-filament-context-spec.md), [proposed architecture decision](architecture/ard-layer-template-filament-context.md).
+
+### G4 first-layer sequence: bounded GREEN (2026-10-12)
 
 Witness upstream `ToolOrdering::apply_first_layer_order` with two actual outer-wall tools, not only wall/infill sharing.
 Five finite one-based configured-vector controls cover size gating, reversal and first-occurrence duplicate handling.
-Existing first-layer Rust ordering stays the source rewrite boundary; no assumed production RED.
+Merged `36ed482eb`: machine-start implicit vector rendering follows the resolved initial filament (`GCode.cpp:3118`); first-layer ordering itself is retained.
+Full evidence is the actual `4650357d2`-based candidate: seeded974/974 PASS, official973 PASS/1 coordinator-adjudicated known Native variant, fresh diagnostic3/3 PASS; not a new clean full baseline.
 Other-layer count is already merged; SAFC Native nondeterminism is owned by worker6.
 [Sources, Rust destinations, failure inventory and test-first exits](architecture/option-g4-first-layer-sequence-coverage.md).
 
