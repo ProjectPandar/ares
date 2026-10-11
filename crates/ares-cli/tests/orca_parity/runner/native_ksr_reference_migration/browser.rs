@@ -1,5 +1,5 @@
 //! Actual WASM/browser bytes against Print::export_gcode / GCode::do_export.
-//! The capture comes from project-slice.spec.mjs; no CLI substitution.
+//! The capture comes from web/e2e/ksrProject.spec.ts; no CLI substitution.
 
 use super::{compare, producer};
 use crate::runner::{ExportedCase, cache_identity, repo_root};
@@ -9,7 +9,7 @@ use std::fs;
 fn browser_output_matches_initialized_orca_242_ordered_bytes() {
     let Some(capture) = std::env::var_os("ARES_BROWSER_GCODE") else {
         crate::native_environment::skipped(
-            "browser capture absent; run via project-slice.spec.mjs",
+            "browser capture absent; run via web/e2e/ksrProject.spec.ts",
         );
         return;
     };

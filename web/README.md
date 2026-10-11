@@ -131,6 +131,11 @@ Artifacts are written to `target/web-e2e/`:
   The preset and profile slice specs run the `ares-cli` parity tests with
   `ARES_REQUIRE_ORCA=1` and the Native binary and resources of that extraction, so
   a missing Native fails them instead of skipping the comparison.
+- `ksr-project/`: `tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf` sliced twice
+  through the `AresSlicer` worker API (`browser.gcode`, `result.json`). The
+  `ares-cli` parity test compares it as ordered bytes with the KSR initialized
+  OrcaSlicer 2.4.2 named by `ARES_KSR_INITIALIZED_BIN`,
+  `ARES_KSR_INITIALIZED_NATIVE_BIN` and `ARES_KSR_INITIALIZED_RESOURCES_DIR`.
 
 The oracles are external binaries named by environment variables: `ORCA_APPDIR`
 above, and `ARES_PROCGCODE_BIN` for the OrcaSlicer `GCodeProcessor` build

@@ -64,7 +64,7 @@ fn required_without_browser_capture_is_visibly_skipped() {
     );
     assert!(output.status.success(), "{artifacts:?}: {diagnostic}");
     assert!(
-        diagnostic.contains("SKIPPED: browser capture absent; run via project-slice.spec.mjs"),
+        diagnostic.contains("SKIPPED: browser capture absent; run via web/e2e/ksrProject.spec.ts"),
         "{artifacts:?}: {diagnostic}"
     );
     assert_eq!(
