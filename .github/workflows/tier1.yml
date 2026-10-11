@@ -65,6 +65,7 @@ jobs:
           - merged-oracle
           - ksr-initialized
           - seed-replay
+          - procgcode
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -239,6 +240,7 @@ jobs:
             echo "NIX_PATH=nixpkgs=$nixpkgs"
             echo "ARES_ORCA_BIN=$PWD/scripts/orca-seeded-parity.sh"
             echo "ORCA_REPLAY_BIN=$ORACLE_seed_replay/bin/orca-slicer"
+            echo "ARES_ORCA_REFERENCE_BINARY=$ORACLE_seed_replay/bin/.orca-slicer-wrapped"
             echo "ARES_ORCA_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_ORCA_RESOURCES_DIR=$ksr/share/OrcaSlicer"
             echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
@@ -335,6 +337,7 @@ jobs:
             echo "ARES_ORCA_BIN=$PWD/scripts/orca-parity.sh"
             echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
             echo "ARES_ORCA_NATIVE_BIN=$RUNNER_TEMP/orca-appdir/bin/orca-slicer"
+            echo "ARES_ORCA_REFERENCE_BINARY=$RUNNER_TEMP/orca-appdir/bin/orca-slicer"
             echo "ARES_ORCA_RESOURCES_DIR=$RUNNER_TEMP/orca-appdir/resources"
             echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
             echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"

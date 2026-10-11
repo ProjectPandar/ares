@@ -50,7 +50,12 @@ case "$variant" in
       --file "$repo/tools/chain-probe/merged-oracle.nix"
     ;;
   seed-replay)
-    git -C "$src" apply --unidiff-zero "$repo/scripts/orca-replay/seed-only.patch"
+    # The approved seed-replay oracle carries all three initialization patches,
+    # not just seed-only (verified byte-identical to the accepted source tree).
+    git -C "$src" apply --unidiff-zero \
+      "$repo/scripts/orca-replay/seed-only.patch" \
+      "$repo/scripts/orca-replay/concentric-initialization.patch" \
+      "$repo/scripts/orca-replay/object-id-initialization.patch"
     ORCA_REPLAY_SOURCE="$src" ORCA_REPLAY_NIXPKGS="$nixpkgs" \
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/scripts/orca-replay/build.nix"
