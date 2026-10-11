@@ -32,13 +32,15 @@ pub(super) fn emit(command: Emission<'_>) {
     // the QUANTIZED emitted positions, not the raw source geometry.
     let quantize = |v: f64| (v * 1000.0).round() / 1000.0;
     let mut previous = (quantize(points[0].0), quantize(points[0].1));
-    // `GCode.cpp:7115-7122`: the sloped length basis is the PROCESSED
-    // point polyline (`Polyline3 l(new_points)`), not the raw emitted
-    // path.
+    // `GCode.cpp:7114-7121`: the sloped length denominator is the PROCESSED
+    // point polyline (`Polyline3 l(new_points)`) built from the RAW
+    // `ProcessedPoint.p`, before `point_to_gcode_quantized`; the
+    // `path_length` numerator (`GCode.cpp:7149`) still accumulates over the
+    // quantized emitted positions, so the cumulative ratio may exceed 1.
     let slope = properties.slope.map(|slope| {
-        let total_length = points
+        let total_length = processed
             .windows(2)
-            .map(|pair| (pair[1].0 - pair[0].0).hypot(pair[1].1 - pair[0].1))
+            .map(|pair| (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y))
             .sum::<f64>();
         (slope, total_length)
     });
