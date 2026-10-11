@@ -26,6 +26,8 @@ mod wrapping_exclude_coverage;
 #[path = "option_coverage/filament_flow_coverage.rs"]
 mod filament_flow_coverage;
 
+#[path = "option_coverage/adaptive_volumetric_coverage.rs"]
+mod adaptive_volumetric_coverage;
 #[cfg(test)]
 #[path = "option_coverage/bridge_flow_coverage.rs"]
 mod bridge_flow_coverage;
