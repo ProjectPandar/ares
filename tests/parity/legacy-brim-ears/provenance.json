@@ -27,10 +27,20 @@
       "input_sha256": "30bb0b3c962d909a0aba7cbfc6b9b2918369095d8f567cb622cb90eed06c9c7a",
       "selector": "outer_only",
       "bool": "1"
+    },
+    "E0": {
+      "input_sha256": "1a3f2d1c1417dd03933adfc2e84916df89898cd4a1462b29260541cfb5e04e5d",
+      "selector": "brim_ears",
+      "bool": "0"
+    },
+    "E1": {
+      "input_sha256": "f29e201684f4677a2cd9d238c892f4b0a2bdc27507061600575b253b21fdeca5",
+      "selector": "brim_ears",
+      "bool": "1"
     }
   },
   "all_other_members_equal": true,
   "actual_native_commit": "b09dd730dd2b2088bc24841eb1903bd8ddc73eac",
   "artifact_root": "/tmp/worker3-brim-admission-v1",
-  "scope": "four non-ear inputs only; six-case historical proof and ear RED retained on worker3-brim-six-case-red-archive"
+  "scope": "inputs only, no golden"
 }

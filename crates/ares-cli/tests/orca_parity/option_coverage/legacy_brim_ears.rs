@@ -1,6 +1,6 @@
 //! PrintConfig.cpp:1751-1756; Brim.cpp:455-458,536-554.
 //! Failure inventory: legacy bool selecting geometry, lost config echo,
-//! inactive non-ear selector, API/CLI mismatch. Ear RED lives on production chain.
+//! inactive brim selector, collapsed outer/ear shapes, API/CLI mismatch.
 use crate::{
     golden,
     runner::{OrcaRunner, stages},
@@ -19,7 +19,7 @@ struct Case {
     enabled: bool,
     project: &'static [u8],
 }
-const CASES: [Case; 4] = [
+const CASES: [Case; 6] = [
     Case {
         label: "N0",
         selector: "no_brim",
@@ -44,6 +44,18 @@ const CASES: [Case; 4] = [
         enabled: true,
         project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/O1.3mf"),
     },
+    Case {
+        label: "E0",
+        selector: "brim_ears",
+        enabled: false,
+        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/E0.3mf"),
+    },
+    Case {
+        label: "E1",
+        selector: "brim_ears",
+        enabled: true,
+        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/E1.3mf"),
+    },
 ];
 pub(super) fn generate(key: &str) -> Option<(Vec<super::domains::OptionCase>, serde_json::Value)> {
     if key != "brim_ears" {
@@ -63,7 +75,7 @@ pub(super) fn generate(key: &str) -> Option<(Vec<super::domains::OptionCase>, se
         "spec":"docs/architecture/option-legacy-brim-ears-bounded-spec.md",
         "cases":CASES.iter().map(|c|json!({"label":c.label,"brim_type":c.selector,"brim_ears":c.enabled})).collect::<Vec<_>>(),
         "scope":"single PLA cube, one nozzle, fixed width4/gap0.1/angle125/detection1",
-        "deferred":["auto ear selector E0/E1 and ear sweep: retained RED production chain","painted ears","holes","multi objects","geometry production"]
+        "deferred":["painted ears","holes","multi objects","geometry production"]
         }),
     ))
 }
@@ -199,6 +211,14 @@ fn compare_with(runner: &OrcaRunner, case: &Case) {
             "legacy bool must not change Native geometry"
         );
     }
+    if case.label == "E0" {
+        let outer = native(runner, &root.join("outer"), CASES[2].project);
+        assert_ne!(
+            brim_lines,
+            brim_motion(&outer),
+            "ear selector must differ from outer contour"
+        );
+    }
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
@@ -268,4 +288,14 @@ fn legacy_brim_o0_whole_output() {
 #[test]
 fn legacy_brim_o1_whole_output() {
     compare("O1");
+}
+
+#[test]
+fn legacy_brim_e0_whole_output() {
+    compare("E0");
+}
+
+#[test]
+fn legacy_brim_e1_whole_output() {
+    compare("E1");
 }
