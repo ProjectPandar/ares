@@ -1,6 +1,7 @@
 # SAFC concentric Native authority and short-line initialization
 
-Status: stage1 preflight approved and completed; revised stage2 SPEC proposed.
+Status: stage2 approved; authority selection revised by the coordinator to
+existing common KSR initialized paths after the additional four-run preflight.
 No Rust or production change. Worker6 owns this bounded
 Native-determinism investigation. Stock rescan remains HOLD; no full run is
 part of this slice. Source pin: OrcaSlicer8500fcdcc.
@@ -90,10 +91,11 @@ common defaults are source-cited by WallToolPaths.cpp:34-37,56; defective fill
 constructors do not define their values. Current Ares
 project_slice/fill_entities/concentric/generate.rs:107-112 explicitly uses that
 same convention. Do not port undefined bytes to Rust or modify the official
-binary. The historical KSR producer jqfsg42 has a different RNG recipe and is
-not substituted for the current admitted producer.
+binary. The historical KSR producer jqfsg42 has a different RNG recipe; its
+bounded use below was admitted only after fresh concentric output equivalence.
+This does not establish interchangeability for patterns that consume RNG.
 
-## Proposed bounded correction (approval required)
+## Approved bounded correction
 
 Rust destination is test harness only:
 option_coverage/safc_coverage.rs plus same-prefix dedicated helper. Keep all
@@ -102,25 +104,23 @@ role requirements and all coupled consumer assertions. No core, processor,
 SAFC formula, input geometry/options, shared cache or production API change.
 
 - Rectilinear scenarios remain on the caller's selected official/seeded Native.
-- On/off-concentric form a paired initialized-authority child using the current
-  admitted replay producer, seed0 and existing single-CPU wrapper semantics.
+- On/off-concentric form a paired initialized-authority child using the admitted
+  jqfsg42 producer, seed0 and existing single-CPU wrapper semantics.
   This is explicit authority selection, never a fallback after comparison fails.
   Parent retains the seven-case inventory and separately reports the selected
   producer per case; official-mode reporting must identify five official cases
   plus two initialized cases, not claim seven untouched official comparisons.
-- Reuse the control script's existing seeded producer configuration, not new
-  SAFC environment variables or the historical KSR producer. The concentric
-  child in both modes receives the same seeded tuple: ARES_ORCA_BIN selects
-  scripts/orca-seeded-parity.sh, ORCA_REPLAY_BIN selects the admitted 1k0p5
-  endpoint, ORCA_REPLAY_SEED=0, ARES_PARITY_SEEDED_REFERENCE=1, and
-  ARES_ORCA_NATIVE_BIN/ARES_ORCA_RESOURCES_DIR identify that installation's
-  existing ELF/resources. Invoke the same OrcaRunner::from_env path in the
-  child; no constructor bypass, process-wide set_var or second cache.
-  The official parent's existing tuple continues to serve the other five
-  cases. Control configuration must supply the existing replay endpoint/seed
-  for this child in official mode too; currently those two variables are set
-  only in the seeded branch. Reuse those names and the same producer selection,
-  rather than discover an arbitrary store build or fall back after failure.
+- Reuse common ARES_KSR_INITIALIZED_BIN/NATIVE_BIN/RESOURCES_DIR exactly as
+  declared by the control environment. Only the paired child maps them into
+  existing ARES_ORCA_BIN/NATIVE_BIN/RESOURCES_DIR and ORCA_REPLAY_BIN;
+  ARES_ORCA_BIN selects scripts/orca-seeded-parity.sh, ORCA_REPLAY_SEED=0 and
+  ARES_PARITY_SEEDED_REFERENCE=1 are set only in that child. Invoke the same
+  OrcaRunner::from_env path; no constructor bypass, process-wide set_var or
+  second cache. The official parent keeps ORCA_REPLAY_BIN/SEED unset and retains
+  its existing producer/cache identity; seeded parents retain their existing
+  1k0p5 selection. Do not promote replay variables into official common refs:
+  their presence changes bridge_over_infill_filament.rs:96 and
+  narrowed_x2d_whole_file.rs:78, and changes cache_identity.rs:86-91 identity.
   Reuse slice_case's existing producer/request/lock/receipt machinery. Both
   concentric cases use the same producer and original inputs.
 - Missing dependencies use tests/support/native_environment: required FAIL;
@@ -204,3 +204,33 @@ initialized ELF is the 59fb88a2 hash above. The two source inputs remain exactly
 the captured bytes throughout all four executions of each case. Source-owned
 UB diagnosis and stage2 approval remain distinct from these finite observations;
 the official failure is retained and is not relabeled PASS.
+
+## Additional common-producer admission
+
+The coordinator rejected adding replay BIN/SEED to official common refs for
+the side effects above. Four additional fixed sequential fresh uncached CLI
+runs used the existing common jqfsg42 producer on the exact same on/off inputs,
+two executions each. All exited0, with1622 segments/49 Top and no timeout,
+retry or rebuild. On normalized SHA is2d04dbb0ebdb97744bf69540be0d93d6f1f67cf8bfb7c1fd286c2ca916e16ce1;
+off is883f67d254a67796a8a0c0f073d0b3a26f69d99548b4016b8ed84d136155204c.
+Each equals both original1k0p5 initialized executions and the corresponding
+retained Ares complete output. Both on/off pairs also have identical segment
+keys/order/exact E. No RNG-equivalence claim extends beyond this fixture.
+
+ELF SHA is8f0cf69dd9494ccfe53bf6749d6b685ccb5a0dd0df206694ce50d421007cc03d.
+The explicit install is
+/nix/store/jqfsg42f6xzq3krnf5scm6w4g1z4kz4c-orca-slicer-seed-replay-2.4.2;
+its source rebuild/identity proof is the existing
+[KSR authority ARD](ard-ksr-initialized-runtime-authority.md) and
+[recipe](../../tools/orca-probes/ksr-initialized.nix), not a new Native build.
+All four requests/raw outputs/logs/hashes are outside git in
+/tmp/worker6-safc-nd/preflight-jqf-v1/summary.json and audit.json;
+command script is /tmp/worker6-safc-nd/preflight-jqf.py.
+
+The initial GREEN and unfinished workspace using the rejected routing are
+SUPERSEDED, not acceptance evidence. Revised gates use the unmodified external
+control script, without extra official parent replay variables. CI needs only
+its already-used common KSR initialized three paths, ordinary Native/artifact
+configuration, and inherited replay CPU from the existing runner. The internal
+ARES_SAFC_CONCENTRIC_REQUEST variable carries the paired child request and does
+not select a producer or require control/CI configuration.

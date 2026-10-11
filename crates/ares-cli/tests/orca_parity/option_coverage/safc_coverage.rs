@@ -76,6 +76,7 @@ fn orca_parity_safc_coupled_models_preserve_whole_output_and_segment_consumers()
     let mut observed_native = Vec::new();
     let mut observed_ares = Vec::new();
     let mut failures = Vec::new();
+    let mut exported_cases = Vec::new();
     for (label, enabled, model, pattern) in cases {
         process.insert(ENABLE.into(), json!(enabled));
         process.insert(MODEL.into(), model.clone());
@@ -111,7 +112,33 @@ fn orca_parity_safc_coupled_models_preserve_whole_output_and_segment_consumers()
         ] {
             runner::application::verify_value(&exported.project, key, &json!(pattern)).unwrap();
         }
-        let sliced = runner.slice_case(&exported).unwrap();
+        exported_cases.push((label, enabled, model, pattern, exported));
+    }
+    let concentric_cases = exported_cases
+        .iter()
+        .skip(5)
+        .map(|(_, _, _, _, exported)| exported)
+        .collect::<Vec<_>>();
+    let Some(initialized) = runner::safc_reference::initialized_pair(&concentric_cases, &root)
+    else {
+        return;
+    };
+    let caller_producer = runner::safc_reference::producer(&runner);
+    for (index, (label, enabled, model, pattern, exported)) in
+        exported_cases.into_iter().enumerate()
+    {
+        let (sliced, native_producer) = if index < 5 {
+            (runner.slice_case(&exported).unwrap(), &caller_producer)
+        } else {
+            (
+                runner::ParityCase {
+                    label: label.clone(),
+                    project: exported.project,
+                    reference: std::fs::read(&initialized.paths[index - 5]).unwrap(),
+                },
+                &initialized.producer,
+            )
+        };
         let native = observation::observe(&sliced.reference);
         observation::require_roles(&native);
         let outcome = parity::compare_case(&sliced);
@@ -124,6 +151,7 @@ fn orca_parity_safc_coupled_models_preserve_whole_output_and_segment_consumers()
             observation::require_roles(ares);
         }
         proofs.push(json!({"label":label,"enabled":enabled,"model":model,"pattern":pattern,
+            "native_producer":native_producer,
             "native_role_segments":observation::role_counts(&native),
             "ares_role_segments":ares.as_ref().map(|s| observation::role_counts(s)),
             "full_output_status":outcome.status,"detail":outcome.detail,"artifacts":outcome.artifacts}));

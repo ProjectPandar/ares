@@ -389,3 +389,6 @@ pub(super) fn repo_root() -> PathBuf {
 
 #[path = "runner/wrapping_input.rs"]
 pub(crate) mod wrapping_input;
+
+#[path = "option_coverage/safc_reference.rs"]
+pub(super) mod safc_reference;

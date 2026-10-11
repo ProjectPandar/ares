@@ -5,7 +5,12 @@ use sha2::{Digest, Sha256};
 
 #[test]
 fn orca_parity_safc_concentric_cases_use_initialized_authority_in_both_modes() {
-    let Some(endpoint) = crate::native_environment::binary("ORCA_REPLAY_BIN") else {
+    if let Some(request) = std::env::var_os(crate::runner::safc_reference::REQUEST) {
+        crate::runner::safc_reference::child(std::path::Path::new(&request));
+        return;
+    }
+    let Some(initialized) = crate::native_environment::binary("ARES_KSR_INITIALIZED_NATIVE_BIN")
+    else {
         return;
     };
     if crate::runner::OrcaRunner::from_env().unwrap().is_none() {
@@ -30,7 +35,6 @@ fn orca_parity_safc_concentric_cases_use_initialized_authority_in_both_modes() {
     let proofs: Vec<Value> =
         serde_json::from_slice(&fs::read(root.join("safc-cases.json")).unwrap()).unwrap();
     assert_eq!(proofs.len(), 7, "{root:?}");
-    let initialized = endpoint.parent().unwrap().join(".orca-slicer-wrapped");
     let hash = |bytes| {
         Sha256::digest(bytes)
             .iter()
