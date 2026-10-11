@@ -111,7 +111,7 @@ pub struct VertexBuffers {
     spiral_vase_mode: bool,
     pub(crate) viewer: ViewerImpl,
     moves_slider: MovesSlider,
-    sequential_view: SequentialView,
+    pub(crate) sequential_view: SequentialView,
     values: Vec<f32>,
     ids: Vec<u32>,
     tags: Vec<u8>,

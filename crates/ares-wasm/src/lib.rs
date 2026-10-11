@@ -1,3 +1,4 @@
+mod actual_speed_profile;
 mod color_print;
 mod colors;
 mod custom_gcode_overview;
