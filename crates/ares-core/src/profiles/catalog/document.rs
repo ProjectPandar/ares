@@ -11,13 +11,13 @@ pub(in crate::profiles) struct CatalogInput {
 }
 
 #[derive(Deserialize)]
-pub(super) struct VendorInput {
+pub(in crate::profiles) struct VendorInput {
     pub index: VendorIndex,
     pub files: BTreeMap<String, ProfileDocument>,
 }
 
 #[derive(Deserialize)]
-pub(super) struct VendorIndex {
+pub(in crate::profiles) struct VendorIndex {
     pub name: String,
     #[serde(default)]
     pub machine_list: Vec<VendorEntry>,
@@ -28,7 +28,7 @@ pub(super) struct VendorIndex {
 }
 
 #[derive(Deserialize)]
-pub(super) struct VendorEntry {
+pub(in crate::profiles) struct VendorEntry {
     pub sub_path: String,
 }
 
