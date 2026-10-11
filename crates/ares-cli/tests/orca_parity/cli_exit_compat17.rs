@@ -240,3 +240,32 @@ fn compat17_branch1_accept() {
         &["filament-generic-pla.json"],
     );
 }
+
+/// Branch-2 machine-switch accept (`:2624-2647`): machine file names a
+/// different printer than embedded → upstream sets compatible without
+/// consulting `current_print_compatible_printers`; the fixture's empty
+/// `upward_compatible_machine` keeps the deferred `-16` path out.
+#[test]
+fn compat17_branch2_machine_switch_accept() {
+    assert_load_settings_accept(
+        "branch2-switch",
+        &["machine-different-name.json"],
+        &["filament-generic-pla.json"],
+    );
+}
+
+/// Branch-3 accept (`:2595-2605`): process only and its
+/// `compatible_printers` contains the embedded system name — both
+/// sides slice. The `-rel` clone keeps the embedded relative-E
+/// addressing (`use_relative_e_distances:1`): the shared process
+/// clones pin `0`, which against the embedded `before_layer_change_
+/// gcode`'s `G92 E0` makes native exit `-51` after adjudication —
+/// harmless for reject cases but masking the accept path.
+#[test]
+fn compat17_branch3_accept() {
+    assert_load_settings_accept(
+        "branch3-accept",
+        &["process-compatible-including-rel.json"],
+        &["filament-generic-pla.json"],
+    );
+}
