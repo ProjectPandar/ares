@@ -31,6 +31,8 @@ mod adaptive_volumetric_coverage;
 #[cfg(test)]
 #[path = "option_coverage/bridge_flow_coverage.rs"]
 mod bridge_flow_coverage;
+#[path = "option_coverage/first_layer_sequence.rs"]
+mod first_layer_sequence;
 #[cfg(test)]
 #[path = "option_coverage/safc_coverage.rs"]
 mod safc_coverage;
