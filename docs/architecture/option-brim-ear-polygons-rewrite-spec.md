@@ -12,6 +12,9 @@ Raw input, Native, API and real CLI evidence remains under
 `/tmp/worker3-brim-directed-v1-seeded-artifacts` and original failed log.
 
 No production implementation starts before approval of this request.
+Approved scope amendment: **auto btEar only**. Painted make_brim_ears is entirely
+deferred to a separate source-cited, test-first slice; no painted production
+code or transport/API changes belong here.
 
 ## Upstream owners and Rust destinations
 
@@ -19,7 +22,7 @@ No production implementation starts before approval of this request.
 |---|---|
 | Brim.cpp:310-352 `make_brim_ears_auto` | Replace `crates/ares-core/src/brims/ears.rs::brim_ear_paths`, including square_ear_path172; generate scaled circular ear polygons, not independent square loops |
 | Polygon.cpp:275-317 `filter_convex_concave_points_by_angle_threshold`, `convex_points`, `concave_points` | Ear candidate selection in ears.rs or a private ear-candidate module; reuse existing geometry types without changing global unrelated polygon behavior |
-| Brim.cpp:354-419 `make_brim_ears` | Private ear polygon producer for source-owned painted-ear geometry; distinct sibling of auto producer, not a function called by make_brim_ears_auto |
+| Brim.cpp:354-419 `make_brim_ears` | Entire painted sibling deferred; no implementation in this slice |
 | Brim.cpp:448-460,529-573 outer_inner_brim_area ear branches | `crates/ares-core/src/brims.rs` ear dispatch and private ear area module: flow-spacing width quantization, object-gap offsets, outer/inner differences and intersections |
 | Brim.cpp:813-856 `tryExPolygonOffset` and makeBrimInfillImpl polygon-loop setup | Private ear area-to-path module under brims; use existing clipper/offset boundaries, preserve source loop ordering rather than emitting each corner independently |
 
@@ -43,21 +46,18 @@ owns Native admission and verifiable artifacts.
 - Preserve source path ordering and existing emission behavior. Full-output
   estimate/footer differences must disappear through matching geometry and
   paths, not by disabling M73 or changing estimate/comparator tolerances.
-- Include the `make_brim_ears` sibling's scaled circular producer, radius
-  quantization and transform semantics where its existing model data can be
-  expressed. Painted/EFC adapter reachability is a separate admission barrier:
-  inspect actual Rust model transport before any field/API addition; report
-  exact missing source boundary and request scope amendment if necessary.
-  Do not claim painted full parity from auto-ear E0/E1 success alone.
+- Automatic ears only: do not implement painted radius/transforms or add model
+  transport fields. Their source sibling is explicitly outside this slice.
 
 ## Deferred adjacent behavior
 
 No new GUI painting workflow, new project format, automatic adhesion-width
 heuristics, multi-extruder allocation, support brim rewrite, bed clipping
 redesign, global path scheduler or general perimeter/polygon refactor.
-Painted EFC island snapping helpers, arbitrary 3D transforms and volume-group
-composition need their own source-cited input admission before integration;
-this slice must disclose any deferred adapter rather than fabricate defaults.
+Painted make_brim_ears, its radius/transforms/model transport and EFC island
+snapping are entirely deferred. No painted production code without independent
+admitted tests. Automatic volume-group composition beyond the admitted cases
+needs source-cited admission; do not fabricate defaults.
 Reuse existing flow/geometry services; do not repair other brim modes unless
 the cited shared operation is necessary and its unchanged-output controls pass.
 
@@ -71,8 +71,8 @@ the cited shared operation is necessary and its unchanged-output controls pass.
    wrong minimum-width behavior or double application of offsets.
 5. Overlapping ears are emitted twice; footprint/hole masks are reversed;
    offset simplification changes vertex count or loop nesting/order.
-6. Painted radius/transforms select wrong model frame or above-bed points;
-   missing transport is incorrectly replaced by fabricated automatic points.
+6. Auto implementation accidentally introduces untested painted radius,
+   transforms or model transport, violating the explicit deferred boundary.
 7. Native parity is restored only in motion but estimates/footer/API/CLI differ.
 8. Non-ear modes/bool echo change through shared dispatch modifications.
 9. Tier1 numeric differences, increased allocations, module size >=400LOC,
