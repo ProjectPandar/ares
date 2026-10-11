@@ -1,7 +1,7 @@
 # SPEC: FillBase multiline Clipper2 Positive union
 
-Status: approved numeric-only slice, GREEN candidate; gates pending.
-RED baseline `48821ce89`, integration baseline `765ae4964`; upstream `8500fcdcc`. Stars mode2 WIP is saved locally as `6f3066116`
+Status: numeric-only GREEN submitted for code review; workspace/full pending.
+RED baseline `48821ce89`, current integration baseline `4650357d2`; upstream `8500fcdcc`. Stars mode2 WIP is saved locally as `6f3066116`
 on `worker6/stars-mode2-wip`, not pushed or stashed.
 
 ## Owning upstream boundary
@@ -370,6 +370,30 @@ registrations are coordinator-deferred R2/G2 (`assertion-audit.json`).
 The first strict run rejected excessive_nesting in the scanbeam correction.
 It was flattened into root-level lets and early returns, without suppression
 or changed arithmetic. Fresh strict/fmt/wasm32 all exit0 under
-`/tmp/worker6-union-engineering-flat.NWezRA`. Fresh two-mode option_coverage
-revalidation of this final structure and queued default workspace are pending;
-no merge approval or workspace pass is claimed.
+`/tmp/worker6-union-engineering-flat.NWezRA`.
+
+Current chain on4650357d2: SPEC7e40abdae, RED9dceff73a (original50544582c),
+Positive-only failed trial022bcbec8, numeric attribution2ae742de9, GREEN4f9f96b16.
+Both rebases (765 to5fc560ca0 to4650357d2) were conflict-free, with no brim or
+profiles file overlap; all five range-diff entries were unchanged.
+Fresh option_coverage on GREEN passed212/212 in each mode (seeded485.730s,
+official567.793s); each mode used its own fresh cache/artifact root under
+`/tmp/worker6-union-465-option.Vbi74Q`. Its member-hash/raw audits retain
+362/362 seeded and354/354 official unchanged common-input streams versus765.
+Only the ten added control labels have no corresponding baseline stream.
+New-head strict clippy(-D warnings), fmt and wasm32 checks all exited0 under
+`/tmp/worker6-union-465-engineering.orDJLn`. No workspace/full pass is claimed;
+workspace waits the preceding worker1 END and load<30, full awaits approval.
+
+The preceding5fc560ca0 official run was211/212, preserved without rewriting:
+`/tmp/worker6-union-rebase-option.6umZUs`. The failed interface_fan below-baseline
+stream first differed at byte20359/line850: Native travel113.388/113.135 versus
+Ares113.244/113.297, immediately before Internal solid infill. Three sequential
+official single-test runs with fresh cache/roots all passed under
+`/tmp/worker6-union-interface-fan-repro.TZQMmN`; `audit.json` confirms identical
+3MF members and identical Ares rawSHA b74639d07030e3ce7376ccafba4d82d1c3743c6e3916a92ddef01ec0a7f53683
+across prior PASS, isolated FAIL and all three reruns. The isolated Native rawSHA
+3b5f063d34e68e7b3a2eaf823526c2a9e8116704313f0b26bbd6d3a9c482155f differs from
+every rerun; reruns match Ares under the unchanged generated-by-only comparator.
+Coordinator adjudication: one-off Native outlier, no Ares regression. Both roots
+and the original211/212 result remain evidence; no assertion or tolerance changed.
