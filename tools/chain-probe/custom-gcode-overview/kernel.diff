@@ -1,0 +1,39 @@
+--- kernel.upstream.hpp
++++ kernel.hpp
+@@ -20,13 +20,16 @@
+     return -1;
+ }
+ 
+-    std::vector<double> get_layers_zs() const {
++    template <class Viewer> std::vector<double> get_layers_zs(const Viewer &m_viewer) {
+         const std::vector<float> zs = m_viewer.get_layers_zs();
+         std::vector<double> ret;
+         std::transform(zs.begin(), zs.end(), std::back_inserter(ret), [](float z) { return static_cast<double>(z); });
+         return ret;
+     }
+ 
++template <class Viewer, class Imgui>
++void render_custom_gcode_overview(const std::vector<Slic3r::CustomGCode::Item> &custom_gcode_per_print_z, const Viewer &m_viewer, Imgui &imgui, float window_padding, float max_len)
++{
+         // Types of custom gcode
+         std::string cgcode_pause_str = _u8L("Pause");
+         std::string cgcode_template_str= _u8L("Template");
+@@ -35,7 +38,7 @@
+         std::string cgcode_unknown_str = _u8L("Unknown");
+ 
+         // ORCA: Get layer Zs as doubles
+-        std::vector<double> layer_zs = get_layers_zs();
++        std::vector<double> layer_zs = get_layers_zs(m_viewer);
+ 
+         for (Slic3r::CustomGCode::Item custom_gcode : custom_gcode_per_print_z) {
+             ImGui::Dummy({window_padding, window_padding});
+@@ -63,6 +66,9 @@
+                     custom_gcode_time += layer_times[i];
+                 }
+             }
++            imgui.time(custom_gcode_time);
+             imgui.text(short_time(get_time_dhms(custom_gcode_time)));
+ 
+         }
++
++}

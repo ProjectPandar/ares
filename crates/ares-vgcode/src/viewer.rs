@@ -9,10 +9,12 @@ use crate::{
 
 mod color_print;
 mod colors;
+mod custom_gcode_overview;
 pub use color_print::{
     ColorPrintLegend, ColorPrintRange, ExtruderColorPrints, MissingColorVolume, PartialTime,
     PartialTimeKind, PrintedColor, color_print_legend,
 };
+pub use custom_gcode_overview::{CustomGCodeOverviewRow, custom_gcode_overview};
 mod enabled;
 pub use colors::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS};
 

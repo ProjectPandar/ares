@@ -9,3 +9,4 @@ ares-core = { path = "../ares-core" }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+tokio = { workspace = true }

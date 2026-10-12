@@ -29,7 +29,7 @@ pub use types::{
     Vec3, ViewType, lerp_color, move_type_to_option,
 };
 pub use viewer::{
-    ColorPrintLegend, ColorPrintRange, DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS,
-    ExtruderColorPrints, MissingColorVolume, PartialTime, PartialTimeKind, PrintedColor,
-    ViewerImpl, color_print_legend,
+    ColorPrintLegend, ColorPrintRange, CustomGCodeOverviewRow, DEFAULT_EXTRUSION_ROLES_COLORS,
+    DEFAULT_OPTIONS_COLORS, ExtruderColorPrints, MissingColorVolume, PartialTime, PartialTimeKind,
+    PrintedColor, ViewerImpl, color_print_legend, custom_gcode_overview,
 };

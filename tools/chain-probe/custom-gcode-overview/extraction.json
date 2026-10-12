@@ -1,0 +1,50 @@
+{
+  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "conversion": {
+    "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
+    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+  },
+  "label": "native source-kernel oracle; not full native viewer execution",
+  "adaptations": [
+    "GCodeViewer::get_layers_zs member to a free function over the viewer",
+    "the label strings and the overview loop wrapped in a function; locals, m_viewer and imgui supplied as parameters",
+    "imgui.time records the accumulated float before the formatted text"
+  ],
+  "upstream": [
+    {
+      "path": "src/slic3r/GUI/IMSlider.hpp",
+      "lines": "24-24",
+      "fileSha256": "85c96c762f4f0d33dab7de9ff82780c911876dd3d8a603015f2a1824153fa2c8",
+      "excerptSha256": "ffb6b869ba49abeb5218f015a18dbc88bf44d6fc36218018ba2e8276c482ef6c"
+    },
+    {
+      "path": "src/slic3r/GUI/GCodeViewer.cpp",
+      "lines": "108-126",
+      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "excerptSha256": "8ad5d415399f0385d1b9f287a4214f68d4d46c36cc7373e45a6583798b3c3e49"
+    },
+    {
+      "path": "src/slic3r/GUI/GCodeViewer.hpp",
+      "lines": "290-295",
+      "fileSha256": "69aa602e0da76aae5e5aac3426f0e4fcefbe89da04e2d66a0dcb96efeda2a14c",
+      "excerptSha256": "394a35da43dfd30aaea66c91bd15dcf9bca08a71c6e08b3b766abd5a62ac9948"
+    },
+    {
+      "path": "src/slic3r/GUI/GCodeViewer.cpp",
+      "lines": "4488-4493",
+      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "excerptSha256": "56840faabdcb0d2dcd1fa0fc7218001aacdd8ab631d90836de4376256bccd58e"
+    },
+    {
+      "path": "src/slic3r/GUI/GCodeViewer.cpp",
+      "lines": "4514-4545",
+      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "excerptSha256": "f02657876497194907394f1551f0e428646a08cad30f9489a48de19a3fd1c4dc"
+    }
+  ],
+  "files": {
+    "kernel.upstream.hpp": "da209094f7c402faa6f6a073cc9f16ae9569b495231fddf38dac522104d014b9",
+    "kernel.hpp": "5d1984876fd7a4404b22c7bd9530402042216e7374ce903a05ce4254aafb420d",
+    "kernel.diff": "c8873806b3648a32acb4520e021b8925b881f5c1a6d9b6db9e97399ffa968d94"
+  }
+}
