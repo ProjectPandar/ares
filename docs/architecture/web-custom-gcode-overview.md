@@ -30,10 +30,17 @@ Vec<CustomGCodeOverviewRow>`, where each row is `{ label: &'static str,
 layer: i32, time: f32 }`. It takes the items as an argument, so it does not
 care which upstream branch supplied them.
 
-**Transport.** The wasm slice adapter already loads the `Project`. It
-passes `curr_plate_custom_gcodes().gcodes` into a thin JSON getter in a new
-`crates/ares-wasm/src/custom_gcode_overview.rs` (`moves.rs` is at 370
-lines). The exact hook point is cited in the review once A has merged.
+**Transport (ruled).** The processed slice entry
+(`slice_project_plate_processed_bytes`, behind `sliceProjectPlateProcessed`)
+only forwards `load_project(input).select_plate(plate).curr_plate_custom_gcodes().gcodes`
+to ares-vgcode and exposes the rows through the `SliceOutput.customGcodeOverview()`
+JSON getter in a new `crates/ares-wasm/src/custom_gcode_overview.rs`. The
+items stay on the `Project` (upstream `Model`); `ProcessedGCode` gains no
+field, because `GCodeProcessorResult` carries no plate custom G-codes. The
+one ares-core change is `Project::select_plate(Option<u32>)` becoming `pub`,
+with `None` resolved by the moved `first_plate_id` (the slice default):
+the plate selection that sets `Model::curr_plate_index`
+(`OrcaSlicer.cpp:5690`). The wasm adapter maps no plate ids to keys.
 `LegendCustomGCode.tsx` renders the rows before `EstimationRows` and does
 no computation beyond the existing time formatter.
 
@@ -56,6 +63,9 @@ no computation beyond the existing time formatter.
   grid with the same three columns.
 - The adjacent `Settings` block (`:4430-4475`, viewer only) and the time
   mode button (`:4646-4670`).
+- The preset slice entry (`sliceWithProfilesProcessed`, the app's path
+  when presets are selected): its overview stays empty (ruled deferred);
+  its input may be an STL, which has no plate list.
 - Tick emission (slice A's deferral). Until it lands, the times are those
   of an Ares G-code without M600/M601 lines. The overview is still exact
   for the G-code Ares produced, because its oracle reads those same bytes.
@@ -131,6 +141,13 @@ no computation beyond the existing time formatter.
    function exists and returns an empty `Vec`, so RED fails on an assertion.
    With `ARES_REQUIRE_ORCA=1` a missing producer fails.
 4. **Core GREEN:** the port, plus a wasm test that round-trips the JSON.
+   **Plate ≠ first (ruled):** the B-only fixture
+   `tests/parity/custom-gcode-overview/two-plates.3mf`, written by the same
+   `--write-fixture`, puts a second cube instance on plate 2 (grid origin
+   264, 0) with a different list. `crates/ares-wasm/tests/custom_gcode_overview.rs`
+   slices plate 2 and the default plate through the wasm entry and compares
+   the getter rows with the Native rows of plate keys 1 and 0. RED forwarded
+   the list without `select_plate`, so plate 2 showed plate 1's rows.
 5. **Web RED:** a preview E2E imports the `overview` fixture, slices it, and
    asserts the exact table text against the oracle rows in FeatureType and
    in one other view. It then slices the tick-free project and asserts the
@@ -140,8 +157,8 @@ no computation beyond the existing time formatter.
 6. **Web GREEN:** the table is implemented. The artifacts are the oracle
    JSON, the expected and actual rows, and dark, light and phone legend
    screenshots.
-7. **Gates** (as in the S2 ruling; no ares-core change and no G-code
-   bytes change):
+7. **Gates** (as in the S2 ruling, plus the ares-core tests touched by
+   `select_plate`; no G-code bytes change):
    - Rust: `nextest -p ares-vgcode -p ares-wasm` with the producer, clippy
      `-D warnings`, fmt, and the wasm32 build.
    - Web: build, lint and typecheck, then browser base and candidate.
