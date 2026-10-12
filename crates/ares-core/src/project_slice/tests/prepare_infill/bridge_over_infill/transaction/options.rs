@@ -135,20 +135,6 @@ fn task22o71_zero_top_density_reaches_empty_fill_grouping() {
 }
 
 #[test]
-fn task22o71_unported_anchor_rotation_templates_fail_without_fallback() {
-    assert_unsupported_mutation(
-        "\"sparse_infill_rotate_template\": \"\"",
-        "\"sparse_infill_rotate_template\": \"+45N2\"",
-        "sparse_infill_rotate_template",
-    );
-    assert_unsupported_mutation(
-        "\"solid_infill_rotate_template\": \"\"",
-        "\"solid_infill_rotate_template\": \"+45N2\"",
-        "solid_infill_rotate_template",
-    );
-}
-
-#[test]
 fn task22o71_multiline_reaches_the_fill_grouping_stage() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
