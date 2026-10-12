@@ -69,6 +69,7 @@ jobs:
           - procgcode-stable-options
           - procgcode-dynamics
           - print-statistics
+          - patchelf
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -328,7 +329,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics patchelf; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -347,6 +348,7 @@ jobs:
             echo "ARES_ORCA_NATIVE_BIN=$RUNNER_TEMP/orca-appdir/bin/orca-slicer"
             echo "ARES_ORCA_REFERENCE_BINARY=$RUNNER_TEMP/orca-appdir/bin/orca-slicer"
             echo "ARES_ORCA_RESOURCES_DIR=$RUNNER_TEMP/orca-appdir/resources"
+            echo "ORCA_PATCHELF=$ORACLE_patchelf/bin/patchelf"
             echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
             echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"

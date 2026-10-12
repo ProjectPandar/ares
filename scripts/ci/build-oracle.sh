@@ -83,8 +83,8 @@ case "$variant" in
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/orca-probes/ksr-initialized.nix"
     ;;
-  gdb)
-    nix build "${jobs_flag[@]}" --no-link --print-out-paths "$NIXPKGS_URL#gdb"
+  gdb|patchelf)
+    nix build "${jobs_flag[@]}" --no-link --print-out-paths "$NIXPKGS_URL#$variant"
     ;;
   *)
     echo "unknown variant: $variant" >&2

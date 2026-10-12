@@ -58,7 +58,26 @@ for dir in "${libdirs[@]}"; do
     fi
 done
 
-if [ -n "$ld" ]; then
+# Exec'ing orca-slicer through the nix loader makes /proc/self/exe point at
+# ld.so, so upstream's program_location()/resources_dir() resolves into the
+# nix store and silently misses data files (resources/flush/flush_data_*.txt),
+# changing computed outputs (e.g. flush_volumes_matrix). When ORCA_PATCHELF is
+# provided, patch the AppImage interpreter once under a lock so the binary runs
+# directly and keeps a correct exe path; fall back to the ld.so launch only
+# when patchelf is unavailable.
+if [ -n "$ld" ] && [ -n "${ORCA_PATCHELF:-}" ] && [ ! -f "$APPDIR/.orca-interp-patched" ]; then
+    (
+        flock 9
+        if [ ! -f "$APPDIR/.orca-interp-patched" ]; then
+            "$ORCA_PATCHELF" --set-interpreter "$ld" "$APPDIR/bin/orca-slicer"
+            touch "$APPDIR/.orca-interp-patched"
+        fi
+    ) 9>"$APPDIR/.orca-interp.lock"
+fi
+
+if [ -f "$APPDIR/.orca-interp-patched" ]; then
+    exec "$APPDIR/bin/orca-slicer" "$@"
+elif [ -n "$ld" ]; then
     exec "$ld" "$APPDIR/bin/orca-slicer" "$@"
 else
     exec "$APPDIR/bin/orca-slicer" "$@"
