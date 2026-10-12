@@ -1,7 +1,11 @@
 # Timelapse traditional insertion: bounded repair PLAN extension
 
-Status: REVIEW-REQUEST; not approved and not implemented.
+Status: APPROVED `1f79cf081`; implemented in the bounded GREEN candidate.
 Original SPEC `20444a910`, admitted RED `2ceaa08bf` on base `afca7400a`.
+
+Finite GREEN: `/tmp/worker2-timelapse-green.83W74O/green-evidence.json`, seeded6/6 PASS (nextest12.544s), official6/6 PASS (9.724s). Native/API/CLI whole output and all existing RED assertions match; active cases have100 blocks over50 layers. Test files remain byte-identical to RED. Whole option_coverage and engineering gates follow on the committed candidate; workspace/full require coordinator allocation.
+
+Reset audit: `layers.rs:292-295,369` groups entries by physical Z and invokes `boundary::append` once before tool/object visits; `boundary.rs:232` calls `advance_for_layer`, whose existing line50 reset is source-cited to `GCode.cpp:4653`. No reset-point production edit is needed.
 
 ## Why the preapproved render repair is insufficient
 

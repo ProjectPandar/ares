@@ -7,12 +7,12 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### G4 timelapse-template current-filament context: SPEC request (2026-10-12)
+### G4 timelapse-template current-filament context: bounded GREEN, gates pending (2026-10-12)
 
 Port `GCode::process_layer` direct/tracked timelapse invocation context from `GCode.cpp:4672-4674,5167`: implicit vectors use the current logical writer filament.
-Rust boundary is the shared render call in `gcode_emit/timelapse.rs`; preserve scheduling, validation/write-back and position/last-Z bookkeeping.
+Rust boundary is `gcode_emit/timelapse.rs`: shared render context plus approved `GCode.cpp:5455-5460` once-only traditional insertion check/set using the existing physical-layer flag. Preserve validation/write-back and position/last-Z bookkeeping.
 Six finite Native/API/CLI controls must witness direct/traditional phases and real M104/tool consumption. BBL/tower/safe-position and other template owners remain deferred.
-Docs only until SPEC approval; no overlap with other workers' production claims.
+SPEC20444a910 and PLAN extension1f79cf081 approved; admitted RED2ceaa08bf tests/assertions retained. Finite six cases PASS both modes with full Native/API/CLI equality, direct/traditional100 blocks over50 layers. Whole option_coverage and engineering gates pending; heavy gates require allocation. No overlap with other workers' production claims.
 [SPEC and test-first gates](architecture/timelapse-filament-context-spec.md), [proposed ARD](architecture/ard-timelapse-filament-context.md).
 
 ### G4 layer-template current-filament context: merged bounded GREEN (2026-10-12)

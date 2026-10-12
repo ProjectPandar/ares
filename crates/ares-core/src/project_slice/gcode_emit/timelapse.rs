@@ -75,11 +75,14 @@ pub(super) fn append_traditional(
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<bool, SliceError> {
-    if !enabled {
+    // `GCode.cpp:5455-5460`: one traditional insert per physical layer;
+    // `layers/boundary.rs` resets the existing flag like `GCode.cpp:4653`.
+    if !enabled || state.has_insert_timelapse_gcode {
         return Ok(false);
     }
     super::motion::prepare_traditional_timelapse(output, state);
     append_and_track(output, state, context)?;
+    state.has_insert_timelapse_gcode = true;
     Ok(true)
 }
 
@@ -137,14 +140,15 @@ fn append(
     // Write-back validation precedes emission; render or validation
     // failure emits only the inline report (`GCode.cpp:3920-3933`).
     let mut failure_error = String::new();
-    let rendered = match template::render(source, &mut config) {
-        Ok(rendered) => Some(rendered),
-        Err(error) => {
-            failure_error = error.to_string();
-            state.record_template_failure("timelapse_gcode", &failure_error);
-            None
-        }
-    };
+    let rendered =
+        match template::render_for_filament(source, &mut config, state.extruders.active_id()) {
+            Ok(rendered) => Some(rendered),
+            Err(error) => {
+                failure_error = error.to_string();
+                state.record_template_failure("timelapse_gcode", &failure_error);
+                None
+            }
+        };
     let last_z = rendered.as_deref().and_then(last_motion_z);
     let name = "timelapse_gcode";
     let failed = rendered.is_none()

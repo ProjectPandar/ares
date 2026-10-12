@@ -1,6 +1,6 @@
 # Timelapse template current-filament context: SPEC
 
-Status: SPEC REVIEW-REQUEST, worker2; base `afca7400a`.
+Status: SPEC APPROVED `20444a910`, worker2; base `afca7400a`. Approved PLAN extension `1f79cf081` adds the source-owned per-layer traditional insertion flag check/set, as recorded in [the repair PLAN](timelapse-once-per-layer-repair-plan.md).
 This proposal adds no tests, Native execution or production changes before approval.
 
 ## Upstream ownership and Rust boundary
