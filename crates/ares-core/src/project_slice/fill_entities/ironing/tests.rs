@@ -38,6 +38,7 @@ fn emit(domain: ExPolygon, spacing: f64) -> LayerFillEntities {
             object: &object,
             nozzles: &nozzles,
             layer: &layer,
+            layers: std::slice::from_ref(&layer),
             last_layer: true,
             spiral_mode: false,
             model_rotation_offset: 0.0,

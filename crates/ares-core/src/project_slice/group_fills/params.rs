@@ -1,7 +1,7 @@
 mod locked;
 mod projection;
 
-pub(in crate::project_slice) use projection::simple_rotation_angle;
+pub(in crate::project_slice) use projection::template_rotation_angle;
 
 use crate::{
     FloatOrPercent, ObjectOptions, OrcaFloats, RegionOptions, SliceError,
@@ -21,6 +21,9 @@ use super::{LockRegionParam, SurfaceFillParams};
 
 pub(super) struct LayerContext<'a> {
     pub(super) planned: &'a PlannedLayer,
+    /// Whole `plan.layers` for the meta-language rotation interpreter
+    /// (`Fill.cpp:85-175` walks layers `i <= layer_id`).
+    pub(super) layers: &'a [PlannedLayer],
     pub(super) record: &'a PreparedSurfaceTypeRecord,
     pub(super) region_id: usize,
     pub(super) region: &'a RegionOptions,
@@ -71,6 +74,7 @@ impl<'a> LayerContext<'a> {
         };
         Self {
             planned: &plan.layers[layer_index],
+            layers: &plan.layers,
             record,
             region_id: input.current.region_index,
             region: prelude.region_options(input),

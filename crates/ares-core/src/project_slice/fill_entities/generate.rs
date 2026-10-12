@@ -316,6 +316,7 @@ pub(in crate::project_slice) fn generate_layer(
                 object: object_options,
                 nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
                 layer,
+                layers: &plan.layers,
                 last_layer: input.upper_layer_index.is_none(),
                 spiral_mode: input.spiral_mode,
                 model_rotation_offset: if region.align_infill_direction_to_model.0 {

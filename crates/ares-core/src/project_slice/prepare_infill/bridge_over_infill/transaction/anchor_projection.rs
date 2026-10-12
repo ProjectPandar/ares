@@ -2,10 +2,7 @@ use crate::{
     ProcessInfillPattern, RegionOptions, SliceError,
     fill::cross_hatch::line_spacing,
     geometry::CoordinateScale,
-    project_slice::{
-        group_fills::simple_rotation_angle,
-        region_slices::{RegionSurface, RegionSurfaceKind},
-    },
+    project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
 use super::super::sparse_anchoring::{projected_anchor_lengths, projected_sparse_density};
@@ -57,16 +54,11 @@ pub(super) fn validate(
     if options.sparse_infill_density.0 <= 0.0 {
         return unsupported("sparse_infill_density");
     }
-    if !options.sparse_infill_rotate_template.0.is_empty()
-        && simple_rotation_angle(&options.sparse_infill_rotate_template.0, 0).is_none()
-    {
-        return unsupported("sparse_infill_rotate_template");
-    }
-    if !options.solid_infill_rotate_template.0.is_empty()
-        && simple_rotation_angle(&options.solid_infill_rotate_template.0, 0).is_none()
-    {
-        return unsupported("solid_infill_rotate_template");
-    }
+    // All rotate_template strings are admissible upstream: the meta
+    // interpreter (`Fill.cpp:60-203`, ported in projection/rotation/meta.rs)
+    // covers meta templates, and the non-meta path feeds every token to
+    // `strtod`-style parsing (`Fill.cpp:206-210`) where unparseable tails
+    // truncate and unparseable tokens become 0.0 — upstream never rejects.
     if !matches!(
         options.top_surface_pattern,
         ProcessInfillPattern::Monotonic

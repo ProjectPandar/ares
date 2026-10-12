@@ -29,6 +29,7 @@ pub(super) struct Input<'a> {
     pub(super) object: &'a ObjectOptions,
     pub(super) nozzles: &'a OrcaFloats,
     pub(super) layer: &'a PlannedLayer,
+    pub(super) layers: &'a [PlannedLayer],
     pub(super) last_layer: bool,
     pub(super) spiral_mode: bool,
     pub(super) model_rotation_offset: f32,
@@ -260,7 +261,17 @@ fn ironing_areas(input: &Input<'_>) -> Result<Option<Vec<ExPolygon>>, SliceError
 
 fn ironing_angle(input: &Input<'_>) -> (f32, bool) {
     let template = &input.region.solid_infill_rotate_template.0;
-    let template_angle = super::super::group_fills::simple_rotation_angle(template, input.layer.id);
+    // Upstream runs `calculate_infill_rotation_angle` for ironing too
+    // (`Fill.cpp:1605-1611`), including the meta path.
+    let template_angle = (!template.is_empty()).then(|| {
+        super::super::group_fills::template_rotation_angle(
+            template,
+            input.layers,
+            input.object,
+            input.region,
+            input.layer.id,
+        )
+    });
     let base = if input.region.ironing_angle_fixed.0 {
         0.0
     } else {
