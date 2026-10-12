@@ -135,13 +135,15 @@ jobs:
           nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
-            echo "ORCA_SLICER_DIR=$PWD/OrcaSlicer"
+            echo "ORCA_SLICER_DIR=$PWD/OrcaSlicer/"
             echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
             echo "ORCA_REPLAY_SEED=0"
             echo "ARES_WASM_PKG=$PWD/target/wasm-browser"
             echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
             echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
@@ -167,6 +169,12 @@ jobs:
       - run: npm run build --prefix web
       - run: npm run typecheck --prefix web
       - run: npm run test:e2e --prefix web
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-e2e-artifacts
+          path: target/web-e2e
+          retention-days: 3
 
   parity-seeded:
     runs-on: self-hosted
