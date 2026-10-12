@@ -144,7 +144,7 @@ jobs:
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath')/lib/locale/locale-archive"
+            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
           } >> "$GITHUB_ENV"
       - name: Verify generated PrintConfigDef metadata is in sync with upstream
         run: |
@@ -258,7 +258,7 @@ jobs:
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath')/lib/locale/locale-archive"
+            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
@@ -360,7 +360,7 @@ jobs:
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath')/lib/locale/locale-archive"
+            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8

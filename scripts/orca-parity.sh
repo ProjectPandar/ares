@@ -41,9 +41,7 @@ else
     printf '%s' "$extra" > "$CACHE"
 fi
 
-export LD_LIBRARY_PATH="$APPDIR/lib/orca-runtime:$APPDIR/bin:$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-export LC_ALL=C
-export APPDIR
+native_library_path="$APPDIR/lib/orca-runtime:$APPDIR/bin:$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 # The nixpkgs runtime libraries may need a newer glibc than the host provides
 # (Ubuntu CI image vs nixpkgs pin). Prefer the nix glibc's loader so the
@@ -76,9 +74,9 @@ if [ -n "$ld" ] && [ -n "${ORCA_PATCHELF:-}" ] && [ ! -f "$APPDIR/.orca-interp-p
 fi
 
 if [ -f "$APPDIR/.orca-interp-patched" ]; then
-    exec "$APPDIR/bin/orca-slicer" "$@"
+    LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$APPDIR/bin/orca-slicer" "$@"
 elif [ -n "$ld" ]; then
-    exec "$ld" "$APPDIR/bin/orca-slicer" "$@"
+    LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$ld" "$APPDIR/bin/orca-slicer" "$@"
 else
-    exec "$APPDIR/bin/orca-slicer" "$@"
+    LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$APPDIR/bin/orca-slicer" "$@"
 fi
