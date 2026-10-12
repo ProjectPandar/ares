@@ -1,5 +1,6 @@
 mod color_print;
 mod colors;
+mod custom_gcode_overview;
 mod estimation;
 mod filament_legend;
 mod moves;
@@ -48,7 +49,8 @@ pub async fn slice_project_plate(
     plate: Option<u32>,
     overrides_json: Option<String>,
 ) -> Result<Vec<u8>, JsValue> {
-    let overrides = parse_overrides(overrides_json)?;
+    let overrides =
+        parse_overrides(overrides_json.as_deref()).map_err(|error| JsValue::from_str(&error))?;
     ares_core::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
@@ -67,17 +69,31 @@ pub async fn slice_project_plate_processed(
     plate: Option<u32>,
     overrides_json: Option<String>,
 ) -> Result<SliceOutput, JsValue> {
+    slice_project_plate_processed_bytes(input, plate, overrides_json.as_deref())
+        .await
+        .map_err(|error| JsValue::from_str(&error))
+}
+
+/// The processed slice of `plate`, with the legend Custom G-code overview of
+/// that plate's custom G-codes.
+pub async fn slice_project_plate_processed_bytes(
+    input: Vec<u8>,
+    plate: Option<u32>,
+    overrides_json: Option<&str>,
+) -> Result<SliceOutput, String> {
     let overrides = parse_overrides(overrides_json)?;
     let output = ares_core::slice_project_plate_processed_validated(
-        input,
+        &input,
         GenerationMetadata::default(),
         plate,
         &overrides,
         ares_core::SlicerContext::new(0),
     )
     .await
-    .map_err(slice_error_js)?;
-    Ok(SliceOutput::from_processed(output))
+    .map_err(|error| error.to_string())?;
+    let custom_gcodes = custom_gcode_overview::plate_custom_gcodes(&input, plate)
+        .map_err(|error| error.to_string())?;
+    Ok(SliceOutput::from_processed(output).with_custom_gcodes(&custom_gcodes))
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {
@@ -86,11 +102,11 @@ fn slice_error_js(error: SliceError) -> JsValue {
 
 /// `{key: string|string[]}` → validated `ConfigOverrides` (M854; absent or
 /// `undefined` means no overrides).
-fn parse_overrides(overrides_json: Option<String>) -> Result<ares_core::ConfigOverrides, JsValue> {
+fn parse_overrides(overrides_json: Option<&str>) -> Result<ares_core::ConfigOverrides, String> {
     match overrides_json {
         None => Ok(ares_core::ConfigOverrides::default()),
         Some(json) => ares_core::ConfigOverrides::from_json(json.as_bytes())
-            .map_err(|error| JsValue::from_str(&error.to_string())),
+            .map_err(|error| error.to_string()),
     }
 }
 

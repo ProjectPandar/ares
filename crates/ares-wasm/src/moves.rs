@@ -1,8 +1,8 @@
 use crate::MoveBuffers;
 use ares_core::ProcessedGCode;
 use ares_vgcode::{
-    FilamentLegend, GCodeExtrusionRole, GCodeInputData, MovesSlider, OptionType, SequentialView,
-    ViewerImpl,
+    CustomGCodeOverviewRow, FilamentLegend, GCodeExtrusionRole, GCodeInputData, MovesSlider,
+    OptionType, SequentialView, ViewerImpl,
     convert::{from_processor_result, move_type_counts},
     filament_legend, move_type_to_option,
 };
@@ -13,12 +13,13 @@ use wasm_bindgen::prelude::*;
 pub struct SliceOutput {
     gcode: Vec<u8>,
     moves: MoveBuffers,
-    vertices: VertexBuffers,
+    pub(crate) vertices: VertexBuffers,
     print_statistics: Vec<u8>,
     estimation: String,
     extruder_colors: Vec<String>,
     filament_diameters: Vec<f32>,
     filament_densities: Vec<f32>,
+    pub(crate) custom_gcode_overview: Vec<CustomGCodeOverviewRow>,
 }
 
 impl SliceOutput {
@@ -45,6 +46,7 @@ impl SliceOutput {
             extruder_colors: output.result.extruder_colors,
             filament_diameters: output.result.filament_diameters,
             filament_densities: output.result.filament_densities,
+            custom_gcode_overview: Vec::new(),
         }
     }
 }

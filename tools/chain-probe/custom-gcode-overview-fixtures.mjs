@@ -6,6 +6,9 @@
 // `--write-fixture` writes the committed input tests/parity/custom-gcode-overview/overview.3mf:
 // tests/parity/orca_cli_ender3.3mf, every entry copied byte for byte, plus one
 // Metadata/custom_gcode_per_layer.xml (bbs_3mf.cpp:220, layout bbs_3mf.cpp:8462-8510).
+// It also writes two-plates.3mf: the same cube, a second instance on plate 2 at the
+// plate grid origin (PartPlate.hpp:38-48, 220 mm bed x 1.2), and different lists per
+// plate, so slicing plate 2 must show plate 2's list (OrcaSlicer.cpp:5690).
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { crc32, deflateRawSync, inflateRawSync } from "node:zlib";
 import { execFileSync } from "node:child_process";
@@ -39,6 +42,42 @@ const OVERVIEW_XML = `<?xml version="1.0" encoding="utf-8"?>
   typed("0.1995", 0, 1, "#0000FF"), // below the first layer, within eps
   typed("1000", 4, 1, "", "M117 above"), // above the last layer, outside eps
 ].join("")}</plate></custom_gcodes_per_layer>`.replace(/></g, ">\n<");
+
+const PLATE_TWO = `<plate><plate_info id="2"/>${[
+  typed("2", 1, 1, "", "plate 2 pause"),
+  typed("5.0005", 3, 1),
+  typed("0.5", 4, 1, "", "M117 plate 2"),
+].join("")}</plate>`.replace(/></g, ">\n<");
+const TWO_PLATES_XML = OVERVIEW_XML.replace("</custom_gcodes_per_layer>", `${PLATE_TWO}\n</custom_gcodes_per_layer>`);
+
+/** `orca_cli_ender3.3mf` entries with object 3, an instance of the cube, on plate 2. */
+function twoPlates(entries) {
+  const edit = (name, from, to) => {
+    const entry = entries.find(([entryName]) => entryName === name);
+    const text = entry[1].toString("utf8");
+    if (text.split(from).length !== 2) throw new Error(`${name}: expected one ${from}`);
+    entry[1] = Buffer.from(text.replace(from, to));
+  };
+  edit("3D/3dmodel.model", " </resources>", `  <object id="3" p:UUID="00000003-61cb-4c03-9d28-80fed5dfa1dc" type="model">
+   <components>
+    <component p:path="/3D/Objects/cube10.stl_1.model" objectid="1" p:UUID="00030000-b206-40ff-9872-83e8017abed1" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>
+   </components>
+  </object>
+ </resources>`);
+  edit("3D/3dmodel.model", " </build>", `  <item objectid="3" p:UUID="00000004-b1ec-4553-aec9-835e5b724bb4" transform="1 0 0 0 1 0 0 0 1 374 110 5" printable="1" auto_drop="1"/>
+ </build>`);
+  const config = entries.find(([name]) => name === "Metadata/model_settings.config")[1].toString("utf8");
+  const object = config.slice(config.indexOf("  <object id=\"2\">"), config.indexOf("  <plate>"));
+  const plate = config.slice(config.indexOf("  <plate>"), config.indexOf("  <assemble>"));
+  // _add_model_config_file_to_archive writes every object, then every plate (bbs_3mf.cpp:7800-7916).
+  edit("Metadata/model_settings.config", "  <plate>", `${object.replace('<object id="2">', '<object id="3">')}  <plate>`);
+  edit("Metadata/model_settings.config", "  <assemble>", `${plate
+    .replace('"plater_id" value="1"', '"plater_id" value="2"')
+    .replace('"object_id" value="2"', '"object_id" value="3"')
+    .replace('"identify_id" value="14"', '"identify_id" value="15"')}  <assemble>`);
+  edit("Metadata/filament_sequence.json", "}}", '},"plate_2":{"nozzle_sequence":[],"optimal_assignment":[],"sequence":[]}}');
+  return entries;
+}
 
 function unzip(bytes) {
   const end = bytes.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
@@ -104,6 +143,8 @@ function writeFixture() {
   mkdirSync(`${repo}tests/parity/custom-gcode-overview`, { recursive: true });
   const entry = ["Metadata/custom_gcode_per_layer.xml", Buffer.from(OVERVIEW_XML)];
   writeFileSync(`${repo}tests/parity/custom-gcode-overview/overview.3mf`, zip([...source, entry]));
+  const two = twoPlates(unzip(readFileSync(`${repo}tests/parity/orca_cli_ender3.3mf`)));
+  writeFileSync(`${repo}tests/parity/custom-gcode-overview/two-plates.3mf`, zip([...two, ["Metadata/custom_gcode_per_layer.xml", Buffer.from(TWO_PLATES_XML)]]));
 }
 
 /** `plate` is the zero-based key of the sliced plate. */
