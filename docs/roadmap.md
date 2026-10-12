@@ -7,6 +7,19 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### OuterOnly contour and hole exclusion: SPEC request (2026-10-12)
+
+Next worker3 candidate: `Brim.cpp::outer_inner_brim_area:448-570,661-711`
+explicit OuterOnly contour-only Round area, default-Miter3 no-inner hole mask
+and contact retention; `make_brim:903-904` owns spacing as no_brim_offset.
+Replace the bounded whole-ExPolygon project scaffold with private `brims/outer.rs`
+and existing BrimPlan dispatch, reusing shared clipping/contact/path emission.
+One object/instance/volume/group/tool; auto/EFC/support/painting, nested islands,
+cross-object policy and the public rectangular adapter remain deferred.
+Documents only; no fixtures/Native/tests/implementation before Claude's approval.
+[SPEC and test-first gates](architecture/outer-only-brim-hole-mask-spec.md),
+[proposed ARD](architecture/ard-outer-only-brim-hole-mask-boundary.md).
+
 ### G4 timelapse-template current-filament context: bounded GREEN, gates pending (2026-10-12)
 
 Port `GCode::process_layer` direct/tracked timelapse invocation context from `GCode.cpp:4672-4674,5167`: implicit vectors use the current logical writer filament.
@@ -33,7 +46,7 @@ Full evidence is the actual `4650357d2`-based candidate: seeded974/974 PASS, off
 Other-layer count is already merged; SAFC Native nondeterminism is owned by worker6.
 [Sources, Rust destinations, failure inventory and test-first exits](architecture/option-g4-first-layer-sequence-coverage.md).
 
-### OuterAndInner combined brim: bounded GREEN, review pending (2026-10-12)
+### OuterAndInner combined brim: merged bounded source slice (2026-10-12)
 
 Next worker3 source slice: `Brim.cpp::outer_inner_brim_area` combined selector,
 contour Round outer area + original-width Miter3 hole area, shared masks/contact
@@ -42,7 +55,13 @@ volume/group/tool; EFC, supports, painting, cross-object composition and the
 rectangular public adapter remain deferred. SPEC53b22ddc9 approved; ten input-only
 fixtures/Native-admitted REDb35dc2bd5 committed/reported before implementation.
 Finite GREEN25/25 both modes; all nine InnerOnly API/CLI outputs byte-identical
-across both modes (36 streams). Directed/engineering/workspace/full review pending.
+across both modes (36 streams). Merged `5d1a77062` after exact-hash approval.
+Workspace8718380/8380 accepted; strict/fmt/WASM green. Directed seeded232/232,
+official231 PASS/1 Native M73 displacement accepted after fresh3 and unchanged
+Ares SHA versus main/history. Full executed871@oldbaseafca: seeded1007/1007 PASS,
+official1005 PASS/2 Native113.388 variants, each fresh3 PASS with identical Ares
+SHA; full evidence accepted and carried through catalog-only rebase. Raw FAILs
+remain retained; old-base full is not registered as a new clean baseline.
 [SPEC](architecture/outer-inner-brim-rewrite-spec.md),
 [runtime ARD](architecture/ard-outer-inner-brim-runtime-boundary.md).
 
