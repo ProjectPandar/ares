@@ -3,7 +3,7 @@ use serde_json::json;
 use std::{fs, process::Command};
 
 #[path = "layer_context_fixture.rs"]
-mod fixture;
+pub(super) mod fixture;
 #[path = "layer_context_observation.rs"]
 mod observation;
 

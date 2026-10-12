@@ -29,7 +29,7 @@ fn bind_plate(body: &str, fields: &[(&str, String)]) -> String {
 // Failure inventory: export may shrink the palette or replace plate sequences;
 // first-layer IDs are zero-based, range IDs one-based; comments alone do not
 // prove usage. Never classify export/application/observer errors as production RED.
-pub(super) fn prepare(
+pub(in super::super) fn prepare(
     runner: &OrcaRunner,
     label: &str,
     first: &[usize],
