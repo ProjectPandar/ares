@@ -162,6 +162,7 @@ jobs:
       - run: npm exec --prefix web playwright install --with-deps chromium webkit
       - run: npm run lint --prefix web
       - run: npm run build:wasm --prefix web/packages/ares-wasm-js
+      - run: npm run build --prefix web/packages/ares-wasm-js
       - run: npm run typecheck --prefix web
       - run: npm run test:e2e --prefix web
 
@@ -227,7 +228,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -328,7 +329,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
