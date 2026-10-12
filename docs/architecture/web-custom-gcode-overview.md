@@ -66,6 +66,10 @@ no computation beyond the existing time formatter.
 - The preset slice entry (`sliceWithProfilesProcessed`, the app's path
   when presets are selected): its overview stays empty (ruled deferred);
   its input may be an STL, which has no plate list.
+- A single load that passes the `Model` custom G-codes along: the processed
+  slice entry parses the same input twice (once to slice, once for the
+  plate's custom G-codes) until the slice hands its selected `Project`
+  list back.
 - Tick emission (slice A's deferral). Until it lands, the times are those
   of an Ares G-code without M600/M601 lines. The overview is still exact
   for the G-code Ares produced, because its oracle reads those same bytes.
