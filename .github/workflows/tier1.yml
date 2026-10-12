@@ -68,6 +68,7 @@ jobs:
           - procgcode-dynamics
           - print-statistics
           - plate-custom-gcodes
+          - custom-gcode-overview
           - patchelf
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +124,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle procgcode procgcode-dynamics print-statistics plate-custom-gcodes; do
+          for v in merged-oracle procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -144,6 +145,7 @@ jobs:
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
+            echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
             echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
@@ -170,28 +172,7 @@ jobs:
       - run: npm run build:wasm --prefix web/packages/ares-wasm-js
       - run: npm run build --prefix web
       - run: npm run typecheck --prefix web
-      - run: npm run prepare:e2e --prefix web
-      - name: Desktop E2E
-        run: npm exec --prefix web -- playwright test --config web/playwright.config.ts --project desktop --trace retain-on-failure --output /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/desktop
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-e2e-desktop-artifacts
-          path: |
-            target/web-e2e
-            /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/desktop
-          retention-days: 3
-      - name: Mobile E2E
-        if: ${{ !cancelled() }}
-        run: npm exec --prefix web -- playwright test --config web/playwright.config.ts --project iphone --project pixel --project ipad --trace retain-on-failure --output /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/mobile
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-e2e-mobile-artifacts
-          path: |
-            target/web-e2e
-            /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/mobile
-          retention-days: 3
+      - uses: ./.github/actions/web-e2e
 
   parity-seeded:
     runs-on: self-hosted
@@ -255,7 +236,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics plate-custom-gcodes; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -281,6 +262,7 @@ jobs:
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
+            echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
@@ -355,7 +337,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics plate-custom-gcodes patchelf; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview patchelf; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -384,6 +366,7 @@ jobs:
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
+            echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
