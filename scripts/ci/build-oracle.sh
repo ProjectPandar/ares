@@ -66,7 +66,13 @@ case "$variant" in
       --file "$repo/tools/chain-probe/$variant.nix"
     ;;
   print-statistics)
-    git -C "$src" apply --unidiff-zero "$repo/scripts/orca-replay/seed-only.patch"
+    # Same source as the approved print-statistics oracle v4zhqnbm: the full
+    # seed-replay producer source (three init patches) + print-statistics.patch
+    # added by the nix recipe.
+    git -C "$src" apply --unidiff-zero \
+      "$repo/scripts/orca-replay/seed-only.patch" \
+      "$repo/scripts/orca-replay/concentric-initialization.patch" \
+      "$repo/scripts/orca-replay/object-id-initialization.patch"
     ORCA_PRINT_STATISTICS_SOURCE="$src" ORCA_PRINT_STATISTICS_NIXPKGS="$nixpkgs" \
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/print-statistics.nix"

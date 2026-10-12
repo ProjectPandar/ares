@@ -66,6 +66,9 @@ jobs:
           - ksr-initialized
           - seed-replay
           - procgcode
+          - procgcode-stable-options
+          - procgcode-dynamics
+          - print-statistics
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -118,7 +121,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle; do
+          for v in merged-oracle procgcode procgcode-dynamics print-statistics; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -135,11 +138,9 @@ jobs:
             echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
             echo "ORCA_REPLAY_SEED=0"
             echo "ARES_WASM_PKG=$PWD/target/wasm-browser"
-            echo "ARES_PROCGCODE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
+            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
             echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = \"x86_64-linux\"; }).glibcLocales.outPath')/lib/locale/locale-archive"
@@ -228,7 +229,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -248,13 +249,11 @@ jobs:
             echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
             echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
-            echo "ARES_PROCGCODE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
+            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
-            echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
@@ -329,7 +328,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -351,13 +350,11 @@ jobs:
             echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
             echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
-            echo "ARES_PROCGCODE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
+            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
-            echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
