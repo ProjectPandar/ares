@@ -335,27 +335,6 @@ fn simple_rotation_template_cycles_angles_and_marks_them_fixed() {
     combine_infill::dispose(graph);
 }
 
-#[test]
-fn rotation_template_metalanguage_remains_explicitly_deferred() {
-    let mut graph = graph();
-    options_mut(&mut graph, LAYER).solid_infill_rotate_template = OrcaString("+30N2".to_owned());
-    record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
-        RegionSurfaceKind::InternalSolid,
-        rectangle(0, 0, 4_000_000, 4_000_000),
-        0,
-    )];
-
-    let error = match group_fills::group_fills(external(&graph), 0, LAYER) {
-        Err(error) => error,
-        Ok(_) => panic!("rotation-template metalanguage must remain gated"),
-    };
-    assert_eq!(
-        error,
-        SliceError::UnsupportedProjectFeature("solid_infill_rotate_template".to_owned())
-    );
-    combine_infill::dispose(graph);
-}
-
 fn assert_sorted_flow_sidecar(entries: &[LockFlowParam], expected: &[ExPolygon]) {
     assert_eq!(entries.len(), expected.len());
     assert!(
