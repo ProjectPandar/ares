@@ -75,7 +75,7 @@ pub(crate) fn validate_xml_for_test(
     )
 }
 
-fn configured_reader(input: &[u8]) -> NsReader<&[u8]> {
+pub(super) fn configured_reader(input: &[u8]) -> NsReader<&[u8]> {
     let mut reader = NsReader::from_reader(input);
     reader.config_mut().enable_all_checks(true);
     reader
