@@ -59,8 +59,8 @@ no computation beyond the existing time formatter.
   (`web/app/src/shell/TopBar.tsx:26`), and no route opens a raw `.gcode`.
 - Stealth mode: the time uses `TimeMode::Normal`. Ares has no stealth
   machine yet (M853 deferred), the same rule as the estimation footer.
-- ImGui column geometry (`max_len`, `max_len * 1.5`): the web uses a CSS
-  grid with the same three columns.
+- ImGui column geometry (`max_len`, `max_len * 1.5`): the web uses an HTML
+  table with the same three columns.
 - The adjacent `Settings` block (`:4430-4475`, viewer only) and the time
   mode button (`:4646-4670`).
 - The preset slice entry (`sliceWithProfilesProcessed`, the app's path

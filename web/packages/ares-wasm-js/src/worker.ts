@@ -52,6 +52,7 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
   const gcode = owned(output.takeGcode());
   const vertices = output.takeVertices();
   const estimation = JSON.parse(output.estimation);
+  const customGcodeOverview = JSON.parse(output.customGcodeOverview());
   output.free();
   const toolpaths: Toolpaths = {
     vertexCount: vertices.count,
@@ -71,6 +72,7 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
     spiralVaseMode: vertices.spiralVaseMode,
     filamentLegend: JSON.parse(vertices.filamentLegend()),
     estimation,
+    customGcodeOverview,
   };
   replaceViewer(vertices);
   const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs } = toolpaths;

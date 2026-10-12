@@ -3,6 +3,7 @@ import type { ColorRange, ExtrusionRole, MoveType, Toolpaths } from "@ares-slice
 import { EXTRUSION_ROLES, MOVE_TYPES } from "@ares-slicer/wasm";
 import type { PreviewView } from "../state/store";
 import { css, RangeRows, VIEW_TYPE_ITEMS } from "./LegendRange";
+import { CustomGCodeRows } from "./LegendCustomGCode";
 import { EstimationRows } from "./LegendEstimation";
 import { SummaryRows } from "./LegendSummary";
 
@@ -134,6 +135,7 @@ export function Legend({ roles, options, toolpaths, range, view, onChange }: {
         {options.flatMap((id) => optionRow(id, true))}
       </ul>
       )}
+      <CustomGCodeRows rows={toolpaths.customGcodeOverview} />
       <EstimationRows estimation={toolpaths.estimation} legend={toolpaths.filamentLegend}
         featureType={view.viewType === "FeatureType"} />
     </div>

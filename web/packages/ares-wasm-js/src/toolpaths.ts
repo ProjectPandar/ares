@@ -36,6 +36,17 @@ export interface Toolpaths {
   /** Engine-selected ColorPrint legend columns and used filament volumes. */
   filamentLegend: FilamentLegend;
   estimation: Estimation;
+  /** Legend Custom G-code overview rows of the sliced plate's items, in list order; empty for `sliceWithProfiles`. */
+  customGcodeOverview: CustomGCodeOverviewRow[];
+}
+
+/** One item of the legend Custom G-code overview (GCodeViewer.cpp:4517-4544), computed by ares-vgcode. */
+export interface CustomGCodeOverviewRow {
+  label: "Pause" | "Template" | "Tool Change" | "Custom" | "Unknown";
+  /** `find_close_layer_idx + 1`, printed with `%d`. */
+  layer: number;
+  /** Float sum of the Normal-mode times of the layers before `layer`, seconds. */
+  time: number;
 }
 
 /** Legend estimation footer inputs (GCodeViewer.cpp:4547-4644). */
