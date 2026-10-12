@@ -7,6 +7,11 @@ use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
 const NATIVE: &str = "/nix/store/1bq61dyqxb8yjdsaaq697ii6hbhb5cxm-orca-slicer-procgcode-2.4.2/bin/.orca-slicer-wrapped";
+fn native_bin() -> PathBuf {
+    std::env::var_os("ARES_PROCGCODE_NATIVE_BIN")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(NATIVE))
+}
 impl OrcaRunner {
     pub(crate) fn processor_reference(&self, input: &Path) -> Result<Option<PathBuf>, StageError> {
         self.processor_capture(
@@ -40,8 +45,8 @@ impl OrcaRunner {
             "mode": mode,
             "input": cache_identity::raw_digest(&stages::read(&input, stage)?),
             "input_name": input.file_name().map(|name| name.to_string_lossy()),
-            "native_path": NATIVE,
-            "native": cache_identity::raw_digest(&stages::read(Path::new(NATIVE), stage)?),
+            "native_path": native_bin(),
+            "native": cache_identity::raw_digest(&stages::read(&native_bin(), stage)?),
             "reader": cache_identity::raw_digest(&stages::read(&reader, stage)?),
             "launcher": cache_identity::raw_digest(&stages::read(&launcher, stage)?),
             "launcher_path": launcher,

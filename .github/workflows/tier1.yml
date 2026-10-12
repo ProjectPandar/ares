@@ -250,6 +250,7 @@ jobs:
             echo "ARES_PROCGCODE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
@@ -260,6 +261,12 @@ jobs:
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-seeded-artifacts
+          path: ${{ runner.temp }}/parity-artifacts
+          retention-days: 3
 
   parity-official:
     runs-on: self-hosted
@@ -346,6 +353,7 @@ jobs:
             echo "ARES_PROCGCODE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
@@ -356,3 +364,9 @@ jobs:
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-official-artifacts
+          path: ${{ runner.temp }}/parity-artifacts
+          retention-days: 3
