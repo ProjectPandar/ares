@@ -79,6 +79,8 @@ mod m205;
 mod narrowed_x2d_whole_file;
 #[path = "orca_parity/option_coverage.rs"]
 mod option_coverage;
+#[path = "orca_parity/plate_custom_gcodes.rs"]
+mod plate_custom_gcodes;
 #[path = "orca_parity/presets.rs"]
 mod presets;
 #[path = "orca_parity/print_estimated_stats.rs"]

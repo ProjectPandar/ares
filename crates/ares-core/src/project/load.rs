@@ -151,6 +151,7 @@ pub(crate) fn load_project_with_preparation(
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::normalize_volume_offsets(&mut objects);
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
+    let plates_custom_gcodes = super::plate_custom_gcodes::load(&mut archive, &archive_paths)?;
     // bbs_3mf.cpp:3945-3957: the model's `Application` metadata tags the
     // BambuStudio/OrcaSlicer family (`is_bbl_3mf`).
     let bbl_family_3mf = graph.models.iter().any(|model| {
@@ -160,24 +161,23 @@ pub(crate) fn load_project_with_preparation(
                     || entry.value.starts_with("OrcaSlicer-"))
         })
     });
-    Ok((
-        Project::new(
-            models,
-            objects,
-            metadata.plates,
-            settings,
-            ProjectDocuments {
-                project_settings_raw,
-                model_settings,
-                slice_info,
-                filament_sequences,
-                plate_documents,
-                has_painted_layer_height_profile,
-                bbl_family_3mf,
-            },
-        ),
-        preparation,
-    ))
+    let mut project = Project::new(
+        models,
+        objects,
+        metadata.plates,
+        settings,
+        ProjectDocuments {
+            project_settings_raw,
+            model_settings,
+            slice_info,
+            filament_sequences,
+            plate_documents,
+            has_painted_layer_height_profile,
+            bbl_family_3mf,
+        },
+    );
+    project.plates_custom_gcodes = plates_custom_gcodes;
+    Ok((project, preparation))
 }
 
 fn read(archive: &mut ProjectArchive<'_>, path: &str) -> Result<Vec<u8>, SliceError> {

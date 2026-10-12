@@ -73,6 +73,9 @@ impl Project {
             settings,
             documents,
             plate_origin: plate_grid_origin(index, plate_count, &self.settings),
+            plates_custom_gcodes: self.plates_custom_gcodes.clone(),
+            // OrcaSlicer.cpp:5690 `model.curr_plate_index = index`.
+            curr_plate_index: index as i32,
         })
     }
 }

@@ -1,0 +1,47 @@
+--- a/src/OrcaSlicer.cpp
++++ b/src/OrcaSlicer.cpp
+@@ -1638,6 +1638,44 @@
+                 //LoadStrategy strategy = LoadStrategy::LoadModel | LoadStrategy::LoadConfig|LoadStrategy::AddDefaultInstances;
+                 //if (load_aux) strategy = strategy | LoadStrategy::LoadAuxiliary;
+                 model = Model::read_from_file(file, &config, &config_substitutions, strategy, &plate_data_src, &project_presets, &is_bbl_3mf, &file_version, nullptr, nullptr, nullptr, plate_to_slice);
++                // ARES_PLATE_CUSTOM_GCODES_DUMP=<path>: write Model::plates_custom_gcodes as loaded by
++                // read_from_file (bbs_3mf.cpp:3208-3292 + the Model.cpp:365-366 mode check) and exit.
++                // %.17g round-trips double.
++                if (const char* dump = ::getenv("ARES_PLATE_CUSTOM_GCODES_DUMP"); dump != nullptr && *dump != '\0') {
++                    FILE* out = fopen(dump, "w");
++                    if (out == nullptr)
++                        flush_and_exit(1);
++                    auto string = [out](const std::string& value) {
++                        fputc('"', out);
++                        for (unsigned char c : value) {
++                            if (c == '"' || c == '\\')
++                                fprintf(out, "\\%c", c);
++                            else if (c < 0x20)
++                                fprintf(out, "\\u%04x", c);
++                            else
++                                fputc(c, out);
++                        }
++                        fputc('"', out);
++                    };
++                    fprintf(out, "{\"curr_plate_index\":%d,\"plates\":[", model.curr_plate_index);
++                    bool first_plate = true;
++                    for (const auto& [plate, info] : model.plates_custom_gcodes) {
++                        fprintf(out, "%s{\"plate\":%d,\"mode\":%d,\"gcodes\":[", first_plate ? "" : ",", plate, static_cast<int>(info.mode));
++                        first_plate = false;
++                        for (size_t i = 0; i < info.gcodes.size(); ++i) {
++                            const CustomGCode::Item& item = info.gcodes[i];
++                            fprintf(out, "%s{\"print_z\":%.17g,\"type\":%d,\"extruder\":%d,\"color\":", i == 0 ? "" : ",", item.print_z, static_cast<int>(item.type), item.extruder);
++                            string(item.color);
++                            fprintf(out, ",\"extra\":");
++                            string(item.extra);
++                            fputc('}', out);
++                        }
++                        fprintf(out, "]}");
++                    }
++                    fprintf(out, "]}\n");
++                    fclose(out);
++                    flush_and_exit(0);
++                }
+                 if (is_bbl_3mf)
+                 {
+                     if (!first_file)

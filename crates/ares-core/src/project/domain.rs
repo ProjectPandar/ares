@@ -69,6 +69,10 @@ pub struct Project {
     /// and the G-code emitter subtracts it again
     /// (`Print.cpp:2636-2638` `set_gcode_offset`).
     plate_origin: (f64, f64),
+    pub(in crate::project) plates_custom_gcodes:
+        std::collections::BTreeMap<i32, super::plate_custom_gcodes::CustomGCodeInfo>,
+    /// `Model::curr_plate_index` (`Model.hpp:1562`): the selected plate's position.
+    pub(in crate::project) curr_plate_index: i32,
 }
 
 impl Project {
@@ -86,6 +90,8 @@ impl Project {
             settings,
             documents,
             plate_origin: (0.0, 0.0),
+            plates_custom_gcodes: Default::default(),
+            curr_plate_index: 0,
         }
     }
 

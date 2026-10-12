@@ -10,6 +10,7 @@ mod model_settings;
 mod model_xml;
 mod plate;
 pub(crate) mod plate_config;
+mod plate_custom_gcodes;
 pub(crate) mod raw_settings;
 pub(crate) mod region_graph;
 mod relationships;
@@ -29,6 +30,7 @@ pub use domain::{
 pub use layer_config_ranges::LayerConfigRange;
 pub(crate) use load::load_project_with_preparation;
 pub use load::{load_project, load_project_with};
+pub use plate_custom_gcodes::{CustomGCodeInfo, CustomGCodeMode};
 pub use transform::Transform3d;
 #[cfg(test)]
 mod tests;
