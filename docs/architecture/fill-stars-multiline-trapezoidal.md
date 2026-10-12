@@ -358,18 +358,37 @@ unchanged. `native-order-after-step2.json` shows every geometrically matching
 polygon now has the same Native/Ares index, with no remaining matched-path
 permutation. Post-clipping arrays are unchanged across all 14 calls. Thus
 minima sorting has a source-stage effect, but has not repaired the S10 bytes.
-Its inclusion remains subject to coordinator review; no GREEN is claimed.
+The coordinator retained this source-stage correction; it is not claimed
+to repair the S10 bytes by itself.
 
-The next read-only numerical lead is FillBase.cpp:2744/2749: `i * spacing`
-is a float multiplication before promotion into the double offsets vector.
-Ares `fill/multiline_offset.rs:37-39` currently multiplies in f64. Existing
-Native ABI capture under `/tmp/worker6-stars-native-spacing-abi.1CZgFf`,
-and Ares capture under
-`/tmp/worker6-stars-minima-s10-stage.OKxdRk`, each contain 14 calls with the
-same spacing 0.40707963705062866. For even count 10 and index 3, the upstream
-expression gives 1.4247786700725555 versus Ares 1.4247787296772003, a scaled
-offset difference of 0.059604644775390625. These expression values are derived
-from the captured spacing, not a capture of the actual Execute delta. This
-lead requires further stage proof and scope approval before a production edit.
-The first Native named-parameter attempt had no debug symbols and is excluded;
-the successful capture uses the x86_64 float argument register explicitly.
+### Shared multiline expression precision correction
+
+FillBase.cpp:2739-2749 receives spacing as float: `i * spacing` remains f32
+before conversion into the double offsets vector, while `0.5 * spacing` and
+the even-offset sum use f64. The coordinator approved preserving these types
+in the shared `fill/multiline_offset.rs::apply`; count 1 still returns early.
+
+Existing Native capture `/tmp/worker6-stars-execute-delta.xGNfx8/delta-audit.json`
+contains all 14 S10 calls and five actual Execute deltas per call. Every value
+matches the f32-product expression exactly. For captured spacing
+0.40707963705062866, index 3 gives Native delta 1424778.6700725555 versus the
+old f64-product delta 1424778.7296772003. The original missing-symbol capture
+is excluded; successful spacing/delta capture uses x86_64 argument registers.
+No Native rebuild or artifact is committed.
+
+Correction `05d4568f1` keeps multiplication in f32 and then promotes to f64,
+with an explicit upstream-line comment. Core strict clippy and fmt passed.
+Fresh `/tmp/worker6-stars-float-gates.GeN49e/finite` gives 17/17 PASS in each
+mode, including S10 whole-output equality. Its raw-change-audit.json compares
+same-input members against Step 2: 16/17 raw outputs identical per mode, only
+S10 changes (line 131 M73 placement and subsequent path differences repaired).
+Complete option_coverage on this tree passed 220/220 in both modes under
+`/tmp/worker6-stars-float-gates.GeN49e/option`. Against pre-correction
+`/tmp/worker6-stars-float-baseline.1EjVGY`, raw-change-audit.json records
+391 seeded and 381 official same-input outputs unchanged; only S10 changes.
+Two additional official labels lacked baseline captures because the original
+tree assertion stopped early. No non-RED raw change is observed.
+`tree-native-attribution.json` records the baseline official tree failure:
+same input and Ares raw SHA, Native-only line 1081 travel variation
+113.388/113.135 versus 113.244/113.297. Original FAIL logs remain intact.
+Rebase carry gates and final engineering/workspace acceptance are still pending.
