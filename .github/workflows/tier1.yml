@@ -98,6 +98,8 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            src/libvgcode
+            src/slic3r/GUI/LibVGCode
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -168,7 +170,7 @@ jobs:
       - run: npm run build:wasm --prefix web/packages/ares-wasm-js
       - run: npm run build --prefix web
       - run: npm run typecheck --prefix web
-      - run: npm run test:e2e --prefix web
+      - run: npm run test:e2e --prefix web -- --trace retain-on-failure
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
