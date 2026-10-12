@@ -7,12 +7,21 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### G4 layer-template current-filament context: SPEC request (2026-10-12)
+### G4 timelapse-template current-filament context: SPEC request (2026-10-12)
+
+Port `GCode::process_layer` direct/tracked timelapse invocation context from `GCode.cpp:4672-4674,5167`: implicit vectors use the current logical writer filament.
+Rust boundary is the shared render call in `gcode_emit/timelapse.rs`; preserve scheduling, validation/write-back and position/last-Z bookkeeping.
+Six finite Native/API/CLI controls must witness direct/traditional phases and real M104/tool consumption. BBL/tower/safe-position and other template owners remain deferred.
+Docs only until SPEC approval; no overlap with other workers' production claims.
+[SPEC and test-first gates](architecture/timelapse-filament-context-spec.md), [proposed ARD](architecture/ard-timelapse-filament-context.md).
+
+### G4 layer-template current-filament context: merged bounded GREEN (2026-10-12)
 
 Port `GCode::process_layer` before/after layer-template invocation context from `GCode.cpp:4639-4641,4682-4684`: unindexed legacy vectors use the current logical writer filament.
 Rust boundary is existing `gcode_emit/layer_gcode.rs`; reuse the parser and writer registry, preserve hook timing/write-back and explicit indexes.
 Six finite Native/API/CLI controls distinguish nonzero/current/upcoming tools through actual M104 and wall-tool consumption. Other template owners and printer/option completeness remain deferred.
-No tests, Native execution or production change before SPEC approval; no overlap with APA/anchor, brim, profiles, multiline geometry, CI/oracle or viewer runtime claims.
+Merged `afca7400a` after approved RED/repair: six finite controls PASS both modes. Accepted workspace actualc7@d7518361/8361 and candidate full actual55f6@361988/988 in both modes; these are carried candidate results, not a new full baseline.
+Final afca directed seeded214/214, official213PASS/1 coordinator-accepted Native adaptivePA variant (fresh3PASS, five identical Ares SHA samples), strict/fmt/wasm PASS. Raw failure evidence remains recorded.
 [SPEC and test-first gates](architecture/layer-template-filament-context-spec.md), [proposed architecture decision](architecture/ard-layer-template-filament-context.md).
 
 ### G4 first-layer sequence: bounded GREEN (2026-10-12)
