@@ -391,4 +391,8 @@ tree assertion stopped early. No non-RED raw change is observed.
 `tree-native-attribution.json` records the baseline official tree failure:
 same input and Ares raw SHA, Native-only line 1081 travel variation
 113.388/113.135 versus 113.244/113.297. Original FAIL logs remain intact.
-Rebase carry gates and final engineering/workspace acceptance are still pending.
+Rebase to afca7400a is conflict-free; all 11 range-diff entries are unchanged.
+On b92b16b03, `/tmp/worker6-stars-afca-gates.Abs6QH` gives option_coverage
+220/220 in both modes (including all 17 controls), strict/fmt/wasm32 exit 0.
+All matched raw outputs versus the previous GREEN remain identical: seeded
+392/392 and official 384/384. Workspace awaits coordinator allocation.
