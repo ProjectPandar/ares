@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
-import { movesSliderVertices, type Move } from "./toolpathPreview";
+import { movesSliderVertices } from "./toolpathPreview";
+import type { Move } from "./oracleMoves";
 
 /** GCodeProcessor `EMoveType` by `--dump-moves` id with its `to_string` label (`GCodeViewer.cpp:277-294`). */
 const TYPE_LABELS = [

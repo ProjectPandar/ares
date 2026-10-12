@@ -8,7 +8,8 @@ import { test } from "./failureDiagnostics";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { checkToolpathPreview, oracleMoves } from "./toolpathPreview";
+import { checkToolpathPreview } from "./toolpathPreview";
+import { oracleMoves } from "./oracleMoves";
 import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));

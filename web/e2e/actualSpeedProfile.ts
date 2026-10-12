@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
-import { movesSliderVertices, type Move } from "./toolpathPreview";
+import { movesSliderVertices } from "./toolpathPreview";
+import type { Move } from "./oracleMoves";
 
 const SEAM = 3;
 const EXTRUDE = 10;

@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
-import { canvasDigest, type Move } from "./toolpathPreview";
+import { canvasDigest } from "./toolpathPreview";
+import type { Move } from "./oracleMoves";
 
 /** GCodeProcessor `EMoveType::Extrude` in `--dump-moves` CSV ids. */
 const EXTRUDE = 10;
