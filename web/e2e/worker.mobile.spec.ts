@@ -1,6 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./failureDiagnostics";
 import { act, choose, PRESETS } from "./lhPresets";
 
 // A closed cylinder (binary STL) whose slice takes seconds: 512 facets around, 60 mm tall.

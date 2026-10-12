@@ -65,7 +65,7 @@ case "$variant" in
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"
     ;;
-  print-statistics)
+  print-statistics|plate-custom-gcodes)
     # Same source as the approved print-statistics oracle v4zhqnbm: the full
     # seed-replay producer source (three init patches) + print-statistics.patch
     # added by the nix recipe.
@@ -74,8 +74,9 @@ case "$variant" in
       "$repo/scripts/orca-replay/concentric-initialization.patch" \
       "$repo/scripts/orca-replay/object-id-initialization.patch"
     ORCA_PRINT_STATISTICS_SOURCE="$src" ORCA_PRINT_STATISTICS_NIXPKGS="$nixpkgs" \
+    ORCA_PLATE_CUSTOM_GCODES_SOURCE="$src" ORCA_PLATE_CUSTOM_GCODES_NIXPKGS="$nixpkgs" \
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
-      --file "$repo/tools/chain-probe/print-statistics.nix"
+      --file "$repo/tools/chain-probe/$variant.nix"
     ;;
   ksr-initialized)
     git -C "$src" apply --unidiff-zero "$repo/tools/orca-probes/ksr-initialized-source.patch"

@@ -1,7 +1,8 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
-import { expect, type Route, test } from "@playwright/test";
+import { expect, type Route } from "@playwright/test";
+import { test } from "./failureDiagnostics";
 
 const dist = fileURLToPath(new URL("../app/dist/", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/bundle/", import.meta.url));

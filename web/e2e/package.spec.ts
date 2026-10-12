@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./failureDiagnostics";
 import { build, preview } from "vite";
 
 const web = fileURLToPath(new URL("../", import.meta.url));

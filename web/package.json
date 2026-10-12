@@ -12,7 +12,8 @@
     "dev": "npm run build -w @ares-slicer/wasm && npm run build -w @ares-slicer/profiles && npm run dev -w ares-app",
     "lint": "oxlint packages app e2e",
     "typecheck": "npm run typecheck -w @ares-slicer/wasm && npm run typecheck -w ares-app && tsc -p tsconfig.json",
-    "test:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build && playwright test",
+    "prepare:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build",
+    "test:e2e": "npm run prepare:e2e && playwright test",
     "lighthouse": "node e2e/lighthouse.mjs"
   },
   "devDependencies": {

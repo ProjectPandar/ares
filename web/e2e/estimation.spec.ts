@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));

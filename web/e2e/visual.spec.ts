@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./failureDiagnostics";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const label = process.env.ARES_VISUAL_LABEL ?? "current";

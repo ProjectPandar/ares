@@ -3,7 +3,8 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./failureDiagnostics";
 import { markerTimeNative } from "./markerTimeNative";
 
 test("missing Native cannot become frozen formatter parity", async () => {
