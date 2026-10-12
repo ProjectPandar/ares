@@ -7,9 +7,10 @@ use wasm_bindgen::prelude::*;
 /// `model().get_curr_plate_custom_gcodes().gcodes` of the sliced plate.
 pub(crate) fn plate_custom_gcodes(
     input: &[u8],
-    _plate: Option<u32>,
+    plate: Option<u32>,
 ) -> Result<Vec<CustomGCodeItem>, SliceError> {
     Ok(ares_core::load_project(input)?
+        .select_plate(plate)?
         .curr_plate_custom_gcodes()
         .gcodes)
 }

@@ -176,15 +176,8 @@ pub(crate) fn validate_loaded_project(
     plate: Option<u32>,
     selected_printer: Option<&str>,
 ) -> Result<(), SliceError> {
-    let plate = plate.unwrap_or_else(|| {
-        project
-            .plates()
-            .iter()
-            .map(|plate| plate.id())
-            .min()
-            .unwrap_or(1)
-    });
     let project = project.select_plate(plate)?;
+    let plate = project.first_plate_id();
     let resolved = resolve_bounded_project_config(&project)?;
     validate_applied_project(&project, &resolved, plate, selected_printer)
 }

@@ -3,8 +3,10 @@ use crate::{ProjectSettings, SliceError};
 
 impl Project {
     /// Projects slice one plate at a time (OrcaSlicer exports `plate_<n>.gcode`
-    /// per plate). Returns a view containing only the instances of `plate_id`.
-    pub(crate) fn select_plate(&self, plate_id: u32) -> Result<Self, SliceError> {
+    /// per plate). Returns a view containing only the instances of `plate`
+    /// (the first plate when `None`), selected as `Model::curr_plate_index`.
+    pub fn select_plate(&self, plate: Option<u32>) -> Result<Self, SliceError> {
+        let plate_id = plate.unwrap_or_else(|| self.first_plate_id());
         let plate_count = self.plates.len();
         let index = self
             .plates
@@ -77,6 +79,17 @@ impl Project {
             // OrcaSlicer.cpp:5690 `model.curr_plate_index = index`.
             curr_plate_index: index as i32,
         })
+    }
+}
+
+impl Project {
+    /// The lowest plate id; on a selected view, the selected plate's id.
+    pub(crate) fn first_plate_id(&self) -> u32 {
+        self.plates
+            .iter()
+            .map(|plate| plate.id())
+            .min()
+            .unwrap_or(1)
     }
 }
 

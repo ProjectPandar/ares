@@ -19,7 +19,7 @@ pub(super) fn from_failed_templates(
     let settings = &traversal.resolved.views.full;
     SliceError::CustomGCode {
         message,
-        plate_index: crate::project_slice::state::first_plate_id(&traversal.project),
+        plate_index: traversal.project.first_plate_id(),
         layer_height: f64::from(settings.process.object.layer_height.0 as f32),
         wall_loops: settings.process.region.wall_loops.0,
         sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),

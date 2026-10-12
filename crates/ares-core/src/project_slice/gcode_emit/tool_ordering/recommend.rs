@@ -63,7 +63,7 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             let settings = &traversal.resolved.views.full;
             return Err(SliceError::Slicing {
                 message,
-                plate_index: crate::project_slice::state::first_plate_id(&traversal.project),
+                plate_index: traversal.project.first_plate_id(),
                 layer_height: f64::from(settings.process.object.layer_height.0 as f32),
                 wall_loops: settings.process.region.wall_loops.0,
                 sparse_infill_density: f64::from(

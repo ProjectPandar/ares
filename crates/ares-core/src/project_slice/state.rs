@@ -25,15 +25,6 @@ pub(super) struct ProjectSliceState {
     pub(super) intersected_objects: Vec<IntersectedPrintObject>,
 }
 
-pub(super) fn first_plate_id(project: &Project) -> u32 {
-    project
-        .plates()
-        .iter()
-        .map(|plate| plate.id())
-        .min()
-        .unwrap_or(1)
-}
-
 #[cfg(test)]
 pub(super) fn prepare_project_slice(
     project: impl AsRef<[u8]>,
@@ -95,8 +86,8 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         &crate::ConfigOverrides,
     )>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let plate_id = plate.unwrap_or_else(|| first_plate_id(&project));
-    let project = project.select_plate(plate_id)?;
+    let project = project.select_plate(plate)?;
+    let plate_id = project.first_plate_id();
     // `OrcaSlicer.cpp:5710-5724`: unconditional — if no model-part instance
     // is fully inside the plate's print volume, reject with the upstream
     // -50 text (`Model.cpp:692-702 update_print_volume_state`).

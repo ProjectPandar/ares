@@ -16,7 +16,7 @@ pub(super) fn check(
             error_code,
             gcode: processed.gcode,
             // bbs_3mf.cpp:2282 maps plater_id to index + 1; this view is selected.
-            plate_index: crate::project_slice::state::first_plate_id(&traversal.project),
+            plate_index: traversal.project.first_plate_id(),
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
             wall_loops: settings.process.region.wall_loops.0,
             sparse_infill_density: f64::from(
