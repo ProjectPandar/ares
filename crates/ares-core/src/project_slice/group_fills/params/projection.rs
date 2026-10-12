@@ -2,7 +2,7 @@ mod rotation;
 mod sticky;
 
 use rotation::projected_angle;
-pub(in crate::project_slice) use rotation::template_rotation_angle;
+pub(in crate::project_slice) use rotation::{reset_rand_state, template_rotation_angle};
 use sticky::{anchor_lengths, apply_pattern_fields};
 
 use crate::{

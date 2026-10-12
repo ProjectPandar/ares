@@ -1,10 +1,11 @@
 mod locked;
 mod projection;
 
-pub(in crate::project_slice) use projection::template_rotation_angle;
+pub(in crate::project_slice) use projection::{reset_rand_state, template_rotation_angle};
 
 use crate::{
-    FloatOrPercent, ObjectOptions, OrcaFloats, RegionOptions, SliceError,
+    FloatOrPercent, ObjectOptions, OrcaFloats, ProcessRegionSourceOptions, RegionOptions,
+    SliceError,
     geometry::{CoordinateScale, ExPolygon},
     project_slice::{
         layers::PlannedLayer,
@@ -28,6 +29,9 @@ pub(super) struct LayerContext<'a> {
     pub(super) region_id: usize,
     pub(super) region: &'a RegionOptions,
     pub(super) object: &'a ObjectOptions,
+    /// `object->print()->default_region_config()` for the meta-language B/T
+    /// shell units (`Fill.cpp:125-127`) — print-level process values.
+    pub(super) default_region: &'a ProcessRegionSourceOptions,
     pub(super) nozzles: &'a OrcaFloats,
     pub(super) initial_layer_width: FloatOrPercent,
     pub(super) model_rotation_offset: f32,
@@ -79,6 +83,7 @@ impl<'a> LayerContext<'a> {
             region_id: input.current.region_index,
             region: prelude.region_options(input),
             object,
+            default_region: &traversal.resolved.views.full.process.region,
             nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
             initial_layer_width: traversal
                 .resolved

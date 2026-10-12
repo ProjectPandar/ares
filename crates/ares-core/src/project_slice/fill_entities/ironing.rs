@@ -2,7 +2,7 @@
 
 use crate::{
     ExtrusionRole, ObjectOptions, OrcaFloats, ProcessInfillPattern, ProcessIroningType,
-    RegionOptions, SliceError,
+    ProcessRegionSourceOptions, RegionOptions, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     geometry::{
         CoordinateScale, ExPolygon, JoinType, Point, intersection_ex, offset_expolygon,
@@ -27,6 +27,9 @@ pub(super) struct Input<'a> {
     pub(super) layer_slices: &'a [ExPolygon],
     pub(super) region: &'a RegionOptions,
     pub(super) object: &'a ObjectOptions,
+    /// `default_region_config()` — print-level process region options for
+    /// the meta-language B/T shell units (`Fill.cpp:125-127`).
+    pub(super) default_region: &'a ProcessRegionSourceOptions,
     pub(super) nozzles: &'a OrcaFloats,
     pub(super) layer: &'a PlannedLayer,
     pub(super) layers: &'a [PlannedLayer],
@@ -268,7 +271,7 @@ fn ironing_angle(input: &Input<'_>) -> (f32, bool) {
             template,
             input.layers,
             input.object,
-            input.region,
+            input.default_region,
             input.layer.id,
         )
     });

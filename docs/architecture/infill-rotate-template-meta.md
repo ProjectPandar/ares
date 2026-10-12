@@ -100,15 +100,19 @@ release binary. Reproducing UB is a non-goal.
   `meta_rotation_angle(template, &ObjectRotationContext) -> Option<f64>`.
 - `LayerContext` gains `&'a [PlannedLayer]` (whole `plan.layers`, available
   at `params.rs:52-79`) and `object_height` derived the same way upstream
-  reads `object->height()`; `layer_height`/`shell_layers` come from existing
-  `region`/`object` fields.
-- `rand()` joints (`~` idx12, `^` idx13): RED first measures whether the
-  Native oracle's output is deterministic per template; if yes, Ares must
-  reproduce the same stream — port upstream's `rand()` seed state (glibc
-  `rand()` seeded once per process; upstream effectively draws in
-  deterministic order per slice run). If nondeterministic, defer `~`/`^`
-  and admit deterministic joints only — decision recorded in the RED
-  artifacts (`witness.json` across 3 replays).
+  reads `object->height()`; `layer_height` comes from `object` config.
+- `B`/`T` read `object->print()->default_region_config().{bottom,top}_shell_layers`
+  (`:125-128`) — the **print-level process values** (`views.full.process.region`),
+  never the current `RegionOptions` (which may carry object/modifier
+  overrides).
+- `rand()` joints (`~` idx12, `^` idx13): the Native oracle is
+  deterministic (no `srand` on the slicing path → glibc default-seeded
+  TYPE_3 stream, first draws `1804289383, 846930886, 1681692777`).
+  `GlibcRandom` reproduces that sequence and lives in `thread_local`
+  state; `slice_source` calls `reset_rand_state()` at the start of each
+  slice to give fresh-process equivalence — without the reset a second
+  slice on the same worker thread (WASM worker / API embedder) would
+  continue the stream and emit different G-code than the oracle.
 - Admission guards (`anchor_projection.rs` sparse/solid template checks):
   remove the `is_none()` rejections **only after** the interpreter lands.
   `simple_rotation_angle`'s residual `None` (unparseable non-meta string)
@@ -116,11 +120,21 @@ release binary. Reproducing UB is a non-goal.
 
 ## Documented upstream-UB deviation
 
-Ares keeps a bounded `UnsupportedProjectFeature` for **non-meta template
-strings that do not parse as a float list**. Upstream does not reject them —
-it reads `rotate_angles.values[layer_id % 0]`, undefined behavior. This is a
-deliberate deviation: matching UB/crash is not a parity goal. Recorded in
-the ARD per condition ④.
+Ares feeds every non-meta token to `strtod`-prefix parsing, so every
+string produces a numeric list and the upstream `layer_id % 0` UB domain
+(`deserialize` → empty `rotate_angles`) is unreachable in practice; the
+theoretical empty-token case returns angle `0.0` instead of dividing by
+zero — a deliberate deviation: matching UB/crash is not a parity goal.
+
+## Documented rand() deviation
+
+`GlibcRandom` is **per-worker-thread**, upstream's `rand()` is
+process-global. Sequential slicing (the only mode Ares runs, and the
+mode the Native oracle exercises) is bit-identical; if Ares ever
+parallelized layer projection, draws would partition across threads
+differently than upstream's single interleaved stream. `reset_rand_state()`
+per `slice_source` guarantees per-slice determinism even when the
+embedding process slices repeatedly.
 
 ## Included / deferred
 
@@ -128,9 +142,10 @@ the ARD per condition ④.
   `_absolute`/`_negative`/`_noop`/`stop`/`repeats` semantics; `B`/`T`;
   all length units (`%`, `#`, `'`, `"`, `c`, `m`, `mm`); all deterministic
   joints (`/ N n Z z $ L l U u Q q | #`); the `*3.6` percent-of-turn form.
-- Deferred: `~`/`^` pending RED determinism; unparseable non-meta (UB
-  deviation above); `infill_direction`/`align_infill_direction_to_model`
-  (already ported).
+- Deferred: unparseable non-meta UB domain (deviation above);
+  `infill_direction`/`align_infill_direction_to_model` (already ported).
+  `~`/`^` are included — RED measured deterministic draws and the glibc
+  default-seeded stream is reproduced exactly.
 
 ## RED matrix (condition ②)
 

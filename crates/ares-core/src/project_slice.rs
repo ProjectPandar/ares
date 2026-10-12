@@ -171,6 +171,10 @@ pub(crate) fn slice_source(
     record_moves: bool,
     mut context: crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
+    // Fresh-process equivalence for the `~`/`^` rotate_template joints:
+    // upstream slices once per process, so `rand()` always sees the default
+    // seed (`Fill.cpp:199-200`); reset the per-thread stream per slice.
+    group_fills::reset_rand_state();
     let staged = prepare_infill::surface_type_detection::prepare(
         perimeters::prepare_post_layer_region_perimeters(project, &mut context)?,
     )?;

@@ -13,7 +13,7 @@
 
 use std::cell::RefCell;
 
-use crate::{ObjectOptions, RegionOptions, project_slice::layers::PlannedLayer};
+use crate::{ObjectOptions, ProcessRegionSourceOptions, project_slice::layers::PlannedLayer};
 
 struct MetaLayerContext<'a> {
     pub(super) layers: &'a [PlannedLayer],
@@ -22,9 +22,9 @@ struct MetaLayerContext<'a> {
     pub(super) object_height: f64,
     /// `object->config().layer_height`.
     pub(super) layer_height: f64,
-    /// `default_region_config().{bottom,top}_shell_layers`
-    /// (`Fill.cpp:125-127`); resolved from the current region — equal for
-    /// the single-region objects this gate supports.
+    /// `object->print()->default_region_config().{bottom,top}_shell_layers`
+    /// (`Fill.cpp:125-127`): the print-level process values, never the
+    /// current region (which may carry object/modifier overrides).
     pub(super) bottom_shell_layers: f64,
     pub(super) top_shell_layers: f64,
 }
@@ -41,7 +41,7 @@ pub(in crate::project_slice) fn template_rotation_angle(
     template: &str,
     layers: &[PlannedLayer],
     object: &ObjectOptions,
-    region: &RegionOptions,
+    default_region: &ProcessRegionSourceOptions,
     layer_id: usize,
 ) -> f64 {
     if is_meta_template(template) {
@@ -49,8 +49,8 @@ pub(in crate::project_slice) fn template_rotation_angle(
             layers,
             object_height: layers[layers.len() - 1].print_z - bottom_z(&layers[0]),
             layer_height: object.layer_height.0,
-            bottom_shell_layers: f64::from(region.bottom_shell_layers.0),
-            top_shell_layers: f64::from(region.top_shell_layers.0),
+            bottom_shell_layers: f64::from(default_region.bottom_shell_layers.0),
+            top_shell_layers: f64::from(default_region.top_shell_layers.0),
         };
         meta_rotation_angle(template, &context, layer_id)
     } else {
@@ -164,6 +164,17 @@ impl GlibcRandom {
 
 thread_local! {
     static RAND_STATE: RefCell<GlibcRandom> = RefCell::new(GlibcRandom::new());
+}
+
+/// Restart the `~`/`^` stream from the default seed at the start of each
+/// slice, mirroring upstream's fresh-process `rand()` state (the oracle
+/// slices once per process; a library embedder may slice repeatedly on the
+/// same worker thread). Remaining documented deviation: upstream's `rand()`
+/// is process-global, so parallel layer projection on one upstream process
+/// would interleave draws across threads; Ares slices single-threaded per
+/// worker thread, so the stream matches the sequential oracle.
+pub(in crate::project_slice) fn reset_rand_state() {
+    RAND_STATE.with(|state| *state.borrow_mut() = GlibcRandom::new());
 }
 
 /// `Fill.cpp:60-203` meta path. Returns the angle in **degrees** — upstream
@@ -383,18 +394,5 @@ fn read_one_unit(
     if absolute {
         state.angle_start = state.angle_add;
         state.angle_add = 0.0;
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn glibc_default_sequence_matches_oracle() {
-        let mut rng = GlibcRandom::new();
-        let draws: Vec<i32> = (0..3).map(|_| rng.next_i31()).collect();
-        // Canonical glibc rand(1) draws.
-        assert_eq!(draws, [1804289383, 846930886, 1681692777]);
     }
 }

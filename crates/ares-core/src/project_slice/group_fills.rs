@@ -4,7 +4,7 @@ mod params;
 mod priority;
 mod types;
 
-pub(in crate::project_slice) use params::template_rotation_angle;
+pub(in crate::project_slice) use params::{reset_rand_state, template_rotation_angle};
 pub(in crate::project_slice) use types::{
     GroupedFills, LockDensityParam, LockFlowParam, LockRegionParam, RepresentativeSurface,
     SurfaceFill, SurfaceFillParams, SurfaceFillPattern,

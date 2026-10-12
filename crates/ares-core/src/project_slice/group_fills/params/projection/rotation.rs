@@ -26,7 +26,7 @@ pub(super) fn projected_angle(
             template,
             context.layers,
             context.object,
-            context.region,
+            context.default_region,
             context.planned.id,
         )
     };
@@ -37,7 +37,7 @@ pub(super) fn projected_angle(
     Ok((angle, fixed))
 }
 
-pub(in crate::project_slice) use meta::template_rotation_angle;
+pub(in crate::project_slice) use meta::{reset_rand_state, template_rotation_angle};
 
 /// Non-meta list path (`Fill.cpp:206-210`): upstream
 /// `ConfigOptionFloats::deserialize` tokenizes on `[\s,]+` and feeds each

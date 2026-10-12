@@ -33,6 +33,7 @@ fn emit(domain: ExPolygon, spacing: f64) -> LayerFillEntities {
         &mut output,
         Input {
             record: &record,
+            default_region: &settings.process.region,
             layer_slices: std::slice::from_ref(&domain),
             region: &region,
             object: &object,

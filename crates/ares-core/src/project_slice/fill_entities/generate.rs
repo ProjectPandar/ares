@@ -314,6 +314,7 @@ pub(in crate::project_slice) fn generate_layer(
                 layer_slices: &object_slices[layer_index],
                 region,
                 object: object_options,
+                default_region: &traversal.resolved.views.full.process.region,
                 nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
                 layer,
                 layers: &plan.layers,
