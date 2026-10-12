@@ -3,8 +3,9 @@
 ## Status and roadmap selection
 
 Worker3; base main `5d1a77062`, after the approved combined-brim merge.
-Draft for Claude, the sole reviewer. This submission contains documents only;
-no fixture, test, Native execution or implementation precedes SPEC approval.
+Claude, the sole reviewer, approved SPEC a68680255. The original submission
+was documents only. Separate fixtures/tests now have admitted Native RED;
+[evidence](outer-only-brim-red-evidence.md) is reported before implementation.
 
 Selected from roadmap **Current acceptance priorities: full acceptance (open)**:
 active brim selectors need source-owned, nonempty complete-output witnesses.

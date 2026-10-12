@@ -1,6 +1,6 @@
 # ARD: Brim.cpp OuterOnly contour and hole-mask boundary
 
-Status: proposed; awaits Claude's SPEC approval. Documents only.
+Status: SPEC a68680255 approved by Claude; separate Native RED precedes code.
 
 ## Source and destination
 

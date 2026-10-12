@@ -16,7 +16,10 @@ Replace the bounded whole-ExPolygon project scaffold with private `brims/outer.r
 and existing BrimPlan dispatch, reusing shared clipping/contact/path emission.
 One object/instance/volume/group/tool; auto/EFC/support/painting, nested islands,
 cross-object policy and the public rectangular adapter remain deferred.
-Documents only; no fixtures/Native/tests/implementation before Claude's approval.
+SPEC a68680255 approved. Eleven admitted input-only fixtures yield both-mode
+47 tests: 39 PASS/8 new geometry RED; 36 existing controls unchanged and green.
+The separate [RED evidence](architecture/outer-only-brim-red-evidence.md) must
+be committed/reported before production; workspace/full wait allocation.
 [SPEC and test-first gates](architecture/outer-only-brim-hole-mask-spec.md),
 [proposed ARD](architecture/ard-outer-only-brim-hole-mask-boundary.md).
 
