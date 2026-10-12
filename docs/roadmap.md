@@ -7,7 +7,7 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### OuterOnly contour and hole exclusion: SPEC request (2026-10-12)
+### OuterOnly contour and hole exclusion: bounded GREEN, review pending (2026-10-12)
 
 Next worker3 candidate: `Brim.cpp::outer_inner_brim_area:448-570,661-711`
 explicit OuterOnly contour-only Round area, default-Miter3 no-inner hole mask
@@ -16,10 +16,12 @@ Replace the bounded whole-ExPolygon project scaffold with private `brims/outer.r
 and existing BrimPlan dispatch, reusing shared clipping/contact/path emission.
 One object/instance/volume/group/tool; auto/EFC/support/painting, nested islands,
 cross-object policy and the public rectangular adapter remain deferred.
-SPEC a68680255 approved. Eleven admitted input-only fixtures yield both-mode
-47 tests: 39 PASS/8 new geometry RED; 36 existing controls unchanged and green.
-The separate [RED evidence](architecture/outer-only-brim-red-evidence.md) must
-be committed/reported before production; workspace/full wait allocation.
+SPEC a68680255 approved; admitted fixtures/tests [RED9c589662e](architecture/outer-only-brim-red-evidence.md)
+committed/reported before production (both modes39PASS/8 new geometry FAIL).
+Finite GREEN47/47 both modes; all138 existing/inactive raw Ares streams unchanged.
+[GREEN evidence](architecture/outer-only-brim-green-evidence.md) records clipping
+Native226 retained and prior52 detached paths removed. Directed/engineering/code
+review remain separate; workspace/full wait explicit allocation.
 [SPEC and test-first gates](architecture/outer-only-brim-hole-mask-spec.md),
 [proposed ARD](architecture/ard-outer-only-brim-hole-mask-boundary.md).
 

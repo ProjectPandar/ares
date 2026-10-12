@@ -5,6 +5,7 @@ pub(crate) mod combined;
 pub(crate) mod ears;
 mod efc_outline;
 pub(crate) mod inner;
+pub(crate) mod outer;
 
 const DEFAULT_BRIM_EARS_MAX_ANGLE_DEGREES: f64 = 125.0;
 const DEFAULT_BRIM_EARS_DETECTION_LENGTH_MM: f64 = 1.0;

@@ -156,3 +156,9 @@ repairing it under this SPEC.
 
 This is a source-cited proposal only; no Native outcome or implementation
 acceptance is claimed at submission.
+
+After approval and separate RED9c589662e report, the bounded port reaches
+finite GREEN47/47 in both modes. All138 existing/inactive raw Ares streams
+remain unchanged; see [GREEN evidence](outer-only-brim-green-evidence.md).
+Committed-head directed, code review, workspace/full and merge approval remain
+separate required gates.

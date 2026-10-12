@@ -4,7 +4,7 @@
 
 use crate::{
     ProcessBrimType, SliceError,
-    geometry::{CoordinateScale, JoinType, Point, difference_ex, offset_expolygons},
+    geometry::{CoordinateScale, Point},
     project_slice::perimeters::{
         classic::traversal::PreparedPostClassicTraversal, flow::build_nonbridging_flow,
     },
@@ -123,12 +123,9 @@ impl BrimPlan {
                 },
             )?
         } else {
-            let inner = offset_expolygons(&source, gap, JoinType::Round, resolution)
-                .map_err(brim_geometry_error)?;
-            let outer = offset_expolygons(&inner, brim_width, JoinType::Round, resolution)
-                .map_err(brim_geometry_error)?;
-            let brim_area = difference_ex(&outer, &inner).map_err(brim_geometry_error)?;
-            (brim_area, inner)
+            let area = crate::brims::outer::area(&source, gap, brim_width, spacing, resolution)?;
+            object_islands = area.object_islands;
+            (area.area, area.forbidden)
         };
         let brim_area = bed_area::clip(
             traversal,
@@ -139,7 +136,9 @@ impl BrimPlan {
         )?;
         let brim_area = if matches!(
             options.brim_type,
-            ProcessBrimType::InnerOnly | ProcessBrimType::OuterAndInner
+            ProcessBrimType::OuterOnly
+                | ProcessBrimType::InnerOnly
+                | ProcessBrimType::OuterAndInner
         ) {
             crate::brims::inner::retain_contact(brim_area, &object_islands, spacing, resolution)?
         } else {
