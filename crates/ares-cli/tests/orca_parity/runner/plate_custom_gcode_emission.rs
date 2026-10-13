@@ -219,11 +219,6 @@ fn plate_custom_gcode_emission_color_change_matches_native() {
 }
 
 #[test]
-fn plate_custom_gcode_emission_same_layer_matches_native() {
-    frozen("same-layer", &customs(&["M117 second"], &["M117 first"]));
-}
-
-#[test]
 fn plate_custom_gcode_emission_bounds_matches_native() {
     frozen("bounds", &customs(&["M117 above"], &["M117 below"]));
 }

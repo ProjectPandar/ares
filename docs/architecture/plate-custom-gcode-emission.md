@@ -61,6 +61,12 @@ below must confirm it byte for byte before GREEN relies on it.
   `:3581-3600`).
 - **Sequential printing:** upstream emits nothing there either
   (`GCode.cpp:2758-2760`, `:4825`). Covered by one guard case, no code.
+- **The `same-layer` case** (two Custom events inside one layer span, the
+  last wins, `ToolOrdering.cpp:1513`). Its emitted body matches Native, but
+  Native places `M73 P27`/`P28` differently around the lone `;CUSTOM_GCODE`
+  vertex (`GCodeProcessor.cpp:3314-3320` `store_move_vertex(Custom_GCode)`).
+  That is a `GCodeProcessor` gap, so the case is the RED of a separate
+  processor slice and merges with that slice's GREEN.
 - **Web:** after this slice, slice B's overview and the estimation footer
   show Native times without any web change. Single-load (slice B's
   deferral) stays deferred.
@@ -122,7 +128,6 @@ are placed at layer `print_z` values of the base project's own layers.
 | `custom` | same | Custom, multi-line `extra` | `:4242-4250` raw `extra` |
 | `template` | same, with `template_custom_gcode` set in `project_settings.config` | Template | `:4245-4246` placeholder render |
 | `color-change` | same | ColorChange, extruder 1 | the `#if 0` quirk: Custom_Code tag + empty `extra` |
-| `same-layer` | same | two events between one layer's midpoints | the last in list order wins (`:1513`) |
 | `bounds` | same | Custom below half of the first layer; Custom above the top layer | the first is never assigned (`:1498`, `print_z_below = 0`); the second lands on the top layer (`print_z_above = lowest()`, `:1478`, `:1486`) |
 | `mode-mismatch` | same | model mode `MultiExtruder` + ColorChange + PausePrint | color change ignored (`:1473`), pause kept |
 | `tool-change` | same | model mode `MultiAsSingle` + ToolChange + Custom on another layer | ToolChange skipped (`:1487`), so only the Custom is emitted |
@@ -161,7 +166,8 @@ before the RED counts.
 - **Processor:** the processed output's M73 stop times. `PAUSE_PRINT` /
   `CUSTOM_GCODE` already go through the ported processor
   (`processor/stop_times.rs`). A mismatch there is reported as a finding;
-  this slice does not change the processor.
+  this slice does not change the processor. The `same-layer` finding is
+  deferred above.
 
 ## Gates
 

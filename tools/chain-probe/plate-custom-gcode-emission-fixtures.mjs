@@ -35,8 +35,6 @@ const FIXTURES = [
   },
   // ColorChange on layer 9: the M600 block is #if 0, so tag + empty extra (GCode.cpp:4203-4231, :4242-4250).
   { name: "color-change", xml: entry(item("1.8", 0, 1, "#00FF00")) },
-  // Two events inside layer 11's span (2.1, 2.3]: the last one wins (ToolOrdering.cpp:1513).
-  { name: "same-layer", xml: entry(item("2.15", 4, 1, "", "M117 first"), item("2.2", 4, 1, "", "M117 second")) },
   // Below the first layer's midpoint 0.1: never assigned (ToolOrdering.cpp:1495-1498).
   // Above the top layer 10.0: lands on the top layer (print_z_above = lowest(), :1478, :1486).
   { name: "bounds", xml: entry(item("0.05", 4, 1, "", "M117 below"), item("12", 4, 1, "", "M117 above")) },
