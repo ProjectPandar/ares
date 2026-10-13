@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
+import { chromiumLaunch } from "./chromiumLaunch";
 import { test } from "./failureDiagnostics";
 import { markerTimeNative } from "./markerTimeNative";
 
@@ -16,6 +17,7 @@ test("missing Native cannot become frozen formatter parity", async () => {
     outputDir: join(directory, "results"),
     reporter: "line",
     timeout: 300_000,
+    use: { launchOptions: chromiumLaunch },
   })}`);
   const env: NodeJS.ProcessEnv = { ...process.env, ARES_REQUIRE_ORCA: "1", FORCE_COLOR: "0" };
   delete env.ARES_MARKER_TIME_BIN;
