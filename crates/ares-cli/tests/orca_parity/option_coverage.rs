@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "option_coverage/master_extruder_id.rs"]
+mod master_extruder_id;
+
 #[path = "option_coverage/multiline_union.rs"]
 pub(crate) mod multiline_union;
 
