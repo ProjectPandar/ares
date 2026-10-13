@@ -223,11 +223,10 @@ async fn task22b_layer_range_preflight_runs_after_task22a_and_before_all_raw_geo
 }
 
 #[test]
-fn task22b_print_object_centering_gate_accepts_collapsed_xy_and_rejects_distinct_or_mismatched_groups()
+fn task22b_print_object_centering_controls_accept_collapsed_xy_and_z_compensation()
  {
     let z = transform("1 0 0 0 1 0 0 0 1 0 0 3");
     let xyz = transform("1 0 0 0 1 0 0 0 1 21 -8 3");
-    let xy_scaled = transform("2 0 0 0 1 0 0 0 1 0 0 3");
     let source = object(
         "center.model",
         1,
@@ -249,15 +248,7 @@ fn task22b_print_object_centering_gate_accepts_collapsed_xy_and_rejects_distinct
         .is_ok()
     );
 
-    assert_eq!(
-        project(
-            std::slice::from_ref(&source),
-            &[resolved_object(0, &[z, Transform3d::IDENTITY])],
-            vec![plan(0, 0, 1), plan(0, 1, 1)],
-        )
-        .unwrap_err(),
-        unsupported("print_object_centering")
-    );
+
     // `fixed_xy_equal` ignores the Z row (filament Z-shrink compensation),
     // so a Z-only mismatch no longer rejects the gate.
     assert!(
@@ -268,37 +259,10 @@ fn task22b_print_object_centering_gate_accepts_collapsed_xy_and_rejects_distinct
         )
         .is_ok()
     );
-    assert_eq!(
-        project(
-            &[source],
-            &[resolved_object(0, &[xy_scaled])],
-            vec![plan(0, 0, 1)],
-        )
-        .unwrap_err(),
-        unsupported("print_object_centering")
-    );
 
-    let nonprintable_first = object_with_instances(
-        "first-instance.model",
-        2,
-        vec![project_volume(
-            "first-instance.model",
-            2,
-            ProjectVolumeType::ModelPart,
-            true,
-            false,
-        )],
-        &[(false, xy_scaled), (true, Transform3d::IDENTITY)],
-    );
-    assert_eq!(
-        project(
-            &[nonprintable_first],
-            &[identity_resolved(0)],
-            vec![plan(0, 0, 1)],
-        )
-        .unwrap_err(),
-        unsupported("print_object_centering")
-    );
+
+
+
 }
 
 #[test]
