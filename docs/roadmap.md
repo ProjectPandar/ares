@@ -7,6 +7,16 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Arachne alternate extra wall: SPEC review requested (2026-10-13)
+
+Worker3 ports `PerimeterGenerator.cpp::process_arachne:2131–2144,2163–2175`
+per-surface alternate count, integer sparse-density predicate and ordering before
+single-wall overrides into `project_slice/perimeters/arachne/{config,walls}.rs`.
+Replace only its alternate guard; existing generator/regeneration consumers remain.
+Fuzzy skin and overhang each await separate SPEC/RED/REVIEW. No implementation yet.
+[SPEC and public test-first gates](architecture/arachne-alternate-extra-wall-spec.md),
+[proposed ARD](architecture/ard-arachne-alternate-extra-wall.md).
+
 ### OuterOnly contour and hole exclusion: bounded GREEN, review pending (2026-10-12)
 
 Next worker3 candidate: `Brim.cpp::outer_inner_brim_area:448-570,661-711`
