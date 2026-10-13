@@ -349,3 +349,26 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
    `#[ignore]` 删除。
 3. 推分支触发 CI：记录首跑（冷）与第二跑（缓存）各 job 耗时。
 4. REVIEW-REQUEST 附 run 链接 + 前后耗时 + skipped 清零证据。
+
+## Review correction: Native extraction ownership
+
+- Canonical `/tmp/ares-parity-control-set-v2.sh` official mode selects
+  `/tmp/orca-wrapper-inherit-cpu.sh`, which delegates to the arachne worktree's
+  host-exec wrapper, using shared `/tmp/orca-official-242/squashfs-root`.
+  Seeded mode selects `scripts/orca-seeded-parity.sh`, not this AppImage wrapper.
+  These are not candidate-wrapper validation evidence.
+- The candidate wrapper now has only direct host execution (no Nix loader in
+  the resolved library set) or direct execution of a patched **job-local copy**.
+  A Nix loader requires both `ORCA_PATCHELF` and `ORCA_JOB_APPDIR`; missing inputs
+  fail explicitly. Invoking the Native via `ld.so` is forbidden because upstream
+  `program_location()` would resolve the wrong resource directory.
+- `ORCA_APPDIR` is read-only reference input. `ORCA_JOB_APPDIR` must be outside
+  that extraction, unique to the job, and is populated under a lock before
+  patching its binary. CI web/official jobs supply separate runner-temp paths.
+  Local directed validation invokes the candidate wrapper with the shared input
+  and a fresh external job destination; hashes and interpreters of input/copy
+  are retained in the validation artifact root.
+- `bash scripts/ci/check-orca-wrapper-isolation.sh` checks missing-patchelf
+  rejection, exact argument forwarding to the copied binary, rejection of a
+  shared destination, and byte-identical source preservation. It retains its
+  synthetic command artifacts under `/tmp/orca-wrapper-isolation-*`.

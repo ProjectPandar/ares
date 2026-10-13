@@ -43,10 +43,8 @@ fi
 
 native_library_path="$APPDIR/lib/orca-runtime:$APPDIR/bin:$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
-# The nixpkgs runtime libraries may need a newer glibc than the host provides
-# (Ubuntu CI image vs nixpkgs pin). Prefer the nix glibc's loader so the
-# versioned glibc symbols resolve; fall back to the host loader when none is
-# in the resolved set (e.g. wrapper tests with a synthetic library path).
+# Nix runtime libraries require their matching loader, but invoking ld.so
+# directly breaks upstream program_location() and resource lookup.
 ld=""
 IFS=: read -r -a libdirs <<< "$extra"
 for dir in "${libdirs[@]}"; do
@@ -56,27 +54,35 @@ for dir in "${libdirs[@]}"; do
     fi
 done
 
-# Exec'ing orca-slicer through the nix loader makes /proc/self/exe point at
-# ld.so, so upstream's program_location()/resources_dir() resolves into the
-# nix store and silently misses data files (resources/flush/flush_data_*.txt),
-# changing computed outputs (e.g. flush_volumes_matrix). When ORCA_PATCHELF is
-# provided, patch the AppImage interpreter once under a lock so the binary runs
-# directly and keeps a correct exe path; fall back to the ld.so launch only
-# when patchelf is unavailable.
-if [ -n "$ld" ] && [ -n "${ORCA_PATCHELF:-}" ] && [ ! -f "$APPDIR/.orca-interp-patched" ]; then
+if [ -n "$ld" ]; then
+    if [ -z "${ORCA_PATCHELF:-}" ]; then
+        echo "ORCA_PATCHELF is required when Nix runtime libraries need a Nix loader; ld.so execution is forbidden" >&2
+        exit 127
+    fi
+    if [ -z "${ORCA_JOB_APPDIR:-}" ]; then
+        echo "ORCA_JOB_APPDIR must name a per-job copy destination; the reference AppDir is read-only" >&2
+        exit 127
+    fi
+    source_dir="$(realpath "$APPDIR")"
+    job_dir="$(realpath -m "$ORCA_JOB_APPDIR")"
+    case "$job_dir/" in
+        "$source_dir/"*)
+            echo "ORCA_JOB_APPDIR must be outside the reference AppDir" >&2
+            exit 127
+            ;;
+    esac
+    mkdir -p "$(dirname "$job_dir")"
     (
         flock 9
-        if [ ! -f "$APPDIR/.orca-interp-patched" ]; then
-            "$ORCA_PATCHELF" --set-interpreter "$ld" "$APPDIR/bin/orca-slicer"
-            touch "$APPDIR/.orca-interp-patched"
+        if [ ! -f "$job_dir/.orca-interp-patched" ]; then
+            mkdir -p "$job_dir"
+            cp -a --reflink=auto "$source_dir/." "$job_dir/"
+            "$ORCA_PATCHELF" --set-interpreter "$ld" "$job_dir/bin/orca-slicer"
+            touch "$job_dir/.orca-interp-patched"
         fi
-    ) 9>"$APPDIR/.orca-interp.lock"
+    ) 9>"$job_dir.lock"
+    APPDIR="$job_dir"
+    native_library_path="$APPDIR/lib/orca-runtime:$APPDIR/bin:$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 fi
 
-if [ -f "$APPDIR/.orca-interp-patched" ]; then
-    LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$APPDIR/bin/orca-slicer" "$@"
-elif [ -n "$ld" ]; then
-    LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$ld" "$APPDIR/bin/orca-slicer" "$@"
-else
-    LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$APPDIR/bin/orca-slicer" "$@"
-fi
+LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$APPDIR/bin/orca-slicer" "$@"
