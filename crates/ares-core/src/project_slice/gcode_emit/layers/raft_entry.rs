@@ -63,7 +63,7 @@ pub(super) fn emit(
     motion::emit_layer(
         output,
         layer,
-        (motion_geometry, first_layer, |_| {
+        (motion_geometry, first_layer, |_, _| {
             let region = &traversal.resolved.views.full.process.region;
             (
                 region.sparse_infill_density.0,

@@ -1,7 +1,8 @@
 //! GCode.cpp regional layer phases and infill chaining.
 
 use super::{
-    EmitState, LayerGeometry, emit_fill_entity, emit_variable_width_entity, local_cursor, perimeter,
+    EmitState, LayerGeometry, MotionOptions, emit_fill_entity, emit_variable_width_entity,
+    local_cursor, perimeter,
 };
 use crate::{
     SliceError,
@@ -15,6 +16,7 @@ use crate::{
 #[derive(Default)]
 struct RegionEntities {
     perimeters: Vec<IslandPrintEntity>,
+    had_perimeters: bool,
     infills: Vec<IslandPrintEntity>,
     ironing: Vec<IslandPrintEntity>,
 }
@@ -28,7 +30,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_layer<F, D>(
 ) -> Result<bool, SliceError>
 where
     F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
-    D: Fn(usize) -> (f64, bool, super::super::small_area::Gate),
+    D: Fn(usize, &mut MotionOptions) -> (f64, bool, super::super::small_area::Gate),
 {
     let mut interlude_emitted = false;
     for island in &mut layer.islands {
@@ -44,7 +46,9 @@ where
                 let region = perimeter_ids
                     .next()
                     .expect("perimeter retains its source region");
-                regions.entry(region).or_default().perimeters.push(entity);
+                let region = regions.entry(region).or_default();
+                region.perimeters.push(entity);
+                region.had_perimeters = true;
                 continue;
             }
             let region = region_ids.next().expect("infill retains its source region");
@@ -58,7 +62,10 @@ where
         // GCode.cpp:5450-5468,6131-6145: wall-first regions, all infills,
         // infill-first region walls, then ironing. First layer is wall-first.
         for (&id, region) in &mut regions {
-            let (density, infill_first, gate) = options_for_region(id);
+            if !region.had_perimeters {
+                continue;
+            }
+            let (density, infill_first, gate) = options_for_region(id, &mut state.options);
             state.small_area_gate = gate;
             if first_layer || !infill_first {
                 emit_perimeters(output, &mut region.perimeters, geometry, state, density);
@@ -68,34 +75,30 @@ where
             interlude_emitted = before_first_infill(output, state)?;
         }
         for (&id, region) in &mut regions {
-            state.small_area_gate = options_for_region(id).2;
-            emit_infills(
-                output,
-                &mut region.infills,
-                geometry,
-                state,
-                options_for_region(id).0,
-            );
+            if region.infills.is_empty() {
+                continue;
+            }
+            let (density, _, gate) = options_for_region(id, &mut state.options);
+            state.small_area_gate = gate;
+            emit_infills(output, &mut region.infills, geometry, state, density);
         }
         for (&id, region) in &mut regions {
-            state.small_area_gate = options_for_region(id).2;
-            emit_perimeters(
-                output,
-                &mut region.perimeters,
-                geometry,
-                state,
-                options_for_region(id).0,
-            );
+            // GCode.cpp:6135-6140 applies even when this phase skips the
+            // original perimeter collection; our first phase drains it.
+            if !region.had_perimeters {
+                continue;
+            }
+            let (density, _, gate) = options_for_region(id, &mut state.options);
+            state.small_area_gate = gate;
+            emit_perimeters(output, &mut region.perimeters, geometry, state, density);
         }
         for (&id, region) in &mut regions {
-            state.small_area_gate = options_for_region(id).2;
-            emit_infills(
-                output,
-                &mut region.ironing,
-                geometry,
-                state,
-                options_for_region(id).0,
-            );
+            if region.ironing.is_empty() {
+                continue;
+            }
+            let (density, _, gate) = options_for_region(id, &mut state.options);
+            state.small_area_gate = gate;
+            emit_infills(output, &mut region.ironing, geometry, state, density);
         }
     }
     Ok(interlude_emitted)

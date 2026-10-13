@@ -17,4 +17,11 @@ impl MotionOptions {
     ) -> Self {
         fields::assemble(traversal, context::prelude(traversal, filament))
     }
+
+    pub(in crate::project_slice::gcode_emit) fn apply_region_outer_wall_speed(
+        &mut self,
+        current: &crate::RegionOptions,
+    ) {
+        region::apply_outer_wall_speed(self, current);
+    }
 }
