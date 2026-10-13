@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use super::super::{graph::ModelGraph, mesh_prepare, volume_metadata};
-use super::{ExpandedModelBudget, ObjectIdentity, Pending, enqueue_occurrence};
+use super::{ExpandedModelBudget, ObjectIdentity, enqueue_occurrence};
 use crate::{
     SliceError,
     project::{ProjectVolume, model_settings::PartSettings, transform::Transform3d},
@@ -14,17 +14,24 @@ pub(super) fn collect_volumes(
     object_name: &str,
     budget: &mut ExpandedModelBudget,
 ) -> Result<Vec<ProjectVolume>, SliceError> {
-    let mut pending = VecDeque::<Pending>::new();
+    let mut pending = VecDeque::new();
     enqueue_occurrence(
         &mut pending,
         budget,
-        (root.0.clone(), root.1, Transform3d::IDENTITY),
+        (
+            graph.import_namespace(&root.0).to_owned(),
+            root.1,
+            Transform3d::IDENTITY,
+        ),
     )?;
     let mut output = Vec::new();
     let mut unnamed_count = 0_usize;
 
     while let Some((path, object_id, accumulated)) = pending.pop_front() {
-        let (model, object) = graph.object(&path, object_id)?;
+        let Some((model, object)) = graph.imported_object(&path, object_id) else {
+            // bbs_3mf.cpp:4867-4891: absent literal importer IDs do not expand.
+            continue;
+        };
         if let Some(mesh) = &object.mesh {
             if mesh.vertices.vertices.is_empty() || mesh.triangles.triangles.is_empty() {
                 continue;
@@ -34,7 +41,7 @@ pub(super) fn collect_volumes(
             selected.name = volume_name(selected.name, object_name, &mut unnamed_count);
             let prepared = mesh_prepare::prepare(mesh, model.document.unit, accumulated);
             let mut volume = ProjectVolume::new(
-                path.as_str().to_owned(),
+                model.path.as_str().to_owned(),
                 object.id,
                 prepared.mesh,
                 prepared.transform,
@@ -53,7 +60,14 @@ pub(super) fn collect_volumes(
             output.push(volume);
         } else if let Some(components) = &object.components {
             for component in &components.components {
-                let child_path = graph.component_target(model, component.path.as_deref())?;
+                // Main components use their literal p:path; ObjectImporter
+                // components use their own namespace (:3851-3872/5564-5584).
+                let child_path = component
+                    .path
+                    .as_deref()
+                    .filter(|_| path.is_empty())
+                    .unwrap_or(&path)
+                    .to_owned();
                 enqueue_occurrence(
                     &mut pending,
                     budget,

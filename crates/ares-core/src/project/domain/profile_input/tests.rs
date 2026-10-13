@@ -114,6 +114,7 @@ fn overlay(
             validate_print: false,
         },
         &crate::ConfigOverrides::default(),
+        None,
     )
     .map(|(project, _)| project)
 }

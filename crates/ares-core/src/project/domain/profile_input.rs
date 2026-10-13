@@ -46,6 +46,7 @@ impl Project {
         input: &[u8],
         profile: SelectedProfile<'_>,
         overrides: &crate::ConfigOverrides,
+        plate: Option<u32>,
     ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
         let SelectedProfile {
             settings,
@@ -119,6 +120,8 @@ impl Project {
             SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
         })?
         .resolve();
+        // OrcaSlicer.cpp:1640 chooses importer membership before placement.
+        project.prepare_import_scope(plate);
         // `shrink_to_new_bed` (`OrcaSlicer.cpp:3766-3796`): a BBL-family 3mf
         // re-centers onto the loaded machine's bed — the embedded bed being
         // smaller sets `shrink = 1`, and every instance plus the wipe tower

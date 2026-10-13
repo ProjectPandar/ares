@@ -12,7 +12,6 @@ use crate::project::{
     PackagePath,
     domain::{ProjectInstance, ProjectModel, ProjectObject, ProjectVolume},
     model_settings::{ModelSettings, ObjectSettings},
-    transform::Transform3d,
 };
 
 mod component_graph;
@@ -25,7 +24,8 @@ mod tests;
 
 const EXPANDED_MODEL_LIMIT: usize = 1_000_000;
 type ObjectIdentity = (PackagePath, u32);
-type Pending = (PackagePath, u32, Transform3d);
+#[cfg(test)]
+type Pending = (PackagePath, u32, crate::project::transform::Transform3d);
 
 #[derive(Default)]
 struct ExpandedModelBudget {
@@ -58,10 +58,10 @@ fn expanded_model_limit_error() -> SliceError {
     )
 }
 
-fn enqueue_occurrence(
-    pending: &mut VecDeque<Pending>,
+fn enqueue_occurrence<T>(
+    pending: &mut VecDeque<T>,
     budget: &mut ExpandedModelBudget,
-    occurrence: Pending,
+    occurrence: T,
 ) -> Result<(), SliceError> {
     budget.claim(1)?;
     pending.push_back(occurrence);

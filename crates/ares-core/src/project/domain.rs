@@ -6,7 +6,9 @@ mod shared_mesh;
 pub use mesh::ProjectMesh;
 use shared_mesh::MeshPreparation;
 pub(crate) use shared_mesh::materialize_meshes;
+mod import_scope;
 mod plate_selection;
+use import_scope::ImportScope;
 mod profile_input;
 mod volume_offsets;
 
@@ -42,6 +44,8 @@ pub struct Project {
     plates: Vec<PlateMetadata>,
     settings: ProjectSettings,
     documents: ProjectDocuments,
+    import_scope: ImportScope,
+    plate_view: bool,
     /// The selected plate's grid origin in the project-global coordinate
     /// space (`PartPlate.cpp:3914-3962`; zero until a plate is selected).
     /// Instances stay in global coordinates upstream
@@ -70,6 +74,8 @@ impl Project {
             plates,
             settings,
             documents,
+            import_scope: ImportScope::All,
+            plate_view: false,
             plate_origin: (0.0, 0.0),
             plates_custom_gcodes: Default::default(),
             curr_plate_index: 0,

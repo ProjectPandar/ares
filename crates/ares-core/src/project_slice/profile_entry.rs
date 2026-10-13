@@ -51,9 +51,12 @@ fn load_with_profile_preparation(
         validate_print: project.validate_print,
     };
     match crate::InputFormat::detect(project.bytes) {
-        crate::InputFormat::ThreeMf => {
-            Project::from_3mf_with_profiles(project.bytes, selected, project.overrides)
-        }
+        crate::InputFormat::ThreeMf => Project::from_3mf_with_profiles(
+            project.bytes,
+            selected,
+            project.overrides,
+            project.plate,
+        ),
         _ => Project::from_stl_with_profiles(
             project.bytes,
             profile.filename,
