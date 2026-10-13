@@ -1,5 +1,6 @@
-//! Classic `PerimeterGenerator.cpp:1728–1924`, chbBridges only.
+//! Classic `PerimeterGenerator.cpp:1728–1929`, Bridges and Filled.
 mod detector;
+mod filled;
 use super::super::types::{PerimeterDispatch, PerimeterInputRecord, PostPerimeterInputPrintObject};
 use crate::geometry::{
     ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, append_simplified_expolygon,
@@ -12,6 +13,7 @@ use crate::{ProcessCounterboreHoleBridging, RegionOptions, SliceError};
 struct BridgeGeometry {
     spacing: i64,
     width: i64,
+    margin: f64,
     anchor: f64,
 }
 
@@ -31,7 +33,7 @@ pub(super) fn process(
 ) -> Result<Vec<ExPolygon>, SliceError> {
     let config = object.region_options(record);
     if record.dispatch != PerimeterDispatch::Classic
-        || config.counterbore_hole_bridging != ProcessCounterboreHoleBridging::PartiallyBridged
+        || config.counterbore_hole_bridging == ProcessCounterboreHoleBridging::None
     {
         return Ok(Vec::new());
     }
@@ -50,6 +52,7 @@ pub(super) fn process(
         geometry: BridgeGeometry {
             spacing,
             width: external_width,
+            margin: 1.0 / scale.factor(),
             anchor: (1.0 / scale.factor())
                 .min(spacing as f64)
                 .min(external_width as f64),
@@ -72,7 +75,13 @@ fn process_surfaces(
     let mut index = 0;
     while index < surfaces.len() {
         let original = surfaces[index].clone();
-        let last = process_surface(original.as_parts().1, context, &mut fill)?;
+        let last = process_surface(
+            original.as_parts().1,
+            context,
+            &mut fill,
+            surfaces,
+            &mut index,
+        )?;
         let mut parts = last.into_iter();
         let Some(first) = parts.next() else {
             surfaces.remove(index);
@@ -89,6 +98,8 @@ fn process_surface(
     original: &ExPolygon,
     context: &SurfaceContext<'_>,
     fill: &mut Vec<ExPolygon>,
+    surfaces: &mut Vec<RegionSurface>,
+    index: &mut usize,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     let mut last = vec![original.clone()];
     let unsupported = difference_ex_with_safety_offset(&last, context.lower)?;
@@ -116,8 +127,18 @@ fn process_surface(
     if bridgeable.is_empty() || original.holes().is_empty() {
         return Ok(last);
     }
-    last = difference_ex_with_safety_offset(&last, &filtered)?;
-    let mask = partial_mask(&last, &filtered, &bridgeable, &context.geometry)?;
+    let mask = match context.config.counterbore_hole_bridging {
+        ProcessCounterboreHoleBridging::SacrificialLayer => {
+            filled::mask((surfaces, index), &last, &filtered, &bridgeable, context)?
+        }
+        ProcessCounterboreHoleBridging::PartiallyBridged => {
+            last = difference_ex_with_safety_offset(&last, &filtered)?;
+            partial_mask(&last, &filtered, &bridgeable, &context.geometry)?
+        }
+        ProcessCounterboreHoleBridging::None => {
+            unreachable!("None is gated before surface processing")
+        }
+    };
     if mask.is_empty() {
         return Ok(last);
     }
@@ -160,6 +181,7 @@ fn partial_mask(
         spacing,
         width,
         anchor,
+        ..
     } = *geometry;
     let mut filtered = Vec::new();
     for polygon in bridgeable {

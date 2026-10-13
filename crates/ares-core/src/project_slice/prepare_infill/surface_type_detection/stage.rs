@@ -141,13 +141,25 @@ fn stage_record(
     context: StageRecordContext,
 ) -> Result<StagedRecord, SliceError> {
     let source = object.current_surfaces(input);
-    let mut slices = classify_slices(
-        source,
-        object.upper_slices(input),
-        object.lower_slices(input),
-        context.external_width,
-        context.bottom_kind,
-    )?;
+    let mut slices = if object.region_options(input).counterbore_hole_bridging
+        == crate::ProcessCounterboreHoleBridging::SacrificialLayer
+    {
+        classify_with_fill(
+            (source, Some(&output.fill_surfaces)),
+            object.upper_slices(input),
+            object.lower_slices(input),
+            context.external_width,
+            context.bottom_kind,
+        )?
+    } else {
+        classify_slices(
+            source,
+            object.upper_slices(input),
+            object.lower_slices(input),
+            context.external_width,
+            context.bottom_kind,
+        )?
+    };
     apply_spiral_surface_types(
         &mut slices,
         context.spiral_mode,
@@ -194,14 +206,31 @@ pub(super) fn classify_slices(
     external_width: i64,
     bottom_kind: RegionSurfaceKind,
 ) -> Result<Vec<RegionSurface>, SliceError> {
+    classify_with_fill((source, None), upper, lower, external_width, bottom_kind)
+}
+
+fn classify_with_fill(
+    domain: (&[RegionSurface], Option<&[RegionSurface]>),
+    upper: Option<&[ExPolygon]>,
+    lower: Option<&[ExPolygon]>,
+    external_width: i64,
+    bottom_kind: RegionSurfaceKind,
+) -> Result<Vec<RegionSurface>, SliceError> {
+    let (source, generated) = domain;
     let previous = expolygons(source);
+    // PrintObject.cpp:1579–1583 expands comparisons, not the original internal domain (:1698).
+    let filled_comparison = generated
+        .map(|fill| crate::geometry::union_expolygons(&previous, &expolygons(fill)))
+        .transpose()
+        .map_err(geometry_error)?;
+    let comparison = filled_comparison.as_deref().unwrap_or(&previous);
     let offset = opening_offset(external_width);
 
     let mut top = if let Some(upper) = upper {
         fresh(
             RegionSurfaceKind::Top,
             opening(
-                &safety_difference(&previous, upper, GeometryStep::TopSafetyDifference)?,
+                &safety_difference(comparison, upper, GeometryStep::TopSafetyDifference)?,
                 offset,
                 GeometryStep::TopShrink,
                 GeometryStep::TopExpand,
@@ -217,7 +246,7 @@ pub(super) fn classify_slices(
         fresh(
             bottom_kind,
             opening(
-                &safety_difference(&previous, lower, GeometryStep::BottomSafetyDifference)?,
+                &safety_difference(comparison, lower, GeometryStep::BottomSafetyDifference)?,
                 offset,
                 GeometryStep::BottomShrink,
                 GeometryStep::BottomExpand,
