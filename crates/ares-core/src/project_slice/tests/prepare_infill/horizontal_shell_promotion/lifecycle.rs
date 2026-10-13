@@ -101,6 +101,11 @@ async fn task22o25_every_earlier_capability_error_precedes_promotion() {
     )] {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
+        archive.replace_unique(
+            "Metadata/project_settings.config",
+            "\"wall_generator\": \"classic\"",
+            "\"wall_generator\": \"arachne\"",
+        );
         horizontal_shell_promotion::reset_hooks();
         horizontal_shell_propagation::reset_hooks();
         assert_eq!(

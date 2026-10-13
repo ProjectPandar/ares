@@ -38,6 +38,11 @@ async fn task22o22_earlier_capability_errors_have_precedence() {
     )] {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
+        archive.replace_unique(
+            "Metadata/project_settings.config",
+            "\"wall_generator\": \"classic\"",
+            "\"wall_generator\": \"arachne\"",
+        );
         vertical_shell_regularization::reset_invocations();
         assert_eq!(
             slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))

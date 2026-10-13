@@ -12,6 +12,11 @@ async fn task22o16_counterbore_preflight_precedes_layer_region_lifecycle() {
         "\"counterbore_hole_bridging\": \"none\"",
         "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
     );
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"wall_generator\": \"classic\"",
+        "\"wall_generator\": \"arachne\"",
+    );
     layer_region::reset_finish_invocations();
     assert_eq!(
         slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))

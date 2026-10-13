@@ -12,6 +12,11 @@ async fn task22o18_earlier_errors_leave_invocations_zero() {
     )] {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
+        archive.replace_unique(
+            "Metadata/project_settings.config",
+            "\"wall_generator\": \"classic\"",
+            "\"wall_generator\": \"arachne\"",
+        );
         fill_surfaces::reset_invocations();
         assert_eq!(
             slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))

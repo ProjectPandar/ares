@@ -13,6 +13,11 @@ async fn task22o17_counterbore_fails_before_detection() {
         "\"counterbore_hole_bridging\": \"none\"",
         "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
     );
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"wall_generator\": \"classic\"",
+        "\"wall_generator\": \"arachne\"",
+    );
     reset_invocations();
     assert_eq!(
         slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
