@@ -5,7 +5,7 @@ use super::{
     raw_support::{intersections, preflight_order_scenarios},
     support::{
         KsrArchive, identity_resolved, metadata, object, plan, project_volume, project_volume_at_x,
-        slot_limit, unsupported,
+        slot_limit,
     },
 };
 
