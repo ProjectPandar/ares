@@ -8,6 +8,9 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/per_object_skirt_groups.rs"]
+mod per_object_skirt_groups;
+
 #[path = "orca_parity/adaptive_pressure_advance.rs"]
 mod adaptive_pressure_advance;
 #[path = "orca_parity/arachne_alternate_extra_wall.rs"]
