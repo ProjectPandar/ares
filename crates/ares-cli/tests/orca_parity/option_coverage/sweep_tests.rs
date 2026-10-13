@@ -206,3 +206,81 @@ fn orca_parity_print_extruder_id_accounts_six_materialized_identity_cases() {
         }
     }
 }
+
+// PrintConfig.cpp:5068-5079; OrcaSlicer.cpp:1682-1690.
+#[cfg(target_os = "linux")]
+#[test]
+fn orca_parity_post_process_accounts_bounded_cli_admission_cases() {
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("post-process matrix requires the live Native oracle");
+    let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
+    let selection =
+        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
+    let machine = profiles.machine(&selection.printer).unwrap();
+    let mut process = profiles.process(&selection.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    let mut filaments = selection
+        .filaments
+        .iter()
+        .map(|name| profiles.filament(name).unwrap())
+        .collect::<Vec<_>>();
+    parity::normalize_filament_defaults(&mut filaments);
+    let plan = domains::load(&runner::repo_root())
+        .into_iter()
+        .find(|plan| plan.key == "post_process")
+        .unwrap();
+    let outcome = execute_plan(&runner, &plan, &machine, &process, &filaments);
+    write_summary(std::slice::from_ref(&outcome));
+    assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+    assert_eq!(outcome.cases, 3);
+    assert_eq!(outcome.compared, 3);
+    assert_eq!(outcome.rejected, 0);
+    assert!(plan.cases.iter().all(|case| case.value.is_some()));
+    let expected = ["empty-vector", "empty-string-vector", "owned-script"];
+    assert_eq!(
+        plan.cases
+            .iter()
+            .map(|case| case.label.as_str())
+            .collect::<Vec<_>>(),
+        expected
+    );
+    let root = parity::artifacts::root_from_env().unwrap();
+    let counts: Value = serde_json::from_slice(
+        &std::fs::read(root.join("post-process-comparison-counts.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(counts["strict_gcode"], 1);
+    assert_eq!(counts["expected_cli_rejection"], 2);
+    for label in expected {
+        let receipt: Value = serde_json::from_slice(
+            &std::fs::read(root.join(format!("post-process-{label}-comparison.json"))).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(receipt["key"], "post_process");
+        assert_eq!(receipt["label"], label);
+        assert_eq!(receipt["comparison"], "PASS");
+        let directory = PathBuf::from(receipt["directory"].as_str().unwrap());
+        assert!(directory.join("input.3mf").is_file());
+        assert!(!directory.join("must-not-run.sh.marker").exists());
+        if label == "empty-vector" {
+            assert_eq!(receipt["kind"], "strict whole G-code");
+            assert_eq!(receipt["requested"], serde_json::json!([]));
+            assert!(directory.join("native.gcode").is_file());
+            assert!(directory.join("ares.gcode").is_file());
+        } else {
+            assert_eq!(receipt["kind"], "expected CLI rejection");
+            assert!(!directory.join("ares.gcode").exists());
+            assert!(directory.join("native.result.json").is_file());
+            assert!(directory.join("result.json").is_file());
+            if label == "empty-string-vector" {
+                assert_eq!(receipt["requested"], serde_json::json!([""]));
+            } else {
+                let script = PathBuf::from(receipt["requested"][0].as_str().unwrap());
+                assert!(script.is_absolute());
+                assert_eq!(script, directory.join("must-not-run.sh"));
+                assert!(script.is_file());
+            }
+        }
+    }
+}
