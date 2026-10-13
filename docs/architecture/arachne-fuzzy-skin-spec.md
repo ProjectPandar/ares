@@ -1,6 +1,6 @@
 # Arachne fuzzy skin: proposed junction rewrite slice
 
-Status: SPEC308583e3a approved with the F1/F2 split below; no implementation.
+Status: SPEC308583e3a and group-dependency ruling791a9fbe9 approved; RED first.
 Worker3; coordinator Claude is the sole reviewer.
 Draft base: origin/main `c22f5a81da41fce715b528268711393649daad66`.
 Separate worktree/branch from the code-approved alternate candidate6a7d842bc.
@@ -30,7 +30,11 @@ Latest coordinator execution ruling permits F1 GREEN development while alternate
 the exclusive full window belongs to worker6. This supersedes the earlier
 development HOLD, not the merge order. The reachable multi-group dependency is
 documented in [F1/F2 boundary addendum](arachne-fuzzy-f1-group-boundary-addendum.md)
-for the explicitly required coordinator ruling before production integration.
+for the accepted coordinator ruling before production integration. Its order is:
+commit/report F2 public Native RED, commit F1 noise/junction production, commit
+F2 masks/LineSplit production, then review/canonical full once on the complete
+stack. F1 and F2 merge together; no partial F1 merge. The earlier independent
+F1 GREEN/review sequencing is superseded by this dependency ruling.
 
 ## Upstream ownership and source identity
 

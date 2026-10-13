@@ -14,6 +14,8 @@ mod adaptive_pressure_advance;
 mod arachne_alternate_extra_wall;
 #[path = "orca_parity/arachne_fuzzy_f1.rs"]
 mod arachne_fuzzy_f1;
+#[path = "orca_parity/arachne_fuzzy_f2.rs"]
+mod arachne_fuzzy_f2;
 #[path = "orca_parity/artifacts.rs"]
 mod artifacts;
 #[path = "orca_parity/bridge_over_infill_filament.rs"]
