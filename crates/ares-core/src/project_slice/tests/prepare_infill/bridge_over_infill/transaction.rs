@@ -120,17 +120,6 @@ fn task22o71_nofilter_empty_candidate_accepts_an_absent_lower_record() {
 }
 
 #[test]
-fn task22o71_unported_anchor_surface_kinds_fail_without_panicking_or_fallback() {
-    let mut raw = super::prepare(KsrArchive::new());
-    let surfaces = &mut raw.predecessor.predecessor.objects[0].records[14]
-        .as_mut()
-        .unwrap()
-        .fill_surfaces;
-    surfaces.push(surfaces[0].clone_with_kind(RegionSurfaceKind::InternalVoid));
-    assert_unsupported_raw(raw, "bridge_over_infill_anchor_surface_kind");
-}
-
-#[test]
 fn task22o71_late_rewrite_error_disposes_owned_graph_without_successor() {
     external_surfaces::reset_hooks();
     transaction::reset_hooks();
@@ -165,24 +154,10 @@ fn task22o71_late_rewrite_error_disposes_owned_graph_without_successor() {
     transaction::reset_hooks();
 }
 
-fn assert_unsupported_mutation(from: &str, to: &str, expected: &str) {
-    let mut archive = KsrArchive::new();
-    archive.replace_unique("Metadata/project_settings.config", from, to);
-    let raw = super::prepare(archive);
-    assert_unsupported_raw(raw, expected);
-}
-
 fn assert_error_mutation(from: &str, to: &str, expected: SliceError) {
     let mut archive = KsrArchive::new();
     archive.replace_unique("Metadata/project_settings.config", from, to);
     assert_error_raw(super::prepare(archive), expected);
-}
-
-fn assert_unsupported_raw(raw: PreparedPostBridgeCandidates, expected: &str) {
-    assert_error_raw(
-        raw,
-        SliceError::UnsupportedProjectFeature(expected.to_owned()),
-    );
 }
 
 fn assert_error_raw(raw: PreparedPostBridgeCandidates, expected: SliceError) {

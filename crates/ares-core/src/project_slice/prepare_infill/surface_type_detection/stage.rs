@@ -35,6 +35,7 @@ struct StageRecordContext {
     bottom_shell_layers: usize,
     layer_count: usize,
     spiral_mode: bool,
+    interface_shells: bool,
 }
 
 pub(super) fn project(
@@ -107,6 +108,7 @@ fn stage_object(
                         bottom_shell_layers,
                         layer_count,
                         spiral_mode,
+                        interface_shells: options.interface_shells.0,
                     },
                 )
                 .map(Some)
@@ -141,25 +143,38 @@ fn stage_record(
     context: StageRecordContext,
 ) -> Result<StagedRecord, SliceError> {
     let source = object.current_surfaces(input);
-    let mut slices = if object.region_options(input).counterbore_hole_bridging
-        == crate::ProcessCounterboreHoleBridging::SacrificialLayer
-    {
-        classify_with_fill(
-            (source, Some(&output.fill_surfaces)),
-            object.upper_slices(input),
-            object.lower_slices(input),
-            context.external_width,
-            context.bottom_kind,
-        )?
-    } else {
-        classify_slices(
-            source,
-            object.upper_slices(input),
-            object.lower_slices(input),
-            context.external_width,
-            context.bottom_kind,
-        )?
-    };
+    let same_region_upper = context
+        .interface_shells
+        .then(|| object.upper_same_region_surfaces(input))
+        .flatten()
+        .map(expolygons);
+    let upper = same_region_upper
+        .as_deref()
+        .or_else(|| object.upper_slices(input));
+    let interface_bottom = context
+        .interface_shells
+        .then(|| object.lower_same_region_surfaces(input))
+        .flatten()
+        .map(expolygons);
+    let lower = object.lower_slices(input).map(|slices| LowerLayer {
+        slices,
+        own_region: interface_bottom.as_deref(),
+    });
+    let domain: (&[RegionSurface], Option<&[RegionSurface]>) =
+        if object.region_options(input).counterbore_hole_bridging
+            == crate::ProcessCounterboreHoleBridging::SacrificialLayer
+        {
+            (source, Some(output.fill_surfaces.as_slice()))
+        } else {
+            (source, None)
+        };
+    let mut slices = classify_with_fill(
+        domain,
+        upper,
+        lower,
+        context.external_width,
+        context.bottom_kind,
+    )?;
     apply_spiral_surface_types(
         &mut slices,
         context.spiral_mode,
@@ -199,20 +214,18 @@ pub(super) fn apply_spiral_surface_types(
     }
 }
 
-pub(super) fn classify_slices(
-    source: &[RegionSurface],
-    upper: Option<&[ExPolygon]>,
-    lower: Option<&[ExPolygon]>,
-    external_width: i64,
-    bottom_kind: RegionSurfaceKind,
-) -> Result<Vec<RegionSurface>, SliceError> {
-    classify_with_fill((source, None), upper, lower, external_width, bottom_kind)
+/// The lower neighbor layer: its whole slices plus, when `interface_shells` is
+/// set, this region's own slices on that layer.
+#[derive(Clone, Copy)]
+pub(super) struct LowerLayer<'a> {
+    pub(super) slices: &'a [ExPolygon],
+    pub(super) own_region: Option<&'a [ExPolygon]>,
 }
 
-fn classify_with_fill(
+pub(super) fn classify_with_fill(
     domain: (&[RegionSurface], Option<&[RegionSurface]>),
     upper: Option<&[ExPolygon]>,
-    lower: Option<&[ExPolygon]>,
+    lower: Option<LowerLayer<'_>>,
     external_width: i64,
     bottom_kind: RegionSurfaceKind,
 ) -> Result<Vec<RegionSurface>, SliceError> {
@@ -243,15 +256,21 @@ fn classify_with_fill(
             .collect()
     };
     let mut bottom = if let Some(lower) = lower {
-        fresh(
+        let mut surfaces = fresh(
             bottom_kind,
             opening(
-                &safety_difference(comparison, lower, GeometryStep::BottomSafetyDifference)?,
+                &safety_difference(
+                    comparison,
+                    lower.slices,
+                    GeometryStep::BottomSafetyDifference,
+                )?,
                 offset,
                 GeometryStep::BottomShrink,
                 GeometryStep::BottomExpand,
             )?,
-        )
+        );
+        surfaces.extend(interface_bottom_surfaces(comparison, &lower, offset)?);
+        surfaces
     } else {
         source
             .iter()
@@ -266,6 +285,33 @@ fn classify_with_fill(
     slices.extend(top);
     slices.extend(bottom);
     Ok(slices)
+}
+
+/// Ported from PrintObject.cpp (interface_shells `#else` path): the portion of
+/// this layer supported by a different region below becomes a solid bottom.
+fn interface_bottom_surfaces(
+    comparison: &[ExPolygon],
+    lower: &LowerLayer<'_>,
+    offset: f32,
+) -> Result<Vec<RegionSurface>, SliceError> {
+    let Some(own_lower) = lower.own_region else {
+        return Ok(Vec::new());
+    };
+    let supported = intersection_ex(comparison, lower.slices).map_err(geometry_error)?;
+    let other_region = safety_difference(
+        &supported,
+        own_lower,
+        GeometryStep::InterfaceBottomDifference,
+    )?;
+    Ok(fresh(
+        RegionSurfaceKind::Bottom,
+        opening(
+            &other_region,
+            offset,
+            GeometryStep::BottomShrink,
+            GeometryStep::BottomExpand,
+        )?,
+    ))
 }
 
 pub(super) fn clipped_fill(

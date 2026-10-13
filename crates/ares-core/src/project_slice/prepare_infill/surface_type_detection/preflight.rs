@@ -1,22 +1,6 @@
-use crate::{
-    ObjectOptions, ProcessSupportType, SliceError,
-    project::effective_config::types::ResolvedProjectObject,
-};
+use crate::{ObjectOptions, ProcessSupportType};
 
 use crate::project_slice::region_slices::RegionSurfaceKind;
-
-pub(super) fn validate(objects: &[ResolvedProjectObject]) -> Result<(), SliceError> {
-    if objects.iter().any(|object| {
-        object.object.interface_shells.0
-            && object
-                .layer_candidates
-                .iter()
-                .any(|layer| layer.model_parts.len() > 1)
-    }) {
-        return unsupported("interface_shells");
-    }
-    Ok(())
-}
 
 pub(super) fn bottom_kind(options: &ObjectOptions) -> RegionSurfaceKind {
     let has_support = options.enable_support.0 || options.enforce_support_layers.0 > 0;
@@ -36,8 +20,4 @@ pub(super) fn bottom_kind(options: &ObjectOptions) -> RegionSurfaceKind {
     } else {
         RegionSurfaceKind::BottomBridge
     }
-}
-
-fn unsupported<T>(key: &str) -> Result<T, SliceError> {
-    Err(SliceError::UnsupportedProjectFeature(key.to_owned()))
 }

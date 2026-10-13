@@ -3,6 +3,9 @@
 #[path = "option_coverage/multiline_union.rs"]
 mod multiline_union;
 
+#[path = "option_coverage/interface_shells_alignment.rs"]
+mod interface_shells_alignment;
+
 #[path = "option_coverage/print_extruder_identity.rs"]
 mod print_extruder_identity;
 

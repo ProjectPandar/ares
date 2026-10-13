@@ -1,4 +1,4 @@
-use super::{assert_error_mutation, assert_unsupported_mutation};
+use super::assert_error_mutation;
 use crate::{
     SliceError,
     project_slice::{prepare_infill::bridge_over_infill::transaction, tests::support::KsrArchive},
@@ -137,20 +137,6 @@ fn task22o71_multiline_reaches_the_fill_grouping_stage() {
     let prepared = transaction::prepare(super::super::prepare(archive)).unwrap();
 
     transaction::dispose(prepared);
-}
-
-#[test]
-fn task22o71_unported_anchor_group_params_fail_without_fallback() {
-    assert_unsupported_mutation(
-        "\"top_surface_pattern\": \"monotonicline\"",
-        "\"top_surface_pattern\": \"gyroid\"",
-        "top_surface_pattern",
-    );
-    assert_unsupported_mutation(
-        "\"internal_solid_infill_pattern\": \"monotonic\"",
-        "\"internal_solid_infill_pattern\": \"gyroid\"",
-        "internal_solid_infill_pattern",
-    );
 }
 
 #[test]

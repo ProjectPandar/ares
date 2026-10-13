@@ -107,38 +107,6 @@ fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_constrain
 }
 
 #[test]
-fn task22o17_preflight_failure_with_deep_predecessors_fits_constrained_stack() {
-    let mut source = perimeters::prepare_post_layer_region_perimeters(
-        &KsrArchive::new().bytes(),
-        &mut crate::SlicerContext::new(0),
-    )
-    .unwrap();
-    deepen_both_tree_families(source.predecessor.as_classic_mut());
-    source.predecessor.as_classic_mut().resolved.objects[0]
-        .object
-        .interface_shells = crate::OrcaBool(true);
-    let second_part = source.predecessor.as_classic().resolved.objects[0].layer_candidates[0]
-        .model_parts[0]
-        .clone();
-    source.predecessor.as_classic_mut().resolved.objects[0].layer_candidates[0]
-        .model_parts
-        .push(second_part);
-    let (drop_probe, dropped) = source.predecessor.as_classic().drop_probe_observer();
-    run_on_constrained_stack(move || {
-        let error = match surface_type_detection::prepare(source) {
-            Err(error) => error,
-            Ok(_) => panic!("O17 preflight failure must not produce a successor"),
-        };
-        assert_eq!(
-            error,
-            SliceError::UnsupportedProjectFeature("interface_shells".to_owned())
-        );
-        assert!(drop_probe.upgrade().is_none());
-        assert!(dropped.load(std::sync::atomic::Ordering::SeqCst));
-    });
-}
-
-#[test]
 fn task22o17_public_incomplete_cleanup_with_deep_predecessors_fits_constrained_stack() {
     let mut source = perimeters::prepare_post_layer_region_perimeters(
         &KsrArchive::new().bytes(),

@@ -94,6 +94,13 @@ fn prepare_object_contexts(
             records.push(flows.map(|flows| {
                 let upper_layer_index =
                     (layer_index + 1 < plan.layers.len()).then_some(layer_index + 1);
+                let lower_same_region =
+                    layer_index
+                        .checked_sub(1)
+                        .map(|layer_index| RegionLayerIndex {
+                            region_index,
+                            layer_index,
+                        });
                 let spiral_mode = global_spiral_mode
                     && layer.id >= bottom_shell_layers
                     && layer.print_z >= region_options.bottom_shell_thickness.0 - EPSILON;
@@ -119,6 +126,7 @@ fn prepare_object_contexts(
                         region_index,
                         layer_index,
                     }),
+                    lower_same_region,
                     layer_height: layer.height,
                     perimeter_flow: flows.perimeter_flow,
                     ext_perimeter_flow: flows.ext_perimeter_flow,
