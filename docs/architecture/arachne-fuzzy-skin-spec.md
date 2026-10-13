@@ -1,11 +1,29 @@
 # Arachne fuzzy skin: proposed junction rewrite slice
 
-Status: SPEC review requested; docs only, no tests or implementation.
+Status: SPEC308583e3a approved with the F1/F2 split below; no implementation.
 Worker3; coordinator Claude is the sole reviewer.
 Draft base: origin/main `c22f5a81da41fce715b528268711393649daad66`.
 Separate worktree/branch from the code-approved alternate candidate6a7d842bc.
 Implementation must await this SPEC approval and the alternate integration
 sequence; rebase the eventual candidate to the then-current main first.
+
+## Approved execution split and order
+
+Coordinator approved the stochastic oracle distinction and required two slices:
+
+- F1: single-group whole coverage, all noise variants and three modes, Ripple,
+  raw source eligibility, Context/draw sequence and actual slice_z. Only F1's
+  small production boundary lands after its own public RED and alternate merge.
+- F2: compatible multi-group effect masks, identical-effect merge/priority and
+  LineSplit ordered splits. Separate fixtures/RED, production GREEN and REVIEW.
+
+Neither slice inherits acceptance from the other. Until alternate closes
+W4 merge→rebase→FULL-GO→canonical full→rebased REVIEW→APPROVED→ff push, only
+single-core Native closure/min-width preflight and F1 fixtures/public RED may
+proceed. F1/F2 production remains untouched; full/workspace HOLD.
+No F1 partial implementation may silently treat multiple groups as one, discard
+non-owner configurations or add a new Unsupported guard. Any reachable
+multi-group dependency preventing a clean F1 boundary needs coordinator ruling.
 
 ## Upstream ownership and source identity
 
@@ -135,8 +153,8 @@ Proposed E2E evidence split, following the existing seeded-context distinction:
   explicitly not strict Native parity PASS. Do not normalize random coordinates,
   retry until chance matches, or claim a shared reproducible random stream.
 
-SPEC approval must explicitly accept this stochastic oracle boundary, or supply
-another reproducible official contract before implementation. If all active
+Coordinator explicitly accepted this stochastic oracle boundary with308583e3a,
+consistent with existing ARD-0068. If all active
 official stochastic cases must be raw-byte identical without a reproducible
 producer/seed, report that gate unresolved; never weaken the strict comparator
 or present the diagnostic projection as full parity.
@@ -172,7 +190,8 @@ Preflight modes near low-width boundaries: keep the exact scaled integer floor;
 if Native admits behavior needing a downstream variable-width consumer repair,
 cite that owner and seek scope approval rather than adding an arbitrary clamp.
 No speculative unit test, implementation-derived expected RNG or saved Native
-golden replaces the public artifact comparison.
+golden replaces the public artifact comparison. Finite F1 RED excludes F2
+mask/split acceptance; no multi-group result is presented as F1 GREEN.
 
 The old `active_fuzzy_skin_fails_closed` unit in project_slice/tests/perimeters/
 arachne/traverse.rs asserts precisely the rejection to be removed. After public
