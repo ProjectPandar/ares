@@ -1,6 +1,6 @@
 use crate::{
-    ObjectOptions, OrcaFloat, OrcaFloats, Percent, RegionOptions, SliceError,
-    geometry::CoordinateScale, project_slice::perimeters::arachne::config::validate_record,
+    ObjectOptions, OrcaFloat, OrcaFloats, RegionOptions, SliceError, geometry::CoordinateScale,
+    project_slice::perimeters::arachne::config::validate_record,
 };
 
 const SCALE: CoordinateScale = CoordinateScale::Normal;
@@ -82,22 +82,6 @@ fn task22w8_arc_fitting_reduces_the_surface_simplify_resolution() {
     // `PerimeterGenerator.cpp:2119-2122`: the resolution is scaled.
     assert_eq!(base.surface_simplify_resolution, 12000.0);
     assert_eq!(arc.surface_simplify_resolution, 0.2 * 12000.0);
-}
-
-#[test]
-fn task22w9_rejects_deferred_scopes_typed() {
-    // wall_sequence InnerOuterInner is now implemented by the sandwich
-    // reordering (`PerimeterGenerator.cpp:2374-2464`); only the scope
-    // gates below remain typed rejections.
-    // only_one_wall_top is now implemented by the top-surface
-    // regeneration (`PerimeterGenerator.cpp:2160-2248`).
-    let mut region = default_region();
-    region.alternate_extra_wall.0 = true;
-    region.sparse_infill_density = Percent(15.0);
-    assert_eq!(
-        validate(&region, 1, Some(2)).unwrap_err(),
-        SliceError::UnsupportedProjectFeature("alternate_extra_wall".to_owned())
-    );
 }
 
 #[test]

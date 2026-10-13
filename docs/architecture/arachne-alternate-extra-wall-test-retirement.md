@@ -1,6 +1,6 @@
 # Proposed retirement of the obsolete Arachne alternate rejection test
 
-Status: coordinator ruling requested; existing test and assertion unchanged.
+Status: coordinator approved retiring this one obsolete test after RED8989e26eb.
 
 The existing test is
 `crates/ares-core/src/project_slice/tests/perimeters/arachne/config.rs`,
@@ -16,7 +16,7 @@ overrides and generator counts after it. The approved SPEC requires deleting
 the production guard; leaving this rejection assertion would require retaining
 the forbidden guard or failing workspace by design.
 
-Proposed concrete change, only after coordinator approval:
+Approved concrete change:
 
 - Delete this obsolete test function and its now-unused `Percent` import.
 - Preserve every other existing assertion, fixture and comparator.
@@ -33,4 +33,4 @@ outside Git at `/tmp/worker3-arachne-alternate-red-sui9f3ez`.
 
 This is a request to replace an obsolete negative contract with upstream
 positive public coverage; it does not authorize weakening a parity assertion.
-Do not perform the deletion until the coordinator explicitly permits it.
+Coordinator explicitly selected “批准退役这一过时拒绝测试” on 2026-10-13.
