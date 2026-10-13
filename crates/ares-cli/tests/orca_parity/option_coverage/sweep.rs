@@ -150,6 +150,9 @@ fn execute_plan(
     ) {
         return super::printer_physical_identity::execute_plan(runner, plan);
     }
+    if plan.key == "print_extruder_id" {
+        return super::print_extruder_identity::execute_plan(runner, plan);
+    }
     if plan.key == "brim_ears" {
         return super::legacy_brim_ears::execute_plan(runner, plan);
     }
