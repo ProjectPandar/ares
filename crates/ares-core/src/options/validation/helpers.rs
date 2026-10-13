@@ -14,7 +14,13 @@ impl SliceOptions {
         is_valid: fn(&str) -> bool,
     ) -> Result<(), SliceError> {
         let value = self.string_or_default(key)?;
-        if !is_valid(&value) {
+        // PrintConfig.cpp:8201-8207, Config.cpp:577-579: validate the
+        // serialized enum after the exact legacy input rewrite.
+        let canonical = match value.as_str() {
+            "zig-zag" => "rectilinear",
+            token => token,
+        };
+        if !is_valid(canonical) {
             errors.insert(key.to_owned(), invalid_value_message(value));
         }
         Ok(())
