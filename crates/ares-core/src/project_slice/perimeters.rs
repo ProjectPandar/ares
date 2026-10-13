@@ -170,7 +170,7 @@ pub(super) fn prepare_post_layer_region_perimeters<'a>(
     // context spine and arachne records materialize through
     // `PerimeterGenerator::process_arachne` (`PerimeterGenerator.cpp:2093`).
     let prelude = prepare_post_classic_prelude(project)?;
-    let arachne = arachne::materialize::finish(&prelude)?;
+    let arachne = arachne::materialize::finish(&prelude, context)?;
     let has_arachne = arachne
         .objects
         .iter()

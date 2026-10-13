@@ -36,6 +36,7 @@ pub(in crate::project_slice) struct PreparedArachneObject {
 
 pub(in crate::project_slice) fn finish(
     prelude: &PreparedPostClassicPrelude,
+    context: &mut crate::SlicerContext,
 ) -> Result<PreparedArachnePerimeters, SliceError> {
     let enable_arc_fitting = prelude
         .resolved
@@ -59,33 +60,34 @@ pub(in crate::project_slice) fn finish(
                 .find(|resolved| resolved.source_object_index == source_object_index)
                 .expect("the prelude object retains its resolved source")
                 .object;
-            let records = object
-                .object
-                .as_parts()
-                .1
-                .iter()
-                .zip(&object.records)
-                .map(|(input, prelude_record)| match (input, prelude_record) {
-                    (Some(input), Some(prelude_record))
-                        if input.dispatch == PerimeterDispatch::Arachne =>
-                    {
-                        materialize_record(
-                            &object.object,
-                            input,
-                            prelude_record,
-                            object_options,
-                            config::PrintParameters {
-                                enable_arc_fitting,
-                                resolution,
-                                nozzle_diameters,
-                                scale: prelude.scale,
-                            },
-                        )
-                        .map(Some)
-                    }
-                    _ => Ok(None),
-                })
-                .collect::<Result<Vec<_>, SliceError>>()?;
+            let inputs = object.object.as_parts().1;
+            let mut records = (0..inputs.len()).map(|_| None).collect::<Vec<_>>();
+            // `Layer.cpp::make_perimeters` runs physical-layer compatible groups
+            // in discovery order. Keep that RNG draw order while storing output
+            // in the existing region-major record slots.
+            let mut order = (0..inputs.len()).collect::<Vec<_>>();
+            order.sort_by_key(|&slot| object.object.record_groups[slot]);
+            for slot in order {
+                let (Some(input), Some(prelude_record)) = (inputs[slot], &object.records[slot])
+                else {
+                    continue;
+                };
+                if input.dispatch != PerimeterDispatch::Arachne {
+                    continue;
+                }
+                records[slot] = Some(materialize_record(
+                    &object.object,
+                    (&input, prelude_record),
+                    object_options,
+                    config::PrintParameters {
+                        enable_arc_fitting,
+                        resolution,
+                        nozzle_diameters,
+                        scale: prelude.scale,
+                    },
+                    context,
+                )?);
+            }
             Ok(PreparedArachneObject { records })
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
@@ -94,8 +96,7 @@ pub(in crate::project_slice) fn finish(
 
 fn materialize_record(
     object: &PostPerimeterInputPrintObject,
-    input: &PerimeterInputRecord,
-    prelude_record: &ClassicPreludeRecord,
+    (input, prelude_record): (&PerimeterInputRecord, &ClassicPreludeRecord),
     object_options: &crate::ObjectOptions,
     config::PrintParameters {
         enable_arc_fitting,
@@ -103,20 +104,26 @@ fn materialize_record(
         nozzle_diameters,
         scale,
     }: config::PrintParameters<'_>,
+    context: &mut crate::SlicerContext,
 ) -> Result<PreparedLayerRegionPerimeterRecord, SliceError> {
     let region = object.region_options(input);
+    let fuzzy = super::fuzzy::Regions::prepare(object, input, scale)?;
     let config = config::validate_record(
         region,
         object_options,
         input.layer_id,
         input.upper_layer_index,
         crate::project_slice::perimeters::arachne::config::PrintParameters {
-            enable_arc_fitting,
+            // `process_arachne:2119-2122`: any compatible member can
+            // disable the arc-fitting resolution reduction.
+            enable_arc_fitting: enable_arc_fitting && !fuzzy.has_contour,
             resolution,
             nozzle_diameters,
             scale,
         },
     )?;
+    let (plan, _, _) = object.object.as_parts().0.as_parts();
+    let slice_z = plan.layers[input.planned_layer_index].slice_z;
     let spacings = ArachneSpacings::new(
         scale,
         &input.perimeter_flow,
@@ -207,7 +214,8 @@ fn materialize_record(
                 overhang_reverse_threshold: region.overhang_reverse_threshold,
                 wall_direction: region.wall_direction,
                 wall_sequence: region.wall_sequence,
-                fuzzy_skin: crate::perimeters::FuzzySkinConfig::from_region(region),
+                fuzzy_skin: &fuzzy,
+                slice_z,
                 perimeter_flow: input.perimeter_flow,
                 ext_perimeter_flow: input.ext_perimeter_flow,
                 overhang_flow: input.overhang_flow,
@@ -215,6 +223,7 @@ fn materialize_record(
                 lower_slices: object.lower_slices(input).unwrap_or(&[]),
                 scale,
             },
+            context,
         )?;
         // `this->loops->append(extrusion_coll)` only when non-empty
         // (`PerimeterGenerator.cpp:2470-2474`).

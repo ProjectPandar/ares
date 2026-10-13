@@ -155,6 +155,7 @@ pub(crate) struct Clipper {
     /// (`SupportCommon.cpp:550-554`).
     z_fill_mark: Option<i64>,
     z_fill_width: bool,
+    z_fill_source_index: bool,
     #[cfg(test)]
     collected_maxima_for_test: Vec<i64>,
     #[cfg(test)]
@@ -182,6 +183,7 @@ impl Clipper {
             z_intersections: None,
             z_fill_mark: None,
             z_fill_width: false,
+            z_fill_source_index: false,
             #[cfg(test)]
             collected_maxima_for_test: Vec::new(),
             #[cfg(test)]

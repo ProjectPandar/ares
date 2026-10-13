@@ -92,6 +92,15 @@ impl Clipper {
             point.z = mark;
             return;
         }
+        if self.z_fill_source_index {
+            // `Algorithm/LineSplit.cpp:19-28::cb_split_line`.
+            let minimum = [first.bottom.z, first.top.z, second.bottom.z, second.top.z]
+                .into_iter()
+                .min()
+                .expect("four edge endpoints");
+            point.z = -(minimum + 1);
+            return;
+        }
         if self.z_fill_width {
             // PerimeterGenerator.cpp:283–303: select the subject edge and
             // truncate the width delta before adding its bottom width.

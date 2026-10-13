@@ -59,12 +59,6 @@ pub(in crate::project_slice) fn validate_record(
         scale,
     }: PrintParameters<'_>,
 ) -> Result<ArachneRecordConfig, SliceError> {
-    // Scope gates for deferred upstream behavior: typed rejections, never a
-    // classic fallback. Each names the upstream slice that lands it.
-    if crate::perimeters::FuzzySkinConfig::from_region(region).should_fuzzify(layer_id, 0, true) {
-        return Err(unsupported("fuzzy_skin"));
-    }
-
     let nozzle_index = region
         .outer_wall_filament_id
         .0
@@ -168,8 +162,4 @@ fn make_paths_params(
 
 fn invalid(message: &str) -> SliceError {
     SliceError::InvalidInput(message.to_owned())
-}
-
-fn unsupported(key: &str) -> SliceError {
-    SliceError::UnsupportedProjectFeature(key.to_owned())
 }

@@ -202,6 +202,21 @@ impl PostPerimeterInputPrintObject {
             .unwrap_or_else(|| self.region_surfaces(record.current))
     }
 
+    pub(super) fn compatible_fuzzy_regions(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> impl Iterator<Item = (&crate::RegionOptions, &[RegionSurface])> {
+        let slot = self.region_layer_record_index(record.current);
+        let group = &self.groups[self.record_groups[slot].unwrap()];
+        let (_, _, regions) = self.object.as_parts().0.as_parts();
+        group.members.iter().map(|&member| {
+            (
+                regions[member.region_index].as_parts().1,
+                self.region_surfaces(member),
+            )
+        })
+    }
+
     pub(in crate::project_slice) fn raw_slices(
         &self,
         region_index: usize,

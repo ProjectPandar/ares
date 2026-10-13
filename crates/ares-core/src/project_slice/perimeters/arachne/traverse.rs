@@ -6,13 +6,12 @@
 // `ExtrusionMultiPath` entities that split on discontinuities (`:546-566`).
 // Ordinary steep-overhang detection and start-point rechaining are consumed
 // here. Clipped-width interpolation is owned by geometry::clip_open_path_widths;
-// active junction fuzzification remains a deferred upstream rewrite slice.
+// junction fuzzification is owned by the source-cited fuzzy module.
 
 use crate::{
     FloatOrPercent, ProcessWallDirection, ProcessWallSequence, SliceError,
     arachne::ExtrusionLine,
     geometry::{CoordinateScale, ExPolygon, Polygon},
-    perimeters::FuzzySkinConfig,
     project_slice::perimeters::{
         classic::{
             chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
@@ -52,7 +51,8 @@ pub(in crate::project_slice) struct TraverseExtrusionsContext<'a> {
     pub(in crate::project_slice) overhang_reverse_threshold: FloatOrPercent,
     pub(in crate::project_slice) wall_direction: ProcessWallDirection,
     pub(in crate::project_slice) wall_sequence: ProcessWallSequence,
-    pub(in crate::project_slice) fuzzy_skin: FuzzySkinConfig,
+    pub(in crate::project_slice) fuzzy_skin: &'a super::fuzzy::Regions,
+    pub(in crate::project_slice) slice_z: f64,
     pub(in crate::project_slice) perimeter_flow: Flow,
     pub(in crate::project_slice) ext_perimeter_flow: Flow,
     pub(in crate::project_slice) overhang_flow: Flow,
@@ -74,6 +74,7 @@ pub(in crate::project_slice) struct TraverseExtrusionsOutcome {
 pub(in crate::project_slice) fn traverse_extrusions(
     pg_extrusions: Vec<PerimeterGeneratorArachneExtrusion>,
     context: &TraverseExtrusionsContext,
+    slice_context: &mut crate::SlicerContext,
 ) -> Result<TraverseExtrusionsOutcome, SliceError> {
     // Detect steep overhangs. Only calculate overhang degree on even (from
     // GUI POV) layers (`PerimeterGenerator.cpp:375-377`).
@@ -86,7 +87,7 @@ pub(in crate::project_slice) fn traverse_extrusions(
     let mut steep_overhang_hole = false;
 
     for pg_extrusion in pg_extrusions {
-        let extrusion = pg_extrusion.extrusion;
+        let mut extrusion = pg_extrusion.extrusion;
         if extrusion.junctions.is_empty() {
             continue;
         }
@@ -99,18 +100,25 @@ pub(in crate::project_slice) fn traverse_extrusions(
         };
 
         let is_contour = !extrusion.is_closed || pg_extrusion.is_contour;
-        // `apply_fuzzy_skin(extrusion, perimeter_generator, is_contour)`
-        // (`PerimeterGenerator.cpp:387`, `FuzzySkin.cpp:685`) — the junction
-        // fuzzifier is a later seam; an active skin fails closed.
-        if context
-            .fuzzy_skin
-            .should_fuzzify(context.layer_id, extrusion.inset_index, is_contour)
-        {
-            return Err(unsupported("fuzzy_skin"));
-        }
+        context.fuzzy_skin.apply(
+            &mut extrusion,
+            is_contour,
+            super::fuzzy::Layer {
+                id: context.layer_id,
+                slice_z: context.slice_z,
+                scale: context.scale,
+            },
+            slice_context,
+        )?;
 
         let mut paths: Vec<ExtrusionPath> = Vec::new();
         if context.detect_overhang_wall && above_raft {
+            // `traverse_extrusions:422-428`: fuzzy walls force reversal
+            // before the ordinary steep-overhang detection.
+            let fuzzy_reverse = overhangs_reverse && context.fuzzy_skin.has_contour;
+            steep_overhang_contour |= fuzzy_reverse && pg_extrusion.is_contour;
+            steep_overhang_hole |=
+                fuzzy_reverse && !pg_extrusion.is_contour && context.fuzzy_skin.has_hole;
             let found = if pg_extrusion.is_contour {
                 steep_overhang_contour
             } else {

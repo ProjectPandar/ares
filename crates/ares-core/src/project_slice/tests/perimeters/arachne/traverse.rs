@@ -8,7 +8,6 @@ use crate::{
     Percent, ProcessWallDirection, ProcessWallSequence,
     arachne::{ExtrusionJunction, ExtrusionLine},
     geometry::{CoordinateScale, Point},
-    perimeters::FuzzySkinConfig,
     project_slice::perimeters::{
         arachne::{
             PerimeterGeneratorArachneExtrusion, TraverseExtrusionsContext, traverse_extrusions,
@@ -44,7 +43,8 @@ fn context() -> TraverseExtrusionsContext<'static> {
         overhang_reverse_threshold: crate::FloatOrPercent::Percent(Percent(50.0)),
         wall_direction: ProcessWallDirection::CounterClockwise,
         wall_sequence: ProcessWallSequence::InnerOuter,
-        fuzzy_skin: FuzzySkinConfig::disabled(),
+        fuzzy_skin: &crate::project_slice::perimeters::arachne::fuzzy::EMPTY,
+        slice_z: 0.5,
         perimeter_flow: flow(0.3),
         ext_perimeter_flow: flow(0.2),
         overhang_flow: flow(0.3),
@@ -87,8 +87,12 @@ fn rectangle(width: i64) -> Vec<(i64, i64, i64)> {
 
 #[test]
 fn closed_contour_line_becomes_a_counter_clockwise_loop_entity() {
-    let outcome = traverse_extrusions(vec![wall(0, true, true, &rectangle(450_000))], &context())
-        .expect("the ordinary branch converts a closed contour");
+    let outcome = traverse_extrusions(
+        vec![wall(0, true, true, &rectangle(450_000))],
+        &context(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .expect("the ordinary branch converts a closed contour");
     let [ExtrusionEntity::Loop(ordered)] = &outcome.collection.entities[..] else {
         panic!("a closed wall line appends one loop entity");
     };
@@ -123,8 +127,12 @@ fn closed_contour_line_becomes_a_counter_clockwise_loop_entity() {
 
 #[test]
 fn closed_hole_line_reverses_to_clockwise_and_keeps_hole_role() {
-    let outcome = traverse_extrusions(vec![wall(0, true, false, &rectangle(450_000))], &context())
-        .expect("the ordinary branch converts a closed hole");
+    let outcome = traverse_extrusions(
+        vec![wall(0, true, false, &rectangle(450_000))],
+        &context(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .expect("the ordinary branch converts a closed hole");
     let [ExtrusionEntity::Loop(ordered)] = &outcome.collection.entities[..] else {
         panic!("a closed wall line appends one loop entity");
     };
@@ -153,8 +161,12 @@ fn closed_hole_line_reverses_to_clockwise_and_keeps_hole_role() {
 
 #[test]
 fn internal_inset_uses_perimeter_role_and_flow() {
-    let outcome = traverse_extrusions(vec![wall(1, true, true, &rectangle(420_000))], &context())
-        .expect("internal walls convert with the perimeter flow");
+    let outcome = traverse_extrusions(
+        vec![wall(1, true, true, &rectangle(420_000))],
+        &context(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .expect("internal walls convert with the perimeter flow");
     let [ExtrusionEntity::Loop(ordered)] = &outcome.collection.entities[..] else {
         panic!("a closed wall line appends one loop entity");
     };
@@ -173,7 +185,8 @@ fn thin_wall_hole_reverses_entity_order_outside_outer_inner() {
         wall(0, true, true, &rectangle(450_000)),
         wall(1, true, false, &rectangle(350_000)),
     ];
-    let outcome = traverse_extrusions(walls, &context()).expect("two walls convert");
+    let outcome = traverse_extrusions(walls, &context(), &mut crate::SlicerContext::new(0))
+        .expect("two walls convert");
     let [ExtrusionEntity::Loop(hole), ExtrusionEntity::Loop(contour)] =
         &outcome.collection.entities[..]
     else {
@@ -192,7 +205,8 @@ fn thin_wall_hole_keeps_source_order_for_outer_inner_sequence() {
     ];
     let mut context = context();
     context.wall_sequence = ProcessWallSequence::OuterInner;
-    let outcome = traverse_extrusions(walls, &context).expect("two walls convert");
+    let outcome = traverse_extrusions(walls, &context, &mut crate::SlicerContext::new(0))
+        .expect("two walls convert");
     let [ExtrusionEntity::Loop(contour), ExtrusionEntity::Loop(hole)] =
         &outcome.collection.entities[..]
     else {
@@ -216,6 +230,7 @@ fn open_line_appends_one_multi_path_entity() {
             ],
         )],
         &context(),
+        &mut crate::SlicerContext::new(0),
     )
     .expect("the ordinary branch converts an open wall line");
     let [ExtrusionEntity::MultiPath(multi_path)] = &outcome.collection.entities[..] else {
@@ -240,6 +255,7 @@ fn variable_width_open_line_keeps_chained_sub_paths_in_one_entity() {
             &[(0, 0, 200_000), (4_000_000, 0, 400_000)],
         )],
         &context(),
+        &mut crate::SlicerContext::new(0),
     )
     .expect("the ordinary branch converts a variable-width open wall line");
     let [ExtrusionEntity::MultiPath(multi_path)] = &outcome.collection.entities[..] else {
@@ -264,8 +280,12 @@ fn variable_width_open_line_keeps_chained_sub_paths_in_one_entity() {
 
 #[test]
 fn empty_wall_lines_are_skipped() {
-    let outcome = traverse_extrusions(vec![wall(0, true, true, &[])], &context())
-        .expect("empty wall lines skip conversion");
+    let outcome = traverse_extrusions(
+        vec![wall(0, true, true, &[])],
+        &context(),
+        &mut crate::SlicerContext::new(0),
+    )
+    .expect("empty wall lines skip conversion");
     assert!(outcome.collection.entities.is_empty());
 }
 
@@ -275,8 +295,12 @@ fn steep_overhang_flags_follow_odd_reversing_layers_without_detection() {
         let mut context = context();
         context.overhang_reverse = true;
         context.layer_id = layer_id;
-        let outcome = traverse_extrusions(vec![wall(0, true, true, &rectangle(450_000))], &context)
-            .expect("the ordinary branch never clips");
+        let outcome = traverse_extrusions(
+            vec![wall(0, true, true, &rectangle(450_000))],
+            &context,
+            &mut crate::SlicerContext::new(0),
+        )
+        .expect("the ordinary branch never clips");
         assert_eq!(outcome.steep_overhang_contour, expected);
         assert_eq!(outcome.steep_overhang_hole, expected);
     }
@@ -296,7 +320,11 @@ fn overhang_clipping_keeps_widths_for_covered_walls() {
     let mut context = context();
     context.detect_overhang_wall = true;
     context.lower_slices_polygons = lower;
-    let outcome = traverse_extrusions(vec![wall(0, true, true, &rectangle(450_000))], &context)
-        .expect("a covered wall clips through the Z path");
+    let outcome = traverse_extrusions(
+        vec![wall(0, true, true, &rectangle(450_000))],
+        &context,
+        &mut crate::SlicerContext::new(0),
+    )
+    .expect("a covered wall clips through the Z path");
     assert_eq!(outcome.collection.entities.len(), 1);
 }

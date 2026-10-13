@@ -1,19 +1,21 @@
 // `FuzzySkin.cpp:345-412::fuzzy_extrusion_line`: preserve destination
 // junction width/index and C++ coordinate truncation, using the task RNG.
-use super::config::Config;
+use super::{Layer, config::Config};
 use crate::{
     Point2, ProcessFuzzySkinMode, SlicerContext,
     arachne::ExtrusionJunction,
-    geometry::{CoordinateScale, Point},
+    geometry::Point,
     perimeters::{FuzzySkinNoiseType, coherent_value},
 };
 
 pub(super) fn fuzzify(
     junctions: &mut Vec<ExtrusionJunction>,
     config: Config,
-    layer_id: usize,
-    slice_z: f64,
-    scale: CoordinateScale,
+    Layer {
+        id: layer_id,
+        slice_z,
+        scale,
+    }: Layer,
     context: &mut SlicerContext,
     closed: bool,
 ) {

@@ -10,6 +10,7 @@ mod edge_grid;
 mod expolygon;
 mod line;
 mod line_distance_tree;
+mod line_split;
 pub(crate) mod marching_squares;
 pub(crate) mod medial_axis;
 pub(crate) mod mutable_polygon;
@@ -67,6 +68,7 @@ pub(crate) use line::{Line, ThickLine};
     )
 )]
 pub(crate) use line_distance_tree::{FloatLineDistanceTree, LineDistanceTree, NearestLine};
+pub(crate) use line_split::{SplitJunction, split_line};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};

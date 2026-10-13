@@ -4,6 +4,7 @@ mod intersections;
 mod intersections_mm;
 mod outside;
 mod query;
+mod radius;
 mod segment;
 
 pub(crate) use floating::FloatLineDistanceTree;
@@ -63,6 +64,10 @@ impl<'a> LineDistanceTree<'a> {
             lines,
             nodes: build::build(lines),
         }
+    }
+
+    pub(crate) fn all_lines_in_radius(&self, point: Point, radius: f64) -> Vec<usize> {
+        radius::query(self, point, radius * radius)
     }
 
     pub(crate) fn nearest(&self, point: Point) -> Option<NearestLine> {

@@ -6,6 +6,7 @@
 // typed-rejected; wall generation and overhang clipping are later seams.
 
 pub(in crate::project_slice) mod config;
+pub(in crate::project_slice) mod fuzzy;
 pub(in crate::project_slice) mod materialize;
 pub(in crate::project_slice) mod order;
 pub(in crate::project_slice) mod sandwich;

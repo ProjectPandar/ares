@@ -160,13 +160,14 @@ impl PostClassicTraversalPrintObject {
         }
     }
 
+    /// `ExtrusionProcessor.hpp:305-311::prepare_for_new_layer` consumes
+    /// the preceding physical layer's merged `Layer::lslices`, even when
+    /// modifiers have emptied the base region's record slots.
     pub(in crate::project_slice) fn lower_slices(
         &self,
-        record_index: usize,
+        layer_index: usize,
     ) -> Option<&[crate::geometry::ExPolygon]> {
-        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
-        let input = prelude.object.records[record_index].as_ref()?;
-        prelude.object.lower_slices(input)
+        self.slices(layer_index.checked_sub(1)?)
     }
 
     /// Current layer's merged slices (`Layer::lslices`), the base of the

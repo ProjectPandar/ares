@@ -67,6 +67,16 @@ impl Clipper {
         (paths, intersections)
     }
 
+    pub(in crate::geometry) fn execute_z_source_paths(
+        &mut self,
+        operation: ClipOperation,
+    ) -> Vec<ZPath> {
+        self.z_fill_source_index = true;
+        let (paths, _) = self.execute_z_paths(operation, FillRule::NonZero, FillRule::NonZero);
+        self.z_fill_source_index = false;
+        paths
+    }
+
     pub(in crate::geometry) fn execute_z_width_paths(
         &mut self,
         operation: ClipOperation,
@@ -142,6 +152,7 @@ impl Clipper {
         self.z_intersections = None;
         self.z_fill_mark = None;
         self.z_fill_width = false;
+        self.z_fill_source_index = false;
         #[cfg(test)]
         self.collected_maxima_for_test.clear();
         #[cfg(test)]
