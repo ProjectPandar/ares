@@ -22,7 +22,7 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(super) print_position: Vec<usize>,
     pub(in crate::project_slice::gcode_emit) instances: Vec<Vec<super::instances::Instance>>,
     pub(in crate::project_slice::gcode_emit) tower: Option<super::super::wipe_tower::Data>,
-    pub(super) labels: Vec<Option<ObjectLabels>>,
+    pub(super) labels: Vec<Vec<Option<ObjectLabels>>>,
     pub(super) object_layer_counts: Vec<usize>,
     pub(super) last_entry: Option<(usize, usize)>,
     pub(super) layer_count: usize,
@@ -271,7 +271,11 @@ pub(in crate::project_slice::gcode_emit) fn build(
         })
         .collect();
     let labels = (0..object_count)
-        .map(|index| ObjectLabels::from_traversal(traversal, index))
+        .map(|index| {
+            (0..instances[index].len())
+                .map(|copy| ObjectLabels::from_traversal(traversal, index, copy))
+                .collect()
+        })
         .collect();
     let object_layer_counts = objects.iter().map(Vec::len).collect();
     let last_entry = merged

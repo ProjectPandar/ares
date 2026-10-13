@@ -20,7 +20,7 @@ pub(super) fn emit(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     raft_index: usize,
-    labels: &[Option<ObjectLabels>],
+    labels: Option<&ObjectLabels>,
     emit_labels: bool,
     traditional_interlude: bool,
     timelapse_context: timelapse_core::Context<'_>,
@@ -57,7 +57,7 @@ pub(super) fn emit(
     // Raft layers belong to the same print instance and
     // carry its object labels (`GCode.cpp:5348-5352` fires
     // per `instance_to_print`, raft layers included).
-    if let Some(labels) = &labels[object_index] {
+    if let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
     motion::emit_layer(
@@ -86,7 +86,7 @@ pub(super) fn emit(
             )
         },
     )?;
-    if let Some(labels) = &labels[object_index] {
+    if let Some(labels) = labels {
         labels.queue_stop(output, state, emit_labels);
     }
     if is_group_end {

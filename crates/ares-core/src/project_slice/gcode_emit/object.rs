@@ -35,14 +35,17 @@ impl ObjectLabels {
     pub(super) fn from_traversal(
         traversal: &PreparedPostClassicTraversal,
         object_index: usize,
+        copy_index: usize,
     ) -> Option<Self> {
-        let object = traversal.project.objects().get(object_index)?;
-        let instance = object.instances().first()?;
+        let (resolved, group) = traversal.print_object_config(object_index);
+        let object = &traversal.project.objects()[resolved.source_object_index];
+        let instance = &object.instances()[group.instance_indices[copy_index]];
         let mut labels = traversal
             .project
             .objects()
             .iter()
             .flat_map(|object| object.instances())
+            .filter(|instance| instance.printable())
             .map(|instance| instance.loaded_label_id().unwrap_or(0))
             .collect::<Vec<_>>();
         labels.sort_unstable();
@@ -52,7 +55,7 @@ impl ObjectLabels {
             .ok()?;
         let bitset = 1_u64.checked_shl(position as u32)?;
         let (exclude_start, exclude_end) =
-            super::footprint::in_print_labels(traversal, object_index);
+            super::footprint::in_print_labels(traversal, object_index, copy_index);
         let settings = &traversal.resolved.views.full;
         let flavor = settings.printer.gcode.gcode_flavor;
         // `set_object_info` only runs when the exclude-object labeling is
@@ -65,7 +68,7 @@ impl ObjectLabels {
         Some(Self {
             name: object.name().to_owned(),
             object_id: if ids_assigned { object_index as u32 } else { 0 },
-            copy_id: instance.instance_id(),
+            copy_id: if ids_assigned { copy_index as u32 } else { 0 },
             label_id: instance.loaded_label_id().unwrap_or(0),
             encoded_labels: encode_base64(bitset.to_le_bytes()),
             exclude_start,

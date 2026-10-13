@@ -27,7 +27,7 @@ pub(super) fn emit(
     starts_after_support: bool,
     chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
-    labels: &[Option<ObjectLabels>],
+    labels: Option<&ObjectLabels>,
     emit_labels: bool,
     traditional_interlude: bool,
     traditional_timelapse: bool,
@@ -56,7 +56,7 @@ pub(super) fn emit(
         lower_boundary.as_ref(),
     );
     let entry_output_start = output.len();
-    if !starts_after_support && let Some(labels) = &labels[object_index] {
+    if !starts_after_support && let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
     let regions = traversal.objects[object_index]
@@ -111,7 +111,7 @@ pub(super) fn emit(
         },
     )?;
     let is_last_entry = Some((object_index, layer_index)) == last_entry;
-    if let Some(labels) = &labels[object_index] {
+    if let Some(labels) = labels {
         labels.queue_stop(output, state, emit_labels);
     }
     if is_group_end {

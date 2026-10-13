@@ -113,12 +113,9 @@ pub(in crate::project_slice) fn prepare(
             .predecessor
             .predecessor
             .predecessor;
-        traversal
-            .resolved
-            .objects
-            .iter()
-            .map(|object| {
-                object.layer_candidates[0].model_parts[0]
+        (0..traversal.objects.len())
+            .map(|index| {
+                traversal.print_object_config(index).0.layer_candidates[0].model_parts[0]
                     .region
                     .is_infill_first
                     .0

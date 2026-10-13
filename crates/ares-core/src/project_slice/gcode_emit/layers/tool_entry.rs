@@ -20,7 +20,7 @@ pub(super) struct Input<'a, 'b> {
     pub(super) purging_finished: bool,
     pub(super) support_layers: &'a mut [Vec<InstalledSupportLayer>],
     pub(super) raft: &'a Option<super::RaftSchedule>,
-    pub(super) labels: &'a [Option<ObjectLabels>],
+    pub(super) labels: &'a [Vec<Option<ObjectLabels>>],
     pub(super) emit_labels: bool,
     pub(super) traditional_interlude: bool,
     pub(super) traditional_timelapse: bool,
@@ -81,6 +81,7 @@ pub(super) fn emit(
         .filter(|_| bucket.support_wiping == (pass == tool_buckets::Pass::Wiping));
     let entry = &bucket.source;
     let object_index = entry.object_index;
+    let labels = labels[object_index][bucket.instance.copy].as_ref();
     let raft_index = entry.raft_layer;
     let (source_object_index, _) = traversal.objects[object_index]
         .predecessor
@@ -208,7 +209,7 @@ pub(super) fn emit(
         // GCode.cpp:5348–5372,5478–5494 labels every selected instance,
         // including an empty half of the wiping/normal two-pass traversal.
         if support_role.is_none()
-            && let Some(labels) = &labels[object_index]
+            && let Some(labels) = labels
         {
             labels.queue_start(output, state, emit_labels);
             labels.queue_stop(output, state, emit_labels);

@@ -30,7 +30,7 @@ pub(super) fn emit(
     entry_builder: &mut EntryBuilder<'_>,
     chunk_slices: &[crate::geometry::ExPolygon],
     chunk_perimeter_spacing: f64,
-    labels: &[Option<ObjectLabels>],
+    labels: Option<&ObjectLabels>,
     emit_labels: bool,
     standalone: bool,
     is_group_end: bool,
@@ -92,7 +92,7 @@ pub(super) fn emit(
     state.object_layer_over_raft = false;
     state.spiral_vase_layer = false;
     state.avoid_boundary = None;
-    if let Some(labels) = &labels[object_index] {
+    if let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
     motion::emit_support(
@@ -103,7 +103,7 @@ pub(super) fn emit(
         state,
     );
     if standalone {
-        if let Some(labels) = &labels[object_index] {
+        if let Some(labels) = labels {
             labels.queue_stop(output, state, emit_labels);
         }
         if is_group_end {

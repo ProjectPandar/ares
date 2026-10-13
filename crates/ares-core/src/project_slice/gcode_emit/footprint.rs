@@ -123,8 +123,11 @@ pub(super) fn definitions(traversal: &PreparedPostClassicTraversal) -> Vec<Insta
     let plate_origin = traversal.project.plate_origin();
     let mut unique_id = 0;
     let mut output = Vec::new();
-    for (object_index, object) in traversal.project.objects().iter().enumerate() {
-        for (instance_index, instance) in object.instances().iter().enumerate() {
+    for object_index in 0..traversal.objects.len() {
+        let (resolved, group) = traversal.print_object_config(object_index);
+        let object = &traversal.project.objects()[resolved.source_object_index];
+        for (instance_index, &member) in group.instance_indices.iter().enumerate() {
+            let instance = &object.instances()[member];
             output.push(InstanceDefinition {
                 name: instance_name(object.name(), object_index as u32, instance_index as u32),
                 unique_id,
@@ -159,6 +162,7 @@ impl InstanceDefinition {
 pub(super) fn in_print_labels(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
+    copy_index: usize,
 ) -> (Option<String>, Option<String>) {
     let settings = &traversal.resolved.views.full;
     if !EXCLUDE_FLAVORS.contains(&settings.printer.gcode.gcode_flavor)
@@ -167,17 +171,19 @@ pub(super) fn in_print_labels(
     {
         return (None, None);
     }
-    let Some(object) = traversal.project.objects().get(object_index) else {
-        return (None, None);
-    };
-    let Some(instance) = object.instances().first() else {
-        return (None, None);
-    };
-    let preceding_instances = traversal.project.objects()[..object_index]
-        .iter()
-        .map(|object| object.instances().len())
-        .sum::<usize>();
-    let name = instance_name(object.name(), object_index as u32, instance.instance_id());
+    let (resolved, _) = traversal.print_object_config(object_index);
+    let object = &traversal.project.objects()[resolved.source_object_index];
+    let preceding_instances = (0..object_index)
+        .map(|index| {
+            traversal
+                .print_object_config(index)
+                .1
+                .instance_indices
+                .len()
+        })
+        .sum::<usize>()
+        + copy_index;
+    let name = instance_name(object.name(), object_index as u32, copy_index as u32);
     let klipper = settings.printer.gcode.gcode_flavor == crate::GCodeFlavor::Klipper;
     let start = if klipper {
         format!("EXCLUDE_OBJECT_START NAME={name}\n")
