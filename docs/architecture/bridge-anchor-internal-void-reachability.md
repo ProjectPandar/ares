@@ -81,3 +81,29 @@ public active witness. No production deletion is included in this report.
 Native stable-options/dynamics restoration remains pending. No failed setup,
 private record injection, unsupported return caused by another guard, or
 already passing public case is labeled RED.
+
+## Coordinator ruling and upstream static gate
+
+RULING `f586ddc40` accepts direct deletion without a fabricated public RED.
+The upstream source check resolves the earlier adjacent-stage suggestion:
+
+- `PrintObjectSlice.cpp:22`: `PrintObject::infill_only_where_needed` is
+  initialized to `false`. The source has no other assignment and no active
+  public config entry for this static flag.
+- `PrintObject.cpp:3871`: `clip_fill_surfaces` immediately returns when that
+  same flag is false.
+- `LayerRegion.cpp:954`: the other pre-bridge conversion to `stInternalVoid`
+  also selects on this flag; false selects `stInternal`.
+
+Thus upstream also produces no `stInternalVoid` before bridge-over-infill
+through this public path. A port of the disabled clipping stage would be a
+no-op here; it is not required to establish parity or justify this deletion.
+
+The authorized production change removes the surface-kind check and its
+unused surface parameter/import. The caller keeps its aligned-slot invariant
+but binds only the remaining input. All other checks, generation, rewrite
+order and comparisons remain as before. No tests/assertions are removed.
+
+Verification still requires the existing bridge/anchor public directed
+regressions official+seeded after RESTORED, plus strict clippy, fmt and wasm32.
+This direct deletion uses the accepted proof, not an E2E RED/GREEN claim.

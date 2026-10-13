@@ -1,15 +1,12 @@
 use crate::{
-    ProcessInfillPattern, RegionOptions, SliceError,
-    fill::cross_hatch::line_spacing,
+    ProcessInfillPattern, RegionOptions, SliceError, fill::cross_hatch::line_spacing,
     geometry::CoordinateScale,
-    project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
 use super::super::sparse_anchoring::{projected_anchor_lengths, projected_sparse_density};
 
 pub(super) fn validate(
     options: &RegionOptions,
-    surfaces: &[RegionSurface],
     spacing: f32,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
@@ -112,19 +109,6 @@ pub(super) fn validate(
         return Err(SliceError::InvalidInput(
             "invalid Orca option sparse_infill_line_width".to_owned(),
         ));
-    }
-    if surfaces.iter().any(|surface| {
-        !matches!(
-            surface.as_parts().0,
-            RegionSurfaceKind::Bottom
-                | RegionSurfaceKind::BottomBridge
-                | RegionSurfaceKind::InternalBridge
-                | RegionSurfaceKind::InternalSolid
-                | RegionSurfaceKind::Top
-                | RegionSurfaceKind::Internal
-        )
-    }) {
-        return unsupported("bridge_over_infill_anchor_surface_kind");
     }
     Ok(())
 }

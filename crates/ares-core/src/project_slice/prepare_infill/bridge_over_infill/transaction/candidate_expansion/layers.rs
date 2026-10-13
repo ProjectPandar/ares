@@ -88,8 +88,8 @@ pub(super) fn prepare_infill_lines(
                 region_index,
                 layer_index: lower_layer,
             });
-            let (input, record) = match (&inputs[slot], &horizontal.records[slot]) {
-                (Some(input), Some(record)) => (input, record),
+            let input = match (&inputs[slot], &horizontal.records[slot]) {
+                (Some(input), Some(_)) => input,
                 (None, None) => continue,
                 _ => unreachable!("bridge anchor records remain aligned"),
             };
@@ -98,12 +98,7 @@ pub(super) fn prepare_infill_lines(
                 continue;
             }
             let nominal_flow = resolve_nominal_sparse_infill_flow(region, object_options, nozzles)?;
-            super::super::anchor_projection::validate(
-                region,
-                &record.fill_surfaces,
-                nominal_flow.spacing,
-                scale,
-            )?;
+            super::super::anchor_projection::validate(region, nominal_flow.spacing, scale)?;
         }
         let lines = generate_sparse_infill_polylines_for_anchoring(
             predecessor,
