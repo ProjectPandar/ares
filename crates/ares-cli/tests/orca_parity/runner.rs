@@ -90,6 +90,9 @@ mod compatible_regions;
 #[path = "runner/costrings.rs"]
 mod costrings;
 #[cfg(test)]
+#[path = "runner/counterbore_filled.rs"]
+mod counterbore_filled;
+#[cfg(test)]
 #[path = "runner/counterbore_partiallybridge.rs"]
 mod counterbore_partiallybridge;
 #[cfg(test)]
