@@ -18,7 +18,8 @@ fn check(name: &str) {
         .expect("native profile oracle");
     let root = super::repo_root();
     let fixtures = root.join("tests/parity/counterbore-partiallybridge");
-    let matrix_bytes = fs::read(root.join("tests/parity/arachne-counterbore-none/matrix.json")).unwrap();
+    let matrix_bytes =
+        fs::read(root.join("tests/parity/arachne-counterbore-none/matrix.json")).unwrap();
     let matrix: Value = serde_json::from_slice(&matrix_bytes).unwrap();
     let case = matrix["cases"]
         .as_array()
