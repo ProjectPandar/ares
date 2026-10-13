@@ -25,6 +25,13 @@ No F1 partial implementation may silently treat multiple groups as one, discard
 non-owner configurations or add a new Unsupported guard. Any reachable
 multi-group dependency preventing a clean F1 boundary needs coordinator ruling.
 
+Latest coordinator execution ruling permits F1 GREEN development while alternate
+032ed1133 waits for W5 merge/approval. Directed runs use CPU12 single core only;
+the exclusive full window belongs to worker6. This supersedes the earlier
+development HOLD, not the merge order. The reachable multi-group dependency is
+documented in [F1/F2 boundary addendum](arachne-fuzzy-f1-group-boundary-addendum.md)
+for the explicitly required coordinator ruling before production integration.
+
 ## Upstream ownership and source identity
 
 OrcaSlicer v2.4.2 owns this behavior:
