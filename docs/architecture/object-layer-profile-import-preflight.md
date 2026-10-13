@@ -37,21 +37,13 @@ Ares must not replace these accepted inputs with InvalidInput or Unsupported.
 Any diagnostic representation must preserve successful slicing and record-level
 selection, remain portable, and avoid filesystem logging in ares-core.
 
-## Diagnostic boundary proposed after preflight
+## Diagnostic ruling
 
-Scope confirmation requested before GREEN: include `_BBS_3MF_Base::m_errors`
-in P's imported source data. Keep a profile-specific error vector on the loaded
-Project and expose only `Project::layer_height_profile_import_errors() -> &[String]`.
-This lets the public load caller inspect the same nonfatal import messages while
-load and slicing still succeed. No generic warning framework, logging side
-effect, filesystem operation or second slicing API is proposed.
-
-The importer retains the first duplicate, ignores structurally invalid records
-with the corresponding recorded error, leaves unknown ordinals unassociated,
-and preserves permissive numeric conversion. Empty members and profile
-regeneration are normal upstream cases and do not gain fabricated diagnostics.
-Public E2E asserts both the observed import messages and complete Native bytes;
-no error is silently suppressed or promoted to a fatal SliceError.
+Coordinator rejected the proposed diagnostic getter: `_BBS_3MF_Base::m_errors`
+only feeds BOOST_LOG; it changes neither G-code nor slicing/CLI success.
+No public diagnostic API or unused error carrier is added. The importer follows
+upstream record selection and comments each nonfatal skip with the exact source
+lines. This is source-defined import behavior, not a silent legacy fallback.
 
 ## Evidence
 
@@ -82,3 +74,35 @@ failure or a binary64 construction substituted for a Native oracle.
 Evidence `/tmp/worker6-profile-red.zWjapr/{official,seeded}`: each exit100,
 0 PASS/2 FAIL. Cache receipts, original input and Native bytes are retained
 under those external artifact roots. No captured Native file is committed.
+
+## Additional control corrections and deferred finding
+
+After the original RED, broader controls were added. Native-to-Native import
+controls now apply the existing `normalize_one_generator_line(Orca)` to both
+sides and assert exact bytes. The Ares-to-Native comparator is unchanged. The
+initial misuse of its Ares generator check is retained in trial evidence, not
+counted as a production failure or a weakened comparison.
+
+The new two-object fixtures' `.rels` serializer originally emitted
+`ns0:Relationship`; upstream compares literal `Relationship`
+(`bbs_3mf.cpp:4830`). Only namespace spelling is corrected in that fixture
+generator; geometry, placements and settings stay unchanged. Corrected fixtures
+require a fresh RED reconfirmation on unchanged main production before acceptance.
+
+Reconfirmation uses isolated main `c22f5a81d` with corrected tests/inputs only:
+`/tmp/worker6-profile-red-corrected.6RFfsp/{official,seeded}`. Each mode returns
+exit100, 0 PASS/7 FAIL, exclusively at the existing profile rejection. Every
+inactive full-byte control passes; no producer rejection or timeout remains.
+The isolated worktree's `crates/ares-core/src` diff is empty. Ramp/step from the
+original RED are byte-identical inputs; the new `.rels` fix preserves geometry,
+placements and settings.
+
+The combined precise-Z/shrinkage control was added after RED `30c2f424a`, whose
+provenance contains only absent/ramp/step. Its no-profile baseline has a real
+first difference at line 3: Native 11 layers versus Ares 12, in both modes.
+Per coordinator ruling it is removed from P and frozen as an independent finding:
+`/tmp/worker6-profile-precise-shrink-finding/finding.json`, with both inputs,
+original full outputs, layer vectors, SHA values and generation/test recipe.
+Targets: `Slicing.cpp:67-115`, `PrintObject.cpp:3732-3780`,
+`Print.cpp:3851-3884` and `PrintApply.cpp:1534,1776`. No production fix for this
+finding is included in P; a new source-cited SPEC→RED slice follows P's merge.

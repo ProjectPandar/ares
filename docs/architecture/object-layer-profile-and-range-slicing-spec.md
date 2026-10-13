@@ -132,7 +132,7 @@ generated-by normalization, never a footer/polygon-only comparison.
 | P3: two objects with different profiles | Original ordinal association, merged layer schedule |
 | P4: selected plate with an earlier unselected object | Association before plate filtering, complete selected output |
 | P5: wrong top; P6: wrong first height | Native range-profile regeneration, complete byte equality |
-| P7: precise-Z and non-unit shrinkage | Actual Native schedule, f64 arithmetic and top alignment |
+| P7: precise-Z and non-unit shrinkage (deferred after RED) | Independent no-profile Native11/Ares12 finding; separate slice after P merge |
 
 P1/P2 establish RED before production import/selection changes. A Native
 rejection or producer instability is reported, not hidden by changing context.

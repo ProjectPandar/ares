@@ -8,6 +8,9 @@ use serde_json::json;
 
 use crate::runner::{ExportedCase, OrcaRunner};
 
+#[path = "object_layer_profiles/boundaries.rs"]
+mod boundaries;
+
 const ABSENT: &[u8] =
     include_bytes!("../../../../../tests/parity/object-layer-profiles/absent.3mf");
 const RAMP: &[u8] = include_bytes!("../../../../../tests/parity/object-layer-profiles/ramp.3mf");
@@ -24,6 +27,16 @@ async fn object_stored_step_profile_preserves_complete_native_output() {
 }
 
 async fn compare_profile(label: &str, input: &[u8]) {
+    compare_case(label, input, ABSENT, None, true).await;
+}
+
+async fn compare_case(
+    label: &str,
+    input: &[u8],
+    baseline_input: &[u8],
+    plate: Option<u32>,
+    changes_schedule: bool,
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -32,14 +45,32 @@ async fn compare_profile(label: &str, input: &[u8]) {
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    let baseline = reference(&runner, "absent", ABSENT, &directory);
-    let baseline_actual = slice(ABSENT).await.unwrap();
+    let baseline = reference(&runner, "absent", baseline_input, &directory, plate);
+    let baseline_actual = slice(baseline_input, plate).await.unwrap();
+    fs::write(directory.join("absent/ares.gcode"), &baseline_actual).unwrap();
+    fs::write(directory.join("absent/native.gcode"), &baseline).unwrap();
     crate::golden::compare_ordered_bytes_generator_only(&baseline, &baseline_actual)
         .unwrap_or_else(|error| panic!("inactive control: {error}; {directory:?}"));
-    let native = reference(&runner, label, input, &directory);
+    let native = reference(&runner, label, input, &directory, plate);
     let native_layers = layer_lines(&native);
-    assert_ne!(native_layers, layer_lines(&baseline), "{directory:?}");
-    let actual = slice(input).await;
+    if changes_schedule {
+        assert_ne!(native_layers, layer_lines(&baseline), "{directory:?}");
+    } else {
+        assert_eq!(
+            crate::golden::normalize_one_generator_line(
+                &baseline,
+                crate::golden::GeneratorKind::Orca
+            )
+            .unwrap(),
+            crate::golden::normalize_one_generator_line(
+                &native,
+                crate::golden::GeneratorKind::Orca
+            )
+            .unwrap(),
+            "import selection; {directory:?}"
+        );
+    }
+    let actual = slice(input, plate).await;
     if let Ok(bytes) = &actual {
         fs::write(directory.join("ares.gcode"), bytes).unwrap();
     }
@@ -63,27 +94,36 @@ async fn compare_profile(label: &str, input: &[u8]) {
         .unwrap_or_else(|error| panic!("{error}; {directory:?}"));
 }
 
-fn reference(runner: &OrcaRunner, label: &str, input: &[u8], root: &std::path::Path) -> Vec<u8> {
+fn reference(
+    runner: &OrcaRunner,
+    label: &str,
+    input: &[u8],
+    root: &std::path::Path,
+    plate: Option<u32>,
+) -> Vec<u8> {
     let directory = root.join(label);
     fs::create_dir(&directory).unwrap();
     let project_path = directory.join("input.3mf");
     fs::write(&project_path, input).unwrap();
-    runner
-        .slice_case(&ExportedCase {
-            label: format!("object-layer-profile/{label}"),
-            project: input.to_vec(),
-            project_path,
-            output_dir: directory,
-        })
-        .unwrap()
-        .reference
+    let case = ExportedCase {
+        label: format!("object-layer-profile/{label}"),
+        project: input.to_vec(),
+        project_path,
+        output_dir: directory,
+    };
+    match plate {
+        Some(plate) => runner.slice_selected_plate_case(&case, plate),
+        None => runner.slice_case(&case),
+    }
+    .unwrap()
+    .reference
 }
 
-async fn slice(input: &[u8]) -> Result<Vec<u8>, ares_core::SliceError> {
+async fn slice(input: &[u8], plate: Option<u32>) -> Result<Vec<u8>, ares_core::SliceError> {
     ares_core::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
-        None,
+        plate,
         &ConfigOverrides::default(),
         SlicerContext::new(0),
     )
