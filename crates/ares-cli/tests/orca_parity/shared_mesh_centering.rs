@@ -18,31 +18,30 @@ fn sha(bytes: &[u8]) -> String {
 }
 
 fn compare(label: &str, bytes: &[u8], plate: u32) {
+    compare_scope(label, bytes, plate, Some(plate), MANIFEST);
+}
+
+pub(super) fn compare_scope(
+    label: &str,
+    bytes: &[u8],
+    native_plate: u32,
+    plate: Option<u32>,
+    manifest: &str,
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         crate::native_environment::skipped("centering Native oracle not configured");
         return;
     };
-    let manifest: Value = serde_json::from_str(MANIFEST).unwrap();
+    let manifest: Value = serde_json::from_str(manifest).unwrap();
     let case = &manifest["cases"][label];
     assert_eq!(sha(bytes), case["input_sha256"].as_str().unwrap());
     let project = ares_core::load_project(bytes).unwrap();
-    assert_eq!(
-        project.objects().len(),
-        case["object_ids"].as_array().unwrap().len()
-    );
-    for (object, count) in project
-        .objects()
-        .iter()
-        .zip(case["volume_counts"].as_array().unwrap())
-    {
-        assert_eq!(object.volumes().len(), count.as_u64().unwrap() as usize);
-    }
     let settings = crate::runner::application::settings(bytes).unwrap();
     for (key, value) in case["settings"].as_object().unwrap() {
         assert_eq!(&settings[key], value, "input {key}");
     }
     let root = tempfile::Builder::new()
-        .prefix(&format!("centering-c2-{label}-plate{plate}-"))
+        .prefix(&format!("centering-c2-{label}-plate{native_plate}-"))
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
@@ -50,7 +49,7 @@ fn compare(label: &str, bytes: &[u8], plate: u32) {
     fs::create_dir(root.join("native")).unwrap();
     let args = vec![
         "--slice".into(),
-        plate.to_string(),
+        native_plate.to_string(),
         "--outputdir".into(),
         root.join("native").to_str().unwrap().into(),
         root.join("input.3mf").to_str().unwrap().into(),
@@ -71,7 +70,8 @@ fn compare(label: &str, bytes: &[u8], plate: u32) {
     let result: Value =
         serde_json::from_slice(&fs::read(root.join("native/result.json")).unwrap()).unwrap();
     assert_eq!(result["return_code"], 0, "Native admission {root:?}");
-    let reference = fs::read(root.join(format!("native/plate_{plate}.gcode"))).unwrap();
+    let reference =
+        fs::read(root.join(format!("native/plate_{}.gcode", native_plate.max(1)))).unwrap();
     if label.starts_with("facet-") {
         assert!(
             crate::option_coverage::normal_support_output::has_support_extrusion(
@@ -112,7 +112,7 @@ fn compare(label: &str, bytes: &[u8], plate: u32) {
         .block_on(ares_core::slice_project_plate_validated(
             &bytes,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            Some(plate),
+            plate,
             &ares_core::ConfigOverrides::default(),
             ares_core::SlicerContext::new(0),
         ));
@@ -125,8 +125,13 @@ fn compare(label: &str, bytes: &[u8], plate: u32) {
         .and_then(|g| golden::compare_ordered_bytes_generator_only(&reference, g));
     let output = root.join("ares.cli.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
-        .args(["slice", "--plate", &plate.to_string(), "-o"])
+    let mut command = Command::new(binary);
+    command.arg("slice");
+    if let Some(plate) = plate {
+        command.args(["--plate", &plate.to_string()]);
+    }
+    let cli = command
+        .arg("-o")
         .arg(&output)
         .arg(root.join("input.3mf"))
         .output()
@@ -146,6 +151,28 @@ fn compare(label: &str, bytes: &[u8], plate: u32) {
         "cli_binary_sha256":sha(&fs::read(binary).unwrap()),"cli_comparison":cli_comparison,
         "strict_parity_required":true,"comparator":"unchanged golden::compare_ordered_bytes_generator_only"
     })).unwrap()).unwrap();
+    fs::write(
+        root.join("import-membership.json"),
+        serde_json::to_vec_pretty(&json!({
+            "objects":project.objects().iter().map(|object| json!({
+                "id":object.id(), "volume_count":object.volumes().len()
+            })).collect::<Vec<_>>(),
+            "expected":case, "native_plate":native_plate, "public_plate":plate
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        project.objects().len(),
+        case["object_ids"].as_array().unwrap().len()
+    );
+    for (object, count) in project
+        .objects()
+        .iter()
+        .zip(case["volume_counts"].as_array().unwrap())
+    {
+        assert_eq!(object.volumes().len(), count.as_u64().unwrap() as usize);
+    }
     assert!(api.is_ok(), "C2 public API admission RED {root:?}: {api:?}");
     assert!(
         cli.status.success(),

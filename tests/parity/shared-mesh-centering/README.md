@@ -25,3 +25,30 @@ blocker code8 and current-volume enforcer code4. Their output comparison must
 preserve current-volume annotations when vertices/triangles are shared.
 All oracle products, diagnostics, commands and comparison evidence stay in
 external fresh artifact roots. No Native product is committed.
+
+## Import-contract dependency (SPEC415d796bd)
+
+`generate_import_contracts.py` authors three input-only ZIPs from the existing
+fixtures. Its separate manifest records every changed input field and SHA.
+Their hashes exactly match the retained Native preflight inputs:
+
+- unassigned-owner: owner2 becomes nonprintable and loses only its plate1
+  membership; explicit import must exclude it before shared-owner selection.
+- default-scope: owner2 moves to plate2/globalX374 and object3 to plate1/globalX155;
+  plate object/label membership swaps. Native slice0/all-import and slice1/explicit
+  import have different owners. API None and CLI without --plate use slice0.
+- local-id-bfs: omit only the root component's self p:path. This is the local-ID
+  BFS control; the original literal-ID nested-bfs input remains unchanged.
+
+The original nested fixture's expected imported volume count is one, approved
+separately against bbs_3mf.cpp:4867-4891. Its equality assertion and ordered
+comparison remain strict. Five new public E2Es cover the four contract groups,
+including both default and explicit requests on the same authored input.
+The shared helper now records Native/API/CLI products before asserting imported
+membership, preserving the exact prior membership assertions and comparator.
+Selected-view assertions additionally check unassigned exclusion, owner widths,
+and retention when selecting None on an already selected view.
+
+At authoring time the directed window is closed: no compilation or oracle run,
+and no RED/GREEN claim for these new tests. Fresh official and seeded runs are
+required after the coordinator reopens the CPU12 window, before production.
