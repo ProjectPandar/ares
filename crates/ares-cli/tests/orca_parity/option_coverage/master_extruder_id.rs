@@ -198,3 +198,34 @@ fn orca_parity_master_extruder_id_has_active_bounded_native_scope() {
         [Some(json!("1")), Some(json!("2"))]
     );
 }
+
+// PrintConfig.cpp:5399; ToolOrdering.cpp:1150,1200-1201: bounded H2D TPU branch.
+pub(super) fn generate(key: &str) -> Option<(Vec<domains::OptionCase>, Value)> {
+    (key == "master_extruder_id").then(|| {
+        let cases = [("M1", "1"), ("M2", "2")].into_iter()
+            .map(|(label, value)| domains::OptionCase { label: label.into(), value: Some(json!(value)) })
+            .collect();
+        (cases, json!({
+            "domain":"bounded H2D TPU master selector",
+            "definition":"PrintConfig.cpp:5399-5403",
+            "consumer":"ToolOrdering.cpp:1150-1207; FilamentGroup.cpp:40-49",
+            "input":"master_extruder_id_input::project",
+            "mode":"Auto For Flush", "nozzle_diameter":["0.4","0.4"],
+            "filament_type":["TPU","PLA"], "wall_filament":1,"sparse_infill_filament":2,
+            "controls":"Manual [1,2] with master1 and master2 retains actual motion",
+            "deferred":["Auto For Match","non-TPU optimization","AMS grouping","wipe tower offsets","invalid indices","arbitrary printer contexts"]
+        }))
+    })
+}
+
+pub(super) fn execute_plan(runner: &OrcaRunner, plan: &domains::OptionPlan) -> OptionOutcome {
+    for case in &plan.cases {
+        compare(
+            runner,
+            &format!("master-extruder-id/{}", case.label),
+            case.value.as_ref().unwrap().as_str().unwrap(),
+            "Auto For Flush",
+        );
+    }
+    OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None)
+}

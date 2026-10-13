@@ -138,6 +138,9 @@ fn execute_plan(
     if plan.cases.is_empty() {
         return OptionOutcome::omitted(plan);
     }
+    if plan.key == "master_extruder_id" {
+        return super::master_extruder_id::execute_plan(runner, plan);
+    }
     if plan.key == super::print_compatible_printers::KEY {
         // Replay embedded requests, never load this metadata key as a preset.
         // All seven witnesses and the retained baseline must pass before credit.
