@@ -1,0 +1,78 @@
+{
+  "sources": {
+    "tests/parity/object-layer-profiles/absent.3mf": "4457965422f4597e669dd83519e6ed8264bee2e1abf2e507a603c36aa3333761",
+    "tests/parity/validation/modifier-wall-loops-classic.3mf": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf"
+  },
+  "variants": {
+    "baseline": {
+      "input_sha256": "10893d0122fe0bd5c83974a4aa1bca43efa455d9b35d0a3d44b887e32877a381",
+      "baseline": null,
+      "contract": "Authored 20x20x6 closed cube; existing project presets; rectilinear20%, 2 walls/shells"
+    },
+    "density": {
+      "input_sha256": "2ab021d1fba2e969c431bf828439b5e6c69107341517fe396e93886053dea8e5",
+      "baseline": "baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"3\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"sparse_infill_density\">40%</option></range></object></objects>"
+    },
+    "width": {
+      "input_sha256": "cea26e7920a21122cc110ac185e6920e9162c05b0f57e5b02ba98851f9af7869",
+      "baseline": "baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"3\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"outer_wall_line_width\">0.5</option></range></object></objects>"
+    },
+    "speed": {
+      "input_sha256": "8cf9d819865fdd4c35742866fb4805161b7012968d1b794f5a850273753e31f2",
+      "baseline": "baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"3\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"outer_wall_speed\">35</option></range></object></objects>"
+    },
+    "profile-baseline": {
+      "input_sha256": "b5da568d0b57d1bce3966197481ae6625b54e6e3aada85d046a700009b10d679",
+      "baseline": null,
+      "contract": "object_id=1|0;0.3;0.3;0.15;3;0.15;3;0.2;6;0.2\n"
+    },
+    "profile-mixed": {
+      "input_sha256": "d783de46ade0bdd6aee47a4a1b4654a9d7ba6d543ac5fe7ad2fa623f9069cd40",
+      "baseline": "profile-baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"2\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"sparse_infill_density\">40%</option></range><range min_z=\"3\" max_z=\"4\"><option opt_key=\"outer_wall_speed\">35</option></range></object></objects>"
+    },
+    "profile-region-only": {
+      "input_sha256": "7e0c48bf3fcdc35eb42ab2c6de3a57fd923087d68516c9cc6e53721ad02f61db",
+      "baseline": "profile-baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"3\"><option opt_key=\"sparse_infill_density\">40%</option></range></object></objects>"
+    },
+    "profile-overlap": {
+      "input_sha256": "b76cf2226f1a469fdb008f7a9638b39fc436c61370806f794d143a03fcdc7aad",
+      "baseline": "profile-baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"3\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"sparse_infill_density\">40%</option></range><range min_z=\"2\" max_z=\"4\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"outer_wall_speed\">35</option></range></object></objects>"
+    },
+    "profile-gap": {
+      "input_sha256": "5f17e2022ba66625df46eed37d3ba5c3074eee058fd98c4c88c52a3a448f4385",
+      "baseline": "profile-baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"2\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"sparse_infill_density\">40%</option></range><range min_z=\"3\" max_z=\"4\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"outer_wall_speed\">35</option></range></object></objects>"
+    },
+    "profile-epsilon": {
+      "input_sha256": "13e5625ed75d39cfce1edfcf24da855c9908fc62625ff3356fb7573423c4bfe4",
+      "baseline": "profile-baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"0.825\" max_z=\"1.12495\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"outer_wall_speed\">35</option></range><range min_z=\"1.125\" max_z=\"2\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"sparse_infill_density\">40%</option></range></object></objects>"
+    },
+    "volume-baseline": {
+      "input_sha256": "b9bdf0b87c1239d9a508b7cec064284a710089898e790f22d70f53a88c0db449",
+      "baseline": null,
+      "contract": "Model-part outer_wall_line_width=0.6"
+    },
+    "volume-precedence": {
+      "input_sha256": "c9d386900011876e8c46cbfcecb2a08f28b0ff6edc16afc9067c39e4855dcb86",
+      "baseline": "volume-baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"1\" max_z=\"3\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"outer_wall_line_width\">0.5</option></range></object></objects>"
+    },
+    "modifier-baseline": {
+      "input_sha256": "943616fedc2e55285866a3f8fdf10f03fba3175ac11ff5cf6f5d0f05f761ebf1",
+      "baseline": null,
+      "contract": "Existing tracked modifier project; no geometry/config changes"
+    },
+    "modifier-range": {
+      "input_sha256": "5bb243c131f0838704003ede5bf98c4b48518b01358cb3e22413003818453e0e",
+      "baseline": "modifier-baseline",
+      "contract": "<?xml version='1.0' encoding='utf-8'?>\n<objects><object id=\"1\"><range min_z=\"0.3\" max_z=\"0.6\"><option opt_key=\"layer_height\">0.2</option><option opt_key=\"outer_wall_speed\">35</option></range></object></objects>"
+    }
+  }
+}

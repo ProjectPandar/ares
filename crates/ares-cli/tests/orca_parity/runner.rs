@@ -9,6 +9,9 @@ mod native_ksr_reference_migration;
 
 use serde_json::{Map, Value};
 
+#[path = "runner/object_layer_ranges.rs"]
+mod object_layer_ranges;
+
 #[path = "runner/object_layer_profiles.rs"]
 mod object_layer_profiles;
 
