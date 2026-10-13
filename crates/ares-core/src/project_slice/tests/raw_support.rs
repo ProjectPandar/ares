@@ -11,8 +11,8 @@ use super::super::{
     },
 };
 use super::support::{
-    identity_resolved, object, object_with_instances, plan, project_volume, project_volume_at_x,
-    project_with_range, resolved_object, slot_limit, transform, unsupported,
+    identity_resolved, object, plan, project_volume, project_volume_at_x, project_with_range,
+    resolved_object, slot_limit, transform, unsupported,
 };
 
 pub(super) fn retained_facts(

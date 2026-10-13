@@ -1,4 +1,4 @@
-use crate::{ProjectVolumeType, Transform3d, load_project, slice_project};
+use crate::{ProjectVolumeType, Transform3d, slice_project};
 
 use super::{
     raw_support::{
@@ -6,8 +6,8 @@ use super::{
         ranged_later_request, request_wide_dense_objects, retained_facts,
     },
     support::{
-        KsrArchive, identity_resolved, metadata, object, object_with_instances, plan, project,
-        project_volume, project_volume_at_x, resolved_object, slot_limit, transform, unsupported,
+        KsrArchive, identity_resolved, metadata, object, plan, project, project_volume,
+        resolved_object, slot_limit, transform, unsupported,
     },
 };
 use crate::project_slice::raw_intersections::validate_dense_slot_counts;
