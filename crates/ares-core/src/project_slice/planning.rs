@@ -10,7 +10,6 @@ pub(super) fn plan_project(
     resolved: &BoundedResolvedProjectConfig,
 ) -> Result<Vec<layers::PlannedPrintObject>, SliceError> {
     capabilities::validate(
-        project.has_painted_layer_height_profile(),
         project.objects(),
         &resolved.objects,
         resolved.views.full.process.print.spiral_mode.0,
@@ -31,9 +30,11 @@ pub(super) fn plan_project(
             object_height,
             &object_extruders[object_index],
         )?;
-        let profile = profile::layer_height_profile_from_ranges(
+        let source = &project.objects()[resolved_object.source_object_index];
+        let profile = profile::update_layer_height_profile(
             &parameters,
-            project.objects()[resolved_object.source_object_index].layer_config_ranges(),
+            source.layer_height_profile(),
+            source.layer_config_ranges(),
         );
         Ok((parameters, profile))
     })

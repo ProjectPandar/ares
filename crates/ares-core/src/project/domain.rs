@@ -1,4 +1,5 @@
 mod documents;
+mod layer_height_profile;
 mod placement;
 mod plate_selection;
 mod profile_input;
@@ -155,6 +156,7 @@ pub struct ProjectObject {
     object_overrides: ObjectOptionOverrides,
     region_overrides: RegionOptionOverrides,
     layer_config_ranges: Vec<LayerConfigRange>,
+    layer_height_profile: Vec<f64>,
     volumes: Vec<ProjectVolume>,
     instances: Vec<ProjectInstance>,
 }
@@ -175,6 +177,7 @@ impl ProjectObject {
             object_overrides: metadata.2,
             region_overrides: metadata.3,
             layer_config_ranges: Vec::new(),
+            layer_height_profile: Vec::new(),
             volumes,
             instances,
         }

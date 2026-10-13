@@ -5,6 +5,7 @@ pub(crate) mod effective_config;
 pub(crate) mod facets_annotation;
 mod filament_sequence;
 mod layer_config_ranges;
+mod layer_height_profiles;
 mod load;
 mod model_settings;
 mod model_xml;

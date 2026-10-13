@@ -4,14 +4,10 @@ use crate::{
 };
 
 pub(super) fn validate(
-    has_painted_layer_height_profile: bool,
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
     spiral_mode: bool,
 ) -> Result<(), SliceError> {
-    if has_painted_layer_height_profile {
-        return unsupported("layer_height_profile");
-    }
     if resolved_objects.iter().any(|resolved| {
         source_objects[resolved.source_object_index]
             .layer_config_ranges()

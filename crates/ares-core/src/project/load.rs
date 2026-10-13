@@ -151,6 +151,7 @@ pub(crate) fn load_project_with_preparation(
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::normalize_volume_offsets(&mut objects);
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
+    super::layer_height_profiles::load(&mut archive, &archive_paths, &mut objects)?;
     let plates_custom_gcodes = super::plate_custom_gcodes::load(&mut archive, &archive_paths)?;
     // bbs_3mf.cpp:3945-3957: the model's `Application` metadata tags the
     // BambuStudio/OrcaSlicer family (`is_bbl_3mf`).

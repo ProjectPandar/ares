@@ -4,6 +4,28 @@ use super::parameters::SlicingParameters;
 
 const EPSILON: f64 = 1e-4;
 
+// PrintObject.cpp:3805-3833: validate stored data before regenerating from ranges.
+pub(super) fn update_layer_height_profile(
+    parameters: &SlicingParameters,
+    stored: &[f64],
+    ranges: &[LayerConfigRange],
+) -> Vec<f64> {
+    let mut profile = stored.to_vec();
+    if !profile.is_empty()
+        && (!profile.len().is_multiple_of(2)
+            || (profile[profile.len() - 2] - parameters.object_print_z_uncompensated_max
+                + parameters.object_print_z_min)
+                .abs()
+                > 1e-3)
+    {
+        profile.clear();
+    }
+    if profile.is_empty() || profile[1] != parameters.first_object_layer_height {
+        return layer_height_profile_from_ranges(parameters, ranges);
+    }
+    profile
+}
+
 pub(super) fn layer_height_profile_from_ranges(
     parameters: &SlicingParameters,
     ranges: &[LayerConfigRange],

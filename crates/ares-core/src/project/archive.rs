@@ -82,6 +82,10 @@ impl<'a> ProjectArchive<'a> {
     pub(crate) fn paths(&self) -> impl Iterator<Item = &PackagePath> {
         self.entries.keys()
     }
+
+    pub(crate) fn entry_index(&self, path: &PackagePath) -> usize {
+        self.entries[path].0
+    }
 }
 
 fn invalid_archive(reason: impl Into<String>) -> SliceError {
