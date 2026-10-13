@@ -6,6 +6,9 @@ mod filament_self_index;
 #[path = "option_coverage/master_extruder_id.rs"]
 mod master_extruder_id;
 
+#[path = "option_coverage/printer_technology.rs"]
+mod printer_technology;
+
 #[path = "option_coverage/multiline_union.rs"]
 pub(crate) mod multiline_union;
 
