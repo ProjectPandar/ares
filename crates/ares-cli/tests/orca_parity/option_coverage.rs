@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "option_coverage/filament_self_index.rs"]
+mod filament_self_index;
+
 #[path = "option_coverage/master_extruder_id.rs"]
 mod master_extruder_id;
 
