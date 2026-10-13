@@ -9,8 +9,7 @@ use crate::{presets::VendorProfiles, runner};
 
 #[path = "grid_multiline_mode0_inputs.rs"]
 mod inputs;
-#[path = "../option_coverage/multiline_union_observation.rs"]
-mod observation;
+use crate::option_coverage::multiline_union::observation;
 
 #[derive(Clone, Copy)]
 struct Case {
