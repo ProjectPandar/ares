@@ -17,6 +17,7 @@ CASES={
  'single':([A],{}),
  'xy-copy':([A,(I,155,110,.5,1)],{}),
  'rotation-group':([A,B],{}),
+ 'rotation-exclusion':([A,B],{'exclude_object':'1'}),
  'scale-group':([A,(S,155,110,.5,1)],{}),
  'mirror-group':([A,(M,155,110,.5,1)],{}),
  'rotation-thirty':([A,(R30,155,110,.5,1)],{}),
