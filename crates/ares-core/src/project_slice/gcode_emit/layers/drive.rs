@@ -283,4 +283,3 @@
         chunk_index += 1;
         state.adaptive_pa_layer = chunk_index;
     }
-    cooling.finish(output);

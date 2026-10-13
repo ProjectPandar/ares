@@ -251,6 +251,7 @@ pub(super) fn append(
     let mut chunk_index = 0;
     let mut final_chunk = None;
     include!("layers/drive.rs");
+    cooling.finish(output);
 
     let filtered_end = output.len();
     if let Some((entry, slices, spacing)) = final_chunk {
