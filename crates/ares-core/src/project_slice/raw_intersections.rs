@@ -4,10 +4,14 @@ use crate::{
     Point3d, ProjectObject, ProjectVolumeType, SliceError,
     geometry::{CoordinateScale, Point},
     mesh_slicer::{IntersectionLine, RawIntersectionBudget, slice_mesh_on_planes},
+    options::FilamentRegionSourceOptions,
     project::effective_config::types::ResolvedProjectObject,
 };
 
 use super::layers::PlannedPrintObject;
+
+#[path = "raw_intersections/ranges.rs"]
+mod ranges;
 
 const DENSE_SLOT_LIMIT: usize = 1_000_000;
 
@@ -143,6 +147,8 @@ pub(super) fn intersect_projected_objects(
     resolved_objects: &[ResolvedProjectObject],
     projected_objects: Vec<ProjectedPrintObject>,
     scale: CoordinateScale,
+    filament: &FilamentRegionSourceOptions,
+    logical_count: usize,
 ) -> Result<Vec<IntersectedPrintObject>, SliceError> {
     let mut budget = RawIntersectionBudget::new();
     let mut intersected_objects = Vec::with_capacity(projected_objects.len());
@@ -153,6 +159,8 @@ pub(super) fn intersect_projected_objects(
             .iter()
             .find(|resolved| resolved.source_object_index == plan.source_object_index)
             .expect("planned object must have resolved configuration");
+        let active_ranges = (resolved.layer_candidates.len() > 1)
+            .then(|| ranges::active_volume_ranges(source, resolved, filament, logical_count));
         let center = raw_center(source, scale)?;
         let centered_object_transform = resolved.print_objects[plan.transform_index]
             .transform
@@ -175,12 +183,25 @@ pub(super) fn intersect_projected_objects(
                 .prescaled_xy(scale.factor());
             let vertices =
                 transformed_vertices(source_volume.mesh().vertices(), slicing_transform)?;
-            let layers = slice_mesh_on_planes(
-                &vertices,
-                source_volume.mesh().triangles(),
-                &planes,
-                &mut budget,
-            )?;
+            let layers = match &active_ranges {
+                Some(active) => ranges::slice_volume(
+                    &vertices,
+                    source_volume.mesh().triangles(),
+                    &planes,
+                    &active[projected_volume.source_volume_index],
+                    &mut budget,
+                )?,
+                None => slice_mesh_on_planes(
+                    &vertices,
+                    source_volume.mesh().triangles(),
+                    &planes,
+                    &mut budget,
+                )?,
+            };
+            // PrintObjectSlice.cpp:221-225 drops volumes with no filtered layers.
+            if active_ranges.is_some() && layers.is_empty() {
+                continue;
+            }
             volumes.push(RawVolumeIntersections {
                 source_volume_index: projected_volume.source_volume_index,
                 volume_ordinal: projected_volume.volume_ordinal,
@@ -269,6 +290,8 @@ fn coordinate_error() -> SliceError {
     )
 }
 
+// Profile selection has already rejected regeneration with a missing height;
+// here retain the existing no-profile rejection for the raw preflight boundary.
 fn validate_layer_ranges(
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
@@ -277,14 +300,10 @@ fn validate_layer_ranges(
         source_objects[resolved.source_object_index]
             .layer_config_ranges()
             .iter()
-            .any(|range| {
-                range.layer_height().is_none()
-                    || range.region_overrides()
-                        != &crate::options::RegionOptionOverrides {
-                            wall_loops: range.region_overrides().wall_loops,
-                            ..Default::default()
-                        }
-            })
+            .any(|range| range.layer_height().is_none())
+            && source_objects[resolved.source_object_index]
+                .layer_height_profile()
+                .is_empty()
     }) {
         return unsupported("layer_config_ranges");
     }

@@ -35,7 +35,7 @@ pub(super) fn plan_project(
             &parameters,
             source.layer_height_profile(),
             source.layer_config_ranges(),
-        );
+        )?;
         Ok((parameters, profile))
     })
 }

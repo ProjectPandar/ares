@@ -1,4 +1,4 @@
-use crate::LayerConfigRange;
+use crate::{LayerConfigRange, SliceError};
 
 use super::parameters::SlicingParameters;
 
@@ -9,7 +9,7 @@ pub(super) fn update_layer_height_profile(
     parameters: &SlicingParameters,
     stored: &[f64],
     ranges: &[LayerConfigRange],
-) -> Vec<f64> {
+) -> Result<Vec<f64>, SliceError> {
     let mut profile = stored.to_vec();
     if !profile.is_empty()
         && (!profile.len().is_multiple_of(2)
@@ -21,9 +21,16 @@ pub(super) fn update_layer_height_profile(
         profile.clear();
     }
     if profile.is_empty() || profile[1] != parameters.first_object_layer_height {
-        return layer_height_profile_from_ranges(parameters, ranges);
+        // Retain the existing raw range rejection before Slicing.cpp:249 would
+        // dereference a missing height. A retained profile bypasses this path.
+        if ranges.iter().any(|range| range.layer_height().is_none()) {
+            return Err(SliceError::UnsupportedProjectFeature(
+                "layer_config_ranges".to_owned(),
+            ));
+        }
+        return Ok(layer_height_profile_from_ranges(parameters, ranges));
     }
-    profile
+    Ok(profile)
 }
 
 pub(super) fn layer_height_profile_from_ranges(

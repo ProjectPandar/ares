@@ -130,6 +130,8 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         &resolved.objects,
         projected_objects,
         scale,
+        &resolved.views.full.filament.region,
+        resolved.logical_filament_count,
     )?;
     Ok(ProjectSliceState {
         project,
