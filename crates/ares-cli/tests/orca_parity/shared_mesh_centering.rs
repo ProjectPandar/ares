@@ -264,11 +264,15 @@ fn c2_same_project_selection_a_b_a() {
     compare("plate-local", PLATES, 2);
     let again = view_geometry(&project, 1);
     compare("plate-local", PLATES, 1);
-    let root = tempfile::Builder::new()
-        .prefix("centering-c2-repeat-selection-")
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
+    let mut builder = tempfile::Builder::new();
+    builder.prefix("centering-c2-repeat-selection-");
+    let root = if std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some() {
+        builder.tempdir_in(crate::artifacts::root_from_env().unwrap())
+    } else {
+        builder.tempdir()
+    }
+    .unwrap()
+    .keep();
     fs::write(root.join("selection.json"), serde_json::to_vec_pretty(&json!({
         "sequence":[1,2,1],"a":a,"b":b,"a_again":again,
         "seam":"one loaded Project::select_plate; strict byte API/CLI per plate independently imports the same bytes"

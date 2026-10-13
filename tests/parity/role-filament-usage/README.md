@@ -28,3 +28,12 @@ The WASM role test remains an ordinary public-result JSON pass-through test;
 it does not read Native files. Required/optional availability follows the shared
 Native policy, including visible SKIPPED for an omitted optional comparison.
 See docs/architecture/native-artifact-cleanup-processor-spec.md.
+
+The WASM positive explicit-plate test uses `wasm-plate1.3mf`, reproduced by
+`generate_wasm_plate1.py`. It adds only plate1 object2/instance0/identify14
+membership to the original shared input. Under Native importer semantics
+(bbs_3mf.cpp:2058-2082), the original membership-empty input rejects --slice1
+with -6/empty model in both modes, while --slice0 succeeds. The dedicated
+membership-complete input admits --slice1 in both modes. Geometry, transforms,
+settings and the original shared fixture remain unchanged. This preserves
+Some(1) and every WASM statistics assertion; no import fallback is added.
