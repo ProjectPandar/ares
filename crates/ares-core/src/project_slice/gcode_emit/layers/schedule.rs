@@ -311,6 +311,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         .map_err(|error| {
             crate::SliceError::InvalidInput(format!("wipe tower geometry: {error:?}"))
         })?;
+    tool_ordering.assign_custom_gcodes(traversal);
     Ok(Schedule {
         tower,
         tool_ordering,

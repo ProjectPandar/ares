@@ -3,6 +3,7 @@ mod boundary;
 mod brim_emit;
 mod context;
 mod cooling_result;
+mod custom_gcode;
 mod entry;
 mod entry_builder;
 mod fan_setup;

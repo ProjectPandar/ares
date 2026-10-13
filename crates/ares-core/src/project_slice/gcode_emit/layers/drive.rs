@@ -133,6 +133,7 @@
                 first_layer,
                 second_layer_done: &mut second_layer_done,
                 bed_cache: &mut bed_cache,
+                custom_gcode: tool_ordering.for_layer(group_z).custom_gcode.as_ref(),
             },
         )?;
         let timelapse_context = boundary.timelapse_context;

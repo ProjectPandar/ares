@@ -80,6 +80,8 @@ pub(super) struct LayerBoundary<'a> {
     /// mutable so the second-layer M140 refreshes it for the next
     /// sequential-object transition.
     pub(super) bed_cache: &'a mut i32,
+    /// `LayerTools::custom_gcode` of this layer's by-layer ordering.
+    pub(super) custom_gcode: Option<&'a crate::gcode_processor::CustomGCodeItem>,
 }
 
 /// Emits the `change_layer` block for `layer_index` (`GCode.cpp:5685-5718`
@@ -103,6 +105,7 @@ pub(super) fn append<'a>(
         first_layer,
         second_layer_done,
         bed_cache,
+        custom_gcode,
     }: LayerBoundary<'_>,
 ) -> Result<BoundaryAdvance<'a>, SliceError> {
     state.physical_fan_speed = state.part_fan_speed;
@@ -304,6 +307,10 @@ pub(super) fn append<'a>(
     if second_layer_reset {
         *second_layer_done = true;
         machine::append_second_layer_transition(output, traversal, state, bed_cache);
+    }
+    // `GCode.cpp:4825-4828`, after the second-layer block.
+    if let Some(item) = custom_gcode {
+        super::custom_gcode::append(output, state, item, &timelapse_context)?;
     }
     // Orca `GCode.cpp:5205-5210`: core-xy BBL printers emit the eager
     // change-layer lift (the second change-layer retract is a no-op

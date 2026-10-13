@@ -1,6 +1,7 @@
 //! `ToolOrdering.cpp` materialized layer tools and writer-used IDs.
 
 mod collect;
+mod custom_gcodes;
 mod first_layer;
 mod initialize;
 use initialize::{initialize_layers, initialize_layers_scoped, layer_index};
@@ -32,6 +33,8 @@ pub(super) struct LayerTools {
     pub(super) has_wipe_tower: bool,
     pub(super) wipe_tower_layer_height: f64,
     pub(super) wiping: wiping::WipingExtrusions,
+    /// `LayerTools::custom_gcode` (`ToolOrdering.hpp:168`).
+    pub(super) custom_gcode: Option<crate::gcode_processor::CustomGCodeItem>,
 }
 
 pub(super) struct ToolOrdering {
