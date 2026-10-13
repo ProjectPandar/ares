@@ -77,3 +77,12 @@ D: f64 input finiteness does not establish finite f32 projected anchor length.
 A schema-bounded percent near FLT_MAX, multiplied by spacing then narrowed,
 may overflow; check Native admission and actual float projection after oracle
 restoration. No unreachable-proof or deletion is claimed for D at this stage.
+
+## Coordinator ruling / implementation
+
+RULING `1e5ee06c3` accepts this exhaustive proof and authorizes direct deletion
+of the sparse-pattern guard as a commit separate from Slice A. The production
+change removes only that always-false rejection; the existing per-pattern
+Fill dispatch and other checks are preserved. No fabricated RED or assertion
+change is involved. Slice A and C1 may share one post-RESTORED directed run
+and one code REVIEW-REQUEST, while retaining distinct implementation commits.

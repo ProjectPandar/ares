@@ -10,42 +10,6 @@ pub(super) fn validate(
     spacing: f32,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    if !matches!(
-        options.sparse_infill_pattern,
-        ProcessInfillPattern::CrossHatch
-            | ProcessInfillPattern::Grid
-            | ProcessInfillPattern::Triangles
-            | ProcessInfillPattern::Cubic
-            | ProcessInfillPattern::Gyroid
-            | ProcessInfillPattern::ThreeDHoneycomb
-            | ProcessInfillPattern::Rectilinear
-            | ProcessInfillPattern::ZigZag
-            | ProcessInfillPattern::Monotonic
-            | ProcessInfillPattern::MonotonicLine
-            | ProcessInfillPattern::AlignedRectilinear
-            | ProcessInfillPattern::Line
-            | ProcessInfillPattern::CrossZag
-            | ProcessInfillPattern::LockedZag
-            | ProcessInfillPattern::Concentric
-            | ProcessInfillPattern::Honeycomb
-            | ProcessInfillPattern::HilbertCurve
-            | ProcessInfillPattern::ArchimedeanChords
-            | ProcessInfillPattern::OctagramSpiral
-            // `AdaptiveCubic`/`SupportCubic` are accepted: the
-            // FillAdaptive port provides `adaptive::anchoring_lines`
-            // for the sparse anchoring path (`sparse_anchoring/arms.rs`).
-            | ProcessInfillPattern::AdaptiveCubic
-            | ProcessInfillPattern::SupportCubic
-            | ProcessInfillPattern::TriHexagon
-            | ProcessInfillPattern::QuarterCubic
-            | ProcessInfillPattern::LateralLattice
-            | ProcessInfillPattern::LateralHoneycomb
-            | ProcessInfillPattern::TpmsD
-            | ProcessInfillPattern::TpmsFk
-            | ProcessInfillPattern::Lightning
-    ) {
-        return unsupported("sparse_infill_pattern");
-    }
     // `gyroid_optimized` is supported — `FillGyroid.cpp` tpms/gyroid_optimized
     // field emission with the real layer height + post-offset re-clipping.
     if options.sparse_infill_density.0 <= 0.0 {
