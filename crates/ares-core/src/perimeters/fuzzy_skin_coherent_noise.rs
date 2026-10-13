@@ -40,7 +40,7 @@ fn lerp(n0: f64, n1: f64, a: f64) -> f64 {
     (1.0 - a) * n0 + a * n1
 }
 
-pub(super) fn coherent_value(
+pub(crate) fn coherent_value(
     noise_type: FuzzySkinNoiseType,
     sample: Point2,
     print_z: f64,

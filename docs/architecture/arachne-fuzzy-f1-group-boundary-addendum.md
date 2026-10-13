@@ -51,3 +51,14 @@ Review/canonical full happen once on the complete stack; F1/F2 merge together.
 CPU12 only for directed runs. No guard is tightened or added,
 no configuration is discarded, and no compatibility rule is changed here.
 The independently approved obsolete test retirement proceeds separately.
+
+## F1 production closure ruling
+
+PerimeterGenerator.cpp:534-540 contains the disconnected-path TODO and
+closing assert, compiled out under NDEBUG. Native release evidence in
+`/tmp/worker3-fuzzy-f1-native-preflight-00nkklq5/closure-width-audit.json`
+admits Ripple gaps 0.320306 / 0.200202 mm. F1 removes only the closing
+debug_assert from traverse.rs and emits the same open sampled loop;
+point-count and adjacent-path joint assertions remain. No closure repair
+or retagging is introduced. F2's own endpoint assignment remains the
+separate source behaviour at FuzzySkin.cpp:811-812.

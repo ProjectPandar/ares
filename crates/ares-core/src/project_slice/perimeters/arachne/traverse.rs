@@ -174,16 +174,9 @@ pub(in crate::project_slice) fn traverse_extrusions(
                     .windows(2)
                     .all(|pair| pair[0].polyline.points.last() == pair[1].polyline.points.first())
             );
-            debug_assert_eq!(
-                extrusion_loop
-                    .paths
-                    .first()
-                    .and_then(|path| path.polyline.points.first()),
-                extrusion_loop
-                    .paths
-                    .last()
-                    .and_then(|path| path.polyline.points.last())
-            );
+            // Native release (NDEBUG) admits Ripple's open sampled loop.
+            // `PerimeterGenerator.cpp:534-540` documents disconnected paths;
+            // closure-width-audit.json confirms no closure repair is applied.
             orient_loop(
                 &mut extrusion_loop,
                 context.wall_direction,

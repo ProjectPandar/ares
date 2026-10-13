@@ -17,7 +17,7 @@ pub(crate) enum FuzzySkinKind {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(super) enum FuzzySkinNoiseType {
+pub(crate) enum FuzzySkinNoiseType {
     Classic,
     Perlin,
     Billow,
@@ -28,17 +28,17 @@ pub(super) enum FuzzySkinNoiseType {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct FuzzySkinConfig {
-    kind: FuzzySkinKind,
-    pub(super) noise_type: FuzzySkinNoiseType,
-    pub(super) thickness_mm: f64,
-    pub(super) point_distance_mm: f64,
-    pub(super) scale_mm: f64,
-    pub(super) octaves: usize,
-    pub(super) persistence: f64,
-    pub(super) ripples_per_layer: usize,
-    pub(super) ripple_offset_percent: f64,
-    pub(super) layers_between_ripple_offset: usize,
-    first_layer: bool,
+    pub(crate) kind: FuzzySkinKind,
+    pub(crate) noise_type: FuzzySkinNoiseType,
+    pub(crate) thickness_mm: f64,
+    pub(crate) point_distance_mm: f64,
+    pub(crate) scale_mm: f64,
+    pub(crate) octaves: usize,
+    pub(crate) persistence: f64,
+    pub(crate) ripples_per_layer: usize,
+    pub(crate) ripple_offset_percent: f64,
+    pub(crate) layers_between_ripple_offset: usize,
+    pub(crate) first_layer: bool,
 }
 
 /// Layer identity and Z inputs to fuzzy skin (`Layer.hpp::Layer`,
