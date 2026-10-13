@@ -6,6 +6,9 @@ use std::io::{Cursor, Read};
 #[path = "compatible_regions/inherited_filament.rs"]
 mod inherited_filament;
 
+#[path = "compatible_regions/top_pattern.rs"]
+mod top_pattern;
+
 #[path = "compatible_regions/modifier_travel.rs"]
 mod modifier_travel;
 
