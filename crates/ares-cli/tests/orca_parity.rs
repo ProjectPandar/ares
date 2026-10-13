@@ -109,6 +109,8 @@ mod replay_tests;
 mod runner;
 #[path = "orca_parity/sermoon_v1_whole_file.rs"]
 mod sermoon_v1_whole_file;
+#[path = "orca_parity/shared_mesh_centering.rs"]
+mod shared_mesh_centering;
 #[path = "orca_parity/smoke.rs"]
 mod smoke;
 #[path = "orca_parity/smoke_overrides.rs"]
