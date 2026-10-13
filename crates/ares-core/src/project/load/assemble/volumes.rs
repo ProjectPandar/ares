@@ -45,7 +45,11 @@ pub(super) fn collect_volumes(
                     selected.source_transform,
                 ),
             );
-            volume.set_mesh_shared(selected.mesh_shared);
+            let key = selected
+                .mesh_shared_id
+                .filter(|key| *key != -1)
+                .unwrap_or(object.id as i32);
+            volume.set_mesh_preparation(prepared.init_shift, accumulated, key);
             output.push(volume);
         } else if let Some(components) = &object.components {
             for component in &components.components {

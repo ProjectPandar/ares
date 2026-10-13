@@ -7,6 +7,7 @@ use crate::project::{
 pub(super) struct PreparedMesh {
     pub(super) mesh: ProjectMesh,
     pub(super) transform: Transform3d,
+    pub(super) init_shift: Point3d,
 }
 
 pub(super) fn prepare(
@@ -66,6 +67,7 @@ pub(super) fn prepare(
     PreparedMesh {
         mesh,
         transform: component_transform.translated(shift),
+        init_shift: shift,
     }
 }
 

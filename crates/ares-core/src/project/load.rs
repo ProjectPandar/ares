@@ -149,6 +149,7 @@ pub(crate) fn load_project_with_preparation(
     .resolve();
 
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
+    super::domain::materialize_meshes(&mut objects);
     super::domain::normalize_volume_offsets(&mut objects);
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
     super::layer_height_profiles::load(&mut archive, &archive_paths, &mut objects)?;

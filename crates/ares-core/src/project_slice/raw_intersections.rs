@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, num::NonZeroU32, ops::Deref};
+use std::{num::NonZeroU32, ops::Deref};
 
 use crate::{
     Point3d, ProjectObject, ProjectVolumeType, SliceError,
@@ -125,7 +125,6 @@ pub(super) fn prepare_projected_objects(
     planned_objects: Vec<PlannedPrintObject>,
 ) -> Result<Vec<ProjectedPrintObject>, SliceError> {
     validate_layer_ranges(source_objects, resolved_objects)?;
-    validate_shared_meshes(source_objects)?;
 
     let projected_objects = planned_objects
         .into_iter()
@@ -314,21 +313,6 @@ fn validate_layer_ranges(
                 .is_empty()
     }) {
         return unsupported("layer_config_ranges");
-    }
-    Ok(())
-}
-
-fn validate_shared_meshes(source_objects: &[ProjectObject]) -> Result<(), SliceError> {
-    let mut source_ids = BTreeSet::new();
-    for volume in source_objects
-        .iter()
-        .flat_map(ProjectObject::volumes)
-        .filter(|volume| !volume.mesh().triangles().is_empty())
-    {
-        if volume.has_mesh_shared() || !source_ids.insert((volume.source_model_path(), volume.id()))
-        {
-            return unsupported("shared_mesh_centering");
-        }
     }
     Ok(())
 }

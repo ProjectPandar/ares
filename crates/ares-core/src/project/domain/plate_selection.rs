@@ -18,11 +18,16 @@ impl Project {
             .iter()
             .copied()
             .collect::<std::collections::BTreeSet<_>>();
-        let objects = self
+        let rebuild_meshes = self.plates.len() > 1;
+        let mut objects = self
             .objects
             .iter()
             .filter_map(|object| {
-                let mut instances = object.instances().to_vec();
+                let mut instances = if rebuild_meshes {
+                    object.import_instances.clone()
+                } else {
+                    object.instances().to_vec()
+                };
                 instances.retain(|instance| {
                     // Unassigned instances (no plate metadata) stay for the
                     // geometric print-volume gate; assigned instances match
@@ -43,6 +48,10 @@ impl Project {
                 })
             })
             .collect::<Vec<_>>();
+        if rebuild_meshes {
+            super::materialize_meshes(&mut objects);
+            super::normalize_volume_offsets(&mut objects);
+        }
         if objects.is_empty() {
             // Model.cpp:354-355 rejects an empty selected importer model.
             // The CLI adapter maps this to `CLI_NO_SUITABLE_OBJECTS`

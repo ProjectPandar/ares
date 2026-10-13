@@ -64,7 +64,7 @@ pub(crate) struct SelectedVolumeMetadata {
     pub(crate) volume_type: ProjectVolumeType,
     pub(crate) region_overrides: RegionOptionOverrides,
     pub(crate) source_transform: Transform3d,
-    pub(crate) mesh_shared: bool,
+    pub(crate) mesh_shared_id: Option<i32>,
     pub(crate) source_provenance: SelectedSourceProvenance,
     pub(crate) mesh_statistics: SelectedMeshStatistics,
 }
@@ -86,7 +86,7 @@ pub(super) fn select(
                 volume_type: ProjectVolumeType::ModelPart,
                 region_overrides: RegionOptionOverrides::default(),
                 source_transform: Transform3d::IDENTITY,
-                mesh_shared: false,
+                mesh_shared_id: None,
                 source_provenance: SelectedSourceProvenance::default(),
                 mesh_statistics: SelectedMeshStatistics::default(),
             })
@@ -113,7 +113,6 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
     let mut volume_type = parse_volume_type("subtype", &part.subtype)?;
     let mut source_transform = Transform3d::IDENTITY;
     let mut has_source_transform = false;
-    let mut mesh_shared = false;
     let mut source_provenance = SelectedSourceProvenance::default();
 
     for entry in &part.retained_metadata {
@@ -146,7 +145,7 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
             "source_in_meters" => {
                 source_provenance.converted_from_meters = entry.value == "1";
             }
-            "mesh_shared" => mesh_shared = true,
+            "mesh_shared" => {}
             _ => unreachable!("part structural metadata was classified before assembly"),
         }
     }
@@ -169,10 +168,56 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
         volume_type,
         region_overrides: part.region_overrides.clone(),
         source_transform,
-        mesh_shared,
+        mesh_shared_id: sharing_key(&part.retained_metadata),
         source_provenance,
         mesh_statistics,
     })
+}
+
+// bbs_3mf.cpp:4931-4949: matrix/shared lookup stops after two matches.
+fn sharing_key(entries: &[Metadata]) -> Option<i32> {
+    let mut found = 0;
+    let mut key = None;
+    for entry in entries {
+        match entry.key.as_str() {
+            "matrix" => found += 1,
+            "mesh_shared" => {
+                key = Some(atoi(&entry.value));
+                found += 1;
+            }
+            _ => {}
+        }
+        if found >= 2 {
+            break;
+        }
+    }
+    key
+}
+
+fn atoi(value: &str) -> i32 {
+    let bytes = value.as_bytes();
+    let mut cursor = 0;
+    while cursor < bytes.len() && matches!(bytes[cursor], b' ' | b'\t' | b'\n' | b'\r' | 11 | 12) {
+        cursor += 1;
+    }
+    let negative = bytes.get(cursor) == Some(&b'-');
+    if matches!(bytes.get(cursor), Some(b'+' | b'-')) {
+        cursor += 1;
+    }
+    let mut number = 0_i32;
+    for &digit in &bytes[cursor..] {
+        if !digit.is_ascii_digit() {
+            break;
+        }
+        number = number
+            .wrapping_mul(10)
+            .wrapping_add(i32::from(digit - b'0'));
+    }
+    if negative {
+        number.wrapping_neg()
+    } else {
+        number
+    }
 }
 
 fn parse_volume_type(key: &str, value: &str) -> Result<ProjectVolumeType, SliceError> {

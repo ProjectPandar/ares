@@ -1,6 +1,11 @@
 mod documents;
 mod layer_height_profile;
+mod mesh;
 mod placement;
+mod shared_mesh;
+pub use mesh::ProjectMesh;
+use shared_mesh::MeshPreparation;
+pub(crate) use shared_mesh::materialize_meshes;
 mod plate_selection;
 mod profile_input;
 mod volume_offsets;
@@ -27,31 +32,6 @@ pub struct Point3d {
 impl Point3d {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ProjectMesh {
-    vertices: Vec<Point3d>,
-    triangles: Vec<[u32; 3]>,
-    pub(crate) supported_facets: super::facets_annotation::FacetsAnnotation,
-}
-
-impl ProjectMesh {
-    pub(crate) fn new(vertices: Vec<Point3d>, triangles: Vec<[u32; 3]>) -> Self {
-        Self {
-            vertices,
-            triangles,
-            supported_facets: super::facets_annotation::FacetsAnnotation::default(),
-        }
-    }
-
-    pub fn vertices(&self) -> &[Point3d] {
-        &self.vertices
-    }
-
-    pub fn triangles(&self) -> &[[u32; 3]] {
-        &self.triangles
     }
 }
 
@@ -159,6 +139,7 @@ pub struct ProjectObject {
     layer_height_profile: Vec<f64>,
     volumes: Vec<ProjectVolume>,
     instances: Vec<ProjectInstance>,
+    import_instances: Vec<ProjectInstance>,
 }
 
 impl ProjectObject {
@@ -179,6 +160,7 @@ impl ProjectObject {
             layer_config_ranges: Vec::new(),
             layer_height_profile: Vec::new(),
             volumes,
+            import_instances: instances.clone(),
             instances,
         }
     }
@@ -243,7 +225,7 @@ pub struct ProjectVolume {
     volume_type: ProjectVolumeType,
     region_overrides: RegionOptionOverrides,
     source_transform: Transform3d,
-    mesh_shared: bool,
+    mesh_preparation: MeshPreparation,
 }
 
 impl ProjectVolume {
@@ -262,13 +244,13 @@ impl ProjectVolume {
         Self {
             source_model_path,
             id,
+            mesh_preparation: MeshPreparation::new(&mesh, transform, id as i32),
             mesh,
             transform,
             name: metadata.0,
             volume_type: metadata.1,
             region_overrides: metadata.2,
             source_transform: metadata.3,
-            mesh_shared: false,
         }
     }
 
@@ -304,12 +286,15 @@ impl ProjectVolume {
         self.source_transform
     }
 
-    pub(crate) fn has_mesh_shared(&self) -> bool {
-        self.mesh_shared
-    }
-
-    pub(crate) fn set_mesh_shared(&mut self, mesh_shared: bool) {
-        self.mesh_shared = mesh_shared;
+    pub(crate) fn set_mesh_preparation(
+        &mut self,
+        shift: Point3d,
+        component: Transform3d,
+        key: i32,
+    ) {
+        self.mesh_preparation.init_shift = shift;
+        self.mesh_preparation.component = component;
+        self.mesh_preparation.key = key;
     }
 }
 
