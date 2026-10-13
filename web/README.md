@@ -39,7 +39,8 @@ The headers enable cross-origin isolation and SharedArrayBuffer; all app assets
 are served from the same origin. The app uses `/#/prepare` and `/#/preview`, so
 no custom SPA redirect is required.
 
-The Cloudflare Pages workflow builds and checks every push and pull request,
+The Cloudflare Pages workflow uses the existing self-hosted build runners and
+builds and checks every push and pull request,
 independently of the native oracle jobs, and retains the `cloudflare-pages`
 deployment artifact for seven days. PRs and branch pushes never deploy.
 Production deploys only on `main` pushes when repository variable
