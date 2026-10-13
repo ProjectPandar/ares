@@ -89,9 +89,9 @@ for label,spec in CASES.items():
   resources=object_resource(2,first+component(meshname,1,x=45))
   metadata=object_settings(2,firstpart+part(1,'repeat-box'));ids=[2];volume_counts=[2]
  if spec.get('nested'):
-  # A queued nested owner comes after the direct wider leaf in BFS order.
+  # Literal main/self-path misses Native's empty importer ID namespace.
   resources=object_resource(2,component('3D/3dmodel.model',5)+component(secondname,mid,x=45))+object_resource(5,first)
-  metadata=object_settings(2,secondpart+firstpart);ids=[2];volume_counts=[2]
+  metadata=object_settings(2,secondpart+firstpart);ids=[2];volume_counts=[1]
  if spec.get('reverse'):ids.reverse();volume_counts.reverse()
  model=files['3D/3dmodel.model'].decode()
  model=re.sub(r'<resources>[\s\S]*?</resources>',f'<resources>{resources}</resources>',model)
