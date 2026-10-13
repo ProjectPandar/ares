@@ -12,29 +12,29 @@ use super::super::capabilities::validate as validate_capabilities;
 use super::support::KsrArchive;
 
 fn validate(
-    has_painted_layer_height_profile: bool,
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
 ) -> Result<(), SliceError> {
-    validate_capabilities(
-        has_painted_layer_height_profile,
-        source_objects,
-        resolved_objects,
-        false,
-    )
+    validate_capabilities(source_objects, resolved_objects, false)
 }
 
 #[test]
 fn task22a_capability_gates_each_named_feature() {
-    assert_unsupported(validate(true, &[], &[]), "layer_height_profile");
+    let project = load_project(include_bytes!(
+        "../../../../../tests/parity/object-layer-profiles/step.3mf"
+    ))
+    .unwrap();
+    assert_eq!(
+        validate(
+            project.objects(),
+            &[resolved(0, object_options(), Vec::new())]
+        ),
+        Ok(())
+    );
 
     let ranged = source_object(Default::default(), Vec::new(), one_layer_height_range());
     assert_eq!(
-        validate(
-            false,
-            &[ranged],
-            &[resolved(0, object_options(), Vec::new())],
-        ),
+        validate(&[ranged], &[resolved(0, object_options(), Vec::new())],),
         Ok(())
     );
 
@@ -43,7 +43,7 @@ fn task22a_capability_gates_each_named_feature() {
     // The raft gate is removed (raft milestone): raft_layers no longer
     // crosses the capability boundary.
     assert_eq!(
-        validate(false, &[source], &[resolved(0, object, Vec::new())]),
+        validate(&[source], &[resolved(0, object, Vec::new())]),
         Ok(())
     );
 }
@@ -65,21 +65,20 @@ fn task22a_capability_gate_order_is_project_key_major() {
         resolved(1, object_options(), Vec::new()),
     ];
 
-    assert_unsupported(
-        validate(true, &sources, &resolved_objects),
-        "layer_height_profile",
-    );
-    assert_eq!(validate(false, &sources, &resolved_objects), Ok(()));
+    let mut profiled = sources.clone();
+    profiled[0].set_layer_height_profile(vec![0.0, 0.2, 0.5, 0.1, 1.0, 0.2]);
+    assert_eq!(validate(&profiled, &resolved_objects), Ok(()));
+    assert_eq!(validate(&sources, &resolved_objects), Ok(()));
 
     let sources = [
         source_object(Default::default(), Vec::new(), Vec::new()),
         source_object(Default::default(), Vec::new(), Vec::new()),
     ];
     // The raft gate is removed: raft_layers=1 validates clean.
-    assert_eq!(validate(false, &sources, &resolved_objects), Ok(()));
+    assert_eq!(validate(&sources, &resolved_objects), Ok(()));
     first.raft_layers = OrcaInt(0);
     resolved_objects[0].object = first;
-    assert_eq!(validate(false, &sources, &resolved_objects), Ok(()));
+    assert_eq!(validate(&sources, &resolved_objects), Ok(()));
 }
 
 #[test]
@@ -87,7 +86,6 @@ fn zaa_requires_a_provably_inactive_axis_aligned_box() {
     let source = source_object(Default::default(), Vec::new(), Vec::new());
     assert_unsupported(
         validate(
-            false,
             &[source],
             &[resolved(0, object_options(), vec![region(true)])],
         ),
@@ -97,13 +95,13 @@ fn zaa_requires_a_provably_inactive_axis_aligned_box() {
 
 #[test]
 fn task22o18_global_spiral_crosses_the_capability_boundary_after_earlier_gates() {
-    assert_eq!(validate_capabilities(false, &[], &[], true), Ok(()));
+    assert_eq!(validate_capabilities(&[], &[], true), Ok(()));
 
     let source = source_object(Default::default(), Vec::new(), Vec::new());
     let object = with_object(|value| value.raft_layers = OrcaInt(1));
     // The raft gate is removed: only spiral_mode gates here.
     assert_eq!(
-        validate_capabilities(false, &[source], &[resolved(0, object, Vec::new())], true),
+        validate_capabilities(&[source], &[resolved(0, object, Vec::new())], true),
         Ok(())
     );
 }
@@ -116,7 +114,7 @@ fn task22o17_support_options_cross_the_early_capability_boundary() {
         value.enforce_support_layers = OrcaInt(1);
     });
     assert_eq!(
-        validate(false, &[source], &[resolved(0, object, Vec::new())]),
+        validate(&[source], &[resolved(0, object, Vec::new())]),
         Ok(())
     );
 }
