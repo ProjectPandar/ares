@@ -1,0 +1,290 @@
+macro_rules! append_drive {
+    () => {
+    while phase_index < phases.len() {
+        let merged: &[(f64, schedule::LayerToPrint)] = phases[phase_index].merged;
+        let phase = &phases[phase_index];
+        let tool_ordering: &super::tool_ordering::ToolOrdering = phases[phase_index].tool_ordering;
+        if group_start >= merged.len() {
+            phase_index += 1;
+            group_start = 0;
+            if let Some(phase) = phases.get(phase_index) {
+                // `GCode.cpp:3309-3342`: the instance transition between
+                // the sequential objects; `:3369-3372` resets the
+                // second-layer flag for the incoming instance, and the
+                // layer height restarts from the object's own first
+                // layer (the per-object `process_layers` z tracking).
+                let origin = instance_origin(
+                    &instances[phase.object][phase
+                        .copy
+                        .min(instances[phase.object].len().saturating_sub(1))..],
+                    traversal.scale.factor(),
+                );
+                let _primed = transition::emit(
+                    output,
+                    state,
+                    transition::Transition {
+                        traversal,
+                        metadata,
+                        first_layer_bounds,
+                        finished_objects: phase_index,
+                        initial_extruder: phase.tool_ordering.first_extruder.unwrap_or(0),
+                        printing_extruders: phase.tool_ordering.all_extruders().to_vec(),
+                        lift_z: max_layer_z + state.options.z_hop,
+                        origin,
+                        bed_cache: &mut bed_cache,
+                    },
+                )?;
+                let _ = _primed;
+                previous_layer_z = 0.0;
+                second_layer_done = false;
+            }
+            continue;
+        }
+        let group_z = merged[group_start].0;
+        let mut group_end = group_start;
+        while group_end < merged.len() && merged[group_end].0 == group_z {
+            group_end += 1;
+        }
+        let mut entries: Vec<schedule::LayerToPrint> = merged[group_start..group_end]
+            .iter()
+            .map(|&(_, entry)| entry)
+            .collect();
+        let (cooling_layer_index, cooling_buffer_flush) = cooling_result::metadata(
+            &entries,
+            traversal,
+            support_layers,
+            group_end == merged.len(),
+        );
+        group_start = group_end;
+        if tool_ordering.tools_for_layer(group_z).is_empty() {
+            cooling.empty_layer(output, cooling_layer_index, group_end == merged.len());
+            continue;
+        }
+        entries.sort_by_key(|entry| print_position[entry.object_index]);
+        max_layer_z = max_layer_z.max(f64::from(group_z as f32));
+        // Chunk-wide inputs for the external motion planner
+        // (`get_perimeter_spacing_external` averages the perimeter
+        // spacing over every object with slices at this print z,
+        // `AvoidCrossingPerimeters.cpp:511-529`).
+        let (chunk_slices, chunk_perimeter_spacing) = group::geometry(traversal, &entries);
+        // The preamble fires on the first PHYSICAL layer chunk — raft layer
+        // 0 included (`first_layer` is a sentinel there, so the check keys
+        // off `first_group`, not `first_layer == 0`). Upstream emits the
+        // filament-start g-code at the raft base, not the object base.
+        if first_group {
+            preamble::emit(output, state, traversal, metadata, first_layer_bounds)?;
+            tower::emit(
+                output,
+                state,
+                tower::Event::Initialize,
+                tower::Input {
+                    context: super::timelapse::Context {
+                        traversal,
+                        metadata,
+                        first_layer_bounds,
+                        layer: super::timelapse::TimelapseLayer {
+                            index: 0,
+                            z: 0.0,
+                            max_z: 0.0,
+                        },
+                    },
+                    entry: &entries[0],
+                    builder: &mut entry_builder,
+                    support: entries[0]
+                        .support_layer
+                        .map(|index| &support_layers[entries[0].object_index][index]),
+                    chunk_slices: &chunk_slices,
+                    spacing: chunk_perimeter_spacing,
+                },
+            )?;
+            first_group = false;
+        }
+        // The cooling rewrite window opens after the preamble (the start
+        // g-code is not part of the layer's buffered extrusions).
+        let layer_output_start = output.len();
+        cooling.begin_layer(output, cooling_layer_index);
+        state.part_fan_speed = cooling.provisional_part_speed();
+        // The change-layer block uses the merged chunk's leading entry
+        // (`change_layer` runs once per layer chunk, `GCode.cpp:5685`).
+        let slicing = traversal.objects[entries[0].object_index].slicing_parameters();
+        let object_layer_over_raft = entries[0].object_layer == Some(0)
+            && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
+        let layer_z = group_z;
+        // The HEIGHT header keeps the f32-difference quirk (upstream
+        // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
+        // f64 print_z for template comparisons.
+        let layer_height = f64::from(layer_z as f32) - f64::from(previous_layer_z as f32);
+        // `GCode.cpp:4589`: `first_layer` is per-object — the leading
+        // object/support/raft layer sitting on the plate.
+        let first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
+        let boundary = boundary::append(
+            output,
+            state,
+            &mut spiral,
+            boundary::Boundary {
+                traversal,
+                layer_change_template: &layer_change_template,
+                metadata,
+                first_layer_bounds,
+            },
+            boundary::LayerBoundary {
+                layer_index: chunk_index,
+                object_layer_over_raft,
+                layer_z,
+                layer_height,
+                first_layer,
+                second_layer_done: &mut second_layer_done,
+                bed_cache: &mut bed_cache,
+            },
+        )?;
+        let timelapse_context = boundary.timelapse_context;
+        state.layer_index = cooling_layer_index;
+        state.on_first_layer = first_layer;
+        // The skirt prints once per layer before any object content
+        // (`GCode.cpp:4388+`), gated by the `skirt_done` vector:
+        // `Skirt::make_skirt_loops_per_extruder_1st_layer` emits when the
+        // vector is empty and records the print z
+        // (`GCode.cpp:4292-4295`); `..._other_layers` keeps emitting while
+        // `skirt_done.size() < skirt_height` (`GCode.cpp:4311-4315`). The
+        // vector is shared across the sequential by-object instances, so a
+        // later object restarting at the same z does not re-emit. Raft
+        // chunks emit the skirt around the raft polygons (the skirt layer
+        // index is the raft layer index — with a raft, the covered layers
+        // start at the raft flange).
+        // `GCode.cpp:4306-4328`: `make_skirt_extrusion` also requires the
+        // NEW print z to advance past the last recorded one
+        // (`skirt_done.back() < print_z - EPSILON`) — a later object
+        // restarting at a lower z neither re-emits nor consumes budget.
+        // The per-group accounting drives emission: `m_skirt_group_done[group_idx]`
+        // (`GCode.cpp:5240-5250`, cleared once per export at :2036) is
+        // threaded through `generate_skirt`, whose `make_skirt_extrusion`
+        // gates on has_skirt, the skirt_height budget and print-z advance
+        // (`GCode.cpp:4306-4330`) — SkirtSchedule::next is that port, so
+        // the chunk position never gates the skirt.
+        skirt_emit::emit(
+            output,
+            state,
+            skirt_emit::SkirtEmission {
+                entries: &entries,
+                support: support_layers,
+                skirt,
+                raft: &raft,
+                print_z: layer_z,
+                schedule: &mut skirt_schedule,
+                entry_builder: &mut entry_builder,
+                traversal,
+                chunk_slices: &chunk_slices,
+                chunk_perimeter_spacing,
+            },
+        );
+        // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
+        // template insert fire once per layer inside the per-extruder loop
+        // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
+        // toolchange and every instance block (object skirt group, brim,
+        // `; printing object` marker, content).
+        let layer_tools = tool_ordering.for_layer(group_z);
+        let has_tower = layer_tools.has_wipe_tower && state.wipe_tower.is_some();
+        if has_tower {
+            state.wipe_tower.as_mut().unwrap().next_layer();
+        }
+        let wiping = &layer_tools.wiping;
+        let mut by_tool = tool_buckets::build(tool_buckets::Input {
+            traversal,
+            entries: &entries,
+            instances: &instances,
+            copy_filter: phase.copy_filter,
+            tools: tool_ordering.tools_for_layer(group_z),
+            wiping,
+            objects,
+            support: support_layers,
+            raft: &mut raft_layers,
+        });
+        let last_tool = by_tool.last().map(|(tool, _)| *tool);
+        let mut final_entry = entries[0];
+        for (tool, tool_entries) in &mut by_tool {
+            wrapping::emit(output, state, &timelapse_context)?;
+            if let Some(instances) = &filament_instances {
+                state.filament_instances_code = Some(
+                    instances.encode(tool_entries.iter().map(|entry| entry.instance.label_id)),
+                );
+            }
+            let needs_change = !state.extruder_selected || state.extruders.active_id() != *tool;
+            if has_tower {
+                tower::emit(
+                    output,
+                    state,
+                    tower::Event::Change {
+                        tool: *tool,
+                        finish_layer: Some(*tool) == last_tool,
+                    },
+                    tower::Input {
+                        context: timelapse_context,
+                        entry: &entries[0],
+                        builder: &mut entry_builder,
+                        support: entries[0]
+                            .support_layer
+                            .map(|index| &support_layers[entries[0].object_index][index]),
+                        chunk_slices: &chunk_slices,
+                        spacing: chunk_perimeter_spacing,
+                    },
+                )?;
+                state.last_feature = Some("Prime tower");
+            } else if needs_change {
+                super::tool_transition::emit(output, state, *tool, timelapse_context)?;
+            }
+            if needs_change {
+                last_object_copy = None;
+            }
+            let entry_count = tool_entries.len();
+            for (pass, entry_position) in [tool_buckets::Pass::Wiping, tool_buckets::Pass::Normal]
+                .into_iter()
+                .filter(|pass| *pass == tool_buckets::Pass::Normal || wiping.has_overrides())
+                .flat_map(|pass| (0..entry_count).map(move |position| (pass, position)))
+            {
+                final_entry = tool_entries[entry_position].source;
+                tool_entry::emit(
+                    output,
+                    state,
+                    &mut tool_entries[entry_position],
+                    tool_entry::Input {
+                        traversal,
+                        pass,
+                        purging_finished: pass == tool_buckets::Pass::Normal
+                            && entry_position == 0
+                            && wiping.has_overrides(),
+                        support_layers,
+                        raft: &raft,
+                        labels: &labels,
+                        emit_labels,
+                        traditional_interlude,
+                        traditional_timelapse: timelapse_gate.traditional_timelapse,
+                        timelapse_context,
+                        is_group_end: pass == tool_buckets::Pass::Normal
+                            && entry_position + 1 == entry_count
+                            && Some(*tool) == last_tool,
+                        last_object_copy: &mut last_object_copy,
+                        entry_builder: &mut entry_builder,
+                        chunk_slices: &chunk_slices,
+                        chunk_perimeter_spacing,
+                        brim,
+                        spiral: &mut spiral,
+                        layer_z,
+                        layer_height,
+                        object_layer_counts: &object_layer_counts,
+                        last_entry,
+                        layer_output_start,
+                    },
+                )?;
+            }
+        }
+        cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
+        if state.wipe_tower.is_some() {
+            final_chunk = Some((final_entry, chunk_slices, chunk_perimeter_spacing));
+        }
+        previous_layer_z = layer_z;
+        chunk_index += 1;
+        state.adaptive_pa_layer = chunk_index;
+    }
+    cooling.finish(output);
+    };
+}
