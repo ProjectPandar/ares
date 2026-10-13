@@ -85,3 +85,53 @@ Final-head finite controls, complete option_coverage both modes, allocated
 workspace and explicitly authorized canonical full remain pending.
 Finite GREEN is not a merge authorization. Existing count1 and non-RED
 callers must remain raw-byte unchanged; any change stops for review.
+
+## Final-head directed verification on C1 main
+
+Clean rebase to `4ca7554c6` preserved all seven commits (`=` in every
+range-diff row): `/tmp/worker6-grid-rebase-4ca.range-diff`. Exact tested HEAD
+`3ca0838c8`; fresh CPU11 official/seeded results:
+`/tmp/worker6-grid-final-directed.7oRuR5/{official,seeded}/{log,exit}`.
+Each mode runs 229 tests (Grid9 plus complete option_coverage220), all PASS,
+exit0. Grid7 RED cases retain strict Native/API/CLI ordered bytes and line
+counts; the nine paired count1 captures retain their raw bytes from RED.
+All 32 Grid input ZIP member sets remain unchanged from RED. No assertions
+or comparator changes were required.
+
+`control-audit.json` records those exact comparisons. `raw-invariance.json`
+proves Stars7+union10 (34 captures across both modes) unchanged against current
+main C1 full captures, not a new worker6 base run. The official and seeded
+common-raw audits additionally match 376 and 384 same-input keys respectively,
+all Ares raw unchanged with zero unmatched keys. Baseline:
+`/tmp/worker3-centering-c1-full-4ca7554c6-vjqa0dvg/{official,seeded}/artifacts`.
+The source-audit and arm-scope-audit in the directed root prove changed Rust
+files <=400 LOC and only the Grid arm changed in arms.rs.
+
+Canonical refs do not enable ARES_PARITY_OPTIONS. The existing sweep test
+therefore explicitly reports SKIPPED: Native-not-executed. The coordinator
+accepted this as the canonical-env policy used by full; no sweep Native
+acceptance is claimed. Non-Native option_coverage tests and independent
+Native controls were all selected, with existing seeded-only references
+visibly skipped only where their canonical mode policy requires it.
+
+`affinity-exe-audit.json` samples only the own process tree and classifies
+Native by /proc/PID/exe readlink; all recorded masks are CPU11, zero violations.
+The earlier generic affinity-audit is also retained. Its initial background
+launch failed to persist; the premature path claim was corrected in the
+inbox and sampling resumed in a managed session before Native began. The
+02:12:04 unpinned process could not be worker6: its batch was still compiling
+and had no test/Native execution at that time. No historical sample claim is
+made for the period before the live sampler started.
+
+Git-only rebase onto web/vgcode main `325ea6983` gives `91296c3fa`, seven
+range-diff rows all `=`: `/tmp/worker6-grid-rebase-325.range-diff`. Per the
+coordinator's carry ruling, directed results remain valid. Fresh strict
+(workspace/all targets/all features, -D warnings), fmt and wasm32 checks all
+exit0 on that HEAD: `/tmp/worker6-grid-engineering.iqdxPV`.
+The local core-only gate on `91296c3fa` was explicitly stopped when the
+coordinator moved that gate to CI self-hosted workspace on the exact candidate
+hash. Its partial result is 5601/7177 PASS, zero FAIL/TIMEOUT; it is not
+acceptance evidence. Logs and the interruption checkpoint are retained at
+`/tmp/worker6-grid-core-gate.6VOW3y/{run.log,interruption.json}`. No test was
+filtered or changed. CI workspace and canonical full have not been run for
+this candidate; full remains queued after worker5 and needs FULL-GO.
