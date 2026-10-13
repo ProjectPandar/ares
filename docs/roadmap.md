@@ -7,6 +7,18 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Arachne fuzzy-skin junctions: proposed SPEC (2026-10-13)
+
+Worker3 next slice: `PerimeterGenerator.cpp::process_arachne:2095,2125` and
+`traverse_extrusions:378–435`; `Feature/FuzzySkin/FuzzySkin.cpp:223–291,345–558,685–814`
+own junction noise/modes, compatible-region effects and source-ordered splitting.
+Rust destination is private `project_slice/perimeters/arachne/fuzzy_skin` plus
+existing context/config/traverse seams; replace two fuzzy guards after public RED.
+Doc only; proposed stochastic oracle boundary and Native closure/width preflight
+require SPEC review. Alternate6a7d842bc is code-approved but not merge-authorized;
+full/workspace HOLD. [SPEC](architecture/arachne-fuzzy-skin-spec.md),
+[proposed ARD](architecture/ard-arachne-fuzzy-skin.md).
+
 ### Arachne alternate extra wall: bounded GREEN, review pending (2026-10-13)
 
 Worker3 ports `PerimeterGenerator.cpp::process_arachne:2131–2144,2163–2175`
