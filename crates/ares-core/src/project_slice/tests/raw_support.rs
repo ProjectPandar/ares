@@ -282,7 +282,7 @@ type PreflightScenario = (
     SliceError,
 );
 
-pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 4] {
+pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 3] {
     let distinct = transform("1 0 0 0 1 0 0 0 1 0 0 2");
 
     let mut range_later = object(
@@ -312,40 +312,6 @@ pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 4] {
         unsupported("layer_config_ranges"),
     );
 
-    let sharing_first = object(
-        "sharing-first.model",
-        3,
-        vec![project_volume(
-            "sharing-first.model",
-            350,
-            ProjectVolumeType::ModelPart,
-            true,
-            true,
-        )],
-        &[Transform3d::IDENTITY],
-    );
-    let centering_later = object(
-        "centering-later.model",
-        4,
-        vec![project_volume(
-            "centering-later.model",
-            450,
-            ProjectVolumeType::ModelPart,
-            true,
-            false,
-        )],
-        &[Transform3d::IDENTITY],
-    );
-    let centering = (
-        vec![sharing_first, centering_later],
-        vec![
-            identity_resolved(0),
-            resolved_object(1, &[Transform3d::IDENTITY, distinct]),
-        ],
-        vec![plan(0, 0, 1), plan(1, 0, 1)],
-        unsupported("print_object_centering"),
-    );
-
     let sharing_later = object(
         "sharing-later.model",
         6,
@@ -370,7 +336,7 @@ pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 4] {
         vec![plan(0, 0, 100_000)],
         slot_limit(),
     );
-    [range, centering, sharing, dense]
+    [range, sharing, dense]
 }
 
 fn dense_object(object_id: u32, large_coordinate: bool) -> ProjectObject {

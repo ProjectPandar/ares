@@ -223,8 +223,7 @@ async fn task22b_layer_range_preflight_runs_after_task22a_and_before_all_raw_geo
 }
 
 #[test]
-fn task22b_print_object_centering_controls_accept_collapsed_xy_and_z_compensation()
- {
+fn task22b_print_object_centering_controls_accept_collapsed_xy_and_z_compensation() {
     let z = transform("1 0 0 0 1 0 0 0 1 0 0 3");
     let xyz = transform("1 0 0 0 1 0 0 0 1 21 -8 3");
     let source = object(
@@ -248,7 +247,6 @@ fn task22b_print_object_centering_controls_accept_collapsed_xy_and_z_compensatio
         .is_ok()
     );
 
-
     // `fixed_xy_equal` ignores the Z row (filament Z-shrink compensation),
     // so a Z-only mismatch no longer rejects the gate.
     assert!(
@@ -259,10 +257,6 @@ fn task22b_print_object_centering_controls_accept_collapsed_xy_and_z_compensatio
         )
         .is_ok()
     );
-
-
-
-
 }
 
 #[test]

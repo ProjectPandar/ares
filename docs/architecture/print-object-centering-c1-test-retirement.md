@@ -28,3 +28,21 @@ comment/control, and every assertion in every other test. Rename the test only
 to describe its retained collapsed-XY/Z-compensation controls. No broad test
 retirement is requested. An approved retirement goes in its own test commit,
 separate from C1 GREEN, citing the upstream ranges and RED508383c69.
+
+## Separately approved precedence-row retirement
+
+Code audit found one further old guard expectation in
+`raw_support.rs::preflight_order_scenarios`: its `centering` row supplies a
+shared-mesh first object and a later two-transform resolved object, expecting
+`print_object_centering` to outrank `shared_mesh_centering`. With the C1 guard
+removed, that ordering is no longer part of the upstream contract. C2's shared
+mesh guard still exists until C2, so this row must not redefine C1 admission.
+
+Request: delete only this obsolete `centering` table row and its solely used
+`sharing_first`/`centering_later` fixture construction; change the return array
+length4 to3. Keep range/shared/dense rows, `distinct` (still used by range), and
+the consuming test's generic assertions entirely untouched. Same upstream
+PrintApply.cpp138-170/PrintObject.cpp93-130 and public RED508383c69 apply.
+This additional change was separately explicitly approved; all generic assertion
+macros and the other three rows remain unchanged. It is committed independently
+from production.
