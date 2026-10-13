@@ -1,6 +1,6 @@
 # Proposed slice: FillGrid multiline trapezoidal mode0
 
-Status: SPEC-REVIEW requested; docs only, no production/tests or Native runs.
+Status: approved boundary; public Native-backed RED accepted, GREEN in validation.
 Base: `296b060186fc90590e23238145a27fa4805c59e7`.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
@@ -75,8 +75,10 @@ Proposed changes after approval and fresh RED:
   once-per-object box producer for Grid count>1 as well as Stars count>1;
   use a source-owned name if its ownership widens. Other patterns/count1
   keep their existing path and do not compute this additional box.
-- Sparse anchoring: only the Grid arm in arms.rs and the necessary bbox
-  eligibility/threading in sparse_anchoring/mod.rs. Feed the actual current
+- Sparse anchoring: only the Grid arm in arms.rs and the existing bbox
+  eligibility predicate in transaction/candidate_expansion/layers.rs:65-78.
+  The coordinator approved this actual call-site correction; sparse_anchoring/mod.rs
+  already threads the box and layer id and remains unchanged. Feed the actual current
   object, layer id and representative thickness_layers to the same mode0
   generator as emission. Do not recalculate a regional/surface bbox or use
   regions[0]. Preserve the count1 Grid arm.
@@ -151,4 +153,4 @@ Request explicit FULL-GO only after the engineering/directed prerequisites;
 canonical candidate-only official+seeded full uses the unchanged control script,
 fresh per-leg resources, jobs2/threads2 and exact START/END inbox markers.
 Report the exact reviewed HEAD and all evidence; merge only after APPROVED.
-This document is an unexecuted proposal, not an acceptance report.
+This document defines the approved boundary, not final acceptance evidence.
