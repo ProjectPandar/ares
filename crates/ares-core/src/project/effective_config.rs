@@ -23,6 +23,10 @@ pub(crate) fn validate_materialized_project(
     settings: &ProjectSettings,
     project: &Project,
 ) -> Result<ValidatedMaterializedProject, SliceError> {
+    // `OrcaSlicer.cpp:3619,3627-3633`: check resolved technology before FFF work.
+    if settings.printer.remaining.printer_technology != crate::PrinterTechnology::Fff {
+        return Err(SliceError::InvalidPrinterTechnology);
+    }
     let validated = cardinality::validate(settings)?;
     selector_validation::validate(settings, project, validated)?;
     Ok(validated)

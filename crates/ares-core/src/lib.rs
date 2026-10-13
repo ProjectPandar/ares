@@ -235,6 +235,8 @@ impl InputFormat {
 pub enum SliceError {
     EmptyInput,
     InvalidInput(String),
+    /// Resolved non-FFF technology (`OrcaSlicer.cpp:3619,3627-3633`).
+    InvalidPrinterTechnology,
     /// `CLI_POSTPROCESS_NOT_SUPPORTED` (`Utils.hpp:44`): a 3MF whose
     /// embedded `post_process` array is non-empty is rejected under the CLI
     /// (`OrcaSlicer.cpp:1682-1690`).
@@ -309,6 +311,7 @@ impl fmt::Display for SliceError {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
             Self::InvalidInput(message) => f.write_str(message),
+            Self::InvalidPrinterTechnology => f.write_str("invalid printer_technology"),
             Self::PostProcessNotSupported => {
                 f.write_str("post_process is not supported under CLI.")
             }

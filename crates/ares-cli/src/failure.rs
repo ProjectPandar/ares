@@ -121,6 +121,20 @@ pub(super) fn slice_error_to_failure(
         }))
     };
     match error {
+        SliceError::InvalidPrinterTechnology => family(
+            -7,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            "Unsupported printer technology (not FDM).",
+            "invalid printer_technology \n".into(),
+        ),
         SliceError::PostProcessNotSupported => family(
             -19,
             #[cfg(target_os = "linux")]
