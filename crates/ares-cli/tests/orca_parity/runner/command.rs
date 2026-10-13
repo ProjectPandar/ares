@@ -25,6 +25,8 @@ pub(super) fn run(
         timeout,
     }: Limits,
 ) -> Result<(), StageError> {
+    let started = Instant::now();
+    let mut timings = serde_json::json!({"clock": "monotonic", "unit": "microseconds"});
     let io_error = |error| StageError::new(stage, FailureKind::Io, error);
     let requested_bin = bin;
     let bin = std::path::absolute(bin).map_err(io_error)?;
@@ -61,18 +63,22 @@ pub(super) fn run(
     let stderr_path = directory.join("stderr.live");
     let stdout_file = File::create(&stdout_path).map_err(io_error)?;
     let stderr_file = File::create(&stderr_path).map_err(io_error)?;
-    let mut child = match Command::new(&bin)
+    timings["prepared_at_us"] = serde_json::json!(started.elapsed().as_micros());
+    let spawn_started = Instant::now();
+    let spawned = Command::new(&bin)
         .args(&args)
         .envs(envs.iter().copied())
         .current_dir(work)
         .stdin(Stdio::null())
         .stdout(Stdio::from(stdout_file))
         .stderr(Stdio::from(stderr_file))
-        .spawn()
-    {
+        .spawn();
+    timings["spawn_us"] = serde_json::json!(spawn_started.elapsed().as_micros());
+    timings["spawn_returned_at_us"] = serde_json::json!(started.elapsed().as_micros());
+    let mut child = match spawned {
         Ok(child) => child,
         Err(error) => {
-            return finish(
+            return timed_finish(
                 &directory,
                 stage,
                 Some((FailureKind::Spawn, error.to_string())),
@@ -82,6 +88,7 @@ pub(super) fn run(
                     stdout: vec![],
                     stderr: vec![],
                 },
+                (timings, started),
             );
         }
     };
@@ -97,15 +104,20 @@ pub(super) fn run(
                     Err(error) => (FailureKind::Wait, error.to_string()),
                     Ok(_) => (FailureKind::Timeout, "orca-slicer timed out".into()),
                 };
-                let (status, shutdown) = shutdown(&mut child);
+                timings["failure_detected_at_us"] =
+                    serde_json::json!(started.elapsed().as_micros());
+                let (status, shutdown, shutdown_timings) = shutdown(&mut child);
+                timings["shutdown"] = shutdown_timings;
                 failure = Some((reason.0, format!("{}; {shutdown}", reason.1)));
                 break status;
             }
         }
     };
+    timings["child_wait_completed_at_us"] = serde_json::json!(started.elapsed().as_micros());
     if failure.is_none() && status.is_some_and(|status| !status.success()) {
         failure = Some((FailureKind::Process, "unsuccessful Orca process".into()));
     }
+    let lifecycle_started = Instant::now();
     let lifecycle = serde_json::json!({"direct_child_pid": pid, "direct_child_reaped": status.is_some(),
         "native_status": status.map(|status| status.to_string()), "process_tree_termination": "not guaranteed"});
     if let Err(error) = std::fs::write(
@@ -114,12 +126,18 @@ pub(super) fn run(
     ) {
         capture_error(&mut failure, error.to_string());
     }
+    timings["lifecycle_persist_us"] = serde_json::json!(lifecycle_started.elapsed().as_micros());
+    let snapshot_started = Instant::now();
     let (stdout, stdout_error) = snapshot(&stdout_path);
+    timings["stdout_snapshot_us"] = serde_json::json!(snapshot_started.elapsed().as_micros());
+    let snapshot_started = Instant::now();
     let (stderr, stderr_error) = snapshot(&stderr_path);
+    timings["stderr_snapshot_us"] = serde_json::json!(snapshot_started.elapsed().as_micros());
     for error in [stdout_error, stderr_error].into_iter().flatten() {
         capture_error(&mut failure, error);
     }
-    finish(
+    timings["snapshots_completed_at_us"] = serde_json::json!(started.elapsed().as_micros());
+    timed_finish(
         &directory,
         stage,
         failure,
@@ -129,11 +147,45 @@ pub(super) fn run(
             stdout,
             stderr,
         },
+        (timings, started),
     )
 }
 
-fn shutdown(child: &mut Child) -> (Option<ExitStatus>, String) {
+fn timed_finish(
+    directory: &Path,
+    stage: Stage,
+    failure: Option<(FailureKind, String)>,
+    captured: Captured,
+    (mut timings, started): (serde_json::Value, Instant),
+) -> Result<(), StageError> {
+    let persist_started = Instant::now();
+    let mut result = finish(directory, stage, failure, captured);
+    timings["finish_persist_us"] = serde_json::json!(persist_started.elapsed().as_micros());
+    timings["finish_completed_at_us"] = serde_json::json!(started.elapsed().as_micros());
+    // The final timing-file write cannot measure its own duration. All other
+    // synchronous persistence, including immutable captures/status, is covered.
+    if let Err(error) = std::fs::write(
+        directory.join("timings.json"),
+        serde_json::to_vec_pretty(&timings).unwrap(),
+    ) {
+        let detail = format!("timing evidence I/O error: {error}");
+        match &mut result {
+            Err(primary) => primary.detail.push_str(&format!("; {detail}")),
+            Ok(()) => {
+                let mut error = StageError::new(stage, FailureKind::Io, detail);
+                error.evidence = Some(directory.to_owned());
+                result = Err(error);
+            }
+        }
+    }
+    result
+}
+
+fn shutdown(child: &mut Child) -> (Option<ExitStatus>, String, serde_json::Value) {
+    let kill_started = Instant::now();
     let kill = child.kill();
+    let kill_us = kill_started.elapsed().as_micros();
+    let reap_started = Instant::now();
     let deadline = Instant::now() + Duration::from_secs(2);
     let reap = loop {
         match child.try_wait() {
@@ -143,7 +195,11 @@ fn shutdown(child: &mut Child) -> (Option<ExitStatus>, String) {
     };
     let detail = format!("kill={kill:?}; reap={reap:?}");
     // None/error is an explicitly unreaped child, never a successful stage.
-    (reap.ok().flatten(), detail)
+    (
+        reap.ok().flatten(),
+        detail,
+        serde_json::json!({"kill_us": kill_us, "reap_us": reap_started.elapsed().as_micros()}),
+    )
 }
 
 fn snapshot(path: &Path) -> (Vec<u8>, Option<String>) {
