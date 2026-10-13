@@ -195,6 +195,41 @@ fn orca_parity_printer_technology_parsed_sla_rejection() {
             .any(|line| line.trim() == "invalid printer_technology"),
         "{native_stderr}"
     );
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let api = runtime.block_on(ares_core::slice_project_plate_validated(
+        &bytes,
+        ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+        None,
+        &ares_core::ConfigOverrides::default(),
+        ares_core::SlicerContext::new(0),
+    ));
+    let wasm = runtime.block_on(ares_wasm::slice_project_plate_processed_bytes(
+        bytes.clone(),
+        None,
+        None,
+    ));
+    fs::write(
+        root.join("api-wasm.json"),
+        serde_json::to_vec_pretty(&json!({
+            "api_error":api.as_ref().err().map(|e| format!("{e:?}")),
+            "wasm_error":wasm.as_ref().err(), "api_admitted":api.is_ok(),
+            "wasm_admitted":wasm.is_ok()
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        api.as_ref().err().map(|e| format!("{e:?}")),
+        Some("InvalidPrinterTechnology".into()),
+        "typed API rejection RED {root:?}"
+    );
+    assert_eq!(
+        wasm.as_ref().err().map(String::as_str),
+        Some("invalid printer_technology"),
+        "WASM adapter rejection RED {root:?}"
+    );
     assert_eq!(
         cli.status.code(),
         captured.code,
