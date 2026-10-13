@@ -281,6 +281,7 @@ impl ProjectSettingsRaw {
             SliceOptions::deserialize(self.clone().into_object()).map_err(|error| {
                 SliceError::InvalidInput(format!("invalid project settings: {error}"))
             })?;
+        merge_first(&mut errors, normalized.validate_infill_pattern_options()?);
         merge_first(&mut errors, normalized.validate_extrusion_width_options()?);
         Ok(errors)
     }

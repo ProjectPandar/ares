@@ -16,19 +16,6 @@ pub(super) fn validate(
     // `strtod`-style parsing (`Fill.cpp:206-210`) where unparseable tails
     // truncate and unparseable tokens become 0.0 — upstream never rejects.
     if !matches!(
-        options.top_surface_pattern,
-        ProcessInfillPattern::Monotonic
-            | ProcessInfillPattern::MonotonicLine
-            | ProcessInfillPattern::Rectilinear
-            | ProcessInfillPattern::AlignedRectilinear
-            | ProcessInfillPattern::Concentric
-            | ProcessInfillPattern::HilbertCurve
-            | ProcessInfillPattern::ArchimedeanChords
-            | ProcessInfillPattern::OctagramSpiral
-    ) {
-        return unsupported("top_surface_pattern");
-    }
-    if !matches!(
         options.internal_solid_infill_pattern,
         ProcessInfillPattern::Monotonic
             | ProcessInfillPattern::MonotonicLine
