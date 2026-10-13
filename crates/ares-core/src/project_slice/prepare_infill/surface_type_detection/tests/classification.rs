@@ -5,7 +5,7 @@ use crate::{
             GeometryStep,
             cracks::crack_threshold,
             geometry::{opening_offset, paths, safety_difference},
-            stage::{LowerLayer, apply_spiral_surface_types, classify_slices},
+            stage::{LowerLayer, apply_spiral_surface_types, classify_with_fill},
         },
         region_slices::{RegionSurface, RegionSurfaceKind},
     },
@@ -68,8 +68,14 @@ fn single_layer_bottom_wins_and_preserves_source_metadata() {
         0.75,
         4,
     )];
-    let output =
-        classify_slices(&source, None, None, 100, RegionSurfaceKind::BottomBridge).unwrap();
+    let output = classify_with_fill(
+        (source.as_slice(), None),
+        None,
+        None,
+        100,
+        RegionSurfaceKind::BottomBridge,
+    )
+    .unwrap();
     assert_eq!(kinds(&output), [RegionSurfaceKind::Bottom]);
     let (_, _, thickness, layers, angle, extra) = output[0].as_parts();
     assert_eq!((thickness, layers, angle, extra), (0.3, 2, 0.75, 4));
@@ -86,8 +92,8 @@ fn final_top_preserves_metadata_when_lower_difference_is_empty() {
         5,
     )];
     let lower = vec![geometry];
-    let output = classify_slices(
-        &source,
+    let output = classify_with_fill(
+        (source.as_slice(), None),
         None,
         whole_layer(&lower),
         100,
@@ -110,8 +116,8 @@ fn covered_interior_is_fresh_internal_geometry() {
         5,
     )];
     let neighbor = vec![geometry];
-    let output = classify_slices(
-        &source,
+    let output = classify_with_fill(
+        (source.as_slice(), None),
         Some(&neighbor),
         whole_layer(&neighbor),
         100,
@@ -129,7 +135,14 @@ fn lower_void_uses_the_source_selected_bottom_kind() {
     let source = vec![RegionSurface::internal(geometry.clone())];
     let upper = vec![geometry];
     for kind in [RegionSurfaceKind::BottomBridge, RegionSurfaceKind::Bottom] {
-        let output = classify_slices(&source, Some(&upper), whole_layer(&[]), 100, kind).unwrap();
+        let output = classify_with_fill(
+            (source.as_slice(), None),
+            Some(&upper),
+            whole_layer(&[]),
+            100,
+            kind,
+        )
+        .unwrap();
         assert!(kinds(&output).contains(&kind));
     }
 }
@@ -142,8 +155,8 @@ fn actual_out_of_range_geometry_uses_the_stable_o17_error() {
         i64::MAX,
         1_000,
     ))];
-    let error = match classify_slices(
-        &source,
+    let error = match classify_with_fill(
+        (source.as_slice(), None),
         Some(&[]),
         whole_layer(&[]),
         100,
@@ -165,8 +178,8 @@ fn narrow_external_difference_collapses_during_source_opening() {
     let geometry = rectangle(0, 0, 100, 1_000);
     let source = vec![RegionSurface::internal(geometry.clone())];
     let lower = vec![geometry];
-    let output = classify_slices(
-        &source,
+    let output = classify_with_fill(
+        (source.as_slice(), None),
         Some(&[]),
         whole_layer(&lower),
         1_000,
@@ -186,8 +199,8 @@ fn terminal_partial_overlap_reconstructs_top_with_default_metadata() {
         5,
     )];
     let lower = vec![rectangle(0, 0, 1_000, 1_000)];
-    let output = classify_slices(
-        &source,
+    let output = classify_with_fill(
+        (source.as_slice(), None),
         None,
         whole_layer(&lower),
         100,
@@ -251,5 +264,14 @@ fn multiple_holed_surfaces_flatten_contour_then_holes_in_surface_order() {
 #[test]
 fn minimal_valid_coordinates_remain_accepted() {
     let source = vec![RegionSurface::internal(rectangle(0, 0, 1, 1))];
-    assert!(classify_slices(&source, None, None, 1, RegionSurfaceKind::BottomBridge).is_ok());
+    assert!(
+        classify_with_fill(
+            (source.as_slice(), None),
+            None,
+            None,
+            1,
+            RegionSurfaceKind::BottomBridge
+        )
+        .is_ok()
+    );
 }

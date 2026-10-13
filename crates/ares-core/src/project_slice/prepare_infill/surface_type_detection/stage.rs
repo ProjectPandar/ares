@@ -222,18 +222,7 @@ pub(super) struct LowerLayer<'a> {
     pub(super) own_region: Option<&'a [ExPolygon]>,
 }
 
-#[cfg(test)]
-pub(super) fn classify_slices(
-    source: &[RegionSurface],
-    upper: Option<&[ExPolygon]>,
-    lower: Option<LowerLayer<'_>>,
-    external_width: i64,
-    bottom_kind: RegionSurfaceKind,
-) -> Result<Vec<RegionSurface>, SliceError> {
-    classify_with_fill((source, None), upper, lower, external_width, bottom_kind)
-}
-
-fn classify_with_fill(
+pub(super) fn classify_with_fill(
     domain: (&[RegionSurface], Option<&[RegionSurface]>),
     upper: Option<&[ExPolygon]>,
     lower: Option<LowerLayer<'_>>,
