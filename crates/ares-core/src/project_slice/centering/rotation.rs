@@ -87,9 +87,9 @@ fn rotation(transform: Transform3d) -> Matrix {
         }
         if pos != i {
             singular.swap(i, pos);
-            for (u_row,v_row) in u.iter_mut().zip(&mut v) {
-                u_row.swap(i,pos);
-                v_row.swap(i,pos);
+            for (u_row, v_row) in u.iter_mut().zip(&mut v) {
+                u_row.swap(i, pos);
+                v_row.swap(i, pos);
             }
         }
     }
@@ -133,11 +133,11 @@ fn block(a: Matrix, p: usize, q: usize) -> ((f64, f64), (f64, f64)) {
 }
 
 fn on_left(a: &mut Matrix, p: usize, q: usize, (c, s): (f64, f64)) {
-    let (before,after) = a.split_at_mut(p);
-    for (x,y) in after[0].iter_mut().zip(&mut before[q]) {
-        let (old_x,old_y) = (*x,*y);
-        *x = c*old_x+s*old_y;
-        *y = -s*old_x+c*old_y;
+    let (before, after) = a.split_at_mut(p);
+    for (x, y) in after[0].iter_mut().zip(&mut before[q]) {
+        let (old_x, old_y) = (*x, *y);
+        *x = c * old_x + s * old_y;
+        *y = -s * old_x + c * old_y;
     }
 }
 fn on_right(a: &mut Matrix, p: usize, q: usize, (c, s): (f64, f64)) {

@@ -76,7 +76,8 @@ pub(super) fn append(
         .gcode_label_objects
         .0;
     let mut cooling = cooling::CoolingState::from_traversal(traversal, state);
-    let mut spiral = spiral_vase::SpiralVaseFilter::from_traversal(traversal, brim.iter().any(Option::is_some));
+    let mut spiral =
+        spiral_vase::SpiralVaseFilter::from_traversal(traversal, brim.iter().any(Option::is_some));
     // `GCode.cpp:4629-4630`: upstream tracks `m_max_layer_z` as the
     // running max of `float(print_z)` — the f32 cast absorbs the f64
     // accumulation drift so `{max_layer_z}`/`max_print_z` placeholders
