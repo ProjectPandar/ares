@@ -97,6 +97,8 @@ mod plate_custom_gcodes;
 mod presets;
 #[path = "orca_parity/print_estimated_stats.rs"]
 mod print_estimated_stats;
+#[path = "orca_parity/print_object_centering.rs"]
+mod print_object_centering;
 #[path = "orca_parity/print_validation.rs"]
 mod print_validation;
 #[path = "orca_parity/replay.rs"]
