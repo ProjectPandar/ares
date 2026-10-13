@@ -111,7 +111,7 @@ fn octree_for(
     traversal
         .adaptive_octrees
         .get_or_build((object_index, line_spacing.to_bits()), || {
-            build_object_octree(traversal, object_index, line_spacing).expect("resolved group")
+            build_object_octree(traversal, object_index, line_spacing)
         })
 }
 
@@ -119,7 +119,7 @@ fn build_object_octree(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     line_spacing: f64,
-) -> Result<octree::Octree, SliceError> {
+) -> octree::Octree {
     let traversal_object = &traversal.objects[object_index];
     let identity = traversal_object
         .predecessor
@@ -131,12 +131,14 @@ fn build_object_octree(
     // `resolved.objects` is a filtered list (nonprintable groups are
     // dropped by candidates.rs), so look the group up by source index
     // instead of indexing with it.
+    // `classic::traversal::finish` already checked this source membership
+    // and retained the same resolved list (`PrintObject.cpp:984` ownership).
     let resolved = traversal
         .resolved
         .objects
         .iter()
         .find(|object| object.source_object_index == identity.0)
-        .ok_or_else(|| SliceError::UnsupportedProjectFeature("adaptive_infill".to_owned()))?;
+        .expect("adaptive object retains its resolved source");
     let object_transform = resolved.print_objects[identity.1].transform;
     let source = &traversal.project.objects()[identity.0];
 
@@ -182,7 +184,7 @@ fn build_object_octree(
             )
         })
         .collect();
-    Ok(octree::build_octree(
+    octree::build_octree(
         octree::OctreeMesh {
             vertices: &rotated,
             triangles: &triangles,
@@ -191,7 +193,7 @@ fn build_object_octree(
         line_spacing,
         false,
         center_offset,
-    ))
+    )
 }
 
 fn clipper_error(error: crate::geometry::ClipperError) -> SliceError {
