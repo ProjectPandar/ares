@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
@@ -71,6 +71,9 @@ test("a project sliced twice through the worker API is complete, repeatable and 
   // Oracle: Print::export_gcode / GCode::do_export of the initialized OrcaSlicer 2.4.2 on the same
   // project; the Rust parity test compares the browser capture as ordered bytes.
   const nativeRoot = mkdtempSync(`${tmpdir()}/ares-web-ksr-oracle-`);
+  // The replay stays on this run's first allowed CPU instead of producer.rs's re-launch on CPU 0.
+  const replayCpu = /^Cpus_allowed_list:\s*(\d+)/m.exec(readFileSync("/proc/self/status", "utf8"))![1];
+  console.log(`KSR seeded replay CPU ${replayCpu}`);
   try {
     execFileSync("cargo", ["nextest", "run", "-p", "ares-cli", "--test", "orca_parity", "--test-threads", "2", "-E",
       "test(runner::native_ksr_reference_migration::browser::browser_output_matches_initialized_orca_242_ordered_bytes)"], {
@@ -82,15 +85,18 @@ test("a project sliced twice through the worker API is complete, repeatable and 
         ARES_BROWSER_GCODE: capture,
         ARES_REQUIRE_ORCA: "1",
         ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
-        ARES_ORCA_BIN: `${repositoryRoot}scripts/orca-seeded-parity.sh`,
+        // Byte-equal to producer.rs's repo_root() launcher (CARGO_MANIFEST_DIR/../..), so it runs in-process.
+        ARES_ORCA_BIN: `${repositoryRoot}crates/ares-cli/../../scripts/orca-seeded-parity.sh`,
         ARES_ORCA_NATIVE_BIN: native,
         ARES_ORCA_RESOURCES_DIR: resources,
         ORCA_REPLAY_BIN: replay,
         ORCA_REPLAY_SEED: "0",
+        ORCA_REPLAY_CPU: replayCpu,
       },
     });
   } catch (error) {
     const { stdout, stderr } = error as { stdout: string; stderr: string };
     throw new Error(`initialized OrcaSlicer 2.4.2 ordered bytes differ from ${capture} (Native artifacts ${nativeRoot})\n${stdout}\n${stderr}`, { cause: error });
   }
+  expect(readdirSync(nativeRoot).filter((name) => name.startsWith("ksr-initialized-dispatch-"))).toEqual([]);
 });
