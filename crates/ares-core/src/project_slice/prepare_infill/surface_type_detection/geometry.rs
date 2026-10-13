@@ -27,6 +27,7 @@ pub(in crate::project_slice) enum GeometryStep {
     CollectionResidualErosion,
     SingletonCrackExpansion,
     BottomSubtraction,
+    InterfaceBottomDifference,
     TopDifference,
     InternalDifference,
     FillTopIntersection,

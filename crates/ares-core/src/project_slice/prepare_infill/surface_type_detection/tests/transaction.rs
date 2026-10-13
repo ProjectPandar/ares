@@ -69,6 +69,12 @@ fn run(step: GeometryStep) -> Result<(), SliceError> {
         GeometryStep::TopDifference => {
             subtract_paths(std::slice::from_ref(square.contour()), &[]).map(drop)
         }
+        GeometryStep::InterfaceBottomDifference => safety_difference(
+            std::slice::from_ref(&square),
+            &[],
+            GeometryStep::InterfaceBottomDifference,
+        )
+        .map(drop),
         GeometryStep::InternalDifference => internal(std::slice::from_ref(&square), &[]).map(drop),
         GeometryStep::FillTopIntersection
         | GeometryStep::FillBottomIntersection

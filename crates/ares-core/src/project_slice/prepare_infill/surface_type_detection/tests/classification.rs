@@ -5,11 +5,18 @@ use crate::{
             GeometryStep,
             cracks::crack_threshold,
             geometry::{opening_offset, paths, safety_difference},
-            stage::{apply_spiral_surface_types, classify_slices},
+            stage::{LowerLayer, apply_spiral_surface_types, classify_slices},
         },
         region_slices::{RegionSurface, RegionSurfaceKind},
     },
 };
+
+fn whole_layer(slices: &[ExPolygon]) -> Option<LowerLayer<'_>> {
+    Some(LowerLayer {
+        slices,
+        own_region: None,
+    })
+}
 
 fn rectangle(x0: i64, y0: i64, x1: i64, y1: i64) -> ExPolygon {
     ExPolygon::new(
@@ -82,7 +89,7 @@ fn final_top_preserves_metadata_when_lower_difference_is_empty() {
     let output = classify_slices(
         &source,
         None,
-        Some(&lower),
+        whole_layer(&lower),
         100,
         RegionSurfaceKind::BottomBridge,
     )
@@ -106,7 +113,7 @@ fn covered_interior_is_fresh_internal_geometry() {
     let output = classify_slices(
         &source,
         Some(&neighbor),
-        Some(&neighbor),
+        whole_layer(&neighbor),
         100,
         RegionSurfaceKind::BottomBridge,
     )
@@ -122,7 +129,7 @@ fn lower_void_uses_the_source_selected_bottom_kind() {
     let source = vec![RegionSurface::internal(geometry.clone())];
     let upper = vec![geometry];
     for kind in [RegionSurfaceKind::BottomBridge, RegionSurfaceKind::Bottom] {
-        let output = classify_slices(&source, Some(&upper), Some(&[]), 100, kind).unwrap();
+        let output = classify_slices(&source, Some(&upper), whole_layer(&[]), 100, kind).unwrap();
         assert!(kinds(&output).contains(&kind));
     }
 }
@@ -138,7 +145,7 @@ fn actual_out_of_range_geometry_uses_the_stable_o17_error() {
     let error = match classify_slices(
         &source,
         Some(&[]),
-        Some(&[]),
+        whole_layer(&[]),
         100,
         RegionSurfaceKind::BottomBridge,
     ) {
@@ -161,7 +168,7 @@ fn narrow_external_difference_collapses_during_source_opening() {
     let output = classify_slices(
         &source,
         Some(&[]),
-        Some(&lower),
+        whole_layer(&lower),
         1_000,
         RegionSurfaceKind::BottomBridge,
     )
@@ -182,7 +189,7 @@ fn terminal_partial_overlap_reconstructs_top_with_default_metadata() {
     let output = classify_slices(
         &source,
         None,
-        Some(&lower),
+        whole_layer(&lower),
         100,
         RegionSurfaceKind::BottomBridge,
     )
@@ -244,5 +251,5 @@ fn multiple_holed_surfaces_flatten_contour_then_holes_in_surface_order() {
 #[test]
 fn minimal_valid_coordinates_remain_accepted() {
     let source = vec![RegionSurface::internal(rectangle(0, 0, 1, 1))];
-    assert!(classify_slices(&source, None, None, 1, RegionSurfaceKind::BottomBridge,).is_ok());
+    assert!(classify_slices(&source, None, None, 1, RegionSurfaceKind::BottomBridge).is_ok());
 }

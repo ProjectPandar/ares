@@ -132,6 +132,7 @@ pub(in crate::project_slice) struct PerimeterInputRecord {
     pub(in crate::project_slice) lower_layer_index: Option<usize>,
     pub(in crate::project_slice) upper_layer_index: Option<usize>,
     pub(in crate::project_slice) upper_same_region: Option<RegionLayerIndex>,
+    pub(in crate::project_slice) lower_same_region: Option<RegionLayerIndex>,
     pub(in crate::project_slice) layer_height: f64,
     pub(in crate::project_slice) perimeter_flow: Flow,
     pub(in crate::project_slice) ext_perimeter_flow: Flow,
@@ -265,6 +266,15 @@ impl PostPerimeterInputPrintObject {
     ) -> Option<&[RegionSurface]> {
         record
             .upper_same_region
+            .map(|index| self.region_surfaces(index))
+    }
+
+    pub(in crate::project_slice) fn lower_same_region_surfaces(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> Option<&[RegionSurface]> {
+        record
+            .lower_same_region
             .map(|index| self.region_surfaces(index))
     }
 

@@ -29,10 +29,6 @@ pub(in crate::project_slice) fn prepare(
     #[cfg(test)]
     INVOCATIONS.with(|count| count.set(count.get() + 1));
 
-    if let Err(error) = preflight::validate(&prepared.predecessor.as_classic().resolved.objects) {
-        dispose_predecessor(prepared);
-        return Err(error);
-    }
     let staged = match stage::project(&prepared) {
         Ok(staged) => staged,
         Err(error) => {
