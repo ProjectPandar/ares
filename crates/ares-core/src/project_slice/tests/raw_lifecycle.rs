@@ -243,7 +243,6 @@ fn assert_later_request_preflights_beat_earlier_coordinate() {
             2,
             ProjectVolumeType::ModelPart,
             true,
-            true,
         )],
         &[Transform3d::IDENTITY],
     );
@@ -267,7 +266,6 @@ fn assert_later_request_preflights_beat_earlier_coordinate() {
                     10 + index,
                     ProjectVolumeType::ModelPart,
                     true,
-                    false,
                 )
             })
             .collect(),

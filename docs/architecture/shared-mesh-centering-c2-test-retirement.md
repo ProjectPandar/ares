@@ -1,6 +1,7 @@
 # C2 obsolete guard assertions: retirement request
 
-Status: REQUESTED, not authorized or applied.
+Status: coordinator approved the exact list on2026-10-14; applied in a
+separate retirement test commit before GREEN.
 Public RED commit: `4334347e441cfd60fbf26afd90590f7f1486d23d`.
 Both modes23tests:7PASS/16FAIL; each25 Native outputs admitted0.
 Evidence: `/tmp/worker3-centering-c2-red-matrix-izu0d3pw/red-evidence.json`.

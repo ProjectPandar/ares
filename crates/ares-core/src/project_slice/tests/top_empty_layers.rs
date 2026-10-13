@@ -100,7 +100,6 @@ fn task22k_top_empty_layers_preserve_complete_volume_sidecar() {
             1,
             ProjectVolumeType::ModelPart,
             true,
-            false,
         )],
         &[Transform3d::IDENTITY],
     );

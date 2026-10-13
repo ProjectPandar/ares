@@ -282,7 +282,6 @@ fn adapter_coordinate_case(
                 30,
                 ProjectVolumeType::ModelPart,
                 true,
-                false,
             ),
             mesh_volume(
                 31,
