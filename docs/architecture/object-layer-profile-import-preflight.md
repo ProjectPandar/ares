@@ -37,6 +37,22 @@ Ares must not replace these accepted inputs with InvalidInput or Unsupported.
 Any diagnostic representation must preserve successful slicing and record-level
 selection, remain portable, and avoid filesystem logging in ares-core.
 
+## Diagnostic boundary proposed after preflight
+
+Scope confirmation requested before GREEN: include `_BBS_3MF_Base::m_errors`
+in P's imported source data. Keep a profile-specific error vector on the loaded
+Project and expose only `Project::layer_height_profile_import_errors() -> &[String]`.
+This lets the public load caller inspect the same nonfatal import messages while
+load and slicing still succeed. No generic warning framework, logging side
+effect, filesystem operation or second slicing API is proposed.
+
+The importer retains the first duplicate, ignores structurally invalid records
+with the corresponding recorded error, leaves unknown ordinals unassociated,
+and preserves permissive numeric conversion. Empty members and profile
+regeneration are normal upstream cases and do not gain fabricated diagnostics.
+Public E2E asserts both the observed import messages and complete Native bytes;
+no error is silently suppressed or promoted to a fatal SliceError.
+
 ## Evidence
 
 - Diagnostic capture with per-case cwd/log isolation:
