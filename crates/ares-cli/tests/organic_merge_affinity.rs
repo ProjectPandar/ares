@@ -2,6 +2,7 @@
 //! (SPEC `docs/architecture/2026-10-14-organic-merge-single-worker-spec.md`):
 //! the same organic-support project must slice to byte-identical G-code
 //! regardless of how many CPUs the slicer process may use.
+#![cfg(target_os = "linux")]
 
 use std::{fs, path::Path, process::Command};
 
@@ -55,7 +56,6 @@ fn slice_with_affinity(affinity: Option<&str>, output: &Path) -> Vec<u8> {
     fs::read(output).expect("the G-code output exists")
 }
 
-#[cfg(target_os = "linux")]
 #[test]
 fn organic_support_output_is_identical_across_affinity_widths() {
     let directory = tempfile::tempdir().unwrap();

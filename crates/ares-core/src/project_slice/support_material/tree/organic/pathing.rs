@@ -17,7 +17,6 @@ pub(super) fn create_layer_pathing(
     volumes: &mut TreeModelVolumes<'_>,
     config: &TreeSettings,
     move_bounds: &mut [VecDeque<SupportElement>],
-    workers: usize,
     scale: CoordinateScale,
 ) -> Result<(), ClipperError> {
     let mut last_merge_layer = move_bounds.len();
@@ -80,13 +79,7 @@ pub(super) fn create_layer_pathing(
         if merge_this_layer {
             let count_before_merge = influence_areas.len();
             if count_before_merge > 1 {
-                merge_influence_areas(
-                    volumes,
-                    config,
-                    (layer, workers),
-                    &mut influence_areas,
-                    scale,
-                )?;
+                merge_influence_areas(volumes, config, layer, &mut influence_areas, scale)?;
             }
             let reduced_by_merging = count_before_merge > influence_areas.len();
             last_merge_layer = layer;

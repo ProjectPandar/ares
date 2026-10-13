@@ -10,6 +10,12 @@ Reproducible CPU0 comparisons must restrict the Ares test process as well as
 the reference process. Restricting only Orca gives different merge inputs.
 Keep the native available_parallelism derivation and browser one-worker branch;
 do not pin production to one worker, change outputs or relax the comparator.
+[SUPERSEDED 2026-10-14 by
+docs/architecture/2026-10-14-organic-merge-single-worker-spec.md: production
+now fixes the organic merge worker count to 1; the workers() derivation and
+its plumbing are deleted, making Ares output affinity-invariant on every
+platform. The reference-execution-domain framing and Grid/Snug coverage below
+remain in force.]
 Preserve default multiworker execution results separately and label their scope.
 
 `SupportParameters.hpp:190–204` normalizes raw Tree Grid/Snug to default,

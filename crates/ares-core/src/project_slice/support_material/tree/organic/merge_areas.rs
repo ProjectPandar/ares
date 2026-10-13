@@ -10,19 +10,23 @@ use crate::geometry::{ClipperError, CoordinateScale};
 pub(super) fn merge_influence_areas(
     volumes: &mut TreeModelVolumes<'_>,
     config: &TreeSettings,
-    execution: (usize, usize),
+    layer: usize,
     nodes: &mut [SupportElementMerging],
     scale: CoordinateScale,
 ) -> Result<(), ClipperError> {
-    let (layer, workers) = execution;
     let input_size = nodes.len();
     if input_size == 0 {
         return Ok(());
     }
     ordering::build_recursive(nodes);
+    // TreeSupport3D.cpp:2386-2391 selects the initial bucket layout from the
+    // runtime TBB arena concurrency. Ares deliberately fixes that input to a
+    // single worker (num_threads = 1) so the layout never depends on the
+    // machine; see docs/architecture/2026-10-14-organic-merge-single-worker-spec.md
+    // superseding ARD-0102's keep-native-parallelism clause.
     let num_buckets_min = (input_size + 2) / 4;
     let num_buckets_max = input_size / 2;
-    let (num_buckets_initial, bucket_size) = if num_buckets_min >= workers {
+    let (num_buckets_initial, bucket_size) = if num_buckets_min >= 1 {
         (num_buckets_min, 4)
     } else {
         (num_buckets_max, 2)
