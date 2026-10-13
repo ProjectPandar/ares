@@ -34,4 +34,30 @@ set -e
 test "$code" != 0
 grep -q 'ORCA_JOB_APPDIR must be outside' "$root/shared.err"
 cmp "$root/original" "$root/source/bin/orca-slicer"
+
+# setarch determinism: the wrapper must disable ASLR at the Native exec site
+# without leaking LD_LIBRARY_PATH into setarch itself.
+command -v setarch >/dev/null 2>&1 || { echo 'setarch (util-linux) missing on this runner' >&2; exit 1; }
+mkdir -p "$root/shim-bin"
+printf '#!/bin/sh\nprintf "%%s\\n" "LDLP=${LD_LIBRARY_PATH:-UNSET}" "$*" >"$SETARCH_RECORD"\nwhile [ "$1" = "-R" ]; do shift; done\nexec "$@"\n' > "$root/shim-bin/setarch"
+chmod +x "$root/shim-bin/setarch"
+SETARCH_RECORD="$root/setarch.record" PATH="$root/shim-bin:$PATH" \
+    env -u ORCA_PATCHELF -u ORCA_JOB_APPDIR ORCA_APPDIR="$root/source" ORCA_LIB_CACHE="$root/host-cache" \
+    bash "$repo/scripts/orca-parity.sh" --help > "$root/setarch.out"
+printf '%s\n' "$root/source" --help > "$root/setarch.expected"
+cmp "$root/setarch.expected" "$root/setarch.out"
+grep -q '^LDLP=UNSET$' "$root/setarch.record"
+grep -q -- '-R env' "$root/setarch.record"
+
+# A runner without setarch must fail loudly instead of running the oracle
+# with ASLR enabled.
+mkdir -p "$root/minimal-bin"
+for tool in cat env; do ln -s "$(command -v "$tool")" "$root/minimal-bin/$tool"; done
+set +e
+env -u ORCA_PATCHELF -u ORCA_JOB_APPDIR ORCA_APPDIR="$root/source" ORCA_LIB_CACHE="$root/host-cache" \
+    PATH="$root/minimal-bin" "$(command -v bash)" "$repo/scripts/orca-parity.sh" --help > "$root/nosetarch.out" 2> "$root/nosetarch.err"
+code=$?
+set -e
+test "$code" != 0
+grep -q 'setarch (util-linux) is required' "$root/nosetarch.err"
 echo "PASS $root"

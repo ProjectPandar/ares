@@ -14,4 +14,8 @@ fi
 case "$ORCA_REPLAY_CPU" in
     ''|*[!0-9]*) echo 'ORCA_REPLAY_CPU must name one CPU' >&2; exit 2 ;;
 esac
-exec taskset -c "$ORCA_REPLAY_CPU" "$ORCA_REPLAY_BIN" "$@"
+if ! command -v setarch >/dev/null 2>&1; then
+    echo "setarch (util-linux) is required to disable ASLR for the Native oracle; install util-linux" >&2
+    exit 127
+fi
+exec taskset -c "$ORCA_REPLAY_CPU" setarch -R "$ORCA_REPLAY_BIN" "$@"

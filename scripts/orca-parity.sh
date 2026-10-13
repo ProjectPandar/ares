@@ -85,4 +85,13 @@ if [ -n "$ld" ]; then
     native_library_path="$APPDIR/lib/orca-runtime:$APPDIR/bin:$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 fi
 
-LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" exec "$APPDIR/bin/orca-slicer" "$@"
+if ! command -v setarch >/dev/null 2>&1; then
+    echo "setarch (util-linux) is required to disable ASLR for the Native oracle; install util-linux" >&2
+    exit 127
+fi
+
+# setarch itself must load system libraries, so it runs with LD_LIBRARY_PATH
+# stripped; the inner env restores the AppImage path for orca-slicer only.
+exec env -u LD_LIBRARY_PATH setarch -R \
+    env LD_LIBRARY_PATH="$native_library_path" LC_ALL=C APPDIR="$APPDIR" \
+    "$APPDIR/bin/orca-slicer" "$@"
