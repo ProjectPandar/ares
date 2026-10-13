@@ -1,4 +1,5 @@
 node_modules/
+.wrangler/
 dist/
 packages/ares-wasm-js/src/wasm/
 test-results/

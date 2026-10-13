@@ -28,6 +28,44 @@ npm run build        # library (packages/ares-wasm-js/dist) then app (app/dist)
 `app/dist/` is a static site; serve it with any static file server
 (`npm run preview -w ares-app` serves it on http://127.0.0.1:4174).
 
+### Cloudflare Pages
+
+`npm run build:pages` produces `app/dist/`, including the WASM, module worker,
+lazy profile assets and Pages `_headers`. It requires the pinned OrcaSlicer
+profiles checkout used by CI. `npm run test:pages` runs Chromium against
+Wrangler's local Pages server and retains screenshots/traces in
+`target/pages-e2e/`. Install Chromium first with `npx playwright install chromium`.
+The headers enable cross-origin isolation and SharedArrayBuffer; all app assets
+are served from the same origin. The app uses `/#/prepare` and `/#/preview`, so
+no custom SPA redirect is required.
+
+The Cloudflare Pages workflow builds and checks every push and pull request,
+independently of the native oracle jobs, and retains the `cloudflare-pages`
+deployment artifact for seven days. PRs and branch pushes never deploy.
+Production deploys only on `main` pushes when repository variable
+`CLOUDFLARE_PAGES_ENABLED` is `true`. Deployment is disabled until setup is approved.
+
+Before enabling production, verify the existing Cloudflare account and Pages
+project, with its production branch set to `main`, and approve public hosting
+of the private repository's compiled JS/WASM and bundled upstream profiles.
+Set `CLOUDFLARE_PAGES_PROJECT` to that verified project name. Use the
+`cloudflare-pages-production` GitHub environment and configure its branch
+restrictions and required reviewers as appropriate. Store `CLOUDFLARE_API_TOKEN`
+and `CLOUDFLARE_ACCOUNT_ID` as environment secrets, keeping the token out of
+files, command arguments, logs and chat. The API token needs only **Account /
+Cloudflare Pages / Edit**, restricted to the selected account, with an explicitly
+approved expiry. This permission covers Pages projects in that account; it is
+not restricted to one project. Transfer the newly created token through an
+approved secure handoff directly into GitHub secrets. Do not reuse or read
+existing secret values. Set the enable variable only after these steps and
+publication approval are complete.
+
+The deployment job runs on a hosted runner and downloads only this run's checked
+artifact. It uses `cloudflare/wrangler-action@v4` with the locked Wrangler version
+and names secrets only in that job; it does not execute app build scripts with
+deployment credentials. No preview deployment or Cloudflare account changes are
+performed by PR builds. See Cloudflare's [Direct Upload CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
+
 ### Bundle size
 
 Measured at `314b224c`:
