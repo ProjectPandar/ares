@@ -1,6 +1,6 @@
 # Arachne alternate extra wall: proposed source slice
 
-Status: SPEC review requested; no fixtures or implementation yet.
+Status: SPEC c3d238a8a approved; public RED recorded, implementation pending.
 Owner: worker3; sole reviewer: coordinator Claude.
 Base: origin/main `c22f5a81da41fce715b528268711393649daad66`.
 
@@ -123,3 +123,8 @@ exclusive full slot in inbox. Do not push before exact-hash merge approval.
 This SPEC covers alternate extra wall only. After its separate REVIEW, propose
 Arachne fuzzy skin, then overhang detection/segmentation, each with its own
 source boundary, SPEC approval, public RED commit and production REVIEW.
+
+Approved public fixture RED and source-derived preflight corrections are in
+[RED evidence](arachne-alternate-extra-wall-red-evidence.md). An existing unit
+assertion that requires the removed rejection needs the separately proposed
+[test retirement ruling](arachne-alternate-extra-wall-test-retirement.md).

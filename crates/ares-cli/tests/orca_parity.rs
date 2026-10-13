@@ -10,6 +10,8 @@ mod native_environment;
 
 #[path = "orca_parity/adaptive_pressure_advance.rs"]
 mod adaptive_pressure_advance;
+#[path = "orca_parity/arachne_alternate_extra_wall.rs"]
+mod arachne_alternate_extra_wall;
 #[path = "orca_parity/artifacts.rs"]
 mod artifacts;
 #[path = "orca_parity/bridge_over_infill_filament.rs"]
