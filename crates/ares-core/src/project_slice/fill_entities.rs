@@ -88,13 +88,16 @@ pub(in crate::project_slice) fn prepare(
                     unreachable!("fill object retains its resolved configuration");
                 };
                 // Fill.cpp:1224/1237 -> PrintObject::bounding_box, once per object.
-                // Only Stars multiline reads this box; other generators keep their adapters.
+                // Stars/Grid multiline read this box; other generators keep their adapters.
                 let stars_bounds = resolved
                     .all_regions
                     .iter()
                     .any(|region| {
-                        region.sparse_infill_pattern == crate::ProcessInfillPattern::TriHexagon
-                            && region.fill_multiline.0 > 1
+                        matches!(
+                            region.sparse_infill_pattern,
+                            crate::ProcessInfillPattern::TriHexagon
+                                | crate::ProcessInfillPattern::Grid
+                        ) && region.fill_multiline.0 > 1
                     })
                     .then(|| {
                         stars_bounds::extended(

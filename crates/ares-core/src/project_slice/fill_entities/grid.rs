@@ -30,14 +30,19 @@ const SWEEPS: [Sweep; 2] = [
     },
 ];
 
+pub(super) struct LayerGeometry {
+    pub(super) layer_id: usize,
+    pub(super) bounds: Option<crate::geometry::BoundingBox>,
+}
+
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    layer_id: usize,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
+    geometry: LayerGeometry,
 ) -> Result<(), SliceError> {
-    let polylines = grid_polylines_inner(&fill, scale, layer_id, object_reference)?;
+    let polylines = grid_polylines_inner(&fill, scale, object_reference, geometry)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -64,8 +69,8 @@ pub(super) fn append(
 fn grid_polylines_inner(
     fill: &SurfaceFill,
     scale: crate::geometry::CoordinateScale,
-    layer_id: usize,
     object_reference: crate::geometry::Point,
+    geometry: LayerGeometry,
 ) -> Result<Vec<Polyline>, SliceError> {
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
@@ -83,11 +88,30 @@ fn grid_polylines_inner(
     };
     let mut result = Vec::new();
     for expolygon in &fill.expolygons {
-        let mut polylines = fill_surface(expolygon, params, &SWEEPS, scale).map_err(grid_error)?;
+        // FillRectilinear.cpp:3426-3444: multiline mode0 has XY transpose,
+        // while only the ordinary count1 branch reverses odd-layer paths.
+        let mut polylines = if params.multiline > 1 {
+            let Some(bounds) = geometry.bounds else {
+                unreachable!("Grid multiline bounds are prepared once per object");
+            };
+            crate::fill::grid_trapezoidal::fill_surface(
+                expolygon,
+                params,
+                crate::fill::grid_trapezoidal::SurfaceGeometry {
+                    layer_id: geometry.layer_id,
+                    thickness_layers: fill.representative.thickness_layers,
+                    bounds,
+                },
+                scale,
+            )
+        } else {
+            fill_surface(expolygon, params, &SWEEPS, scale)
+        }
+        .map_err(grid_error)?;
         // Odd UPSTREAM layer ids (0-based) reverse the grid polylines
         // (FillRectilinear.cpp:3441); our layer ids are 1-based, so the flip is
         // on even ids.
-        if layer_id % 2 == 1 {
+        if params.multiline == 1 && geometry.layer_id % 2 == 1 {
             for polyline in &mut polylines {
                 polyline.reverse();
             }

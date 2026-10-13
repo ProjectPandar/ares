@@ -104,9 +104,12 @@ pub(in crate::project_slice) fn generate_layer(
                 super::grid::append(
                     &mut output,
                     fill,
-                    layer.id,
                     traversal.scale,
                     object_reference,
+                    super::grid::LayerGeometry {
+                        layer_id: layer.id,
+                        bounds: stars_bounds,
+                    },
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Cubic) => {

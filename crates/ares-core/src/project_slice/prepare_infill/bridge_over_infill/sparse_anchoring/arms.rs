@@ -68,10 +68,27 @@ pub(super) fn dispatch(
                 dont_sort: false,
             };
             for expolygon in fill.expolygons {
-                result.extend(
-                    fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?,
-                );
+                let lines = match (params.multiline > 1, stars_bounds) {
+                    (true, Some((bounds, layer_id))) => {
+                        crate::fill::grid_trapezoidal::fill_surface(
+                            &expolygon,
+                            params,
+                            crate::fill::grid_trapezoidal::SurfaceGeometry {
+                                layer_id,
+                                thickness_layers: fill.representative.thickness_layers,
+                                bounds,
+                            },
+                            traversal.scale,
+                        )
+                    }
+                    (true, None) => {
+                        unreachable!("Grid anchoring retains its object box and layer id")
+                    }
+                    (false, _) => {
+                        fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
+                    }
+                };
+                result.extend(lines.map_err(super::super::transaction::geometry_error)?);
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
