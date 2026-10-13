@@ -1,4 +1,4 @@
-# C2-T GREEN: global schema validation and local top Fill admission
+# C2-T candidate: blocked by existing loaded-config regression
 
 Implemented PLAN `a5f445512` (carried `718c7cf1e`) on main `023b742f2`.
 Local RED `df184e73b` carries to `e3f203dc6`; global-role RED `f73fdbc97`
@@ -29,8 +29,9 @@ fresh cache and artifact root per leg, both 238/238 PASS, zero FAIL/TIMEOUT:
 
 Each leg includes finite7 (local object/part Grid, no-candidate control,
 exact Native global config rejection), full option_coverage, existing
-bridge/anchor and loaded-config regressions. Existing assertions remain
-unchanged, and all existing cases pass.
+bridge/anchor regressions. Existing assertions remain unchanged. The first
+filter accidentally omitted profile_entry, so loaded-config cases were not
+in those 238 tests. Group counts are finite7/coverage220/bridge-anchor11.
 
 Strict clippy (workspace/all-targets/all-features, -D warnings), fmt check,
 and wasm32 core/vgcode/wasm check all exit0, CPU13, standard env:
@@ -39,3 +40,19 @@ Joined external evidence `/tmp/worker2-c2t-green-review-evidence.json` contains
 per-group counts, exact test names, global diagnostic witnesses and receipts.
 No Native artifacts are committed. Full remains pending coordinator FULL-GO;
 only the coordinator merges main.
+
+## Required stop after supplemental loaded-config regression
+
+Fresh supplemental runs on candidate `320fb0757` matched the actual
+`runner::profile_entry::{loaded_config_*,preset_vector_loading}` modules:
+
+- official `/tmp/worker2-c2t-loaded-official.tWhUM2`: 16 PASS, 1 FAIL.
+- seeded `/tmp/worker2-c2t-loaded-seeded.3NOeCp`: 16 PASS, 1 FAIL.
+
+The unchanged `orca_parity_o3_matrix_sweep_loaded_config` fails in both modes.
+Anycubic Kobra S1 Max 0.25/0.4 and Kobra X 0.4 acquire an extra Ares
+`internal_solid_infill_pattern: invalid value zig-zag` error; Native reports
+only the existing numeric errors. Per PLAN approval condition, implementation
+and all experiments stop here. Assertions are unchanged; no expanded repair,
+no FULL-READY, no full, no merge. External evidence is updated with this
+failure and the filter correction. Await coordinator ruling.
