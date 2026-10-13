@@ -1,6 +1,5 @@
 use crate::{
-    ProcessInfillPattern, RegionOptions, SliceError, fill::cross_hatch::line_spacing,
-    geometry::CoordinateScale,
+    RegionOptions, SliceError, fill::cross_hatch::line_spacing, geometry::CoordinateScale,
 };
 
 use super::super::sparse_anchoring::{projected_anchor_lengths, projected_sparse_density};
@@ -15,19 +14,6 @@ pub(super) fn validate(
     // covers meta templates, and the non-meta path feeds every token to
     // `strtod`-style parsing (`Fill.cpp:206-210`) where unparseable tails
     // truncate and unparseable tokens become 0.0 — upstream never rejects.
-    if !matches!(
-        options.internal_solid_infill_pattern,
-        ProcessInfillPattern::Monotonic
-            | ProcessInfillPattern::MonotonicLine
-            | ProcessInfillPattern::AlignedRectilinear
-            | ProcessInfillPattern::Concentric
-            | ProcessInfillPattern::Rectilinear
-            | ProcessInfillPattern::HilbertCurve
-            | ProcessInfillPattern::ArchimedeanChords
-            | ProcessInfillPattern::OctagramSpiral
-    ) {
-        return unsupported("internal_solid_infill_pattern");
-    }
     // `PrintObject::bridge_over_infill` (`PrintObject.cpp:2468+`) is
     // extruder-agnostic: rewritten surfaces stay in their LayerRegion and
     // emit on the region's role filament (`Fill.cpp:865`,
