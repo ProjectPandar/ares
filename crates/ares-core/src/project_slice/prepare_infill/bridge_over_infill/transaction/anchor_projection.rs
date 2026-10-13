@@ -10,11 +10,6 @@ pub(super) fn validate(
     spacing: f32,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    // `gyroid_optimized` is supported — `FillGyroid.cpp` tpms/gyroid_optimized
-    // field emission with the real layer height + post-offset re-clipping.
-    if options.sparse_infill_density.0 <= 0.0 {
-        return unsupported("sparse_infill_density");
-    }
     // All rotate_template strings are admissible upstream: the meta
     // interpreter (`Fill.cpp:60-203`, ported in projection/rotation/meta.rs)
     // covers meta templates, and the non-meta path feeds every token to

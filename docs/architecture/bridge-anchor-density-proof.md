@@ -84,3 +84,28 @@ Likewise local anchor metadata is not range-checked in the region normalizer.
 A finite f64 carrier can overflow when narrowed/projected to f32. Native
 release acceptance/output must be measured after RESTORED; no D proof or
 production change is proposed here.
+
+## Coordinator ruling and B behavior gate
+
+RULING `20229a3d6` accepts deletion of the unreachable density rejection in
+its own commit. Remove the orphaned pattern-support comment with this block.
+This does not complete B: upstream `PrintObject.cpp:2521` considers `stInternal`
+unsupported for density zero, while only Fill produces no sparse polylines.
+
+Trace the public path separately from the admission proof. On the audited
+Ares base, `candidates.rs` uses the same `kind != Internal || density == 100`
+lower-solid predicate. The zero-density continue in `candidate_expansion/layers.rs`
+occurs inside the per-region validation loop; the actual sparse generator call
+is after this loop and still runs. These observations suggest the check is
+only a validation bypass, but do not establish whole-output parity.
+
+Before further production changes, build public Native E2E cases with an
+internal solid ceiling at density `0%` and `0.0001%` (below the normalization
+threshold), plus a positive-density control. Assert the Native internal-bridge
+extrusion witness, no sparse extrusions for zero/near-zero, exact applied
+public input values, and whole-output generator-only parity with Ares.
+Persist input, Native/Ares bytes, hashes and comparison artifacts externally.
+Use official and seeded after RESTORED with per-run fresh cache/root.
+Any mismatch is B's actual RED and must be preserved before porting the
+missing upstream behavior; matching cases become regression controls.
+The caller and candidate logic are unchanged by the authorized deletion.
