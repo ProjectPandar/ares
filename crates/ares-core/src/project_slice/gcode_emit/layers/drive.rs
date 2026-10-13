@@ -1,4 +1,3 @@
-{
     while phase_index < phases.len() {
         let merged: &[(f64, schedule::LayerToPrint)] = phases[phase_index].merged;
         let phase = &phases[phase_index];
@@ -285,4 +284,3 @@
         state.adaptive_pa_layer = chunk_index;
     }
     cooling.finish(output);
-}
