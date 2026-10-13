@@ -147,8 +147,7 @@ pub(super) fn intersect_projected_objects(
     resolved_objects: &[ResolvedProjectObject],
     projected_objects: Vec<ProjectedPrintObject>,
     scale: CoordinateScale,
-    filament: &FilamentRegionSourceOptions,
-    logical_count: usize,
+    (filament, logical_count): (&FilamentRegionSourceOptions, usize),
 ) -> Result<Vec<IntersectedPrintObject>, SliceError> {
     let mut budget = RawIntersectionBudget::new();
     let mut intersected_objects = Vec::with_capacity(projected_objects.len());
