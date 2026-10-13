@@ -39,7 +39,14 @@ pub(super) fn intersections(
     plans: Vec<PlannedPrintObject>,
 ) -> Result<Vec<IntersectedPrintObject>, SliceError> {
     let projected = super::support::project(objects, resolved, plans)?;
-    intersect_projected_objects(objects, resolved, projected, CoordinateScale::Normal)
+    intersect_projected_objects(
+        objects,
+        resolved,
+        projected,
+        CoordinateScale::Normal,
+        &crate::options::FilamentRegionSourceOptions::default(),
+        1,
+    )
 }
 
 pub(super) fn planned_layers(
