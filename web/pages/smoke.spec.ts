@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 
 test("Pages serves the production app, isolated WASM and module worker", async ({ page, request }, testInfo) => {
   const errors: string[] = [];
@@ -21,6 +21,11 @@ test("Pages serves the production app, isolated WASM and module worker", async (
     expect(statSync(`app/dist/assets/${asset}`).size).toBeLessThanOrEqual(25 * 1024 * 1024);
     const result = await request.get(`/assets/${asset}`);
     expect(result.ok(), asset).toBe(true);
+  }
+  for (const notice of ["THIRD_PARTY_NOTICES.md", ...readdirSync("../LICENSES").map((file) => `LICENSES/${file}`)]) {
+    const result = await request.get(`/${notice}`);
+    expect(result.ok(), notice).toBe(true);
+    expect(await result.text()).toBe(readFileSync(`../${notice}`, "utf8"));
   }
   expect(errors).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("pages-prepare.png") });

@@ -13,7 +13,8 @@ concurrency:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on:
+      group: Default
     steps:
       - uses: actions/checkout@v4
         with:

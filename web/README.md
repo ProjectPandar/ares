@@ -31,7 +31,8 @@ npm run build        # library (packages/ares-wasm-js/dist) then app (app/dist)
 ### Cloudflare Pages
 
 `npm run build:pages` produces `app/dist/`, including the WASM, module worker,
-lazy profile assets and Pages `_headers`. It requires the pinned OrcaSlicer
+lazy profile assets, Pages `_headers`, existing `THIRD_PARTY_NOTICES.md` and
+`LICENSES/` texts. It requires the pinned OrcaSlicer
 profiles checkout used by CI. `npm run test:pages` runs Chromium against
 Wrangler's local Pages server and retains screenshots/traces in
 `target/pages-e2e/`. Install Chromium first with `npx playwright install chromium`.
@@ -39,7 +40,8 @@ The headers enable cross-origin isolation and SharedArrayBuffer; all app assets
 are served from the same origin. The app uses `/#/prepare` and `/#/preview`, so
 no custom SPA redirect is required.
 
-The Cloudflare Pages workflow uses the existing self-hosted build runners and
+The Cloudflare Pages workflow uses the existing `Default` self-hosted runner
+group (the current fleet has no `self-hosted` label) and
 builds and checks every push and pull request,
 independently of the native oracle jobs, and retains the `cloudflare-pages`
 deployment artifact for seven days. PRs and branch pushes never deploy.
@@ -49,6 +51,11 @@ Production deploys only on `main` pushes when repository variable
 Before enabling production, verify the existing Cloudflare account and Pages
 project, with its production branch set to `main`, and approve public hosting
 of the private repository's compiled JS/WASM and bundled upstream profiles.
+Both web library packages declare `AGPL-3.0-or-later`; npm's `prepack` license
+copy does not run during a Vite build. The Pages package preserves the existing
+notices and license texts, but does not publish private source or establish
+license compliance. Before public hosting, separately review licensing and
+approve any required corresponding-source availability and disclosure plan.
 Set `CLOUDFLARE_PAGES_PROJECT` to that verified project name. Use the
 `cloudflare-pages-production` GitHub environment and configure its branch
 restrictions and required reviewers as appropriate. Store `CLOUDFLARE_API_TOKEN`
@@ -66,6 +73,11 @@ artifact. It uses `cloudflare/wrangler-action@v4` with the locked Wrangler versi
 and names secrets only in that job; it does not execute app build scripts with
 deployment credentials. No preview deployment or Cloudflare account changes are
 performed by PR builds. See Cloudflare's [Direct Upload CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
+The current shared runner group permits all private repositories and does not
+restrict workflows. The CI architecture document describes per-job VMs, but
+the selected fleet's clean creation/destruction controls have not been verified.
+Keep secret-bearing deployment on a fresh hosted runner until an equivalent
+isolation guarantee is established; GitHub billing availability is a prerequisite.
 
 ### Bundle size
 
