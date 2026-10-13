@@ -192,8 +192,9 @@ case!(c1_support_groups, "support-groups");
 
 #[test]
 fn c1_rotation_exclusion() {
-    let input = include_bytes!("../../../../tests/parity/print-object-centering/rotation-exclusion.3mf");
+    let input =
+        include_bytes!("../../../../tests/parity/print-object-centering/rotation-exclusion.3mf");
     let settings = crate::runner::application::settings(input).unwrap();
-    assert_eq!(settings["exclude_object"],json!("1"));
-    compare("rotation-exclusion",input);
+    assert_eq!(settings["exclude_object"], json!("1"));
+    compare("rotation-exclusion", input);
 }
