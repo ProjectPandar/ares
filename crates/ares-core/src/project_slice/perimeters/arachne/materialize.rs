@@ -245,7 +245,7 @@ fn materialize_record(
                 loop_number,
             },
             &spacings,
-            prelude_record.surface_simplify_resolution,
+            config.scaled_resolution,
             crate::project_slice::perimeters::arachne::walls::BoundaryOverlap {
                 overlaps,
                 top_or_bottom: config.is_bottom_layer || config.is_topmost_layer,
