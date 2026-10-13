@@ -62,3 +62,15 @@ variables, using CPU12/jobs1 and the independent worker3 target. This exercises
 the exact missing-root workspace path and the positive explicit-plate WASM
 adapter path. Capture logs and retained selection.json externally. Then verify
 strict/fmt/wasm32; coordinator owns CI/workspace/full and all pushes.
+
+## Same positive-input requirement in runtime role migration
+
+`runner/processor_migration/roles.rs` also used the original membership-empty
+input with Some(1), while tools/chain-probe/role-filament-map.py:115 produces
+Native --slice0. Its optional Native path was unavailable in workspace, so this
+consumer did not fail in the self-hosted job. It would encounter the same
+approved explicit-import rejection in full. Switch only its PROJECT input path
+to the complete fixture. Preserve Some(1), every whole-stream, footer/map and
+f64-bit assertion, producer scripts and cache policy. For this single assigned
+object, all-import and explicit import have the same owner/geometry.
+Verify the existing runtime roles module in fresh official/seeded Native runs.

@@ -6,7 +6,7 @@ use serde_json::Value;
 use std::path::Path;
 
 const PROJECT: &[u8] =
-    include_bytes!("../../../../../../tests/parity/validation/kobra3-centered/0.8.3mf");
+    include_bytes!("../../../../../../tests/parity/role-filament-usage/wasm-plate1.3mf");
 
 // Migrate slice A's subprocess policy proof with the real role entrypoint.
 // Deliberately missing gdb prevents launching Native; this is not parity evidence.
