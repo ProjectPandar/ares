@@ -30,7 +30,7 @@ pub(super) struct Input<'a, 'b> {
     pub(super) entry_builder: &'a mut EntryBuilder<'b>,
     pub(super) chunk_slices: &'a [ExPolygon],
     pub(super) chunk_perimeter_spacing: f64,
-    pub(super) brim: &'a Option<BrimPlan>,
+    pub(super) brim: &'a [Option<BrimPlan>],
     pub(super) spiral: &'a mut spiral_vase::SpiralVaseFilter,
     pub(super) layer_z: f64,
     pub(super) layer_height: f64,

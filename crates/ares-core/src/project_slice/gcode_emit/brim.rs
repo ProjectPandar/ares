@@ -1,4 +1,4 @@
-//! Explicit outer/inner brim for a single object, rewriting the simple
+//! Explicit outer/inner brim per PrintObject, rewriting the simple
 //! `outer_inner_brim_area` + `makeBrimInfillImpl` path
 //! (`Brim.cpp:421-570,819-878`).
 
@@ -22,10 +22,9 @@ pub(super) struct BrimPlan {
 impl BrimPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
+        object_index: usize,
     ) -> Result<Option<Self>, SliceError> {
-        let Some(resolved) = traversal.resolved.objects.first() else {
-            return Ok(None);
-        };
+        let (resolved, _) = traversal.print_object_config(object_index);
         let options = &resolved.object;
         if !matches!(
             options.brim_type,
@@ -39,7 +38,7 @@ impl BrimPlan {
         }
         let source = traversal
             .objects
-            .first()
+            .get(object_index)
             .and_then(|object| {
                 object
                     .predecessor
@@ -129,7 +128,7 @@ impl BrimPlan {
         };
         let brim_area = bed_area::clip(
             traversal,
-            resolved.source_object_index,
+            object_index,
             region.outer_wall_filament_id.0 as usize - 1,
             (brim_area, inner),
             resolution,

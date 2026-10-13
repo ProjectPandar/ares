@@ -54,7 +54,9 @@ impl EntryGeometry<'_> {
         motion::LayerGeometry {
             nearest_seam_penalties: self.nearest_penalties,
             staggered_inner: self.nearest_penalties.is_some()
-                && traversal.resolved.objects[object_index]
+                && traversal
+                    .print_object_config(object_index)
+                    .0
                     .object
                     .staggered_inner_seams
                     .0,

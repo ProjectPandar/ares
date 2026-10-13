@@ -14,14 +14,13 @@ use super::{brim_geometry_error, scaled_f64};
 
 pub(super) fn clip(
     traversal: &PreparedPostClassicTraversal,
-    source_object_index: usize,
+    object_index: usize,
     logical_filament: usize,
     (area, inner): (Vec<ExPolygon>, Vec<ExPolygon>),
     resolution: f64,
 ) -> Result<Vec<ExPolygon>, SliceError> {
     let scale = traversal.scale;
-    let object = &traversal.project.objects()[source_object_index];
-    let (x, y) = super::super::footprint::object_origin(object, scale);
+    let (x, y) = super::super::footprint::print_object_origin(traversal, object_index);
     let shift = Point::new(
         (x / scale.factor()).round() as i64,
         (y / scale.factor()).round() as i64,

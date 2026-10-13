@@ -51,7 +51,10 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         .predecessor
         .predecessor
         .predecessor;
-    let placements = runtime::placement_modes(&traversal.resolved.objects, &prepared.objects);
+    let configurations = (0..traversal.objects.len())
+        .map(|index| traversal.print_object_config(index).0)
+        .collect::<Vec<_>>();
+    let placements = runtime::placement_modes(&configurations, &prepared.objects);
     if !placements.iter().any(Option::is_some) {
         return;
     }
@@ -66,9 +69,13 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
             if placement.is_none() {
                 return None;
             }
-            let source_index = traversal.resolved.objects[object_index].source_object_index;
+            let source_index = traversal
+                .print_object_config(object_index)
+                .0
+                .source_object_index;
             let mesh = mesh::TriangleMesh::from_object(
                 &traversal.project.objects()[source_index],
+                traversal.print_object_config(object_index).1,
                 traversal.scale,
             );
             (!mesh.triangles.is_empty()).then(|| {
@@ -151,7 +158,9 @@ fn apply_objects(
             }
             _ => unreachable!("only active seam placement modes are prepared"),
         }
-        let staggered = traversal.resolved.objects[object_index]
+        let staggered = traversal
+            .print_object_config(object_index)
+            .0
             .object
             .staggered_inner_seams
             .0;

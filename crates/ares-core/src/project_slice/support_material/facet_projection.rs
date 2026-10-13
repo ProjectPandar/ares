@@ -6,7 +6,7 @@ use crate::{
     geometry::{CoordinateScale, Polygon},
     mesh_slicer::slice_bottom_slabs,
     project::{effective_config::types::ResolvedProjectObject, facets_annotation::strict_facets},
-    project_slice::{layers::PlannedPrintObject, raw_intersections::raw_center},
+    project_slice::layers::PlannedPrintObject,
 };
 
 pub(super) struct Input<'a> {
@@ -34,7 +34,11 @@ pub(super) fn append(
     let Some(first) = volumes.next() else {
         return Ok(Vec::new());
     };
-    let center = raw_center(source, scale)?;
+    let center = crate::project_slice::centering::center(
+        source,
+        &resolved.print_objects[plan.transform_index],
+        scale,
+    )?;
     let object_transform = resolved.print_objects[plan.transform_index]
         .transform
         .without_xy_translation()

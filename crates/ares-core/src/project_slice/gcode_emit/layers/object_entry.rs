@@ -74,7 +74,9 @@ pub(super) fn emit(
     let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
     let first_layer =
         physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 0.0001;
-    state.options.seam_position = traversal.resolved.objects[object_index]
+    state.options.seam_position = traversal
+        .print_object_config(object_index)
+        .0
         .object
         .seam_position;
     let timelapse_inserted = motion::emit_layer(

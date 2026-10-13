@@ -70,8 +70,12 @@ impl AutoLift {
             };
             let layers = detect::layers(slices, plan, line_width, scale)?;
             let project_object = &traversal.project.objects()[plan.source_object_index];
-            let center = crate::project_slice::raw_intersections::raw_center(project_object, scale)
-                .expect("sliced object has validated raw bounds");
+            let center = crate::project_slice::centering::center(
+                project_object,
+                &resolved.print_objects[plan.transform_index],
+                scale,
+            )
+            .expect("sliced object has validated raw bounds");
             objects.push(Object {
                 shifts: resolved.print_objects[plan.transform_index]
                     .instance_indices

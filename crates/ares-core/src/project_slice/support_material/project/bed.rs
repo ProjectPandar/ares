@@ -8,6 +8,7 @@ use crate::{
 pub(super) fn polygon(
     settings: &ProjectSettings,
     object: &ProjectObject,
+    group: &crate::project::effective_config::types::ResolvedPrintObjectConfig,
     scale: CoordinateScale,
 ) -> Result<Polygon, SliceError> {
     let points = |input: &crate::Point2dList| {
@@ -35,14 +36,13 @@ pub(super) fn polygon(
     if !difference.is_empty() {
         bed = difference.remove(0);
     }
-    let center = crate::project_slice::raw_intersections::raw_center(object, scale)?;
-    let translation = object
-        .instances()
-        .iter()
-        .find(|instance| instance.printable())
-        .expect("resolved object has a printable instance")
-        .transform()
-        .transform_point(Point3d::new(0.0, 0.0, 0.0));
+    let center = crate::project_slice::centering::center(object, group, scale)?;
+    let translation = object.instances()[*group
+        .instance_indices
+        .first()
+        .expect("print group has a member")]
+    .transform()
+    .transform_point(Point3d::new(0.0, 0.0, 0.0));
     let shift = Point::new(
         scale.scaled_delta(translation.x) as i64 + center.x(),
         scale.scaled_delta(translation.y) as i64 + center.y(),

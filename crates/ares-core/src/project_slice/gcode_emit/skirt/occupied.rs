@@ -12,7 +12,7 @@ use crate::{
 pub(super) fn hulls(
     traversal: &PreparedPostClassicTraversal,
     support: &[Vec<InstalledSupportLayer>],
-    brim: Option<&BrimPlan>,
+    brim: &[Option<BrimPlan>],
     layer_limit: usize,
     raft: Option<&super::super::layers::RaftSchedule>,
 ) -> Vec<Vec<Point>> {
@@ -74,30 +74,24 @@ pub(super) fn hulls(
                 );
             });
         }
-        let resolved = &traversal.resolved.objects[object_index];
+        let (resolved, group) = traversal.print_object_config(object_index);
         if let Some(raft) = raft {
             local.extend(raft.skirt_points(object_index));
         }
         let local_hull = super::convex_hull(&local);
         let source = &traversal.project.objects()[resolved.source_object_index];
-        let center = crate::project_slice::raw_intersections::raw_center(source, scale)
+        let center = crate::project_slice::centering::center(source, group, scale)
             .expect("sliced object has validated raw bounds");
-        for instance in source
-            .instances()
-            .iter()
-            .filter(|instance| instance.printable())
-        {
-            let shift = footprint::instance_shift(instance, center, scale);
+        for &member in &group.instance_indices {
+            let shift = footprint::instance_shift(&source.instances()[member], center, scale);
             occupied.extend(
                 local_hull
                     .iter()
                     .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y())),
             );
         }
-        if object_index == 0
-            && let Some(brim) = brim
-        {
-            let (x, y) = footprint::object_origin(source, scale);
+        if let Some(brim) = &brim[object_index] {
+            let (x, y) = footprint::print_object_origin(traversal, object_index);
             let shift = Point::new(
                 (x / scale.factor()).round() as i64,
                 (y / scale.factor()).round() as i64,

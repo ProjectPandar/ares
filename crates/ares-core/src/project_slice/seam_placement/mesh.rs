@@ -2,8 +2,6 @@ use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 use crate::{Point3d, ProjectObject, ProjectVolumeType, geometry::CoordinateScale};
 
-use crate::project_slice::raw_intersections::raw_center;
-
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(super) struct Vec3 {
     pub(super) x: f32,
@@ -155,17 +153,16 @@ impl TriangleMesh {
     /// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
     /// `PrintObject::trafo_centered()` = instance transform with zeroed XY
     /// translation (`PrintApply.cpp` zeroes `trafo` XY, moving it to `shift`)
-    /// pretranslated by `-center_offset`. `raw_center` mirrors
-    /// `PrintObject.cpp:97-110` `center_offset` (bbox center of the
-    /// translation-stripped transformed mesh).
-    pub(super) fn from_object(object: &ProjectObject, scale: CoordinateScale) -> Self {
-        let instance_transform = object
-            .instances()
-            .first()
-            .expect("a sliced project object has an instance")
-            .transform();
-        let center =
-            raw_center(object, scale).expect("resolved project object bounds must be finite");
+    /// pretranslated by `-center_offset`. The group center follows
+    /// `PrintObject.cpp:97-110`, including the source/group rotation difference.
+    pub(super) fn from_object(
+        object: &ProjectObject,
+        group: &crate::project::effective_config::types::ResolvedPrintObjectConfig,
+        scale: CoordinateScale,
+    ) -> Self {
+        let instance_transform = group.transform;
+        let center = crate::project_slice::centering::center(object, group, scale)
+            .expect("resolved project object bounds must be finite");
         let object_transform =
             instance_transform
                 .without_xy_translation()

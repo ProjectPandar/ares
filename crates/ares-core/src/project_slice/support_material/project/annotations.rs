@@ -11,9 +11,8 @@ use crate::{
     },
     project::effective_config::types::ResolvedProjectObject,
     project_slice::{
-        layers::PlannedPrintObject,
-        pre_closing_unions::union_layer_polygons,
-        raw_intersections::{raw_center, transformed_vertices},
+        layers::PlannedPrintObject, pre_closing_unions::union_layer_polygons,
+        raw_intersections::transformed_vertices,
     },
 };
 
@@ -31,7 +30,11 @@ pub(super) fn slice_volumes(
     let Some(first) = volumes.next() else {
         return Ok(Vec::new());
     };
-    let center = raw_center(source, scale)?;
+    let center = crate::project_slice::centering::center(
+        source,
+        &resolved.print_objects[plan.transform_index],
+        scale,
+    )?;
     let object_transform = resolved.print_objects[plan.transform_index]
         .transform
         .without_xy_translation()

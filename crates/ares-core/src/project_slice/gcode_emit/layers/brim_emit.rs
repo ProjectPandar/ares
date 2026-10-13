@@ -14,7 +14,7 @@ use crate::project_slice::perimeters::classic::traversal::types::PreparedPostCla
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    brim: &Option<brim::BrimPlan>,
+    brim: &[Option<brim::BrimPlan>],
     object_index: usize,
     layer_index: usize,
     entry_builder: &mut EntryBuilder<'_>,
@@ -22,9 +22,8 @@ pub(super) fn emit(
     chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
 ) {
-    if object_index == 0
-        && layer_index == 0
-        && let Some(plan) = brim
+    if layer_index == 0
+        && let Some(plan) = &brim[object_index]
     {
         let geometry = entry_builder.geometry(
             object_index,

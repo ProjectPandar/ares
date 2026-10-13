@@ -73,6 +73,7 @@ pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project
     };
     profile_entry::load_with_profile(source, profile)
 }
+mod centering;
 mod raw_intersections;
 mod region_slices;
 #[cfg_attr(

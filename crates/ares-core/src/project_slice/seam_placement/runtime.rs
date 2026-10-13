@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub(super) fn placement_modes(
-    objects: &[ResolvedProjectObject],
+    objects: &[&ResolvedProjectObject],
     prepared: &[Vec<OrderedExtrusionLayer>],
 ) -> Vec<Option<ProcessSeamPosition>> {
     objects

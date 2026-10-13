@@ -267,7 +267,12 @@ pub(in crate::project_slice) fn generate(
                 enforcers: &enforcers,
                 blockers: &blockers,
                 extrusion_width,
-                bed: bed::polygon(settings, source_object, scale)?,
+                bed: bed::polygon(
+                    settings,
+                    source_object,
+                    &resolved_object.print_objects[plan.transform_index],
+                    scale,
+                )?,
                 has_brim,
                 scale,
             };

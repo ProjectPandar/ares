@@ -2,7 +2,7 @@ use std::{collections::BTreeSet, num::NonZeroU32, ops::Deref};
 
 use crate::{
     Point3d, ProjectObject, ProjectVolumeType, SliceError,
-    geometry::{CoordinateScale, Point},
+    geometry::CoordinateScale,
     mesh_slicer::{IntersectionLine, RawIntersectionBudget, slice_mesh_on_planes},
     options::FilamentRegionSourceOptions,
     project::effective_config::types::ResolvedProjectObject,
@@ -12,6 +12,8 @@ use super::layers::PlannedPrintObject;
 
 #[path = "raw_intersections/ranges.rs"]
 mod ranges;
+#[cfg(test)]
+use crate::geometry::Point;
 
 const DENSE_SLOT_LIMIT: usize = 1_000_000;
 
@@ -123,7 +125,6 @@ pub(super) fn prepare_projected_objects(
     planned_objects: Vec<PlannedPrintObject>,
 ) -> Result<Vec<ProjectedPrintObject>, SliceError> {
     validate_layer_ranges(source_objects, resolved_objects)?;
-    validate_centering(source_objects, resolved_objects)?;
     validate_shared_meshes(source_objects)?;
 
     let projected_objects = planned_objects
@@ -160,7 +161,8 @@ pub(super) fn intersect_projected_objects(
             .expect("planned object must have resolved configuration");
         let active_ranges = (resolved.layer_candidates.len() > 1)
             .then(|| ranges::active_volume_ranges(source, resolved, filament, logical_count));
-        let center = raw_center(source, scale)?;
+        let center =
+            super::centering::center(source, &resolved.print_objects[plan.transform_index], scale)?;
         let centered_object_transform = resolved.print_objects[plan.transform_index]
             .transform
             .without_xy_translation()
@@ -213,10 +215,19 @@ pub(super) fn intersect_projected_objects(
     Ok(intersected_objects)
 }
 
+#[cfg(test)]
 pub(super) fn raw_center(
     source: &ProjectObject,
     scale: CoordinateScale,
 ) -> Result<Point, SliceError> {
+    let [x, y] = raw_center_unscaled(source)?;
+    Ok(Point::new(
+        scale.checked_scale(x).ok_or_else(coordinate_error)?,
+        scale.checked_scale(y).ok_or_else(coordinate_error)?,
+    ))
+}
+
+pub(super) fn raw_center_unscaled(source: &ProjectObject) -> Result<[f64; 2], SliceError> {
     let object_transform = source
         .instances()
         .first()
@@ -252,9 +263,7 @@ pub(super) fn raw_center(
         bounds.expect("resolved project object must have a nonempty model part");
     let center_x = (min_x + max_x) * 0.5;
     let center_y = (min_y + max_y) * 0.5;
-    let x = scale.checked_scale(center_x).ok_or_else(coordinate_error)?;
-    let y = scale.checked_scale(center_y).ok_or_else(coordinate_error)?;
-    Ok(Point::new(x, y))
+    Ok([center_x, center_y])
 }
 
 pub(super) fn transformed_vertices(
@@ -282,7 +291,7 @@ fn scaled_coordinate_is_valid(value: f32) -> bool {
     (i64::MIN as f64..-(i64::MIN as f64)).contains(&f64::from(value))
 }
 
-fn coordinate_error() -> SliceError {
+pub(super) fn coordinate_error() -> SliceError {
     SliceError::InvalidInput(
         "project mesh slicing coordinate is nonfinite or outside the scaled coordinate range"
             .to_owned(),
@@ -305,31 +314,6 @@ fn validate_layer_ranges(
                 .is_empty()
     }) {
         return unsupported("layer_config_ranges");
-    }
-    Ok(())
-}
-
-fn validate_centering(
-    source_objects: &[ProjectObject],
-    resolved_objects: &[ResolvedProjectObject],
-) -> Result<(), SliceError> {
-    for resolved in resolved_objects {
-        let [print_object] = resolved.print_objects.as_slice() else {
-            return unsupported("print_object_centering");
-        };
-        let source = &source_objects[resolved.source_object_index];
-        let first_source_transform = source
-            .instances()
-            .first()
-            .expect("resolved project object must have a source instance")
-            .transform()
-            .without_xy_translation();
-        let same_transform = print_object
-            .transform
-            .fixed_xy_equal(first_source_transform);
-        if !same_transform {
-            return unsupported("print_object_centering");
-        }
     }
     Ok(())
 }

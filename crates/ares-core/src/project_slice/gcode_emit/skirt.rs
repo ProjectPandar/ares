@@ -46,7 +46,7 @@ impl SkirtPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<crate::project_slice::support_material::InstalledSupportLayer>],
-        brim: Option<&super::brim::BrimPlan>,
+        brim: &[Option<super::brim::BrimPlan>],
         tower_corners: &[Point],
         raft: Option<&super::layers::RaftSchedule>,
     ) -> Result<Option<Self>, SliceError> {

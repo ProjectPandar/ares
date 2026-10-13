@@ -31,7 +31,9 @@ pub(super) fn prepare(predecessor: &mut PreparedPostExternalSurfaces) -> Result<
     let scale = traversal.scale;
     for object_index in 0..horizontal.objects.len() {
         if !matches!(
-            traversal.resolved.objects[object_index]
+            traversal
+                .print_object_config(object_index)
+                .0
                 .object
                 .enable_extra_bridge_layer,
             ProcessExtraBridgeLayer::InternalBridgeOnly | ProcessExtraBridgeLayer::ApplyToAll

@@ -1,6 +1,6 @@
 //! Plate-frame bounds (`Print::first_layer_islands`, `GCode.cpp:2930-2939`).
 
-use super::{FirstLayerBounds, object_origin};
+use super::{FirstLayerBounds, print_object_origin};
 use crate::{
     geometry::{CoordinateScale, Point},
     project_slice::{
@@ -12,7 +12,7 @@ use crate::{
 pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
     traversal: &PreparedPostClassicTraversal,
     skirt: Option<&SkirtPlan>,
-    brim: Option<&BrimPlan>,
+    brim: &[Option<BrimPlan>],
     tower_corners: &[Point],
     islands: &[Point],
 ) -> Option<FirstLayerBounds> {
@@ -22,10 +22,12 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
     if let Some(skirt) = skirt {
         include_bounds(skirt.covered_bounds(scale), &mut bounds);
     }
-    if let Some(brim) = brim {
-        let source =
-            &traversal.project.objects()[traversal.resolved.objects[0].source_object_index];
-        let (x, y) = object_origin(source, scale);
+    for (index, brim) in brim
+        .iter()
+        .enumerate()
+        .filter_map(|(index, plan)| plan.as_ref().map(|plan| (index, plan)))
+    {
+        let (x, y) = print_object_origin(traversal, index);
         include_bounds(
             brim.covered_bounds(scale)
                 .map(|(min_x, min_y, max_x, max_y)| (min_x + x, min_y + y, max_x + x, max_y + y)),
@@ -45,15 +47,17 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
 pub(in crate::project_slice::gcode_emit) fn first_layer_convex_hull(
     traversal: &PreparedPostClassicTraversal,
     skirt: Option<&SkirtPlan>,
-    brim: Option<&BrimPlan>,
+    brim: &[Option<BrimPlan>],
     tower_corners: &[Point],
     islands: &[Point],
 ) -> Vec<Point> {
     let mut points = Vec::new();
-    if let Some(brim) = brim {
-        let source =
-            &traversal.project.objects()[traversal.resolved.objects[0].source_object_index];
-        let (x, y) = object_origin(source, traversal.scale);
+    for (index, brim) in brim
+        .iter()
+        .enumerate()
+        .filter_map(|(index, plan)| plan.as_ref().map(|plan| (index, plan)))
+    {
+        let (x, y) = print_object_origin(traversal, index);
         let shift = Point::new(
             (x / traversal.scale.factor()).round() as i64,
             (y / traversal.scale.factor()).round() as i64,
@@ -80,7 +84,7 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_convex_hull(
 pub(in crate::project_slice::gcode_emit) fn first_layer_object_center(
     traversal: &PreparedPostClassicTraversal,
     instances: &[Vec<super::super::layers::Instance>],
-    brim: Option<&BrimPlan>,
+    brim: &[Option<BrimPlan>],
     support_spacing: &[Vec<Point>],
 ) -> [f64; 2] {
     let scale = traversal.scale;
@@ -114,17 +118,19 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_object_center(
             }
         }
     }
-    if let Some(brim) = brim
-        && traversal.resolved.objects[0].object.raft_layers.0 <= 0
-        && let Some((min_x, min_y, max_x, max_y)) = brim.covered_bounds(scale)
-    {
-        for copy in &instances[0] {
-            let x = scale.unscale(copy.shift.x());
-            let y = scale.unscale(copy.shift.y());
-            include_bounds(
-                Some((min_x + x, min_y + y, max_x + x, max_y + y)),
-                &mut bounds,
-            );
+    for (index, brim) in brim.iter().enumerate() {
+        if traversal.print_object_config(index).0.object.raft_layers.0 <= 0
+            && let Some(brim) = brim
+            && let Some((min_x, min_y, max_x, max_y)) = brim.covered_bounds(scale)
+        {
+            for copy in &instances[index] {
+                let x = scale.unscale(copy.shift.x());
+                let y = scale.unscale(copy.shift.y());
+                include_bounds(
+                    Some((min_x + x, min_y + y, max_x + x, max_y + y)),
+                    &mut bounds,
+                );
+            }
         }
     }
     bounds.map_or([0.0; 2], |(min_x, min_y, max_x, max_y)| {

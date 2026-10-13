@@ -29,8 +29,12 @@ pub(super) fn collect(traversal: &PreparedPostClassicTraversal) -> Vec<Vec<Insta
             .find(|object| object.source_object_index == source_index)
             .expect("print object retains resolved instance membership");
         let object = &traversal.project.objects()[source_index];
-        let center = crate::project_slice::raw_intersections::raw_center(object, traversal.scale)
-            .expect("sliced object retains its raw center");
+        let center = crate::project_slice::centering::center(
+            object,
+            &resolved.print_objects[transform_index],
+            traversal.scale,
+        )
+        .expect("sliced object retains its raw center");
         let copies = resolved.print_objects[transform_index]
             .instance_indices
             .iter()

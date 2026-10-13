@@ -17,6 +17,31 @@ pub(in crate::project_slice) struct PreparedPostClassicTraversal {
     pub(in crate::project_slice) drop_probe: TraversalDropProbe,
 }
 
+impl PreparedPostClassicTraversal {
+    pub(in crate::project_slice) fn print_object_config(
+        &self,
+        index: usize,
+    ) -> (
+        &crate::project::effective_config::types::ResolvedProjectObject,
+        &crate::project::effective_config::types::ResolvedPrintObjectConfig,
+    ) {
+        let (source, transform) = self.objects[index]
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .object
+            .identity();
+        let resolved = self
+            .resolved
+            .objects
+            .iter()
+            .find(|object| object.source_object_index == source)
+            .expect("print object retains its source configuration");
+        (resolved, &resolved.print_objects[transform])
+    }
+}
+
 #[cfg(test)]
 pub(in crate::project_slice) struct TraversalDropProbe {
     token: std::sync::Arc<()>,

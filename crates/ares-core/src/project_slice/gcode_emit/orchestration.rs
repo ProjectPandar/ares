@@ -17,14 +17,16 @@ pub(in crate::project_slice) fn emit(
         .predecessor
         .predecessor
         .predecessor;
-    let brim = brim::BrimPlan::generate(traversal)?;
+    let brim = (0..traversal.objects.len())
+        .map(|index| brim::BrimPlan::generate(traversal, index))
+        .collect::<Result<Vec<_>, _>>()?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         tower.first_layer_corners(&traversal.resolved.views.full, traversal.scale)
     });
     let skirt = skirt::SkirtPlan::generate(
         traversal,
         &prepared.support_layers,
-        brim.as_ref(),
+        &brim,
         &tower_corners,
         schedule.raft.as_ref(),
     )?;
@@ -67,7 +69,7 @@ pub(in crate::project_slice) fn emit(
     let first_layer_bounds = footprint::first_layer_bounds(
         traversal,
         skirt.as_ref(),
-        brim.as_ref(),
+        &brim,
         &tower_corners,
         &islands.plate,
     );
@@ -101,16 +103,7 @@ pub(in crate::project_slice) fn emit(
         (0.0, 0.0)
     } else {
         let (origin_x, origin_y) = traversal.project.plate_origin();
-        let object_offset = traversal
-            .resolved
-            .objects
-            .first()
-            .map_or((0.0, 0.0), |object| {
-                footprint::object_origin(
-                    &traversal.project.objects()[object.source_object_index],
-                    traversal.scale,
-                )
-            });
+        let object_offset = footprint::print_object_origin(traversal, 0);
         (object_offset.0 - origin_x, object_offset.1 - origin_y)
     };
     let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
@@ -142,7 +135,7 @@ pub(in crate::project_slice) fn emit(
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,
             skirt.as_ref(),
-            brim.as_ref(),
+            &brim,
             &tower_corners,
             &islands.plate,
         ),
@@ -150,7 +143,7 @@ pub(in crate::project_slice) fn emit(
             traversal,
             &prepared.support_layers,
             &schedule,
-            brim.as_ref(),
+            &brim,
         )?,
         wipe_tower: schedule.tower.take().map(|data| {
             let settings = &traversal.resolved.views.full;
@@ -176,7 +169,7 @@ pub(in crate::project_slice) fn emit(
             let center = footprint::first_layer_object_center(
                 traversal,
                 &schedule.instances,
-                brim.as_ref(),
+                &brim,
                 &islands.support_spacing,
             );
             wipe_tower::Integration::new(data, settings, center, overlap)

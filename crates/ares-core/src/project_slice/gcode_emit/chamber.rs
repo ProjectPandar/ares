@@ -14,7 +14,7 @@ pub(super) fn hold_temperature(
     traversal: &PreparedPostClassicTraversal,
     support: &[Vec<InstalledSupportLayer>],
     schedule: &Schedule,
-    brim: Option<&BrimPlan>,
+    brim: &[Option<BrimPlan>],
 ) -> Result<bool, SliceError> {
     let settings = &traversal.resolved.views.full;
     let first_z = settings.process.print.initial_layer_print_height.0;
@@ -51,9 +51,7 @@ pub(super) fn hold_temperature(
                 area += polygon.area();
             }
         }
-        if index == 0
-            && let Some(brim) = brim
-        {
+        if let Some(brim) = &brim[index] {
             add_brim_area(&mut area, brim, &schedule.instances[index], traversal.scale)?;
         }
     }
