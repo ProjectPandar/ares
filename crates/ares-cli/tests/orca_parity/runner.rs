@@ -166,6 +166,9 @@ mod overhang_reverse;
 #[cfg(test)]
 #[path = "runner/path_tests.rs"]
 mod path_tests;
+#[cfg(test)]
+#[path = "runner/plate_custom_gcode_emission.rs"]
+mod plate_custom_gcode_emission;
 #[path = "runner/print_sequence_by_object.rs"]
 mod print_sequence_by_object;
 #[cfg(test)]
