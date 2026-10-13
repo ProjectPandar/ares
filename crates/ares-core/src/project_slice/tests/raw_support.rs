@@ -44,8 +44,7 @@ pub(super) fn intersections(
         resolved,
         projected,
         CoordinateScale::Normal,
-        &crate::options::FilamentRegionSourceOptions::default(),
-        1,
+        (&crate::options::FilamentRegionSourceOptions::default(), 1),
     )
 }
 
