@@ -1,6 +1,7 @@
-# F1 obsolete rejection test: proposed retirement
+# F1 obsolete rejection test retirement
 
-Status: request after public F1 RED; no existing test/helper/assertion changed.
+Status: coordinator approved this exact retirement after public RED a31c6142c.
+Delete only the named test, its sole helper and newly unused imports.
 The closure debug-assert ruling is separate and applies in F1 production.
 
 Existing test:
@@ -19,7 +20,7 @@ F1 public Native/API/CLI RED will identify the existing guards before any
 production edits, and replace this private guard expectation with full public
 coverage for noise/modes, eligibility, variable width and task Context.
 
-Proposed concrete change, after explicit coordinator approval:
+Approved concrete change, committed separately from F1 production:
 
 - Delete only `active_fuzzy_skin_fails_closed` and its sole-used
   `active_fuzzy_skin` configuration helper.
@@ -31,5 +32,5 @@ Proposed concrete change, after explicit coordinator approval:
 - Commit this retirement separately from F1 GREEN, with a message citing
   PerimeterGenerator.cpp:386–387, FuzzySkin.cpp:689–694 and the actual F1 RED hash.
 
-Request approval only after the separate public RED commit/evidence exists.
-No retirement is performed by this document or the closure ruling.
+Approval cites PerimeterGenerator.cpp:386–387, FuzzySkin.cpp:689–694 and
+RED a31c6142c. The closure assertion ruling remains a separate production change.

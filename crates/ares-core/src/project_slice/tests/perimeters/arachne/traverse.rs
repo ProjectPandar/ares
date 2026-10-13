@@ -5,9 +5,7 @@
 // and the fail-closed deferred branches.
 
 use crate::{
-    OrcaBool, OrcaFloat, OrcaInt, Percent, ProcessFuzzySkinMode, ProcessFuzzySkinType,
-    ProcessNoiseType, ProcessRegionSourceOptions, ProcessWallDirection, ProcessWallSequence,
-    RegionOptions, SliceError,
+    Percent, ProcessWallDirection, ProcessWallSequence,
     arachne::{ExtrusionJunction, ExtrusionLine},
     geometry::{CoordinateScale, Point},
     perimeters::FuzzySkinConfig,
@@ -85,20 +83,6 @@ fn rectangle(width: i64) -> Vec<(i64, i64, i64)> {
         (0, 1_000_000, width),
         (0, 0, width),
     ]
-}
-
-fn active_fuzzy_skin() -> FuzzySkinConfig {
-    let mut region = RegionOptions::from_base(&ProcessRegionSourceOptions::default());
-    region.fuzzy_skin = ProcessFuzzySkinType::External;
-    region.fuzzy_skin_first_layer = OrcaBool(true);
-    region.fuzzy_skin_noise_type = ProcessNoiseType::Ripple;
-    region.fuzzy_skin_mode = ProcessFuzzySkinMode::Displacement;
-    region.fuzzy_skin_thickness = OrcaFloat(0.2);
-    region.fuzzy_skin_point_distance = OrcaFloat(1.0);
-    region.fuzzy_skin_ripples_per_layer = OrcaInt(1);
-    region.fuzzy_skin_ripple_offset = Percent(0.0);
-    region.fuzzy_skin_layers_between_ripple_offset = OrcaInt(1);
-    FuzzySkinConfig::from_region(&region)
 }
 
 #[test]
@@ -315,13 +299,4 @@ fn overhang_clipping_keeps_widths_for_covered_walls() {
     let outcome = traverse_extrusions(vec![wall(0, true, true, &rectangle(450_000))], &context)
         .expect("a covered wall clips through the Z path");
     assert_eq!(outcome.collection.entities.len(), 1);
-}
-
-#[test]
-fn active_fuzzy_skin_fails_closed() {
-    let mut context = context();
-    context.fuzzy_skin = active_fuzzy_skin();
-    let error = traverse_extrusions(vec![wall(0, true, true, &rectangle(450_000))], &context)
-        .expect_err("the junction fuzzifier is a later seam");
-    assert!(matches!(error, SliceError::UnsupportedProjectFeature(ref key) if key == "fuzzy_skin"));
 }
