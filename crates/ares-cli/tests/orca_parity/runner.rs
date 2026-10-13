@@ -78,6 +78,9 @@ pub(crate) mod application;
 #[path = "runner/application_tests.rs"]
 mod application_tests;
 #[cfg(test)]
+#[path = "runner/arachne_counterbore_none.rs"]
+mod arachne_counterbore_none;
+#[cfg(test)]
 #[path = "runner/arachne_open_wall_order.rs"]
 mod arachne_open_wall_order;
 #[cfg(test)]
