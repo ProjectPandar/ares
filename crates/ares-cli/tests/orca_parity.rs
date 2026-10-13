@@ -16,6 +16,8 @@ mod arachne_alternate_extra_wall;
 mod artifacts;
 #[path = "orca_parity/bridge_over_infill_filament.rs"]
 mod bridge_over_infill_filament;
+#[path = "orca_parity/bridge_over_infill_zero_density.rs"]
+mod bridge_over_infill_zero_density;
 #[path = "orca_parity/brim_bed_region.rs"]
 mod brim_bed_region;
 #[path = "orca_parity/brim_bed_region_controls.rs"]

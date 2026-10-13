@@ -109,3 +109,29 @@ Use official and seeded after RESTORED with per-run fresh cache/root.
 Any mismatch is B's actual RED and must be preserved before porting the
 missing upstream behavior; matching cases become regression controls.
 The caller and candidate logic are unchanged by the authorized deletion.
+
+### Public ceiling regression results (before rebase to W4)
+
+On deletion head `b3ca141c4`, the new public tests ran against both real Native
+modes on CPU13/CPU14, jobs2/threads2, independently fresh cache/artifact roots.
+After correcting the worktree's missing vendor resource link (first attempt
+was setup failure, not RED), all 11 selected tests PASS in both modes:
+3 ceiling cases and 8 existing bridge/anchor cases.
+
+- `0%`: Native internal-bridge extrusion moves 36, sparse moves 0.
+- `0.0001%`: Native internal-bridge extrusion moves 36, sparse moves 0.
+- `20%` control: Native internal-bridge moves 54, sparse moves 419.
+
+All three whole-output generator-only comparisons PASS in each mode; Ares
+API and CLI raw bytes agree. These are regression controls, not RED. No
+candidate/generation repair is warranted by these inputs: the zero-density
+continue bypasses only admission validation, not candidate gathering or the
+subsequent anchor-generator call. The existing port preserves the upstream
+zero-density ceiling behavior verified here.
+
+Receipts join exact public input SHA and Native output SHA to the live
+producer. Official receipts use wrapper SHA
+`1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`
+(`setarch -R`); no deterministic new mismatch appeared. External evidence:
+`/tmp/worker2-bridge-density-controls-evidence.json`. This is evidence for
+actual `b3ca141c4` plus the recorded test-source SHA, not a run on future main.
