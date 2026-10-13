@@ -79,7 +79,7 @@ with an exclusive canonical full (official and seeded).
 | `crates/ares-core/src/project_slice/gcode_emit/layers/custom_gcode.rs` | new: `emit_custom_gcode_per_print_z` |
 | `crates/ares-core/src/project_slice/gcode_emit/layers/drive.rs` | **one field** in the `boundary::LayerBoundary { .. }` literal (`:128-136`): `custom_gcode: tool_ordering.for_layer(group_z).custom_gcode.as_ref()` |
 | `crates/ares-core/src/project_slice/gcode_emit/layers.rs` | `mod custom_gcode;` |
-| `crates/ares-cli/tests/orca_parity/plate_custom_gcode_emission.rs` (+ `mod` in `orca_parity.rs`) | new Native comparison |
+| `crates/ares-cli/tests/orca_parity/runner/plate_custom_gcode_emission.rs` (+ `mod` in `runner.rs`; under `runner/` because `ExportedCase` fields are runner-private) | new Native comparison |
 | `tests/parity/plate-custom-gcode-emission/*.3mf`, `README.md` | new fixtures |
 | `tools/chain-probe/plate-custom-gcode-emission-fixtures.mjs` | new fixture writer (same form as slice A's) |
 | `docs/architecture/plate-custom-gcode-emission.md`, `docs/roadmap.md` | this spec, status line |
@@ -117,24 +117,33 @@ are placed at layer `print_z` values of the base project's own layers.
 
 | Case | Base | Entry | Upstream path checked |
 |---|---|---|---|
-| `pause` | `orca_cli_ender3.3mf` (1 filament, `machine_pause_gcode` = `M25`) | PausePrint at layer 3, `extra` = message | `:4233-4239`, message not emitted |
-| `custom` | same | Custom, multi-line `extra` | `:4241-4249` raw `extra` |
+| `control` (guard) | `orca_cli_ender3.3mf` unchanged | none | base parity of the fixture base |
+| `pause` | `orca_cli_ender3.3mf` (1 filament, `machine_pause_gcode` = `M25`) | PausePrint at layer 3, `extra` = message | `:4233-4241`, message not emitted |
+| `custom` | same | Custom, multi-line `extra` | `:4242-4250` raw `extra` |
 | `template` | same, with `template_custom_gcode` set in `project_settings.config` | Template | `:4245-4246` placeholder render |
 | `color-change` | same | ColorChange, extruder 1 | the `#if 0` quirk: Custom_Code tag + empty `extra` |
 | `same-layer` | same | two events between one layer's midpoints | the last in list order wins (`:1513`) |
 | `bounds` | same | Custom below half of the first layer; Custom above the top layer | the first is never assigned (`:1498`, `print_z_below = 0`); the second lands on the top layer (`print_z_above = lowest()`, `:1478`, `:1486`) |
 | `mode-mismatch` | same | model mode `MultiExtruder` + ColorChange + PausePrint | color change ignored (`:1473`), pause kept |
 | `tool-change` | same | model mode `MultiAsSingle` + ToolChange + Custom on another layer | ToolChange skipped (`:1487`), so only the Custom is emitted |
-| `multi-as-single` | `validation/multi-filament-bridge-anchor-narrowed.3mf` (2 filaments, object extruder 1, no tower) | explicit `<mode value="MultiAsSingle"/>` (without it, slice A's mode check turns `extruder > 1` into `MultiExtruder` and the mismatch ignore drops both); ColorChange extruder 2, ColorChange extruder 1 on separate layers | `extruder_printing_above` (`:1508`): extruder 2 dropped, extruder 1 kept |
+| `two-filament-control` (guard) | runtime: the vg1 X1C two-filament cube10 export (`vg1_inputs::bind_two_filaments`), all on filament 1 | none | base parity of the two-filament base |
+| `multi-as-single` | runtime: the same export. Not `validation/multi-filament-bridge-anchor-narrowed.3mf`: its official appimage run has an uninitialized object id, so that fixture is byte-compared only in seeded mode (`narrowed_x2d_whole_file.rs:14-21`) | explicit `<mode value="MultiAsSingle"/>` (without it, slice A's mode check turns `extruder > 1` into `MultiExtruder` and the mismatch ignore drops both); ColorChange extruder 2, ColorChange extruder 1 on separate layers | `extruder_printing_above` (`:1508`): extruder 2 dropped, extruder 1 kept |
 | `by-object` (guard) | `orca_cli_ender3.3mf` with `print_sequence` = `by object` | PausePrint | no emission (`:2758-2760`, `:4825`) |
 
-**RED expectation.** On `main` every case except the `by-object` guard must
-fail on the
+**Native witness.** Before the byte comparison, each case checks Native
+itself: how many pause/custom tag lines Native writes, and which payload
+lines are present or absent (for example `M117 second` but not
+`M117 first`). That way the upstream readings above are confirmed by Native,
+not only by the Ares diff.
+
+**RED expectation.** On `main` every case except the three guards
+(`control`, `two-filament-control`, `by-object`) must fail on the
 ordered-bytes assertion, at the first line Native adds (`;PAUSE_PRINT` /
 `;CUSTOM_GCODE` …), in both modes. Two things fail the RED: a failure that
 is not that assertion (a panic, a missing Native binary), and a case that
-already passes. The `by-object` guard is expected to pass at RED and stays
-as a guard.
+already passes. The three guards are expected to pass at RED and stay as
+guards. If a guard fails, the base is not at parity, and that is root-caused
+before the RED counts.
 
 **Ways it could fail (checked by the cases):**
 - **Midpoints:** the midpoint rule off by one layer, using `>=`, or
