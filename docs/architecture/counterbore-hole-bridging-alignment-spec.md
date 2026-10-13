@@ -73,7 +73,9 @@ All destinations are within `crates/ares-core/src/project_slice/`:
    `object.current_surfaces(input)` without Filled's generated-fill union.
    Add the upstream comparison-domain distinction using the existing
    `PreparedLayerRegionPerimeterRecord.fill_surfaces` and `fill_expolygons`.
-   Preserve original-slice internal classification semantics and surface types.
+   materialize the comparison-domain change only for Filled; existing non-Filled
+   controls must remain byte-identical. Preserve original-slice internal
+   classification semantics and surface types.
    Existing stage structs remain lifecycle carriers, not a parallel pipeline.
 
 No filesystem, terminal, Native invocation, OpenGL, or UI in core. CLI test
@@ -89,8 +91,13 @@ Rust module stays below 400 lines; do not refactor unrelated stages.
   alignment semantics, with actual region flow-derived spacing/width.
 - Filled candidate shrink; simplified single convex contour and single expanded
   contour checks; bridgeable intersection and expanded-contour support test.
-  Restore candidate with `spacing + min(1mm, spacing, external_width)` anchor,
-  then clamp to original surface (`:1778–1801`).
+  Restore candidate with `spacing + bridge_anchor_offset`, where
+  `bridge_anchor_offset = min(bridged_infill_margin, perimeter_spacing,
+  ext_perimeter_width)` (`:1774`), then clamp to original surface
+  (`:1778–1801`). At this pinned source `:1736` initializes the margin from
+  `scale_(BRIDGE_INFILL_MARGIN)` (`libslic3r.h:89`, constant 1). Approval
+  clarification confirmed this constant-derived margin at the existing pin;
+  retain the named upstream margin and do not invent a config option.
 - Remove only holes with a nonempty wall band that has no lower support;
   supported holes stay holes. Preserve no-increment-after-erase behaviour
   (`:1803–1825`).
@@ -106,6 +113,9 @@ Rust module stays below 400 lines; do not refactor unrelated stages.
 
 - Arachne counterbore handling (`process_arachne:2123`) for both non-None modes.
   Keep its current rejection explicit; no classic fallback or silent ignore.
+  Arachne is the next counterbore slice, owned by W4: separately specify its
+  dispatch/pre-wall mutation and both non-None modes, then public Native RED;
+  do not leave it as an unowned backlog item.
 - Expanding presently unsupported interface-shell, spiral, modifier, raft or
   multi-material domains merely to satisfy this slice. Preserve supported
   existing behaviour; if a proposed fixture needs one of these, stop and request
