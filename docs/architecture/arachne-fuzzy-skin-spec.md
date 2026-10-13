@@ -36,6 +36,7 @@ OrcaSlicer v2.4.2 owns this behavior:
 | same | 418–435 | fuzzy contour/hole flags participate in odd-layer overhang reversal before steep detection |
 | `Feature/FuzzySkin/FuzzySkin.cpp::group_region_by_fuzzify` | 415–473 | full compatible-member config equality, scaled values, active flags, single-group whole coverage and safety-offset multi-group masks |
 | `should_fuzzify` | 476–492 | type, first layer, inset and contour/hole eligibility |
+| `PrintObject.cpp::region_config_from_model_volume` | 3664–3709, especially3707–3708 | after object/volume/material/range overrides, thickness<0.001 or point distance<0.01 normalizes region fuzzy type to None |
 | `get_noise_module`, `random_value` | 26–65 | uniform noise or existing libnoise modules; random spacing consumes mt19937 draws even for coherent noise |
 | `fuzzy_extrusion_line` | 345–412 | random resampling, three modes, destination width/index, small-output padding and endpoint repair |
 | `fuzzy_extrusion_line_ripple` | 223–291 | adjacent-junction arc resampling, deterministic phase, destination width/index; separate dispatch from three-mode random branch |
@@ -85,12 +86,17 @@ junction width/index for an inserted crossing and changes its position.
 
 ## Existing scaffold and included behavior
 
-`perimeters/FuzzySkinConfig` already maps type/noise parameters, but omits the
-Arachne mode and applies a thickness>=0.001 eligibility shortcut. Upstream
-should_fuzzify has no thickness threshold. Read the full source-owned config
-for this Arachne seam; retain the distinction between eligibility and numeric
-noise generation. Do not silently treat legal zero/sub-threshold thickness as
-disabled, particularly for grouping, arc fitting or mode-driven widths.
+`perimeters/FuzzySkinConfig` already maps type/noise parameters but omits the
+Arachne mode. Its thickness>=0.001 and point-distance>=0.01 condition reflects
+the upstream region normalization owner, not an independently invented skip:
+PrintObject.cpp::region_config_from_model_volume:3707–3708 resets region type
+to None below these thresholds before should_fuzzify. The initial SPEC's
+"independent shortcut" interpretation was corrected by Native zero/sub-threshold
+inactive controls and the source normalization call chain during F1 preflight.
+Preserve this normalization before config grouping/active flags, not only inside
+the later sample generator. should_fuzzify itself remains the source type/layer/
+inset/contour predicate applied to the normalized config. Global footer settings
+need not show the effective per-region type reset.
 `PrintConfig.cpp:3561–3579` permits thickness0..2 and point distance0.01..5;
 out-of-schema values remain public validation errors, not internal guards.
 
@@ -167,8 +173,9 @@ Use a small finite matrix that shares meshes but keeps these failures witnessed:
 
 1. Closed prism with External/Hole/All/AllWalls and disabled/none controls;
    hollow and two-wall inputs distinguish contours, holes and inset eligibility.
-2. First-layer false/true and thickness0/sub-threshold controls, active arc fitting:
-   distinguish source eligibility from effect magnitude and simplification flags.
+2. First-layer false/true and thickness0/sub-threshold inactive controls, active
+   arc fitting: distinguish upstream region normalization from raw global footer
+   settings, and preserve the resulting eligibility/simplification flags.
 3. Narrow neck/open Arachne wall and varying-width model: preserve width/index,
    source open/closed handling, junction padding and endpoint/loop connectivity.
 4. Ripple phase0/nonzero, grouped layer offset, anchor crossing/fallback and each
@@ -183,9 +190,10 @@ Use a small finite matrix that shares meshes but keeps these failures witnessed:
 
 Before declaring RED, preflight Native admission and actual open/closed path
 behavior. Ripple223–291 does not contain the random branch's endpoint repair;
-PerimeterGenerator.cpp:534–540 still asserts closed-loop connectivity. Preserve
-these assertions. Any demonstrated release/debug discrepancy needs a separate
-coordinator ruling, not an invented closing segment or silent assertion removal.
+PerimeterGenerator.cpp:534–540 still asserts closed-loop connectivity. The
+coordinator's closure ruling below resolves the demonstrated release/debug
+discrepancy; preserve every assertion not demonstrated broken and never invent
+a closing segment.
 Preflight modes near low-width boundaries: keep the exact scaled integer floor;
 if Native admits behavior needing a downstream variable-width consumer repair,
 cite that owner and seek scope approval rather than adding an arbitrary clamp.
@@ -200,6 +208,17 @@ if approved, retire it alone in a separate commit citing source and RED hash.
 Every other assertion and existing fixture/comparator stays untouched.
 
 ## Gates, exclusions and sequencing
+
+F1 closure addendum (explicit coordinator ruling,2026-10-13):
+PerimeterGenerator.cpp:534–540's disconnected-path TODO and NDEBUG release
+semantics make the Native-admitted open Ripple loop authoritative. Evidence:
+`/tmp/worker3-fuzzy-f1-native-preflight-00nkklq5/closure-width-audit.json`.
+F1's production commit removes the mirrored closing debug assertion broken by
+that input; adjacent-joint assertion removal additionally requires demonstrated
+breakage. Preserve all other assertions, no invented closure/retag. Cite those
+source lines, NDEBUG and evidence JSON in the production commit message.
+The two Native Flow::spacing rejection cases(-100/156) leave the parity matrix;
+they remain diagnostic preflight evidence and authorize no new Ares guard.
 
 Included only the source-owned fuzzy configuration/group/junction behavior and
 its required context/consumer seams above. Defer Arachne beading/stitch changes,

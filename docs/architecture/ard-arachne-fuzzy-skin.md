@@ -1,6 +1,6 @@
 # ARD: Arachne fuzzy skin owns junctions and compatible-region effects
 
-Status: proposed; implementation requires SPEC approval.
+Status: SPEC308583e3a approved with separate F1/F2 RED→GREEN→review slices.
 
 Owner: `PerimeterGenerator.cpp::process_arachne:2095,2125` and
 `traverse_extrusions:378–435`, with
@@ -19,15 +19,20 @@ Non-negotiable decisions:
 - Group actual compatible members; full config equality and same-effect
   equality are distinct source contracts. Preserve masks, priority, source-index
   splits and non-fuzzy boundary junctions; no representative-first-region shortcut.
-- Eligibility follows upstream type/layer/inset/contour rules, not a private
-  effect-magnitude threshold. Group flags control simplification/reversal.
+- Region normalization first follows PrintObject.cpp:3707–3708's threshold→None
+  rule after all overrides; then eligibility follows source type/layer/inset/
+  contour rules. Group flags control simplification/reversal. The initial SPEC
+  incorrectly described the helper threshold as private; preflight corrected it.
 - A task owns its explicit-seed Context continuously. Reuse verified RNG/noise
   primitives, preserve draw order and real slice_z, keep core platform-neutral.
 - Strict parity and diagnostic stochastic admission are separate evidence.
-  Approve the SPEC's oracle boundary explicitly before writing tests or code.
-  Never disguise official stochastic projections as complete byte parity.
-- Preserve existing assertions. A Native release/debug closure discrepancy
-  or necessary downstream width repair requires source evidence and a ruling.
+  The coordinator approved the seeded/official boundary; never disguise
+  official stochastic projections as complete byte parity.
+- Preserve every assertion not demonstrated broken. The closure ruling permits
+  F1 to remove the broken closing assertion, citing PerimeterGenerator.cpp:
+  534–540, NDEBUG and the Native closure-width-audit.json in its commit message.
+  Removing an adjacent-joint assertion requires demonstrated breakage; a
+  necessary downstream width repair requires source evidence and a ruling.
   Retiring the one obsolete rejection test needs separate explicit approval.
 - Keep each file <=400LOC; no new guards, fallback, skipped fuzzy geometry,
   probes, suppressions or committed Native outputs.
