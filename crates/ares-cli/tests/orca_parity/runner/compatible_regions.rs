@@ -9,6 +9,9 @@ mod inherited_filament;
 #[path = "compatible_regions/top_pattern.rs"]
 mod top_pattern;
 
+#[path = "compatible_regions/solid_pattern.rs"]
+mod solid_pattern;
+
 #[path = "compatible_regions/modifier_travel.rs"]
 mod modifier_travel;
 
