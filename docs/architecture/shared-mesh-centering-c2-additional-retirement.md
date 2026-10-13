@@ -1,6 +1,7 @@
 # C2 additional lifecycle guard retirement request
 
-Status: REQUESTED; not applied by the bb886ec6c retirement approval.
+Status: separately approved by the coordinator on2026-10-14 and applied
+in a separate test commit; not part of the bb886ec6c approval.
 RED4334347e4 and both-mode evidence:
 `/tmp/worker3-centering-c2-red-matrix-izu0d3pw/red-evidence.json`.
 Source: `bbs_3mf.cpp:4931-4974,5025-5052`; `Model.cpp:1295-1307`.
