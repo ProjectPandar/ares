@@ -7,17 +7,20 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### Arachne alternate extra wall: approved SPEC, public RED (2026-10-13)
+### Arachne alternate extra wall: bounded GREEN, review pending (2026-10-13)
 
 Worker3 ports `PerimeterGenerator.cpp::process_arachne:2131–2144,2163–2175`
 per-surface alternate count, integer sparse-density predicate and ordering before
 single-wall overrides into `project_slice/perimeters/arachne/{config,walls}.rs`.
 Replace only its alternate guard; existing generator/regeneration consumers remain.
-Fuzzy skin and overhang each await separate SPEC/RED/REVIEW. No implementation yet.
+Fuzzy skin and overhang each await separate SPEC/RED/REVIEW.
 SPEC c3d238a8a approved; Native official/seeded each2PASS/8 guard-rejection FAIL,
 40/40 Native admissions, 24 public off/inert control comparisons PASS.
 [RED evidence](architecture/arachne-alternate-extra-wall-red-evidence.md);
-obsolete negative unit retirement awaits explicit coordinator ruling.
+approved obsolete negative unit retirement76b8fbe43 is separate from GREEN.
+Finite official/seeded10/10 paired tests PASS each; all48 raw off/inert control
+streams unchanged. [GREEN evidence](architecture/arachne-alternate-extra-wall-green-evidence.md).
+Broad oracle-dependent gates await RESTORED; workspace/full await allocation.
 [SPEC and public test-first gates](architecture/arachne-alternate-extra-wall-spec.md),
 [proposed ARD](architecture/ard-arachne-alternate-extra-wall.md).
 

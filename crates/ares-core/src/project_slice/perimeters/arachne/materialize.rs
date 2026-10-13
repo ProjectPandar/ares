@@ -136,6 +136,12 @@ fn materialize_record(
         infill_wall_overlap: region.infill_wall_overlap.0,
         top_bottom_infill_wall_overlap: region.top_bottom_infill_wall_overlap.0,
     };
+    // `process_arachne:2131-2134` truncates density to int and adds the
+    // alternating wall before per-island extras and single-wall overrides.
+    let alternate_extra_wall = region.alternate_extra_wall.0
+        && input.layer_id % 2 == 1
+        && !input.spiral_mode
+        && region.sparse_infill_density.0 as i32 > 0;
     let mut perimeters = Vec::new();
     let mut fill_surfaces = Vec::new();
     let mut fill_no_overlap = Vec::new();
@@ -159,7 +165,7 @@ fn materialize_record(
             &config,
             &spacings,
             crate::project_slice::perimeters::arachne::walls::SurfaceWallParameters {
-                wall_loops: region.wall_loops.0,
+                wall_loops: region.wall_loops.0 + i32::from(alternate_extra_wall),
                 layer_height: input.layer_height,
                 scale,
             },

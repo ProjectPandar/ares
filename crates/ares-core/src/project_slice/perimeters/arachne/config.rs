@@ -64,10 +64,6 @@ pub(in crate::project_slice) fn validate_record(
     if crate::perimeters::FuzzySkinConfig::from_region(region).should_fuzzify(layer_id, 0, true) {
         return Err(unsupported("fuzzy_skin"));
     }
-    if region.alternate_extra_wall.0 && layer_id % 2 == 1 && region.sparse_infill_density.0 > 0.0 {
-        // Alternating extra wall (`PerimeterGenerator.cpp:2116-2117`).
-        return Err(unsupported("alternate_extra_wall"));
-    }
 
     let nozzle_index = region
         .outer_wall_filament_id
