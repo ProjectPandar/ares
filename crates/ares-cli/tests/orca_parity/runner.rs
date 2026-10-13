@@ -9,6 +9,9 @@ mod native_ksr_reference_migration;
 
 use serde_json::{Map, Value};
 
+#[path = "runner/object_layer_profiles.rs"]
+mod object_layer_profiles;
+
 #[path = "runner/config_block_roundtrip.rs"]
 mod config_block_roundtrip;
 #[path = "runner/native_plate_origin_migration.rs"]

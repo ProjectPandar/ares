@@ -1,0 +1,19 @@
+{
+  "base": "tests/parity/validation/object-range-layer-height.3mf",
+  "base_sha256": "fc938f743bed802de2691134f232015e715d525fc87f9f4b33ce6a51785b9b5f",
+  "removed_member": "Metadata/layer_config_ranges.xml",
+  "variants": {
+    "absent": {
+      "profile": null,
+      "sha256": "4457965422f4597e669dd83519e6ed8264bee2e1abf2e507a603c36aa3333761"
+    },
+    "ramp": {
+      "profile": "object_id=1|0;0.3;0.3;0.2;0.6;0.1\n",
+      "sha256": "97d98ef7f302270d4db35efe16c28b04ab903b6ff467852d247c609254cdef3c"
+    },
+    "step": {
+      "profile": "object_id=1|0;0.3;0.3;0.15;0.6;0.15\n",
+      "sha256": "17154d665b83c7d3d25fd5bdea067bc9e13f80fdfe1d0437cad0fb042e2fb0cd"
+    }
+  }
+}
