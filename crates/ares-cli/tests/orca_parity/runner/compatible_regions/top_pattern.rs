@@ -6,6 +6,8 @@ use std::{fs, process::Command};
 
 #[path = "top_pattern_fixture.rs"]
 mod fixture;
+#[path = "global_pattern.rs"]
+mod global_pattern;
 use fixture::Scope;
 
 #[test]
