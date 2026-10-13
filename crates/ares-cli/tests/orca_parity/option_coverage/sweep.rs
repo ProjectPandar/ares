@@ -150,6 +150,10 @@ fn execute_plan(
     ) {
         return super::printer_physical_identity::execute_plan(runner, plan);
     }
+    #[cfg(target_os = "linux")]
+    if plan.key == "post_process" {
+        return super::post_process_matrix::execute_plan(runner, plan);
+    }
     if plan.key == "print_extruder_id" {
         return super::print_extruder_identity::execute_plan(runner, plan);
     }

@@ -18,6 +18,10 @@ mod semm_ramming;
 #[path = "option_coverage/nozzle_dataset.rs"]
 mod nozzle_dataset;
 
+#[cfg(target_os = "linux")]
+#[path = "option_coverage/post_process_matrix.rs"]
+mod post_process_matrix;
+
 #[path = "option_coverage/legacy_brim_ears.rs"]
 mod legacy_brim_ears;
 

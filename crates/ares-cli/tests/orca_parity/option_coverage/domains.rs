@@ -82,6 +82,23 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     } else if key == super::print_compatible_printers::KEY {
         provably_legal = true;
         (super::print_compatible_printers::cases(), None)
+    } else if key == "post_process" {
+        #[cfg(target_os = "linux")]
+        {
+            let (values, metadata) = super::post_process_matrix::generate();
+            tool_metadata = Some(metadata);
+            provably_legal = true;
+            (values, None)
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            (
+                vec![baseline_case()],
+                Some(
+                    "bounded CLI admission witnesses require Linux; external execution is uncovered",
+                ),
+            )
+        }
     } else if let Some((values, metadata)) = super::print_extruder_identity::generate(&key) {
         tool_metadata = Some(metadata);
         provably_legal = true;
