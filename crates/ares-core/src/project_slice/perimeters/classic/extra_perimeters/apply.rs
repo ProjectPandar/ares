@@ -68,6 +68,7 @@ impl Context<'_> {
             .into_iter()
             .map(|path| {
                 ExtrusionEntity::Path(ExtrusionPath {
+                    z_contoured: false,
                     polyline: Polyline3 {
                         points: path
                             .into_points()

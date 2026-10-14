@@ -95,6 +95,7 @@ fn loop_entity(role: ExtrusionLoopRole, path_role: ExtrusionRole, x: i64) -> Ext
     ExtrusionEntity::Loop(OrderedExtrusionLoop {
         extrusion_loop: ExtrusionLoop {
             paths: vec![ExtrusionPath {
+                z_contoured: false,
                 polyline: Polyline3 {
                     points: vec![
                         Point3 { x, y: 0, z: 0 },

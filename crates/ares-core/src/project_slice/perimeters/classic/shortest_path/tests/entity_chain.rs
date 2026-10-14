@@ -142,6 +142,7 @@ fn gap_path(first: i64, last: i64) -> GapFillEntity {
 
 fn gap_extrusion_path(first: i64, last: i64) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: vec![
                 Point3 {

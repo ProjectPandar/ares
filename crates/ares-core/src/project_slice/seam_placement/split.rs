@@ -216,6 +216,7 @@ pub(super) fn projected_parts(
     };
     let make = |polyline: crate::project_slice::perimeters::classic::materialize::Polyline3| {
         (polyline.points.len() >= 2).then_some(ExtrusionPath {
+            z_contoured: path.z_contoured,
             polyline,
             role: path.role,
             can_reverse: path.can_reverse,

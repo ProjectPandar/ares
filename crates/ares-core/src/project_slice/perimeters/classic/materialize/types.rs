@@ -72,6 +72,7 @@ pub(in crate::project_slice) struct Polyline3 {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionPath {
+    pub(in crate::project_slice) z_contoured: bool,
     pub(in crate::project_slice) polyline: Polyline3,
     pub(in crate::project_slice) role: ExtrusionRole,
     pub(in crate::project_slice) can_reverse: bool,

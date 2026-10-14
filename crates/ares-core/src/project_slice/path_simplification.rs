@@ -191,6 +191,10 @@ fn simplify_path3(
     tolerance: f64,
     arc_fitting: bool,
 ) {
+    // ExtrusionEntity.cpp:33-47: ContourZ already simplifies its own 3D samples.
+    if path.z_contoured {
+        return;
+    }
     simplify_polyline3(&mut path.polyline, scale, tolerance, arc_fitting);
 }
 

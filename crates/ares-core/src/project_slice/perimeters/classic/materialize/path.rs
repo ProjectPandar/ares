@@ -175,6 +175,7 @@ fn path(
     height: f32,
 ) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: polyline
                 .into_points()

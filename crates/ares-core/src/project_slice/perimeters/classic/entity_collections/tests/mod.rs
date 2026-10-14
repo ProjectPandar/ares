@@ -61,6 +61,7 @@ fn square_loop(x: i64, y: i64, role: ExtrusionLoopRole) -> ExtrusionLoop {
 
 fn path(points: &[(i64, i64)], role: ExtrusionRole) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y)| Point3 { x, y, z: 0 }).collect(),
             fitting: Vec::new(),

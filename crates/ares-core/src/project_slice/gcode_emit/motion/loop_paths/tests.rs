@@ -15,6 +15,7 @@ fn wipe_before_external_uses_the_source_rotated_inner_point() {
     .map(|(x, y)| Point3 { x, y, z: 200_000 })
     .collect();
     let paths = vec![ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points,
             fitting: Vec::new(),

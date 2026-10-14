@@ -286,6 +286,7 @@ fn collection(inset_idx: i32, paths: Vec<ExtrusionPath>) -> ExtrusionEntityColle
 
 fn path(x: i64, role: ExtrusionRole) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: vec![
                 Point3 { x, y: x + 1, z: 0 },

@@ -262,6 +262,7 @@ fn split_path(path: &ExtrusionPath, distance: f64) -> (ExtrusionPath, ExtrusionP
 
 fn copy_with_points(path: &ExtrusionPath, points: Vec<Point3>) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: path.z_contoured,
         polyline: Polyline3 {
             points,
             fitting: Vec::new(),

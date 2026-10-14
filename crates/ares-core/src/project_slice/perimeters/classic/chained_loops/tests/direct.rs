@@ -143,6 +143,7 @@ fn mixed_paths() -> Vec<ExtrusionPath> {
 
 fn path(points: &[(i64, i64, i64)], mm3: f64, width: f32, height: f32) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y, z)| Point3 { x, y, z }).collect(),
             fitting: Vec::new(),

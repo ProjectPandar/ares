@@ -18,6 +18,7 @@ use crate::{
 fn prepared_axis_rectangle_is_safe_for_clockwise_source_seam() {
     let loop_ = ExtrusionLoop {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: [(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]
                     .into_iter()
@@ -100,6 +101,7 @@ fn task22o128_occluding_surface_lowers_visibility() {
 fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
     let mut loop_ = ExtrusionLoop {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: [(0, 0), (1_000_000, 0), (1_000_000, 1_000_000), (0, 0)]
                     .into_iter()
@@ -140,6 +142,7 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
 fn nearest_seam_uses_the_runtime_cursor() {
     let mut loop_ = ExtrusionLoop {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: [
                     (1_000_000, 1_000_000),
@@ -185,6 +188,7 @@ fn nearest_seam_uses_the_runtime_cursor() {
 fn split_within_source_epsilon_snaps_to_existing_vertex() {
     let mut loop_ = ExtrusionLoop {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: [(0, 0), (1_000_000, 0), (1_000_000, 1_000_000), (0, 0)]
                     .into_iter()

@@ -238,6 +238,7 @@ mod tests {
     #[test]
     fn source_volume_uses_three_dimensional_polyline_not_fitted_arc_length() {
         let extrusion = ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: vec![
                     Point3 { x: 0, y: 0, z: 0 },

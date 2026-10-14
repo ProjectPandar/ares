@@ -11,6 +11,7 @@ use crate::{FloatOrPercent, Percent, ProcessSeamScarfType};
 
 fn square() -> Vec<ExtrusionPath> {
     vec![ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: [
                 (0, 0),

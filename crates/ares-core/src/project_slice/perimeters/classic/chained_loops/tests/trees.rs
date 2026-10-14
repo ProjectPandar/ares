@@ -65,6 +65,7 @@ fn seed(children: Vec<TraversalSeed>) -> TraversalSeed {
 fn raw(children: Vec<RawPathNode>) -> RawPathNode {
     RawPathNode {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: vec![Point3 { x: 0, y: 0, z: 0 }, Point3 { x: 10, y: 0, z: 0 }],
                 fitting: Vec::new(),

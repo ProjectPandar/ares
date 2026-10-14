@@ -238,6 +238,7 @@ fn collection(paths: Vec<ExtrusionPath>) -> ExtrusionEntityCollection {
 
 fn path(points: &[(i64, i64)], role: ExtrusionRole, width: f32) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y)| Point3 { x, y, z: 0 }).collect(),
             fitting: Vec::new(),

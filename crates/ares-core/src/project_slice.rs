@@ -15,6 +15,7 @@ mod closing;
 pub(crate) mod compatibility;
 mod compensation;
 mod conical_overhang;
+mod contour_z;
 mod elephant_foot;
 mod extruders;
 mod extrusion_islands;
@@ -202,7 +203,8 @@ pub(crate) fn slice_source(
     // `get_boundary` consumes current Top fill surfaces after prepare_infill
     // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
-    let filled = fill_entities::prepare(prepared)?;
+    let mut filled = fill_entities::prepare(prepared)?;
+    contour_z::prepare_perimeters(&mut filled);
     let support_layers = match support_material::generate(&filled, &mut context) {
         Ok(layers) => layers,
         Err(error) => {

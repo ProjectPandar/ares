@@ -234,6 +234,7 @@ fn collection() -> ExtrusionEntityCollection {
 
 fn thin_path(x0: i64, x1: i64) -> ExtrusionEntity {
     ExtrusionEntity::Path(ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: vec![Point3 { x: x0, y: 0, z: 0 }, Point3 { x: x1, y: 0, z: 0 }],
             fitting: Vec::new(),
@@ -250,6 +251,7 @@ fn entity(x: i64, inset_idx: i32) -> OrderedExtrusionLoop {
     OrderedExtrusionLoop {
         extrusion_loop: ExtrusionLoop {
             paths: vec![ExtrusionPath {
+                z_contoured: false,
                 polyline: Polyline3 {
                     points: vec![
                         Point3 { x, y: 0, z: 0 },

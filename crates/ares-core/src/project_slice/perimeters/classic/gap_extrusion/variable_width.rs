@@ -244,6 +244,7 @@ fn push_group(
             + flow.height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
         let new_flow = flow.with_width(width)?;
         output.push(ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points,
                 fitting: Vec::new(),
