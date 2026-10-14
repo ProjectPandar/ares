@@ -121,3 +121,6 @@ mod anchor_max_projection;
 
 #[path = "bridge_anchor_length_projection.rs"]
 mod anchor_length_projection;
+
+#[path = "zaa_contour_z.rs"]
+mod zaa_contour_z;
