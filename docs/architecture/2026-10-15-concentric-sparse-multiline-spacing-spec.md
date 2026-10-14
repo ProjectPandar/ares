@@ -92,3 +92,86 @@ requires STOP and coordinator review; no tolerance or comparator changes.
 Then exact-HEAD directed official+seeded, complete option_coverage in both modes,
 non-RED raw invariance, strict clippy, fmt and wasm32. Files stay <=400 LOC.
 Full/workspace remain coordinator-only. No push without exact-hash approval.
+
+## Proposed amendment: preserve density and ring-pitch expression types
+
+Status: amendment pending approval. The spacing-only trial `b94b93053` is NOT
+GREEN: both modes are 0/3, though all API/CLI calls now accept. Evidence:
+`/tmp/worker6-concentric-green.Qo0bBh/residual-audit.json` and
+`/tmp/worker6-concentric-STOP.md`. No assertion/comparator changes.
+
+The coordinator authorized bounded observation after STOP. Existing binaries
+were observed with gdb only; no source instrumentation, Native rebuild, memory
+writes or expression substitutions. The initial absolute-address Native attempt
+failed to insert a PIE breakpoint and is not evidence. Successful runs resolve
+breakpoints after exec. Every observed Native inferior records affinity CPU11.
+
+C30M2 observation: `/tmp/worker6-concentric-diagnose.rkrl8m01/report.json`,
+`native-values.json`, `rust-paths.json`, `pre-multiline-diff.json`.
+Native normalized output equals the unchanged trial reference; Ares raw output
+is exactly unchanged. At physical layer 4 (Native `layer_id=3`, Z0.8):
+
+| value | Native | Ares trial |
+| --- | --- | --- |
+| spacing mm | 0.40707963705062866 | same |
+| density fraction f32 | 0.30000001192092896 | 0.29999998211860657 |
+| scaled min_spacing | integer 814159 | f64 814159.27410125732 |
+| integer ring pitch | 2713863 | 2713864 |
+| negative contraction f32 | -203539.8125 | same |
+| spacing passed into multiline, f32 | 0.40707963705062866 | same |
+
+The first differing input is density. `Fill.cpp:1283` (and the other surface
+path at 1479) computes `float(0.01 * surface_fill.params.density)`: the literal
+is double, the product is double, and only the assignment narrows to float.
+Rust `project_slice/fill_entities/concentric.rs:98` currently multiplies in f32.
+The owning Rust boundary is this Concentric caller only; no shared density
+helper or other pattern changes are proposed.
+
+There is a second independently wrong expression boundary:
+`FillConcentric.cpp:22` stores the double product
+`scale_(this->spacing) * params.multiline` in `coord_t`, truncating first.
+Line 23 then converts that integer to float for division by float density;
+`coord_t(...)` truncates the resulting f32 quotient. The existing Native
+instructions confirm `cvttsd2si`, `cvtsi2ss`, `divss`, `cvttss2si` in that order.
+Rust currently retains f64 for both the product and quotient. Correcting only
+the density input still leaves a modeled f64 pitch of 2713864 for C30M2;
+Native's observed typed calculation gives 2713863.
+Line 37 also uses integer `min_spacing/2`, including integer sum/negation before
+the offset call's float conversion. Retain that integer arithmetic rather than
+the current f64 half spacing. These are one ring-pitch ownership/type chain.
+
+Before multiline, the observed emitted layer-4 outer ring is byte-for-byte
+equal as a point vector. The first inner ring already differs:
+Native (-28102285,-20102285), Ares (-28102284,-20102284).
+The next ring differs by 2 units, and so on. Thus the geometry discrepancy
+exists before multiline's shared offset/union; its input pitch differs by one
+unit and accumulates exactly one unit per ring. Do not change shared Clipper,
+contract, multiline offset or flow based on this finding.
+The Rust capture at index 0 belongs to a separate projection call, so the
+emission comparison uses capture index 1, whose outer ring matches Native.
+Projection caller alignment is deferred, not relabeled as matching.
+
+Count1 observation: `/tmp/worker6-concentric-diagnose.rrc7_fjq/report.json`.
+It uses the frozen count1 input, not a replacement control. Native normalized
+output remains identical to its survey; candidate Ares raw is exactly identical
+to main's frozen output. The same density discrepancy is present. Native
+min_spacing/pitch are 407079/1356930; Ares are 407079.63705062866/1356932.
+This proves count1 shares the wrong input/type chain, not that its E residual
+has already been closed. Its E1.51782/E1.51781 finding remains a FAIL.
+
+Requested scope: add the Concentric-specific density conversion and exact
+integer/f32 ring-pitch/half-spacing expressions above to the existing slice.
+No implementation has been made for this amendment. Keep `b94b93053` unpushed.
+The earlier count1 raw-unchanged requirement needs an explicit exception if this
+amendment is approved: this shared arithmetic necessarily changes count1 ring
+coordinates. Proposed replacement acceptance is an additional public runtime
+Native count1 witness with strict whole bytes, not a rebound hash or tolerance.
+No existing test assertion would be altered. Confirm this exception before code.
+
+After approval, freeze the additional count1 RED before implementing this numeric
+chain; retain all three original RED cases. Any remaining diff requires STOP,
+including C45M2's layer-17 non-sparse path mismatch (first Native geometry line
+6005 X140.571/Y133.201 versus Ares X141.05/Y133.201), which is not proven to be
+fixed by pitch arithmetic. Do not touch anchor_projection or consume a flow /
+solid-path fix without another ruling. All accepted cases must match both modes;
+then run non-RED raw auditing and the previously specified gates.
