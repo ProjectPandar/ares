@@ -180,6 +180,20 @@ pub(in crate::project_slice) fn surface_polylines(
                 request.call.reference,
             )
         }
+        // Equal-index full arcs (dense ironing spacing may project two
+        // distinct intersections onto one contour vertex) walk the whole
+        // contour like `take_ccw_full` (`FillBase.cpp:474-486`); the
+        // `append_full` loop mirrors that release behavior.
+        ProcessInfillPattern::LateralLattice => {
+            let fill = surface_fill(request);
+            super::lateral_lattice::polylines(
+                &fill,
+                request.call.layer_id,
+                request.print_z,
+                request.call.scale,
+                request.call.reference,
+            )
+        }
         // Guarded: Native emits real ironing paths that Ares does not
         // reproduce byte-identically (probe evidence, organic-overhang
         // fixture, `;TYPE:Ironing` E-line counts vs Ares CLI diffs):
@@ -193,8 +207,6 @@ pub(in crate::project_slice) fn surface_polylines(
         //   crosszag phase shift.
         // - LockedZag: 127 native E-lines; needs the per-layer lock regions
         //   (`Fill.cpp:1309`) the ironing call site never installs.
-        // - LateralLattice: Ares port panics (`fill/connect/contour.rs:142`)
-        //   under ironing spacing.
         // - HilbertCurve / ArchimedeanChords / OctagramSpiral: 19118 / 4149 /
         //   1527 native E-lines; plane-path fills need the object bounding
         //   box + resolution context (`generate.rs` sparse arms).
@@ -206,7 +218,6 @@ pub(in crate::project_slice) fn surface_polylines(
         | ProcessInfillPattern::ZigZag
         | ProcessInfillPattern::CrossZag
         | ProcessInfillPattern::LockedZag
-        | ProcessInfillPattern::LateralLattice
         | ProcessInfillPattern::HilbertCurve
         | ProcessInfillPattern::ArchimedeanChords
         | ProcessInfillPattern::OctagramSpiral
