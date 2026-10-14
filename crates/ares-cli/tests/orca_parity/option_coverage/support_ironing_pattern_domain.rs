@@ -367,3 +367,20 @@ fn orca_parity_support_ironing_pattern_cross_zag() {
 fn orca_parity_support_ironing_pattern_locked_zag() {
     leg("locked-zag", "lockedzag");
 }
+
+/// Domain: unknown enum keys silently fall to the option default
+/// (`Config.cpp:654-672` substitution under the `EnableSilent` 3MF load
+/// rule, `Model.cpp:259`) — even the gcode config echo carries the
+/// substituted default.
+#[test]
+fn orca_parity_support_ironing_pattern_unknown_key_cross_zag() {
+    leg("unknown-cross-zag", "cross-zag");
+}
+
+/// Domain: same substitution for an arbitrary unknown key — Native slices
+/// with the default pattern and no warning (probe 2026-10-14:
+/// 719 E-lines, echo `rectilinear`).
+#[test]
+fn orca_parity_support_ironing_pattern_unknown_key_bogus() {
+    leg("unknown-bogus", "bogus-pattern");
+}
