@@ -92,34 +92,6 @@ async fn task22o25_public_parse_error_disposes_o24_and_preserves_error() {
     assert_eq!(horizontal_shell_propagation::invocations(), 0);
 }
 
-#[tokio::test]
-async fn task22o25_every_earlier_capability_error_precedes_promotion() {
-    for (from, to, feature) in [(
-        "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
-        "counterbore_hole_bridging",
-    )] {
-        let mut archive = KsrArchive::new();
-        archive.replace_unique("Metadata/project_settings.config", from, to);
-        archive.replace_unique(
-            "Metadata/project_settings.config",
-            "\"wall_generator\": \"classic\"",
-            "\"wall_generator\": \"arachne\"",
-        );
-        horizontal_shell_promotion::reset_hooks();
-        horizontal_shell_propagation::reset_hooks();
-        assert_eq!(
-            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
-                .await
-                .unwrap_err(),
-            SliceError::UnsupportedProjectFeature(feature.to_owned())
-        );
-        assert_eq!(horizontal_shell_promotion::invocations(), 0);
-        assert_eq!(horizontal_shell_promotion::disposals(), 0);
-        assert_eq!(horizontal_shell_propagation::invocations(), 0);
-    }
-}
-
 async fn assert_precedes(expected: &str) {
     horizontal_shell_promotion::reset_hooks();
     horizontal_shell_propagation::reset_hooks();

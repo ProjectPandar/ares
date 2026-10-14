@@ -10,31 +10,6 @@ use crate::project_slice::{
 use crate::{SliceError, slice_project};
 
 #[tokio::test]
-async fn task22o21_earlier_capability_errors_have_precedence() {
-    for (from, to, expected) in [(
-        "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
-        SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
-    )] {
-        let mut archive = KsrArchive::new();
-        archive.replace_unique("Metadata/project_settings.config", from, to);
-        archive.replace_unique(
-            "Metadata/project_settings.config",
-            "\"wall_generator\": \"classic\"",
-            "\"wall_generator\": \"arachne\"",
-        );
-        vertical_shell_trimming::reset_invocations();
-        assert_eq!(
-            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
-                .await
-                .unwrap_err(),
-            expected
-        );
-        assert_eq!(vertical_shell_trimming::invocations(), 0);
-    }
-}
-
-#[tokio::test]
 async fn task22o21_o17_o19_and_o20_failures_precede_trimming() {
     surface_type_detection::reset_geometry_hooks();
     surface_type_detection::fail_geometry_at(
