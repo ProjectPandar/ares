@@ -3,6 +3,8 @@
 use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 pub(in crate::project_slice) mod line_spacing;
+mod preparation;
+pub(in crate::project_slice) use preparation::prepare_support;
 
 use crate::{
     ProjectVolumeType, SliceError,
@@ -111,11 +113,14 @@ fn octree_for(
     line_spacing: f64,
     kind: OctreeKind,
 ) -> std::sync::Arc<octree::Octree> {
-    traversal
-        .adaptive_octrees
-        .get_or_build((object_index, line_spacing.to_bits(), kind), || {
-            build_object_octree(traversal, object_index, line_spacing, kind)
-        })
+    let key = (object_index, line_spacing.to_bits(), kind);
+    match kind {
+        OctreeKind::Adaptive => traversal.adaptive_octrees.get_or_build(key, || {
+            build_object_octree(traversal, object_index, line_spacing, kind, &[])
+        }),
+        // PrintObject.cpp:2735 builds the Support tree before anchoring/rewrite.
+        OctreeKind::Support => traversal.adaptive_octrees.get(key),
+    }
 }
 
 fn build_object_octree(
@@ -123,6 +128,7 @@ fn build_object_octree(
     object_index: usize,
     line_spacing: f64,
     kind: OctreeKind,
+    overhang_triangles: &[[f64; 3]],
 ) -> octree::Octree {
     let traversal_object = &traversal.objects[object_index];
     let identity = traversal_object
@@ -178,14 +184,20 @@ fn build_object_octree(
     let rotated: Vec<[f64; 3]> = world
         .iter()
         .map(|vertex| {
-            octree::rotate_point(
+            let point = octree::rotate_point(
                 rotation,
                 [
                     vertex[0] - center_offset[0],
                     vertex[1] - center_offset[1],
                     vertex[2],
                 ],
-            )
+            );
+            // PrintObject.cpp:984 / FillAdaptive.cpp:1514-1516: source
+            // indexed_triangle_set stores Vec3f; bridge payload stays Vec3d.
+            match kind {
+                OctreeKind::Adaptive => point,
+                OctreeKind::Support => point.map(|value| f64::from(value as f32)),
+            }
         })
         .collect();
     let mesh = octree::OctreeMesh {
@@ -194,7 +206,25 @@ fn build_object_octree(
     };
     match kind {
         OctreeKind::Adaptive => octree::build_adaptive_octree(mesh, line_spacing, center_offset),
-        OctreeKind::Support => octree::build_octree(mesh, &[], line_spacing, false, center_offset),
+        OctreeKind::Support => {
+            // Ares surface coordinates include the XY object translation.
+            // PrintObject.cpp:995-998 uses centered surfaces, then to_octree;
+            // keep this payload double rather than casting it with the mesh.
+            let overhangs: Vec<_> = overhang_triangles
+                .iter()
+                .map(|point| {
+                    octree::rotate_point(
+                        rotation,
+                        [
+                            point[0] - center_offset[0],
+                            point[1] - center_offset[1],
+                            point[2],
+                        ],
+                    )
+                })
+                .collect();
+            octree::build_octree(mesh, &overhangs, line_spacing, true, center_offset)
+        }
     }
 }
 

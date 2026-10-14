@@ -33,6 +33,7 @@ use crate::{
 };
 
 pub(in crate::project_slice) use stage::PreparedPostBridgeCandidates;
+pub(in crate::project_slice) use types::BridgeCandidateObject;
 
 #[cfg(test)]
 thread_local! {

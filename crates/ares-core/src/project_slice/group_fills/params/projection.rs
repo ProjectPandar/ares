@@ -99,7 +99,9 @@ pub(super) fn project_surface(
     // configuration doubles before the extrusion Flow rounds them to f32.
     params.adaptive_line_spacing = if matches!(
         params.pattern,
-        SurfaceFillPattern::Configured(ProcessInfillPattern::AdaptiveCubic)
+        SurfaceFillPattern::Configured(
+            ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic
+        )
     ) {
         crate::project_slice::fill_entities::adaptive::line_spacing::configured(
             context.region,

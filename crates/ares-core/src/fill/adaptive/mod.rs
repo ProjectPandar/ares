@@ -42,4 +42,8 @@ impl AdaptiveOctreeCache {
             .or_insert_with(|| Arc::new(build()))
             .clone()
     }
+
+    pub(crate) fn get(&self, key: (usize, u64, OctreeKind)) -> Arc<octree::Octree> {
+        self.0.borrow()[&key].clone()
+    }
 }

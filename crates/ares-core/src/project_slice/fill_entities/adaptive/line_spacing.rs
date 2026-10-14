@@ -30,7 +30,9 @@ pub(in crate::project_slice) fn configured(
 pub(super) fn for_fill(params: &SurfaceFillParams) -> f64 {
     if matches!(
         params.pattern,
-        SurfaceFillPattern::Configured(crate::ProcessInfillPattern::AdaptiveCubic)
+        SurfaceFillPattern::Configured(
+            crate::ProcessInfillPattern::AdaptiveCubic | crate::ProcessInfillPattern::SupportCubic
+        )
     ) {
         params.adaptive_line_spacing
     } else {

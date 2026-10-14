@@ -5,7 +5,7 @@ mod tests;
 
 use super::{CoordinateScale, ExPolygon};
 
-pub(super) fn triangulate_expolygon_3d(
+pub(crate) fn triangulate_expolygon_3d(
     expolygon: &ExPolygon,
     z: f64,
     flip: bool,

@@ -21,6 +21,7 @@ mod region_expansion;
 pub(crate) mod simplification;
 pub(crate) mod support_grid;
 mod tessellation;
+pub(crate) use tessellation::triangulate_expolygon_3d;
 
 pub(crate) use bbox_clip::{
     clip_clipper_expolygons_with_subject_bbox, clip_clipper_expolygons_with_subject_bbox_mode,
