@@ -94,3 +94,31 @@ supportcubic/cubic/lightning/3dhoneycomb/lateral-lattice 等，若 ironing
 - off-control 两腿不变；
 - clippy/fmt/wasm；directed 双 mode（official+seeded）矩阵全绿后
   FULL-READY。
+
+> **GREEN v3 修正（REJECTED 2046ad6c9 后追加， 2026-10-14）**
+>
+> 评审三点修正的落地：
+>
+> 1. **空输出臂→守卫（附 Native 证据）**。Native probe（organic
+>    overhang fixture，`;TYPE:Ironing` 段 E 行计数）：hilbertcurve=19118、
+>    archimedeanchords=4149、octagramspiral=1527、lockedzag=127、
+>    zigzag=127、crosszag=127、crosshatch=779、line=699 全部真实出路径；
+>    lightning/adaptivecubic/supportcubic Native 直接 SIGSEGV（exit 139，
+>    无 oracle 输出可镜像）；lateral_lattice ares 端 panic
+>    （fill/connect/contour.rs:142）。以上 12 个 pattern 全部保留
+>    `UnsupportedProjectFeature` 守卫（v2 的空输出臂删除），证据计数
+>    写入 surface.rs 守卫臂注释。
+> 2. **extended_object_bounds=(0,0) 移除**。读该值的分支
+>    （consistent_pattern：ZigZag|CrossZag|LockedZag，enums.rs:225-227）
+>    已全部入守卫集；存活四臂（Rectilinear/AlignedRectilinear/
+>    Monotonic/MonotonicLine）经 monotonic 入口传入的 bounds 为
+>    死值 0（构造处注释说明 has_consistent_pattern=false 不读）。
+>    真实 PrintObject bbox plumbed 锚随 zigzag/crosszag 守卫 deferred。
+> 3. **ConcentricInternal 类型化排除**。surface_polylines 改收
+>    `ProcessInfillPattern`（SurfaceRequest.pattern），ConcentricInternal
+>    不可构造，无掩盖性空臂。
+>
+> **分派集=17 个逐字节证明 pattern**（测试矩阵 17 腿全绿）：
+> rectilinear/alignedrectilinear/monotonic/monotonicline/concentric/
+> grid/triangles/honeycomb/gyroid/cubic/quartercubic/3dhoneycomb/
+> tri-hexagon/tpmsd/tpmsfk/lateral-honeycomb + rect/zig-zag 控制腿。

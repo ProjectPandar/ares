@@ -37,15 +37,15 @@ pub(super) fn expolygon_polylines(
     // `FillRectilinear::fill_surface` and its monotonic subclasses share
     // `fill_surface_by_lines` (`FillRectilinear.cpp:3386-3419`).
     pattern: ProcessInfillPattern,
-    layer_id: usize,
     object_geometry: &super::types::ObjectFillGeometry,
-    link_max_length: f64,
+    call: &super::types::SurfaceCall,
 ) -> Result<Vec<crate::fill::rectilinear::MonotonicFillOutput>, SliceError> {
     let super::types::ObjectFillGeometry {
         scale,
         extended_object_min_x,
         extended_object_max_x,
     } = *object_geometry;
+    let layer_id = call.layer_id;
     let (horiz_move, symmetric) = runtime_controls(
         pattern,
         fill.params.horiz_move,
@@ -68,9 +68,9 @@ pub(super) fn expolygon_polylines(
         bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
         // PrintObject::bounding_box() is symmetric about the centered object origin.
         reference_point: Point::new(0, 0),
-        dont_adjust: fill.params.bridge,
+        dont_adjust: call.dont_adjust,
         anchor_length_max,
-        link_max_length,
+        link_max_length: call.link_max_length,
         consistent_pattern: pattern.has_consistent_pattern(),
         // `extended_object_bounding_box` x-bounds — only meaningful when
         // `consistent_pattern` (`FillRectilinear.cpp:2785` gates the swap).
@@ -155,13 +155,18 @@ pub(super) fn append(
     let surfaces = expolygon_polylines(
         &fill,
         pattern,
-        layer_id,
         &super::types::ObjectFillGeometry {
             scale,
             extended_object_min_x,
             extended_object_max_x,
         },
-        0.0,
+        &super::types::SurfaceCall {
+            layer_id,
+            reference: Point::new(0, 0),
+            scale,
+            link_max_length: 0.0,
+            dont_adjust: fill.params.bridge,
+        },
     )?;
     for (expolygon, generated) in fill.expolygons.into_iter().zip(surfaces) {
         if generated.polylines.is_empty() {

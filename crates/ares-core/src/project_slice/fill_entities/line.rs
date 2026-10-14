@@ -15,23 +15,21 @@ use super::{
 pub(super) fn expolygon_polylines(
     expolygon: &crate::geometry::ExPolygon,
     fill: &SurfaceFill,
-    layer_id: usize,
-    reference: Point,
-    scale: CoordinateScale,
+    call: &super::types::SurfaceCall,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = LineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         angle: fill.params.angle,
-        layer_index: layer_id,
+        layer_index: call.layer_id,
         thickness_layers: fill.representative.thickness_layers.max(1),
         fixed_angle: fill.params.fixed_angle,
         bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
-        reference,
-        dont_adjust: fill.params.bridge,
+        reference: call.reference,
+        dont_adjust: call.dont_adjust,
     };
-    fill_line(expolygon, params, scale).map_err(geometry_error)
+    fill_line(expolygon, params, call.scale).map_err(geometry_error)
 }
 
 pub(super) fn append(
@@ -41,11 +39,18 @@ pub(super) fn append(
     reference: Point,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
+    let call = super::types::SurfaceCall {
+        layer_id,
+        reference,
+        scale,
+        link_max_length: 0.0,
+        dont_adjust: fill.params.bridge,
+    };
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;
     for expolygon in &fill.expolygons {
-        let polylines = expolygon_polylines(expolygon, &fill, layer_id, reference, scale)?;
+        let polylines = expolygon_polylines(expolygon, &fill, &call)?;
         if polylines.is_empty() {
             continue;
         }
