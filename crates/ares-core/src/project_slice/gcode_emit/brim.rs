@@ -56,6 +56,18 @@ impl BrimPlan {
         if source.is_empty() {
             return Ok(None);
         }
+        let source = outline::select(
+            &traversal.objects[object_index]
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object
+                .object,
+            options,
+            traversal.scale,
+            source,
+        )?;
         let full = &traversal.resolved.views.full;
         let print = &full.process.print;
         let region = &resolved
@@ -188,6 +200,7 @@ pub(super) fn brim_geometry_error(_: crate::geometry::ClipperError) -> SliceErro
 
 mod bed_area;
 mod emit;
+mod outline;
 
 #[cfg(test)]
 mod tests;
