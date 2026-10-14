@@ -1,6 +1,30 @@
 //! `ExportLines::update` M73 lookup over `g1_times_cache` (`GCodeProcessor.cpp:771-810`, `:1241-1252`, `:1458-1471`).
 
-use super::export_cache;
+use super::{Estimate, export_cache};
+
+impl Estimate {
+    pub(in crate::project_slice::gcode_emit::processor) fn elapsed_at(
+        &self,
+        line: usize,
+    ) -> Option<f64> {
+        self.elapsed
+            .get(line)
+            .copied()
+            .flatten()
+            .map(|entry| f64::from(entry.elapsed))
+    }
+
+    pub(in crate::project_slice::gcode_emit::processor) fn next_elapsed_at(
+        &self,
+        line: usize,
+    ) -> Option<f32> {
+        self.elapsed
+            .get(line)
+            .copied()
+            .flatten()
+            .and_then(|entry| entry.next)
+    }
+}
 
 #[derive(Clone, Copy)]
 pub(super) struct Snapshot {

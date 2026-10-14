@@ -58,7 +58,9 @@ pub(super) fn record_motions(
         .map(|(index, indexed)| {
             motion.end = indexed.end;
             motion.seam = seams.get(index).copied().flatten();
+            let vertex = recorder.options_z.next_vertex();
             let move_id = recorder.motion(motion);
+            recorder.options_z.block(vertex);
             motion.start = indexed.end;
             move_id
         })

@@ -2,13 +2,14 @@
 //! tags, `:3812-4234` `process_G1`, `:5004-5081` M104/M106/M107/M109,
 //! `:5540-5605` filament change, `:5630-5718` `store_move_vertex`).
 
-mod actual_speed;
+pub(super) mod actual_speed;
 pub(super) mod dynamics;
 mod extrusion;
 use extrusion::move_type;
 pub(super) mod tags;
 
 use super::ProcessorConfig;
+use super::estimate::options_z::Log;
 use super::motion::{MotionState, Trapezoid};
 use super::motion_util::{MMMIN_TO_MMSEC, word};
 use crate::ExtrusionRole;
@@ -44,6 +45,7 @@ pub(super) struct MoveRecorder {
     color_change_volume: f64,
     color_change_volumes: Vec<f64>,
     pending_option: Option<(usize, usize)>,
+    pub(super) options_z: Log,
     tags: &'static Tags,
     role: ExtrusionRole,
     processing_start_custom_gcode: bool,
@@ -105,13 +107,15 @@ impl MoveRecorder {
                     .map_or([0.0; 2], |offset| [offset.x as f32, offset.y as f32])
             })
             .collect();
+        let origin = MoveVertex::default();
         Self {
-            moves: vec![MoveVertex::default()],
+            moves: vec![origin],
             custom_gcode_per_print_z: Vec::new(),
             last_default_color: 0,
             color_change_volume: 0.0,
             color_change_volumes: Vec::new(),
             pending_option: None,
+            options_z: Log::new(&origin),
             tags: if config.limits.bbl_printer {
                 &BBL_TAGS
             } else {
@@ -282,9 +286,20 @@ impl MoveRecorder {
             marker.position = position;
             marker.height = self.height;
             self.moves.push(marker);
+            self.options_z.update(position);
             self.moves.remove(move_id);
             self.custom_gcode_per_print_z[item_id].print_z = f64::from(position[2]);
         }
+    }
+
+    /// `OptionsZCorrector::set` (`GCodeProcessor.hpp:688-691`) after a marker
+    /// vertex and its `custom_gcode_per_print_z` item.
+    fn set_option(&mut self) {
+        self.pending_option = Some((
+            self.moves.len() - 1,
+            self.custom_gcode_per_print_z.len() - 1,
+        ));
+        self.options_z.set();
     }
 
     /// `store_move_vertex` (`:5630-5718`); `source` is the input line the
@@ -309,13 +324,15 @@ impl MoveRecorder {
         } else {
             (end[2] - f64::from(self.z_offset)) as f32
         };
+        let position = [end[0] as f32 + offset[0], end[1] as f32 + offset[1], z];
+        self.options_z.vertex(move_type, position);
         self.moves.push(MoveVertex {
             gcode_id: source as u32,
             move_type,
             extrusion_role: self.role,
             extruder_id: self.filament as u8,
             cp_color_id: self.cp_color_current,
-            position: [end[0] as f32 + offset[0], end[1] as f32 + offset[1], z],
+            position,
             delta_extruder: delta_extruder as f32,
             feedrate: self.feedrate,
             width: self.width,

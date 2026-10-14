@@ -5,6 +5,7 @@ mod custom_time;
 mod elapsed;
 use commands::{arc_seams, record_motions, synchronizes_planner};
 mod export_cache;
+pub(super) mod options_z;
 mod seam;
 use elapsed::elapsed_snapshots;
 use seam::SeamDetector;
@@ -36,13 +37,19 @@ pub(super) struct Estimate {
 }
 impl Estimate {
     /// Runs the time estimate and, with a `recorder`, records the
-    /// `GCodeProcessorResult::moves` of the same pass.
+    /// `GCodeProcessorResult::moves` of the same pass. The progress lines
+    /// read the vertex types, so a pass without one records them unused.
     pub(super) fn record(
         lines: &[String],
         machine_load_filament_time: f64,
         config: &ProcessorConfig<'_>,
-        mut recorder: Option<&mut MoveRecorder>,
+        recorder: Option<&mut MoveRecorder>,
     ) -> Self {
+        let mut owned = None;
+        let recorder = match recorder {
+            Some(recorder) => recorder,
+            None => owned.insert(MoveRecorder::new(config)),
+        };
         let limits = config.limits;
         let mut blocks = Vec::new();
         let mut state = MotionState::with_limits(limits);
@@ -92,10 +99,9 @@ impl Estimate {
                 state.position[2],
                 state.e_position,
             ];
-            if let Some(recorder) = recorder.as_deref_mut() {
-                recorder.machine(&state);
-                recorder.line(index + 1, parsed, g1_line_id, line_start);
-            }
+            recorder.machine(&state);
+            recorder.options_z.tick(events.len());
+            recorder.line(index + 1, parsed, g1_line_id, line_start);
             if let Some(kind) = parsed
                 .custom
                 .and_then(|tag| tag.time_kind(filaments.current_filament()))
@@ -138,10 +144,9 @@ impl Estimate {
                 used_filaments.tool_change(previous_selection.0, previous_selection.1);
             }
             if let Some((filament, extra_time)) = change {
-                let move_id = recorder
-                    .as_deref_mut()
-                    .map(|recorder| recorder.tool_change(index + 1, filament, line_start));
-                block_moves.push(move_id.unwrap_or(0));
+                let vertex = recorder.options_z.next_vertex();
+                block_moves.push(recorder.tool_change(index + 1, filament, line_start));
+                recorder.options_z.block(vertex);
                 blocks.push(commands::tool_change_block());
                 block_line_ids.push(g1_line_id);
                 remaining_internal.push(0);
@@ -165,10 +170,7 @@ impl Estimate {
             let virtual_block = (command == "VG1")
                 .then(|| state.virtual_motion(code))
                 .flatten();
-            if command == "VG1"
-                && word(code, 'F').is_some()
-                && let Some(recorder) = recorder.as_deref_mut()
-            {
+            if command == "VG1" && word(code, 'F').is_some() {
                 recorder.set_feedrate(state.feedrate, false);
             }
             if command == "VG1" && virtual_block.is_none() {
@@ -178,6 +180,7 @@ impl Estimate {
                 used_filaments.motion(block.delta, true, state.wiping, &filaments);
                 blocks.push(block);
                 block_moves.push(0);
+                recorder.options_z.virtual_block();
                 block_line_ids.push(g1_line_id);
                 prepare_stages.push(prepare_stage);
                 cache_eligible.push(false);
@@ -249,27 +252,22 @@ impl Estimate {
                 seam_excluded = seam_vertices[0].is_some();
             }
             let arc = matches!(command, "G2" | "G3");
-            if let Some(recorder) = recorder.as_deref_mut()
-                && (matches!(command, "G10" | "G11") || word(code, 'F').is_some())
-            {
+            if matches!(command, "G10" | "G11") || word(code, 'F').is_some() {
                 recorder.set_feedrate(state.feedrate, arc);
             }
-            match recorder.as_deref_mut() {
-                Some(recorder) => block_moves.extend(record_motions(
-                    recorder,
-                    RecordedMotion {
-                        source: index + 1,
-                        start: line_start,
-                        end: line_start,
-                        wiping: state.wiping,
-                        linear: !arc,
-                        seam: None,
-                    },
-                    &motion_blocks,
-                    &seam_vertices,
-                )),
-                None => block_moves.extend(std::iter::repeat_n(0, motion_blocks.len())),
-            }
+            block_moves.extend(record_motions(
+                recorder,
+                RecordedMotion {
+                    source: index + 1,
+                    start: line_start,
+                    end: line_start,
+                    wiping: state.wiping,
+                    linear: !arc,
+                    seam: None,
+                },
+                &motion_blocks,
+                &seam_vertices,
+            ));
             remaining_internal.extend(
                 motion_blocks
                     .iter()
@@ -324,12 +322,14 @@ impl Estimate {
             trailing_delay,
             flush_ends,
             flush_starts,
+            pushed,
             processed_blocks,
         } = scheduled_times(&blocks, &events);
         let mut stop_times = StopTimes::new(&stop_events, &flush_starts, processed_blocks);
-        if let Some(recorder) = recorder {
-            recorder.apply_schedule(&block_moves, &times, &trapezoids);
-        }
+        recorder.apply_schedule(&block_moves, &times, &trapezoids);
+        recorder
+            .options_z
+            .correct(&trapezoids, &pushed, &flush_ends, &mut cache_eligible);
         debug_assert_eq!(block_line_ids.len(), times.len());
         // Per-block signature dump (id, cumulative, distance, speed) for
         // sequence alignment against the GT oracle's ORCA_DUMP_TIMES — env
@@ -388,25 +388,5 @@ impl Estimate {
             #[cfg(test)]
             block_line_ids: block_line_ids_snapshot,
         }
-    }
-
-    pub(super) fn elapsed_at(&self, line: usize) -> Option<f64> {
-        self.elapsed
-            .get(line)
-            .copied()
-            .flatten()
-            .map(|entry| f64::from(entry.elapsed))
-    }
-
-    pub(super) fn next_elapsed_at(&self, line: usize) -> Option<f32> {
-        self.elapsed
-            .get(line)
-            .copied()
-            .flatten()
-            .and_then(|entry| entry.next)
-    }
-
-    pub(super) fn export_elapsed_at(&self, line: usize) -> Option<f32> {
-        self.export_elapsed[line]
     }
 }
