@@ -138,6 +138,9 @@ fn execute_plan(
     if plan.cases.is_empty() {
         return OptionOutcome::omitted(plan);
     }
+    if plan.key == "filament_self_index" {
+        return super::filament_self_index::execute_plan(runner, plan);
+    }
     if plan.key == "master_extruder_id" {
         return super::master_extruder_id::execute_plan(runner, plan);
     }

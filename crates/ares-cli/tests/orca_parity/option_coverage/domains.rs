@@ -115,6 +115,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         tool_metadata = Some(metadata);
         provably_legal = true;
         (values, None)
+    } else if let Some((values, metadata)) = super::filament_self_index::generate(&key) {
+        tool_metadata = Some(metadata);
+        provably_legal = true;
+        (values, None)
     } else if let Some((values, metadata)) = super::master_extruder_id::generate(&key) {
         tool_metadata = Some(metadata);
         provably_legal = true;

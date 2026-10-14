@@ -218,3 +218,37 @@ fn orca_parity_filament_self_index_has_active_bounded_native_scope() {
             .collect::<Vec<_>>()
     );
 }
+
+// PrintApply.cpp:1172; PrintConfig.cpp:9004-9054,9805-9910: complete slot IDs.
+pub(super) fn generate(key: &str) -> Option<(Vec<domains::OptionCase>, Value)> {
+    (key == "filament_self_index").then(|| {
+        let cases = CASES.iter().map(|case| domains::OptionCase {
+            label: case.0.into(), value: Some(json!(case.1))
+        }).collect();
+        (cases, json!({
+            "domain":"bounded H2D filament self-index slots",
+            "definition":"PrintConfig.cpp:5432-5437",
+            "consumer":"PresetBundle.cpp:172-195; PrintApply.cpp:1172; PrintConfig.cpp:9004-9054,9805-9910",
+            "input":"filament_self_index_input::project", "mode":"Manual",
+            "filament_map":["1","2"], "nozzle_volume_type":["Standard","Standard"],
+            "nozzle_diameter":["0.4","0.4"],"wall_filament":1,"sparse_infill_filament":2,
+            "consumption":"M104/M109 first211 vs233; real wall/infill bothused",
+            "deferred":["malformed or short IDs","generated IDs","active High Flow","arbitrary vectors","exotic stride","production changes"]
+        }))
+    })
+}
+
+pub(super) fn execute_plan(runner: &OrcaRunner, plan: &domains::OptionPlan) -> OptionOutcome {
+    let root = tempfile::Builder::new()
+        .prefix("filament-self-index-matrix-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    for requested in &plan.cases {
+        let &(label, ids, first) = CASES.iter().find(|case| case.0 == requested.label).unwrap();
+        assert_eq!(requested.value, Some(json!(ids)));
+        let case = capture_native(runner, label, ids, first, &root);
+        compare_public(&case, &root.join(label));
+    }
+    OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None)
+}
