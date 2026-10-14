@@ -18,6 +18,7 @@ use crate::project_slice::perimeters::flow::build_nonbridging_flow;
 mod generate;
 mod geometry;
 mod groups;
+mod loop_generation;
 mod member_groups;
 mod occupied;
 #[cfg(test)]
@@ -63,18 +64,16 @@ impl SkirtPlan {
 
     pub(super) fn emit_group(
         &self,
-        group: usize,
         output: &mut Vec<u8>,
-        layer: SkirtLayer,
+        (group, layer): (usize, SkirtLayer),
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
     ) {
         self.emit_loops(
             output,
-            layer,
+            (layer, &self.loops[self.member_groups[group].loops.clone()]),
             geometry,
             state,
-            &self.loops[self.member_groups[group].loops.clone()],
         );
     }
 
@@ -114,20 +113,18 @@ impl SkirtPlan {
     ) {
         self.emit_loops(
             output,
-            layer,
+            (layer, self.loops_for_layer(layer.index)),
             geometry,
             state,
-            self.loops_for_layer(layer.index),
         );
     }
 
     fn emit_loops(
         &self,
         output: &mut Vec<u8>,
-        layer: SkirtLayer,
+        (layer, loops): (SkirtLayer, &[Vec<Point>]),
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
-        loops: &[Vec<Point>],
     ) {
         if layer.index >= self.layer_count || loops.is_empty() {
             return;

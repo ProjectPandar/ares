@@ -1,3 +1,4 @@
+use super::loop_generation::{LoopParameters, make_loops};
 use super::*;
 
 impl SkirtPlan {
@@ -24,6 +25,7 @@ impl SkirtPlan {
         if per_object
             && traversal.objects.len() > 1
             && (print.draft_shield != crate::ProcessDraftShield::Disabled
+                || print.enable_prime_tower.0
                 || print.min_skirt_length.0 != 0.0
                 || print.print_sequence != crate::ProcessPrintSequence::ByLayer
                 || traversal
@@ -122,33 +124,19 @@ impl SkirtPlan {
         let mut occupied_hull = Vec::new();
         for group in generation_groups {
             let mut distance = initial_distance;
-            let mut extruded_filament = 0.0;
             let start = loops.len();
-            let mut group_loops = Vec::with_capacity(loops_count);
-            while loops_count > 0
-                && (group_loops.len() < loops_count || extruded_filament < minimum_filament)
-            {
-                distance += scaled_spacing;
-                let offset = offset_paths(
-                    std::slice::from_ref(&group.hull),
-                    distance.abs(),
-                    JoinType::Round,
+            let mut group_loops = make_loops(
+                &group.hull,
+                &mut distance,
+                LoopParameters {
+                    loops_count,
+                    scaled_spacing,
                     arc_tolerance,
-                )
-                .map_err(|_| SliceError::InvalidInput("skirt offset failed".into()))?;
-                let Some(loop_polygon) = offset.first() else {
-                    break;
-                };
-                let simplified = simplify_closed_points(
-                    loop_polygon.points().to_vec(),
-                    checked_scale(scale, 0.05)? as f64,
-                );
-                if simplified.len() < 3 {
-                    break;
-                }
-                extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
-                group_loops.push(simplified);
-            }
+                    minimum_filament,
+                    e_per_path_mm,
+                    scale,
+                },
+            )?;
             group_loops.reverse();
             loops.extend(group_loops);
             if !group.members.is_empty() {
@@ -175,9 +163,7 @@ impl SkirtPlan {
                         JoinType::Round,
                         arc_tolerance,
                     )
-                    .map_err(|_| {
-                        SliceError::InvalidInput("skirt occupied hull offset failed".into())
-                    })?,
+                    .map_err(occupied_error)?,
                 );
             }
         }
@@ -195,4 +181,8 @@ impl SkirtPlan {
             plate_origin: traversal.project.plate_origin(),
         }))
     }
+}
+
+fn occupied_error(_: crate::geometry::ClipperError) -> SliceError {
+    SliceError::InvalidInput("skirt occupied hull offset failed".into())
 }

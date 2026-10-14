@@ -33,23 +33,7 @@ pub(super) fn merge(
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| SliceError::InvalidInput("skirt group geometry failed".into()))?;
         let mut parent = (0..groups.len()).collect::<Vec<_>>();
-        let mut changed = false;
-        for i in 0..groups.len() {
-            for j in i + 1..groups.len() {
-                let a = root(&mut parent, i);
-                let b = root(&mut parent, j);
-                if a != b
-                    && !crate::geometry::intersection_polygons_paths(&envelopes[i], &envelopes[j])
-                        .map_err(|_| {
-                            SliceError::InvalidInput("skirt group geometry failed".into())
-                        })?
-                        .is_empty()
-                {
-                    parent[b] = a;
-                    changed = true;
-                }
-            }
-        }
+        let changed = merge_collisions(&envelopes, &mut parent)?;
         if !changed {
             return Ok(groups);
         }
@@ -70,6 +54,25 @@ pub(super) fn merge(
             })
             .collect();
     }
+}
+
+fn merge_collisions(envelopes: &[Vec<Polygon>], parent: &mut [usize]) -> Result<bool, SliceError> {
+    let mut changed = false;
+    for i in 0..envelopes.len() {
+        for j in i + 1..envelopes.len() {
+            let a = root(parent, i);
+            let b = root(parent, j);
+            if a != b
+                && !crate::geometry::intersection_polygons_paths(&envelopes[i], &envelopes[j])
+                    .map_err(|_| SliceError::InvalidInput("skirt group geometry failed".into()))?
+                    .is_empty()
+            {
+                parent[b] = a;
+                changed = true;
+            }
+        }
+    }
+    Ok(changed)
 }
 
 fn root(parent: &mut [usize], mut i: usize) -> usize {

@@ -42,9 +42,8 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: I
     let lower = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
     plan.emit_group(
-        group,
         output,
-        layer,
+        (group, layer),
         geometry.view(input.traversal, input.object, input.layer, lower.as_ref()),
         state,
     );
