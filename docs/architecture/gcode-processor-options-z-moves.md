@@ -1,6 +1,8 @@
 # GCodeProcessor: OptionsZCorrector side effects on `GCodeProcessorResult::moves`
 
-Status: SPEC, awaiting review. No production code before approval.
+Status: SPEC approved (5c538e11e). COORD ruling (b): `custom`,
+`mode-mismatch` and `pause` join `template` in the RED. If the GREEN does
+not close one of them, work stops and the case is reported, not dropped.
 
 This is the "slice C" deferral of
 `docs/architecture/gcode-processor-options-z-corrector.md`: that slice
