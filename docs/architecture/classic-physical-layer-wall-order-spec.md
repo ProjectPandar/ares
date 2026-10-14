@@ -1,6 +1,8 @@
 # SPEC: Classic physical-layer wall ordering for compatible-region owners
 
-Status: docs-only proposal; correction awaits exact-hash approval.
+Status: approved at `137b3e01c80efc042e6abb627320267408d054ef`, with
+coordinator's conditional brim scope restriction: brim is explicitly deferred
+because no separate Native-backed public brim RED has been established.
 Base main: `57fea94989ff362129d0e53da0c35c298822f689`.
 Diagnostic HEAD: `cda563f81db3f03ef4851bc2bf79f35559ea359c`.
 
@@ -55,7 +57,7 @@ callee reads. This is not an assertion that the entire repository is defect-free
 
 | Consumer | Disposition |
 | --- | --- |
-| `transform_object:81` index==0 for first-layer OuterOnly brim | INCLUDED: same upstream1463–1467 identity boundary; use actual layer ID, preserve brim predicates. |
+| `transform_object:81` index==0 for first-layer OuterOnly brim | DEFERRED by conditional approval: no Native-backed public RED specific to this consumer; leave predicate unchanged in this slice. |
 | `transform_object:99` index passed as layer_id; `reorder_walls:222–223` first-layer sandwich gate | INCLUDED: principal two-RED correction. |
 | `transform_object:92` `traversal.lower_slices(index)` | DEFERRED, explicit adjacent identity misuse: `traversal.rs:166–191` expects physical/planned layer index, subtracts1 and steps region-major slots by physical layer count. Do not silently repair in this slice. Need its own overhang-reversal/lower-layer public RED and ownership amendment; actual layer ID and planned layer index must not be conflated, including raft offsets. |
 | Record lookup `traversal.records[index]`, `region_options(traversal,index)`, input records[record_index] | RETAIN record index: aligned region-major record slots, not layer IDs. |
@@ -77,16 +79,16 @@ No Native patch/debugging, fallback, oracle changes or comparator weakening.
 2. Run fresh official then seeded directed RED on approved current main,
    CPU15/jobs1/nextest threads1/fresh caches, before production edits. Existing
    assertions stay intact; any retirement requires separate exact approval.
-3. Correct ONLY actual layer-ID operands for sandwich and first-layer brim.
-   Retain record-slot lookups and unchanged upstream reorder math/geometry.
+3. Correct ONLY actual layer-ID operand passed to sandwich ordering.
+   Leave index==0 brim predicate and lower_slices(index) unchanged and explicitly
+   deferred. Retain record-slot lookups and upstream reorder math/geometry.
 4. Require both full ordered public streams PASS under established generator-only
    normalization, including travel, arcs, M73, statistics/footer and role order.
    Verify later-owner physical layer0 and actual later layer; first-owner and
-   incompatible controls; existing26 counterbore controls; explicitly add a
-   compatible later-owner first-layer OuterOnly/nonzero-brim public witness for
-   the included second consumer before coding it. Native fixture acceptance
-   must succeed first; absence of an accepted brim witness is a gate, not a
-   reason to weaken it or silently extend scope.
+   incompatible controls; existing26 counterbore controls. First-layer brim
+   is NOT an implemented consumer in this slice: any future inclusion requires
+   a separate Native-backed public RED demonstrating its own divergence and
+   an owner-approved scope amendment before code.
 5. Directed core/CLI tests via cargo nextest; cargo fmt --check, cargo clippy,
    WASM check and platform-neutral byte API invariance. Coordinator alone owns
    full runs/push/merge and exact-hash approval. Honor exclusive freezes/VOID.

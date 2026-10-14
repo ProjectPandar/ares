@@ -1,6 +1,7 @@
 # ARD: Classic ordering uses upstream layer identity, not record position
 
-Status: proposed with [SPEC](classic-physical-layer-wall-order-spec.md).
+Status: approved at SPEC137b3e01c, narrowed by coordinator's conditional brim
+restriction: no proven brim RED, so defer it. See [SPEC](classic-physical-layer-wall-order-spec.md).
 Base main:57fea94989ff362129d0e53da0c35c298822f689.
 
 ## Context and owning boundary
@@ -21,27 +22,31 @@ of nested Arachne counterbore behavior.
 - Keep record index for slot alignment and region lookup; actual layer ID for
   upstream first/later-layer conditions. Planned layer index is a separate
   coordinate for physical-slice lookup; do not assume raft offset equality.
-- Correct sandwich and first-layer OuterOnly brim operand handoffs within the
-  exact existing `perimeter_append.rs` destination. Preserve emitted geometry,
+- Correct sandwich operand handoff within the exact existing
+  `perimeter_append.rs` destination. First-layer OuterOnly brim is deferred
+  because its own Native-backed public RED is not established; leave it
+  unchanged. Preserve emitted geometry,
   flow, wall-direction, inset permutation and current-source owner selection.
 - Adjacent `lower_slices(index)` misuse is documented and deferred pending its
   own source-owned public RED/amendment; do not silently broaden this slice.
 - Existing scaffold using record position as layer identity is replaced, not
   retained as a legacy route. No regions[0] or default-owner shortcut.
 - Tests are written/frozen before production. Both existing M REDs compare
-  complete ordered G-code with established generator-only normalization. The
-  included brim consumer needs an accepted Native/public witness before coding.
+  complete ordered G-code with established generator-only normalization. Brim
+  inclusion requires its own Native-backed public RED and scope amendment.
 - No Native runtime instrumentation, binary patch or comparator/assertion
   weakening. Temporary Ares diagnostics are archived and removed, not public API.
 - No core filesystem/UI/terminal behavior; remain platform-neutral byte APIs
   for browser WASM, Windows, macOS and Linux. Coordinator approves exact hash
-  and schedules full runs/push/merge; this docs-only proposal authorizes no fix.
+  and schedules full runs/push/merge; production is authorized only within the
+  approved SPEC and coordinator's conditional scope restriction.
 
 ## Included / deferred behavior
 
-Included: actual-layer handoff for Classic sandwich gate and same first-layer
-brim gate, plus exact two REDs and scoped ordering controls.
-Deferred: lower-slice identity, raft policy changes, compatible-group ownership,
+Included: actual-layer handoff for Classic sandwich gate, plus exact two REDs
+and scoped ordering controls.
+Deferred: first-layer brim gate (conditional approval, no proven separate RED),
+lower-slice identity, raft policy changes, compatible-group ownership,
 Native internal state, Arachne N-split, imports/classification/fill, loop nesting,
 chaining and geometry/reorder algorithm changes. Evidence and exit gates are
 in SPEC; any scope expansion requires a separate owner-approved amendment.
