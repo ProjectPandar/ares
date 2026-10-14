@@ -1,4 +1,4 @@
-//! FillRectilinear.cpp:3387-3399: sparse Rectilinear's single multiline sweep.
+//! FillRectilinear.cpp:2996-3045,3386-3399: sparse rectilinear multiline sweep.
 
 use crate::{
     ProcessInfillPattern,
@@ -13,7 +13,12 @@ use super::{
 pub(crate) fn enabled(pattern: ProcessInfillPattern, multiline: i32, density: f32) -> bool {
     // FillBase.hpp:50 and FillRectilinear.cpp:3391 retain the by-lines full branch.
     let full_infill = density > 0.9999;
-    pattern == ProcessInfillPattern::Rectilinear && multiline > 1 && !full_infill
+    // FillRectilinear.hpp:38-46: Aligned inherits this dispatch, fixing only its angle.
+    matches!(
+        pattern,
+        ProcessInfillPattern::Rectilinear | ProcessInfillPattern::AlignedRectilinear
+    ) && multiline > 1
+        && !full_infill
 }
 
 pub(crate) fn fill_surface(
