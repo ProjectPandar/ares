@@ -1,8 +1,6 @@
 mod projected;
 
-pub(in crate::project_slice) use projected::{
-    object_bounding_box, projected_anchor_lengths, projected_sparse_density,
-};
+pub(in crate::project_slice) use projected::{object_bounding_box, projected_sparse_density};
 mod arms;
 mod arms_tail;
 mod linear;
