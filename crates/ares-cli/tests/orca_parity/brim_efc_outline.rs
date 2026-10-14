@@ -230,34 +230,3 @@ fn native_group(block: &str, role: &str) -> GroupMotion {
         relative_e_mm: points.iter().map(|p| p.2).sum(),
     }
 }
-fn native_group(block: &str, role: &str) -> GroupMotion {
-    let suffix = format!("; {}", role.to_lowercase());
-    let points = block
-        .split(";TYPE:")
-        .next()
-        .unwrap()
-        .lines()
-        .filter_map(|line| {
-            if !line.starts_with("G1 ") || !line.ends_with(&suffix) {
-                return None;
-            }
-            let coordinate = |prefix| {
-                line.split_whitespace()
-                    .find_map(|word: &str| word.strip_prefix(prefix)?.parse::<f64>().ok())
-            };
-            let e = coordinate('E')?;
-            (e > 0.0).then(|| (coordinate('X').unwrap(), coordinate('Y').unwrap(), e))
-        })
-        .collect::<Vec<_>>();
-    assert!(!points.is_empty(), "real {role} XY extrusion");
-    GroupMotion {
-        bounds: [
-            points.iter().map(|p| p.0).fold(f64::INFINITY, f64::min),
-            points.iter().map(|p| p.1).fold(f64::INFINITY, f64::min),
-            points.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max),
-            points.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max),
-        ],
-        positive_xy_segments: points.len(),
-        relative_e_mm: points.iter().map(|p| p.2).sum(),
-    }
-}
