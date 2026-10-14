@@ -165,8 +165,8 @@ pub(crate) fn fill_surface(
     dont_sort: bool,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    // `FillAdaptive.cpp:489`: 1000 at the 40/mm lattice == 25 mm.
-    let connect_epsilon = (25.0 / scale.factor()) as i64;
+    // `FillAdaptive.cpp:487`: retain the literal in the active scaled domain.
+    let connect_epsilon = 1000;
     let mut lines: Vec<Segment> = Vec::new();
     for direction in 0..3 {
         let mut context = FillContext::new(octree, z, direction, connect_epsilon, scale);
