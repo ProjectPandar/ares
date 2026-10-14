@@ -130,10 +130,7 @@ pub(crate) fn build_octree(
     // PrintObject.cpp:110); added back to the rotated cube centers.
     world_offset: [f64; 3],
 ) -> Octree {
-    let OctreeMesh {
-        vertices: mesh_vertices,
-        triangles: mesh_triangles,
-    } = mesh;
+    let mesh_vertices = mesh.vertices;
     let mut bbox_min = [f64::INFINITY; 3];
     let mut bbox_max = [f64::NEG_INFINITY; 3];
     for v in mesh_vertices {
@@ -150,6 +147,28 @@ pub(crate) fn build_octree(
     let bbox_size = (bbox_max[0] - bbox_min[0])
         .max(bbox_max[1] - bbox_min[1])
         .max(bbox_max[2] - bbox_min[2]);
+    build_octree_from_bounds(
+        mesh,
+        overhang_triangles,
+        line_spacing,
+        support_overhangs_only,
+        world_offset,
+        (cube_center, bbox_size),
+    )
+}
+
+fn build_octree_from_bounds(
+    mesh: OctreeMesh<'_>,
+    overhang_triangles: &[[f64; 3]],
+    line_spacing: f64,
+    support_overhangs_only: bool,
+    world_offset: [f64; 3],
+    (cube_center, bbox_size): ([f64; 3], f64),
+) -> Octree {
+    let OctreeMesh {
+        vertices: mesh_vertices,
+        triangles: mesh_triangles,
+    } = mesh;
     let cubes_properties = make_cubes_properties(bbox_size, line_spacing);
     let mut octree = Octree {
         root_cube: Box::new(Cube::new(cube_center)),
