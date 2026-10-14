@@ -41,7 +41,13 @@ impl SkirtPlan {
                 || traversal.resolved.objects.iter().any(|object| {
                     object.object.enable_support.0 || object.object.raft_layers.0 > 0
                 })
-                || brim.iter().any(Option::is_some)
+                || brim.iter().enumerate().any(|(index, plan)| {
+                    let (object, group) = traversal.print_object_config(index);
+                    plan.is_some()
+                        && (print.combine_brims.0
+                            || object.object.brim_type != crate::ProcessBrimType::OuterOnly
+                            || group.instance_indices.len() != 1)
+                })
                 || raft.is_some()
                 || !tower_corners.is_empty())
         {
