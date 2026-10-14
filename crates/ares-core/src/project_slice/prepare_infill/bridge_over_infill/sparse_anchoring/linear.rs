@@ -9,8 +9,7 @@ use crate::{
 };
 
 pub(super) fn append(
-    fill: SurfaceFill,
-    pattern: ProcessInfillPattern,
+    (fill, pattern): (SurfaceFill, ProcessInfillPattern),
     traversal: &PreparedPostClassicTraversal,
     layer_index: usize,
     object_bounding_box: BoundingBox,

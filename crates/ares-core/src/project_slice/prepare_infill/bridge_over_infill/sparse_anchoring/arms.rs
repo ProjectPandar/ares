@@ -217,8 +217,7 @@ pub(super) fn dispatch(
             | ProcessInfillPattern::LockedZag),
         ) => {
             super::linear::append(
-                fill,
-                pattern,
+                (fill, pattern),
                 traversal,
                 layer_index,
                 object_bounding_box,
