@@ -70,6 +70,28 @@ processed block, `g1_line_id`, `move_id`, and the type that
 membership changes on `same-layer`. If the probe disproves the mechanism,
 this spec is amended before any code.
 
+The probe adds `ORCA_OPTZ_PROBE` stderr tracing to `TimeMachine::calculate_time`
+(each Normal block: `g1_line_id`, `move_id`, block type, the type of
+`moves[move_id]`, cached or not), `GCodeProcessor::calculate_time` (actual-speed
+insertions per flush) and `OptionsZCorrector::set`/`update` (the index and
+type of the erased vertex). It runs `--slice 0` on `same-layer` and the
+by-layer control, pinned to one assigned CPU. The patch and its output are
+not committed.
+
+**What it must explain.** The two Native `same-layer` outputs share their
+body bytes. Only two M73 lines move, both on layer Z 2, 27 to 55 lines
+*before* the `;CUSTOM_GCODE` tag at line 987, and in opposite directions:
+
+| | Native | Ares / Native control |
+|---|---|---|
+| `M73 P27` | after the wipe `G1 X105.959 Y110.732 E-1` (line 931) | 4 lines later (936) |
+| `M73 P28` | after `G1 Z2.4` (line 959) | 5 lines earlier (955) |
+
+A vertex erased while these blocks are still queued in the planner
+predicts exactly this: effects before the tag only, and gains and losses
+of cache entries. A mechanism that only touches blocks after the tag is
+ruled out by these lines.
+
 ## RED
 
 `plate_custom_gcode_emission_same_layer_matches_native` (fixture
