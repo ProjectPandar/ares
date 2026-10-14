@@ -66,7 +66,8 @@ below must confirm it byte for byte before GREEN relies on it.
   Native places `M73 P27`/`P28` differently around the lone `;CUSTOM_GCODE`
   vertex (`GCodeProcessor.cpp:3314-3320` `store_move_vertex(Custom_GCode)`).
   That is a `GCodeProcessor` gap, so the case is the RED of a separate
-  processor slice and merges with that slice's GREEN.
+  processor slice and merges with that slice's GREEN
+  (`docs/architecture/gcode-processor-options-z-corrector.md`).
 - **Web:** after this slice, slice B's overview and the estimation footer
   show Native times without any web change. Single-load (slice B's
   deferral) stays deferred.

@@ -1,6 +1,6 @@
 # GCodeProcessor: OptionsZCorrector vertex shift and M73 cache eligibility
 
-Status: spec for review. Docs only. The RED (the `same-layer` case moved out
+Status: implemented (see GREEN). The RED (the `same-layer` case moved out
 of slice C, `docs/architecture/plate-custom-gcode-emission.md`) is merged
 together with this slice's GREEN. The RED needs slice C merged first,
 because without slice C's emission the fixture has no `;CUSTOM_GCODE` tag.
@@ -109,6 +109,33 @@ A RED that fails anywhere else does not count.
 - Changing the total time or stop-time values rather than only which lines
   carry them.
 - Moving the existing Pause/ColorChange cases, which flush at the tag.
+
+## GREEN
+
+The probe confirmed the stale index on `same-layer`: `set()` stored
+`move_id` 1140, a flush inserted 260 actual-speed vertices, and `update()`
+erased a Wipe vertex while the Custom vertex stayed in place.
+
+`processor/estimate/options_z.rs` replays this after the planner
+schedule. It keeps a log of every stored vertex (type and position), the
+first vertex of each block (`move_id`), and the queue state at each
+`set()`/`update()`. For every update it:
+
+1. counts the actual-speed vertices that flushes between `set()` and
+   `update()` inserted in front of the marker (same rule as
+   `moves/actual_speed.rs`), which is how far the stored index is stale;
+2. walks back that many elements from the marker to find the erased
+   element, which is either a vertex or an inserted actual-speed vertex;
+3. moves every block still queued at `update()` whose element is at or
+   after the erased one to the next element.
+
+A block whose element moved takes its `g1_times_cache` membership, and
+with it its stop-time anchor, from the new element's type. `moves.rs`
+`correct_options_z` is unchanged. The log is built on every pass, since
+the M73 lines depend on it even when `moves` is not requested.
+
+Still deferred: the per-vertex `moves[]` side effects listed above, and
+Stealth mode.
 
 ## Gates
 
