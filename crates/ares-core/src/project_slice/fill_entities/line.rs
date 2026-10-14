@@ -12,13 +12,13 @@ use super::{
 
 /// Emitted sparse fill for `ProcessInfillPattern::Line` — wraps
 /// `fill::line::fill_line` (port of `FillLine::_fill_surface_single`).
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn expolygon_polylines(
+    expolygon: &crate::geometry::ExPolygon,
+    fill: &SurfaceFill,
     layer_id: usize,
     reference: Point,
     scale: CoordinateScale,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = LineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
@@ -31,11 +31,21 @@ pub(super) fn append(
         reference,
         dont_adjust: fill.params.bridge,
     };
+    fill_line(expolygon, params, scale).map_err(geometry_error)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    layer_id: usize,
+    reference: Point,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;
-    for expolygon in fill.expolygons {
-        let polylines = fill_line(&expolygon, params, scale).map_err(geometry_error)?;
+    for expolygon in &fill.expolygons {
+        let polylines = expolygon_polylines(expolygon, &fill, layer_id, reference, scale)?;
         if polylines.is_empty() {
             continue;
         }
@@ -58,7 +68,7 @@ pub(super) fn append(
             no_overlap_expolygons: &no_overlap_expolygons,
             params: fill_params,
             kind: fill_kind,
-            expolygon: &expolygon,
+            expolygon,
             scale,
         })?;
         output.collections.push(FillExtrusionCollection {

@@ -12,15 +12,13 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
-    layer: &crate::project_slice::layers::PlannedLayer,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
+    layer_id: usize,
+    print_z: f64,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
-) -> Result<(), SliceError> {
-    let layer_id = layer.id;
-    let print_z = layer.print_z;
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let sweeps = crate::fill::multiline::lateral_lattice_sweeps(
         fill.params.lateral_lattice_angle_1,
         fill.params.lateral_lattice_angle_2,
@@ -48,6 +46,17 @@ pub(super) fn append(
             polyline.reverse();
         }
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    layer: &crate::project_slice::layers::PlannedLayer,
+    scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, layer.id, layer.print_z, scale, object_reference)?;
     if polylines.is_empty() {
         return Ok(());
     }

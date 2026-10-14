@@ -11,13 +11,12 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     print_z: f64,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let shift = (std::f64::consts::FRAC_1_SQRT_2 * print_z) as f32;
     // Raw upstream sweep bases {0, π/3, 2π/3}; the +π/2 frame offset from
     // `Fill::_infill_direction` (FillBase.cpp:329) is folded into
@@ -50,6 +49,17 @@ pub(super) fn append(
     for expolygon in &fill.expolygons {
         polylines.extend(fill_surface(expolygon, params, &sweeps, scale).map_err(cubic_error)?);
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    print_z: f64,
+    scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, print_z, scale, object_reference)?;
     if polylines.is_empty() {
         return Ok(());
     }

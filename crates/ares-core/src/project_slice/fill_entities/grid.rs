@@ -42,7 +42,7 @@ pub(super) fn append(
     object_reference: crate::geometry::Point,
     geometry: LayerGeometry,
 ) -> Result<(), SliceError> {
-    let polylines = grid_polylines_inner(&fill, scale, object_reference, geometry)?;
+    let polylines = polylines(&fill, scale, object_reference, geometry)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -66,7 +66,7 @@ pub(super) fn append(
     Ok(())
 }
 
-fn grid_polylines_inner(
+pub(super) fn polylines(
     fill: &SurfaceFill,
     scale: crate::geometry::CoordinateScale,
     object_reference: crate::geometry::Point,

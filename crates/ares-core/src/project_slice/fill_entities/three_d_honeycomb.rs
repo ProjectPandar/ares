@@ -7,12 +7,11 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     print_z: f64,
     scale: CoordinateScale,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = Params {
         z: print_z,
         spacing: fill.params.spacing,
@@ -30,6 +29,16 @@ pub(super) fn append(
             SliceError::InvalidInput(format!("3D honeycomb failed: {error:?}"))
         })?);
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    print_z: f64,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, print_z, scale)?;
     if polylines.is_empty() {
         return Ok(());
     }

@@ -30,12 +30,11 @@ const SWEEPS: [Sweep; 3] = [
     },
 ];
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
@@ -51,6 +50,16 @@ pub(super) fn append(
     for expolygon in &fill.expolygons {
         polylines.extend(fill_surface(expolygon, params, &SWEEPS, scale).map_err(triangles_error)?);
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, scale, object_reference)?;
     if polylines.is_empty() {
         return Ok(());
     }

@@ -13,13 +13,26 @@ use super::{
 /// Emitted sparse fill for `ProcessInfillPattern::Honeycomb` — wraps
 /// `fill::honeycomb::fill_honeycomb` (port of `FillHoneycomb::_fill_surface_single`,
 /// which already runs `chain_or_connect_infill`).
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
-    layer_id: usize,
+pub(super) fn expolygon_polylines(
+    expolygon: &crate::geometry::ExPolygon,
+    delta: f32,
+    params: HoneycombFillParams,
     scale: CoordinateScale,
-) -> Result<(), SliceError> {
-    let params = HoneycombFillParams {
+) -> Result<Vec<Vec<crate::geometry::Polyline>>, SliceError> {
+    // `Fill::fill_surface` offsets the surface by `overlap - spacing/2`
+    // (`FillBase.cpp:108`) before `_fill_surface_single`; each resulting
+    // component is filled independently.
+    let components =
+        offset_expolygon(expolygon, delta, JoinType::Miter, 3.0).map_err(geometry_error)?;
+    let mut per_component = Vec::with_capacity(components.len());
+    for component in &components {
+        per_component.push(fill_honeycomb(component, params, scale).map_err(geometry_error)?);
+    }
+    Ok(per_component)
+}
+
+pub(super) fn polylines_params(fill: &SurfaceFill, layer_id: usize) -> HoneycombFillParams {
+    HoneycombFillParams {
         spacing: fill.params.spacing,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
@@ -30,7 +43,16 @@ pub(super) fn append(
         bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
         anchor_length: fill.params.anchor_length,
         anchor_length_max: fill.params.anchor_length_max,
-    };
+    }
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    layer_id: usize,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    let params = polylines_params(&fill, layer_id);
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;
@@ -38,10 +60,7 @@ pub(super) fn append(
     // (`FillBase.cpp:108`) before `_fill_surface_single`.
     let delta = ((fill_params.overlap - 0.5 * fill_params.spacing) / scale.factor()) as f32;
     for expolygon in fill.expolygons {
-        let components =
-            offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0).map_err(geometry_error)?;
-        for component in &components {
-            let polylines = fill_honeycomb(component, params, scale).map_err(geometry_error)?;
+        for polylines in expolygon_polylines(&expolygon, delta, params, scale)? {
             if polylines.is_empty() {
                 continue;
             }

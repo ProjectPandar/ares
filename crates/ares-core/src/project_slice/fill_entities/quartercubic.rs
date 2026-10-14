@@ -12,13 +12,12 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     print_z: f64,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
     let sweeps = crate::fill::multiline::quartercubic_sweeps(
         fill.params.spacing,
@@ -43,6 +42,17 @@ pub(super) fn append(
         polylines
             .extend(fill_surface(expolygon, params, &sweeps, scale).map_err(quartercubic_error)?);
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    print_z: f64,
+    scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, print_z, scale, object_reference)?;
     if polylines.is_empty() {
         return Ok(());
     }

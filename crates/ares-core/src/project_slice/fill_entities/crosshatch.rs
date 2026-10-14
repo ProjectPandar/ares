@@ -2,7 +2,7 @@ use crate::{
     SliceError,
     fill::cross_hatch::{CrossHatchFillParams, fill_surface},
     geometry::CoordinateScale,
-    project_slice::group_fills::SurfaceFill,
+    project_slice::group_fills::{SurfaceFill, SurfaceFillParams},
 };
 
 use super::{
@@ -10,25 +10,34 @@ use super::{
     geometry_error,
 };
 
+pub(super) fn expolygon_polylines(
+    expolygon: &crate::geometry::ExPolygon,
+    params: SurfaceFillParams,
+    z: f64,
+    scale: CoordinateScale,
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
+    let params = CrossHatchFillParams {
+        z,
+        spacing: params.spacing,
+        overlap: params.overlap,
+        angle: params.angle,
+        density: (0.01_f64 * f64::from(params.density)) as f32,
+        multiline: params.multiline,
+        anchor_length: params.anchor_length,
+        anchor_length_max: params.anchor_length_max,
+        dont_sort: false,
+    };
+    fill_surface(expolygon, params, scale).map_err(geometry_error)
+}
+
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
     z: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    let params = CrossHatchFillParams {
-        z,
-        spacing: fill.params.spacing,
-        overlap: fill.params.overlap,
-        angle: fill.params.angle,
-        density: (0.01_f64 * f64::from(fill.params.density)) as f32,
-        multiline: fill.params.multiline,
-        anchor_length: fill.params.anchor_length,
-        anchor_length_max: fill.params.anchor_length_max,
-        dont_sort: false,
-    };
     for expolygon in fill.expolygons {
-        let polylines = fill_surface(&expolygon, params, scale).map_err(geometry_error)?;
+        let polylines = expolygon_polylines(&expolygon, fill.params, z, scale)?;
         if polylines.is_empty() {
             continue;
         }
