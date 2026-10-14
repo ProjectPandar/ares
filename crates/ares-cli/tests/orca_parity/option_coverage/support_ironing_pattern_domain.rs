@@ -338,3 +338,32 @@ fn orca_parity_sparse_lateral_lattice_control() {
         sparse_project("lateral-lattice"),
     );
 }
+
+/// Domain: consistent zig-zag ironing — `FillZigZag` under the canonical
+/// enum key (`"zigzag"`, `PrintConfig.cpp:232`; the hyphenated legacy
+/// `"zig-zag"` migrates to rectilinear at `PrintConfig.cpp:8206`). The
+/// vertical-line grid anchors on the extended dummy support box
+/// (`SupportCommon.cpp:1433`/`:1880`); Native emits identical ironing
+/// toolpaths for all three consistent patterns, differing only in the
+/// config echo (127 E-lines each, probe 2026-10-14).
+#[test]
+fn orca_parity_support_ironing_pattern_zig_zag() {
+    leg("zig-zag", "zigzag");
+}
+
+/// Domain: consistent cross-zag ironing — `FillCrossZag`; at the ironing
+/// call site every `FillParams` phase/symmetric control keeps its default,
+/// matching the zig-zag leg byte-for-byte in Native.
+#[test]
+fn orca_parity_support_ironing_pattern_cross_zag() {
+    leg("cross-zag", "crosszag");
+}
+
+/// Domain: consistent locked-zag ironing — `FillLockedZag`; the lock-region
+/// extrusion path is unreachable here (only `fill_surface_extrusion` is
+/// overridden, the Polylines overload serves the base rectilinear
+/// traversal), so this pins the same consistent traversal as zig-zag.
+#[test]
+fn orca_parity_support_ironing_pattern_locked_zag() {
+    leg("locked-zag", "lockedzag");
+}
