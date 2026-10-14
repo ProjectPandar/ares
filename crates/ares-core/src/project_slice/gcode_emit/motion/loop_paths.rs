@@ -342,13 +342,18 @@ fn clipped_loop_end(
         for segment in path.polyline.points.windows(2).rev() {
             let dx = geometry.scale.unscale(segment[1].x - segment[0].x);
             let dy = geometry.scale.unscale(segment[1].y - segment[0].y);
-            let length = dx.hypot(dy);
+            let length = if path.z_contoured {
+                let dz = geometry.scale.unscale(segment[1].z - segment[0].z);
+                (dx * dx + dy * dy + dz * dz).sqrt()
+            } else {
+                dx.hypot(dy)
+            };
             if length > distance {
                 let ratio = distance / length;
                 return Point3 {
                     x: (segment[1].x as f64 + (segment[0].x - segment[1].x) as f64 * ratio) as i64,
                     y: (segment[1].y as f64 + (segment[0].y - segment[1].y) as f64 * ratio) as i64,
-                    z: segment[1].z,
+                    z: (segment[1].z as f64 + (segment[0].z - segment[1].z) as f64 * ratio) as i64,
                 };
             }
             distance -= length;

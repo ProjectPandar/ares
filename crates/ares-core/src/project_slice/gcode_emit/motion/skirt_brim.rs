@@ -48,6 +48,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
                 .iter()
                 .map(|point| (point.0 - offset.0, point.1 - offset.1)),
             PathProperties {
+                contour: None,
                 mm3_per_mm: flow.mm3_per_mm,
                 width: flow.width,
                 height: flow.height,
@@ -81,6 +82,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
         output,
         points.into_iter(),
         PathProperties {
+            contour: None,
             mm3_per_mm: flow.mm3_per_mm,
             width: flow.width,
             height: flow.height,
@@ -120,6 +122,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
         output,
         points,
         PathProperties {
+            contour: None,
             mm3_per_mm: flow.mm3_per_mm,
             width: flow.width,
             height: flow.height,

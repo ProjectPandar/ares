@@ -268,7 +268,7 @@ pub(super) fn emit_approach_move(
         );
         state.record_z(z);
         travel_set_layer_z = z == leg_z;
-    } else if slope_start_z.is_some() {
+    } else if slope_start_z.is_some() || travel_will_move_z(state, leg_z) {
         // The first leg's destination z equals the live writer z on a
         // same-z detour (or a clamped approach): upstream's
         // `travel_to_xyz` then takes the XY-only, COMMENTLESS

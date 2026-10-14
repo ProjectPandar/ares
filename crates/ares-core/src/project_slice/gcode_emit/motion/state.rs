@@ -15,6 +15,7 @@ pub(in crate::project_slice::gcode_emit) enum LiftMode {
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
+    pub(in crate::project_slice::gcode_emit) contour_z_too_low: bool,
     pub(in crate::project_slice::gcode_emit) total_layer_count: usize,
     pub(in crate::project_slice::gcode_emit) template_rng: super::super::value::TemplateRng,
     pub(in crate::project_slice::gcode_emit) hold_chamber_temp_for_flat_print: bool,

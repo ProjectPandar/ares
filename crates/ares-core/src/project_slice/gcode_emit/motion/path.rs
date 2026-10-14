@@ -1,6 +1,7 @@
 mod adaptive_pa;
 mod avoid_crossing;
 mod constant;
+pub(super) mod contour;
 mod retraction;
 pub(in crate::project_slice::gcode_emit) mod role_change;
 mod start_travel;
@@ -32,6 +33,32 @@ pub(super) fn emit(
 }
 
 pub(super) fn emit_with_speed(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    (properties, speed): (PathProperties<'_>, Option<f64>),
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    if let Some(points) = properties.contour {
+        let points = contour::clipped(points, properties.end_clip / geometry.scale.factor());
+        let properties = PathProperties {
+            contour: Some(&points),
+            end_clip: 0.0,
+            ..properties
+        };
+        emit_inner(
+            output,
+            points.iter().map(|p| (p.x, p.y)),
+            (properties, speed),
+            geometry,
+            state,
+        );
+    } else {
+        emit_inner(output, points, (properties, speed), geometry, state);
+    }
+}
+
+fn emit_inner(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
     (properties, requested_speed): (PathProperties<'_>, Option<f64>),
@@ -320,8 +347,15 @@ pub(super) fn emit_with_speed(
             state,
         });
         state.last_scaled_position = Some(last_scaled);
-        state.scarf_z = Some(state.layer_z);
+        if properties.contour.is_none() {
+            state.scarf_z = Some(state.layer_z);
+        }
         output.extend_from_slice(b";_EXTRUDE_END\n");
+        return;
+    }
+    if properties.contour.is_some() {
+        contour::emit(output, &points, properties, geometry, state);
+        state.last_scaled_position = Some(last_scaled);
         return;
     }
     // Non-processed sloped path (`GCode.cpp:6992` non-`new_points`

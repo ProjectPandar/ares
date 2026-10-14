@@ -112,6 +112,7 @@ fn emit_path(
             .iter()
             .map(|point| (point.x, point.y)),
         PathProperties {
+            contour: None,
             mm3_per_mm: support.mm3_per_mm,
             width: support.width,
             height: support.height,
@@ -205,6 +206,7 @@ fn emit_loop(
         output,
         polyline.points.iter().map(|point| (point.x, point.y)),
         PathProperties {
+            contour: None,
             mm3_per_mm: support.mm3_per_mm,
             width: support.width,
             height: support.height,

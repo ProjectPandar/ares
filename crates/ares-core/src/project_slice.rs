@@ -204,7 +204,7 @@ pub(crate) fn slice_source(
     // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let mut filled = fill_entities::prepare(prepared)?;
-    contour_z::prepare_perimeters(&mut filled);
+    contour_z::prepare(&mut filled);
     let support_layers = match support_material::generate(&filled, &mut context) {
         Ok(layers) => layers,
         Err(error) => {

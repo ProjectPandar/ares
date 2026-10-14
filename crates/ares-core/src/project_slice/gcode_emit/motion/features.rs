@@ -34,6 +34,8 @@ pub(super) fn role_id(feature: &str) -> u32 {
 
 #[derive(Clone, Copy)]
 pub(super) struct PathProperties<'a> {
+    pub(super) contour:
+        Option<&'a [crate::project_slice::perimeters::classic::materialize::Point3]>,
     pub(super) mm3_per_mm: f64,
     pub(super) width: f32,
     pub(super) height: f32,

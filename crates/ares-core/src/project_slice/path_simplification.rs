@@ -105,6 +105,10 @@ fn simplify_fill_entity(
 ) {
     match entity {
         FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
+            // ExtrusionEntity.cpp:33-47: contour samples are already simplified.
+            if path.z_contoured {
+                return;
+            }
             let mut points = path
                 .polyline
                 .points()

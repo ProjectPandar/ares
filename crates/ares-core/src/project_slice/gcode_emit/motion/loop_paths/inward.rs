@@ -25,10 +25,19 @@ pub(super) fn append_inward_move(
 
     // GCode.cpp:5804,5994-6002 uses the clipped last path, but the original
     // loop winding. The selected end-3 vertex precedes any inserted endpoint.
-    let (point_count, _) = super::super::clip::clipped_tail(
-        last.polyline.points.iter().map(|point| (point.x, point.y)),
-        end_clip / geometry.scale.factor(),
-    );
+    let point_count = if last.z_contoured {
+        super::super::path::contour::clipped(
+            &last.polyline.points,
+            end_clip / geometry.scale.factor(),
+        )
+        .len()
+    } else {
+        let (point_count, _) = super::super::clip::clipped_tail(
+            last.polyline.points.iter().map(|point| (point.x, point.y)),
+            end_clip / geometry.scale.factor(),
+        );
+        point_count
+    };
     if point_count < 3 {
         return;
     }
@@ -121,10 +130,17 @@ pub(super) fn path_length(path: &ExtrusionPath, geometry: LayerGeometry<'_>) -> 
         .points
         .windows(2)
         .map(|segment| {
-            geometry
-                .scale
-                .unscale(segment[1].x - segment[0].x)
-                .hypot(geometry.scale.unscale(segment[1].y - segment[0].y))
+            if path.z_contoured {
+                let dx = (segment[1].x - segment[0].x) as f64;
+                let dy = (segment[1].y - segment[0].y) as f64;
+                let dz = (segment[1].z - segment[0].z) as f64;
+                (dx * dx + dy * dy + dz * dz).sqrt() * geometry.scale.factor()
+            } else {
+                geometry
+                    .scale
+                    .unscale(segment[1].x - segment[0].x)
+                    .hypot(geometry.scale.unscale(segment[1].y - segment[0].y))
+            }
         })
         .sum()
 }

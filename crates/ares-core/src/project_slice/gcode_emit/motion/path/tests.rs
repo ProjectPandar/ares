@@ -39,6 +39,7 @@ fn volumetric_speed_cap_divides_by_print_and_filament_flow_ratios() {
         &mut output,
         [(0, 0), (1_000_000, 0)].into_iter(),
         PathProperties {
+            contour: None,
             mm3_per_mm: 0.08,
             width: 0.45,
             height: 0.2,
@@ -100,6 +101,7 @@ fn zero_max_volumetric_speed_leaves_the_role_speed_uncapped() {
         &mut output,
         [(0, 0), (1_000_000, 0)].into_iter(),
         PathProperties {
+            contour: None,
             mm3_per_mm: 0.08,
             width: 0.45,
             height: 0.2,
@@ -163,6 +165,7 @@ fn plate_loops_unscale_after_integer_translation() {
                 &mut output,
                 [(8_000_000, -11_811_500), (8_550_000, -11_811_500)].into_iter(),
                 PathProperties {
+                    contour: None,
                     mm3_per_mm: 0.08,
                     width: 0.45,
                     height: 0.2,
@@ -224,6 +227,7 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             ..EmitState::default()
         };
         let properties = PathProperties {
+            contour: None,
             mm3_per_mm: 0.08,
             width: 0.45,
             height: 0.2,
@@ -251,6 +255,7 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             &mut output,
             [(-9_000_000, -9_000_000), (-8_000_000, -9_000_000)].into_iter(),
             PathProperties {
+                contour: None,
                 feature: destination,
                 ..properties
             },

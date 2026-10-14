@@ -7,6 +7,7 @@ use crate::project_slice::gcode_emit::motion::{
 
 fn properties(feature: &'static str) -> PathProperties<'static> {
     PathProperties {
+        contour: None,
         mm3_per_mm: 0.04,
         width: 0.45,
         height: 0.2,
@@ -40,12 +41,14 @@ fn equal_speed_ignores_start_and_reasserts_base_fan_at_end() {
         &mut output,
         properties("Inner wall"),
         ProcessedPoint {
+            z: 0.0,
             x: 0.0,
             y: 0.0,
             speed: 50.0,
             overlap: 1.0,
         },
         ProcessedPoint {
+            z: 0.0,
             x: 1.0,
             y: 0.0,
             speed: 50.0,
@@ -100,6 +103,7 @@ fn faster_overhang_fan_activates_for_variable_segment() {
         ..EmitState::default()
     };
     let point = ProcessedPoint {
+        z: 0.0,
         x: 0.0,
         y: 0.0,
         speed: 50.0,
@@ -135,6 +139,7 @@ fn internal_bridge_marker_reasserts_equal_baseline_at_end() {
         ..EmitState::default()
     };
     let point = ProcessedPoint {
+        z: 0.0,
         x: 0.0,
         y: 0.0,
         speed: 50.0,

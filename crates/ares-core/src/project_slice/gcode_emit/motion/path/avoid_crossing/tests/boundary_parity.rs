@@ -122,6 +122,7 @@ fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_corner_then_destinati
             first_x: 4.89,
             first_y: 4.89,
             properties: PathProperties {
+                contour: None,
                 mm3_per_mm: 0.04,
                 width: 0.22,
                 height: 0.25,

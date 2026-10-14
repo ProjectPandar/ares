@@ -152,6 +152,7 @@ fn emit_fill_entity(
                 .iter()
                 .map(|point| (point.x(), point.y())),
             PathProperties {
+                contour: path.z_contoured.then_some(path.polyline.points.as_slice()),
                 mm3_per_mm: path.mm3_per_mm,
                 width: path.width,
                 height: path.height,

@@ -1,4 +1,4 @@
-//! PrintObject.cpp:748-804 / ContourZ.cpp:235-243. Stage1 preserves the capability guard.
+//! PrintObject.cpp:748-804 / ContourZ.cpp:235-243. production per-region contour stage.
 mod entities;
 mod mesh;
 mod path;
@@ -9,7 +9,7 @@ mod tree;
 
 use crate::project_slice::fill_entities::PreparedPostFillEntities;
 
-pub(super) fn prepare_perimeters(prepared: &mut PreparedPostFillEntities) {
+pub(super) fn prepare(prepared: &mut PreparedPostFillEntities) {
     let combined = &prepared.predecessor;
     let external = &combined.predecessor.predecessor;
     let traversal = &external.predecessor.predecessor;

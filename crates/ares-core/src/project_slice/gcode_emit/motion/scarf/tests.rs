@@ -158,6 +158,7 @@ fn sloped_writer_compares_quantized_z_and_tracks_raw_position() {
             ..EmitState::default()
         };
         let properties = PathProperties {
+            contour: None,
             mm3_per_mm: 1.0,
             width: 0.45,
             height: 0.2,
@@ -204,6 +205,7 @@ fn sloped_segments_interpolate_z_and_endpoint_extrusion_ratio() {
         ..EmitState::default()
     };
     let properties = PathProperties {
+        contour: None,
         mm3_per_mm: 1.0,
         width: 0.45,
         height: 0.2,

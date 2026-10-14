@@ -80,7 +80,10 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     let slope_needs_z_travel = slope_start_z.is_some_and(|target| {
         (state.scarf_z.unwrap_or(state.layer_z) - target).abs() >= super::SOURCE_EPSILON_MM
     });
-    let target_z = slope_start_z.unwrap_or(state.layer_z);
+    let contour_z = properties
+        .contour
+        .map(|points| state.layer_z + geometry.scale.unscale(points[0].z));
+    let target_z = slope_start_z.or(contour_z).unwrap_or(state.layer_z);
     let needs_travel =
         first_position || state.last_scaled_position != Some(first_scaled) || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
@@ -111,7 +114,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 geometry,
                 first_position,
                 layer_change_travel,
-                slope_start_z,
+                slope_start_z: slope_start_z.or(contour_z),
                 target_z,
                 travel_distance,
             },
@@ -150,6 +153,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         state,
         restate::RestateContext {
             is_sloped: properties.slope.is_some(),
+            contour_z,
             never_positioned,
             travel_set_layer_z,
             eager_lifted_travel,

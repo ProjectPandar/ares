@@ -244,6 +244,20 @@ pub(in crate::project_slice) fn emit(
         .predecessor
         .predecessor
         .predecessor;
+    if state.contour_z_too_low {
+        // GCode.cpp:7025/7233, OrcaSlicer.cpp:6286-6291: export failure, not config admission.
+        let settings = &traversal.resolved.views.full;
+        return Err(SliceError::Slicing {
+            message: "GCode: very low z".to_owned(),
+            plate_index: traversal.project.first_plate_id(),
+            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+            wall_loops: settings.process.region.wall_loops.0,
+            sparse_infill_density: f64::from(
+                settings.process.region.sparse_infill_density.0 as f32,
+            ),
+        });
+    }
+
     // The compatible tail's `; total layers count` prints `m_layer_count`
     // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
     // tag-based count the header placeholder carries.

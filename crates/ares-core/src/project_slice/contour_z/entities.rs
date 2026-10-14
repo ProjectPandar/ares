@@ -1,4 +1,4 @@
-//! ContourZ.cpp:162-243: existing perimeter entity traversal; fill carrier waits next stack.
+//! ContourZ.cpp:162-243: eligible perimeter and fill entity traversal.
 use super::{
     mesh::IndexedMesh,
     path::{self, Context},
@@ -64,8 +64,47 @@ pub(super) fn prepare_layer(
             layer_height: planned.height,
             scale,
         };
+        for (_, range) in layer
+            .collection_ranges
+            .iter()
+            .filter(|(owner, _)| *owner == region_index)
+        {
+            for entity in layer.collections[range.clone()]
+                .iter_mut()
+                .flat_map(|collection| &mut collection.entities)
+            {
+                fill(entity, mesh, &context);
+            }
+        }
         for item in &mut layer.perimeters[layer.perimeter_ranges[region_index].clone()] {
             collection(item, mesh, &context);
+        }
+    }
+}
+
+fn fill(
+    entity: &mut crate::project_slice::fill_entities::FillExtrusionEntity,
+    mesh: &IndexedMesh,
+    context: &Context<'_>,
+) {
+    use crate::project_slice::{
+        fill_entities::FillExtrusionEntity, perimeters::classic::gap_extrusion::GapFillEntity,
+    };
+    match entity {
+        FillExtrusionEntity::Path(item) | FillExtrusionEntity::Oriented(item) => {
+            if let Some(points) =
+                path::contour(&item.polyline.points, item.role, item.width, mesh, context)
+            {
+                item.polyline.points = points;
+                item.polyline.fitting.clear();
+                item.z_contoured = true;
+            }
+        }
+        FillExtrusionEntity::VariableWidth(GapFillEntity::Path(item)) => apply(item, mesh, context),
+        FillExtrusionEntity::VariableWidth(GapFillEntity::Loop(paths)) => {
+            for item in paths {
+                apply(item, mesh, context);
+            }
         }
     }
 }

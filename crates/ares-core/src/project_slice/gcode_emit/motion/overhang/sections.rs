@@ -50,11 +50,21 @@ pub(super) fn speed_sections(
 }
 
 impl BoundaryContext<'_> {
-    pub(super) fn add_boundary_intersections(&self, points: &[(f64, f64)]) -> Vec<ExtendedPoint> {
+    pub(super) fn add_boundary_intersections(
+        &self,
+        points: &[(f64, f64)],
+        contour: Option<&[crate::project_slice::perimeters::classic::materialize::Point3]>,
+    ) -> Vec<ExtendedPoint> {
         let mut result = Vec::with_capacity(points.len() * 2);
-        result.push(self.extended(points[0]));
-        for &point in &points[1..] {
-            let next = self.extended(point);
+        result.push(self.extended(
+            points[0],
+            contour.map_or(0.0, |p| self.scale.unscale(p[0].z)),
+        ));
+        for (index, &point) in points.iter().enumerate().skip(1) {
+            let next = self.extended(
+                point,
+                contour.map_or(0.0, |p| self.scale.unscale(p[index].z)),
+            );
             let previous = *result.last().unwrap();
             self.append_intersections(&mut result, previous, next);
             result.push(next);
@@ -74,11 +84,20 @@ impl BoundaryContext<'_> {
         if previous_outside == next_outside {
             return;
         }
+        // AABBTreeLines.hpp:144-150: previous boundary boxes lie at Z=0.
+        if previous.z.min(next.z) > 0.0 || previous.z.max(next.z) < 0.0 {
+            return;
+        }
         let line = [[previous.x, previous.y], [next.x, next.y]];
         for (intersection, _) in self.tree.intersections_sorted_mm(line, self.scale.factor()) {
+            // Line.hpp:123-145 uses the XY intersection parameter for all XYZ axes.
+            let delta = [next.x - previous.x, next.y - previous.y];
+            let axis = usize::from(delta[1].abs() > delta[0].abs());
+            let ratio = (intersection[axis] - line[0][axis]) / delta[axis];
             let intersection = ExtendedPoint {
                 x: intersection[0],
                 y: intersection[1],
+                z: previous.z + ratio * (next.z - previous.z),
                 distance: self.offset,
             };
             if distance(previous, intersection) > self.minimum_spacing
@@ -143,7 +162,7 @@ impl BoundaryContext<'_> {
             return;
         }
         let candidate = interpolate(current, next, factor);
-        let raw_distance = self.signed_distance((candidate.x, candidate.y));
+        let raw_distance = self.signed_distance((candidate.x, candidate.y), candidate.z);
         let candidate = ExtendedPoint {
             distance: (raw_distance + f64::from(self.offset)) as f32,
             ..candidate
@@ -156,20 +175,21 @@ impl BoundaryContext<'_> {
         }
     }
 
-    fn extended(&self, point: (f64, f64)) -> ExtendedPoint {
+    fn extended(&self, point: (f64, f64), z: f64) -> ExtendedPoint {
         // `ExtendedPoint.distance` is `float`, but the boundary offset
         // add happens in the f64 distance domain before narrowing
         // (`next_point.distance = distance + boundary_offset`,
         // `ExtrusionProcessor.hpp:100-101`).
-        let raw_distance = self.signed_distance(point);
+        let raw_distance = self.signed_distance(point, z);
         ExtendedPoint {
             x: point.0,
             y: point.1,
+            z,
             distance: (raw_distance + f64::from(self.offset)) as f32,
         }
     }
 
-    fn signed_distance(&self, point: (f64, f64)) -> f64 {
+    fn signed_distance(&self, point: (f64, f64), z: f64) -> f64 {
         // `distance_from_lines_extra<true>` over `LinesDistancer<Linef3>`
         // (`ExtrusionProcessor.hpp:92-101,366`): the previous-layer
         // boundary lines are unscaled f64 — the distance is measured in
@@ -181,7 +201,11 @@ impl BoundaryContext<'_> {
             .expect("a nonempty boundary has a nearest line");
         self.tree
             .outside_mm([point.0, point.1], self.scale.factor()) as f64
-            * nearest.squared_distance.sqrt()
+            * if z == 0.0 {
+                nearest.squared_distance.sqrt()
+            } else {
+                (nearest.squared_distance + z * z).sqrt()
+            }
     }
 }
 
@@ -229,10 +253,19 @@ pub(super) fn interpolate(
     ExtendedPoint {
         x: first.x + factor * (second.x - first.x),
         y: first.y + factor * (second.y - first.y),
+        z: first.z + factor * (second.z - first.z),
         distance: 0.0,
     }
 }
 
 pub(super) fn distance(first: ExtendedPoint, second: ExtendedPoint) -> f64 {
-    (second.x - first.x).hypot(second.y - first.y)
+    let xy = (second.x - first.x).hypot(second.y - first.y);
+    if first.z == second.z {
+        xy
+    } else {
+        let dx = second.x - first.x;
+        let dy = second.y - first.y;
+        let dz = second.z - first.z;
+        (dx * dx + dy * dy + dz * dz).sqrt()
+    }
 }

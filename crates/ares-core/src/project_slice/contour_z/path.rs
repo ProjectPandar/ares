@@ -63,14 +63,17 @@ pub(super) fn contour(
         }
     }
     was_contoured.then(|| {
-        output
+        // ContourZ.cpp:155 / Point.hpp:280 selects Point3(double): round, then append dedup.
+        let mut points: Vec<Point3> = output
             .into_iter()
             .map(|p| Point3 {
-                x: (p[0] / context.scale.factor()) as i64,
-                y: (p[1] / context.scale.factor()) as i64,
-                z: (p[2] / context.scale.factor()) as i64,
+                x: (p[0] / context.scale.factor()).round() as i64,
+                y: (p[1] / context.scale.factor()).round() as i64,
+                z: (p[2] / context.scale.factor()).round() as i64,
             })
-            .collect()
+            .collect();
+        points.dedup();
+        points
     })
 }
 fn height_difference(

@@ -46,6 +46,7 @@ pub(super) fn emit_with_speed(
         path.polyline.points.iter().map(|point| (point.x, point.y)),
         (
             PathProperties {
+                contour: path.z_contoured.then_some(path.polyline.points.as_slice()),
                 mm3_per_mm: path.mm3_per_mm,
                 width: path.width,
                 height: path.height,

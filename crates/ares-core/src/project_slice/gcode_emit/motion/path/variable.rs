@@ -44,6 +44,7 @@ pub(super) fn emit(command: Emission<'_>) {
             .sum::<f64>();
         (slope, total_length)
     });
+    let mut previous_z = quantize(processed[0].z);
     let mut slope_path_length = 0.0;
     for index in 1..points.len() {
         let end = arc::Point {
@@ -59,8 +60,9 @@ pub(super) fn emit(command: Emission<'_>) {
         );
         let end_q = (quantize(end.x), quantize(end.y));
         let length = ((end_q.0 - previous.0) * (end_q.0 - previous.0)
-            + (end_q.1 - previous.1) * (end_q.1 - previous.1))
-            .sqrt();
+            + (end_q.1 - previous.1) * (end_q.1 - previous.1)
+            + (quantize(processed[index].z) - previous_z).powi(2))
+        .sqrt();
         if length < SOURCE_EPSILON_MM {
             continue;
         }
@@ -84,7 +86,15 @@ pub(super) fn emit(command: Emission<'_>) {
             state.current_feedrate = original_feedrate;
             last_feedrate = original_feedrate;
         }
-        if let Some((slope, total_length)) = slope {
+        if properties.contour.is_some() {
+            super::contour::segment(
+                output,
+                crate::Point3d::new(end.x, end.y, processed[index].z),
+                length,
+                properties,
+                state,
+            );
+        } else if let Some((slope, total_length)) = slope {
             slope_path_length += length;
             let ratio = slope_path_length / total_length;
             let z_ratio = slope.z_begin + (slope.z_end - slope.z_begin) * ratio;
@@ -116,6 +126,7 @@ pub(super) fn emit(command: Emission<'_>) {
             extrusion::linear_segment(output, end, length, properties, state);
         }
         previous = end_q;
+        previous_z = quantize(processed[index].z);
     }
     state.extrusion_feedrate = last_feedrate;
     // The PATH points are local mm (raw scaled points, like upstream
