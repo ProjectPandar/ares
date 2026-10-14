@@ -190,3 +190,10 @@ fn orca_parity_support_ironing_pattern_line() {
 fn orca_parity_support_ironing_pattern_crosshatch() {
     leg("crosshatch", "crosshatch");
 }
+
+/// Domain: `OctagramSpiral` ironing — plane-path filler, centered
+/// pattern (`FillPlanePath.cpp:62-171`, density-1 snug-bounds path).
+#[test]
+fn orca_parity_support_ironing_pattern_octagramspiral() {
+    leg("octagramspiral", "octagramspiral");
+}
