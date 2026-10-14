@@ -28,6 +28,8 @@ macro_rules! witness {
         }
     };
 }
+// Fill.cpp:1283 / FillConcentric.cpp:22-23: count1 shares the density/pitch chain.
+witness!(concentric_sparse_30_multiline_1, "C30M1", "30%", "1");
 witness!(concentric_sparse_30_multiline_2, "C30M2", "30%", "2");
 witness!(concentric_sparse_45_multiline_2, "C45M2", "45%", "2");
 witness!(concentric_sparse_30_multiline_3, "C30M3", "30%", "3");
