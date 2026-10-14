@@ -391,3 +391,10 @@ fn orca_parity_support_ironing_pattern_unknown_key_bogus() {
 fn orca_parity_support_ironing_pattern_line() {
     leg("line", "line");
 }
+
+/// Domain: `FillCrossHatch` ironing — the z-phase layered pattern
+/// (`FillCrossHatch.cpp:14-233`), keyed on the support layer print_z.
+#[test]
+fn orca_parity_support_ironing_pattern_crosshatch() {
+    leg("crosshatch", "crosshatch");
+}
