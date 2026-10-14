@@ -52,6 +52,7 @@ impl ProjectSettingsRaw {
     /// `Config.cpp:927-929`) — the same semantics preset documents get
     /// through `json_deserialize::deserialize_preset_config`.
     pub(crate) fn normalize_option_scalars(&mut self) -> Result<(), String> {
+        crate::options::json_deserialize::normalize_unknown_wire_substitutions(&mut self.0);
         crate::options::json_deserialize::normalize_empty_vector_strings(&mut self.0);
         crate::options::json_deserialize::normalize_scalar_vector_strings(&mut self.0)
     }
