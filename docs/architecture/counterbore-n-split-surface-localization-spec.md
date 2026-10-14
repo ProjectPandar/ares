@@ -166,13 +166,29 @@ results count. Fresh d8vwdaom after END independently supersedes it.
 The launcher now checks the latest exclusive START/END before any runtime
 launch. No owned GDB/Native run remains pending.
 
-## Proposed deterministic rewrite slice for approval
+## Approved deterministic rewrite slice; destination amendment
 
 Coordinator's subsequent ruling permits reproducing the observed effective
 Native outcome by deterministic capacity-growth rules, never by C++ UB.
 The owning libslic3r boundary remains the Surface container and current
 reference lifecycle above. Rust destination stays within counterbore.rs and
 filled.rs; public input, load, selection and G-code contracts do not change.
+
+Coordinator approved a779ad1d1 with this exact destination amendment,
+which lands with RED before production:
+
+- `crates/ares-core/src/project_slice/perimeters/classic/counterbore.rs::process_surfaces`
+  owns the private logical Native capacity across traversal and the current
+  reference-validity state captured/reset for each iteration. This is the
+  Rust port of PerimeterGenerator.cpp::process_no_bridge:1739–1924; this
+  function decides whether retained-polygon writeback updates the live slot.
+- The same file's `process_surface` passes that state into
+  `crates/ares-core/src/project_slice/perimeters/classic/counterbore/filled.rs::mask`
+  and `recover_nested_islands`. The latter updates it on the ordered Surface
+  append/erase operations (:1841/:1845–1848). It does not independently own
+  or infer a second capacity from Rust Vec allocation.
+- Final Surface appends (:1924) update the same traversal capacity in
+  `counterbore.rs::process_surfaces`. No public state/config/API is added.
 
 The accessible libstdc++15.3 headers describe the selected supplier rule:
 bits/stl_vector.h:631–639 copy-constructs storage with source size;

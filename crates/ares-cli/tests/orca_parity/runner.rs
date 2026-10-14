@@ -120,6 +120,9 @@ mod costrings;
 #[path = "runner/counterbore_filled.rs"]
 mod counterbore_filled;
 #[cfg(test)]
+#[path = "runner/counterbore_n_split.rs"]
+mod counterbore_n_split;
+#[cfg(test)]
 #[path = "runner/counterbore_partiallybridge.rs"]
 mod counterbore_partiallybridge;
 #[cfg(test)]
