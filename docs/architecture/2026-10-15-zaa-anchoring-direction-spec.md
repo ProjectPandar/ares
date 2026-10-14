@@ -163,3 +163,35 @@ Only directed work on CPU13/14 with outer taskset and jobs2/threads2;
 full/workspace remain coordinator-only. Do not begin Native/cargo/nextest
 inside FULL14. Abort/VOID owned runs on later EXCLUSIVE FULL START and wait
 for END. No push. This SPEC submission runs no build, test or Native job.
+
+## Authorized bounded ceiling amendment after the initial NO-WITNESS
+
+The initial10mm cube has Native Internal Bridge on one-based layer46;
+its supporting object layer is index44, an even layer. Both flag states
+therefore use the same base direction for that support layer:
+FillBase.hpp:211 alternates only odd indices; FillBase.cpp:311-313 can
+suppress that alternation. This explains an inactive initial witness
+without claiming the source mismatch has no reachable effect.
+
+Probe only the following three fixed input variants, in this order, stopping
+at the first stable bridge-geometry delta. All retain the admitted source
+profile,20% Rectilinear sparse infill,0.2mm layers,5 top shell layers and
+zero internal_bridge_angle override. Change only the named mesh coordinates
+and the previously specified ZAA options; retain bottom z=-5 and instance
+placement. Native actual bridge layers are observed, not assumed.
+
+| Candidate ceiling | Exact mesh amendment | Source justification |
+| --- | --- | --- |
+| Parity cube |10x10 XY, top z5->5.2 (height10.2mm) | One extra0.2mm layer should move the first top ceiling and its supporting sparse layer to opposite parity. Fill.cpp:1442 and FillBase.hpp:211 / FillBase.cpp:311-313 govern that layer's direction; PrintObject.cpp:2735-2754 reads that supporting layer. |
+| Parity rectangle |20x10 XY (x multiplied by2), same10.2mm height | The same parity change plus a non-square boundary changes the sampling weights in PrintObject.cpp:2863-2893 determine_bridging_angle, which scores nearby anchor directions. |
+| Rotated parity rectangle |Previous20x10 rectangle rotated23 degrees about mesh XY origin, same10.2mm height | A fixed non-axis-aligned boundary changes sampled anchor distances/orientations in the same source lambda; PrintObject.cpp:3244-3250 distinguishes actual anchors from boundary-only fallback. |
+
+For each attempted candidate, Native-only flag0/1 official+seeded with
+fresh cache/output and two repeats per state. Require accepted output,
+exact requested footer options, positive sparse/Internal Bridge roles,
+stable per-state geometry and cross-mode agreement. Geometry observation
+uses layer/start/end XYZ for positive Internal Bridge extrusion, excluding
+comments, feedrate, extrusion amount and metadata. Ordinary sparse changes
+are insufficient. No API/CLI run, test or production edit in this bounded
+amendment. If all three lack a bridge delta, close this slice NO-WITNESS and
+propose a different upstream-cited Native-RED slice; do not keep searching.
