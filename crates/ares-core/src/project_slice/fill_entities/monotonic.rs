@@ -105,7 +105,20 @@ pub(super) fn append(
         if let Some(axis) = symmetric_y_axis {
             fill_expolygon.symmetric_y(axis);
         }
-        let mut generated = generate(&fill_expolygon, params, scale).map_err(geometry_error)?;
+        let mut generated =
+            if crate::fill::rectilinear_multiline::enabled(pattern, fill.params.multiline, density)
+            {
+                crate::fill::rectilinear_multiline::fill_surface(
+                    &fill_expolygon,
+                    params,
+                    fill.params.multiline,
+                    fill.params.anchor_length,
+                    scale,
+                )
+            } else {
+                generate(&fill_expolygon, params, scale)
+            }
+            .map_err(geometry_error)?;
         if let Some(axis) = symmetric_y_axis {
             for point in generated
                 .polylines

@@ -66,8 +66,23 @@ pub(super) fn append(
         fill_rectilinear_surface
     };
     for expolygon in fill.expolygons {
-        result.extend(
+        let generated = if crate::fill::rectilinear_multiline::enabled(
+            pattern,
+            fill.params.multiline,
+            params.density,
+        ) {
+            crate::fill::rectilinear_multiline::fill_surface(
+                &expolygon,
+                params,
+                fill.params.multiline,
+                fill.params.anchor_length,
+                traversal.scale,
+            )
+        } else {
             generate(&expolygon, params, traversal.scale)
+        };
+        result.extend(
+            generated
                 .map_err(super::super::transaction::geometry_error)?
                 .polylines,
         );
