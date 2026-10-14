@@ -7,6 +7,9 @@ use std::path::{Path, PathBuf};
 #[path = "runner/native_ksr_reference_migration.rs"]
 mod native_ksr_reference_migration;
 
+#[path = "runner/repetier_cached_feedrate.rs"]
+mod repetier_cached_feedrate;
+
 use serde_json::{Map, Value};
 
 #[path = "runner/grid_multiline_mode0.rs"]
