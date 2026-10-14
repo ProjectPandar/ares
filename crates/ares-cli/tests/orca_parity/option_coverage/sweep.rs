@@ -352,14 +352,9 @@ fn execute_plan(
                 // still surface as failures.
                 if oracle_nondeterministic(&plan.key, &case.label) && outcome.status == "DIVERGENT"
                 {
-                    // Upstream slices lightning layers concurrently through
-                    // the process-global, unseeded `rand()`
-                    // (`PrintObject.cpp:710-715` + `Lightning/TreeNode.cpp`
-                    // child selection): the oracle itself emits different
-                    // G-code across identical runs, so byte-exactness is
-                    // undefined for this value. Count only cases the
-                    // exemption actually excused — a case that byte-matches
-                    // is ordinary coverage, not nondeterministic evidence.
+                    // Feature/FuzzySkin/FuzzySkin.cpp:26-31 random_value uses a
+                    // thread-local entropy/thread-ID-seeded generator. These
+                    // excused divergences remain incomplete coverage.
                     excused += 1;
                     eprintln!("[option] ORACLE_NONDETERMINISTIC {label}");
                     continue;

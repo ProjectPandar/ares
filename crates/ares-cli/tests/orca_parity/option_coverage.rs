@@ -311,10 +311,15 @@ impl OptionOutcome {
             || !rejected.is_empty()
             || plan.cases.iter().any(|case| case.value.is_none())
         {
+            let oracle_reason = if compared == 0 && excused > 0 {
+                "ORACLE_NONDETERMINISTIC; "
+            } else {
+                ""
+            };
             (
                 "INCOMPLETE",
                 format!(
-                    "required legal cases not all compared; {}",
+                    "required legal cases not all compared; {oracle_reason}{}",
                     rejected.join("; ")
                 ),
             )
