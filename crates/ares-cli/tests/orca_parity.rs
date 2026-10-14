@@ -8,6 +8,9 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/per_object_draft_triple.rs"]
+mod per_object_draft_triple;
+
 #[path = "orca_parity/per_object_draft_compositions.rs"]
 mod per_object_draft_compositions;
 
