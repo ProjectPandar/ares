@@ -115,3 +115,6 @@ fn observe(bytes: &[u8]) -> (usize, Vec<String>) {
     }
     (bridge_moves, solid_moves)
 }
+
+#[path = "bridge_anchor_max_projection.rs"]
+mod anchor_max_projection;
