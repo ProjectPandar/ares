@@ -284,3 +284,68 @@ fn orca_parity_post_process_accounts_bounded_cli_admission_cases() {
         }
     }
 }
+
+// PrintConfig.cpp:3611,3637,3647,3656; Feature/FuzzySkin/FuzzySkin.cpp:26-31.
+#[test]
+fn orca_parity_fuzzy_incomplete_details_keep_actual_oracle_nondeterminism() {
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("fuzzy detail regression requires the live Native oracle");
+    let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
+    let selection =
+        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
+    let machine = profiles.machine(&selection.printer).unwrap();
+    let mut process = profiles.process(&selection.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    let mut filaments = selection
+        .filaments
+        .iter()
+        .map(|name| profiles.filament(name).unwrap())
+        .collect::<Vec<_>>();
+    parity::normalize_filament_defaults(&mut filaments);
+    let keys = [
+        "fuzzy_skin_noise_type",
+        "fuzzy_skin_octaves",
+        "fuzzy_skin_persistence",
+        "fuzzy_skin_scale",
+    ];
+    let plans = domains::load(&runner::repo_root());
+    let outcomes = keys
+        .iter()
+        .map(|&key| {
+            let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+            execute_plan(&runner, plan, &machine, &process, &filaments)
+        })
+        .collect::<Vec<_>>();
+    write_summary(&outcomes);
+    let seeded = std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() == Ok("1");
+    for outcome in outcomes {
+        assert_eq!(outcome.rejected, 0, "{}: {}", outcome.key, outcome.detail);
+        if seeded || outcome.compared == outcome.cases {
+            assert_eq!(
+                outcome.status, "PASS",
+                "{}: {}",
+                outcome.key, outcome.detail
+            );
+            assert_eq!(outcome.compared, outcome.cases, "{}", outcome.key);
+            assert!(!outcome.detail.contains("ORACLE_NONDETERMINISTIC"));
+        } else {
+            assert_eq!(
+                outcome.status, "INCOMPLETE",
+                "{}: {}",
+                outcome.key, outcome.detail
+            );
+            let reason = if outcome.compared == 0 {
+                "ORACLE_NONDETERMINISTIC"
+            } else {
+                "nondeterministic"
+            };
+            assert!(
+                outcome.detail.contains(reason),
+                "{}: missing {reason} reason for actual excused cases: {}",
+                outcome.key,
+                outcome.detail
+            );
+        }
+    }
+}
