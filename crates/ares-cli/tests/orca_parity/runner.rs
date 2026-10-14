@@ -4,6 +4,9 @@
 
 use std::path::{Path, PathBuf};
 
+#[path = "runner/tpms_d_rotation_precision.rs"]
+mod tpms_d_rotation_precision;
+
 #[path = "runner/adaptive_cubic_precision.rs"]
 mod adaptive_cubic_precision;
 
