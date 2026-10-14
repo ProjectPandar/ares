@@ -150,7 +150,8 @@ fn materialize_record(
         && !input.spiral_mode
         && region.sparse_infill_density.0 as i32 > 0;
     let mut perimeters = Vec::new();
-    let mut fill_surfaces = Vec::new();
+    // `process_no_bridge:1899–1929` precedes ordinary island fill.
+    let mut fill_surfaces = prelude_record.counterbore_fill.clone();
     let mut fill_no_overlap = Vec::new();
     // we need each island separately (`PerimeterGenerator.cpp:2124-2126`).
     for surface in object.perimeter_surfaces(input) {

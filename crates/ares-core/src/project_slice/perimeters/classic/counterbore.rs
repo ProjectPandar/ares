@@ -1,7 +1,7 @@
-//! Classic `PerimeterGenerator.cpp:1728–1929`, Bridges and Filled.
+//! Shared `PerimeterGenerator.cpp:1728–1929`, Bridges and Filled.
 mod detector;
 mod filled;
-use super::super::types::{PerimeterDispatch, PerimeterInputRecord, PostPerimeterInputPrintObject};
+use super::super::types::{PerimeterInputRecord, PostPerimeterInputPrintObject};
 use crate::geometry::{
     ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, append_simplified_expolygon,
     difference_ex, difference_ex_with_safety_offset, intersection_ex, offset_expolygons,
@@ -32,9 +32,7 @@ pub(super) fn process(
     scale: CoordinateScale,
 ) -> Result<Vec<ExPolygon>, SliceError> {
     let config = object.region_options(record);
-    if record.dispatch != PerimeterDispatch::Classic
-        || config.counterbore_hole_bridging == ProcessCounterboreHoleBridging::None
-    {
+    if config.counterbore_hole_bridging == ProcessCounterboreHoleBridging::None {
         return Ok(Vec::new());
     }
     let Some(lower) = object

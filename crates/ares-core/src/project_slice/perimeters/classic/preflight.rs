@@ -1,4 +1,4 @@
-use crate::{ObjectOptions, ProcessCounterboreHoleBridging, RegionOptions, SliceError};
+use crate::{ObjectOptions, RegionOptions, SliceError};
 
 use super::super::types::{PerimeterInputRecord, PostPerimeterInputPrintObject};
 
@@ -67,7 +67,6 @@ pub(super) fn validate_project(
                         .as_ref()
                         .map(|record| {
                             validate_record(
-                                object,
                                 record,
                                 RecordValidationContext {
                                     object_options: &resolved.object,
@@ -87,7 +86,6 @@ pub(super) fn validate_project(
 }
 
 fn validate_record(
-    object: &PostPerimeterInputPrintObject,
     record: &PerimeterInputRecord,
     context: RecordValidationContext<'_>,
 ) -> Result<ValidatedClassicConfig, SliceError> {
@@ -102,16 +100,6 @@ fn validate_record(
     // `first_outer::thin_wall_offsets` (PerimeterGenerator.cpp:1251-1266),
     // materialized as `variable_width` external-perimeter `ExtrusionPath`s in
     // `traverse_loops` (:231-232).
-    if record.dispatch == super::super::types::PerimeterDispatch::Arachne
-        && region.counterbore_hole_bridging != ProcessCounterboreHoleBridging::None
-        && object
-            .perimeter_surfaces(record)
-            .iter()
-            .any(|surface| !surface.as_parts().1.holes().is_empty())
-    {
-        return Err(unsupported("counterbore_hole_bridging"));
-    }
-
     let nozzle_index = region
         .outer_wall_filament_id
         .0
@@ -159,8 +147,4 @@ fn validate_record(
 
 fn invalid(message: &str) -> SliceError {
     SliceError::InvalidInput(message.to_owned())
-}
-
-fn unsupported(key: &str) -> SliceError {
-    SliceError::UnsupportedProjectFeature(key.to_owned())
 }
