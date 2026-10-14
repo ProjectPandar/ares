@@ -15,6 +15,9 @@ pub(crate) mod multiline_union;
 #[path = "option_coverage/interface_shells_alignment.rs"]
 mod interface_shells_alignment;
 
+#[path = "option_coverage/support_ironing_pattern_domain.rs"]
+mod support_ironing_pattern_domain;
+
 #[path = "option_coverage/print_extruder_identity.rs"]
 mod print_extruder_identity;
 
