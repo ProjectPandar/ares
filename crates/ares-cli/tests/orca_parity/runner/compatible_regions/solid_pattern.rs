@@ -130,3 +130,6 @@ mod zaa_modifier_slice_z;
 
 #[path = "zaa_fill_direction.rs"]
 mod zaa_fill_direction;
+
+#[path = "zaa_anchoring_direction.rs"]
+mod zaa_anchoring_direction;
