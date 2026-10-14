@@ -200,22 +200,21 @@ struct GroupMotion {
 }
 
 fn native_group(block: &str, role: &str) -> GroupMotion {
-    let suffix = format!("; {}", role.to_lowercase());
     let points = block
         .split(";TYPE:")
         .next()
         .unwrap()
         .lines()
         .filter_map(|line| {
-            if !line.starts_with("G1 ") || !line.ends_with(&suffix) {
+            if !line.starts_with("G1 ") {
                 return None;
             }
             let coordinate = |prefix| {
                 line.split_whitespace()
                     .find_map(|word: &str| word.strip_prefix(prefix)?.parse::<f64>().ok())
             };
-            let e = coordinate('E')?;
-            (e > 0.0).then(|| (coordinate('X').unwrap(), coordinate('Y').unwrap(), e))
+            let (x, y, e) = (coordinate('X')?, coordinate('Y')?, coordinate('E')?);
+            (e > 0.0).then_some((x, y, e))
         })
         .collect::<Vec<_>>();
     assert!(!points.is_empty(), "real {role} XY extrusion");
