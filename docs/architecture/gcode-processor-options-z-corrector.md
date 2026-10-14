@@ -2,7 +2,8 @@
 
 Status: spec for review. Docs only. The RED (the `same-layer` case moved out
 of slice C, `docs/architecture/plate-custom-gcode-emission.md`) is merged
-together with this slice's GREEN.
+together with this slice's GREEN. The RED needs slice C merged first,
+because without slice C's emission the fixture has no `;CUSTOM_GCODE` tag.
 
 ## Finding
 
