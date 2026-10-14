@@ -95,7 +95,8 @@ pub(super) fn append_configured(
     // (`FillConcentric.cpp:22`): the Arachne variable-width generator runs only
     // at full density; below `density > 0.9999` upstream uses the plain
     // `offset2_ex` ring loop emitting fixed-width `Polyline` entities.
-    let density_fraction = 0.01 * params.density;
+    // Fill.cpp:1283,1479: multiply in double, then narrow the fraction to float.
+    let density_fraction = (0.01_f64 * f64::from(params.density)) as f32;
     let sparse = density_fraction <= 0.9999 || params.bridge;
     for expolygon in fill.expolygons {
         if sparse {

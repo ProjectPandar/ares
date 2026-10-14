@@ -59,12 +59,10 @@ pub(crate) fn fill_concentric_sparse(
     // units (spacing is divided by scale.factor() once here).
     let mut effective_spacing = spacing;
     let scaled_spacing = spacing / scale.factor();
-    let min_spacing = scaled_spacing * f64::from(multiline);
-    // `coord_t(min_spacing / params.density)` — upstream truncates the
-    // ring pitch to integer scaled units (`FillConcentric.cpp:23`), so
-    // the i64 cast (toward zero) is load-bearing: sub-micron remainder
-    // shifts every subsequent `offset2_ex` ring by accumulating drift.
-    let mut distance = (min_spacing / f64::from(density)).trunc();
+    // FillConcentric.cpp:22-23: truncate the double product to coord_t,
+    // divide that integer in float, then truncate the quotient to coord_t.
+    let min_spacing = (scaled_spacing * f64::from(multiline)) as i64;
+    let mut distance = (min_spacing as f32 / density) as i64;
     // `FillConcentric.cpp:25-27`: ironing retains nominal spacing;
     // ordinary full-density fills may adjust it to the contour's X extent.
     if density > 0.9999 && !dont_adjust {
@@ -76,9 +74,9 @@ pub(crate) fn fill_concentric_sparse(
             }
             (x0, x1)
         };
-        distance = adjust_solid_spacing(x1 - x0, distance as i64) as f64;
+        distance = adjust_solid_spacing(x1 - x0, distance);
         // FillConcentric.cpp:25-27: only solid adjustment rewrites mm spacing.
-        effective_spacing = distance * scale.factor();
+        effective_spacing = distance as f64 * scale.factor();
     }
     // FillConcentric.cpp:31: contract using nominal/adjusted mm spacing,
     // not the scaled, density-dependent ring pitch. Narrow after scaling.
@@ -103,8 +101,9 @@ pub(crate) fn fill_concentric_sparse(
     while !last.is_empty() {
         last = offset2_ex(
             &last,
-            -(distance + min_spacing / 2.0) as f32,
-            (min_spacing / 2.0) as f32,
+            // FillConcentric.cpp:37: integer half-spacing and sum before float conversion.
+            -(distance + min_spacing / 2) as f32,
+            (min_spacing / 2) as f32,
             JoinType::Miter,
             3.0,
         )?;
