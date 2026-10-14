@@ -4,6 +4,9 @@
 
 use std::path::{Path, PathBuf};
 
+#[path = "runner/adaptive_cubic_precision.rs"]
+mod adaptive_cubic_precision;
+
 #[path = "runner/aligned_rectilinear_multiline.rs"]
 mod aligned_rectilinear_multiline;
 
