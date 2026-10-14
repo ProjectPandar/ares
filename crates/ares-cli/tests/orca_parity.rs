@@ -47,6 +47,8 @@ mod bridge_over_infill_zero_density;
 mod brim_bed_region;
 #[path = "orca_parity/brim_bed_region_controls.rs"]
 mod brim_bed_region_controls;
+#[path = "orca_parity/brim_efc_outline.rs"]
+mod brim_efc_outline;
 #[path = "orca_parity/change_filament_flush_blocks.rs"]
 mod change_filament_flush_blocks;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
