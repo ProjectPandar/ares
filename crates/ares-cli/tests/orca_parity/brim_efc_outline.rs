@@ -107,7 +107,7 @@ fn check(label: &str) {
             "wrapper":runner.bin(), "native_binary":native_binary,
             "native_binary_sha256":sha(&fs::read(&native_binary).unwrap()),
             "args":args,"input_sha256":sha(&bytes),
-            "source":"Print.cpp2703-2778,2794-2819; GCode.cpp4300-4540,5334-5335"
+            "source":"Brim.cpp55-62,109-118,462-513; GCode.cpp4456-4540,5334-5335"
         }))
         .unwrap(),
     )
@@ -118,8 +118,13 @@ fn check(label: &str) {
     assert_eq!(result["return_code"], 0, "Native admission {root:?}");
     let reference = fs::read(root.join("native/plate_1.gcode")).unwrap();
     let text = std::str::from_utf8(&reference).unwrap();
-    assert!(text.contains("; skirt_type = perobject\n"));
-    assert!(text.contains("; skirt_loops = 2\n"));
+    for key in [
+        "brim_type",
+        "brim_use_efc_outline",
+        "elefant_foot_compensation",
+    ] {
+        assert!(text.contains(&format!("; {key} = {}\n", settings[key].as_str().unwrap())));
+    }
     assert!(text.lines().any(|line| line.starts_with("M83")));
     assert!(!text.lines().any(|line| line.starts_with("M82")));
     let first_brim = std::str::from_utf8(&reference)
