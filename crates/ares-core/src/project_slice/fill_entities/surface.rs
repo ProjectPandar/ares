@@ -68,6 +68,45 @@ pub(in crate::project_slice) fn surface_polylines(
                 .flat_map(|surface| surface.polylines)
                 .collect())
         }
+        // `FillZigZag`/`FillCrossZag`/`FillLockedZag` ironing: the Polylines
+        // `fill_surface` overload never reaches the locked-zag extrusion
+        // path (`FillRectilinear.hpp:210-224` overrides only
+        // `fill_surface_extrusion`), so all three reduce to the consistent
+        // rectilinear traversal with `FillParams` defaults. The grid anchors
+        // on the `bbox_object` dummy box — `BoundingBox(±scale_(1mm))`
+        // (`SupportCommon.cpp:1433`) installed via `set_bounding_box` at
+        // `SupportCommon.cpp:1880` — extended by
+        // `FillRectilinear::extended_object_bounding_box`
+        // (`FillRectilinear.cpp:2741-2748`); Native emits identical toolpaths
+        // for the three patterns at this call site.
+        ProcessInfillPattern::ZigZag
+        | ProcessInfillPattern::CrossZag
+        | ProcessInfillPattern::LockedZag => {
+            let fill = surface_fill(request);
+            // `scale_(1mm)` — scaled coordinates are `mm / factor()`.
+            let one_mm = (1.0 / request.call.scale.factor()) as i64;
+            let dummy = crate::geometry::BoundingBox::new(
+                crate::geometry::Point::new(-one_mm, -one_mm),
+                crate::geometry::Point::new(one_mm, one_mm),
+            );
+            let (extended_object_min_x, extended_object_max_x) =
+                super::flow::extended_object_bounding_box_x(dummy);
+            let object_geometry = super::types::ObjectFillGeometry {
+                scale: request.call.scale,
+                extended_object_min_x,
+                extended_object_max_x,
+            };
+            let surfaces = super::monotonic::expolygon_polylines(
+                &fill,
+                request.pattern,
+                &object_geometry,
+                &request.call,
+            )?;
+            Ok(surfaces
+                .into_iter()
+                .flat_map(|surface| surface.polylines)
+                .collect())
+        }
         ProcessInfillPattern::Concentric => {
             // `raft::fills::concentric` is the `SupportCommon`-context
             // `FillConcentric` port (byte-parity pinned by the ironing legs).
@@ -200,13 +239,6 @@ pub(in crate::project_slice) fn surface_polylines(
         // - Line: 699 native E-lines, Ares travel/link geometry diverges.
         // - CrossHatch: 779 native E-lines, Ares anchor/starting point
         //   diverges.
-        // - ZigZag: 127 native E-lines; the consistent-pattern anchor reads
-        //   `PrintObject::bounding_box` (`FillBase.cpp:1569-1578`), which the
-        //   support pipeline does not carry — deferred until plumbed.
-        // - CrossZag: 127 native E-lines; same anchor dependency plus the
-        //   crosszag phase shift.
-        // - LockedZag: 127 native E-lines; needs the per-layer lock regions
-        //   (`Fill.cpp:1309`) the ironing call site never installs.
         // - HilbertCurve / ArchimedeanChords / OctagramSpiral: 19118 / 4149 /
         //   1527 native E-lines; plane-path fills need the object bounding
         //   box + resolution context (`generate.rs` sparse arms).
@@ -215,9 +247,6 @@ pub(in crate::project_slice) fn surface_polylines(
         //   is no oracle output to mirror.
         ProcessInfillPattern::Line
         | ProcessInfillPattern::CrossHatch
-        | ProcessInfillPattern::ZigZag
-        | ProcessInfillPattern::CrossZag
-        | ProcessInfillPattern::LockedZag
         | ProcessInfillPattern::HilbertCurve
         | ProcessInfillPattern::ArchimedeanChords
         | ProcessInfillPattern::OctagramSpiral
