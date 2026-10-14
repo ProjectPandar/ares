@@ -85,6 +85,8 @@ mod post_process_cli;
 mod residual_stock_cli;
 #[path = "orca_parity/stock_early_cli.rs"]
 mod stock_early_cli;
+#[path = "orca_parity/wipe_zero_retraction_comment.rs"]
+mod wipe_zero_retraction_comment;
 
 #[path = "orca_parity/curled_perimeter_slowdown.rs"]
 mod curled_perimeter_slowdown;
