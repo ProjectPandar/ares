@@ -1,8 +1,9 @@
-# SPEC AMENDMENT: c-oo5 RED 分阶段探针定位——support no-brim 裁剪
+# SPEC AMENDMENT: c-oo5 RED 分阶段探针定位——support no-brim 裁剪 + 分节顺序
 
-状态：AMENDMENT-REVIEW-REQUEST（docs-only）。修订
-`2026-10-15-brim-outeronly-w5-spec.md`（RED `b4bfe77b` 已批准）。
-依据：分阶段只读探针（temp env 探针已还原，工作树净）。
+状态：AMENDMENT-REVIEW-REQUEST（docs-only，第 2 版，按裁决改为两个
+子片）。修订 `2026-10-15-brim-outeronly-w5-spec.md`（RED `b4bfe77b`
+已批准，其全文件 byte-parity 断言**不变**）。依据：分阶段只读探针
+（temp env 探针已还原，工作树净）。
 
 ## 1. 探针结论（逐阶段排除）
 
@@ -21,35 +22,39 @@
     （26 段弧，四角各一簇），实测 254 E-move。
   - ares 无该裁剪，输出完整方环（对称方 bbox，448 E-move）。
 
-## 2. 唯一上游函数（GREEN 移植目标）
+## 2. 子片 (1)：support no-brim 裁剪（待批复后实施）
 
-**`Brim.cpp:outer_inner_brim_area:421-725` 的 support no-brim 块
-`:590-634`**——`stInnerNormal`（`:597-605`
+**唯一上游函数**：`Brim.cpp:outer_inner_brim_area:421-725` 的
+support no-brim 块 `:590-634`——`stInnerNormal`（`:597-605`
 `no_brim_area_support.emplace_back(support_contour)`，brim 不生成
 于 support）与 tree（`:607-634`，含 `!has_outer_brim`/`has_inner`
 分支与 holes），经 `:576` 平铺进全局 `no_brim_area`，在
 `:682-689` 对 `brimAreaMap` 生效。ares 侧 destination：
 `gcode_emit/brim.rs` OuterOnly 臂的 `forbidden` 集合追加 support
-轮廓（单对象作用域，跨对象 `:687-717` 连通性过滤仍在延后边界
-内不动）。
+轮廓（单对象作用域；跨对象 `:687-717` 连通性过滤仍在延后边界
+内不动）。独立 production commit。
 
-## 3. 次级阻塞（需裁示是否并入本片 GREEN）
+## 2b. 子片 (2)：首层分节顺序 Skirt→Brim→Support（本版新增引注）
 
-分节顺序分歧（独立于裁剪）：native L0 顺序
-`Skirt → Brim → Support → Outer wall`；ares
-`Skirt → Support → Brim`。即使 brim 几何 parity，本 RED 腿仍因
-分节顺序 byte 不等。该顺序属 gcode 发射序（上游
-`GCode.cpp`/`Print::process` 层），非 `outer_inner_brim_area`。
-两个选项：
-- A：本片 GREEN 仅裁剪（`outer_inner_brim_area` 单函数边界），RED
-  腿暂以 brim 段几何对拍（域内 witness）而非全文件 byte-parity，
-  分节顺序另立片；
-- B：GREEN 并入分节顺序修正（需引用发射序上游函数，超出本 SPEC
-  的单函数边界，需扩审）。
+上游 owner（只读定位）：`GCode.cpp:GCode::process_layer`——
+- skirt（combined）：`:5249` `generate_skirt`（逐 extruder 循环
+  顶部，先于所有对象内容）；
+- brim：逐实例循环内 `:5335` `generate_object_brim(print, object,
+  first_layer)`（先于该实例的 support 与 perimeters/infill）；
+- support：`:5419-5426` `object_by_extruder.support` →
+  `extrude_support`；perimeters/infill 在其后（`:5454+`）。
 
-默认按 A 执行，待裁示。
+即首层顺序 **Skirt → Brim → Support → perimeters/infill**。
+ares 现状：`gcode_emit/layers/tool_entry.rs:190`
+`support_entry::emit` **先于** `:220` `brim_emit::emit`（其模块
+头注自称“brim prints before the object content”，未覆盖 support）。
+GREEN（子片 2）：将 brim 发射移至 support 之前以对齐
+`GCode.cpp:5335 < :5419`（注意保留 brim 所需的 layer state
+设置）；独立 production commit。
 
-## 4. 探针材料
+GREEN 总门 = 未改动的 RED 双模式通过。
+
+## 3. 探针材料
 
 - temp 探针副本 `/tmp/w5-brim-probe-brim.rs.bak`（已还原并
   `diff` 验证一致，`git status` 净）；
