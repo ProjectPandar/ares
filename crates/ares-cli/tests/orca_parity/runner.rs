@@ -11,6 +11,8 @@ use serde_json::{Map, Value};
 
 #[path = "runner/grid_multiline_mode0.rs"]
 mod grid_multiline_mode0;
+#[path = "runner/rectilinear_multiline.rs"]
+mod rectilinear_multiline;
 
 #[path = "runner/object_layer_ranges.rs"]
 mod object_layer_ranges;
