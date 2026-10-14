@@ -114,6 +114,9 @@ mod arachne_open_wall_order;
 #[path = "runner/cache_contract_tests.rs"]
 mod cache_contract_tests;
 #[cfg(test)]
+#[path = "runner/classic_layer_id.rs"]
+mod classic_layer_id;
+#[cfg(test)]
 #[path = "runner/clipped_loop_motion.rs"]
 mod clipped_loop_motion;
 #[cfg(test)]
@@ -131,6 +134,7 @@ mod counterbore_n_split;
 #[cfg(test)]
 #[path = "runner/counterbore_partiallybridge.rs"]
 mod counterbore_partiallybridge;
+
 #[cfg(test)]
 #[path = "runner/direct_stl_override_bookkeeping.rs"]
 mod direct_stl_override_bookkeeping;
