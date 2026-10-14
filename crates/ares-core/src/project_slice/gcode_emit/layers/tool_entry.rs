@@ -185,6 +185,21 @@ pub(super) fn emit(
                 region.top_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
         }
     }
+    // GCode.cpp:5335 emits the object brim ahead of the same instance's
+    // support extrusions (:5419-5426).
+    if let Some(layer_index) = entry.object_layer {
+        brim_emit::emit(
+            output,
+            state,
+            brim,
+            object_index,
+            layer_index,
+            entry_builder,
+            traversal,
+            chunk_slices,
+            chunk_perimeter_spacing,
+        );
+    }
     if let Some(selected_role) = support_role {
         let support_index = entry.support_layer.expect("support bucket retains layer");
         support_entry::emit(
@@ -217,17 +232,6 @@ pub(super) fn emit(
     let slicing = traversal.objects[object_index].slicing_parameters();
     state.object_layer_over_raft =
         layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
-    brim_emit::emit(
-        output,
-        state,
-        brim,
-        object_index,
-        layer_index,
-        entry_builder,
-        traversal,
-        chunk_slices,
-        chunk_perimeter_spacing,
-    );
     let Some(layer) = body.as_mut() else {
         // GCode.cpp:5348–5372,5478–5494 labels every selected instance,
         // including an empty half of the wiping/normal two-pass traversal.
