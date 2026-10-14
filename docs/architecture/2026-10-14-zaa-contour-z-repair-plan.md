@@ -1,9 +1,9 @@
 # ZAA ContourZ repair PLAN
 
-Status: PLAN-REVIEW-REQUEST, conditional on approved public RED.
+Status: PLAN-REVIEW-REQUEST; RED6d2b6f37a APPROVED by coordinator.
 RED candidate:6d2b6f37a0b0115f0880599bacef5247fc351020.
 Base main:de1211be5067d0eb6f709602a1299a0854c89145.
-SPEC06a8bd6fe approved; no production changes.
+SPEC06a8bd6fe and RED6d2b6f37a approved; no production changes.
 Must not implement before coordinator approves an exact committed PLAN.
 
 RED6d2b6f37a is independently committed and reported before this PLAN:
@@ -19,7 +19,7 @@ by /tmp/worker2-zaa-red-evidence.json; no Native products are committed.
 ## Source ownership and CPU determinism
 
 SLA/IndexedMesh.cpp:17-43 uses AABBTreeIndirect::Tree3f, fixed triangle-ray
- epsilon and source indexed vertices. :139-171 provides float hit distance
+epsilon and source indexed vertices. :139-171 provides float hit distance
 and normalized face normal. Port AABBTreeIndirect.hpp's indexed-triangle
 build and nearest-hit traversal, not an independently designed BVH heuristic.
 Construction order, median partition, axis selection, tie behavior, child
@@ -126,3 +126,92 @@ are deferred as coverage cases, not silently replaced with different behavior.
    retirement of its obsolete private-test contract. Keep public RED intact.
 4. Verify the exact GREEN hash in both Native modes, preserve disabled bytes,
    then strict/fmt/wasm and code REVIEW. No production before PLAN approval.
+
+## Concrete ray-query layout and source traversal
+
+Port AABBTreeIndirect.hpp::Tree<3,float> / Tree3f (:217), build_recursive
+(:121-155), partition_input (:157-212), indexed triangle construction
+(:672-717) and first-hit query (:396-440,723-746). mesh.rs owns transformed
+f32 indexed vertices, original-order triangle indices, immutable tree and
+ground offset. Tree nodes carry source bbox and leaf triangle index (or
+inner-node marker), in the source implicit binary layout; source child
+indices are node*2+1 / node*2+2. No task/worker metadata enters this layout.
+
+Build from source face order, compute source bbox/centroid, select longest
+bbox axis with source axis ties, then source median-of-three QuickSelect.
+Do not substitute a stable sort, an independently designed tie rule, or
+CPU-dependent bucket sizes. Query left first, update min_t only for strict
+less-than hit distance, then right with the updated bound. Equal float hit
+distance does not replace the left result. Compute ray intersection in
+source f64 precision, then retain the source f32 hit-distance carrier and
+normal conversion. Match source positive-t and epsilon semantics; no-hit
+is the source no-hit outcome, not an invented fallback.
+
+All tree construction, partition and query recursion remains serial and
+fixed-order. No available_parallelism, CPU-count branching, dynamic task
+partition or floating-point parallel reduction. A later parallel layer
+schedule could only write independent slots without changing any query;
+that optimization is deferred. This immutable indexed structure avoids
+per-sample all-triangle scans while remaining WASM/Windows/macOS/Linux pure
+Rust with no Native I/O or platform-dependent topology.
+
+## Guard deletion and compiler-proven orphan inventory
+
+capabilities.rs:38-43 deletes the zaa-requested/inactive-box rejection only
+after admitted paths contour and emit. The resulting local candidate-orphan
+chain is zaa_requested (:47), zaa_is_provably_inactive (:65),
+is_axis_aligned_box (:93), extrema (:125), subtract (:132), cross (:136),
+and close (:144). Point3d, ProjectVolumeType and Transform3d imports then
+become unused. Confirm each with compiler/reference searches before deletion;
+no pre-existing unrelated dead code is included. Expected file150 ->40-50LOC.
+
+Keep validate's layer-range and spiral clauses, ProjectObject,
+ResolvedProjectObject, SliceError and unsupported: the latter still serves
+two layer_config_ranges rejections (:26/:36). No guard replacement or shape
+whitelist; real contouring replaces the current capability scaffold.
+
+Private tests/capabilities.rs::zaa_requires_a_provably_inactive_axis_aligned_box
+and its now-unreferenced test helpers are a separate retirement request,
+not implicitly approved by this PLAN. Exact diff/source citations must be
+approved before changing that test. RED6d2b6f37a assertions remain intact.
+
+## Estimated LOC and file split budget
+
+These are implementation estimates, not code already written. LOC counts
+physical source lines; all files stay<=400 including comments and tests.
+If the source port requires a material expansion, STOP for amended PLAN.
+
+| New source file under project_slice/ | Expected LOC / source responsibility |
+|---|---|
+| contour_z.rs | 60-100: stage wiring / PrintObject::contour_z |
+| contour_z/mesh.rs | 90-140: transformed raw mesh, ground frame, indexed normal/query owner |
+| contour_z/tree.rs | 140-200: Tree3f nodes and recursive construction |
+| contour_z/tree/partition.rs | 80-140: source QuickSelect and axis comparison |
+| contour_z/ray.rs | 200-300: bbox/triangle intersection and first-hit traversal |
+| contour_z/path.rs | 170-250: ContourZ sampled path, bounds and collinear simplification |
+| contour_z/entities.rs | 130-200: eligible region/entity traversal, source loop/multipath/collection dispatch |
+| gcode_emit/motion/path/contour.rs | 180-280: source XYZ start/end and per-point E emission |
+
+Estimated new implementation:1050-1610LOC across these source-owned files.
+Additional net carrier/wiring changes: roughly200-400LOC; guard/orphan
+removal roughly100-110LOC. Total net source growth estimate1140-1910LOC,
+with mechanical edits spread across existing consumers, not a single file.
+
+| Existing source file/group | Current LOC / expected boundary |
+|---|---|
+| perimeters/classic/materialize/types.rs | 97 ->100-120; source flag and carrier conversions |
+| fill_entities/types.rs | 83 ->85-115; Polyline3/flag, remove separate fitting field |
+| path_simplification.rs | 223 ->225-260; source contoured early-return plus mechanical 3D fill projection |
+| motion/features.rs | 328 ->335-355; contour metadata, no extra kinematics policy |
+| motion/materialized.rs | 69 ->80-110; preserve XYZ and flag through dispatch |
+| motion/path.rs | 352 ->365-390; small dispatch only; contour emitter stays in separate file |
+| capabilities.rs | 150 ->40-50; specified guard/orphan removal only |
+| fill producers, ordering, seam/clip/start-travel | compiler-enumerated mechanical adaptations; split any file before exceeding400 |
+
+Static constructor search finds FillExtrusionPath literals in28 files,
+ExtrusionPath literals in53 files, and PathProperties literals in11 files
+(overlapping counts include tests). This is an honest migration footprint,
+not permission for algorithm refactors. Preserve all ordinary XY sequences,
+roles, flow/height/width, reversibility, fitting semantics and collection
+order. Constructor test literals may need the unchanged default flag/Z to
+compile; no behavioral assertion deletion/weakening is authorized.
