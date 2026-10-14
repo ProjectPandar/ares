@@ -99,8 +99,22 @@ bridge overrides. The conjunction must be false when ZAA is disabled.
 The complete-output witness remains the admitted classic single-instance
 roof; no unmeasured multi-object/modifier coverage is claimed.
 
-Deferred: other fill subclass implementations (Line, Honeycomb, lattice,
-Grid/Triangles/Stars, TPMS, plane paths and others), object ironing and
+DEFERRED: Fill.cpp:1440-1447 bridge-over-infill sparse anchoring, including
+the rectilinear patterns in prepare_infill/bridge_over_infill/
+sparse_anchoring/linear.rs. Its filler also receives the regional flag
+upstream, but this slice retains false at that separate Rust call site.
+Anchoring is the next slice and requires its own active public Native RED
+before production changes; ordinary-fill parity does not cover it.
+
+DEFERRED: locked_zag and other dedicated object-pattern implementations
+whose upstream filler receives the flag at Fill.cpp:1235-1242, including
+fill_entities/locked_zag.rs and Line, Honeycomb, lattice, Grid/Triangles/
+Stars, TPMS and plane paths. Their explicit false initialization preserves
+the existing behavior; this slice does not port their regional flag.
+ZigZag/CrossZag already routed through the shared monotonic adapter receive
+its scalar, without claiming dedicated-pattern ZAA coverage.
+
+Also deferred: object ironing and
 support/raft generator option domains, multi-object/instance and Arachne
 ZAA fixtures. In particular Fill.cpp:1631 is a separately identified
 ironing follow-up, not silently claimed by the ordinary-fill witness.
