@@ -50,6 +50,8 @@ mod native_jerk_semm_migration;
 
 #[path = "runner/mesh_edge_pairing.rs"]
 mod mesh_edge_pairing;
+#[path = "runner/mesh_odd_order_admission.rs"]
+mod mesh_odd_order_admission;
 #[path = "runner/modifier_bottom_shell.rs"]
 mod modifier_bottom_shell;
 #[path = "runner/modifier_top_shell.rs"]
