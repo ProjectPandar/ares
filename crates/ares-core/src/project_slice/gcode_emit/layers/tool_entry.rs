@@ -31,6 +31,8 @@ pub(super) struct Input<'a, 'b> {
     pub(super) chunk_slices: &'a [ExPolygon],
     pub(super) chunk_perimeter_spacing: f64,
     pub(super) brim: &'a [Option<BrimPlan>],
+    pub(super) skirt: &'a Option<super::super::skirt::SkirtPlan>,
+    pub(super) object_skirt_done: &'a mut [(usize, f64)],
     pub(super) spiral: &'a mut spiral_vase::SpiralVaseFilter,
     pub(super) layer_z: f64,
     pub(super) layer_height: f64,
@@ -62,6 +64,8 @@ pub(super) fn emit(
         chunk_slices,
         chunk_perimeter_spacing,
         brim,
+        skirt,
+        object_skirt_done,
         spiral,
         layer_z,
         layer_height,
@@ -90,6 +94,25 @@ pub(super) fn emit(
         .predecessor
         .object
         .identity();
+    if pass == tool_buckets::Pass::Normal
+        && body.is_some()
+        && let Some(layer) = entry.object_layer
+    {
+        super::object_skirt::emit(
+            output,
+            state,
+            super::object_skirt::Input {
+                skirt,
+                done: object_skirt_done,
+                object: object_index,
+                layer,
+                builder: entry_builder,
+                traversal,
+                slices: chunk_slices,
+                spacing: chunk_perimeter_spacing,
+            },
+        );
+    }
     let shift = bucket.instance.shift;
     // Every emitted coordinate is plate-local: the per-object origin from
     // the global instance shift loses the plate grid origin

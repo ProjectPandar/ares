@@ -4,9 +4,9 @@ impl SkirtPlan {
     pub(in crate::project_slice::gcode_emit) fn generate(
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<crate::project_slice::support_material::InstalledSupportLayer>],
-        brim: &[Option<super::brim::BrimPlan>],
+        brim: &[Option<super::super::brim::BrimPlan>],
         tower_corners: &[Point],
-        raft: Option<&super::layers::RaftSchedule>,
+        raft: Option<&super::super::layers::RaftSchedule>,
     ) -> Result<Option<Self>, SliceError> {
         let print = &traversal.resolved.views.full.process.print;
         let loops_count = usize::try_from(print.skirt_loops.0).unwrap_or(0);
@@ -20,16 +20,38 @@ impl SkirtPlan {
         if layer_limit == 0 {
             return Ok(None);
         }
-        if loops_count > 0
-            && print.skirt_type != crate::ProcessSkirtType::Combined
-            && !(print.skirt_type == crate::ProcessSkirtType::PerObject
-                && traversal.resolved.objects.len() == 1)
+        let per_object = loops_count > 0 && print.skirt_type == crate::ProcessSkirtType::PerObject;
+        if per_object
+            && traversal.objects.len() > 1
+            && (print.draft_shield != crate::ProcessDraftShield::Disabled
+                || print.min_skirt_length.0 != 0.0
+                || print.print_sequence != crate::ProcessPrintSequence::ByLayer
+                || traversal
+                    .resolved
+                    .views
+                    .full
+                    .filament
+                    .gcode
+                    .filament_diameter
+                    .0
+                    .len()
+                    > 1
+                || traversal.resolved.objects.iter().any(|object| {
+                    object.object.enable_support.0 || object.object.raft_layers.0 > 0
+                })
+                || brim.iter().any(Option::is_some)
+                || raft.is_some()
+                || !tower_corners.is_empty())
         {
             return Err(SliceError::UnsupportedProjectFeature(
                 "skirt_type per-object".to_owned(),
             ));
         }
-        let mut hulls = occupied::hulls(traversal, support, brim, layer_limit, raft);
+        let items = occupied::items(traversal, support, brim, layer_limit, raft);
+        let mut hulls = items
+            .iter()
+            .map(|(_, hull)| hull.clone())
+            .collect::<Vec<_>>();
         if !tower_corners.is_empty() {
             hulls.push(tower_corners.to_vec());
         }
@@ -66,7 +88,7 @@ impl SkirtPlan {
         // then reverse for emission.
         let scale = traversal.scale;
         let scaled_spacing = (f64::from(flow.spacing) / scale.factor()) as f32;
-        let mut distance =
+        let initial_distance =
             ((print.skirt_distance.0 - f64::from(flow.spacing) * 0.5) / scale.factor()) as f32;
         let arc_tolerance = checked_scale(scale, 0.1)? as f64;
         let hull_polygon = Polygon::new(hull);
@@ -80,60 +102,91 @@ impl SkirtPlan {
         let flow_ratio = super::motion::first_nullable_float(&filament.filament_flow_ratio, 1.0);
         let e_per_path_mm =
             flow.mm3_per_mm * flow_ratio / (std::f64::consts::PI * diameter.powi(2) * 0.25);
-        let mut extruded_filament = 0.0;
-        let mut loops = Vec::with_capacity(loops_count);
-        while loops_count > 0 && (loops.len() < loops_count || extruded_filament < minimum_filament)
-        {
-            distance += scaled_spacing;
-            let offset = offset_paths(
-                std::slice::from_ref(&hull_polygon),
-                distance.abs(),
-                JoinType::Round,
-                arc_tolerance,
-            )
-            .map_err(|_| SliceError::InvalidInput("skirt offset failed".to_owned()))?;
-            let Some(loop_polygon) = offset.first() else {
-                break;
-            };
-            let simplified = simplify_closed_points(
-                loop_polygon.points().to_vec(),
-                checked_scale(scale, 0.05)? as f64,
-            );
-            if simplified.len() < 3 {
-                break;
-            }
-            extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
-            loops.push(simplified);
-        }
-        let groups = if loops_count == 0 && print.skirt_type == crate::ProcessSkirtType::PerObject {
-            groups::merge(
-                hulls,
-                checked_scale(scale, print.skirt_distance.0)? as f32,
+        let generation_groups = if per_object && traversal.objects.len() > 1 {
+            member_groups::merge(
+                items,
+                checked_scale(
+                    scale,
+                    print.skirt_distance.0 + loops_count as f64 * f64::from(flow.spacing),
+                )? as f32,
                 arc_tolerance,
             )?
         } else {
-            vec![hull_polygon]
+            vec![member_groups::Group {
+                members: Vec::new(),
+                hull: hull_polygon.clone(),
+            }]
         };
+        let mut loops = Vec::new();
+        let mut member_groups = Vec::new();
         let mut occupied_hull = Vec::new();
-        for hull in groups {
-            occupied_hull.extend(
-                offset_paths(
-                    std::slice::from_ref(&hull),
-                    distance + 0.5_f32 * scaled_spacing,
+        for group in generation_groups {
+            let mut distance = initial_distance;
+            let mut extruded_filament = 0.0;
+            let start = loops.len();
+            let mut group_loops = Vec::with_capacity(loops_count);
+            while loops_count > 0
+                && (group_loops.len() < loops_count || extruded_filament < minimum_filament)
+            {
+                distance += scaled_spacing;
+                let offset = offset_paths(
+                    std::slice::from_ref(&group.hull),
+                    distance.abs(),
                     JoinType::Round,
                     arc_tolerance,
                 )
-                .map_err(|_| {
-                    SliceError::InvalidInput("skirt occupied hull offset failed".to_owned())
-                })?,
-            );
+                .map_err(|_| SliceError::InvalidInput("skirt offset failed".into()))?;
+                let Some(loop_polygon) = offset.first() else {
+                    break;
+                };
+                let simplified = simplify_closed_points(
+                    loop_polygon.points().to_vec(),
+                    checked_scale(scale, 0.05)? as f64,
+                );
+                if simplified.len() < 3 {
+                    break;
+                }
+                extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
+                group_loops.push(simplified);
+            }
+            group_loops.reverse();
+            loops.extend(group_loops);
+            if !group.members.is_empty() {
+                member_groups.push(SkirtGroup {
+                    members: group.members,
+                    loops: start..loops.len(),
+                });
+            }
+            let occupied_groups =
+                if loops_count == 0 && print.skirt_type == crate::ProcessSkirtType::PerObject {
+                    groups::merge(
+                        hulls.clone(),
+                        checked_scale(scale, print.skirt_distance.0)? as f32,
+                        arc_tolerance,
+                    )?
+                } else {
+                    vec![group.hull]
+                };
+            for hull in occupied_groups {
+                occupied_hull.extend(
+                    offset_paths(
+                        std::slice::from_ref(&hull),
+                        distance + 0.5_f32 * scaled_spacing,
+                        JoinType::Round,
+                        arc_tolerance,
+                    )
+                    .map_err(|_| {
+                        SliceError::InvalidInput("skirt occupied hull offset failed".into())
+                    })?,
+                );
+            }
         }
-        loops.reverse();
 
         let layer_count = if loops.is_empty() { 0 } else { layer_limit };
         let start_angle_deg = object.map_or(-135.0, |value| value.object.skirt_start_angle.0);
         Ok(Some(Self {
             loops,
+            member_groups,
             occupied_hull,
             width: flow.width,
             layer_count,
@@ -142,5 +195,4 @@ impl SkirtPlan {
             plate_origin: traversal.project.plate_origin(),
         }))
     }
-
 }

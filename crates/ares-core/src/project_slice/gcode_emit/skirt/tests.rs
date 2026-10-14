@@ -28,6 +28,7 @@ fn convex_hull_matches_upstream_ordering() {
 #[test]
 fn single_loop_draft_shield_keeps_only_the_innermost_later_loop() {
     let plan = SkirtPlan {
+        member_groups: Vec::new(),
         occupied_hull: Vec::new(),
         loops: vec![
             vec![Point::new(0, 0), Point::new(10, 0), Point::new(10, 10)],

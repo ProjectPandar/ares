@@ -43,6 +43,9 @@ pub(super) fn emit(
         chunk_perimeter_spacing,
     }: SkirtEmission<'_, '_>,
 ) {
+    if skirt.as_ref().is_some_and(|plan| plan.group_count() > 0) {
+        return;
+    }
     if let (Some(entry), Some(plan)) = (entries.first(), skirt) {
         let object = entry.object_index;
         let Some((skirt_plan_index, skirt_height)) = schedule.next(print_z, plan.layer_count)

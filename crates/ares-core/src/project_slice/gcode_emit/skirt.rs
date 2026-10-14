@@ -18,6 +18,7 @@ use crate::project_slice::perimeters::flow::build_nonbridging_flow;
 mod generate;
 mod geometry;
 mod groups;
+mod member_groups;
 mod occupied;
 #[cfg(test)]
 mod tests;
@@ -26,7 +27,13 @@ use crate::geometry::convex_hull;
 pub(in crate::project_slice::gcode_emit) use geometry::split_at_nearest;
 use geometry::{closed_length, find_start_point};
 
+struct SkirtGroup {
+    members: Vec<usize>,
+    loops: std::ops::Range<usize>,
+}
+
 pub(super) struct SkirtPlan {
+    member_groups: Vec<SkirtGroup>,
     /// Plate-frame closed loops, outermost first (`Print.cpp:2985`).
     loops: Vec<Vec<Point>>,
     /// `_make_skirt` retains this outline even when skirt_loops is zero.
@@ -44,6 +51,33 @@ pub(super) struct SkirtPlan {
 }
 
 impl SkirtPlan {
+    pub(super) fn group_count(&self) -> usize {
+        self.member_groups.len()
+    }
+
+    pub(super) fn object_group(&self, object: usize) -> Option<usize> {
+        self.member_groups
+            .iter()
+            .position(|group| group.members.contains(&object))
+    }
+
+    pub(super) fn emit_group(
+        &self,
+        group: usize,
+        output: &mut Vec<u8>,
+        layer: SkirtLayer,
+        geometry: LayerGeometry<'_>,
+        state: &mut EmitState,
+    ) {
+        self.emit_loops(
+            output,
+            layer,
+            geometry,
+            state,
+            &self.loops[self.member_groups[group].loops.clone()],
+        );
+    }
+
     pub(super) fn extrusion_paths(&self) -> impl Iterator<Item = (&[Point], f32)> {
         self.loops
             .iter()
@@ -78,7 +112,24 @@ impl SkirtPlan {
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
     ) {
-        if layer.index >= self.layer_count {
+        self.emit_loops(
+            output,
+            layer,
+            geometry,
+            state,
+            self.loops_for_layer(layer.index),
+        );
+    }
+
+    fn emit_loops(
+        &self,
+        output: &mut Vec<u8>,
+        layer: SkirtLayer,
+        geometry: LayerGeometry<'_>,
+        state: &mut EmitState,
+        loops: &[Vec<Point>],
+    ) {
+        if layer.index >= self.layer_count || loops.is_empty() {
             return;
         }
         // Print.cpp:2634-2637 -> GCode.hpp:218 -> GCodeWriter.cpp:608,
@@ -96,7 +147,6 @@ impl SkirtPlan {
             height,
             mm3_per_mm,
         };
-        let loops = self.loops_for_layer(layer.index);
         let mut seam_target = if layer.index == 0 {
             find_start_point(&loops[0], self.start_angle_deg)
         } else {
@@ -142,6 +192,7 @@ impl SkirtPlan {
 }
 
 /// Per-layer emission inputs.
+#[derive(Clone, Copy)]
 pub(super) struct SkirtLayer {
     pub(super) index: usize,
     pub(super) height_mm: f64,

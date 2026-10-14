@@ -15,6 +15,7 @@ mod instances;
 pub(super) use instances::Instance;
 mod object_entry;
 mod object_order;
+mod object_skirt;
 mod preamble;
 mod raft_entry;
 mod raft_schedule;
@@ -76,6 +77,7 @@ pub(super) fn append(
         .print
         .gcode_label_objects
         .0;
+    let mut object_skirt_done = vec![(0, 0.0); skirt.as_ref().map_or(0, |plan| plan.group_count())];
     let mut cooling = cooling::CoolingState::from_traversal(traversal, state);
     let mut spiral =
         spiral_vase::SpiralVaseFilter::from_traversal(traversal, brim.iter().any(Option::is_some));

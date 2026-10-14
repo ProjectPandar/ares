@@ -266,6 +266,8 @@
                         chunk_slices: &chunk_slices,
                         chunk_perimeter_spacing,
                         brim,
+                        skirt,
+                        object_skirt_done: &mut object_skirt_done,
                         spiral: &mut spiral,
                         layer_z,
                         layer_height,
