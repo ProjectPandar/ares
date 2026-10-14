@@ -40,6 +40,8 @@ mod native_bbl_boundary_migration;
 #[path = "runner/native_jerk_semm_migration.rs"]
 mod native_jerk_semm_migration;
 
+#[path = "runner/modifier_bottom_shell.rs"]
+mod modifier_bottom_shell;
 #[path = "runner/modifier_top_shell.rs"]
 mod modifier_top_shell;
 #[path = "runner/modifier_wall_loops.rs"]
