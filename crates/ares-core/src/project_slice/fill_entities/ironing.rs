@@ -1,3 +1,4 @@
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 // Source boundary: OrcaSlicer 2.4.2 `Fill/Fill.cpp::Layer::make_ironing`.
 
 use crate::{
@@ -110,8 +111,8 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                     .into_iter()
                     .map(|polyline| {
                         FillExtrusionEntity::Path(FillExtrusionPath {
-                            polyline,
-                            fitting: Vec::new(),
+                            polyline: Polyline3::from_xy(polyline, Vec::new()),
+                            z_contoured: false,
                             role: ExtrusionRole::Ironing,
                             mm3_per_mm,
                             width,
@@ -158,8 +159,8 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                 .into_iter()
                 .map(|polyline| {
                     FillExtrusionEntity::Path(FillExtrusionPath {
-                        polyline,
-                        fitting: Vec::new(),
+                        polyline: Polyline3::from_xy(polyline, Vec::new()),
+                        z_contoured: false,
                         role: ExtrusionRole::Ironing,
                         mm3_per_mm,
                         width,

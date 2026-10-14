@@ -1,3 +1,4 @@
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     ProcessInfillPattern, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
@@ -179,8 +180,8 @@ pub(super) fn append(
             .cloned()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

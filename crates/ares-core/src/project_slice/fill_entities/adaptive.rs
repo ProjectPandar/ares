@@ -1,5 +1,6 @@
 //! Adaptive/support cubic sparse infill entry (`FillAdaptive.cpp:1483`,
 //! `PrintObject.cpp:984`, `:275-356`).
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 pub(in crate::project_slice) mod line_spacing;
 
@@ -80,8 +81,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

@@ -163,7 +163,7 @@ fn emit_fill_entity(
                         | crate::ExtrusionRole::OverhangPerimeter
                 ),
                 end_clip: 0.0,
-                fitting: &path.fitting,
+                fitting: &path.polyline.fitting,
                 slope: None,
                 inside_loop: false,
             },

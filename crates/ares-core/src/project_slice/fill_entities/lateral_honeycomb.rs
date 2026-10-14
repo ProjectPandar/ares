@@ -4,6 +4,7 @@
 //! chosen by which third of the vertical period the layer height lands in;
 //! the double family splits the density and offsets the two lines
 //! symmetrically around the period knot.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -70,8 +71,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

@@ -97,6 +97,6 @@ fn spacing_coverage(
     spacing: f32,
     scale: CoordinateScale,
 ) -> Result<Vec<Polygon>, SliceError> {
-    super::footprint::covered_by_spacing(points, spacing, 0.0, scale)
+    super::footprint::covered_by_spacing(points.iter().copied(), spacing, 0.0, scale)
         .map_err(|error| SliceError::InvalidInput(format!("brim spacing coverage: {error:?}")))
 }

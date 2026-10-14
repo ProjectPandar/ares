@@ -1,4 +1,5 @@
 use super::{IslandInfillEntity, assign_layer, contour_bounds, island_index};
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     ExtrusionRole,
     geometry::{CoordinateScale, ExPolygon, Point, Polygon, Polyline},
@@ -21,8 +22,8 @@ fn rectangle(minimum: i64, maximum: i64) -> ExPolygon {
 
 fn path(start: Point, end: Point) -> FillExtrusionEntity {
     FillExtrusionEntity::Path(FillExtrusionPath {
-        polyline: Polyline::new(vec![start, end]),
-        fitting: Vec::new(),
+        polyline: Polyline3::from_xy(Polyline::new(vec![start, end]), Vec::new()),
+        z_contoured: false,
         role: ExtrusionRole::SolidInfill,
         mm3_per_mm: 0.04,
         width: 0.4,

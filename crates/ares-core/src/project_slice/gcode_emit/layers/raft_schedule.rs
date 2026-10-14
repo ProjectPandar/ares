@@ -9,6 +9,7 @@
 //! `layers.rs` (5b); reaching the object emission with a sentinel
 //! index is a bug, so the sentinel space is asserted disjoint from
 //! real object layer indices.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::project_slice::raft::RaftLayerPlan;
 use crate::project_slice::raft::bridge::build_project_raft;
@@ -47,9 +48,11 @@ impl RaftSchedule {
                 }
             })
             .flat_map(|entity| match entity {
-                FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
-                    path.polyline.points().iter().copied()
-                }
+                FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => path
+                    .polyline
+                    .points()
+                    .iter()
+                    .map(|point| crate::geometry::Point::new(point.x, point.y)),
                 FillExtrusionEntity::VariableWidth(_) => {
                     unreachable!("raft materialization emits constant-width paths")
                 }
@@ -142,8 +145,8 @@ fn materialize_layer(
     let height = plan.height_mm as f32;
     let mm3_per_mm = crate::project_slice::perimeters::flow::ordinary_volume(width, height);
     let make_path = |polyline| FillExtrusionPath {
-        polyline,
-        fitting: Vec::new(),
+        polyline: Polyline3::from_xy(polyline, Vec::new()),
+        z_contoured: false,
         role,
         mm3_per_mm,
         width,

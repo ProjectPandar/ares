@@ -1,6 +1,7 @@
 //! Cubic sparse infill — `FillCubic::fill_surface`
 //! (`FillRectilinear.cpp:3506-3516`): three 60° scanline families shifted by
 //! `sqrt(0.5) * print_z` and connected as one pool.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -69,8 +70,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

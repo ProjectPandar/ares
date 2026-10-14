@@ -82,16 +82,6 @@ pub(in crate::project_slice) struct ExtrusionPath {
 
 impl ExtrusionPath {
     pub(in crate::project_slice) fn reverse(&mut self) {
-        let last_index = self.polyline.points.len().saturating_sub(1);
-        for fitted in &mut self.polyline.fitting {
-            let start = fitted.start;
-            fitted.start = last_index - fitted.end;
-            fitted.end = last_index - start;
-            if let Some(arc) = &mut fitted.arc {
-                arc.clockwise = !arc.clockwise;
-            }
-        }
-        self.polyline.fitting.reverse();
-        self.polyline.points.reverse();
+        self.polyline.reverse();
     }
 }

@@ -2,6 +2,7 @@
 //! per-object `Generator` (built once in `prepare`) converts the layer's
 //! lightning trees to lines clipped to the fill surface; `multiline_fill`
 //! expands them; `chain_or_connect_infill` merges them into entities.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -91,8 +92,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

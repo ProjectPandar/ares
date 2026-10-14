@@ -1,3 +1,4 @@
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     SliceError,
     geometry::{
@@ -212,8 +213,8 @@ fn append_sparse_paths(
 ) {
     entities.extend(polylines.into_iter().map(|polyline| {
         FillExtrusionEntity::Path(super::FillExtrusionPath {
-            polyline,
-            fitting: Vec::new(),
+            polyline: Polyline3::from_xy(polyline, Vec::new()),
+            z_contoured: false,
             role,
             mm3_per_mm: flow.mm3_per_mm,
             width: flow.width,

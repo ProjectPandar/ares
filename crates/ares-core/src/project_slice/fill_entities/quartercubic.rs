@@ -2,6 +2,7 @@
 //! (`FillRectilinear.cpp:3518-3548`): four scanline families — two pairs at
 //! 0° and 90° — each pair mirrored by a z-dependent `dx` shift so the pattern
 //! forms tetrahedral cells.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -62,8 +63,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

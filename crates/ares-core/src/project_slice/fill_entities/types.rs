@@ -23,17 +23,16 @@ pub(in crate::project_slice) struct SurfaceCall {
 
 use crate::{
     ExtrusionRole,
-    geometry::Polyline,
     project_slice::perimeters::classic::{
         entity_collections::ExtrusionEntityCollection, gap_extrusion::GapFillEntity,
-        materialize::FittedMove,
     },
 };
 
 #[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct FillExtrusionPath {
-    pub(in crate::project_slice) polyline: Polyline,
-    pub(in crate::project_slice) fitting: Vec<FittedMove>,
+    pub(in crate::project_slice) polyline:
+        crate::project_slice::perimeters::classic::materialize::Polyline3,
+    pub(in crate::project_slice) z_contoured: bool,
     pub(in crate::project_slice) role: ExtrusionRole,
     pub(in crate::project_slice) mm3_per_mm: f64,
     pub(in crate::project_slice) width: f32,

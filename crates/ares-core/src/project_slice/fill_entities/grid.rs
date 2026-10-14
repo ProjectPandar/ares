@@ -2,6 +2,7 @@
 //! 3446`): two scanline families at 0° and 90° with the density split
 //! between them, one connector pass, and polylines reversed on odd layers.
 //! `Fill.cpp:1325` disables later path reversal, not collection sorting.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -52,8 +53,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Oriented(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

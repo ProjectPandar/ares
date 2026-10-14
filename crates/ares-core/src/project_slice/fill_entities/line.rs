@@ -1,3 +1,4 @@
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     ProcessInfillPattern, SliceError,
     fill::line::{LineFillParams, fill_line},
@@ -59,8 +60,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill_params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

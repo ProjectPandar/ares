@@ -2,6 +2,7 @@
 //! (`FillRectilinear.cpp:3449-3464`): two parallel scanline families at 90°,
 //! shifted by `tan(lateral_lattice_angle_{1,2}) * z` so the lattice leans with
 //! the layer height; the polylines are reversed on odd layers.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -66,8 +67,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

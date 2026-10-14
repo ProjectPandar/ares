@@ -171,7 +171,7 @@ fn support_path(
         .collect::<Vec<_>>();
     append(
         output,
-        &points,
+        points,
         spacing(path.width, path.height, path.role),
         epsilon,
         scale,
@@ -205,7 +205,10 @@ fn raft_path(
     match entity {
         FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => append(
             output,
-            path.polyline.points(),
+            path.polyline
+                .points()
+                .iter()
+                .map(|point| Point::new(point.x, point.y)),
             spacing(path.width, path.height, path.role),
             epsilon,
             scale,
@@ -224,7 +227,7 @@ fn spacing(width: f32, height: f32, role: ExtrusionRole) -> f32 {
 }
 fn append(
     output: &mut Vec<Point>,
-    points: &[Point],
+    points: impl IntoIterator<Item = Point>,
     spacing: f32,
     epsilon: f32,
     scale: CoordinateScale,

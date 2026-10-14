@@ -2,7 +2,7 @@
 //! (`LayerRegion.cpp:1060-1125`).
 
 use crate::{
-    geometry::{CoordinateScale, Point, Polyline, douglas_peucker},
+    geometry::{CoordinateScale, Point, douglas_peucker},
     project_slice::perimeters::classic::{
         gap_extrusion::GapFillEntity,
         materialize::{ExtrusionPath, Point3},
@@ -27,9 +27,12 @@ pub(super) fn apply(output: &mut LayerFillEntities, resolution: f64, scale: Coor
 }
 
 fn simplify_fill_path(path: &mut FillExtrusionPath, tolerance: f64) {
-    let points = std::mem::replace(&mut path.polyline, Polyline::new(Vec::new())).into_points();
-    path.polyline = Polyline::new(douglas_peucker(&points, tolerance));
-    path.fitting.clear();
+    path.polyline.points = crate::geometry::simplification::douglas_peucker_projected(
+        &path.polyline.points,
+        tolerance,
+        |point| Point::new(point.x, point.y),
+    );
+    path.polyline.fitting.clear();
 }
 
 fn simplify_gap_entity(entity: &mut GapFillEntity, tolerance: f64) {
