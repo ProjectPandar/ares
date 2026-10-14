@@ -2,7 +2,7 @@ use crate::{
     RegionOptions, SliceError, fill::cross_hatch::line_spacing, geometry::CoordinateScale,
 };
 
-use super::super::sparse_anchoring::{projected_anchor_lengths, projected_sparse_density};
+use super::super::sparse_anchoring::projected_sparse_density;
 
 pub(super) fn validate(
     options: &RegionOptions,
@@ -20,7 +20,6 @@ pub(super) fn validate(
     // `Fill.cpp:920-924`), so divergent `sparse_infill_filament_id` /
     // `internal_solid_filament_id` / `top_surface_filament_id` are
     // admitted here; role→filament resolution happens downstream.
-    let (anchor, _) = projected_anchor_lengths(options, f64::from(spacing));
     // `anchor_length_max < 0.05` is upstream's supported `dont_connect()`
     // selection (`FillBase.hpp:52`; `FillRectilinear.cpp:3366-3373`,
     // `FillBase.cpp:1820-1828`), not an unsupported input — the connect
@@ -30,9 +29,6 @@ pub(super) fn validate(
     // projects `min(anchor, anchor_max)` with no sign check). The
     // `anchor_length >= 0.` asserts (`FillBase.cpp:1584-1585,2251-2252`)
     // are debug-only — the release oracle defines the behavior.
-    if !anchor.is_finite() {
-        return unsupported("infill_anchor");
-    }
     let density = projected_sparse_density(options);
     if line_spacing(f64::from(spacing), density, 1, scale) <= 0 {
         return Err(SliceError::InvalidInput(
@@ -40,8 +36,4 @@ pub(super) fn validate(
         ));
     }
     Ok(())
-}
-
-fn unsupported(key: &str) -> Result<(), SliceError> {
-    Err(SliceError::UnsupportedProjectFeature(key.to_owned()))
 }
