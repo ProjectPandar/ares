@@ -24,6 +24,11 @@ mod splice;
 mod sweep;
 use mesh::{Edge, Face, Mesh, Vertex};
 use queue::Queue;
+struct RightEdges {
+    first: usize,
+    last: usize,
+    top_left: usize,
+}
 #[derive(Clone, Copy, Default)]
 struct Region {
     edge: usize,
@@ -98,14 +103,12 @@ pub(super) fn tessellate(contours: &[Vec<[f64; 3]>], z: f64, flip: bool) -> Vec<
     let mut last;
     for contour in contours {
         last = 0;
-        let empty_cache = !cached.is_empty();
+        let needs_empty_cache = !cached.is_empty();
         for &point in contour {
-            if empty_cache && mesh.is_none() {
+            if needs_empty_cache && mesh.is_none() {
                 let mut new_mesh = Mesh::new();
                 let mut cached_last = 0;
-                for point in cached.drain(..) {
-                    add_vertex(&mut new_mesh, &mut cached_last, point);
-                }
+                empty_cache(&mut cached, &mut new_mesh, &mut cached_last);
                 mesh = Some(new_mesh);
                 last = 0;
             }
@@ -115,9 +118,7 @@ pub(super) fn tessellate(contours: &[Vec<[f64; 3]>], z: f64, flip: bool) -> Vec<
             }
             if mesh.is_none() {
                 let mut new_mesh = Mesh::new();
-                for point in cached.drain(..) {
-                    add_vertex(&mut new_mesh, &mut last, point);
-                }
+                empty_cache(&mut cached, &mut new_mesh, &mut last);
                 mesh = Some(new_mesh);
             }
             add_vertex(mesh.as_mut().unwrap(), &mut last, point);
@@ -164,4 +165,10 @@ fn add_vertex(mesh: &mut Mesh, last: &mut usize, point: [f64; 3]) {
     let sym = mesh.e(e).sym;
     mesh.edges[sym].winding = -1;
     *last = e;
+}
+
+fn empty_cache(cached: &mut Vec<[f64; 3]>, mesh: &mut Mesh, last: &mut usize) {
+    for point in cached.drain(..) {
+        add_vertex(mesh, last, point);
+    }
 }

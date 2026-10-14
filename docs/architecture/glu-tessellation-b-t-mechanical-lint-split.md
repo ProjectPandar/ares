@@ -1,0 +1,45 @@
+# B-T mechanical strict-lint split
+
+Coordinator authorized this mechanical change after strict on aabc1260f
+reported 25 excessive_nesting and two too_many_arguments errors. No lint
+configuration, attributes, tests, assertions or public interfaces change.
+The complete B-T+B-S stack remains held for review and coordinator full.
+
+All destinations are private steps under
+crates/ares-core/src/geometry/tessellation. The existing mesh, sweep,
+rendering and ordered callback algorithm is preserved, including equal-key
+swaps, floating-point expression order, early completion and mutation order.
+
+Source map (OrcaSlicer/deps_src/glu-libtess/src):
+
+- tessmono.c:72-132, __gl_meshTessellateMonoRegion: monotone.rs extracts the
+  lower and upper chain walks, returning the same updated edge handles.
+- normal.c:141-169, CheckOrientation: projection.rs extracts orientation
+  and one-face accumulation; the accumulator is shared, never regrouped.
+- priorityq.c:92-190, pqInit: queue.rs separates one range, partition,
+  directional scans and insertion pass. PqSortState contains the original
+  shared seed and explicit partition stack; the seed advances identically.
+- sweep.c:107-139/286-409: regions.rs extracts event EdgeLeq and the
+  FinishLeftRegions upper-edge repair. RightEdges bundles AddRightEdges'
+  eFirst/eLast/eTopLeft, retaining regUp and cleanUp as separate parameters.
+- sweep.c:475-497, GetIntersectData: intersection.rs bundles the original
+  orgUp/dstUp/orgLo/dstLo vertex handles without changing GLfloat weights
+  or GLdouble accumulation order.
+- sweep.c:760-844, WalkDirtyRegions: splice.rs extracts one loop iteration
+  and its intersection branch. Completion remains completion of the whole
+  dirty walk; the next up/lo pair is returned only when another iteration
+  would previously execute.
+- sweep.c:1199-1232/1320-1357: sweep.rs extracts degenerate edge-pair deletion
+  and duplicate-event merging, preserving saved next pointers and order.
+- tess.c:345-579, EmptyCache/vertex ingestion: kernel.rs extracts the same
+  ordered drain, preserving contour starts and the 100-vertex cache cutoff.
+- render.c:82-145/206-275/362-431: render.rs separates RenderFan,
+  RenderStrip, RenderLonelyTriangles and ComputeNormal accumulation/check
+  steps; callback order and normal-sign early exit stay unchanged.
+
+Verification: fresh CPU12 jobs1/threads2 official+seeded B-S ten public
+cases, all complete-output comparisons strict; six controls byte-identical
+to RED. Both modes run the existing 19 runtime GLU oracle tests and existing
+octree/filler controls. Final exact head requires workspace strict clippy
+all targets/features with -D warnings, fmt and core wasm32 check. No local
+workspace test, canonical full or push is authorized.

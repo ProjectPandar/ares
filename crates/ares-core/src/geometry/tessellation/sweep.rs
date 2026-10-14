@@ -3,7 +3,7 @@
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/
 use super::{
-    Region, Tess,
+    Region, RightEdges, Tess,
     mesh::{E_HEAD, F_HEAD},
     queue::Queue,
 };
@@ -30,7 +30,15 @@ impl Tess {
             degenerate = true;
         }
         if degenerate {
-            self.add_right(up, self.e(bottom_left).onext, top_left, top_left, true);
+            self.add_right(
+                up,
+                RightEdges {
+                    first: self.e(bottom_left).onext,
+                    last: top_left,
+                    top_left: top_left,
+                },
+                true,
+            );
             return;
         }
         let target = if self.leq(self.e(el).org, self.e(eu).org) {
@@ -39,7 +47,15 @@ impl Tess {
             eu
         };
         let new = self.mesh.connect(self.lprev(bottom_left), target);
-        self.add_right(up, new, self.e(new).onext, self.e(new).onext, false);
+        self.add_right(
+            up,
+            RightEdges {
+                first: new,
+                last: self.e(new).onext,
+                top_left: self.e(new).onext,
+            },
+            false,
+        );
         let r = self.e(self.e(new).sym).region;
         self.regions[r].fix_upper = true;
         self.walk_dirty(up);
@@ -74,7 +90,15 @@ impl Tess {
         if !self.leq(self.dst(top_left), self.e(top_left).org) {
             top_left = 0;
         }
-        self.add_right(up, self.e(top_right).onext, last, top_left, true);
+        self.add_right(
+            up,
+            RightEdges {
+                first: self.e(top_right).onext,
+                last: last,
+                top_left: top_left,
+            },
+            true,
+        );
     }
     fn connect_left(&mut self, event: usize) {
         // The source uses a stack ActiveRegion as the dictionary search key.
@@ -107,7 +131,15 @@ impl Tess {
             }
             self.sweep_event(event);
         } else {
-            self.add_right(up, self.v(event).edge, self.v(event).edge, 0, true);
+            self.add_right(
+                up,
+                RightEdges {
+                    first: self.v(event).edge,
+                    last: self.v(event).edge,
+                    top_left: 0,
+                },
+                true,
+            );
         }
     }
     fn sweep_event(&mut self, event: usize) {
@@ -127,7 +159,15 @@ impl Tess {
         if self.e(bottom_left).onext == top_left {
             self.connect_right(up, bottom_left);
         } else {
-            self.add_right(up, self.e(bottom_left).onext, top_left, top_left, true);
+            self.add_right(
+                up,
+                RightEdges {
+                    first: self.e(bottom_left).onext,
+                    last: top_left,
+                    top_left: top_left,
+                },
+                true,
+            );
         }
     }
     fn add_sentinel(&mut self, t: f64) {
@@ -160,19 +200,23 @@ impl Tess {
                 lnext = self.e(e).lnext;
             }
             if self.e(lnext).lnext == e {
-                if lnext != e {
-                    if lnext == next || lnext == self.e(next).sym {
-                        next = self.e(next).next;
-                    }
-                    self.mesh.delete(lnext);
-                }
-                if e == next || e == self.e(next).sym {
-                    next = self.e(next).next;
-                }
-                self.mesh.delete(e);
+                next = self.remove_degenerate_edge_pair(e, lnext, next);
             }
             e = next;
         }
+    }
+    fn remove_degenerate_edge_pair(&mut self, e: usize, lnext: usize, mut next: usize) -> usize {
+        if lnext != e {
+            if lnext == next || lnext == self.e(next).sym {
+                next = self.e(next).next;
+            }
+            self.mesh.delete(lnext);
+        }
+        if e == next || e == self.e(next).sym {
+            next = self.e(next).next;
+        }
+        self.mesh.delete(e);
+        next
     }
     fn remove_degenerate_faces(&mut self) {
         let mut f = self.f(F_HEAD).next;
@@ -186,6 +230,16 @@ impl Tess {
             f = next;
         }
     }
+    fn merge_event_vertices(&mut self, v: usize) {
+        loop {
+            let next = self.queue.minimum(&self.mesh);
+            if next == 0 || !self.eq(next, v) {
+                break;
+            }
+            let next = self.queue.extract(&self.mesh);
+            self.merge_vertices(self.v(v).edge, self.v(next).edge);
+        }
+    }
     pub(super) fn compute_interior(&mut self) {
         self.remove_degenerate_edges();
         self.queue = Queue::new(&mut self.mesh);
@@ -196,14 +250,7 @@ impl Tess {
             if v == 0 {
                 break;
             }
-            loop {
-                let next = self.queue.minimum(&self.mesh);
-                if next == 0 || !self.eq(next, v) {
-                    break;
-                }
-                let next = self.queue.extract(&self.mesh);
-                self.merge_vertices(self.v(v).edge, self.v(next).edge);
-            }
+            self.merge_event_vertices(v);
             self.sweep_event(v);
         }
         self.event = self.e(self.r(self.nodes[self.nodes[0].next].key).edge).org;

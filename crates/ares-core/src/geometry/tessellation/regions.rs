@@ -2,16 +2,13 @@
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/
-use super::{Node, Region, Tess, predicates};
+use super::{Node, Region, RightEdges, Tess, predicates};
 impl Tess {
     fn edge_leq(&self, e1: usize, e2: usize) -> bool {
         let event = self.event;
         if self.dst(e1) == event {
             if self.dst(e2) == event {
-                if self.leq(self.e(e1).org, self.e(e2).org) {
-                    return self.sign(self.dst(e2), self.e(e1).org, self.e(e2).org) <= 0.0;
-                }
-                return self.sign(self.dst(e1), self.e(e2).org, self.e(e1).org) >= 0.0;
+                return self.edge_leq_at_event(e1, e2);
             }
             return self.sign(self.dst(e2), event, self.e(e2).org) <= 0.0;
         }
@@ -21,6 +18,12 @@ impl Tess {
         let t1 = predicates::eval(self.v(self.dst(e1)), self.v(event), self.v(self.e(e1).org));
         let t2 = predicates::eval(self.v(self.dst(e2)), self.v(event), self.v(self.e(e2).org));
         t1 >= t2
+    }
+    fn edge_leq_at_event(&self, e1: usize, e2: usize) -> bool {
+        if self.leq(self.e(e1).org, self.e(e2).org) {
+            return self.sign(self.dst(e2), self.e(e1).org, self.e(e2).org) <= 0.0;
+        }
+        self.sign(self.dst(e1), self.e(e2).org, self.e(e1).org) >= 0.0
     }
     pub(super) fn below(&self, r: usize) -> usize {
         self.nodes[self.nodes[self.r(r).node].prev].key
@@ -127,15 +130,10 @@ impl Tess {
         while previous != last {
             self.regions[previous].fix_upper = false;
             let r = self.below(previous);
-            let mut e = self.r(r).edge;
-            if self.e(e).org != self.e(eprev).org {
-                if !self.r(r).fix_upper {
-                    self.finish_region(previous);
-                    break;
-                }
-                e = self.mesh.connect(self.lprev(eprev), self.e(e).sym);
-                self.fix_upper(r, e);
-            }
+            let e = self.r(r).edge;
+            let Some(e) = self.finish_left_fix_upper(previous, r, eprev, e) else {
+                break;
+            };
             if self.e(eprev).onext != e {
                 self.mesh.splice(self.oprev(e), e);
                 self.mesh.splice(eprev, e);
@@ -146,14 +144,30 @@ impl Tess {
         }
         eprev
     }
-    pub(super) fn add_right(
+    fn finish_left_fix_upper(
         &mut self,
-        up: usize,
-        first: usize,
-        last: usize,
-        mut top_left: usize,
-        clean: bool,
-    ) {
+        previous: usize,
+        r: usize,
+        eprev: usize,
+        e: usize,
+    ) -> Option<usize> {
+        if self.e(e).org != self.e(eprev).org {
+            if !self.r(r).fix_upper {
+                self.finish_region(previous);
+                return None;
+            }
+            let e = self.mesh.connect(self.lprev(eprev), self.e(e).sym);
+            self.fix_upper(r, e);
+            return Some(e);
+        }
+        Some(e)
+    }
+    pub(super) fn add_right(&mut self, up: usize, edges: RightEdges, clean: bool) {
+        let RightEdges {
+            first,
+            last,
+            mut top_left,
+        } = edges;
         let mut e = first;
         loop {
             self.add_below(up, self.e(e).sym);

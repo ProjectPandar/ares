@@ -69,53 +69,60 @@ impl Tess {
     }
     pub(super) fn walk_dirty(&mut self, mut up: usize) {
         let mut lo = self.below(up);
-        loop {
-            while self.r(lo).dirty {
-                up = lo;
-                lo = self.below(lo);
+        while let Some((next_up, next_lo)) = self.walk_dirty_region(up, lo) {
+            up = next_up;
+            lo = next_lo;
+        }
+    }
+    fn walk_dirty_region(&mut self, mut up: usize, mut lo: usize) -> Option<(usize, usize)> {
+        while self.r(lo).dirty {
+            up = lo;
+            lo = self.below(lo);
+        }
+        if !self.r(up).dirty {
+            lo = up;
+            up = self.above(up);
+            if up == 0 || !self.r(up).dirty {
+                return None;
             }
-            if !self.r(up).dirty {
-                lo = up;
-                up = self.above(up);
-                if up == 0 || !self.r(up).dirty {
-                    return;
-                }
-            }
-            self.regions[up].dirty = false;
-            let mut eu = self.r(up).edge;
-            let mut el = self.r(lo).edge;
-            if self.dst(eu) != self.dst(el) && self.check_left_splice(up) {
-                if self.r(lo).fix_upper {
-                    self.delete_region(lo);
-                    self.mesh.delete(el);
-                    lo = self.below(up);
-                    el = self.r(lo).edge;
-                } else if self.r(up).fix_upper {
-                    self.delete_region(up);
-                    self.mesh.delete(eu);
-                    up = self.above(lo);
-                    eu = self.r(up).edge;
-                }
-            }
-            if self.e(eu).org != self.e(el).org {
-                if self.dst(eu) != self.dst(el)
-                    && !self.r(up).fix_upper
-                    && !self.r(lo).fix_upper
-                    && (self.dst(eu) == self.event || self.dst(el) == self.event)
-                {
-                    if self.check_intersection(up) {
-                        return;
-                    }
-                } else {
-                    self.check_right_splice(up);
-                }
-            }
-            if self.e(eu).org == self.e(el).org && self.dst(eu) == self.dst(el) {
-                self.mesh.add_winding(el, eu);
+        }
+        self.regions[up].dirty = false;
+        let mut eu = self.r(up).edge;
+        let mut el = self.r(lo).edge;
+        if self.dst(eu) != self.dst(el) && self.check_left_splice(up) {
+            if self.r(lo).fix_upper {
+                self.delete_region(lo);
+                self.mesh.delete(el);
+                lo = self.below(up);
+                el = self.r(lo).edge;
+            } else if self.r(up).fix_upper {
                 self.delete_region(up);
                 self.mesh.delete(eu);
                 up = self.above(lo);
+                eu = self.r(up).edge;
             }
+        }
+        if self.e(eu).org != self.e(el).org && self.walk_dirty_intersection(up, lo, eu, el) {
+            return None;
+        }
+        if self.e(eu).org == self.e(el).org && self.dst(eu) == self.dst(el) {
+            self.mesh.add_winding(el, eu);
+            self.delete_region(up);
+            self.mesh.delete(eu);
+            up = self.above(lo);
+        }
+        Some((up, lo))
+    }
+    fn walk_dirty_intersection(&mut self, up: usize, lo: usize, eu: usize, el: usize) -> bool {
+        if self.dst(eu) != self.dst(el)
+            && !self.r(up).fix_upper
+            && !self.r(lo).fix_upper
+            && (self.dst(eu) == self.event || self.dst(el) == self.event)
+        {
+            self.check_intersection(up)
+        } else {
+            self.check_right_splice(up);
+            false
         }
     }
 }

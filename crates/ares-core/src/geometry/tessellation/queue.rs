@@ -18,6 +18,10 @@ pub(super) struct Queue {
     heap_size: usize,
     free: usize,
 }
+struct PqSortState {
+    seed: u64,
+    stack: Vec<(isize, isize)>,
+}
 impl Queue {
     pub fn new(mesh: &mut Mesh) -> Self {
         let mut keys = Vec::new();
@@ -42,63 +46,86 @@ impl Queue {
     }
     fn sort(&mut self, mesh: &Mesh) {
         // Preserve the source LP64 quicksort seed, equal-key swaps and insertion cutoff.
-        let mut seed = 2016473283u64;
-        let mut stack = vec![(0isize, self.size as isize - 1)];
-        while let Some((mut p, mut r)) = stack.pop() {
-            while r > p + 10 {
-                seed = seed.wrapping_mul(1539415821).wrapping_add(1);
-                let pivot_index = p + (seed % ((r - p + 1) as u64)) as isize;
-                let pivot = self.order[pivot_index as usize];
-                self.order.swap(pivot_index as usize, p as usize);
-                let (mut i, mut j) = (p - 1, r + 1);
-                loop {
-                    loop {
-                        i += 1;
-                        if leq(
-                            mesh.v(self.keys[self.order[i as usize]]),
-                            mesh.v(self.keys[pivot]),
-                        ) {
-                            break;
-                        }
-                    }
-                    loop {
-                        j -= 1;
-                        if leq(
-                            mesh.v(self.keys[pivot]),
-                            mesh.v(self.keys[self.order[j as usize]]),
-                        ) {
-                            break;
-                        }
-                    }
-                    self.order.swap(i as usize, j as usize);
-                    if i >= j {
-                        break;
-                    }
-                }
-                self.order.swap(i as usize, j as usize);
-                if i - p < r - j {
-                    stack.push((j + 1, r));
-                    r = i - 1;
-                } else {
-                    stack.push((p, i - 1));
-                    p = j + 1;
-                }
+        let mut state = PqSortState {
+            seed: 2016473283u64,
+            stack: vec![(0isize, self.size as isize - 1)],
+        };
+        while let Some((p, r)) = state.stack.pop() {
+            self.pq_sort_range(mesh, p, r, &mut state);
+        }
+    }
+    fn pq_sort_range(&mut self, mesh: &Mesh, mut p: isize, mut r: isize, state: &mut PqSortState) {
+        while r > p + 10 {
+            state.seed = state.seed.wrapping_mul(1539415821).wrapping_add(1);
+            let pivot_index = p + (state.seed % ((r - p + 1) as u64)) as isize;
+            let pivot = self.order[pivot_index as usize];
+            self.order.swap(pivot_index as usize, p as usize);
+            let (i, j) = self.pq_partition(mesh, (p, r), pivot);
+            if i - p < r - j {
+                state.stack.push((j + 1, r));
+                r = i - 1;
+            } else {
+                state.stack.push((p, i - 1));
+                p = j + 1;
             }
-            let mut i = p + 1;
-            while i <= r {
-                let pivot = self.order[i as usize];
-                let mut j = i;
-                while j > p
-                    && !leq(
-                        mesh.v(self.keys[pivot]),
-                        mesh.v(self.keys[self.order[(j - 1) as usize]]),
-                    )
-                {
-                    self.order[j as usize] = self.order[(j - 1) as usize];
-                    j -= 1;
-                }
-                self.order[j as usize] = pivot;
-                i += 1;
+        }
+        self.pq_insertion_sort(mesh, p, r);
+    }
+    fn pq_insertion_sort(&mut self, mesh: &Mesh, p: isize, r: isize) {
+        let mut i = p + 1;
+        while i <= r {
+            let pivot = self.order[i as usize];
+            let mut j = i;
+            while j > p
+                && !leq(
+                    mesh.v(self.keys[pivot]),
+                    mesh.v(self.keys[self.order[(j - 1) as usize]]),
+                )
+            {
+                self.order[j as usize] = self.order[(j - 1) as usize];
+                j -= 1;
+            }
+            self.order[j as usize] = pivot;
+            i += 1;
+        }
+    }
+    fn pq_partition(
+        &mut self,
+        mesh: &Mesh,
+        (p, r): (isize, isize),
+        pivot: usize,
+    ) -> (isize, isize) {
+        let (mut i, mut j) = (p - 1, r + 1);
+        loop {
+            i = self.pq_scan_forward(mesh, i, pivot);
+            j = self.pq_scan_backward(mesh, j, pivot);
+            self.order.swap(i as usize, j as usize);
+            if i >= j {
+                break;
+            }
+        }
+        self.order.swap(i as usize, j as usize);
+        (i, j)
+    }
+    fn pq_scan_forward(&self, mesh: &Mesh, mut i: isize, pivot: usize) -> isize {
+        loop {
+            i += 1;
+            if leq(
+                mesh.v(self.keys[self.order[i as usize]]),
+                mesh.v(self.keys[pivot]),
+            ) {
+                return i;
+            }
+        }
+    }
+    fn pq_scan_backward(&self, mesh: &Mesh, mut j: isize, pivot: usize) -> isize {
+        loop {
+            j -= 1;
+            if leq(
+                mesh.v(self.keys[pivot]),
+                mesh.v(self.keys[self.order[j as usize]]),
+            ) {
+                return j;
             }
         }
     }

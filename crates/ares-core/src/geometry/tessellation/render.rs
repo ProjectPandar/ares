@@ -173,37 +173,56 @@ impl Tess {
                 largest = group;
             }
         }
-        let mut e = largest.edge;
+        let e = largest.edge;
         match largest.primitive {
             Primitive::Triangles => self.add_trail(self.e(e).face, lonely),
-            Primitive::Fan => {
-                emitter.begin(Primitive::Fan);
-                emitter.vertex(self.v(self.e(e).org).data);
-                emitter.vertex(self.v(self.dst(e)).data);
-                while !self.marked(self.e(e).face) {
-                    let f = self.e(e).face;
-                    self.mesh.faces[f].marked = true;
-                    e = self.e(e).onext;
-                    emitter.vertex(self.v(self.dst(e)).data);
-                }
+            Primitive::Fan => self.render_fan(e, emitter),
+            Primitive::Strip => self.render_strip(e, emitter),
+        }
+    }
+    fn render_fan(&mut self, mut e: usize, emitter: &mut Emitter) {
+        emitter.begin(Primitive::Fan);
+        emitter.vertex(self.v(self.e(e).org).data);
+        emitter.vertex(self.v(self.dst(e)).data);
+        while !self.marked(self.e(e).face) {
+            let f = self.e(e).face;
+            self.mesh.faces[f].marked = true;
+            e = self.e(e).onext;
+            emitter.vertex(self.v(self.dst(e)).data);
+        }
+    }
+    fn render_strip(&mut self, mut e: usize, emitter: &mut Emitter) {
+        emitter.begin(Primitive::Strip);
+        emitter.vertex(self.v(self.e(e).org).data);
+        emitter.vertex(self.v(self.dst(e)).data);
+        while !self.marked(self.e(e).face) {
+            let f = self.e(e).face;
+            self.mesh.faces[f].marked = true;
+            e = self.dprev(e);
+            emitter.vertex(self.v(self.e(e).org).data);
+            if self.marked(self.e(e).face) {
+                break;
             }
-            Primitive::Strip => {
-                emitter.begin(Primitive::Strip);
-                emitter.vertex(self.v(self.e(e).org).data);
-                emitter.vertex(self.v(self.dst(e)).data);
-                while !self.marked(self.e(e).face) {
-                    let f = self.e(e).face;
-                    self.mesh.faces[f].marked = true;
-                    e = self.dprev(e);
-                    emitter.vertex(self.v(self.e(e).org).data);
-                    if self.marked(self.e(e).face) {
-                        break;
-                    }
-                    let f = self.e(e).face;
-                    self.mesh.faces[f].marked = true;
-                    e = self.e(e).onext;
-                    emitter.vertex(self.v(self.dst(e)).data);
-                }
+            let f = self.e(e).face;
+            self.mesh.faces[f].marked = true;
+            e = self.e(e).onext;
+            emitter.vertex(self.v(self.dst(e)).data);
+        }
+    }
+    fn render_lonely_triangles(&self, mut f: usize, emitter: &mut Emitter) {
+        while f != 0 {
+            self.render_lonely_face(f, emitter);
+            f = self.f(f).trail;
+        }
+    }
+    fn render_lonely_face(&self, f: usize, emitter: &mut Emitter) {
+        let start = self.f(f).edge;
+        let mut e = start;
+        loop {
+            emitter.vertex(self.v(self.e(e).org).data);
+            e = self.e(e).lnext;
+            if e == start {
+                break;
             }
         }
     }
@@ -224,19 +243,7 @@ impl Tess {
         }
         if lonely != 0 {
             emitter.begin(Primitive::Triangles);
-            let mut f = lonely;
-            while f != 0 {
-                let start = self.f(f).edge;
-                let mut e = start;
-                loop {
-                    emitter.vertex(self.v(self.e(e).org).data);
-                    e = self.e(e).lnext;
-                    if e == start {
-                        break;
-                    }
-                }
-                f = self.f(f).trail;
-            }
+            self.render_lonely_triangles(lonely, &mut emitter);
         }
         emitter.output
     }
@@ -255,28 +262,37 @@ fn cache_normal(points: &[[f64; 3]], norm: &mut [f64; 3], check: bool) -> i32 {
         ];
         let dot = n[0] * norm[0] + n[1] * norm[1] + n[2] * norm[2];
         if !check {
-            for axis in 0..3 {
-                if dot >= 0.0 {
-                    norm[axis] += n[axis];
-                } else {
-                    norm[axis] -= n[axis];
-                }
-            }
+            compute_normal_accumulate(norm, n, dot);
         } else if dot != 0.0 {
-            if dot > 0.0 {
-                if sign < 0 {
-                    return 2;
-                }
-                sign = 1;
-            } else {
-                if sign > 0 {
-                    return 2;
-                }
-                sign = -1;
+            sign = compute_normal_check(sign, dot);
+            if sign == 2 {
+                return 2;
             }
         }
     }
     sign
+}
+fn compute_normal_accumulate(norm: &mut [f64; 3], n: [f64; 3], dot: f64) {
+    for axis in 0..3 {
+        if dot >= 0.0 {
+            norm[axis] += n[axis];
+        } else {
+            norm[axis] -= n[axis];
+        }
+    }
+}
+fn compute_normal_check(sign: i32, dot: f64) -> i32 {
+    if dot > 0.0 {
+        if sign < 0 {
+            return 2;
+        }
+        1
+    } else {
+        if sign > 0 {
+            return 2;
+        }
+        -1
+    }
 }
 pub(super) fn cache(points: &[[f64; 3]], z: f64, flip: bool) -> Option<Vec<[f64; 3]>> {
     if points.len() < 3 {

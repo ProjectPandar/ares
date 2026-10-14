@@ -86,21 +86,15 @@ pub(super) fn project(mesh: &mut Mesh) {
         mesh.vertices[v].t = c[0] * t_unit[0] + c[1] * t_unit[1] + c[2] * t_unit[2];
         v = mesh.v(v).next;
     }
+    check_orientation(mesh);
+}
+fn check_orientation(mesh: &mut Mesh) {
     let mut area = 0.0;
     let mut f = mesh.f(F_HEAD).next;
     while f != F_HEAD {
         let start = mesh.f(f).edge;
         if mesh.e(start).winding > 0 {
-            let mut e = start;
-            loop {
-                let o = mesh.v(mesh.e(e).org);
-                let d = mesh.v(mesh.dst(e));
-                area += (o.s - d.s) * (o.t + d.t);
-                e = mesh.e(e).lnext;
-                if e == start {
-                    break;
-                }
-            }
+            orientation_face_area(mesh, start, &mut area);
         }
         f = mesh.f(f).next;
     }
@@ -109,6 +103,19 @@ pub(super) fn project(mesh: &mut Mesh) {
         while v != V_HEAD {
             mesh.vertices[v].t = -mesh.v(v).t;
             v = mesh.v(v).next;
+        }
+    }
+}
+
+fn orientation_face_area(mesh: &Mesh, start: usize, area: &mut f64) {
+    let mut e = start;
+    loop {
+        let o = mesh.v(mesh.e(e).org);
+        let d = mesh.v(mesh.dst(e));
+        *area += (o.s - d.s) * (o.t + d.t);
+        e = mesh.e(e).lnext;
+        if e == start {
+            break;
         }
     }
 }

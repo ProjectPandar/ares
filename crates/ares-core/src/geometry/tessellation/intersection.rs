@@ -2,7 +2,13 @@
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/
-use super::{Tess, predicates};
+use super::{RightEdges, Tess, predicates};
+struct IntersectData {
+    org_up: usize,
+    dst_up: usize,
+    org_lo: usize,
+    dst_lo: usize,
+}
 impl Tess {
     fn vertex_weights(&mut self, isect: usize, org: usize, dst: usize) {
         let i = self.v(isect);
@@ -18,14 +24,13 @@ impl Tess {
                 (w0 as f64) * o.coords[axis] + (w1 as f64) * d.coords[axis];
         }
     }
-    fn intersect_data(
-        &mut self,
-        isect: usize,
-        org_up: usize,
-        dst_up: usize,
-        org_lo: usize,
-        dst_lo: usize,
-    ) {
+    fn intersect_data(&mut self, isect: usize, data: IntersectData) {
+        let IntersectData {
+            org_up,
+            dst_up,
+            org_lo,
+            dst_lo,
+        } = data;
         self.mesh.vertices[isect].coords = [0.0; 3];
         self.vertex_weights(isect, org_up, dst_up);
         self.vertex_weights(isect, org_lo, dst_lo);
@@ -87,7 +92,15 @@ impl Tess {
                 up = self.top_left(up);
                 eu = self.r(self.below(up)).edge;
                 self.finish_left(self.below(up), lo);
-                self.add_right(up, self.oprev(eu), eu, eu, true);
+                self.add_right(
+                    up,
+                    RightEdges {
+                        first: self.oprev(eu),
+                        last: eu,
+                        top_left: eu,
+                    },
+                    true,
+                );
                 return true;
             }
             if du == self.event {
@@ -98,7 +111,15 @@ impl Tess {
                 let e = self.rprev(self.r(self.below(up)).edge);
                 self.regions[lo].edge = self.oprev(el);
                 el = self.finish_left(lo, 0);
-                self.add_right(up, self.e(el).onext, self.rprev(eu), e, true);
+                self.add_right(
+                    up,
+                    RightEdges {
+                        first: self.e(el).onext,
+                        last: self.rprev(eu),
+                        top_left: e,
+                    },
+                    true,
+                );
                 return true;
             }
             if predicates::sign(self.v(du), self.v(self.event), isect) >= 0.0 {
@@ -127,7 +148,15 @@ impl Tess {
         self.mesh.vertices[v].s = isect.s;
         self.mesh.vertices[v].t = isect.t;
         self.mesh.vertices[v].pq_handle = self.queue.insert(&self.mesh, v);
-        self.intersect_data(v, ou, du, ol, dl);
+        self.intersect_data(
+            v,
+            IntersectData {
+                org_up: ou,
+                dst_up: du,
+                org_lo: ol,
+                dst_lo: dl,
+            },
+        );
         let above = self.above(up);
         self.regions[above].dirty = true;
         self.regions[up].dirty = true;
