@@ -100,7 +100,20 @@ fn check(label: &str) {
     let reference = fs::read(root.join("native/plate_1.gcode")).unwrap();
     let text = std::str::from_utf8(&reference).unwrap();
     for key in ["retract_before_wipe", "retraction_length", "wipe"] {
-        assert!(text.contains(&format!("; {key} = {}\n", case[key].as_str().unwrap())));
+        let prefix = format!("; {key} = ");
+        let actual = text
+            .lines()
+            .find_map(|line| line.strip_prefix(&prefix))
+            .unwrap();
+        assert_eq!(
+            actual.trim_end_matches('%').parse::<f64>().unwrap(),
+            case[key]
+                .as_str()
+                .unwrap()
+                .trim_end_matches('%')
+                .parse::<f64>()
+                .unwrap()
+        );
     }
     let moves: Vec<_> = text
         .split(";WIPE_START\n")
