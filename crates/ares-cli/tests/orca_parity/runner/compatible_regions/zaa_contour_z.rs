@@ -77,7 +77,7 @@ fn orca_parity_zaa_sloped_roof_preserves_complete_xyz_output() {
     }
 }
 
-fn wedge(project: &[u8], enabled: bool) -> (Vec<u8>, serde_json::Value) {
+pub(super) fn wedge(project: &[u8], enabled: bool) -> (Vec<u8>, serde_json::Value) {
     let mut input = zip::ZipArchive::new(Cursor::new(project)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let mut unchanged = serde_json::Map::new();

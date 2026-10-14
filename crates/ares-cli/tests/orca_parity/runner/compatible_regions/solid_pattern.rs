@@ -124,3 +124,6 @@ mod anchor_length_projection;
 
 #[path = "zaa_contour_z.rs"]
 mod zaa_contour_z;
+
+#[path = "zaa_modifier_slice_z.rs"]
+mod zaa_modifier_slice_z;
