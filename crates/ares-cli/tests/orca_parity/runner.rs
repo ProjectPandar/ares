@@ -87,6 +87,9 @@ pub(crate) mod application;
 #[path = "runner/application_tests.rs"]
 mod application_tests;
 #[cfg(test)]
+#[path = "runner/arachne_counterbore.rs"]
+mod arachne_counterbore;
+#[cfg(test)]
 #[path = "runner/arachne_counterbore_none.rs"]
 mod arachne_counterbore_none;
 #[cfg(test)]
