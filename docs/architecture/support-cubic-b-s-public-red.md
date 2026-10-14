@@ -65,3 +65,57 @@ Run official and seeded sequentially on CPU12 outer taskset, jobs1/threads2,
 fresh artifact/cache root per mode. Full/workspace remain coordinator-only;
 no push, no production before RED evidence review. Stop on non-admission or
 unexpected baseline/control failures; do not weaken the matrix to obtain RED.
+
+## Fresh RED receipt, 2026-10-15
+
+Original test-only RED48a61b997 rebased cleanly to
+a5f485f159c580e5fd0d9ec9c35dc67fc057d392 on main
+48ff6b184b4681e30a855b0ffed42873c36d0f27. All six range-diff entries
+are `=`; approved B-T6fd maps to3bc8c3d64 without patch changes.
+The following evidence was collected on that exact clean test head.
+This receipt is a subsequent docs-only update, with no test/source changes.
+
+Root /tmp/worker3-support-b-s-red-nefse_1y; default test opt1, Rust1.99.0,
+outer taskset CPU12, jobs1/threads2, fresh official/seeded cache/artifact
+directories. fmt exit0. The 57 observed descendant processes, including
+18 sampled actual Native processes, all had Cpus_allowed_list=12.
+Both modes ran ten selected public API+CLI tests: six strict PASS and four
+expected complete-output FAIL (nextest exit100). Native export/slice commands
+were20/20 exit0 per mode, with persisted reaped-child receipts. No retry,
+normalization change, Native rejection, setup error or weakened assertion.
+
+| Cases | Result in each mode | Lines Native/API/CLI | First difference |
+| --- | --- | --- | --- |
+| S45, SAUTO | RED | 5425 | layer4, line1418, extrusion rounding |
+| S50, S125 | RED | 5353 | layer4, line1426, Y rounding |
+| A45, AAUTO | strict PASS | 5425 | none |
+| A50, A125 | strict PASS | 5353 | none |
+| R1 | strict PASS | 5835 | none |
+| L1 | strict PASS | 5887 | none |
+
+All20 cases admitted in the public validated API, actual CLI exit0;
+API/CLI raw G-code SHA256 matched per case, layer markers and total line
+counts matched Native. The four Support differences occur in sparse infill,
+with the same first difference in official and seeded. Complete ordered
+comparator results and all raw streams remain runtime artifacts outside Git.
+
+Input audit compared every regenerated project with its original W6 project,
+and official against seeded. All nine uncompressed ZIP members per project
+were byte-identical: model, config, metadata and other member data unchanged.
+Raw project SHA changed solely because local/central ZIP DOS timestamps changed;
+the byte-offset audit verified every differing archive byte lies in those
+timestamp fields. The authored STL and unchanged generator hashes match the
+manifest. This explains input SHA changes without replacing any input or
+rerunning to hide a difference. Oracle wrapper SHA256
+1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3.
+
+Durable evidence JSON:
+/home/indexyz/ares-evidence/worker3/support-cubic-b-s-red/evidence.json,
+SHA25697a405380ba0dc47b46160be0c9293957b3bb6f1ecac6e9852a765264470384e.
+Raw streams, projects, command receipts, affinity observations, logs, run script
+and range-diff are retained in a5f485f15-public-red.tar.gz in that directory,
+SHA25620e0a4615b6fa45544e81f09cabf3d0f30d9e2348a43406e692d075c0def9b58.
+The earlier /tmp/worker3-support-b-s-red-ig75o6ej batch was terminated during
+compilation for FULL10: VOID, zero Native artifacts, never counted as RED.
+Its checkpoint is retained in the sibling support-cubic-b-s-red-void-full10
+directory. No B-S production changes yet; GREEN waits for RED evidence review.
