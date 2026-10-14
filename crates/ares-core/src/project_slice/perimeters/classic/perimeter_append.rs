@@ -96,7 +96,7 @@ fn transform_object(
                         source,
                         inactive,
                         wall_sequence,
-                        index,
+                        traversal_record.layer_id,
                         reorient,
                     ))
                 }
