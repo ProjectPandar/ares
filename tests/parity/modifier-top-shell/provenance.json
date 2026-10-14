@@ -1,0 +1,176 @@
+{
+  "base_main": "5a9687ac0",
+  "source": "PrintApply.cpp:1032-1088; PrintObject.cpp:3664-3710/2223-2251/3973-3995",
+  "cases": {
+    "classic-none": {
+      "sha256": "77c3b81899ce1063e357e89d0885ceef9069d69cdb06fe9002100b95587eafc4",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": null,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "classic-zero": {
+      "sha256": "aff867c7d02799bb02f75390cd3c7905dca4e7d7a09c884b186cd79034e0565e",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 0,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "classic-one": {
+      "sha256": "80cb9a3423d0d3cd174708423e21cc0bd1472f7984735d5f86563300acfa0d51",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 1,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "classic-four": {
+      "sha256": "e07299574a310ec38ec3d69e99eaf2b9d7f89b68d9c873dfc2adaf7735fe0330",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 4,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "classic-equal": {
+      "sha256": "6391f2d349ce93d270964f66a7ab0311f1f76383218dbe43b75c8d01d6063474",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 2,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "classic-outside": {
+      "sha256": "d965f1cbc107eefa147956d66fb2bc1908fec49441d7bce531d8b92689949b83",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 4,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": true,
+      "overlap_later_top": null
+    },
+    "classic-overlap": {
+      "sha256": "cce0c617f6c3c0a1bc86225dd3a103c4d43781cf1955790fe8fff2f6954f4def",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 4,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": 1
+    },
+    "classic-horizontal-none": {
+      "sha256": "08356de660939376adbb06a80f24e31964eecef8aaa40f779e62f830dff7ab25",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": null,
+      "parent_top": 2,
+      "horizontal": true,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "classic-horizontal-one": {
+      "sha256": "e662f8dd87a9a3506659647facd8206db02b65f6a2eb43fd72a799a9fe82e76d",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 1,
+      "parent_top": 2,
+      "horizontal": true,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "classic-horizontal-four": {
+      "sha256": "a9b34b5ff4f3465373d3696908c98562d4a56b7b35fca56fae05a183662a2417",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "top": 4,
+      "parent_top": 2,
+      "horizontal": true,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "arachne-none": {
+      "sha256": "cb36461d057b4c4244826c54e5e112902bd19c5bfb85bbae7dd88e26c4cd4180",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "top": null,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "arachne-zero": {
+      "sha256": "ea7156efde094beb38132513e87d24c117e9ac76a9912e1cad36f4e03b033b1f",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "top": 0,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "arachne-one": {
+      "sha256": "044525f22eba144ad6208e8d14b4f40c5475b82977431aaa6e16fdd67bd62a67",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "top": 1,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "arachne-four": {
+      "sha256": "6ac471c530d402170f305dbba81db2e5a6206228bbea0e8e7b8c932f48a43341",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "top": 4,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "arachne-equal": {
+      "sha256": "c5bfe7779b9849edf9d8eeb4d2e103d234798a15ea9de840e444419b42f9df16",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "top": 2,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": null
+    },
+    "arachne-outside": {
+      "sha256": "425170ef5d84078e1cfeb803239bc16380bdd65e5e30ccfb35dc8e0927236b16",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "top": 4,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": true,
+      "overlap_later_top": null
+    },
+    "arachne-overlap": {
+      "sha256": "896b7b55bb0617d95f4b5d601a73ca1977ee4fcf9cc23b57692729665e734bc7",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "top": 4,
+      "parent_top": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_top": 1
+    }
+  }
+}
