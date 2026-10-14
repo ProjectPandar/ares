@@ -69,12 +69,12 @@ impl SkirtPlan {
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
     ) {
-        self.emit_loops(
-            output,
-            (layer, &self.loops[self.member_groups[group].loops.clone()]),
-            geometry,
-            state,
-        );
+        let mut range = self.member_groups[group].loops.clone();
+        // GCode.cpp:4417-4424 selects the innermost loop of this group's range.
+        if layer.index > 0 && self.single_loop_draft_shield {
+            range.start = range.end - 1;
+        }
+        self.emit_loops(output, (layer, &self.loops[range]), geometry, state);
     }
 
     pub(super) fn extrusion_paths(&self) -> impl Iterator<Item = (&[Point], f32)> {
