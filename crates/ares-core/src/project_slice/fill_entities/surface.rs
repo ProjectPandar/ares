@@ -223,6 +223,10 @@ pub(in crate::project_slice) fn surface_polylines(
         // distinct intersections onto one contour vertex) walk the whole
         // contour like `take_ccw_full` (`FillBase.cpp:474-486`); the
         // `append_full` loop mirrors that release behavior.
+        ProcessInfillPattern::Line => {
+            let fill = surface_fill(request);
+            super::line::expolygon_polylines(&request.expolygon, &fill, &request.call)
+        }
         ProcessInfillPattern::LateralLattice => {
             let fill = surface_fill(request);
             super::lateral_lattice::polylines(
@@ -236,17 +240,13 @@ pub(in crate::project_slice) fn surface_polylines(
         // Guarded: Native emits real ironing paths that Ares does not
         // reproduce byte-identically (probe evidence, organic-overhang
         // fixture, `;TYPE:Ironing` E-line counts vs Ares CLI diffs):
-        // - Line: 699 native E-lines, Ares travel/link geometry diverges.
-        // - CrossHatch: 779 native E-lines, Ares anchor/starting point
-        //   diverges.
         // - HilbertCurve / ArchimedeanChords / OctagramSpiral: 19118 / 4149 /
         //   1527 native E-lines; plane-path fills need the object bounding
         //   box + resolution context (`generate.rs` sparse arms).
         // - Lightning / AdaptiveCubic / SupportCubic: Native segfaults
         //   (exit 139) on the uninitialized filler at this call site — there
         //   is no oracle output to mirror.
-        ProcessInfillPattern::Line
-        | ProcessInfillPattern::CrossHatch
+        ProcessInfillPattern::CrossHatch
         | ProcessInfillPattern::HilbertCurve
         | ProcessInfillPattern::ArchimedeanChords
         | ProcessInfillPattern::OctagramSpiral
