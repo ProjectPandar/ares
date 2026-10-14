@@ -175,3 +175,91 @@ including C45M2's layer-17 non-sparse path mismatch (first Native geometry line
 fixed by pitch arithmetic. Do not touch anchor_projection or consume a flow /
 solid-path fix without another ruling. All accepted cases must match both modes;
 then run non-RED raw auditing and the previously specified gates.
+
+## Proposed amendment: Concentric sparse anchoring calls Fill::fill_surface
+
+Status: pending approval; numeric candidate `7f016498c` remains NOT GREEN.
+It is rebased cleanly onto `caac760d4` (all six range-diff entries `=`).
+Its exact-HEAD public tests give 3/4 in both modes: C30M1/2/3 whole-byte PASS,
+C45M2 FAIL. Original RED cases and all assertions remain unchanged.
+
+### Plain-main comparison and correction to the prior interpretation
+
+Fresh CPU11 official+seeded evidence:
+`/tmp/worker6-concentric-main-c45.jij3ltgy/report.json`.
+Same C45M2 input bytes, main binary built at exact `caac760d4` by FULL13.
+Native accepts (exit0); main still exits154 / -102, so main is NOT a parity PASS.
+In retained physical-layer-17 output, however, main's Internal Bridge travel
+is `G1 X140.571 Y133.201 F9000`, exactly the Native point. Candidate has
+`G1 X141.05 Y133.201 F9000`. Native and main's following bridge moves also agree
+at this initial sequence; candidate's are tilted. Six actual Native samples,
+all CPU11; no retries or builds. The numeric trial's Native normalized stream
+is identical to this fresh Native stream.
+
+Therefore the residual is NOT present at this point on plain main. The previous
+observation that it is unchanged between the spacing-only and numeric candidates
+was accurate, but does not establish independence from the spacing unit fix.
+Repairing the shared generator exposes its other caller's incomplete port.
+Do not dismiss this as pre-existing or remove C45M2 from acceptance.
+
+### Owning source boundary and observed first upstream discrepancy
+
+The boundary is the Concentric arm of
+`Layer::generate_sparse_infill_polylines_for_anchoring` (`Fill.cpp:1394-1503`),
+called by `PrintObject::bridge_over_infill` (`PrintObject.cpp:2725-2754`).
+It is NOT `BridgeDetector::detect_angle`: this path uses PrintObject's local
+`determine_bridging_angle` lambda (`PrintObject.cpp:2849-2934`), selected with
+actual sparse anchors at 3242-3251 and consumed with those boundaries by
+`construct_anchored_polygon` at 3268-3272.
+
+`Fill.cpp:1441` constructs the filler; `FillBase.hpp:182-187` initializes overlap
+to zero. `Fill.cpp:1479` converts density via a double product, 1489 forwards
+multiline, 1494 sets mm spacing, and 1497 calls `f->fill_surface`.
+`FillBase.cpp:105-117` first offsets the surface by
+`float(scale_(overlap - 0.5 * spacing))`, then invokes the Concentric primitive.
+Thus the anchor input must be contracted by half nominal spacing at zero overlap
+before `FillConcentric.cpp:31` applies its separate multiline contraction.
+
+Rust destination:
+`project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/arms.rs:286-302`.
+Its Concentric arm calls `fill_concentric_sparse(&expolygon, ...)` directly,
+without the Fill::fill_surface input offset, and still uses an f32 density
+product at line294. Other pattern arms are outside this amendment.
+This also corrects the earlier caller inventory: besides locked_zag.rs:35,
+this anchoring Concentric arm is an additional f32-product caller. The earlier
+inventory focused on emission callers; locked_zag remains a separate finding.
+
+Read-only existing-binary gdb evidence:
+`/tmp/worker6-concentric-diagnose.4xitirmn/report.json`, `native-values.json`,
+`rust-paths.json`. Native normalized output and candidate raw output are exactly
+unchanged by observation. Call-stack classification distinguishes the anchoring
+call from emitted calls (no positional inference):
+
+| C45M2 pre-multiline outer-ring first point | Native | candidate |
+| --- | --- | --- |
+| anchoring, source layer id15 | (-30816148,-22816148) | (-31019688,-23019688) |
+| emitted sparse, layer id3 | (-30816148,-22816148) | (-30816148,-22816148) |
+
+The anchor discrepancy is 203540 scaled units in each coordinate: half the
+observed spacing 0.40707963705062866mm, offset through the float boundary.
+Native anchoring density is 0.44999998807907104, pitch 1809242; emission uses the
+same values. The already-correct emission arm supplies the missing wrapper
+contraction. This identifies the first observed geometric mismatch at the
+projection input, before bridge-angle selection or G-code emission. It does not
+claim that an unexecuted fix has proved complete downstream closure.
+
+### Requested bounded change and acceptance
+
+Only the Concentric anchoring arm: apply the zero-overlap half-spacing offset
+with the same expression types / Miter policy as Fill::fill_surface, forward
+all resulting domains to the existing primitive, and convert its density using
+`(0.01_f64 * f64::from(percent)) as f32`. Reuse existing geometry primitives;
+no shared generator/Clipper changes, no new helper unless the LOC rule requires it.
+No edits to transaction/anchor_projection.rs, bridge angle, candidate geometry,
+BridgeDetector, routing, other pattern arms, or locked_zag.
+
+Keep all four public RED witnesses and their exact whole-byte comparison.
+On approval, make a separate production commit, rerun all four in official+seeded
+on CPU11, then follow the existing option_coverage/non-RED raw/strict/fmt/wasm gates.
+Any residual requires STOP and another ruling. No assertion removal, hash rebinding,
+normalization expansion, fallback, Native rebuild or committed Native artifact.
