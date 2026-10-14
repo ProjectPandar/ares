@@ -1,24 +1,27 @@
 # N-split Filled: bounded surface-writeback localization
 
-Status: draft during FULL8 freeze; final SPEC request follows END. No
-production or test change authorized.
-Base main6e0349d9f6da4c0dfdae3cedb26ef9cc0a98e412. W3's approved
-odd-order candidate cfff95d6a remains untouched on its separate branch.
-Coordinator reassigned this analysis ahead of first-layer follow-up.
-Window:2026-10-14 19:42:40–20:42:40 Asia/Singapore,3600 wall-clock seconds.
-FULL8 freezes runtime work; this deadline is not silently extended.
+Status: SPEC-REVIEW-REQUEST; localization complete, no implementation.
+Base main57fea94989ff362129d0e53da0c35c298822f689 (FULL8 merged).
+The docs-only checkpoint was rebased with range-diff1/1 `=`.
+W3 odd-order was merged by coordinator; its original branch remains untouched.
+
+The bounded window started2026-10-14 19:42:40 Asia/Singapore.
+Coordinator paused it during FULL8,19:56:40–20:52:05 (3325s).
+Adjusted deadline21:38:05; localization completed20:56:07.864,
+1082.864 effective seconds (~18min). Runtime investigation is finished.
+W5 clip/chain observation was explicitly CANCELLED and was not resumed.
 
 ## Exact upstream and Rust boundaries
 
 PerimeterGenerator.cpp::process_no_bridge:1728–1929 owns this state change.
 Classic process copies `Surfaces all_surfaces` at1212; process_arachne copies
-it at2121 and invokes the shared function at2123. Surface.hpp defines
+it at2121 and invokes the shared function at2123. Surface.hpp:116 defines
 `Surfaces` as std::vector<Surface>. The shared function retains a pointer at
 1739, runs Filled nested-island intersection
 and replacement at1826–1854, appends copied metadata and replacement polygons
 at1841, erases the original at1845, repairs the current pointer only when
 an earlier index is removed at1846–1848, and writes retained `last` through
-the pointer at1922. Surface.hpp:37–44 defines the owning Surface fields;
+the pointer at1922. Surface.hpp:38–43 defines the owning Surface fields;
 ExPolygon/Polygon retain ordered contours and holes.
 
 Rust destination for analysis is project_slice/perimeters/classic/
@@ -33,9 +36,9 @@ Included: N-split Arachne Filled, layer1, one region, ordered input surfaces,
 nested replacements, append/erase lifetime and retained current writeback.
 Deferred: Classic M ownership/grouping, other counterbore modes, Arachne
 wall support/materialization, bridge detector formulas, polygon normalization,
-fitter/ETA changes, and any production/oracle correction. No guessed mask,
-index, actual invalid-reference emulation or output-comparator change is
-included without a separate reviewed implementation slice.
+fitter/ETA changes, CLI profile-footer handling and oracle corrections.
+This request proposes only the capacity/reference lifecycle described below;
+no production, tests or comparator changes have been made.
 
 ## Frozen public RED and capture identity
 
@@ -56,13 +59,15 @@ localization preserves the complete stream and all M73/movement assertions.
 
 The existing owned Ares binary was built at7498165e0, with executable source
 identical to approved cfff95d6a. Counterbore, filled, region-surface and
-geometry sources match main6e0349. Its only production delta is endpoint
-sorting; the frozen STL has manifold edge-use counts. More directly, the
+geometry sources match current main57fea94989 (audited by path-scoped
+git diff against binary producer7498165e0, no changed files). The binary
+is not claimed to have been built at the new main. Endpoint sorting is now
+merged; the frozen STL has manifold edge-use counts. More directly, the
 actual counterbore entry ordered polygon arrays match Native exactly.
 That measured equality is the input prerequisite, not an assumption from
 topology or a claim that different public adapters are interchangeable.
 
-## Completed valid observations before FULL8
+## Completed valid ordered-state observations
 
 Seeded source-state root:/tmp/worker3-counterbore-seeded-state-npun_56f.
 Actual function symbol start0x555556601620; entry stop skips20 prologue bytes.
@@ -97,48 +102,69 @@ frozen Native raw SHA:
 66ecc9f1aa762bf86045d854cf7dfb71315a6dece0f4eda3e3eaa4ab6eac83ca.
 The generator timestamps differ; no movement/M73/stat/footer is removed.
 
-Valid partial Rust root:/tmp/worker3-counterbore-ares-state-p7b22wnz.
-Entry has identical two ordered polygon arrays; spacing457079 and external
-width419999 match Native. Its readable current0 post-writeback ring equals
-Native's prepared `last` exactly: hole half-width14.419999mm. Final ordered
-arrays have three surfaces; only polygon index0 differs from Native.
-Both later polygons agree exactly. Source collection divergence therefore
-exists before Arachne wall generation. This is stronger than a role/ETA
-observation, but not yet a complete earliest-intermediate-state trace.
+Fresh valid Rust root:/tmp/worker3-counterbore-ares-state-d8vwdaom.
+Fresh official root:/tmp/worker3-counterbore-official-state-3vxnu7bo.
+Both ran after FULL8 END on CPU12; GDB and inferiors exit0.
+Native official also returns result0. No source/inferior values were changed,
+no inferior functions called, no allocator manipulated. Existing instruction
+breakpoints only observe active arrays, saved pointer values and live `last`;
+freed Surface memory is not decoded.
 
-## Missing fields, freeze and exit criteria
+| Comparison: Native seeded vs Ares | Result |
+|---|---|
+| Entry,2 surfaces/cap2 | Ordered polygons and all metadata equal |
+| Nested replacement ready | Same ordered2 replacements; arrays equal |
+| Before erase,4 surfaces/cap4 | Arrays equal |
+| After erase,3 surfaces/cap4 | Arrays equal |
+| Before current0 writeback | Arrays equal; ordered `last` equal |
+| After current0 writeback | First captured live-array divergence, index0 only |
+| Return | Other two polygons equal; index0 hole differs |
 
-Rust nested/current/pre-writeback locals were optimized out in the valid
-partial attempt. Those errors are preserved, not filled with inferred data.
-A corrected helper preserves readable ordered surfaces even when optional
-local-index fields are unavailable; its latest runtime root
-/tmp/worker3-counterbore-ares-state-ha1m36hq is ENTIRELY VOID: FULL8 started
-in inbox19:56:40, this leg ran19:57:06–19:57:14. By the freeze process audit
-it had ended; killed PID list is empty. No kill/resume is falsely claimed.
-It contributes no localization evidence. No active owned runtime remains.
+Spacing457079 and external width419999 agree. Metadata comparisons cover
+surface type, thickness, thickness_layers, bridge_angle and extra_perimeters.
+Native stInternal enum4 maps to Rust Internal by source, not by numeric
+assumption. Ares current0 writeback equals Native prepared `last` exactly;
+Native live array remains unchanged. This localizes the divergence before
+wall generation, at the retained-polygon writeback, rather than a guessed
+role or ETA correction. Optional optimized Rust indices are explicitly
+unavailable at nested/pre-writeback stops; actual arrays/replacements/last
+are readable, and post-writeback current indices0/1/2 are readable.
 
-Also retained: first Native root1d_61z5q has incorrect prologue-relative stage
-mapping, and Rust roots zaezfcv2/lf_8p61x have byte-pointer decoding failures.
-They are not successful stage captures. All corrections remain explicit.
+Official's actual entry/return ordered arrays and capacities agree with
+seeded. Official intermediate instruction stages were not sampled; seeded
+instruction offsets were never reused for that binary. Official raw stream
+SHA256:b9e17ef15319e6432c9497de0e934782e148a9d1aa266611181c27be3fb597dd.
+Both Native captured streams match the frozen Native stream with only the
+existing generated-by-line treatment; no new normalization is proposed.
 
-Only after FULL8 END, and only before the original deadline, complete:
+### Adapter boundary and complete-stream limitations
 
-1. Fresh Rust nested replacement/before-and-after erase/pre-and-post current
-   writeback arrays. Preserve unavailable-field annotations, not guessed indices.
-2. Official actual function entry/return and corresponding verified instruction
-   stages if available within the cap. Seeded instruction offsets cannot be
-   assumed valid in a different producer.
-3. Compare ordered arrays stage by stage. Report the earliest measured mismatch
-   and distinguish it from source-derived conclusions. Check each captured
-   producer's full stream against the frozen stream without extra normalization.
+GDB used the existing Ares CLI load-settings entry, whereas W4's public RED
+uses `ares_core::slice_with_profiles` with catalog/selection/overrides.
+Their Ares output differs in exactly one line: the CLI `inherits_group`
+footer contains three parent profile names, while the API and frozen Native
+both emit `; inherits_group = ;;`. All other lines, including complete
+movement, M73 and statistics streams, agree between those Ares outputs.
+CLI raw SHA256:928fe5119f97ec1349d7709e92974f475d937221a8011a68ddf7937e00d71dca;
+API raw SHA256:d27ab37712885e80ca54d23ae3cdc11a5d40086a5b1a63961b92bc43cb7f9f82.
+Thus CLI/API complete byte equality is NOT claimed. The actual equal
+counterbore input/state trace establishes core localization. The RED will
+reuse the original public API adapter and retain its full footer comparison;
+the unrelated CLI footer is deferred, never normalized away here.
 
-STOP at deadline or missing trustworthy state; publish the exact remaining
-uncertainty. Existing observations establish Native relocation plus a saved
-non-current address and later active-domain divergence. They do not authorize
-Rust to reproduce an invalid C++ lifetime, modify Native, repair downstream
-roles, weaken the public RED, or claim a safe geometry/index fix exists.
-A production slice requires SPEC approval after localization. No production
-changes, new tests, full/workspace or push here.
+### Corrections and VOID evidence
+
+All roots are retained. Native1d_61z5q used an incorrect prologue-relative
+stage mapping, so its stages are invalid. Rust zaezfcv2/lf_8p61x had
+byte-pointer decoding errors. Rust p7b22wnz is a partial trace with missing
+optimized locals; it is superseded by fresh d8vwdaom, not used to fill gaps.
+
+Rust ha1m36hq is ENTIRELY FULL8 VOID: inbox START19:56:40 preceded its
+19:57:06–19:57:14 execution. At the later process audit it had already ended;
+killed PID list is empty. No kill/resume is falsely claimed and none of its
+results count. Fresh d8vwdaom after END independently supersedes it.
+The launcher now checks the latest exclusive START/END before any runtime
+launch. No owned GDB/Native run remains pending.
 
 ## Proposed deterministic rewrite slice for approval
 
@@ -182,12 +208,13 @@ replacement pieces. Other lifetimes requiring behavior not established by
 source plus actual data are a STOP/amendment boundary, not permission to
 invent a rejection, fallback or silently relax parity.
 
-RED is N-split ONLY: commit the frozen input and its generator/profile
-provenance as pure inputs; public Native official+seeded must accept/export,
+RED is N-split ONLY: reuse W4 public `slice_with_profiles` input/selection
+path, commit the frozen input and generator/profile provenance as pure
+inputs; Native official+seeded must accept/export,
 and current Ares must retain the full-stream failure. Keep existing whole
 comparison, movement/M73/stat/footer assertions and every unrelated test.
-No new broad M matrix or test retirement. After RED is reported and approved,
-an independent small GREEN commit must match full output in both modes,
+No new broad M matrix or test retirement. After SPEC approval and the
+separate RED commit/evidence report, an independent small GREEN commit must match full output in both modes,
 preserve existing counterbore controls and pass strict/fmt/wasm before review.
 Workspace/full remain explicit coordinator allocations.
 
@@ -195,3 +222,19 @@ Local source-header path:
 /nix/store/qrn789mrv652j7f5bcjp367npzpcyvdi-gcc-15.3.0/include/c++/15.3.0/bits/.
 The compatibility rule is included here for reviewer selection; it is not
 yet implemented or treated as universally guaranteed Native behavior.
+
+## Durable evidence receipt
+
+Archive (outside Git; includes valid, corrected and VOID roots, commands,
+full ordered state JSONL, source assembly, selected supplier headers, original
+public inputs/outputs, adapter-difference receipt and timing/agreement JSON):
+/home/indexyz/ares-evidence/worker3/counterbore-n-split-localization-20261014.tar.gz
+Bytes:380044; SHA256:3909c4bcebdea683f23a5cf1e996165b3c4b190c5dc5e8bda75d1a2abf826397.
+Cache directories and target binaries are excluded. No Native products enter
+Git. The committed stage table, input hash, stream hashes and correction
+ledger above preserve the conclusion if /tmp is cleaned after10days.
+
+This docs-only request ran no new builds/tests/full/workspace. After approval,
+all directed outer processes remain taskset CPU12 with fresh cache/artifacts,
+CARGO_BUILD_JOBS=1 and assigned window; full/workspace need explicit allocation.
+No push or production change is authorized by this SPEC request.
