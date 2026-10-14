@@ -49,6 +49,8 @@ mod brim_bed_region;
 mod brim_bed_region_controls;
 #[path = "orca_parity/brim_efc_outline.rs"]
 mod brim_efc_outline;
+#[path = "orca_parity/brim_physical_layer.rs"]
+mod brim_physical_layer;
 #[path = "orca_parity/change_filament_flush_blocks.rs"]
 mod change_filament_flush_blocks;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
