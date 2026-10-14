@@ -135,6 +135,11 @@ fn plate_custom_gcode_mode_mismatch_moves_match_gcode_processor_oracle() {
     check_emission_fixture("mode-mismatch");
 }
 
+#[test]
+fn plate_custom_gcode_same_layer_moves_match_gcode_processor_oracle() {
+    check_emission_fixture("same-layer");
+}
+
 fn check_fixture(oracle: &Path, name: &str, project: &Path, plate: Option<u32>) {
     let artifacts = workspace_path("target/gcode-moves-oracle").join(name);
     fs::create_dir_all(&artifacts).unwrap();
