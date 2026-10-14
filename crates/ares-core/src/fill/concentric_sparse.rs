@@ -57,6 +57,7 @@ pub(crate) fn fill_concentric_sparse(
     let dont_adjust = params.dont_adjust;
     // All of `min_spacing`, `distance`, `contract` are already in scaled coord
     // units (spacing is divided by scale.factor() once here).
+    let mut effective_spacing = spacing;
     let scaled_spacing = spacing / scale.factor();
     let min_spacing = scaled_spacing * f64::from(multiline);
     // `coord_t(min_spacing / params.density)` — upstream truncates the
@@ -76,11 +77,12 @@ pub(crate) fn fill_concentric_sparse(
             (x0, x1)
         };
         distance = adjust_solid_spacing(x1 - x0, distance as i64) as f64;
+        // FillConcentric.cpp:25-27: only solid adjustment rewrites mm spacing.
+        effective_spacing = distance * scale.factor();
     }
-    // `-float(scale_(0.5 * (multiline - 1) * this->spacing))` — `this->spacing`
-    // has already been reassigned to the adjusted distance upstream, so the
-    // contract derives from `distance`, not the raw option spacing.
-    let contract = (0.5 * f64::from(multiline - 1) * distance).trunc();
+    // FillConcentric.cpp:31: contract using nominal/adjusted mm spacing,
+    // not the scaled, density-dependent ring pitch. Narrow after scaling.
+    let contract = 0.5 * f64::from(multiline - 1) * effective_spacing / scale.factor();
     let mut last = if contract.abs() > f64::EPSILON {
         offset_expolygons(
             std::slice::from_ref(expolygon),
@@ -135,9 +137,9 @@ pub(crate) fn fill_concentric_sparse(
     }
     // `multiline_fill` — expand by the multiline overlap count.
     let mut polylines = if multiline > 1 {
-        // `multiline_fill(polylines_out, params, spacing)` — upstream `spacing`
-        // is `this->spacing` (the adjusted distance at full density).
-        crate::fill::multiline_offset::apply(polylines, multiline, distance, scale)?
+        // FillConcentric.cpp:54 / FillBase.cpp:2712: multiline_fill takes
+        // mm spacing; its offset implementation performs the scaling.
+        crate::fill::multiline_offset::apply(polylines, multiline, effective_spacing, scale)?
     } else {
         polylines
     };
