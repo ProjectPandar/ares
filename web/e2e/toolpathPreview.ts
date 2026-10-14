@@ -321,8 +321,9 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await page.keyboard.press("End");
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   // GCodeViewer::render (`GCodeViewer.cpp:1594-1601`): the marker stays shown once the moves thumb left the end.
-  await expect.poll(() => canvasDigest(page), { message: "the latched tool marker draws at the last move" }).not.toBe(full);
+  // The top layer commit sets `aria-busy` until the latched-marker frame is drawn, which `canvasDigest` waits on.
   const marked = await canvasDigest(page);
+  expect(marked, "the latched tool marker draws at the last move").not.toBe(full);
   Object.assign(movesSlider, { [layers]: await checkMovesSlider(page, gcode, moves, layers - 1, artifacts, true) });
 
   const outerWall = legend.getByRole("button", { name: "Outer wall" });
