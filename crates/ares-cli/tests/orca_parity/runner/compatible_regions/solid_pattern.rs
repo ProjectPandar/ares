@@ -118,3 +118,6 @@ fn observe(bytes: &[u8]) -> (usize, Vec<String>) {
 
 #[path = "bridge_anchor_max_projection.rs"]
 mod anchor_max_projection;
+
+#[path = "bridge_anchor_length_projection.rs"]
+mod anchor_length_projection;
