@@ -1,4 +1,4 @@
-use crate::SliceError;
+use crate::{SliceError, geometry::fixed_gcc_sort_by};
 
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) struct MeshTopology {
@@ -110,14 +110,8 @@ pub(super) fn sorted_edge_uses(triangles: &[[u32; 3]]) -> Vec<EdgeUse> {
             });
         }
     }
-    uses.sort_unstable_by_key(|edge_use| {
-        (
-            edge_use.low,
-            edge_use.high,
-            edge_use.face,
-            edge_use.local_edge,
-        )
-    });
+    // TriangleMesh.cpp:531/558: compare endpoints only with the reference sort.
+    fixed_gcc_sort_by(&mut uses, |left, right| left.key() < right.key());
     uses
 }
 
