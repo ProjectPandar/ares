@@ -81,6 +81,42 @@ fn sha(bytes: &[u8]) -> String {
         .collect()
 }
 
+/// Rewrites `Metadata/project_settings.config`, swapping the sparse infill
+/// pattern value. Control seam for the connect-stage change: sparse
+/// lateral-lattice output must stay byte-identical to Native.
+fn sparse_project(pattern: &str) -> Vec<u8> {
+    let mut reader = zip::ZipArchive::new(Cursor::new(BASE)).unwrap();
+    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..reader.len() {
+        let mut file = reader.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            let text = String::from_utf8(bytes).unwrap();
+            let needle = r#""sparse_infill_pattern": "crosshatch""#;
+            assert!(
+                text.contains(needle),
+                "fixture must carry the crosshatch sparse baseline"
+            );
+            bytes = text
+                .replacen(
+                    needle,
+                    &format!(r#""sparse_infill_pattern": "{pattern}""#),
+                    1,
+                )
+                .into_bytes();
+        }
+        writer
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+            )
+            .unwrap();
+        writer.write_all(&bytes).unwrap();
+    }
+    writer.finish().unwrap().into_inner()
+}
+
 fn native(runner: &OrcaRunner, directory: &std::path::Path, project: &[u8]) -> Vec<u8> {
     fs::create_dir(directory).unwrap();
     let path = directory.join("input.3mf");
@@ -111,6 +147,10 @@ fn native(runner: &OrcaRunner, directory: &std::path::Path, project: &[u8]) -> V
 }
 
 fn leg(label: &str, pattern: &str) {
+    leg_with_project(label, pattern, project(pattern));
+}
+
+fn leg_with_project(label: &str, pattern: &str, project: Vec<u8>) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -120,7 +160,6 @@ fn leg(label: &str, pattern: &str) {
         .unwrap()
         .keep();
     let directory = root.join("case");
-    let project = project(pattern);
     let reference = native(&runner, &directory, &project);
 
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -277,4 +316,25 @@ fn orca_parity_support_ironing_pattern_monotonic_line() {
 #[test]
 fn orca_parity_support_ironing_pattern_concentric_control() {
     leg("concentric-control", "concentric");
+}
+
+/// Domain: lateral lattice ironing paths — `FillLateralLattice` reached
+/// from the 3MF load; pins the full-arc degeneracy handling
+/// (`FillBase.cpp:474` equal-index walks the whole contour instead of
+/// asserting).
+#[test]
+fn orca_parity_support_ironing_pattern_lateral_lattice() {
+    leg("lateral-lattice", "lateral-lattice");
+}
+
+/// Control: sparse lateral-lattice (`FillLateralLattice` sparse path
+/// through the same `fill/connect` stage) must stay byte-identical to
+/// Native while the contour assert is removed.
+#[test]
+fn orca_parity_sparse_lateral_lattice_control() {
+    leg_with_project(
+        "sparse-lattice-control",
+        "lateral-lattice",
+        sparse_project("lateral-lattice"),
+    );
 }
