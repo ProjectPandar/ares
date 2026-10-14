@@ -35,7 +35,7 @@ impl Tess {
                 RightEdges {
                     first: self.e(bottom_left).onext,
                     last: top_left,
-                    top_left: top_left,
+                    top_left,
                 },
                 true,
             );
@@ -94,8 +94,8 @@ impl Tess {
             up,
             RightEdges {
                 first: self.e(top_right).onext,
-                last: last,
-                top_left: top_left,
+                last,
+                top_left,
             },
             true,
         );
@@ -164,7 +164,7 @@ impl Tess {
                 RightEdges {
                     first: self.e(bottom_left).onext,
                     last: top_left,
-                    top_left: top_left,
+                    top_left,
                 },
                 true,
             );
