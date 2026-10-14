@@ -5,6 +5,7 @@ pub(in crate::project_slice) use projected::{
 };
 mod arms;
 mod arms_tail;
+mod linear;
 
 use crate::{
     SliceError,

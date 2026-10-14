@@ -8,7 +8,6 @@ use crate::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
         gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
-        rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
     geometry::{Point, Polyline},
@@ -217,66 +216,14 @@ pub(super) fn dispatch(
             | ProcessInfillPattern::CrossZag
             | ProcessInfillPattern::LockedZag),
         ) => {
-            // Upstream `generate_sparse_infill_polylines_for_anchoring`
-            // (`Fill.cpp:1394`) creates `Fill::new_from_type(pattern)` for
-            // every linear pattern — `FillRectilinear`/`FillMonotonic`/
-            // `FillLine`/`FillZigZag`/`FillCrossZag`/`FillLockedZag`/
-            // `FillMonotonicLines`/`FillAlignedRectilinear` all share the
-            // rectilinear/monotonic core (`fill_surface` `monotonic` flag).
-            let params = MonotonicFillParams {
-                spacing: fill.params.spacing,
-                overlap: 0.0,
-                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
-                angle: fill.params.angle,
-                layer_index,
-                thickness_layers: fill.representative.thickness_layers.max(1),
-                fixed_angle: fill.params.fixed_angle,
-                bridge_angle: None,
-                reference_point: Point::new(0, 0),
-                dont_adjust: false,
-                // `FillMonotonicLines` forces `anchor_length_max = 0`
-                // (`FillRectilinear.cpp:3676-3682`).
-                anchor_length_max: if pattern == ProcessInfillPattern::MonotonicLine {
-                    0.0
-                } else {
-                    fill.params.anchor_length_max
-                },
-                link_max_length: 0.0,
-                consistent_pattern: pattern.has_consistent_pattern(),
-                horiz_move: fill.params.horiz_move,
-                // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) —
-                // same transpose-merge + sqrt(2) origin-scale as the main fill
-                // path, so anchored zig-zag/locked-zag keeps the object-wide
-                // grid parity.
-                extended_object_min_x: pattern.has_consistent_pattern().then(|| {
-                    crate::project_slice::fill_entities::extended_object_bounding_box_x(
-                        object_bounding_box,
-                    )
-                    .0
-                }),
-                extended_object_max_x: pattern.has_consistent_pattern().then(|| {
-                    crate::project_slice::fill_entities::extended_object_bounding_box_x(
-                        object_bounding_box,
-                    )
-                    .1
-                }),
-                locked_zag: false,
-            };
-            let generate = if matches!(
+            super::linear::append(
+                fill,
                 pattern,
-                ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
-            ) {
-                fill_monotonic_surface
-            } else {
-                fill_rectilinear_surface
-            };
-            for expolygon in fill.expolygons {
-                result.extend(
-                    generate(&expolygon, params, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?
-                        .polylines,
-                );
-            }
+                traversal,
+                layer_index,
+                object_bounding_box,
+                result,
+            )?;
         }
         SurfaceFillPattern::Configured(
             pattern @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
