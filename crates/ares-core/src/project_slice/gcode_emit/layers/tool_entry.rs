@@ -186,8 +186,21 @@ pub(super) fn emit(
         }
     }
     // GCode.cpp:5335 emits the object brim ahead of the same instance's
-    // support extrusions (:5419-5426).
-    if let Some(layer_index) = entry.object_layer {
+    // support extrusions (:5419-5426); the layer state it reads is the
+    // object-layer state assigned at :5343-5344, so hoist those
+    // assignments ahead of the brim instead of leaving the previous
+    // entry's values in place.
+    let object_layer_state = entry.object_layer.inspect(|&layer_index| {
+        let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
+        state.layer_index = physical_layer.id;
+        state.active_layer_print_z = physical_layer.print_z;
+        state.on_first_layer =
+            physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 1e-4;
+        let slicing = traversal.objects[object_index].slicing_parameters();
+        state.object_layer_over_raft =
+            layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
+    });
+    if let Some(layer_index) = object_layer_state {
         brim_emit::emit(
             output,
             state,
@@ -202,6 +215,11 @@ pub(super) fn emit(
     }
     if let Some(selected_role) = support_role {
         let support_index = entry.support_layer.expect("support bucket retains layer");
+        // GCode.cpp:5388 runs the support extrusions with
+        // `m_object_layer_over_raft = false` and :5429-5430 restores the
+        // object-layer value before the islands.
+        let saved_over_raft = state.object_layer_over_raft;
+        state.object_layer_over_raft = false;
         support_entry::emit(
             output,
             state,
@@ -220,18 +238,11 @@ pub(super) fn emit(
             traditional_timelapse,
             timelapse_context,
         )?;
+        state.object_layer_over_raft = saved_over_raft;
     }
-    let Some(layer_index) = entry.object_layer else {
+    let Some(layer_index) = object_layer_state else {
         return Ok(());
     };
-    let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
-    state.layer_index = physical_layer.id;
-    state.active_layer_print_z = physical_layer.print_z;
-    state.on_first_layer =
-        physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 1e-4;
-    let slicing = traversal.objects[object_index].slicing_parameters();
-    state.object_layer_over_raft =
-        layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
     let Some(layer) = body.as_mut() else {
         // GCode.cpp:5348–5372,5478–5494 labels every selected instance,
         // including an empty half of the wiping/normal two-pass traversal.
