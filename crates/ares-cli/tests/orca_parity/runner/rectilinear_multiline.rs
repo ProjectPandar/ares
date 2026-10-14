@@ -112,7 +112,7 @@ control!(
     "monotonic",
     "2",
     "45",
-    "30%",
+    "100%",
     false
 );
 control!(
@@ -136,7 +136,7 @@ control!(
 control!(
     rectilinear_multiline_s2,
     "S2",
-    "stars",
+    "tri-hexagon",
     "2",
     "45",
     "30%",

@@ -44,7 +44,14 @@ pub(super) fn reference(runner: &OrcaRunner, label: &str, case: Case) -> ParityC
         .collect::<Vec<_>>();
     crate::normalize_filament_defaults(&mut filaments);
     let variable = [
-        ("sparse_infill_pattern", case.pattern),
+        (
+            "sparse_infill_pattern",
+            if case.pattern == "monotonic" {
+                "rectilinear"
+            } else {
+                case.pattern
+            },
+        ),
         ("fill_multiline", case.count),
         ("infill_direction", case.angle),
         ("sparse_infill_density", case.density),
@@ -52,7 +59,25 @@ pub(super) fn reference(runner: &OrcaRunner, label: &str, case: Case) -> ParityC
         // PrintConfig.cpp:3974/4093: combination is bool; .4 ceiling combines two .2 layers.
         ("infill_combination_max_layer_height", "0.4"),
     ];
-    for (key, value) in FIXED.into_iter().chain(variable) {
+    // PrintConfig.cpp:2079-2080/3030: Monotonic belongs to solid roles;
+    // the sparse Stars canonical enum spelling is tri-hexagon.
+    let requests = FIXED
+        .into_iter()
+        .chain(variable)
+        .map(|(key, value)| {
+            let solid_pattern = matches!(
+                key,
+                "top_surface_pattern" | "bottom_surface_pattern" | "internal_solid_infill_pattern"
+            );
+            let value = if case.pattern == "monotonic" && solid_pattern {
+                "monotonic"
+            } else {
+                value
+            };
+            (key, value)
+        })
+        .collect::<Vec<_>>();
+    for &(key, value) in &requests {
         process.insert(key.into(), json!(value));
     }
     let mesh = if case.hole { "holed-prism" } else { "prism" };
@@ -78,7 +103,7 @@ pub(super) fn reference(runner: &OrcaRunner, label: &str, case: Case) -> ParityC
             &path,
         )
         .unwrap();
-    for (key, value) in FIXED.into_iter().chain(variable) {
+    for (key, value) in requests {
         application::verify_value(&exported.project, key, &json!(value)).unwrap();
     }
     runner.slice_case(&exported).unwrap()
