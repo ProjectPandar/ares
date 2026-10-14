@@ -23,7 +23,7 @@ impl SkirtPlan {
         }
         let per_object = loops_count > 0 && print.skirt_type == crate::ProcessSkirtType::PerObject;
         if per_object
-            && traversal.objects.len() > 1
+            && traversal.resolved.objects.len() > 1
             && (print.draft_shield != crate::ProcessDraftShield::Disabled
                 || print.enable_prime_tower.0
                 || print.min_skirt_length.0 != 0.0
