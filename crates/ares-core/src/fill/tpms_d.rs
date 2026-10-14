@@ -36,7 +36,9 @@ pub(crate) fn fill_tpmsd_surface(
     params: &TpmsDFillParams,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let infill_angle = f64::from(params.angle) + CORRECTION_ANGLE;
+    // FillTpmsD.cpp:108-110,155-160: narrow the corrected angle to float
+    // before both rotations and the EPSILON check.
+    let infill_angle = f64::from((f64::from(params.angle) + CORRECTION_ANGLE) as f32);
     let rotate = infill_angle.abs() >= EPSILON;
     let rotated = if rotate {
         rotate_expolygon(expolygon, -infill_angle)?
