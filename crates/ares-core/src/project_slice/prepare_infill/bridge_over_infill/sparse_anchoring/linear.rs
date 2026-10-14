@@ -2,16 +2,12 @@ use crate::{
     ProcessInfillPattern, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
     geometry::{BoundingBox, Point, Polyline},
-    project_slice::{
-        group_fills::SurfaceFill,
-        perimeters::classic::traversal::types::PreparedPostClassicTraversal,
-    },
+    project_slice::{fill_entities::SurfaceCall, group_fills::SurfaceFill},
 };
 
 pub(super) fn append(
     (fill, pattern): (SurfaceFill, ProcessInfillPattern),
-    traversal: &PreparedPostClassicTraversal,
-    layer_index: usize,
+    call: SurfaceCall,
     object_bounding_box: BoundingBox,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
@@ -22,12 +18,12 @@ pub(super) fn append(
     // `FillMonotonicLines`/`FillAlignedRectilinear` all share the
     // rectilinear/monotonic core (`fill_surface` `monotonic` flag).
     let params = MonotonicFillParams {
-        dont_alternate_fill_direction: false,
+        dont_alternate_fill_direction: call.dont_alternate_fill_direction,
         spacing: fill.params.spacing,
         overlap: 0.0,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         angle: fill.params.angle,
-        layer_index,
+        layer_index: call.layer_id,
         thickness_layers: fill.representative.thickness_layers.max(1),
         fixed_angle: fill.params.fixed_angle,
         bridge_angle: None,
@@ -76,10 +72,10 @@ pub(super) fn append(
                 params,
                 fill.params.multiline,
                 fill.params.anchor_length,
-                traversal.scale,
+                call.scale,
             )
         } else {
-            generate(&expolygon, params, traversal.scale)
+            generate(&expolygon, params, call.scale)
         };
         result.extend(
             generated

@@ -236,13 +236,30 @@ pub(super) fn dispatch(
             | ProcessInfillPattern::CrossZag
             | ProcessInfillPattern::LockedZag),
         ) => {
-            super::linear::append(
-                (fill, pattern),
-                traversal,
-                layer_index,
-                object_bounding_box,
-                result,
-            )?;
+            let prelude = &traversal.objects[object_index]
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object;
+            let resolved_object = traversal
+                .resolved
+                .objects
+                .iter()
+                .find(|object| object.source_object_index == prelude.identity().0)
+                .expect("anchoring retains its resolved object");
+            // Fill.cpp:1440-1447: use the anchoring fill's printing region.
+            let region = &resolved_object.all_regions[fill.region_id];
+            let call = crate::project_slice::fill_entities::SurfaceCall {
+                dont_alternate_fill_direction: region.zaa_enabled.0
+                    && region.zaa_dont_alternate_fill_direction.0,
+                layer_id: layer_index,
+                reference: object_reference,
+                scale: traversal.scale,
+                link_max_length: 0.0,
+                dont_adjust: false,
+            };
+            super::linear::append((fill, pattern), call, object_bounding_box, result)?;
         }
         SurfaceFillPattern::Configured(
             pattern @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
