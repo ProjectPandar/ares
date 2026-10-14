@@ -12,7 +12,12 @@ pub(super) fn chain(
 ) {
     if calibration_order && pattern == PlanePathPattern::ArchimedeanChords {
         order_calibration_archimedean(polylines);
-    } else if pattern == PlanePathPattern::OctagramSpiral {
+    } else if pattern == PlanePathPattern::OctagramSpiral
+        || (pattern == PlanePathPattern::HilbertCurve && !calibration_order)
+    {
+        // `FillPlanePath.cpp:158-160`: every non-calibration plane-path
+        // chains through `chain_polylines` (greedy2 + two-exchange
+        // flipping, `ShortestPath.cpp:1968-1994`).
         chain_polylines(polylines, scale);
     } else {
         chain_polylines_multifragment(polylines);
