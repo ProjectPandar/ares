@@ -32,7 +32,7 @@ use std::{
     process::Command,
 };
 
-const BASE: &[u8] =
+pub(super) const BASE: &[u8] =
     include_bytes!("../../../../../tests/parity/support-ironing/overhang-organic.3mf");
 
 /// Rewrites `Metadata/project_settings.config`, swapping the
@@ -150,7 +150,7 @@ fn leg(label: &str, pattern: &str) {
     leg_with_project(label, pattern, project(pattern));
 }
 
-fn leg_with_project(label: &str, pattern: &str, project: Vec<u8>) {
+pub(super) fn leg_with_project(label: &str, pattern: &str, project: Vec<u8>) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
