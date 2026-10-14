@@ -1,6 +1,7 @@
 pub(super) mod arc;
 #[cfg(test)]
 mod axis_acceleration_tests;
+mod cached_feedrate;
 mod config_commands;
 mod firmware;
 mod homing;
@@ -22,6 +23,7 @@ pub(super) struct MotionState {
     pub(super) units: f32,
     pub(super) origin: [f64; 4],
     pub(super) feedrate: f64,
+    pub(super) cached_feedrate: f32,
     pub(super) acceleration: f64,
     pub(super) retract_acceleration: f64,
     pub(super) travel_acceleration: f64,
@@ -58,6 +60,8 @@ impl Default for MotionState {
             units: 1.0,
             origin: [0.0; 4],
             feedrate: 0.0,
+            // GCodeProcessor.cpp:233-237/2506: reset the cached-speed sentinel.
+            cached_feedrate: f32::MAX,
             acceleration: 0.0,
             retract_acceleration: 0.0,
             travel_acceleration: 0.0,
@@ -228,7 +232,7 @@ impl MotionState {
             self.set_position(code);
             return None;
         }
-        if self.handle_config_command(code) {
+        if self.handle_config_command(code) || self.handle_cached_feedrate(code) {
             return None;
         }
         let command = code.split_whitespace().next()?;
