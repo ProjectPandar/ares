@@ -20,14 +20,11 @@ pub(super) fn validate(
     // `Fill.cpp:920-924`), so divergent `sparse_infill_filament_id` /
     // `internal_solid_filament_id` / `top_surface_filament_id` are
     // admitted here; role→filament resolution happens downstream.
-    let (anchor, anchor_max) = projected_anchor_lengths(options, f64::from(spacing));
+    let (anchor, _) = projected_anchor_lengths(options, f64::from(spacing));
     // `anchor_length_max < 0.05` is upstream's supported `dont_connect()`
     // selection (`FillBase.hpp:52`; `FillRectilinear.cpp:3366-3373`,
     // `FillBase.cpp:1820-1828`), not an unsupported input — the connect
     // asserts (`FillBase.cpp:1584-1585,2251-2252`) are unreachable there.
-    if !anchor_max.is_finite() {
-        return unsupported("infill_anchor_max");
-    }
     // `infill_anchor < 0` is a schema-legal input upstream
     // (`PrintConfig.cpp:3137-3160` has no `min` bound; `Fill.cpp:984-988`
     // projects `min(anchor, anchor_max)` with no sign check). The
