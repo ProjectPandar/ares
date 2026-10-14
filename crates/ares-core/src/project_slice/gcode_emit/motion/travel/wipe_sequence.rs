@@ -132,10 +132,9 @@ pub(super) fn retract_and_wipe_impl(
     // the full length.
     let before = if !has_wipe {
         (retraction_length - state.extruder.retracted_amount).max(0.0)
-    } else if retraction_length <= 1e-4 {
-        // `GCode.cpp:330` returns `(0, 0)`, not `(requested_before, 0)`.
-        0.0
     } else if during <= 0.0 {
+        // `GCodeWriter.cpp:1004-1011` consumes the `(0, 0)` return via
+        // its configured before-wipe fraction, as for `(fL, 0)` here.
         // `(fL, 0)` — no leftover difference is folded into the
         // pre-wipe amount (`GCode.cpp:351-352`).
         (requested_before - state.extruder.retracted_amount).max(0.0)
