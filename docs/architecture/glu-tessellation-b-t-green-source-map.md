@@ -13,19 +13,19 @@ crates/ares-core/src/geometry/tessellation/ unless otherwise named.
 | Original source operation | Rust destination |
 |---|---|
 | Tesselate.cpp:23–56/100–170/192–195, contour/holes/z/flip | geometry/tessellation.rs::triangulate_expolygon_3d and render.rs::Emitter |
-| tess.c:337–457/500–579, vertex collection/cache/polygon pipeline | kernel.rs::tessellate/add_vertex |
-| mesh.h:110–190 and mesh.c:58–483, half-edge navigation and topology | mesh.rs::Mesh and edge/vertex/face records |
-| normal.c:76–172/200–257, automatic normal/projection/orientation | projection.rs::project/normal |
+| tess.c:345–579, vertex collection/cache/polygon pipeline | kernel.rs::tessellate/add_vertex |
+| mesh.h:110–190 and mesh.c:69–543/603–649, half-edge navigation and topology | mesh.rs::Mesh and edge/vertex/face records |
+| normal.c:76–169/198–257, automatic normal/projection/orientation | projection.rs::project/normal |
 | geom.c:47–264, ordered predicates and stable intersection interpolation | predicates.rs::leq/eq/eval/sign/intersect |
-| priorityq.c:89–261, source quicksort/insertion order and event merge | queue.rs::Queue |
-| priorityq-heap.c:94–256, dynamic event heap and deletion handles | queue.rs::up/down/insert/delete/extract_heap |
-| dict.c:59–111, ordered circular-list dictionary | regions.rs::insert_before/search/delete_region |
-| sweep.c:59–280, active-region winding and left/right topology | regions.rs::Tess |
-| sweep.c:287–456/672–737, splice repair and dirty-region traversal | splice.rs::Tess |
-| sweep.c:318–365/464–660, exact intersection/combine payload | intersection.rs::Tess |
-| sweep.c:743–1115/1190–1361, sweep events/sentinels/degenerates | sweep.rs::Tess |
-| tessmono.c:59–149, monotone subdivision triangulation | monotone.rs::triangulate_interior/triangulate_face |
-| render.c:64–322/371–502, maximum fan/strip/triangle grouping and cache rendering | render.rs::Tess/cache |
+| priorityq.c:92–261, source quicksort/insertion order and event merge | queue.rs::Queue |
+| priorityq-heap.c:96–256, dynamic event heap and deletion handles | queue.rs::up/down/insert/delete/extract_heap |
+| dict.c:73–111, ordered circular-list dictionary | regions.rs::insert_before/search/delete_region |
+| sweep.c:107–409, active-region winding and left/right topology | regions.rs::Tess |
+| sweep.c:438–452/499–603/760–844, splice repair and dirty-region traversal | splice.rs::Tess |
+| sweep.c:454–497/606–758, exact intersection/combine payload | intersection.rs::Tess |
+| sweep.c:847–1196/1199–1361, sweep events/sentinels/degenerates | sweep.rs::Tess |
+| tessmono.c:72–147, monotone subdivision triangulation | monotone.rs::triangulate_interior/triangulate_face |
+| render.c:82–330/362–502, maximum fan/strip/triangle grouping and cache rendering | render.rs::Tess/cache |
 
 Indices replace client/internal pointers while preserving linked-list order,
 paired half-edge order and source insertion/splice/delete order. Removed records
@@ -58,13 +58,22 @@ requests and both runtime outputs. This is diagnostic evidence; the approved
 19 nextest comparisons and exact-head gates are still required.
 
 The independent B-T operation has no production caller until B-S. Coordinator
-ruling is requested on stacking separately committed/reviewed B-T and B-S
+has approved stacking separately committed/reviewed B-T and B-S
 rather than adding a dummy consumer, exposing unrelated internals, adding a
 cfg exclusion or suppressing dead_code. No B-S implementation is authorized
-by this B-T GREEN. Non-test strict gates remain pending that boundary ruling.
+by this B-T GREEN. Non-test strict gates remain deferred until the real B-S consumer joins this stack.
 
 CI self-hosted native and parity jobs now check gcc/g++, and sparse checkouts
 include original deps_src/glu-libtess. Both canonical-mode CI parity jobs run
 the 19 core comparisons with their mandatory Native environment before CLI
 parity, so the runtime C supplier build is actually exercised. The canonical
 local full script is unchanged. No workspace/full/push is run by this worker.
+
+The first formal GREEN at bd759a6c2 passed official19/19 and seeded19/19
+runtime-Native nextest comparisons (21 Native executions per leg, including
+A–B–A). Root /tmp/worker3-glu-formal-green-3hnnfvx8 retains compiler/raw/bit
+artifacts. Actual-kernel WASM check passed. Strict kernel lint found a manual
+swap; it is replaced with Vec::swap in a following commit, preserving the
+source swap and RNG pivot exactly. No assertion/input/oracle changes.
+Kernel and core gates remain distinguished: isolated kernel strict/WASM do
+not claim whole-core strict while the approved B-S consumer is absent.

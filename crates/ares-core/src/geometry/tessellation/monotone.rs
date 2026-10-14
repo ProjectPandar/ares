@@ -1,4 +1,4 @@
-//! glu-libtess tessmono.c:59–149, monotone-face triangulation.
+//! glu-libtess tessmono.c:72–147, monotone-face triangulation.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/

@@ -1,4 +1,4 @@
-//! glu-libtess render.c:64–322/371–502; Tesselate.cpp:110–164 expansion.
+//! glu-libtess render.c:82–330/362–502; Tesselate.cpp:110–164.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/

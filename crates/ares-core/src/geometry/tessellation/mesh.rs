@@ -1,4 +1,4 @@
-//! Original glu-libtess mesh.h/mesh.c:58–529, indexed half-edge storage.
+//! Original glu-libtess mesh.h:110–190; mesh.c:69–543/603–649.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/

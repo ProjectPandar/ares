@@ -91,7 +91,7 @@ impl Tess {
         predicates::sign(self.v(u), self.v(v), self.v(w))
     }
 }
-// tess.c:337–457. Cache flush preserves contour starts and GLU's 100-vertex cutoff.
+// tess.c:345–579. Cache flush preserves contour starts and GLU's 100-vertex cutoff.
 pub(super) fn tessellate(contours: &[Vec<[f64; 3]>], z: f64, flip: bool) -> Vec<[f64; 3]> {
     let mut cached = Vec::new();
     let mut mesh = None;

@@ -1,4 +1,4 @@
-//! glu-libtess dict.c:59–111 and sweep.c:59–280, active-region dictionary.
+//! glu-libtess dict.c:73–111; sweep.c:107–409, active regions.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/

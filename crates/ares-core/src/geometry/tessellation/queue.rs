@@ -1,4 +1,4 @@
-//! glu-libtess priorityq.c:89–261 and priorityq-heap.c:94–256.
+//! glu-libtess priorityq.c:92–261; priorityq-heap.c:96–256.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/
@@ -49,8 +49,7 @@ impl Queue {
                 seed = seed.wrapping_mul(1539415821).wrapping_add(1);
                 let pivot_index = p + (seed % ((r - p + 1) as u64)) as isize;
                 let pivot = self.order[pivot_index as usize];
-                self.order[pivot_index as usize] = self.order[p as usize];
-                self.order[p as usize] = pivot;
+                self.order.swap(pivot_index as usize, p as usize);
                 let (mut i, mut j) = (p - 1, r + 1);
                 loop {
                     loop {

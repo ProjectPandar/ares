@@ -1,4 +1,4 @@
-//! glu-libtess sweep.c:743–1115/1190–1361, event sweep and degenerates.
+//! glu-libtess sweep.c:847–1196/1199–1361, sweep events/degenerates.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/

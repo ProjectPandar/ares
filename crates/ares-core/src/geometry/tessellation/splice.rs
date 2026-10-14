@@ -1,4 +1,4 @@
-//! glu-libtess sweep.c:287–456/672–737, splice repair and dirty regions.
+//! glu-libtess sweep.c:438–452/499–603/760–844, splice/dirty repair.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/

@@ -1,4 +1,4 @@
-//! glu-libtess sweep.c:318–365/464–660, intersections and combine data.
+//! glu-libtess sweep.c:454–497/606–758, intersections and combine.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/

@@ -1,4 +1,4 @@
-//! glu-libtess normal.c:76–172/200–257, automatic normal and projection.
+//! glu-libtess normal.c:76–169/198–257, automatic normal/projection.
 //! Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
 //! SGI FREE SOFTWARE LICENSE B, Version 2.0:
 //! http://oss.sgi.com/projects/FreeB/
