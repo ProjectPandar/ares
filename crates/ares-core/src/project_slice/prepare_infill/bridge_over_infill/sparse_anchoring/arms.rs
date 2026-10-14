@@ -10,7 +10,7 @@ use crate::{
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
-    geometry::{Point, Polyline},
+    geometry::{JoinType, Point, Polyline, offset_expolygon},
     project_slice::group_fills::SurfaceFillPattern,
 };
 
@@ -284,22 +284,29 @@ pub(super) fn dispatch(
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
+            // Fill.cpp:1479,1497 / FillBase.cpp:105-117: anchoring uses the
+            // zero-overlap fill_surface contraction before the pattern generator.
+            let params = crate::fill::FillParams {
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                multiline: fill.params.multiline,
+                dont_adjust: false,
+            };
+            let delta = (-0.5 * fill.params.spacing / traversal.scale.factor()) as f32;
             for expolygon in fill.expolygons {
-                result.extend(
-                    crate::fill::concentric_sparse::fill_concentric_sparse(
-                        &expolygon,
-                        fill.params.spacing,
-                        &crate::fill::FillParams { density: // upstream `params.density` is a 0..1 fraction; the
-                            // SurfaceFill param is a percent.
-                            0.01 * fill.params.density,
- multiline: fill.params.multiline,
- dont_adjust: false,
- },
-                        fill.params.loop_clipping,
-                        traversal.scale,
-                    )
-                    .map_err(super::super::transaction::geometry_error)?,
-                );
+                let domains = offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
+                    .map_err(super::super::transaction::geometry_error)?;
+                for domain in domains {
+                    result.extend(
+                        crate::fill::concentric_sparse::fill_concentric_sparse(
+                            &domain,
+                            fill.params.spacing,
+                            &params,
+                            fill.params.loop_clipping,
+                            traversal.scale,
+                        )
+                        .map_err(super::super::transaction::geometry_error)?,
+                    );
+                }
             }
         }
         SurfaceFillPattern::Configured(
