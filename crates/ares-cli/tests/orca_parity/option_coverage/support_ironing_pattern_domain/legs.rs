@@ -197,3 +197,10 @@ fn orca_parity_support_ironing_pattern_crosshatch() {
 fn orca_parity_support_ironing_pattern_octagramspiral() {
     leg("octagramspiral", "octagramspiral");
 }
+
+/// Domain: `ArchimedeanChords` ironing — plane-path filler, min-corner
+/// shift (`FillPlanePath.cpp:62-171`, density-1 snug-bounds path).
+#[test]
+fn orca_parity_support_ironing_pattern_archimedeanchords() {
+    leg("archimedeanchords", "archimedeanchords");
+}
