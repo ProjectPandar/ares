@@ -8,6 +8,7 @@ use crate::{
     project_slice::perimeters::{
         classic::traversal::PreparedPostClassicTraversal, flow::build_nonbridging_flow,
     },
+    project_slice::support_material::InstalledSupportLayer,
 };
 
 pub(super) struct BrimPlan {
@@ -22,6 +23,7 @@ pub(super) struct BrimPlan {
 impl BrimPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
+        support: &[Vec<InstalledSupportLayer>],
         object_index: usize,
     ) -> Result<Option<Self>, SliceError> {
         let (resolved, _) = traversal.print_object_config(object_index);
@@ -136,7 +138,19 @@ impl BrimPlan {
         } else {
             let area = crate::brims::outer::area(&source, gap, brim_width, spacing, resolution)?;
             object_islands = area.object_islands;
-            (area.area, area.forbidden)
+            let mut forbidden = area.forbidden;
+            // Brim.cpp:590-634 via :576/:682-689: support contours join the
+            // no-brim mask (tree: first-layer slice contours; inner-normal:
+            // fill spacing coverage).
+            if let Some(first) = support.get(object_index).and_then(|layers| layers.first()) {
+                let kind =
+                    super::tool_ordering::object_options(traversal, object_index).support_type;
+                forbidden.extend(
+                    super::footprint::support_no_brim(kind, first, scale)
+                        .map_err(brim_geometry_error)?,
+                );
+            }
+            (area.area, forbidden)
         };
         let brim_area = bed_area::clip(
             traversal,

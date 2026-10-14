@@ -3,7 +3,7 @@ use super::super::{layers::Schedule, tool_ordering};
 use super::coverage::covered_by_spacing;
 use crate::{
     ExtrusionRole, ProcessSupportType, SliceError,
-    geometry::{ClipperError, CoordinateScale, Point},
+    geometry::{ClipperError, CoordinateScale, ExPolygon, Point},
     project_slice::{
         fill_entities::FillExtrusionEntity,
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
@@ -239,4 +239,76 @@ fn append(
 }
 fn geometry_error(error: ClipperError) -> SliceError {
     SliceError::InvalidInput(format!("first-layer support coverage: {error:?}"))
+}
+
+/// `Brim.cpp:590-634`: support contours that the brim must avoid. Tree
+/// support contributes its first-layer slice contours (`lslices`),
+/// inner-normal support contributes the spacing coverage of its fills
+/// (`polygons_covered_by_spacing`).
+pub(in crate::project_slice::gcode_emit) fn support_no_brim(
+    kind: ProcessSupportType,
+    layer: &InstalledSupportLayer,
+    scale: CoordinateScale,
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    match kind {
+        ProcessSupportType::TreeAuto | ProcessSupportType::TreeManual => Ok(layer
+            .support_islands
+            .iter()
+            .map(|polygon| ExPolygon::new(polygon.contour().clone(), Vec::new()))
+            .collect()),
+        ProcessSupportType::NormalAuto | ProcessSupportType::NormalManual => {
+            let epsilon = (1e-4 / scale.factor()) as f32;
+            let mut polygons = Vec::new();
+            for entity in &layer.support_fills {
+                no_brim_entity(&mut polygons, entity, epsilon, scale)?;
+            }
+            Ok(polygons
+                .into_iter()
+                .map(|polygon| ExPolygon::new(polygon, Vec::new()))
+                .collect())
+        }
+    }
+}
+fn no_brim_entity(
+    output: &mut Vec<crate::geometry::Polygon>,
+    entity: &SupportExtrusionEntity,
+    epsilon: f32,
+    scale: CoordinateScale,
+) -> Result<(), ClipperError> {
+    match entity {
+        SupportExtrusionEntity::Path(path) | SupportExtrusionEntity::Loop(path) => {
+            no_brim_path(output, path, epsilon, scale)
+        }
+        SupportExtrusionEntity::MultiPath(paths) => {
+            for path in paths {
+                no_brim_path(output, path, epsilon, scale)?;
+            }
+            Ok(())
+        }
+        SupportExtrusionEntity::NoSort(entities) => {
+            for entity in entities {
+                no_brim_entity(output, entity, epsilon, scale)?;
+            }
+            Ok(())
+        }
+    }
+}
+fn no_brim_path(
+    output: &mut Vec<crate::geometry::Polygon>,
+    path: &SupportExtrusionPath,
+    epsilon: f32,
+    scale: CoordinateScale,
+) -> Result<(), ClipperError> {
+    let points = path
+        .polyline
+        .points
+        .iter()
+        .map(|point| Point::new(point.x, point.y));
+    output.extend(covered_by_spacing(
+        points,
+        spacing(path.width, path.height, path.role),
+        epsilon,
+        scale,
+    )?);
+    Ok(())
 }
