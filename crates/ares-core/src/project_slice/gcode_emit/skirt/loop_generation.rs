@@ -1,3 +1,5 @@
+//! Print.cpp:2728-2778: a fresh filament budget for each group hull.
+
 use super::*;
 
 pub(super) struct LoopParameters {
@@ -45,7 +47,9 @@ pub(super) fn make_loops(
         if simplified.len() < 3 {
             break;
         }
-        extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
+        if minimum_filament > 0.0 {
+            extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
+        }
         group_loops.push(simplified);
     }
     Ok(group_loops)
