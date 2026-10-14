@@ -26,7 +26,6 @@ impl SkirtPlan {
             && traversal.resolved.objects.len() > 1
             && (print.draft_shield != crate::ProcessDraftShield::Disabled
                 || print.enable_prime_tower.0
-                || (print.min_skirt_length.0 != 0.0 && brim.iter().any(Option::is_some))
                 || print.print_sequence != crate::ProcessPrintSequence::ByLayer
                 || traversal
                     .resolved
