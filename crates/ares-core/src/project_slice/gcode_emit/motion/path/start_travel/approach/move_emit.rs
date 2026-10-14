@@ -268,7 +268,9 @@ pub(super) fn emit_approach_move(
         );
         state.record_z(z);
         travel_set_layer_z = z == leg_z;
-    } else if slope_start_z.is_some() || travel_will_move_z(state, leg_z) {
+    } else if slope_start_z.is_some() {
+        // GCode.cpp:6371-6394/7480-7482 supplies contour/sloped or nominal Z;
+        // GCodeWriter.cpp:771-806 handles their XY/XYZ travel branches.
         // The first leg's destination z equals the live writer z on a
         // same-z detour (or a clamped approach): upstream's
         // `travel_to_xyz` then takes the XY-only, COMMENTLESS

@@ -61,6 +61,10 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         properties,
         geometry,
     } = request;
+    let after_contour = std::mem::replace(
+        &mut state.last_path_z_contoured,
+        properties.contour.is_some(),
+    );
     // `positioned` mirrors `GCodeWriter::m_is_current_pos_clear`: cleared by
     // custom g-code (timelapse/toolchange), set by every travel. The
     // `never_positioned` flag mirrors `GCode::m_last_pos.is_none()` — true
@@ -83,7 +87,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     let contour_z = properties
         .contour
         .map(|points| state.layer_z + geometry.scale.unscale(points[0].z));
-    let target_z = slope_start_z.or(contour_z).unwrap_or(state.layer_z);
+    // GCode.cpp:7480-7482 restores nominal Z through travel_to_xyz.
+    let travel_z = slope_start_z
+        .or(contour_z)
+        .or(after_contour.then_some(state.layer_z));
+    let target_z = travel_z.unwrap_or(state.layer_z);
     let needs_travel =
         first_position || state.last_scaled_position != Some(first_scaled) || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
@@ -114,7 +122,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 geometry,
                 first_position,
                 layer_change_travel,
-                slope_start_z: slope_start_z.or(contour_z),
+                slope_start_z: travel_z,
                 target_z,
                 travel_distance,
             },
