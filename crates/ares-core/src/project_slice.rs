@@ -38,9 +38,7 @@ use load_stages::prepare_post_conical_overhang;
 mod parameters;
 mod path_simplification;
 mod raft;
-pub(crate) use perimeters::classic::shortest_path::{
-    chain_polylines, chain_polylines_multifragment,
-};
+pub(crate) use perimeters::classic::shortest_path::chain_polylines;
 mod perimeters;
 pub(crate) use perimeters::flow::skirt_flow_width_spacing;
 mod planning;
