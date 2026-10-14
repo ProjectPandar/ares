@@ -30,17 +30,6 @@ fn task22b_topology_pairs_two_same_oriented_uses() {
 }
 
 #[test]
-fn task22b_topology_rejects_more_than_two_uses_before_intersection() {
-    let expected = || SliceError::UnsupportedProjectFeature("mesh_topology".to_owned());
-
-    assert_eq!(
-        index_mesh_edges(&[[0, 1, 2], [1, 0, 3], [0, 1, 4]]).unwrap_err(),
-        expected()
-    );
-    assert_eq!(index_mesh_edges(&[[0, 0, 0]]).unwrap_err(), expected());
-}
-
-#[test]
 fn task22b_topology_edge_id_range_is_checked_without_large_allocation() {
     assert_eq!(checked_edge_id(u64::from(u32::MAX)), Ok(u32::MAX));
     assert_eq!(

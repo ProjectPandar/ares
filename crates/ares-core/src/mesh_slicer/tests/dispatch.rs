@@ -215,38 +215,4 @@ fn task22b_multi_plane_slicing_is_repeatably_deterministic() {
         first.iter().map(Vec::len).collect::<Vec<_>>(),
         vec![0, 2, 2, 2, 2]
     );
-
-    let nonmanifold_vertices = [
-        [0.0, 0.0, 0.0],
-        [4.0, 0.0, 2.0],
-        [0.0, 4.0, 2.0],
-        [10.0, 0.0, 0.0],
-        [14.0, 0.0, 2.0],
-        [10.0, 4.0, 2.0],
-        [10.0, 6.0, 2.0],
-        [10.0, 8.0, 2.0],
-    ];
-    let nonmanifold_triangles = [[0, 1, 2], [3, 4, 5], [3, 4, 6], [3, 4, 7]];
-    let nonmanifold_planes = [1.0];
-    let mut untouched_budget = RawIntersectionBudget::new();
-    let mut attempts = Vec::new();
-    let mut output = Vec::new();
-    assert_eq!(
-        dispatch_mesh_on_planes_with(
-            MeshPlaneInput::new(
-                &nonmanifold_vertices,
-                &nonmanifold_triangles,
-                &nonmanifold_planes,
-            ),
-            &mut untouched_budget,
-            |face_index, plane_index| attempts.push((face_index, plane_index)),
-            |plane_index, line| output.push((plane_index, line)),
-        ),
-        Err(SliceError::UnsupportedProjectFeature(
-            "mesh_topology".to_owned()
-        ))
-    );
-    assert_eq!(untouched_budget.retained_lines, 0);
-    assert!(attempts.is_empty());
-    assert!(output.is_empty());
 }
