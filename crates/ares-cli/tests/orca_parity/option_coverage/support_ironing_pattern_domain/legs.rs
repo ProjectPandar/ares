@@ -198,9 +198,18 @@ fn orca_parity_support_ironing_pattern_octagramspiral() {
     leg("octagramspiral", "octagramspiral");
 }
 
-/// Domain: `ArchimedeanChords` ironing — plane-path filler, min-corner
-/// shift (`FillPlanePath.cpp:62-171`, density-1 snug-bounds path).
+/// Domain: `ArchimedeanChords` ironing — plane-path filler, center
+/// shift (`FillPlanePath.hpp:65`, `centered() == true`; density-1
+/// snug-bounds path).
 #[test]
 fn orca_parity_support_ironing_pattern_archimedeanchords() {
     leg("archimedeanchords", "archimedeanchords");
+}
+
+/// Domain: `HilbertCurve` ironing — plane-path filler, min-corner
+/// shift (`FillPlanePath.hpp:72`, `centered() == false`; density-1
+/// snug-bounds path).
+#[test]
+fn orca_parity_support_ironing_pattern_hilbertcurve() {
+    leg("hilbertcurve", "hilbertcurve");
 }
