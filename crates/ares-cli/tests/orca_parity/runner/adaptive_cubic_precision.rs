@@ -32,6 +32,23 @@ control!(adaptive_precision_a45, "A45", "adaptivecubic", "0.45");
 control!(adaptive_precision_a50, "A50", "adaptivecubic", "0.50");
 control!(adaptive_precision_a125, "A125", "adaptivecubic", "125%");
 control!(adaptive_precision_aauto, "AAUTO", "adaptivecubic", "0");
+// B-S: PrintObject.cpp:1006–1007/FillAdaptive.cpp:1483–1545 support preparation.
+control!(support_cubic_s45, "S45", "supportcubic", "0.45");
+control!(support_cubic_s50, "S50", "supportcubic", "0.50");
+control!(support_cubic_s125, "S125", "supportcubic", "125%");
+control!(support_cubic_sauto, "SAUTO", "supportcubic", "0");
+control!(
+    support_cubic_rectilinear_control,
+    "R1",
+    "rectilinear",
+    "0.45"
+);
+control!(
+    support_cubic_aligned_control,
+    "L1",
+    "alignedrectilinear",
+    "0.45"
+);
 
 fn compare(label: &str, case: Case) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
