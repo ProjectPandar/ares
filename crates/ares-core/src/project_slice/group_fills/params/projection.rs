@@ -95,6 +95,20 @@ pub(super) fn project_surface(
     } else {
         1
     };
+    // FillAdaptive.cpp:296-309,344-354: retain the owning region's
+    // configuration doubles before the extrusion Flow rounds them to f32.
+    params.adaptive_line_spacing = if matches!(
+        params.pattern,
+        SurfaceFillPattern::Configured(ProcessInfillPattern::AdaptiveCubic)
+    ) {
+        crate::project_slice::fill_entities::adaptive::line_spacing::configured(
+            context.region,
+            context.nozzles,
+            params.multiline,
+        )
+    } else {
+        0.0
+    };
     params.gyroid_optimized = matches!(
         params.pattern,
         SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid)
@@ -174,6 +188,7 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
         bridge_angle: 0.0,
         density: 0.0,
         multiline: 1,
+        adaptive_line_spacing: 0.0,
         anchor_length: 1000.0,
         anchor_length_max: 1000.0,
         flow: Flow {

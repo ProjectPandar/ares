@@ -1,9 +1,11 @@
 //! Adaptive/support cubic sparse infill entry (`FillAdaptive.cpp:1483`,
 //! `PrintObject.cpp:984`, `:275-356`).
 
+pub(in crate::project_slice) mod line_spacing;
+
 use crate::{
     ProjectVolumeType, SliceError,
-    fill::adaptive::{filler, octree},
+    fill::adaptive::{OctreeKind, filler, octree},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
     project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal,
@@ -31,15 +33,14 @@ pub(super) fn append(
     // `adaptive_fill_line_spacing` (`FillAdaptive.cpp:337-354`):
     // extrusion_width / ((density / 100) * 0.333333) * n_multiline, from
     // the region's fill parameters.
-    let line_spacing = f64::from(fill.params.flow.width)
-        / ((f64::from(fill.params.density) / 100.0) * 0.333_333_333)
-        * f64::from(fill.params.multiline);
+    let line_spacing = line_spacing::for_fill(&fill.params);
     if !line_spacing.is_finite() || line_spacing <= 0.0 {
         return Err(SliceError::UnsupportedProjectFeature(
             "sparse_infill_pattern".to_owned(),
         ));
     }
-    let octree = octree_for(traversal, object_index, line_spacing);
+    let kind = octree_kind(fill.params.pattern);
+    let octree = octree_for(traversal, object_index, line_spacing, kind);
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
@@ -107,11 +108,12 @@ fn octree_for(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     line_spacing: f64,
+    kind: OctreeKind,
 ) -> std::sync::Arc<octree::Octree> {
     traversal
         .adaptive_octrees
-        .get_or_build((object_index, line_spacing.to_bits()), || {
-            build_object_octree(traversal, object_index, line_spacing)
+        .get_or_build((object_index, line_spacing.to_bits(), kind), || {
+            build_object_octree(traversal, object_index, line_spacing, kind)
         })
 }
 
@@ -119,6 +121,7 @@ fn build_object_octree(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     line_spacing: f64,
+    kind: OctreeKind,
 ) -> octree::Octree {
     let traversal_object = &traversal.objects[object_index];
     let identity = traversal_object
@@ -184,16 +187,27 @@ fn build_object_octree(
             )
         })
         .collect();
-    octree::build_octree(
-        octree::OctreeMesh {
-            vertices: &rotated,
-            triangles: &triangles,
-        },
-        &[],
-        line_spacing,
-        false,
-        center_offset,
-    )
+    let mesh = octree::OctreeMesh {
+        vertices: &rotated,
+        triangles: &triangles,
+    };
+    match kind {
+        OctreeKind::Adaptive => octree::build_adaptive_octree(mesh, line_spacing, center_offset),
+        OctreeKind::Support => octree::build_octree(mesh, &[], line_spacing, false, center_offset),
+    }
+}
+
+fn octree_kind(pattern: crate::project_slice::group_fills::SurfaceFillPattern) -> OctreeKind {
+    if matches!(
+        pattern,
+        crate::project_slice::group_fills::SurfaceFillPattern::Configured(
+            crate::ProcessInfillPattern::AdaptiveCubic
+        )
+    ) {
+        OctreeKind::Adaptive
+    } else {
+        OctreeKind::Support
+    }
 }
 
 fn clipper_error(error: crate::geometry::ClipperError) -> SliceError {
@@ -209,15 +223,14 @@ pub(in crate::project_slice) fn anchoring_lines(
     z: f64,
     scale: CoordinateScale,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
-    let line_spacing = f64::from(fill.params.flow.width)
-        / ((f64::from(fill.params.density) / 100.0) * 0.333_333_333)
-        * f64::from(fill.params.multiline);
+    let line_spacing = line_spacing::for_fill(&fill.params);
     if !line_spacing.is_finite() || line_spacing <= 0.0 {
         return Err(SliceError::UnsupportedProjectFeature(
             "sparse_infill_pattern".to_owned(),
         ));
     }
-    let octree = octree_for(traversal, object_index, line_spacing);
+    let kind = octree_kind(fill.params.pattern);
+    let octree = octree_for(traversal, object_index, line_spacing, kind);
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         polylines.extend(

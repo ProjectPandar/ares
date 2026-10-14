@@ -66,6 +66,7 @@ impl IroningSurface {
             bridge_angle: 0.0,
             density: 100.0,
             multiline: 1,
+            adaptive_line_spacing: 0.0,
             anchor_length: 1000.0,
             anchor_length_max: 1000.0,
             flow: input.parameters.raft_interface_flow,

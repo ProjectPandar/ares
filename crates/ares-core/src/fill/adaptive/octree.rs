@@ -40,6 +40,7 @@ pub(crate) struct Octree {
     pub(crate) cubes_properties: Vec<CubeProperties>,
 }
 
+mod float_bounds;
 mod frame;
 
 use frame::{Matrix3, cross, dot, norm, octree_rotation_to_world, sub, triangle_aabb_intersects};
@@ -152,8 +153,23 @@ pub(crate) fn build_octree(
         overhang_triangles,
         line_spacing,
         support_overhangs_only,
-        world_offset,
-        (cube_center, bbox_size),
+        (world_offset, cube_center, bbox_size),
+    )
+}
+
+// FillAdaptive.cpp:1495-1497: only the completed Vec3f bbox values widen.
+pub(crate) fn build_adaptive_octree(
+    mesh: OctreeMesh<'_>,
+    line_spacing: f64,
+    world_offset: [f64; 3],
+) -> Octree {
+    let (cube_center, bbox_size) = float_bounds::of(mesh.vertices);
+    build_octree_from_bounds(
+        mesh,
+        &[],
+        line_spacing,
+        false,
+        (world_offset, cube_center, bbox_size),
     )
 }
 
@@ -162,8 +178,7 @@ fn build_octree_from_bounds(
     overhang_triangles: &[[f64; 3]],
     line_spacing: f64,
     support_overhangs_only: bool,
-    world_offset: [f64; 3],
-    (cube_center, bbox_size): ([f64; 3], f64),
+    (world_offset, cube_center, bbox_size): ([f64; 3], [f64; 3], f64),
 ) -> Octree {
     let OctreeMesh {
         vertices: mesh_vertices,

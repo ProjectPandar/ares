@@ -22,6 +22,7 @@ pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) bridge_angle: f32,
     pub(in crate::project_slice) density: f32,
     pub(in crate::project_slice) multiline: i32,
+    pub(in crate::project_slice) adaptive_line_spacing: f64,
     pub(in crate::project_slice) anchor_length: f32,
     pub(in crate::project_slice) anchor_length_max: f32,
     pub(in crate::project_slice) flow: Flow,
