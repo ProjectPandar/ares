@@ -48,12 +48,11 @@ fn rejected_unexecuted_and_baseline_only_domains_are_incomplete() {
             "INCOMPLETE"
         );
     }
-    let baseline = plans
-        .iter()
-        .find(|plan| plan.cases[0].value.is_none())
-        .unwrap();
+    // Test baseline-only classification even when every inventory key has samples.
+    let mut baseline = plan.clone();
+    baseline.cases[0].value = None;
     assert_eq!(
-        OptionOutcome::executed(baseline, 1, vec![], 0, None).status,
+        OptionOutcome::executed(&baseline, 1, vec![], 0, None).status,
         "INCOMPLETE"
     );
 }
