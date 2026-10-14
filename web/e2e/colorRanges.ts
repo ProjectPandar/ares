@@ -165,7 +165,7 @@ export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts
     await select.selectOption({ label });
     expected[view] = legendValues(inputs[view], view === "LayerTimeLogarithmic");
     await expectRows(page, expected[view], decimals, view);
-    await expect.poll(() => canvasDigest(page), { message: `${label} must recolor the toolpaths` }).not.toBe(featureType);
+    expect(await canvasDigest(page), `${label} must recolor the toolpaths`).not.toBe(featureType);
     if (["Height", "Speed", "ActualSpeed", "ActualVolumetricFlowRate", "LayerTimeLogarithmic", "Acceleration", "Jerk", "PressureAdvance"].includes(view)) {
       await page.screenshot({ path: `${artifacts}preview-view-${view}.png` });
     }
@@ -193,6 +193,6 @@ export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts
 
   await select.selectOption({ label: "Line Type" });
   await expect(page.getByTestId("legend").locator(".legend-range li")).toHaveCount(0);
-  await expect.poll(() => canvasDigest(page), { message: "Line Type restores the feature colors" }).toBe(featureType);
+  expect(await canvasDigest(page), "Line Type restores the feature colors").toBe(featureType);
   return Object.fromEntries(Object.entries(expected).map(([view, values]) => [view, [values.at(-1), values[0], values.length]]));
 }
