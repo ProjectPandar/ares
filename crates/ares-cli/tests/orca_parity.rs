@@ -8,6 +8,9 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/per_object_draft_shield.rs"]
+mod per_object_draft_shield;
+
 #[path = "orca_parity/per_object_skirt_min_brim.rs"]
 mod per_object_skirt_min_brim;
 
