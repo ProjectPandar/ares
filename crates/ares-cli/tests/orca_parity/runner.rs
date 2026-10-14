@@ -2,6 +2,9 @@
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
 
+#[path = "runner/concentric_sparse_multiline.rs"]
+mod concentric_sparse_multiline;
+
 use std::path::{Path, PathBuf};
 
 #[path = "runner/tpms_d_rotation_precision.rs"]
