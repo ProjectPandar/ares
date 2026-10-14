@@ -113,7 +113,9 @@ pub(super) fn retract_and_wipe_impl(
     // whole pre-wipe fraction retracts BEFORE the wipe and the wipe
     // carries no retraction (`GCode.cpp:350-353`). Otherwise `during >
     // remaining` within the EPSILON window emits as-is (:352-357).
-    let during = if during_max <= 1e-4 {
+    // `GCode.cpp:330,337`: the full-length and remaining-length early
+    // returns precede the during-wipe budget calculation.
+    let during = if retraction_length <= 1e-4 || remaining <= 1e-4 || during_max <= 1e-4 {
         0.0
     } else if during_max - remaining > 1e-4 {
         remaining
@@ -130,6 +132,9 @@ pub(super) fn retract_and_wipe_impl(
     // the full length.
     let before = if !has_wipe {
         (retraction_length - state.extruder.retracted_amount).max(0.0)
+    } else if retraction_length <= 1e-4 {
+        // `GCode.cpp:330` returns `(0, 0)`, not `(requested_before, 0)`.
+        0.0
     } else if during <= 0.0 {
         // `(fL, 0)` — no leftover difference is folded into the
         // pre-wipe amount (`GCode.cpp:351-352`).
