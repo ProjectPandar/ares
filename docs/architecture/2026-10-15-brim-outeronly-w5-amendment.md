@@ -60,3 +60,42 @@ GREEN 总门 = 未改动的 RED 双模式通过。
   `diff` 验证一致，`git status` 净）；
 - gcode 对拍数据：`/tmp/w5-oo5-red/case-Zsb5A0/{orca,ares}.gcode`
   （official 模式 RED 运行产物，本地留档）。
+
+## 5. REVIEW 修订（2e99a2e7d findings）
+
+- (1) 已修（001f9f067）：tool_entry.rs 的 layer-state 赋值
+  （layer_index/active_layer_print_z/on_first_layer/
+  object_layer_over_raft）上提到 brim 发射之前
+  （GCode.cpp:5343-5344），support 发射期间
+  `object_layer_over_raft = false` 并随后恢复
+  （GCode.cpp:5388/:5429-5430）。
+- (2) 显式延后声明：islands.rs `support_no_brim` 的 tree 分支仅覆盖
+  `Brim.cpp:606-625` 的 `has_outer_brim` 路径（仅 contour；
+  `holes_support`/`no_brim_offset` 分支省略）；`:591` 的
+  `support_material_extruder == extruderNo` 门与 `brimToWrite.sup`
+  记账一并延后（单挤出物 RED 覆盖面之外）。
+
+## 6. AMENDMENT v3：残余定位（外部探针）
+
+已批准的探针范围：`makeBrimInfillImpl:836-877` 残余。结论：**残余
+主项不是 makeBrimInfillImpl，而是 mask 多边形源**。
+
+证据（c-oo5，探针副本 /tmp/w5-brim-probe3.txt，已还原）：
+- 环弧中段顶点**逐字节相同**（如 native/ares 共有
+  118.192/117.935、117.722/118.375、116.613/119.025 序列）——
+  `tryExPolygonOffset` 阶梯 + DP 一致；
+- 差异集中于环被 mask 裁切的**端点**（native 切点 local
+  (4.718,5.189) vs ares (4.384,5.189)，Δ≈0.33mm）与切点附近少量
+  附加段（native 266 vs ares 253 顶点）；
+- ares 首层 support island[0] 边缘在 y=5.2 处 x=4.5688/5.0828，
+  与 native lslices 隐含边缘相差 ~0.15-0.33mm——mask 源
+  （`support_islands` = union(bottoms/tops/bases/interfaces 源多边形)）
+  ≠ native `support_layers().front()->lslices`。
+
+**下一个唯一函数**：`TreeSupport.cpp:2360-2396`（`ts_layer->lslices`
+构造：area_groups base/roof/floor/roof_1st 经 <2mm 孔擦除后 union，
+且仅在 `layer_nr < brim_skirt_layers` 层填充）——organic 等价物在
+ares 侧的对齐源。destination：`support_no_brim` tree 分支改读
+lslices 等价多边形（具体承载字段在 GREEN 前用一次外部探针对拍
+bottoms/tops 源与 native 切点确认）。`makeBrimInfillImpl` 的
+chain/reverse/connect 阶段维持延后，待 mask parity 后重探针再命名。
