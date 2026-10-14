@@ -41,6 +41,7 @@ pub(super) fn append(
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let call = super::types::SurfaceCall {
+        dont_alternate_fill_direction: false,
         layer_id,
         reference,
         scale,

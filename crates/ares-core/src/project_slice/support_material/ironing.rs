@@ -87,6 +87,7 @@ impl IroningSurface {
             gap_fill_target: crate::ProcessGapFillTarget::default(),
         };
         let call = SurfaceCall {
+            dont_alternate_fill_direction: false,
             layer_id: input.layer_id,
             reference: crate::geometry::Point::new(0, 0),
             scale: input.scale,

@@ -14,6 +14,7 @@ pub(super) struct ObjectFillGeometry {
 /// `dont_adjust` from the bridge surface type).
 #[derive(Clone, Copy)]
 pub(in crate::project_slice) struct SurfaceCall {
+    pub(in crate::project_slice) dont_alternate_fill_direction: bool,
     pub(in crate::project_slice) layer_id: usize,
     pub(in crate::project_slice) reference: crate::geometry::Point,
     pub(in crate::project_slice) scale: crate::geometry::CoordinateScale,

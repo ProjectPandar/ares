@@ -15,6 +15,8 @@ pub(crate) struct MonotonicFillParams {
     pub(crate) layer_index: usize,
     pub(crate) thickness_layers: u16,
     pub(crate) fixed_angle: bool,
+    /// FillBase.hpp:147 / FillBase.cpp:311-313: separate from fixed_angle.
+    pub(crate) dont_alternate_fill_direction: bool,
     pub(crate) bridge_angle: Option<f32>,
     pub(crate) reference_point: Point,
     pub(crate) dont_adjust: bool,
@@ -184,6 +186,7 @@ fn infill_direction(params: MonotonicFillParams) -> f32 {
     let mut direction = params.bridge_angle.unwrap_or(params.angle);
     if params.bridge_angle.is_none()
         && !params.fixed_angle
+        && !params.dont_alternate_fill_direction
         && (params.layer_index / usize::from(params.thickness_layers)) & 1 == 1
     {
         direction += std::f32::consts::FRAC_PI_2;

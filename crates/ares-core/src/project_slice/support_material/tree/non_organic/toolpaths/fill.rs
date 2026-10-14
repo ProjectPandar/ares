@@ -71,6 +71,7 @@ impl Filler {
             RaftFillPattern::Rectilinear => Ok(fill_rectilinear_surface(
                 area,
                 MonotonicFillParams {
+                    dont_alternate_fill_direction: false,
                     spacing: self.spacing,
                     overlap: 0.0,
                     density,

@@ -127,6 +127,7 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
         let generated = fill_monotonic_surface(
             &area,
             MonotonicFillParams {
+                dont_alternate_fill_direction: false,
                 spacing,
                 overlap: 0.0,
                 density: 1.0,

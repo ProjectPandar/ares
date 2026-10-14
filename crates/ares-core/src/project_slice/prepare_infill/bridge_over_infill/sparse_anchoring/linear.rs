@@ -22,6 +22,7 @@ pub(super) fn append(
     // `FillMonotonicLines`/`FillAlignedRectilinear` all share the
     // rectilinear/monotonic core (`fill_surface` `monotonic` flag).
     let params = MonotonicFillParams {
+        dont_alternate_fill_direction: false,
         spacing: fill.params.spacing,
         overlap: 0.0,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,

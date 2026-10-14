@@ -65,6 +65,7 @@ pub(super) fn rectilinear(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let params = MonotonicFillParams {
+        dont_alternate_fill_direction: false,
         spacing: spec.spacing,
         overlap: 0.0,
         density: spec.density,

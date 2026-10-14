@@ -78,6 +78,7 @@ pub(super) fn generate(
             )?),
             RaftFillPattern::Rectilinear => {
                 let params = MonotonicFillParams {
+                    dont_alternate_fill_direction: false,
                     spacing,
                     overlap: 0.0,
                     density,

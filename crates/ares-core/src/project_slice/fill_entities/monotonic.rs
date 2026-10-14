@@ -59,6 +59,7 @@ pub(super) fn expolygon_polylines(
         fill.params.anchor_length_max
     };
     let params = MonotonicFillParams {
+        dont_alternate_fill_direction: call.dont_alternate_fill_direction,
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
         density,
@@ -143,7 +144,7 @@ pub(super) fn append(
     // `FillRectilinear::fill_surface` and its monotonic subclasses share
     // `fill_surface_by_lines` (`FillRectilinear.cpp:3386-3419`).
     pattern: ProcessInfillPattern,
-    layer_id: usize,
+    call: super::types::SurfaceCall,
     super::types::ObjectFillGeometry {
         scale,
         extended_object_min_x,
@@ -161,13 +162,7 @@ pub(super) fn append(
             extended_object_min_x,
             extended_object_max_x,
         },
-        &super::types::SurfaceCall {
-            layer_id,
-            reference: Point::new(0, 0),
-            scale,
-            link_max_length: 0.0,
-            dont_adjust: fill.params.bridge,
-        },
+        &call,
     )?;
     for (expolygon, generated) in fill.expolygons.into_iter().zip(surfaces) {
         if generated.polylines.is_empty() {
