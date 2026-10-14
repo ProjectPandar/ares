@@ -182,7 +182,12 @@ pub(super) fn retract_and_wipe_impl(
                     format_extrusion(retract)
                 )
             } else {
-                format!("G1 X{} Y{}\n", format_axis(point.x), format_axis(point.y))
+                let comment = gcode_comment(state, " ; wipe and retract");
+                format!(
+                    "G1 X{} Y{}{comment}\n",
+                    format_axis(point.x),
+                    format_axis(point.y)
+                )
             };
             output.extend_from_slice(line.as_bytes());
             state.x = point.x;
