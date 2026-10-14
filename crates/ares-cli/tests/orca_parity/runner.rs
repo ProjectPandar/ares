@@ -2,6 +2,9 @@
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
 
+#[path = "runner/crosshatch_dont_connect.rs"]
+mod crosshatch_dont_connect;
+
 #[path = "runner/concentric_sparse_multiline.rs"]
 mod concentric_sparse_multiline;
 
