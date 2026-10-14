@@ -59,3 +59,38 @@ pub(super) fn zhop_project(value: &str) -> Vec<u8> {
         text.replace_range(nil_at..nil_at + 5, &format!("\"{value}\""));
     })
 }
+
+/// Domain: a non-"0"/"1" bool wire silently substitutes via
+/// `looks_like_true` (`Config.cpp:666-668`) — "enabled" keeps ironing on.
+#[test]
+fn orca_parity_support_ironing_unknown_bool_enabled() {
+    leg_with_project(
+        "unknown-bool-enabled",
+        "rectilinear",
+        ironing_bool_project("enabled"),
+    );
+}
+
+/// Domain: the literal "true" is NOT in the `looks_like_true` set
+/// (`Config.hpp:96-99`: only "enabled"/"on") — it substitutes to false and
+/// the ironing section disappears.
+#[test]
+fn orca_parity_support_ironing_unknown_bool_true() {
+    leg_with_project(
+        "unknown-bool-true",
+        "rectilinear",
+        ironing_bool_project("true"),
+    );
+}
+
+/// Domain: an unknown coEnums entry substitutes the whole vector with the
+/// option default (`Config.cpp:668-671`) — the echo carries
+/// `filament_z_hop_types = Slope Lift`.
+#[test]
+fn orca_parity_support_ironing_unknown_vector_enum_zhop() {
+    leg_with_project(
+        "unknown-vector-enum-zhop",
+        "rectilinear",
+        zhop_project("Bogus Lift"),
+    );
+}
