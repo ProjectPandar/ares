@@ -127,3 +127,6 @@ mod zaa_contour_z;
 
 #[path = "zaa_modifier_slice_z.rs"]
 mod zaa_modifier_slice_z;
+
+#[path = "zaa_fill_direction.rs"]
+mod zaa_fill_direction;
