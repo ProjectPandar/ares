@@ -35,6 +35,7 @@ fn fill(width: i64, overlap: f64) -> SurfaceFill {
             bridge_angle: 0.0,
             density: 15.0,
             multiline: 1,
+            adaptive_line_spacing: 0.0,
             anchor_length: 0.0,
             anchor_length_max: 0.0,
             flow: Flow {

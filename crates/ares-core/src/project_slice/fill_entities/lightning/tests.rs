@@ -56,6 +56,7 @@ fn lightning_clips_to_fill_surface_offset_before_anchoring() {
             bridge_angle: 0.0,
             density: 15.0,
             multiline: 1,
+            adaptive_line_spacing: 0.0,
             anchor_length: 1.6283185,
             anchor_length_max: 20.0,
             flow: Flow {
