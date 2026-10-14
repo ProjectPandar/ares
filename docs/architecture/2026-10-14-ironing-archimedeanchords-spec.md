@@ -19,8 +19,9 @@
 - `generate()` 虚分派到 **Archimedean 螺旋弦离散化**
   （`FillPlanePath.cpp:173` `generate_archimedean_chords`：以
   resolution 决定离散角步，弦折线逼近螺旋）；
-- `centered() == false`（`FillPlanePath.hpp:76`）——**min-corner shift**
-  （`bounding_box.min`，非 center），与 Octagram/Hilbert 不同。
+- `centered() == true`（`FillPlanePath.hpp:65`；初版误引 `:76`/min-corner——
+  那是 FillHilbertCurve 的 `centered() == false`，ArchimedeanChords 与
+  OctagramSpiral 同走 center shift）
 
 ironing 语境其余参数与 OctagramSpiral 片一致（density=1 → align=false
 → snug bbox；resolution=FillParams 默认 0.0125；直出 →

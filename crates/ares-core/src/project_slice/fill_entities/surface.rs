@@ -264,8 +264,8 @@ pub(in crate::project_slice) fn surface_polylines(
             request.params,
             request.call.scale,
         ),
-        // `FillArchimedeanChords` shifts by `bounding_box.min`
-        // (`FillPlanePath.hpp:76`, `centered() == false`).
+        // `FillArchimedeanChords` shares the center shift
+        // (`FillPlanePath.hpp:65`, `centered() == true`).
         ProcessInfillPattern::ArchimedeanChords => super::plane_path::expolygon_polylines(
             &request.expolygon,
             crate::fill::plane_path::PlanePathPattern::ArchimedeanChords,
