@@ -41,6 +41,13 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
+      - name: Verify runtime GLU oracle prerequisites
+        run: |
+          command -v gcc
+          command -v g++
+          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
+          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
       - run: cargo nextest run --workspace --no-fail-fast
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
@@ -99,6 +106,7 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
             src/libvgcode
             src/slic3r/GUI/LibVGCode
       - uses: actions/setup-node@v4
@@ -233,6 +241,7 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
@@ -277,6 +286,14 @@ jobs:
             echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
+      - name: Verify runtime GLU oracle prerequisites
+        run: |
+          command -v gcc
+          command -v g++
+          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
+          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+      - name: Compare GLU tessellation against runtime Native supplier
+        run: cargo nextest run -p ares-core --lib --no-fail-fast -E 'test(/^geometry::tessellation::tests::/)' --test-threads 2
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
       - if: failure()
         uses: actions/upload-artifact@v4
@@ -334,6 +351,7 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
@@ -382,6 +400,14 @@ jobs:
             echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
+      - name: Verify runtime GLU oracle prerequisites
+        run: |
+          command -v gcc
+          command -v g++
+          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
+          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+      - name: Compare GLU tessellation against runtime Native supplier
+        run: cargo nextest run -p ares-core --lib --no-fail-fast -E 'test(/^geometry::tessellation::tests::/)' --test-threads 2
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
       - if: failure()
         uses: actions/upload-artifact@v4
