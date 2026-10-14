@@ -240,8 +240,8 @@ pub(in crate::project_slice) fn surface_polylines(
         // Guarded: Native emits real ironing paths that Ares does not
         // reproduce byte-identically (probe evidence, organic-overhang
         // fixture, `;TYPE:Ironing` E-line counts vs Ares CLI diffs):
-        // - HilbertCurve / ArchimedeanChords / OctagramSpiral: 19118 / 4149 /
-        //   1527 native E-lines; plane-path fills need the object bounding
+        // - HilbertCurve / ArchimedeanChords: 19118 / 4149 native
+        //   E-lines; plane-path fills need the object bounding
         //   box + resolution context (`generate.rs` sparse arms).
         // - Lightning / AdaptiveCubic / SupportCubic: Native segfaults
         //   (exit 139) on the uninitialized filler at this call site — there
@@ -254,9 +254,17 @@ pub(in crate::project_slice) fn surface_polylines(
             request.print_z,
             request.call.scale,
         ),
+        // At ironing density the plane-path generator runs unaligned on the
+        // snug bounds (`FillPlanePath.cpp:80`), so no object context is
+        // needed and the pattern centers itself (`centered() == true`).
+        ProcessInfillPattern::OctagramSpiral => super::plane_path::expolygon_polylines(
+            &request.expolygon,
+            crate::fill::plane_path::PlanePathPattern::OctagramSpiral,
+            request.params,
+            request.call.scale,
+        ),
         ProcessInfillPattern::HilbertCurve
         | ProcessInfillPattern::ArchimedeanChords
-        | ProcessInfillPattern::OctagramSpiral
         | ProcessInfillPattern::Lightning
         | ProcessInfillPattern::AdaptiveCubic
         | ProcessInfillPattern::SupportCubic => Err(SliceError::UnsupportedProjectFeature(
