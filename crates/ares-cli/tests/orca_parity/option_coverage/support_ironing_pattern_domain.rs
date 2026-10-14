@@ -384,3 +384,10 @@ fn orca_parity_support_ironing_pattern_unknown_key_cross_zag() {
 fn orca_parity_support_ironing_pattern_unknown_key_bogus() {
     leg("unknown-bogus", "bogus-pattern");
 }
+
+/// Domain: `FillLine` ironing — vertical scan family with endpoint
+/// extension and the oscillation-based connect (`FillLine.cpp:13-110`).
+#[test]
+fn orca_parity_support_ironing_pattern_line() {
+    leg("line", "line");
+}
