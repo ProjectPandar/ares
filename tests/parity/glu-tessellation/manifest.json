@@ -1,0 +1,96 @@
+{
+  "source": "libslic3r/Tesselate.cpp:192-195 + vendored deps_src/glu-libtess",
+  "scale": "Normal 1e-6; authored integer input coordinates",
+  "cases": [
+    {
+      "name": "quad",
+      "input_sha256": "69d0f3a43bac0f9eb23e5cb47e3bd567bf1c50af8ab247c717482942f250a531",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "translated",
+      "input_sha256": "fd43babd0d6196cb28555b8a06f43a8472741d7feb58f0ed3d159d24faf4e62b",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "clockwise",
+      "input_sha256": "cfb6e3d4377b899ec04eb5be910afe3e23f6fe82f9308191c335111768a7f57a",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "concave",
+      "input_sha256": "15ba4b6d395dae90be65c326ac6b757eb073a220c50995cdd93eb7452d420b62",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "one_hole",
+      "input_sha256": "2150192877146ec29cfd844e20c3ea51c1782989074a41cab304d53ef6699323",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "two_holes",
+      "input_sha256": "ace86885f2459bfadf290b0cab9622de61e3501365075644c8c768a2d61b3769",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "holes_reordered",
+      "input_sha256": "ebbb260655b2c8199e841b01ace3be71f41aac28f9b3c2355d5fc1474d0490f7",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "convex_six",
+      "input_sha256": "1c44b2acb0e922b8d3a4903f7b2d6228f20b52f8529af6e36fa74e9a48fb11b0",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "flip",
+      "input_sha256": "7549782fb74f46bf1ee47514bb8a6c5cf29d7e447a2eb9b17a5ddfae51ec1383",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "float_z",
+      "input_sha256": "e96cb8fa7ed3224c5beec2a30e793ac5b95ba3091775b317493a320d4843841e",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "collinear",
+      "input_sha256": "83a32cc60fc3e5dc75a1aa87a40917249f10067e2aeba19a2bbc35d99163a2cf",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "duplicate",
+      "input_sha256": "a7ae39d7fdc4bfbf7887d96cd40af91af05e8f03f39b15e418458a37e7c63a6b",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "empty",
+      "input_sha256": "9d6ac3bf30d19ed574c82c2b2c9b4090fc8b524ee76de667cbc6eeab8e225a64",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "point",
+      "input_sha256": "b8788e553581ff2d237419d27732ede198dec37b023d510b081488dbd363dc62",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "line",
+      "input_sha256": "6babd823767d8682f00b40bb2666b99cb39c854d5bcf21664a937593912cd7fb",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "crossing",
+      "input_sha256": "03500435993a49830e42868a6a0e852f363c3a5cdeee1a165977903ab648981a",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "concave_u",
+      "input_sha256": "315a4970436df3f69dae65bc7028628ae9f9437c7323d7ae4ec4d74a619c3f9d",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    },
+    {
+      "name": "cache_flush_101",
+      "input_sha256": "4601764198b2bce8486e79ee2c24ad19107a99196a54b836800b0f6b297aabb9",
+      "failure_modes": "see docs/architecture/glu-tessellation-b-t-failure-modes.md; no Native outputs included"
+    }
+  ]
+}
