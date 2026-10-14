@@ -4,6 +4,9 @@
 
 use std::path::{Path, PathBuf};
 
+#[path = "runner/aligned_rectilinear_multiline.rs"]
+mod aligned_rectilinear_multiline;
+
 #[path = "runner/native_ksr_reference_migration.rs"]
 mod native_ksr_reference_migration;
 
