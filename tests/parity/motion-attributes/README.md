@@ -7,9 +7,10 @@ using explicit `ARES_PROCGCODE_DYNAMICS_BIN`; only the producer name is changed
 so Native loads the embedded configuration, preserving command bytes and line ids.
 
 The approved initialized-Native diagnostic is defined by
-`tools/chain-probe/procgcode-dynamics.{nix,patch}` on top of procgcode and
-stable-options. It initializes upstream's indeterminate PA to zero, remaps pending
-option indices across actual-speed insertions, and aligns the DynamicPrintConfig
+`tools/chain-probe/procgcode-dynamics.{nix,patch}` on top of raw procgcode.
+It initializes upstream's indeterminate PA to zero, keeps upstream's stale
+OptionsZCorrector index across actual-speed insertions (no stable-options remap,
+`docs/architecture/procgcode-dynamics-raw-options-z.md`), and aligns the DynamicPrintConfig
 travel-acceleration flavor gate with the slicing PrintConfig path. It is labeled
 a diagnostic, not an unmodified official processor.
 

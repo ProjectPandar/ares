@@ -22,11 +22,7 @@ impl Recipe {
         match self {
             Self::RawColor => &["procgcode.patch"],
             Self::StableColor => &["procgcode.patch", "procgcode-stable-options.patch"],
-            Self::Dynamics => &[
-                "procgcode.patch",
-                "procgcode-stable-options.patch",
-                "procgcode-dynamics.patch",
-            ],
+            Self::Dynamics => &["procgcode.patch", "procgcode-dynamics.patch"],
         }
     }
 
