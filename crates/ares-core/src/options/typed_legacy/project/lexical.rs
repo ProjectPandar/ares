@@ -4,7 +4,10 @@ use serde::de::{
 };
 
 use super::super::{LegacyRule, VectorType};
-use crate::options::project_settings::ProjectSettingsBuilder;
+use crate::options::{
+    project_settings::ProjectSettingsBuilder,
+    registry::{self, OptionValueKind},
+};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(super) enum ValueOrigin {
@@ -33,10 +36,11 @@ where
     } else {
         builder.deserialize_known_value(target, StringDeserializer::<E>::new(value))
     }
-    .map_err(|error| {
-        E::custom(format_args!(
+    .or_else(|error| {
+        let wrapped = E::custom(format_args!(
             "invalid legacy Orca option {source} for {target}: {error}"
-        ))
+        ));
+        substitute_enum_default::<E>(builder, target, wrapped)
     })?;
 
     if handled {
@@ -45,6 +49,33 @@ where
         Err(E::custom(format_args!(
             "legacy Orca option {source} resolved to unknown target {target}"
         )))
+    }
+}
+
+/// `Config.cpp:654-672`: a failed enum deserialization under the 3MF load
+/// rule (`EnableSilent`, `Model.cpp:259`) silently substitutes the option's
+/// default value instead of failing the load — `opt->set(optdef->
+/// default_value)`, `success = true`. Only the scalar enum kind mirrors
+/// this (RED-covered); enum vectors and every other failure keep the
+/// original error until their own Native evidence lands.
+fn substitute_enum_default<E>(
+    builder: &mut ProjectSettingsBuilder,
+    target: &str,
+    error: E,
+) -> Result<bool, E>
+where
+    E: Error,
+{
+    let Some(definition) = registry::option_definition(target) else {
+        return Err(error);
+    };
+    if definition.kind == OptionValueKind::Enum {
+        builder.deserialize_known_value(
+            target,
+            StringDeserializer::<E>::new(definition.default_value.to_string()),
+        )
+    } else {
+        Err(error)
     }
 }
 
