@@ -246,8 +246,15 @@ pub(in crate::project_slice) fn surface_polylines(
         // - Lightning / AdaptiveCubic / SupportCubic: Native segfaults
         //   (exit 139) on the uninitialized filler at this call site — there
         //   is no oracle output to mirror.
-        ProcessInfillPattern::CrossHatch
-        | ProcessInfillPattern::HilbertCurve
+        // `FillCrossHatch` keys its layered pattern on the layer print_z
+        // (`FillCrossHatch.cpp:160-189`).
+        ProcessInfillPattern::CrossHatch => super::crosshatch::expolygon_polylines(
+            &request.expolygon,
+            request.params,
+            request.print_z,
+            request.call.scale,
+        ),
+        ProcessInfillPattern::HilbertCurve
         | ProcessInfillPattern::ArchimedeanChords
         | ProcessInfillPattern::OctagramSpiral
         | ProcessInfillPattern::Lightning
