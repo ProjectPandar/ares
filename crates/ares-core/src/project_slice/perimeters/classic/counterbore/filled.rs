@@ -1,5 +1,5 @@
 //! `PerimeterGenerator::process_no_bridge`, Filled branch (:1777–1855).
-use super::{RegionSurface, SurfaceContext};
+use super::{RegionSurface, SurfaceContext, SurfaceReference};
 use crate::geometry::simplification::polygons_simplify;
 use crate::geometry::{
     ClipperError, ExPolygon, JoinType, Polygon, difference_ex_with_safety_offset, intersection_ex,
@@ -8,13 +8,13 @@ use crate::geometry::{
 };
 
 pub(super) fn mask(
-    traversal: (&mut Vec<RegionSurface>, &mut usize),
+    traversal: (&mut Vec<RegionSurface>, &mut usize, &mut SurfaceReference),
     last: &[ExPolygon],
     unsupported: &[ExPolygon],
     bridgeable: &[ExPolygon],
     context: &SurfaceContext<'_>,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let (surfaces, current) = traversal;
+    let (surfaces, current, reference) = traversal;
     let geometry = &context.geometry;
     let spacing = geometry.spacing;
     let margin = geometry.margin;
@@ -57,7 +57,7 @@ pub(super) fn mask(
     let mut mask = intersection_ex(last, &restored)?;
     for polygon in &mut mask {
         remove_unsupported_holes(polygon, context)?;
-        recover_nested_islands(polygon, surfaces, current, spacing, margin)?;
+        recover_nested_islands(polygon, (surfaces, current, reference), spacing, margin)?;
     }
     Ok(mask)
 }
@@ -107,11 +107,11 @@ fn remove_unsupported_holes(
 
 fn recover_nested_islands(
     polygon: &mut ExPolygon,
-    surfaces: &mut Vec<RegionSurface>,
-    current: &mut usize,
+    traversal: (&mut Vec<RegionSurface>, &mut usize, &mut SurfaceReference),
     spacing: i64,
     margin: f64,
 ) -> Result<(), ClipperError> {
+    let (surfaces, current, reference) = traversal;
     let mut index = 0;
     while index < surfaces.len() {
         if index == *current {
@@ -142,11 +142,14 @@ fn recover_nested_islands(
         } else {
             for island in replacement {
                 append_hole(polygon, island.contour());
+                reference.append(surfaces.len());
                 surfaces.push(other.clone_with_expolygon(island));
             }
             surfaces.remove(index);
             if index < *current {
                 *current -= 1;
+                // :1846–1848 refreshes the captured reference after an earlier erase.
+                reference.valid = true;
             }
         }
     }

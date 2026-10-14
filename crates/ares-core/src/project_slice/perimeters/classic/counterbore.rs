@@ -24,6 +24,21 @@ struct SurfaceContext<'a> {
     geometry: BridgeGeometry,
 }
 
+struct SurfaceReference {
+    capacity: usize,
+    valid: bool,
+}
+
+impl SurfaceReference {
+    fn append(&mut self, len: usize) {
+        // Native libstdc++ _M_check_len(1): logical growth, independent of Rust Vec.
+        if len == self.capacity {
+            self.capacity = len + len.max(1);
+            self.valid = false;
+        }
+    }
+}
+
 pub(super) fn process(
     object: &mut PostPerimeterInputPrintObject,
     record: &PerimeterInputRecord,
@@ -71,22 +86,33 @@ fn process_surfaces(
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     let mut fill = Vec::new();
     let mut index = 0;
+    // Surface copy (:1212/:2121) has capacity == size; capture current at :1739.
+    let mut reference = SurfaceReference {
+        capacity: surfaces.len(),
+        valid: true,
+    };
     while index < surfaces.len() {
+        reference.valid = true;
         let original = surfaces[index].clone();
         let last = process_surface(
             original.as_parts().1,
             context,
             &mut fill,
-            surfaces,
-            &mut index,
+            (surfaces, &mut index, &mut reference),
         )?;
         let mut parts = last.into_iter();
         let Some(first) = parts.next() else {
             surfaces.remove(index);
             continue;
         };
-        surfaces[index] = original.clone_with_expolygon(first);
-        surfaces.extend(parts.map(|polygon| original.clone_with_expolygon(polygon)));
+        // :1922: growth can invalidate the captured Native reference; live slot stays.
+        if reference.valid {
+            surfaces[index] = original.clone_with_expolygon(first);
+        }
+        for polygon in parts {
+            reference.append(surfaces.len());
+            surfaces.push(original.clone_with_expolygon(polygon));
+        }
         index += 1;
     }
     Ok(fill)
@@ -96,9 +122,9 @@ fn process_surface(
     original: &ExPolygon,
     context: &SurfaceContext<'_>,
     fill: &mut Vec<ExPolygon>,
-    surfaces: &mut Vec<RegionSurface>,
-    index: &mut usize,
+    traversal: (&mut Vec<RegionSurface>, &mut usize, &mut SurfaceReference),
 ) -> Result<Vec<ExPolygon>, ClipperError> {
+    let (surfaces, index, reference) = traversal;
     let mut last = vec![original.clone()];
     let unsupported = difference_ex_with_safety_offset(&last, context.lower)?;
     if unsupported.is_empty() {
@@ -126,9 +152,13 @@ fn process_surface(
         return Ok(last);
     }
     let mask = match context.config.counterbore_hole_bridging {
-        ProcessCounterboreHoleBridging::SacrificialLayer => {
-            filled::mask((surfaces, index), &last, &filtered, &bridgeable, context)?
-        }
+        ProcessCounterboreHoleBridging::SacrificialLayer => filled::mask(
+            (surfaces, index, reference),
+            &last,
+            &filtered,
+            &bridgeable,
+            context,
+        )?,
         ProcessCounterboreHoleBridging::PartiallyBridged => {
             last = difference_ex_with_safety_offset(&last, &filtered)?;
             partial_mask(&last, &filtered, &bridgeable, &context.geometry)?
