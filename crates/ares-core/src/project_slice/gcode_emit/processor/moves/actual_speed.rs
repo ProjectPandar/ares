@@ -1,6 +1,6 @@
 //! `TimeMachine::calculate_time` move times and actual-speed vertices
 //! with their `actual_feedrate` (`GCodeProcessor.cpp:458-572`) inserted by `GCodeProcessor::
-//! calculate_time` (`:5962-5997`).
+//! calculate_time` (`:5962-6008`), one planner flush at a time.
 
 use crate::gcode_processor::{EMoveType, MoveVertex};
 use crate::project_slice::gcode_emit::processor::motion::Trapezoid;
@@ -8,20 +8,33 @@ use crate::project_slice::gcode_emit::processor::motion::Trapezoid;
 /// libslic3r `EPSILON` (`libslic3r.h:52`).
 const EPSILON: f64 = 1e-4;
 
-pub(super) fn apply(
-    moves: &mut Vec<MoveVertex>,
-    block_moves: &[u32],
-    times: &[f64],
-    trapezoids: &[Trapezoid],
-) {
-    let mut inserted = Vec::new();
-    let mut block_speeds = Vec::new();
-    for ((&move_id, &time), trapezoid) in block_moves.iter().zip(times).zip(trapezoids) {
-        let id = move_id as usize;
+/// One timed block's detection result (`TimeMachine::ActualSpeedMove`).
+struct Detected {
+    move_id: usize,
+    splits: usize,
+    speed: f32,
+}
+
+/// The actual-speed moves one `calculate_time` call collects.
+#[derive(Default)]
+pub(in crate::project_slice::gcode_emit::processor) struct Pass {
+    detected: Vec<Detected>,
+    splits: Vec<MoveVertex>,
+}
+
+impl Pass {
+    /// `:472-573` for a block whose `move_id` is `id`.
+    pub(in crate::project_slice::gcode_emit::processor) fn block(
+        &mut self,
+        moves: &mut [MoveVertex],
+        id: usize,
+        time: f64,
+        trapezoid: &Trapezoid,
+    ) {
         moves[id].time = time as f32;
         let curr = moves[id];
         if !is_timed(curr.move_type) {
-            continue;
+            return;
         }
         let Trapezoid {
             distance,
@@ -36,46 +49,65 @@ pub(super) fn apply(
             prev.actual_feedrate = entry;
         }
         let prev = *prev;
-        inserted.extend(
+        let before = self.splits.len();
+        self.splits.extend(
             split_fractions(trapezoid)
-                .filter_map(|t| actual_vertex(&prev, &curr, t, cruise_feedrate))
-                .map(|v| (id, v)),
+                .filter_map(|t| actual_vertex(&prev, &curr, t, cruise_feedrate)),
         );
         let has_deceleration = has_deceleration(trapezoid);
         // `Trapezoid::is_cruise_only` (`GCodeProcessor.hpp:444`).
         let is_cruise_only =
             f64::from(((decelerate_after - accelerate_until) - distance).abs()) < EPSILON;
-        block_speeds.push((
-            id,
-            if is_cruise_only || !has_deceleration {
+        self.detected.push(Detected {
+            move_id: id,
+            splits: self.splits.len() - before,
+            speed: if is_cruise_only || !has_deceleration {
                 cruise_feedrate
             } else {
                 exit
             },
-        ));
+        });
     }
-    // The insertion pass (`:5986-5997`) runs after every predecessor write and
-    // only inserts before block moves, so a following Seam keeps index `id + 1`.
-    for (id, speed) in block_speeds {
-        moves[id].actual_feedrate = speed;
-        if let Some(next) = moves.get_mut(id + 1)
-            && next.move_type == EMoveType::Seam
+
+    /// `:5962-6000`: inserts the split vertices in front of their block's
+    /// vertex. Returns `id_map` (sorted by the old `move_id`) and the
+    /// inserted count that renumber the queued blocks (`:6003-6008`).
+    pub(in crate::project_slice::gcode_emit::processor) fn insert(
+        &mut self,
+        moves: &mut Vec<MoveVertex>,
+    ) -> (Vec<(usize, usize)>, usize) {
+        let Some(first) = self.detected.first() else {
+            return (Vec::new(), 0);
+        };
+        let mut tail = moves.split_off(first.move_id);
+        let lo = first.move_id;
+        let inserted = self.splits.len();
+        let mut splits = self.splits.drain(..);
+        let mut map = Vec::with_capacity(self.detected.len());
+        let mut cursor = 0;
+        for Detected {
+            move_id,
+            splits: count,
+            speed,
+        } in self.detected.drain(..)
         {
-            next.actual_feedrate = speed;
+            let at = move_id - lo;
+            moves.extend_from_slice(&tail[cursor..at]);
+            cursor = at;
+            moves.extend(splits.by_ref().take(count));
+            map.push((move_id, moves.len()));
+            tail[at].actual_feedrate = speed;
+            // The seam sync reads the element after the vertex before any
+            // later insertion (`:5990-5995`).
+            if let Some(next) = tail.get_mut(at + 1)
+                && next.move_type == EMoveType::Seam
+            {
+                next.actual_feedrate = speed;
+            }
         }
+        moves.extend_from_slice(&tail[cursor..]);
+        (map, inserted)
     }
-    if inserted.is_empty() {
-        return;
-    }
-    let mut merged = Vec::with_capacity(moves.len() + inserted.len());
-    let mut inserted = inserted.into_iter().peekable();
-    for (index, vertex) in moves.drain(..).enumerate() {
-        while let Some((_, actual)) = inserted.next_if(|(base, _)| *base == index) {
-            merged.push(actual);
-        }
-        merged.push(vertex);
-    }
-    *moves = merged;
 }
 
 /// Only these vertex types get a block time entry (`:484-488`).
@@ -84,18 +116,6 @@ pub(in crate::project_slice::gcode_emit::processor) fn is_timed(kind: EMoveType)
         kind,
         EMoveType::Extrude | EMoveType::Travel | EMoveType::Wipe
     )
-}
-
-/// The number of actual-speed vertices `calculate_time` inserts in front of
-/// a timed `curr` (`:497-546`).
-pub(in crate::project_slice::gcode_emit::processor) fn split_count(
-    prev: [f32; 3],
-    curr: [f32; 3],
-    trapezoid: &Trapezoid,
-) -> usize {
-    split_fractions(trapezoid)
-        .filter(|&t| split_position(prev, curr, t).is_some())
-        .count()
 }
 
 fn has_deceleration(trapezoid: &Trapezoid) -> bool {

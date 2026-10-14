@@ -89,6 +89,21 @@ Part of `moves.rs` moves into a new `moves/options_z.rs` if the edit would
 take it past 400. No new public API, and the wasm and vgcode consumers are
 unchanged.
 
+**GREEN as built.** `options_z::Log` no longer reconstructs the resolution
+from kinds and positions. It records the block queue and the corrector
+calls with their clocks, and `Log::replay` rebuilds Native's move list:
+recorded vertices are stored, each `set()`/`update()` first runs the
+`calculate_time` flushes due by its clock (`moves/actual_speed.rs` `Pass`,
+`:472-573` detection and `:5962-6008` insertion and renumbering), and
+`update()` copies and erases the stale index exactly as
+`GCodeProcessor.hpp:693-705` does. Queued blocks at or after the erased
+index are marked shifted; their `cache_eligible` follows the type of the
+element they resolve to, as before. `VG1` blocks keep writing `moves[0]`.
+The per-block `move_id` list (`block_moves`) in `estimate.rs` and the
+`record_motions`/`tool_change`/`motion` return values it fed became unused
+and were removed (`estimate.rs`, `estimate/commands.rs`, beyond the
+allowlist below).
+
 ## Included and deferred
 
 **Included:**

@@ -66,8 +66,6 @@ impl Estimate {
         let mut printable_area = PrintableAreaTracker::new(config.settings, [0.0; 2]);
         let mut g1_line_id = 0;
         let mut block_line_ids = Vec::new();
-        // `TimeBlock::move_id` of every block (`GCodeProcessor.cpp:4001`).
-        let mut block_moves = Vec::new();
         let mut remaining_internal = Vec::new();
         let mut cache_eligible = Vec::new();
         let mut seams = SeamDetector::default();
@@ -145,7 +143,7 @@ impl Estimate {
             }
             if let Some((filament, extra_time)) = change {
                 let vertex = recorder.options_z.next_vertex();
-                block_moves.push(recorder.tool_change(index + 1, filament, line_start));
+                recorder.tool_change(index + 1, filament, line_start);
                 recorder.options_z.block(vertex);
                 blocks.push(commands::tool_change_block());
                 block_line_ids.push(g1_line_id);
@@ -179,7 +177,6 @@ impl Estimate {
             if let Some(block) = virtual_block {
                 used_filaments.motion(block.delta, true, state.wiping, &filaments);
                 blocks.push(block);
-                block_moves.push(0);
                 recorder.options_z.virtual_block();
                 block_line_ids.push(g1_line_id);
                 prepare_stages.push(prepare_stage);
@@ -255,7 +252,7 @@ impl Estimate {
             if matches!(command, "G10" | "G11") || word(code, 'F').is_some() {
                 recorder.set_feedrate(state.feedrate, arc);
             }
-            block_moves.extend(record_motions(
+            record_motions(
                 recorder,
                 RecordedMotion {
                     source: index + 1,
@@ -267,7 +264,7 @@ impl Estimate {
                 },
                 &motion_blocks,
                 &seam_vertices,
-            ));
+            );
             remaining_internal.extend(
                 motion_blocks
                     .iter()
@@ -326,10 +323,13 @@ impl Estimate {
             processed_blocks,
         } = scheduled_times(&blocks, &events);
         let mut stop_times = StopTimes::new(&stop_events, &flush_starts, processed_blocks);
-        recorder.apply_schedule(&block_moves, &times, &trapezoids);
-        recorder
-            .options_z
-            .correct(&trapezoids, &pushed, &flush_ends, &mut cache_eligible);
+        let scheduled = options_z::Scheduled {
+            times: &times,
+            trapezoids: &trapezoids,
+            pushed: &pushed,
+            flush_ends: &flush_ends,
+        };
+        recorder.apply_schedule(&scheduled, &mut cache_eligible);
         debug_assert_eq!(block_line_ids.len(), times.len());
         // Per-block signature dump (id, cumulative, distance, speed) for
         // sequence alignment against the GT oracle's ORCA_DUMP_TIMES — env

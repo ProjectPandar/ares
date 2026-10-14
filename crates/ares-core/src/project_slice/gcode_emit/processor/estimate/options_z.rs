@@ -1,57 +1,72 @@
-//! `OptionsZCorrector` (`GCodeProcessor.hpp:678-711`) seen by the queued
-//! `TimeBlock`s. A block keeps the `move_id` it got at creation
-//! (`GCodeProcessor.cpp:4004`); only `calculate_time`'s actual-speed
-//! insertion renumbers it (`:6003-6008`). `set()` stores `moves.size() - 1`
-//! and nothing renumbers it, so a flush between `set()` and `update()` leaves
-//! the index pointing at an earlier element. `update()` erases whatever sits
-//! there, and every queued block at or after it resolves to the next element,
-//! whose type decides its `g1_times_cache` entry (`:484-488`, `:574`).
+//! `OptionsZCorrector` (`GCodeProcessor.hpp:678-711`) replayed on the move
+//! list `GCodeProcessor::calculate_time` grows (`GCodeProcessor.cpp:5951-6008`).
+//! A block keeps the `move_id` it got at creation (`:4004`, `:5617`); only
+//! the actual-speed insertion renumbers it (`:6003-6008`). `set()` stores
+//! `moves.size() - 1` and nothing renumbers it, so a flush between `set()`
+//! and `update()` leaves the index pointing at an earlier element.
+//! `update()` copies and erases whatever sits there, and every queued block
+//! at or after it resolves to the next element: its time (`:472`), its
+//! actual-speed vertices (`:480-573`) and its `g1_times_cache` entry
+//! (`:484-488`, `:574`) follow that element.
 
-use std::ops::Range;
-
-use crate::gcode_processor::{EMoveType, MoveVertex};
+use crate::gcode_processor::MoveVertex;
 use crate::project_slice::gcode_emit::processor::motion::Trapezoid;
-use crate::project_slice::gcode_emit::processor::moves::actual_speed::{is_timed, split_count};
+use crate::project_slice::gcode_emit::processor::moves::actual_speed::{Pass, is_timed};
 
 /// The block of a `VG1`, which stores no vertex.
 const NO_VERTEX: u32 = u32::MAX;
 
-/// Blocks queued and planner events pushed so far.
-#[derive(Clone, Copy, Default)]
+/// Blocks queued, vertices stored and planner events pushed so far.
+#[derive(Clone, Copy)]
 struct Clock {
     blocks: usize,
+    vertices: usize,
     events: usize,
 }
 
-struct Update {
-    /// The marker vertex `set()` indexed.
-    marker: u32,
-    set: Clock,
-    /// The vertex `update()` appends.
-    copy: u32,
-    update: Clock,
+enum Call {
+    Set,
+    /// `update(m_height)` (`GCodeProcessor.cpp:3929`).
+    Update(f32),
 }
 
-/// Every stored vertex in creation order, erased ones included, and the
-/// first vertex each block stored.
+/// The stored vertex count, the first vertex each block stored and the
+/// corrector calls, in creation order.
 pub(in crate::project_slice::gcode_emit::processor) struct Log {
-    kinds: Vec<EMoveType>,
-    positions: Vec<[f32; 3]>,
+    vertices: usize,
     blocks: Vec<u32>,
     events: usize,
-    set: Option<(u32, Clock)>,
-    updates: Vec<Update>,
+    calls: Vec<(Clock, Call)>,
+}
+
+/// The planned blocks. `pushed[i]` is the processed-block count once block
+/// `i` is queued and `flush_ends[e]` the count after planner event `e`.
+pub(in crate::project_slice::gcode_emit::processor) struct Scheduled<'a> {
+    pub(in crate::project_slice::gcode_emit::processor) times: &'a [f64],
+    pub(in crate::project_slice::gcode_emit::processor) trapezoids: &'a [Trapezoid],
+    pub(in crate::project_slice::gcode_emit::processor) pushed: &'a [usize],
+    pub(in crate::project_slice::gcode_emit::processor) flush_ends: &'a [usize],
+}
+
+impl Scheduled<'_> {
+    fn processed(&self, clock: Clock) -> usize {
+        let refreshed = clock.blocks.checked_sub(1).map_or(0, |i| self.pushed[i]);
+        let flushed = clock
+            .events
+            .checked_sub(1)
+            .map_or(0, |e| self.flush_ends[e]);
+        refreshed.max(flushed)
+    }
 }
 
 impl Log {
-    pub(in crate::project_slice::gcode_emit::processor) fn new(origin: &MoveVertex) -> Self {
+    /// The origin vertex `GCodeProcessorResult::moves` starts with.
+    pub(in crate::project_slice::gcode_emit::processor) fn new() -> Self {
         Self {
-            kinds: vec![origin.move_type],
-            positions: vec![origin.position],
+            vertices: 1,
             blocks: Vec::new(),
             events: 0,
-            set: None,
-            updates: Vec::new(),
+            calls: Vec::new(),
         }
     }
 
@@ -61,204 +76,160 @@ impl Log {
     }
 
     pub(in crate::project_slice::gcode_emit::processor) fn next_vertex(&self) -> u32 {
-        self.kinds.len() as u32
+        self.vertices as u32
     }
 
-    /// Queues the block of a command whose vertices start at `first`. Its
-    /// `move_id` (`:4004`) skips the copy an `update()` (`:3929`) appended
-    /// before the command's own vertices.
+    /// Queues the block of a command whose vertices start at `first`.
     pub(in crate::project_slice::gcode_emit::processor) fn block(&mut self, first: u32) {
-        let updated = self
-            .updates
-            .last()
-            .is_some_and(|update| update.copy == first);
-        self.blocks.push(first + u32::from(updated));
+        self.blocks.push(first);
     }
 
     pub(in crate::project_slice::gcode_emit::processor) fn virtual_block(&mut self) {
         self.blocks.push(NO_VERTEX);
     }
 
-    pub(in crate::project_slice::gcode_emit::processor) fn vertex(
-        &mut self,
-        kind: EMoveType,
-        position: [f32; 3],
-    ) {
-        self.kinds.push(kind);
-        self.positions.push(position);
+    /// A `store_move_vertex` (`:5630`).
+    pub(in crate::project_slice::gcode_emit::processor) fn vertex(&mut self) {
+        self.vertices += 1;
     }
 
-    fn clock(&self) -> Clock {
-        Clock {
+    fn call(&mut self, call: Call) {
+        let clock = Clock {
             blocks: self.blocks.len(),
+            vertices: self.vertices,
             events: self.events,
-        }
+        };
+        self.calls.push((clock, call));
     }
 
     /// `OptionsZCorrector::set` (`GCodeProcessor.hpp:688-691`).
     pub(in crate::project_slice::gcode_emit::processor) fn set(&mut self) {
-        self.set = Some((self.next_vertex() - 1, self.clock()));
+        self.call(Call::Set);
     }
 
-    /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`) appends a
-    /// copy whose type is only known once the flushes are planned.
-    pub(in crate::project_slice::gcode_emit::processor) fn update(&mut self, position: [f32; 3]) {
-        let Some((marker, set)) = self.set.take() else {
-            return;
-        };
-        self.vertex(self.kinds[marker as usize], position);
-        self.updates.push(Update {
-            marker,
-            set,
-            copy: self.next_vertex() - 1,
-            update: self.clock(),
-        });
+    /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`) after a
+    /// `set()`.
+    pub(in crate::project_slice::gcode_emit::processor) fn update(&mut self, height: f32) {
+        self.call(Call::Update(height));
     }
 
-    /// Corrects `cache_eligible` of the blocks the updates shifted.
-    /// `pushed[i]` is the processed-block count once block `i` is queued and
-    /// `flush_ends[e]` the count after planner event `e`.
-    pub(in crate::project_slice::gcode_emit::processor) fn correct(
-        &mut self,
-        trapezoids: &[Trapezoid],
-        pushed: &[usize],
-        flush_ends: &[usize],
-        cache_eligible: &mut [bool],
-    ) {
-        debug_assert_eq!(self.blocks.len(), cache_eligible.len());
-        let processed = |clock: Clock| {
-            let refreshed = clock.blocks.checked_sub(1).map_or(0, |i| pushed[i]);
-            let flushed = clock.events.checked_sub(1).map_or(0, |e| flush_ends[e]);
-            refreshed.max(flushed)
-        };
-        let updates = std::mem::take(&mut self.updates);
-        let mut list = List {
-            log: &*self,
-            trapezoids,
-            resolved: self.blocks.clone(),
-            erased: Vec::new(),
-        };
-        let mut copies = Vec::with_capacity(updates.len());
-        for update in &updates {
-            let queued = processed(update.update)..update.update.blocks;
-            let flushed = processed(update.set)..queued.start;
-            let steps = list.inserted_before(update.marker, flushed, &copies);
-            let (vertex, kind) = list.erase(update.marker, steps, queued.start, &copies);
-            copies.push((update.copy, kind));
-            list.shift(queued, vertex);
-        }
-        for ((eligible, &vertex), &own) in cache_eligible
-            .iter_mut()
-            .zip(&list.resolved)
-            .zip(&self.blocks)
-        {
-            if vertex != own {
-                *eligible = is_timed(list.kind(vertex, &copies));
-            }
-        }
-    }
-}
-
-/// `GCodeProcessorResult::moves` as seen through the stored vertices.
-struct List<'a> {
-    log: &'a Log,
-    trapezoids: &'a [Trapezoid],
-    /// The vertex each block's `move_id` resolves to.
-    resolved: Vec<u32>,
-    erased: Vec<u32>,
-}
-
-impl List<'_> {
-    /// The actual-speed vertices `calculate_time` inserts in front of the
-    /// vertex `block` resolves to (`GCodeProcessor.cpp:497-546`).
-    fn splits(&self, block: usize, copies: &[(u32, EMoveType)]) -> usize {
-        let vertex = self.resolved[block];
-        if vertex == NO_VERTEX || !is_timed(self.kind(vertex, copies)) {
-            return 0;
-        }
-        split_count(
-            self.log.positions[self.previous(vertex) as usize],
-            self.log.positions[vertex as usize],
-            &self.trapezoids[block],
-        )
-    }
-
-    fn kind(&self, vertex: u32, copies: &[(u32, EMoveType)]) -> EMoveType {
-        copies
-            .iter()
-            .find_map(|&(copy, kind)| (copy == vertex).then_some(kind))
-            .unwrap_or(self.log.kinds[vertex as usize])
-    }
-
-    /// Vertices the flushes between `set()` and `update()` inserted in
-    /// front of `marker`; each pushes it one past the stored index.
-    fn inserted_before(
+    /// Rebuilds `GCodeProcessorResult::moves` from the `recorded` vertices
+    /// (origin first) with the flushes interleaved where Native ran them, and
+    /// corrects `cache_eligible` of the blocks an `update()` shifted.
+    pub(in crate::project_slice::gcode_emit::processor) fn replay(
         &self,
-        marker: u32,
-        flushed: Range<usize>,
-        copies: &[(u32, EMoveType)],
-    ) -> usize {
-        flushed
-            .filter(|&block| self.resolved[block] < marker)
-            .map(|block| self.splits(block, copies))
-            .sum()
-    }
-
-    /// Erases the element `steps` in front of `marker` and returns the first
-    /// vertex at or after it with the erased element's type; an actual-speed
-    /// vertex has the type of the vertex it splits.
-    fn erase(
-        &mut self,
-        marker: u32,
-        mut steps: usize,
-        queued: usize,
-        copies: &[(u32, EMoveType)],
-    ) -> (u32, EMoveType) {
-        let mut vertex = marker;
-        let mut owner = queued;
-        while steps > 0 {
-            while let Some(prev) = owner.checked_sub(1)
-                && (self.resolved[prev] == NO_VERTEX || self.resolved[prev] > vertex)
-            {
-                owner = prev;
-            }
-            let inserted = owner
-                .checked_sub(1)
-                .filter(|&prev| self.resolved[prev] == vertex)
-                .map_or(0, |prev| self.splits(prev, copies));
-            if steps <= inserted {
-                return (vertex, self.kind(vertex, copies));
-            }
-            steps -= inserted + 1;
-            vertex = self.previous(vertex);
-        }
-        self.erased.push(vertex);
-        (vertex, self.kind(vertex, copies))
-    }
-
-    /// Queued blocks at or after the erased element resolve to the next one.
-    fn shift(&mut self, queued: Range<usize>, erased: u32) {
-        for block in queued {
-            let vertex = self.resolved[block];
-            if vertex != NO_VERTEX && vertex >= erased {
-                self.resolved[block] = self.next(vertex);
+        recorded: Vec<MoveVertex>,
+        scheduled: &Scheduled<'_>,
+        cache_eligible: &mut [bool],
+    ) -> Vec<MoveVertex> {
+        debug_assert_eq!(self.blocks.len(), cache_eligible.len());
+        let mut replay = Replay {
+            scheduled,
+            cache_eligible,
+            moves: Vec::with_capacity(recorded.len() * 2),
+            recorded: recorded.into_iter(),
+            stored: 0,
+            queue: Vec::with_capacity(self.blocks.len()),
+            done: 0,
+            pass: Pass::default(),
+        };
+        let mut stale = None;
+        for &(clock, ref call) in &self.calls {
+            replay.advance(clock.vertices, &self.blocks[..clock.blocks]);
+            replay.flush(scheduled.processed(clock));
+            match (call, stale.take()) {
+                // `m_move_id = moves.size() - 1`.
+                (Call::Set, _) => stale = Some(replay.moves.len() - 1),
+                (&Call::Update(height), Some(index)) => replay.update(index, height),
+                (Call::Update(_), None) => {}
             }
         }
+        replay.advance(self.vertices, &self.blocks);
+        replay.flush(self.blocks.len());
+        replay.moves
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Queued {
+    /// `TimeBlock::move_id`; `None` for a `VG1`, which keeps `0`.
+    move_id: Option<usize>,
+    /// An `update()` erased an element at or before `move_id`.
+    shifted: bool,
+}
+
+/// Native's move list and block queue while the recorded vertices replay.
+struct Replay<'a, 'b> {
+    scheduled: &'a Scheduled<'b>,
+    cache_eligible: &'a mut [bool],
+    moves: Vec<MoveVertex>,
+    recorded: std::vec::IntoIter<MoveVertex>,
+    stored: usize,
+    queue: Vec<Queued>,
+    done: usize,
+    pass: Pass,
+}
+
+impl Replay<'_, '_> {
+    /// Stores the recorded vertices up to `vertices` and queues `blocks`.
+    /// Nothing flushes in between, so a block's `move_id` is its first
+    /// vertex offset by the elements inserted so far.
+    fn advance(&mut self, vertices: usize, blocks: &[u32]) {
+        let offset = self.moves.len() - self.stored;
+        self.moves
+            .extend(self.recorded.by_ref().take(vertices - self.stored));
+        self.stored = vertices;
+        self.queue
+            .extend(blocks[self.queue.len()..].iter().map(|&first| Queued {
+                move_id: (first != NO_VERTEX).then_some(first as usize + offset),
+                shifted: false,
+            }));
     }
 
-    fn previous(&self, mut vertex: u32) -> u32 {
-        vertex -= 1;
-        while self.erased.contains(&vertex) {
-            vertex -= 1;
+    /// `GCodeProcessor::calculate_time` (`:5951-6008`) up to `target`
+    /// processed blocks.
+    fn flush(&mut self, target: usize) {
+        if target <= self.done {
+            return;
         }
-        vertex
+        for block in self.done..target {
+            let Queued { move_id, shifted } = self.queue[block];
+            let time = self.scheduled.times[block];
+            let Some(id) = move_id else {
+                self.moves[0].time = time as f32;
+                continue;
+            };
+            if shifted {
+                self.cache_eligible[block] = is_timed(self.moves[id].move_type);
+            }
+            let trapezoid = &self.scheduled.trapezoids[block];
+            self.pass.block(&mut self.moves, id, time, trapezoid);
+        }
+        self.done = target;
+        let (map, inserted) = self.pass.insert(&mut self.moves);
+        for id in self.queue[target..]
+            .iter_mut()
+            .filter_map(|q| q.move_id.as_mut())
+        {
+            *id = match map.binary_search_by_key(id, |&(old, _)| old) {
+                Ok(found) => map[found].1,
+                Err(_) => *id + inserted,
+            };
+        }
     }
 
-    fn next(&self, mut vertex: u32) -> u32 {
-        vertex += 1;
-        while self.erased.contains(&vertex) {
-            vertex += 1;
+    /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`) on the
+    /// stale `index`; queued blocks keep their `move_id`.
+    fn update(&mut self, index: usize, height: f32) {
+        let mut copy = self.moves[index];
+        copy.position = self.moves[self.moves.len() - 1].position;
+        copy.height = height;
+        self.moves.push(copy);
+        self.moves.remove(index);
+        for queued in &mut self.queue[self.done..] {
+            if queued.move_id.is_some_and(|id| id >= index) {
+                queued.shifted = true;
+            }
         }
-        vertex
     }
 }
