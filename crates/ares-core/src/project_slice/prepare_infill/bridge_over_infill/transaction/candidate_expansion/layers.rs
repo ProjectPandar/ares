@@ -68,7 +68,9 @@ pub(super) fn prepare_infill_lines(
         .any(|region| {
             matches!(
                 region.sparse_infill_pattern,
-                crate::ProcessInfillPattern::TriHexagon | crate::ProcessInfillPattern::Grid
+                crate::ProcessInfillPattern::TriHexagon
+                    | crate::ProcessInfillPattern::Grid
+                    | crate::ProcessInfillPattern::Triangles
             ) && region.fill_multiline.0 > 1
         })
         .then(|| {

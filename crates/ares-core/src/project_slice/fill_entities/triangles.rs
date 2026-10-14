@@ -30,10 +30,16 @@ const SWEEPS: [Sweep; 3] = [
     },
 ];
 
+pub(super) struct LayerGeometry {
+    pub(super) layer_id: usize,
+    pub(super) bounds: Option<crate::geometry::BoundingBox>,
+}
+
 pub(super) fn polylines(
     fill: &SurfaceFill,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
+    geometry: LayerGeometry,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
@@ -48,7 +54,24 @@ pub(super) fn polylines(
     };
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(fill_surface(expolygon, params, &SWEEPS, scale).map_err(triangles_error)?);
+        let lines = if params.multiline > 1 {
+            let Some(bounds) = geometry.bounds else {
+                unreachable!("Triangles multiline bounds are prepared once per object");
+            };
+            crate::fill::triangles_trapezoidal::fill_surface(
+                expolygon,
+                params,
+                crate::fill::triangles_trapezoidal::SurfaceGeometry {
+                    layer_id: geometry.layer_id,
+                    thickness_layers: fill.representative.thickness_layers,
+                    bounds,
+                },
+                scale,
+            )
+        } else {
+            fill_surface(expolygon, params, &SWEEPS, scale)
+        };
+        polylines.extend(lines.map_err(triangles_error)?);
     }
     Ok(polylines)
 }
@@ -58,8 +81,9 @@ pub(super) fn append(
     fill: SurfaceFill,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
+    geometry: LayerGeometry,
 ) -> Result<(), SliceError> {
-    let polylines = polylines(&fill, scale, object_reference)?;
+    let polylines = polylines(&fill, scale, object_reference, geometry)?;
     if polylines.is_empty() {
         return Ok(());
     }

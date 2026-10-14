@@ -94,7 +94,15 @@ pub(in crate::project_slice) fn surface_polylines(
         }
         ProcessInfillPattern::Triangles => {
             let fill = surface_fill(request);
-            super::triangles::polylines(&fill, request.call.scale, request.call.reference)
+            super::triangles::polylines(
+                &fill,
+                request.call.scale,
+                request.call.reference,
+                super::triangles::LayerGeometry {
+                    layer_id: request.call.layer_id,
+                    bounds: None,
+                },
+            )
         }
         ProcessInfillPattern::Honeycomb => {
             let fill = surface_fill(request);

@@ -38,3 +38,4 @@ pub(crate) mod three_d_honeycomb;
 pub(crate) mod tpms_d;
 pub(crate) mod tpms_fk;
 mod trapezoidal_tail;
+pub(crate) mod triangles_trapezoidal;
