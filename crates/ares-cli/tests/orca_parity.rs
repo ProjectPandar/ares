@@ -195,3 +195,6 @@ pub(crate) use outcomes::{divergence, pass};
 #[path = "orca_parity/vendor_inventory.rs"]
 mod vendor_inventory;
 pub(crate) use vendor_inventory::vendors;
+
+#[path = "orca_parity/support_touching_grid.rs"]
+mod support_touching_grid;
