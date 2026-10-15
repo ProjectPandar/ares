@@ -13,7 +13,7 @@ pub(in crate::project_slice) struct InstalledSupportLayer {
     /// Upstream `SupportInnerType` fact: only the classic-tree layer
     /// factory (`add_tree_support_layer`, PrintObject.cpp:1073-1077)
     /// sets stInnerTree; every other factory (`add_support_layer`,
-    // PrintObject.cpp:1080-1083) leaves the Layer.hpp:288 default
+    /// PrintObject.cpp:1080-1083) leaves the Layer.hpp:288 default
     /// stInnerNormal.
     pub(in crate::project_slice) inner_tree: bool,
     pub(super) interface_id: usize,
