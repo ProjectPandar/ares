@@ -1,7 +1,7 @@
 use super::ViewerImpl;
 use crate::{
     DEFAULT_TRAVELS_RADIUS_MM, DEFAULT_WIPES_RADIUS_MM, MAX_TRAVELS_RADIUS_MM, MAX_WIPES_RADIUS_MM,
-    MIN_TRAVELS_RADIUS_MM, MIN_WIPES_RADIUS_MM,
+    MIN_TRAVELS_RADIUS_MM, MIN_WIPES_RADIUS_MM, Vec3,
 };
 
 /// `m_travels_radius` / `m_wipes_radius` (ViewerImpl.hpp:234,238).
@@ -60,5 +60,17 @@ impl ViewerImpl {
                 }
             })
             .collect()
+    }
+
+    /// RED scaffold for the positions branch of `extract_pos_and_or_hwa`
+    /// (ViewerImpl.cpp:945-952): returns the raw vertex positions.
+    pub fn positions(&self) -> Vec<Vec3> {
+        self.vertices.iter().map(|v| v.position).collect()
+    }
+
+    /// RED scaffold for the join angle of `extract_pos_and_or_hwa`
+    /// (ViewerImpl.cpp:928-934,979-980): returns zeros.
+    pub fn angles(&self) -> Vec<f32> {
+        vec![0.0; self.vertices.len()]
     }
 }
