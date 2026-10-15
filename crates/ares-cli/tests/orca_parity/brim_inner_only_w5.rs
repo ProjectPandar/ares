@@ -9,7 +9,7 @@ use crate::runner::{OrcaRunner, stages};
 
 const INPUT: &[u8] =
     include_bytes!("../../../../tests/parity/validation/w5-brim/inner-only-w5.3mf");
-const INPUT_SHA256: &str = "e69fc9fefa0b69008d072968f0abac7bd6a010c6663a884997075d4483817122";
+const INPUT_SHA256: &str = "b4755bc6ef96b1e2296ca68b816b54fbe725c99480ac89a052ca0ddc8f76dffd";
 
 #[test]
 fn brim_inner_only_width5_matches_native() {
