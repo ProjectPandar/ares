@@ -17,6 +17,78 @@ pub(crate) struct AreaParameters {
     pub(crate) max_angle: f64,
 }
 
+pub(crate) struct PaintedParameters {
+    pub(crate) gap: f32,
+    pub(crate) spacing: f32,
+    pub(crate) resolution: f64,
+    /// Brim flow width in millimetres (`print.brim_flow()` spacing), the
+    /// `flowWidth` argument of `make_brim_ears` (Brim.cpp:355).
+    pub(crate) flow_width: f64,
+    pub(crate) scale: CoordinateScale,
+    /// Ear centres already mapped into the `source` (mesh-centred
+    /// lslices) space, each with its `head_front_radius` in millimetres.
+    pub(crate) points: Vec<([f32; 2], f32)>,
+}
+
+/// `make_brim_ears` (Brim.cpp:354-412), outer-birim call site `:537`:
+/// per-point discs minus the object contour offset. The EFC snapping
+/// branch (:377-404) is deferred with the EFC chain; the inner call site
+/// (:551) needs a holed fixture and stays deferred.
+pub(crate) fn painted(
+    source: &[ExPolygon],
+    parameters: PaintedParameters,
+) -> Result<(Vec<ExPolygon>, Vec<ExPolygon>), SliceError> {
+    let PaintedParameters {
+        gap,
+        spacing,
+        resolution,
+        flow_width,
+        scale,
+        points,
+    } = parameters;
+    let mut result = Vec::new();
+    for poly in source {
+        let contour = ExPolygon::new(poly.contour().clone(), Vec::new());
+        let inner = offset_expolygons(&[contour], gap, JoinType::Round, resolution)
+            .map_err(geometry_error)?;
+        let mut discs = Vec::new();
+        for &(center, radius) in &points {
+            // :375/:377-380: the painted radius quantizes to even brim
+            // flow widths (the second re-quantization pass over the scaled
+            // width collapses to the same millimetre quantization).
+            let width = (radius as f64 / flow_width / 2.0).floor() * flow_width * 2.0;
+            // :382: size_ear = brim_width - brim_offset - scaled spacing.
+            let size_ear = (scale.checked_scale(width).expect("validated brim width") as f32
+                - gap
+                - spacing) as i64;
+            // :390-391: int32_t pt_x = scale_(pos.x()) — scale_ is a plain
+            // division (libslic3r.h:93), so the conversion truncates
+            // toward zero.
+            let factor = scale.factor();
+            let center_x = (f64::from(center[0]) / factor) as i64;
+            let center_y = (f64::from(center[1]) / factor) as i64;
+            // :383-388: POLY_SIDE_COUNT-sided circle translated to the ear
+            // centre (libslic3r.h:72).
+            let points = (0..24)
+                .map(|index| {
+                    let angle = 2.0 * std::f64::consts::PI * f64::from(index) / 24.0;
+                    Point::new(
+                        center_x + (size_ear as f64 * angle.cos()).round() as i64,
+                        center_y + (size_ear as f64 * angle.sin()).round() as i64,
+                    )
+                })
+                .collect();
+            discs.push(ExPolygon::new(Polygon::new(points), Vec::new()));
+        }
+        // :544: append(brim_area_object, diff_ex(outerExpoly, innerExpoly)).
+        result.extend(difference_ex(&discs, &inner).map_err(geometry_error)?);
+    }
+    // :560-570: objectIsland footprint stays the forbidden source.
+    let footprint =
+        offset_expolygons(source, gap, JoinType::Round, resolution).map_err(geometry_error)?;
+    Ok((result, footprint))
+}
+
 pub(crate) fn area(
     source: &[ExPolygon],
     parameters: AreaParameters,

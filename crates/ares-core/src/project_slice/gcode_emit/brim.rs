@@ -20,6 +20,22 @@ pub(super) struct BrimPlan {
     pub(super) mm3_per_mm: f64,
 }
 
+fn painted_points(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+) -> Vec<([f32; 2], f32)> {
+    // Brim.cpp:359-361: no painted points means no painted brim at all.
+    let source_index = traversal.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object
+        .identity()
+        .0;
+    traversal.project.objects()[source_index].brim_ear_centers()
+}
+
 impl BrimPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
@@ -34,6 +50,7 @@ impl BrimPlan {
                 | ProcessBrimType::InnerOnly
                 | ProcessBrimType::OuterAndInner
                 | ProcessBrimType::BrimEars
+                | ProcessBrimType::Painted
         ) || options.brim_width.0 <= 0.0
         {
             return Ok(None);
@@ -122,6 +139,7 @@ impl BrimPlan {
                 | ProcessBrimType::OuterAndInner
                 | ProcessBrimType::InnerOnly
                 | ProcessBrimType::BrimEars
+                | ProcessBrimType::Painted
         ) {
             match support.get(object_index).and_then(|layers| layers.first()) {
                 Some(first) => super::footprint::support_no_brim(first.inner_tree, first, scale)
@@ -148,6 +166,29 @@ impl BrimPlan {
             let mut forbidden = object_islands.clone();
             forbidden.extend(support_mask);
             (area.area, forbidden)
+        } else if options.brim_type == ProcessBrimType::Painted {
+            // Brim.cpp:456-458/:537: the painted call site replaces the
+            // auto ears with per-point discs (make_brim_ears :354-412;
+            // empty point set keeps the plan empty, :359-361).
+            let points = painted_points(traversal, object_index);
+            if points.is_empty() {
+                return Ok(None);
+            }
+            let area = crate::brims::ears::painted(
+                &source,
+                crate::brims::ears::PaintedParameters {
+                    gap,
+                    spacing,
+                    resolution,
+                    flow_width: spacing_mm,
+                    scale,
+                    points,
+                },
+            )?;
+            object_islands = area.1.clone();
+            let mut forbidden = area.1;
+            forbidden.extend(support_mask);
+            (area.0, forbidden)
         } else if options.brim_type == ProcessBrimType::BrimEars {
             let (area, mut forbidden) = crate::brims::ears::area(
                 &source,

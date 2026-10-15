@@ -146,6 +146,7 @@ pub struct ProjectObject {
     volumes: Vec<ProjectVolume>,
     instances: Vec<ProjectInstance>,
     import_instances: Vec<ProjectInstance>,
+    pub(in crate::project) brim_points: Vec<crate::project::brim_ear_points::BrimPoint>,
 }
 
 impl ProjectObject {
@@ -168,6 +169,7 @@ impl ProjectObject {
             volumes,
             import_instances: instances.clone(),
             instances,
+            brim_points: Vec::new(),
         }
     }
 

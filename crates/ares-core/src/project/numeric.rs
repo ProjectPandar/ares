@@ -1,6 +1,6 @@
 //! C-locale atoi/atof consumed by bbs_3mf.cpp:2855,2878.
 
-pub(super) fn atoi(text: &str) -> i32 {
+pub(in crate::project) fn atoi(text: &str) -> i32 {
     let text = text.trim_start_matches(|c: char| c.is_ascii_whitespace());
     let bytes = text.as_bytes();
     let mut end = usize::from(matches!(bytes.first(), Some(b'+' | b'-')));
@@ -14,7 +14,7 @@ pub(super) fn atoi(text: &str) -> i32 {
     text[..end].parse().unwrap_or(0)
 }
 
-pub(super) fn atof(text: &str) -> f64 {
+pub(in crate::project) fn atof(text: &str) -> f64 {
     let text = text.trim_start_matches(|c: char| c.is_ascii_whitespace());
     if let Ok(value) = text.parse::<f64>() {
         return value;

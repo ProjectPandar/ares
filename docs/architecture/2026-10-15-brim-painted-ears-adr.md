@@ -27,7 +27,7 @@ ares 侧 `traverse` 携带 `Project`（`PreparedPostClassicTraversal.project`）
 
 ## L3 — `make_brim_ears` 移植
 
-`Brim.cpp:354-412`（EFC snap `:377-404` 延后，EFC 独立链）：
+`Brim.cpp:354-412`（EFC snap `:392-404`（`use_brim_efc_outline` `:56-62`）与 inner 调用点 `:551` 延后，为下一片候选）：
 `brim_width = floor(scale_(r)/flowWidth/2)*flowWidth*2`（`:375`，
 scaled 量纲）；outer 路径再按 `flowWidth/SCALING_FACTOR` 量化
 （`:377-380`）；`size_ear = brim_width - brim_offset - scaled_spacing`
