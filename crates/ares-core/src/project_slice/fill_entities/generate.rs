@@ -319,19 +319,52 @@ pub(in crate::project_slice) fn generate_layer(
             .push((region_id, collection_start..output.collections.len()));
     }
     let region_count = prelude.records.len() / plan.layers.len();
-    let mut previous_ironing_pattern = ProcessInfillPattern::Rectilinear;
+    let mut spans = Vec::with_capacity(region_count);
     for region_index in 0..region_count {
         let record_index = region_index * plan.layers.len() + layer_index;
-        let (Some(record), Some(input)) = (
+        if let (Some(record), Some(input)) = (
             prepared.predecessor.objects[object_index].records[record_index].as_ref(),
             prelude.records[record_index].as_ref(),
-        ) else {
-            continue;
-        };
+        ) {
+            spans.push((record_index, record, input));
+        }
+    }
+    spans.sort_by(|(_, _, left), (_, _, right)| {
+        let left = prelude.region_options(left);
+        let right = prelude.region_options(right);
+        left.top_surface_filament_id
+            .0
+            .cmp(&right.top_surface_filament_id.0)
+            .then_with(|| {
+                left.filament_ironing_spacing
+                    .0
+                    .total_cmp(&right.filament_ironing_spacing.0)
+            })
+            .then_with(|| {
+                (object_options.layer_height.0 * left.filament_ironing_flow.0 as f64).total_cmp(
+                    &(object_options.layer_height.0 * right.filament_ironing_flow.0 as f64),
+                )
+            })
+            .then_with(|| {
+                left.filament_ironing_speed
+                    .0
+                    .total_cmp(&right.filament_ironing_speed.0)
+            })
+            .then_with(|| left.ironing_angle.0.total_cmp(&right.ironing_angle.0))
+            .then_with(|| left.ironing_angle_fixed.0.cmp(&right.ironing_angle_fixed.0))
+            .then_with(|| {
+                left.filament_ironing_inset
+                    .0
+                    .total_cmp(&right.filament_ironing_inset.0)
+            })
+    });
+    let mut previous_ironing_pattern = None;
+    for (_, record, input) in spans {
         let region = prelude.region_options(input);
         let collection_start = output.collections.len();
-        let pattern_replaced = region.ironing_pattern != previous_ironing_pattern;
-        previous_ironing_pattern = region.ironing_pattern;
+        let pattern_replaced =
+            previous_ironing_pattern.is_some_and(|previous| previous != region.ironing_pattern);
+        previous_ironing_pattern = Some(region.ironing_pattern);
         super::ironing::append(
             &mut output,
             super::ironing::Input {
