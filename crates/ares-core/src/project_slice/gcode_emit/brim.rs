@@ -113,14 +113,15 @@ impl BrimPlan {
         let mut object_islands = Vec::new();
         // Brim.cpp:590-634 via :576/:682-689: support contours join the
         // no-brim mask for every brim type with a ring on the first layer
-        // (outer ring types, and InnerOnly's in-hole ring; tree: first-layer
-        // slice contours; inner-normal: fill spacing coverage). The BrimEars
-        // arm is deferred to its own RED coverage.
+        // (outer ring types, InnerOnly's in-hole ring, and the ears ring;
+        // tree: first-layer slice contours; inner-normal: fill spacing
+        // coverage).
         let support_mask = if matches!(
             options.brim_type,
             ProcessBrimType::OuterOnly
                 | ProcessBrimType::OuterAndInner
                 | ProcessBrimType::InnerOnly
+                | ProcessBrimType::BrimEars
         ) {
             match support.get(object_index).and_then(|layers| layers.first()) {
                 Some(first) => super::footprint::support_no_brim(first.inner_tree, first, scale)
@@ -148,7 +149,7 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area.area, forbidden)
         } else if options.brim_type == ProcessBrimType::BrimEars {
-            crate::brims::ears::area(
+            let (area, mut forbidden) = crate::brims::ears::area(
                 &source,
                 crate::brims::ears::AreaParameters {
                     gap,
@@ -160,7 +161,9 @@ impl BrimPlan {
                         .expect("validated brim detection length"),
                     max_angle: options.brim_ears_max_angle.0,
                 },
-            )?
+            )?;
+            forbidden.extend(support_mask);
+            (area, forbidden)
         } else {
             let area = crate::brims::outer::area(&source, gap, brim_width, spacing, resolution)?;
             object_islands = area.object_islands;
