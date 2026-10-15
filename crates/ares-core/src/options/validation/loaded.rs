@@ -290,6 +290,11 @@ impl ProjectSettingsRaw {
         // Pure processing retains the existing Flow preflight error boundary.
         if validate_print {
             merge_first(&mut errors, normalized.validate_bridge_flow_options()?);
+            // `PrintConfig.cpp:10436-10447`: strict-positive clearance values.
+            merge_first(
+                &mut errors,
+                normalized.validate_extruder_clearance_options()?,
+            );
         }
         merge_first(&mut errors, normalized.validate_infill_pattern_options()?);
         merge_first(&mut errors, normalized.validate_extrusion_width_options()?);
