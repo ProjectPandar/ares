@@ -44,9 +44,11 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
     for (size_t id = 0; id < vertices.size(); ++id) {
         const libvgcode::PathVertex& v = vertices[id];
         const libvgcode::Vec4& hwa = heights_widths_angles[id];
+        const libvgcode::Vec4& position = positions[id];
         dumped.push_back({ { "id", id }, { "type", static_cast<int>(v.type) }, { "role", static_cast<int>(v.role) },
             { "valid", static_cast<bool>(valid_lines_bitset[id]) },
             { "positionBits", { bits(v.position[0]), bits(v.position[1]), bits(v.position[2]) } },
+            { "positionOutBits", { bits(position[0]), bits(position[1]), bits(position[2]) } },
             { "heightWidthBits", { bits(v.height), bits(v.width) } },
             { "hwaBits", { bits(hwa[0]), bits(hwa[1]), bits(hwa[2]), bits(hwa[3]) } } });
     }
