@@ -82,6 +82,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   const start = new Float32Array(vertexCount * 3);
   const end = new Float32Array(vertexCount * 3);
   const size = new Float32Array(vertexCount * 4);
+  const angles = new Float32Array(vertexCount * 2);
   const color = new Uint8Array(vertexCount * 3);
   const layer = new Float32Array(vertexCount);
   const kind = new Uint8Array(vertexCount);
@@ -119,6 +120,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   geometry.setAttribute("aStart", new THREE.InstancedBufferAttribute(start.subarray(0, count * 3), 3));
   geometry.setAttribute("aEnd", new THREE.InstancedBufferAttribute(end.subarray(0, count * 3), 3));
   geometry.setAttribute("aSize", new THREE.InstancedBufferAttribute(size.subarray(0, count * 4), 4));
+  geometry.setAttribute("aAngles", new THREE.InstancedBufferAttribute(angles.subarray(0, count * 2), 2));
   geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(color.subarray(0, count * 3), 3, true));
   geometry.setAttribute("aLayer", new THREE.InstancedBufferAttribute(layer.subarray(0, count), 1));
   geometry.setAttribute("aKind", new THREE.InstancedBufferAttribute(kind.subarray(0, count), 1));
@@ -188,6 +190,20 @@ export function segmentSizesProbe(mesh: THREE.Mesh): string {
   const size = geometry.getAttribute("aSize").array as Float32Array;
   let hash = 0x811c9dc5;
   for (const byte of new Uint8Array(size.buffer, size.byteOffset, size.byteLength)) hash = Math.imul(hash ^ byte, 0x01000193);
+  return `${geometry.instanceCount}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+/**
+ * E2E probe of the instance segment geometry inputs: instance count and the
+ * FNV-1a 32 hash of the f32 bytes of `aStart`, then `aEnd`, then `aAngles`.
+ */
+export function segmentGeometryProbe(mesh: THREE.Mesh): string {
+  const geometry = mesh.geometry as THREE.InstancedBufferGeometry;
+  let hash = 0x811c9dc5;
+  for (const name of ["aStart", "aEnd", "aAngles"]) {
+    const array = geometry.getAttribute(name).array as Float32Array;
+    for (const byte of new Uint8Array(array.buffer, array.byteOffset, array.byteLength)) hash = Math.imul(hash ^ byte, 0x01000193);
+  }
   return `${geometry.instanceCount}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }
 
