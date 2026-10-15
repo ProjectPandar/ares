@@ -1,0 +1,24 @@
+{
+  "head": "8331ea4ef7a31f3180db537dcdde8bf0c259ea41",
+  "cardinality": "singleton filament colour/diameter/settings_id/ratio and nozzle; multi-value requires family expansion, deferred",
+  "cases": {
+    "control": {
+      "ratio": [
+        "1"
+      ],
+      "sha256": "4d49fc71ee8393fe4d0138fb03f857ed16339cb358193e9a47b5d5a75a262adc"
+    },
+    "zero": {
+      "ratio": [
+        "0"
+      ],
+      "sha256": "b59b56c11f376810601491d20aa99c7ac387b63d2c07252149ea43431516a226"
+    },
+    "upper-control": {
+      "ratio": [
+        "2"
+      ],
+      "sha256": "e4ffe903fa8df3254f53dd26f9776bfe25b810b112eb04d70d14cbde450689a4"
+    }
+  }
+}
