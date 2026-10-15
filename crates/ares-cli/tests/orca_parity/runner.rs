@@ -5,6 +5,9 @@
 #[path = "runner/loaded_system_inherits_group.rs"]
 mod loaded_system_inherits_group;
 
+#[path = "runner/resource_part_build.rs"]
+mod resource_part_build;
+
 #[path = "runner/crosshatch_dont_connect.rs"]
 mod crosshatch_dont_connect;
 

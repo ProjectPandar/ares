@@ -165,8 +165,10 @@ M73/config/metadata/identity/transform changes; no old-v1/v2 substitution.
 Retained FULL16 control streams select the fixture, but fresh Native references
 are mandatory for this RED matrix.
 
-**Native-first:** after MAIN-ADVANCE / FREEZE LIFTED, obtain fresh official AND
-seeded Native --slice references before Ares comparison. Every reference leg must
+**Native-first, full test per mode:** obtain fresh Native --slice references
+before public calls within EACH official/seeded test invocation. Per owner review,
+no Native-only early return or externally injected reference path is permitted;
+each enabled test always executes Native→public end to end. Every reference leg must
 exit0 with complete ordered G-code/footer and authoritative complete snapshots.
 Require complete generator-only Native positive/repeat/control neutrality; no
 cached historical stream, export result, partial observation or load-only success

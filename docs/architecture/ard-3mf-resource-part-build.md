@@ -41,8 +41,9 @@ shells around ObjectImporter/imported resource identities, not a new Ares loader
   then public slice_project_plate_validated and real bare-3MF CLI. No extra
   loaded JSONs, export-only/load-only success, observer or cached Native substitute.
   Use the qualified source control's --slice0 --outputdir argv (no extra arrange
-  flag); fresh official AND seeded Native references come first after revised
-  SPEC approval, without reusing FULL16 output as the new runtime baseline.
+  flag); EACH enabled official/seeded invocation always executes fresh Native→
+  public end to end. No Native-only early return, external reference injection or
+  reuse of FULL16 output as the new runtime baseline.
 - Approved RED is the specific Ares resource-build admission error versus complete
   Native G-code. CLI must confirm the same admission cause. A missing Ares stream
   is not raw byte equality, G-code PASS or an invented ordered-stream difference.
