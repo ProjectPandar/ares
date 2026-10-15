@@ -62,8 +62,9 @@ fixture will compare complete API/CLI output and role/XY/E streams at each
 span boundary.
 
 Deferred: more than two regions, multiple extruders and per-extruder grouping,
-non-adjacent spans that become equivalent after sorting, `IroningParams::
-just_infill` (`Fill.cpp:1649-1652` remains TODO upstream), support ironing,
+the equivalent-span merge at `Fill.cpp:1643-1644` (including non-adjacent spans
+that become equivalent after sorting), `IroningParams::just_infill`
+(`Fill.cpp:1649-1652` remains TODO upstream), support ironing,
 raft/tower ironing, pattern schema expansion beyond PrintConfig.cpp:4298-4308,
 bridge/anchoring inset behavior, and any independent ironing flow/speed or
 CoolingBuffer difference. No change to the comparator or existing assertions.
