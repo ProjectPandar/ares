@@ -7,6 +7,11 @@
 //! limits; defaults other than 0.1; sizes drifting through f64.
 //! Public seams: `ViewerImpl::load`, then `heights_widths` and the radius
 //! getters/setters (`ViewerImpl.hpp:169-172`).
+//! Positions/angles (`ViewerImpl.cpp:928-934,945-952,979-980`) failure
+//! inventory: push-down applied to non-extrusions or by the full height; angle
+//! sign flipped or using a 3D cross; `prev_line` taken across an invalid line
+//! (type change, seam, zero length); positions drifting through f64.
+//! Public seams: `ViewerImpl::load`, then `positions` and `angles`.
 
 use std::{
     path::{Path, PathBuf},
@@ -110,6 +115,62 @@ fn optional_missing_native_reports_skipped() {
         .unwrap();
     assert!(output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("SKIPPED:"));
+}
+
+/// Oracle-input precondition, not an Ares assertion: the Native rows of the
+/// fixture must reach a pushed-down extrusion and a non-zero join angle on both
+/// a travel and an extrusion.
+fn native_positions_angles_coverage(table: &[Vec<u32>]) {
+    let native = |kind: MoveType, reached: fn(&[u32]) -> bool| {
+        table
+            .iter()
+            .any(|r| MOVE_TYPES[r[0] as usize] == kind && reached(r))
+    };
+    assert!(
+        native(MoveType::Extrude, |r| r[8] != r[3]),
+        "Native push-down"
+    );
+    for kind in [MoveType::Travel, MoveType::Extrude] {
+        assert!(native(kind, |r| r[9] != 0), "Native {kind:?} angle");
+    }
+}
+
+#[test]
+fn native_segment_positions_angles_bits() {
+    for gcode in FIXTURES {
+        let Some(root) = fixture(gcode) else {
+            return;
+        };
+        let table = rows(&root, "positions_angles.tsv");
+        let vertices: Vec<_> = table
+            .iter()
+            .map(|r| PathVertex {
+                move_type: MOVE_TYPES[r[0] as usize],
+                position: [r[1], r[2], r[3]].map(f32::from_bits),
+                height: f32::from_bits(r[4]),
+                width: f32::from_bits(r[5]),
+                ..Default::default()
+            })
+            .collect();
+        if gcode == FIXTURES[0] {
+            native_positions_angles_coverage(&table);
+        }
+        let mut viewer = ViewerImpl::default();
+        viewer.load(GCodeInputData {
+            vertices,
+            ..Default::default()
+        });
+        let actual: Vec<_> = viewer
+            .positions()
+            .iter()
+            .map(|p| p.map(f32::to_bits))
+            .collect();
+        let expected: Vec<_> = table.iter().map(|r| [r[6], r[7], r[8]]).collect();
+        assert_eq!(actual, expected, "{gcode} positions bits");
+        let actual: Vec<_> = viewer.angles().iter().map(|a| a.to_bits()).collect();
+        let expected: Vec<_> = table.iter().map(|r| r[9]).collect();
+        assert_eq!(actual, expected, "{gcode} angle bits");
+    }
 }
 
 #[test]
