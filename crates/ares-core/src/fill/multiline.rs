@@ -7,8 +7,8 @@ use super::{
     connect::{FillBoundary, FillConnectionParams, connect_infill_polygons},
 };
 use crate::geometry::{
-    BoundingBox, ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polygon, Polyline,
-    intersection_open_polylines, offset_expolygon,
+    BoundingBox, ClipperError, CoordinateScale, ExPolygon, JoinType, Line, Point, Polygon,
+    Polyline, intersection_open_polylines, offset_expolygon,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -38,6 +38,28 @@ pub(crate) fn fill_surface(
     params: MultilineFillParams,
     sweeps: &[Sweep],
     scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    fill_surface_with_overlap_removal(surface, params, sweeps, scale, false)
+}
+
+/// Lateral-only entry point for `FillRectilinear::fill_surface_by_multilines`.
+/// The upstream gate at `FillRectilinear.cpp:3031-3032` runs after intersection
+/// and before connection for lateral patterns with multiline > 1.
+pub(crate) fn fill_surface_lateral(
+    surface: &ExPolygon,
+    params: MultilineFillParams,
+    sweeps: &[Sweep],
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    fill_surface_with_overlap_removal(surface, params, sweeps, scale, true)
+}
+
+fn fill_surface_with_overlap_removal(
+    surface: &ExPolygon,
+    params: MultilineFillParams,
+    sweeps: &[Sweep],
+    scale: CoordinateScale,
+    lateral: bool,
 ) -> Result<Vec<Polyline>, ClipperError> {
     debug_assert!(!sweeps.is_empty());
     let reference = params.reference;
@@ -106,7 +128,13 @@ pub(crate) fn fill_surface(
     // apply the multiline offset after all sweeps, then clip once against the
     // contracted surface.
     lines = super::multiline_offset::apply(lines, params.multiline, params.spacing, scale)?;
-    let lines = intersection_open_polylines(&lines, &boundaries)?;
+    let mut lines = intersection_open_polylines(&lines, &boundaries)?;
+    if lateral && params.multiline > 1 {
+        let line_width = scale
+            .checked_scale(params.spacing)
+            .ok_or(ClipperError::CoordinateOutOfRange)?;
+        remove_overlapped(&mut lines, line_width);
+    }
     let bbox = BoundingBox::from_expolygon(surface)
         .expect("the multiline fill surface contour must be nonempty");
     connect_infill_polygons(
@@ -124,6 +152,33 @@ pub(crate) fn fill_surface(
         },
         scale,
     )
+}
+
+/// Port of `FillRectilinear.cpp:2960-2994`: retain the first line whose
+/// integer midpoint is not within `0.75 * line_width` of a retained midpoint.
+fn remove_overlapped(lines: &mut Vec<Polyline>, line_width: i64) {
+    let tolerance = (0.75 * line_width as f64) as i64;
+    let mut retained = Vec::with_capacity(lines.len());
+    for line in lines.drain(..) {
+        let midpoint_point = midpoint(&line);
+        let overlapped = retained.iter().any(|existing: &Polyline| {
+            let other = midpoint(existing);
+            let dx = (midpoint_point.x() - other.x()).abs();
+            let dy = (midpoint_point.y() - other.y()).abs();
+            !(dy > tolerance && dx > tolerance)
+                && Line::new(midpoint_point, other).length() < tolerance as f64
+        });
+        if !overlapped {
+            retained.push(line);
+        }
+    }
+    *lines = retained;
+}
+
+fn midpoint(line: &Polyline) -> Point {
+    let first = line.points()[0];
+    let last = *line.points().last().unwrap();
+    Point::new((first.x() + last.x()) / 2, (first.y() + last.y()) / 2)
 }
 
 struct FamilyRequest<'a> {

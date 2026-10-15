@@ -6,7 +6,7 @@ use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, fill_surface},
+    fill::multiline::{MultilineFillParams, fill_surface_lateral},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
@@ -38,7 +38,9 @@ pub(super) fn polylines(
     };
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(fill_surface(expolygon, params, &sweeps, scale).map_err(lattice_error)?);
+        polylines.extend(
+            fill_surface_lateral(expolygon, params, &sweeps, scale).map_err(lattice_error)?,
+        );
     }
     // `if (this->layer_id % 2 == 1) std::reverse(...)` — odd layers reverse each
     // polyline so the lattice overhang leans the other way.
