@@ -1,0 +1,31 @@
+{
+  "base": "c251aa6166bcc0270063fc6d2e41b84ab01a637d",
+  "spec": "25c72e867d0fdd107ca3a9281c271353e1ea14ab",
+  "source_sha256": "183a2d5cbce46aabbe99d22a39b90636326a62a20e752448e444467cb02f9993",
+  "cases": {
+    "marlin2-wipe0": {
+      "sha256": "d0d89d6d9bab58cc0738cc558bbc5d92b766b4cb4980055defa4aca2afd42071",
+      "retract_before_wipe": "50%",
+      "retraction_length": "0.8",
+      "wipe": "0",
+      "wipe_distance": "2",
+      "gcode_flavor": "marlin2"
+    },
+    "makerware-wipe0": {
+      "sha256": "26dfb65f65dce55b3aed63e6588374c48a6b37080900912649dadab796acb965",
+      "retract_before_wipe": "50%",
+      "retraction_length": "0.8",
+      "wipe": "0",
+      "wipe_distance": "2",
+      "gcode_flavor": "makerware"
+    },
+    "makerware-wipe1": {
+      "sha256": "fbb5460de7dc2ed0a1c01da7ae90764faa20d360311b26dabfa3f633a08191f8",
+      "retract_before_wipe": "50%",
+      "retraction_length": "0.8",
+      "wipe": "1",
+      "wipe_distance": "2",
+      "gcode_flavor": "makerware"
+    }
+  }
+}

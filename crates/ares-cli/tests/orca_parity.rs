@@ -71,6 +71,8 @@ mod cli_retained_input;
 mod cli_sequential_clearance;
 #[path = "orca_parity/cli_upward_machine_result.rs"]
 mod cli_upward_machine_result;
+#[path = "orca_parity/gcode_flavor_admission.rs"]
+mod gcode_flavor_admission;
 #[path = "orca_parity/load_settings_3mf.rs"]
 mod load_settings_3mf;
 #[path = "orca_parity/load_settings_3mf_inherits.rs"]
