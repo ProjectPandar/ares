@@ -120,6 +120,21 @@ impl ViewerImpl {
         self.elapsed_times[id][self.settings.time_mode.index()]
     }
 
+    /// ViewerImpl.hpp:141 (RED scaffold: not yet ported).
+    pub fn get_extrusion_roles(&self) -> impl Iterator<Item = GCodeExtrusionRole> + '_ {
+        std::iter::empty()
+    }
+
+    /// ViewerImpl.hpp:142 (RED scaffold: not yet ported).
+    pub fn get_extrusion_role_estimated_time(&self, _role: GCodeExtrusionRole) -> f32 {
+        0.0
+    }
+
+    /// ViewerImpl.hpp:147 (RED scaffold: not yet ported).
+    pub fn get_travels_estimated_time(&self) -> f32 {
+        0.0
+    }
+
     /// GCodeViewer.cpp:452-454, for the engine-selected property-window vertex.
     pub fn get_marker_time(&self, window_vertex: usize) -> crate::MarkerTime {
         crate::MarkerTime {
