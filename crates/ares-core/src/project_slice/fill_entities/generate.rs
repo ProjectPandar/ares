@@ -318,68 +318,20 @@ pub(in crate::project_slice) fn generate_layer(
             .collection_ranges
             .push((region_id, collection_start..output.collections.len()));
     }
-    let region_count = prelude.records.len() / plan.layers.len();
-    let mut spans = Vec::with_capacity(region_count);
-    for region_index in 0..region_count {
-        let record_index = region_index * plan.layers.len() + layer_index;
-        if let (Some(record), Some(input)) = (
-            prepared.predecessor.objects[object_index].records[record_index].as_ref(),
-            prelude.records[record_index].as_ref(),
-        ) {
-            let region = prelude.region_options(input);
-            let model_rotation_offset = if region.align_infill_direction_to_model.0 {
-                input.model_rotation_rad as f32
-            } else {
-                0.0
-            };
-            let context = super::ironing::SpanContext {
-                object: object_options,
-                default_region: &traversal.resolved.views.full.process.region,
-                layer,
-                layers: &plan.layers,
-                model_rotation_offset,
-            };
-            let sort_key = super::ironing::span_sort_key(region, &context);
-            spans.push((sort_key, record, input));
-        }
-    }
-    spans.sort_by(|(left, _, _), (right, _, _)| left.cmp(right));
-    let mut previous_ironing_pattern = None;
-    for (_, record, input) in spans {
-        let region = prelude.region_options(input);
-        let collection_start = output.collections.len();
-        let pattern_replaced =
-            previous_ironing_pattern.is_some_and(|previous| previous != region.ironing_pattern);
-        previous_ironing_pattern = Some(region.ironing_pattern);
-        super::ironing::append(
-            &mut output,
-            super::ironing::Input {
-                record,
-                layer_slices: &object_slices[layer_index],
-                region,
-                dont_alternate_fill_direction: region.zaa_enabled.0
-                    && region.zaa_dont_alternate_fill_direction.0
-                    && !pattern_replaced,
-                object: object_options,
-                default_region: &traversal.resolved.views.full.process.region,
-                nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
-                layer,
-                layers: &plan.layers,
-                last_layer: input.upper_layer_index.is_none(),
-                spiral_mode: input.spiral_mode,
-                model_rotation_offset: if region.align_infill_direction_to_model.0 {
-                    input.model_rotation_rad as f32
-                } else {
-                    0.0
-                },
-                scale: traversal.scale,
-            },
-        )?;
-        output.collection_ranges.push((
-            input.current.region_index,
-            collection_start..output.collections.len(),
-        ));
-    }
+    super::ironing::append_spans(super::ironing::SpanGeneration {
+        output: &mut output,
+        prepared,
+        object_index,
+        layer_index,
+        prelude,
+        layer,
+        layers: &plan.layers,
+        layer_slices: &object_slices[layer_index],
+        object: object_options,
+        default_region: &traversal.resolved.views.full.process.region,
+        nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
+        scale: traversal.scale,
+    })?;
     let process = &traversal.resolved.views.full.process;
     if simplify_before_ordering(
         process.gcode.enable_arc_fitting.0,

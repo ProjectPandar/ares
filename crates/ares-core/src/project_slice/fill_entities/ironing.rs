@@ -21,6 +21,9 @@ use super::{
     geometry_error,
 };
 
+mod spans;
+pub(super) use spans::{SpanGeneration, append_spans};
+
 const ROUNDED_RECTANGLE_FACTOR: f64 = 1.0 - 0.25 * std::f64::consts::PI;
 
 pub(super) struct Input<'a> {
