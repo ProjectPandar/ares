@@ -143,10 +143,8 @@ impl BrimPlan {
             // no-brim mask (tree: first-layer slice contours; inner-normal:
             // fill spacing coverage).
             if let Some(first) = support.get(object_index).and_then(|layers| layers.first()) {
-                let kind =
-                    super::tool_ordering::object_options(traversal, object_index).support_type;
                 forbidden.extend(
-                    super::footprint::support_no_brim(kind, first, scale)
+                    super::footprint::support_no_brim(first.inner_tree, first, scale)
                         .map_err(brim_geometry_error)?,
                 );
             }

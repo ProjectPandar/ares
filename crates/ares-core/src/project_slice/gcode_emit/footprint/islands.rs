@@ -246,18 +246,21 @@ fn geometry_error(error: ClipperError) -> SliceError {
 /// inner-normal support contributes the spacing coverage of its fills
 /// (`polygons_covered_by_spacing`).
 pub(in crate::project_slice::gcode_emit) fn support_no_brim(
-    kind: ProcessSupportType,
+    inner_tree: bool,
     layer: &InstalledSupportLayer,
     scale: CoordinateScale,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    match kind {
-        ProcessSupportType::TreeAuto | ProcessSupportType::TreeManual => Ok(layer
+    match inner_tree {
+        true => Ok(layer
             .support_islands
             .iter()
             .map(|polygon| ExPolygon::new(polygon.contour().clone(), Vec::new()))
             .collect()),
-        ProcessSupportType::NormalAuto | ProcessSupportType::NormalManual => {
-            let epsilon = (1e-4 / scale.factor()) as f32;
+        false => {
+            // `ExtrusionEntity.cpp:75-84` buffers by spacing/2 + the
+            // caller-scaled SCALED_EPSILON (= scaled 1e-4, 100 units at
+            // factor 1e6), not a millimetre value.
+            let epsilon = (1e-4 * scale.factor()) as f32;
             let mut polygons = Vec::new();
             for entity in &layer.support_fills {
                 no_brim_entity(&mut polygons, entity, epsilon, scale)?;
