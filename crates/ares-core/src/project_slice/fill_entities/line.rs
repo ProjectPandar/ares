@@ -2,7 +2,6 @@ use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     ProcessInfillPattern, SliceError,
     fill::line::{LineFillParams, fill_line},
-    geometry::{CoordinateScale, Point},
     project_slice::group_fills::SurfaceFill,
 };
 
@@ -19,6 +18,7 @@ pub(super) fn expolygon_polylines(
     call: &super::types::SurfaceCall,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = LineFillParams {
+        dont_alternate_fill_direction: call.dont_alternate_fill_direction,
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
@@ -36,18 +36,8 @@ pub(super) fn expolygon_polylines(
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    layer_id: usize,
-    reference: Point,
-    scale: CoordinateScale,
+    call: super::types::SurfaceCall,
 ) -> Result<(), SliceError> {
-    let call = super::types::SurfaceCall {
-        dont_alternate_fill_direction: false,
-        layer_id,
-        reference,
-        scale,
-        link_max_length: 0.0,
-        dont_adjust: fill.params.bridge,
-    };
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;
@@ -76,7 +66,7 @@ pub(super) fn append(
             params: fill_params,
             kind: fill_kind,
             expolygon,
-            scale,
+            scale: call.scale,
         })?;
         output.collections.push(FillExtrusionCollection {
             entities,

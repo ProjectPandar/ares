@@ -210,6 +210,7 @@ pub(super) fn dispatch(
                     crate::fill::line::fill_line(
                         &expolygon,
                         crate::fill::line::LineFillParams {
+                            dont_alternate_fill_direction: false,
                             spacing: fill.params.spacing,
                             overlap: 0.0,
                             density: (0.01 * f64::from(fill.params.density)) as f32,

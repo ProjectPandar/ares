@@ -96,6 +96,17 @@ pub(in crate::project_slice) fn generate_layer(
     for fill in surface_fills {
         let region_id = fill.region_id;
         let collection_start = output.collections.len();
+        // Fill.cpp:1235-1242: each filler uses its printing region's runtime flag.
+        let region = &resolved_object.all_regions[region_id];
+        let call = super::types::SurfaceCall {
+            layer_id: layer.id,
+            dont_alternate_fill_direction: region.zaa_enabled.0
+                && region.zaa_dont_alternate_fill_direction.0,
+            reference: object_reference,
+            scale: traversal.scale,
+            link_max_length: 0.0,
+            dont_adjust: fill.params.bridge,
+        };
         match fill.params.pattern {
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
                 super::crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
@@ -170,13 +181,7 @@ pub(in crate::project_slice) fn generate_layer(
                 super::honeycomb::append(&mut output, fill, layer.id, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
-                super::line::append(
-                    &mut output,
-                    fill,
-                    layer.id,
-                    object_reference,
-                    traversal.scale,
-                )?;
+                super::line::append(&mut output, fill, call)?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear
@@ -186,17 +191,6 @@ pub(in crate::project_slice) fn generate_layer(
                 | ProcessInfillPattern::Monotonic
                 | ProcessInfillPattern::MonotonicLine),
             ) => {
-                // Fill.cpp:1235-1242/1446: use this fill's printing region.
-                let region = &resolved_object.all_regions[region_id];
-                let call = super::types::SurfaceCall {
-                    layer_id: layer.id,
-                    dont_alternate_fill_direction: region.zaa_enabled.0
-                        && region.zaa_dont_alternate_fill_direction.0,
-                    reference: object_reference,
-                    scale: traversal.scale,
-                    link_max_length: 0.0,
-                    dont_adjust: fill.params.bridge,
-                };
                 super::monotonic::append(
                     &mut output,
                     fill,
@@ -252,17 +246,6 @@ pub(in crate::project_slice) fn generate_layer(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::LockedZag) => {
-                // Fill.cpp:1235-1242: use this fill's printing region.
-                let region = &resolved_object.all_regions[region_id];
-                let call = super::types::SurfaceCall {
-                    layer_id: layer.id,
-                    dont_alternate_fill_direction: region.zaa_enabled.0
-                        && region.zaa_dont_alternate_fill_direction.0,
-                    reference: object_reference,
-                    scale: traversal.scale,
-                    link_max_length: 0.0,
-                    dont_adjust: fill.params.bridge,
-                };
                 super::locked_zag::append(
                     &mut output,
                     fill,
