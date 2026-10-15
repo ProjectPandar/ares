@@ -61,8 +61,8 @@ All upstream citations are in `OrcaSlicer/src/libslic3r/`:
 - `Fill/FillAdaptive.cpp:1398-1401`: scaled hook lengths finish through
   `std::min<float>` before widening to coordf_t; call `connect_lines_using_hooks`.
 - `Fill/FillAdaptive.cpp:801-1262`: `connect_lines_using_hooks` owns the
-  source/working lines and mutable collision index, including source insertion
-  at870 and newly connected segments at1038/1044.
+  source/working lines and collision index, including source insertion
+  at870 and contour/hole segment insertion at1038/1044.
 - `Fill/FillAdaptive.cpp:600-612`: `Intersection::other_hook` and its intersection.
 - `Fill/FillAdaptive.cpp:670-778`: `add_hook`; start intersection695-698,
   other-hook700/713, finite forward query705-711, exclude-the-intersecting-line

@@ -10,7 +10,8 @@ pub(super) fn shift_from_thick_line(dir_x: f64, dir_y: f64, line: &Line, trim: f
     if n <= 0.0 {
         return 0.0;
     }
-    trim * (dir_x * dy / n - dir_y * dx / n).abs()
+    let (nx, ny) = (dx / n, dy / n);
+    trim * (dir_x * ny - dir_y * nx).abs()
 }
 
 pub(super) struct Thresholds {
@@ -134,28 +135,6 @@ pub(super) fn segments_cross(a1: Point, a2: Point, b1: Point, b2: Point) -> Opti
     let u = ((b1.x() - a1.x()) as f64 * d1y - (b1.y() - a1.y()) as f64 * d1x) / denom;
     if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
         Some((a1.x() as f64 + t * d1x, a1.y() as f64 + t * d1y))
-    } else {
-        None
-    }
-}
-
-pub(super) fn ray_segment_hit(origin: (f64, f64), dir: (f64, f64), line: &Line) -> Option<f64> {
-    let ax = line.a.x() as f64 - origin.0;
-    let ay = line.a.y() as f64 - origin.1;
-    let bx = line.b.x() as f64 - origin.0;
-    let by = line.b.y() as f64 - origin.1;
-    let dx = bx - ax;
-    let dy = by - ay;
-    let denom = dir.0 * dy - dir.1 * dx;
-    if denom.abs() < 1e-12 {
-        return None;
-    }
-    // t = cross(a, d)/cross(D, d), u = cross(a, D)/cross(D, d) — the
-    // segment parameter shares the denominator's sign (no negation).
-    let t = (ax * dy - ay * dx) / denom;
-    let u = (ax * dir.1 - ay * dir.0) / denom;
-    if t > 0.0 && (0.0..=1.0).contains(&u) {
-        Some(t)
     } else {
         None
     }

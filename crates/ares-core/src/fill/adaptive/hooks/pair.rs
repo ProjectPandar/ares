@@ -3,25 +3,24 @@
 //! that determines the connected path direction.
 
 use super::Joint;
-use super::add_hook;
 use super::create_offset_line;
 use super::geometry::{
     distance_squared, dot, normalize, segment_line_intersection, segments_cross,
 };
+use super::hook::{HookParams, add_hook};
 use crate::geometry::{Line, Point};
 
-#[allow(clippy::too_many_arguments)]
 pub(super) fn connect_pair(
     first: &mut Joint,
     nearest: &mut Joint,
-    source: &[Line],
+    params: &HookParams<'_>,
     working: &mut [Vec<Point>],
     merged_with: &mut [usize],
-    scaled_offset: f64,
-    hook_length_max: f64,
-    hook_length: f64,
-    scaled_trim_distance: f64,
 ) {
+    let source = params.source;
+    let scaled_offset = params.offset;
+    let hook_length_max = params.maximum_length;
+    let scaled_trim_distance = params.trim;
     let anchor = create_offset_line(
         first.intersect_point,
         nearest.intersect_point,
@@ -29,38 +28,17 @@ pub(super) fn connect_pair(
         scaled_offset,
     );
     let Some(first_pt) = segment_line_intersection(source[first.intersect_line], anchor) else {
-        add_hook(
-            first,
-            source,
-            working,
-            scaled_offset,
-            hook_length,
-            scaled_trim_distance,
-        );
+        add_hook(first, working, params);
         first.used = true;
         return;
     };
     let Some(nearest_pt) = segment_line_intersection(source[nearest.intersect_line], anchor) else {
-        add_hook(
-            first,
-            source,
-            working,
-            scaled_offset,
-            hook_length,
-            scaled_trim_distance,
-        );
+        add_hook(first, working, params);
         first.used = true;
         return;
     };
     if distance_squared(first_pt, nearest_pt) > hook_length_max * hook_length_max {
-        add_hook(
-            first,
-            source,
-            working,
-            scaled_offset,
-            hook_length,
-            scaled_trim_distance,
-        );
+        add_hook(first, working, params);
         first.used = true;
         return;
     }
@@ -70,14 +48,7 @@ pub(super) fn connect_pair(
             && index != nearest.intersect_line
             && segments_cross(first_pt, nearest_pt, line.a, line.b).is_some()
         {
-            add_hook(
-                first,
-                source,
-                working,
-                scaled_offset,
-                hook_length,
-                scaled_trim_distance,
-            );
+            add_hook(first, working, params);
             first.used = true;
             return;
         }
@@ -167,7 +138,7 @@ pub(super) fn connect_pair(
 
 /// `Intersection::other_hook` (`FillAdaptive.cpp:600-606`): the hook
 /// segment of a just-hooked 3-point polyline.
-fn other_hook(joint: &Joint, points: &[Point]) -> Option<Line> {
+pub(super) fn other_hook(joint: &Joint, points: &[Point]) -> Option<Line> {
     if points.len() >= 3 {
         Some(if joint.front {
             Line::new(points[1], points[2])
