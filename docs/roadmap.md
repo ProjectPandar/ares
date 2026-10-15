@@ -7,6 +7,19 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Resource vertex coordinate defaults: proposed ObjectImporter SPEC (2026-10-15)
+
+Next W4 docs-only candidate: `Format/bbs_3mf.cpp::ObjectImporter` active vertex
+handler `5478-5490` uses zero for a missing x/y/z attribute before applying the
+model unit set at `5315-5319`; resource dispatch is `5612-5649`. Rust destination
+is the private role-aware `project/model_xml.rs::Vertex` decode reached through
+`project/load/graph.rs`. Preserve explicit coordinates, unit scaling, mesh
+finite/index checks, XML security, and main-model behavior; do not add global
+serde defaults or a new fallback. SPEC review and input approval precede any
+Native/API/CLI/test/fixture work. Public RED must assert target Native equality
+and fail until GREEN; controls assert equality. [SPEC](architecture/3mf-resource-vertex-defaults-spec.md),
+[ARD](architecture/ard-3mf-resource-vertex-defaults.md).
+
 ### Resource build/item non-consumption: proposed ObjectImporter SPEC (2026-10-15)
 
 Worker4 next source slice: `Format/bbs_3mf.cpp::ObjectImporter` resource start/end
