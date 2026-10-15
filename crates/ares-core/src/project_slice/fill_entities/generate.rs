@@ -318,10 +318,15 @@ pub(in crate::project_slice) fn generate_layer(
             .collection_ranges
             .push((region_id, collection_start..output.collections.len()));
     }
-    if let (Some(record), Some(input)) = (
-        prepared.predecessor.objects[object_index].records[layer_index].as_ref(),
-        prelude.records[layer_index].as_ref(),
-    ) {
+    let region_count = prelude.records.len() / plan.layers.len();
+    for region_index in 0..region_count {
+        let record_index = region_index * plan.layers.len() + layer_index;
+        let (Some(record), Some(input)) = (
+            prepared.predecessor.objects[object_index].records[record_index].as_ref(),
+            prelude.records[record_index].as_ref(),
+        ) else {
+            continue;
+        };
         let region = prelude.region_options(input);
         let collection_start = output.collections.len();
         super::ironing::append(
