@@ -32,6 +32,7 @@ pub(super) struct Input<'a> {
     /// `default_region_config()` — print-level process region options for
     /// the meta-language B/T shell units (`Fill.cpp:125-127`).
     pub(super) default_region: &'a ProcessRegionSourceOptions,
+    pub(super) nozzles: &'a OrcaFloats,
     pub(super) layer: &'a PlannedLayer,
     pub(super) layers: &'a [PlannedLayer],
     pub(super) last_layer: bool,
@@ -43,7 +44,6 @@ pub(super) struct Input<'a> {
 pub(super) struct SpanContext<'a> {
     pub(super) object: &'a ObjectOptions,
     pub(super) default_region: &'a ProcessRegionSourceOptions,
-    pub(super) nozzles: &'a OrcaFloats,
     pub(super) layer: &'a PlannedLayer,
     pub(super) layers: &'a [PlannedLayer],
     pub(super) model_rotation_offset: f32,
