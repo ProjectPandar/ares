@@ -332,15 +332,15 @@ pub(in crate::project_slice) fn generate_layer(
             } else {
                 0.0
             };
-            let sort_key = super::ironing::span_sort_key(
-                region,
-                object_options,
-                &traversal.resolved.views.full.process.region,
-                &traversal.resolved.views.full.project.print.nozzle_diameter,
+            let context = super::ironing::SpanContext {
+                object: object_options,
+                default_region: &traversal.resolved.views.full.process.region,
+                nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
                 layer,
-                &plan.layers,
+                layers: &plan.layers,
                 model_rotation_offset,
-            )?;
+            };
+            let sort_key = super::ironing::span_sort_key(region, &context)?;
             spans.push((sort_key, record, input));
         }
     }

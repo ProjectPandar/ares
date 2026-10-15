@@ -41,6 +41,15 @@ pub(super) struct Input<'a> {
     pub(super) scale: CoordinateScale,
 }
 
+pub(super) struct SpanContext<'a> {
+    pub(super) object: &'a ObjectOptions,
+    pub(super) default_region: &'a ProcessRegionSourceOptions,
+    pub(super) nozzles: &'a OrcaFloats,
+    pub(super) layer: &'a PlannedLayer,
+    pub(super) layers: &'a [PlannedLayer],
+    pub(super) model_rotation_offset: f32,
+}
+
 pub(super) struct SpanSortKey {
     extruder: i32,
     spacing: f64,
@@ -66,24 +75,13 @@ impl SpanSortKey {
 
 pub(super) fn span_sort_key(
     region: &RegionOptions,
-    object: &ObjectOptions,
-    default_region: &ProcessRegionSourceOptions,
-    nozzles: &OrcaFloats,
-    layer: &PlannedLayer,
-    layers: &[PlannedLayer],
-    model_rotation_offset: f32,
+    context: &SpanContext<'_>,
 ) -> Result<SpanSortKey, SliceError> {
-    let nozzle = selected_nozzle(region, nozzles)?;
+    let nozzle = selected_nozzle(region, context.nozzles)?;
     let spacing = region.filament_ironing_spacing.0;
-    let height = object.layer_height.0 * 0.01 * region.filament_ironing_flow.0 * spacing / nozzle;
-    let (angle, fixed_angle) = ironing_angle_for(
-        region,
-        object,
-        default_region,
-        layer,
-        layers,
-        model_rotation_offset,
-    );
+    let height =
+        context.object.layer_height.0 * 0.01 * region.filament_ironing_flow.0 * spacing / nozzle;
+    let (angle, fixed_angle) = ironing_angle_for(region, context);
     let inset = if region.filament_ironing_inset.0 == 0.0 {
         0.5 * nozzle
     } else {
@@ -326,34 +324,28 @@ fn ironing_areas(input: &Input<'_>) -> Result<Option<Vec<ExPolygon>>, SliceError
 }
 
 fn ironing_angle(input: &Input<'_>) -> (f32, bool) {
-    ironing_angle_for(
-        input.region,
-        input.object,
-        input.default_region,
-        input.layer,
-        input.layers,
-        input.model_rotation_offset,
-    )
+    let context = SpanContext {
+        object: input.object,
+        default_region: input.default_region,
+        nozzles: input.nozzles,
+        layer: input.layer,
+        layers: input.layers,
+        model_rotation_offset: input.model_rotation_offset,
+    };
+    ironing_angle_for(input.region, &context)
 }
 
-fn ironing_angle_for(
-    region: &RegionOptions,
-    object: &ObjectOptions,
-    default_region: &ProcessRegionSourceOptions,
-    layer: &PlannedLayer,
-    layers: &[PlannedLayer],
-    model_rotation_offset: f32,
-) -> (f32, bool) {
+fn ironing_angle_for(region: &RegionOptions, context: &SpanContext<'_>) -> (f32, bool) {
     let template = &region.solid_infill_rotate_template.0;
     // Upstream runs `calculate_infill_rotation_angle` for ironing too
     // (`Fill.cpp:1605-1611`), including the meta path.
     let template_angle = (!template.is_empty()).then(|| {
         super::super::group_fills::template_rotation_angle(
             template,
-            layers,
-            object,
-            default_region,
-            layer.id,
+            context.layers,
+            context.object,
+            context.default_region,
+            context.layer.id,
         )
     });
     let base = if region.ironing_angle_fixed.0 {
@@ -361,7 +353,8 @@ fn ironing_angle_for(
     } else {
         template_angle.unwrap_or(region.solid_infill_direction.0)
     };
-    let angle = ((base + region.ironing_angle.0).to_radians() as f32) + model_rotation_offset;
+    let angle =
+        ((base + region.ironing_angle.0).to_radians() as f32) + context.model_rotation_offset;
     (angle, region.ironing_angle_fixed.0 || !template.is_empty())
 }
 
