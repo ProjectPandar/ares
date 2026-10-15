@@ -5,7 +5,7 @@ use crate::SliceError;
 use super::super::{
     PackagePath, ProjectArchive,
     content_types::{ContentTypes, MODEL_CONTENT_TYPE, RELATIONSHIPS_CONTENT_TYPE},
-    model_xml::{ModelDocument, ModelObject},
+    model_xml::{Build, ModelDocument, ModelObject},
     relationships::{MODEL_RELATIONSHIP_TYPE, Relationships},
     xml::{XmlRole, deserialize_xml},
 };
@@ -100,7 +100,7 @@ pub(super) fn load(
     root: PackagePath,
 ) -> Result<ModelGraph, SliceError> {
     let mut import_paths = BTreeMap::from([(String::new(), root.clone())]);
-    let mut queue = VecDeque::from([root]);
+    let mut queue = VecDeque::from([root.clone()]);
     let mut loaded_paths = BTreeSet::new();
     let mut models = Vec::new();
 
@@ -110,7 +110,12 @@ pub(super) fn load(
         }
         require_model_content_type(content_types, &path)?;
         let bytes = archive.read(&path)?;
-        let document: ModelDocument = deserialize_xml(&bytes, XmlRole::Model)?;
+        let document = if path == root {
+            deserialize_xml::<ModelDocument>(&bytes, XmlRole::Model)?
+        } else {
+            deserialize_xml::<ModelDocument<Option<Build>>>(&bytes, XmlRole::Model)?
+                .into_resource_document()
+        };
         document.validate()?;
 
         let relationship_part = relationship_part(&path)?;

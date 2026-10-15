@@ -11,7 +11,7 @@ pub(crate) const MATERIAL_NAMESPACE: &str =
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename = "model")]
-pub(crate) struct ModelDocument {
+pub(crate) struct ModelDocument<B = Build> {
     #[serde(rename = "@unit", default)]
     pub unit: ModelUnit,
     #[serde(rename = "@requiredextensions", default)]
@@ -19,7 +19,21 @@ pub(crate) struct ModelDocument {
     #[serde(rename = "metadata", default)]
     pub metadata: Vec<ModelMetadata>,
     pub resources: Resources,
-    pub build: Build,
+    pub build: B,
+}
+
+impl ModelDocument<Option<Build>> {
+    pub(crate) fn into_resource_document(self) -> ModelDocument {
+        // bbs_3mf.cpp ObjectImporter:5612-5687/5323-5327 has no build requirement.
+        // Resource builds do not create instances; only the main build does.
+        ModelDocument {
+            unit: self.unit,
+            required_extensions: self.required_extensions,
+            metadata: self.metadata,
+            resources: self.resources,
+            build: self.build.unwrap_or(Build { items: Vec::new() }),
+        }
+    }
 }
 
 impl ModelDocument {
