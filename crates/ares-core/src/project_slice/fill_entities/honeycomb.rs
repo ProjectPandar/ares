@@ -32,13 +32,17 @@ pub(super) fn expolygon_polylines(
     Ok(per_component)
 }
 
-pub(super) fn polylines_params(fill: &SurfaceFill, layer_id: usize) -> HoneycombFillParams {
+pub(super) fn polylines_params(
+    fill: &SurfaceFill,
+    call: &super::types::SurfaceCall,
+) -> HoneycombFillParams {
     HoneycombFillParams {
+        dont_alternate_fill_direction: call.dont_alternate_fill_direction,
         spacing: fill.params.spacing,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         angle: fill.params.angle,
-        layer_index: layer_id,
+        layer_index: call.layer_id,
         thickness_layers: fill.representative.thickness_layers.max(1),
         fixed_angle: fill.params.fixed_angle,
         bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
@@ -50,10 +54,10 @@ pub(super) fn polylines_params(fill: &SurfaceFill, layer_id: usize) -> Honeycomb
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    layer_id: usize,
-    scale: CoordinateScale,
+    call: super::types::SurfaceCall,
 ) -> Result<(), SliceError> {
-    let params = polylines_params(&fill, layer_id);
+    let params = polylines_params(&fill, &call);
+    let scale = call.scale;
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;

@@ -101,6 +101,7 @@ pub(super) fn generate(
             }
             RaftFillPattern::Honeycomb => {
                 let params = HoneycombFillParams {
+                    dont_alternate_fill_direction: false,
                     spacing,
                     density,
                     multiline: 1,

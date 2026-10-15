@@ -152,7 +152,7 @@ pub(in crate::project_slice) fn surface_polylines(
             super::honeycomb::expolygon_polylines(
                 &request.expolygon,
                 delta,
-                super::honeycomb::polylines_params(&fill, request.call.layer_id),
+                super::honeycomb::polylines_params(&fill, &request.call),
                 request.call.scale,
             )
             .map(|per_component| per_component.into_iter().flatten().collect())

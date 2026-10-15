@@ -284,6 +284,7 @@ pub(super) fn dispatch(
                     crate::fill::honeycomb::fill_honeycomb(
                         &expolygon,
                         crate::fill::honeycomb::HoneycombFillParams {
+                            dont_alternate_fill_direction: false,
                             spacing: fill.params.spacing,
                             density: (0.01 * f64::from(fill.params.density)) as f32,
                             multiline: fill.params.multiline,

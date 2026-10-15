@@ -149,6 +149,7 @@ impl Filler {
                     lines.extend(fill_honeycomb(
                         &component,
                         HoneycombFillParams {
+                            dont_alternate_fill_direction: false,
                             spacing: self.spacing,
                             density,
                             multiline: 1,

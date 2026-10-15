@@ -178,7 +178,7 @@ pub(in crate::project_slice) fn generate_layer(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
-                super::honeycomb::append(&mut output, fill, layer.id, traversal.scale)?;
+                super::honeycomb::append(&mut output, fill, call)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
                 super::line::append(&mut output, fill, call)?;
