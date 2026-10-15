@@ -51,6 +51,8 @@ mod brim_bed_region;
 mod brim_bed_region_controls;
 #[path = "orca_parity/brim_efc_outline.rs"]
 mod brim_efc_outline;
+#[path = "orca_parity/brim_inner_only_w5.rs"]
+mod brim_inner_only_w5;
 #[path = "orca_parity/brim_outer_inner_w8.rs"]
 mod brim_outer_inner_w8;
 #[path = "orca_parity/brim_outeronly_w5.rs"]
