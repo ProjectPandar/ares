@@ -101,7 +101,10 @@ impl ViewerImpl {
                     [0.0; 3]
                 };
                 let dot = prev[0] * this[0] + prev[1] * this[1] + prev[2] * this[2];
-                (prev[0] * this[1] - prev[1] * this[0]).atan2(dot)
+                let cross = prev[0] * this[1] - prev[1] * this[0];
+                // f64 evaluation plus rounding matches the platform-independent
+                // result of the upstream float `std::atan2` (ViewerImpl.cpp:980).
+                f64::from(cross).atan2(f64::from(dot)) as f32
             })
             .collect()
     }
