@@ -7,6 +7,7 @@ import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
 import { checkActualSpeedProfile } from "./actualSpeedProfile";
 import { oracleMoves, type Move } from "./oracleMoves";
 import { checkRoleTimes } from "./roleTimes";
+import { checkSegmentSizes } from "./segmentSizes";
 
 /** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current and drawn. */
 export async function canvasDigest(page: Page) {
@@ -295,6 +296,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   }
   const options = await checkOptions(page, moves, extrudeRoles.size, artifacts);
   const roleTimes = await checkRoleTimes(page, artifacts);
+  const segmentSizes = await checkSegmentSizes(page, artifacts);
   const top = page.getByRole("slider", { name: "Top layer" });
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   await expect(page.getByTestId("layer-slider")).toContainText(layerZ(moves, layers - 1).toFixed(2));
@@ -343,7 +345,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, movesSlider, toolPosition, actualSpeedProfile, roles: [...extrudeRoles].sort((a, b) => a - b), roleTimes, options, colorRanges, filamentView,
+      moves: moves.length, layers, movesSlider, toolPosition, actualSpeedProfile, roles: [...extrudeRoles].sort((a, b) => a - b), roleTimes, segmentSizes, options, colorRanges, filamentView,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,
