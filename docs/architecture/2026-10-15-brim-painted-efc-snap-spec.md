@@ -77,8 +77,12 @@
   非 painted 路径），本片不改 ares Painted 臂现有 `source` 语义；
 - `Polygon::closest_point` 的上游实现细节（投影 vs 顶点级）以 native
   对拍为准，若顶点级足够则不引投影（discovery 定值）；
-- BrimEars auto 臂、跨对象、combine、EFC outline 与 support mask 的
-  交互组合保持既有片边界。
+- BrimEars auto 臂（btEar）、AutoBrim/NoBrim 的 `:468-472` EFC
+  base-slices 交换：本片 RED 仅覆盖 Painted，故 gate 保持
+  OuterOnly/InnerOnly/OuterAndInner/Painted；btEar/AutoBrim 延后
+  （需独立 RED+ctl）；
+- 跨对象、combine、EFC outline 与 support mask 的交互组合保持既有
+  片边界。
 
 ## 5. 测试先行（TDD）
 

@@ -32,6 +32,13 @@ pub(crate) struct PaintedParameters {
     /// Ear centres already mapped into the `source` (mesh-centred
     /// lslices) space, each with its `head_front_radius` in millimetres.
     pub(crate) points: Vec<([f32; 2], f32)>,
+    /// Raw bottom lslices (`raw_outline`, Brim.cpp:363) for island
+    /// matching during the snap.
+    pub(crate) raw_outline: Vec<ExPolygon>,
+    /// `Some(efc_outline)` when the gate `:56-62` is open; the
+    /// lazily-built EFC-adjusted outline is the caller's single
+    /// computation (Brim.cpp:364-367/:112-118).
+    pub(crate) efc_outline: Option<Vec<ExPolygon>>,
 }
 
 /// `make_brim_ears` (Brim.cpp:354-412), outer-birim call site `:537`:
@@ -54,6 +61,63 @@ fn ear_disc(center_x: i64, center_y: i64, size: i64) -> Polygon {
     )
 }
 
+/// `closest_point_on_expolygons` (Brim.cpp:65-80): nearest vertex over
+/// every contour and hole (vertex-level `closest_point`, no projection),
+/// `int64` squared deltas compared as `double` with strict `<`.
+fn closest_point_on_expolygons(polygons: &[ExPolygon], from: Point) -> Option<Point> {
+    let mut best: Option<(f64, Point)> = None;
+    let mut consider = |point: &Point| {
+        let dx = point.x() - from.x();
+        let dy = point.y() - from.y();
+        let distance = (dx * dx + dy * dy) as f64;
+        if best.is_none_or(|(previous, _)| distance < previous) {
+            best = Some((distance, *point));
+        }
+    };
+    for polygon in polygons {
+        consider_many(polygon, &mut consider);
+    }
+    best.map(|(_, point)| point)
+}
+
+fn consider_many<F: FnMut(&Point)>(polygon: &ExPolygon, consider: &mut F) {
+    for point in polygon.contour().points() {
+        consider(point);
+    }
+    for hole in polygon.holes() {
+        for point in hole.points() {
+            consider(point);
+        }
+    }
+}
+
+/// `find_containing_expolygon_index` (Brim.cpp:84-96): first lslices
+/// island containing the point; `ExPolygon::contains` excludes the
+/// holes (ExPolygon.cpp), so a centre inside a hole matches no island.
+fn find_containing_expolygon_index(polygons: &[ExPolygon], from: Point) -> Option<usize> {
+    polygons.iter().position(|polygon| {
+        polygon.contour().contains(&from)
+            && !polygon.holes().iter().any(|hole| hole.contains(&from))
+    })
+}
+
+/// `closest_point_on_matching_island` (Brim.cpp:99-108): snap inside the
+/// matched island's EFC intersection, else on the whole EFC outline.
+fn closest_point_on_matching_island(
+    raw_outline: &[ExPolygon],
+    efc_outline: &[ExPolygon],
+    from: Point,
+) -> Result<Option<Point>, SliceError> {
+    if let Some(index) = find_containing_expolygon_index(raw_outline, from) {
+        let island_outline =
+            intersection_ex(efc_outline, &raw_outline[index..index + 1]).map_err(geometry_error)?;
+        if !island_outline.is_empty() {
+            return Ok(closest_point_on_expolygons(&island_outline, from));
+        }
+    }
+    Ok(closest_point_on_expolygons(efc_outline, from))
+}
+
 pub(crate) fn painted(
     source: &[ExPolygon],
     parameters: PaintedParameters,
@@ -66,15 +130,39 @@ pub(crate) fn painted(
         flow_width,
         scale,
         points,
+        raw_outline,
+        efc_outline,
     } = parameters;
     let factor = scale.factor();
+    // :392-411: snap each ear centre (after the truncating scale_ of
+    // :390-391) to the closest vertex of the EFC-adjusted outline when
+    // the gate :56-62 is open; the disc size path (:375-382) is
+    // unaffected, so the snapped centre feeds both the outer and the
+    // inner discs (:411 translates after the branch).
+    let mut centers = Vec::with_capacity(points.len());
+    for &(center, _) in &points {
+        let mut pt = Point::new(
+            (f64::from(center[0]) / factor) as i64,
+            (f64::from(center[1]) / factor) as i64,
+        );
+        let snapped = match efc_outline.as_ref() {
+            Some(efc) if !efc.is_empty() => {
+                closest_point_on_matching_island(&raw_outline, efc, pt)?
+            }
+            _ => None,
+        };
+        if let Some(closest) = snapped {
+            pt = closest;
+        }
+        centers.push(pt);
+    }
     let mut result = Vec::new();
     for poly in source {
         let contour = ExPolygon::new(poly.contour().clone(), Vec::new());
         let inner = offset_expolygons(&[contour], gap, JoinType::Round, resolution)
             .map_err(geometry_error)?;
         let mut discs = Vec::new();
-        for &(center, radius) in &points {
+        for (&(_, radius), &pt) in points.iter().zip(&centers) {
             // :375/:377-380: the painted radius quantizes to even brim
             // flow widths (the second re-quantization pass over the scaled
             // width collapses to the same millimetre quantization).
@@ -83,13 +171,8 @@ pub(crate) fn painted(
             let size_ear = (scale.checked_scale(width_mm).expect("validated brim width") as f32
                 - gap
                 - spacing) as i64;
-            // :390-391: int32_t pt_x = scale_(pos.x()) — scale_ is a plain
-            // division (libslic3r.h:93), so the conversion truncates
-            // toward zero.
-            let center_x = (f64::from(center[0]) / factor) as i64;
-            let center_y = (f64::from(center[1]) / factor) as i64;
             discs.push(ExPolygon::new(
-                ear_disc(center_x, center_y, size_ear),
+                ear_disc(pt.x(), pt.y(), size_ear),
                 Vec::new(),
             ));
         }
@@ -113,7 +196,7 @@ pub(crate) fn painted(
             let inset = offset_expolygons(&holes, -width - gap, JoinType::Miter, 3.0)
                 .map_err(geometry_error)?;
             let mut inner_discs = Vec::new();
-            for &(center, radius) in &points {
+            for (&(_, radius), &pt) in points.iter().zip(&centers) {
                 // :375-376 without the :377-380 outer re-quantization:
                 // brim_width = floor(scale_(radius) / flowWidth / 2) *
                 // flowWidth * 2 keeps the scaled/millimetre mix; scale_ is
@@ -122,10 +205,8 @@ pub(crate) fn painted(
                 let scaled_radius = f64::from(radius) / factor;
                 let mixed = (scaled_radius / flow_width / 2.0).floor() * flow_width * 2.0;
                 let size_ear = (mixed as f32 - gap - spacing) as i64;
-                let center_x = (f64::from(center[0]) / factor) as i64;
-                let center_y = (f64::from(center[1]) / factor) as i64;
                 inner_discs.push(ExPolygon::new(
-                    ear_disc(center_x, center_y, size_ear),
+                    ear_disc(pt.x(), pt.y(), size_ear),
                     Vec::new(),
                 ));
             }

@@ -75,18 +75,25 @@ impl BrimPlan {
         if source.is_empty() {
             return Ok(None);
         }
-        let source = outline::select(
-            &traversal.objects[object_index]
-                .predecessor
-                .predecessor
-                .predecessor
-                .predecessor
-                .object
-                .object,
-            options,
-            traversal.scale,
-            source,
-        )?;
+        let raw = source;
+        // Brim.cpp:364-367/:468-472: the EFC-adjusted bottom outline is
+        // computed once under the gate and shared by the base-slices swap
+        // and the painted-ear snap.
+        let efc_bottom = if outline::efc_enabled(options) {
+            Some(outline::bottom_regions(
+                &traversal.objects[object_index]
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .object
+                    .object,
+                traversal.scale,
+            )?)
+        } else {
+            None
+        };
+        let source = outline::select(raw.clone(), efc_bottom.as_deref())?;
         let full = &traversal.resolved.views.full;
         let print = &full.process.print;
         let region = &resolved
@@ -174,6 +181,12 @@ impl BrimPlan {
             if points.is_empty() {
                 return Ok(None);
             }
+            // Brim.cpp:363-367: raw lslices for island matching and the
+            // lazily-built EFC outline (:112-118) for the painted-ear
+            // snap (:392-411); :468-472 already swapped `source` to the
+            // EFC outline via outline::select.
+            let raw_outline = raw.clone();
+            let efc_outline = efc_bottom.clone();
             let area = crate::brims::ears::painted(
                 &source,
                 crate::brims::ears::PaintedParameters {
@@ -184,6 +197,8 @@ impl BrimPlan {
                     flow_width: spacing_mm,
                     scale,
                     points,
+                    raw_outline,
+                    efc_outline,
                 },
             )?;
             object_islands = area.1.clone();
