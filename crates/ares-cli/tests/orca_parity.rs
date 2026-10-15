@@ -63,6 +63,8 @@ mod brim_outeronly_w5;
 mod brim_physical_layer;
 #[path = "orca_parity/change_filament_flush_blocks.rs"]
 mod change_filament_flush_blocks;
+#[path = "orca_parity/clearance_admission.rs"]
+mod clearance_admission;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
 mod cli_custom_gcode_exit;
 #[path = "orca_parity/cli_exit_channels.rs"]
