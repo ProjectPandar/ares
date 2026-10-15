@@ -111,6 +111,23 @@ impl BrimPlan {
         let spacing = scaled_f32(scale, spacing_mm)?;
         let resolution = scaled_f64(scale, 0.0125)?;
         let mut object_islands = Vec::new();
+        // Brim.cpp:590-634 via :576/:682-689: support contours join the
+        // no-brim mask for every brim type with an outer ring (tree:
+        // first-layer slice contours; inner-normal: fill spacing
+        // coverage). The InnerOnly and BrimEars arms are deferred to
+        // their own RED coverage.
+        let support_mask = if matches!(
+            options.brim_type,
+            ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner
+        ) {
+            match support.get(object_index).and_then(|layers| layers.first()) {
+                Some(first) => super::footprint::support_no_brim(first.inner_tree, first, scale)
+                    .map_err(brim_geometry_error)?,
+                None => Vec::new(),
+            }
+        } else {
+            Vec::new()
+        };
         let (brim_area, inner) = if options.brim_type == ProcessBrimType::InnerOnly {
             let area = crate::brims::inner::area(&source, gap, brim_width, spacing, resolution)?;
             object_islands = area.object_islands;
@@ -119,8 +136,11 @@ impl BrimPlan {
             let area = crate::brims::combined::area(&source, gap, brim_width, spacing, resolution)?;
             object_islands = area.object_islands;
             // Both predicates are true: only objectIsland is forbidden,
-            // without the no-inner/no-outer masks (Brim.cpp:560-570).
-            (area.area, object_islands.clone())
+            // without the no-inner/no-outer masks (Brim.cpp:560-570); the
+            // support no-brim mask is a separate :590-634 source.
+            let mut forbidden = object_islands.clone();
+            forbidden.extend(support_mask);
+            (area.area, forbidden)
         } else if options.brim_type == ProcessBrimType::BrimEars {
             crate::brims::ears::area(
                 &source,
@@ -139,15 +159,7 @@ impl BrimPlan {
             let area = crate::brims::outer::area(&source, gap, brim_width, spacing, resolution)?;
             object_islands = area.object_islands;
             let mut forbidden = area.forbidden;
-            // Brim.cpp:590-634 via :576/:682-689: support contours join the
-            // no-brim mask (tree: first-layer slice contours; inner-normal:
-            // fill spacing coverage).
-            if let Some(first) = support.get(object_index).and_then(|layers| layers.first()) {
-                forbidden.extend(
-                    super::footprint::support_no_brim(first.inner_tree, first, scale)
-                        .map_err(brim_geometry_error)?,
-                );
-            }
+            forbidden.extend(support_mask);
             (area.area, forbidden)
         };
         let brim_area = bed_area::clip(
