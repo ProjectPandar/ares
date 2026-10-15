@@ -28,8 +28,8 @@ export async function generateRoleTimes(directory, gcode = `${repo}tests/parity/
   // Mechanical projection only; expected numeric bits remain C++ output.
   writeFileSync(`${dir}/vertices.tsv`, native.vertices.map(v => [v.id, v.type, v.role, ...v.timesBits].join("\t")).join("\n") + "\n");
   writeFileSync(`${dir}/roles.tsv`, native.roles.map(r => [r.role, ...r.timesBits].join("\t")).join("\n") + "\n");
-  writeFileSync(`${dir}/totals.tsv`, [["travels", ...native.travelsTimeBits], ["total", ...native.totalTimeBits]]
-    .map(row => row.join("\t")).join("\n") + "\n");
+  // Row 0: travels, row 1: total; columns are the time modes.
+  writeFileSync(`${dir}/totals.tsv`, [native.travelsTimeBits, native.totalTimeBits].map(row => row.join("\t")).join("\n") + "\n");
   const files = ["input.gcode", "moves.csv", "native.json", "vertices.tsv", "roles.tsv", "totals.tsv"];
   writeFileSync(`${dir}/oracle.json`, `${JSON.stringify({
     kind: native.oracle, upstream: native.upstream,
