@@ -7,17 +7,19 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### Resource vertex coordinate defaults: proposed ObjectImporter SPEC (2026-10-15)
+### 3MF vertex coordinate defaults: amended shared importer SPEC (2026-10-15)
 
-Next W4 docs-only candidate: `Format/bbs_3mf.cpp::ObjectImporter` active vertex
-handler `5478-5490` uses zero for a missing x/y/z attribute before applying the
-model unit set at `5315-5319`; resource dispatch is `5612-5649`. Rust destination
-is the private role-aware `project/model_xml.rs::Vertex` decode reached through
-`project/load/graph.rs`. Preserve explicit coordinates, unit scaling, mesh
-finite/index checks, XML security, and main-model behavior; do not add global
-serde defaults or a new fallback. SPEC review and input approval precede any
-Native/API/CLI/test/fixture work. Public RED must assert target Native equality
-and fail until GREEN; controls assert equality. [SPEC](architecture/3mf-resource-vertex-defaults-spec.md),
+Next W4 docs-only candidate: both
+`_BBS_3MF_Importer::_handle_start_vertex:3772-3782` and
+`ObjectImporter::_handle_object_start_vertex:5485-5495` use zero for missing
+x/y/z before their existing unit factors. Rust destination is the single
+`project/model_xml.rs::Vertex` decoder through `project/load/graph.rs`; no
+role-specific DTO partition. Triangle `v1/v2/v3` zero defaults at main `:3814`
+and resource `:5527` are explicitly deferred. Preserve explicit coordinates,
+unit scaling, mesh finite/index checks, XML security, and both roles. SPEC review
+and input approval precede any Native/API/CLI/test/fixture work. Public RED must
+assert target Native equality and fail until GREEN; controls assert equality.
+[SPEC](architecture/3mf-resource-vertex-defaults-spec.md),
 [ARD](architecture/ard-3mf-resource-vertex-defaults.md).
 
 ### Resource build/item non-consumption: proposed ObjectImporter SPEC (2026-10-15)
