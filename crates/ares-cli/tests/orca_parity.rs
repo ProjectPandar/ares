@@ -49,6 +49,8 @@ mod bridge_over_infill_zero_density;
 mod brim_bed_region;
 #[path = "orca_parity/brim_bed_region_controls.rs"]
 mod brim_bed_region_controls;
+#[path = "orca_parity/brim_ears_w5.rs"]
+mod brim_ears_w5;
 #[path = "orca_parity/brim_efc_outline.rs"]
 mod brim_efc_outline;
 #[path = "orca_parity/brim_inner_only_w5.rs"]
