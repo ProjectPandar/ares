@@ -271,7 +271,10 @@ impl ProjectSettingsRaw {
     /// this runs), so the range loop reads `RawConfigValue` elements
     /// directly — the same values upstream `Slic3r::validate` sees on the
     /// post-normalize config.
-    pub(crate) fn loaded_range_options(&self) -> Result<BTreeMap<String, String>, SliceError> {
+    pub(crate) fn loaded_range_options(
+        &self,
+        validate_print: bool,
+    ) -> Result<BTreeMap<String, String>, SliceError> {
         let mut errors = BTreeMap::new();
         collect_range_errors(self.as_map(), &mut errors)?;
         // `PrintConfig.cpp:10504-10517`: the line-width nozzle bound (bridge
@@ -283,7 +286,11 @@ impl ProjectSettingsRaw {
             })?;
         // `PrintConfig.cpp:3904-3920`: known flavor tokens must also be allowed.
         merge_first(&mut errors, normalized.validate_gcode_flavor_option()?);
-        merge_first(&mut errors, normalized.validate_bridge_flow_options()?);
+        // `PrintConfig.cpp:10426-10434` belongs to validate(), not process().
+        // Pure processing retains the existing Flow preflight error boundary.
+        if validate_print {
+            merge_first(&mut errors, normalized.validate_bridge_flow_options()?);
+        }
         merge_first(&mut errors, normalized.validate_infill_pattern_options()?);
         merge_first(&mut errors, normalized.validate_extrusion_width_options()?);
         Ok(errors)
@@ -297,8 +304,9 @@ impl crate::ProjectSettings {
     pub(crate) fn validate_loaded_config(
         &self,
         raw: &ProjectSettingsRaw,
+        validate_print: bool,
     ) -> Result<(), SliceError> {
-        let mut errors = raw.loaded_range_options()?;
+        let mut errors = raw.loaded_range_options(validate_print)?;
         // O2 (firmware/wipe) writes the same std::map (PrintConfig.cpp:10391).
         merge_first(&mut errors, self.validate_loaded_retraction_map()?);
         loaded_config_error(errors)

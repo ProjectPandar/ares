@@ -47,9 +47,10 @@ pub(super) fn prepare_project_source(
     // `OrcaSlicer.cpp:2653-2654`: the plain-3MF compatible-printers gate
     // fires after load and before parameter validation.
     super::compatibility::reject_incompatible_process(&project.documents().project_settings_raw)?;
-    project
-        .settings()
-        .validate_loaded_config(&project.documents().project_settings_raw)?;
+    project.settings().validate_loaded_config(
+        &project.documents().project_settings_raw,
+        source.validate_print,
+    )?;
     project.initialize_cli_loaded_project_config();
     // CLI:2656 commits the original-machine report before plate selection
     // and Print::validate. Early load/config failures above cannot leak it.

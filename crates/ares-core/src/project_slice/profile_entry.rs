@@ -15,7 +15,7 @@ pub(crate) fn validate_profile_source(
     let project = load_with_profile(source, profile)?;
     project
         .settings()
-        .validate_loaded_config(&project.documents().project_settings_raw)?;
+        .validate_loaded_config(&project.documents().project_settings_raw, true)?;
     crate::print::validate::validate_loaded_project(
         project,
         source.plate,
@@ -107,9 +107,10 @@ pub(super) fn prepare_profile_slice(
             names,
         )?;
     }
-    loaded
-        .settings()
-        .validate_loaded_config(&loaded.documents().project_settings_raw)?;
+    loaded.settings().validate_loaded_config(
+        &loaded.documents().project_settings_raw,
+        project.validate_print,
+    )?;
     state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,
