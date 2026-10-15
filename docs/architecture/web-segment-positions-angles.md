@@ -129,6 +129,10 @@ Deferred: ORCA bias (as ruled), option markers (`ShadersES.hpp:159-216`), cog/to
 markers, and the GL texture packing of positions/sizes (the web uses instanced
 attributes; the values per instance are the same).
 
+Deferred by COORD ruling on RED `0c3a5f021`: per-end segment color. Upstream colors
+each end by its own vertex (`ShadersES.hpp:101,145`, `color_tex` at `id`); the web
+keeps one color per instance, that of the end vertex.
+
 RED 2 (test-only, after a scaffold): a new production read-out
 `data-segment-geometry` = `instanceCount:FNV-1a32` over the f32 bytes of
 `aStart`, `aEnd` and `aAngles` per instance (pure read-out, like `data-segment-sizes`).
