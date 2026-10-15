@@ -295,6 +295,11 @@ impl ProjectSettingsRaw {
                 &mut errors,
                 normalized.validate_extruder_clearance_options()?,
             );
+            // `PrintConfig.cpp:10449-10454`: reject any nonpositive flow ratio.
+            merge_first(
+                &mut errors,
+                normalized.validate_filament_flow_ratio_options()?,
+            );
         }
         merge_first(&mut errors, normalized.validate_infill_pattern_options()?);
         merge_first(&mut errors, normalized.validate_extrusion_width_options()?);
