@@ -1,0 +1,38 @@
+--- upstream excerpts
++++ segment-hw/kernel.hpp
+@@ -1,8 +1,13 @@
+-    float m_travels_radius{ DEFAULT_TRAVELS_RADIUS_MM };
+-    float m_wipes_radius{ DEFAULT_WIPES_RADIUS_MM };
++// ViewerImpl.hpp:234,238 radius defaults, ViewerImpl.cpp:909-983 Vec4 and extract_pos_and_or_hwa,
++// ViewerImpl.cpp:1648-1658 radius setters over a caller-owned radius.
++namespace libvgcode {
++    inline constexpr float default_travels_radius{ DEFAULT_TRAVELS_RADIUS_MM };
++
++    inline constexpr float default_wipes_radius{ DEFAULT_WIPES_RADIUS_MM };
++
+ using Vec4 = std::array<float, 4>;
+ 
+-static void extract_pos_and_or_hwa(const std::vector<PathVertex>& vertices, float travels_radius, float wipes_radius, BitSet<>& valid_lines_bitset,
++inline void extract_pos_and_or_hwa(const std::vector<PathVertex>& vertices, float travels_radius, float wipes_radius, BitSet<>& valid_lines_bitset,
+     std::vector<Vec4>* positions = nullptr, std::vector<Vec4>* heights_widths_angles = nullptr, bool update_bitset = false) {
+   static constexpr const Vec3 ZERO = { 0.0f, 0.0f, 0.0f };
+     if (positions == nullptr && heights_widths_angles == nullptr)
+@@ -75,13 +80,14 @@
+         }
+     }
+ }
+-void ViewerImpl::set_travels_radius(float radius)
++
++inline void set_travels_radius(float& m_travels_radius, float radius)
+ {
+     m_travels_radius = std::clamp(radius, MIN_TRAVELS_RADIUS_MM, MAX_TRAVELS_RADIUS_MM);
+-    update_heights_widths();
+ }
+-void ViewerImpl::set_wipes_radius(float radius)
++
++inline void set_wipes_radius(float& m_wipes_radius, float radius)
+ {
+     m_wipes_radius = std::clamp(radius, MIN_WIPES_RADIUS_MM, MAX_WIPES_RADIUS_MM);
+-    update_heights_widths();
++}
+ }
