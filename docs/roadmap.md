@@ -7,23 +7,41 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### Referenced 3MF resource-part build omission: proposed loader SPEC (2026-10-15)
+### Resource build/item non-consumption: proposed ObjectImporter SPEC (2026-10-15)
 
-Worker4 next source slice: `Format/bbs_3mf.cpp::ObjectImporter` active resource
-parser (extract993/5715, dispatch5612-5687) does not require build/item; main
-instance creation remains separate. Rust destination: private `project/model_xml`
-and `project/load/graph` part-role decoding, not a new importer/pipeline.
-Retained v1 body/modifier omission is an old admission finding, not current RED
-or proof about a missing main build. Boundary c6a9e152a approved; amended seam is
-fresh Native --slice first in both modes on identical frozen3MF, then public
-slice_project_plate_validated + real CLI, full generator-only comparison/raw
-API-CLI equality. First e1de695aa RED rejected: old control had independent
-M73/G1 insertion drift; [deferred discovery](architecture/discovery-m73-resource-control-order.md),
-no work there. New input revision proposes exact FULL16 strict-PASS control-before50
-SHAadb38ee8 and positive0eab5d4d (only resource empty-build removed); full SHAs/proof
-in SPEC. Docs review before new execution, no export/load-only oracle. Exit:
-qualified public admission RED with control full PASS, unchanged main/security/
-graph behavior and separately approved bounded GREEN; residual G-code STOP/report. [SPEC](architecture/3mf-resource-part-build-spec.md),
+Worker4 next source slice: `Format/bbs_3mf.cpp::ObjectImporter` resource start/end
+handlers5612-5687 do not dispatch build/item; active workers1780-1817 differ from
+main `_handle_start_item:3893-3909`. Approved omission GREEN still deserializes
+present resource `BuildItem` fields. Rust destination is private
+`project/model_xml.rs` and `project/load/graph.rs` role-aware transport; replace
+that resource/main payload conflation, not an Ares-owned loader/pipeline.
+Propose unchanged strict-PASS controladb38ee8 and a single resource-entry edit
+`<build/>`→`<build><item/></build>` to witness non-consumption of main-item
+attributes. This well-formed-XML probe is not claimed schema-valid for a main
+build. Static prediction only: no positive generated or runtime RED claimed.
+SPEC/input approval before any fixture/test freeze or execution; each enabled
+test always Native→public, no staged bypass/injected references. Exit: complete
+neutral Native slices, attributable public admission RED with whole strict-PASS
+control, then separately authorized GREEN/full parity and 3MF/load nonregression.
+Main schema/security/instance behavior unchanged; M73 discovery stays deferred.
+[SPEC](architecture/3mf-resource-build-item-ignore-spec.md),
+[proposed ARD](architecture/ard-3mf-resource-build-item-ignore.md).
+
+### Referenced 3MF resource-part build omission: approved GREEN, stack-17 (2026-10-15)
+
+Worker4 ports `Format/bbs_3mf.cpp::ObjectImporter` resource build-omission semantics
+(active workers1780-1817, dispatch5612-5687, end_model5323-5327) into private
+`project/model_xml.rs`/`project/load/graph.rs` role-aware decoding under
+`load_project_with_preparation`. Main required Build remains unchanged. Approved
+public RED `a88578afa946db02e4e6d68420730b8dae71902f` always executes fresh
+Native→public; old e1/ad442 rejected commits are not its ancestor chain. Exact
+controladb38ee8/positive0eab5d4d differ only by resource empty-build omission.
+Owner approved GREEN `87ac91eb5243d70138681e12a5c2b20602cc92bc` for stack-17;
+RED may merge only with GREEN. No GREEN batch rerun after API/socket failures.
+The independent [M73 discovery](architecture/discovery-m73-resource-control-order.md)
+is archived/deferred, no work. Present nonempty resource build/item behavior is
+separate proposed work above, not implicitly included in this omission GREEN.
+[SPEC](architecture/3mf-resource-part-build-spec.md),
 [ARD](architecture/ard-3mf-resource-part-build.md).
 
 ### Arachne fuzzy-skin junctions: proposed SPEC (2026-10-13)
