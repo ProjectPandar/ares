@@ -44,6 +44,7 @@ pub struct ViewerImpl {
     valid_lines: Vec<bool>,
     enabled_segments: Vec<u32>,
     enabled_options: Vec<u32>,
+    radii: heights_widths::Radii,
 }
 
 /// `is_visible` (ViewerImpl.cpp:1713-1726): options by option visibility,

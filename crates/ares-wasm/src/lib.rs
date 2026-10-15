@@ -4,6 +4,7 @@ mod colors;
 mod custom_gcode_overview;
 mod estimation;
 mod filament_legend;
+mod heights_widths;
 mod moves;
 mod profiles;
 mod raw_moves;

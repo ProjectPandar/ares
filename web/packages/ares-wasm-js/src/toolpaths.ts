@@ -42,6 +42,8 @@ export interface Toolpaths {
   extrusionRoles: Uint8Array<ArrayBuffer>;
   /** Normal-mode `get_extrusion_role_estimated_time` of each `extrusionRoles` id, seconds. */
   extrusionRoleTimes: Float32Array<ArrayBuffer>;
+  /** libvgcode `extract_pos_and_or_hwa` `[height, width]` of each vertex (travels / wipes at their radius). */
+  heightsWidths: Float32Array<ArrayBuffer>;
   /** Normal-mode `get_travels_estimated_time`, seconds (an f32). */
   travelsTime: number;
   /** Normal-mode `ViewerImpl::get_estimated_time`, seconds (an f32). */

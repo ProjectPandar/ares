@@ -10,17 +10,13 @@ const TRAVEL = MOVE_TYPES.indexOf("Travel");
 const WIPE = MOVE_TYPES.indexOf("Wipe");
 const CUSTOM = EXTRUSION_ROLES.indexOf("Custom");
 const STRIDE = VERTEX_VALUES.length;
-const HEIGHT = VERTEX_VALUES.indexOf("height");
-const WIDTH = VERTEX_VALUES.indexOf("width");
 /** `aKind` of travels and wipes: this plus their `EOptionType` index, above the role ids. */
 const KIND_OPTION = 32;
-/** Cross-section of travel / wipe moves, which carry no extrusion size. */
-const OPTION_SIZE = 0.08;
 
 const vertexShader = /* glsl */ `
 in vec3 aStart;
 in vec3 aEnd;
-in vec2 aSize;
+in vec4 aSize;
 in vec3 aColor;
 in float aLayer;
 in float aKind;
@@ -50,10 +46,13 @@ void main() {
   side = length(side) > 1e-6 ? normalize(side) : vec3(0.0, 1.0, 0.0);
   vec3 up = cross(along, side);
   // Unit box: x along [0, 1], y across [-0.5, 0.5], z down from the nozzle
-  // [-1, 0]; ends grow by half a width so corners close.
-  float cap = 0.5 * aSize.x;
-  vec3 local = aStart + along * (position.x * (len + 2.0 * cap) - cap)
-    + side * (position.y * aSize.x) + up * (position.z * aSize.y);
+  // [-1, 0]; each end takes the [height, width] of its own vertex
+  // (Shaders.hpp:91-118) and grows by half its width so corners close.
+  vec2 hw = position.x < 0.5 ? aSize.xy : aSize.zw;
+  float capStart = 0.5 * aSize.y;
+  float capEnd = 0.5 * aSize.w;
+  vec3 local = aStart + along * (position.x * (len + capEnd) - (1.0 - position.x) * capStart)
+    + side * (position.y * hw.y) + up * (position.z * hw.x);
   vNormal = normalize(normalMatrix * (along * normal.x + side * normal.y + up * normal.z));
   vColor = aColor;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(local, 1.0);
@@ -79,10 +78,10 @@ void main() {
  * update uniforms.
  */
 export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
-  const { values, ids, tags, options, colors, vertexCount } = toolpaths;
+  const { values, ids, tags, options, colors, heightsWidths, vertexCount } = toolpaths;
   const start = new Float32Array(vertexCount * 3);
   const end = new Float32Array(vertexCount * 3);
-  const size = new Float32Array(vertexCount * 2);
+  const size = new Float32Array(vertexCount * 4);
   const color = new Uint8Array(vertexCount * 3);
   const layer = new Float32Array(vertexCount);
   const kind = new Uint8Array(vertexCount);
@@ -102,8 +101,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     const extrude = type === EXTRUDE;
     const role = tags[4 * i];
     if (extrude && role !== CUSTOM) bounds.expandByPoint(point.fromArray(values, a)).expandByPoint(point.fromArray(values, b));
-    size[count * 2] = extrude ? values[b + WIDTH] : OPTION_SIZE;
-    size[count * 2 + 1] = extrude ? values[b + HEIGHT] : OPTION_SIZE;
+    size.set(heightsWidths.subarray(2 * (i - 1), 2 * i + 2), count * 4);
     const id = extrude ? role : KIND_OPTION + options[i];
     color.set(colors.subarray(3 * i, 3 * i + 3), count * 3);
     vertex[count] = i;
@@ -120,7 +118,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   geometry.setAttribute("normal", box.getAttribute("normal"));
   geometry.setAttribute("aStart", new THREE.InstancedBufferAttribute(start.subarray(0, count * 3), 3));
   geometry.setAttribute("aEnd", new THREE.InstancedBufferAttribute(end.subarray(0, count * 3), 3));
-  geometry.setAttribute("aSize", new THREE.InstancedBufferAttribute(size.subarray(0, count * 2), 2));
+  geometry.setAttribute("aSize", new THREE.InstancedBufferAttribute(size.subarray(0, count * 4), 4));
   geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(color.subarray(0, count * 3), 3, true));
   geometry.setAttribute("aLayer", new THREE.InstancedBufferAttribute(layer.subarray(0, count), 1));
   geometry.setAttribute("aKind", new THREE.InstancedBufferAttribute(kind.subarray(0, count), 1));
@@ -188,10 +186,8 @@ export function applyEnabled(mesh: THREE.Mesh, segments: Uint32Array, options: U
 export function segmentSizesProbe(mesh: THREE.Mesh): string {
   const geometry = mesh.geometry as THREE.InstancedBufferGeometry;
   const size = geometry.getAttribute("aSize").array as Float32Array;
-  const ends = new Float32Array(geometry.instanceCount * 4);
-  for (let n = 0; n < geometry.instanceCount; n++) ends.set([size[2 * n + 1], size[2 * n], size[2 * n + 1], size[2 * n]], 4 * n);
   let hash = 0x811c9dc5;
-  for (const byte of new Uint8Array(ends.buffer)) hash = Math.imul(hash ^ byte, 0x01000193);
+  for (const byte of new Uint8Array(size.buffer, size.byteOffset, size.byteLength)) hash = Math.imul(hash ^ byte, 0x01000193);
   return `${geometry.instanceCount}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }
 
