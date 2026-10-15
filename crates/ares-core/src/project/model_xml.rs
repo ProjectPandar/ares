@@ -173,13 +173,14 @@ pub(crate) struct Vertices {
     pub vertices: Vec<Vertex>,
 }
 
+// bbs_3mf.cpp:3772-3782 / :5485-5495: missing x/y/z read as zero (bbs_get_attribute_value_float).
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct Vertex {
-    #[serde(rename = "@x")]
+    #[serde(rename = "@x", default)]
     pub x: f32,
-    #[serde(rename = "@y")]
+    #[serde(rename = "@y", default)]
     pub y: f32,
-    #[serde(rename = "@z")]
+    #[serde(rename = "@z", default)]
     pub z: f32,
 }
 
