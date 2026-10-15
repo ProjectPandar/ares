@@ -39,6 +39,8 @@ mod arachne_fuzzy_f1;
 mod arachne_fuzzy_f2;
 #[path = "orca_parity/artifacts.rs"]
 mod artifacts;
+#[path = "orca_parity/bridge_flow_admission.rs"]
+mod bridge_flow_admission;
 #[path = "orca_parity/bridge_over_infill_filament.rs"]
 mod bridge_over_infill_filament;
 #[path = "orca_parity/bridge_over_infill_zero_density.rs"]
