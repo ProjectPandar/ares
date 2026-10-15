@@ -326,37 +326,25 @@ pub(in crate::project_slice) fn generate_layer(
             prepared.predecessor.objects[object_index].records[record_index].as_ref(),
             prelude.records[record_index].as_ref(),
         ) {
-            spans.push((record_index, record, input));
+            let region = prelude.region_options(input);
+            let model_rotation_offset = if region.align_infill_direction_to_model.0 {
+                input.model_rotation_rad as f32
+            } else {
+                0.0
+            };
+            let sort_key = super::ironing::span_sort_key(
+                region,
+                object_options,
+                &traversal.resolved.views.full.process.region,
+                &traversal.resolved.views.full.project.print.nozzle_diameter,
+                layer,
+                &plan.layers,
+                model_rotation_offset,
+            )?;
+            spans.push((sort_key, record, input));
         }
     }
-    spans.sort_by(|(_, _, left), (_, _, right)| {
-        let left = prelude.region_options(left);
-        let right = prelude.region_options(right);
-        left.top_surface_filament_id
-            .0
-            .cmp(&right.top_surface_filament_id.0)
-            .then_with(|| {
-                left.filament_ironing_spacing
-                    .0
-                    .total_cmp(&right.filament_ironing_spacing.0)
-            })
-            .then_with(|| {
-                (object_options.layer_height.0 * left.filament_ironing_flow.0)
-                    .total_cmp(&(object_options.layer_height.0 * right.filament_ironing_flow.0))
-            })
-            .then_with(|| {
-                left.filament_ironing_speed
-                    .0
-                    .total_cmp(&right.filament_ironing_speed.0)
-            })
-            .then_with(|| left.ironing_angle.0.total_cmp(&right.ironing_angle.0))
-            .then_with(|| left.ironing_angle_fixed.0.cmp(&right.ironing_angle_fixed.0))
-            .then_with(|| {
-                left.filament_ironing_inset
-                    .0
-                    .total_cmp(&right.filament_ironing_inset.0)
-            })
-    });
+    spans.sort_by(|(left, _, _), (right, _, _)| left.cmp(right));
     let mut previous_ironing_pattern = None;
     for (_, record, input) in spans {
         let region = prelude.region_options(input);
