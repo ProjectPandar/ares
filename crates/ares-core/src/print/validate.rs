@@ -166,7 +166,7 @@ pub fn validate_project_plate(
     let mut project = crate::project::load_project_with(input, overrides)?;
     project
         .settings()
-        .validate_loaded_config(&project.documents().project_settings_raw)?;
+        .validate_loaded_config(&project.documents().project_settings_raw, true)?;
     project.initialize_cli_loaded_project_config();
     validate_loaded_project(project, plate, None)
 }
