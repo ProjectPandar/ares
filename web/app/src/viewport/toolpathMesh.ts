@@ -218,6 +218,9 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   geometry.setAttribute("aEnabled", new THREE.InstancedBufferAttribute(new Uint8Array(count).fill(1), 1));
   geometry.instanceCount = count;
   geometry.boundingBox = bounds;
+  // The template "position" holds vertex ids, not coordinates; the renderer's
+  // depth sort must not derive a sphere from it.
+  geometry.boundingSphere = bounds.getBoundingSphere(new THREE.Sphere());
 
   const material = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3,
