@@ -283,6 +283,7 @@ impl ProjectSettingsRaw {
             })?;
         // `PrintConfig.cpp:3904-3920`: known flavor tokens must also be allowed.
         merge_first(&mut errors, normalized.validate_gcode_flavor_option()?);
+        merge_first(&mut errors, normalized.validate_bridge_flow_options()?);
         merge_first(&mut errors, normalized.validate_infill_pattern_options()?);
         merge_first(&mut errors, normalized.validate_extrusion_width_options()?);
         Ok(errors)
