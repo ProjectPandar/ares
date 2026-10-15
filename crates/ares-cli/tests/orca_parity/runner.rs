@@ -14,6 +14,9 @@ mod crosshatch_dont_connect;
 #[path = "runner/concentric_sparse_multiline.rs"]
 mod concentric_sparse_multiline;
 
+#[path = "runner/modifier_sparse_loss.rs"]
+mod modifier_sparse_loss;
+
 use std::path::{Path, PathBuf};
 
 #[path = "runner/tpms_d_rotation_precision.rs"]
