@@ -22,16 +22,16 @@ pub(crate) struct ModelDocument<B = Build> {
     pub build: B,
 }
 
-impl ModelDocument<Option<Build>> {
+impl ModelDocument<Option<serde::de::IgnoredAny>> {
     pub(crate) fn into_resource_document(self) -> ModelDocument {
-        // bbs_3mf.cpp ObjectImporter:5612-5687/5323-5327 has no build requirement.
-        // Resource builds do not create instances; only the main build does.
+        // bbs_3mf.cpp ObjectImporter start/end dispatch:5612-5687 ignores build/item;
+        // only the main _handle_start_item:3893-3909 creates instances.
         ModelDocument {
             unit: self.unit,
             required_extensions: self.required_extensions,
             metadata: self.metadata,
             resources: self.resources,
-            build: self.build.unwrap_or(Build { items: Vec::new() }),
+            build: Build { items: Vec::new() },
         }
     }
 }

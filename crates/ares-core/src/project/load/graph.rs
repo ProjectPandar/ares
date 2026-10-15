@@ -5,7 +5,7 @@ use crate::SliceError;
 use super::super::{
     PackagePath, ProjectArchive,
     content_types::{ContentTypes, MODEL_CONTENT_TYPE, RELATIONSHIPS_CONTENT_TYPE},
-    model_xml::{Build, ModelDocument, ModelObject},
+    model_xml::{ModelDocument, ModelObject},
     relationships::{MODEL_RELATIONSHIP_TYPE, Relationships},
     xml::{XmlRole, deserialize_xml},
 };
@@ -113,7 +113,7 @@ pub(super) fn load(
         let document = if path == root {
             deserialize_xml::<ModelDocument>(&bytes, XmlRole::Model)?
         } else {
-            deserialize_xml::<ModelDocument<Option<Build>>>(&bytes, XmlRole::Model)?
+            deserialize_xml::<ModelDocument<Option<serde::de::IgnoredAny>>>(&bytes, XmlRole::Model)?
                 .into_resource_document()
         };
         document.validate()?;
