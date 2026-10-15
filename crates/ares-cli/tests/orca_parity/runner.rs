@@ -41,6 +41,8 @@ use serde_json::{Map, Value};
 
 #[path = "runner/grid_multiline_mode0.rs"]
 mod grid_multiline_mode0;
+#[path = "runner/lateral_multiline_overlap.rs"]
+mod lateral_multiline_overlap;
 #[path = "runner/rectilinear_multiline.rs"]
 mod rectilinear_multiline;
 #[path = "runner/triangles_multiline_mode1.rs"]
