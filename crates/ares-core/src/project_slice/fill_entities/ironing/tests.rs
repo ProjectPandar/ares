@@ -36,6 +36,7 @@ fn emit(domain: ExPolygon, spacing: f64) -> LayerFillEntities {
             default_region: &settings.process.region,
             layer_slices: std::slice::from_ref(&domain),
             region: &region,
+            dont_alternate_fill_direction: false,
             object: &object,
             nozzles: &nozzles,
             layer: &layer,

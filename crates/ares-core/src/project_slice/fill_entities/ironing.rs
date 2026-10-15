@@ -27,6 +27,7 @@ pub(super) struct Input<'a> {
     pub(super) record: &'a PreparedSurfaceTypeRecord,
     pub(super) layer_slices: &'a [ExPolygon],
     pub(super) region: &'a RegionOptions,
+    pub(super) dont_alternate_fill_direction: bool,
     pub(super) object: &'a ObjectOptions,
     /// `default_region_config()` — print-level process region options for
     /// the meta-language B/T shell units (`Fill.cpp:125-127`).
@@ -128,8 +129,7 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
             &area,
             MonotonicFillParams {
                 // Fill.cpp:1631/1705-1723 -> FillBase.cpp:311-313.
-                dont_alternate_fill_direction: input.region.zaa_enabled.0
-                    && input.region.zaa_dont_alternate_fill_direction.0,
+                dont_alternate_fill_direction: input.dont_alternate_fill_direction,
                 spacing,
                 overlap: 0.0,
                 density: 1.0,

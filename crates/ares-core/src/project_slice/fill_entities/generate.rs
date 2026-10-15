@@ -319,6 +319,7 @@ pub(in crate::project_slice) fn generate_layer(
             .push((region_id, collection_start..output.collections.len()));
     }
     let region_count = prelude.records.len() / plan.layers.len();
+    let mut previous_ironing_pattern = ProcessInfillPattern::Rectilinear;
     for region_index in 0..region_count {
         let record_index = region_index * plan.layers.len() + layer_index;
         let (Some(record), Some(input)) = (
@@ -329,12 +330,17 @@ pub(in crate::project_slice) fn generate_layer(
         };
         let region = prelude.region_options(input);
         let collection_start = output.collections.len();
+        let pattern_replaced = region.ironing_pattern != previous_ironing_pattern;
+        previous_ironing_pattern = region.ironing_pattern;
         super::ironing::append(
             &mut output,
             super::ironing::Input {
                 record,
                 layer_slices: &object_slices[layer_index],
                 region,
+                dont_alternate_fill_direction: region.zaa_enabled.0
+                    && region.zaa_dont_alternate_fill_direction.0
+                    && !pattern_replaced,
                 object: object_options,
                 default_region: &traversal.resolved.views.full.process.region,
                 nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
