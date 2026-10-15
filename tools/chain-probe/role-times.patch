@@ -1,0 +1,22 @@
+diff --git a/src/OrcaSlicer.cpp b/src/OrcaSlicer.cpp
+--- a/src/OrcaSlicer.cpp
++++ b/src/OrcaSlicer.cpp
+@@ -65,6 +65,7 @@
+ #include "libslic3r/Format/OBJ.hpp"
+ #include "libslic3r/Format/SL1.hpp"
+ #include "libslic3r/Utils.hpp"
++#include "role-times-oracle.hpp"
+ #include "libslic3r/Time.hpp"
+ #include "libslic3r/Thread.hpp"
+ #include "libslic3r/BlacklistedLibraryCheck.hpp"
+@@ -7565,6 +7566,10 @@
+             processor.apply_config(config);
+             processor.process_file(argv[i + 1]);
+             const auto& result = processor.get_result();
++            for (int j = 1; j + 1 < argc; ++j)
++                if (strcmp(argv[j], "--dump-role-times") == 0)
++                    if (!role_times_source::dump(result, argv[j + 1]))
++                        return 1;
+             for (int m = 0; m < static_cast<int>(PrintEstimatedStatistics::ETimeMode::Count); ++m) {
+                 auto mode = static_cast<PrintEstimatedStatistics::ETimeMode>(m);
+                 if (result.print_statistics.modes[(size_t)mode].time > 0.0f)

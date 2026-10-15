@@ -1,0 +1,65 @@
+--- upstream excerpts
++++ role-times/kernel.hpp
+@@ -1,22 +1,43 @@
++// ViewerImpl::load (ViewerImpl.cpp:1002-1018): only the time and role accumulators.
++inline void load_times(const std::vector<libvgcode::PathVertex>& m_vertices, std::array<float, libvgcode::TIME_MODES_COUNT>& m_total_time,
++    std::array<float, libvgcode::TIME_MODES_COUNT>& m_travels_time, libvgcode::ExtrusionRoles& m_extrusion_roles)
++{
++    using namespace libvgcode;
+     for (size_t i = 0; i < m_vertices.size(); ++i) {
+         const PathVertex& v = m_vertices[i];
++
+         for (size_t j = 0; j < TIME_MODES_COUNT; ++j) {
+             m_total_time[j] += v.times[j];
+             if (v.type == EMoveType::Travel)
+                 m_travels_time[j] += v.times[j];
+         }
++
+         if (v.type == EMoveType::Extrude) {
+             m_extrusion_roles.add(v.role, v.times);
++        }
++    }
++}
++
++// GCodeViewer::render_legend (GCodeViewer.cpp:3151, 3410-3418, 3638-3650, 3659-3668):
++// the Feature Type Time and % cells; Usage cells are a later slice.
++template <class Viewer>
++inline void feature_type_cells(const Viewer& m_viewer, const Slic3r::PrintEstimatedStatistics::Mode& time_mode,
++    std::vector<std::string>& labels, std::vector<std::string>& times, std::vector<std::string>& percents,
++    std::string& travel_time, std::string& travel_percent)
++{
+     const float total_estimated_time = time_mode.time > 0.0f ? time_mode.time : m_viewer.get_estimated_time();
+-    auto role_time_and_percent = [this, total_estimated_time](libvgcode::EGCodeExtrusionRole role) {
++
++    auto role_time_and_percent = [&m_viewer, total_estimated_time](libvgcode::EGCodeExtrusionRole role) {
+         const float time = m_viewer.get_extrusion_role_estimated_time(role);
+         return std::make_pair(time, total_estimated_time > 0.0f ? time / total_estimated_time : 0.0f);
+     };
+ 
+-    auto travel_time_and_percent = [this, total_estimated_time]() {
++    auto travel_time_and_percent = [&m_viewer, total_estimated_time]() {
+         const float time = m_viewer.get_travels_estimated_time();
+         return std::make_pair(time, total_estimated_time > 0.0f ? time / total_estimated_time : 0.0f);
+     };
++
++    {
+         char buffer[64];
+         const std::vector<libvgcode::EGCodeExtrusionRole>& roles = m_viewer.get_extrusion_roles();
+         for (libvgcode::EGCodeExtrusionRole role : roles) {
+@@ -30,6 +51,9 @@
+                 else
+                     percent > 0.001 ? ::sprintf(buffer, "%.1f", percent * 100) : ::sprintf(buffer, "<0.1");
+                 percents.push_back(buffer);
++            }
++        }
++
+         //BBS: get travel time and percent
+         {
+             auto [time, percent] = travel_time_and_percent();
+@@ -40,3 +64,6 @@
+                 percent > 0.001 ? ::sprintf(buffer, "%.1f", percent * 100) : ::sprintf(buffer, "<0.1");
+             travel_percent = buffer;
+             percents.push_back(travel_percent);
++        }
++    }
++}
