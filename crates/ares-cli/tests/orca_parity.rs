@@ -61,6 +61,10 @@ mod brim_outer_inner_w8;
 mod brim_outeronly_w5;
 #[path = "orca_parity/brim_painted_ctl.rs"]
 mod brim_painted_ctl;
+#[path = "orca_parity/brim_painted_efc_ctl.rs"]
+mod brim_painted_efc_ctl;
+#[path = "orca_parity/brim_painted_efc_w5.rs"]
+mod brim_painted_efc_w5;
 #[path = "orca_parity/brim_painted_inner_ctl.rs"]
 mod brim_painted_inner_ctl;
 #[path = "orca_parity/brim_painted_inner_w5.rs"]

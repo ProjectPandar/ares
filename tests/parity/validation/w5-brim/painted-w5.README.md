@@ -22,3 +22,16 @@
 - painted-inner-ctl-w5.3mf  sha256=bdb02a48d4da6c24f8a622836356499347d1166dee0611a265925ce787801bdd
   same input without brim_ear_points.txt (control): both engines emit
   no brim and must match byte-for-byte.
+
+## btPainted EFC snap (Brim.cpp:392-411)
+
+- painted-efc-w5.3mf  sha256=c92ffdef749533af50bdb063c9d7d838f8802460f4564260f5985297c9750a68
+  painted-inner fixture base with brim_use_efc_outline=1 and
+  elefant_foot_compensation 0.1 / 1 layer / no raft (gate :56-62).
+  Native snaps the painted ear centre to the closest vertex of the
+  EFC-adjusted bottom outline (:392-411, vertex-level via
+  closest_point_on_matching_island :99-108); the skirt follows the
+  changed brim hull. Ares (pre-GREEN) does not snap: RED.
+- painted-efc-ctl-w5.3mf  sha256=03660965077394763c5841a1e3a78c9e3e11b2833fb902a5e55b20c0c62c837a
+  same input with brim_use_efc_outline=0 (gate closed): native and ares
+  stay byte-identical; must PASS.
