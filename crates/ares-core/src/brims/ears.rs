@@ -19,6 +19,10 @@ pub(crate) struct AreaParameters {
 
 pub(crate) struct PaintedParameters {
     pub(crate) gap: f32,
+    /// Config brim width already quantized to even brim flow widths and
+    /// scaled (`Brim.cpp:445`); the `brim_width` of the inner branch
+    /// (`:546`).
+    pub(crate) width: f32,
     pub(crate) spacing: f32,
     pub(crate) resolution: f64,
     /// Brim flow width in millimetres (`print.brim_flow()` spacing), the
@@ -34,18 +38,36 @@ pub(crate) struct PaintedParameters {
 /// per-point discs minus the object contour offset. The EFC snapping
 /// branch (:377-404) is deferred with the EFC chain; the inner call site
 /// (:551) needs a holed fixture and stays deferred.
+/// `Brim.cpp:383-388`: the POLY_SIDE_COUNT-sided ear circle (24,
+/// libslic3r.h:72) translated to the truncating-scaled ear centre.
+fn ear_disc(center_x: i64, center_y: i64, size: i64) -> Polygon {
+    Polygon::new(
+        (0..24)
+            .map(|index| {
+                let angle = 2.0 * std::f64::consts::PI * f64::from(index) / 24.0;
+                Point::new(
+                    center_x + (size as f64 * angle.cos()).round() as i64,
+                    center_y + (size as f64 * angle.sin()).round() as i64,
+                )
+            })
+            .collect(),
+    )
+}
+
 pub(crate) fn painted(
     source: &[ExPolygon],
     parameters: PaintedParameters,
 ) -> Result<(Vec<ExPolygon>, Vec<ExPolygon>), SliceError> {
     let PaintedParameters {
         gap,
+        width,
         spacing,
         resolution,
         flow_width,
         scale,
         points,
     } = parameters;
+    let factor = scale.factor();
     let mut result = Vec::new();
     for poly in source {
         let contour = ExPolygon::new(poly.contour().clone(), Vec::new());
@@ -56,32 +78,61 @@ pub(crate) fn painted(
             // :375/:377-380: the painted radius quantizes to even brim
             // flow widths (the second re-quantization pass over the scaled
             // width collapses to the same millimetre quantization).
-            let width = (radius as f64 / flow_width / 2.0).floor() * flow_width * 2.0;
+            let width_mm = (f64::from(radius) / flow_width / 2.0).floor() * flow_width * 2.0;
             // :382: size_ear = brim_width - brim_offset - scaled spacing.
-            let size_ear = (scale.checked_scale(width).expect("validated brim width") as f32
+            let size_ear = (scale.checked_scale(width_mm).expect("validated brim width") as f32
                 - gap
                 - spacing) as i64;
             // :390-391: int32_t pt_x = scale_(pos.x()) — scale_ is a plain
             // division (libslic3r.h:93), so the conversion truncates
             // toward zero.
-            let factor = scale.factor();
             let center_x = (f64::from(center[0]) / factor) as i64;
             let center_y = (f64::from(center[1]) / factor) as i64;
-            // :383-388: POLY_SIDE_COUNT-sided circle translated to the ear
-            // centre (libslic3r.h:72).
-            let points = (0..24)
-                .map(|index| {
-                    let angle = 2.0 * std::f64::consts::PI * f64::from(index) / 24.0;
-                    Point::new(
-                        center_x + (size_ear as f64 * angle.cos()).round() as i64,
-                        center_y + (size_ear as f64 * angle.sin()).round() as i64,
-                    )
-                })
-                .collect();
-            discs.push(ExPolygon::new(Polygon::new(points), Vec::new()));
+            discs.push(ExPolygon::new(
+                ear_disc(center_x, center_y, size_ear),
+                Vec::new(),
+            ));
         }
         // :544: append(brim_area_object, diff_ex(outerExpoly, innerExpoly)).
         result.extend(difference_ex(&discs, &inner).map_err(geometry_error)?);
+        // :546-556: the inner call site (is_outer_brim=false).
+        let mut holes = Vec::new();
+        for hole in poly.holes() {
+            let mut reversed = hole.clone();
+            reversed.reverse();
+            holes.push(ExPolygon::new(reversed, Vec::new()));
+        }
+        if !holes.is_empty() {
+            // :547 offset_ex with no joinType falls back to
+            // DefaultJoinType jtMiter / DefaultMiterLimit 3
+            // (ClipperUtils.hpp:19/331); only the outer arm at :533 pins
+            // jtRound/SCALED_RESOLUTION. The per-hole ExPolygon list is
+            // equivalent to upstream's single Polygons union as long as
+            // holes never overlap (first-layer lslices holes are
+            // disjoint).
+            let inset = offset_expolygons(&holes, -width - gap, JoinType::Miter, 3.0)
+                .map_err(geometry_error)?;
+            let mut inner_discs = Vec::new();
+            for &(center, radius) in &points {
+                // :375-376 without the :377-380 outer re-quantization:
+                // brim_width = floor(scale_(radius) / flowWidth / 2) *
+                // flowWidth * 2 keeps the scaled/millimetre mix; scale_ is
+                // the plain double division (libslic3r.h:93), so the
+                // quotient stays f64 until the float assignment.
+                let scaled_radius = f64::from(radius) / factor;
+                let mixed = (scaled_radius / flow_width / 2.0).floor() * flow_width * 2.0;
+                let size_ear = (mixed as f32 - gap - spacing) as i64;
+                let center_x = (f64::from(center[0]) / factor) as i64;
+                let center_y = (f64::from(center[1]) / factor) as i64;
+                inner_discs.push(ExPolygon::new(
+                    ear_disc(center_x, center_y, size_ear),
+                    Vec::new(),
+                ));
+            }
+            let ring = difference_ex(&inner_discs, &inset).map_err(geometry_error)?;
+            // :553-554: intersection(diff(outer, inner), holes_rev).
+            result.extend(intersection_ex(&ring, &holes).map_err(geometry_error)?);
+        }
     }
     // :560-570: objectIsland footprint stays the forbidden source.
     let footprint =

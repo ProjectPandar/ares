@@ -178,6 +178,7 @@ impl BrimPlan {
                 &source,
                 crate::brims::ears::PaintedParameters {
                     gap,
+                    width: brim_width,
                     spacing,
                     resolution,
                     flow_width: spacing_mm,
