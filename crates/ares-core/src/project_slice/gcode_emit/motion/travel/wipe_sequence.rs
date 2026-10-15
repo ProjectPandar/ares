@@ -142,7 +142,15 @@ pub(super) fn retract_and_wipe_impl(
         // The before-wipe call emits `max(0, before - m_retracted)`
         // (`Extruder.cpp:77-84`); the post-wipe `retract()` tops the
         // remainder off to the full length.
-        (retraction_length - during - state.extruder.retracted_amount).max(0.0)
+        // `GCodeWriter.cpp:1004-1011`: only overrides above EPSILON
+        // select the explicit length; otherwise use the configured fraction.
+        let override_length = retraction_length - during;
+        let length = if override_length > 1e-4 {
+            override_length
+        } else {
+            requested_before
+        };
+        (length - state.extruder.retracted_amount).max(0.0)
     };
     if state.options.use_firmware_retraction && (has_wipe || !suppressed_tail) {
         firmware_retract(output, state);
