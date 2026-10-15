@@ -101,6 +101,58 @@ difference shows, NO-RED STOP.
 - Bias: the ES shader is the WebGL target upstream ships, so the web follows it. The
   desktop ORCA bias (`ViewerImpl.cpp:970-975`, `Shaders.hpp:93-96,137-138`) is deferred.
 
+## Slice B addendum: ES segment geometry (SPEC, awaiting COORD review)
+
+Slice A merged in stack-19 (`5c7383991`). Slice B replaces the box shell in
+`web/app/src/viewport/toolpathMesh.ts` with the upstream WebGL2 segment draw.
+
+| Upstream | What it does | Ares destination |
+|---|---|---|
+| `SegmentTemplate.cpp:13-27,46-52,81` | 24 template vertices, each carrying its vertex id 0..7, drawn non-indexed and instanced (`glDrawArraysInstanced`) | `toolpathMesh.ts`: `vertexId` attribute (Uint8, 24 entries) instead of `THREE.BoxGeometry` |
+| `ShadersES.hpp:58-142` | segment `id_a -> id_a + 1`: line frame (`:64-80`), view signs table (`:81-100`), endpoint choice (`:101-103`), FIX_TWISTING closer end (`:104-113`), `is_vertical_view` (`:114-115`), half sizes and cross-section (`:116-128`), caps from the angle (`:129-142`) | `toolpathMesh.ts` vertex shader, transcribed line by line |
+| `ShadersES.hpp:44-49,143-147,150-157` | per-vertex `lighting()` with `eye_normal = normalize(pos - endpoint_pos)`; pass-through fragment | same vertex shader; fragment becomes the pass-through (see question 1) |
+| `ViewerImpl.cpp:1300-1302,1940` | camera position from the inverse view matrix, uploaded as a uniform | three.js `cameraPosition` built-in (the toolpath mesh has an identity model matrix) |
+| `ViewerImpl.cpp:1929,1942` | face culling disabled while drawing segments | `THREE.DoubleSide` material |
+
+Data: the worker transfers slice A's `segmentPositions` and `segmentAngles` next to
+`heightsWidths`. `aStart`/`aEnd` come from `segmentPositions` (pushed down) instead of
+the raw `values`, and a new `aAngles` vec2 holds the angles of `id_a`/`id_b`. `aSize`
+keeps its layout, so the approved `data-segment-sizes` probe and its test do not change.
+The paths bounding box keeps the raw positions, as `GCodeViewer::load` does. Instance
+selection (types 8/9/10, zero-length skip), colours, layer/visibility filtering and
+`applyEnabled` are unchanged.
+
+Removed: `BoxGeometry`, the `[z - height, z]` box frame, the half-width flat caps, the
+`normal`-based fragment light.
+
+Deferred: ORCA bias (as ruled), option markers (`ShadersES.hpp:159-216`), cog/tool
+markers, and the GL texture packing of positions/sizes (the web uses instanced
+attributes; the values per instance are the same).
+
+RED 2 (test-only, after a scaffold): a new production read-out
+`data-segment-geometry` = `instanceCount:FNV-1a32` over the f32 bytes of
+`aStart`, `aEnd` and `aAngles` per instance (pure read-out, like `data-segment-sizes`).
+The e2e computes the expected value from the Native oracle `positionOutBits` and
+`hwaBits[2]` over the same instance selection, in `presetSlice` and `slice`. The
+scaffold adds `aAngles` filled with zeros and the probe, so RED fails on the hash
+(raw z and zero angles). The GLSL itself cannot be bit-checked against Native (no
+headless Native GL); it is a transcription of the cited lines, and I'll review it
+through before/after preview crops for every preview PNG. Thresholds stay unchanged.
+
+Failure modes: (1) vertex ids or template order wrong, giving missing or inside-out
+faces; (2) culling left on, so back faces vanish; (3) `cameraPosition` taken in view
+space instead of world space; (4) `id`/`endpoint_pos` chosen per triangle instead of
+`vertex_id < 4`; (5) the closer end swapped in FIX_TWISTING; (6) angles of the wrong
+end fed to the caps; (7) raw positions left in `aStart`/`aEnd`.
+
+Questions to COORD:
+1. Lighting: the box normals disappear with the template, so the shader needs the
+   upstream normal anyway. I propose porting the ES `lighting()` and the pass-through
+   fragment (`:44-49,143-157`) in this slice rather than inventing a web normal.
+2. Probe: is the new `data-segment-geometry` read-out acceptable (it leaves the approved
+   `data-segment-sizes` test untouched), rather than widening `data-segment-sizes` as
+   the original SPEC text said?
+
 ## Questions to COORD (answered above)
 
 1. Bias: follow the ES shader (no bias) as above, or also port the desktop `hwa.w` bias?
