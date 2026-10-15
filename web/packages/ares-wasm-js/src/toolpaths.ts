@@ -44,6 +44,10 @@ export interface Toolpaths {
   extrusionRoleTimes: Float32Array<ArrayBuffer>;
   /** libvgcode `extract_pos_and_or_hwa` `[height, width]` of each vertex (travels / wipes at their radius). */
   heightsWidths: Float32Array<ArrayBuffer>;
+  /** libvgcode `ViewerImpl` segment position of each vertex, stride 3 (extrusions pushed down by half their height). */
+  segmentPositions: Float32Array<ArrayBuffer>;
+  /** libvgcode `extract_pos_and_or_hwa` join angle of each vertex, radians. */
+  segmentAngles: Float32Array<ArrayBuffer>;
   /** Normal-mode `get_travels_estimated_time`, seconds (an f32). */
   travelsTime: number;
   /** Normal-mode `ViewerImpl::get_estimated_time`, seconds (an f32). */
