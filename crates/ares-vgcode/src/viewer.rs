@@ -2,9 +2,11 @@
 
 use std::collections::BTreeMap;
 
+use crate::extrusion_roles::add_times;
 use crate::{
-    Color, ColorPrint, DUMMY_COLOR, GCodeExtrusionRole, GCodeInputData, Interval, Layers, MoveType,
-    OptionType, Palette, PathVertex, TimeMode, ViewRange, move_type_to_option, settings::Settings,
+    Color, ColorPrint, DUMMY_COLOR, ExtrusionRoles, GCodeExtrusionRole, GCodeInputData, Interval,
+    Layers, MoveType, OptionType, Palette, PathVertex, TimeMode, ViewRange, move_type_to_option,
+    settings::Settings,
 };
 
 mod color_print;
@@ -29,6 +31,8 @@ pub struct ViewerImpl {
     view_range: ViewRange,
     vertices: Vec<PathVertex>,
     elapsed_times: Vec<[f32; TimeMode::COUNT]>,
+    travels_time: [f32; TimeMode::COUNT],
+    extrusion_roles: ExtrusionRoles,
     tool_colors: Palette,
     color_print_colors: Palette,
     /// `m_used_extruders`: ordered per-extruder ColorPrint transitions.
@@ -70,17 +74,21 @@ impl ViewerImpl {
         self.used_extruders.clear();
         self.elapsed_times.clear();
         self.elapsed_times.reserve(self.vertices.len());
+        self.travels_time = [0.0; TimeMode::COUNT];
+        self.extrusion_roles.reset();
         let mut total_time = [0.0; TimeMode::COUNT];
         for (i, v) in (0..).zip(&self.vertices) {
             self.layers.update(v, i);
             // ViewerImpl.cpp:1007-1026: timestamp includes this vertex.
-            for (total, time) in total_time.iter_mut().zip(v.times) {
-                *total += time;
+            add_times(&mut total_time, v.times);
+            if v.move_type == MoveType::Travel {
+                add_times(&mut self.travels_time, v.times);
             }
             self.elapsed_times.push(total_time);
             if v.move_type != MoveType::Extrude {
                 continue;
             }
+            self.extrusion_roles.add(v.role, v.times);
             let colors = self.used_extruders.entry(v.extruder_id).or_default();
             if colors.last().is_none_or(|last| last.color_id != v.color_id) {
                 colors.push(ColorPrint {
@@ -120,19 +128,26 @@ impl ViewerImpl {
         self.elapsed_times[id][self.settings.time_mode.index()]
     }
 
-    /// ViewerImpl.hpp:141 (RED scaffold: not yet ported).
+    /// ViewerImpl.hpp:136.
+    pub fn get_estimated_time(&self) -> f32 {
+        self.elapsed_times
+            .last()
+            .map_or(0.0, |total| total[self.settings.time_mode.index()])
+    }
+
+    /// ViewerImpl.hpp:141.
     pub fn get_extrusion_roles(&self) -> impl Iterator<Item = GCodeExtrusionRole> + '_ {
-        std::iter::empty()
+        self.extrusion_roles.get_roles()
     }
 
-    /// ViewerImpl.hpp:142 (RED scaffold: not yet ported).
-    pub fn get_extrusion_role_estimated_time(&self, _role: GCodeExtrusionRole) -> f32 {
-        0.0
+    /// ViewerImpl.hpp:142.
+    pub fn get_extrusion_role_estimated_time(&self, role: GCodeExtrusionRole) -> f32 {
+        self.extrusion_roles.get_time(role, self.settings.time_mode)
     }
 
-    /// ViewerImpl.hpp:147 (RED scaffold: not yet ported).
+    /// ViewerImpl.hpp:147.
     pub fn get_travels_estimated_time(&self) -> f32 {
-        0.0
+        self.travels_time[self.settings.time_mode.index()]
     }
 
     /// GCodeViewer.cpp:452-454, for the engine-selected property-window vertex.

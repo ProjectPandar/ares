@@ -7,6 +7,7 @@ mod filament_legend;
 mod moves;
 mod profiles;
 mod raw_moves;
+mod role_times;
 mod scene;
 
 pub use colors::{option_colors, role_colors, view_types};

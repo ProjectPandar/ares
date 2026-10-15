@@ -38,6 +38,14 @@ export interface Toolpaths {
   estimation: Estimation;
   /** Legend Custom G-code overview rows of the sliced plate's items, in list order; empty for `sliceWithProfiles`. */
   customGcodeOverview: CustomGCodeOverviewRow[];
+  /** libvgcode `ViewerImpl::get_extrusion_roles`: `EXTRUSION_ROLES` ids with extrusions, in id order. */
+  extrusionRoles: Uint8Array<ArrayBuffer>;
+  /** Normal-mode `get_extrusion_role_estimated_time` of each `extrusionRoles` id, seconds. */
+  extrusionRoleTimes: Float32Array<ArrayBuffer>;
+  /** Normal-mode `get_travels_estimated_time`, seconds (an f32). */
+  travelsTime: number;
+  /** Normal-mode `ViewerImpl::get_estimated_time`, seconds (an f32). */
+  estimatedTime: number;
 }
 
 /** One item of the legend Custom G-code overview (GCodeViewer.cpp:4517-4544), computed by ares-vgcode. */

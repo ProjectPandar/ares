@@ -2,6 +2,7 @@
 
 mod color_range;
 pub mod convert;
+mod extrusion_roles;
 mod filament_legend;
 mod input_data;
 mod layers;
@@ -14,6 +15,7 @@ mod types;
 mod viewer;
 
 pub use color_range::{ColorRange, DEFAULT_RANGES_COLORS};
+pub use extrusion_roles::ExtrusionRoles;
 pub use filament_legend::{FilamentColumn, FilamentLegend, FilamentRow, filament_legend};
 pub use input_data::{ColorPrint, GCodeInputData};
 pub use layers::Layers;

@@ -51,6 +51,14 @@
 @media (hover: hover) { .legend-row:hover { background: var(--panel-raised); } }
 .legend-row.off { color: var(--text-faint); }
 .legend-row.off .legend-swatch { opacity: 0.25; }
+.legend-label { flex: 1; }
+.legend-time, .legend-percent { color: var(--text-faint); font-variant-numeric: tabular-nums; text-align: right; flex: none; }
+.legend-time { width: 7ch; }
+.legend-percent { width: 4ch; }
+.legend-header { display: flex; gap: 8px; padding: 2px 4px; color: var(--text-faint); font-size: 0.85em; }
+.legend-header span:first-child { flex: 1; padding-left: 22px; }
+.legend-header span:nth-child(2) { width: 7ch; text-align: right; }
+.legend-header span:nth-child(3) { width: 4ch; text-align: right; }
 .legend-count { margin-left: auto; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 .legend-swatch { width: 14px; height: 10px; border-radius: 2px; flex: none; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25); }
 .layer-slider {

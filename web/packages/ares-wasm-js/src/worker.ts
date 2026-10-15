@@ -73,12 +73,17 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
     filamentLegend: JSON.parse(vertices.filamentLegend()),
     estimation,
     customGcodeOverview,
+    extrusionRoles: owned(vertices.extrusionRoles()),
+    extrusionRoleTimes: vertices.extrusionRoleTimes() as Float32Array<ArrayBuffer>,
+    travelsTime: vertices.travelsTime,
+    estimatedTime: vertices.estimatedTime,
   };
   replaceViewer(vertices);
-  const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs } = toolpaths;
+  const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs, extrusionRoles, extrusionRoleTimes } = toolpaths;
   return [
     { gcode, toolpaths },
-    [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, colors.buffer, roles.buffer, optionRgb.buffer, layerZs.buffer],
+    [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, colors.buffer, roles.buffer, optionRgb.buffer, layerZs.buffer,
+      extrusionRoles.buffer, extrusionRoleTimes.buffer],
   ];
 }
 
