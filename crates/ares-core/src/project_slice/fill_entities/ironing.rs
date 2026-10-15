@@ -73,29 +73,19 @@ impl SpanSortKey {
     }
 }
 
-pub(super) fn span_sort_key(
-    region: &RegionOptions,
-    context: &SpanContext<'_>,
-) -> Result<SpanSortKey, SliceError> {
-    let nozzle = selected_nozzle(region, context.nozzles)?;
+pub(super) fn span_sort_key(region: &RegionOptions, context: &SpanContext<'_>) -> SpanSortKey {
     let spacing = region.filament_ironing_spacing.0;
-    let height =
-        context.object.layer_height.0 * 0.01 * region.filament_ironing_flow.0 * spacing / nozzle;
+    let height = context.object.layer_height.0 * 0.01 * region.filament_ironing_flow.0;
     let (angle, fixed_angle) = ironing_angle_for(region, context);
-    let inset = if region.filament_ironing_inset.0 == 0.0 {
-        0.5 * nozzle
-    } else {
-        region.filament_ironing_inset.0
-    };
-    Ok(SpanSortKey {
+    SpanSortKey {
         extruder: region.top_surface_filament_id.0,
         spacing,
         height,
         speed: region.filament_ironing_speed.0,
         angle,
         fixed_angle,
-        inset,
-    })
+        inset: region.filament_ironing_inset.0,
+    }
 }
 
 pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result<(), SliceError> {

@@ -340,7 +340,7 @@ pub(in crate::project_slice) fn generate_layer(
                 layers: &plan.layers,
                 model_rotation_offset,
             };
-            let sort_key = super::ironing::span_sort_key(region, &context)?;
+            let sort_key = super::ironing::span_sort_key(region, &context);
             spans.push((sort_key, record, input));
         }
     }
