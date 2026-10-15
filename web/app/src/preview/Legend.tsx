@@ -112,8 +112,8 @@ export function Legend({ options, toolpaths, range, view, onChange }: {
           onClick={() => onChange({ visibleOptions: view.visibleOptions ^ (1 << id) })}>
           <span className="legend-swatch" style={{ background: css(optionColors.subarray(3 * id, 3 * id + 3)) }} />
           <span className="legend-label">{row.label}</span>
-          {count && name === "Travels" && times ? <TimeCells time={toolpaths.travelsTime} total={total} />
-            : count && <span className="legend-count">{row.moves && compactCount(moveTypeCounts[MOVE_TYPES.indexOf(row.moves)])}</span>}
+          {count && <span className="legend-count">{row.moves && compactCount(moveTypeCounts[MOVE_TYPES.indexOf(row.moves)])}</span>}
+          {count && name === "Travels" && times && <TimeCells time={toolpaths.travelsTime} total={total} />}
         </button>
       </li>,
     ];
