@@ -59,6 +59,10 @@ mod brim_inner_only_w5;
 mod brim_outer_inner_w8;
 #[path = "orca_parity/brim_outeronly_w5.rs"]
 mod brim_outeronly_w5;
+#[path = "orca_parity/brim_painted_ctl.rs"]
+mod brim_painted_ctl;
+#[path = "orca_parity/brim_painted_w5.rs"]
+mod brim_painted_w5;
 #[path = "orca_parity/brim_physical_layer.rs"]
 mod brim_physical_layer;
 #[path = "orca_parity/change_filament_flush_blocks.rs"]
