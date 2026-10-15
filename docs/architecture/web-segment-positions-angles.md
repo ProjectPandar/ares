@@ -1,6 +1,7 @@
 # Web preview: libvgcode segment positions and join angles
 
-Status: SPEC (awaiting COORD review). Follow-up rewrite slice to
+Status: SPEC `ffe2c63e6` APPROVED by COORD, split into two slices (see COORD ruling at
+the end). Follow-up rewrite slice to
 `web-segment-heights-widths.md` (chain `5e164a404..50ca38eb4`, stack-19). It ports the
 rest of libvgcode `extract_pos_and_or_hwa` (the positions branch and the join angle)
 and the segment geometry that consumes them in the ES segments shader, which is the
@@ -89,7 +90,18 @@ difference shows, NO-RED STOP.
    the closer end).
 6. Positions transferred through f64 and drifting from the f32 bits.
 
-## Questions to COORD
+## COORD ruling (on `ffe2c63e6`)
+
+- Slice A: Rust `positions` plus the join angle in ares-vgcode / ares-wasm
+  (`ViewerImpl.cpp:928-934,945-952,979-980`) with the oracle extension, RED 1 and GREEN.
+  No web geometry change and no preview baseline change in A.
+- Slice B (after A merges): ES segment geometry (`ShadersES.hpp:13-148`,
+  `SegmentTemplate.cpp:13-27`) in `toolpathMesh.ts`, RED 2 and every preview baseline
+  move.
+- Bias: the ES shader is the WebGL target upstream ships, so the web follows it. The
+  desktop ORCA bias (`ViewerImpl.cpp:970-975`, `Shaders.hpp:93-96,137-138`) is deferred.
+
+## Questions to COORD (answered above)
 
 1. Bias: follow the ES shader (no bias) as above, or also port the desktop `hwa.w` bias?
 2. Scope: is the ES geometry port (template plus shader) acceptable in this slice, or
