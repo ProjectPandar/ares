@@ -62,15 +62,47 @@ impl ViewerImpl {
             .collect()
     }
 
-    /// RED scaffold for the positions branch of `extract_pos_and_or_hwa`
-    /// (ViewerImpl.cpp:945-952): returns the raw vertex positions.
+    /// The positions branch of `extract_pos_and_or_hwa` (ViewerImpl.cpp:945-952):
+    /// extrusion vertices are pushed down by half their height, the others keep
+    /// the nozzle z.
     pub fn positions(&self) -> Vec<Vec3> {
-        self.vertices.iter().map(|v| v.position).collect()
+        self.vertices
+            .iter()
+            .map(|v| {
+                let [x, y, z] = v.position;
+                if v.is_extrusion() {
+                    [x, y, z - 0.5 * v.height]
+                } else {
+                    v.position
+                }
+            })
+            .collect()
     }
 
-    /// RED scaffold for the join angle of `extract_pos_and_or_hwa`
-    /// (ViewerImpl.cpp:928-934,979-980): returns zeros.
+    /// The join angle of `extract_pos_and_or_hwa` (ViewerImpl.cpp:928-934,
+    /// 979-980): `atan2` of the z cross and the dot of the previous and the next
+    /// line, each zero when that line is not valid (`valid_lines`).
     pub fn angles(&self) -> Vec<f32> {
-        vec![0.0; self.vertices.len()]
+        let line = |i: usize| {
+            let [ax, ay, az] = self.vertices[i].position;
+            let [bx, by, bz] = self.vertices[i + 1].position;
+            [bx - ax, by - ay, bz - az]
+        };
+        (0..self.vertices.len())
+            .map(|i| {
+                let prev = if i > 0 && self.valid_lines[i - 1] {
+                    line(i - 1)
+                } else {
+                    [0.0; 3]
+                };
+                let this = if self.valid_lines[i] {
+                    line(i)
+                } else {
+                    [0.0; 3]
+                };
+                let dot = prev[0] * this[0] + prev[1] * this[1] + prev[2] * this[2];
+                (prev[0] * this[1] - prev[1] * this[0]).atan2(dot)
+            })
+            .collect()
     }
 }
