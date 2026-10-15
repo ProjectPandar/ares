@@ -7,9 +7,10 @@ mod preparation;
 pub(in crate::project_slice) use preparation::prepare_support;
 
 use crate::{
-    ProjectVolumeType, SliceError,
+    Point3d, ProjectObject, ProjectVolumeType, SliceError, Transform3d,
     fill::adaptive::{OctreeKind, filler, octree},
     geometry::CoordinateScale,
+    project::effective_config::types::ResolvedPrintObjectConfig,
     project_slice::group_fills::SurfaceFill,
     project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal,
 };
@@ -43,7 +44,7 @@ pub(super) fn append(
         ));
     }
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, line_spacing, kind);
+    let octree = octree_for(traversal, object_index, line_spacing, kind)?;
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
@@ -112,14 +113,26 @@ fn octree_for(
     object_index: usize,
     line_spacing: f64,
     kind: OctreeKind,
-) -> std::sync::Arc<octree::Octree> {
+) -> Result<std::sync::Arc<octree::Octree>, SliceError> {
     let key = (object_index, line_spacing.to_bits(), kind);
     match kind {
-        OctreeKind::Adaptive => traversal.adaptive_octrees.get_or_build(key, || {
-            build_object_octree(traversal, object_index, line_spacing, kind, &[])
+        OctreeKind::Adaptive => traversal.adaptive_octrees.get_or_try_build(key, || {
+            let (source, group) = object_input(traversal, object_index);
+            // PrintObject.cpp:91-110,981-984 / Print.hpp:327-328:
+            // use the same PrintObject frame as raw_intersections.rs:163-172.
+            let center = crate::project_slice::centering::center(source, group, traversal.scale)?;
+            let transform = group
+                .transform
+                .without_xy_translation()
+                .pretranslated(Point3d::new(
+                    -traversal.scale.unscale(center.x()),
+                    -traversal.scale.unscale(center.y()),
+                    0.0,
+                ));
+            Ok(build_in_frame(source, transform, line_spacing, kind, &[]))
         }),
         // PrintObject.cpp:2735 builds the Support tree before anchoring/rewrite.
-        OctreeKind::Support => traversal.adaptive_octrees.get(key),
+        OctreeKind::Support => Ok(traversal.adaptive_octrees.get(key)),
     }
 }
 
@@ -130,6 +143,20 @@ fn build_object_octree(
     kind: OctreeKind,
     overhang_triangles: &[[f64; 3]],
 ) -> octree::Octree {
+    let (source, group) = object_input(traversal, object_index);
+    build_in_frame(
+        source,
+        group.transform,
+        line_spacing,
+        kind,
+        overhang_triangles,
+    )
+}
+
+fn object_input(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+) -> (&ProjectObject, &ResolvedPrintObjectConfig) {
     let traversal_object = &traversal.objects[object_index];
     let identity = traversal_object
         .predecessor
@@ -149,11 +176,17 @@ fn build_object_octree(
         .iter()
         .find(|object| object.source_object_index == identity.0)
         .expect("adaptive object retains its resolved source");
-    let object_transform = resolved.print_objects[identity.1].transform;
     let source = &traversal.project.objects()[identity.0];
+    (source, &resolved.print_objects[identity.1])
+}
 
-    // World-frame vertices: instance × volume transform (the bounds.rs
-    // pattern). The octree then works on to_octree × (p - xy_center).
+fn build_in_frame(
+    source: &ProjectObject,
+    object_transform: Transform3d,
+    line_spacing: f64,
+    kind: OctreeKind,
+    overhang_triangles: &[[f64; 3]],
+) -> octree::Octree {
     let mut world: Vec<[f64; 3]> = Vec::new();
     let mut triangles: Vec<[u32; 3]> = Vec::new();
     for volume in source
@@ -171,15 +204,22 @@ fn build_object_octree(
             triangles.push([base + triangle[0], base + triangle[1], base + triangle[2]]);
         }
     }
-    let mut min = [f64::INFINITY; 2];
-    let mut max = [f64::NEG_INFINITY; 2];
-    for vertex in &world {
-        for k in 0..2 {
-            min[k] = min[k].min(vertex[k]);
-            max[k] = max[k].max(vertex[k]);
+    let center_offset = match kind {
+        // FillAdaptive.cpp:1472-1480,1524-1526 rotates back into the
+        // centered PrintObject frame; do not restore its consumed XY offset.
+        OctreeKind::Adaptive => [0.0; 3],
+        OctreeKind::Support => {
+            let mut min = [f64::INFINITY; 2];
+            let mut max = [f64::NEG_INFINITY; 2];
+            for vertex in &world {
+                for k in 0..2 {
+                    min[k] = min[k].min(vertex[k]);
+                    max[k] = max[k].max(vertex[k]);
+                }
+            }
+            [0.5 * (min[0] + max[0]), 0.5 * (min[1] + max[1]), 0.0]
         }
-    }
-    let center_offset = [0.5 * (min[0] + max[0]), 0.5 * (min[1] + max[1]), 0.0];
+    };
     let rotation = octree::octree_rotation_to_octree();
     let rotated: Vec<[f64; 3]> = world
         .iter()
@@ -261,7 +301,7 @@ pub(in crate::project_slice) fn anchoring_lines(
         ));
     }
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, line_spacing, kind);
+    let octree = octree_for(traversal, object_index, line_spacing, kind)?;
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         polylines.extend(
