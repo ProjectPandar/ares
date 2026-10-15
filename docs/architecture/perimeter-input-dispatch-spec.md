@@ -1,132 +1,127 @@
-# Amended SPEC: 3MF config resolution and loaded-preset precedence
+# Amended SPEC: loaded system-preset inherits_group ownership
 
-Status: **REVIEW-REQUEST, docs only; no new Native/test/production budget**.
-Supersedes rejected dispatch/admission proposal925b13ae5. Seam v2 NO-RED closure
-is accepted and unchanged. This is a source-cited configuration rewrite slice,
-NOT a perimeter/seam algorithm repair or an Ares-owned pipeline.
+Status: **REVIEW-REQUEST: SPEC + fixture/budget proposal only**. No production edits
+or new runs authorized. Supersedes b7's undecided request-contract proposal.
+Seam v2 NO-RED closure stays accepted. Owning rewrite slice is preset group metadata
+and CLI loaded-source precedence, not seams, geometry or an Ares pipeline.
 
-## 1. Retained single-control candidate and provenance
+## 1. Identical-input witness
 
-Candidate is unchanged v2 single.3mf SHA256
-`5518edad86d3af4e8966a8235e0e782b0bc26edf5f56a579673865169595b974`.
-Retained root: `/tmp/worker4-seam-project-entry-red-y1PN/official/artifacts/orca-runner-rKLPnw`.
-Primary witness is effective config; secondary acceptance is complete ordered
-G-code. Native/API full difference M73byte1002/line40, lengths64683/69418;
-API/CLI raw equality holds. Do NOT require equal **resolved** configs before RED:
-wrong effective config under the same requested source/precedence contract IS RED.
+Coordinator ruled Native and Ares must receive identical 3MF AND loaded JSONs.
+One authorized external check reused complete retained Native output and invoked
+existing `ares_core::slice_with_load_settings` +CLI --load-settings/--load-filaments,
+no extra overrides, matching generation metadata, plateNone/placementNone/seed0.
+No new Native command; existing mainc251 core/CLI artifacts reused, digests saved.
 
-Read-only localization found the following exact source values:
+Unchanged v2 single.3mf SHA
+`5518edad86d3af4e8966a8235e0e782b0bc26edf5f56a579673865169595b974`;
+loaded machine/process/filament SHA respectively:
+- `9b1fe473c5add85ba8b9240135b4e04127e4a68ce215f22699fc0ae9c5ef8b6b`
+- `972e234541199a11dea87edeb97a0ddd9cf151fa0fc446a6523f776220d6308d`
+- `82b6ae0d147822cd90c38ed5368eda0767430316dcd996bbd629bebeeab10c41`
 
-| Key | Explicit 3MF project_settings + API/CLI footer | Explicit loaded process.json + Native footer |
-| --- | --- | --- |
-| wall_generator | arachne | classic |
-| wall_sequence | inner-outer-inner wall | inner wall/outer wall |
-| brim_type | auto_brim | no_brim |
-| overhang_reverse | 0 | 1 |
-| overhang_reverse_internal_only | 0 | 1 |
+API/CLI exit0 and raw equality PASS; both raw SHA
+`2cbd00bd4f11f24288a65af60623282441029c020d2a75b52ff44f8762afa095`.
+Five previously differing effective fields now match Native: Classic,
+inner wall/outer wall, no_brim, reversal1/internal-only1. Those previous deltas
+were the bare-versus-loaded harness mismatch, not a product resolution finding.
 
-Embedded `Metadata/project_settings.config` member SHA256
-`5622f384e71fb366dd6fe2b99afef14adcb944170e235d4f8ed31776d2fec405`.
-All five values are explicit strings, not missing/defaulted. `inherits` absent;
-`inherits_group=["","",""]`; no embedded preset members. Named printer/process/
-filament IDs are present, but their names do not establish that their values
-supersede explicit serialized project values.
+**Actual same-request RED candidate:** complete established generator-only comparator
+fails for both public entries at byte51464/line2151/column20, lengths64683/64761:
 
-**Important retained argv/source distinction:** Native `command-O8knlt/command.json`
-contains `--load-settings machine.json;process.json --load-filaments filament.json`.
-The loaded process JSON contains all five Native values explicitly; SHA256
-`972e234541199a11dea87edeb97a0ddd9cf151fa0fc446a6523f776220d6308d`.
-It is from=system, inherits=fdm_process_phoenixProV1_common, and was flattened plus
-case-overridden by the frozen test harness. API uses project plate validated with
-profile None/default overrides; bare CLI has NO load-settings/load-filaments.
-Thus same 3MF bytes presently accompany different additional supplied settings.
-Do not hide this distinction or mislabel the explicit Ares values as a defaults/
-system-inheritance failure. Retained config/output disparity is the review
-candidate; proving product precedence drift versus omitted request sources still
-needs a contract ruling. No bare-Native output is retained and none was generated.
+```
+Native:  ; inherits_group = ;;
+API/CLI: ; inherits_group = fdm_process_phoenixProV1_common;fdm_filament_pla;fdm_machine_phoenixprov1_common
+```
 
-## 2. Owning upstream file:function:lines
+All three loaded JSONs explicitly declare from=system and nonempty raw inherits.
+Complete CONFIG_BLOCK comparison finds only inherits_group differs. Complete raw
+line comparison finds only generated-by identity and this field. Do not remove
+or normalize the metadata to claim NO-RED; full output remains acceptance.
+No fresh paired/seeded Native RED or permanent test-only RED is claimed yet.
 
-Pin8500fcdccaa10b5099ac20d252af3a7c560046f1; paths relative OrcaSlicer/src.
+## 2. Exact owning upstream boundary
 
-- `libslic3r/Format/bbs_3mf.cpp::_BBS_3MF_Importer::_load_model_from_file:1923-1939` dispatches
-  project config and embedded presets; `_extract_project_config_from_archive:
-  2632-2654` loads Metadata/project_settings.config via config.load_from_json.
-- `libslic3r/Config.cpp::ConfigBase::load_from_json:820,925-935` deserializes
-  explicit string option values (set_deserialize), with legacy handling. This
-  loader is the shared config owner; byte-oriented Rust replaces filesystem I/O.
-- `libslic3r/PresetBundle.cpp::load_vendor_configs_from_json:4602,4886-4927`
-  resolves inherits/default base then applies explicit child config. Separately,
-  `load_config_file_config:4271,4301-4319` redistributes inherits_group metadata.
-  This pin has no PresetBundle::load_3mf routine: the actual 3MF owner above must
-  not be replaced by an invented named function or an assumed GUI preset path.
-- `libslic3r/PrintConfig.cpp::PrintConfigDef::init_fff_params`: reversal defaults
-  false at1526-1545, brim Auto at1690-1711, wall sequence InnerOuter at2158-2179,
-  generator Arachne at7155-7167. Wall sequence's embedded inner-outer-inner value
-  differs from its default, independently ruling out blanket defaults attribution.
-- Native CLI glue is provenance, not a new core architecture goal:
-  `OrcaSlicer.cpp::CLI::run:1640,1953-2024,2073-2096` loads 3MF then preset files;
-  local `update_full_config:2750-2812` sets supplied options; process call3011 uses
-  update_all=true for explicitly loaded process; help7277-7280 states command
-  line > loaded settings/filaments > 3MF. Direct file loading does not walk the
-  system inherits chain to obtain these five already explicit values.
+Pin8500fcdccaa10b5099ac20d252af3a7c560046f1, paths relative OrcaSlicer/src.
 
-This chain makes config source/precedence, not LayerRegion generator dispatch,
-the proposed owning boundary. Dispatch is a downstream effect only.
+- `libslic3r/PresetBundle.cpp::construct_full_config:69-236` owns positional
+  process/filaments/machine inheritance metadata; collection at109-112/129-131
+  and export at225-236. This is the shared preset group concept being ported.
+  Its general bundle semantics must not overwrite different CLI file-source rules.
+- `OrcaSlicer.cpp::CLI::run:2038-2047,2079-2086` derives machine/process system
+  status from loaded file `from`; groupslots at2838-2842 and2981-2985 become
+  empty for system sources, parent name for User/user sources.
+- `CLI::run:2189-2193,3161-3163` retains filament parent only for User/user and
+  assigns the loaded filament slot. All three retained sources are system, hence
+  Native empty slots despite raw nonempty parent strings.
+- Local `update_full_config:2750-2812`, especially2799-2802, excludes raw inherits;
+  CLI priority7277-7280 is CLI > loaded settings/filaments > embedded3MF. Metadata
+  ownership is source-aware, not generic option copying.
+- `libslic3r/GCode.cpp::GCode::append_full_config:5591-5648` exports full config.
+  This consumer is evidence only; no footer/comparator suppression is permitted.
+- Embedded config source remains `Format/bbs_3mf.cpp::_BBS_3MF_Importer::
+  _extract_project_config_from_archive:2632-2654` / Config.cpp::load_from_json820.
+  System vendor inheritance loading at PresetBundle.cpp4886-4927 is deferred:
+  loaded CLI files already contain flattened values and do not resolve parent files.
 
-## 3. Exact Rust destination / existing scaffold
+## 3. Rust destination and witnessed handoff
 
-- `project_slice/validated.rs::slice_project_plate_validated:66-86` sets profile
-  None and forwards caller overrides; `project_slice/state.rs::prepare_project_source:
-  39-54` loads the project directly.
-- **Embedded config destination:** `project/load.rs::load_project_with_preparation:
-  55,118-150`: deserialize raw JSON, apply supplied overrides, normalize/legacy,
-  ProjectSettingsBuilder.resolve. `options/project_settings.rs:29-48,118-127`
-  routes fields and resolves builders; typed defaults in object_fields.rs:7/87
-  and region_fields.rs:123-127 apply only when a field is absent.
-- **Loaded-source destination if that contract is selected:**
-  `profiles/load_settings.rs::compose_load_settings:69-124`,
-  `profiles/catalog/compose.rs::merge:108-136` (direct imports do not walk inherits),
-  `project_slice/profile_entry.rs::load_with_profile_preparation:43-66`, and
-  `project/domain/profile_input.rs::from_3mf_with_profiles:44-110` overlay loaded
-  raws on embedded config before final overrides. Reuse existing byte JSON inputs
-  and composition; no second resolver, filesystem lookup or new public API.
+Existing public loaded-entry route: profiles/entry.rs::slice_with_load_settings:
+197-206 ->compose_load_settings69-124; CLI supplies the same JSON texts.
 
-These are compatibility shells for bbs_3mf/Config/PresetBundle concepts. Any
-correction must replace incorrect precedence/source handling at the admitted
-owner, not patch downstream wall choice or substitute config values to pass.
-Current source+receipts show explicit embedded values reaching Ares unchanged
-and explicit loaded values reaching Native; no erroneous Rust field parse or
-missing system-parent lookup has yet been proven.
+**Correction destination:** loaded-entry group/source-status preparation in
+`crates/ares-core/src/profiles/load_settings.rs::compose_load_settings:69-124`
+and existing group handoff, as needed:
+`profiles/catalog/compose.rs::Catalog::compose:87-91`,
+`profiles/composition/metadata.rs::ProfileGroupMetadata::from_profiles:23-32`,
+`project/domain/profile_input/overlay.rs::merged_profile_raw:247-273`.
+No broad parser/default/system-lookup rewrite or new API.
 
-## 4. Review decisions and RED gate (no execution authorized)
+Witnessed source chain: load_settings imports documents; catalog/store.rs::
+push_import57-62 uses user holding scope. inheritance.rs::merge_metadata328-346
+retains both raw inherits and from. Group constructor collects every inherits
+without consulting from; compose inserts that group; overlay copies those slots
+into embedded metadata. Loaded system status must survive the CLI-specific
+handoff. General bundle/catalog parent grouping is not blanket-authorized to
+change; preserve its upstream semantics. These existing structures are temporary
+compatibility shells around PresetBundle/CLI metadata, not an independent policy.
 
-Retain single-control as config-resolution RED candidate, not an ordinary PASS
-control that gets dropped. Preserve its complete ordered G-code and config witness.
-Review must choose the intended upstream request contract with all supplied
-configuration sources recorded:
-- Standalone 3MF contract: project-validated API/bare CLI corresponds to Native
-  without loaded settings. Current cached Native includes loaded settings, so it
-  cannot silently stand in for that missing baseline.
-- Loaded-settings contract: identical retained machine/process/filament JSON
-  bytes must be supplied through the existing public load-settings API and CLI;
-  compare effective fields and complete output to retained Native. Do not demand
-  equal actual config before RED or force it with new override/fixture edits.
+Required invariant: for explicitly loaded system files, corresponding inherits_group
+slots are empty; for User/user preserve upstream parent policy; preserve positional
+order, embedded filament count and unloaded slots. Do not fix output by clearing
+all groups, deleting raw inherits, rewriting fixture JSONs or skipping the footer.
 
-No new Native/API run, fixture edit, test amendment or production edit follows
-from this spec submission. A separately approved test/budget may establish the
-contract, freeze public config-witness + whole-output RED, then request independent
-RED approval. STOP on no RED, changed owner, admission/resource failure; preserve
-all failures. User's current ruling is read-only localization/docs review only.
+## 4. Proposed fixture and fresh RED budget (approval required)
 
-Included: four requested key groups (generator, sequence, brim, reversal including
-internal-only), explicit project JSON versus supplied profiles/inherits/default
-precedence. Deferred: broad PresetBundle rewrite, unrelated config migrations,
-seam planes/scoring, perimeter geometry/order, brim geometry, travel/M73/statistics,
-loader missing-build finding and lower-slice discovery. No fallback, Unsupported
-guard, comparator/assertion weakening, profile/fixture substitution or diagnostic
-core I/O. WASM/desktop API separation remains unchanged.
+Retained single-control is now the **positive** for this different metadata slice;
+seam-control failure remains in history, not reclassified as a seam RED.
+Propose freezing exact retained3MF and all three exact positive JSONs, with hashes,
+source argv and public request metadata; no Native products committed.
 
-Evidence: `/home/indexyz/.ares-evidence/worker4/single-control-config-provenance.json`
-and `single-control-config-resolution-localization.md`; full retained-root archive
-SHA `e2c8312e8137f996c99ef28a877bbfd5e7614d0420aa5dd98dc77b23eabc6a1a`.
+Proposed control: same3MF/from=system/preset IDs/options/filament slots, with ONLY
+raw inherits strings blanked in the three loaded JSONs. Native system metadata
+should be invariant to those parent strings; current Ares is expected to agree
+for this control. This is a new narrowly defined control requiring explicit
+fixture approval; it has NOT run and byte equality is NOT claimed.
+
+Proposed budget **three comparisons per mode**: exact positive, fresh positive
+repeat, blank-system-parent control; official then seeded, CPU15/jobs1/threads1,
+load<60 before builds/eachNative, fresh cache/artifact roots, START/END receipts.
+Require Native normalized complete repeat equality, public API/CLI raw equality,
+control complete PASS and Native positive/control complete neutrality. Effective
+inherits_group divergence under identical requests is RED, not excluded admission.
+Freeze separate public test-only RED commit ->independent REVIEW-REQUEST before
+any production correction. Stop on no RED, control/admission/resource failure or
+changed source boundary. No retry or extra cases automatically approved.
+
+Included only loaded system source metadata precedence/positional group fidelity.
+Deferred User/user matrix expansion, optional/unloaded-kind behavior changes,
+vendor parent resolution, compatibility metadata, other config migrations,
+seam planes, geometry/order/brim/travel/M73/statistics and loader/lower discovery.
+No fallback/Unsupported guard, new resolver, core I/O or comparator weakening;
+WASM/Windows/macOS/Linux byte API separation remains unchanged.
+
+Evidence: external `identical-loaded-single-report.md`, F2JO/identical-input-check.json,
+unchanged whole comparator source and driver/binary/input digests. Full same-input
+external-check archive receipt is published with REVIEW-REQUEST. Earlier b7 source
+provenance and both failed harness histories remain preserved separately.
