@@ -2,6 +2,9 @@
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
 
+#[path = "runner/loaded_system_inherits_group.rs"]
+mod loaded_system_inherits_group;
+
 #[path = "runner/crosshatch_dont_connect.rs"]
 mod crosshatch_dont_connect;
 

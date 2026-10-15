@@ -1,0 +1,14 @@
+{
+  "approved_spec": "6c38e182fd8f22388833cc55b225c26dbb805dab",
+  "upstream_pin": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "source": "retained rKLPnw single-control plus identical loaded JSONs",
+  "sha256": {
+    "positive/machine.json": "9b1fe473c5add85ba8b9240135b4e04127e4a68ce215f22699fc0ae9c5ef8b6b",
+    "control/machine.json": "701c66ed5f23655b4e69c3a832fb8273bb33b94b4dd3d8486fd247cc8fb3b687",
+    "positive/process.json": "972e234541199a11dea87edeb97a0ddd9cf151fa0fc446a6523f776220d6308d",
+    "control/process.json": "9c21d13170e6a3f94e919c8467ebccebf6ae3aa6afb5fe7928664cdf4d45e586",
+    "positive/filament.json": "82b6ae0d147822cd90c38ed5368eda0767430316dcd996bbd629bebeeab10c41",
+    "control/filament.json": "010f25c30126349901442f8cc5d1e640e0f1762f0dfeb2c011a7bedebf766a84",
+    "single.3mf": "5518edad86d3af4e8966a8235e0e782b0bc26edf5f56a579673865169595b974"
+  }
+}
