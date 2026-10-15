@@ -61,7 +61,7 @@ fn orca_parity_support_touching_grid_s_c0_public_api_cli() {
             .contains(";TYPE:Sparse infill\n")
     );
 
-    // Run CLI first so its exit status/stderr survive the API's current panic.
+    // Capture CLI exit status and stderr before invoking the public API.
     let binary = env!("CARGO_BIN_EXE_ares");
     let output = root.join("ares.cli.gcode");
     let cli = Command::new(binary)

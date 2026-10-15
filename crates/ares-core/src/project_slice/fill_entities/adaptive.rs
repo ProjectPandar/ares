@@ -303,21 +303,33 @@ pub(in crate::project_slice) fn anchoring_lines(
     let kind = octree_kind(fill.params.pattern);
     let octree = octree_for(traversal, object_index, line_spacing, kind)?;
     let mut polylines = Vec::new();
+    // Fill.cpp:1492-1498 calls Fill::fill_surface (FillBase.cpp:105-117),
+    // with the constructor's zero overlap (FillBase.hpp:181-187).
+    let delta = ((0.0 - 0.5 * fill.params.spacing) / scale.factor()) as f32;
     for expolygon in &fill.expolygons {
-        polylines.extend(
-            filler::fill_surface(
-                &octree,
-                expolygon,
-                z,
-                fill.params.spacing,
-                fill.params.multiline,
-                fill.params.anchor_length,
-                fill.params.anchor_length_max,
-                false,
-                scale,
-            )
-            .map_err(clipper_error)?,
-        );
+        let components = crate::geometry::offset_expolygon(
+            expolygon,
+            delta,
+            crate::geometry::JoinType::Miter,
+            3.0,
+        )
+        .map_err(clipper_error)?;
+        for component in components {
+            polylines.extend(
+                filler::fill_surface(
+                    &octree,
+                    &component,
+                    z,
+                    fill.params.spacing,
+                    fill.params.multiline,
+                    fill.params.anchor_length,
+                    fill.params.anchor_length_max,
+                    false,
+                    scale,
+                )
+                .map_err(clipper_error)?,
+            );
+        }
     }
     Ok(polylines)
 }
