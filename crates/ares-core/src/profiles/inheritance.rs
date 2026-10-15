@@ -192,8 +192,9 @@ pub fn merge_profile_fragments(
 /// Single-record composition for the CLI import path: `load_config_file`
 /// never resolves `inherits` (the chain reads are commented out upstream,
 /// `OrcaSlicer.cpp:1987,1991`), so an imported preset composes as its own
-/// chain of one while keeping its `inherits` value as metadata
-/// (`:2038-2041,2084-2087` capture it as the system name for `from: user`).
+/// chain of one. Parent metadata follows CLI file-source rules:
+/// system machine/process parents are cleared (`:2838-2842,2981-2985`),
+/// and filament parents are retained only for `User`/`user` (`:2189-2193`).
 pub(super) fn merge_direct_profile_fragment(
     fragments: &[ProfileFragment],
     target_kind: ProfileKind,
@@ -205,7 +206,20 @@ pub(super) fn merge_direct_profile_fragment(
         .ok_or_else(|| {
             SliceError::InvalidInput(format!("profile '{target_name}' was not found"))
         })?;
-    merge_chain(&[&fragments[selected]], target_kind)
+    let mut merged = merge_chain(&[&fragments[selected]], target_kind)?;
+    let metadata = match &mut merged {
+        MergedProfile::Machine { metadata, .. }
+        | MergedProfile::Process { metadata, .. }
+        | MergedProfile::Filament { metadata, .. } => metadata,
+    };
+    let keep_parent = match target_kind {
+        ProfileKind::Machine | ProfileKind::Process => metadata.from() != Some("system"),
+        ProfileKind::Filament => matches!(metadata.from(), Some("User" | "user")),
+    };
+    if !keep_parent {
+        metadata.inherits = None;
+    }
+    Ok(merged)
 }
 
 fn merge_chain(
