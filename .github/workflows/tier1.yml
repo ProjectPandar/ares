@@ -78,6 +78,7 @@ jobs:
           - custom-gcode-overview
           - actual-speed-profile
           - role-times
+          - segment-hw
           - patchelf
     steps:
       - uses: actions/checkout@v4
@@ -134,7 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview actual-speed-profile role-times patchelf; do
+          for v in merged-oracle ksr-initialized procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview actual-speed-profile role-times segment-hw patchelf; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -164,6 +165,7 @@ jobs:
             echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
             echo "ARES_ACTUAL_SPEED_PROFILE_BIN=$ORACLE_actual_speed_profile/bin/orca-slicer"
             echo "ARES_ROLE_TIMES_BIN=$ORACLE_role_times/bin/orca-slicer"
+            echo "ARES_SEGMENT_HW_BIN=$ORACLE_segment_hw/bin/orca-slicer"
             echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
