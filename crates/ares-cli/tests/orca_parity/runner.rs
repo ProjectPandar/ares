@@ -5,6 +5,9 @@
 #[path = "runner/loaded_system_inherits_group.rs"]
 mod loaded_system_inherits_group;
 
+#[path = "runner/resource_vertex_defaults.rs"]
+mod resource_vertex_defaults;
+
 #[path = "runner/resource_item_ignore.rs"]
 mod resource_item_ignore;
 
