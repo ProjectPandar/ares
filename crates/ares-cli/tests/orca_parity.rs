@@ -89,6 +89,8 @@ mod post_process_cli;
 mod residual_stock_cli;
 #[path = "orca_parity/stock_early_cli.rs"]
 mod stock_early_cli;
+#[path = "orca_parity/wipe_before_override.rs"]
+mod wipe_before_override;
 #[path = "orca_parity/wipe_retraction_epsilon.rs"]
 mod wipe_retraction_epsilon;
 #[path = "orca_parity/wipe_zero_retraction_comment.rs"]
