@@ -17,10 +17,13 @@ Retained v1 body/modifier omission is an old admission finding, not current RED
 or proof about a missing main build. Boundary c6a9e152a approved; amended seam is
 fresh Native --slice first in both modes on identical frozen3MF, then public
 slice_project_plate_validated + real CLI, full generator-only comparison/raw
-API-CLI equality. Docs-only until MAIN-ADVANCE/FREEZE LIFTED; no export/load-only
-oracle. Exit: reviewed public admission RED, unchanged main/security/graph behavior
-and separately approved bounded GREEN; any residual G-code diff STOP/report,
-no downstream scope growth. [SPEC](architecture/3mf-resource-part-build-spec.md),
+API-CLI equality. First e1de695aa RED rejected: old control had independent
+M73/G1 insertion drift; [deferred discovery](architecture/discovery-m73-resource-control-order.md),
+no work there. New input revision proposes exact FULL16 strict-PASS control-before50
+SHAadb38ee8 and positive0eab5d4d (only resource empty-build removed); full SHAs/proof
+in SPEC. Docs review before new execution, no export/load-only oracle. Exit:
+qualified public admission RED with control full PASS, unchanged main/security/
+graph behavior and separately approved bounded GREEN; residual G-code STOP/report. [SPEC](architecture/3mf-resource-part-build-spec.md),
 [ARD](architecture/ard-3mf-resource-part-build.md).
 
 ### Arachne fuzzy-skin junctions: proposed SPEC (2026-10-13)

@@ -1,10 +1,11 @@
 # SPEC: 3MF resource-part import without a build element
 
-Status: **boundary APPROVED at c6a9e152a; RED seam amended by owner**.
-Current work is docs-only during FULL16 freeze. Native-first canonical public
-slicing RED is authorized only after MAIN-ADVANCE / FREEZE LIFTED; production
-still requires independent test-only RED review and separate approval.
-Approved inherits_group RED6f1f48a29/GREENed6bfd3aa remain unchanged, queued stack16.
+Status: **input revision REVIEW-REQUEST after rejected e1de695aa RED**.
+Source boundary c6a9e152a and canonical seam d610c0aad remain approved. Owner
+rejected the first RED because its control failed full parity; the new frozen
+input pair below awaits exact revised SPEC approval BEFORE any new execution.
+Main is3ee8f272c (FULL16 both1499/1499, CI38675499172success), freeze lifted.
+No production authorization; old test/fixtures/evidence remain immutable.
 
 ## 1. Owning upstream rewrite boundary
 
@@ -55,6 +56,60 @@ compatibility correction did not repair the loader and must not replace v1 to
 make the positive pass. Before/after ZIP-entry mesh/options/transform proof is
 retained. This proposal does not resume the old eight-case discovery or seam v2.
 
+## 2a. Rejected first public attempt and replacement input justification
+
+Frozen test e1de695aa8cfbffb99cd971f86468037f6df4766 is **NOT approved RED**.
+Fresh Native-first official+seeded6/6 complete/neutral; official public positive/
+repeat API and CLI both reject missing build. However old v2 control admitted/
+raw API==CLI but strict comparator failed byte5217/line224: M73 P67 R2 versus
+adjacent G1 order. STOP was correct; public seeded was not run. Retain the exact
+root `/tmp/worker4-resource-build-red-c0yg` and archive39906c69dc4b6b80218e816cc890778ab51e1cc8a620b37a0975e3b42bfc9380.
+[Independent discovery](discovery-m73-resource-control-order.md) records the
+GCodeProcessor::run_post_process insertion boundary; it is deferred, not repaired
+by this slice. No comparator/M73 weakening or retry of the old pair is proposed.
+
+**New control:** byte-exact current-main fixture
+`tests/parity/wipe-before-override/control-before50.3mf`, SHA
+`adb38ee8df9485a864135007753fb935aedf7883fe37f910109f20145f3c7be2`.
+It contains a valid main build and one referenced mesh resource with empty build;
+no modifier is required to witness the same upstream resource parser boundary.
+This replaces geometry AND settings as a whole with an existing qualified input,
+not selectively disabling M73 or editing values to hide its difference.
+
+**New positive:** remove ONLY the literal `<build/>` from
+`3D/Objects/overhang.stl_1.model` of that control, SHA
+`0eab5d4dea27aa756422e4a821d8d64d1b2ac544afc83dd121ac4899afa33f7a`.
+All other uncompressed ZIP entries, order, resource vertices/triangles, main build,
+relationships, volume IDs/roles/transforms and embedded settings remain identical.
+The resource entry hashes are control
+`5de32760cab07a393137fa0e6d485b83520352650fea421f6c78156c5e6cf78b`
+versus positive
+`345b6dc35a34402a1a6e06733b4829dfa04acb8fedc407b4e831d509de7c4d2e`.
+Only this positive is derived; control is an exact existing file, not regenerated.
+
+**Current-main strict-PASS evidence, not a new runtime claim:** FULL16
+`wipe_before_override::orca_parity_wipe_before_override_control_before50` passes
+in official/run.log14837 and seeded/run.log14796, same main3ee8f272c.
+Raw retained streams were read offline: strict generator-only COMPLETE equality
+and raw API/CLI equality independently verified, retaining M73/all movement/footer.
+Official root:
+`/tmp/ares-full16-3ee8f-5ovWDK/official/artifacts/wipe-before-override-control-before50-4hqbHN`;
+seeded root:
+`/tmp/ares-full16-3ee8f-5ovWDK/seeded/artifacts/wipe-before-override-control-before50-YOBX0W`.
+Both API+CLI rawSHA
+`2e9e3d4a65a71c9e05b58792c78e3b21879b635ab219be0b212d39da7f58340d`;
+all normalized Native/API/CLI SHA
+`8bae941305727f043ec25c0cca7a7bd8d0042d12cdc597b6ac1ed6b214567f69`.
+Actual source request was Native --slice0 --outputdir (no explicit --arrange),
+validated API/defaults and real bare CLI. Preserve that exact source request in
+this revision; no arrangement option or loadedJSONs are added. Fresh Native-first
+proof on the new pair is still mandatory after revised SPEC approval. No Native/
+API/CLI execution has been done on the new positive and no positive RED claimed.
+
+Proposal bytes/complete entry manifest/current-main raw proof copies are external
+under `/home/indexyz/.ares-evidence/worker4/resource-build-input-v2-proposal/`.
+Do not overwrite committed e1de695aa fixtures until this revision is approved.
+
 ## 3. Exact Rust destination / behavior
 
 `crates/ares-core/src/project/load.rs::load_project_with_preparation:87-96`
@@ -94,7 +149,8 @@ change is authorized by this document. Tier1 byte-only core boundary stays intac
 is withdrawn. The owning production boundary remains resource-part parsing, but
 verification uses the complete public slicing path:
 
-- Native `--slice 0 --arrange 0 --outputdir <fresh>` on the identical frozen3MF;
+- Native `--slice 0 --outputdir <fresh>` on the identical frozen3MF, matching
+  the qualified current-main control request without adding --arrange;
   no load-settings/filament JSONs or extra overrides for this bare-3MF contract.
 - Public `ares_core::slice_project_plate_validated` on those same bytes, no profile,
   plateNone/default ConfigOverrides, matching deterministic generation metadata
@@ -102,12 +158,12 @@ verification uses the complete public slicing path:
 - Real CLI `ares slice -o <fresh cli.gcode> <same frozen3MF>`, no profile/loaded
   files/overrides. Capture actual command/status/stdout/stderr and complete output.
 
-Freeze exact retained v1 positive, byte-audited v2 empty-build counterpart control,
-and fresh positive repeat. No mesh, transform, role, profile/config metadata,
-main build, relationship, ID or generator-option change. Record complete ZIP-entry
-hashes and prove only resource empty-build tags differ. v2 must not replace v1.
-Historical loaded-Native versus catalog-API receipts do not establish this new
-same-input contract; fresh references are mandatory.
+After approval, freeze the new section2a pair: positive0eab5d4d, exact qualified
+controladb38ee8, and fresh positive repeat. Pin complete source/ZIP-entry hashes
+and prove the sole resource empty-build removal. No further mesh/settings/
+M73/config/metadata/identity/transform changes; no old-v1/v2 substitution.
+Retained FULL16 control streams select the fixture, but fresh Native references
+are mandatory for this RED matrix.
 
 **Native-first:** after MAIN-ADVANCE / FREEZE LIFTED, obtain fresh official AND
 seeded Native --slice references before Ares comparison. Every reference leg must
@@ -150,10 +206,11 @@ outputs, diagnostic core I/O, new public APIs or oracle fallback.
 
 ## 5. Gates / limits / deferrals
 
-1. Boundary approval at c6a9e152a recorded; owner-amended canonical slicing seam
-   supersedes the export/loader-only proposal. This amendment is docs-only.
-2. After explicit MAIN-ADVANCE / FREEZE LIFTED, freeze the unchanged positive /
-   repeat / empty-build control and run Native-first, maximum three fresh Native
+1. Review this exact input revision, including reason, new SHAs and inherited
+   qualified control request. Source/parser boundary and canonical seam stay fixed.
+   No new tests/Native/API/CLI/production runs before revised SPEC approval.
+2. After approval (and any applicable freeze lift), freeze the new positive /
+   repeat / exact qualified empty-build control and run Native-first, maximum three fresh Native
    slices per mode, official+seeded. CPU15/jobs1/threads1, load<60 before builds /
    every Native, fresh caches/artifacts, from_env, START/END receipts. No export
    preflight or additional oracle is authorized.
@@ -165,7 +222,8 @@ outputs, diagnostic core I/O, new public APIs or oracle fallback.
 
 STOP on changed failure, no RED, non-neutral control, request mismatch, Native
 --slice failure/incomplete G-code, missing archived input/source, or freeze.
-No retries. FULL16 freeze currently prohibits ALL new Native/nextest.
+No retries or further substitutions; stop and request disposition. Current main
+has advanced/freeze lifted, but this revised input SPEC must be approved first.
 
 Deferred: main-model missing-build parity, nonempty resource build/item behavior,
 arbitrary resource-schema relaxation, nested/remote relationship-policy changes,

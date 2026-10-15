@@ -2,8 +2,9 @@
 
 Status: boundary approved at c6a9e152a; owner-amended
 [SPEC](3mf-resource-part-build-spec.md) uses canonical slicing, not export/load-only.
-FULL16 freeze active: docs only now; Native-first RED only after MAIN-ADVANCE /
-FREEZE LIFTED. Independent test-only RED review precedes production approval.
+Main3ee8f272c has advanced/freeze lifted. First RED e1de695aa was rejected for
+control G-code divergence. This docs-only input revision requires approval before
+any new runtime. Independent qualified test-only RED review precedes production.
 
 ## Upstream owner / Rust boundary
 
@@ -22,8 +23,12 @@ shells around ObjectImporter/imported resource identities, not a new Ares loader
 
 ## Non-negotiable decisions
 
-- Exact retained v1 has a valid main build; only referenced body/modifier resources
-  omit it. Do not infer main-model missing-build semantics from that evidence.
+- Old v1/v2 geometry is frozen history, not the next qualifying pair. Its control
+  M73 insertion difference is independent deferred discovery, not this slice's fix.
+  New control is exact FULL16 strict-PASS control-before50 SHAadb38ee8; new
+  positive0eab5d4d removes ONLY one referenced resource's empty build. Both retain
+  main build. Complete SHAs/entry proof/known current-main streams are in SPEC2a.
+  No selective M73/settings changes, comparator weakening or implicit substitutions.
 - Resource omission and empty build must preserve imported meshes, identities,
   component transforms, roles and instance counts. No manufactured instances.
 - Preserve current main-model behavior without a global serde build default;
@@ -35,7 +40,9 @@ shells around ObjectImporter/imported resource identities, not a new Ares loader
 - Verification seam is Native --slice completing on the identical frozen3MF,
   then public slice_project_plate_validated and real bare-3MF CLI. No extra
   loaded JSONs, export-only/load-only success, observer or cached Native substitute.
-  Fresh official AND seeded Native references come first after MAIN-ADVANCE.
+  Use the qualified source control's --slice0 --outputdir argv (no extra arrange
+  flag); fresh official AND seeded Native references come first after revised
+  SPEC approval, without reusing FULL16 output as the new runtime baseline.
 - Approved RED is the specific Ares resource-build admission error versus complete
   Native G-code. CLI must confirm the same admission cause. A missing Ares stream
   is not raw byte equality, G-code PASS or an invented ordered-stream difference.
@@ -48,7 +55,9 @@ shells around ObjectImporter/imported resource identities, not a new Ares loader
   comparator weakening, fixture substitution or metadata filtering to get PASS.
 - Boundary approved ->docs-only seam amendment ->Native-first public test-only
   RED after MAIN-ADVANCE/FREEZE LIFTED ->independent exact-hash RED review ->
-  separate production approval. No Native/nextest during current FULL16 freeze.
+  separate production approval. Old control failure is NOT approved RED; new
+  control must strict-PASS, positive missing-build error is the real admission
+  RED. No Native/nextest before input revision approval or during any new freeze.
 
 ## Deferred / trade-off
 
