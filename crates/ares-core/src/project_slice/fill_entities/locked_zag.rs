@@ -19,7 +19,7 @@ pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
     lock: &GroupLock,
-    layer_id: usize,
+    call: super::types::SurfaceCall,
     super::types::ObjectFillGeometry {
         scale,
         extended_object_min_x,
@@ -30,12 +30,12 @@ pub(super) fn append(
     let kind = fill.representative.kind;
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let base = MonotonicFillParams {
-        dont_alternate_fill_direction: false,
+        dont_alternate_fill_direction: call.dont_alternate_fill_direction,
         spacing: params.spacing,
         overlap: params.overlap,
         density: 0.01 * params.density,
         angle: params.angle,
-        layer_index: layer_id,
+        layer_index: call.layer_id,
         thickness_layers: fill.representative.thickness_layers.max(1),
         fixed_angle: params.fixed_angle,
         bridge_angle: params.bridge.then_some(params.bridge_angle),

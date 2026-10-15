@@ -252,11 +252,22 @@ pub(in crate::project_slice) fn generate_layer(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::LockedZag) => {
+                // Fill.cpp:1235-1242: use this fill's printing region.
+                let region = &resolved_object.all_regions[region_id];
+                let call = super::types::SurfaceCall {
+                    layer_id: layer.id,
+                    dont_alternate_fill_direction: region.zaa_enabled.0
+                        && region.zaa_dont_alternate_fill_direction.0,
+                    reference: object_reference,
+                    scale: traversal.scale,
+                    link_max_length: 0.0,
+                    dont_adjust: fill.params.bridge,
+                };
                 super::locked_zag::append(
                     &mut output,
                     fill,
                     &lock_region_param,
-                    layer.id,
+                    call,
                     extended_object_bounds(),
                 )?;
             }
