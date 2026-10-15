@@ -7,6 +7,20 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Referenced 3MF resource-part build omission: proposed loader SPEC (2026-10-15)
+
+Worker4 next source slice: `Format/bbs_3mf.cpp::ObjectImporter` active resource
+parser (extract993/5715, dispatch5612-5687) does not require build/item; main
+instance creation remains separate. Rust destination: private `project/model_xml`
+and `project/load/graph` part-role decoding, not a new importer/pipeline.
+Retained v1 body/modifier omission is an old admission finding, not current RED
+or proof about a missing main build. Docs-only during FULL16 freeze; propose
+separate public load_project/export-only oracle and fixture/budget review.
+Exit: approved fresh loader RED/control, unchanged main/security/graph behavior,
+public data preservation and separate bounded GREEN review; no downstream parity
+claim. [SPEC](architecture/3mf-resource-part-build-spec.md),
+[ARD](architecture/ard-3mf-resource-part-build.md).
+
 ### Arachne fuzzy-skin junctions: proposed SPEC (2026-10-13)
 
 Worker3 next slice: `PerimeterGenerator.cpp::process_arachne:2095,2125` and
