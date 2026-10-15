@@ -18,6 +18,7 @@ pub use color_print::{
 };
 pub use custom_gcode_overview::{CustomGCodeOverviewRow, custom_gcode_overview};
 mod enabled;
+mod heights_widths;
 pub use colors::{DEFAULT_EXTRUSION_ROLES_COLORS, DEFAULT_OPTIONS_COLORS};
 
 /// `ViewerImpl` state behind the layer and view ranges: vertices, layers,

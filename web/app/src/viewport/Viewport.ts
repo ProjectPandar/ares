@@ -6,7 +6,7 @@ import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
 import { buildToolMarker, placeToolMarker } from "./toolMarker";
-import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
+import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, segmentSizesProbe, type ToolpathFilter } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -182,6 +182,7 @@ export class Viewport {
     this.#toolpaths = null;
     this.#toolMarker.visible = false;
     delete this.container.dataset.optionMarkers;
+    delete this.container.dataset.segmentSizes;
     if (toolpaths) {
       this.#toolpaths = buildToolpathMesh(toolpaths);
       this.#toolpathColors = toolpaths.colors;
@@ -189,6 +190,7 @@ export class Viewport {
       this.#toolpaths.add(markers.mesh);
       this.#scene.add(this.#toolpaths);
       this.container.dataset.optionMarkers = JSON.stringify(markers.counts);
+      this.container.dataset.segmentSizes = segmentSizesProbe(this.#toolpaths);
     }
     if (this.#previewView) this.setPreviewView(this.#previewView);
     else this.render();

@@ -181,6 +181,20 @@ export function applyEnabled(mesh: THREE.Mesh, segments: Uint32Array, options: U
   });
 }
 
+/**
+ * E2E probe of the instance end sizes: instance count and the FNV-1a 32 hash of
+ * the f32 bits `[start height, start width, end height, end width]` per instance.
+ */
+export function segmentSizesProbe(mesh: THREE.Mesh): string {
+  const geometry = mesh.geometry as THREE.InstancedBufferGeometry;
+  const size = geometry.getAttribute("aSize").array as Float32Array;
+  const ends = new Float32Array(geometry.instanceCount * 4);
+  for (let n = 0; n < geometry.instanceCount; n++) ends.set([size[2 * n + 1], size[2 * n], size[2 * n + 1], size[2 * n]], 4 * n);
+  let hash = 0x811c9dc5;
+  for (const byte of new Uint8Array(ends.buffer)) hash = Math.imul(hash ^ byte, 0x01000193);
+  return `${geometry.instanceCount}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
 /** Sets the view on the toolpath mesh and its option markers (children). */
 export function applyPreviewView(mesh: THREE.Mesh, view: ToolpathFilter) {
   mesh.traverse((node) => {
