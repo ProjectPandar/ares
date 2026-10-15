@@ -335,7 +335,6 @@ pub(in crate::project_slice) fn generate_layer(
             let context = super::ironing::SpanContext {
                 object: object_options,
                 default_region: &traversal.resolved.views.full.process.region,
-                nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
                 layer,
                 layers: &plan.layers,
                 model_rotation_offset,

@@ -32,7 +32,6 @@ pub(super) struct Input<'a> {
     /// `default_region_config()` — print-level process region options for
     /// the meta-language B/T shell units (`Fill.cpp:125-127`).
     pub(super) default_region: &'a ProcessRegionSourceOptions,
-    pub(super) nozzles: &'a OrcaFloats,
     pub(super) layer: &'a PlannedLayer,
     pub(super) layers: &'a [PlannedLayer],
     pub(super) last_layer: bool,
@@ -317,7 +316,6 @@ fn ironing_angle(input: &Input<'_>) -> (f32, bool) {
     let context = SpanContext {
         object: input.object,
         default_region: input.default_region,
-        nozzles: input.nozzles,
         layer: input.layer,
         layers: input.layers,
         model_rotation_offset: input.model_rotation_offset,
