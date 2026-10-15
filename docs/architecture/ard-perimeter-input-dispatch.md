@@ -1,35 +1,48 @@
-# ARD: Match configured perimeter owners before claiming algorithm parity
+# ARD: Config resolution is observable parity, not a prefiltered prerequisite
 
-Status: proposed, docs-only [SPEC](perimeter-input-dispatch-spec.md) review required.
+Status: amended proposal, docs-only [SPEC](perimeter-input-dispatch-spec.md) review
+required. Seam v2 NO-RED closure is already accepted and remains unchanged.
 
-## Source and destination
+## Source owner and Rust destination
 
-Orca8500fcdcc PrintConfig.hpp:1020/1217 types object generator and region sequence;
-PrintConfig.cpp::PrintConfigDef::init_fff_params:2158-2182/7155-7167 defines them.
-LayerRegion.cpp::make_perimeters:86-142 passes configs into PerimeterGenerator and
-selects its implementation at138-141. Rust destination is perimeters/context.rs::
-prepare_object_contexts:59-144, especially107-111, using existing retained typed
-options/record. This is an upstream handoff rewrite slice, not a new Ares pipeline.
+Orca8500fcdcc: bbs_3mf.cpp::_BBS_3MF_Importer::_load_model_from_file1923-1939 /
+_extract_project_config_from_archive2632-2654, Config.cpp::ConfigBase::load_from_json
+820/925-935, PresetBundle.cpp::load_vendor_configs_from_json4886-4927 and
+load_config_file_config4301-4319, PrintConfig.cpp::init_fff_params defaults.
+Native CLI update_full_config2750-2812/process3011 supplies entry precedence;
+that glue is provenance, not an independent Ares architecture goal.
+Rust: project/load.rs::load_project_with_preparation118-150 plus typed builders;
+loaded-source route profiles/load_settings.rs69-124/catalog/compose.rs108-136 and
+project/domain/profile_input.rs::from_3mf_with_profiles44-110. Reuse byte-oriented
+existing APIs and composition; no new resolver, filesystem or public API.
 
 ## Non-negotiable decisions
 
-- Different effective wall generators cannot establish same-input geometry/order
-  parity. Input-byte identity alone is insufficient when one entry loads profiles
-  and overrides while another uses embedded project settings.
-- The first motion travel toward a different loop identifies upstream perimeter
-  producer/first-entity ownership; it does not establish a route or seam bug.
-- A qualifying byte-equal main control and matched effective config/provenance
-  must precede RED. v2 failed control is excluded from positive evidence, not
-  deleted/substituted inside a comparison. No retry or new budget is implied.
-- Keep complete ordered G-code and raw API/CLI equality. Motion projection is
-  diagnosis only: retain M73, arcs, extrusion, statistics and footer in acceptance.
-- Existing config/dispatch scaffold remains a compatibility shell. Do not add
-  an Ares-specific dispatch policy, new public API, guard, fallback or diagnostic I/O.
-- Deferred downstream algorithms cannot be repaired under this proposal. Evidence
-  crossing this source boundary requires a new SPEC before implementation.
+- Effective config divergence under the same requested source/precedence contract
+  IS a RED candidate. Do not require equal actual configs before comparing output;
+  that would hide config-resolution bugs. Retained single-control stays the
+  effective-config plus complete ordered G-code candidate.
+- Record ALL supplied sources: 3MF, loaded preset files, caller overrides, entry
+  and source-selection metadata. Identical 3MF bytes do not erase additional
+  Native --load-settings inputs. Request provenance is not actual-config matching.
+- Here five Ares values equal explicit embedded JSON; Native values equal explicit
+  loaded process JSON. Defaults/inherits are not a demonstrated substitute source.
+  Do not invent missing parent lookup, overwrite explicit document fields from
+  named preset IDs, or repair downstream perimeter choice on this evidence.
+- Review must resolve standalone versus loaded-source contract before a new RED
+  run. Do not silently replay bare API against an overlaid cached Native oracle,
+  or add fixture/override manipulation to force actual fields equal.
+- Preserve effective-config witnesses AND all movement/arcs/M73/statistics/footer
+  in acceptance. Native primary streams remain immutable; motion projection is
+  diagnostic only. Failed harness histories are retained, never retry-to-success.
+- Production scope is only a demonstrated config-source/precedence rewrite at the
+  cited boundary after SPEC/test-only RED approval. Seam, ordering, brim geometry,
+  travel and broad preset migration are deferred. No guards or fallback.
 
-## Consequence
+## Trade-off
 
-Seam v2 closes NO-RED; two unmerged failing harness test commits remain external
-history, not merge candidates. The proposed next source boundary still needs
-SPEC, fixture/control and budget rulings before new tests or execution.
+The rejected matched-effective-config admission gate would hide the very bug
+under investigation. Removing it must not replace evidence with a causal claim:
+retained invocations supply different sources, so the exact contract remains a
+review decision. Config delta is preserved rather than normalized or discarded;
+no production correction is preselected and no new execution budget is implied.
