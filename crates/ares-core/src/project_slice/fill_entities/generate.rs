@@ -341,9 +341,8 @@ pub(in crate::project_slice) fn generate_layer(
                     .total_cmp(&right.filament_ironing_spacing.0)
             })
             .then_with(|| {
-                (object_options.layer_height.0 * left.filament_ironing_flow.0 as f64).total_cmp(
-                    &(object_options.layer_height.0 * right.filament_ironing_flow.0 as f64),
-                )
+                (object_options.layer_height.0 * left.filament_ironing_flow.0)
+                    .total_cmp(&(object_options.layer_height.0 * right.filament_ironing_flow.0))
             })
             .then_with(|| {
                 left.filament_ironing_speed
