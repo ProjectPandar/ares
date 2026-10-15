@@ -136,3 +136,6 @@ mod zaa_anchoring_direction;
 
 #[path = "zaa_locked_zag_direction.rs"]
 mod zaa_locked_zag_direction;
+
+#[path = "zaa_line_direction.rs"]
+mod zaa_line_direction;
