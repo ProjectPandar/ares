@@ -1,7 +1,9 @@
 # SPEC: 3MF resource-part import without a build element
 
-Status: **docs-only REVIEW-REQUEST**. FULL16 freeze remains active. This proposes
-an independent loader slice, not implementation, fixture, Native or nextest budget.
+Status: **boundary APPROVED at c6a9e152a; RED seam amended by owner**.
+Current work is docs-only during FULL16 freeze. Native-first canonical public
+slicing RED is authorized only after MAIN-ADVANCE / FREEZE LIFTED; production
+still requires independent test-only RED review and separate approval.
 Approved inherits_group RED6f1f48a29/GREENed6bfd3aa remain unchanged, queued stack16.
 
 ## 1. Owning upstream rewrite boundary
@@ -43,7 +45,7 @@ public slice_with_profiles failed `InvalidInput("invalid project model XML: miss
 field `build`")`. Historical Native received flattened machine/process/filament
 JSONs; the API received catalog/selection/overrides. All supplied sources/argv
 remain in the archive, not inferred from preset IDs. This is not evidence for the
-new standalone export/loader request contract below.
+new bare-3MF canonical slicing request contract below.
 Seeded0, admitted ordered-G-code comparisons0. This was an
 admission finding, NOT a lower-slice/seam/ordered-stream RED. It is not a fresh
 public loader RED on current main or proof of complete model parity.
@@ -86,59 +88,84 @@ Existing ModelDocument/ModelGraph remain temporary representations of the named
 upstream resource/import graph, not a new Ares scene architecture. No production
 change is authorized by this document. Tier1 byte-only core boundary stays intact.
 
-## 4. Proposed public RED seam (separate approval/budget required)
+## 4. Approved amended public RED seam: Native-first canonical slicing
 
-Agree the seam before test code: public `ares_core::load_project(bytes)` admission
-and existing public Project model/object/volume/mesh/instance views. The assertion
-under test is **resource-part admission and data preservation**, not ordered-G-code
-parity. At this seam a specifically attributable missing-build error can be a
-product loader RED; arbitrary harness/Native admission failures cannot.
+**No loader-only or export-only oracle.** The earlier load_project/export proposal
+is withdrawn. The owning production boundary remains resource-part parsing, but
+verification uses the complete public slicing path:
 
-Propose exact retained v1 as positive, byte-audited v2 empty-build counterpart as
-control, plus fresh positive repeat. Do not change meshes, transforms, roles,
-profiles, metadata, main build, relationship paths or IDs. Freeze all entry hashes
-and a proof that only the two resource empty-build tags differ before execution.
-No newly modified fixture is implicitly approved by the old discovery budget.
+- Native `--slice 0 --arrange 0 --outputdir <fresh>` on the identical frozen3MF;
+  no load-settings/filament JSONs or extra overrides for this bare-3MF contract.
+- Public `ares_core::slice_project_plate_validated` on those same bytes, no profile,
+  plateNone/default ConfigOverrides, matching deterministic generation metadata
+  and SlicerContext seed0.
+- Real CLI `ares slice -o <fresh cli.gcode> <same frozen3MF>`, no profile/loaded
+  files/overrides. Capture actual command/status/stdout/stderr and complete output.
 
-Proposed Native admission witness is the existing public **export-only** route:
-`OrcaSlicer.cpp::CLI::run:5618-5620,7058-7063` (--export-3mf), arrange0, same
-standalone 3MF bytes, no load-settings/filament files or slicing request. It must
-finish exit0 with a valid model export for both inputs. Native-export resource/
-instance fingerprints must be positive/repeat/control invariant; exclude only
-non-model container identities such as ZIP times from that *model-data* artifact,
-not vertices, winding, IDs, transforms, volume roles or ordering. Export itself
-is not proof of all model fields: retain source ZIP entry proof and raw exports.
-This export route is proposed, NOT preflighted in this task. If unavailable or
-non-neutral, STOP for review; no automatic slice/observer/oracle substitution.
+Freeze exact retained v1 positive, byte-audited v2 empty-build counterpart control,
+and fresh positive repeat. No mesh, transform, role, profile/config metadata,
+main build, relationship, ID or generator-option change. Record complete ZIP-entry
+hashes and prove only resource empty-build tags differ. v2 must not replace v1.
+Historical loaded-Native versus catalog-API receipts do not establish this new
+same-input contract; fresh references are mandatory.
 
-Public API control must load successfully; positive must fail specifically at
-resource build decoding before production. After a separately approved fix,
-positive/repeat/control must load and produce identical ordered public-domain
-fingerprints (mesh coordinates/index buffers, resources, roles, instances and
-transforms). Artifact includes exact request/input hashes, Native command/status/
-raw export, public error or fingerprint, and control/neutrality results. No
-committed Native outputs, diagnostic core I/O or new public APIs.
+**Native-first:** after MAIN-ADVANCE / FREEZE LIFTED, obtain fresh official AND
+seeded Native --slice references before Ares comparison. Every reference leg must
+exit0 with complete ordered G-code/footer and authoritative complete snapshots.
+Require complete generator-only Native positive/repeat/control neutrality; no
+cached historical stream, export result, partial observation or load-only success
+can substitute. Stop on Native failure, unstable/non-neutral reference or source
+mismatch. Do not run Ares first and treat a missing Native baseline as RED.
 
-No G-code is required by this loader-only seam. If any slicing is later proposed,
-request a separate matched-input budget; retain full existing generator-only
-ordered comparison, motion/arcs/M73/statistics/footer and raw API/CLI equality.
-Do not use known downstream divergence to reject a valid loader finding or claim
-that loader admission establishes slicing parity.
+**Approved RED:** Native completes G-code on the frozen positive while the public
+Ares slicing entry rejects its resource model specifically for missing build.
+Run/capture the real CLI too: it must reject the same request for the same
+admission cause, not a different adapter/input contract. This attributable product
+admission error is the RED at the approved slicing seam; it is not fabricated
+ordered-byte divergence. Native/harness failures or unrelated Ares errors are not
+qualifying RED. Preserve the old discovery's separate historical classification.
+
+For every admitted Ares leg, require API/CLI RAW byte equality and the unchanged
+strict COMPLETE ordered Native/API/CLI generator-only comparison: no removal of
+motion/arcs/M73/statistics/footer, no effective-config-equality admission gate,
+no tolerance or metadata filtering. Save full configs and first difference.
+For an admission-error leg, raw-stream equality/comparison is explicitly **not
+evaluated: no complete Ares stream**; matching API/CLI error causes are recorded,
+not misreported as byte equality or G-code PASS. Control must Native-complete
+and both public Ares entries admit; record its full strict comparison. A residual
+control mismatch is retained/reported, never waived or repaired to manufacture
+parity. Freeze test-only errors/results before production review.
+
+After separately approved GREEN, positive/repeat/control must admit, API/CLI raw
+equality must hold and the same full strict comparator must be rerun. If ANY
+residual G-code difference remains, **STOP and report exact first difference and
+full retained streams; no scope growth** into seam, geometry, order, config or
+travel. Do not label loader admission as complete slicing GREEN, weaken the
+comparator, substitute fixtures or repair adjacent owners.
+
+Artifacts: exact request/source hashes, Native and CLI commands/status/snapshots,
+full streams where present, public API admission error or output, configs,
+repeat/control neutrality and unmodified comparator results. No committed Native
+outputs, diagnostic core I/O, new public APIs or oracle fallback.
 
 ## 5. Gates / limits / deferrals
 
-1. Exact docs SPEC/ARD approval and oracle/request-contract ruling.
-2. Explicit fixture and post-freeze preflight/RED budget: proposed maximum three
-   export admissions per mode, preflight included (positive/repeat/control), official+seeded, CPU15,
-   jobs1/threads1, load<60, fresh caches/artifacts, from_env, START/END receipts.
-3. Freeze public test-only attributable loader RED + control/neutrality proof;
-   independent exact-hash review BEFORE production approval.
-4. Separate bounded correction; fmt/strict clippy/WASM, <400LOC modules, original
-   admission suite + existing project-loader family. Coordinator schedules full.
+1. Boundary approval at c6a9e152a recorded; owner-amended canonical slicing seam
+   supersedes the export/loader-only proposal. This amendment is docs-only.
+2. After explicit MAIN-ADVANCE / FREEZE LIFTED, freeze the unchanged positive /
+   repeat / empty-build control and run Native-first, maximum three fresh Native
+   slices per mode, official+seeded. CPU15/jobs1/threads1, load<60 before builds /
+   every Native, fresh caches/artifacts, from_env, START/END receipts. No export
+   preflight or additional oracle is authorized.
+3. Freeze public test-only attributable slicing-admission RED + control/neutrality
+   proof; REVIEW-REQUEST independent exact-hash review BEFORE production approval.
+4. Separate bounded correction only after that gate; fmt/strict clippy/WASM,
+   <400LOC modules, original slicing witness + existing project-loader family.
+   Any post-GREEN residual whole-output diff means STOP/report, not expansion.
 
 STOP on changed failure, no RED, non-neutral control, request mismatch, Native
-admission/export failure, missing archived input/source, or freeze. No retries.
-FULL16 freeze currently prohibits ALL new Native/nextest, including preflight.
+--slice failure/incomplete G-code, missing archived input/source, or freeze.
+No retries. FULL16 freeze currently prohibits ALL new Native/nextest.
 
 Deferred: main-model missing-build parity, nonempty resource build/item behavior,
 arbitrary resource-schema relaxation, nested/remote relationship-policy changes,

@@ -14,11 +14,13 @@ parser (extract993/5715, dispatch5612-5687) does not require build/item; main
 instance creation remains separate. Rust destination: private `project/model_xml`
 and `project/load/graph` part-role decoding, not a new importer/pipeline.
 Retained v1 body/modifier omission is an old admission finding, not current RED
-or proof about a missing main build. Docs-only during FULL16 freeze; propose
-separate public load_project/export-only oracle and fixture/budget review.
-Exit: approved fresh loader RED/control, unchanged main/security/graph behavior,
-public data preservation and separate bounded GREEN review; no downstream parity
-claim. [SPEC](architecture/3mf-resource-part-build-spec.md),
+or proof about a missing main build. Boundary c6a9e152a approved; amended seam is
+fresh Native --slice first in both modes on identical frozen3MF, then public
+slice_project_plate_validated + real CLI, full generator-only comparison/raw
+API-CLI equality. Docs-only until MAIN-ADVANCE/FREEZE LIFTED; no export/load-only
+oracle. Exit: reviewed public admission RED, unchanged main/security/graph behavior
+and separately approved bounded GREEN; any residual G-code diff STOP/report,
+no downstream scope growth. [SPEC](architecture/3mf-resource-part-build-spec.md),
 [ARD](architecture/ard-3mf-resource-part-build.md).
 
 ### Arachne fuzzy-skin junctions: proposed SPEC (2026-10-13)

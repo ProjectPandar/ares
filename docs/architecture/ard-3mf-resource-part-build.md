@@ -1,7 +1,9 @@
 # ARD: Separate resource-part admission from main-model build semantics
 
-Status: proposed; [SPEC](3mf-resource-part-build-spec.md) review only. FULL16 freeze
-active; no runtime, test, fixture or production authorization.
+Status: boundary approved at c6a9e152a; owner-amended
+[SPEC](3mf-resource-part-build-spec.md) uses canonical slicing, not export/load-only.
+FULL16 freeze active: docs only now; Native-first RED only after MAIN-ADVANCE /
+FREEZE LIFTED. Independent test-only RED review precedes production approval.
 
 ## Upstream owner / Rust boundary
 
@@ -30,19 +32,23 @@ shells around ObjectImporter/imported resource identities, not a new Ares loader
 - Preserve namespace/entity/size/depth/security/path/relationship/identity checks;
   no XML-string insertion, error-catch/reparse fallback, filename role heuristic,
   archive rescanning, filesystem/terminal IO in core, new resolver or public API.
-- The public seam is loader admission + public Project data, not G-code parity.
-  A specific public loader rejection of a Native-admitted resource can qualify
-  only after separate loader RED approval; historical failed slicing admission
-  remains NOT a lower-slice/seam/ordered-byte RED.
-- Proposed Native export-only input contract supplies exactly the same standalone
-  3MF to both loader oracles; no hidden loaded JSONs. Export neutrality must be
-  preflighted under an explicit budget, not assumed. Retain raw exports and input
-  entry hashes; no artifact/observer substitution on failure.
-- Any future G-code check retains the entire existing strict comparator contract;
-  this import-only proposal neither weakens it nor claims downstream parity.
-- Separate docs approval ->fixture/export-oracle/budget approval after freeze ->
-  fresh public test-only RED ->independent exact-hash review ->production approval.
-  Current task is docs only. No Native/nextest before explicit freeze lift.
+- Verification seam is Native --slice completing on the identical frozen3MF,
+  then public slice_project_plate_validated and real bare-3MF CLI. No extra
+  loaded JSONs, export-only/load-only success, observer or cached Native substitute.
+  Fresh official AND seeded Native references come first after MAIN-ADVANCE.
+- Approved RED is the specific Ares resource-build admission error versus complete
+  Native G-code. CLI must confirm the same admission cause. A missing Ares stream
+  is not raw byte equality, G-code PASS or an invented ordered-stream difference.
+  Historical failed discovery admission remains separately classified.
+- Every admitted Ares leg uses API/CLI raw equality and the unchanged strict full
+  generator-only comparison, retaining movement/arcs/M73/statistics/footer and
+  effective-config differences. Repeat/control neutrality remains mandatory.
+- After separately approved GREEN, ANY residual G-code difference means STOP and
+  report the complete streams/first difference. No downstream scope growth,
+  comparator weakening, fixture substitution or metadata filtering to get PASS.
+- Boundary approved ->docs-only seam amendment ->Native-first public test-only
+  RED after MAIN-ADVANCE/FREEZE LIFTED ->independent exact-hash RED review ->
+  separate production approval. No Native/nextest during current FULL16 freeze.
 
 ## Deferred / trade-off
 
