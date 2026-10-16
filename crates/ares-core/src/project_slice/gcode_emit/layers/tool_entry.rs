@@ -95,7 +95,6 @@ pub(super) fn emit(
         .object
         .identity();
     if pass == tool_buckets::Pass::Normal
-        && body.is_some()
         && (entry.object_layer.is_some()
             || entry.support_layer.is_some()
             || entry.raft_layer.is_some())
