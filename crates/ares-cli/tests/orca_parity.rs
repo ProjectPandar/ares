@@ -32,6 +32,8 @@ mod per_object_skirt_groups;
 mod skirt_per_object_tower_ctl;
 #[path = "orca_parity/skirt_per_object_tower_w5.rs"]
 mod skirt_per_object_tower_w5;
+#[path = "orca_parity/per_object_skirt_support_raft.rs"]
+mod per_object_skirt_support_raft;
 
 #[path = "orca_parity/adaptive_pressure_advance.rs"]
 mod adaptive_pressure_advance;
