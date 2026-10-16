@@ -73,6 +73,8 @@ mod brim_painted_inner_w5;
 mod brim_painted_w5;
 #[path = "orca_parity/brim_physical_layer.rs"]
 mod brim_physical_layer;
+#[path = "orca_parity/byobject_transition_comments.rs"]
+mod byobject_transition_comments;
 #[path = "orca_parity/change_filament_flush_blocks.rs"]
 mod change_filament_flush_blocks;
 #[path = "orca_parity/clearance_admission.rs"]

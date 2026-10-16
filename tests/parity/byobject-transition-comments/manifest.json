@@ -1,0 +1,13 @@
+{
+  "source": "GCode.cpp:3321-3322; GCodeWriter.hpp:266-267; GCodeWriter.cpp:678",
+  "cases": {
+    "comments-on": {
+      "sha256": "aa77e24538a677c58fc6cc5ccad08c6f94e8dc2e2dfc7bef789ce0ce43d45ce1",
+      "gcode_comments": "1"
+    },
+    "comments-off": {
+      "sha256": "c09d00e0ba1e0a55e4e4dc330ec0587ae03827c46685e422fd19dfcbe5037fbb",
+      "gcode_comments": "0"
+    }
+  }
+}
