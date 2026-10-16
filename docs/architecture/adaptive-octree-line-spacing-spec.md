@@ -90,3 +90,29 @@ single-variable fixture families. Deferred: bridge triangles
 behavior, multiline geometry expansion, object-region spacing beyond this
 source-derived tree spacing, Honeycomb/TPMS-D anchoring, and public contracts.
 If no valid Native-admitted spacing divergence is found, stop with NO-RED.
+
+## Amendment required before RED
+
+The bridge-free check excludes the bottom-shell layers themselves. With
+`bottom_shell_layers=3`, `discover_horizontal_shells` may produce
+`stInternalSolid` on layers 1 and 2 (and the bottom boundary layer); those
+solids are expected and are harmless under `PrintObject.cpp:2543-2546`. The
+fixture also sets `bottom_shell_thickness` so it does not extend solidification
+above those bottom-shell layers. The check therefore starts on the first layer
+above the bottom-shell range and verifies the Native G-code there.
+
+Native `fill_surfaces` is not directly observable. The runtime test instead
+checks every Native layer above the bottom shells for both absence of
+`;TYPE:Internal solid infill` and absence of bridge feature markers. This is
+required because `stInternalSolid` always emits as solid infill; the check does
+not infer candidate absence from a missing `Internal Bridge` role alone.
+
+The two regions are constructed by one model-part volume followed by one
+modifier volume in the authored 3MF object order. `PrintApply.cpp:1000-1012`
+`get_create_region` visits the part first, so its config becomes region 0;
+the modifier config becomes region 1. The modifier footprint is a 10 mm ×
+10 mm rectangle (100 mm²), well above the default `minimum_sparse_infill_area`
+of 15 mm², so it is not solidified or discarded as a tiny sparse region. The
+part and modifier configs differ only in the fixture variable under test
+(density or multiline), and their distinct configs prevent `get_create_region`
+from merging them.
