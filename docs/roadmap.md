@@ -7,6 +7,28 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### spRear/back candidate comparison and alignment: SPEC request (2026-10-17)
+
+W4's coordinator-approved proposal ports `GCode/SeamPlacer.cpp` spRear
+comparison Y priority777-779, similarity839-841, pick917-928, rear fit
+length1364-1366 and alignment routing1486-1492 (pin8500fcdcc). Rust boundary is
+existing `project_slice/seam_placement` runtime/preparation/alignment; replace
+its Back bypass, not the unrelated basic-perimeter max-Y helper. No max-Y
+shortcut or new Ares pipeline; paint/scarf/new random/nearest and clocks defer.
+Base **approved physical-plane GREEN4dbba4fc09b4b84033797ab83f2941e5d8484b95**,
+keeping shared files on the same stack25 ancestry. Discovery on4351: admitted
+6-vertex/8-triangle four-layer prism, aligned control Native/CLI whole-PASS;
+only back positive Native0/CLI0 whole-FAIL byte451/line18, first motion raw64
+Native110,113.446 versus Ares110.43,112.509. Not an admission/defensive guard.
+Docs only: SPEC approval→frozen Native-first public API+real CLI control/positive
+RED in official+seeded→RED REVIEW→separate bounded GREEN REVIEW. Exit: whole
+PASS/raw API==CLI both modes, Native first-motion parity, existing seam-family
+regressions including audited Native gates, fmt/strict scoped clippy/WASM;
+residual whole failure means STOP. No code/test/fixture permission before gates;
+CPU15 targeted only, coordinator owns full/workspace/integration; RED merges
+only with GREEN. [SPEC](architecture/seam-rear-spec.md),
+[ARD](architecture/ard-seam-rear.md).
+
 ### Per-object skirt guard inventory: approved ByObject slice, integration pending (2026-10-17)
 
 W1 Slice 1 GREEN `c1780265dd00dfd9322ffc6bba734d335c5311fe` ports
