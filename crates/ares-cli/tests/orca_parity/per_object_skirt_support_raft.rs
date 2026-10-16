@@ -21,10 +21,10 @@ fn orca_parity_per_object_skirt_support_raft_matches_native() {
     let cube = runner::repo_root().join("tests/parity/cube10.stl");
     let overhang = runner::repo_root().join("tests/parity/overhang.stl");
     let cases = [
-        ("support", true, 0, [&overhang, &overhang], 2),
-        ("raft", false, 2, [&cube, &cube], 2),
         ("control", false, 0, [&cube, &cube], 2),
         ("single-raft-control", false, 2, [&cube, &cube], 1),
+        ("support", true, 0, [&overhang, &overhang], 2),
+        ("raft", false, 2, [&cube, &cube], 2),
     ];
     for (label, enable_support, raft_layers, models, object_count) in cases {
         let mut process = profiles.process(&selection.process).unwrap();
