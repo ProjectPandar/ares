@@ -1,10 +1,69 @@
 # SPEC: ObjectImporter ignores resource-part build/item payload
 
-Status: **PROPOSED, docs only; approval required before fixture freezing or runtime.**
-Follows approved omission RED `a88578afa946db02e4e6d68420730b8dae71902f`
-and GREEN `87ac91eb5243d70138681e12a5c2b20602cc92bc`, entering stack-17 together.
-No GREEN batch rerun. The [M73 discovery](discovery-m73-resource-control-order.md)
-remains deferred; no work on that owner.
+Status: **REFRESHED against main `41f2c90f765d42c6620583121296bb61a2cb839c`
+(2026-10-16); the named production slice is already merged.** This refresh is
+docs-only and requests owner adjudication of the repeated assignment, not a new
+RED or production authorization. Main includes `86b7f3e1c` (resource build/item
+ignore), following `61c22160b` (resource build omission). Original approved RED
+`021d96bacf0f624f7daf95274ba893c4c93e3313` and GREEN
+`06d31e9d94d1be9902e26aed1f72e73a4ab872b3` were verified and merged through
+stack-19. Do not recreate that RED on a main which already contains its GREEN.
+M73 remains deferred.
+
+## Current-main finding and delivery gate
+
+`project/load/graph.rs::load` already selects required `ModelDocument<Build>`
+for the resolved root, and `ModelDocument<Option<serde::de::IgnoredAny>>` for
+resource parts. `project/model_xml.rs::into_resource_document` already moves
+unit/extensions/metadata/resources unchanged and supplies an empty internal
+resource build; only the main build can create instances. The destination and
+source boundary requested by this assignment are therefore already present.
+
+The existing frozen input-only witness is
+`tests/parity/3mf-resource-item-ignore/{positive,control}.3mf`; existing public
+test is `runner/resource_item_ignore.rs::resource_item_ignored_public_slicing`.
+Both roles still pass the common XML security/mesh/path/relationship validation.
+No change to test, production, fixture or comparator is proposed by this refresh.
+
+A new public RED cannot honestly be promised for identical inputs on this base.
+The planned oracle seam remains fresh Native at runtime, validated public API,
+real bare CLI, raw API==CLI and complete strict generator-only equality; the
+existing test asserts target success/equality and failed before GREEN. On this
+base it is a nonregression witness, not a new RED. Any request for additional
+behavior requires a separately named upstream boundary and input approval.
+No Native probing or RED/production work is authorized by this docs refresh.
+
+### Failure inventory before any separately approved verification
+
+| Failure | Classification / action |
+|---|---|
+| Requested boundary already present in main | Report duplicate/completed slice; no fabricated RED or removal of GREEN. |
+| Fixture archive/entry hash drift | STOP before Native; retain frozen positive/control identities. |
+| Native nonzero/incomplete footer/snapshot | Invalid oracle, not product RED; STOP without retries or input substitution. |
+| Native positive/repeat non-neutral | STOP/adjudicate nondeterminism; do not normalize behavioral lines away. |
+| API or real CLI rejects while same-input Native completes | Admission delta only; target-success assertions must FAIL, not pass an expected-error branch. |
+| Missing Ares stream | Raw/whole comparison NOT EVALUATED; never missing-output equality. |
+| Control admission/raw/strict comparison fails | Disqualify RED; STOP, no M73/metadata/output filtering. |
+| Public stream differs anywhere except permitted generator identity | Target equality FAIL; preserve first difference and whole streams; no scope growth. |
+| Main build/item policy or instance count changes | Outside resource dispatch slice; STOP, no guards/fallbacks or global defaults. |
+| XML/security/path/relationship checks regress | Reject change; ignoring payload does not waive document validation. |
+
+### Current frozen pair and included/deferred scope
+
+Positive SHA `41dca2941a280ed674b063bed0cbb5afd9d37336c4757f8327afc331e39d1464`;
+control SHA `adb38ee8df9485a864135007753fb935aedf7883fe37f910109f20145f3c7be2`.
+Only `3D/Objects/overhang.stl_1.model` changes `<build/>` to
+`<build><item/></build>`; manifest in the fixture directory pins every entry.
+Included behavior is non-consumption of resource build/item fields and no
+resource-created instances, under existing XML validation. Main item decoding,
+arbitrary unknown tags, nested relationship policy, units/transforms/geometry,
+PrintConfig, and M73 remain deferred. No new Ares loader/pipeline is designed.
+
+The source-cited design/history below records the original pre-GREEN proposal;
+its statements about an optional typed resource `Build` gap and an unfrozen pair
+are **historical**, not the state of main41f2.
+
+## Original proposal (historical, already approved and implemented)
 
 ## 1. Upstream rewrite slice
 

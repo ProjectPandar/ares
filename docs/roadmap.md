@@ -22,25 +22,22 @@ assert target Native equality and fail until GREEN; controls assert equality.
 [SPEC](architecture/3mf-resource-vertex-defaults-spec.md),
 [ARD](architecture/ard-3mf-resource-vertex-defaults.md).
 
-### Resource build/item non-consumption: proposed ObjectImporter SPEC (2026-10-15)
+### Resource build/item non-consumption: merged, refreshed at main41f2 (2026-10-16)
 
-Worker4 next source slice: `Format/bbs_3mf.cpp::ObjectImporter` resource start/end
-handlers5612-5687 do not dispatch build/item; active workers1780-1817 differ from
-main `_handle_start_item:3893-3909`. Approved omission GREEN still deserializes
-present resource `BuildItem` fields. Rust destination is private
-`project/model_xml.rs` and `project/load/graph.rs` role-aware transport; replace
-that resource/main payload conflation, not an Ares-owned loader/pipeline.
-Propose unchanged strict-PASS controladb38ee8 and a single resource-entry edit
-`<build/>`→`<build><item/></build>` to witness non-consumption of main-item
-attributes. This well-formed-XML probe is not claimed schema-valid for a main
-build. Static prediction only: no positive generated or runtime RED claimed.
-SPEC/input approval before any fixture/test freeze or execution; each enabled
-test always Native→public, no staged bypass/injected references. Exit: complete
-neutral Native slices, attributable public admission RED with whole strict-PASS
-control, then separately authorized GREEN/full parity and 3MF/load nonregression.
-Main schema/security/instance behavior unchanged; M73 discovery stays deferred.
+`Format/bbs_3mf.cpp::ObjectImporter` resource start/end handlers5612-5687 do
+not dispatch build/item, unlike main `_handle_start_item:3893-3909`. This port
+is already present in main41f2: `project/load/graph.rs` decodes resource payload
+as `ModelDocument<Option<IgnoredAny>>`; `project/model_xml.rs` converts it to
+empty internal build items. Required main Build and instance/security behavior
+remain unchanged. Merged GREEN86b7f3e1c implements original approved GREEN06d31;
+existing frozen public witness/control now assert full strict Native/API/CLI
+and raw API==CLI equality. The repeated assignment is docs-only refresh and
+owner adjudication, not permission to fabricate another RED or undo parity.
+Refreshed SPEC records exact current pair, included/deferred scope, failure
+inventory, historical pre-GREEN design and planned oracle seam for separately
+approved verification. No new Native/test/production work; M73 stays deferred.
 [SPEC](architecture/3mf-resource-build-item-ignore-spec.md),
-[proposed ARD](architecture/ard-3mf-resource-build-item-ignore.md).
+[ARD](architecture/ard-3mf-resource-build-item-ignore.md).
 
 ### Referenced 3MF resource-part build omission: approved GREEN, stack-17 (2026-10-15)
 

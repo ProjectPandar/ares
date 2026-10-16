@@ -1,8 +1,23 @@
 # ARD: Resource build payload belongs to ObjectImporter's ignored dispatch
 
-Status: **PROPOSED**, associated [SPEC](3mf-resource-build-item-ignore-spec.md).
-Docs only; not runtime or production authorization. Approved omission GREEN87ac
-is complete and entering stack-17 with REDa885; do not rerun that GREEN batch.
+Status: **IMPLEMENTED / REFRESHED at main41f2 (2026-10-16)**, associated
+[SPEC](3mf-resource-build-item-ignore-spec.md). This docs-only refresh identifies
+that the repeated assignment is already completed in main; no new runtime,
+fixture, RED, test, or production change is proposed. Await owner adjudication.
+
+Main `41f2c90f765d42c6620583121296bb61a2cb839c` contains resource-ignore GREEN
+`86b7f3e1c` and omission prerequisite `61c22160b`. Existing role selection decodes
+resource `ModelDocument<Option<serde::de::IgnoredAny>>`, converts its internal
+build to empty items, and preserves required main `ModelDocument<Build>`.
+The existing public witness asserts target Native/API/CLI whole equality and
+raw API==CLI; a pre-GREEN rejection made it fail, rather than pass an inverted
+assertion. On this base it is a regression, not a new RED.
+
+Non-negotiable: do not undo already merged parity or invent another importer to
+manufacture a RED. A new behavior must have a new source-cited boundary and
+separate approval. Failure inventory and current frozen pair are in the SPEC.
+The original decisions below remain the source contract, with the old optional
+`Build` gap description historical rather than current. M73 stays deferred.
 
 ## Source / destination
 
@@ -16,15 +31,15 @@ Rust destination is private `project/model_xml.rs` resource transport and
 `load_project_with_preparation`. Existing DTO/graph are temporary compatibility
 shells around the named upstream import owner, not a new Ares pipeline.
 
-## Decisions requiring approval
+## Source contract (implemented decisions)
 
 - Root role comes from the resolved package root relationship. Main required
   Build and typed BuildItem decoding remain unchanged; no filename/index policy
   or global serde build default.
 - Resource build payload is not a second main-build document. Its fields must
-  not trigger main item deserializers or create instances. Current optional
-  Build admits omission but still consumes present item fields; this follow-up
-  replaces only that remaining compatibility shell behavior.
+  not trigger main item deserializers or create instances. Main41f2 implements
+  this through `Option<IgnoredAny>` and empty internal resource build; the prior
+  optional typed `Build` was a temporary compatibility shell, now replaced.
 - Keep the existing XML validation/security pass. Ignoring a resource payload
   does not waive malformed XML, namespace/entity/size/depth/path checks or mesh/
   relationship/identity validation. No XML insertion/reparse/error fallback.
