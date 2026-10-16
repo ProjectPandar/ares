@@ -167,11 +167,11 @@ pub(in crate::project_slice) fn generate_layer(
                     &mut output,
                     fill,
                     layer.print_z,
-                    super::adaptive::AdaptiveObject {
+                    super::adaptive::AdaptiveObject::new(
                         traversal,
                         object_index,
-                        active_region_ids: &active_region_ids,
-                    },
+                        &active_region_ids,
+                    ),
                     traversal.scale,
                 )?;
             }

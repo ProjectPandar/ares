@@ -270,12 +270,14 @@ pub(super) fn dispatch(
                 let _ = expolygon;
             }
             let anchored = crate::project_slice::fill_entities::adaptive::anchoring_lines(
-                traversal,
-                object_index,
+                crate::project_slice::fill_entities::adaptive::AdaptiveObject::new(
+                    traversal,
+                    object_index,
+                    active_region_ids,
+                ),
                 &fill,
                 z,
                 traversal.scale,
-                active_region_ids,
             )?;
             result.extend(anchored);
             let _ = pattern;

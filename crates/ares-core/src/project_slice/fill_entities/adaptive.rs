@@ -19,10 +19,24 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 
 /// Object inputs for the adaptive octree (`FillAdaptive.cpp:1483`,
 /// `PrintObject.cpp:275-356,984`).
-pub(super) struct AdaptiveObject<'a> {
+pub(in crate::project_slice) struct AdaptiveObject<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) object_index: usize,
     pub(super) active_region_ids: &'a [usize],
+}
+
+impl<'a> AdaptiveObject<'a> {
+    pub(in crate::project_slice) fn new(
+        traversal: &'a PreparedPostClassicTraversal,
+        object_index: usize,
+        active_region_ids: &'a [usize],
+    ) -> Self {
+        Self {
+            traversal,
+            object_index,
+            active_region_ids,
+        }
+    }
 }
 
 pub(super) fn append(
@@ -292,13 +306,16 @@ fn clipper_error(error: crate::geometry::ClipperError) -> SliceError {
 /// Sparse anchoring lines (`PrintObject.cpp:2750-2754`: the bridge-over-
 /// infill phase generates the sparse infill polylines with the octrees).
 pub(in crate::project_slice) fn anchoring_lines(
-    traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
+    adaptive: AdaptiveObject<'_>,
     fill: &SurfaceFill,
     z: f64,
     scale: CoordinateScale,
-    active_region_ids: &[usize],
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
+    let AdaptiveObject {
+        traversal,
+        object_index,
+        active_region_ids,
+    } = adaptive;
     let kind = octree_kind(fill.params.pattern);
     let octree = octree_for(traversal, object_index, kind, active_region_ids)?;
     let mut polylines = Vec::new();
