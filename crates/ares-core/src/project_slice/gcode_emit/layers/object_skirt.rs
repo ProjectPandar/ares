@@ -60,18 +60,17 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: I
             state,
         );
     } else if let Some(raft_index) = input.raft_layer {
-        let raft_polygons = input
-            .raft
-            .as_ref()
-            .and_then(|raft| raft.plans.get(input.object))
-            .and_then(|plans| plans.get(raft_index))
-            .map(|plan| {
-                plan.polygons
-                    .iter()
-                    .map(|polygon| ExPolygon::new(polygon.clone(), Vec::new()))
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
+        // `GCode.cpp:5329-5335` calls generate_object_skirt_group for raft
+        // entries; `:4398` selects first_layer and `:4311-4318` counts raft
+        // layers toward skirt_height. Raft polygons/flow come from the
+        // support-layer footprint path (`Print.cpp:2669-2696`).
+        let raft = input.raft.as_ref().unwrap();
+        let raft_plan = &raft.plans[input.object][raft_index];
+        let raft_polygons = raft_plan
+            .polygons
+            .iter()
+            .map(|polygon| ExPolygon::new(polygon.clone(), Vec::new()))
+            .collect::<Vec<_>>();
         let geometry = EntryGeometry {
             top_surfaces: Vec::new(),
             lower_boundary_lines: Vec::new(),
@@ -88,6 +87,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: I
             state,
         );
     } else if let Some(support_index) = input.support_layer {
+        // `GCode.cpp:5329-5335` also invokes generate_object_skirt_group for
+        // support-only entries; `:4398`/`:4311-4318` own first_layer and
+        // skirt_height. Support geometry and skirt flow originate in the
+        // occupied support footprints (`Print.cpp:2669-2696`) and group
+        // emission (`GCode.cpp:4465-4485`).
         let support = &input.support_layers[input.object][support_index];
         let geometry = EntryGeometry {
             top_surfaces: Vec::new(),
