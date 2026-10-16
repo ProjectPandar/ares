@@ -22,6 +22,26 @@ assert target Native equality and fail until GREEN; controls assert equality.
 [SPEC](architecture/3mf-resource-vertex-defaults-spec.md),
 [ARD](architecture/ard-3mf-resource-vertex-defaults.md).
 
+### Shared triangle vertex-index defaults: proposed source slice (2026-10-16)
+
+Worker4 ports the previously deferred v1/v2/v3 omission contract:
+`Format/bbs_3mf.cpp` main `_handle_start_triangle:3813-3819` and resource
+`ObjectImporter::_handle_object_start_triangle:5526-5532` both read absent
+indices as zero using `bbs_get_attribute_value_int:508-514`. Destination is
+shared `project/model_xml.rs::Triangle` reached by both `project/load/graph.rs`
+roles; current fields are required u32. No separate role DTO or mesh repair port.
+Active Native `_generate_volumes_new` bounds-checks then constructs TriangleMesh,
+not an automatic STL repair; first proposed witness removes already-zero v1
+from `(0,1,2)` in unchanged controladb38, avoiding new degeneration. No fixture
+or runtime yet. Priority: SPEC/input approval, bounded CPU15 Native discovery,
+separately approved public target-success/equality RED with strict-PASS control,
+then authorized minimal shared defaults GREEN. Exit: both modes whole strict
+Native/API/realCLI equality/raw API==CLI, unchanged control and targeted 3MF/load
+regressions plus fmt/clippy/WASM. Nonzero-index omissions/degenerate repair,
+malformed numeric conversion, extra role/index fixtures and M73 are deferred.
+[SPEC](architecture/3mf-triangle-index-defaults-spec.md),
+[ARD](architecture/ard-3mf-triangle-index-defaults.md).
+
 ### Resource build/item non-consumption: merged, refreshed at main41f2 (2026-10-16)
 
 `Format/bbs_3mf.cpp::ObjectImporter` resource start/end handlers5612-5687 do
