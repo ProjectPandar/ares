@@ -76,14 +76,24 @@ pub(in crate::project_slice) fn active_region_ids(
         .collect()
 }
 
-pub(in crate::project_slice) fn prepare_support(
-    traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
-    candidates: &BridgeCandidateObject,
-    horizontal: &PreparedSurfaceTypeObject,
-    prelude: &PostPerimeterInputPrintObject,
-    spacing: ObjectSpacing,
-) {
+pub(in crate::project_slice) struct SupportPreparation<'a> {
+    pub(in crate::project_slice) traversal: &'a PreparedPostClassicTraversal,
+    pub(in crate::project_slice) object_index: usize,
+    pub(in crate::project_slice) candidates: &'a BridgeCandidateObject,
+    pub(in crate::project_slice) horizontal: &'a PreparedSurfaceTypeObject,
+    pub(in crate::project_slice) prelude: &'a PostPerimeterInputPrintObject,
+    pub(in crate::project_slice) spacing: ObjectSpacing,
+}
+
+pub(in crate::project_slice) fn prepare_support(context: SupportPreparation<'_>) {
+    let SupportPreparation {
+        traversal,
+        object_index,
+        candidates,
+        horizontal,
+        prelude,
+        spacing,
+    } = context;
     let (plan, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
     let mut contributing = regions.iter().filter(|region| {
         let options = region.as_parts().1;
