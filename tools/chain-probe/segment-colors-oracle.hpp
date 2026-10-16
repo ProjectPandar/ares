@@ -2,7 +2,8 @@
 // ColorRange and Layers, and the extracted ViewerImpl color code
 // (ViewerImpl.cpp:1467-1553, 1817-1878) with the default Settings and palettes
 // (ViewerImpl.cpp:729-733), per vertex in the Feature Type, Height, Speed, Width,
-// Volumetric Flow Rate, Fan Speed and Temperature views.
+// Volumetric Flow Rate, Fan Speed and Temperature views, plus Speed with Travels
+// visible (the speed range takes travel feedrates only then, :1860-1863).
 #pragma once
 #include <array>
 #include <cassert>
@@ -63,6 +64,8 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
     std::vector<nlohmann::json> view_rgb;
     for (const auto& [name, type] : views)
         view_rgb.push_back(view_colors(type));
+    colors.m_settings.options_visibility[size_t(libvgcode::EOptionType::Travels)] = true;
+    const auto speed_travels = view_colors(EViewType::Speed);
 
     auto dumped = nlohmann::json::array();
     for (size_t id = 0; id < colors.m_vertices.size(); ++id) {
@@ -71,6 +74,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
             { "positionBits", { bits(v.position[0]), bits(v.position[1]), bits(v.position[2]) } } };
         for (size_t view = 0; view < views.size(); ++view)
             row[views[view].first] = view_rgb[view][id];
+        row["speedTravels"] = speed_travels[id];
         dumped.push_back(std::move(row));
     }
     const nlohmann::json data = {
