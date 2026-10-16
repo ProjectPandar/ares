@@ -12,12 +12,13 @@ use crate::{
 use super::simplify_before_ordering;
 use super::types::LayerFillEntities;
 
-pub(in crate::project_slice) fn generate_layer(
+pub(in crate::project_slice) fn generate_layer_with_active(
     prepared: &PreparedPostExternalSurfaces,
     object_index: usize,
     layer_index: usize,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
     stars_bounds: Option<crate::geometry::BoundingBox>,
+    active_region_ids: &[usize],
 ) -> Result<LayerFillEntities, SliceError> {
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
@@ -51,11 +52,6 @@ pub(in crate::project_slice) fn generate_layer(
         .find(|object| object.source_object_index == prelude.identity().0)
         .expect("fill generation retains its resolved object");
     let object_options = &resolved_object.object;
-    let active_region_ids =
-        crate::project_slice::prepare_infill::external_surfaces::active_region_ids(
-            prepared,
-            object_index,
-        );
     let mut output = LayerFillEntities::default();
     // `PrintObject::bounding_box` (Print.hpp:347) is symmetric around zero;
     // `Fill::_infill_direction` uses that center, not quantized slice bounds.
@@ -350,6 +346,38 @@ pub(in crate::project_slice) fn generate_layer(
         );
     }
     Ok(output)
+}
+
+#[cfg(test)]
+pub(in crate::project_slice) fn generate_layer(
+    prepared: &PreparedPostExternalSurfaces,
+    object_index: usize,
+    layer_index: usize,
+    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<crate::geometry::BoundingBox>,
+) -> Result<LayerFillEntities, SliceError> {
+    let traversal = &prepared.predecessor.predecessor;
+    let traversal_object = &traversal.objects[object_index];
+    let prelude = &traversal_object
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
+    let active_region_ids = super::adaptive::active_region_ids(
+        prelude,
+        &prepared.predecessor.objects[object_index].records,
+        plan.layers.len(),
+    );
+    generate_layer_with_active(
+        prepared,
+        object_index,
+        layer_index,
+        lightning_generator,
+        stars_bounds,
+        &active_region_ids,
+    )
 }
 
 fn plane_path_object_bounding_box(

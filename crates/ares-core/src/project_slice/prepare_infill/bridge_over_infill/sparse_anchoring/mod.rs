@@ -67,11 +67,11 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     // `fill_entities/generate.rs`). Keep the contour-derived bbox.
     let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
-    let active_region_ids =
-        crate::project_slice::prepare_infill::external_surfaces::active_region_ids(
-            prepared,
-            object_index,
-        );
+    let active_region_ids = crate::project_slice::fill_entities::adaptive::active_region_ids(
+        prelude,
+        &prepared.predecessor.objects[object_index].records,
+        plan.layers.len(),
+    );
 
     for fill in grouped.surface_fills {
         if fill.representative.kind != RegionSurfaceKind::Internal {

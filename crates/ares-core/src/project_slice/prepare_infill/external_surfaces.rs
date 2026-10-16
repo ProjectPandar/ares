@@ -19,42 +19,6 @@ use crate::{
 pub(in crate::project_slice) use stage::PreparedPostExternalSurfaces;
 pub(in crate::project_slice) use types::{Bridge, ExpansionResult, ExpansionZone};
 
-pub(in crate::project_slice) fn active_region_ids(
-    prepared: &PreparedPostExternalSurfaces,
-    object_index: usize,
-) -> Vec<usize> {
-    let horizontal = &prepared.predecessor;
-    let traversal = &horizontal.predecessor;
-    let traversal_object = &traversal.objects[object_index];
-    let prelude = &traversal_object
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .object;
-    let (post_regions, _) = prelude.as_parts().0.as_parts();
-    let (plan, _, regions) = post_regions.as_parts();
-    regions
-        .iter()
-        .enumerate()
-        .filter_map(|(region_index, _)| {
-            (0..plan.layers.len())
-                .any(|layer_index| {
-                    let slot = prelude.region_layer_record_index(
-                        crate::project_slice::perimeters::types::RegionLayerIndex {
-                            region_index,
-                            layer_index,
-                        },
-                    );
-                    horizontal.objects[object_index].records[slot]
-                        .as_ref()
-                        .is_some_and(|record| !record.fill_surfaces.is_empty())
-                })
-                .then_some(region_index)
-        })
-        .collect()
-}
-
 #[cfg(test)]
 thread_local! {
     static INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };

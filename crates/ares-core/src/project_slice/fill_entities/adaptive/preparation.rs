@@ -10,10 +10,35 @@ use crate::{
         },
         prepare_infill::{
             bridge_over_infill::BridgeCandidateObject,
-            surface_type_detection::types::PreparedSurfaceTypeObject,
+            surface_type_detection::types::{PreparedSurfaceTypeObject, PreparedSurfaceTypeRecord},
         },
     },
 };
+
+pub(in crate::project_slice) fn active_region_ids(
+    prelude: &PostPerimeterInputPrintObject,
+    records: &[Option<PreparedSurfaceTypeRecord>],
+    layer_count: usize,
+) -> Vec<usize> {
+    let (_, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
+    regions
+        .iter()
+        .enumerate()
+        .filter_map(|(region_index, _)| {
+            (0..layer_count)
+                .any(|layer_index| {
+                    let slot = prelude.region_layer_record_index(RegionLayerIndex {
+                        region_index,
+                        layer_index,
+                    });
+                    records[slot]
+                        .as_ref()
+                        .is_some_and(|record| !record.fill_surfaces.is_empty())
+                })
+                .then_some(region_index)
+        })
+        .collect()
+}
 
 pub(in crate::project_slice) fn prepare_support(
     traversal: &PreparedPostClassicTraversal,
@@ -24,36 +49,12 @@ pub(in crate::project_slice) fn prepare_support(
 ) {
     let (plan, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
-    let active_region_ids: Vec<_> = regions
-        .iter()
-        .enumerate()
-        .filter_map(|(region_index, _)| {
-            (0..plan.layers.len())
-                .any(|layer_index| {
-                    let slot = prelude.region_layer_record_index(RegionLayerIndex {
-                        region_index,
-                        layer_index,
-                    });
-                    horizontal.records[slot]
-                        .as_ref()
-                        .is_some_and(|record| !record.fill_surfaces.is_empty())
-                })
-                .then_some(region_index)
-        })
-        .collect();
+    let active_region_ids = active_region_ids(prelude, &horizontal.records, plan.layers.len());
     let mut contributing = regions.iter().enumerate().filter(|(index, region)| {
         let options = region.as_parts().1;
         options.sparse_infill_pattern == ProcessInfillPattern::SupportCubic
             && options.sparse_infill_density.0 > 0.0
-            && (0..plan.layers.len()).any(|layer_index| {
-                let slot = prelude.region_layer_record_index(RegionLayerIndex {
-                    region_index: *index,
-                    layer_index,
-                });
-                horizontal.records[slot]
-                    .as_ref()
-                    .is_some_and(|record| !record.fill_surfaces.is_empty())
-            })
+            && active_region_ids.contains(index)
     });
     if contributing.next().is_none() {
         return;

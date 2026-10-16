@@ -4,7 +4,7 @@ use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 pub(in crate::project_slice) mod line_spacing;
 mod preparation;
-pub(in crate::project_slice) use preparation::prepare_support;
+pub(in crate::project_slice) use preparation::{active_region_ids, prepare_support};
 
 use crate::{
     Point3d, ProjectObject, ProjectVolumeType, SliceError, Transform3d,
