@@ -12,14 +12,24 @@ use crate::{
 use super::simplify_before_ordering;
 use super::types::LayerFillEntities;
 
+pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
+    pub(in crate::project_slice) lightning_generator:
+        Option<&'a crate::fill::lightning::generator::Generator>,
+    pub(in crate::project_slice) stars_bounds: Option<crate::geometry::BoundingBox>,
+    pub(in crate::project_slice) active_region_ids: &'a [usize],
+}
+
 pub(in crate::project_slice) fn generate_layer_with_active(
     prepared: &PreparedPostExternalSurfaces,
     object_index: usize,
     layer_index: usize,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<crate::geometry::BoundingBox>,
-    active_region_ids: &[usize],
+    options: LayerGenerationOptions<'_>,
 ) -> Result<LayerFillEntities, SliceError> {
+    let LayerGenerationOptions {
+        lightning_generator,
+        stars_bounds,
+        active_region_ids,
+    } = options;
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
     let minimum_nozzle_diameter = traversal
@@ -166,7 +176,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     super::adaptive::AdaptiveObject::new(
                         traversal,
                         object_index,
-                        &active_region_ids,
+                        active_region_ids,
                     ),
                     traversal.scale,
                 )?;
@@ -374,9 +384,11 @@ pub(in crate::project_slice) fn generate_layer(
         prepared,
         object_index,
         layer_index,
-        lightning_generator,
-        stars_bounds,
-        &active_region_ids,
+        LayerGenerationOptions {
+            lightning_generator,
+            stars_bounds,
+            active_region_ids: &active_region_ids,
+        },
     )
 }
 

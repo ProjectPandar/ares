@@ -129,9 +129,11 @@ pub(in crate::project_slice) fn prepare(
                             external,
                             object_index,
                             layer_index,
-                            lightning_generator.map(|g| g.as_ref()),
-                            stars_bounds,
-                            &active_region_ids,
+                            generate::LayerGenerationOptions {
+                                lightning_generator: lightning_generator.map(|g| g.as_ref()),
+                                stars_bounds,
+                                active_region_ids: &active_region_ids,
+                            },
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()
