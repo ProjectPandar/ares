@@ -190,13 +190,14 @@ pub(crate) struct Triangles {
     pub triangles: Vec<Triangle>,
 }
 
+// bbs_3mf.cpp:508-514 / :3813-3819 / :5526-5532: absent triangle indices read as zero.
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct Triangle {
-    #[serde(rename = "@v1")]
+    #[serde(rename = "@v1", default)]
     pub v1: u32,
-    #[serde(rename = "@v2")]
+    #[serde(rename = "@v2", default)]
     pub v2: u32,
-    #[serde(rename = "@v3")]
+    #[serde(rename = "@v3", default)]
     pub v3: u32,
     #[serde(rename = "@paint_supports", default)]
     pub paint_supports: super::facets_annotation::TriangleCodes,
