@@ -383,3 +383,5 @@ pub(crate) mod wrapping_input;
 
 #[path = "option_coverage/safc_reference.rs"]
 pub(super) mod safc_reference;
+#[path = "runner/spiral_transition_e_precision.rs"]
+mod spiral_transition_e_precision;
