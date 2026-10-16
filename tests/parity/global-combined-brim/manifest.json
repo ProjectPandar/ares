@@ -1,0 +1,13 @@
+{
+  "source": "Brim.cpp:958-1018; GCode.cpp:4486-4531",
+  "cases": {
+    "target": {
+      "sha256": "0c6edb459c2835d9a310a929f22058a3d38c66c96c4fe64b07625c47f22e5436",
+      "combine_brims": "1"
+    },
+    "control": {
+      "sha256": "50e00087db58cc969b55ea6bd7c09877255b1eb898bcc0c8820f885d1f8ee5d1",
+      "combine_brims": "0"
+    }
+  }
+}

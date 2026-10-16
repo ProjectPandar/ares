@@ -105,6 +105,8 @@ mod cli_upward_machine_result;
 mod filament_flow_admission;
 #[path = "orca_parity/gcode_flavor_admission.rs"]
 mod gcode_flavor_admission;
+#[path = "orca_parity/global_combined_brim.rs"]
+mod global_combined_brim;
 #[path = "orca_parity/load_settings_3mf.rs"]
 mod load_settings_3mf;
 #[path = "orca_parity/load_settings_3mf_inherits.rs"]
