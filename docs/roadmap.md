@@ -73,6 +73,30 @@ assert target Native equality and fail until GREEN; controls assert equality.
 [SPEC](architecture/3mf-resource-vertex-defaults-spec.md),
 [ARD](architecture/ard-3mf-resource-vertex-defaults.md).
 
+### Modifier feature filament IDs: Native discovery complete, SPEC review (2026-10-16)
+
+Worker4's next rewrite slice is `PrintObject.cpp:3592-3705` explicit feature-ID
+mask and modifier base-extruder precedence, `PrintApply.cpp:1032-1055` parent
+region construction (painting override order at810-830/1060-1075 stays separate),
+and `PrintRegion.cpp:13-15/81-86` sparse filament routing/used-tool collection.
+Rust destinations: the six-key modifier guard in effective_config/candidates.rs,
+existing region_graph::add_modifier and options/region_options/merge resolver;
+no new pipeline. Native discovery on CPU15 accepted both frozen input members
+in both modes: positive only adds sparse_infill_filament_id=2 to an existing
+modifier with absent extruder, using identical complete two-filament settings.
+Positive/control diverge; positive780 actual T1 sparse segments inside modifier
+bounds vs controlzero. Observer TYPE/FEATURE dialect fix was offline only;
+four Native slices total, no retry/input substitution. No public parity claim.
+Next: review source boundary/discovery, then separately reviewed public target-
+equality RED with whole strict-PASS/raw-identical control. Guard retirement
+requires GREEN approval and unchanged complete comparators; no other guards,
+M73 or downstream repairs. Additional role/nonzero-modifier-extruder runtime
+matrices deferred; exact source precedence is specified now. Exit: both modes
+whole strict Native/API/realCLI equality, raw API==CLI, unchanged control and
+approved targeted regression/fmt/clippy/WASM. Coordinator owns full/merge.
+[SPEC](architecture/modifier-feature-filament-spec.md),
+[ARD](architecture/ard-modifier-feature-filament.md).
+
 ### Shared triangle vertex-index defaults: proposed source slice (2026-10-16)
 
 Worker4 ports the previously deferred v1/v2/v3 omission contract:
