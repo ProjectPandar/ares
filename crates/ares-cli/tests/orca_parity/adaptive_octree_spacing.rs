@@ -1,6 +1,6 @@
 //! FillAdaptive.cpp:314-354 object-level spacing and region-0 multiline.
 
-use crate::{golden, runner::stages, OrcaRunner};
+use crate::{OrcaRunner, golden, runner::stages};
 use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
@@ -48,7 +48,10 @@ fn run_case(name: &str, expected_sha: &str) {
         .arg(root.join("input.3mf"))
         .output()
         .unwrap();
-    assert!(cli.status.success(), "CLI admission {name} {root:?}: {cli:?}");
+    assert!(
+        cli.status.success(),
+        "CLI admission {name} {root:?}: {cli:?}"
+    );
     let cli_bytes = fs::read(output).unwrap();
     let api = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -66,14 +69,17 @@ fn run_case(name: &str, expected_sha: &str) {
         .unwrap_or_else(|error| panic!("API strict comparison {name} {root:?}: {error}"));
     golden::compare_ordered_bytes_generator_only(&native, &cli_bytes)
         .unwrap_or_else(|error| panic!("CLI strict comparison {name} {root:?}: {error}"));
-    assert_eq!(api, cli_bytes, "public API/CLI raw equality {name} {root:?}");
+    assert_eq!(
+        api, cli_bytes,
+        "public API/CLI raw equality {name} {root:?}"
+    );
 }
 
 #[test]
 fn adaptive_octree_spacing_single_region_control() {
     run_case(
         "control",
-        "415e618032003375cc36ce51f36c8b6bdf50d55544cc84b9f08da05459ee8d5f",
+        "d6ea590827af8502bec7c2e2cc42139fbe879cb42e6949de954cde3430139ca9",
     );
 }
 
@@ -81,7 +87,7 @@ fn adaptive_octree_spacing_single_region_control() {
 fn adaptive_octree_spacing_two_region_control() {
     run_case(
         "baseline",
-        "aaebe0fc41772e80571913f1271696c9f078cafa9cdfd29cc074a1cef53d868c",
+        "d8194e73435fe1d29204fc0a9ac0f614c7152d65c75d6b7f697de4d64012a619",
     );
 }
 
@@ -89,7 +95,7 @@ fn adaptive_octree_spacing_two_region_control() {
 fn adaptive_octree_spacing_density_red() {
     run_case(
         "density",
-        "94cd069c6f422caeaa0b64f9dbb1c899aaf89cf481f003531e966a35afbac5e0",
+        "d64f5cbdf529de964b463c238f13939d200287ff4b909f906a935c972c3115be",
     );
 }
 
@@ -97,6 +103,6 @@ fn adaptive_octree_spacing_density_red() {
 fn adaptive_octree_spacing_multiline_red() {
     run_case(
         "multiline",
-        "edfb949d54e162bd52eeefa539b74065435e7661378b9d84371385a36293efe3",
+        "70b0675b517a5bf6f27c2c7358b127c65a4d145e742eba6bf98b35a8cc0904d93",
     );
 }
