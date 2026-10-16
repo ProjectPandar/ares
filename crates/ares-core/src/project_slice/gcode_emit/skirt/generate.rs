@@ -25,7 +25,6 @@ impl SkirtPlan {
         if per_object
             && traversal.resolved.objects.len() > 1
             && (print.enable_prime_tower.0
-                || print.print_sequence != crate::ProcessPrintSequence::ByLayer
                 || traversal
                     .resolved
                     .views
@@ -123,6 +122,18 @@ impl SkirtPlan {
                 hull: hull_polygon.clone(),
             }]
         };
+        // `Print.cpp:2551-2556`: ByObject shared per-object skirts throw SlicingError.
+        // Keep this unsupported scope guarded; only separate object groups are admitted.
+        if per_object
+            && print.print_sequence == crate::ProcessPrintSequence::ByObject
+            && generation_groups
+                .iter()
+                .any(|group| group.members.len() > 1)
+        {
+            return Err(SliceError::UnsupportedProjectFeature(
+                "skirt_type per-object".to_owned(),
+            ));
+        }
         let mut loops = Vec::new();
         let mut member_groups = Vec::new();
         let mut occupied_hull = Vec::new();
