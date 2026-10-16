@@ -38,6 +38,7 @@ in vec3 aStart;
 in vec3 aEnd;
 in vec4 aSize;
 in vec2 aAngles;
+in vec3 aStartColor;
 in vec3 aColor;
 in float aLayer;
 in float aKind;
@@ -151,7 +152,7 @@ void main() {
   }
   vec3 eye_position = (viewMatrix * vec4(pos, 1.0)).xyz;
   vec3 eye_normal = (viewMatrix * vec4(normalize(pos - endpoint_pos), 0.0)).xyz;
-  color = aColor * lighting(eye_position, eye_normal);
+  color = (vertex_id < 4 ? aStartColor : aColor) * lighting(eye_position, eye_normal);
   gl_Position = projectionMatrix * vec4(eye_position, 1.0);
 }
 `;
@@ -201,7 +202,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     size.set(heightsWidths.subarray(2 * (i - 1), 2 * i + 2), count * 4);
     const id = extrude ? role : KIND_OPTION + options[i];
     color.set(colors.subarray(3 * i, 3 * i + 3), count * 3);
-    startColor.set(colors.subarray(3 * i, 3 * i + 3), count * 3);
+    startColor.set(colors.subarray(3 * (i - 1), 3 * i), count * 3);
     vertex[count] = i;
     layer[count] = ids[2 * i + 1];
     kind[count] = id;
@@ -245,8 +246,9 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
 
 /**
  * Recolors the toolpath mesh and its option markers with per-vertex RGB
- * (`ViewColors.colors`); each instance takes its vertex's color, as libvgcode
- * segments take their end vertex color.
+ * (`ViewColors.colors`): template vertices 0..3 of a segment instance take its
+ * start vertex color and 4..7 its end vertex color, as libvgcode's ES segment
+ * shader colors by `id_a` / `id_b` (`ShadersES.hpp:101,145`).
  */
 export function applyVertexColors(mesh: THREE.Mesh, colors: Uint8Array) {
   mesh.traverse((node) => {
@@ -259,7 +261,7 @@ export function applyVertexColors(mesh: THREE.Mesh, colors: Uint8Array) {
     if (node !== mesh) return;
     const startAttribute = (node.geometry as THREE.InstancedBufferGeometry).getAttribute("aStartColor") as THREE.InstancedBufferAttribute;
     const startColor = startAttribute.array as Uint8Array;
-    for (let n = 0; n < vertices.length; n++) startColor.set(colors.subarray(3 * vertices[n], 3 * vertices[n] + 3), 3 * n);
+    for (let n = 0; n < vertices.length; n++) startColor.set(colors.subarray(3 * (vertices[n] - 1), 3 * vertices[n]), 3 * n);
     startAttribute.needsUpdate = true;
   });
 }
