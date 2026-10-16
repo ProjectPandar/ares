@@ -35,7 +35,7 @@ pub(in crate::project_slice) fn object_configured(
     nozzles: &OrcaFloats,
     kind: ProcessInfillPattern,
     active_region_ids: &[usize],
-) -> Option<f64> {
+) -> f64 {
     let contributing: Vec<_> = regions
         .iter()
         .enumerate()
@@ -47,7 +47,7 @@ pub(in crate::project_slice) fn object_configured(
         .map(|(_, region)| region)
         .collect();
     if contributing.is_empty() {
-        return None;
+        return 0.0;
     }
     let width = contributing
         .iter()
@@ -65,7 +65,7 @@ pub(in crate::project_slice) fn object_configured(
     } else {
         width
     };
-    Some(width / ((density / 100.0) * f64::from(0.333_333_34_f32)) * f64::from(multiline))
+    width / ((density / 100.0) * f64::from(0.333_333_34_f32)) * f64::from(multiline)
 }
 
 fn absolute_width(region: &RegionOptions, nozzles: &OrcaFloats) -> f64 {

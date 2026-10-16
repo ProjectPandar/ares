@@ -65,14 +65,12 @@ pub(in crate::project_slice) fn prepare_support(
         .iter()
         .find(|object| object.source_object_index == plan.source_object_index)
         .expect("support object retains resolved regions");
-    let Some(spacing) = super::line_spacing::object_configured(
+    let spacing = super::line_spacing::object_configured(
         &resolved.all_regions,
         nozzles,
         ProcessInfillPattern::SupportCubic,
         &active_region_ids,
-    ) else {
-        return;
-    };
+    );
     let mut triangles = Vec::new();
     // Source map/layer order and each candidate vector's original order.
     for candidate in candidates.surfaces_by_layer.values().flatten() {

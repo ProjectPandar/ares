@@ -16,7 +16,8 @@ pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
     pub(in crate::project_slice) lightning_generator:
         Option<&'a crate::fill::lightning::generator::Generator>,
     pub(in crate::project_slice) stars_bounds: Option<crate::geometry::BoundingBox>,
-    pub(in crate::project_slice) active_region_ids: &'a [usize],
+    pub(in crate::project_slice) adaptive_spacing: f64,
+    pub(in crate::project_slice) support_spacing: f64,
 }
 
 pub(in crate::project_slice) fn generate_layer_with_active(
@@ -28,7 +29,8 @@ pub(in crate::project_slice) fn generate_layer_with_active(
     let LayerGenerationOptions {
         lightning_generator,
         stars_bounds,
-        active_region_ids,
+        adaptive_spacing,
+        support_spacing,
     } = options;
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
@@ -168,16 +170,16 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 pattern
                 @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
             ) => {
-                let _ = pattern;
+                let line_spacing = match pattern {
+                    ProcessInfillPattern::AdaptiveCubic => adaptive_spacing,
+                    ProcessInfillPattern::SupportCubic => support_spacing,
+                    _ => unreachable!("adaptive arm only handles adaptive patterns"),
+                };
                 super::adaptive::append(
                     &mut output,
                     fill,
                     layer.print_z,
-                    super::adaptive::AdaptiveObject::new(
-                        traversal,
-                        object_index,
-                        active_region_ids,
-                    ),
+                    super::adaptive::AdaptiveObject::new(traversal, object_index, line_spacing),
                     traversal.scale,
                 )?;
             }
@@ -356,40 +358,6 @@ pub(in crate::project_slice) fn generate_layer_with_active(
         );
     }
     Ok(output)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn generate_layer(
-    prepared: &PreparedPostExternalSurfaces,
-    object_index: usize,
-    layer_index: usize,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<crate::geometry::BoundingBox>,
-) -> Result<LayerFillEntities, SliceError> {
-    let traversal = &prepared.predecessor.predecessor;
-    let traversal_object = &traversal.objects[object_index];
-    let prelude = &traversal_object
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .object;
-    let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
-    let active_region_ids = super::adaptive::active_region_ids(
-        prelude,
-        &prepared.predecessor.objects[object_index].records,
-        plan.layers.len(),
-    );
-    generate_layer_with_active(
-        prepared,
-        object_index,
-        layer_index,
-        LayerGenerationOptions {
-            lightning_generator,
-            stars_bounds,
-            active_region_ids: &active_region_ids,
-        },
-    )
 }
 
 fn plane_path_object_bounding_box(

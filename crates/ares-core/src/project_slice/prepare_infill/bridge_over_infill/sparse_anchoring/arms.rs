@@ -30,7 +30,8 @@ pub(super) fn dispatch(
     object_bounding_box: crate::geometry::BoundingBox,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
     stars_bounds: Option<(crate::geometry::BoundingBox, usize)>,
-    active_region_ids: &[usize],
+    adaptive_spacing: f64,
+    support_spacing: f64,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     match fill.params.pattern {
@@ -273,7 +274,11 @@ pub(super) fn dispatch(
                 crate::project_slice::fill_entities::adaptive::AdaptiveObject::new(
                     traversal,
                     object_index,
-                    active_region_ids,
+                    match pattern {
+                        ProcessInfillPattern::AdaptiveCubic => adaptive_spacing,
+                        ProcessInfillPattern::SupportCubic => support_spacing,
+                        _ => unreachable!("adaptive arm only handles adaptive patterns"),
+                    },
                 ),
                 &fill,
                 z,
