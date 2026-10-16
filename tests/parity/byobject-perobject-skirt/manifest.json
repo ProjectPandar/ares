@@ -1,0 +1,19 @@
+{
+  "cases": {
+    "bylayer-control": {
+      "sha256": "4f61eebac26d420fddca1da8ab149140f0b84d837f245dda09c0d9eaabd22bb8",
+      "sequence": "by layer",
+      "skirt": "perobject"
+    },
+    "combined-control": {
+      "sha256": "aa77e24538a677c58fc6cc5ccad08c6f94e8dc2e2dfc7bef789ce0ce43d45ce1",
+      "sequence": "by object",
+      "skirt": "combined"
+    },
+    "target": {
+      "sha256": "d65d5d068b3a6ec24b685128de6ff53d82bac0649427df740ca0df91db7e7967",
+      "sequence": "by object",
+      "skirt": "perobject"
+    }
+  }
+}
