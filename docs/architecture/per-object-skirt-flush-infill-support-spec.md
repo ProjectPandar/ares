@@ -24,24 +24,41 @@ With the full disjunct removed (offline probe, restored afterwards):
 
 - `pf-tgt` (skirt_type=perobject, flush_into_infill=1, prime tower on):
   native rc=0, normalized diff = 0.
-- `pf-sup` (skirt_type=perobject, flush_into_support=1): native rc=0,
-  normalized diff = 0.
+- `pf-sup` (skirt_type=perobject, flush_into_support=1): the first
+  attempt was INERT (R1 cubes have no overhang; `enable_support` with
+  the R1 support block generated nothing). After mesh surgery (an
+  overhang object) + the TiQ2 tree-support block + object relocation,
+  native slices rc=0 with 23 `;TYPE:Support` + 8 interface blocks, all
+  inside wiping-pass windows — but removing the disjunct then leaves a
+  302-line divergence (per-object skirt placement/ordering around the
+  support-bearing object, `; printing/stop printing` label order at the
+  purge boundary). That is a real residual in a different domain, NOT
+  skirt-guard-only. `flush_into_support` therefore STAYS guarded and
+  gets its own slice.
 - `pf-obj` (skirt_type=perobject, flush_into_objects=1): native rc=0,
   ares diverges massively (`; filament: 2,1` vs `1`, M600 ordering) — a
   separate tool-change/print-order residual, NOT skirt-related. Out of
   scope here; stays guarded.
 
-## Included
+## Included (v2, revised after the support discovery)
 
-- Remove `flush_into_infill` and `flush_into_support` from the guard
-  disjunct; `flush_into_objects` remains guarded.
-- Public RED: two test legs (pf-tgt, pf-sup) asserting strict
-  native/ares parity. Today ares REJECTS both inputs
-  (`UnsupportedProjectFeature("skirt_type per-object")`), so both legs
-  FAIL before the GREEN.
+- Remove ONLY `flush_into_infill` from the guard disjunct;
+  `flush_into_support` and `flush_into_objects` remain guarded.
+- Public RED: one test leg (pf-tgt) asserting strict native/ares
+  parity. Today ares REJECTS the input
+  (`UnsupportedProjectFeature("skirt_type per-object")`), so the leg
+  FAILS before the GREEN.
+- The leg also asserts the flush feature is ACTIVE in the NATIVE
+  output (not merely configured): wiping-pass windows (between
+  `; PURGING FINISHED` and the next `;LAYER_CHANGE`) must contain
+  `;TYPE:Sparse infill` extrusions (witness: 76 windows each with
+  Sparse infill + Prime tower + walls).
 
 ## Deferred
 
+- `flush_into_support` + per-object skirt: ACTIVE fixture diverges in
+  per-object skirt placement around support-bearing objects and purge
+  boundary label order (302 normalized lines) — separate slice.
 - `flush_into_objects` + per-object skirt: diverges in tool-change and
   print ordering (`; filament:` header, M600 placement), a separate
   upstream boundary (GCode.cpp tool-change sequencing); needs its own
