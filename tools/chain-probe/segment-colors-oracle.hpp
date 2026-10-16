@@ -1,7 +1,8 @@
 // Read-only diagnostic: real LibVGCodeWrapper conversion, the real libvgcode
 // ColorRange and Layers, and the extracted ViewerImpl color code
 // (ViewerImpl.cpp:1467-1553, 1817-1878) with the default Settings and palettes
-// (ViewerImpl.cpp:729-733), per vertex in the Feature Type and Height views.
+// (ViewerImpl.cpp:729-733), per vertex in the Feature Type, Height, Speed, Width,
+// Volumetric Flow Rate, Fan Speed and Temperature views.
 #pragma once
 #include <array>
 #include <cassert>
@@ -52,15 +53,25 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
         }
         return rgb;
     };
-    const auto feature_type = view_colors(libvgcode::EViewType::FeatureType);
-    const auto height = view_colors(libvgcode::EViewType::Height);
+    using libvgcode::EViewType;
+    const std::array<std::pair<const char*, EViewType>, 7> views{ {
+        { "featureType", EViewType::FeatureType }, { "height", EViewType::Height },
+        { "speed", EViewType::Speed }, { "width", EViewType::Width },
+        { "volumetricFlowRate", EViewType::VolumetricFlowRate },
+        { "fanSpeed", EViewType::FanSpeed }, { "temperature", EViewType::Temperature },
+    } };
+    std::vector<nlohmann::json> view_rgb;
+    for (const auto& [name, type] : views)
+        view_rgb.push_back(view_colors(type));
 
     auto dumped = nlohmann::json::array();
     for (size_t id = 0; id < colors.m_vertices.size(); ++id) {
         const libvgcode::PathVertex& v = colors.m_vertices[id];
-        dumped.push_back({ { "id", id }, { "type", static_cast<int>(v.type) },
-            { "positionBits", { bits(v.position[0]), bits(v.position[1]), bits(v.position[2]) } },
-            { "featureType", feature_type[id] }, { "height", height[id] } });
+        nlohmann::json row = { { "id", id }, { "type", static_cast<int>(v.type) },
+            { "positionBits", { bits(v.position[0]), bits(v.position[1]), bits(v.position[2]) } } };
+        for (size_t view = 0; view < views.size(); ++view)
+            row[views[view].first] = view_rgb[view][id];
+        dumped.push_back(std::move(row));
     }
     const nlohmann::json data = {
         { "oracle", "native source-kernel (not full Viewer execution)" },

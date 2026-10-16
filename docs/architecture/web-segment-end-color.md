@@ -54,6 +54,25 @@ same instance selection as the web: types 8/9/10, with zero-length instances ski
 - **Layer Height:** the ends differ on hundreds of instances in both inputs, so the RED uses this view.
 - **Speed:** almost no instances differ (0 and 3), so it is not used.
 
+### Revision: RGB-end measurement (COORD ruling (a))
+
+The raw values above count instances whose ends are travel, wipe or option vertices.
+Those are drawn in fixed colors, so raw differences do not imply RGB differences. The
+built oracle (`orca-slicer-segment-colors-2.4.2`, `0j5bpnsd…`) measured the
+`get_vertex_color` RGB ends over the same instances:
+
+| Input | Instances | Feature Type RGB ends differ | Height RGB ends differ |
+|---|---|---|---|
+| slice | 5309 | 0 | 0 |
+| presetSlice | 5519 | 0 | 0 |
+
+Height changes only across layer or option boundaries, never inside an extrusion run,
+so Layer Height cannot carry the RED. The oracle header therefore also dumps the
+`Speed`, `Width`, `VolumetricFlowRate`, `FanSpeed` and `Temperature` range views
+(header loop only; the kernel is unchanged). The RED view is the view with a non-zero
+Native RGB-end count on both inputs (recorded below after the rebuild). If every count
+is 0, the slice closes as NO-RED. No dedicated fixture is added.
+
 ## Native oracle
 
 A new read-only chain-probe `tools/chain-probe/segment-colors.nix`, built on
@@ -71,7 +90,8 @@ It contains:
 over a struct holding the same members instead (the `role-times` precedent).
 
 For each vertex, `--dump-segment-colors <json>` writes the RGB of `get_vertex_color`
-under `FeatureType` and under `Height`, with the default visibility (all roles shown,
+under `featureType`, `height`, `speed`, `width`, `volumetricFlowRate`, `fanSpeed` and
+`temperature`, with the default visibility (all roles shown,
 Seams only among the options; the web default). Native outputs stay outside Git.
 COORD will need a gcroot for the new store path.
 
