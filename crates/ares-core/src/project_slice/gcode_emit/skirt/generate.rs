@@ -22,20 +22,26 @@ impl SkirtPlan {
             return Ok(None);
         }
         let per_object = loops_count > 0 && print.skirt_type == crate::ProcessSkirtType::PerObject;
+        // Wiping-pass residual (narrowing of the same guard key): the
+        // upstream wiping pass also emits object skirts when extrusions
+        // are overridden (is_anything_overridden, GCode.cpp:5330-5333)
+        // while Ares emits skirts on Pass::Normal only
+        // (layers/tool_entry.rs); with a tower and any flush_into_* the
+        // divergence is reachable, so the combination stays unsupported.
+        let tower_active = print.enable_prime_tower.0
+            && traversal
+                .resolved
+                .views
+                .full
+                .filament
+                .gcode
+                .filament_diameter
+                .0
+                .len()
+                > 1;
         if per_object
             && traversal.resolved.objects.len() > 1
-            && (print.enable_prime_tower.0
-                || traversal
-                    .resolved
-                    .views
-                    .full
-                    .filament
-                    .gcode
-                    .filament_diameter
-                    .0
-                    .len()
-                    > 1
-                || traversal.resolved.objects.iter().any(|object| {
+            && (traversal.resolved.objects.iter().any(|object| {
                     object.object.enable_support.0 || object.object.raft_layers.0 > 0
                 })
                 || brim.iter().enumerate().any(|(index, plan)| {
@@ -46,7 +52,12 @@ impl SkirtPlan {
                             || group.instance_indices.len() != 1)
                 })
                 || raft.is_some()
-                || !tower_corners.is_empty())
+                || (tower_active
+                    && traversal.resolved.objects.iter().any(|object| {
+                        object.object.flush_into_objects.0
+                            || object.object.flush_into_infill.0
+                            || object.object.flush_into_support.0
+                    })))
         {
             return Err(SliceError::UnsupportedProjectFeature(
                 "skirt_type per-object".to_owned(),
@@ -110,6 +121,11 @@ impl SkirtPlan {
         let generation_groups = if per_object && traversal.objects.len() > 1 {
             member_groups::merge(
                 items,
+                if tower_corners.is_empty() {
+                    None
+                } else {
+                    Some(tower_corners)
+                },
                 checked_scale(
                     scale,
                     print.skirt_distance.0 + loops_count as f64 * f64::from(flow.spacing),

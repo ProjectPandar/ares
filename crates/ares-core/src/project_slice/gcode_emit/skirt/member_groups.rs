@@ -7,53 +7,99 @@ pub(super) struct Group {
     pub(super) hull: Polygon,
 }
 
+struct Item {
+    members: Vec<usize>,
+    points: Vec<Point>,
+    hull: Polygon,
+    /// `emits_skirt` (Print.cpp:2785-2789): obstacle items such as the
+    /// wipe tower never emit a skirt and do not expand their envelope
+    /// (`:2874-2880`); groups without an emitting member produce no
+    /// skirt (`:2901+`).
+    emits: bool,
+}
+
 pub(super) fn merge(
     items: Vec<(usize, Vec<Point>)>,
+    obstacle: Option<&[Point]>,
     distance: f32,
     tolerance: f64,
 ) -> Result<Vec<Group>, SliceError> {
     let mut groups = items
         .into_iter()
-        .map(|(member, points)| Group {
+        .map(|(member, points)| Item {
+            hull: Polygon::new(convex_hull(&points)),
             members: vec![member],
-            hull: Polygon::new(points),
+            points,
+            emits: true,
         })
+        .chain(obstacle.map(|points| Item {
+            hull: Polygon::new(convex_hull(points)),
+            members: Vec::new(),
+            points: points.to_vec(),
+            emits: false,
+        }))
         .collect::<Vec<_>>();
     loop {
         let envelopes = groups
             .iter()
-            .map(|group| {
-                offset_paths(
-                    std::slice::from_ref(&group.hull),
-                    distance,
-                    JoinType::Round,
-                    tolerance,
-                )
-            })
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|_| SliceError::InvalidInput("skirt group geometry failed".into()))?;
+            .map(|item| envelope(item, distance, tolerance))
+            .collect::<Result<Vec<_>, _>>()?;
         let mut parent = (0..groups.len()).collect::<Vec<_>>();
         let changed = merge_collisions(&envelopes, &mut parent)?;
         if !changed {
-            return Ok(groups);
+            break;
         }
-        let mut points = vec![Vec::new(); groups.len()];
-        let mut members = vec![Vec::new(); groups.len()];
-        for (i, group) in groups.into_iter().enumerate() {
-            let owner = root(&mut parent, i);
-            points[owner].extend(group.hull.into_points());
-            members[owner].extend(group.members);
-        }
-        groups = points
-            .into_iter()
-            .zip(members)
-            .filter(|(_, members)| !members.is_empty())
-            .map(|(points, members)| Group {
-                members,
-                hull: Polygon::new(convex_hull(&points)),
-            })
-            .collect();
+        groups = merged_items(groups, &mut parent);
     }
+    Ok(groups
+        .into_iter()
+        .filter(|item| item.emits)
+        .map(|item| Group {
+            members: item.members,
+            hull: item.hull,
+        })
+        .collect())
+}
+
+/// `:2874-2880`: only emitting groups expand to their final skirt
+/// reach; obstacle envelopes stay the raw occupied hull.
+fn envelope(item: &Item, distance: f32, tolerance: f64) -> Result<Vec<Polygon>, SliceError> {
+    if !item.emits {
+        return Ok(vec![item.hull.clone()]);
+    }
+    offset_paths(
+        std::slice::from_ref(&item.hull),
+        distance,
+        JoinType::Round,
+        tolerance,
+    )
+    .map_err(|_| SliceError::InvalidInput("skirt group geometry failed".into()))
+}
+
+fn merged_items(groups: Vec<Item>, parent: &mut [usize]) -> Vec<Item> {
+    let mut merged = (0..groups.len())
+        .map(|_| Option::<Item>::None)
+        .collect::<Vec<_>>();
+    for (index, mut item) in groups.into_iter().enumerate() {
+        let owner = root(parent, index);
+        let slot = &mut merged[owner];
+        match slot {
+            Some(slot) => {
+                slot.points.append(&mut item.points);
+                slot.members.append(&mut item.members);
+                slot.emits = slot.emits || item.emits;
+            }
+            None => *slot = Some(item),
+        }
+    }
+    merged
+        .into_iter()
+        .flatten()
+        .map(|mut item| {
+            item.hull = Polygon::new(convex_hull(&item.points));
+            item
+        })
+        .collect()
 }
 
 fn merge_collisions(envelopes: &[Vec<Polygon>], parent: &mut [usize]) -> Result<bool, SliceError> {
