@@ -1,5 +1,5 @@
 //! Public RED for per-object skirts with support/raft footprints and layers.
-//! Upstream: Print.cpp:2669-2696,4311-4318,4398,4455-4485,5329-5335.
+//! Upstream: Print.cpp:2669-2696; GCode.cpp:4311-4318,4398,4455-4485,5329-5335.
 
 use crate::{CaseInputs, OrcaRunner, golden, normalize_process_defaults, runner, select_printer};
 use serde_json::json;
@@ -7,77 +7,91 @@ use sha2::Digest;
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_skirt_support_raft_matches_native() {
+fn orca_parity_per_object_skirt_control_matches_native() {
+    run_case("control", false, 0, false);
+}
+
+#[test]
+fn orca_parity_per_object_skirt_single_raft_control_matches_native() {
+    run_case("single-raft-control", false, 2, false);
+}
+
+#[test]
+fn orca_parity_per_object_skirt_support_red_matches_native() {
+    run_case("support", true, 0, true);
+}
+
+#[test]
+fn orca_parity_per_object_skirt_raft_red_matches_native() {
+    run_case("raft", false, 2, false);
+}
+
+fn run_case(label: &str, enable_support: bool, raft_layers: u32, support_fixture: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let resources = std::env::var_os("ARES_ORCA_RESOURCES_DIR")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| runner::repo_root().join("OrcaSlicer/resources"));
+    let Some(resources) =
+        crate::native_environment::value("ARES_ORCA_RESOURCES_DIR").map(std::path::PathBuf::from)
+    else {
+        return;
+    };
     let profiles =
         crate::presets::VendorProfiles::load(&resources.join("profiles"), "Creality").unwrap();
     let selection = select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
     let machine = profiles.machine(&selection.printer).unwrap();
     let cube = runner::repo_root().join("tests/parity/cube10.stl");
     let overhang = runner::repo_root().join("tests/parity/overhang.stl");
-    let cases = [
-        ("control", false, 0, [&cube, &cube], 2),
-        ("single-raft-control", false, 2, [&cube, &cube], 1),
-        ("support", true, 0, [&overhang, &overhang], 2),
-        ("raft", false, 2, [&cube, &cube], 2),
-    ];
-    for (label, enable_support, raft_layers, models, object_count) in cases {
-        let mut process = profiles.process(&selection.process).unwrap();
-        normalize_process_defaults(&machine, &mut process);
-        for (key, value) in [
-            ("skirt_type", json!("perobject")),
-            ("skirt_loops", json!("2")),
-            ("skirt_height", json!("2")),
-            ("skirt_distance", json!("6")),
-            ("min_skirt_length", json!("0")),
-            ("draft_shield", json!("disabled")),
-            (
-                "enable_support",
-                json!(if enable_support { "1" } else { "0" }),
-            ),
-            ("raft_layers", json!(raft_layers.to_string())),
-            ("brim_type", json!("no_brim")),
-            ("combine_brims", json!("0")),
-            ("enable_prime_tower", json!("0")),
-            ("print_sequence", json!("by layer")),
-        ] {
-            process.insert(key.to_owned(), value);
-        }
-        if enable_support {
-            process.insert("support_type".into(), json!("normal(auto)"));
-            process.insert("support_threshold_angle".into(), json!("45"));
-        }
-        let mut filaments = selection
-            .filaments
-            .iter()
-            .map(|name| profiles.filament(name).unwrap())
-            .collect::<Vec<_>>();
-        crate::normalize_filament_defaults(&mut filaments);
-        let model_list: Vec<&std::path::Path> = if object_count == 1 {
-            vec![models[0].as_path()]
-        } else {
-            vec![models[0].as_path(), models[1].as_path()]
-        };
-        let exported = runner
-            .export_case_multi(
-                &CaseInputs {
-                    label: &format!("per-object-skirt-support-raft/{label}"),
-                    machine: &machine,
-                    process: &process,
-                    filaments: &filaments,
-                },
-                &crate::smoke_overrides(),
-                &model_list,
-                &[],
-            )
-            .unwrap();
-        compare_case(&runner, label, &exported.project);
+    let mut process = profiles.process(&selection.process).unwrap();
+    normalize_process_defaults(&machine, &mut process);
+    for (key, value) in [
+        ("skirt_type", json!("perobject")),
+        ("skirt_loops", json!("2")),
+        ("skirt_height", json!("2")),
+        ("skirt_distance", json!("6")),
+        ("min_skirt_length", json!("0")),
+        ("draft_shield", json!("disabled")),
+        (
+            "enable_support",
+            json!(if enable_support { "1" } else { "0" }),
+        ),
+        ("raft_layers", json!(raft_layers.to_string())),
+        ("brim_type", json!("no_brim")),
+        ("combine_brims", json!("0")),
+        ("enable_prime_tower", json!("0")),
+        ("print_sequence", json!("by layer")),
+    ] {
+        process.insert(key.to_owned(), value);
     }
+    if enable_support {
+        process.insert("support_type".into(), json!("normal(auto)"));
+        process.insert("support_threshold_angle".into(), json!("45"));
+    }
+    let mut filaments = selection
+        .filaments
+        .iter()
+        .map(|name| profiles.filament(name).unwrap())
+        .collect::<Vec<_>>();
+    crate::normalize_filament_defaults(&mut filaments);
+    let model = if support_fixture { &overhang } else { &cube };
+    let model_list = if label == "single-raft-control" {
+        vec![model.as_path()]
+    } else {
+        vec![model.as_path(), model.as_path()]
+    };
+    let exported = runner
+        .export_case_multi(
+            &CaseInputs {
+                label: &format!("per-object-skirt-support-raft/{label}"),
+                machine: &machine,
+                process: &process,
+                filaments: &filaments,
+            },
+            &crate::smoke_overrides(),
+            &model_list,
+            &[],
+        )
+        .unwrap();
+    compare_case(&runner, label, &exported.project);
 }
 
 fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8]) {
@@ -145,7 +159,7 @@ fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8]) {
             "cli_code": cli.status.code(),
             "cli_error": cli_result.as_ref().err(),
             "strict_parity_required": true,
-            "upstream": "Print.cpp:2669-2696,4311-4318,4398,4455-4485,5329-5335"
+            "upstream": "Print.cpp:2669-2696; GCode.cpp:4311-4318,4398,4455-4485,5329-5335"
         }))
         .unwrap(),
     )
