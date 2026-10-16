@@ -115,6 +115,8 @@ mod load_settings_3mf_partial;
 mod load_settings_cli;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
+#[path = "orca_parity/perobject_outer_inner_brim.rs"]
+mod perobject_outer_inner_brim;
 #[path = "orca_parity/plate_origin_cli.rs"]
 mod plate_origin_cli;
 #[path = "orca_parity/option_coverage/post_process.rs"]
