@@ -108,7 +108,11 @@ fn run_case(label: &str, control: bool) {
     api_comparison.unwrap_or_else(|error| panic!("{label}: API strict RED at {root:?}: {error}"));
     assert!(cli.status.success(), "{label}: CLI strict RED at {root:?}");
     cli_comparison.unwrap_or_else(|error| panic!("{label}: CLI strict RED at {root:?}: {error}"));
-    assert_eq!(api.unwrap(), cli_bytes.unwrap(), "{label}: API/CLI raw equality");
+    assert_eq!(
+        api.unwrap(),
+        cli_bytes.unwrap(),
+        "{label}: API/CLI raw equality"
+    );
 }
 
 fn sha(bytes: &[u8]) -> String {

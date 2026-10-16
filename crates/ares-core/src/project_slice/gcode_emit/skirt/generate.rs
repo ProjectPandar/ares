@@ -46,10 +46,11 @@ impl SkirtPlan {
                 plan.is_some()
                     && (print.combine_brims.0
                         // `Print.cpp:2847-2971` / `Brim.cpp:448-460,964-977`:
-                        // both brim kinds retain their object's occupied footprint.
+                        // admitted brim kinds retain their object's occupied footprint.
                         || !matches!(
                             object.object.brim_type,
                             crate::ProcessBrimType::OuterOnly
+                                | crate::ProcessBrimType::InnerOnly
                                 | crate::ProcessBrimType::OuterAndInner
                         )
                         || group.instance_indices.len() != 1)
