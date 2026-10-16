@@ -7,6 +7,45 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Per-object skirt guard inventory: approved ByObject slice, integration pending (2026-10-17)
+
+W1 Slice 1 GREEN `c1780265dd00dfd9322ffc6bba734d335c5311fe` ports
+`GCode.cpp:3321-3322` / `GCodeWriter.hpp:266-267` / `GCodeWriter.cpp:678`
+transition descriptions. Slice 2 GREEN
+`ee270b46a3ebf5d66f8f6838b06b6557b1c0ce00` admits separated ByObject
+per-object skirt groups, reusing `Print.cpp::_make_skirt:2780-2977` and
+`GCode.cpp:4465-4483,5334` per-group emission. Both are owner-approved and
+queued together, **not yet merged**. Slice 2 official/seeded targeted28/28 each,
+fmt/strict/WASM pass; shared-group source-branch reachability remains unproven.
+[SPEC](architecture/per-object-skirt-by-object-spec.md),
+[Slice 2 boundary](architecture/per-object-skirt-by-object-slice2-spec.md).
+
+Remaining guards in W1's approved
+`crates/ares-core/src/project_slice/gcode_emit/skirt/generate.rs::SkirtPlan::generate`
+are recorded below; W2/W5 concurrently own related edits, so their integration
+status is not inferred from this branch. Coordinator resolves stack conflicts.
+
+- Early multi-object/perobject guard: enabled prime tower (W5); more than one
+  filament-diameter entry / multi-filament (W5); any object enabling support or
+  raft layers (W2); installed raft schedule (W2); nonempty tower corners (W5).
+- Brim guard remains: an installed brim plan with combine_brims enabled, a
+  non-OuterOnly brim type, or a print-object group with other than one instance.
+  Existing singleton OuterOnly/no-combine admission is not broadened here.
+- New bounded post-group guard remains: ByObject + perobject with multiple
+  object members in a computed generation group returns the existing
+  UnsupportedProjectFeature. `Print.cpp:2551-2556` throws SlicingError for
+  has_shared_per_object_skirt; W1 does not invent that diagnostic/error variant
+  without a reachable witness. The distance35 probe rejected earlier at
+  sequential clearance, so it does not certify this shared-skirt branch.
+
+Only the blanket early sequence disjunct was removed. Native ByObject clearance,
+height/order constraints (`Print.cpp:613,1286-1303`) remain unchanged. No blanket
+reset of skirt histories between objects, no new grouping/sequence pipeline,
+and no fallback. Future guard removals require their own source-owned SPEC,
+Native-first public RED and independent GREEN approval; no full/workspace run
+is implied by this docs-only inventory.
+
+
 ### 3MF vertex coordinate defaults: amended shared importer SPEC (2026-10-15)
 
 Next W4 docs-only candidate: both
