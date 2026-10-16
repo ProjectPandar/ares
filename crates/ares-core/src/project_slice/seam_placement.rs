@@ -133,7 +133,12 @@ fn apply_objects(
         ) else {
             continue;
         };
-        let layer_zs = runtime::layer_slice_zs(&traversal.objects[object_index].records);
+        // SeamPlacer.cpp:1024-1032 consumes each physical Layer::slice_z.
+        let layer_zs = traversal.objects[object_index]
+            .physical_layers()
+            .iter()
+            .map(|layer| layer.slice_z as f32)
+            .collect::<Vec<_>>();
         let mut plans = alignment::prepare(
             (layers, &layer_zs),
             traversal,
