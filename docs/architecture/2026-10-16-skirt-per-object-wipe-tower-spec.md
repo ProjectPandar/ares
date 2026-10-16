@@ -60,8 +60,7 @@ fixture 在 GREEN 后仍撞守卫。
 - `generate.rs`：删除守卫中 `!tower_corners.is_empty()`、
   `filament_diameter.len() > 1`、`enable_prime_tower` 三个条件
   （**W2 拥有同守卫的 support/raft disjuncts——只删本片三条**）；
-  tower_corners 作为障碍项进入 per-object 分组；同时**新增**两条
-  延后守卫（见 §4）；
+  tower_corners 作为障碍项进入 per-object 分组；同时**新增**延后守卫（见 §4）；
 - `member_groups.rs`：`Group` 增发射语义；`merge` 遵循
   `:2874-2880`——仅发射组扩张 envelope；合并结果丢弃无发射成员
   的组（不发 loop）；
@@ -73,18 +72,23 @@ fixture 在 GREEN 后仍撞守卫。
 - per-object + wipe tower（prime tower + 多耗材 + 有 tool_changes）
   正常切片：tower 紧邻时对象组与障碍项合并、绕含 tower 点的
   convex_hull 发射；tower 远离时各自成组；仅对象组发射 loop；
-  组内对象按 GCode.cpp `:4465-4485/:5334` 语义以各自 extruder
-  发射、每组每层一次；
+  组按 GCode.cpp `:4465-4485/:5334` 语义发射——`extruder_id` 是
+  `layer_tools.extruders` 循环（`:5241`）中**首个打印任一成员对象
+  的耗材**；同组后续成员经 `skirt_done` print_z 跳过
+  （`:4293/:4317`），每组每层一次；
 - stCombined 不变（`:2843-2845`）；
 - RED：fixture（2 对象 × 2 extruder + prime/wipe tower +
-  per-object skirt，`min_skirt_length=0`）native 正常输出 vs ares
+  per-object skirt，`min_skirt_length=0`、`brim_type=no_brim`、
+  `combine_brims=0`——默认 btAutoBrim（PrintConfig.cpp:1690-1700）
+  会撞保留的 brim 守卫 disjunct `generate.rs:41-47`，参照
+  `per_object_skirt_groups.rs:54` 的做法）native 正常输出 vs ares
   `UnsupportedProjectFeature` 错误——严格相等断言先 FAIL；
   control 腿同 fixture `skirt_type=combined`；
 - failure inventory：①ares 抛错（当前态）②tower 障碍组错误发射
   loop ③障碍组 envelope 误扩张导致过 merge ④tower 点未并入合并组
-  hull（loop 贴 tower 穿过）⑤combined 路径回归 ⑥组内第二对象重复
-  或漏发 skirt（`m_skirt_group_done` 语义）⑦对象 extruder 选择错
-  （首 extruder ≠ 对象 extruder）。
+  hull（loop 贴 tower 穿过）⑤combined 路径回归 ⑥组重复或漏发
+  （skirt_done 去重语义）⑦组发射耗材选错（非该层首个打印成员
+  对象的耗材）。
 
 ## 4. 延后行为（全部保持守卫，无静默分歧）
 
@@ -93,9 +97,14 @@ fixture 在 GREEN 后仍撞守卫。
   disjuncts 保留（W2 拥有 support/raft 项）；
 - **新增守卫**：`min_skirt_length > 0 && filament_diameter.len() > 1`
   （上游 extruder 轮换 `:2745-2760` vs ares 单一 `e_per_path_mm`
-  `generate.rs:104-111`）；draft shield（infinite skirt）×
-  per-object（现无守卫，补 `draft_shield==Enabled && per_object`
-  抛 Unsupported）；
+  `generate.rs:104-111`）；**wiping pass 发射**：上游在
+  `is_anything_overridden`（wipe 耗材注入对象）时 wiping pass 也会
+  发对象 skirt（`:5330-5333`），ares 仅 `Pass::Normal`
+  （`layers/tool_entry.rs:97`）——本片显式守卫（per-object 路径遇
+  wiping override 抛 Unsupported）延后。per-object draft shield 已
+  移植并有 byte-parity 测试（`per_object_draft_shield.rs:86-95`、
+  `per_object_draft_compositions.rs`、`per_object_draft_triple.rs`），
+  不加守卫；
 - `m_has_shared_per_object_skirt` 标志与 SkirtBrimGroup brim 载荷
   （`:2973-2993`）——ares SkirtGroup 无 brim 载荷，保持现状。
 
