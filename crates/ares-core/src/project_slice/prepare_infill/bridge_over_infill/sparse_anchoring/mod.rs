@@ -6,7 +6,7 @@ mod arms_tail;
 mod linear;
 
 use crate::{
-    ProcessInfillPattern, SliceError,
+    SliceError,
     fill::multiline::Sweep,
     geometry::Polyline,
     project_slice::{
@@ -67,31 +67,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     // `fill_entities/generate.rs`). Keep the contour-derived bbox.
     let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
-    let active_region_ids = crate::project_slice::fill_entities::adaptive::active_region_ids(
-        prelude,
-        &prepared.predecessor.objects[object_index].records,
-        plan.layers.len(),
-    );
-    let resolved = traversal
-        .resolved
-        .objects
-        .iter()
-        .find(|object| object.source_object_index == prelude.identity().0)
-        .expect("anchoring retains its resolved object");
-    let adaptive_spacing =
-        crate::project_slice::fill_entities::adaptive::line_spacing::object_configured(
-            &resolved.all_regions,
-            &traversal.resolved.views.full.project.print.nozzle_diameter,
-            ProcessInfillPattern::AdaptiveCubic,
-            &active_region_ids,
-        );
-    let support_spacing =
-        crate::project_slice::fill_entities::adaptive::line_spacing::object_configured(
-            &resolved.all_regions,
-            &traversal.resolved.views.full.project.print.nozzle_diameter,
-            ProcessInfillPattern::SupportCubic,
-            &active_region_ids,
-        );
+    let spacing = prepared.object_spacings[object_index];
 
     for fill in grouped.surface_fills {
         if fill.representative.kind != RegionSurfaceKind::Internal {
@@ -107,8 +83,8 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             object_bounding_box,
             lightning_generator,
             stars_bounds.map(|bounds| (bounds, plan.layers[layer_index].id)),
-            adaptive_spacing,
-            support_spacing,
+            spacing.adaptive,
+            spacing.support,
             &mut result,
         )?;
     }

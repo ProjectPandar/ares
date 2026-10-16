@@ -25,14 +25,12 @@ mod tpms_fk;
 
 pub(in crate::project_slice) use flow::{extended_object_bounding_box_x, materialized_flow};
 #[cfg(test)]
-pub(in crate::project_slice) use generate_test::generate_layer;
+pub(in crate::project_slice) use generate::generate_layer;
 pub(in crate::project_slice) use stars_bounds::extended as extended_stars_bounds;
 
 pub(in crate::project_slice) use surface::{SurfaceRequest, surface_polylines};
 
 mod generate;
-#[cfg(test)]
-mod generate_test;
 #[cfg(test)]
 mod tests;
 mod three_d_honeycomb;
@@ -120,36 +118,18 @@ pub(in crate::project_slice) fn prepare(
                     .lightning_generators
                     .get(object_index)
                     .and_then(|g| g.as_ref());
-                let active_region_ids = adaptive::active_region_ids(
-                    prelude,
-                    &external.predecessor.objects[object_index].records,
-                    plan.layers.len(),
-                );
-                let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
-                let adaptive_spacing = adaptive::line_spacing::object_configured(
-                    &resolved.all_regions,
-                    nozzles,
-                    crate::ProcessInfillPattern::AdaptiveCubic,
-                    &active_region_ids,
-                );
-                let support_spacing = adaptive::line_spacing::object_configured(
-                    &resolved.all_regions,
-                    nozzles,
-                    crate::ProcessInfillPattern::SupportCubic,
-                    &active_region_ids,
-                );
                 (0..plan.layers.len())
                     .map(|layer_index| {
                         generate::generate_layer_with_active(
                             external,
                             object_index,
                             layer_index,
-                            generate::LayerGenerationOptions {
-                                lightning_generator: lightning_generator.map(|g| g.as_ref()),
+                            generate::layer_options(
+                                external,
+                                object_index,
+                                lightning_generator.map(|g| g.as_ref()),
                                 stars_bounds,
-                                adaptive_spacing,
-                                support_spacing,
-                            },
+                            ),
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()

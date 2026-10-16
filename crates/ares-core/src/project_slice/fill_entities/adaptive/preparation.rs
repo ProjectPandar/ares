@@ -15,6 +15,42 @@ use crate::{
     },
 };
 
+#[derive(Clone, Copy)]
+pub(in crate::project_slice) struct ObjectSpacing {
+    pub(in crate::project_slice) adaptive: f64,
+    pub(in crate::project_slice) support: f64,
+}
+
+pub(in crate::project_slice) fn object_spacings(
+    traversal: &PreparedPostClassicTraversal,
+    prelude: &PostPerimeterInputPrintObject,
+    records: &[Option<PreparedSurfaceTypeRecord>],
+    layer_count: usize,
+) -> ObjectSpacing {
+    let active = active_region_ids(prelude, records, layer_count);
+    let resolved = traversal
+        .resolved
+        .objects
+        .iter()
+        .find(|object| object.source_object_index == prelude.identity().0)
+        .expect("adaptive spacing retains its resolved object");
+    let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
+    ObjectSpacing {
+        adaptive: super::line_spacing::object_configured(
+            &resolved.all_regions,
+            nozzles,
+            ProcessInfillPattern::AdaptiveCubic,
+            &active,
+        ),
+        support: super::line_spacing::object_configured(
+            &resolved.all_regions,
+            nozzles,
+            ProcessInfillPattern::SupportCubic,
+            &active,
+        ),
+    }
+}
+
 pub(in crate::project_slice) fn active_region_ids(
     prelude: &PostPerimeterInputPrintObject,
     records: &[Option<PreparedSurfaceTypeRecord>],
@@ -46,31 +82,21 @@ pub(in crate::project_slice) fn prepare_support(
     candidates: &BridgeCandidateObject,
     horizontal: &PreparedSurfaceTypeObject,
     prelude: &PostPerimeterInputPrintObject,
+    spacing: ObjectSpacing,
 ) {
     let (plan, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
-    let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
-    let active_region_ids = active_region_ids(prelude, &horizontal.records, plan.layers.len());
-    let mut contributing = regions.iter().enumerate().filter(|(index, region)| {
+    let mut contributing = regions.iter().filter(|region| {
         let options = region.as_parts().1;
         options.sparse_infill_pattern == ProcessInfillPattern::SupportCubic
             && options.sparse_infill_density.0 > 0.0
-            && active_region_ids.contains(index)
     });
     if contributing.next().is_none() {
         return;
     }
-    let resolved = traversal
-        .resolved
-        .objects
-        .iter()
-        .find(|object| object.source_object_index == plan.source_object_index)
-        .expect("support object retains resolved regions");
-    let spacing = super::line_spacing::object_configured(
-        &resolved.all_regions,
-        nozzles,
-        ProcessInfillPattern::SupportCubic,
-        &active_region_ids,
-    );
+    if !spacing.support.is_finite() || spacing.support <= 0.0 {
+        return;
+    }
+    let spacing = spacing.support;
     let mut triangles = Vec::new();
     // Source map/layer order and each candidate vector's original order.
     for candidate in candidates.surfaces_by_layer.values().flatten() {
