@@ -67,7 +67,8 @@ The emitter remains a temporary compatibility shell for Print/GCode concepts.
 Freeze the three admitted inputs only, exact SHA/member manifest, no Native
 output in Git. Runtime `OrcaRunner::from_env` Native FIRST, assert Native exit0.
 Target assert two skirt blocks; second occurs AFTER `move to origin position for
-next object` and BEFORE object1/id1 extrusion, first before object0/id0; positive
+next object` and BEFORE the second stack's local id0 extrusion, first before
+first-stack id0 (Native reuses local labels per process_layers); positive
 XY/E, 40 layers and complete sequential stacks. Both controls retain strict whole
 ordered Native/API/CLI equality and raw API==CLI. Target asserts that SAME strict
 equality and real API/CLI success, so pre-GREEN fails on actual unsupported API
