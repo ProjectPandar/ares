@@ -58,6 +58,26 @@ keeps the existing guard and does not claim a RED or port for these three
 patterns. Ordinary ironing remains the two-value enum from
 `PrintConfig.cpp:6565-6575`.
 
+### Physical seam candidate plane: resource-control SPEC request (2026-10-16)
+
+W4 localized unchanged d951 resource-control motion995/line1198 to third-layer
+region1 inner hole-wall seam selection. All24 oriented pre-seam loops and67
+candidate XY/angles agree; Native slice_z0.62 versus Rust0.32 flips candidate8/10.
+The upstream owner is `GCode/SeamPlacer.cpp::gather_seam_candidates:1014-1040`,
+consuming `PrintObjectSlice.cpp::compute_slice_z/new_layers:24-75`'s physical
+`Layer::slice_z`. Rust destination is only the runtime region-height scan and
+`seam_placement.rs::apply_objects` caller, replaced by the retained
+`PostClassicTraversalPrintObject::physical_layers` view. No new plane/pipeline.
+Minimal-delta modifier density50→20 control whole-PASSes official Native/API/CLI;
+positive whole strict FAIL is retained. M73 is a total-time-denominator symptom,
+not a postprocessor fix; old v2 NO-RED remains closed. SPEC approval→frozen public
+RED review→separate GREEN permission. Exit: both whole streams/raw API==CLI in
+both modes, scoped regressions/fmt/clippy/WASM, no scoring/geometry/M73 changes;
+residual owner means STOP. main41f2 now; rebase only after stack24 MAIN-ADVANCE.
+FULL24 FREEZE: CPU15 targeted only; coordinator owns full/workspace/integration.
+[SPEC](architecture/seam-physical-plane-resource-spec.md),
+[ARD](architecture/ard-seam-physical-plane-resource.md).
+
 ### 3MF vertex coordinate defaults: amended shared importer SPEC (2026-10-15)
 
 Next W4 docs-only candidate: both
