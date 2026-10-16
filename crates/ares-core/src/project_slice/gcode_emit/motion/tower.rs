@@ -88,7 +88,8 @@ pub(in crate::project_slice::gcode_emit) fn writer_z(
         return;
     }
     let feedrate = travel::lift_z_feedrate(state);
-    let comment = if state.options.gcode_comments {
+    // `GCodeWriter.hpp:266-267`: empty descriptions never emit a comment.
+    let comment = if state.options.gcode_comments && !comment.is_empty() {
         format!(" ; {comment}")
     } else {
         String::new()

@@ -72,11 +72,18 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     // the planar move (the native pair `G1 Z10.4` / `G1 Z10.8` /
     // `G1 X… Y… Z10.8`).
     let hop_z = lift_z + state.options.z_hop;
-    motion::tower::writer_z(output, state, hop_z, "", true);
+    // `GCodeWriter.cpp:678`: the ordinary travel lift carries this description.
+    motion::tower::writer_z(output, state, hop_z, "normal lift Z", true);
     let feedrate = motion::tower::travel_feedrate(state);
+    // `GCode.cpp:3322`: forward the sequential origin travel description.
+    let comment = if state.options.gcode_comments {
+        " ; move to origin position for next object"
+    } else {
+        ""
+    };
     output.extend_from_slice(
         format!(
-            "G1 X{} Y{} Z{} F{}\n",
+            "G1 X{} Y{} Z{} F{}{comment}\n",
             format_z(origin[0]),
             format_z(origin[1]),
             format_z(hop_z),
