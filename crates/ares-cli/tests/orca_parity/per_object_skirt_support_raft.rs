@@ -23,7 +23,7 @@ fn orca_parity_per_object_skirt_support_red_matches_native() {
 
 #[test]
 fn orca_parity_per_object_skirt_raft_red_matches_native() {
-    run_case("raft", false, 2, false);
+    run_case("raft", true, 2, true);
 }
 
 fn run_case(label: &str, enable_support: bool, raft_layers: u32, support_fixture: bool) {
