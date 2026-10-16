@@ -2,22 +2,30 @@
 
 use super::{
     super::{motion, skirt},
+    entry::EntryGeometry,
     entry_builder::EntryBuilder,
+    raft_schedule::RaftSchedule,
 };
 use crate::{
     geometry::ExPolygon,
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    project_slice::support_material::InstalledSupportLayer,
 };
 
 pub(super) struct Input<'a, 'b> {
     pub(super) skirt: &'a Option<skirt::SkirtPlan>,
     pub(super) done: &'a mut [(usize, f64)],
     pub(super) object: usize,
-    pub(super) layer: usize,
+    pub(super) layer: Option<usize>,
     pub(super) builder: &'a mut EntryBuilder<'b>,
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) slices: &'a [ExPolygon],
     pub(super) spacing: f64,
+    pub(super) support_layers: &'a [Vec<InstalledSupportLayer>],
+    pub(super) raft: &'a Option<RaftSchedule>,
+    pub(super) support_layer: Option<usize>,
+    pub(super) raft_layer: Option<usize>,
+    pub(super) print_z: f64,
 }
 
 pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: Input<'_, '_>) {
@@ -25,26 +33,76 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: I
     let Some(group) = plan.object_group(input.object) else {
         return;
     };
-    let physical = &input.traversal.objects[input.object].physical_layers()[input.layer];
+    let physical_z = input.layer.map_or(input.print_z, |layer| {
+        input.traversal.objects[input.object].physical_layers()[layer].print_z
+    });
     let (count, last_z) = &mut input.done[group];
-    if *count >= plan.layer_count || (*count > 0 && *last_z >= physical.print_z - 1e-4) {
+    if *count >= plan.layer_count || (*count > 0 && *last_z >= physical_z - 1e-4) {
         return;
     }
     let layer = skirt::SkirtLayer {
         index: *count,
-        height_mm: f64::from((physical.print_z - *last_z) as f32),
+        height_mm: f64::from((physical_z - *last_z) as f32),
     };
     *count += 1;
-    *last_z = physical.print_z;
-    let geometry = input
-        .builder
-        .geometry(input.object, input.layer, input.slices, input.spacing);
-    let lower = (!geometry.lower_boundary_lines.is_empty())
-        .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
-    plan.emit_group(
-        output,
-        (group, layer),
-        geometry.view(input.traversal, input.object, input.layer, lower.as_ref()),
-        state,
-    );
+    *last_z = physical_z;
+    if let Some(object_layer) = input.layer {
+        let geometry =
+            input
+                .builder
+                .geometry(input.object, object_layer, input.slices, input.spacing);
+        let lower = (!geometry.lower_boundary_lines.is_empty())
+            .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
+        plan.emit_group(
+            output,
+            (group, layer),
+            geometry.view(input.traversal, input.object, object_layer, lower.as_ref()),
+            state,
+        );
+    } else if let Some(raft_index) = input.raft_layer {
+        let raft_polygons = input
+            .raft
+            .as_ref()
+            .and_then(|raft| raft.plans.get(input.object))
+            .and_then(|plans| plans.get(raft_index))
+            .map(|plan| {
+                plan.polygons
+                    .iter()
+                    .map(|polygon| ExPolygon::new(polygon.clone(), Vec::new()))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let geometry = EntryGeometry {
+            top_surfaces: Vec::new(),
+            lower_boundary_lines: Vec::new(),
+            nearest_penalties: None,
+            layer_slices: raft_polygons.clone().into(),
+            internal_surfaces: Vec::new(),
+            chunk_slices: raft_polygons,
+            chunk_perimeter_spacing: 0.0,
+        };
+        plan.emit_group(
+            output,
+            (group, layer),
+            geometry.view_raft(input.traversal.scale),
+            state,
+        );
+    } else if let Some(support_index) = input.support_layer {
+        let support = &input.support_layers[input.object][support_index];
+        let geometry = EntryGeometry {
+            top_surfaces: Vec::new(),
+            lower_boundary_lines: Vec::new(),
+            nearest_penalties: None,
+            layer_slices: support.slices.clone().into(),
+            internal_surfaces: Vec::new(),
+            chunk_slices: input.slices.to_vec(),
+            chunk_perimeter_spacing: input.spacing,
+        };
+        plan.emit_group(
+            output,
+            (group, layer),
+            geometry.view_raft(input.traversal.scale),
+            state,
+        );
+    }
 }

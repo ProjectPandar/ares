@@ -96,7 +96,9 @@ pub(super) fn emit(
         .identity();
     if pass == tool_buckets::Pass::Normal
         && body.is_some()
-        && let Some(layer) = entry.object_layer
+        && (entry.object_layer.is_some()
+            || entry.support_layer.is_some()
+            || entry.raft_layer.is_some())
     {
         super::object_skirt::emit(
             output,
@@ -105,11 +107,16 @@ pub(super) fn emit(
                 skirt,
                 done: object_skirt_done,
                 object: object_index,
-                layer,
+                layer: entry.object_layer,
                 builder: entry_builder,
                 traversal,
                 slices: chunk_slices,
                 spacing: chunk_perimeter_spacing,
+                support_layers,
+                raft,
+                support_layer: entry.support_layer,
+                raft_layer: entry.raft_layer,
+                print_z: layer_z,
             },
         );
     }

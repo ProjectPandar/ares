@@ -41,23 +41,18 @@ impl SkirtPlan {
                 > 1;
         if per_object
             && traversal.resolved.objects.len() > 1
-            && (traversal.resolved.objects.iter().any(|object| {
-                    object.object.enable_support.0 || object.object.raft_layers.0 > 0
-                })
-                || brim.iter().enumerate().any(|(index, plan)| {
-                    let (object, group) = traversal.print_object_config(index);
-                    plan.is_some()
-                        && (print.combine_brims.0
-                            || object.object.brim_type != crate::ProcessBrimType::OuterOnly
-                            || group.instance_indices.len() != 1)
-                })
-                || raft.is_some()
-                || (tower_active
-                    && traversal.resolved.objects.iter().any(|object| {
-                        object.object.flush_into_objects.0
-                            || object.object.flush_into_infill.0
-                            || object.object.flush_into_support.0
-                    })))
+            && (brim.iter().enumerate().any(|(index, plan)| {
+                let (object, group) = traversal.print_object_config(index);
+                plan.is_some()
+                    && (print.combine_brims.0
+                        || object.object.brim_type != crate::ProcessBrimType::OuterOnly
+                        || group.instance_indices.len() != 1)
+            }) || (tower_active
+                && traversal.resolved.objects.iter().any(|object| {
+                    object.object.flush_into_objects.0
+                        || object.object.flush_into_infill.0
+                        || object.object.flush_into_support.0
+                })))
         {
             return Err(SliceError::UnsupportedProjectFeature(
                 "skirt_type per-object".to_owned(),
