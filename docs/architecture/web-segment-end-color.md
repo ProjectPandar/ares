@@ -8,7 +8,7 @@ production code until COORD approves this spec.
 
 | Upstream | Behavior | Ares destination |
 |---|---|---|
-| `src/libvgcode/src/ShadersES.hpp:60-61` | segment `gl_InstanceID` gives `id_a`; `id_b = id_a + 1` | already ported: instance `n` = vertex `i` with start `i - 1` (`toolpathMesh.ts` `buildToolpathMesh`) |
+| `src/libvgcode/src/ShadersES.hpp:60-61` | segment `gl_InstanceID` gives `id_a`; `id_b = id_a + 1` | already ported: instance `n` = vertex `i` with start `i - 1` (`toolpathMesh.ts` `buildToolpathMesh`). The web keys an instance by its **end** vertex `i` = upstream `id_b`; upstream `enabled_segments` keys a segment by its **start** `id_a` (`ViewerImpl.cpp:929-942` validates the line `i -> i + 1`, `:1183` pushes `i`), so `applyEnabled` maps segment `id` to instance end `id + 1` |
 | `ShadersES.hpp:101` | `int id = vertex_id < 4 ? id_a : id_b;` — the template vertices 0..3 belong to the start end, 4..7 to the end | `toolpathMesh.ts` vertex shader: pick the start or end color by the same `vertex_id < 4` test |
 | `ShadersES.hpp:36-43,145-146` | `color_base = decode_color(color_tex[id])`, then `color = color_base * lighting(...)`; `color` is not `flat`, so the rasterizer interpolates it between the two ends | same shader: `color = (vertex_id < 4 ? aStartColor : aColor) * lighting(...)` |
 | `ViewerImpl.cpp:1218-1224,1227-1258,1261-1287` | `update_colors` stores `encode_color(get_vertex_color(v))` for **every vertex**, `update_colors_texture` greys some of them, and the result is uploaded as one texel per vertex | already ported: `ares-vgcode` `viewer/colors.rs` (`update_colors`, `update_colors_texture`, `get_vertex_color`) and wasm `VertexBuffers::vertex_colors` / `Toolpaths.colors` (RGB per vertex) |
@@ -92,8 +92,10 @@ same instance selection: start `rgb[i - 1]`, end `rgb[i]`. It runs three steps:
 3. **Control, back to Line Type:** the read-out equals the step-1 Native value again. This exercises the recolor path for both ends.
 
 A coverage precondition reads only the Native rows. It requires at least one instance
-with differing Height ends, so the RED cannot pass vacuously. It is kept separate from
-the Ares-vs-Native assertions.
+whose Native Height-view **RGB** ends differ (`get_vertex_color` output, not the raw
+heights: two heights can fall into the same `round_to_bin` / `ColorRange` color), so
+the RED cannot pass vacuously. It is kept separate from the Ares-vs-Native assertions.
+The count of such instances is written to `segment-colors/expected.json`.
 
 The existing `data-segment-sizes` and `data-segment-geometry` read-outs and tests do
 not change.
