@@ -34,17 +34,8 @@ pub(super) fn append(
     }: AdaptiveObject<'_>,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    // `adaptive_fill_line_spacing` (`FillAdaptive.cpp:337-354`):
-    // extrusion_width / ((density / 100) * 0.333333) * n_multiline, from
-    // the region's fill parameters.
-    let line_spacing = line_spacing::for_fill(&fill.params);
-    if !line_spacing.is_finite() || line_spacing <= 0.0 {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "sparse_infill_pattern".to_owned(),
-        ));
-    }
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, line_spacing, kind)?;
+    let octree = octree_for(traversal, object_index, kind)?;
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
@@ -100,20 +91,29 @@ pub(super) fn append(
 
 /// `PrintObject.cpp:984` — `to_octree * trafo_centered` over the object's
 /// ModelPart volumes, then the octree build (`FillAdaptive.cpp:1483`).
-/// The cache key includes the line spacing: upstream builds one octree
-/// per PrintObject with the region-averaged spacing; per-fill spacing
-/// would otherwise alias a different-density tree onto the first one.
-/// `PrintObject.cpp:984` — the per-slice octree cache on the traversal
-/// context; key includes the line spacing so regions with different
-/// densities never alias onto the first region's tree (upstream builds
-/// one octree per PrintObject with the region-averaged spacing,
-/// `FillAdaptive.cpp:276-354`).
+/// `PrintObject.cpp:984` — one per-slice octree per object and pattern kind.
+/// `FillAdaptive.cpp:314-354` supplies the object-averaged spacing.
 fn octree_for(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
-    line_spacing: f64,
     kind: OctreeKind,
 ) -> Result<std::sync::Arc<octree::Octree>, SliceError> {
+    let (resolved, _) = traversal.print_object_config(object_index);
+    let pattern = match kind {
+        OctreeKind::Adaptive => crate::ProcessInfillPattern::AdaptiveCubic,
+        OctreeKind::Support => crate::ProcessInfillPattern::SupportCubic,
+    };
+    let line_spacing = line_spacing::object_configured(
+        &resolved.all_regions,
+        &traversal.resolved.views.full.project.print.nozzle_diameter,
+        pattern,
+    )
+    .ok_or_else(|| SliceError::UnsupportedProjectFeature("sparse_infill_pattern".to_owned()))?;
+    if !line_spacing.is_finite() || line_spacing <= 0.0 {
+        return Err(SliceError::UnsupportedProjectFeature(
+            "sparse_infill_pattern".to_owned(),
+        ));
+    }
     let key = (object_index, line_spacing.to_bits(), kind);
     match kind {
         OctreeKind::Adaptive => traversal.adaptive_octrees.get_or_try_build(key, || {
@@ -294,14 +294,8 @@ pub(in crate::project_slice) fn anchoring_lines(
     z: f64,
     scale: CoordinateScale,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
-    let line_spacing = line_spacing::for_fill(&fill.params);
-    if !line_spacing.is_finite() || line_spacing <= 0.0 {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "sparse_infill_pattern".to_owned(),
-        ));
-    }
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, line_spacing, kind)?;
+    let octree = octree_for(traversal, object_index, kind)?;
     let mut polylines = Vec::new();
     // Fill.cpp:1492-1498 calls Fill::fill_surface (FillBase.cpp:105-117),
     // with the constructor's zero overlap (FillBase.hpp:181-187).

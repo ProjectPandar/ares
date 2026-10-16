@@ -24,7 +24,7 @@ pub(in crate::project_slice) fn prepare_support(
 ) {
     let (plan, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
-    let contributing = regions.iter().enumerate().filter(|(index, region)| {
+    let mut contributing = regions.iter().enumerate().filter(|(index, region)| {
         let options = region.as_parts().1;
         options.sparse_infill_pattern == ProcessInfillPattern::SupportCubic
             && options.sparse_infill_density.0 > 0.0
@@ -38,15 +38,22 @@ pub(in crate::project_slice) fn prepare_support(
                     .is_some_and(|record| !record.fill_surfaces.is_empty())
             })
     });
-    let spacings: Vec<_> = contributing
-        .map(|(_, region)| {
-            let options = region.as_parts().1;
-            super::line_spacing::configured(options, nozzles, options.fill_multiline.0)
-        })
-        .collect();
-    if spacings.is_empty() {
+    if contributing.next().is_none() {
         return;
     }
+    let resolved = traversal
+        .resolved
+        .objects
+        .iter()
+        .find(|object| object.source_object_index == plan.source_object_index)
+        .expect("support object retains resolved regions");
+    let Some(spacing) = super::line_spacing::object_configured(
+        &resolved.all_regions,
+        nozzles,
+        ProcessInfillPattern::SupportCubic,
+    ) else {
+        return;
+    };
     let mut triangles = Vec::new();
     // Source map/layer order and each candidate vector's original order.
     for candidate in candidates.surfaces_by_layer.values().flatten() {
@@ -69,18 +76,16 @@ pub(in crate::project_slice) fn prepare_support(
             traversal.scale,
         ));
     }
-    for spacing in spacings {
-        traversal.adaptive_octrees.get_or_build(
-            (object_index, spacing.to_bits(), OctreeKind::Support),
-            || {
-                super::build_object_octree(
-                    traversal,
-                    object_index,
-                    spacing,
-                    OctreeKind::Support,
-                    &triangles,
-                )
-            },
-        );
-    }
+    traversal.adaptive_octrees.get_or_build(
+        (object_index, spacing.to_bits(), OctreeKind::Support),
+        || {
+            super::build_object_octree(
+                traversal,
+                object_index,
+                spacing,
+                OctreeKind::Support,
+                &triangles,
+            )
+        },
+    );
 }
