@@ -52,6 +52,7 @@ impl SkirtPlan {
                             crate::ProcessBrimType::OuterOnly
                                 | crate::ProcessBrimType::InnerOnly
                                 | crate::ProcessBrimType::Painted
+                                | crate::ProcessBrimType::BrimEars
                                 | crate::ProcessBrimType::OuterAndInner
                         )
                         || group.instance_indices.len() != 1)
