@@ -118,14 +118,20 @@ pub(in crate::project_slice) fn prepare(
                     .lightning_generators
                     .get(object_index)
                     .and_then(|g| g.as_ref());
+                let active_region_ids = adaptive::active_region_ids(
+                    prelude,
+                    &external.predecessor.objects[object_index].records,
+                    plan.layers.len(),
+                );
                 (0..plan.layers.len())
                     .map(|layer_index| {
-                        generate::generate_layer(
+                        generate::generate_layer_with_active(
                             external,
                             object_index,
                             layer_index,
                             lightning_generator.map(|g| g.as_ref()),
                             stars_bounds,
+                            &active_region_ids,
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()
