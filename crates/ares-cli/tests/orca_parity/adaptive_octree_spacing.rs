@@ -103,6 +103,6 @@ fn adaptive_octree_spacing_density_red() {
 fn adaptive_octree_spacing_multiline_red() {
     run_case(
         "multiline",
-        "70b0675b517a5bf6f27c2c7358b127c65a4d145e742eba6bf98b35a8cc0904d93",
+        "70b0675b517a5bf6f27c2c7358b127c65a4d145e742eba6bf98b35a8cc0904d9",
     );
 }
