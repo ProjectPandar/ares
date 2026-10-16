@@ -1,11 +1,12 @@
 //! GCode.cpp:5330-5333 wiping-pass extrusions x Print.cpp:2784-2996
 //! per-object skirt: the SEMM fixture (R1 base, skirt_type=perobject,
-//! prime tower on, flush_into_infill=1) — Native prints infill during
-//! the wiping pass and groups per-object skirts with the tower
-//! obstacle; Ares rejects `skirt_type per-object` (gcode_emit/skirt/
-//! generate.rs flush_into_infill guard disjunct) — the RED must FAIL
-//! before the GREEN slice retires that disjunct (flush_into_support
-//! and flush_into_objects stay guarded; both have their own residuals).
+//! prime tower on, flush_into_infill=1) — Native extrudes infill
+//! during the wiping pass and groups per-object skirts with the tower
+//! obstacle (GCode.cpp:4465-4485); the leg keeps the combination
+//! byte-identical and asserts the flush is ACTIVE (infill inside the
+//! wiping windows). flush_into_objects and flush_into_support stay
+//! guarded (tool-change/print ordering and support-skirt placement
+//! residuals — their own slices).
 use std::fs;
 
 use serde_json::json;
