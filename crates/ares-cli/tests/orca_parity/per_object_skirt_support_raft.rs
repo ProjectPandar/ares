@@ -11,11 +11,11 @@ fn orca_parity_per_object_skirt_support_raft_matches_native() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let profiles = crate::presets::VendorProfiles::load(
-        &runner::repo_root().join("OrcaSlicer/resources/profiles"),
-        "Creality",
-    )
-    .unwrap();
+    let resources = std::env::var_os("ARES_ORCA_RESOURCES_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| runner::repo_root().join("OrcaSlicer/resources"));
+    let profiles =
+        crate::presets::VendorProfiles::load(&resources.join("profiles"), "Creality").unwrap();
     let selection = select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
     let machine = profiles.machine(&selection.printer).unwrap();
     let cube = runner::repo_root().join("tests/parity/cube10.stl");
