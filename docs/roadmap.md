@@ -45,6 +45,18 @@ and no fallback. Future guard removals require their own source-owned SPEC,
 Native-first public RED and independent GREEN approval; no full/workspace run
 is implied by this docs-only inventory.
 
+### Native-undefined support-ironing patterns (2026-10-17)
+
+`support_ironing_pattern` values Lightning, AdaptiveCubic, and SupportCubic
+remain an explicit Native-undefined boundary in 2.4.2, rather than deferred
+coverage. `SupportCommon.cpp:1879-1885` constructs the ironing filler without
+initializing `FillLightning::Filler::generator` (`FillLightning.hpp:25`; the
+generator is assigned only by `Fill.cpp:1260,1456`), while the Lightning path
+dereferences it at `FillLightning.cpp:17`. The adaptive paths likewise depend
+on `adapt_fill_octree`, assigned only at `Fill.cpp:1246,1451`. Ares therefore
+keeps the existing guard and does not claim a RED or port for these three
+patterns. Ordinary ironing remains the two-value enum from
+`PrintConfig.cpp:4298-4306`.
 
 ### 3MF vertex coordinate defaults: amended shared importer SPEC (2026-10-15)
 
