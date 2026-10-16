@@ -172,6 +172,10 @@ pub(crate) fn write_canonical_entries(
             && raw_settings
                 .token_prefix(&entry.key, filament_count)
                 .is_none()
+            // PrintConfig.cpp:8567-8574 / :8664-8671 creates this nullable
+            // override under spiral mode and fills every slot with false.
+            && !(entry.key == "filament_retract_when_changing_layer"
+                && settings.process.print.spiral_mode.0)
         {
             continue;
         }
@@ -211,6 +215,10 @@ pub(crate) fn write_canonical_entries(
         // all-nil active-slot overrides never echo.
         if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&key)
             && raw_settings.token_prefix(key, filament_count).is_none()
+            // The spiral normalization above owns the absent-key insertion;
+            // retain it in the exported block just like Native.
+            && !(key == "filament_retract_when_changing_layer"
+                && settings.process.print.spiral_mode.0)
         {
             continue;
         }
