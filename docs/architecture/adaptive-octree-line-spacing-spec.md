@@ -4,9 +4,9 @@ Status: proposed, docs only. Base: `origin/main=41f2c90f765d42c6620583121296bb61
 
 ## Upstream boundary
 
-`PrintObject.cpp:296-321` establishes the per-region tristate admission and
-`PrintObject.cpp:2735` prepares the Support tree on the same object traversal.
-`FillAdaptive.cpp:314-321` then averages density and extrusion width over all
+`Fill/FillAdaptive.cpp:296-321` establishes the per-region tristate admission,
+while `PrintObject.cpp:2735` prepares the Support tree on the same object
+traversal. `FillAdaptive.cpp:314-321` then averages density and extrusion width over all
 regions whose tristate is `Yes` for the requested pattern. The calculation is
 completed at `FillAdaptive.cpp:320-354`: `to_line_spacing` is formed at
 `:337-350`, `n_multiline` is read from
@@ -20,10 +20,16 @@ loop decides independently which regions contribute to the Adaptive or Support
 average. Region 0 may therefore be non-Adaptive while its `fill_multiline`
 value still multiplies both returned spacings.
 
-Upstream also inserts bridge overhang triangles into the object octree at
-`PrintObject.cpp:1006-1007`. Those inputs originate from the object's bridge
-candidate preparation around `PrintObject.cpp:2735` and the Adaptive build
-path. They are outside this spacing slice.
+Upstream bridge candidates are collected by
+`PrintObject.cpp:2468-2572`; `dont_filter_internal_bridges` at `:2532` and
+`:2550` changes filtering but does not disable candidate collection. The
+fixture geometry must contain no internal solid infill over unsupported sparse
+areas, as described by `PrintObject.cpp:2543-2557` (for example,
+top_shell_layers=0 or an open-top/constant-section shape). The original
+surfaces at `PrintObject.cpp:2728-2735` can still supply overhang triangles
+even when no `Internal Bridge` G-code role is emitted. A fixture is accepted
+only after its geometry/settings are inspected against :2543-2557; G-code role
+absence alone is not evidence. Bridge triangles remain deferred.
 
 ## Ares destination and replacement boundary
 
@@ -32,7 +38,12 @@ Ares currently keys its Adaptive octree cache per local spacing and kind in
 spacing in `adaptive/line_spacing.rs:6-28`, and supplies the region-local
 parameters from `group_fills/params/projection.rs:100-109`. The Support path is
 also independently prepared in `adaptive/preparation.rs:41-46,71-80`; it must
-be treated as a second candidate RED, not a control. The shared entry points
+be treated as a second candidate RED, not a control. The Ares region identity
+comes from `group_fills/params.rs:83` (`input.current.region_index`), which is
+the source region index carried into `SurfaceFillParams`. Upstream region order
+and merging are defined by `PrintApply.cpp:1000-1012` (`get_create_region`);
+fixtures must use genuinely different configs so upstream merging does not
+collapse the two regions. The shared entry points
 are `adaptive.rs::append`, `::anchoring_lines`, `::octree_for`, and
 `preparation.rs`'s Support tree construction. W6's coordinate transforms and
 `build_object_octree` implementation remain outside this slice.
