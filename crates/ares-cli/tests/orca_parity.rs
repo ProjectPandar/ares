@@ -26,6 +26,8 @@ mod per_object_skirt_min_length;
 #[path = "orca_parity/per_object_skirt_brim.rs"]
 mod per_object_skirt_brim;
 
+#[path = "orca_parity/per_object_skirt_brim_ears.rs"]
+mod per_object_skirt_brim_ears;
 #[path = "orca_parity/per_object_skirt_brim_types.rs"]
 mod per_object_skirt_brim_types;
 #[path = "orca_parity/per_object_skirt_groups.rs"]
