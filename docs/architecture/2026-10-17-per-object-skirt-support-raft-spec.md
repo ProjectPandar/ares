@@ -42,7 +42,10 @@ The existing `occupied.rs:61-80` support-fill and
 hull before instance shifts, membership merging, loop generation, and emission.
 The separate raft carrier is a compatibility shell: upstream supplies raft
 support layers through `Print.cpp:2687-2691`, rather than a separate geometric
-policy. Preserve the current
+policy. The same GREEN must replace the `entry.object_layer`-only emission gate
+in `layers/tool_entry.rs:92-112` and `object_skirt.rs:28`, so per-object skirt
+paths are emitted on raft/support-only chunks with the upstream first-layer and
+skirt-height timing. Preserve the current
 fixed-point envelope grouping, object/instance translations, layer limit,
 outermost-first loop order, flow, seam clipping, and per-group emission. No new
 support or raft geometry policy is introduced; this is the missing admission
@@ -82,6 +85,12 @@ is attributable only to this slice:
 3. a control with support disabled and `raft_layers=0`, while all W5 and other
    disjuncts are false.
 
+Add an extra, separately reported control: one object with per-object skirt and
+`raft_layers>0`. Ares currently routes this through the combined path
+(`gcode_emit/drive.rs:150`); compare it with Native, but if it fails, report a
+separate single-object finding rather than folding it into this two-object
+guard/emission result.
+
 Each case must be accepted by Native. The public test will use
 `OrcaRunner::from_env()` and compare complete API and CLI output to Native with
 the unchanged strict comparator; the control must pass and each positive case
@@ -98,8 +107,11 @@ that result instead of inventing a RED.
 The candidate failure inventory is: Ares rejects a Native-accepted positive
 case; support or raft points are absent from the local hull; fixed-point group
 membership differs; instance shifts differ; per-group loop ranges or seam
-emission differ; API and CLI diverge; or the control changes. A RED is valid
+emission differ; per-object skirt is missing or mistimed on a raft/support-only
+layer (including the first-layer decision at `GCode.cpp:4398` or skirt-height
+accounting at `4311-4318`); API and CLI diverge; or the control changes. A RED is valid
 only when the control is strict-equal and the positive Native witness is active.
-Production work is limited to the two guard disjuncts above and follows a
-separate approved GREEN. No RED, production edit, or broad gate starts before
-SPEC approval.
+Production work is limited to the two guard disjuncts above plus that
+raft/support-layer emission change (`tool_entry.rs:92-112`,
+`object_skirt.rs:28`) and follows a separate approved GREEN. No RED,
+production edit, or broad gate starts before SPEC approval.
