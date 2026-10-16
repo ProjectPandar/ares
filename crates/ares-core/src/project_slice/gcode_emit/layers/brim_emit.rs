@@ -22,9 +22,18 @@ pub(super) fn emit(
     chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
 ) {
+    let global = brim.iter().flatten().find(|plan| plan.global);
+    let plan = if let Some(plan) = global {
+        (!state.global_brim_done).then_some(plan)
+    } else {
+        brim[object_index].as_ref()
+    };
     if layer_index == 0
-        && let Some(plan) = &brim[object_index]
+        && let Some(plan) = plan
     {
+        if plan.global {
+            state.global_brim_done = true;
+        }
         let geometry = entry_builder.geometry(
             object_index,
             layer_index,

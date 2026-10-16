@@ -12,6 +12,8 @@ use crate::{
 };
 
 pub(super) struct BrimPlan {
+    area: Vec<crate::geometry::ExPolygon>,
+    pub(super) global: bool,
     pub(super) paths: Vec<Vec<Point>>,
     pub(super) covered_hull: Vec<Point>,
     pub(super) width: f32,
@@ -255,11 +257,18 @@ impl BrimPlan {
                 .collect::<Vec<_>>(),
         );
 
-        let paths = crate::brims::ears::paths::from_area(brim_area, spacing, resolution)?;
-        if paths.is_empty() {
-            return Ok(None);
-        }
+        let (area, paths) = if combined::enabled(traversal) {
+            (brim_area, Vec::new())
+        } else {
+            let paths = crate::brims::ears::paths::from_area(brim_area, spacing, resolution)?;
+            if paths.is_empty() {
+                return Ok(None);
+            }
+            (Vec::new(), paths)
+        };
         Ok(Some(Self {
+            area,
+            global: false,
             paths,
             covered_hull,
             width: flow.width,
@@ -289,6 +298,8 @@ pub(super) fn brim_geometry_error(_: crate::geometry::ClipperError) -> SliceErro
 }
 
 mod bed_area;
+mod combined;
+pub(super) use combined::combine;
 mod emit;
 mod outline;
 
