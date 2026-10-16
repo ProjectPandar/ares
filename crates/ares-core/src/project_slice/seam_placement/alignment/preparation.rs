@@ -1,4 +1,5 @@
 use crate::{
+    ProcessSeamPosition,
     geometry::CoordinateScale,
     project_slice::{
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
@@ -25,6 +26,11 @@ pub(in crate::project_slice::seam_placement) fn prepare(
     visibility: &visibility::GlobalVisibility,
 ) -> Vec<LayerPlan> {
     let (layers, layer_zs) = layers;
+    let placement = traversal
+        .print_object_config(object_index)
+        .0
+        .object
+        .seam_position;
     let input = &traversal.objects[object_index]
         .predecessor
         .predecessor
@@ -37,7 +43,13 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         .enumerate()
         .map(|(index, (layer, &z))| {
             let regions = layer_regions(layer, input, index);
-            prepare_layer(&regions, z, traversal.scale, nozzle_diameter, visibility)
+            prepare_layer(
+                &regions,
+                z,
+                traversal.scale,
+                nozzle_diameter,
+                (visibility, placement),
+            )
         })
         .collect::<Vec<_>>();
     let (post_region, layer_slices) = input.object.as_parts();
@@ -133,7 +145,7 @@ fn prepare_layer(
     z: f32,
     scale: CoordinateScale,
     nozzle_diameter: f32,
-    visibility: &visibility::GlobalVisibility,
+    (visibility, placement): (&visibility::GlobalVisibility, ProcessSeamPosition),
 ) -> LayerPlan {
     let collections = regions
         .iter()
@@ -176,6 +188,7 @@ fn prepare_layer(
         .map(|collection| association.collection_map(collection))
         .collect();
     LayerPlan {
+        placement,
         candidates,
         choices: Vec::new(),
         collection_perimeters,

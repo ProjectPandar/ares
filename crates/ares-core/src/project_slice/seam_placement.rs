@@ -147,9 +147,9 @@ fn apply_objects(
             visibility,
         );
         match placement {
-            ProcessSeamPosition::Aligned | ProcessSeamPosition::AlignedBack => {
-                alignment::align(&mut plans)
-            }
+            ProcessSeamPosition::Aligned
+            | ProcessSeamPosition::AlignedBack
+            | ProcessSeamPosition::Back => alignment::align(&mut plans),
             ProcessSeamPosition::Random => alignment::randomize(&mut plans),
             ProcessSeamPosition::Nearest => {
                 // `SeamPlacer.cpp:1465` skips `pick_seam_point` for spNearest —
@@ -161,7 +161,6 @@ fn apply_objects(
                 nearest_plans[object_index] = nearest_seam_data(&plans, visibility);
                 continue;
             }
-            _ => unreachable!("only active seam placement modes are prepared"),
         }
         let staggered = traversal
             .print_object_config(object_index)

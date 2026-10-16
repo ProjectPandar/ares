@@ -35,10 +35,9 @@ pub(super) fn placement_modes(
             ProcessSeamPosition::Aligned | ProcessSeamPosition::Random => {
                 Some(object.object.seam_position)
             }
-            ProcessSeamPosition::AlignedBack | ProcessSeamPosition::Nearest => {
-                Some(object.object.seam_position)
-            }
-            _ => None,
+            ProcessSeamPosition::AlignedBack
+            | ProcessSeamPosition::Nearest
+            | ProcessSeamPosition::Back => Some(object.object.seam_position),
         })
         .collect()
 }
