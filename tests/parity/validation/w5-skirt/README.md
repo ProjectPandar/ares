@@ -28,3 +28,15 @@
 - toolchange-wipe-ctl-w5.3mf  sha256=85aabacdd30857f74fc65c6d9580d6b6fcad1423c18141a05b0b7ebdce91d3ed
   same input without flush_into_*: no wiping pass, native/Ares
   byte-identical (raw normalized diff=0, CPU7,8); must PASS.
+
+## Per-object skirt x flush_into_infill (Print.cpp:2784-2996; GCode.cpp:5330-5333)
+
+- skirt-flush-infill-w5.3mf  sha256=b029a0f96daf20f2e4a5f677a02af8f82e606da5affd584608631304951ccefc
+  R1 base with skirt_type=perobject and flush_into_infill=1 (prime tower
+  on): Native extrudes Sparse infill inside the wiping windows (76 of
+  them) and groups per-object skirts around the tower obstacle; Ares
+  rejects the input via the flush_into_infill guard disjunct. RED, must
+  FAIL before the GREEN retires that disjunct. Guard-off probe:
+  normalized diff=0 (CPU7,8). flush_into_support and flush_into_objects
+  stay guarded — separate residuals (302-line support skirt placement;
+  tool-change/print ordering).
