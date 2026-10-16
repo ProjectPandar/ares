@@ -20,3 +20,14 @@ diff --git a/src/OrcaSlicer.cpp b/src/OrcaSlicer.cpp
              for (int m = 0; m < static_cast<int>(PrintEstimatedStatistics::ETimeMode::Count); ++m) {
                  auto mode = static_cast<PrintEstimatedStatistics::ETimeMode>(m);
                  if (result.print_statistics.modes[(size_t)mode].time > 0.0f)
+diff --git a/src/libvgcode/include/ColorRange.hpp b/src/libvgcode/include/ColorRange.hpp
+--- a/src/libvgcode/include/ColorRange.hpp
++++ b/src/libvgcode/include/ColorRange.hpp
+@@ -100,6 +100,7 @@
+     void reset();
+ 
+     friend class ViewerImpl;
++    friend struct ColorsViewer;
+ };
+ 
+ } // namespace libvgcode
