@@ -310,7 +310,7 @@ jobs:
         with:
           name: parity-seeded-artifacts
           path: ${{ runner.temp }}/parity-artifacts
-          retention-days: 3
+          retention-days: 1
 
   parity-official:
     runs-on: self-hosted
@@ -424,4 +424,23 @@ jobs:
         with:
           name: parity-official-artifacts
           path: ${{ runner.temp }}/parity-artifacts
-          retention-days: 3
+          retention-days: 1
+
+  cleanup-artifacts:
+    runs-on: self-hosted
+    needs: [native, format, web, parity-seeded, parity-official]
+    if: success()
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            for (const { id } of artifacts) {
+              await github.rest.actions.deleteArtifact({ owner: context.repo.owner, repo: context.repo.repo, artifact_id: id });
+            }
