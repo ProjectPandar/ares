@@ -1,9 +1,11 @@
 # SPEC: modifier-volume per-feature filament identifiers
 
-Status: **PROPOSED after Native-only discovery; docs-only review before public RED.**
+Status: **SPEC APPROVED a2ffbb77bcf205b657e70f17245b38c9b78cd2d2; public RED authorized with per-role witnesses.**
+The RED extension below records control preflight and all-six Native qualification.
+No guard or production change in the RED; GREEN needs separate approval.
 Base `d84ad64aea77e21610f0a780d729b6ca0c5c3f95` (approved triangle chain,
-queued for coordinator merge). No production, guard, test or input committed
-by this SPEC. No full/workspace run. This ports an upstream region-config slice,
+queued for coordinator merge). The original SPEC was docs-only. This RED adds
+six independent public tests and input-only 3MF/SHA fixtures, no production edit. No full/workspace run. This ports an upstream region-config slice,
 not an Ares-owned slicing pipeline. [ARD](ard-modifier-feature-filament.md).
 
 ## 1. Source owner, precedence, and destination
@@ -49,10 +51,10 @@ Rust boundary already contains much of this rewrite:
 
 The prospective production boundary is **only this six-key modifier feature
 filament admission gate**, after a qualifying public RED and separate GREEN
-approval. No other guards may be touched. Whether all six branches can retire
-together must be confirmed at review; the runtime witness below covers sparse
-only and cannot be presented as all-role runtime proof. No resolver rewrite is
-currently justified. Existing scaffolding remains only a compatibility shell
+approval. No other guards may be touched. **Owner condition: only branches with
+their own public RED witness may retire.** All six have now qualified in Native
+below, but each still needs its own public RED; no blanket guard retirement.
+No resolver rewrite is currently justified. Existing scaffolding remains only a compatibility shell
 around upstream region config, not authority to design different precedence.
 
 ## 2. Completed Native discovery (before SPEC)
@@ -114,7 +116,46 @@ after the two official legs. Pure offline re-observation added the donor's
 proof before running the still-unexecuted seeded legs once. Initial script/log
 and observations are retained. No Native retry-to-success or input substitution.
 
-## 3. Public RED plan and gate
+## 3. Approved extension: control first, then six role-qualified RED inputs
+
+Before adding any role to the public RED, fresh Native/public control was run
+in both modes at a2ff: API success, real CLI exit0, raw API==CLI, whole strict
+Native/API/CLI PASS through the unchanged golden.rs comparator. Evidence root:
+`/home/indexyz/.ares-evidence/worker4/modifier-control-public-okRS`.
+No input or settings substitution was needed.
+
+Then the other five single-key positives were frozen from the exact control.
+Each adds only that role's filament_id=2 inside modifier part3; the same sparse
+input retains its original SHA. Native qualification (both modes, CPU15) used
+actual FEATURE role, T1 selection, positive E and both segment endpoints inside
+X[133,138]/Y[118,138], plus output divergence vs the control. Every new leg exit0
+and complete footer; no input/case retry, no nonzero modifier extruder case.
+Evidence root `/home/indexyz/.ares-evidence/worker4/modifier-six-role-native-E9JO`.
+
+| Feature key prefix | Actual FEATURE comment | Local T1 segments (each mode) | Eligible for public RED |
+|---|---|---|---|
+| sparse_infill | Sparse infill | 780 | yes |
+| internal_solid | Internal solid infill | 405 | yes |
+| top_surface | Top surface | 43 | yes |
+| bottom_surface | Bottom surface | 63 | yes |
+| outer_wall | Outer wall | 200 | yes |
+| inner_wall | Inner wall | 196 | yes |
+
+All corresponding control local T1 counts are zero. No unqualified role in this
+frozen matrix; any role losing qualification must keep its guard. The committed
+`tests/parity/modifier-feature-filament/manifest.json` pins control + six
+positive 3MF SHA/entry identities, with no Native G-code/expected output.
+
+Six independent `modifier_feature_filament_*_matches_native` tests share a
+bounded helper: from_env/reference gate; fresh runtime Native control, whole
+public control first; fresh positive Native and local T1 qualification; then
+execute positive API+real CLI before target success assertions. Each role has
+its own artifact/error receipt and own failing assertion rather than a loop
+that stops at the first role. Per-role targeted runs stop on a control failure;
+no test/comparator/guard fallback. No GREEN branch may retire until its own
+public RED is reviewed. Native all-role admission/effect is not public parity.
+
+## 4. Public RED plan and gate (original contract, retained)
 
 First review this source boundary/discovery; do not treat successful Native-only
 discovery as a public RED. Freeze the exact pair/manifest in git only for the
@@ -143,16 +184,18 @@ stay unchanged; both modes must become whole strict PASS with raw API==CLI and
 unchanged control. Targeted modifier/3MF/load regression plus fmt/strict clippy/
 WASM remain the exit gates; coordinator alone schedules full/workspace/merge.
 
-## 4. Included / deferred and failure inventory
+## 5. Included / deferred and failure inventory
 
 Included source contract: modifier inherits parent region, its explicit positive
 feature ID beats same-scope base extruder fallback, zero/absent semantics and
 final normalization remain as the existing upstream/Rust resolver. Initial
-runtime proof/public RED concerns **sparse ID2, modifier extruder absent** only.
+runtime proof/public RED initially concerned sparse only; the approved extension
+now supplies six separately qualified role cases, all with modifier extruder
+absent. Nonzero modifier extruder remains unprobed and is not added here.
 No new six-role engine, new material system, tool scheduler, painting engine or
 CLI interface is designed. Other admission guards remain intact.
 
-Deferred runtime matrices: remaining five feature roles; modifier extruder!=0,
+Deferred runtime matrices: modifier extruder!=0,
 zero/out-of-range IDs, material/layer overrides, later/overlapping modifiers,
 painted regions, more filaments/maps/printers, prime tower/flush changes. Their
 source precedence is recorded above, not claimed empirically proven here.

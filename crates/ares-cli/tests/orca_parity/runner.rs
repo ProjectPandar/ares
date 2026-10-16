@@ -2,6 +2,9 @@
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
 
+#[path = "runner/modifier_feature_filament.rs"]
+mod modifier_feature_filament;
+
 #[path = "runner/loaded_system_inherits_group.rs"]
 mod loaded_system_inherits_group;
 

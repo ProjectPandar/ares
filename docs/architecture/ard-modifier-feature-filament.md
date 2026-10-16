@@ -1,8 +1,9 @@
 # ARD: modifier feature filament overrides use upstream region config
 
-Status: **PROPOSED**, accompanying
-[SPEC](modifier-feature-filament-spec.md), Native-only discovery complete.
-No production or public test edit in this docs commit.
+Status: **SPEC APPROVED a2ffbb77b; public RED authorized with per-role witnesses.**
+Associated [SPEC](modifier-feature-filament-spec.md). No production/guard change
+in this RED. Whole strict public control passed in both modes before extension;
+all six individual roles now have their own Native local-T1 qualification.
 
 ## Owner and non-negotiable boundary
 
@@ -23,8 +24,10 @@ six-key `first_unsupported_modifier_key` guard. `project/region_graph.rs` and
 `options/region_options/merge.rs` remain the source-cited destinations around it.
 Only separately authorized GREEN can retire any of those six branches;
 unrelated guards remain untouched. No resolver rewrite is justified by a guard
-alone. The first Native witness covers sparse only; no blanket all-role runtime
-parity claim follows from it.
+alone. Each branch may retire only with its own reviewed public RED. The initial
+sparse witness is now extended by five independently Native-qualified role cases;
+no unqualified role is admitted by this matrix. Keep any unqualified guard branch.
+This remains neither an all-combination parity claim nor nonzero-extruder proof.
 
 ## Evidence and rejected shortcuts
 
@@ -37,6 +40,6 @@ offline on the same G-code, not by rerunning Native or changing the input.
 Public control must independently pass whole strict Native/API/CLI and raw
 API==CLI. Positive must fail target equality before GREEN, not pass an error
 expectation. No missing-stream equality, Native-only bypass, M73 filtering or
-downstream repair. Reject sparse-only diagnostic equality as a substitute for
-the complete comparator. Nonzero modifier-extruder and other role matrices
+downstream repair. Reject role-only diagnostic equality as a substitute for the
+complete comparator. Nonzero modifier-extruder/material/painting/overlap matrices
 remain explicitly deferred runtime evidence, with source precedence preserved.
