@@ -30,6 +30,8 @@ mod per_object_skirt_brim;
 mod per_object_skirt_brim_types;
 #[path = "orca_parity/per_object_skirt_groups.rs"]
 mod per_object_skirt_groups;
+#[path = "orca_parity/per_object_skirt_painted.rs"]
+mod per_object_skirt_painted;
 #[path = "orca_parity/per_object_skirt_support_raft.rs"]
 mod per_object_skirt_support_raft;
 #[path = "orca_parity/skirt_per_object_tower_ctl.rs"]
