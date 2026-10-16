@@ -98,9 +98,11 @@ fn check(label: &str) {
         let first = native
             .find("; printing object cube10.stl id:0 copy 0")
             .unwrap();
-        let second = native
-            .find("; printing object cube10.stl id:1 copy 0")
-            .unwrap();
+        // Sequential process_layers reuses local object id 0 for the next stack.
+        let second = origin
+            + native[origin..]
+                .find("; printing object cube10.stl id:0 copy 0")
+                .unwrap();
         assert!(skirts[0] < first && first < origin && origin < skirts[1] && skirts[1] < second);
         for (start, end) in [(skirts[0], first), (skirts[1], second)] {
             assert!(
