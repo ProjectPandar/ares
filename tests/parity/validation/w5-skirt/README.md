@@ -40,3 +40,17 @@
   normalized diff=0 (CPU7,8). flush_into_support and flush_into_objects
   stay guarded — separate residuals (302-line support skirt placement;
   tool-change/print ordering).
+
+## Wiping-pass two-loop order x flush_into_support (GCode.cpp:5318-5360)
+
+- skirt-flush-support-w5.3mf  sha256=2ac30225e66793852adc01d9abd9dfe6e0c068e09311b8632f4c050b88dca85c
+  R1 base with an overhang object (mesh: column + cantilever slab), the
+  TiQ2 tree-support block, object relocated to y=85, prime tower on,
+  skirt_type=perobject, flush_into_support=1: Native extrudes Support in
+  23 wiping windows (+8 interface) and emits per-object skirts inside
+  the wiping loop before the printing/stop labels, with "; PURGING
+  FINISHED" opening the normal loop. Ares rejects via the
+  flush_into_support guard disjunct; guard-off it still diverges 302
+  normalized lines (label triple at the bucket head, Skirt blocks
+  displaced). RED, must FAIL before the GREEN mirrors the two-loop
+  order. flush_into_objects stays guarded (tool-change/print ordering).
