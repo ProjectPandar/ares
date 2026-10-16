@@ -1,85 +1,109 @@
 # SPEC(提案): per-object skirt × wipe tower——移除 skirt per-object 守卫的
-wipe tower 支路（Print.cpp::_make_skirt per-object 分支）
+wipe/prime tower 支路（Print.cpp::_make_skirt per-object 分支）
 
-状态：SPEC-DRAFT（docs-only）。承接：现有
+状态：SPEC-DRAFT v2（docs-only；v1 `c29885bf0` 被拒后修订：并入
+prime tower、修正引用、补 guard 延后项与 GCode.cpp 发射源、加
+combined control 预证前提）。承接：现有
 `gcode_emit/skirt/generate.rs:37-53` 的 per-object 守卫在
-wipe tower（`!tower_corners.is_empty()`）与多耗材
-（`filament_diameter.len() > 1`——wipe tower 的必要条件）时抛
-`UnsupportedProjectFeature("skirt_type per-object")`；本片移植上游
-per-object 分组对 wipe tower 障碍项的处理，删除守卫中这两条。
+wipe tower（`!tower_corners.is_empty()`）、多耗材
+（`filament_diameter.len() > 1`）与 `enable_prime_tower` 时抛
+`UnsupportedProjectFeature("skirt_type per-object")`。**wipe tower 即
+prime tower**：`Print::has_wipe_tower`（Print.cpp:3290-3299）以
+`enable_prime_tower` 为前提——三条守卫必须一并移除，否则 RED
+fixture 在 GREEN 后仍撞守卫。
 
-## 1. 上游边界（源：`OrcaSlicer/src/libslic3r/Print.cpp::_make_skirt`，
-`void Print::_make_skirt()` @2646）
+## 1. 上游边界（源：`OrcaSlicer/src/libslic3r/Print.cpp::_make_skirt`
+@2646；发射源 `GCode.cpp`）
 
 - `:2784-2830`：`stCombined || stPerObject` 分组模型——
   `SkirtGroupItem { occupied_points, object_id, emits_skirt }`
-  （`:2785-2789`）：对象项 `emits_skirt=true`；**wipe tower 以
-  障碍项加入**：`wipe_tower_points = first_layer_wipe_tower_corners()`
+  （`:2785-2789`）：对象项 `emits_skirt=true`；wipe tower 以障碍项
+  加入：`wipe_tower_points = first_layer_wipe_tower_corners()`
   （`:2821-2823`，`ObjectID()` + `emits_skirt=false`，≥3 点才加入）；
   `grouping_offset = scale_(skirt_distance + skirt_loops*spacing)`
   （`:2794`）；
 - `first_layer_wipe_tower_corners`（`:3020-3052`）：tower bbx 四角 +
-  稳定锥（cone_base 半径 r=cone_R+brim_width，40 段圆），经
-  `wipe_tower_rotation_angle` 旋转 + plate 原点平移后 scale_——
-  ares 现有 `orchestration.rs:23-29` 的 `tower_corners` 同源，无需重算；
-- `:2827-2863`：union-find 碰撞合并（ares 已移植
-  `member_groups::merge`）；
-- `:2865-2899`：定点迭代——**`emits_skirt` 组的 envelope 才按
-  `grouping_offset` 扩张**（`:2874-2880`），障碍组不扩张；两 envelope
-  相交即合并，直到不变；
-- `:2901+`（`build_grouped_points` / 发射循环）：**无 `emits_skirt`
-  成员的组不生成 skirt**（obstacle-only 组只参与合并不发 loop）；
-  每组 `append_skirt_loops_for_hull`（`:2718-2772`，ares 已移植
-  `loop_generation`）。
+  稳定锥（cone_base r=cone_R+brim_width，40 段圆），经
+  `wipe_tower_rotation_angle` 旋转 + plate 原点平移后 scale_——ares
+  现有 `orchestration.rs:23-29` 的 `tower_corners` 同源，无需重算；
+- union-find 碰撞合并（`:2825-2845`）；stCombined 强制单组
+  （`:2843-2845`，ares 现有单组路径等价）；`build_grouped_points`
+  定义于 `:2847`；
+- `:2865-2899`：定点迭代——**仅 `emits_skirt` 组的 envelope 按
+  `grouping_offset` 扩张**（`:2874-2880`），障碍组不扩张；两
+  envelope 相交即合并直到不变；**与 tower 障碍合并后的组发射时绕
+  `convex_hull(group.points)` 画 loop——组点含 tower 角点**
+  （`:2860` 障碍点并入组点；`:2981`
+  `append_skirt_loops_for_hull(Geometry::convex_hull(group.points),…)`）；
+- `make_group_brims`（`:2898-2971`）与发射循环（`:2973-2993`）：
+  无 `emits_skirt` 成员的组不生成 skirt（obstacle-only 组只参与
+  合并不发 loop）；每组 loop 由已移植的
+  `append_skirt_loops_for_hull`（`:2718-2772`）生成；
+- 发射源（GCode.cpp）：per-object skirt 在 process_layer 的
+  filament→instance 循环内按对象发射——
+  `generate_object_skirt_group`（`:4465-4485`）以调用点传入的
+  `extruder_id`（**当前耗材的 extruder**，call site `:5334`，位于
+  `filament_to_print_instances[extruder_id]` 循环 `:5323-5335`）构造
+  `object_skirt_tools.extruders={extruder_id}`，组索引由
+  `find_skirt_brim_group_idx`（`:4456-4463`）按 object_id 查找，
+  `m_skirt_group_done[group_idx]` 保证每组每层只发一次；
+  `skirt_loops_per_extruder_all_printing`（`:4262-4278`）把全部 loop
+  分给 `extruders.front()`（此处即对象 extruder；ORCA 注释明示多
+  extruder 轮换为 placeholder 未启用）。ares 发射侧已有的
+  per-object 组循环按对象首 extruder 发射需与该语义对齐。
 
 ## 2. Rust 目标边界
 
-`crates/ares-core/src/project_slice/gcode_emit/skirt/`：
+`crates/ares-core/src/project_slice/gcode_emit/skirt/`（及发射侧
+现有 per-object 组循环）：
 
-- `generate.rs`：删除守卫中 `!tower_corners.is_empty()` 与
-  `filament_diameter.len() > 1` 两个条件（其余——prime tower、
-  print_sequence、support/raft、combine_brims/brim 形态——仍守卫，
-  见 §4）；tower_corners 作为障碍项进入 per-object 分组；
-- `member_groups.rs`：`Group` 增 `emits: bool`（或障碍项以空
-  members 表达）；`merge` 遵循 `:2874-2880`——仅发射组扩张
-  envelope；合并结果丢弃无发射成员的组（不发 loop）；
+- `generate.rs`：删除守卫中 `!tower_corners.is_empty()`、
+  `filament_diameter.len() > 1`、`enable_prime_tower` 三个条件
+  （**W2 拥有同守卫的 support/raft disjuncts——只删本片三条**）；
+  tower_corners 作为障碍项进入 per-object 分组；同时**新增**两条
+  延后守卫（见 §4）；
+- `member_groups.rs`：`Group` 增发射语义；`merge` 遵循
+  `:2874-2880`——仅发射组扩张 envelope；合并结果丢弃无发射成员
+  的组（不发 loop）；
 - `occupied.rs`/`generate.rs` occupied hull：tower 角点继续并入
-  `hulls`（现有 `:61-63` 行为对 combined 不变；per-object 时
-  occupied 语义随组循环，tower 障碍不单独发 loop）。
+  `hulls`（combined 不变；per-object 时 occupied 随组循环）。
 
 ## 3. 包含行为
 
-- per-object + wipe tower（多耗材、tower 有 tool_changes）正常切片：
-  tower 附近对象组被障碍项合并（或 tower 远离对象时各自成组），
-  仅对象组发射 skirt loop；skirt 循环量化/发射顺序复用现有
-  `loop_generation`（`:2718-2772` 已移植）；
-- stCombined 不变（上游 `:2862-2863` 强制单组，ares 现有单组路径
-  已等价）；
-- RED：fixture（2 对象 × 2 extruder + wipe tower + per-object skirt）
-  native 正常输出 vs ares `UnsupportedProjectFeature` 错误——严格
-  相等断言先 FAIL；control 腿同 fixture `skirt_type=combined`
-  双引擎 byte-parity 维持 PASS；
+- per-object + wipe tower（prime tower + 多耗材 + 有 tool_changes）
+  正常切片：tower 紧邻时对象组与障碍项合并、绕含 tower 点的
+  convex_hull 发射；tower 远离时各自成组；仅对象组发射 loop；
+  组内对象按 GCode.cpp `:4465-4485/:5334` 语义以各自 extruder
+  发射、每组每层一次；
+- stCombined 不变（`:2843-2845`）；
+- RED：fixture（2 对象 × 2 extruder + prime/wipe tower +
+  per-object skirt，`min_skirt_length=0`）native 正常输出 vs ares
+  `UnsupportedProjectFeature` 错误——严格相等断言先 FAIL；
+  control 腿同 fixture `skirt_type=combined`；
 - failure inventory：①ares 抛错（当前态）②tower 障碍组错误发射
-  loop ③障碍组 envelope 误扩张导致过merge ④tower 角点被并入单组
-  hull 使 combined 之外路径回归 ⑤多耗材 e_per_mm extruder 轮换
-  （上游 `:2745-2760` extruded_length/多 extruder 轮换）若 fixture
-  触发 min_skirt_length>0 才暴露——fixture 保持 min_skirt_length=0
-  以外置。
+  loop ③障碍组 envelope 误扩张导致过 merge ④tower 点未并入合并组
+  hull（loop 贴 tower 穿过）⑤combined 路径回归 ⑥组内第二对象重复
+  或漏发 skirt（`m_skirt_group_done` 语义）⑦对象 extruder 选择错
+  （首 extruder ≠ 对象 extruder）。
 
-## 4. 延后行为
+## 4. 延后行为（全部保持守卫，无静默分歧）
 
-- prime tower（enable_prime_tower）、print_sequence != ByLayer、
-  对象级 support/raft、combine_brims 跨对象 brim 合组
-  （`make_group_brims` `:2901-2980`）仍守卫/未移植；
+- 对象级 support / raft、print_sequence != ByLayer、combine_brims
+  跨对象 brim 合组（`make_group_brims` `:2898-2971`）——既有守卫
+  disjuncts 保留（W2 拥有 support/raft 项）；
+- **新增守卫**：`min_skirt_length > 0 && filament_diameter.len() > 1`
+  （上游 extruder 轮换 `:2745-2760` vs ares 单一 `e_per_path_mm`
+  `generate.rs:104-111`）；draft shield（infinite skirt）×
+  per-object（现无守卫，补 `draft_shield==Enabled && per_object`
+  抛 Unsupported）；
 - `m_has_shared_per_object_skirt` 标志与 SkirtBrimGroup brim 载荷
-  （`:2983-2993`）——ares SkirtGroup 无 brim 载荷，保持现状；
-- 多 extruder skirt 轮换（min_skirt_length>0，`:2745-2760`）；
-- draft shield（infinite skirt）× per-object 组合。
+  （`:2973-2993`）——ares SkirtGroup 无 brim 载荷，保持现状。
 
 ## 5. 测试先行（TDD）
 
-- discovery（Native-first，CPU7,8，≤4 迭代）：2 对象 2 extruder +
-  wipe tower + per-object fixture，native/ares 对拍；tower 紧邻/远离
-  两形态确认合并与独立两组行为；
+- discovery 前提（先于 RED，CPU7,8，≤4 迭代）：**先证明
+  combined + tower + 2 耗材 control 双引擎归一化 byte-equal**（现有
+  combined 路径含 tower_corners 已并入单组 hull），再采 per-object
+  native oracle（tower 紧邻/远离两形态确认合并与独立行为）；
 - RED：input-only fixture + 双腿（per-object / combined control）
   test-only commit；GREEN 按 §2 实施。
