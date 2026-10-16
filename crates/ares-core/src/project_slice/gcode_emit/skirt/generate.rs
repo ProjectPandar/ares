@@ -45,7 +45,13 @@ impl SkirtPlan {
                 let (object, group) = traversal.print_object_config(index);
                 plan.is_some()
                     && (print.combine_brims.0
-                        || object.object.brim_type != crate::ProcessBrimType::OuterOnly
+                        // `Print.cpp:2847-2971` / `Brim.cpp:448-460,964-977`:
+                        // both brim kinds retain their object's occupied footprint.
+                        || !matches!(
+                            object.object.brim_type,
+                            crate::ProcessBrimType::OuterOnly
+                                | crate::ProcessBrimType::OuterAndInner
+                        )
                         || group.instance_indices.len() != 1)
             }) || (tower_active
                 && traversal.resolved.objects.iter().any(|object| {
