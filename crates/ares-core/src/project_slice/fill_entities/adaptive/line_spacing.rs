@@ -34,12 +34,17 @@ pub(in crate::project_slice) fn object_configured(
     regions: &[RegionOptions],
     nozzles: &OrcaFloats,
     kind: ProcessInfillPattern,
+    active_region_ids: &[usize],
 ) -> Option<f64> {
     let contributing: Vec<_> = regions
         .iter()
-        .filter(|region| {
-            region.sparse_infill_pattern == kind && region.sparse_infill_density.0 > 0.0
+        .enumerate()
+        .filter(|(index, region)| {
+            active_region_ids.contains(index)
+                && region.sparse_infill_pattern == kind
+                && region.sparse_infill_density.0 > 0.0
         })
+        .map(|(_, region)| region)
         .collect();
     if contributing.is_empty() {
         return None;
@@ -69,8 +74,13 @@ fn absolute_width(region: &RegionOptions, nozzles: &OrcaFloats) -> f64 {
         .iter()
         .map(|value| value.0)
         .fold(f64::NEG_INFINITY, f64::max);
-    match region.sparse_infill_line_width {
+    let width = match region.sparse_infill_line_width {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => nozzle * value.0 / 100.0,
+    };
+    if width == 0.0 {
+        f64::from(1.125_f32 * nozzle as f32)
+    } else {
+        width
     }
 }

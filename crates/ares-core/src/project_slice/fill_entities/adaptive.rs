@@ -22,6 +22,7 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 pub(super) struct AdaptiveObject<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) object_index: usize,
+    pub(super) active_region_ids: &'a [usize],
 }
 
 pub(super) fn append(
@@ -31,11 +32,12 @@ pub(super) fn append(
     AdaptiveObject {
         traversal,
         object_index,
+        active_region_ids,
     }: AdaptiveObject<'_>,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, kind)?;
+    let octree = octree_for(traversal, object_index, kind, active_region_ids)?;
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
@@ -97,6 +99,7 @@ fn octree_for(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     kind: OctreeKind,
+    active_region_ids: &[usize],
 ) -> Result<std::sync::Arc<octree::Octree>, SliceError> {
     let (resolved, _) = traversal.print_object_config(object_index);
     let pattern = match kind {
@@ -107,6 +110,7 @@ fn octree_for(
         &resolved.all_regions,
         &traversal.resolved.views.full.project.print.nozzle_diameter,
         pattern,
+        active_region_ids,
     )
     .ok_or_else(|| SliceError::UnsupportedProjectFeature("sparse_infill_pattern".to_owned()))?;
     if !line_spacing.is_finite() || line_spacing <= 0.0 {
@@ -293,9 +297,10 @@ pub(in crate::project_slice) fn anchoring_lines(
     fill: &SurfaceFill,
     z: f64,
     scale: CoordinateScale,
+    active_region_ids: &[usize],
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, kind)?;
+    let octree = octree_for(traversal, object_index, kind, active_region_ids)?;
     let mut polylines = Vec::new();
     // Fill.cpp:1492-1498 calls Fill::fill_surface (FillBase.cpp:105-117),
     // with the constructor's zero overlap (FillBase.hpp:181-187).

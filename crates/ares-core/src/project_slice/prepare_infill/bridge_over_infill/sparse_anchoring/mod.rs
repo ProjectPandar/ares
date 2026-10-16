@@ -67,6 +67,11 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     // `fill_entities/generate.rs`). Keep the contour-derived bbox.
     let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
+    let active_region_ids =
+        crate::project_slice::prepare_infill::external_surfaces::active_region_ids(
+            prepared,
+            object_index,
+        );
 
     for fill in grouped.surface_fills {
         if fill.representative.kind != RegionSurfaceKind::Internal {
@@ -82,6 +87,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             object_bounding_box,
             lightning_generator,
             stars_bounds.map(|bounds| (bounds, plan.layers[layer_index].id)),
+            &active_region_ids,
             &mut result,
         )?;
     }

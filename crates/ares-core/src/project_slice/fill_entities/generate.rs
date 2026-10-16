@@ -51,6 +51,11 @@ pub(in crate::project_slice) fn generate_layer(
         .find(|object| object.source_object_index == prelude.identity().0)
         .expect("fill generation retains its resolved object");
     let object_options = &resolved_object.object;
+    let active_region_ids =
+        crate::project_slice::prepare_infill::external_surfaces::active_region_ids(
+            prepared,
+            object_index,
+        );
     let mut output = LayerFillEntities::default();
     // `PrintObject::bounding_box` (Print.hpp:347) is symmetric around zero;
     // `Fill::_infill_direction` uses that center, not quantized slice bounds.
@@ -165,6 +170,7 @@ pub(in crate::project_slice) fn generate_layer(
                     super::adaptive::AdaptiveObject {
                         traversal,
                         object_index,
+                        active_region_ids: &active_region_ids,
                     },
                     traversal.scale,
                 )?;
