@@ -201,23 +201,10 @@ impl ParsedLine {
                 continue;
             };
             match letter {
-                'X' | 'Y' | 'Z' => {
-                    let Ok(value) = chars.as_str().parse::<f64>() else {
-                        continue;
-                    };
-                    match letter {
-                        'X' => parsed.x = Some(value),
-                        'Y' => parsed.y = Some(value),
-                        'Z' => parsed.z = Some(value),
-                        _ => unreachable!(),
-                    }
-                }
-                'E' => {
-                    let Ok(value) = chars.as_str().parse::<f32>() else {
-                        continue;
-                    };
-                    parsed.e = Some(f64::from(value));
-                }
+                'X' => parsed.x = chars.as_str().parse().ok(),
+                'Y' => parsed.y = chars.as_str().parse().ok(),
+                'Z' => parsed.z = chars.as_str().parse().ok(),
+                'E' => parsed.e = chars.as_str().parse::<f32>().ok().map(f64::from),
                 _ => {}
             }
         }
