@@ -35,9 +35,9 @@ mod skirt_per_object_tower_ctl;
 #[path = "orca_parity/skirt_per_object_tower_w5.rs"]
 mod skirt_per_object_tower_w5;
 
-#[path = "orca_parity/adaptive_pressure_advance.rs"]
 #[path = "orca_parity/adaptive_octree_spacing.rs"]
 mod adaptive_octree_spacing;
+#[path = "orca_parity/adaptive_pressure_advance.rs"]
 mod adaptive_pressure_advance;
 #[path = "orca_parity/arachne_alternate_extra_wall.rs"]
 mod arachne_alternate_extra_wall;
