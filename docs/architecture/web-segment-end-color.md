@@ -37,7 +37,7 @@ Deferred:
 - ORCA bias;
 - option-marker, cog and tool-marker shaders;
 - GL texture packing (the web keeps instanced attributes; the values per instance are the same);
-- Native bit-checks of view types other than Feature Type and Layer Height (see below).
+- Native bit-checks of view types other than Feature Type and Speed (see below).
 
 ## Discovery (Native-first, read-only)
 
@@ -69,9 +69,24 @@ built oracle (`orca-slicer-segment-colors-2.4.2`, `0j5bpnsd…`) measured the
 Height changes only across layer or option boundaries, never inside an extrusion run,
 so Layer Height cannot carry the RED. The oracle header therefore also dumps the
 `Speed`, `Width`, `VolumetricFlowRate`, `FanSpeed` and `Temperature` range views
-(header loop only; the kernel is unchanged). The RED view is the view with a non-zero
-Native RGB-end count on both inputs (recorded below after the rebuild). If every count
-is 0, the slice closes as NO-RED. No dedicated fixture is added.
+(header loop only; the kernel is unchanged). The RED view is a view with a non-zero
+Native RGB-end count. If every count were 0, the slice would close as NO-RED. No
+dedicated fixture is added.
+
+Rebuilt oracle `pilsk1xa…` (gcroot `orca-segment-colors-2.4.2`), default visibility:
+
+| Input | Instances | featureType | height | speed | width | volumetricFlowRate | fanSpeed | temperature |
+|---|---|---|---|---|---|---|---|---|
+| slice | 5309 | 0 | 0 | 3 | 0 | 0 | 0 | 0 |
+| presetSlice | 5519 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+All three Speed instances are travel→travel (vertices 3→4, 7339→7340, 7342→7343):
+`get_vertex_color` colors travel by feedrate in Speed (`ViewerImpl.cpp:1472,1489-1491`);
+the other range views give travel the fixed option color. COORD ruling: **Speed RED,
+slice only, with Travel shown**. Travel visibility changes the speed range
+(`update_color_ranges` takes travel feedrates only when Travels is visible,
+`:1860-1863`), so the oracle also dumps `speedTravels` = Speed with
+`options_visibility[Travels] = true` (header only). `presetSlice` stays a control.
 
 ## Native oracle
 
@@ -92,8 +107,8 @@ over a struct holding the same members instead (the `role-times` precedent).
 For each vertex, `--dump-segment-colors <json>` writes the RGB of `get_vertex_color`
 under `featureType`, `height`, `speed`, `width`, `volumetricFlowRate`, `fanSpeed` and
 `temperature`, with the default visibility (all roles shown,
-Seams only among the options; the web default). Native outputs stay outside Git.
-COORD will need a gcroot for the new store path.
+Seams only among the options; the web default), and under `speedTravels` with Travels
+also visible. Native outputs stay outside Git. COORD gcroots each store path.
 
 ## RED (after a scaffold) and control
 
@@ -108,14 +123,19 @@ The e2e test, `web/e2e/segmentColors.ts`, is called from `toolpathPreview.ts` in
 same instance selection: start `rgb[i - 1]`, end `rgb[i]`. It runs three steps:
 
 1. **Control, Feature Type** (the initial view): the read-out equals the Native value. It already passes at the scaffold, because the Native ends are equal there.
-2. **RED, Layer Height:** the test selects "Layer Height" and waits on the read-out. The read-out equals the Native value. It fails on the hash until GREEN, because the scaffold start colors are the end colors.
+2. **Speed.**
+   - `slice` (**RED**): the test selects "Speed", turns the Travel legend row on (asserting `aria-pressed=true`), and waits on the read-out. It must equal the Native `speedTravels` value. It fails on the hash until GREEN, because the scaffold start colors are the end colors. Then it turns Travel off again.
+   - `presetSlice` (**control**): the test selects "Speed" at the default visibility (Travel off, asserted). The read-out must equal the Native `speed` value. It passes at the scaffold and at GREEN.
 3. **Control, back to Line Type:** the read-out equals the step-1 Native value again. This exercises the recolor path for both ends.
 
-A coverage precondition reads only the Native rows. It requires at least one instance
-whose Native Height-view **RGB** ends differ (`get_vertex_color` output, not the raw
-heights: two heights can fall into the same `round_to_bin` / `ColorRange` color), so
-the RED cannot pass vacuously. It is kept separate from the Ares-vs-Native assertions.
-The count of such instances is written to `segment-colors/expected.json`.
+Native-only coverage preconditions read only the Native rows. They are kept separate from
+the Ares-vs-Native assertions and compare `get_vertex_color` **RGB** ends, not raw values
+(two values can fall into the same `round_to_bin` / `ColorRange` color):
+- `slice` requires at least one travel→travel instance whose `speedTravels` RGB ends differ, so the RED cannot pass vacuously.
+- `presetSlice` requires zero differing `speed` ends, so the control really has equal ends.
+- Both require zero differing `featureType` ends.
+
+The counts are written to `segment-colors/expected.json`.
 
 The existing `data-segment-sizes` and `data-segment-geometry` read-outs and tests do
 not change.
@@ -123,7 +143,7 @@ not change.
 The GLSL change cannot be bit-checked against Native, because there is no headless
 Native GL. I will review it through before/after crops of every preview PNG at the
 true base (an exact before-run). Pixel thresholds stay unchanged. Feature Type previews
-should be pixel-identical; range views should change only where heights vary.
+should be pixel-identical; range views should change only where Native ends differ (travel in Speed with Travel shown).
 
 ## Failure inventory
 
@@ -135,13 +155,13 @@ should be pixel-identical; range views should change only where heights vary.
 6. Option markers break because they share `applyVertexColors` but have no `aStartColor`.
 7. The `normalized` flag is missing on `aStartColor`, so the color is 255× too bright.
 8. The instance selection in the test and the mesh differ (count mismatch in the read-out).
-9. A Native-vs-Ares per-vertex Height color mismatch unrelated to the ends (range or `get_color_at` drift in `viewer/colors.rs`). The RED would then fail for a different reason. If that happens, I will report it to COORD as a separate finding and not fix it in this slice.
-10. The Native visibility differs from the web default (travels shown), so ranges differ. The web default `visibleOptions` stays the Seams-only default.
+9. A Native-vs-Ares per-vertex Speed color mismatch unrelated to the ends (range or `get_color_at` drift in `viewer/colors.rs`). The RED would then fail for a different reason. If that happens, I will report it to COORD as a separate finding and not fix it in this slice.
+10. The Native visibility differs from the web's: the RED compares against `speedTravels` only after the Travel row is asserted pressed, and the controls only at the default (asserted unpressed). The web default `visibleOptions` stays the Seams-only default.
 11. Gzip: the change adds only a few shader lines and stays under 125,000 B. I will check it at GREEN.
 
 ## Exit criteria
 
-- RED step 2 fails on the hash at the scaffold and passes at GREEN. Steps 1 and 3 pass at both.
+- `slice` RED step 2 (Speed + Travel) fails on the hash at the scaffold and passes at GREEN. Steps 1 and 3, and all of `presetSlice`, pass at both.
 - Browser E2E passes in full on desktop. clippy, fmt, the web build and the wasm32 build all exit 0.
 - Initial JS gzip is under 125,000 B.
 - The before/after crops show changes only in range views; thresholds are unchanged.

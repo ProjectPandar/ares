@@ -283,7 +283,7 @@ async function checkOptions(page: Page, moves: Move[], roles: number, artifacts:
  * with the layer slider and legend, checked against upstream GCodeProcessor
  * moves of the same G-code.
  */
-export async function checkToolpathPreview(page: Page, oracle: string, gcodePath: string, artifacts: string, errors: string[]) {
+export async function checkToolpathPreview(page: Page, oracle: string, gcodePath: string, artifacts: string, errors: string[], speedTravelEnds: boolean) {
   const moves = oracleMoves(oracle, gcodePath, artifacts);
   const layers = moves.at(-1)!.layer + 1;
   const extrudeRoles = new Set(moves.filter((move) => move.type === EXTRUDE).map((move) => move.role));
@@ -300,7 +300,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   const roleTimes = await checkRoleTimes(page, artifacts);
   const segmentSizes = await checkSegmentSizes(page, artifacts);
   const segmentGeometry = await checkSegmentGeometry(page, artifacts);
-  const segmentColors = await checkSegmentColors(page, artifacts);
+  const segmentColors = await checkSegmentColors(page, artifacts, speedTravelEnds);
   const top = page.getByRole("slider", { name: "Top layer" });
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   await expect(page.getByTestId("layer-slider")).toContainText(layerZ(moves, layers - 1).toFixed(2));
