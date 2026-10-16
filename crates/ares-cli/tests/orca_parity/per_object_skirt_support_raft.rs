@@ -4,7 +4,11 @@
 use crate::{CaseInputs, OrcaRunner, golden, normalize_process_defaults, runner, select_printer};
 use serde_json::json;
 use sha2::Digest;
-use std::{fs, process::Command};
+use std::{
+    fs,
+    io::{Cursor, Read, Write},
+    process::Command,
+};
 
 #[test]
 fn orca_parity_per_object_skirt_control_matches_native() {
@@ -91,7 +95,51 @@ fn run_case(label: &str, enable_support: bool, raft_layers: u32, support_fixture
             &[],
         )
         .unwrap();
-    compare_case(&runner, label, &exported.project);
+    let project = if label == "single-raft-control" {
+        exported.project
+    } else {
+        spread_second_object(&exported.project)
+    };
+    compare_case(&runner, label, &project);
+}
+
+fn spread_second_object(project: &[u8]) -> Vec<u8> {
+    let mut input = zip::ZipArchive::new(Cursor::new(project)).unwrap();
+    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..input.len() {
+        let mut file = input.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "3D/3dmodel.model" {
+            let mut xml = String::from_utf8(bytes).unwrap();
+            let build_start = xml.find("<build").unwrap();
+            let build_end = build_start + xml[build_start..].find("</build>").unwrap();
+            let build = &xml[build_start..build_end];
+            let item_start = build.match_indices("<item ").nth(1).unwrap().0;
+            let transform_start = item_start + build[item_start..].find("transform=\"").unwrap();
+            let value_start = transform_start + "transform=\"".len();
+            let value_end = value_start + build[value_start..].find('"').unwrap();
+            let mut values = build[value_start..value_end]
+                .split_whitespace()
+                .map(str::to_owned)
+                .collect::<Vec<_>>();
+            assert_eq!(values.len(), 12);
+            values[10] = "170".to_owned();
+            xml.replace_range(
+                build_start + value_start..build_start + value_end,
+                &values.join(" "),
+            );
+            bytes = xml.into_bytes();
+        }
+        output
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
+            )
+            .unwrap();
+        output.write_all(&bytes).unwrap();
+    }
+    output.finish().unwrap().into_inner()
 }
 
 fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8]) {
