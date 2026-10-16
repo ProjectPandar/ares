@@ -56,7 +56,7 @@ dereferences it at `FillLightning.cpp:17`. The adaptive paths likewise depend
 on `adapt_fill_octree`, assigned only at `Fill.cpp:1246,1451`. Ares therefore
 keeps the existing guard and does not claim a RED or port for these three
 patterns. Ordinary ironing remains the two-value enum from
-`PrintConfig.cpp:4298-4306`.
+`PrintConfig.cpp:6565-6575`.
 
 ### 3MF vertex coordinate defaults: amended shared importer SPEC (2026-10-15)
 

@@ -9,8 +9,9 @@ footprints at `2669-2696`; the per-object membership and fixed-point envelope
 merge are `2784-2905` (with the object/instance grouping details at
 `2794-2803`), and loop construction is `2718-2778`. The final outermost-first
 loop order is established at `2985`. `OrcaSlicer/src/libslic3r/GCode.cpp::generate_skirt`
-(`4388-4451`) selects a member group’s loop range at `4417-4424` and emits the
-seam-clipped loops using the skirt path boundary at `4334-4359`.
+(`4388-4451`) owns skirt-layer selection; `find_skirt_brim_group_idx` is at
+`4455-4463` and `generate_object_skirt_group` at `4465-4485`. The seam start
+calculation is the separate `Skirt::find_start_point` at `4334-4359`.
 
 The current Rust rewrite already has the relevant upstream-shaped boundaries:
 
@@ -23,7 +24,9 @@ The current Rust rewrite already has the relevant upstream-shaped boundaries:
 - `skirt/loop_generation.rs::make_loops` owns the per-group loop budget
   (`Print.cpp:2728-2778`); and
 - `SkirtPlan::emit_group`/`emit` select and emit the group range corresponding to
-  `GCode.cpp:4417-4424,4334-4359`.
+  `GCode.cpp:4465-4485`; `project_slice/gcode_emit/layers/tool_entry.rs:92-112`
+  and `object_skirt.rs:28` currently limit object-skirt emission to entries with
+  an `object_layer` and `physical_layers()[layer]`.
 
 ## Included behavior
 
@@ -34,9 +37,12 @@ admission disjuncts after a public RED:
    object.object.raft_layers.0 > 0)` in `skirt/generate.rs`; and
 2. the top-level `raft.is_some()` disjunct in the same guard.
 
-The existing `occupied::items` support-fills and `RaftSchedule::skirt_points`
-inputs must then participate in each object’s local hull before instance shifts,
-membership merging, loop generation, and emission. Preserve the current
+The existing `occupied.rs:61-80` support-fill and
+`RaftSchedule::skirt_points` inputs must then participate in each object’s local
+hull before instance shifts, membership merging, loop generation, and emission.
+The separate raft carrier is a compatibility shell: upstream supplies raft
+support layers through `Print.cpp:2687-2691`, rather than a separate geometric
+policy. Preserve the current
 fixed-point envelope grouping, object/instance translations, layer limit,
 outermost-first loop order, flow, seam clipping, and per-group emission. No new
 support or raft geometry policy is introduced; this is the missing admission
@@ -52,14 +58,27 @@ and any raft geometry beyond the existing `skirt_points` carrier are also
 deferred. This slice must not alter `occupied::items` semantics, grouping
 algorithms, or any guard owned by another worker.
 
+The GREEN must also port the upstream emission coverage. `GCode.cpp:4398`
+derives the first-layer decision from raft layers, `:4311-4318` lets raft layers
+contribute to skirt height, `:4455-4463` selects the skirt/brim group, and
+`:4465-4485` emits an object-skirt group. `:5329-5335` calls that path for every
+`instances_to_print` entry, including raft/support-only chunks. Ares must not
+require `entry.object_layer` or index only `physical_layers()[layer]` for those
+chunks.
+
 ## Native RED plan
 
 After SPEC approval, freeze three input-only 3MFs with identical machine and
-skirt settings and two objects in `PerObject` mode:
+skirt settings and two objects in `PerObject` mode. Every input must explicitly
+set `brim_type=no_brim`, `combine_brims=0` (`PrintConfig.cpp:1744`), one
+filament, `ByLayer`, no prime tower, and one instance per object so the result
+is attributable only to this slice:
 
 1. a support-positive case (`enable_support=true` on one object, with ordinary
    support geometry) that exercises the support footprint;
-2. a raft-positive case (`raft_layers>0`) that exercises the raft skirt points;
+2. a raft-positive case (`raft_layers>0`) that exercises the raft skirt points
+   and raft/support-only emission chunks; this setting intentionally trips both
+   admission disjuncts;
 3. a control with support disabled and `raft_layers=0`, while all W5 and other
    disjuncts are false.
 
