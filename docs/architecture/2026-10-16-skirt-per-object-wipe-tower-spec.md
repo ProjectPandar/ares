@@ -77,11 +77,12 @@ fixture 在 GREEN 后仍撞守卫。
   的耗材**；同组后续成员经 `skirt_done` print_z 跳过
   （`:4293/:4317`），每组每层一次；
 - stCombined 不变（`:2843-2845`）；
-- RED：fixture（2 对象 × 2 extruder + prime/wipe tower +
-  per-object skirt，`min_skirt_length=0`、`brim_type=no_brim`、
-  `combine_brims=0`——默认 btAutoBrim（PrintConfig.cpp:1690-1700）
-  会撞保留的 brim 守卫 disjunct `generate.rs:41-47`，参照
-  `per_object_skirt_groups.rs:54` 的做法）native 正常输出 vs ares
+- RED：fixture（SEMM Ender-3 双耗材基 `tests/parity/semm-ramming/R1.3mf`
+  派生：两对象 extruder 1/2 + prime tower，`skirt_type=perobject`、
+  `min_skirt_length=0`、`brim_type=no_brim`、`combine_brims=0`——默认
+  btAutoBrim（PrintConfig.cpp:1690-1700）会撞保留的 brim 守卫
+  disjunct `generate.rs:41-47`，参照 `per_object_skirt_groups.rs:54`
+  的做法）native 正常输出 vs ares
   `UnsupportedProjectFeature` 错误——严格相等断言先 FAIL；
   control 腿同 fixture `skirt_type=combined`；
 - failure inventory：①ares 抛错（当前态）②tower 障碍组错误发射
@@ -98,10 +99,14 @@ fixture 在 GREEN 后仍撞守卫。
 - **新增守卫**：`min_skirt_length > 0 && filament_diameter.len() > 1`
   （上游 extruder 轮换 `:2745-2760` vs ares 单一 `e_per_path_mm`
   `generate.rs:104-111`）；**wiping pass 发射**：上游在
-  `is_anything_overridden`（wipe 耗材注入对象）时 wiping pass 也会
-  发对象 skirt（`:5330-5333`），ares 仅 `Pass::Normal`
-  （`layers/tool_entry.rs:97`）——本片显式守卫（per-object 路径遇
-  wiping override 抛 Unsupported）延后。per-object draft shield 已
+  `is_anything_overridden`（wipe 耗材注入对象，GCode.cpp:4867）时
+  wiping pass 也会发对象 skirt（`:5330-5333`），ares 仅 `Pass::Normal`
+  （`layers/tool_entry.rs:97`）——本片采用**保守计划期检查**守卫：
+  per-object + tower + 任一对象
+  `flush_into_objects/flush_into_infill/flush_into_support` 任一开启
+  即抛 Unsupported（数据已在 SkirtPlan::generate 之前可得：
+  `tool_ordering/wiping/source.rs:35-36`、`orchestration.rs:11/:26`
+  build_schedule 先于 SkirtPlan）。per-object draft shield 已
   移植并有 byte-parity 测试（`per_object_draft_shield.rs:86-95`、
   `per_object_draft_compositions.rs`、`per_object_draft_triple.rs`），
   不加守卫；
