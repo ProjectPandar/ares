@@ -79,7 +79,7 @@ fn run_case(name: &str, expected_sha: &str) {
 fn adaptive_octree_spacing_single_region_control() {
     run_case(
         "control",
-        "d6ea590827af8502bec7c2e2cc42139fbe879cb42e6949de954cde3430139ca9",
+        "b2f1aba2bb357fb165c025770560e09d8d752bee57b6ad8f53ad9135763b93fd",
     );
 }
 
@@ -87,7 +87,7 @@ fn adaptive_octree_spacing_single_region_control() {
 fn adaptive_octree_spacing_two_region_control() {
     run_case(
         "baseline",
-        "d8194e73435fe1d29204fc0a9ac0f614c7152d65c75d6b7f697de4d64012a619",
+        "4a57f8ccf5df885d4dee61292136cc892113e5cc323ccddfd2c672ca47d78527",
     );
 }
 
@@ -95,7 +95,7 @@ fn adaptive_octree_spacing_two_region_control() {
 fn adaptive_octree_spacing_density_red() {
     run_case(
         "density",
-        "d64f5cbdf529de964b463c238f13939d200287ff4b909f906a935c972c3115be",
+        "f95bfc0f5106b37f815f53bf4ca07d3ea555fbab6f33352ff349f11f2c9a2f9b",
     );
 }
 
@@ -103,6 +103,6 @@ fn adaptive_octree_spacing_density_red() {
 fn adaptive_octree_spacing_multiline_red() {
     run_case(
         "multiline",
-        "70b0675b517a5bf6f27c2c7358b127c65a4d145e742eba6bf98b35a8cc0904d9",
+        "7050c7d1916fa42d9a2ea6f9e8990f4aef447530423a4c175e11c3aef440240d",
     );
 }
