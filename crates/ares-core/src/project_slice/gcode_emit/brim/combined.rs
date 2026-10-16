@@ -57,7 +57,6 @@ pub(in crate::project_slice::gcode_emit) fn combine(
         .into_iter()
         .map(|instance| owners[instance])
         .find(|&owner| plans[owner].is_some())
-        .or_else(|| plans.iter().position(Option::is_some))
         .expect("a nonempty brim area has a contributing owner");
     let area = union_expolygons(&area, &[]).map_err(brim_geometry_error)?;
     let resolution = scale.scaled_delta(traversal.resolved.views.full.process.print.resolution.0);
