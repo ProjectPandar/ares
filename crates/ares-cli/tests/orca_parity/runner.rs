@@ -5,6 +5,8 @@
 #[path = "runner/loaded_system_inherits_group.rs"]
 mod loaded_system_inherits_group;
 
+#[path = "runner/resource_triangle_defaults.rs"]
+mod resource_triangle_defaults;
 #[path = "runner/resource_vertex_defaults.rs"]
 mod resource_vertex_defaults;
 

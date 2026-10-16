@@ -1,10 +1,15 @@
 # SPEC: shared 3MF triangle vertex-index zero defaults
 
-Status: **PROPOSED, docs only; REVIEW-REQUEST before any Native or public RED.**
+Status: **APPROVED a1c1b81dac38fba08e170bc75ab3b8724755677f; public RED authorized.**
+Public RED freezes an input-only pair under `tests/parity/3mf-triangle-index-defaults`:
+positive SHA `a19533ceee3dea510848bf4ee578a3b48f5266139c79fd288ea15da546c8e20d`,
+control SHA `adb38ee8df9485a864135007753fb935aedf7883fe37f910109f20145f3c7be2`.
+The test generates Native references at runtime; no production change authorized.
 Base main `41f2c90f765d42c6620583121296bb61a2cb839c`, atop approved docs refresh
 `f82a77b6d1282e86eafd928d565533f09d8badae`. This is the triangle behavior
 explicitly deferred by the shared vertex-coordinate SPEC, not the already
-merged resource build/item ignore slice. No test/fixture/production change here.
+merged resource build/item ignore slice. The approved SPEC was docs-only;
+this RED adds the frozen pair/public test only. No production change here.
 M73 remains deferred; full/workspace runs remain coordinator-owned.
 
 ## 1. Exact source owner and Rust destination
@@ -13,7 +18,11 @@ Orca pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
 `src/libslic3r/Format/bbs_3mf.cpp`:
 
 - `bbs_get_attribute_value_int:508-514` initializes `value = 0`; absent attribute
-  returns that zero without parsing a string.
+  returns that zero without parsing a string. Present strings use
+  `boost::spirit::qi::int_`, **not atoi**: `abc` leaves zero on parse failure,
+  `5x` parses prefix 5, and `-1` parses negative then is rejected downstream at
+  `_generate_volumes_new:4991-4993`. Malformed/negative/overflow behavior remains
+  deferred; this slice only defaults absent attributes.
 - `_BBS_3MF_Importer::_handle_start_triangle:3804-3830`, especially `3813-3819`,
   appends `(v1,v2,v3)` from that helper. Comment: missing values equal ZERO.
 - `ObjectImporter::_handle_object_start_triangle:5516-5542`, especially
@@ -72,7 +81,7 @@ orientation, centering and annotations. Its signed-volume calculation `:73-96`
 handles zero norm without dividing by it; this is not a general mesh repair
 pass. Neither path should be changed to hide a triangle default defect.
 
-## 3. Proposed public pair and discovery budget — not generated
+## 3. Approved pair/discovery budget (original plan; pair now frozen above)
 
 Control: unchanged `tests/parity/wipe-before-override/control-before50.3mf`, SHA
 `adb38ee8df9485a864135007753fb935aedf7883fe37f910109f20145f3c7be2`.
@@ -93,7 +102,8 @@ positive exercises the decoder also used by main; no role partition is needed.
 
 After SPEC/input approval, freeze deterministic derivation and full archive/
 entry SHA manifest externally before runtime, and before any test commit. No
-positive bytes or SHA are claimed now. Native `--slice 0 --outputdir <fresh>`
+positive bytes or SHA were claimed at SPEC stage; the RED freeze above records
+both identities. Native `--slice 0 --outputdir <fresh>`
 on the same bare input, canonical official/seeded environments, fresh caches/
 TMPDIR/artifacts, CPU15/jobs1/threads1/load<60/START-END. Require complete exit0,
 authoritative output/footer, positive repeat determinism and expected control
