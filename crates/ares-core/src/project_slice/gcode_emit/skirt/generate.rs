@@ -22,26 +22,12 @@ impl SkirtPlan {
             return Ok(None);
         }
         let per_object = loops_count > 0 && print.skirt_type == crate::ProcessSkirtType::PerObject;
-        // Wiping-pass residual (narrowing of the same guard key): the
-        // upstream wiping pass also emits object skirts when extrusions
-        // are overridden (is_anything_overridden, GCode.cpp:5330-5333)
-        // while Ares emits skirts on Pass::Normal only
-        // (layers/tool_entry.rs); with a tower and any flush_into_* the
-        // divergence is reachable, so the combination stays unsupported.
-        let tower_active = print.enable_prime_tower.0
-            && traversal
-                .resolved
-                .views
-                .full
-                .filament
-                .gcode
-                .filament_diameter
-                .0
-                .len()
-                > 1;
+        // Per-object skirts stay unsupported for shared/multi-instance
+        // brim footprints (`Print.cpp:2847-2971`; ByObject shared groups
+        // throw SlicingError at `Print.cpp:2551-2556`).
         if per_object
             && traversal.resolved.objects.len() > 1
-            && (brim.iter().enumerate().any(|(index, plan)| {
+            && brim.iter().enumerate().any(|(index, plan)| {
                 let (object, group) = traversal.print_object_config(index);
                 plan.is_some()
                     && (print.combine_brims.0
@@ -56,12 +42,7 @@ impl SkirtPlan {
                                 | crate::ProcessBrimType::OuterAndInner
                         )
                         || group.instance_indices.len() != 1)
-            }) || (tower_active
-                && traversal.resolved.objects.iter().any(|object| {
-                    object.object.flush_into_objects.0
-                        || object.object.flush_into_infill.0
-                        || object.object.flush_into_support.0
-                })))
+            })
         {
             return Err(SliceError::UnsupportedProjectFeature(
                 "skirt_type per-object".to_owned(),

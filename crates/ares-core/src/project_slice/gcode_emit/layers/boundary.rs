@@ -196,7 +196,11 @@ pub(super) fn append<'a>(
     // on non-BBL paths a pending retract whose target Z equals the
     // (possibly template-assigned) writer Z performs no retract at all,
     // so its `restart_extra` assignment must not run either.
-    motion::flush_pending_retract_wipe(output, state, will_move_z);
+    // Exactly one Ares call owns each upstream `change_layer` retract:
+    // `retract_before_layer` owns layer 0, the config-predicate flush
+    // owns layer > 0 — without the exclusivity a start g-code that
+    // leaves Z unpositioned runs both for the single :5693 call.
+    motion::flush_pending_retract_wipe(output, state, will_move_z && layer_index > 0);
     // Pending object-end labels flush after the layer-change
     // retract/wipe, before the layer-change gcode
     // (`GCode.cpp:5699` `change_layer`).

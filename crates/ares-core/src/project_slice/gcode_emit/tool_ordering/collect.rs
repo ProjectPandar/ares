@@ -47,27 +47,82 @@ pub(super) fn object(
         .0
         .as_parts()
         .2;
+    let options = object_options(traversal, object);
+    // `ToolOrdering.cpp:686-698,714-734`: on by-layer prints
+    // (`m_print_config_ptr` set) an extruder only joins `LayerTools`
+    // when its region has a non-overriddable entity —
+    // `is_overriddable_and_mark` admits every role under
+    // flush_into_objects and only internal infill under
+    // flush_into_infill (`ToolOrdering.cpp:1586-1596`), so a fully
+    // overriddable region adds no extruder and the print can collapse
+    // to a single tool. ByObject ordering never gates
+    // (`m_print_config_ptr` null).
+    let by_layer = traversal.resolved.views.full.process.print.print_sequence
+        != crate::ProcessPrintSequence::ByObject;
+    let runtime = &traversal.resolved.views.runtime_gcode;
+    let soluble = |id: i32| {
+        usize::try_from(id).is_ok_and(|id| {
+            runtime
+                .filament_soluble
+                .0
+                .get(id)
+                .is_some_and(|value| value.0)
+        })
+    };
     for (usage, region) in layer.tool_regions.iter().zip(regions) {
-        let options = &region.options;
-        if usage.perimeters {
+        let region_options = &region.options;
+        // Walls are overriddable only under flush_into_objects (they are
+        // never `erInternalInfill`); a soluble wall filament keeps its
+        // extruder (`is_overriddable`'s first check).
+        let walls_nonoverriddable = !options.flush_into_objects.0
+            || soluble(region_options.outer_wall_filament_id.0.max(1) - 1)
+            || (region_options.wall_loops.0 > 1
+                && soluble(region_options.inner_wall_filament_id.0.max(1) - 1));
+        if usage.perimeters && (!by_layer || walls_nonoverriddable) {
             target
                 .extruders
-                .push(options.outer_wall_filament_id.0 as usize);
-            if options.wall_loops.0 > 1 {
+                .push(region_options.outer_wall_filament_id.0 as usize);
+            if region_options.wall_loops.0 > 1 {
                 target
                     .extruders
-                    .push(options.inner_wall_filament_id.0 as usize);
+                    .push(region_options.inner_wall_filament_id.0 as usize);
             }
         }
-        for (present, id) in [
-            (usage.internal_solid, options.internal_solid_filament_id.0),
-            (usage.top, options.top_surface_filament_id.0),
-            (usage.bottom, options.bottom_surface_filament_id.0),
-            (usage.infill, options.sparse_infill_filament_id.0),
-        ] {
-            if present {
-                target.extruders.push(id as usize);
-            }
+        let categories = [
+            (
+                usage.internal_solid,
+                options.flush_into_objects.0,
+                region_options.internal_solid_filament_id.0,
+            ),
+            (
+                usage.top,
+                options.flush_into_objects.0,
+                region_options.top_surface_filament_id.0,
+            ),
+            (
+                usage.bottom,
+                options.flush_into_objects.0,
+                region_options.bottom_surface_filament_id.0,
+            ),
+            (
+                usage.infill,
+                options.flush_into_objects.0 || options.flush_into_infill.0,
+                region_options.sparse_infill_filament_id.0,
+            ),
+        ];
+        // Upstream pushes the whole category block when ANY present fill
+        // is non-overriddable (`something_nonoverriddable`, :718-733);
+        // soluble filaments are never overriddable.
+        let fills_nonoverriddable = categories
+            .iter()
+            .any(|&(present, overridable, id)| present && (!overridable || soluble(id.max(1) - 1)));
+        if fills_nonoverriddable || !by_layer {
+            target.extruders.extend(
+                categories
+                    .into_iter()
+                    .filter(|&(present, _, _)| present)
+                    .map(|(_, _, id)| id as usize),
+            );
         }
         target.has_object |=
             usage.perimeters || usage.internal_solid || usage.top || usage.bottom || usage.infill;
