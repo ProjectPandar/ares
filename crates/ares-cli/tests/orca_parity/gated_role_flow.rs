@@ -15,7 +15,7 @@ cases! {
     orca_parity_gated_flow_box_unit => "box-unit",
     orca_parity_gated_flow_outer075 => "outer075",
     orca_parity_gated_flow_inner065 => "inner065",
-    orca_parity_gated_flow_sparse070 => "sparse070",
+    orca_parity_gated_flow_sparse070_guard => "sparse070",
     orca_parity_gated_flow_solid060 => "solid060",
     orca_parity_gated_flow_gate_off_all => "gate-off-all",
     orca_parity_gated_flow_first_unit => "first-unit",
@@ -110,7 +110,8 @@ fn check(label: &str) {
     fs::write(
         root.join("launch.json"),
         serde_json::to_vec_pretty(&json!({
-            "case":label,"wrapper":runner.bin(),"native_binary":native_binary,
+            "case":label,"classification":case["classification"],
+            "wrapper":runner.bin(),"native_binary":native_binary,
             "native_binary_sha256":sha(&fs::read(&native_binary).unwrap()),
             "input_sha256":sha(&bytes),"args":args,"source":manifest["source"]
         }))

@@ -22,7 +22,7 @@ cross-mode equality including config/M73/statistics/order.
 | box-unit | All unit ratios, enabled gate; box control |
 | outer075 | outer_wall_flow_ratio=0.75 |
 | inner065 | inner_wall_flow_ratio=0.65 |
-| sparse070 | sparse_infill_flow_ratio=0.70 |
+| sparse070 | sparse_infill_flow_ratio=0.70; existing-parity PASS guard |
 | solid060 | internal_solid_infill_flow_ratio=0.60 |
 | gate-off-all | all non-unit role/first-layer settings retained, gate off |
 | first-unit | unit ratios, positive brim and skirt |
@@ -47,9 +47,18 @@ requires the validated byte-in API and real CLI to succeed, raw API=CLI, and
 unchanged whole ordered generator-only comparisons against the same-input
 Native output. No expected-failure assertions or production changes.
 
-Owner RED instruction: role/first-layer-on targets should strictly FAIL;
-unit and gate-off controls should PASS in both modes. Any unexpected PASS/FAIL
-must STOP and be reported, not normalized, patched or hidden. In particular,
-pre-existing sparse/solid behavior may yield an unexpected PASS; that is not
-permission to fabricate RED or continue production work. Run per-leg barriers
-so later cases do not silently proceed after an unexpected result.
+Owner ruling after `bdf7a651e`: `sparse070` is an existing-parity regression
+guard, because Ares already gates and pre-bakes sparse flow in
+`group_fills/params/projection.rs` and `fill_entities/flow.rs`. Its official
+strict full comparison PASS is not an inverted RED. All tests still require
+success and complete equality; `classification` in the manifest/launch receipt
+only records runtime expectations, never changes an assertion.
+
+Unit, gate-off and sparse guards are expected to PASS. A candidate RED that
+passes must be recorded and reclassified as another guard, not forced to fail.
+Stop on a guard FAIL or an infrastructure/evidence fault. Final RED comprises
+the actual failing legs plus all guards, with the complete matrix rerun in
+both modes at the final committed classification hash before review. This
+protects existing pre-baked sparse/solid behavior when GREEN folds the whole
+block into the single consumer without double multiplication. No GREEN is
+authorized by a target PASS.
