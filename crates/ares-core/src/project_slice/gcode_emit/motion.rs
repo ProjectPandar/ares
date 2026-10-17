@@ -143,7 +143,7 @@ fn emit_fill_entity(
     entity: &FillExtrusionEntity,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     match entity {
         FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => path::emit(
             output,
@@ -172,7 +172,7 @@ fn emit_fill_entity(
             state,
         ),
         FillExtrusionEntity::VariableWidth(entity) => {
-            emit_variable_width_entity(output, entity, geometry, state);
+            emit_variable_width_entity(output, entity, geometry, state)
         }
     }
 }
@@ -182,7 +182,7 @@ fn emit_variable_width_entity(
     entity: &GapFillEntity,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     match entity {
         GapFillEntity::Path(path) => materialized::emit(
             output,

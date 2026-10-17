@@ -39,13 +39,14 @@ pub(in crate::project_slice::gcode_emit) fn travel_to(
     state: &mut EmitState,
     point: [f32; 2],
     geometry: LayerGeometry<'_>,
-) {
+) -> Result<(), crate::SliceError> {
     retract(output, state);
     state.use_external_mp_once = true;
     let point = local(point, state.origin, geometry.scale);
-    path::tower_travel(output, state, point, geometry);
+    path::tower_travel(output, state, point, geometry)?;
     travel::unlift(output, state);
     travel::unretract(output, state);
+    Ok(())
 }
 
 pub(in crate::project_slice::gcode_emit) fn change_z(

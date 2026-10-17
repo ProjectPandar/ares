@@ -15,7 +15,7 @@ pub(super) fn emit_perimeter(
     entity: IslandPrintEntity,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     let IslandPrintEntity::Perimeter(collection) = entity else {
         unreachable!("perimeter phase contains only perimeter entities");
     };
@@ -65,11 +65,11 @@ pub(super) fn emit_perimeter(
                         geometry,
                         inside_loop: false,
                     },
-                );
+                )?;
                 continue;
             }
             ExtrusionEntity::MultiPath(multi_path) => {
-                multi_path::emit(output, &multi_path.paths, geometry, state);
+                multi_path::emit(output, &multi_path.paths, geometry, state)?;
                 continue;
             }
         };
@@ -123,6 +123,7 @@ pub(super) fn emit_perimeter(
             geometry,
             state,
             &region_perimeters,
-        );
+        )?;
     }
+    Ok(())
 }

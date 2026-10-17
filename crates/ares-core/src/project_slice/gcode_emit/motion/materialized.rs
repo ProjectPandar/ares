@@ -15,8 +15,12 @@ pub(super) struct Emission<'a> {
     pub(super) inside_loop: bool,
 }
 
-pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, emission: Emission<'_>) {
-    emit_with_speed(output, state, emission, None);
+pub(super) fn emit(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    emission: Emission<'_>,
+) -> Result<(), crate::SliceError> {
+    emit_with_speed(output, state, emission, None)
 }
 
 pub(super) fn emit_with_speed(
@@ -24,7 +28,7 @@ pub(super) fn emit_with_speed(
     state: &mut EmitState,
     emission: Emission<'_>,
     requested_speed: Option<f64>,
-) {
+) -> Result<(), crate::SliceError> {
     let Emission {
         path,
         end_clip,
@@ -66,5 +70,5 @@ pub(super) fn emit_with_speed(
         ),
         geometry,
         state,
-    );
+    )
 }

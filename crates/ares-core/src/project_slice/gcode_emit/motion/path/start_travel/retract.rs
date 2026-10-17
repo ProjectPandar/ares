@@ -22,8 +22,8 @@ pub(super) fn decide(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     context: RetractContext<'_>,
-    replan: &mut dyn FnMut(&mut EmitState),
-) {
+    replan: &mut dyn FnMut(&mut EmitState) -> Result<(), crate::SliceError>,
+) -> Result<(), crate::SliceError> {
     let RetractContext {
         retract,
         routed_length,
@@ -68,17 +68,20 @@ pub(super) fn decide(
         && state.pending_lift.is_none();
     // A wipe that moved the head re-plans the route from the wipe's end
     // (`GCode.cpp:7436-7443`).
-    let mut wipe_then_replan =
-        |output: &mut Vec<u8>, state: &mut EmitState, emit: fn(&mut Vec<u8>, &mut EmitState)| {
-            let head_before = (state.x, state.y);
-            emit(output, state);
-            if (state.x, state.y) != head_before {
-                replan(state);
-            }
-        };
+    let mut wipe_then_replan = |output: &mut Vec<u8>,
+                                state: &mut EmitState,
+                                emit: fn(&mut Vec<u8>, &mut EmitState)|
+     -> Result<(), crate::SliceError> {
+        let head_before = (state.x, state.y);
+        emit(output, state);
+        if (state.x, state.y) != head_before {
+            replan(state)?;
+        }
+        Ok(())
+    };
     if retract {
         if hilbert_wipe_only {
-            wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail);
+            wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail)?;
             state.extruder.retracted = true;
             // The suppressed tail still runs `reset_e` and the lazy lift
             // (`GCode.cpp:7674-7681`).
@@ -96,7 +99,7 @@ pub(super) fn decide(
             // `lazy_lift` reads the CURRENT writer Z.
             travel::schedule_retract_tail(state);
         } else {
-            wipe_then_replan(output, state, travel::retract_and_lift);
+            wipe_then_replan(output, state, travel::retract_and_lift)?;
         }
     } else if upstream_would_retract {
         // A fully-retracted nozzle still runs upstream's wipe +
@@ -113,12 +116,12 @@ pub(super) fn decide(
             !state.wipe_path.is_empty() && state.options.wipe && state.options.wipe_distance > 1e-4;
         if hilbert_wipe_only {
             if wipe_eligible {
-                wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail);
+                wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail)?;
             }
         } else if !hilbert_suppressed {
             state.extruder.restart_extra = state.options.retract_restart_extra;
             if wipe_eligible {
-                wipe_then_replan(output, state, travel::wipe_only_retract);
+                wipe_then_replan(output, state, travel::wipe_only_retract)?;
             }
         }
         travel::reset_e(output, state);
@@ -130,4 +133,5 @@ pub(super) fn decide(
             travel::schedule_retract_tail(state);
         }
     }
+    Ok(())
 }

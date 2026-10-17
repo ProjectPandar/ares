@@ -28,8 +28,8 @@ pub(super) fn emit(
     properties: PathProperties<'_>,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
-    emit_with_speed(output, points, (properties, None), geometry, state);
+) -> Result<(), crate::SliceError> {
+    emit_with_speed(output, points, (properties, None), geometry, state)
 }
 
 pub(super) fn emit_with_speed(
@@ -38,7 +38,7 @@ pub(super) fn emit_with_speed(
     (properties, speed): (PathProperties<'_>, Option<f64>),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     if let Some(points) = properties.contour {
         let points = contour::clipped(points, properties.end_clip / geometry.scale.factor());
         let properties = PathProperties {
@@ -52,9 +52,9 @@ pub(super) fn emit_with_speed(
             (properties, speed),
             geometry,
             state,
-        );
+        )
     } else {
-        emit_inner(output, points, (properties, speed), geometry, state);
+        emit_inner(output, points, (properties, speed), geometry, state)
     }
 }
 
@@ -64,7 +64,7 @@ fn emit_inner(
     (properties, requested_speed): (PathProperties<'_>, Option<f64>),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     let role = role_id(properties.feature);
     let role_changed = state.last_extrusion_role != Some(role);
     let mut scaled_points = points.collect::<Vec<_>>();
@@ -77,7 +77,7 @@ fn emit_inner(
     );
     let Some((&first_scaled, &last_scaled)) = scaled_points.first().zip(scaled_points.last())
     else {
-        return;
+        return Ok(());
     };
     // Upstream computes segment lengths from scaled integer coordinates
     // (`Line::length() * SCALING_FACTOR`, `GCode.cpp:6997-6998`), not from
@@ -201,7 +201,7 @@ fn emit_inner(
     );
     // Source travels to the raw path start before overhang processing quantizes its points.
     let Some(&(first_local_x, first_local_y)) = local_points.first() else {
-        return;
+        return Ok(());
     };
     let (first_x, first_y) = if plate_space {
         points[0]
@@ -221,7 +221,7 @@ fn emit_inner(
             properties,
             geometry,
         },
-    );
+    )?;
     // Acceleration/jerk emit BEFORE the custom role-change hooks
     // (`GCode.cpp:6460-6464` before `:6745-6770`) so a hook can
     // override them.
@@ -351,12 +351,12 @@ fn emit_inner(
             state.scarf_z = Some(state.layer_z);
         }
         output.extend_from_slice(b";_EXTRUDE_END\n");
-        return;
+        return Ok(());
     }
     if properties.contour.is_some() {
         contour::emit(output, &points, properties, geometry, state);
         state.last_scaled_position = Some(last_scaled);
-        return;
+        return Ok(());
     }
     // Non-processed sloped path (`GCode.cpp:6992` non-`new_points`
     // branch, `sloped != nullptr`): constant speed F, Z-interpolated
@@ -371,7 +371,7 @@ fn emit_inner(
         output.extend_from_slice(b";_EXTRUDE_END\n");
         state.wipe_path = wipe_points.into_iter().rev().collect();
         state.last_scaled_position = Some(last_scaled);
-        return;
+        return Ok(());
     }
     constant::emit(constant::Emission {
         output,
@@ -383,4 +383,5 @@ fn emit_inner(
         properties,
         state,
     });
+    Ok(())
 }

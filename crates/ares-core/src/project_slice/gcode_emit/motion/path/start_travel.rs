@@ -19,7 +19,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
     state: &mut EmitState,
     first_scaled: (i64, i64),
     geometry: LayerGeometry<'_>,
-) {
+) -> Result<(), crate::SliceError> {
     let first_x = geometry.scale.unscale(first_scaled.0) + state.offset.0;
     let first_y = geometry.scale.unscale(first_scaled.1) + state.offset.1;
     let comment = if state.options.gcode_comments {
@@ -41,8 +41,9 @@ pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
         target_z: state.layer_z,
         travel_distance: (first_x - state.x).hypot(first_y - state.y),
     };
-    approach::emit_needs_travel(output, state, request);
+    approach::emit_needs_travel(output, state, request)?;
     state.layer_change_travel_pending = false;
+    Ok(())
 }
 
 pub(super) struct Request<'a> {
@@ -53,7 +54,11 @@ pub(super) struct Request<'a> {
     pub(super) geometry: LayerGeometry<'a>,
 }
 
-pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request<'_>) {
+pub(super) fn emit(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    request: Request<'_>,
+) -> Result<(), crate::SliceError> {
     let Request {
         first_scaled,
         first_x,
@@ -126,7 +131,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 target_z,
                 travel_distance,
             },
-        )
+        )?
     } else {
         (false, false, false)
     };
@@ -168,4 +173,5 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             unclear_position_travel,
         },
     );
+    Ok(())
 }

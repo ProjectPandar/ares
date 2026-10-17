@@ -101,7 +101,7 @@ pub(super) fn emit(
         selected_role,
         motion_geometry,
         state,
-    );
+    )?;
     if standalone {
         if let Some(labels) = labels {
             labels.queue_stop(output, state, emit_labels);

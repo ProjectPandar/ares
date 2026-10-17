@@ -28,17 +28,23 @@ pub(super) struct Input<'a, 'b> {
     pub(super) print_z: f64,
 }
 
-pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: Input<'_, '_>) {
-    let Some(plan) = input.skirt else { return };
+pub(super) fn emit(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    input: Input<'_, '_>,
+) -> Result<(), crate::SliceError> {
+    let Some(plan) = input.skirt else {
+        return Ok(());
+    };
     let Some(group) = plan.object_group(input.object) else {
-        return;
+        return Ok(());
     };
     let physical_z = input.layer.map_or(input.print_z, |layer| {
         input.traversal.objects[input.object].physical_layers()[layer].print_z
     });
     let (count, last_z) = &mut input.done[group];
     if *count >= plan.layer_count || (*count > 0 && *last_z >= physical_z - 1e-4) {
-        return;
+        return Ok(());
     }
     let layer = skirt::SkirtLayer {
         index: *count,
@@ -58,7 +64,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: I
             (group, layer),
             geometry.view(input.traversal, input.object, object_layer, lower.as_ref()),
             state,
-        );
+        )?;
     } else if let Some(raft_index) = input.raft_layer {
         // `GCode.cpp:5329-5335` calls generate_object_skirt_group for raft
         // entries; `:4398` selects first_layer and `:4311-4318` counts raft
@@ -85,7 +91,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: I
             (group, layer),
             geometry.view_raft(input.traversal.scale),
             state,
-        );
+        )?;
     } else if let Some(support_index) = input.support_layer {
         // `GCode.cpp:5329-5335` also invokes generate_object_skirt_group for
         // support-only entries; `:4398`/`:4311-4318` own first_layer and
@@ -107,6 +113,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut motion::EmitState, input: I
             (group, layer),
             geometry.view_raft(input.traversal.scale),
             state,
-        );
+        )?;
     }
+    Ok(())
 }

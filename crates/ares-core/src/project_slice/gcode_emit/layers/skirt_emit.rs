@@ -42,15 +42,15 @@ pub(super) fn emit(
         chunk_slices,
         chunk_perimeter_spacing,
     }: SkirtEmission<'_, '_>,
-) {
+) -> Result<(), crate::SliceError> {
     if skirt.as_ref().is_some_and(|plan| plan.group_count() > 0) {
-        return;
+        return Ok(());
     }
     if let (Some(entry), Some(plan)) = (entries.first(), skirt) {
         let object = entry.object_index;
         let Some((skirt_plan_index, skirt_height)) = schedule.next(print_z, plan.layer_count)
         else {
-            return;
+            return Ok(());
         };
         let skirt_layer = entry.object_layer.unwrap_or(0);
         let geometry = if let Some(raft_index) = entry.raft_layer {
@@ -105,6 +105,7 @@ pub(super) fn emit(
             },
             motion_geometry,
             state,
-        );
+        )?;
     }
+    Ok(())
 }
