@@ -1,0 +1,42 @@
+{
+  "source_fixture_sha256": "39130052643315104ed0927c40548420b69a0e010dbc109273b59ceac931be66",
+  "source": "R1 SEMM base (r1c2) with the 49-key untyped registry Float class set to the integer-valued float '2.0' (layer-critical keys held at defaults)",
+  "cases": {
+    "class": {
+      "sha256": "39130052643315104ed0927c40548420b69a0e010dbc109273b59ceac931be66",
+      "keys": [
+        "absolute_correction", "area_fill", "bottle_cost", "bottle_volume",
+        "bottle_weight", "display_height", "display_width",
+        "elefant_foot_min_width", "exposure_time", "fast_tilt_time",
+        "gamma_correction", "hollowing_closing_distance",
+        "hollowing_min_thickness", "hollowing_quality",
+        "initial_exposure_time", "material_correction_x",
+        "material_correction_y", "material_correction_z",
+        "material_density", "max_exposure_time",
+        "max_initial_exposure_time", "min_exposure_time",
+        "min_initial_exposure_time", "pad_brim_size",
+        "pad_max_merge_distance", "pad_object_connector_penetration",
+        "pad_object_connector_stride", "pad_object_connector_width",
+        "pad_object_gap", "pad_wall_height", "pad_wall_slope",
+        "pad_wall_thickness", "relative_correction_x",
+        "relative_correction_y", "relative_correction_z",
+        "slow_tilt_time", "support_base_diameter", "support_base_height",
+        "support_base_safety_distance", "support_critical_angle",
+        "support_head_front_diameter", "support_head_penetration",
+        "support_head_width", "support_max_bridge_length",
+        "support_max_pillar_link_distance", "support_object_elevation",
+        "support_pillar_diameter", "support_pillar_widening_factor",
+        "support_points_minimal_distance"
+      ],
+      "input_spelling": "2.0",
+      "native_spelling": "2",
+      "first_divergent_line": "; absolute_correction = 2"
+    },
+    "control": {
+      "sha256": "bbf8b207f759444a85c220903de1c49e61a54e71034b605f5b723a0fc3accf37",
+      "keys": ["top_shell_thickness", "bridge_speed"],
+      "input_spelling": "1.0 / 2.0",
+      "expected": "PASS"
+    }
+  }
+}
