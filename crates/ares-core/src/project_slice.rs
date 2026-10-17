@@ -29,6 +29,7 @@ pub(crate) mod gcode_emit;
     )
 )]
 mod group_fills;
+mod hole_to_polyhole;
 mod incomplete_sink;
 mod island_print_order;
 mod largest_contours;
