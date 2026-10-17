@@ -14,8 +14,11 @@ fn raw_token(project: &crate::Project, key: &str) -> Option<String> {
         .documents()
         .project_settings_raw
         .iter()
-        .find(|(name, _)| *name == key)
-        .and_then(|(_, token)| token)
+        .find_map(|entry| {
+            let (name, token) = entry.expect("raw token renders");
+            (name == key).then_some(token)
+        })
+        .flatten()
 }
 
 /// `ironing_angle` negative inputs normalize to `"0"`
