@@ -25,11 +25,10 @@ impl SkirtPlan {
         // Wiping-pass residual (narrowing of the same guard key): the
         // upstream wiping pass also emits object skirts when extrusions
         // are overridden (is_anything_overridden, GCode.cpp:5330-5333)
-        // while Ares emits skirts on Pass::Normal only
-        // (layers/tool_entry.rs). With a tower, flush_into_objects
-        // (tool-change/print ordering) and flush_into_support (skirt
-        // placement around support-bearing objects) still diverge from
-        // the wiping-pass skirt emission, so those combinations stay
+        // while Ares emits skirts on the first print_wipe_extrusions
+        // loop (layers/tool_entry.rs). With a tower,
+        // flush_into_objects (tool-change/print ordering) still diverges
+        // from the wiping-pass emission, so that combination stays
         // unsupported.
         let tower_active = print.enable_prime_tower.0
             && traversal
@@ -57,9 +56,11 @@ impl SkirtPlan {
                         )
                         || group.instance_indices.len() != 1)
             }) || (tower_active
-                && traversal.resolved.objects.iter().any(|object| {
-                    object.object.flush_into_objects.0 || object.object.flush_into_support.0
-                })))
+                && traversal
+                    .resolved
+                    .objects
+                    .iter()
+                    .any(|object| object.object.flush_into_objects.0)))
         {
             return Err(SliceError::UnsupportedProjectFeature(
                 "skirt_type per-object".to_owned(),

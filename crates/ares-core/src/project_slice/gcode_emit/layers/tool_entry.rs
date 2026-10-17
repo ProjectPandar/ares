@@ -94,11 +94,12 @@ pub(super) fn emit(
         .predecessor
         .object
         .identity();
-    if pass == tool_buckets::Pass::Normal
-        && (entry.object_layer.is_some()
-            || entry.support_layer.is_some()
-            || entry.raft_layer.is_some())
-    {
+    // `GCode.cpp:5336-5338`: `generate_object_skirt_group` runs inside
+    // the FIRST `print_wipe_extrusions` loop only (the wiping loop when
+    // extrusions are overridden, the single normal loop otherwise),
+    // before the instance's labels (`:5349`); the `object_skirt_done`
+    // tracking keeps later loops from re-emitting.
+    if entry.object_layer.is_some() || entry.support_layer.is_some() || entry.raft_layer.is_some() {
         super::object_skirt::emit(
             output,
             state,

@@ -3,13 +3,12 @@
 //! (overhang object, tree support, prime tower, 2 filaments,
 //! skirt_type=perobject, flush_into_support=1) — Native extrudes
 //! Support inside the wiping pass and emits per-object skirts in the
-//! wiping loop (generate_object_skirt_group, GCode.cpp:5336-5338)
-//! before the printing/stop labels, with "; PURGING FINISHED" opening
-//! the normal loop (:5327-5328); Ares flushes the label triple at the
-//! bucket head and emits skirts on Pass::Normal only
-//! (layers/tool_entry.rs) — the RED must FAIL before the GREEN mirrors
-//! the two-loop order and retires the flush_into_support guard term
-//! (flush_into_objects stays guarded: tool-change/print ordering).
+//! first print_wipe_extrusions loop (generate_object_skirt_group,
+//! GCode.cpp:5336-5338) ahead of the printing/stop labels, with
+//! "; PURGING FINISHED" opening the normal loop (:5327-5328); the leg
+//! keeps the whole layer sequence byte-identical and asserts the
+//! flush is ACTIVE (support inside the wiping windows).
+//! flush_into_objects stays guarded (tool-change/print ordering).
 use std::fs;
 
 use serde_json::json;
