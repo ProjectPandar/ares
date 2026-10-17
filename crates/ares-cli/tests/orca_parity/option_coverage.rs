@@ -19,6 +19,8 @@ mod interface_shells_alignment;
 mod filament_override_range;
 #[path = "option_coverage/hole_to_polyhole.rs"]
 mod hole_to_polyhole;
+#[path = "option_coverage/ironing_pattern.rs"]
+mod ironing_pattern;
 #[path = "option_coverage/max_travel_detour_distance.rs"]
 mod max_travel_detour_distance;
 #[path = "option_coverage/region_speed_emission.rs"]
@@ -301,105 +303,7 @@ use crate::{
 use serde_json::{Map, Value};
 use std::path::PathBuf;
 
-fn profiles_root() -> PathBuf {
-    runner::repo_root().join("OrcaSlicer/resources/profiles")
-}
+#[path = "option_coverage/outcome.rs"]
+mod outcome;
 
-fn strict_comparator_ran(status: &str) -> bool {
-    matches!(status, "PASS" | "DIVERGENT")
-}
-
-struct OptionOutcome {
-    key: String,
-    option_type: String,
-    source: String,
-    cases: usize,
-    compared: usize,
-    rejected: usize,
-    status: &'static str,
-    detail: String,
-}
-
-impl OptionOutcome {
-    fn executed(
-        plan: &domains::OptionPlan,
-        compared: usize,
-        rejected: Vec<String>,
-        excused: usize,
-        failure: Option<String>,
-    ) -> Self {
-        let (status, detail) = if let Some(detail) = failure {
-            ("FAIL", detail)
-        } else if compared == 0
-            || compared + excused != plan.cases.len()
-            || !rejected.is_empty()
-            || plan.cases.iter().any(|case| case.value.is_none())
-        {
-            let oracle_reason = if compared == 0 && excused > 0 {
-                "ORACLE_NONDETERMINISTIC; "
-            } else {
-                ""
-            };
-            (
-                "INCOMPLETE",
-                format!(
-                    "required legal cases not all compared; {oracle_reason}{}",
-                    rejected.join("; ")
-                ),
-            )
-        } else if excused > 0 {
-            // Nondeterministic-oracle cases never byte-match by
-            // construction; crediting them as strict coverage would
-            // certify the domain on fewer verified values than it
-            // declares. Report them as an evidenced incomplete instead.
-            (
-                "INCOMPLETE",
-                format!("{excused} case(s) excused: oracle is nondeterministic for these values"),
-            )
-        } else if !plan.provably_legal {
-            // Baseline-only, unresolved-expression and deferred context domains
-            // cannot complete the declared-endpoint/interior scope.
-            (
-                "INCOMPLETE",
-                plan.omission
-                    .map(str::to_owned)
-                    .unwrap_or_else(|| "legacy domain application/legality unverified".into()),
-            )
-        } else {
-            ("PASS", String::new())
-        };
-        Self::new(
-            plan,
-            (plan.cases.len(), compared, rejected.len()),
-            status,
-            detail,
-        )
-    }
-
-    fn omitted(plan: &domains::OptionPlan) -> Self {
-        Self::new(
-            plan,
-            (0, 0, 0),
-            "UNBOUNDED",
-            plan.omission.unwrap_or_default().to_owned(),
-        )
-    }
-
-    fn new(
-        plan: &domains::OptionPlan,
-        counts: (usize, usize, usize),
-        status: &'static str,
-        detail: String,
-    ) -> Self {
-        Self {
-            key: plan.key.clone(),
-            option_type: plan.option_type.clone(),
-            source: plan.source.clone(),
-            cases: counts.0,
-            compared: counts.1,
-            rejected: counts.2,
-            status,
-            detail,
-        }
-    }
-}
+use outcome::{OptionOutcome, profiles_root, strict_comparator_ran};
