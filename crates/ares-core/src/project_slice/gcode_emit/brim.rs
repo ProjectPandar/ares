@@ -14,6 +14,8 @@ use crate::{
 pub(super) struct BrimPlan {
     area: Vec<crate::geometry::ExPolygon>,
     pub(super) global: bool,
+    // Ordinary owner areas, occupied hulls and paths are all in plate coordinates.
+    pub(super) owner_collection: bool,
     pub(super) paths: Vec<Vec<Point>>,
     pub(super) covered_hull: Vec<Point>,
     pub(super) width: f32,
@@ -230,13 +232,27 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area.area, forbidden)
         };
-        let brim_area = bed_area::clip(
-            traversal,
-            object_index,
-            region.outer_wall_filament_id.0 as usize - 1,
-            (brim_area, inner),
-            resolution,
-        )?;
+        let owner_collection = !combined::enabled(traversal)
+            && print.print_sequence != crate::ProcessPrintSequence::ByObject;
+        let brim_area = if owner_collection {
+            let (area, forbidden, islands) =
+                owner::expand(traversal, object_index, &brim_area, &inner, &object_islands);
+            object_islands = islands;
+            bed_area::clip_plate(
+                traversal,
+                region.outer_wall_filament_id.0 as usize - 1,
+                (area, forbidden),
+                resolution,
+            )?
+        } else {
+            bed_area::clip(
+                traversal,
+                object_index,
+                region.outer_wall_filament_id.0 as usize - 1,
+                (brim_area, inner),
+                resolution,
+            )?
+        };
         let brim_area = if matches!(
             options.brim_type,
             ProcessBrimType::OuterOnly
@@ -259,6 +275,16 @@ impl BrimPlan {
 
         let (area, paths) = if combined::enabled(traversal) {
             (brim_area, Vec::new())
+        } else if owner_collection {
+            let paths = crate::brims::ears::paths::from_area(
+                brim_area.clone(),
+                spacing,
+                scale.scaled_delta(0.0125),
+            )?;
+            if paths.is_empty() {
+                return Ok(None);
+            }
+            (brim_area, paths)
         } else {
             let paths = crate::brims::ears::paths::from_area(brim_area, spacing, resolution)?;
             if paths.is_empty() {
@@ -269,6 +295,7 @@ impl BrimPlan {
         Ok(Some(Self {
             area,
             global: false,
+            owner_collection,
             paths,
             covered_hull,
             width: flow.width,
@@ -302,6 +329,7 @@ mod combined;
 pub(super) use combined::combine;
 mod emit;
 mod outline;
+mod owner;
 
 #[cfg(test)]
 mod tests;

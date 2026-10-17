@@ -8,6 +8,18 @@ use crate::{
 };
 
 impl BrimPlan {
+    pub(in crate::project_slice::gcode_emit) fn occupied_origin(
+        &self,
+        traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+        object_index: usize,
+    ) -> (f64, f64) {
+        if self.owner_collection {
+            (0.0, 0.0)
+        } else {
+            super::super::footprint::print_object_origin(traversal, object_index)
+        }
+    }
+
     pub(in crate::project_slice::gcode_emit) fn covered_hull(&self) -> &[Point] {
         &self.covered_hull
     }
@@ -56,7 +68,7 @@ impl BrimPlan {
         state: &mut EmitState,
     ) {
         let origin = state.origin;
-        if self.global {
+        if self.global || self.owner_collection {
             motion::set_origin(state, (0.0, 0.0));
         }
         for path in &self.paths {
@@ -77,7 +89,7 @@ impl BrimPlan {
                 state,
             );
         }
-        if self.global {
+        if self.global || self.owner_collection {
             motion::set_origin(state, origin);
         }
     }

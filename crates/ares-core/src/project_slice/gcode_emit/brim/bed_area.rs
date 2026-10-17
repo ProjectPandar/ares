@@ -27,7 +27,18 @@ pub(super) fn clip(
     );
     // Existing model-local storage ↔ global geometry, not a plate-origin transform.
     let area = translate(area, shift);
-    let mut forbidden = translate(inner, shift);
+    let inner = translate(inner, shift);
+    let clipped = clip_plate(traversal, logical_filament, (area, inner), resolution)?;
+    Ok(translate(clipped, Point::new(-shift.x(), -shift.y())))
+}
+
+pub(super) fn clip_plate(
+    traversal: &PreparedPostClassicTraversal,
+    logical_filament: usize,
+    (area, mut forbidden): (Vec<ExPolygon>, Vec<ExPolygon>),
+    resolution: f64,
+) -> Result<Vec<ExPolygon>, SliceError> {
+    let scale = traversal.scale;
     let printer = &traversal.project.settings().printer.remaining;
     let bed = if printer.extruder_printable_area.0.is_empty() {
         // Same printable-area coordinates as PrintVolume::new; O6 owns their frame.
@@ -73,8 +84,7 @@ pub(super) fn clip(
     if let Some(first) = border.into_iter().next() {
         forbidden.push(first);
     }
-    let clipped = difference_ex(&area, &forbidden).map_err(brim_geometry_error)?;
-    Ok(translate(clipped, Point::new(-shift.x(), -shift.y())))
+    difference_ex(&area, &forbidden).map_err(brim_geometry_error)
 }
 
 fn polygon(
@@ -92,7 +102,7 @@ fn polygon(
         .map(Polygon::new)
 }
 
-fn translate(area: Vec<ExPolygon>, shift: Point) -> Vec<ExPolygon> {
+pub(super) fn translate(area: Vec<ExPolygon>, shift: Point) -> Vec<ExPolygon> {
     area.into_iter()
         .map(|area| {
             let (contour, holes) = area.into_parts();

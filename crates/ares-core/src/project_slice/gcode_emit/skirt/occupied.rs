@@ -91,7 +91,7 @@ pub(super) fn items(
             );
         }
         if let Some(brim) = &brim[object_index] {
-            let (x, y) = footprint::print_object_origin(traversal, object_index);
+            let (x, y) = brim.occupied_origin(traversal, object_index);
             let shift = Point::new(
                 (x / scale.factor()).round() as i64,
                 (y / scale.factor()).round() as i64,

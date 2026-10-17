@@ -22,17 +22,23 @@ pub(super) fn emit(
     chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
 ) {
+    if layer_index != 0 {
+        return;
+    }
     let global = brim.iter().flatten().find(|plan| plan.global);
     let plan = if let Some(plan) = global {
         (!state.global_brim_done).then_some(plan)
     } else {
-        brim[object_index].as_ref()
+        brim[object_index].as_ref().filter(|plan| {
+            !plan.owner_collection || !state.emitted_brim_owners.contains(&object_index)
+        })
     };
-    if layer_index == 0
-        && let Some(plan) = plan
-    {
+    if let Some(plan) = plan {
         if plan.global {
             state.global_brim_done = true;
+        }
+        if plan.owner_collection {
+            state.emitted_brim_owners.insert(object_index);
         }
         let geometry = entry_builder.geometry(
             object_index,
