@@ -41,9 +41,10 @@ mod per_object_skirt_groups;
 mod per_object_skirt_painted;
 #[path = "orca_parity/per_object_skirt_support_raft.rs"]
 mod per_object_skirt_support_raft;
+#[path = "orca_parity/power_loss_recovery.rs"]
+mod power_loss_recovery;
 #[path = "orca_parity/skirt_flush_infill_w5.rs"]
 mod skirt_flush_infill_w5;
-
 #[path = "orca_parity/skirt_flush_objects_w5.rs"]
 mod skirt_flush_objects_w5;
 #[path = "orca_parity/skirt_flush_support_w5.rs"]
