@@ -38,6 +38,10 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .or_else(|| gcode.filament_density.0.first())
             .map_or(0.0, |value| value.0),
         filament_flow_ratio: nullable_float_at(&gcode.filament_flow_ratio, filament, 1.0),
+        set_other_flow_ratios: object
+            .map_or(full.process.object.set_other_flow_ratios.0, |value| {
+                value.object.set_other_flow_ratios.0
+            }),
         max_volumetric_speed: gcode
             .filament_max_volumetric_speed
             .0
@@ -60,6 +64,13 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         support_speed: object.map_or(full.process.object.support_speed.0, |value| {
             value.object.support_speed.0
         }),
+        support_flow_ratio: object.map_or(full.process.object.support_flow_ratio.0, |value| {
+            value.object.support_flow_ratio.0
+        }),
+        support_interface_flow_ratio: object.map_or(
+            full.process.object.support_interface_flow_ratio.0,
+            |value| value.object.support_interface_flow_ratio.0,
+        ),
         support_type: object.map_or(full.process.object.support_type, |value| {
             value.object.support_type
         }),

@@ -64,6 +64,28 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     options.wall_direction = region.map_or(default.wall_direction, |value| value.wall_direction);
     options.print_flow_ratio =
         region.map_or(default.print_flow_ratio.0, |value| value.print_flow_ratio.0);
+    options.outer_wall_flow_ratio = region.map_or(default.outer_wall_flow_ratio.0, |value| {
+        value.outer_wall_flow_ratio.0
+    });
+    options.inner_wall_flow_ratio = region.map_or(default.inner_wall_flow_ratio.0, |value| {
+        value.inner_wall_flow_ratio.0
+    });
+    options.overhang_flow_ratio = region.map_or(default.overhang_flow_ratio.0, |value| {
+        value.overhang_flow_ratio.0
+    });
+    options.sparse_infill_flow_ratio = region.map_or(default.sparse_infill_flow_ratio.0, |value| {
+        value.sparse_infill_flow_ratio.0
+    });
+    options.internal_solid_infill_flow_ratio = region
+        .map_or(default.internal_solid_infill_flow_ratio.0, |value| {
+            value.internal_solid_infill_flow_ratio.0
+        });
+    options.gap_fill_flow_ratio = region.map_or(default.gap_fill_flow_ratio.0, |value| {
+        value.gap_fill_flow_ratio.0
+    });
+    options.first_layer_flow_ratio = region.map_or(default.first_layer_flow_ratio.0, |value| {
+        value.first_layer_flow_ratio.0
+    });
     options.inner_wall_speed =
         region.map_or(default.inner_wall_speed.0, |value| value.inner_wall_speed.0);
     options.outer_wall_speed =

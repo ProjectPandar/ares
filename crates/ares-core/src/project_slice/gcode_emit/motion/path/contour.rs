@@ -94,9 +94,8 @@ pub(super) fn segment(
     }
     let delta = extrusion::for_length(
         length,
-        properties.mm3_per_mm,
+        extrusion::effective_flow(properties, &state.options, state.on_first_layer),
         state.options.filament_flow_ratio,
-        state.options.print_flow_ratio,
         state.options.filament_area,
     ) * extrusion::small_area_multiplier(state, properties.feature, length)
         * ratio;

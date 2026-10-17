@@ -86,19 +86,11 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     } else {
         request.options.inner_wall_speed
     };
-    // `_mm3_per_mm` multiplies `scarf_joint_flow_ratio` into the cap for
-    // sloped paths (`GCode.cpp:6478-6480`), so the cap includes it here too.
-    let slope_flow_ratio = request
-        .properties
-        .slope
-        .map_or(1.0, |slope| slope.flow_ratio);
+    // First-layer paths returned above; share the complete effective flow.
     let reference_speed = if request.options.max_volumetric_speed > 0.0 {
         role_speed.min(
             request.options.max_volumetric_speed
-                / (request.properties.mm3_per_mm
-                    * request.options.print_flow_ratio
-                    * request.options.filament_flow_ratio
-                    * slope_flow_ratio),
+                / super::extrusion::effective_flow(request.properties, request.options, false),
         )
     } else {
         role_speed

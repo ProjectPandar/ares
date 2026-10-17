@@ -234,23 +234,14 @@ pub(super) fn flow_role(kind: RegionSurfaceKind, solid: bool) -> FillFlowRole {
 
 fn role_flow_ratio(context: &LayerContext<'_>, role: ExtrusionRole) -> f64 {
     let region = context.region;
-    let mut ratio = match role {
+    // Only the earlier, ungated roles remain pre-baked. GCode.cpp:6485-6507
+    // is owned by motion::extrusion::effective_flow for every entity family.
+    match role {
         ExtrusionRole::TopSolidInfill => region.top_solid_infill_flow_ratio.0,
         ExtrusionRole::BottomSurface => region.bottom_solid_infill_flow_ratio.0,
         ExtrusionRole::InternalBridgeInfill => region.internal_bridge_flow.0,
         _ => 1.0,
-    };
-    if context.object.set_other_flow_ratios.0 {
-        ratio *= match role {
-            ExtrusionRole::InternalInfill => region.sparse_infill_flow_ratio.0,
-            ExtrusionRole::SolidInfill => region.internal_solid_infill_flow_ratio.0,
-            _ => 1.0,
-        };
-        if context.planned.id == 0 {
-            ratio *= region.first_layer_flow_ratio.0;
-        }
     }
-    ratio
 }
 
 fn output_selector(region: &RegionOptions, role: ExtrusionRole, current: u32) -> u32 {

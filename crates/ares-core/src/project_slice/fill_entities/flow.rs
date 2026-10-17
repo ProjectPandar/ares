@@ -12,6 +12,7 @@ pub(in crate::project_slice) fn materialized_flow(
     } else {
         crate::project_slice::perimeters::flow::with_spacing(params.flow, spacing)?
     };
+    // Only earlier ungated fill roles are pre-baked; gated ratios belong to motion export.
     flow.mm3_per_mm *= params.flow_ratio;
     Ok(flow)
 }
