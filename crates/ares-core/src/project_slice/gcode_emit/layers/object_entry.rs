@@ -87,7 +87,15 @@ pub(super) fn emit(
             first_layer,
             |region: usize, motion: &mut motion::MotionOptions| {
                 let options = &regions[region].options;
-                motion.apply_region_outer_wall_speed(options);
+                // GCode.cpp:6136/6163 `m_config.apply(region.config())`:
+                // one region apply refreshes every region-scoped
+                // `MotionOptions` field before the phase emits.
+                motion.apply_region(
+                    &traversal.resolved.views.full.process.region,
+                    Some(options),
+                    traversal.resolved.views.runtime_gcode.travel_speed.0,
+                    motion.nozzle_diameter,
+                );
                 (
                     options.sparse_infill_density.0,
                     options.is_infill_first.0,
