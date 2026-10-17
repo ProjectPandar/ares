@@ -11,31 +11,6 @@ use super::{
 };
 use crate::options::project_config_views::ProjectConfigViews;
 use crate::project::raw_settings::ProjectSettingsRaw;
-/// Nullable filament extruder-override options
-/// (`PrintConfig.cpp:63-80`, `filament_extruder_override_keys`). Upstream
-/// serializes them from the full print config, whose vector is nil when the
-/// project never set a per-filament override, and the echo loop's `is_nil`
-/// filter (all values nil) then skips the key — a nil override never falls
-/// back to the resolved machine value in the echo block.
-const FILAMENT_EXTRUDER_OVERRIDE_KEYS: &[&str] = &[
-    "filament_retraction_length",
-    "filament_z_hop",
-    "filament_z_hop_types",
-    "filament_retract_lift_above",
-    "filament_retract_lift_below",
-    "filament_retract_lift_enforce",
-    "filament_retraction_speed",
-    "filament_deretraction_speed",
-    "filament_retract_restart_extra",
-    "filament_retraction_minimum_travel",
-    "filament_wipe_distance",
-    "filament_retract_when_changing_layer",
-    "filament_wipe",
-    "filament_retract_before_wipe",
-    "filament_long_retractions_when_cut",
-    "filament_retraction_distances_when_cut",
-];
-
 /// CLI-oracle export state the interactive `Print::apply` passes never
 /// observe (see `transform::apply_cli_oracle_state`).
 #[derive(Default)]
@@ -168,12 +143,7 @@ pub(crate) fn write_canonical_entries(
             emit(&mut lines, &entry.key, colour.token, false);
             continue;
         }
-        emit(
-            &mut lines,
-            &entry.key,
-            entry.token.clone(),
-            typed_entry_is_nil(entry, filament_count),
-        );
+        emit(&mut lines, &entry.key, entry.token.clone(), entry.is_nil);
     }
     for (key, token) in raw_settings.iter() {
         if matches!(key, "from" | "name" | "version") {
@@ -191,10 +161,7 @@ pub(crate) fn write_canonical_entries(
         }) {
             continue;
         }
-        if entries
-            .iter()
-            .any(|entry| entry.key == key && typed_entry_is_nil(entry, filament_count))
-        {
+        if entries.iter().any(|entry| entry.key == key && entry.is_nil) {
             // GCode.cpp:5632-5633: nil canonical options cannot be reinserted
             // by retained raw input after the type-owned echo filter.
             continue;
@@ -251,17 +218,6 @@ fn is_bbl_printer(views: &ProjectConfigViews) -> bool {
         .printer_model
         .0
         .starts_with("Bambu Lab")
-}
-
-fn typed_entry_is_nil(entry: &ConfigEntry, filament_count: usize) -> bool {
-    if !FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&entry.key.as_str()) {
-        return entry.is_nil;
-    }
-    entry
-        .token
-        .split(',')
-        .take(filament_count)
-        .all(|value| value == "nil" || value == "2147483647")
 }
 
 fn write_runtime_tail(

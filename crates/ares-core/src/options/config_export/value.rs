@@ -48,23 +48,51 @@ pub(crate) fn serialize_config_value<T>(
 where
     T: Serialize + ?Sized,
 {
-    value.serialize(ConfigValueSerializer::ordinary())
+    serialize_config_value_with_active_count(value, None)
+}
+
+pub(crate) fn serialize_config_value_with_active_count<T>(
+    value: &T,
+    active_count: Option<usize>,
+) -> Result<SerializedConfigValue, ConfigValueError>
+where
+    T: Serialize + ?Sized,
+{
+    value.serialize(ConfigValueSerializer::ordinary(active_count))
+}
+
+fn serialize_config_value_with_sequence_kind<T>(
+    value: &T,
+    sequence_kind: SequenceKind,
+) -> Result<SerializedConfigValue, ConfigValueError>
+where
+    T: Serialize + ?Sized,
+{
+    value.serialize(ConfigValueSerializer::with_sequence_kind(
+        sequence_kind,
+        None,
+    ))
 }
 
 #[derive(Clone, Copy)]
 struct ConfigValueSerializer {
     sequence_kind: SequenceKind,
+    active_count: Option<usize>,
 }
 
 impl ConfigValueSerializer {
-    const fn ordinary() -> Self {
+    const fn ordinary(active_count: Option<usize>) -> Self {
         Self {
             sequence_kind: SequenceKind::Ordinary,
+            active_count,
         }
     }
 
-    const fn with_sequence_kind(sequence_kind: SequenceKind) -> Self {
-        Self { sequence_kind }
+    const fn with_sequence_kind(sequence_kind: SequenceKind, active_count: Option<usize>) -> Self {
+        Self {
+            sequence_kind,
+            active_count,
+        }
     }
 }
 
@@ -92,6 +120,12 @@ impl Serializer for ConfigValueSerializer {
     }
 
     fn serialize_i32(self, value: i32) -> Result<Self::Ok, Self::Error> {
+        if matches!(self.sequence_kind, SequenceKind::Ints) && value == i32::MAX {
+            return Ok(SerializedConfigValue {
+                token: value.to_string(),
+                is_nil: true,
+            });
+        }
         Ok(token(value.to_string()))
     }
 
@@ -142,6 +176,12 @@ impl Serializer for ConfigValueSerializer {
     }
 
     fn serialize_str(self, value: &str) -> Result<Self::Ok, Self::Error> {
+        if matches!(self.sequence_kind, SequenceKind::Ints) && value == i32::MAX.to_string() {
+            return Ok(SerializedConfigValue {
+                token: value.to_owned(),
+                is_nil: true,
+            });
+        }
         Ok(token(escape_scalar_string(value)))
     }
 
@@ -196,19 +236,26 @@ impl Serializer for ConfigValueSerializer {
         T: Serialize + ?Sized,
     {
         match name {
-            CONFIG_OPTION_NUMERIC_VECTOR => {
-                value.serialize(Self::with_sequence_kind(SequenceKind::Numeric))
-            }
-            CONFIG_OPTION_INTS => value.serialize(Self::with_sequence_kind(SequenceKind::Ints)),
-            CONFIG_OPTION_STRINGS => {
-                value.serialize(Self::with_sequence_kind(SequenceKind::Strings))
-            }
-            CONFIG_OPTION_POINTS_GROUPS => {
-                value.serialize(Self::with_sequence_kind(SequenceKind::PointGroups))
-            }
-            CONFIG_OPTION_NULLABLE_VECTOR => {
-                value.serialize(Self::with_sequence_kind(SequenceKind::Nullable))
-            }
+            CONFIG_OPTION_NUMERIC_VECTOR => value.serialize(Self::with_sequence_kind(
+                SequenceKind::Numeric,
+                self.active_count,
+            )),
+            CONFIG_OPTION_INTS => value.serialize(Self::with_sequence_kind(
+                SequenceKind::Ints,
+                self.active_count,
+            )),
+            CONFIG_OPTION_STRINGS => value.serialize(Self::with_sequence_kind(
+                SequenceKind::Strings,
+                self.active_count,
+            )),
+            CONFIG_OPTION_POINTS_GROUPS => value.serialize(Self::with_sequence_kind(
+                SequenceKind::PointGroups,
+                self.active_count,
+            )),
+            CONFIG_OPTION_NULLABLE_VECTOR => value.serialize(Self::with_sequence_kind(
+                SequenceKind::Nullable,
+                self.active_count,
+            )),
             CONFIG_OPTION_NIL => Ok(SerializedConfigValue {
                 token: "nil".to_owned(),
                 is_nil: true,
@@ -233,7 +280,11 @@ impl Serializer for ConfigValueSerializer {
     }
 
     fn serialize_seq(self, length: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        Ok(ConfigSequence::new(self.sequence_kind, length))
+        Ok(ConfigSequence::new(
+            self.sequence_kind,
+            length,
+            self.active_count,
+        ))
     }
 
     fn serialize_tuple(self, length: usize) -> Result<Self::SerializeTuple, Self::Error> {
