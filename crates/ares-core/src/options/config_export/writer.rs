@@ -172,6 +172,24 @@ pub(crate) fn write_canonical_entries(
         let Some(rendered) = token else {
             continue;
         };
+        // Upstream loads every preset key into the config object and
+        // re-serializes it (`Config.cpp` `ConfigOptionFloat::serialize`)
+        // in the full-config block, so raw scalar Float preset echoes
+        // must go through the single typed float serialization
+        // (`format_number`) instead of the verbatim input spelling; a
+        // non-float token is invalid input, not a fallback echo.
+        // Vector Floats echoes keep the verbatim spelling until a RED
+        // freezes their class (nil/empty elements, separator) against
+        // upstream `ConfigOptionFloats::serialize`.
+        let rendered = match crate::options::registry::option_definition(key)
+            .map(|definition| definition.kind)
+        {
+            Some(Kind::Float) => rendered
+                .parse::<f64>()
+                .map(format_number)
+                .map_err(|_| invalid(format!("invalid Orca option {key}: expected a float")))?,
+            _ => rendered.to_owned(),
+        };
         let raw_is_nil =
             crate::options::registry::option_definition(key).is_some_and(|definition| {
                 use crate::options::registry::OptionValueKind as Kind;
