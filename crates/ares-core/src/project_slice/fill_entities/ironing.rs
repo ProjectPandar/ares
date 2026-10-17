@@ -192,9 +192,8 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                 input.scale,
             )?,
             // Zag classes inherit this Polylines path (FillRectilinear.hpp:193-224).
-            // make_ironing sets monotonic=true (Fill.cpp:1619-1621), so
-            // FillRectilinear.cpp:2874 is not reached; LockedZag's extrusion
-            // override is not called.
+            // Ironing is monotonic (Fill.cpp:1619-1621): FillRectilinear.cpp:2874
+            // is not reached; LockedZag's extrusion override is not called.
             ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::ZigZag
             | ProcessInfillPattern::CrossZag
