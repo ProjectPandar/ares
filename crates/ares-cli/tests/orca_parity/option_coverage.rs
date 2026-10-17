@@ -15,6 +15,8 @@ pub(crate) mod multiline_union;
 #[path = "option_coverage/interface_shells_alignment.rs"]
 mod interface_shells_alignment;
 
+#[path = "option_coverage/filament_override_range.rs"]
+mod filament_override_range;
 #[path = "option_coverage/hole_to_polyhole.rs"]
 mod hole_to_polyhole;
 #[path = "option_coverage/max_travel_detour_distance.rs"]

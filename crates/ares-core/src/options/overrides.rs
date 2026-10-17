@@ -212,27 +212,6 @@ fn validate_entry(key: &str, items: Vec<String>) -> Result<OverrideValue, SliceE
     })
 }
 
-/// Port of `ConfigOptionDef::is_value_valid` (`Config.cpp:321-337`): NaN is
-/// only valid for nullable options; a `min == 0` bound rejects negative
-/// input; values within `10^-4` of either bound count as equal; otherwise
-/// the value must satisfy `min <= value <= max`. Upstream unset bounds are
-/// `-FLT_MAX`/`FLT_MAX`.
-fn is_value_valid(metadata: &super::registry::OptionMetadata, value: f64) -> bool {
-    if value.is_nan() {
-        return metadata.nullable;
-    }
-    let min = metadata.min.unwrap_or(-f32::MAX as f64);
-    let max = metadata.max.unwrap_or(f32::MAX as f64);
-    if min == 0.0 && value < 0.0 {
-        return false;
-    }
-    let epsilon = 0.1f64.powi(4);
-    if (value - min).abs() <= epsilon || (value - max).abs() <= epsilon {
-        return true;
-    }
-    min <= value && value <= max
-}
-
 fn validate_numeric_range(
     key: &str,
     kind: OptionValueKind,
@@ -288,13 +267,15 @@ fn validate_numeric_range(
         let parsed: f64 = number
             .parse()
             .map_err(|_| invalid(key, "numeric option expects a number"))?;
-        if !is_value_valid(metadata, parsed) {
-            // Upstream reports `serialize() + " not in range [min,max]"`
-            // (`PrintConfig.cpp:10561`).
-            let min = metadata.min.unwrap_or(-f32::MAX as f64);
-            let max = metadata.max.unwrap_or(f32::MAX as f64);
-            return Err(invalid(key, &format!("{token} not in range [{min},{max}]")));
-        }
+        // No min/max check here: `ConfigBase::set_deserialize`
+        // (`Config.cpp:591-620`) carries no range validation at all —
+        // upstream's only numeric gate is `Slic3r::validate` over
+        // `FullPrintConfig` (`PrintConfig.cpp:10515-10565`), which the
+        // loaded-config path runs after `overrides.apply` (load.rs →
+        // profile_entry.rs). Range rejections therefore surface once,
+        // with the upstream `not in range [min,max]` map entry, and the
+        // dynamic `filament_extruder_override_keys` exemption applies
+        // there exactly as upstream `fpc.apply` dictates.
         if retain_cli_numbers {
             cli_numbers.push(parsed);
         }
