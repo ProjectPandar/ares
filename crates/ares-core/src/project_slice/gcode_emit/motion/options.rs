@@ -167,5 +167,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) seam_position: crate::ProcessSeamPosition,
     pub(in crate::project_slice::gcode_emit) reduce_crossing_wall: bool,
     pub(in crate::project_slice::gcode_emit) crossing_boundary_inset: f64,
+    /// `max_travel_detour_distance` (`PrintConfig.hpp:1489`), consumed by
+    /// `AvoidCrossingPerimeters::travel_to`
+    /// (`AvoidCrossingPerimeters.cpp:1291-1302`).
+    pub(in crate::project_slice::gcode_emit) max_travel_detour_distance: FloatOrPercent,
     pub(in crate::project_slice::gcode_emit) scarf: ScarfOptions,
 }

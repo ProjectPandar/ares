@@ -9,7 +9,7 @@ mod safe_zone;
 #[cfg(test)]
 mod tests;
 
-use crate::project_slice::gcode_emit::motion::arc;
+use crate::{options::FloatOrPercent, project_slice::gcode_emit::motion::arc};
 
 /// `init_layer`'s safe zone and lazily initialized `m_internal` boundary.
 #[derive(Clone)]
@@ -33,6 +33,10 @@ pub(super) struct Request<'a> {
     /// `m_use_external_mp_once` — route along the chunk-wide hole boundary
     /// (`AvoidCrossingPerimeters.cpp:1553-1556`).
     pub(super) use_external: bool,
+    /// `print.max_travel_detour_distance` — detour cap consumed at
+    /// `AvoidCrossingPerimeters.cpp:1291-1302`. `Float(0)`/non-positive
+    /// disables the cap (`opt.value > 0` gate).
+    pub(super) max_detour: FloatOrPercent,
 }
 
 /// Initialize the layer safe zone; routing geometry is built only after a
@@ -70,6 +74,7 @@ pub(super) fn route(
         inset: _,
         after_skirt: _,
         use_external,
+        max_detour,
     } = request;
     let boundary = boundary?;
     let scale = geometry.scale;
@@ -151,8 +156,28 @@ pub(super) fn route(
     } else {
         boundary.internal.as_ref()?
     };
-    let (path, _intersections) =
+    let (mut path, _intersections) =
         router::avoid_perimeters(boundary, scaled_start, scaled_end).ok()?;
+    // Upstream restores the original endpoints before measuring and
+    // emitting (`result_pl.points.front() = start`, `back() = end` at
+    // `AvoidCrossingPerimeters.cpp:1261-1262` and `:1278-1279`).
+    if let Some(first) = path.first_mut() {
+        *first = scaled_start;
+    }
+    if let Some(last) = path.last_mut() {
+        *last = scaled_end;
+    }
+    // `AvoidCrossingPerimeters.cpp:1291-1302`: when
+    // `max_travel_detour_distance > 0` and the routed detour
+    // (`result_pl.length() - direct_pl.length()`, scaled coord units)
+    // exceeds the cap — `percent ? direct*0.01*value : scale_(value)` —
+    // the route collapses to `{start, end}` and upstream also forces
+    // `could_be_wipe_disabled = false`; that flag's only consumer
+    // (`GCode.cpp:7435-7437`) is commented out, so the observable effect
+    // is the straight travel.
+    if detour_cap_exceeded(&path, scaled_start, scaled_end, max_detour, scale.factor()) {
+        return Some(Vec::new());
+    }
     let mut output = Vec::with_capacity(path.len());
     // Upstream restores the original endpoints after routing (which may nudge
     // them), then emits each interior point, even if formatting rounds two
@@ -166,6 +191,36 @@ pub(super) fn route(
         });
     }
     Some(output)
+}
+
+/// Verbatim port of the `travel_to` detour cap
+/// (`AvoidCrossingPerimeters.cpp:1291-1302`): computes in scaled coord
+/// units like upstream (`Polyline::length`); the mm branch uses
+/// `scale_(v)` = `v / factor` (`libslic3r.h:134-139`), percent uses
+/// `direct_length * 0.01 * value` — including the upstream quirk that
+/// percent treats the number itself as the percentage ("10%" -> 10).
+fn detour_cap_exceeded(
+    path: &[crate::geometry::Point],
+    start: crate::geometry::Point,
+    end: crate::geometry::Point,
+    opt: FloatOrPercent,
+    factor: f64,
+) -> bool {
+    let direct = hypot_between(start, end);
+    let cap = match opt {
+        FloatOrPercent::Percent(value) if value.0 > 0.0 => direct * 0.01 * value.0,
+        FloatOrPercent::Float(value) if value > 0.0 => value / factor,
+        _ => return false,
+    };
+    let routed = path
+        .windows(2)
+        .map(|points| hypot_between(points[0], points[1]))
+        .sum::<f64>();
+    routed - direct > cap
+}
+
+fn hypot_between(a: crate::geometry::Point, b: crate::geometry::Point) -> f64 {
+    ((a.x() - b.x()) as f64).hypot((a.y() - b.y()) as f64)
 }
 
 fn detour_emission_ready() -> bool {

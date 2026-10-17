@@ -33,6 +33,8 @@ pub(in crate::project_slice::gcode_emit) fn route(request: Request<'_>) -> Vec<a
         inset,
         after_skirt,
         use_external: _,
+        // The temporary rectangle shell never applies the detour cap.
+        max_detour: _,
     } = request;
     let Some(rect) = rectangle(&geometry, offset, inset) else {
         return Vec::new();

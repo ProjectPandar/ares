@@ -40,6 +40,7 @@ fn request(geometry: LayerGeometry<'_>) -> Request<'_> {
         offset: (160.0, 175.0),
         inset: 0.284_932_5,
         use_external: false,
+        max_detour: FloatOrPercent::Float(0.0),
         after_skirt: false,
     }
 }

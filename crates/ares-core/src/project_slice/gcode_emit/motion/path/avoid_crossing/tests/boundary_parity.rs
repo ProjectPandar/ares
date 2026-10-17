@@ -172,6 +172,7 @@ fn assert_route(start: (i64, i64), end: (i64, i64), expected: &[(i64, i64)]) {
             inset: 0.0,
             after_skirt: false,
             use_external: false,
+            max_detour: FloatOrPercent::Float(0.0),
         },
         Some(&mut boundary),
     )
