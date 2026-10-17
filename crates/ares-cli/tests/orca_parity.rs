@@ -129,6 +129,9 @@ mod cli_retained_input;
 mod cli_sequential_clearance;
 #[path = "orca_parity/cli_upward_machine_result.rs"]
 mod cli_upward_machine_result;
+#[path = "orca_parity/gated_role_flow.rs"]
+mod gated_role_flow;
+
 #[path = "orca_parity/filament_flow_admission.rs"]
 mod filament_flow_admission;
 #[path = "orca_parity/firmware_zero_layer_lift.rs"]
