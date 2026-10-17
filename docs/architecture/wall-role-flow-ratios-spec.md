@@ -1,172 +1,223 @@
-# SPEC RR: gated outer/inner wall flow ratios
+# SPEC RR: complete gated role-flow block
 
-Status: **SPEC-REVIEW-REQUEST, Native discovery complete; no public RED or
-production implementation yet.** Assigned TOP2 only. Base is merged main
-`445648072103587a9d60d85f1c4fb4425056ae18` (stack-27, FULL27 1636/1636
-in both modes); branch `worker1/wall-flow-discovery-spec`. The original spec
-`0f3a80484ca595dc56d1675c9ab8cd8f5993e8cb` is preserved at
-`worker1/wall-flow-spec-pre-stack27`. It rebased cleanly; coordinator owns
-integration. Fresh exact-hash evidence is required before renewed RR.
+Status: **REVISED SPEC-REVIEW-REQUEST; supersedes rejected narrow spec
+fffecfa38. No public RED or production implementation yet.** Base: merged
+main `445648072103587a9d60d85f1c4fb4425056ae18` (stack-27, FULL27
+1636/1636 both modes). Branch: `worker1/wall-flow-discovery-spec`.
+Original pre-rebase spec is preserved at `worker1/wall-flow-spec-pre-stack27`.
+Coordinator owns integration; rebase only on announced advances and refresh
+exact-hash evidence before RR. Interlocking remains shelved/W6; junction
+deviation remains queued. Neither belongs to this slice.
 
-## Owning upstream rewrite boundary
+## Owning upstream boundary: one block, not two independent features
 
-Pinned OrcaSlicer source: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-All upstream paths below are under `OrcaSlicer/src/libslic3r/`.
+Pinned source: `8500fcdccaa10b5099ac20d252af3a7c560046f1`. All upstream
+paths below are under `OrcaSlicer/src/libslic3r/`.
 
-- `PrintConfig.hpp::PrintObjectConfig` owns `set_other_flow_ratios`;
-  `PrintRegionConfig` owns `outer_wall_flow_ratio` / `inner_wall_flow_ratio`.
-  `PrintConfig.cpp:1387-1394,1404-1422` defines the boolean gate (false) and
-  floating role ratios (1). Existing Ares typed parsing is not the missing port.
-- `GCode.cpp:6485-6489`, inside `GCode::_extrude`, applies the outer ratio only
-  to `erExternalPerimeter`, the inner ratio only to `erPerimeter`, and neither
-  when `m_config.set_other_flow_ratios` is false. Overhang perimeter is a
-  distinct next branch, **not** an outer/inner wall alias.
-- Context matters: `GCode.cpp:6469-6471,6485-6515` forms effective volumetric
-  flow from geometric flow, print flow, filament flow and gated role flow,
-  then computes E. `:6504-6506` is the separate first-layer multiplier; it is
-  already 1 in these witnesses, not an extra feature to activate here.
-- The effective flow also feeds the existing speed/volumetric lifecycle
-  (`GCode.cpp:6554-6562` and following consumers), not merely the final E word.
-  Region config is re-applied before entities (`GCode.cpp:6136,6163`).
+The port unit is **the entire `GCode.cpp:6485-6507` block in
+`GCode::_extrude`**: eight mutually exclusive role branches plus the subsequent
+first-layer rule, all inside the **same** `set_other_flow_ratios` gate.
+`PrintConfig.hpp::PrintObjectConfig` owns gate/support ratios;
+`PrintRegionConfig` owns the remaining ratios. Existing typed parsing is
+not the missing port. Definitions/defaults are in `PrintConfig.cpp:1387-1482`:
+gate=false, each multiplier=1.
 
-This is a two-branch Rust rewrite of the cited `_extrude` consumer, not a new
-Ares flow engine, geometry generator, configuration policy or estimator.
+Normative control flow, translated from those exact lines:
 
-## Rust destination and non-negotiable architecture
+```text
+if set_other_flow_ratios {
+    if role == erExternalPerimeter         { effective *= outer_wall_flow_ratio }
+    else if role == erPerimeter            { effective *= inner_wall_flow_ratio }
+    else if role == erOverhangPerimeter    { effective *= overhang_flow_ratio }
+    else if role == erInternalInfill       { effective *= sparse_infill_flow_ratio }
+    else if role == erSolidInfill          { effective *= internal_solid_infill_flow_ratio }
+    else if role == erGapFill              { effective *= gap_fill_flow_ratio }
+    else if role == erSupportMaterial      { effective *= support_flow_ratio }
+    else if role == erSupportMaterialInterface { effective *= support_interface_flow_ratio }
+    if on_first_layer && role != erBrim && role != erSkirt {
+        effective *= first_layer_flow_ratio
+    }
+}
+```
 
-Existing parsed values are in `options/object_fields.rs` (gate) and
-`options/region_fields.rs` (ratios), through their process source types.
-The production `project_slice` emission path does not read these two ratio
-fields. Old helpers in `options/flow_ratios.rs` / `extrusions/options*` are
-not a second pipeline to switch to or a fallback.
+Roles not matched in the eight-way chain get no role multiplier, **but still
+get the first-layer multiplier** when eligible. Do not broaden support to
+`erSupportTransition` (the upstream comment asks a question, not permission),
+or treat overhang as outer/inner. Preserve brim/skirt exceptions. The first
+layer predicate is `GCode.hpp:670`: non-null current layer, id=0, bottom Z
+within EPSILON, not merely the first emitted object layer.
 
-The exact prospective destination is the existing
-`project_slice/gcode_emit/motion/` lifecycle:
+`GCode.cpp:6469-6471` first forms geometric flow * print flow, then filament
+flow. Existing earlier role/scarf adjustments at `:6473-6483` precede this
+block. The block's role multiply precedes its first-layer multiply. E conversion
+at `:6512-6513`, speed/volumetric consumers at `:6554+`, cooling annotations,
+and writer state must see the same effective flow. A final E-word-only patch,
+reordered arithmetic, or double application is not a faithful port.
 
-1. `options.rs::MotionOptions` and `options/build/fields/assemble.rs` resolve
-   the **owning object's** gate, using the existing resolved-object/default
-   machinery. `options/build/region.rs::apply` refreshes the two ratios from
-   the current resolved region, just as it refreshes print flow and speeds.
-   Do not capture only the first region or invent a parallel config lookup.
-2. `materialized.rs::emit_with_speed` already distinguishes
-   `ExternalPerimeter` / `Perimeter` / `OverhangPerimeter` and constructs
-   `features.rs::PathProperties` from the emitted path. Reuse this handoff
-   and the existing path flow preparation; do not alter nominal geometry,
-   widths, fitting, seam clipping, or entity topology to encode a multiplier.
-3. `path.rs`, `path/constant.rs`, `path/variable.rs`, and
-   `extrusion.rs::for_length` are the existing downstream flow/E consumers.
-   Apply the selected ratio once, at the owning effective-flow boundary so
-   the speed, volumetric/cooling metadata and E calculations agree. Preserve
-   the upstream arithmetic order and existing print/filament cancellation;
-   a final E-only multiply, double application, or unrelated arithmetic
-   rewrite is not acceptable. Any needed factoring stays inside this
-   lifecycle, not a new pipeline or estimator repair.
+## Existing Ares first-layer audit and exact Rust destination
 
-These Ares emission structs are temporary compatibility shells around
-`GCode::_extrude` / writer concepts. This slice adds their missing consumer;
-it does not rename them into an Ares-owned architectural abstraction.
-No new parameters, clamps, guards, flags, fallback, or shared-parser changes.
-Changed Rust files must remain below 400 LOC. **Do not touch ironing.rs**;
-owner requires a separately verified mechanical split first if later needed.
+The audit did **not** find a global ungated first-layer application in the
+public project-slicing path. Current `project_slice/group_fills/params/
+projection.rs:235-253::role_flow_ratio` puts sparse, internal-solid and
+first-layer multipliers inside `context.object.set_other_flow_ratios.0`.
+First-layer there is checked using planned id=0. `fill_entities/flow.rs:15`
+and `concentric.rs:135` pre-bake that product into fill flow. This is a
+partial, geometry-side shell around the upstream emission concept, not the
+complete block. `motion/materialized.rs:50` and `motion/support.rs:116,210`
+forward nominal path/support flow without the missing role/first-layer rules.
+Thus the observed first-layer gap is **missing wall/support/etc. coverage and
+split ownership**, not evidence to assert an ungated bug that was not found.
 
-## Completed Native-first discovery
+Legacy `extrusions/options/accessors.rs:154-170` has no gate argument, but
+`options/flow_ratios.rs:208-229` installs non-unit role/first-layer options
+only with gate=true. It is not this project_slice consumer. Do not switch
+to that pipeline or invent a fallback to reuse it.
 
-Original discovery root: `/tmp/ares-w1-wall-flow-discovery-b3251d537/`;
-original exact-spec validation: `/tmp/ares-w1-wall-flow-spec-0f3a80484/`.
-Both are retained as **PRE-REBASE NON-GATE evidence** for this new RR.
-Authoritative refreshed evidence root: `/tmp/ares-w1-wall-flow-spec-stack27/`.
-Review it only after reruns complete and `spec-review-audit.json` records the
-current clean committed HEAD. `native_probe.py`, `native-report.json`,
-`native-probe.log`, `canonical.sh`, `inputs/manifest.json`, raw official/seeded
-outputs, launch receipts and actual Native ELF/all-thread affinity samples
-are retained. The fixture hashes and Native observations below are unchanged
-requirements to verify again at the rebased hash, not carried-over gates.
+Port the complete block into the **existing**
+`project_slice/gcode_emit/motion/` lifecycle, preserving these boundaries:
 
-Four frozen input-only archives share every non-config ZIP member byte.
-They use the previously audited closed 10 x 10 x 1 mm box, Classic walls,
-two wall loops, 0.2 mm layers, no scarf/arc fitting/spiral/ironing/tower.
-Print flow and first-layer flow are 1; filament flow stays 0.98. No setting
-other than the listed project configuration changes between cases.
+1. `options.rs::MotionOptions`, `options/build/fields/assemble.rs`, and
+   `options/build/region.rs::apply` resolve the owning object's gate/support
+   ratios and current region's remaining ratios. Reuse resolved-object
+   defaults and the existing region refresh, matching config apply before
+   entities (`GCode.cpp:6136,6163`). No first-region snapshot or duplicate
+   independent config path.
+2. Existing `features.rs::PathProperties`, materialized/fill/support/skirt/
+   brim handoffs and `path.rs` feed the owning motion consumer. Select the
+   exact role from existing role vocabulary, apply **all eight branches**
+   and the gated first-layer rule at one effective-flow boundary shared by
+   E, volumetric speed and cooling metadata. Reuse the existing
+   `EmitState::on_first_layer` lifecycle; do not introduce another producer.
+3. `extrusion.rs::for_length`, `path/constant.rs`, `path/variable.rs` and
+   existing writer paths must receive that same flow. Keep nominal geometry,
+   widths, point order, fitting, seam clipping and support generation intact.
+   Do not modify estimators to hide mismatched flow-derived bytes.
+4. Retire the **gated-block contribution only** from the earlier fill
+   pre-baking when centralizing it, or otherwise prove there is precisely one
+   application with upstream arithmetic order. Preserve pre-existing top/
+   bottom/internal-bridge flow behavior outside this block. Do not stack new
+   emission multipliers on the old sparse/solid/first-layer pre-baked values.
+   Any grouping/parameter changes needed to preserve ownership must be
+   source-cited and reviewed before implementation; no silent coalescing drift.
 
-| Input | Gate | Outer | Inner | Observed Native activity in each mode |
-|---|---:|---:|---:|---|
-| `unit-control` | 1 | 1 | 1 | 5 positive model layers, 224 positive moves; 20 outer + 20 inner |
-| `outer075-active` | 1 | 0.75 | 1 | 20 corresponding outer E words change; e.g. `.29437` to `.22078` |
-| `inner065-active` | 1 | 1 | 0.65 | 20 corresponding inner E words change; e.g. `.26856` to `.17456` |
-| `gate-off-both` | 0 | 0.75 | 0.65 | All 224 positive moves and complete pre-config body equal unit-control |
+These Ares structs are temporary compatibility shells around `_extrude` and
+writer concepts, not a new Ares flow engine. No new algorithms, parameters,
+clamps, guards, flags, parser relaxation or fallback. Existing files near the
+limit (`path.rs` 386, projection.rs 383 LOC) must stay below 400; mechanically
+split first if necessary. **Do not touch ironing.rs (399 LOC)** without its
+separately verified required split.
 
-All cases retain the effective gate/ratios in Native's emitted config. The
-active cases change actual extrusion, not just configuration text. Ordered
-positive XY geometry/roles remain the same. The inner case additionally
-changes real feedrate (`G1 F892` to `G1 F891`); do not suppress that difference
-or assume that a flow fix affects only E.
+## Completed whole-block Native discovery
 
-**16/16 Native slices succeeded:** four inputs x official/seeded x two
-independent processes. Fresh serial roots/caches, canonical environment,
-seeded CPU18, and actual Native descendants/all sampled threads on CPU18.
-Complete repeats and cross-mode output are equal after only generator
-identity/timestamp normalization, retaining config, M73, statistics and order.
-Paired pre-config/command comparisons above are discovery diagnostics, not
-an alternative public parity comparator. No Ares API/CLI was run in this
-Native-only discovery, so no public RED or control PASS is claimed yet.
+Discovery root: `/tmp/ares-w1-gated-flow-discovery-v2-fffecfa38/`.
+Exact-final-spec rerun root: `/tmp/ares-w1-gated-flow-spec-reviewed-scope/`.
+Only the latter's completed `spec-review-audit.json` at the exact clean new
+commit is authoritative for renewed RR; earlier hashes are discovery, not
+new-hash gates. Both retain scripts, manifest, raw outputs, launch receipts,
+actual Native ELF/all-thread affinity, repeat and activity audits.
 
-Frozen archive SHA256 (full per-member hashes in the input manifest):
+**Every one of the eight roles has an achievable simple Native-active
+witness**, including overhang. No unwitnessed role is proposed for porting.
+Three closed, connected, oppositely edge-paired genus-0 meshes, positive signed
+volume, are built from the existing input-only 3MF shell: 20x20x4 mm box;
+1.3x20x4 mm thin prism for gap fill; 30x10x4 mm T-shaped overhang with support.
+`geometry-manifest.json` records vertices, triangles, edge/Euler/volume/bounds.
+Each pair differs only in project settings; all non-config ZIP members match.
+Classic, 0.2 mm layers, two walls, no scarf/arc/spiral/ironing/tower; explicit
+20% rectilinear sparse infill. Print/first-layer flow=1 except named first
+legs; retained filament flow=0.98. Support uses the existing normal-auto
+configuration. First-layer cases have **positive skirt and brim** to test
+both exceptions, not just their absence.
 
-- unit: `d838bbdc267eb3b0c83c519a34dea3328e1ea8f8e28c6d37bc6bb27ffa71e270`
-- outer: `481fc3239c14b8df6284576e8ead9029d80adc1f81f1a70b8e9fe55464708c00`
-- inner: `e3ea859cd40f53dddd8979c5a97823813289446c7aa758dacc64c35d329a0697`
-- gate off: `f4c42d79c667cd857fa9b332b9a148234dfb844f01d4147f50586e40ef099165`
+| Case / ratio | Unit control | Native-positive target-role moves, all changed |
+|---|---|---:|
+| outer 0.75 | box-unit | 80 Outer wall |
+| inner 0.65 | box-unit | 80 Inner wall |
+| sparse 0.70 | box-unit | 396 Sparse infill |
+| internal solid 0.60 | box-unit | 258 Internal solid infill |
+| gap fill 0.70 | gap-unit | 20 Gap infill |
+| support 0.70 | support-unit | 507 Support |
+| support interface 0.65 | support-unit | 312 Support interface |
+| overhang 0.70 | support-unit | 12 Overhang wall |
+| first-layer 0.55, gate on | first-unit | 33 first-layer moves: 4 outer + 4 inner + 25 sparse |
+| first-layer 0.55, gate off | first-unit | 0 changes; complete pre-config body identical |
+| all ratios non-unit, gate off | box-unit | 0 changes; complete pre-config body identical |
 
-## Proposed public RED, only after SPEC approval
+The four unit controls plus eleven target/control legs make **15 inputs**.
+The eight role targets change all corresponding positive E moves and **no
+other positive role moves**; ordered XYZ, roles and layers are unchanged.
+First-layer gate-on changes every eligible first-layer move, no later moves;
+33 positive skirt and 101 positive brim moves stay unchanged. Both gate-off
+legs retain the non-unit settings in config and keep the complete body equal
+to their units. Genuine feedrate/M73/statistics changes are retained.
 
-Freeze these exact input-only archives/manifests into the existing parity
-fixture layout; never commit Native outputs. Add a bounded public E2E module
-with three assigned legs (outer, inner, gate-off) plus the unit control.
-Native succeeds first, retains settings and exhibits the positive activity
-above. Then require byte-in public API **and real CLI success**, raw API=CLI,
-and the unchanged `golden::compare_ordered_bytes_generator_only` against
-Native for the **same input**. No paired-input substitution.
+Completed discovery: **60/60 successful Native slices** = 15 inputs x
+2 modes x 2 independent processes, fresh serial roots/caches, canonical env,
+seeded CPU18, actual Native ELF and all sampled descendant threads CPU18.
+Complete repeats/cross-mode outputs match after only generator identity/
+timestamp normalization, retaining config/M73/statistics/order. Discovery
+paired-body/positive comparisons prove activation; they never substitute
+for public same-input whole-stream parity.
 
-Expected baseline outcome per mode: **two genuine full-output FAILs** (outer
-and inner) and **two whole-output PASSes** (unit and gate-off). This is an
-expectation to verify, not a discovery result. Unsupported-feature rejection
-must fail the success assertion, never count as a passing RED. Preserve any
-unexpected rejection, control mismatch or other blocker and stop for review;
-do not broaden production scope or manufacture the expected failure.
+The initial 0%-sparse attempt is preserved as **SPARSE-INACTIVE NON-GATE** at
+`/tmp/ares-w1-gated-flow-discovery-fffecfa38/`; it was a fixture fault, not
+proof of equivalence. Corrected v2 explicitly activates sparse infill. All
+archive/member/geometry hashes and per-key retained settings are audited.
+No Ares API/CLI or public RED has been run for this revised slice yet.
 
-The control with both non-unit ratios proves gate-off inactivity. The unit
-control guards neutral enabled behavior. Record actual first mismatch,
-errors/exits, positive Native/API activity, raw outputs/hashes, complete
-Native repeat determinism, config retention, and actual CLI descendants and
-all threads (do not mistake a wrapper or missed short process for evidence).
+## Proposed public E2E RED, only after SPEC approval
 
-Serial official and seeded, CPU18, jobs2/nextest threads2, fresh official/
-seeded artifacts and caches, required Native/all canonical references.
-No full/workspace run, push or merge. After independent exact clean committed
-RED review and owner approval only, implement the minimal owning consumer.
-GREEN requires all four full comparisons in both modes, raw API=CLI, retained
-control bytes, targeted related wall/flow cases and fmt/strict clippy/WASM
-checks on the exact clean committed hash. No comparator edits, body/config/
-M73 filtering, tolerances, sorting, estimator changes or fabricated differences.
+Freeze the exact 15 v2 input-only archives and complete manifests into the
+existing parity layout; never commit Native outputs. For **each** role leg,
+first prove the Native activity above, then require public byte-in API and
+**real CLI success**, raw API=CLI, and unchanged
+`golden::compare_ordered_bytes_generator_only` against Native for the **same
+input**. Include first-layer gate on/off, all-ratios gate-off and all four
+unit controls. Raw API rejection or CLI failure must fail the success
+assertion, never be recast as equivalent rejection.
 
-## Included / deferred / RR gate
+Record genuine mismatch/error/exit per leg in both official and seeded
+modes. Sparse/internal-solid already have partial consumers, so they may
+PASS; report that honestly as existing behavior/regression coverage, not a
+fabricated RED. First-layer gate-off may also PASS. **Do not implement a
+behavioral change for any role lacking an authentic public RED**; if a
+Native-active leg already passes, preserve it byte-for-byte through any
+separately justified mechanical consolidation. If existing implementation
+fully covers the block, STOP NO-RED rather than manufacture a failure.
 
-Included: the shared `_extrude` role consumer for `erExternalPerimeter` and
-`erPerimeter`, unit behavior and gate-off inactivity in the existing object/
-region lifecycle. The bounded E2E witness is ordinary Classic, not permission
-for a Classic-only bypass of the upstream role rule. No independent geometry
-or pipeline work.
+If an authentic RED is blocked by a fixture/geometry/support preparation
+fault outside this block, preserve the fault as NON-GATE, cite the owning
+source and obtain a revised approved boundary. No port of an unwitnessed
+role, no suppression or silently shortened two-role implementation. Any
+future proposed additional role requires its own Native-first RED evidence.
 
-Deferred as separate source-cited witnesses/slices: overhang/gap/support role
-ratios; first-layer/other-role expansion; specialized Arachne/scarf/arc/spiral
-and non-unit print-flow composition E2Es; multi-region/object override E2Es;
-multifilament, support, raft and tower. Deferred E2E coverage is not an
-exemption from the shared role/gate semantics. Preserve adjacent algorithms
-and unchanged parameters; do not repair unrelated gaps as a side effect.
-If shared wiring requires a broader change, stop and amend scope before
-implementation rather than adding a fallback.
+After independent exact-clean-committed RED approval only: implement the
+whole block in the owning lifecycle. GREEN requires all 15 same-input full
+comparisons in both modes, raw API=CLI, retained control and already-passing
+role bytes, unchanged geometry, no duplicate sparse/solid/first-layer factors,
+and actual API flow activity consistent with Native. Preserve complete
+Native repeats and real process/thread affinity receipts.
 
-TOP1 interlocking is shelved because it overlaps W6; TOP3 junction deviation
-is queued, not part of this spec. Request independent SPEC review and owner
-choice/approval before public RED. Independent RED approval remains a
-separate mandatory gate before production GREEN.
+CPU18, jobs2/nextest threads2, targeted runs only; serial official/seeded,
+fresh caches/artifacts, required Native and all canonical references. Exact
+hash fmt, strict core+CLI all-target clippy and WASM checks accompany runtime
+RED/GREEN review. No full/workspace/push/merge. No comparator changes, body/
+config/M73 filtering, tolerances, sorting, estimator repair, or paired input
+substitution. Coordinator owns integration.
+
+## Included / deferred and approval boundary
+
+Included: all eight role branches, first-layer inside the same gate, exact
+brim/skirt exceptions, current object/region ownership, arithmetic order,
+and existing flow-derived motion consumers. The full block is the port unit;
+the earlier two-role scope is explicitly rejected.
+
+Deferred: unrelated earlier flow/scarf/top/bottom/bridge behavior changes,
+new geometry/support algorithms, additional multifilament/raft/tower/
+Arachne/scarf/arc/spiral composition witnesses, and non-unit print-flow
+composition coverage. Deferred coverage is **not** an exemption from the
+shared role/gate semantics. No role algorithm should be redesigned to make
+this slice pass. Unanticipated ownership changes require an amendment.
+
+Request independent revised SPEC review; wait for owner approval before
+public RED, and independent RED approval before production GREEN.
