@@ -31,7 +31,7 @@ pub(in crate::project_slice) fn configured(
 /// spacing. The region order is the get_create_region order from
 /// PrintApply.cpp:1000-1012.
 pub(in crate::project_slice) fn object_configured(
-    regions: &[RegionOptions],
+    regions: &[&RegionOptions],
     nozzles: &OrcaFloats,
     kind: ProcessInfillPattern,
     active_region_ids: &[usize],
@@ -44,7 +44,7 @@ pub(in crate::project_slice) fn object_configured(
                 && region.sparse_infill_pattern == kind
                 && region.sparse_infill_density.0 > 0.0
         })
-        .map(|(_, region)| region)
+        .map(|(_, region)| *region)
         .collect();
     if contributing.is_empty() {
         return 0.0;
@@ -60,11 +60,6 @@ pub(in crate::project_slice) fn object_configured(
         .sum::<f64>()
         / contributing.len() as f64;
     let multiline = regions.first().map_or(1, |region| region.fill_multiline.0);
-    let width = if width == 0.0 {
-        f64::from(1.125_f32 * nozzles.0.iter().map(|value| value.0).fold(0.0, f64::max) as f32)
-    } else {
-        width
-    };
     width / ((density / 100.0) * f64::from(0.333_333_34_f32)) * f64::from(multiline)
 }
 

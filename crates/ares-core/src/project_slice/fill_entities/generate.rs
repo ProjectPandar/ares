@@ -170,11 +170,11 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 pattern
                 @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
             ) => {
-                let line_spacing = match pattern {
-                    ProcessInfillPattern::AdaptiveCubic => adaptive_spacing,
-                    ProcessInfillPattern::SupportCubic => support_spacing,
-                    _ => unreachable!("adaptive arm only handles adaptive patterns"),
-                };
+                let line_spacing = super::adaptive::ObjectSpacing {
+                    adaptive: adaptive_spacing,
+                    support: support_spacing,
+                }
+                .for_pattern(pattern);
                 super::adaptive::append(
                     &mut output,
                     fill,

@@ -21,6 +21,16 @@ pub(in crate::project_slice) struct ObjectSpacing {
     pub(in crate::project_slice) support: f64,
 }
 
+impl ObjectSpacing {
+    pub(in crate::project_slice) fn for_pattern(self, pattern: ProcessInfillPattern) -> f64 {
+        match pattern {
+            ProcessInfillPattern::AdaptiveCubic => self.adaptive,
+            ProcessInfillPattern::SupportCubic => self.support,
+            _ => unreachable!("spacing is only defined for adaptive patterns"),
+        }
+    }
+}
+
 pub(in crate::project_slice) fn object_spacings(
     traversal: &PreparedPostClassicTraversal,
     prelude: &PostPerimeterInputPrintObject,
@@ -28,22 +38,21 @@ pub(in crate::project_slice) fn object_spacings(
     layer_count: usize,
 ) -> ObjectSpacing {
     let active = active_region_ids(prelude, records, layer_count);
-    let resolved = traversal
-        .resolved
-        .objects
+    let (_, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
+    let region_options = regions
         .iter()
-        .find(|object| object.source_object_index == prelude.identity().0)
-        .expect("adaptive spacing retains its resolved object");
+        .map(|region| region.as_parts().1)
+        .collect::<Vec<_>>();
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
     ObjectSpacing {
         adaptive: super::line_spacing::object_configured(
-            &resolved.all_regions,
+            &region_options,
             nozzles,
             ProcessInfillPattern::AdaptiveCubic,
             &active,
         ),
         support: super::line_spacing::object_configured(
-            &resolved.all_regions,
+            &region_options,
             nozzles,
             ProcessInfillPattern::SupportCubic,
             &active,
@@ -94,19 +103,11 @@ pub(in crate::project_slice) fn prepare_support(context: SupportPreparation<'_>)
         prelude,
         spacing,
     } = context;
-    let (plan, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
-    let mut contributing = regions.iter().filter(|region| {
-        let options = region.as_parts().1;
-        options.sparse_infill_pattern == ProcessInfillPattern::SupportCubic
-            && options.sparse_infill_density.0 > 0.0
-    });
-    if contributing.next().is_none() {
-        return;
-    }
-    if !spacing.support.is_finite() || spacing.support <= 0.0 {
-        return;
-    }
+    let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
     let spacing = spacing.support;
+    if spacing == 0.0 {
+        return;
+    }
     let mut triangles = Vec::new();
     // Source map/layer order and each candidate vector's original order.
     for candidate in candidates.surfaces_by_layer.values().flatten() {

@@ -274,11 +274,11 @@ pub(super) fn dispatch(
                 crate::project_slice::fill_entities::adaptive::AdaptiveObject::new(
                     traversal,
                     object_index,
-                    match pattern {
-                        ProcessInfillPattern::AdaptiveCubic => adaptive_spacing,
-                        ProcessInfillPattern::SupportCubic => support_spacing,
-                        _ => unreachable!("adaptive arm only handles adaptive patterns"),
-                    },
+                    crate::project_slice::fill_entities::adaptive::ObjectSpacing {
+                        adaptive: adaptive_spacing,
+                        support: support_spacing,
+                    }
+                    .for_pattern(pattern),
                 ),
                 &fill,
                 z,
