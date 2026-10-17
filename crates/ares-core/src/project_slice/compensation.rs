@@ -9,7 +9,7 @@ use crate::{
 use super::{
     PreparedPostRegions, ProjectBytes,
     elephant_foot::compensate_expolygons,
-    prepare_post_conical_overhang,
+    hole_to_polyhole, prepare_post_conical_overhang,
     region_slices::{PostRegion, PostRegionPrintObject, RegionSurface},
     slice_ordering::{make_slices, order_expolygons},
 };
@@ -100,6 +100,15 @@ impl PostCompensationPrintObject {
 
     pub(super) fn raw_slices(&self, region_index: usize, layer_index: usize) -> &[ExPolygon] {
         &self.raw_slices[region_index][layer_index]
+    }
+
+    /// Mutable `(post_regions, lslices)` access for
+    /// `hole_to_polyhole::transform` (`PrintObject.cpp:189-295`), which
+    /// rewrites region surface holes and the `lslices` clones in place.
+    pub(super) fn polyhole_parts_mut(
+        &mut self,
+    ) -> (&mut PostRegionPrintObject, &mut Vec<Vec<ExPolygon>>) {
+        (&mut self.post_regions, &mut self.lslices)
     }
 
     #[cfg(test)]
@@ -201,7 +210,13 @@ pub(in crate::project_slice) fn apply_project_compensation(
         .into_iter()
         .zip(prepared)
         .map(|(object, prepared)| {
-            apply_object_compensation(object, prepared, scale, &mut closing_epsilon)
+            apply_object_compensation(
+                object,
+                prepared,
+                nozzle_diameters,
+                scale,
+                &mut closing_epsilon,
+            )
         })
         .collect()
 }
@@ -222,6 +237,7 @@ fn validate_structures(objects: &[PostRegionPrintObject]) {
 fn apply_object_compensation(
     mut object: PostRegionPrintObject,
     prepared: PreparedObjectCompensation,
+    nozzle_diameters: &OrcaFloats,
     scale: CoordinateScale,
     closing_epsilon: &mut Option<f32>,
 ) -> Result<PostCompensationPrintObject, SliceError> {
@@ -239,6 +255,22 @@ fn apply_object_compensation(
     for (layer_index, raw) in backups.into_iter().enumerate() {
         lslices[layer_index] = order_expolygons(raw);
     }
+    // `PrintObjectSlice.cpp:847`: `_transform_hole_to_polyholes` runs
+    // after `slice_volumes` (which includes this XY/EFC compensation,
+    // `PrintObjectSlice.cpp:1250+`) and before `backup_untyped_slices`
+    // (:851-867) — the `raw_slices` snapshot below therefore already
+    // sees the polyhole points, matching `Layer::backup_untyped_slices`.
+    let mut wrapped = PostCompensationPrintObject {
+        post_regions: object,
+        lslices,
+        raw_slices: Vec::new(),
+    };
+    hole_to_polyhole::transform(&mut wrapped, nozzle_diameters, scale);
+    let PostCompensationPrintObject {
+        post_regions: object,
+        lslices,
+        ..
+    } = wrapped;
     // Layer::backup_untyped_slices saves regions, not the elephant-foot lslices backup.
     let raw_slices = object
         .regions

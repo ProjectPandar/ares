@@ -202,6 +202,12 @@ pub enum FloatOrPercent {
     Percent(Percent),
 }
 
+impl Default for FloatOrPercent {
+    fn default() -> Self {
+        Self::Float(0.0)
+    }
+}
+
 impl FloatOrPercent {
     pub(crate) fn is_non_positive(self) -> bool {
         match self {

@@ -146,6 +146,13 @@ impl RegionSurface {
         self.kind = kind;
     }
 
+    /// In-place expolygon access for `hole_to_polyhole::transform`
+    /// (`PrintObject.cpp:285-292` writes `polyhole.points` into the
+    /// region surface hole, preserving the rest of the surface).
+    pub(super) fn expolygon_mut(&mut self) -> &mut ExPolygon {
+        &mut self.expolygon
+    }
+
     pub(super) fn take_expolygon(&mut self) -> ExPolygon {
         std::mem::replace(
             &mut self.expolygon,

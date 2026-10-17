@@ -54,6 +54,7 @@ pub(super) fn plan_route(
                 inset: state.options.crossing_boundary_inset,
                 after_skirt,
                 use_external: state.use_external_mp_once,
+                max_detour: state.options.max_travel_detour_distance,
             },
             state.avoid_boundary.as_mut().map(std::rc::Rc::make_mut),
         )
@@ -69,6 +70,7 @@ pub(super) fn plan_route(
                 inset: state.options.crossing_boundary_inset,
                 after_skirt,
                 use_external: false,
+                max_detour: state.options.max_travel_detour_distance,
             })
         })
     } else {

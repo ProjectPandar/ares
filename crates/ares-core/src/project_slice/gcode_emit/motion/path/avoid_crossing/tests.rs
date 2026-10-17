@@ -5,6 +5,7 @@ mod integer_nudge;
 use super::{Request, rectangle_route};
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
+    options::FloatOrPercent,
     project_slice::{
         gcode_emit::motion::{
             LayerGeometry, arc::Point as MotionPoint, state::AvoidCrossingGeometry,
@@ -65,6 +66,7 @@ fn rectangle_shell_routes_crossing_travels_along_inset_boundary() {
             inset,
             after_skirt: true,
             use_external: false,
+            max_detour: FloatOrPercent::Float(0.0),
         }),
         [MotionPoint {
             x: 114.389_38,
@@ -86,6 +88,7 @@ fn rectangle_shell_routes_crossing_travels_along_inset_boundary() {
             inset,
             after_skirt: false,
             use_external: false,
+            max_detour: FloatOrPercent::Float(0.0),
         }),
         [
             MotionPoint {
@@ -113,6 +116,7 @@ fn rectangle_shell_routes_crossing_travels_along_inset_boundary() {
             inset,
             after_skirt: false,
             use_external: false,
+            max_detour: FloatOrPercent::Float(0.0),
         }),
         [MotionPoint {
             x: 121.29,
