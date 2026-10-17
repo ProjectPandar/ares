@@ -147,6 +147,8 @@ mod native_wall_clock;
 mod object_archimedean_ironing;
 #[path = "orca_parity/object_hilbert_ironing.rs"]
 mod object_hilbert_ironing;
+#[path = "orca_parity/object_octagram_ironing.rs"]
+mod object_octagram_ironing;
 #[path = "orca_parity/perobject_multi_copy_skirt.rs"]
 mod perobject_multi_copy_skirt;
 #[path = "orca_parity/perobject_outer_inner_brim.rs"]
