@@ -1,0 +1,59 @@
+{
+  "discovery_base": "8f6ce1660ccfaf95a6888b60c258047183d19ff0",
+  "source": {
+    "pin": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+    "owner": "Fill.cpp:1611-1640,1705-1731;FillBase.cpp:63;FillPlanePath.cpp:69-164,278-315",
+    "conditionally_approved_proposal": "dce718354eca59d3e4c69fbc06693d1af1f5411c",
+    "RED_base_approved_Archimedean_GREEN": "05bf7628cf58ecee5227010e93241d7f55e1f0d5"
+  },
+  "cases": {
+    "octagramspiral-active": {
+      "sha256": "1c9aa16cd1644701454a5dd2cc077169be95b0baf8d86c514c75e97cff2166a6",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "fb16498fe99278a33115e9e6c2b8a9a15ebb369dd1e5d30cdd243534bb567b93",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "octagramspiral",
+      "ironing_type": "topmost"
+    },
+    "rectilinear-control": {
+      "sha256": "74f447fffe933f8d5540426e8fea625894c9c63ee5fbce679861e9fcb94a5cce",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "ac9c586cd3755fe1f579839c6a32c7cbdc5e91c52c11abfa0ba0cbfc3acd8c88",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "rectilinear",
+      "ironing_type": "topmost"
+    },
+    "octagramspiral-disabled-control": {
+      "sha256": "cffd3843fe9ac921791c188a6b3d1e45eb766cd440a2bfbe10b05de2b6c3ab28",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "f04ec10dcb69867672e4a9202cd90d2c7c3048c7b494ecc419369983e3de1901",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "octagramspiral",
+      "ironing_type": "no ironing"
+    }
+  }
+}

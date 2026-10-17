@@ -1,0 +1,64 @@
+{
+  "base": "tests/parity/outer-only-brim/zero-width.3mf",
+  "geometry": "single closedbox10x10x1,8vertices12orientedtriangles;buildcenter110,110,z.5;original namespace header preserved",
+  "cases": {
+    "hilbert-active": {
+      "sha256": "a741b0504891bd65253418a9a59d949c9e0ab450f2be66085a02a96d9ec60a3d",
+      "changes": {
+        "ironing_pattern": "hilbertcurve",
+        "ironing_type": "topmost",
+        "top_shell_layers": "1"
+      },
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "66f5e71bebfe507b28e8fc146b24b64065e31247e8037145c45529a1f48e5d75",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      }
+    },
+    "rectilinear-control": {
+      "sha256": "196011bc0790c416c35e54e811ae9db66c437e322a39980ba1df50389b4258e3",
+      "changes": {
+        "ironing_pattern": "rectilinear",
+        "ironing_type": "topmost",
+        "top_shell_layers": "1"
+      },
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "ac9c586cd3755fe1f579839c6a32c7cbdc5e91c52c11abfa0ba0cbfc3acd8c88",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      }
+    },
+    "hilbert-disabled-control": {
+      "sha256": "bb4e77a4ae9ac8c374b130ad3632c27b980d6c6161c4c7db38db93b614378253",
+      "changes": {
+        "ironing_pattern": "hilbertcurve",
+        "ironing_type": "no ironing",
+        "top_shell_layers": "1"
+      },
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "51f9d3e2207558099e491a98b79f98f29e6964791e12f50fc62bf0644a93b01a",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      }
+    }
+  },
+  "source": "8500fcdccaa10b5099ac20d252af3a7c560046f1 Fill.cpp:1611-1640,1705-1731; FillBase.cpp:62; FillPlanePath.cpp:69-164,248-275"
+}
