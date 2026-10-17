@@ -54,5 +54,8 @@ Discovery repeat/activity evidence:
 `/tmp/ares-w1-object-ironing-remaining-discovery-8f6ce1660/discovery-report.json`.
 The separate zag work remains blocked on discriminating Native toolpath-body
 geometry after excluding the config block, then a separate proposal/RED;
-its bbox must use the real object lifecycle consistent with W3's bbox_object,
-never a second bbox producer or support dummy-box substitution.
+its bbox must independently follow the real object lifecycle in
+`Fill.cpp::make_ironing`. W3 confirmed support/raft's ±1mm dummy bbox_object
+(`SupportCommon.cpp:1456`) is a DIFFERENT source: no alignment is required,
+and it must not replace the real object bbox or create a second object-bbox
+producer.
