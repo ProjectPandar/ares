@@ -77,9 +77,8 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
             arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {
                 let extrusion = extrusion::for_length(
                     arc_segment.length,
-                    properties.mm3_per_mm,
+                    extrusion::effective_flow(properties, &state.options, state.on_first_layer),
                     state.options.filament_flow_ratio,
-                    state.options.print_flow_ratio,
                     state.options.filament_area,
                 ) * extrusion::small_area_multiplier(
                     state,

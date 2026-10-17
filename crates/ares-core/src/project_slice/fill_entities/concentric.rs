@@ -132,6 +132,7 @@ pub(super) fn append_configured(
                 let width = spacing as f32 * scale.factor() as f32
                     + params.flow.height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
                 let mut flow = params.flow.with_width(width)?;
+                // Same ungated-only handoff as materialized_flow; no gated pre-bake.
                 flow.mm3_per_mm *= params.flow_ratio;
                 append_sparse_paths(&mut entities, polylines, params.extrusion_role, flow);
             }

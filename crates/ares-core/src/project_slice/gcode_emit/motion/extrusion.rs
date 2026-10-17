@@ -74,9 +74,8 @@ pub(super) fn linear_segment(
 ) {
     let extrusion = for_length(
         length,
-        properties.mm3_per_mm,
+        effective_flow(properties, &state.options, state.on_first_layer),
         state.options.filament_flow_ratio,
-        state.options.print_flow_ratio,
         state.options.filament_area,
     ) * small_area_multiplier(state, properties.feature, length);
     if extrusion.abs() <= f64::EPSILON {
@@ -141,15 +140,43 @@ pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {
     }
 }
 
+/// `GCode.cpp:6469-6507`: one effective flow for extrusion, speed caps and PA.
+/// Earlier ungated fill/brim ratios still arrive in the geometric handoff.
+pub(super) fn effective_flow(
+    properties: PathProperties<'_>,
+    options: &super::MotionOptions,
+    on_first_layer: bool,
+) -> f64 {
+    let mut flow = properties.mm3_per_mm * options.print_flow_ratio;
+    flow *= options.filament_flow_ratio;
+    if let Some(slope) = properties.slope {
+        flow *= slope.flow_ratio;
+    }
+    if options.set_other_flow_ratios {
+        flow *= match properties.feature {
+            "Outer wall" => options.outer_wall_flow_ratio,
+            "Inner wall" => options.inner_wall_flow_ratio,
+            "Overhang wall" => options.overhang_flow_ratio,
+            "Sparse infill" => options.sparse_infill_flow_ratio,
+            "Internal solid infill" => options.internal_solid_infill_flow_ratio,
+            "Gap infill" => options.gap_fill_flow_ratio,
+            "Support" => options.support_flow_ratio,
+            "Support interface" => options.support_interface_flow_ratio,
+            _ => 1.0,
+        };
+        if on_first_layer && !matches!(properties.feature, "Brim" | "Skirt") {
+            flow *= options.first_layer_flow_ratio;
+        }
+    }
+    flow
+}
+
 pub(super) fn for_length(
     length: f64,
-    mm3_per_mm: f64,
+    effective_mm3_per_mm: f64,
     filament_flow_ratio: f64,
-    print_flow_ratio: f64,
     filament_area: f64,
 ) -> f64 {
-    let mut effective_mm3_per_mm = mm3_per_mm * print_flow_ratio;
-    effective_mm3_per_mm *= filament_flow_ratio;
     let mut e_per_mm3 = filament_flow_ratio;
     e_per_mm3 /= filament_area;
     let mut e_per_mm = e_per_mm3 * effective_mm3_per_mm;
