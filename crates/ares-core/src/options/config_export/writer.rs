@@ -162,30 +162,18 @@ pub(crate) fn write_canonical_entries(
             continue;
         }
         // Nullable per-filament overrides echo only when the project set
-        // them (`GCode.cpp:5642` `is_nil` filter over the full config,
-        // vectors trimmed to the active filament count). The slot count
-        // comes from the typed filament vector (`ConfigOptionVector::size`),
-        // never from splitting the serialized token: nullable vectors join
-        // with ',' while coStrings join with ';' and elements may contain
-        // separators (`Config.hpp` `ConfigOptionVector::serialize`).
-        if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&entry.key.as_str())
-            && raw_settings
-                .token_prefix(&entry.key, filament_count)
-                .is_none()
-            // PrintConfig.cpp:8567-8574 / :8664-8671 creates this nullable
-            // override under spiral mode and fills every slot with false.
-            && !(entry.key == "filament_retract_when_changing_layer"
-                && settings.process.print.spiral_mode.0)
-        {
-            continue;
-        }
         if entry.key == "extruder_colour" {
             let colour = serialize_config_value(&settings.filament.gcode.filament_colour)
                 .map_err(config_error)?;
             emit(&mut lines, &entry.key, colour.token, false);
             continue;
         }
-        emit(&mut lines, &entry.key, entry.token.clone(), entry.is_nil);
+        emit(
+            &mut lines,
+            &entry.key,
+            entry.token.clone(),
+            typed_entry_is_nil(entry, filament_count),
+        );
     }
     for (key, token) in raw_settings.iter() {
         if matches!(key, "from" | "name" | "version") {
@@ -203,23 +191,15 @@ pub(crate) fn write_canonical_entries(
         }) {
             continue;
         }
-        if entries.iter().any(|entry| entry.key == key && entry.is_nil) {
+        if entries
+            .iter()
+            .any(|entry| entry.key == key && typed_entry_is_nil(entry, filament_count))
+        {
             // GCode.cpp:5632-5633: nil canonical options cannot be reinserted
             // by retained raw input after the type-owned echo filter.
             continue;
         }
         if lines.iter().any(|(existing, _)| existing.as_str() == key) {
-            continue;
-        }
-        // The same trimmed `is_nil` filter as the canonical entries:
-        // all-nil active-slot overrides never echo.
-        if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&key)
-            && raw_settings.token_prefix(key, filament_count).is_none()
-            // The spiral normalization above owns the absent-key insertion;
-            // retain it in the exported block just like Native.
-            && !(key == "filament_retract_when_changing_layer"
-                && settings.process.print.spiral_mode.0)
-        {
             continue;
         }
         let Some(rendered) = token else {
@@ -271,6 +251,17 @@ fn is_bbl_printer(views: &ProjectConfigViews) -> bool {
         .printer_model
         .0
         .starts_with("Bambu Lab")
+}
+
+fn typed_entry_is_nil(entry: &ConfigEntry, filament_count: usize) -> bool {
+    if !FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&entry.key.as_str()) {
+        return entry.is_nil;
+    }
+    entry
+        .token
+        .split(',')
+        .take(filament_count)
+        .all(|value| value == "nil" || value == "2147483647")
 }
 
 fn write_runtime_tail(

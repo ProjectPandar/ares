@@ -201,10 +201,17 @@ impl ParsedLine {
                 continue;
             };
             match letter {
-                'X' => parsed.x = chars.as_str().parse().ok(),
-                'Y' => parsed.y = chars.as_str().parse().ok(),
-                'Z' => parsed.z = chars.as_str().parse().ok(),
-                'E' => parsed.e = chars.as_str().parse::<f32>().ok().map(f64::from),
+                'X' => parsed.x = chars.as_str().parse().ok().or(parsed.x),
+                'Y' => parsed.y = chars.as_str().parse().ok().or(parsed.y),
+                'Z' => parsed.z = chars.as_str().parse().ok().or(parsed.z),
+                'E' => {
+                    parsed.e = chars
+                        .as_str()
+                        .parse::<f32>()
+                        .ok()
+                        .map(f64::from)
+                        .or(parsed.e);
+                }
                 _ => {}
             }
         }
