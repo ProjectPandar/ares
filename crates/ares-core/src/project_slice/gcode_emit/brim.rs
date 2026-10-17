@@ -232,8 +232,7 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area.area, forbidden)
         };
-        let owner_collection = !combined::enabled(traversal)
-            && print.print_sequence != crate::ProcessPrintSequence::ByObject;
+        let owner_collection = !combined::enabled(traversal);
         let brim_area = if owner_collection {
             let (area, forbidden, islands) =
                 owner::expand(traversal, object_index, &brim_area, &inner, &object_islands);
@@ -275,7 +274,7 @@ impl BrimPlan {
 
         let (area, paths) = if combined::enabled(traversal) {
             (brim_area, Vec::new())
-        } else if owner_collection {
+        } else {
             // Brim.cpp:820 uses double resolution = 0.0125 / SCALING_FACTOR,
             // retaining the fractional lattice delta rather than truncating it.
             let paths = crate::brims::ears::paths::from_area(
@@ -287,12 +286,6 @@ impl BrimPlan {
                 return Ok(None);
             }
             (brim_area, paths)
-        } else {
-            let paths = crate::brims::ears::paths::from_area(brim_area, spacing, resolution)?;
-            if paths.is_empty() {
-                return Ok(None);
-            }
-            (Vec::new(), paths)
         };
         Ok(Some(Self {
             area,

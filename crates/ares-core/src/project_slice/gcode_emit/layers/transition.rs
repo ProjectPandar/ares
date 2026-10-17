@@ -58,6 +58,8 @@ pub(in crate::project_slice::gcode_emit) fn emit(
             "sequential by-object printing with a priming toolchange at the object boundary is not supported yet".into(),
         ));
     }
+    // GCode.cpp:3298 sets the incoming instance frame before retract/travel.
+    motion::set_origin(state, (origin[0], origin[1]));
     motion::tower::transition_retract(output, state);
     // `GCode.cpp:3326`: the safety lift above every printed layer.
     motion::tower::writer_z(output, state, lift_z, "", true);
@@ -93,6 +95,8 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     );
     state.x = origin[0];
     state.y = origin[1];
+    // GCode.cpp:3322/7506: travel_to ends at (0, 0) in the incoming frame.
+    state.last_scaled_position = Some((0, 0));
     state.positioned = true;
     // The transition's hop leaves the nozzle lifted above the layer
     // domain (`GCodeWriter` lifted state): the incoming instance's

@@ -97,6 +97,10 @@ mod brim_painted_inner_w5;
 mod brim_painted_w5;
 #[path = "orca_parity/brim_physical_layer.rs"]
 mod brim_physical_layer;
+#[path = "orca_parity/byobject_owner_brim.rs"]
+mod byobject_owner_brim;
+#[path = "orca_parity/byobject_perobject_multi_copy_brim.rs"]
+mod byobject_perobject_multi_copy_brim;
 #[path = "orca_parity/byobject_perobject_skirt.rs"]
 mod byobject_perobject_skirt;
 #[path = "orca_parity/byobject_transition_comments.rs"]
