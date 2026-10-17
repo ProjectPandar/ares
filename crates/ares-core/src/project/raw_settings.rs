@@ -152,7 +152,6 @@ impl ProjectSettingsRaw {
             .iter()
             .map(|(key, value)| (key.as_str(), value.option_token(key, None)))
     }
-
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, serde::Serialize)]
