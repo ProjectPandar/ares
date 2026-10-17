@@ -68,7 +68,7 @@ where
             let (density, infill_first, gate) = options_for_region(id, &mut state.options);
             state.small_area_gate = gate;
             if first_layer || !infill_first {
-                emit_perimeters(output, &mut region.perimeters, geometry, state, density);
+                emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
             }
         }
         if !interlude_emitted && has_infill {
@@ -80,7 +80,7 @@ where
             }
             let (density, _, gate) = options_for_region(id, &mut state.options);
             state.small_area_gate = gate;
-            emit_infills(output, &mut region.infills, geometry, state, density);
+            emit_infills(output, &mut region.infills, geometry, state, density)?;
         }
         for (&id, region) in &mut regions {
             // GCode.cpp:6135-6140 applies even when this phase skips the
@@ -90,7 +90,7 @@ where
             }
             let (density, _, gate) = options_for_region(id, &mut state.options);
             state.small_area_gate = gate;
-            emit_perimeters(output, &mut region.perimeters, geometry, state, density);
+            emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
         }
         for (&id, region) in &mut regions {
             if region.ironing.is_empty() {
@@ -98,7 +98,7 @@ where
             }
             let (density, _, gate) = options_for_region(id, &mut state.options);
             state.small_area_gate = gate;
-            emit_infills(output, &mut region.ironing, geometry, state, density);
+            emit_infills(output, &mut region.ironing, geometry, state, density)?;
         }
     }
     Ok(interlude_emitted)
@@ -110,14 +110,15 @@ fn emit_perimeters(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     sparse_density: f64,
-) {
+) -> Result<(), SliceError> {
     if entities.is_empty() {
-        return;
+        return Ok(());
     }
     state.options.has_sparse_infill = sparse_density > 0.0;
     for entity in entities.drain(..) {
-        perimeter::emit_perimeter(output, entity, geometry, state);
+        perimeter::emit_perimeter(output, entity, geometry, state)?;
     }
+    Ok(())
 }
 
 fn emit_infills(
@@ -126,9 +127,9 @@ fn emit_infills(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     sparse_density: f64,
-) {
+) -> Result<(), SliceError> {
     if entities.is_empty() {
-        return;
+        return Ok(());
     }
     // GCode.cpp:6163/7635-7636 applies the current emitted region's density.
     state.options.has_sparse_infill = sparse_density > 0.0;
@@ -136,22 +137,23 @@ fn emit_infills(
     for entity in entities.drain(..) {
         match entity {
             IslandPrintEntity::Fill(entity) => {
-                emit_fill_entity(output, &entity, geometry, state);
+                emit_fill_entity(output, &entity, geometry, state)?;
             }
             IslandPrintEntity::FillCollection(collection) => {
                 let collection = collection.chained_path_from(local_cursor(state, geometry));
                 for entity in &collection.entities {
-                    emit_fill_entity(output, entity, geometry, state);
+                    emit_fill_entity(output, entity, geometry, state)?;
                 }
             }
             IslandPrintEntity::Thin(entity) => {
-                emit_variable_width_entity(output, &entity, geometry, state);
+                emit_variable_width_entity(output, &entity, geometry, state)?;
             }
             IslandPrintEntity::Perimeter(_) => {
                 unreachable!("infill phase contains only infill entities")
             }
         }
     }
+    Ok(())
 }
 
 fn is_ironing_entity(entity: &IslandPrintEntity) -> bool {

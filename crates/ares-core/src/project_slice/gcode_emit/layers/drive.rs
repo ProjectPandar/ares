@@ -175,7 +175,7 @@
                 chunk_slices: &chunk_slices,
                 chunk_perimeter_spacing,
             },
-        );
+        )?;
         // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
         // template insert fire once per layer inside the per-extruder loop
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the

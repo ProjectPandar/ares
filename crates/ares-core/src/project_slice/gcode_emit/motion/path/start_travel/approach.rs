@@ -31,7 +31,7 @@ pub(super) fn emit_needs_travel(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     approach: Approach<'_>,
-) -> (bool, bool, bool) {
+) -> Result<(bool, bool, bool), crate::SliceError> {
     let Approach {
         first_scaled,
         first_x,
@@ -85,7 +85,7 @@ pub(super) fn emit_needs_travel(
     // `avoid_crossing_perimeters.travel_to`), so route first and then
     // decide; a wiping retract moves the head and the route is planned
     // again from the new position (`GCode.cpp:7436-7443`).
-    let mut route = plan_route(state, &geometry, feature, first_x, first_y);
+    let mut route = plan_route(state, &geometry, feature, first_x, first_y)?;
     let skip_retraction = skip_retraction
         || (!matches!(state.last_feature, Some("Outer wall" | "Overhang wall"))
             && matches!(feature, "Support" | "Support transition")
@@ -147,9 +147,10 @@ pub(super) fn emit_needs_travel(
                 destination_feature: feature,
             },
             &mut |state| {
-                route = plan_route(state, &geometry_ref, feature, first_x, first_y);
+                route = plan_route(state, &geometry_ref, feature, first_x, first_y)?;
+                Ok(())
             },
-        );
+        )?;
     }
     if !had_pending_lift && state.pending_lift.is_some() {
         state.pending_lift = Some(lift_mode);
@@ -268,9 +269,9 @@ pub(super) fn emit_needs_travel(
     state.positioned = true;
     state.current_feedrate = state.travel_feedrate;
 
-    (
+    Ok((
         travel_set_layer_z,
         eager_lifted_travel,
         unclear_position_travel,
-    )
+    ))
 }

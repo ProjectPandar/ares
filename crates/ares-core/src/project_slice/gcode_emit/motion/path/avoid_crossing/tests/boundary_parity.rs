@@ -142,7 +142,8 @@ fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_corner_then_destinati
             },
             geometry,
         },
-    );
+    )
+    .unwrap();
     // GCode.cpp:7485–7502 emits the detour at nominal Z, then the scarf Z.
     assert_eq!(
         output,
@@ -169,12 +170,10 @@ fn assert_route(start: (i64, i64), end: (i64, i64), expected: &[(i64, i64)]) {
             end: point(end),
             geometry,
             offset: (0.0, 0.0),
-            inset: 0.0,
-            after_skirt: false,
             use_external: false,
             max_detour: FloatOrPercent::Float(0.0),
         },
-        Some(&mut boundary),
+        &mut boundary,
     )
     .unwrap();
     assert_eq!(

@@ -66,7 +66,7 @@ impl BrimPlan {
         output: &mut Vec<u8>,
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
-    ) {
+    ) -> Result<(), crate::SliceError> {
         let origin = state.origin;
         if self.global || self.owner_collection {
             motion::set_origin(state, (0.0, 0.0));
@@ -87,10 +87,11 @@ impl BrimPlan {
                 },
                 geometry,
                 state,
-            );
+            )?;
         }
         if self.global || self.owner_collection {
             motion::set_origin(state, origin);
         }
+        Ok(())
     }
 }

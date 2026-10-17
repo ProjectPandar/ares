@@ -21,9 +21,9 @@ pub(super) fn emit(
     traversal: &PreparedPostClassicTraversal,
     chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
-) {
+) -> Result<(), crate::SliceError> {
     if layer_index != 0 {
-        return;
+        return Ok(());
     }
     let global = brim.iter().flatten().find(|plan| plan.global);
     let plan = if let Some(plan) = global {
@@ -57,6 +57,7 @@ pub(super) fn emit(
                 lower_boundary.as_ref(),
             ),
             state,
-        );
+        )?;
     }
+    Ok(())
 }

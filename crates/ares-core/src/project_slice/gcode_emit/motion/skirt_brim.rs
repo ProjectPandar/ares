@@ -14,7 +14,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
     flow: SkirtLoopFlow,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     state.adaptive_pa_flow = Some(flow.mm3_per_mm);
     state.adaptive_pa_emitted = false;
     // `GCode::extrude_entity("brim")` dispatches to `extrude_loop`, which
@@ -62,7 +62,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
             },
             geometry,
             state,
-        );
+        )?;
         // `extrude_loop`'s wipe storage (GCode.cpp:5979-5991) concatenates
         // the loop's paths FORWARD (no reverse) — the brim retract's wipe
         // walks the ring from the seam. `path::emit` stored the reversed
@@ -76,7 +76,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
             .collect::<Vec<_>>();
         state.adaptive_pa_flow = None;
         state.adaptive_pa_emitted = false;
-        return;
+        return Ok(());
     }
     path::emit(
         output,
@@ -95,9 +95,10 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
         },
         geometry,
         state,
-    );
+    )?;
     state.adaptive_pa_flow = None;
     state.adaptive_pa_emitted = false;
+    Ok(())
 }
 
 /// Flow and clipping state for the skirt loop (`GCode.cpp:5804`, `Flow.hpp::Flow`).
@@ -115,7 +116,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
     SkirtLoopParameters { flow, preclipped }: SkirtLoopParameters,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     state.adaptive_pa_flow = Some(flow.mm3_per_mm);
     state.adaptive_pa_emitted = false;
     path::emit(
@@ -143,10 +144,11 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
         },
         geometry,
         state,
-    );
+    )?;
     state.adaptive_pa_flow = None;
     state.adaptive_pa_emitted = false;
     // `GCode.cpp:5979-5991` stores loop wipe paths forward so the wipe
     // wraps from the loop end back toward the path start.
     state.wipe_path.reverse();
+    Ok(())
 }

@@ -118,7 +118,7 @@ pub(super) fn emit(
                 raft_layer: entry.raft_layer,
                 print_z: layer_z,
             },
-        );
+        )?;
     }
     let shift = bucket.instance.shift;
     // Every emitted coordinate is plate-local: the per-object origin from
@@ -218,7 +218,7 @@ pub(super) fn emit(
             traversal,
             chunk_slices,
             chunk_perimeter_spacing,
-        );
+        )?;
     }
     if let Some(selected_role) = support_role {
         let support_index = entry.support_layer.expect("support bucket retains layer");

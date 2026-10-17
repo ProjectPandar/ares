@@ -68,13 +68,13 @@ impl SkirtPlan {
         (group, layer): (usize, SkirtLayer),
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
-    ) {
+    ) -> Result<(), SliceError> {
         let mut range = self.member_groups[group].loops.clone();
         // GCode.cpp:4417-4424 selects the innermost loop of this group's range.
         if layer.index > 0 && self.single_loop_draft_shield {
             range.start = range.end - 1;
         }
-        self.emit_loops(output, (layer, &self.loops[range]), geometry, state);
+        self.emit_loops(output, (layer, &self.loops[range]), geometry, state)
     }
 
     pub(super) fn extrusion_paths(&self) -> impl Iterator<Item = (&[Point], f32)> {
@@ -110,13 +110,13 @@ impl SkirtPlan {
         layer: SkirtLayer,
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
-    ) {
+    ) -> Result<(), SliceError> {
         self.emit_loops(
             output,
             (layer, self.loops_for_layer(layer.index)),
             geometry,
             state,
-        );
+        )
     }
 
     fn emit_loops(
@@ -125,9 +125,9 @@ impl SkirtPlan {
         (layer, loops): (SkirtLayer, &[Vec<Point>]),
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
-    ) {
+    ) -> Result<(), SliceError> {
         if layer.index >= self.layer_count || loops.is_empty() {
-            return;
+            return Ok(());
         }
         // Print.cpp:2634-2637 -> GCode.hpp:218 -> GCodeWriter.cpp:608,
         // 715-716,789,873 subtracts plate offset at the writer. Ares currently
@@ -172,11 +172,12 @@ impl SkirtPlan {
                 },
                 geometry,
                 state,
-            );
+            )?;
             if let Some(last) = state.last_scaled_position {
                 seam_target = Point::new(last.0, last.1);
             }
         }
+        Ok(())
     }
 
     fn loops_for_layer(&self, layer_index: usize) -> &[Vec<Point>] {

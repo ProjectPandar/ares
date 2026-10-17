@@ -23,7 +23,7 @@ pub(super) fn emit(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     region_perimeters: &[Vec<(i64, i64)>],
-) {
+) -> Result<(), crate::SliceError> {
     let paths = &loop_.paths;
     let loop_role = loop_.role;
     let small_speed = small_perimeter::speed(paths, &state.options, geometry.scale.factor());
@@ -59,7 +59,7 @@ pub(super) fn emit(
                     inside_loop: true,
                 },
                 speed_for_path(&path.path),
-            );
+            )?;
         }
         state.adaptive_pa_flow = None;
         state.adaptive_pa_emitted = false;
@@ -71,7 +71,7 @@ pub(super) fn emit(
             geometry,
             state,
         );
-        return;
+        return Ok(());
     }
     // `GCode.cpp:4596-4612,5796-5804`: active vase layers keep complete
     // loops for the full-layer SpiralVase filter.
@@ -92,7 +92,7 @@ pub(super) fn emit(
     }
     // GCode.cpp:5804-5805 retains the preceding wipe when clipping consumes the loop.
     if path_count == 0 {
-        return;
+        return Ok(());
     }
     append_wipe_before_external(output, loop_, geometry, state, region_perimeters);
     begin_adaptive_loop(
@@ -123,7 +123,7 @@ pub(super) fn emit(
                 inside_loop: true,
             },
             speed_for_path(path),
-        );
+        )?;
         // `GCode.cpp:5979-5990`: upstream appends each emitted path's
         // polyline to `m_wipe.path`, dropping the join point ONLY when
         // it duplicates the previous last point — adjacent sub-paths
@@ -145,6 +145,7 @@ pub(super) fn emit(
         geometry,
         state,
     );
+    Ok(())
 }
 
 fn begin_adaptive_loop(

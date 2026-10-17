@@ -59,7 +59,7 @@ fn tower_travel_uses_native_comment_without_extrusion_z_restatement() {
         },
     };
     let mut output = Vec::new();
-    super::tower_travel(&mut output, &mut state, (10_000_000, 20_000_000), geometry);
+    super::tower_travel(&mut output, &mut state, (10_000_000, 20_000_000), geometry).unwrap();
     assert_eq!(output, b"G1 X10 Y20 Z.2 F1200 ; Travel to a Wipe Tower\n");
     assert_eq!(state.last_scaled_position, Some((10_000_000, 20_000_000)));
     assert!(!state.layer_change_travel_pending);
@@ -84,8 +84,9 @@ fn first_layer_hilbert_bottom_suppresses_writer_retract_and_extra() {
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
-        &mut |_| {},
-    );
+        &mut |_| Ok(()),
+    )
+    .unwrap();
     assert_eq!(state.extruder.restart_extra, 0.5);
     assert!(output.is_empty());
 }
@@ -109,8 +110,9 @@ fn hilbert_suppression_still_emits_reset_e_in_absolute_mode() {
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
-        &mut |_| {},
-    );
+        &mut |_| Ok(()),
+    )
+    .unwrap();
     assert_eq!(output, b"G92 E0\n");
 }
 
@@ -137,8 +139,9 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
             skip_retraction: false,
             destination_feature: "Top surface",
         },
-        &mut |_| {},
-    );
+        &mut |_| Ok(()),
+    )
+    .unwrap();
     assert_eq!(state.extruder.restart_extra, 0.5);
     // A non-top destination on the same layer still assigns.
     decide(
@@ -150,8 +153,9 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
-        &mut |_| {},
-    );
+        &mut |_| Ok(()),
+    )
+    .unwrap();
     assert_eq!(
         state.extruder.restart_extra,
         state.options.retract_restart_extra
@@ -177,7 +181,8 @@ fn non_hilbert_already_retracted_travel_assigns_restart_extra() {
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
-        &mut |_| {},
-    );
+        &mut |_| Ok(()),
+    )
+    .unwrap();
     assert_eq!(state.extruder.restart_extra, 0.0);
 }

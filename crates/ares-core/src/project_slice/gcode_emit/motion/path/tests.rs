@@ -52,7 +52,8 @@ fn volumetric_speed_cap_divides_by_print_and_filament_flow_ratios() {
         },
         test_geometry(),
         &mut state,
-    );
+    )
+    .unwrap();
 
     let expected = 4.0 / (0.08 * 0.5 * 0.98) * 60.0;
     assert!(
@@ -114,7 +115,8 @@ fn zero_max_volumetric_speed_leaves_the_role_speed_uncapped() {
         },
         test_geometry(),
         &mut state,
-    );
+    )
+    .unwrap();
 
     assert!(
         (state.extrusion_feedrate - 200.0 * 60.0).abs() < 1e-9,
@@ -178,7 +180,8 @@ fn plate_loops_unscale_after_integer_translation() {
                 },
                 test_geometry(),
                 &mut state,
-            );
+            )
+            .unwrap();
             let text = String::from_utf8(output).unwrap();
             assert!(
                 text.contains(&format!("G1 X118 Y{expected_y} ")),
@@ -249,7 +252,8 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             properties,
             test_geometry(),
             &mut state,
-        );
+        )
+        .unwrap();
         let mut output = Vec::new();
         path::emit(
             &mut output,
@@ -261,7 +265,8 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             },
             test_geometry(),
             &mut state,
-        );
+        )
+        .unwrap();
         let text = String::from_utf8(output).unwrap();
         assert!(
             text.contains(&format!("G1 X121.761 Y118.566 E{expected_e}\n")),
