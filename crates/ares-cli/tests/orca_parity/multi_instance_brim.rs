@@ -103,8 +103,12 @@ fn check(label: &str) {
         assert!(native.contains(&format!("; {key}\n")));
     }
     assert!(native.contains(&format!(
-        "; combine_brims = {}\n",
-        if label == "target" { 1 } else { 0 }
+        "; brim_width = {}\n",
+        if label == "control" { "0" } else { "8" }
+    )));
+    assert!(native.contains(&format!(
+        "; skirt_loops = {}\n",
+        if label == "no-skirt" { "0" } else { "2" }
     )));
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
