@@ -147,10 +147,17 @@ impl ProjectSettingsRaw {
         );
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, Option<String>)> {
-        self.0
-            .iter()
-            .map(|(key, value)| (key.as_str(), value.option_token(key, None)))
+    /// Export-echo view: every entry renders through `option_token`,
+    /// which serializes Floats-kind vectors the way upstream
+    /// `ConfigOptionFloats::serialize` does (per-element `%g`, comma
+    /// join) — a non-float element is invalid input, not a verbatim
+    /// echo.
+    pub(crate) fn iter(&self) -> impl Iterator<Item = Result<(&str, Option<String>), String>> {
+        self.0.iter().map(|(key, value)| {
+            value
+                .option_token(key, None)
+                .map(|token| (key.as_str(), token))
+        })
     }
 }
 
@@ -165,13 +172,25 @@ pub(crate) enum RawConfigValue {
     Null,
 }
 
+/// One `ConfigOptionFloats` element: `%g`-formatted via the shared
+/// `format_number` source; a non-float element is invalid input.
+fn float_element(value: &RawConfigValue, key: &str) -> Result<String, String> {
+    let number = match value {
+        RawConfigValue::Text(text) => text.parse::<f64>().map_err(|_| ()),
+        RawConfigValue::Number(number) => number.as_f64().ok_or(()),
+        _ => Err(()),
+    }
+    .map_err(|()| format!("invalid Orca option {key}: expected floats"))?;
+    Ok(crate::options::format_number(number))
+}
+
 impl RawConfigValue {
     /// Raw coStrings retain logical slots for typed deserialization; only
     /// export renders `escape_strings_cstyle` (Config.cpp:72-120).
-    fn option_token(&self, key: &str, count: Option<usize>) -> Option<String> {
+    fn option_token(&self, key: &str, count: Option<usize>) -> Result<Option<String>, String> {
         use crate::options::registry::{OptionValueKind, option_definition};
-        if option_definition(key)
-            .is_some_and(|definition| definition.kind == OptionValueKind::Strings)
+        let definition = option_definition(key);
+        if definition.is_some_and(|definition| definition.kind == OptionValueKind::Strings)
             && let Self::List(values) = self
         {
             let count = count.unwrap_or(values.len()).min(values.len());
@@ -182,9 +201,23 @@ impl RawConfigValue {
                     _ => unreachable!("normalized coStrings contain logical string slots"),
                 })
                 .collect::<Vec<_>>();
-            return Some(rendered.join(";"));
+            return Ok(Some(rendered.join(";")));
         }
-        count.map_or_else(|| self.token(), |count| self.token_prefix(count))
+        // `ConfigOptionFloats::serialize` (`Config.hpp`): per-element
+        // `%g` serialization, comma-joined — the raw Floats preset echo
+        // never keeps the input spelling or the internal `;` list form.
+        if definition.is_some_and(|definition| definition.kind == OptionValueKind::Floats)
+            && let Self::List(values) = self
+        {
+            let count = count.unwrap_or(values.len()).min(values.len());
+            let rendered: Result<Vec<_>, _> = values[..count]
+                .iter()
+                .map(|value| float_element(value, key))
+                .collect();
+            let rendered = rendered?;
+            return Ok((!rendered.is_empty()).then(|| rendered.join(",")));
+        }
+        Ok(count.map_or_else(|| self.token(), |count| self.token_prefix(count)))
     }
 
     /// `ConfigOptionVector::get_at(index)` equivalent: lists return their

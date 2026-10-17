@@ -26,6 +26,11 @@ mod per_object_skirt_min_length;
 #[path = "orca_parity/per_object_skirt_brim.rs"]
 mod per_object_skirt_brim;
 
+#[path = "orca_parity/config_floats_header_serialization.rs"]
+mod config_floats_header_serialization;
+
+#[path = "orca_parity/config_float_header_serialization.rs"]
+mod config_float_header_serialization;
 #[path = "orca_parity/per_object_skirt_brim_ears.rs"]
 mod per_object_skirt_brim_ears;
 #[path = "orca_parity/per_object_skirt_brim_types.rs"]
@@ -38,6 +43,7 @@ mod per_object_skirt_painted;
 mod per_object_skirt_support_raft;
 #[path = "orca_parity/skirt_flush_infill_w5.rs"]
 mod skirt_flush_infill_w5;
+
 #[path = "orca_parity/skirt_flush_objects_w5.rs"]
 mod skirt_flush_objects_w5;
 #[path = "orca_parity/skirt_flush_support_w5.rs"]

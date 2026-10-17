@@ -9,8 +9,10 @@ use super::{
     transform::transformed_for_export,
     value::serialize_config_value,
 };
+use crate::options::config_types::format_number;
 use crate::options::project_config_views::ProjectConfigViews;
-use crate::project::raw_settings::ProjectSettingsRaw;
+use crate::options::registry::OptionValueKind as Kind;
+use crate::project::raw_settings::{ProjectSettingsRaw, RawConfigValue};
 /// CLI-oracle export state the interactive `Print::apply` passes never
 /// observe (see `transform::apply_cli_oracle_state`).
 #[derive(Default)]
@@ -25,20 +27,21 @@ pub(super) struct ExportOverrides {
 }
 
 impl ExportOverrides {
+    /// Bookkeeping lookups read the raw map directly and render with the
+    /// generic (non-Floats) token — no export-echo serialization, so no
+    /// error path and no silent skips.
     fn from_raw(raw_settings: &ProjectSettingsRaw, is_bbl: bool) -> Self {
         let enable_prime_tower = raw_settings
-            .iter()
-            .find(|(key, _)| *key == "enable_prime_tower")
-            .and_then(|(_, token)| token)
+            .get("enable_prime_tower")
+            .and_then(RawConfigValue::token)
             .and_then(|token| match token.as_str() {
                 "1" | "true" => Some(OrcaBool(true)),
                 "0" | "false" => Some(OrcaBool(false)),
                 _ => None,
             });
         let raw_filament_map_token = raw_settings
-            .iter()
-            .find(|(key, _)| *key == "filament_map")
-            .and_then(|(_, token)| token.to_owned());
+            .get("filament_map")
+            .and_then(RawConfigValue::token);
         Self {
             enable_prime_tower,
             raw_filament_map_token,
@@ -145,7 +148,8 @@ pub(crate) fn write_canonical_entries(
         }
         emit(&mut lines, &entry.key, entry.token.clone(), entry.is_nil);
     }
-    for (key, token) in raw_settings.iter() {
+    for entry in raw_settings.iter() {
+        let (key, token) = entry.map_err(config_error)?;
         if matches!(key, "from" | "name" | "version") {
             continue;
         }
@@ -171,6 +175,24 @@ pub(crate) fn write_canonical_entries(
         }
         let Some(rendered) = token else {
             continue;
+        };
+        // Upstream loads every preset key into the config object and
+        // re-serializes it (`Config.cpp` `ConfigOptionFloat::serialize`)
+        // in the full-config block, so raw scalar Float preset echoes
+        // must go through the single typed float serialization
+        // (`format_number`) instead of the verbatim input spelling; a
+        // non-float token is invalid input, not a fallback echo.
+        // Vector Floats echoes keep the verbatim spelling until a RED
+        // freezes their class (nil/empty elements, separator) against
+        // upstream `ConfigOptionFloats::serialize`.
+        let rendered = match crate::options::registry::option_definition(key)
+            .map(|definition| definition.kind)
+        {
+            Some(Kind::Float) => rendered
+                .parse::<f64>()
+                .map(format_number)
+                .map_err(|_| invalid(format!("invalid Orca option {key}: expected a float")))?,
+            _ => rendered.to_owned(),
         };
         let raw_is_nil =
             crate::options::registry::option_definition(key).is_some_and(|definition| {
