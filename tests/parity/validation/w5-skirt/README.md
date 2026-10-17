@@ -54,3 +54,16 @@
   normalized lines (label triple at the bucket head, Skirt blocks
   displaced). RED, must FAIL before the GREEN mirrors the two-loop
   order. flush_into_objects stays guarded (tool-change/print ordering).
+
+## flush_into_objects single-tool collapse (ToolOrdering.cpp:660-760)
+
+- skirt-flush-objects-w5.3mf  sha256=7fc25540dc506a126c618d14088e3b4dbd34b7d0b94851ec908ae0c441da3ce2
+  R1 base with skirt_type=perobject and flush_into_objects=1 (both
+  objects): every wall/fill of the tool-2 object is overriddable
+  (is_overriddable_and_mark, ToolOrdering.cpp:686-698/:718-733), so
+  collect_extruders adds no extruder for it — Native collapses to a
+  single tool ("; filament: 1", second used-filament entry empty, no
+  toolchange, no tower) while printing both objects with per-object
+  skirts. Ares rejects via the flush_into_objects guard disjunct. RED,
+  must FAIL before the GREEN gates collect.rs's extruder pushes on the
+  overridable marking and retires the last guard term.
