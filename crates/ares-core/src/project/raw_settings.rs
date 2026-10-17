@@ -153,15 +153,6 @@ impl ProjectSettingsRaw {
             .map(|(key, value)| (key.as_str(), value.option_token(key, None)))
     }
 
-    /// Renders the export token of only the first `count` list items
-    /// (scalar values render like `token()`). Orca trims preset vectors to
-    /// the active extruder count, so trailing preset slots must not count
-    /// toward nil-ness checks.
-    pub(crate) fn token_prefix(&self, key: &str, count: usize) -> Option<String> {
-        self.0
-            .get(key)
-            .and_then(|value| value.option_token(key, Some(count)))
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, serde::Serialize)]
