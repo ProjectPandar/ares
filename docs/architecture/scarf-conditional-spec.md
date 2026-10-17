@@ -5,6 +5,24 @@ Status: **SPEC REVIEW-REQUEST / docs only**. Proposal approved at
 GREEN9d9814418e1481114d05cb65848ed723869ac2ce. No RED/production permission until
 exact SPEC approval. [ARD](ard-scarf-conditional.md).
 
+## Owner amendment: first-object-over-raft Native UB (2026-10-17)
+
+After approved REDbdb36e092, owner authorizes ONE narrow explicit admission error:
+`raft_layers>0 && conditional scarf active && scarf_overhang_threshold>0` →
+`SliceError::UnsupportedProjectFeature`, key `scarf_overhang_threshold`.
+Conditional scarf active means configured scarf type is not None and conditional
+is enabled, with the source non-vase gate respected; do not reject inactive scarf.
+Check resolved object/region options at the shared scarf-option/admission boundary
+so API and CLI, modifiers/defaults/overrides have the same result. Comment cites
+Native SeamPlacer.hpp59-70 (uninitialized field), SeamPlacer.cpp1092/1563 and
+GCode.cpp5787-5791 (first-object-over-raft consumption). No scalar is fabricated,
+no print/object index is changed. All other defined cases remain the source port.
+This is an explicitly authorized Native-UB guard, not a threshold-only fallback.
+A new RED-side UB witness is NOT required. GREEN gate is ALL seam+scarf+core-seam
+families BOTH modes at the exact hash; residual whole mismatch=STOP. Frozen RED
+stays unchanged. This amendment supersedes the earlier blanket no-new-guard rule
+ONLY for this conjunction; other unassigned-field paths still STOP/report.
+
 ## Decision: the adjacent nonzero-overhang predicate is IN SCOPE
 
 Port Native conditional eligibility as one source-owned decision, not the
