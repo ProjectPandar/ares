@@ -208,6 +208,16 @@ fn collect_range_errors(
     errors: &mut BTreeMap<String, String>,
 ) -> Result<(), SliceError> {
     for (key, value) in values {
+        // `PrintConfig.cpp:8876-8878`: `Slic3r::validate` runs over
+        // `FullPrintConfig` after `fpc.apply(*this, true)`, which drops the
+        // dynamic `filament_extruder_override_keys` (`add_nullable`,
+        // `:7288-7320`) — they are not `FullPrintConfig` static members, so
+        // the `fpc.keys()` range loop never sees them. Keyed on the typed
+        // `FilamentRetractOverrideOptions` field set, not the `filament_`
+        // prefix: static `GCodeConfig` filament members stay checked.
+        if crate::options::filament_options::is_dynamic_filament_override_key(key) {
+            continue;
+        }
         let Some(definition) = registry::option_definition(key) else {
             continue;
         };
