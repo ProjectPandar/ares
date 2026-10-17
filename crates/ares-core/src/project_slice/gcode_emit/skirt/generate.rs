@@ -42,7 +42,7 @@ impl SkirtPlan {
         if per_object
             && traversal.resolved.objects.len() > 1
             && (brim.iter().enumerate().any(|(index, plan)| {
-                let (object, group) = traversal.print_object_config(index);
+                let (object, _) = traversal.print_object_config(index);
                 plan.is_some()
                     && (print.combine_brims.0
                         // `Print.cpp:2847-2971` / `Brim.cpp:448-460,964-977`:
@@ -51,11 +51,7 @@ impl SkirtPlan {
                             object.object.brim_type,
                             crate::ProcessBrimType::OuterOnly
                                 | crate::ProcessBrimType::OuterAndInner
-                        )
-                        // ByLayer uses complete owner collections. ByObject
-                        // multi-instance brim ownership remains unported.
-                        || (print.print_sequence == crate::ProcessPrintSequence::ByObject
-                            && group.instance_indices.len() != 1))
+                        ))
             }) || (tower_active
                 && traversal.resolved.objects.iter().any(|object| {
                     object.object.flush_into_objects.0
