@@ -1,0 +1,34 @@
+{
+  "sha256": {
+    "positive.3mf": "d951edca050a77d6bf7a0c90a14de35ceac8804104af7bb5d3cc2e40ad67157c",
+    "control.3mf": "6b26059cdff3ffd567fcc7d279154da27feb86d165d1deb6bfaeb00b21bd5c2c"
+  },
+  "zip_entry_sha256": {
+    "positive.3mf": {
+      "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+      "3D/3dmodel.model": "ee1e7f1ff154bd8fae66e35fd3aed4192b6c21935ba3408258198f3d096e8c73",
+      "3D/_rels/3dmodel.model.rels": "013d390c27c90bd2e389220b45902459a11e3f5c761074ba1e2544f43eb533dc",
+      "3D/Objects/ring.stl_1.model": "9f20ac752039ad421e684eec0b52cf70b0f2ca69ef8385776d663296872a63bb",
+      "Metadata/project_settings.config": "5622f384e71fb366dd6fe2b99afef14adcb944170e235d4f8ed31776d2fec405",
+      "Metadata/model_settings.config": "3af8bf3f211466793e9e77e4915dd8b1567092b9b817073ae86542cb9cdef814",
+      "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+      "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+      "3D/Objects/modifier.model": "f42f800f6eeb6e35189358e51751ddeb8a3bc45837f01184cce2ed78e7887d66"
+    },
+    "control.3mf": {
+      "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+      "3D/3dmodel.model": "ee1e7f1ff154bd8fae66e35fd3aed4192b6c21935ba3408258198f3d096e8c73",
+      "3D/_rels/3dmodel.model.rels": "013d390c27c90bd2e389220b45902459a11e3f5c761074ba1e2544f43eb533dc",
+      "3D/Objects/ring.stl_1.model": "9f20ac752039ad421e684eec0b52cf70b0f2ca69ef8385776d663296872a63bb",
+      "Metadata/project_settings.config": "5622f384e71fb366dd6fe2b99afef14adcb944170e235d4f8ed31776d2fec405",
+      "Metadata/model_settings.config": "3a4c558cbf07d8e7b82c6a1606780ee288bb50f634b7c4d4eec9204120182be3",
+      "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+      "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+      "3D/Objects/modifier.model": "f42f800f6eeb6e35189358e51751ddeb8a3bc45837f01184cce2ed78e7887d66"
+    }
+  },
+  "only_delta": "positive modifier part3 density50%; control20% equal parent normalpart; geometry/global settings/relationships unchanged",
+  "source_spec": "7941b381d5ab3205dbda0ddb97e524486ceba25c"
+}

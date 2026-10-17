@@ -2,6 +2,11 @@
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
 
+#[path = "runner/seam_physical_plane.rs"]
+mod seam_physical_plane;
+#[path = "runner/seam_rear.rs"]
+mod seam_rear;
+
 #[path = "runner/modifier_feature_filament.rs"]
 mod modifier_feature_filament;
 

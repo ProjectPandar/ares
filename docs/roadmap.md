@@ -7,6 +7,28 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### spRear/back candidate comparison and alignment: SPEC request (2026-10-17)
+
+W4's coordinator-approved proposal ports `GCode/SeamPlacer.cpp` spRear
+comparison Y priority777-779, similarity839-841, pick917-928, rear fit
+length1364-1366 and alignment routing1486-1492 (pin8500fcdcc). Rust boundary is
+existing `project_slice/seam_placement` runtime/preparation/alignment; replace
+its Back bypass, not the unrelated basic-perimeter max-Y helper. No max-Y
+shortcut or new Ares pipeline; paint/scarf/new random/nearest and clocks defer.
+Base **approved physical-plane GREEN4dbba4fc09b4b84033797ab83f2941e5d8484b95**,
+keeping shared files on the same stack25 ancestry. Discovery on4351: admitted
+6-vertex/8-triangle four-layer prism, aligned control Native/CLI whole-PASS;
+only back positive Native0/CLI0 whole-FAIL byte451/line18, first motion raw64
+Native110,113.446 versus Ares110.43,112.509. Not an admission/defensive guard.
+Docs only: SPEC approval→frozen Native-first public API+real CLI control/positive
+RED in official+seeded→RED REVIEW→separate bounded GREEN REVIEW. Exit: whole
+PASS/raw API==CLI both modes, Native first-motion parity, existing seam-family
+regressions including audited Native gates, fmt/strict scoped clippy/WASM;
+residual whole failure means STOP. No code/test/fixture permission before gates;
+CPU15 targeted only, coordinator owns full/workspace/integration; RED merges
+only with GREEN. [SPEC](architecture/seam-rear-spec.md),
+[ARD](architecture/ard-seam-rear.md).
+
 ### Per-object skirt guard inventory: approved ByObject slice, integration pending (2026-10-17)
 
 W1 Slice 1 GREEN `c1780265dd00dfd9322ffc6bba734d335c5311fe` ports
@@ -57,6 +79,26 @@ on `adapt_fill_octree`, assigned only at `Fill.cpp:1246,1451`. Ares therefore
 keeps the existing guard and does not claim a RED or port for these three
 patterns. Ordinary ironing remains the two-value enum from
 `PrintConfig.cpp:6565-6575`.
+
+### Physical seam candidate plane: resource-control SPEC request (2026-10-16)
+
+W4 localized unchanged d951 resource-control motion995/line1198 to third-layer
+region1 inner hole-wall seam selection. All24 oriented pre-seam loops and67
+candidate XY/angles agree; Native slice_z0.62 versus Rust0.32 flips candidate8/10.
+The upstream owner is `GCode/SeamPlacer.cpp::gather_seam_candidates:1014-1040`,
+consuming `PrintObjectSlice.cpp::compute_slice_z/new_layers:24-75`'s physical
+`Layer::slice_z`. Rust destination is only the runtime region-height scan and
+`seam_placement.rs::apply_objects` caller, replaced by the retained
+`PostClassicTraversalPrintObject::physical_layers` view. No new plane/pipeline.
+Minimal-delta modifier density50→20 control whole-PASSes official Native/API/CLI;
+positive whole strict FAIL is retained. M73 is a total-time-denominator symptom,
+not a postprocessor fix; old v2 NO-RED remains closed. SPEC approval→frozen public
+RED review→separate GREEN permission. Exit: both whole streams/raw API==CLI in
+both modes, scoped regressions/fmt/clippy/WASM, no scoring/geometry/M73 changes;
+residual owner means STOP. main41f2 now; rebase only after stack24 MAIN-ADVANCE.
+FULL24 FREEZE: CPU15 targeted only; coordinator owns full/workspace/integration.
+[SPEC](architecture/seam-physical-plane-resource-spec.md),
+[ARD](architecture/ard-seam-physical-plane-resource.md).
 
 ### 3MF vertex coordinate defaults: amended shared importer SPEC (2026-10-15)
 

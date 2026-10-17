@@ -133,7 +133,12 @@ fn apply_objects(
         ) else {
             continue;
         };
-        let layer_zs = runtime::layer_slice_zs(&traversal.objects[object_index].records);
+        // SeamPlacer.cpp:1024-1032 consumes each physical Layer::slice_z.
+        let layer_zs = traversal.objects[object_index]
+            .physical_layers()
+            .iter()
+            .map(|layer| layer.slice_z as f32)
+            .collect::<Vec<_>>();
         let mut plans = alignment::prepare(
             (layers, &layer_zs),
             traversal,
@@ -142,9 +147,9 @@ fn apply_objects(
             visibility,
         );
         match placement {
-            ProcessSeamPosition::Aligned | ProcessSeamPosition::AlignedBack => {
-                alignment::align(&mut plans)
-            }
+            ProcessSeamPosition::Aligned
+            | ProcessSeamPosition::AlignedBack
+            | ProcessSeamPosition::Back => alignment::align(&mut plans),
             ProcessSeamPosition::Random => alignment::randomize(&mut plans),
             ProcessSeamPosition::Nearest => {
                 // `SeamPlacer.cpp:1465` skips `pick_seam_point` for spNearest —
@@ -156,7 +161,6 @@ fn apply_objects(
                 nearest_plans[object_index] = nearest_seam_data(&plans, visibility);
                 continue;
             }
-            _ => unreachable!("only active seam placement modes are prepared"),
         }
         let staggered = traversal
             .print_object_config(object_index)
