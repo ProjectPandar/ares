@@ -3,7 +3,9 @@ use serde::{
     ser::{Impossible, SerializeMap},
 };
 
-use super::value::{ConfigValueError, serialize_config_value};
+use super::value::{
+    ConfigValueError, serialize_config_value, serialize_config_value_with_active_count,
+};
 use crate::options::ProjectSettings;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -17,18 +19,23 @@ pub(crate) fn collect_config_entries(
     settings: &ProjectSettings,
 ) -> Result<Vec<ConfigEntry>, ConfigValueError> {
     let mut entries = Vec::with_capacity(650);
-    append_group(&settings.printer, &mut entries)?;
-    append_group(&settings.process, &mut entries)?;
-    append_group(&settings.filament, &mut entries)?;
-    append_group(&settings.project, &mut entries)?;
+    let active_count = Some(settings.filament.gcode.filament_diameter.0.len());
+    append_group(&settings.printer, &mut entries, active_count)?;
+    append_group(&settings.process, &mut entries, active_count)?;
+    append_group(&settings.filament, &mut entries, active_count)?;
+    append_group(&settings.project, &mut entries, active_count)?;
     finish(entries)
 }
 
-fn append_group<T>(value: &T, entries: &mut Vec<ConfigEntry>) -> Result<(), ConfigValueError>
+fn append_group<T>(
+    value: &T,
+    entries: &mut Vec<ConfigEntry>,
+    active_count: Option<usize>,
+) -> Result<(), ConfigValueError>
 where
     T: Serialize + ?Sized,
 {
-    entries.extend(value.serialize(GroupSerializer)?);
+    entries.extend(value.serialize(GroupSerializer { active_count })?);
     Ok(())
 }
 
@@ -47,10 +54,12 @@ pub(crate) fn collect_serializable_for_test<T>(
 where
     T: Serialize + ?Sized,
 {
-    finish(value.serialize(GroupSerializer)?)
+    finish(value.serialize(GroupSerializer { active_count: None })?)
 }
 
-struct GroupSerializer;
+struct GroupSerializer {
+    active_count: Option<usize>,
+}
 
 impl Serializer for GroupSerializer {
     type Ok = Vec<ConfigEntry>;
@@ -67,6 +76,7 @@ impl Serializer for GroupSerializer {
         Ok(ConfigMap {
             entries: Vec::with_capacity(length.unwrap_or(0)),
             pending_key: None,
+            active_count: self.active_count,
         })
     }
 
@@ -234,6 +244,7 @@ impl Serializer for GroupSerializer {
 struct ConfigMap {
     entries: Vec<ConfigEntry>,
     pending_key: Option<String>,
+    active_count: Option<usize>,
 }
 
 impl SerializeMap for ConfigMap {
@@ -263,7 +274,7 @@ impl SerializeMap for ConfigMap {
             .pending_key
             .take()
             .ok_or_else(|| error("config map value is missing its key"))?;
-        let value = serialize_config_value(value)?;
+        let value = serialize_config_value_with_active_count(value, self.active_count)?;
         self.entries.push(ConfigEntry {
             key,
             token: value.token,

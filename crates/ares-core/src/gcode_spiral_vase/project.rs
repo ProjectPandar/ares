@@ -115,19 +115,15 @@ impl ProjectSpiralVaseRunState {
             let mut normal = line.to_owned();
             if transition_in && let Some(e) = parsed.e {
                 let starting = self.config.starting_flow_ratio as f32;
-                let factor = f64::from(starting + progress as f32 * (1.0 - starting));
-                normal = set_word(&normal, 'E', format_e(e * factor));
+                let factor = starting + progress as f32 * (1.0 - starting);
+                normal = set_word(&normal, 'E', format_e(f64::from(e as f32 * factor)));
             }
             if transition_out {
-                let factor = f64::from(
-                    super::super::gcode_spiral_vase_transition::finishing_factor(
-                        progress,
-                        self.config.finishing_flow_ratio,
-                    ) as f32,
-                );
+                let finishing = self.config.finishing_flow_ratio as f32;
+                let factor = finishing + (1.0 - progress as f32) * (1.0 - finishing);
                 let tapered = parsed.e.map_or_else(
                     || line.to_owned(),
-                    |e| set_word(line, 'E', format_e(e * factor)),
+                    |e| set_word(line, 'E', format_e(f64::from(e as f32 * factor))),
                 );
                 push_line(&mut transition, &tapered);
             }
@@ -204,14 +200,18 @@ impl ParsedLine {
             let Some(letter) = chars.next() else {
                 continue;
             };
-            let Ok(value) = chars.as_str().parse::<f64>() else {
-                continue;
-            };
             match letter {
-                'X' => parsed.x = Some(value),
-                'Y' => parsed.y = Some(value),
-                'Z' => parsed.z = Some(value),
-                'E' => parsed.e = Some(value),
+                'X' => parsed.x = chars.as_str().parse().ok().or(parsed.x),
+                'Y' => parsed.y = chars.as_str().parse().ok().or(parsed.y),
+                'Z' => parsed.z = chars.as_str().parse().ok().or(parsed.z),
+                'E' => {
+                    parsed.e = chars
+                        .as_str()
+                        .parse::<f32>()
+                        .ok()
+                        .map(f64::from)
+                        .or(parsed.e);
+                }
                 _ => {}
             }
         }
