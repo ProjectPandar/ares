@@ -1,3 +1,4 @@
+use crate::fill::plane_path;
 use crate::project_slice::perimeters::classic::materialize::Polyline3;
 // Source boundary: OrcaSlicer 2.4.2 `Fill/Fill.cpp::Layer::make_ironing`.
 
@@ -103,7 +104,12 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
         return Ok(());
     };
     let concentric = input.region.ironing_pattern == ProcessInfillPattern::Concentric;
-    if !concentric && input.region.ironing_pattern != ProcessInfillPattern::Rectilinear {
+    if !matches!(
+        input.region.ironing_pattern,
+        ProcessInfillPattern::Concentric
+            | ProcessInfillPattern::Rectilinear
+            | ProcessInfillPattern::HilbertCurve
+    ) {
         return Err(SliceError::UnsupportedProjectFeature(
             "ironing_pattern".to_owned(),
         ));
@@ -174,40 +180,66 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
             });
             continue;
         }
-        let generated = fill_monotonic_surface(
-            &area,
-            MonotonicFillParams {
-                // Fill.cpp:1631/1705-1723 -> FillBase.cpp:311-313.
-                dont_alternate_fill_direction: input.dont_alternate_fill_direction,
-                spacing,
-                overlap: 0.0,
-                density: 1.0,
-                angle,
-                layer_index: input.layer.id,
-                thickness_layers: 1,
-                fixed_angle,
-                bridge_angle: None,
-                reference_point: Point::new(0, 0),
-                dont_adjust: true,
-                anchor_length_max: 1000.0,
-                link_max_length: 3.0 * spacing,
-                // `fill_surface_ironing`/`FillMonotonicLine`-style ironing is not
-                // a consistent-pattern fill — the monotonic path ignores it.
-                consistent_pattern: false,
-                horiz_move: 0.0,
-                extended_object_min_x: None,
-                extended_object_max_x: None,
-                locked_zag: false,
-            },
-            input.scale,
-        )
-        .map_err(geometry_error)?;
-        if generated.polylines.is_empty() {
+        let polylines = if input.region.ironing_pattern == ProcessInfillPattern::HilbertCurve {
+            // Fill.cpp:1634/1718: dispatch to the existing solid PlanePath fill.
+            plane_path::fill_surface(
+                &area,
+                plane_path::PlanePathPattern::HilbertCurve,
+                plane_path::PlanePathFillParams {
+                    spacing,
+                    overlap: 0.0,
+                    density: 1.0,
+                    angle,
+                    multiline: 1,
+                    resolution: 0.0125,
+                    anchor_length: 1000.0,
+                    anchor_length_max: 1000.0,
+                    object_bounding_box: crate::geometry::BoundingBox::from_expolygon(&area)
+                        .expect("ironing area has a contour"),
+                    calibration_order: false,
+                },
+                input.scale,
+            )
+            .map_err(geometry_error)?
+            .into_iter()
+            .flatten()
+            .collect()
+        } else {
+            fill_monotonic_surface(
+                &area,
+                MonotonicFillParams {
+                    // Fill.cpp:1631/1705-1723 -> FillBase.cpp:311-313.
+                    dont_alternate_fill_direction: input.dont_alternate_fill_direction,
+                    spacing,
+                    overlap: 0.0,
+                    density: 1.0,
+                    angle,
+                    layer_index: input.layer.id,
+                    thickness_layers: 1,
+                    fixed_angle,
+                    bridge_angle: None,
+                    reference_point: Point::new(0, 0),
+                    dont_adjust: true,
+                    anchor_length_max: 1000.0,
+                    link_max_length: 3.0 * spacing,
+                    // `fill_surface_ironing`/`FillMonotonicLine`-style ironing is not
+                    // a consistent-pattern fill — the monotonic path ignores it.
+                    consistent_pattern: false,
+                    horiz_move: 0.0,
+                    extended_object_min_x: None,
+                    extended_object_max_x: None,
+                    locked_zag: false,
+                },
+                input.scale,
+            )
+            .map_err(geometry_error)?
+            .polylines
+        };
+        if polylines.is_empty() {
             continue;
         }
         output.collections.push(FillExtrusionCollection {
-            entities: generated
-                .polylines
+            entities: polylines
                 .into_iter()
                 .map(|polyline| {
                     FillExtrusionEntity::Path(FillExtrusionPath {
