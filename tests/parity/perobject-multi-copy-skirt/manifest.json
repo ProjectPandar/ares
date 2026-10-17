@@ -1,0 +1,27 @@
+{
+  "source": "Print.cpp:2794-2920; Brim.cpp:36-45,573-581,914-977; GCode.cpp:4486-4531",
+  "cases": {
+    "target": {
+      "sha256": "6e447b091386ec11b3002fc91352e30371352bd5d2d4d26082c10bbcf5283243",
+      "skirt_type": "perobject",
+      "native_brim_blocks": 2,
+      "native_skirt_blocks": 1,
+      "active_model_x_centers": [
+        80,
+        110,
+        140
+      ]
+    },
+    "control": {
+      "sha256": "aac4f3c278fe16614d0694ba9fbe94db059e7bb68d75c7cf55f7ecf0f47aa07d",
+      "skirt_type": "combined",
+      "native_brim_blocks": 2,
+      "native_skirt_blocks": 1,
+      "active_model_x_centers": [
+        80,
+        110,
+        140
+      ]
+    }
+  }
+}

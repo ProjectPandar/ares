@@ -41,7 +41,10 @@ impl SkirtPlan {
                                 | crate::ProcessBrimType::BrimEars
                                 | crate::ProcessBrimType::OuterAndInner
                         )
-                        || group.instance_indices.len() != 1)
+                        // ByLayer uses complete owner collections. ByObject
+                        // multi-instance brim ownership remains unported.
+                        || (print.print_sequence == crate::ProcessPrintSequence::ByObject
+                            && group.instance_indices.len() != 1))
             })
         {
             return Err(SliceError::UnsupportedProjectFeature(

@@ -137,6 +137,8 @@ mod load_settings_cli;
 mod multi_instance_brim;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
+#[path = "orca_parity/perobject_multi_copy_skirt.rs"]
+mod perobject_multi_copy_skirt;
 #[path = "orca_parity/perobject_outer_inner_brim.rs"]
 mod perobject_outer_inner_brim;
 #[path = "orca_parity/plate_origin_cli.rs"]
