@@ -1,7 +1,7 @@
 //! `MotionOptions` field assembly split from `build.rs` (400-LOC rule).
 
 mod assemble;
-mod hilbert;
+pub(in crate::project_slice::gcode_emit::motion::options::build) mod hilbert;
 mod retraction;
 mod wipe;
 
