@@ -115,6 +115,8 @@ mod load_settings_3mf_inherits;
 mod load_settings_3mf_partial;
 #[path = "orca_parity/load_settings_cli.rs"]
 mod load_settings_cli;
+#[path = "orca_parity/multi_instance_brim.rs"]
+mod multi_instance_brim;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
 #[path = "orca_parity/perobject_outer_inner_brim.rs"]
