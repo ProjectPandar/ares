@@ -104,19 +104,6 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
     let Some(areas) = ironing_areas(&input)? else {
         return Ok(());
     };
-    let concentric = input.region.ironing_pattern == ProcessInfillPattern::Concentric;
-    if !matches!(
-        input.region.ironing_pattern,
-        ProcessInfillPattern::Concentric
-            | ProcessInfillPattern::Rectilinear
-            | ProcessInfillPattern::HilbertCurve
-            | ProcessInfillPattern::ArchimedeanChords
-            | ProcessInfillPattern::OctagramSpiral
-    ) {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "ironing_pattern".to_owned(),
-        ));
-    }
     let spacing = input.region.filament_ironing_spacing.0;
     if spacing <= 0.0 {
         return Ok(());
@@ -131,102 +118,122 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
     let mm3_per_mm = nozzle * extrusion_height;
 
     for area in areas {
-        // `ipConcentric` ironing uses `FillConcentric` (closed-loop rings at
-        // `spacing`) instead of `FillMonotonicLine` (`Fill.cpp:1634` fills
-        // with `Fill::new_from_type(ironing_params.pattern)`).
-        if concentric {
-            // `Fill::fill_surface` contracts the surface by
-            // `scale_(overlap - 0.5*spacing)` before
-            // `_fill_surface_single` (`FillBase.cpp:107`); ironing sets
-            // `f->overlap = 0` (`Fill.cpp:1631`), so the ring domain is
-            // inset by half the ironing spacing. This is where upstream's
-            // concentric-ironing outer ring lands at spacing/2 inside the
-            // clipped ironing area.
-            let domain_offset = (-0.5 * spacing / input.scale.factor()) as f32;
-            let generation_domains = offset_expolygon(&area, domain_offset, JoinType::Miter, 3.0)
-                .map_err(geometry_error)?;
-            let mut polylines = Vec::new();
-            for domain in generation_domains {
-                polylines.extend(
-                    crate::fill::concentric_sparse::fill_concentric_sparse(
-                        &domain,
-                        spacing,
-                        &crate::fill::FillParams {
-                            density: 1.0,
-                            multiline: 1,
-                            dont_adjust: true,
-                        },
-                        0,
-                        input.scale,
-                    )
-                    .map_err(geometry_error)?,
-                );
-            }
-            if polylines.is_empty() {
+        let polylines = match input.region.ironing_pattern {
+            // Fill.cpp:1634 creates FillConcentric for closed-loop ironing.
+            ProcessInfillPattern::Concentric => {
+                // `Fill::fill_surface` contracts the surface by
+                // `scale_(overlap - 0.5*spacing)` before
+                // `_fill_surface_single` (`FillBase.cpp:107`); ironing sets
+                // `f->overlap = 0` (`Fill.cpp:1631`), so the ring domain is
+                // inset by half the ironing spacing. This is where upstream's
+                // concentric-ironing outer ring lands at spacing/2 inside the
+                // clipped ironing area.
+                let domain_offset = (-0.5 * spacing / input.scale.factor()) as f32;
+                let generation_domains =
+                    offset_expolygon(&area, domain_offset, JoinType::Miter, 3.0)
+                        .map_err(geometry_error)?;
+                let mut polylines = Vec::new();
+                for domain in generation_domains {
+                    polylines.extend(
+                        crate::fill::concentric_sparse::fill_concentric_sparse(
+                            &domain,
+                            spacing,
+                            &crate::fill::FillParams {
+                                density: 1.0,
+                                multiline: 1,
+                                dont_adjust: true,
+                            },
+                            0,
+                            input.scale,
+                        )
+                        .map_err(geometry_error)?,
+                    );
+                }
+                if polylines.is_empty() {
+                    continue;
+                }
+                output.collections.push(FillExtrusionCollection {
+                    entities: polylines
+                        .into_iter()
+                        .map(|polyline| {
+                            FillExtrusionEntity::Path(FillExtrusionPath {
+                                polyline: Polyline3::from_xy(polyline, Vec::new()),
+                                z_contoured: false,
+                                role: ExtrusionRole::Ironing,
+                                mm3_per_mm,
+                                width,
+                                height,
+                            })
+                        })
+                        .collect(),
+                    no_sort: true,
+                });
                 continue;
             }
-            output.collections.push(FillExtrusionCollection {
-                entities: polylines
-                    .into_iter()
-                    .map(|polyline| {
-                        FillExtrusionEntity::Path(FillExtrusionPath {
-                            polyline: Polyline3::from_xy(polyline, Vec::new()),
-                            z_contoured: false,
-                            role: ExtrusionRole::Ironing,
-                            mm3_per_mm,
-                            width,
-                            height,
-                        })
-                    })
-                    .collect(),
-                no_sort: true,
-            });
-            continue;
-        }
-        let polylines = if matches!(
-            input.region.ironing_pattern,
-            ProcessInfillPattern::HilbertCurve
-                | ProcessInfillPattern::ArchimedeanChords
-                | ProcessInfillPattern::OctagramSpiral
-        ) {
-            let pattern = if input.region.ironing_pattern == ProcessInfillPattern::HilbertCurve {
-                PlanePathPattern::HilbertCurve
-            } else if input.region.ironing_pattern == ProcessInfillPattern::ArchimedeanChords {
-                PlanePathPattern::ArchimedeanChords
-            } else {
-                PlanePathPattern::OctagramSpiral
-            };
-            plane_path::polylines(&area, pattern, spacing, angle, input.scale)?
-        } else {
-            fill_monotonic_surface(
+            ProcessInfillPattern::HilbertCurve => plane_path::polylines(
                 &area,
-                MonotonicFillParams {
-                    // Fill.cpp:1631/1705-1723 -> FillBase.cpp:311-313.
-                    dont_alternate_fill_direction: input.dont_alternate_fill_direction,
-                    spacing,
-                    overlap: 0.0,
-                    density: 1.0,
-                    angle,
-                    layer_index: input.layer.id,
-                    thickness_layers: 1,
-                    fixed_angle,
-                    bridge_angle: None,
-                    reference_point: Point::new(0, 0),
-                    dont_adjust: true,
-                    anchor_length_max: 1000.0,
-                    link_max_length: 3.0 * spacing,
-                    // `fill_surface_ironing`/`FillMonotonicLine`-style ironing is not
-                    // a consistent-pattern fill — the monotonic path ignores it.
-                    consistent_pattern: false,
-                    horiz_move: 0.0,
-                    extended_object_min_x: None,
-                    extended_object_max_x: None,
-                    locked_zag: false,
-                },
+                PlanePathPattern::HilbertCurve,
+                spacing,
+                angle,
                 input.scale,
-            )
-            .map_err(geometry_error)?
-            .polylines
+            )?,
+            ProcessInfillPattern::ArchimedeanChords => plane_path::polylines(
+                &area,
+                PlanePathPattern::ArchimedeanChords,
+                spacing,
+                angle,
+                input.scale,
+            )?,
+            ProcessInfillPattern::OctagramSpiral => plane_path::polylines(
+                &area,
+                PlanePathPattern::OctagramSpiral,
+                spacing,
+                angle,
+                input.scale,
+            )?,
+            // Zag classes inherit this Polylines path (FillRectilinear.hpp:193-224).
+            // make_ironing sets monotonic=true (Fill.cpp:1619-1621), so
+            // FillRectilinear.cpp:2874 is not reached; LockedZag's extrusion
+            // override is not called.
+            ProcessInfillPattern::Rectilinear
+            | ProcessInfillPattern::ZigZag
+            | ProcessInfillPattern::CrossZag
+            | ProcessInfillPattern::LockedZag => {
+                fill_monotonic_surface(
+                    &area,
+                    MonotonicFillParams {
+                        // Fill.cpp:1631/1705-1723 -> FillBase.cpp:311-313.
+                        dont_alternate_fill_direction: input.dont_alternate_fill_direction,
+                        spacing,
+                        overlap: 0.0,
+                        density: 1.0,
+                        angle,
+                        layer_index: input.layer.id,
+                        thickness_layers: 1,
+                        fixed_angle,
+                        bridge_angle: None,
+                        reference_point: Point::new(0, 0),
+                        dont_adjust: true,
+                        anchor_length_max: 1000.0,
+                        link_max_length: 3.0 * spacing,
+                        // Ironing bypasses the consistent-pattern traversal
+                        // (FillRectilinear.cpp:2874).
+                        consistent_pattern: false,
+                        horiz_move: 0.0,
+                        extended_object_min_x: None,
+                        extended_object_max_x: None,
+                        locked_zag: false,
+                    },
+                    input.scale,
+                )
+                .map_err(geometry_error)?
+                .polylines
+            }
+            _ => {
+                return Err(SliceError::UnsupportedProjectFeature(
+                    "ironing_pattern".to_owned(),
+                ));
+            }
         };
         if polylines.is_empty() {
             continue;
