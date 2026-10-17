@@ -18,6 +18,7 @@ use crate::{
 pub(super) fn placement_modes(
     objects: &[&ResolvedProjectObject],
     prepared: &[Vec<OrderedExtrusionLayer>],
+    spiral_mode: bool,
 ) -> Vec<Option<ProcessSeamPosition>> {
     objects
         .iter()
@@ -28,7 +29,13 @@ pub(super) fn placement_modes(
                     .region
                     .wall_direction
                     == crate::ProcessWallDirection::Clockwise
-                    && prepared_cw_rectangles_have_source_seams(&prepared[index]) =>
+                    && prepared_cw_rectangles_have_source_seams(&prepared[index])
+                    && (spiral_mode
+                        || !object.all_regions.iter().any(|region| {
+                            region.seam_slope_type != crate::ProcessSeamScarfType::None
+                                && region.seam_slope_conditional.0
+                                && region.scarf_overhang_threshold.0 > 0.0
+                        })) =>
             {
                 None
             }

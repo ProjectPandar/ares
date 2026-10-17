@@ -76,7 +76,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Default,
+            (ExtrusionLoopRole::Default, None),
             geometry(),
             &options(ProcessSeamScarfType::None),
             1,
@@ -86,7 +86,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Default,
+            (ExtrusionLoopRole::Default, None),
             geometry(),
             &options(ProcessSeamScarfType::External),
             1,
@@ -96,7 +96,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Hole,
+            (ExtrusionLoopRole::Hole, None),
             geometry(),
             &options(ProcessSeamScarfType::External),
             1,
@@ -106,7 +106,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Hole,
+            (ExtrusionLoopRole::Hole, None),
             geometry(),
             &options(ProcessSeamScarfType::All),
             1,
@@ -119,7 +119,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
 fn source_scarf_recursively_segments_and_clips_both_overlaps() {
     let scarf = build(
         &square(),
-        ExtrusionLoopRole::Default,
+        (ExtrusionLoopRole::Default, None),
         geometry(),
         &options(ProcessSeamScarfType::External),
         1,

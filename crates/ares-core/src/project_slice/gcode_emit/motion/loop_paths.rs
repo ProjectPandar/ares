@@ -16,7 +16,10 @@ use crate::project_slice::perimeters::classic::{
 
 pub(super) fn emit(
     output: &mut Vec<u8>,
-    loop_: &crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop,
+    (loop_, unsupported_distance): (
+        &crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop,
+        Option<f32>,
+    ),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     region_perimeters: &[Vec<(i64, i64)>],
@@ -36,7 +39,7 @@ pub(super) fn emit(
     if !state.spiral_vase
         && let Some(scarf) = super::scarf::build(
             paths,
-            loop_role,
+            (loop_role, unsupported_distance),
             geometry,
             &state.options,
             state.layer_index,

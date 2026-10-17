@@ -134,6 +134,7 @@ impl<'a> GroupFrame<'a> {
             .into_iter()
             .map(|extrusion_loop| {
                 Some(ExtrusionEntity::Loop(OrderedExtrusionLoop {
+                    unsupported_distance: None,
                     extrusion_loop,
                     inset_idx: 0, // overwritten by the chain order below
                 }))
@@ -245,6 +246,7 @@ pub(super) fn traverse_loops(
             }
             let is_contour = parent.is_contour;
             let parent = ExtrusionEntity::Loop(OrderedExtrusionLoop {
+                unsupported_distance: None,
                 extrusion_loop: parent.extrusion_loop,
                 inset_idx: i32::from(parent.depth),
             });

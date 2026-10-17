@@ -195,6 +195,7 @@ fn prepare_layer(
         scores,
         z,
         overhangs: vec![0.0; candidate_count],
+        unsupported_distances: None,
         embedded_distances: vec![0.0; candidate_count],
         positions,
         point_tree,

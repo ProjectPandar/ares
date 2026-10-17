@@ -101,13 +101,14 @@ pub(super) fn emit_perimeter(
                 z: 0,
             };
             if let Some(layer) = geometry.nearest_seam_penalties {
-                crate::project_slice::seam_placement::place_nearest_penalized(
-                    &mut loop_.extrusion_loop,
-                    cursor,
-                    layer,
-                    geometry.staggered_inner,
-                    geometry.scale,
-                );
+                loop_.unsupported_distance =
+                    crate::project_slice::seam_placement::place_nearest_penalized(
+                        &mut loop_.extrusion_loop,
+                        cursor,
+                        layer,
+                        geometry.staggered_inner,
+                        geometry.scale,
+                    );
             } else {
                 crate::project_slice::seam_placement::place_nearest(
                     &mut loop_.extrusion_loop,
@@ -118,7 +119,7 @@ pub(super) fn emit_perimeter(
         }
         loop_paths::emit(
             output,
-            &loop_.extrusion_loop,
+            (&loop_.extrusion_loop, loop_.unsupported_distance),
             geometry,
             state,
             &region_perimeters,

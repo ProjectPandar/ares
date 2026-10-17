@@ -1,3 +1,4 @@
+mod unsupported;
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 use crate::project_slice::layers::PlannedLayer;
 
@@ -18,6 +19,7 @@ pub(super) fn populate(
         }
         if layer_index > 0 {
             let (_, current) = layers.split_at_mut(layer_index);
+            unsupported::populate(&layer_slices[layer_index - 1], &mut current[0], scale);
             populate_overhang(
                 &layer_slices[layer_index - 1],
                 &mut current[0],

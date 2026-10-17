@@ -41,6 +41,7 @@ pub(in crate::project_slice) fn convert_entities(
                 == last.polyline.points.last().map(|p| (p.x, p.y))
             {
                 output.push(ExtrusionEntity::Loop(OrderedExtrusionLoop {
+                    unsupported_distance: None,
                     extrusion_loop: ExtrusionLoop {
                         paths,
                         role: ExtrusionLoopRole::Default,

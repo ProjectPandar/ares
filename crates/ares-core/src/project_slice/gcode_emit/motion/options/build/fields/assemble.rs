@@ -326,7 +326,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         seam_position: full.process.object.seam_position,
         reduce_crossing_wall: full.process.print.reduce_crossing_wall.0,
         crossing_boundary_inset: crossing::boundary_inset(traversal),
-        scarf: scarf::from_region(&full.process.region, region),
+        scarf: scarf::from_region(&full.process.region, region, wipe_tail.nozzle_diameter),
         enable_arc_fitting: gcode.enable_arc_fitting.0,
         arc_fitting_tolerance: full.process.print.resolution.0,
         ..Default::default()

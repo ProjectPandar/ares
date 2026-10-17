@@ -2,6 +2,8 @@
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
 
+#[path = "runner/scarf_conditional.rs"]
+mod scarf_conditional;
 #[path = "runner/seam_physical_plane.rs"]
 mod seam_physical_plane;
 #[path = "runner/seam_rear.rs"]

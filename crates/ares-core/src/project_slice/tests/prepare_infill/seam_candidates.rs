@@ -226,6 +226,7 @@ fn generate(
 fn collection(paths: Vec<ExtrusionPath>) -> ExtrusionEntityCollection {
     ExtrusionEntityCollection {
         entities: vec![ExtrusionEntity::Loop(OrderedExtrusionLoop {
+            unsupported_distance: None,
             extrusion_loop: ExtrusionLoop {
                 paths,
                 role: ExtrusionLoopRole::Default,

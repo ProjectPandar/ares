@@ -54,7 +54,11 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     let configurations = (0..traversal.objects.len())
         .map(|index| traversal.print_object_config(index).0)
         .collect::<Vec<_>>();
-    let placements = runtime::placement_modes(&configurations, &prepared.objects);
+    let placements = runtime::placement_modes(
+        &configurations,
+        &prepared.objects,
+        traversal.resolved.views.full.process.print.spiral_mode.0,
+    );
     if !placements.iter().any(Option::is_some) {
         return;
     }
@@ -216,6 +220,7 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
             .collect(),
         scores,
         overhangs: plan.overhangs.clone(),
+        unsupported_distances: plan.unsupported_distances.clone(),
         embedded: plan.embedded_distances.clone(),
         perimeter_ranges: plan
             .candidates

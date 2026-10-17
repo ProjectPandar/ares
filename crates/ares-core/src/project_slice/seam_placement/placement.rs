@@ -55,6 +55,10 @@ fn place_collection(
         let perimeter = &plan.candidates.perimeters[perimeter_index];
         let choice = &plan.choices[perimeter_index];
         let selected = choice.seam_index;
+        ordered.unsupported_distance = plan
+            .unsupported_distances
+            .as_ref()
+            .map(|values| values[selected]);
         let previous = if selected == perimeter.start_index {
             perimeter.end_index - 1
         } else {
