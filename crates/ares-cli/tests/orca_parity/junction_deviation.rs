@@ -221,9 +221,10 @@ fn junction_deviation_ordering_matches_native() {
     let reference = slice_native(&runner, &root, ORDERING, "jd-ordering-");
     // GCode.cpp:4761-4774: within the first-layer block the initial
     // acceleration, the initial jerk, and the junction deviation emit
-    // in that order (M204 -> M205 X/Y -> M205 J).
-    let first_layer = &reference[..reference.find(";_SET_FAN_SPEED_CHANGING_LAYER").unwrap()];
-    let m204 = first_layer.rfind("M204 P500\n").unwrap();
+    // in that order (M204 -> M205 X/Y -> M205 J), after the layer
+    // change marker and before the layer-change retract.
+    let first_layer: &str = &reference[reference.find(";_SET_FAN_SPEED_CHANGING_LAYER").unwrap()..];
+    let m204 = first_layer.find("M204 P500\n").unwrap();
     let jerk = first_layer[m204..].find("M205 X8 Y8\n").unwrap() + m204;
     let junction = first_layer[jerk..].find("M205 J0.005\n").unwrap() + jerk;
     assert!(
