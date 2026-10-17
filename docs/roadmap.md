@@ -7,6 +7,27 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Conditional scarf eligibility: SPEC request (2026-10-17)
+
+Approved proposala30db87 selects libslic3r `GCode.cpp::GCode::extrude_loop5777-5785`
+→ `ExtrusionEntity.cpp::ExtrusionLoop::is_smooth369-424` into existing Rust
+`gcode_emit/motion/scarf.rs::build`/private helper and config/callsite context.
+Adjacent positive-overhang guard5787-5791 is IN SCOPE with source-owned
+`SeamPlacer.cpp1083-1092` raw unsupported-distance producer and1550-1563 chosen
+candidate handoff through existing layer plans/ordered loops/nearest context.
+No zero-only support, invented threshold/fallback, old penalty/embedding rewrite
+or new Ares pipeline. Existing scarf construction remains unchanged; painting,
+new random/nearest placement, geometry/travel/M73 and processor behavior defer.
+
+Exit: approved exact SPEC, fixed-budget Native low/high nonzero-dependency
+qualification, frozen five-case Native-ACTIVE/INACTIVE public RED with both
+API/CLI complete strict comparisons in both modes, then separately authorized
+bounded GREEN all wholePASS plus targeted regressions/fmt/strict clippy/WASM.
+Qualification or unrelated geometry prerequisite failure means STOP, not wider
+port/fixture search. RED only integrates with GREEN; full/workspace remains
+coordinator-only. [SPEC](architecture/scarf-conditional-spec.md),
+[ARD](architecture/ard-scarf-conditional.md).
+
 ### spRear/back candidate comparison and alignment: SPEC request (2026-10-17)
 
 W4's coordinator-approved proposal ports `GCode/SeamPlacer.cpp` spRear
