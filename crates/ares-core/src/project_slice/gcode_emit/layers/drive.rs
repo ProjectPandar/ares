@@ -6,6 +6,22 @@
             phase_index += 1;
             group_start = 0;
             if let Some(phase) = phases.get(phase_index) {
+                // `GCode.cpp:3359-3361`: after the finished object's layers
+                // (its stop label already written) and before the instance
+                // transition, disable power loss recovery once the
+                // second-layer block ran with `Enable`; `:3367` then
+                // resets the flag for the incoming instance (whose own
+                // second layer re-arms it).
+                output.extend_from_slice(
+                    crate::gcode_power_loss_recovery::finish_command(
+                        state.tags.is_bbl(),
+                        state.options.gcode_flavor,
+                        state.options.gcode_comments,
+                        state.power_loss_recovery,
+                    )
+                    .as_bytes(),
+                );
+                state.power_loss_recovery = Default::default();
                 // `GCode.cpp:3309-3342`: the instance transition between
                 // the sequential objects; `:3369-3372` resets the
                 // second-layer flag for the incoming instance, and the

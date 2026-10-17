@@ -282,6 +282,26 @@ pub(super) fn append<'a>(
     // flag at every object boundary (`GCode.cpp:3367`), so each object's
     // first non-first layer runs the block once, not just global chunk 1.
     let second_layer_reset = !first_layer && !*second_layer_done;
+    // `GCode.cpp:4777-4779`: the second-layer block emits the configured
+    // power-loss-recovery mode command (`GCodeWriter.cpp:505-522` —
+    // `M1003` on BBL machines, `M413` on Marlin 2 firmware) before the
+    // first-layer-inspection scan.
+    if second_layer_reset {
+        let command = crate::gcode_power_loss_recovery::second_layer_command(
+            state.tags.is_bbl(),
+            state.options.gcode_flavor,
+            traversal
+                .resolved
+                .views
+                .full
+                .printer
+                .gcode
+                .enable_power_loss_recovery,
+            state.options.gcode_comments,
+            &mut state.power_loss_recovery,
+        );
+        output.extend_from_slice(command.as_bytes());
+    }
     if second_layer_reset
         && state.tags.is_bbl()
         && traversal
