@@ -1,11 +1,12 @@
 # SPEC RR: gated outer/inner wall flow ratios
 
 Status: **SPEC-REVIEW-REQUEST, Native discovery complete; no public RED or
-production implementation yet.** Assigned TOP2 only. Base is main
-`b3251d537d2b889d5eac27821e7cae5f535e2fdd`; branch
-`worker1/wall-flow-discovery-spec`. Preserve the approved W1 stack-27 chain.
-If stack-27 lands first, rebase onto the announced main later and refresh
-exact-hash review evidence. Coordinator owns integration.
+production implementation yet.** Assigned TOP2 only. Base is merged main
+`445648072103587a9d60d85f1c4fb4425056ae18` (stack-27, FULL27 1636/1636
+in both modes); branch `worker1/wall-flow-discovery-spec`. The original spec
+`0f3a80484ca595dc56d1675c9ab8cd8f5993e8cb` is preserved at
+`worker1/wall-flow-spec-pre-stack27`. It rebased cleanly; coordinator owns
+integration. Fresh exact-hash evidence is required before renewed RR.
 
 ## Owning upstream rewrite boundary
 
@@ -70,10 +71,16 @@ owner requires a separately verified mechanical split first if later needed.
 
 ## Completed Native-first discovery
 
-Evidence root: `/tmp/ares-w1-wall-flow-discovery-b3251d537/`.
-`native_probe.py`, `native-report.json`, `native-probe.log`, `canonical.sh`,
-`inputs/manifest.json`, raw official/seeded outputs, launch receipts and
-actual Native ELF/all-thread affinity samples are retained there.
+Original discovery root: `/tmp/ares-w1-wall-flow-discovery-b3251d537/`;
+original exact-spec validation: `/tmp/ares-w1-wall-flow-spec-0f3a80484/`.
+Both are retained as **PRE-REBASE NON-GATE evidence** for this new RR.
+Authoritative refreshed evidence root: `/tmp/ares-w1-wall-flow-spec-stack27/`.
+Review it only after reruns complete and `spec-review-audit.json` records the
+current clean committed HEAD. `native_probe.py`, `native-report.json`,
+`native-probe.log`, `canonical.sh`, `inputs/manifest.json`, raw official/seeded
+outputs, launch receipts and actual Native ELF/all-thread affinity samples
+are retained. The fixture hashes and Native observations below are unchanged
+requirements to verify again at the rebased hash, not carried-over gates.
 
 Four frozen input-only archives share every non-config ZIP member byte.
 They use the previously audited closed 10 x 10 x 1 mm box, Classic walls,
