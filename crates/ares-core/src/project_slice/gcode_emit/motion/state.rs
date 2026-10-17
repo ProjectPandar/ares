@@ -15,6 +15,8 @@ pub(in crate::project_slice::gcode_emit) enum LiftMode {
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
+    pub(in crate::project_slice::gcode_emit) global_brim_done: bool,
+    pub(in crate::project_slice::gcode_emit) emitted_brim_owners: std::collections::BTreeSet<usize>,
     pub(in crate::project_slice::gcode_emit) contour_z_too_low: bool,
     pub(in crate::project_slice::gcode_emit) last_path_z_contoured: bool,
     pub(in crate::project_slice::gcode_emit) total_layer_count: usize,

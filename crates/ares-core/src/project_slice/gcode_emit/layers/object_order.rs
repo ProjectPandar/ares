@@ -123,6 +123,16 @@ impl EquivalentChains {
 /// permutation of instance indices in chained path order. `seed` is the
 /// `start_near` point in scaled integer units.
 pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64)) -> Vec<usize> {
+    chain(centers, Some(start_near))
+}
+
+pub(in crate::project_slice::gcode_emit) fn chain_without_start(
+    centers: &[(i64, i64)],
+) -> Vec<usize> {
+    chain(centers, None)
+}
+
+fn chain(centers: &[(i64, i64)], start_near: Option<(i64, i64)>) -> Vec<usize> {
     let count = centers.len();
     if count <= 1 {
         return (0..count).collect();
@@ -161,37 +171,37 @@ pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64
         };
         count * 2
     ];
-    let distance_to_start = |endpoint: usize| {
-        let (x, y) = position(endpoint);
-        let (dx, dy) = (x - start_near.0, y - start_near.1);
-        dx * dx + dy * dy
-    };
-    // `start_near` designates the start end point; it carries a chain of
-    // its own and never enters the queue or the neighbor searches
-    // (`ShortestPath.cpp:178-198`). Ties resolve to the lowest endpoint.
-    let seed_point = (0..count * 2)
-        .min_by_key(|&endpoint| distance_to_start(endpoint))
-        .expect("at least one end point");
-    let seed_chain = chains.new_chain();
-    end_points[seed_point].distance_out = 0.0;
-    end_points[seed_point].chain_id = seed_chain;
+    let seed_point = start_near.map(|start| {
+        (0..count * 2)
+            .min_by_key(|&endpoint| {
+                let (x, y) = position(endpoint);
+                let (dx, dy) = (x - start.0, y - start.1);
+                dx * dx + dy * dy
+            })
+            .expect("at least one end point")
+    });
+    if let Some(seed_point) = seed_point {
+        let seed_chain = chains.new_chain();
+        end_points[seed_point].distance_out = 0.0;
+        end_points[seed_point].chain_id = seed_chain;
+    }
     for (index, end_point) in end_points.iter_mut().enumerate() {
-        if index == seed_point {
+        if Some(index) == seed_point {
             continue;
         }
-        let (next, distance) = nearest(index, Some(seed_point));
+        let (next, distance) = nearest(index, seed_point);
         end_point.edge_out = Some(next);
         end_point.distance_out = distance;
     }
 
     let mut queue: Vec<usize> = (0..count * 2)
-        .filter(|&index| index != seed_point)
+        .filter(|&index| Some(index) != seed_point)
         .collect();
     for start in (0..queue.len() / 2).rev() {
         sift_down(&end_points, &mut queue, start);
     }
 
-    let first_point = Some(seed_point);
+    let mut first_point = seed_point;
     let mut remaining_links = count - 1;
     while !queue.is_empty() {
         let end_point1 = pop_top(&end_points, &mut queue);
@@ -216,13 +226,6 @@ pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64
             end_points[end_point1].chain_id = chain_id;
             end_points[end_point2].chain_id = chain_id;
             remaining_links -= 1;
-            if remaining_links == 0 {
-                // With a start point, exactly one end point remains
-                // (`ShortestPath.cpp:322-333`); it closes the path.
-                let tail = pop_top(&end_points, &mut queue);
-                end_points[tail].edge_out = None;
-                break;
-            }
         } else {
             // Update the neighbor to the closest still-valid end point
             // (`ShortestPath.cpp:339-366`).
@@ -233,6 +236,18 @@ pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64
                 end_point1,
                 distance_sq,
             );
+        }
+        if remaining_links == 0 {
+            // ShortestPath.cpp:320-327: without a designated start,
+            // the residual queue supplies both chain endpoints.
+            first_point.get_or_insert_with(|| {
+                let head = pop_top(&end_points, &mut queue);
+                end_points[head].edge_out = None;
+                head
+            });
+            let tail = pop_top(&end_points, &mut queue);
+            end_points[tail].edge_out = None;
+            break;
         }
     }
     let Some(mut walker) = first_point else {

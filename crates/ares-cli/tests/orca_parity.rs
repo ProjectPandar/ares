@@ -121,6 +121,8 @@ mod cli_upward_machine_result;
 mod filament_flow_admission;
 #[path = "orca_parity/gcode_flavor_admission.rs"]
 mod gcode_flavor_admission;
+#[path = "orca_parity/global_combined_brim.rs"]
+mod global_combined_brim;
 #[path = "orca_parity/load_settings_3mf.rs"]
 mod load_settings_3mf;
 #[path = "orca_parity/load_settings_3mf_inherits.rs"]
@@ -129,6 +131,8 @@ mod load_settings_3mf_inherits;
 mod load_settings_3mf_partial;
 #[path = "orca_parity/load_settings_cli.rs"]
 mod load_settings_cli;
+#[path = "orca_parity/multi_instance_brim.rs"]
+mod multi_instance_brim;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
 #[path = "orca_parity/perobject_outer_inner_brim.rs"]

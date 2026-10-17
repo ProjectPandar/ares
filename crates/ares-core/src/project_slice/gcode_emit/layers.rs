@@ -14,7 +14,7 @@ pub(super) use context::Context;
 mod instances;
 pub(super) use instances::Instance;
 mod object_entry;
-mod object_order;
+pub(super) mod object_order;
 mod object_skirt;
 mod preamble;
 mod raft_entry;
