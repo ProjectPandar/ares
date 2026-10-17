@@ -110,6 +110,7 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
         ProcessInfillPattern::Concentric
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::HilbertCurve
+            | ProcessInfillPattern::ArchimedeanChords
     ) {
         return Err(SliceError::UnsupportedProjectFeature(
             "ironing_pattern".to_owned(),
@@ -181,14 +182,16 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
             });
             continue;
         }
-        let polylines = if input.region.ironing_pattern == ProcessInfillPattern::HilbertCurve {
-            plane_path::polylines(
-                &area,
-                PlanePathPattern::HilbertCurve,
-                spacing,
-                angle,
-                input.scale,
-            )?
+        let polylines = if matches!(
+            input.region.ironing_pattern,
+            ProcessInfillPattern::HilbertCurve | ProcessInfillPattern::ArchimedeanChords
+        ) {
+            let pattern = if input.region.ironing_pattern == ProcessInfillPattern::HilbertCurve {
+                PlanePathPattern::HilbertCurve
+            } else {
+                PlanePathPattern::ArchimedeanChords
+            };
+            plane_path::polylines(&area, pattern, spacing, angle, input.scale)?
         } else {
             fill_monotonic_surface(
                 &area,
