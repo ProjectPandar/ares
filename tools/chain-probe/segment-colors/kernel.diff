@@ -1,0 +1,66 @@
+--- upstream excerpts
++++ segment-colors/kernel.hpp
+@@ -1,3 +1,8 @@
++// ViewerImpl.cpp:23-24,37-43,47-63 rounding helpers and :283-317 default palettes;
++// ViewerImpl.hpp members read by the color code; ViewerImpl.cpp:1567-1597 palette
++// accessors, :1817-1878 update_color_ranges and :1467-1553 get_vertex_color as
++// members of a GL-free holder of the same members (ViewerImpl::load needs GL).
++namespace libvgcode {
+ template<class T, class O = T>
+ using IntegerOnly = std::enable_if_t<std::is_integral<T>::value, O>;
+ template<typename I>
+@@ -58,6 +63,9 @@
+     {  82, 240, 131 }, // PausePrints
+     { 226, 210,  67 }  // CustomGCodes
+ } };
++
++struct ColorsViewer
++{
+     Settings m_settings;
+     Layers m_layers;
+     std::array<Color, size_t(EGCodeExtrusionRole::COUNT)> m_extrusion_roles_colors;
+@@ -83,23 +91,24 @@
+     };
+     Palette m_tool_colors;
+     Palette m_color_print_colors;
+-const Color& ViewerImpl::get_extrusion_role_color(EGCodeExtrusionRole role) const
++
++const Color& get_extrusion_role_color(EGCodeExtrusionRole role) const
+ {
+     return m_extrusion_roles_colors[size_t(role)];
+ }
+-void ViewerImpl::reset_default_extrusion_roles_colors()
++void reset_default_extrusion_roles_colors()
+ {
+     m_extrusion_roles_colors = DEFAULT_EXTRUSION_ROLES_COLORS;
+ }
+-const Color& ViewerImpl::get_option_color(EOptionType type) const
++const Color& get_option_color(EOptionType type) const
+ {
+     return m_options_colors[size_t(type)];
+ }
+-void ViewerImpl::reset_default_options_colors()
++void reset_default_options_colors()
+ {
+     m_options_colors = DEFAULT_OPTIONS_COLORS;
+ }
+-void ViewerImpl::update_color_ranges()
++void update_color_ranges()
+ {
+     // Color ranges do not need to be recalculated that often. If the following settings are the same
+     // as last time, the current ranges are still valid. The recalculation is quite expensive.
+@@ -161,7 +170,7 @@
+ 
+     m_settings_used_for_ranges = m_settings;
+ }
+-Color ViewerImpl::get_vertex_color(const PathVertex& v) const
++Color get_vertex_color(const PathVertex& v) const
+ {
+     if (v.type == EMoveType::Noop)
+         return DUMMY_COLOR;
+@@ -248,3 +257,5 @@
+ 
+     return DUMMY_COLOR;
+ }
++};
++}

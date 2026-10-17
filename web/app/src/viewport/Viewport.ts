@@ -6,7 +6,7 @@ import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
 import { buildToolMarker, placeToolMarker } from "./toolMarker";
-import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, segmentGeometryProbe, segmentSizesProbe, type ToolpathFilter } from "./toolpathMesh";
+import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, segmentColorsProbe, segmentGeometryProbe, segmentSizesProbe, type ToolpathFilter } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -184,6 +184,7 @@ export class Viewport {
     delete this.container.dataset.optionMarkers;
     delete this.container.dataset.segmentSizes;
     delete this.container.dataset.segmentGeometry;
+    delete this.container.dataset.segmentColors;
     if (toolpaths) {
       this.#toolpaths = buildToolpathMesh(toolpaths);
       this.#toolpathColors = toolpaths.colors;
@@ -193,6 +194,7 @@ export class Viewport {
       this.container.dataset.optionMarkers = JSON.stringify(markers.counts);
       this.container.dataset.segmentSizes = segmentSizesProbe(this.#toolpaths);
       this.container.dataset.segmentGeometry = segmentGeometryProbe(this.#toolpaths);
+      this.container.dataset.segmentColors = segmentColorsProbe(this.#toolpaths);
     }
     if (this.#previewView) this.setPreviewView(this.#previewView);
     else this.render();
@@ -203,6 +205,7 @@ export class Viewport {
     if (!this.#toolpaths || colors === this.#toolpathColors) return;
     this.#toolpathColors = colors;
     applyVertexColors(this.#toolpaths, colors);
+    this.container.dataset.segmentColors = segmentColorsProbe(this.#toolpaths);
     this.render();
   }
 

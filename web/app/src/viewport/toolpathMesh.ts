@@ -38,6 +38,7 @@ in vec3 aStart;
 in vec3 aEnd;
 in vec4 aSize;
 in vec2 aAngles;
+in vec3 aStartColor;
 in vec3 aColor;
 in float aLayer;
 in float aKind;
@@ -151,7 +152,7 @@ void main() {
   }
   vec3 eye_position = (viewMatrix * vec4(pos, 1.0)).xyz;
   vec3 eye_normal = (viewMatrix * vec4(normalize(pos - endpoint_pos), 0.0)).xyz;
-  color = aColor * lighting(eye_position, eye_normal);
+  color = (vertex_id < 4 ? aStartColor : aColor) * lighting(eye_position, eye_normal);
   gl_Position = projectionMatrix * vec4(eye_position, 1.0);
 }
 `;
@@ -178,6 +179,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   const size = new Float32Array(vertexCount * 4);
   const angles = new Float32Array(vertexCount * 2);
   const color = new Uint8Array(vertexCount * 3);
+  const startColor = new Uint8Array(vertexCount * 3);
   const layer = new Float32Array(vertexCount);
   const kind = new Uint8Array(vertexCount);
   const vertex = new Uint32Array(vertexCount);
@@ -200,6 +202,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     size.set(heightsWidths.subarray(2 * (i - 1), 2 * i + 2), count * 4);
     const id = extrude ? role : KIND_OPTION + options[i];
     color.set(colors.subarray(3 * i, 3 * i + 3), count * 3);
+    startColor.set(colors.subarray(3 * (i - 1), 3 * i), count * 3);
     vertex[count] = i;
     layer[count] = ids[2 * i + 1];
     kind[count] = id;
@@ -213,6 +216,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
   geometry.setAttribute("aSize", new THREE.InstancedBufferAttribute(size.subarray(0, count * 4), 4));
   geometry.setAttribute("aAngles", new THREE.InstancedBufferAttribute(angles.subarray(0, count * 2), 2));
   geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(color.subarray(0, count * 3), 3, true));
+  geometry.setAttribute("aStartColor", new THREE.InstancedBufferAttribute(startColor.subarray(0, count * 3), 3, true));
   geometry.setAttribute("aLayer", new THREE.InstancedBufferAttribute(layer.subarray(0, count), 1));
   geometry.setAttribute("aKind", new THREE.InstancedBufferAttribute(kind.subarray(0, count), 1));
   geometry.setAttribute("aEnabled", new THREE.InstancedBufferAttribute(new Uint8Array(count).fill(1), 1));
@@ -242,8 +246,9 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
 
 /**
  * Recolors the toolpath mesh and its option markers with per-vertex RGB
- * (`ViewColors.colors`); each instance takes its vertex's color, as libvgcode
- * segments take their end vertex color.
+ * (`ViewColors.colors`): template vertices 0..3 of a segment instance take its
+ * start vertex color and 4..7 its end vertex color, as libvgcode's ES segment
+ * shader colors by `id_a` / `id_b` (`ShadersES.hpp:101,145`).
  */
 export function applyVertexColors(mesh: THREE.Mesh, colors: Uint8Array) {
   mesh.traverse((node) => {
@@ -253,6 +258,11 @@ export function applyVertexColors(mesh: THREE.Mesh, colors: Uint8Array) {
     const color = attribute.array as Uint8Array;
     for (let n = 0; n < vertices.length; n++) color.set(colors.subarray(3 * vertices[n], 3 * vertices[n] + 3), 3 * n);
     attribute.needsUpdate = true;
+    if (node !== mesh) return;
+    const startAttribute = (node.geometry as THREE.InstancedBufferGeometry).getAttribute("aStartColor") as THREE.InstancedBufferAttribute;
+    const startColor = startAttribute.array as Uint8Array;
+    for (let n = 0; n < vertices.length; n++) startColor.set(colors.subarray(3 * (vertices[n] - 1), 3 * vertices[n]), 3 * n);
+    startAttribute.needsUpdate = true;
   });
 }
 
@@ -299,6 +309,19 @@ export function segmentGeometryProbe(mesh: THREE.Mesh): string {
   for (const name of ["aStart", "aEnd", "aAngles"]) {
     const array = geometry.getAttribute(name).array as Float32Array;
     for (const byte of new Uint8Array(array.buffer, array.byteOffset, array.byteLength)) hash = Math.imul(hash ^ byte, 0x01000193);
+  }
+  return `${geometry.instanceCount}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+/**
+ * E2E probe of the instance end colors: instance count and the FNV-1a 32 hash of
+ * the RGB bytes of `aStartColor`, then `aColor`.
+ */
+export function segmentColorsProbe(mesh: THREE.Mesh): string {
+  const geometry = mesh.geometry as THREE.InstancedBufferGeometry;
+  let hash = 0x811c9dc5;
+  for (const name of ["aStartColor", "aColor"]) {
+    for (const byte of geometry.getAttribute(name).array as Uint8Array) hash = Math.imul(hash ^ byte, 0x01000193);
   }
   return `${geometry.instanceCount}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }

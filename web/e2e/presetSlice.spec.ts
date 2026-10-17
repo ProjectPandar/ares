@@ -166,7 +166,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // The preset slice carries the engine's toolpaths for the preview.
   await page.getByRole("link", { name: "Preview" }).click();
   await expect(page.getByTestId("toolpaths-pending")).toHaveCount(0);
-  if (procgcode) await checkToolpathPreview(page, procgcode, gcodePath, artifacts, errors);
+  if (procgcode) await checkToolpathPreview(page, procgcode, gcodePath, artifacts, errors, false);
 
   // Sidebar edits ride on the preset slice as overrides applied after the selected presets.
   await page.getByRole("link", { name: "Prepare" }).click();
