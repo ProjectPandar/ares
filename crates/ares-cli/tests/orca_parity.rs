@@ -143,8 +143,9 @@ mod load_settings_cli;
 mod multi_instance_brim;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
-#[path = "orca_parity/object_hilbert_ironing.rs"]
+#[path = "orca_parity/object_archimedean_ironing.rs"]
 mod object_archimedean_ironing;
+#[path = "orca_parity/object_hilbert_ironing.rs"]
 mod object_hilbert_ironing;
 #[path = "orca_parity/perobject_multi_copy_skirt.rs"]
 mod perobject_multi_copy_skirt;
