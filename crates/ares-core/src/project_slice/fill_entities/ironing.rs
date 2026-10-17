@@ -1,4 +1,4 @@
-use crate::fill::plane_path;
+use crate::fill::plane_path::PlanePathPattern;
 use crate::project_slice::perimeters::classic::materialize::Polyline3;
 // Source boundary: OrcaSlicer 2.4.2 `Fill/Fill.cpp::Layer::make_ironing`.
 
@@ -22,6 +22,7 @@ use super::{
     geometry_error,
 };
 
+mod plane_path;
 mod spans;
 pub(super) use spans::{SpanGeneration, append_spans};
 
@@ -181,29 +182,13 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
             continue;
         }
         let polylines = if input.region.ironing_pattern == ProcessInfillPattern::HilbertCurve {
-            // Fill.cpp:1634/1718: dispatch to the existing solid PlanePath fill.
-            plane_path::fill_surface(
+            plane_path::polylines(
                 &area,
-                plane_path::PlanePathPattern::HilbertCurve,
-                plane_path::PlanePathFillParams {
-                    spacing,
-                    overlap: 0.0,
-                    density: 1.0,
-                    angle,
-                    multiline: 1,
-                    resolution: 0.0125,
-                    anchor_length: 1000.0,
-                    anchor_length_max: 1000.0,
-                    object_bounding_box: crate::geometry::BoundingBox::from_expolygon(&area)
-                        .expect("ironing area has a contour"),
-                    calibration_order: false,
-                },
+                PlanePathPattern::HilbertCurve,
+                spacing,
+                angle,
                 input.scale,
-            )
-            .map_err(geometry_error)?
-            .into_iter()
-            .flatten()
-            .collect()
+            )?
         } else {
             fill_monotonic_surface(
                 &area,
