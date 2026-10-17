@@ -1,6 +1,6 @@
 # Spec: flush_into_objects object-wipe semantics — wiping marks and layer tool lists
 
-Status: DRAFT (awaiting review)
+Status: DRAFT (awaiting review) — discovery amendment recorded below
 Base: `0266b8ef470384465587d52c8a0fd9dded84d98a`
 Upstream boundary: `ToolOrdering.cpp` `WipingExtrusions::is_overriddable`
 (:1586-1596), `mark_wiping_extrusions` (:1613-1755, dedicated-object
@@ -28,6 +28,28 @@ marking feeds.
 So the divergence is NOT skirt geometry (skirt blocks are 2 vs 2); it
 is the object-wipe marking semantics and their effect on the layer
 tool plan.
+
+## Discovery result (collapse owner located)
+
+`ToolOrdering::collect_extruders` (`ToolOrdering.cpp:660-760`) is the
+collapse owner: while building `LayerTools.extruders` it gates every
+wall/fill extruder push on `something_nonoverriddable`, computed by
+`WipingExtrusions::is_overriddable_and_mark` over the layer's
+perimeter collections (:688-698) and fill collections (:718-733).
+With `flush_into_objects` (all roles overriddable) and a by-layer
+print (`m_print_config_ptr` set), a fully-overriddable region adds NO
+extruder to the layer tool list — so the tool-2 object contributes
+nothing and the print collapses to one tool with no toolchange/tower.
+
+Ares counterpart: `gcode_emit/tool_ordering/collect.rs::object`
+pushes wall/infill extruders unconditionally and never consults the
+wiping overridable marking (only `wiping/assign.rs::mark` uses
+`wiping/source.rs`'s overridable, at tower-planning time). The fix
+lands in `collect.rs` (mirroring the `something_nonoverriddable`
+gating) using the existing `wiping/source.rs` overridable predicate —
+the port is fixed in place, no parallel path. `assign.rs` semantics
+stay as they are unless the probe shows a further residual after the
+collect fix.
 
 ## Included
 
