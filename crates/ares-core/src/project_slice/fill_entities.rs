@@ -120,12 +120,16 @@ pub(in crate::project_slice) fn prepare(
                     .and_then(|g| g.as_ref());
                 (0..plan.layers.len())
                     .map(|layer_index| {
-                        generate::generate_layer(
+                        generate::generate_layer_with_active(
                             external,
                             object_index,
                             layer_index,
-                            lightning_generator.map(|g| g.as_ref()),
-                            stars_bounds,
+                            generate::layer_options(
+                                external,
+                                object_index,
+                                lightning_generator.map(|g| g.as_ref()),
+                                stars_bounds,
+                            ),
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()

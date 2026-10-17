@@ -11,6 +11,23 @@ use super::{
     geometry_error,
 };
 
+pub(super) fn object_bounding_box(
+    slices: &[Vec<crate::geometry::ExPolygon>],
+) -> Option<crate::geometry::BoundingBox> {
+    let mut points = slices
+        .iter()
+        .flatten()
+        .flat_map(|expolygon| expolygon.contour().points());
+    let first = *points.next()?;
+    let (minimum, maximum) = points.fold((first, first), |(minimum, maximum), point| {
+        (
+            crate::geometry::Point::new(minimum.x().min(point.x()), minimum.y().min(point.y())),
+            crate::geometry::Point::new(maximum.x().max(point.x()), maximum.y().max(point.y())),
+        )
+    });
+    Some(crate::geometry::BoundingBox::new(minimum, maximum))
+}
+
 /// Ironing entry: solid fills keep the `FillParams` default resolution
 /// (`FillBase.hpp:64`) and never read the object bounding box
 /// (`FillPlanePath.cpp:80` — align only below 0.995 density), so the

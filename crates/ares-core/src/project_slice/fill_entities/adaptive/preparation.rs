@@ -10,41 +10,102 @@ use crate::{
         },
         prepare_infill::{
             bridge_over_infill::BridgeCandidateObject,
-            surface_type_detection::types::PreparedSurfaceTypeObject,
+            surface_type_detection::types::{PreparedSurfaceTypeObject, PreparedSurfaceTypeRecord},
         },
     },
 };
 
-pub(in crate::project_slice) fn prepare_support(
+#[derive(Clone, Copy)]
+pub(in crate::project_slice) struct ObjectSpacing {
+    pub(in crate::project_slice) adaptive: f64,
+    pub(in crate::project_slice) support: f64,
+}
+
+impl ObjectSpacing {
+    pub(in crate::project_slice) fn for_pattern(self, pattern: ProcessInfillPattern) -> f64 {
+        match pattern {
+            ProcessInfillPattern::AdaptiveCubic => self.adaptive,
+            ProcessInfillPattern::SupportCubic => self.support,
+            _ => unreachable!("spacing is only defined for adaptive patterns"),
+        }
+    }
+}
+
+pub(in crate::project_slice) fn object_spacings(
     traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
-    candidates: &BridgeCandidateObject,
-    horizontal: &PreparedSurfaceTypeObject,
     prelude: &PostPerimeterInputPrintObject,
-) {
-    let (plan, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
+    records: &[Option<PreparedSurfaceTypeRecord>],
+    layer_count: usize,
+) -> ObjectSpacing {
+    let active = active_region_ids(prelude, records, layer_count);
+    let (_, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
+    let region_options = regions
+        .iter()
+        .map(|region| region.as_parts().1)
+        .collect::<Vec<_>>();
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
-    let contributing = regions.iter().enumerate().filter(|(index, region)| {
-        let options = region.as_parts().1;
-        options.sparse_infill_pattern == ProcessInfillPattern::SupportCubic
-            && options.sparse_infill_density.0 > 0.0
-            && (0..plan.layers.len()).any(|layer_index| {
-                let slot = prelude.region_layer_record_index(RegionLayerIndex {
-                    region_index: *index,
-                    layer_index,
-                });
-                horizontal.records[slot]
-                    .as_ref()
-                    .is_some_and(|record| !record.fill_surfaces.is_empty())
-            })
-    });
-    let spacings: Vec<_> = contributing
-        .map(|(_, region)| {
-            let options = region.as_parts().1;
-            super::line_spacing::configured(options, nozzles, options.fill_multiline.0)
+    ObjectSpacing {
+        adaptive: super::line_spacing::object_configured(
+            &region_options,
+            nozzles,
+            ProcessInfillPattern::AdaptiveCubic,
+            &active,
+        ),
+        support: super::line_spacing::object_configured(
+            &region_options,
+            nozzles,
+            ProcessInfillPattern::SupportCubic,
+            &active,
+        ),
+    }
+}
+
+pub(in crate::project_slice) fn active_region_ids(
+    prelude: &PostPerimeterInputPrintObject,
+    records: &[Option<PreparedSurfaceTypeRecord>],
+    layer_count: usize,
+) -> Vec<usize> {
+    let (_, _, regions) = prelude.as_parts().0.as_parts().0.as_parts();
+    regions
+        .iter()
+        .enumerate()
+        .filter_map(|(region_index, _)| {
+            (0..layer_count)
+                .any(|layer_index| {
+                    let slot = prelude.region_layer_record_index(RegionLayerIndex {
+                        region_index,
+                        layer_index,
+                    });
+                    records[slot]
+                        .as_ref()
+                        .is_some_and(|record| !record.fill_surfaces.is_empty())
+                })
+                .then_some(region_index)
         })
-        .collect();
-    if spacings.is_empty() {
+        .collect()
+}
+
+pub(in crate::project_slice) struct SupportPreparation<'a> {
+    pub(in crate::project_slice) traversal: &'a PreparedPostClassicTraversal,
+    pub(in crate::project_slice) object_index: usize,
+    pub(in crate::project_slice) candidates: &'a BridgeCandidateObject,
+    pub(in crate::project_slice) horizontal: &'a PreparedSurfaceTypeObject,
+    pub(in crate::project_slice) prelude: &'a PostPerimeterInputPrintObject,
+    pub(in crate::project_slice) spacing: ObjectSpacing,
+}
+
+pub(in crate::project_slice) fn prepare_support(context: SupportPreparation<'_>) {
+    let SupportPreparation {
+        traversal,
+        object_index,
+        candidates,
+        horizontal,
+        prelude,
+        spacing,
+    } = context;
+    let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
+    let spacing = spacing.support;
+    if spacing == 0.0 {
         return;
     }
     let mut triangles = Vec::new();
@@ -69,18 +130,16 @@ pub(in crate::project_slice) fn prepare_support(
             traversal.scale,
         ));
     }
-    for spacing in spacings {
-        traversal.adaptive_octrees.get_or_build(
-            (object_index, spacing.to_bits(), OctreeKind::Support),
-            || {
-                super::build_object_octree(
-                    traversal,
-                    object_index,
-                    spacing,
-                    OctreeKind::Support,
-                    &triangles,
-                )
-            },
-        );
-    }
+    traversal.adaptive_octrees.get_or_build(
+        (object_index, spacing.to_bits(), OctreeKind::Support),
+        || {
+            super::build_object_octree(
+                traversal,
+                object_index,
+                spacing,
+                OctreeKind::Support,
+                &triangles,
+            )
+        },
+    );
 }

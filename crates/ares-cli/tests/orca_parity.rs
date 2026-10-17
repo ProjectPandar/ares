@@ -51,6 +51,8 @@ mod toolchange_wipe_ctl;
 #[path = "orca_parity/toolchange_wipe_flush_w5.rs"]
 mod toolchange_wipe_flush_w5;
 
+#[path = "orca_parity/adaptive_octree_spacing.rs"]
+mod adaptive_octree_spacing;
 #[path = "orca_parity/adaptive_pressure_advance.rs"]
 mod adaptive_pressure_advance;
 #[path = "orca_parity/arachne_alternate_extra_wall.rs"]

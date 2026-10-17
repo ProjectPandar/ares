@@ -12,13 +12,26 @@ use crate::{
 use super::simplify_before_ordering;
 use super::types::LayerFillEntities;
 
-pub(in crate::project_slice) fn generate_layer(
+pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
+    pub(in crate::project_slice) lightning_generator:
+        Option<&'a crate::fill::lightning::generator::Generator>,
+    pub(in crate::project_slice) stars_bounds: Option<crate::geometry::BoundingBox>,
+    pub(in crate::project_slice) adaptive_spacing: f64,
+    pub(in crate::project_slice) support_spacing: f64,
+}
+
+pub(in crate::project_slice) fn generate_layer_with_active(
     prepared: &PreparedPostExternalSurfaces,
     object_index: usize,
     layer_index: usize,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<crate::geometry::BoundingBox>,
+    options: LayerGenerationOptions<'_>,
 ) -> Result<LayerFillEntities, SliceError> {
+    let LayerGenerationOptions {
+        lightning_generator,
+        stars_bounds,
+        adaptive_spacing,
+        support_spacing,
+    } = options;
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
     let minimum_nozzle_diameter = traversal
@@ -76,7 +89,7 @@ pub(in crate::project_slice) fn generate_layer(
                 // perimeter/slice that was actually generated), which we reproduce
                 // here via `plane_path_object_bounding_box` centered on the
                 // origin. See the residual map for the divergence analysis.
-                plane_path_object_bounding_box(object_slices)
+                super::plane_path::object_bounding_box(object_slices)
                     .map(super::extended_object_bounding_box_x)
                     .unwrap_or((0, 0))
             });
@@ -157,15 +170,16 @@ pub(in crate::project_slice) fn generate_layer(
                 pattern
                 @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
             ) => {
-                let _ = pattern;
+                let line_spacing = super::adaptive::ObjectSpacing {
+                    adaptive: adaptive_spacing,
+                    support: support_spacing,
+                }
+                .for_pattern(pattern);
                 super::adaptive::append(
                     &mut output,
                     fill,
                     layer.print_z,
-                    super::adaptive::AdaptiveObject {
-                        traversal,
-                        object_index,
-                    },
+                    super::adaptive::AdaptiveObject::new(traversal, object_index, line_spacing),
                     traversal.scale,
                 )?;
             }
@@ -267,7 +281,8 @@ pub(in crate::project_slice) fn generate_layer(
                     | ExtrusionRole::InternalInfill
             ) =>
             {
-                let Some(object_bounding_box) = plane_path_object_bounding_box(object_slices)
+                let Some(object_bounding_box) =
+                    super::plane_path::object_bounding_box(object_slices)
                 else {
                     continue;
                 };
@@ -346,19 +361,33 @@ pub(in crate::project_slice) fn generate_layer(
     Ok(output)
 }
 
-fn plane_path_object_bounding_box(
-    slices: &[Vec<crate::geometry::ExPolygon>],
-) -> Option<crate::geometry::BoundingBox> {
-    let mut points = slices
-        .iter()
-        .flatten()
-        .flat_map(|expolygon| expolygon.contour().points());
-    let first = *points.next()?;
-    let (minimum, maximum) = points.fold((first, first), |(minimum, maximum), point| {
-        (
-            crate::geometry::Point::new(minimum.x().min(point.x()), minimum.y().min(point.y())),
-            crate::geometry::Point::new(maximum.x().max(point.x()), maximum.y().max(point.y())),
-        )
-    });
-    Some(crate::geometry::BoundingBox::new(minimum, maximum))
+pub(in crate::project_slice) fn layer_options<'a>(
+    prepared: &PreparedPostExternalSurfaces,
+    object_index: usize,
+    lightning_generator: Option<&'a crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<crate::geometry::BoundingBox>,
+) -> LayerGenerationOptions<'a> {
+    let spacing = prepared.object_spacings[object_index];
+    LayerGenerationOptions {
+        lightning_generator,
+        stars_bounds,
+        adaptive_spacing: spacing.adaptive,
+        support_spacing: spacing.support,
+    }
+}
+
+#[cfg(test)]
+pub(in crate::project_slice) fn generate_layer(
+    prepared: &PreparedPostExternalSurfaces,
+    object_index: usize,
+    layer_index: usize,
+    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<crate::geometry::BoundingBox>,
+) -> Result<LayerFillEntities, SliceError> {
+    generate_layer_with_active(
+        prepared,
+        object_index,
+        layer_index,
+        layer_options(prepared, object_index, lightning_generator, stars_bounds),
+    )
 }
