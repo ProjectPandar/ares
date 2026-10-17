@@ -52,7 +52,10 @@ impl SkirtPlan {
                             crate::ProcessBrimType::OuterOnly
                                 | crate::ProcessBrimType::OuterAndInner
                         )
-                        || group.instance_indices.len() != 1)
+                        // ByLayer uses complete owner collections. ByObject
+                        // multi-instance brim ownership remains unported.
+                        || (print.print_sequence == crate::ProcessPrintSequence::ByObject
+                            && group.instance_indices.len() != 1))
             }) || (tower_active
                 && traversal.resolved.objects.iter().any(|object| {
                     object.object.flush_into_objects.0
