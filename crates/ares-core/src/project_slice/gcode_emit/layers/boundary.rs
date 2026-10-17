@@ -189,7 +189,7 @@ pub(super) fn append<'a>(
     let layer_retract_pending = state.pending_layer_retract
         && will_move_z
         && state.options.z_hop > 0.0
-        && state.options.retraction_length > 0.0
+        && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
         && state.lifted_amount <= 0.0
         && state.pending_lift.is_none();
     // `change_layer` retract requires `will_move_z` (`GCode.cpp:5693`) —

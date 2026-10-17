@@ -125,6 +125,8 @@ mod cli_sequential_clearance;
 mod cli_upward_machine_result;
 #[path = "orca_parity/filament_flow_admission.rs"]
 mod filament_flow_admission;
+#[path = "orca_parity/firmware_zero_layer_lift.rs"]
+mod firmware_zero_layer_lift;
 #[path = "orca_parity/gcode_flavor_admission.rs"]
 mod gcode_flavor_admission;
 #[path = "orca_parity/global_combined_brim.rs"]
