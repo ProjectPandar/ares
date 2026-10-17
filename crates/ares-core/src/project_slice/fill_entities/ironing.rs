@@ -111,6 +111,7 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::HilbertCurve
             | ProcessInfillPattern::ArchimedeanChords
+            | ProcessInfillPattern::OctagramSpiral
     ) {
         return Err(SliceError::UnsupportedProjectFeature(
             "ironing_pattern".to_owned(),
@@ -184,12 +185,16 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
         }
         let polylines = if matches!(
             input.region.ironing_pattern,
-            ProcessInfillPattern::HilbertCurve | ProcessInfillPattern::ArchimedeanChords
+            ProcessInfillPattern::HilbertCurve
+                | ProcessInfillPattern::ArchimedeanChords
+                | ProcessInfillPattern::OctagramSpiral
         ) {
             let pattern = if input.region.ironing_pattern == ProcessInfillPattern::HilbertCurve {
                 PlanePathPattern::HilbertCurve
-            } else {
+            } else if input.region.ironing_pattern == ProcessInfillPattern::ArchimedeanChords {
                 PlanePathPattern::ArchimedeanChords
+            } else {
+                PlanePathPattern::OctagramSpiral
             };
             plane_path::polylines(&area, pattern, spacing, angle, input.scale)?
         } else {
