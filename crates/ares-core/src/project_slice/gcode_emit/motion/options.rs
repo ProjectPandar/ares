@@ -12,6 +12,10 @@ mod build;
 pub(in crate::project_slice::gcode_emit) struct ScarfOptions {
     pub(in crate::project_slice::gcode_emit) seam_slope_type: crate::ProcessSeamScarfType,
     pub(in crate::project_slice::gcode_emit) conditional: bool,
+    pub(in crate::project_slice::gcode_emit) angle_threshold: f64,
+    pub(in crate::project_slice::gcode_emit) overhang_threshold: f64,
+    pub(in crate::project_slice::gcode_emit) outer_line_width: f64,
+    pub(in crate::project_slice::gcode_emit) inner_line_width: f64,
     pub(in crate::project_slice::gcode_emit) start_height: Option<FloatOrPercent>,
     pub(in crate::project_slice::gcode_emit) entire_loop: bool,
     pub(in crate::project_slice::gcode_emit) min_length: f64,

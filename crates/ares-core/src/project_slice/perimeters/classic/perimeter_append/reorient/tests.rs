@@ -93,6 +93,7 @@ fn seed(is_contour: bool) -> TraversalSeed {
 
 fn loop_entity(role: ExtrusionLoopRole, path_role: ExtrusionRole, x: i64) -> ExtrusionEntity {
     ExtrusionEntity::Loop(OrderedExtrusionLoop {
+        unsupported_distance: None,
         extrusion_loop: ExtrusionLoop {
             paths: vec![ExtrusionPath {
                 z_contoured: false,

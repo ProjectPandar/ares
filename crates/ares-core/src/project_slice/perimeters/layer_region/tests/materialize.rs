@@ -272,6 +272,7 @@ fn collection(inset_idx: i32, paths: Vec<ExtrusionPath>) -> ExtrusionEntityColle
             .into_iter()
             .map(|path| {
                 ExtrusionEntity::Loop(OrderedExtrusionLoop {
+                    unsupported_distance: None,
                     extrusion_loop: ExtrusionLoop {
                         paths: vec![path],
                         role: ExtrusionLoopRole::Internal,

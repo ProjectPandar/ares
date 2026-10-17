@@ -1,5 +1,6 @@
 //! `GCode.cpp::extrude_loop` / `ExtrusionEntity.cpp::ExtrusionLoopSloped` scarf paths.
 
+mod eligibility;
 mod emit;
 #[cfg(test)]
 mod tests;
@@ -36,7 +37,7 @@ pub(super) struct Loop {
 
 pub(super) fn build(
     original: &[ExtrusionPath],
-    role: ExtrusionLoopRole,
+    (role, unsupported_distance): (ExtrusionLoopRole, Option<f32>),
     geometry: LayerGeometry<'_>,
     options: &MotionOptions,
     layer_index: usize,
@@ -53,7 +54,16 @@ pub(super) fn build(
             ExtrusionRole::ExternalPerimeter | ExtrusionRole::Perimeter
         )
         || (first.role == ExtrusionRole::Perimeter && !options.scarf.inner_walls)
-        || options.scarf.conditional
+    {
+        return None;
+    }
+    if options.scarf.conditional
+        && !eligibility::permits(
+            original,
+            unsupported_distance,
+            options,
+            geometry.scale.factor(),
+        )
     {
         return None;
     }

@@ -92,6 +92,7 @@ impl ExtrusionEntity {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct OrderedExtrusionLoop {
+    pub(in crate::project_slice) unsupported_distance: Option<f32>,
     pub(in crate::project_slice) extrusion_loop: ExtrusionLoop,
     pub(in crate::project_slice) inset_idx: i32,
 }

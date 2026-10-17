@@ -83,6 +83,7 @@ pub(in crate::project_slice) struct NearestSeamLayer {
     pub(in crate::project_slice) scores: Vec<f32>,
     /// Overhang distance per candidate (`SeamPlacer.cpp:765-767`).
     pub(in crate::project_slice) overhangs: Vec<f32>,
+    pub(in crate::project_slice) unsupported_distances: Option<Vec<f32>>,
     /// Embedded (hidden-inside) distance per candidate
     /// (`SeamCandidate::embedded_distance`, `SeamPlacer.cpp:769-775`).
     pub(in crate::project_slice) embedded: Vec<f32>,

@@ -25,6 +25,7 @@ pub(super) struct LayerPlan {
     pub(super) scores: Vec<f32>,
     z: f32,
     pub(super) overhangs: Vec<f32>,
+    pub(super) unsupported_distances: Option<Vec<f32>>,
     pub(super) embedded_distances: Vec<f32>,
     positions: Vec<Vec3>,
     point_tree: PointKdTree,
