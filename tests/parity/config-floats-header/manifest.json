@@ -1,0 +1,20 @@
+{
+  "source": "R1 SEMM base with the two untyped registry Floats keys at non-canonical spellings (native 3MF JSON-array vector form)",
+  "class_keys": ["material_correction", "relative_correction"],
+  "cases": {
+    "class": {
+      "sha256": "8ce99e92b1991787ed60f0ddcbb0c77977336c3d773c3d42d74bdc35a7f6e666",
+      "material_correction": ["1e-1", "0.50"],
+      "relative_correction": ["2.0", "2.0"],
+      "native_spelling": "0.1,0.5 / 2,2",
+      "ares_spelling": "1e-1;0.50 / 2;2",
+      "first_divergent_line": "; material_correction = 0.1,0.5"
+    },
+    "control": {
+      "sha256": "b219dadfad135233899ef00518a65a5f43c0b91bdce6b7053d168c3b81a015ba",
+      "retraction_speed": ["2.0", "2.0"],
+      "expected": "PASS"
+    }
+  },
+  "notes": "Scalar-string vector spellings and nil-element nullable string vectors slice at parity but cannot be frozen here: the parity harness's auxiliary typed re-parse rejects the string form."
+}

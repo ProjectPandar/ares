@@ -26,6 +26,9 @@ mod per_object_skirt_min_length;
 #[path = "orca_parity/per_object_skirt_brim.rs"]
 mod per_object_skirt_brim;
 
+#[path = "orca_parity/config_floats_header_serialization.rs"]
+mod config_floats_header_serialization;
+
 #[path = "orca_parity/config_float_header_serialization.rs"]
 mod config_float_header_serialization;
 #[path = "orca_parity/per_object_skirt_brim_ears.rs"]
