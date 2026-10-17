@@ -276,6 +276,8 @@ impl BrimPlan {
         let (area, paths) = if combined::enabled(traversal) {
             (brim_area, Vec::new())
         } else if owner_collection {
+            // Brim.cpp:820 uses double resolution = 0.0125 / SCALING_FACTOR,
+            // retaining the fractional lattice delta rather than truncating it.
             let paths = crate::brims::ears::paths::from_area(
                 brim_area.clone(),
                 spacing,
