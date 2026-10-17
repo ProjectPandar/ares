@@ -1,0 +1,79 @@
+{
+  "source": "OrcaSlicer8500fcdccaa10b5099ac20d252af3a7c560046f1 Print.cpp:_make_skirt:2646,2794-2920; Brim.cpp:914-977; GCode.cpp:4465-4531,5334-5335",
+  "cases": {
+    "perobject-brim": {
+      "sha256": "12f8a0ad17a51166aa603b01f49e4c8bd7afb5dc4df56b5717c67ebd6452713c",
+      "skirt_type": "perobject",
+      "brim_width": "8",
+      "skirt_loops": "2",
+      "positions_x": [
+        50,
+        125,
+        200
+      ],
+      "print_sequence": "by object",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "972ca49afdb8db7b198646906f777f599c682ba04a2acd63e3a6a1cf67c10177",
+        "3D/_rels/3dmodel.model.rels": "d80b29f82fb4b12463a8c1a8ef0a70d054250c49a4d2e3ff50e7421794a2e0a7",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "34a32f11b9a5c8ad0d1317f09c03d78c32542424f65867ae536b7a04a51ad68a",
+        "Metadata/model_settings.config": "ea52d120f03dfad1ee3b081feb61d70913ec358c579b4aef88dd0bf98fce9bf9",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/Objects/cube10-tall.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805"
+      }
+    },
+    "combined-brim": {
+      "sha256": "5467219291d3d177824fc4b7677605eb855707962ee9fd5d773db96dc15d9922",
+      "skirt_type": "combined",
+      "brim_width": "8",
+      "skirt_loops": "2",
+      "positions_x": [
+        50,
+        125,
+        200
+      ],
+      "print_sequence": "by object",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "972ca49afdb8db7b198646906f777f599c682ba04a2acd63e3a6a1cf67c10177",
+        "3D/_rels/3dmodel.model.rels": "d80b29f82fb4b12463a8c1a8ef0a70d054250c49a4d2e3ff50e7421794a2e0a7",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "b034f2161b5a22b0a133b1cef6580f540bfae1da26a321c8736ca33ec3b929c2",
+        "Metadata/model_settings.config": "ea52d120f03dfad1ee3b081feb61d70913ec358c579b4aef88dd0bf98fce9bf9",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/Objects/cube10-tall.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805"
+      },
+      "only_config_difference_vs_target": "skirt_type"
+    },
+    "perobject-no-brim": {
+      "sha256": "fd0e711e298cfab71ded112b722dbb49ca2383a825b96d890a13a1e5b52871d4",
+      "skirt_type": "perobject",
+      "brim_width": "0",
+      "skirt_loops": "2",
+      "positions_x": [
+        50,
+        125,
+        200
+      ],
+      "print_sequence": "by object",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "972ca49afdb8db7b198646906f777f599c682ba04a2acd63e3a6a1cf67c10177",
+        "3D/_rels/3dmodel.model.rels": "d80b29f82fb4b12463a8c1a8ef0a70d054250c49a4d2e3ff50e7421794a2e0a7",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "ab32f922721b1c6da0179b3f595c6434ddbff4253e081762b315e62ef24d02e0",
+        "Metadata/model_settings.config": "ea52d120f03dfad1ee3b081feb61d70913ec358c579b4aef88dd0bf98fce9bf9",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/Objects/cube10-tall.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805"
+      },
+      "only_config_difference_vs_target": "brim_width"
+    }
+  }
+}
