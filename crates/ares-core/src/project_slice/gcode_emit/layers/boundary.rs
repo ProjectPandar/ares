@@ -325,6 +325,36 @@ pub(super) fn append<'a>(
             second_layer_reset,
         },
     );
+    // `GCode.cpp:4772-4773`: the first-layer block closes with the
+    // junction deviation — after the initial-layer acceleration and
+    // jerk emits above (`:4761-4774`, M204 -> M205 X/Y -> M205 J) —
+    // on the per-object first layer (`:4589`, reset per sequential
+    // object at `:3367`); `GCodeWriter.cpp:352-361` clamps the value
+    // to the machine maximum at 3 fixed decimals.
+    if first_layer {
+        let command = crate::gcode_junction_deviation::junction_deviation_command(
+            state.options.gcode_flavor,
+            traversal
+                .resolved
+                .views
+                .full
+                .process
+                .object
+                .default_junction_deviation
+                .0,
+            traversal
+                .resolved
+                .views
+                .full
+                .printer
+                .machine
+                .machine_max_junction_deviation
+                .0[0]
+                .0,
+            state.options.gcode_comments,
+        );
+        output.extend_from_slice(command.as_bytes());
+    }
     // Second-layer transition: bed temperature for the remaining
     // layers (`GCode.cpp:4777-4830`), once per object under sequential
     // printing (`GCode.cpp:3367`).

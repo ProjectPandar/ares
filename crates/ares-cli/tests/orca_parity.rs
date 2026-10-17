@@ -31,6 +31,8 @@ mod config_floats_header_serialization;
 
 #[path = "orca_parity/config_float_header_serialization.rs"]
 mod config_float_header_serialization;
+#[path = "orca_parity/junction_deviation.rs"]
+mod junction_deviation;
 #[path = "orca_parity/per_object_skirt_brim_ears.rs"]
 mod per_object_skirt_brim_ears;
 #[path = "orca_parity/per_object_skirt_brim_types.rs"]
