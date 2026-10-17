@@ -30,6 +30,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) adaptive_pa_last_flow: f64,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_resets: Vec<(usize, f64)>,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_layer: usize,
+    pub(in crate::project_slice::gcode_emit) power_loss_recovery:
+        crate::gcode_power_loss_recovery::PowerLossRecoveryState,
     pub(in crate::project_slice::gcode_emit) x: f64,
     pub(in crate::project_slice::gcode_emit) y: f64,
     pub(in crate::project_slice::gcode_emit) extruder: extruder_state::ExtruderState,

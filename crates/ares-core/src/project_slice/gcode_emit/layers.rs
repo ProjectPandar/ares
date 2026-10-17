@@ -255,6 +255,20 @@ pub(super) fn append(
     let mut final_chunk = None;
     include!("layers/drive.rs");
     cooling.finish(output);
+    // `GCode.cpp:3440-3441` (ByLayer; the per-object completion
+    // `:3359-3361` reaches the same point at the final object): once
+    // the second-layer block ran with `Enable`, the disable command
+    // closes power-loss recovery after `process_layers` and before the
+    // wipe-tower finalize (`GCodeWriter.cpp:505-522`).
+    output.extend_from_slice(
+        crate::gcode_power_loss_recovery::finish_command(
+            state.tags.is_bbl(),
+            state.options.gcode_flavor,
+            state.options.gcode_comments,
+            state.power_loss_recovery,
+        )
+        .as_bytes(),
+    );
 
     let filtered_end = output.len();
     if let Some((entry, slices, spacing)) = final_chunk {

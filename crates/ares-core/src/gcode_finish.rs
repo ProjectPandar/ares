@@ -68,6 +68,7 @@ pub(crate) fn finish_output(
 ) -> Result<String, SliceError> {
     let mut gcode = String::new();
     gcode.push_str(&crate::gcode_power_loss_recovery::finish_command(
+        false,
         command.gcode_flavor,
         gcode_comments,
         power_loss_recovery_state,

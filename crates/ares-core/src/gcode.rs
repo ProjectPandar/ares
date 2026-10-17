@@ -183,13 +183,19 @@ pub(crate) fn format_gcode(
             }),
         );
         gcode.push_str(&after_z_gcode(options, layer_num, &z)?);
-        gcode.push_str(&crate::gcode_power_loss_recovery::layer_command(
-            gcode_flavor,
-            power_loss_recovery_mode,
-            layer_index,
-            gcode_comments,
-            &mut power_loss_recovery_state,
-        ));
+        gcode.push_str(
+            &(if layer_index == 1 {
+                crate::gcode_power_loss_recovery::second_layer_command(
+                    false,
+                    gcode_flavor,
+                    power_loss_recovery_mode,
+                    gcode_comments,
+                    &mut power_loss_recovery_state,
+                )
+            } else {
+                String::new()
+            }),
+        );
         crate::gcode_layer_markers::push(
             &mut gcode,
             &writer,
