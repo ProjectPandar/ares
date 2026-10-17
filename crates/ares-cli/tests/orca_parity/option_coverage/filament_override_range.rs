@@ -289,6 +289,80 @@ fn orca_parity_filament_override_range_control_15() {
     run_leg(&LEGS[1]);
 }
 
+/// `--overrides` leg (review follow-up): the public override boundary
+/// (`overrides.rs::validate_entry` → `validate_numeric_range`) ports
+/// `ConfigBase::set_deserialize` (`Config.cpp:591-620`), which never
+/// applies min/max — upstream's only range gate is `Slic3r::validate`
+/// where `fpc.apply` already dropped dynamic keys. Native reference is
+/// the same effective config via `project_settings` (target-5 project);
+/// Ares applies `{"filament_retraction_distances_when_cut":["5","5"]}`
+/// over the unpatched fixture and must produce identical bytes.
+/// FAILS pre-fix (`5 not in range [10,18]` at the boundary).
+#[test]
+fn orca_parity_filament_override_range_overrides_cli_5() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = tempfile::Builder::new()
+        .prefix("filament-override-range-overrides-5-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let directory = root.join("case");
+    // Same effective config, through the project_settings path.
+    let reference = native(&runner, &directory, &project(&LEGS[0]));
+
+    let output_dir = directory.join("ares");
+    fs::create_dir(&output_dir).unwrap();
+    let output = output_dir.join("plate_1.gcode");
+    let binary = env!("CARGO_BIN_EXE_ares");
+    let overrides = "{\"filament_retraction_distances_when_cut\":[\"5\",\"5\"]}";
+    let input = directory.join("unpatched.3mf");
+    fs::write(&input, BASE).unwrap();
+    let cli = Command::new(binary)
+        .args(["slice", "--overrides", overrides, "-o"])
+        .arg(&output)
+        .arg(&input)
+        .output()
+        .unwrap();
+    fs::write(directory.join("ares.stdout"), &cli.stdout).unwrap();
+    fs::write(directory.join("ares.stderr"), &cli.stderr).unwrap();
+    let comparison = fs::read(&output)
+        .map_err(|error| format!("CLI output: {error}"))
+        .and_then(|gcode| golden::compare_ordered_bytes_generator_only(&reference, &gcode));
+    fs::write(
+        directory.join("comparison.json"),
+        serde_json::to_vec_pretty(&json!({
+            "label":"overrides-5","native_sha256":sha(&reference),
+            "cli_comparison":comparison,"CLI_code":cli.status.code(),
+            "cli_stderr":String::from_utf8_lossy(&cli.stderr)
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(cli.status.success(), "{root:?}: {cli:?}");
+    comparison.unwrap_or_else(|error| panic!("{root:?}: {error}"));
+
+    // Static `GCodeConfig` filament members stay range-checked through the
+    // same boundary (`filament_max_volumetric_speed=-1` → reject).
+    let reject = Command::new(binary)
+        .args([
+            "slice",
+            "--overrides",
+            "{\"filament_max_volumetric_speed\":[\"-1\"]}",
+            "-o",
+        ])
+        .arg(&output)
+        .arg(&input)
+        .output()
+        .unwrap();
+    assert!(
+        !reject.status.success()
+            && String::from_utf8_lossy(&reject.stderr).contains("not in range"),
+        "{root:?}: static filament_* --overrides must still reject, got {reject:?}"
+    );
+}
+
 /// Rejection control: `filament_max_volumetric_speed=["-1"]` — a static
 /// `GCodeConfig` member with `min=0` (`PrintConfig.cpp:2550-2558`).
 /// Native rejects with `not in range`; Ares must reject identically
