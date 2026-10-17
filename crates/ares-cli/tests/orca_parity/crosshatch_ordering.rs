@@ -1,0 +1,150 @@
+//! Crosshatch sparse-infill chaining order (`ShortestPath.cpp:1968-1994`
+//! `chain_polylines`: `chain_segments_greedy2` greedy pass plus
+//! `improve_ordering_by_two_exchanges_with_segment_flipping`
+//! `ShortestPath.cpp:1918-1965`, reached from `Fill::chain_or_connect_infill`
+//! `FillBase.cpp:1820-1828` via `FillCrossHatch.cpp:225-230`): on this
+//! witness the canonicalized sparse-infill polyline sets are identical on
+//! both sides, but the chaining order differs. The body divergence is the
+//! 36-line layer-2 path starting `G1 X110.33 Y124.02 F9000`: Native chains
+//! that corridor before the `G1 X105.255 Y124.02 F9000` path, Ares after,
+//! with different lane pairing. The first difference of the strict
+//! whole-output compare is an M73/G1 swap that is a downstream symptom of
+//! the total-time offset introduced by the reordered paths' travel, not a
+//! processor bug. The target leg therefore FAILS the strict compare on the
+//! body reordering; the control leg keeps the same no-brim/no-skirt
+//! surface with the fixture's default infill and PASSes. See
+//! docs/architecture/2026-10-18-crosshatch-infill-ordering-divergence.md.
+use std::fs;
+
+use serde_json::json;
+use sha2::{Digest, Sha256};
+
+use crate::runner::{OrcaRunner, stages};
+
+const TARGET: &[u8] = include_bytes!("../../../../tests/parity/crosshatch-ordering/target.3mf");
+const TARGET_SHA256: &str = "f3713a65e52eab7de3176efa2f09b3e6ce59129a2301b20eb211907bca2dc270";
+const CONTROL: &[u8] = include_bytes!("../../../../tests/parity/crosshatch-ordering/control.3mf");
+const CONTROL_SHA256: &str = "73aad5c16915a4769bc9f8bffd75e782011a5f5d2e1afa07578d65296346221e";
+
+fn sha256(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+fn slice_native(runner: &OrcaRunner, root: &std::path::Path, input: &[u8], prefix: &str) -> String {
+    let directory = tempfile::Builder::new()
+        .prefix(prefix)
+        .tempdir_in(root)
+        .unwrap()
+        .keep();
+    let path = directory.join("input.3mf");
+    let output = directory.join("orca");
+    fs::write(&path, input).unwrap();
+    fs::create_dir(&output).unwrap();
+    let args = [
+        "--slice".to_owned(),
+        "0".to_owned(),
+        "--outputdir".to_owned(),
+        output.to_str().unwrap().to_owned(),
+        path.to_str().unwrap().to_owned(),
+    ];
+    stages::run(
+        runner.bin(),
+        args.iter().cloned(),
+        stages::Stage::Slice,
+        &directory,
+    )
+    .unwrap();
+    fs::read_to_string(output.join("plate_1.gcode")).unwrap()
+}
+
+fn compare(
+    root: &std::path::Path,
+    label: &str,
+    input: &[u8],
+    reference: &str,
+    source: &str,
+) -> crate::ParityOutcome {
+    crate::artifacts::compare(
+        root,
+        label,
+        Ok(input),
+        Ok(reference.as_bytes()),
+        json!({
+            "kind":"crosshatch_ordering",
+            "input_sha256":sha256(input),
+            "source":source,
+        }),
+    )
+    .unwrap()
+}
+
+#[test]
+fn crosshatch_ordering_target_matches_native() {
+    assert_eq!(sha256(TARGET), TARGET_SHA256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = crate::artifacts::root_from_env().unwrap();
+    let reference = slice_native(&runner, &root, TARGET, "co-target-");
+    // Native-active pin: the diverging corridor order — the 36-line
+    // layer-2 path starting at X110.33 is chained BEFORE the X105.255
+    // path on Native (Ares emits X105.255 first and pairs the corridor
+    // differently).
+    let corridor = reference
+        .find("G1 X110.33 Y124.02 F9000\nG1 F3600\nG1 X109.147 Y124.02 E.03924\n")
+        .expect("native chains the corridor starting at X110.33");
+    let lane = reference
+        .find("G1 X105.255 Y124.02 F9000\n")
+        .expect("native lane start at X105.255");
+    assert!(
+        corridor < lane,
+        "native order: X110.33 corridor before X105.255 lane"
+    );
+    assert_eq!(
+        reference.lines().filter(|l| *l == ";LAYER_CHANGE").count(),
+        5,
+        "both objects sliced through all layers"
+    );
+    let outcome = compare(
+        &root,
+        "co-target",
+        TARGET,
+        &reference,
+        "ShortestPath.cpp:1968-1994,1918-1965;FillBase.cpp:1820-1828;FillCrossHatch.cpp:225-230",
+    );
+    assert_eq!(
+        outcome.status, "PASS",
+        "{}; {:?}",
+        outcome.detail, outcome.artifacts
+    );
+}
+
+#[test]
+fn crosshatch_ordering_control_matches_native() {
+    assert_eq!(sha256(CONTROL), CONTROL_SHA256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = crate::artifacts::root_from_env().unwrap();
+    let reference = slice_native(&runner, &root, CONTROL, "co-control-");
+    assert_eq!(
+        reference.lines().filter(|l| *l == ";LAYER_CHANGE").count(),
+        5,
+        "both objects sliced through all layers"
+    );
+    let outcome = compare(
+        &root,
+        "co-control",
+        CONTROL,
+        &reference,
+        "ShortestPath.cpp:1968-1994,1918-1965;FillBase.cpp:1820-1828;FillCrossHatch.cpp:225-230",
+    );
+    assert_eq!(
+        outcome.status, "PASS",
+        "{}; {:?}",
+        outcome.detail, outcome.artifacts
+    );
+}
