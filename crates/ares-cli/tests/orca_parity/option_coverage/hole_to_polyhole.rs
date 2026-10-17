@@ -23,10 +23,17 @@ use std::{
 };
 
 const BASE: &[u8] = include_bytes!("../../../../../tests/parity/hole-to-polyhole/block-hole.3mf");
+/// Noisy 64-gon hole (vertex radius ±0.3 mm → ~0.6 mm vertex-spread):
+/// misses the `5%` threshold (~0.25 mm bound, `Percent` branch of
+/// `PrintObject.cpp:234`) but converts under `20%` (~1.0 mm bound).
+const BASE_NOISY: &[u8] =
+    include_bytes!("../../../../../tests/parity/hole-to-polyhole/block-hole-noisy.3mf");
 
 /// `<part id="1">` metadata rows injected after `source_offset_z`.
 struct Leg {
     label: &'static str,
+    /// Fixture bytes this leg mutates and its Native baseline derives.
+    fixture: &'static [u8],
     /// `(key, value)` pairs inserted into the part metadata.
     inject: &'static [(&'static str, &'static str)],
     /// Line that must appear in the Native output (polyhole vertex
@@ -35,36 +42,68 @@ struct Leg {
     native_marker: &'static str,
 }
 
-const LEGS: [Leg; 4] = [
+const LEGS: [Leg; 6] = [
     Leg {
         label: "control",
+        fixture: BASE,
         inject: &[],
         native_marker: "",
     },
     Leg {
         label: "enabled-twisted",
+        fixture: BASE,
         inject: &[("hole_to_polyhole", "1")],
         native_marker: "G1 X130.802 Y125 E.05577",
     },
     Leg {
         label: "enabled-untwisted",
+        fixture: BASE,
         inject: &[("hole_to_polyhole", "1"), ("hole_to_polyhole_twisted", "0")],
         native_marker: "G1 X130.802 Y125 E.05577",
     },
     Leg {
         label: "threshold-miss",
+        fixture: BASE,
         inject: &[
             ("hole_to_polyhole", "1"),
             ("hole_to_polyhole_threshold", "0"),
         ],
         native_marker: "",
     },
+    // Control on the noisy fixture: `hole_to_polyhole=1` + `5%` of
+    // the ~5 mm mean radius (~0.25 mm bound) still misses the ~0.6 mm
+    // vertex spread; Native output must equal the plain noisy fixture.
+    // Discriminates the percent-branch unit bug: an implementation
+    // that percent-scales the *coord-unit* mean radius accepts the
+    // hole (astronomical bound) while upstream rejects it.
+    Leg {
+        label: "noisy-percent-miss",
+        fixture: BASE_NOISY,
+        inject: &[
+            ("hole_to_polyhole", "1"),
+            ("hole_to_polyhole_threshold", "5%"),
+        ],
+        native_marker: "",
+    },
+    // Positive on the noisy fixture: `20%` of ~5 mm (~1.0 mm bound)
+    // beats the ~0.6 mm spread → upstream converts through the
+    // `Percent` branch to a 16-gon polyhole. Marker is a polyhole
+    // vertex absent from the control output.
+    Leg {
+        label: "noisy-percent-positive",
+        fixture: BASE_NOISY,
+        inject: &[
+            ("hole_to_polyhole", "1"),
+            ("hole_to_polyhole_threshold", "20%"),
+        ],
+        native_marker: "G1 X131.161 Y125 E.05388",
+    },
 ];
 
 /// Rewrites `Metadata/model_settings.config`, inserting the leg's
 /// metadata after part 1's `source_offset_z` row. Verifies fixture shape.
 fn project(leg: &Leg) -> Vec<u8> {
-    let mut reader = zip::ZipArchive::new(Cursor::new(BASE)).unwrap();
+    let mut reader = zip::ZipArchive::new(Cursor::new(leg.fixture)).unwrap();
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..reader.len() {
         let mut file = reader.by_index(index).unwrap();
@@ -239,7 +278,7 @@ fn run_leg(leg: &Leg, control_reference: &[u8]) {
 
 /// Runs the unpatched fixture once so each leg can assert its
 /// Native-first control/positive contract against a shared baseline.
-fn control_native() -> Vec<u8> {
+fn control_native(fixture: &'static [u8]) -> Vec<u8> {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return Vec::new();
     };
@@ -248,14 +287,20 @@ fn control_native() -> Vec<u8> {
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    native(&runner, &root.join("baseline"), &project(&LEGS[0]))
+    let baseline = Leg {
+        label: "baseline",
+        fixture,
+        inject: &[],
+        native_marker: "",
+    };
+    native(&runner, &root.join("baseline"), &project(&baseline))
 }
 
 /// Control: unpatched fixture — Native output is the baseline; Ares
 /// must match byte-for-byte before and after the bounded GREEN.
 #[test]
 fn orca_parity_hole_to_polyhole_control() {
-    let control = control_native();
+    let control = control_native(BASE);
     if control.is_empty() {
         return;
     }
@@ -268,7 +313,7 @@ fn orca_parity_hole_to_polyhole_control() {
 /// whole Native output.
 #[test]
 fn orca_parity_hole_to_polyhole_enabled_twisted() {
-    let control = control_native();
+    let control = control_native(BASE);
     if control.is_empty() {
         return;
     }
@@ -280,7 +325,7 @@ fn orca_parity_hole_to_polyhole_enabled_twisted() {
 /// per-layer rotation). Ares must reproduce the whole Native output.
 #[test]
 fn orca_parity_hole_to_polyhole_enabled_untwisted() {
-    let control = control_native();
+    let control = control_native(BASE);
     if control.is_empty() {
         return;
     }
@@ -294,9 +339,40 @@ fn orca_parity_hole_to_polyhole_enabled_untwisted() {
 /// must match byte-for-byte.
 #[test]
 fn orca_parity_hole_to_polyhole_threshold_miss() {
-    let control = control_native();
+    let control = control_native(BASE);
     if control.is_empty() {
         return;
     }
     run_leg(&LEGS[3], &control);
+}
+
+/// Control on the noisy fixture: `hole_to_polyhole_threshold=5%` —
+/// ~0.25 mm bound still misses the ~0.6 mm vertex spread, so Native
+/// emits the circular hole; output must equal the unpatched noisy
+/// fixture byte-for-byte. This leg discriminates a percent-branch unit
+/// bug (percent of the *coord-unit* mean radius yields an astronomical
+/// bound that wrongly converts the hole).
+#[test]
+fn orca_parity_hole_to_polyhole_noisy_percent_miss() {
+    let control = control_native(BASE_NOISY);
+    if control.is_empty() {
+        return;
+    }
+    run_leg(&LEGS[4], &control);
+}
+
+/// Positive on the noisy fixture: `hole_to_polyhole_threshold=20%` —
+/// ~1.0 mm bound beats the ~0.6 mm vertex spread; upstream converts
+/// through the `Percent` branch of `get_abs_value`
+/// (`PrintObject.cpp:234`, percent of the *unscaled* mean radius) to a
+/// 16-gon polyhole. Marker `G1 X131.161 Y125 E.05388` is a polyhole
+/// vertex absent from the control. Ares must reproduce the whole
+/// Native output.
+#[test]
+fn orca_parity_hole_to_polyhole_noisy_percent() {
+    let control = control_native(BASE_NOISY);
+    if control.is_empty() {
+        return;
+    }
+    run_leg(&LEGS[5], &control);
 }
