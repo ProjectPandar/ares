@@ -15,6 +15,9 @@ pub(crate) mod multiline_union;
 #[path = "option_coverage/interface_shells_alignment.rs"]
 mod interface_shells_alignment;
 
+#[path = "option_coverage/region_speed_emission.rs"]
+mod region_speed_emission;
+
 #[path = "option_coverage/support_ironing_pattern_domain.rs"]
 mod support_ironing_pattern_domain;
 
