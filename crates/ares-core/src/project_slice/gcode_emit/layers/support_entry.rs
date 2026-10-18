@@ -95,20 +95,21 @@ pub(super) fn emit(
     if let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
-    let support_reversal_key = (
-        state.shared_toolpath_object(&traversal.project, source_object_index),
-        layer.id,
-    );
+    let phase = motion::EmissionPhase {
+        geometry: motion_geometry,
+        reversal: state.reversal_scope(
+            &traversal.project,
+            object_index,
+            source_object_index,
+            motion::SharedLayerId::Support(layer.id),
+        ),
+    };
     motion::emit_support(
         output,
         &mut layer.support_fills,
         selected_role,
-        motion_geometry,
+        phase,
         state,
-        (
-            object_index,
-            (support_reversal_key.0, support_reversal_key.1),
-        ),
     )?;
     if standalone {
         if let Some(labels) = labels {

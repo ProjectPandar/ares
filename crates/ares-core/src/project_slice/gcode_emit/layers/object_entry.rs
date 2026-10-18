@@ -79,28 +79,27 @@ pub(super) fn emit(
         .0
         .object
         .seam_position;
-    let reversal = (
+    let reversal = state.reversal_scope(
+        &traversal.project,
         object_index,
-        (
-            state.shared_toolpath_object(
-                &traversal.project,
-                traversal.objects[object_index]
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .object
-                    .identity()
-                    .0,
-            ),
-            layer_index,
-        ),
+        traversal.objects[object_index]
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .object
+            .identity()
+            .0,
+        motion::SharedLayerId::Object(layer_index),
     );
     let timelapse_inserted = motion::emit_layer(
         output,
         layer,
         (
-            motion_geometry,
+            motion::EmissionPhase {
+                geometry: motion_geometry,
+                reversal,
+            },
             first_layer,
             |region: usize, motion: &mut motion::MotionOptions| {
                 let options = &regions[region].options;
@@ -126,7 +125,6 @@ pub(super) fn emit(
             },
         ),
         state,
-        reversal,
         |output, state| {
             timelapse_core::append_traditional(
                 traditional_interlude,

@@ -405,31 +405,58 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
 /// identical across instances of one source object).
 /// Raft layers are separate upstream `Layer` entity sets: their ledger keys
 /// must not collide with the object layer keys of the same source object.
-pub(in crate::project_slice::gcode_emit) const RAFT_REVERSAL_LAYER_TAG: usize = 1 << 40;
+/// Upstream layer entity set a shared-reversal ledger is keyed by: object
+/// layers, raft layers, and support layers are disjoint entity sets
+/// (`PrintObject::layers()` / `m_support_layers`, Print.cpp:2103-2106).
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(in crate::project_slice::gcode_emit) enum SharedLayerId {
+    Object(usize),
+    Raft(usize),
+    Support(usize),
+}
+
+/// The chained-emission scope of one `(print object, layer)` pass:
+/// the emitting object (`session`, which discriminates objects sharing
+/// one representative), the sharing-group representative source object,
+/// and the shared layer entity set.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(in crate::project_slice::gcode_emit) struct ReversalScope {
+    pub(in crate::project_slice::gcode_emit) session: usize,
+    pub(in crate::project_slice::gcode_emit) representative: usize,
+    pub(in crate::project_slice::gcode_emit) layer: SharedLayerId,
+}
+
+/// Emission-phase context: the layer geometry plus its shared-reversal
+/// scope, threading the chained phases without widening signatures.
+#[derive(Clone, Copy)]
+pub(in crate::project_slice::gcode_emit) struct EmissionPhase<'a> {
+    pub(in crate::project_slice::gcode_emit) geometry: LayerGeometry<'a>,
+    pub(in crate::project_slice::gcode_emit) reversal: ReversalScope,
+}
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct SharedEntityReversals {
-    infill: std::collections::BTreeMap<(usize, usize), Vec<bool>>,
-    support: std::collections::BTreeMap<(usize, usize), Vec<bool>>,
-    /// `(last session, cursor)` per ledger — the cursor resets whenever
-    /// emission moves to another print object's layer pass and otherwise
-    /// advances over that pass's chained entities. The session discriminates
-    /// objects sharing the same representative key.
-    infill_cursor: (Option<(usize, usize, usize)>, usize),
-    support_cursor: (Option<(usize, usize, usize)>, usize),
+    infill: std::collections::BTreeMap<(usize, SharedLayerId), Vec<bool>>,
+    support: std::collections::BTreeMap<(usize, SharedLayerId), Vec<bool>>,
+    /// `(last scope, cursor)` per ledger — the cursor resets whenever
+    /// emission moves to another print object's layer pass (any of the
+    /// session, representative, or layer changing) and otherwise advances
+    /// over that pass's chained entities.
+    infill_cursor: (Option<ReversalScope>, usize),
+    support_cursor: (Option<ReversalScope>, usize),
 }
 
 impl SharedEntityReversals {
     fn chain<T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity>(
-        ledger: &mut std::collections::BTreeMap<(usize, usize), Vec<bool>>,
-        cursor: &mut (Option<(usize, usize, usize)>, usize),
-        session: (usize, (usize, usize)),
+        ledger: &mut std::collections::BTreeMap<(usize, SharedLayerId), Vec<bool>>,
+        cursor: &mut (Option<ReversalScope>, usize),
+        scope: ReversalScope,
         entities: &mut Vec<T>,
         start: crate::geometry::Point,
     ) {
-        let key = session.1;
-        if cursor.0 != Some((session.0, key.0, key.1)) {
-            cursor.0 = Some((session.0, key.0, key.1));
+        let key = (scope.representative, scope.layer);
+        if cursor.0 != Some(scope) {
+            cursor.0 = Some(scope);
             cursor.1 = 0;
         }
         let base = cursor.1;
@@ -460,15 +487,14 @@ impl SharedEntityReversals {
         T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity,
     >(
         &mut self,
-        session: usize,
-        key: (usize, usize),
+        scope: ReversalScope,
         entities: &mut Vec<T>,
         start: crate::geometry::Point,
     ) {
         Self::chain(
             &mut self.infill,
             &mut self.infill_cursor,
-            (session, key),
+            scope,
             entities,
             start,
         );
@@ -478,15 +504,14 @@ impl SharedEntityReversals {
         T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity,
     >(
         &mut self,
-        session: usize,
-        key: (usize, usize),
+        scope: ReversalScope,
         entities: &mut Vec<T>,
         start: crate::geometry::Point,
     ) {
         Self::chain(
             &mut self.support,
             &mut self.support_cursor,
-            (session, key),
+            scope,
             entities,
             start,
         );
@@ -516,5 +541,25 @@ impl EmitState {
         self.print_sharing
             .insert(source_object_index, representative);
         representative
+    }
+}
+
+impl EmitState {
+    /// The chained-emission scope for one `(print object, layer)` pass:
+    /// `session` is the emitting ares print object (discriminating objects
+    /// of one sharing group), the representative comes from
+    /// `shared_toolpath_object`, and `layer` names the shared entity set.
+    pub(in crate::project_slice::gcode_emit) fn reversal_scope(
+        &mut self,
+        project: &crate::project::Project,
+        session: usize,
+        source_object_index: usize,
+        layer: SharedLayerId,
+    ) -> ReversalScope {
+        ReversalScope {
+            session,
+            representative: self.shared_toolpath_object(project, source_object_index),
+            layer,
+        }
     }
 }

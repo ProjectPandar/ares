@@ -20,22 +20,18 @@ struct RegionEntities {
     ironing: Vec<IslandPrintEntity>,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the layer phase threads the emit context and reversal key"
-)]
 pub(in crate::project_slice::gcode_emit) fn emit_layer<F, D>(
     output: &mut Vec<u8>,
     layer: &mut OrderedExtrusionLayer,
-    (geometry, first_layer, options_for_region): (LayerGeometry<'_>, bool, D),
+    (phase, first_layer, options_for_region): (super::state::EmissionPhase<'_>, bool, D),
     state: &mut EmitState,
-    reversal: (usize, (usize, usize)),
     mut before_first_infill: F,
 ) -> Result<bool, SliceError>
 where
     F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
     D: Fn(usize, &mut MotionOptions) -> (f64, bool, super::super::small_area::Gate),
 {
+    let super::state::EmissionPhase { geometry, reversal } = phase;
     let mut interlude_emitted = false;
     for island in &mut layer.islands {
         let entities = std::mem::take(&mut island.entities);
@@ -87,10 +83,9 @@ where
             emit_infills(
                 output,
                 &mut region.infills,
-                geometry,
+                super::state::EmissionPhase { geometry, reversal },
                 state,
                 density,
-                reversal,
             )?;
         }
         for (&id, region) in &mut regions {
@@ -112,10 +107,9 @@ where
             emit_infills(
                 output,
                 &mut region.ironing,
-                geometry,
+                super::state::EmissionPhase { geometry, reversal },
                 state,
                 density,
-                reversal,
             )?;
         }
     }
@@ -139,17 +133,12 @@ fn emit_perimeters(
     Ok(())
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the infill phase threads the emit context and reversal key"
-)]
 fn emit_infills(
     output: &mut Vec<u8>,
     entities: &mut Vec<IslandPrintEntity>,
-    geometry: LayerGeometry<'_>,
+    phase: super::state::EmissionPhase<'_>,
     state: &mut EmitState,
     sparse_density: f64,
-    reversal: (usize, (usize, usize)),
 ) -> Result<(), SliceError> {
     if entities.is_empty() {
         return Ok(());
@@ -160,12 +149,10 @@ fn emit_infills(
     // shared layer entities: reversals persist to later islands/instances
     // of the same source object (also covers the ironing pass above and
     // `extrude_support`, GCode.cpp:6201).
-    state.shared_reversals.chain_infill(
-        reversal.0,
-        reversal.1,
-        entities,
-        local_cursor(state, geometry),
-    );
+    let geometry = phase.geometry;
+    state
+        .shared_reversals
+        .chain_infill(phase.reversal, entities, local_cursor(state, geometry));
     for entity in entities.drain(..) {
         match entity {
             IslandPrintEntity::Fill(entity) => {

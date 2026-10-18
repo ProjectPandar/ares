@@ -60,42 +60,43 @@ pub(super) fn emit(
     if let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
-    let raft_reversal_key = (
+    let reversal = state.reversal_scope(
+        &traversal.project,
         object_index,
-        state.shared_toolpath_object(
-            &traversal.project,
-            traversal.objects[object_index]
-                .predecessor
-                .predecessor
-                .predecessor
-                .predecessor
-                .object
-                .identity()
-                .0,
-        ),
-        super::super::motion::RAFT_REVERSAL_LAYER_TAG | raft_index,
+        traversal.objects[object_index]
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .object
+            .identity()
+            .0,
+        motion::SharedLayerId::Raft(raft_index),
     );
     motion::emit_layer(
         output,
         layer,
-        (motion_geometry, first_layer, |_, _| {
-            let region = &traversal.resolved.views.full.process.region;
-            (
-                region.sparse_infill_density.0,
-                region.is_infill_first.0,
-                super::super::small_area::Gate {
-                    enabled: region.small_area_infill_flow_compensation.0,
-                    bottom: region.bottom_surface_pattern,
-                    internal: region.internal_solid_infill_pattern,
-                    top: region.top_surface_pattern,
-                },
-            )
-        }),
-        state,
         (
-            raft_reversal_key.0,
-            (raft_reversal_key.1, raft_reversal_key.2),
+            motion::EmissionPhase {
+                geometry: motion_geometry,
+                reversal,
+            },
+            first_layer,
+            |_, _| {
+                let region = &traversal.resolved.views.full.process.region;
+                (
+                    region.sparse_infill_density.0,
+                    region.is_infill_first.0,
+                    super::super::small_area::Gate {
+                        enabled: region.small_area_infill_flow_compensation.0,
+                        bottom: region.bottom_surface_pattern,
+                        internal: region.internal_solid_infill_pattern,
+                        top: region.top_surface_pattern,
+                    },
+                )
+            },
         ),
+        state,
         |output, state| {
             timelapse_core::append_traditional(
                 traditional_interlude,

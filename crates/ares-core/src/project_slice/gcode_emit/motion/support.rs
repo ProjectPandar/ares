@@ -15,18 +15,14 @@ pub(in crate::project_slice::gcode_emit) struct LayerAreas<'a> {
     pub(in crate::project_slice::gcode_emit) tree_base: Option<&'a [crate::geometry::ExPolygon]>,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "support emission carries the shared reversal key"
-)]
 pub(in crate::project_slice::gcode_emit) fn emit(
     output: &mut Vec<u8>,
     entities: &mut Vec<SupportExtrusionEntity>,
     selected_role: ExtrusionRole,
-    geometry: LayerGeometry<'_>,
+    phase: super::state::EmissionPhase<'_>,
     state: &mut EmitState,
-    reversal: (usize, (usize, usize)),
 ) -> Result<(), crate::SliceError> {
+    let geometry = phase.geometry;
     let (selected, mut remaining): (Vec<_>, Vec<_>) =
         std::mem::take(entities).into_iter().partition(|entity| {
             let role = entity.role();
@@ -48,12 +44,9 @@ pub(in crate::project_slice::gcode_emit) fn emit(
         // GCode.cpp:6199-6201 — extrude_support chains the SHARED
         // support_fills entities in place (no_sort false), so reversals
         // persist to later islands/instances of the same source object.
-        state.shared_reversals.chain_support(
-            reversal.0,
-            reversal.1,
-            group,
-            local_cursor(state, geometry),
-        );
+        state
+            .shared_reversals
+            .chain_support(phase.reversal, group, local_cursor(state, geometry));
         for entity in &*group {
             emit_entity(output, entity, selected_role, geometry, state)?;
         }

@@ -23,6 +23,10 @@ use crate::runner::{OrcaRunner, stages};
 
 const TARGET: &[u8] = include_bytes!("../../../../tests/parity/crosshatch-ordering/target.3mf");
 const TARGET_SHA256: &str = "f3713a65e52eab7de3176efa2f09b3e6ce59129a2301b20eb211907bca2dc270";
+const TARGET_BY_OBJECT: &[u8] =
+    include_bytes!("../../../../tests/parity/crosshatch-ordering/target-byobject.3mf");
+const TARGET_BY_OBJECT_SHA256: &str =
+    "6efb407e90c1825312f9ef45293e80a2031d8705b6fea4ff7102ddebbb785d2e";
 const CONTROL: &[u8] = include_bytes!("../../../../tests/parity/crosshatch-ordering/control.3mf");
 const CONTROL_SHA256: &str = "73aad5c16915a4769bc9f8bffd75e782011a5f5d2e1afa07578d65296346221e";
 
@@ -114,6 +118,43 @@ fn crosshatch_ordering_target_matches_native() {
         TARGET,
         &reference,
         "ShortestPath.cpp:1968-1994,1918-1965;FillBase.cpp:1820-1828;FillCrossHatch.cpp:225-230",
+    );
+    assert_eq!(
+        outcome.status, "PASS",
+        "{}; {:?}",
+        outcome.detail, outcome.artifacts
+    );
+}
+
+#[test]
+fn crosshatch_ordering_target_by_object_matches_native() {
+    assert_eq!(sha256(TARGET_BY_OBJECT), TARGET_BY_OBJECT_SHA256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = crate::artifacts::root_from_env().unwrap();
+    let reference = slice_native(&runner, &root, TARGET_BY_OBJECT, "co-byobj-");
+    // print_sequence=by object is active: the layer z resets after the
+    // first object's five layers (`Print.cpp` per-object emission).
+    let zs = reference
+        .lines()
+        .filter_map(|l| l.strip_prefix(";Z:"))
+        .map(str::parse::<f64>)
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    assert_eq!(zs.len(), 10, "both objects sliced through all layers");
+    assert_eq!(
+        zs[5], zs[0],
+        "by-object emission restarts at the first layer z"
+    );
+    // The shared-entity reversal carryover must hold when instance 2 is
+    // emitted after instance 1's whole object, not interleaved per layer.
+    let outcome = compare(
+        &root,
+        "co-byobj",
+        TARGET_BY_OBJECT,
+        &reference,
+        "GCode.cpp:6164,6201;ShortestPath.cpp:1040-1052;Print.cpp:2200-2251,2093-2106",
     );
     assert_eq!(
         outcome.status, "PASS",
