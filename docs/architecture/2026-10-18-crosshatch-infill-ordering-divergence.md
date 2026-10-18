@@ -152,3 +152,76 @@ the upstream walk over oracle per-block times reproduces both native and ares
 placements exactly; total-time difference (+0.08 s, this divergence's extra
 travel move) shifts every M73 R-boundary globally. No processor change belongs
 in this slice; the M73 drift disappears once this ordering divergence is fixed.
+
+## GREEN boundary addendum (upstream sharing group + ledger semantics)
+
+The carryover's enabling boundary, added to the upstream owner list after the
+first GREEN review round:
+
+- `Print.cpp:2200-2251` `is_print_object_the_same` / `do_slicing` grouping:
+  the FIRST print object of an identical group slices; every later identical
+  one calls `set_shared_object(slicing_obj)`.
+- `Print.cpp:2093-2106` `copy_layers_from_shared_object`: `m_layers` and
+  `m_support_layers` are literally the representative's layer pointers — the
+  shared-entity graph the chained-emission reversals mutate.
+
+Ares port: `ProjectObject::shares_print_toolpaths`
+(`crates/ares-core/src/project/domain.rs`), representative = first equal
+project object in import order; consumed by `EmitState::shared_toolpath_object`.
+
+### Field-by-field equivalence with `is_print_object_the_same`
+
+| upstream condition | ares condition | note |
+|---|---|---|
+| volume count | volumes count | direct |
+| `ModelVolume::type()` | `ProjectVolumeType` | direct |
+| `mesh_ptr()` equality | `geometry_identity()` (`Arc` pointer) | see below |
+| volume transformation | `ProjectVolume::transform` | direct |
+| volume `extruder` config | `RegionOptionOverrides` equality (incl. `extruder`) | ares surfaces extruder only at the volume level (project/load/assemble.rs:229 color-group mapping); the object-level `extruder` option has no ares representation and no ares behavior depends on it yet |
+| `supported_facets.equals` | `supported_facets` (`FacetsAnnotation: PartialEq`) | direct |
+| `seam_facets` / `mmu_segmentation_facets` / `fuzzy_skin_facets` equality | — | NOT MODELED: the ares 3mf loader parses only `@paint_supports` (project/model_xml.rs:202-203); seam/MMU/fuzzy facet annotations are not retained anywhere in the ares project domain, so two objects differing only in those annotations compare equal in ares where upstream would not. When those annotations gain ares fields they MUST join this predicate. |
+| object `extruder` config | — | see volume row |
+| layer height profile pointer | `layer_height_profile` value equality | value-equal profiles slice identically |
+| object config string | `ObjectOptionOverrides` equality | the overrides ARE the ares model-object config |
+
+### Mesh identity argument (`mesh_ptr()` vs `geometry_identity()`)
+
+Upstream: `bbs_3mf.cpp:4929-4963,5025-5028` — each volume's
+`shared_mesh_id` (metadata key `mesh_shared`, `bbs_3mf.cpp:397`, defaulting to
+the referenced mesh object id) keys `m_shared_meshes`; volumes with the same
+id REUSE the first `ModelVolume`'s mesh, so `mesh_ptr()` compares equal
+exactly for loader-shared meshes (two separately imported copies of the same
+file get distinct pointers).
+
+Ares: `project/load/assemble/volumes.rs:56-60` derives the SAME id
+(`mesh_shared` id, falling back to the referenced mesh object id), and
+`project/domain/shared_mesh.rs::materialize_meshes` keys an owners map by it,
+cloning one `Arc<MeshGeometry>` per id. `geometry_identity()` compares that
+`Arc` pointer, so `geometry_identity() ==` ⟺ same `mesh_shared` id ⟺ upstream
+`mesh_ptr()` equality. Neither side merges geometrically-identical but
+separately imported meshes.
+
+### Positional ledger alignment and cursor resets
+
+Within one `(representative, layer)` the emission-side entity sequences of
+the group's objects are structurally identical: the grouping predicate fixes
+mesh identity, volume transforms, and overrides, so each object's ares slice
+pipeline runs the same deterministic stages over identical inputs (only the
+instance translation differs, which the fill stage is translation-invariant
+to — the CI boundary probe of the diagnostic round showed byte-equal
+chain_or_connect_infill inputs/outputs for both instances). The ledger's
+positional index is therefore the ares analogue of upstream's shared pointer
+identity, and `ReversalScope.session` (the emitting print object)
+discriminates passes over the same key. The cursor resets whenever
+`(session, representative, layer)` changes — i.e. at every print-object or
+layer pass boundary — and otherwise advances across that pass's chained
+groups (regions, islands, the ironing phase, and support's ordinary/ironing
+groups in `extrude_support` order).
+
+### ByObject verification
+
+`crosshatch_ordering_target_by_object_matches_native`
+(`target-byobject.3mf`: the RED target with `print_sequence = "by object"`)
+runs the carryover under sequential per-object emission — instance 2's layers
+read instance 1's reversal state only after instance 1's whole object —
+against Native in both canonical modes; native output is never committed.
