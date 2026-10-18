@@ -27,6 +27,10 @@ const TARGET_BY_OBJECT: &[u8] =
     include_bytes!("../../../../tests/parity/crosshatch-ordering/target-byobject.3mf");
 const TARGET_BY_OBJECT_SHA256: &str =
     "6efb407e90c1825312f9ef45293e80a2031d8705b6fea4ff7102ddebbb785d2e";
+const TARGET_ROTINST: &[u8] =
+    include_bytes!("../../../../tests/parity/crosshatch-ordering/target-rotinst.3mf");
+const TARGET_ROTINST_SHA256: &str =
+    "229a08c05f096581a509da7e645cdf6b9128af713e9fafde17ac10a685f02810";
 const CONTROL: &[u8] = include_bytes!("../../../../tests/parity/crosshatch-ordering/control.3mf");
 const CONTROL_SHA256: &str = "73aad5c16915a4769bc9f8bffd75e782011a5f5d2e1afa07578d65296346221e";
 
@@ -118,6 +122,48 @@ fn crosshatch_ordering_target_matches_native() {
         TARGET,
         &reference,
         "ShortestPath.cpp:1968-1994,1918-1965;FillBase.cpp:1820-1828;FillCrossHatch.cpp:225-230",
+    );
+    assert_eq!(
+        outcome.status, "PASS",
+        "{}; {:?}",
+        outcome.detail, outcome.artifacts
+    );
+}
+
+#[test]
+fn crosshatch_ordering_target_rotinst_matches_native() {
+    assert_eq!(sha256(TARGET_ROTINST), TARGET_ROTINST_SHA256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = crate::artifacts::root_from_env().unwrap();
+    let reference = slice_native(&runner, &root, TARGET_ROTINST, "co-rotinst-");
+    // Native-active pin: the rotated second instance slices independently
+    // (`Print.cpp:2193-2194` trafo equality refuses cross-trafo sharing),
+    // so the first object's layer-2 chaining is undisturbed — the X98.585
+    // lane travel precedes the corridor's X110.33 endpoint. Ares over-merges
+    // the rotated instance and reaches the corridor first.
+    let lane = reference
+        .find("G1 X98.585 Y115.98 F9000\n")
+        .expect("native lane travel at X98.585");
+    let corridor = reference
+        .find("G1 X110.33 Y124.02 E.03924\n")
+        .expect("native corridor ends at X110.33");
+    assert!(
+        lane < corridor,
+        "native order: X98.585 lane before the corridor's X110.33 endpoint"
+    );
+    assert_eq!(
+        reference.lines().filter(|l| *l == ";LAYER_CHANGE").count(),
+        5,
+        "both objects sliced through all layers"
+    );
+    let outcome = compare(
+        &root,
+        "co-rotinst",
+        TARGET_ROTINST,
+        &reference,
+        "Print.cpp:2193-2194,2200-2251;PrintApply.cpp:138-172;GCode.cpp:6164,6201",
     );
     assert_eq!(
         outcome.status, "PASS",
