@@ -23,7 +23,7 @@ struct RegionEntities {
 pub(in crate::project_slice::gcode_emit) fn emit_layer<F, D>(
     output: &mut Vec<u8>,
     layer: &mut OrderedExtrusionLayer,
-    (phase, first_layer, options_for_region): (super::state::EmissionPhase<'_>, bool, D),
+    (phase, first_layer, options_for_region): (super::shared_reversals::EmissionPhase<'_>, bool, D),
     state: &mut EmitState,
     mut before_first_infill: F,
 ) -> Result<bool, SliceError>
@@ -31,7 +31,7 @@ where
     F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
     D: Fn(usize, &mut MotionOptions) -> (f64, bool, super::super::small_area::Gate),
 {
-    let super::state::EmissionPhase { geometry, reversal } = phase;
+    let super::shared_reversals::EmissionPhase { geometry, reversal } = phase;
     let mut interlude_emitted = false;
     for island in &mut layer.islands {
         let entities = std::mem::take(&mut island.entities);
@@ -83,7 +83,7 @@ where
             emit_infills(
                 output,
                 &mut region.infills,
-                super::state::EmissionPhase { geometry, reversal },
+                super::shared_reversals::EmissionPhase { geometry, reversal },
                 state,
                 density,
             )?;
@@ -107,7 +107,7 @@ where
             emit_infills(
                 output,
                 &mut region.ironing,
-                super::state::EmissionPhase { geometry, reversal },
+                super::shared_reversals::EmissionPhase { geometry, reversal },
                 state,
                 density,
             )?;
@@ -136,7 +136,7 @@ fn emit_perimeters(
 fn emit_infills(
     output: &mut Vec<u8>,
     entities: &mut Vec<IslandPrintEntity>,
-    phase: super::state::EmissionPhase<'_>,
+    phase: super::shared_reversals::EmissionPhase<'_>,
     state: &mut EmitState,
     sparse_density: f64,
 ) -> Result<(), SliceError> {

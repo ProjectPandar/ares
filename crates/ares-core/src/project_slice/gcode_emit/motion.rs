@@ -22,6 +22,7 @@ mod path_tests;
 mod perimeter;
 mod scan;
 mod scarf;
+mod shared_reversals;
 mod skirt_brim;
 mod state;
 mod support;
@@ -38,11 +39,12 @@ pub(in crate::project_slice) use arc::{simplify_linear_points, simplify_points};
 pub(super) use extruder_registry::ExtruderRegistry;
 pub(super) use layer::emit_layer;
 pub(super) use origin::set_origin;
+pub(super) use shared_reversals::{EmissionPhase, SharedLayerId};
 pub(super) use skirt_brim::{SkirtLoopParameters, emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
-    AvoidCrossingGeometry, EmissionPhase, EmitState, LayerBegin, LayerGeometry, LiftMode,
-    SharedLayerId, append_exclude_end, append_object_start, begin_layer, begin_path_travel,
-    queue_exclude_end, queue_exclude_start, queue_object_start, queue_object_stop_label,
+    AvoidCrossingGeometry, EmitState, LayerBegin, LayerGeometry, LiftMode, append_exclude_end,
+    append_object_start, begin_layer, begin_path_travel, queue_exclude_end, queue_exclude_start,
+    queue_object_start, queue_object_stop_label,
 };
 pub(super) use support::{LayerAreas, emit as emit_support};
 pub(super) use travel::{

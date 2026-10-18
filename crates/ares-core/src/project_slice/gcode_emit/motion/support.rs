@@ -19,7 +19,7 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     output: &mut Vec<u8>,
     entities: &mut Vec<SupportExtrusionEntity>,
     selected_role: ExtrusionRole,
-    phase: super::state::EmissionPhase<'_>,
+    phase: super::shared_reversals::EmissionPhase<'_>,
     state: &mut EmitState,
 ) -> Result<(), crate::SliceError> {
     let geometry = phase.geometry;
