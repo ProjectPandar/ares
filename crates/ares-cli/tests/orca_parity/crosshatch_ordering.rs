@@ -284,3 +284,54 @@ fn crosshatch_ordering_control_matches_native() {
         outcome.detail, outcome.artifacts
     );
 }
+
+const TARGET_DECIM: &[u8] =
+    include_bytes!("../../../../tests/parity/crosshatch-ordering/target-decim.3mf");
+const TARGET_DECIM_SHA256: &str =
+    "8dea1be8434c52924db7f39c3d8fb5271926b3228e8f05a0f7d5ad44bfcf9d09";
+
+#[test]
+fn crosshatch_ordering_target_decim_matches_native() {
+    assert_eq!(sha256(TARGET_DECIM), TARGET_DECIM_SHA256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = crate::artifacts::root_from_env().unwrap();
+    let reference = slice_native(&runner, &root, TARGET_DECIM, "co-decim-");
+    // Native-active pin: the 20720-triangle plates exceed
+    // fast_decimation_triangle_count_target (SeamPlacer.hpp:115), so
+    // compute_global_occlusion decimates the occlusion mesh to 16000
+    // triangles (SeamPlacer.cpp:650-653, ShortEdgeCollapse.cpp:11-187)
+    // before visibility sampling — the seam lands on the top-right corner:
+    // travel to X184.37 Y124.37, inner wall leftwards to X155.63. Ares
+    // raycasts the undecimated mesh and starts at X184.37 Y95.63.
+    // Causality proven with an ORCA_NO_DECIM diagnostic build (default
+    // path byte-identical to official): decimation disabled -> native
+    // picks the ares corner; enabled -> the top-right corner. The fixture
+    // sets gcode_label_objects=0: the native id in the label comment comes
+    // from uninitialized memory (exclude_object=0 leaves PrintObject::m_id
+    // unset, GCode.cpp:5349/8096) and varies with heap layout on
+    // large-mesh inputs.
+    let travel = reference
+        .find("G1 X184.37 Y124.37\n")
+        .expect("native travels to the top-right corner before the inner wall");
+    let wall = reference
+        .find("G1 X155.63 Y124.37 E.8831\n")
+        .expect("native inner wall starts leftwards along the top edge");
+    assert!(
+        travel < wall,
+        "native order: top-right corner travel before the top-edge wall"
+    );
+    let outcome = compare(
+        &root,
+        "co-decim",
+        TARGET_DECIM,
+        &reference,
+        "SeamPlacer.cpp:650-653;ShortEdgeCollapse.cpp:11-187",
+    );
+    assert_eq!(
+        outcome.status, "PASS",
+        "{}; {:?}",
+        outcome.detail, outcome.artifacts
+    );
+}
