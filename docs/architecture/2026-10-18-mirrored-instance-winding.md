@@ -71,7 +71,62 @@ native first inner-wall order (body coordinates: the loop's first segment
 leftwards along the bottom edge first) plus the whole-output strict compare
 (DIVERGENT until GREEN). Controls: the existing four legs stay PASS.
 
-## Included / deferred
+## Amendment (approved 2026-10-18): owner corrected to SeamPlacer occlusion mesh
+
+The GREEN round falsified the slicing-boundary premise as the *observable*
+owner: flipping triangles at `raw_intersections.rs` fires (det=-1e12 on the
+mirrored volume) but ares output stays byte-identical, because BOTH slicers'
+post-union contours are winding-blind — the general-case intersection line
+endpoints are vertex-id normalized (upstream `TriangleMeshSlicer.cpp`
+`slice_facet`, "Sort the edge to give a consistent answer"; ares
+`mesh_slicer/intersection.rs` does the same), and the subsequent polygon
+union rebuilds contour orientation regardless of line direction.
+
+Native probe (env-gated `ORCA_SEAMDUMP` in `SeamPlacer.cpp place_seam`,
+official-identical gcode body) proved the divergence enters exclusively
+through seam-candidate VISIBILITY: obj1 and obj2 have identical loop vertex
+sequences and identical candidate positions/angles, but different
+visibility values (e.g. corner 0: 0.918239 vs 0.836138) → different
+`pick_seam_point` choice (idx1 vs idx2) → the witness walls.
+
+Corrected upstream owner: `SeamPlacer.cpp compute_global_occlusion`, TWO
+`fix_left_handed` flip sites:
+
+- `SeamPlacer.cpp:638-640`: `its_transform(model_its,
+  model_volume->get_matrix(), true)` — "Mirrored transforms flip winding,
+  keep normals outward" (per-volume matrix, applied before merge).
+- `SeamPlacer.cpp:659-660`: `its_transform(triangle_set, obj_transform,
+  true)` — "Mirroring flips normals, keep them outward for visibility
+  sampling" (whole merged set, applied after merge).
+
+Flip semantics: the two sites use DIFFERENT swap conventions and the
+distinction is observable through barycentric visibility sampling:
+- SeamPlacer sites use `its_transform(..., fix_left_handed=true)`
+  (admesh `stl.h:362-367`), which swaps indices 0 and 1 — verified by
+  GREEN: swapping (1,2) instead yields visibility values that diverge from
+  the native probe, swapping (0,1) reproduces the native mirrored-object
+  visibility exactly (e.g. 0.918239, 0.797810, 0.830911, 0.838843).
+- The slicing flip uses `its_flip_triangles`
+  (`TriangleMesh.cpp:737-740`), which swaps face(1),face(2).
+
+Ares gap: `seam_placement/mesh.rs:158-199 TriangleMesh::from_object`
+transforms vertices only and never flips triangle indices.
+
+### Corrected fix boundary (GREEN)
+
+- `from_object` keeps the two-site upstream structure: flip each volume's
+  triangles when `det(volume.transform()) < 0`; after merging all volumes,
+flip the whole set again when `det(object_transform) < 0`. Both flips swap
+  indices 0 and 1 (`its_transform` convention). Net parity is
+  `sign(det(volume) · det(object_transform))`, but the structure mirrors
+  upstream site-for-site.
+- The `raw_intersections.rs` flip (PrintObjectSlice.cpp:88-90) stays:
+  upstream-required even though unobservable in this witness, because the
+  witness geometry is X-symmetric (mirror = identical squares) and
+  post-union slice contours are winding-blind on both sides; other
+  geometries can surface it.
+
+## Included / deferred (amended)
 
 - Included: the winding flip at the slicing boundary, the mirror witness
   leg, regressions (crosshatch suite both modes, brim/infill/crosshatch
@@ -80,3 +135,11 @@ leftwards along the bottom edge first) plus the whole-output strict compare
   slice — the flip restores the same winding seam placement consumes
   upstream), support/ironing (already byte-identical on two-object sharing
   probes, 0 non-header diffs, verified 2026-10-18).
+- Deferred (amendment, checked 2026-10-18): `from_object` does not build the
+  `NEGATIVE_VOLUME` occlusion set (upstream gathers
+  `ModelVolumeType::NEGATIVE_VOLUME` meshes separately,
+  SeamPlacer.cpp:633-646) and does not run `its_short_edge_collpase`
+  decimation to `fast_decimation_triangle_count_target`
+  (SeamPlacer.cpp:650-653); ares has no negative-volume or decimation
+  handling elsewhere in `seam_placement/` (grep 2026-10-18). Both are
+  pre-existing gaps independent of winding and out of this slice.
