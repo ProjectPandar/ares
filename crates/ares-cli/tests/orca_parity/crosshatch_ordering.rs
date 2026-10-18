@@ -31,6 +31,10 @@ const TARGET_ROTINST: &[u8] =
     include_bytes!("../../../../tests/parity/crosshatch-ordering/target-rotinst.3mf");
 const TARGET_ROTINST_SHA256: &str =
     "229a08c05f096581a509da7e645cdf6b9128af713e9fafde17ac10a685f02810";
+const TARGET_MIRROR: &[u8] =
+    include_bytes!("../../../../tests/parity/crosshatch-ordering/target-mirror.3mf");
+const TARGET_MIRROR_SHA256: &str =
+    "baaf003d3ab23f192b5f7b2f08518e923ce3cdd245124159e607e342b508633c";
 const CONTROL: &[u8] = include_bytes!("../../../../tests/parity/crosshatch-ordering/control.3mf");
 const CONTROL_SHA256: &str = "73aad5c16915a4769bc9f8bffd75e782011a5f5d2e1afa07578d65296346221e";
 
@@ -122,6 +126,48 @@ fn crosshatch_ordering_target_matches_native() {
         TARGET,
         &reference,
         "ShortestPath.cpp:1968-1994,1918-1965;FillBase.cpp:1820-1828;FillCrossHatch.cpp:225-230",
+    );
+    assert_eq!(
+        outcome.status, "PASS",
+        "{}; {:?}",
+        outcome.detail, outcome.artifacts
+    );
+}
+
+#[test]
+fn crosshatch_ordering_target_mirror_matches_native() {
+    assert_eq!(sha256(TARGET_MIRROR), TARGET_MIRROR_SHA256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = crate::artifacts::root_from_env().unwrap();
+    let reference = slice_native(&runner, &root, TARGET_MIRROR, "co-mirror-");
+    // Native-active pin: PrintObjectSlice.cpp:88-90 flips triangles for the
+    // left-handed slicing trafo, so the mirrored object's first inner wall
+    // keeps its winding — the loop travels to X181.63 Y104.37 and runs the
+    // bottom edge LEFTWARDS first. Ares slices the mirrored mesh with
+    // inverted winding and runs the loop the other way from X172.37.
+    let travel = reference
+        .find("G1 X181.63 Y104.37\n")
+        .expect("native travels to the right edge before the inner wall");
+    let wall = reference
+        .find("G1 X172.37 Y104.37 E.28453\n")
+        .expect("native inner wall starts leftwards along the bottom edge");
+    assert!(
+        travel < wall,
+        "native order: X181.63 travel before the leftwards bottom-edge wall"
+    );
+    assert_eq!(
+        reference.lines().filter(|l| *l == ";LAYER_CHANGE").count(),
+        5,
+        "both objects sliced through all layers"
+    );
+    let outcome = compare(
+        &root,
+        "co-mirror",
+        TARGET_MIRROR,
+        &reference,
+        "PrintObjectSlice.cpp:84-92;TriangleMesh.cpp:337-347",
     );
     assert_eq!(
         outcome.status, "PASS",
