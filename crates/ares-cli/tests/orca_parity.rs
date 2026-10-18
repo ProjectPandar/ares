@@ -276,5 +276,7 @@ pub(crate) use outcomes::{divergence, pass};
 mod vendor_inventory;
 pub(crate) use vendor_inventory::vendors;
 
+#[path = "orca_parity/support_ironing_raft_offset.rs"]
+mod support_ironing_raft_offset;
 #[path = "orca_parity/support_touching_grid.rs"]
 mod support_touching_grid;
