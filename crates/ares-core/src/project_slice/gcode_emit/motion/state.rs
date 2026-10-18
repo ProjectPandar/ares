@@ -67,6 +67,19 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) active_layer_print_z: f64,
     pub(in crate::project_slice::gcode_emit) small_area_flow:
         crate::extrusions::SmallAreaInfillFlowCompensation,
+    /// Object-level shared orientation state for chained emission: the port
+    /// of upstream's in-place reversals of the SHARED layer entities
+    /// (`GCode.cpp:6164,6201` over the pointer vector; `ShortestPath.cpp:
+    /// 1040-1052` `out.back()->reverse()`), which later islands/instances
+    /// of the same source object observe. Keyed by
+    /// `(source_object_index, layer)` — never cross-layer, never
+    /// cross-object; deterministic and independent of parallelism.
+    pub(in crate::project_slice::gcode_emit) shared_reversals: SharedEntityReversals,
+    /// Cached `shares_print_toolpaths` representatives per source object
+    /// (`Print.cpp:2240-2251`) — the object whose shared layers later
+    /// identical objects observe.
+    pub(in crate::project_slice::gcode_emit) print_sharing:
+        std::collections::BTreeMap<usize, usize>,
     pub(in crate::project_slice::gcode_emit) small_area_gate: super::super::small_area::Gate,
     /// Active layer id — upstream's `layer->id()`
     /// (`GCode.cpp:5689`, `GCode.hpp:671-676`): raft layers occupy ids
@@ -379,4 +392,129 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
         state.options.travel_jerk
     };
     set_accel_and_jerk(output, state, acceleration.unwrap_or(0), jerk, true);
+}
+
+/// Port of upstream's shared-entity reversals (`GCode.cpp:6164,6201`):
+/// `chain_and_reorder_extrusion_entities` runs over the pointer vector into
+/// the PrintObject's layer entities and reverses chosen entities IN PLACE
+/// (`ShortestPath.cpp:1040-1052`), so instances emitted later in the same
+/// layer observe the mutated orientations. Ares re-runs fill per instance,
+/// so the orientation state is carried explicitly: keyed by
+/// `(source_object_index, layer id)` with a positional entity index inside
+/// the per-`(object, layer)` chained-emission sequence (structurally
+/// identical across instances of one source object).
+/// Raft layers are separate upstream `Layer` entity sets: their ledger keys
+/// must not collide with the object layer keys of the same source object.
+pub(in crate::project_slice::gcode_emit) const RAFT_REVERSAL_LAYER_TAG: usize = 1 << 40;
+
+#[derive(Default)]
+pub(in crate::project_slice::gcode_emit) struct SharedEntityReversals {
+    infill: std::collections::BTreeMap<(usize, usize), Vec<bool>>,
+    support: std::collections::BTreeMap<(usize, usize), Vec<bool>>,
+    /// `(last session, cursor)` per ledger — the cursor resets whenever
+    /// emission moves to another print object's layer pass and otherwise
+    /// advances over that pass's chained entities. The session discriminates
+    /// objects sharing the same representative key.
+    infill_cursor: (Option<(usize, usize, usize)>, usize),
+    support_cursor: (Option<(usize, usize, usize)>, usize),
+}
+
+impl SharedEntityReversals {
+    fn chain<T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity>(
+        ledger: &mut std::collections::BTreeMap<(usize, usize), Vec<bool>>,
+        cursor: &mut (Option<(usize, usize, usize)>, usize),
+        session: (usize, (usize, usize)),
+        entities: &mut Vec<T>,
+        start: crate::geometry::Point,
+    ) {
+        let key = session.1;
+        if cursor.0 != Some((session.0, key.0, key.1)) {
+            cursor.0 = Some((session.0, key.0, key.1));
+            cursor.1 = 0;
+        }
+        let base = cursor.1;
+        let state = ledger.entry(key).or_default();
+        if state.len() < base + entities.len() {
+            state.resize(base + entities.len(), false);
+        }
+        let carried = state[base..base + entities.len()].to_vec();
+        for (entity, flip) in entities.iter_mut().zip(carried) {
+            if flip && !entity.is_loop() {
+                entity.reverse();
+            }
+        }
+        let flips =
+            crate::project_slice::perimeters::classic::shortest_path::chain_and_reorder_entities_flips(
+                entities,
+                Some(start),
+            );
+        for (slot, flip) in state[base..base + entities.len()].iter_mut().zip(flips) {
+            if flip {
+                *slot = !*slot;
+            }
+        }
+        cursor.1 = base + entities.len();
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn chain_infill<
+        T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity,
+    >(
+        &mut self,
+        session: usize,
+        key: (usize, usize),
+        entities: &mut Vec<T>,
+        start: crate::geometry::Point,
+    ) {
+        Self::chain(
+            &mut self.infill,
+            &mut self.infill_cursor,
+            (session, key),
+            entities,
+            start,
+        );
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn chain_support<
+        T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity,
+    >(
+        &mut self,
+        session: usize,
+        key: (usize, usize),
+        entities: &mut Vec<T>,
+        start: crate::geometry::Point,
+    ) {
+        Self::chain(
+            &mut self.support,
+            &mut self.support_cursor,
+            (session, key),
+            entities,
+            start,
+        );
+    }
+}
+
+impl EmitState {
+    /// Print.cpp:2240-2251: the first print object of an identical group
+    /// slices; later ones share its layers — their chained-emission entity
+    /// orientations observe the representative's reversals. Returns the
+    /// representative source object index, computed once per object.
+    pub(in crate::project_slice::gcode_emit) fn shared_toolpath_object(
+        &mut self,
+        project: &crate::project::Project,
+        source_object_index: usize,
+    ) -> usize {
+        if let Some(&representative) = self.print_sharing.get(&source_object_index) {
+            return representative;
+        }
+        let objects = project.objects();
+        let object = &objects[source_object_index];
+        let representative = objects
+            .iter()
+            .take(source_object_index + 1)
+            .position(|candidate| candidate.shares_print_toolpaths(object))
+            .expect("an object shares toolpaths with itself");
+        self.print_sharing
+            .insert(source_object_index, representative);
+        representative
+    }
 }

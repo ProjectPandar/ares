@@ -14,6 +14,12 @@ pub struct ProjectMesh {
 }
 
 impl ProjectMesh {
+    /// Loader mesh-cache identity (`bbs_3mf.cpp` mesh reuse): volumes
+    /// cloned from the same cached mesh compare equal for
+    /// `shares_print_toolpaths` (`Print.cpp:2211` `mesh_ptr()`).
+    pub(super) fn geometry_identity(&self) -> usize {
+        std::ptr::from_ref(self.geometry.as_ref()) as usize
+    }
     pub(crate) fn new(vertices: Vec<Point3d>, triangles: Vec<[u32; 3]>) -> Self {
         Self {
             geometry: Arc::new(MeshGeometry {

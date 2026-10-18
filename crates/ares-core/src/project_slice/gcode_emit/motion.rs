@@ -25,6 +25,8 @@ mod scarf;
 mod skirt_brim;
 mod state;
 mod support;
+pub(super) use state::RAFT_REVERSAL_LAYER_TAG;
+
 #[cfg(test)]
 mod tests;
 pub(super) mod tool_selection;

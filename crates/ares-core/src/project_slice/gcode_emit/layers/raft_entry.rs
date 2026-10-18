@@ -60,6 +60,21 @@ pub(super) fn emit(
     if let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
+    let raft_reversal_key = (
+        object_index,
+        state.shared_toolpath_object(
+            &traversal.project,
+            traversal.objects[object_index]
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object
+                .identity()
+                .0,
+        ),
+        super::super::motion::RAFT_REVERSAL_LAYER_TAG | raft_index,
+    );
     motion::emit_layer(
         output,
         layer,
@@ -77,6 +92,10 @@ pub(super) fn emit(
             )
         }),
         state,
+        (
+            raft_reversal_key.0,
+            (raft_reversal_key.1, raft_reversal_key.2),
+        ),
         |output, state| {
             timelapse_core::append_traditional(
                 traditional_interlude,
