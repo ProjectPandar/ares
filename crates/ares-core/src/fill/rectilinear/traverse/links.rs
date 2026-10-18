@@ -157,7 +157,9 @@ pub(super) fn follow_vertical_outside(
         emit_vertical_arc(slice, line, intersection, target, forward, points);
     } else {
         output.push(crate::geometry::Polyline::new(std::mem::take(points)));
-        *points = Vec::new();
+        // FillRectilinear.cpp:1548-1551 starts the replacement polyline at
+        // the target contour point before continuing the vertical run.
+        *points = vec![intersection_point(slice, line, target)];
     }
     // `for (i = i_intersection; i < i_vertical; ++i)` / reverse — mark the
     // bypassed outer intersections so they cannot start a new path.
