@@ -98,9 +98,8 @@ pub(super) fn emit(
     let phase = motion::EmissionPhase {
         geometry: motion_geometry,
         reversal: state.reversal_scope(
-            &traversal.project,
+            traversal,
             object_index,
-            source_object_index,
             motion::SharedLayerId::Support(layer.id),
         ),
     };

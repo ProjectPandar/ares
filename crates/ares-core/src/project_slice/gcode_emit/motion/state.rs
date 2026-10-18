@@ -81,7 +81,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// (`Print.cpp:2240-2251`) — the object whose shared layers later
     /// identical objects observe.
     pub(in crate::project_slice::gcode_emit) print_sharing:
-        std::collections::BTreeMap<usize, usize>,
+        std::collections::BTreeMap<(usize, usize), (usize, usize)>,
     pub(in crate::project_slice::gcode_emit) small_area_gate: super::super::small_area::Gate,
     /// Active layer id — upstream's `layer->id()`
     /// (`GCode.cpp:5689`, `GCode.hpp:671-676`): raft layers occupy ids

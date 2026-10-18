@@ -61,16 +61,8 @@ pub(super) fn emit(
         labels.queue_start(output, state, emit_labels);
     }
     let reversal = state.reversal_scope(
-        &traversal.project,
+        traversal,
         object_index,
-        traversal.objects[object_index]
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .object
-            .identity()
-            .0,
         motion::SharedLayerId::Raft(raft_index),
     );
     motion::emit_layer(

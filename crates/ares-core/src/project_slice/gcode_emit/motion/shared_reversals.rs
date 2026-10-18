@@ -30,7 +30,8 @@ pub(in crate::project_slice::gcode_emit) enum SharedLayerId {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct ReversalScope {
     pub(in crate::project_slice::gcode_emit) session: usize,
-    pub(in crate::project_slice::gcode_emit) representative: usize,
+    /// The representative print object `(source object, transform index)`.
+    pub(in crate::project_slice::gcode_emit) representative: (usize, usize),
     pub(in crate::project_slice::gcode_emit) layer: SharedLayerId,
 }
 
@@ -44,8 +45,8 @@ pub(in crate::project_slice::gcode_emit) struct EmissionPhase<'a> {
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct SharedEntityReversals {
-    infill: std::collections::BTreeMap<(usize, SharedLayerId), Vec<bool>>,
-    support: std::collections::BTreeMap<(usize, SharedLayerId), Vec<bool>>,
+    infill: std::collections::BTreeMap<((usize, usize), SharedLayerId), Vec<bool>>,
+    support: std::collections::BTreeMap<((usize, usize), SharedLayerId), Vec<bool>>,
     /// `(last scope, cursor)` per ledger — the cursor resets whenever
     /// emission moves to another print object's layer pass (any of the
     /// session, representative, or layer changing) and otherwise advances
@@ -56,7 +57,7 @@ pub(in crate::project_slice::gcode_emit) struct SharedEntityReversals {
 
 impl SharedEntityReversals {
     fn chain<T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity>(
-        ledger: &mut std::collections::BTreeMap<(usize, SharedLayerId), Vec<bool>>,
+        ledger: &mut std::collections::BTreeMap<((usize, usize), SharedLayerId), Vec<bool>>,
         cursor: &mut (Option<ReversalScope>, usize),
         scope: ReversalScope,
         entities: &mut Vec<T>,
@@ -127,27 +128,62 @@ impl SharedEntityReversals {
 }
 
 impl EmitState {
-    /// Print.cpp:2240-2251: the first print object of an identical group
-    /// slices; later ones share its layers — their chained-emission entity
-    /// orientations observe the representative's reversals. Returns the
-    /// representative source object index, computed once per object.
+    /// Print.cpp:2193-2194,2240-2251: the first print object of an
+    /// identical group slices; later ones share its layers — their
+    /// chained-emission entity orientations observe the representative's
+    /// reversals. Identity is per PRINT OBJECT: equal volume stacks
+    /// (`shares_print_toolpaths`) AND an exactly equal PrintObject trafo
+    /// (the post-shrinkage instance transform with the XY translation
+    /// reset — `PrintApply.cpp:138-172`, upstream compares the full
+    /// matrix with no tolerance), so instances of one source object with
+    /// distinct rotations never share. Returns the representative
+    /// `(source object, transform index)`, computed once per print object.
     pub(in crate::project_slice::gcode_emit) fn shared_toolpath_object(
         &mut self,
-        project: &crate::project::Project,
-        source_object_index: usize,
-    ) -> usize {
-        if let Some(&representative) = self.print_sharing.get(&source_object_index) {
+        traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+        object_index: usize,
+    ) -> (usize, usize) {
+        let identity = traversal.objects[object_index]
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .object
+            .identity();
+        if let Some(&representative) = self.print_sharing.get(&identity) {
             return representative;
         }
-        let objects = project.objects();
-        let object = &objects[source_object_index];
-        let representative = objects
-            .iter()
-            .take(source_object_index + 1)
-            .position(|candidate| candidate.shares_print_toolpaths(object))
-            .expect("an object shares toolpaths with itself");
-        self.print_sharing
-            .insert(source_object_index, representative);
+        let resolved = |source: usize| {
+            traversal
+                .resolved
+                .objects
+                .iter()
+                .find(|object| object.source_object_index == source)
+                .expect("every sliced object has resolved config")
+        };
+        let objects = traversal.project.objects();
+        let object = &objects[identity.0];
+        let trafo = resolved(identity.0).print_objects[identity.1].transform;
+        let representative = (0..=object_index)
+            .map(|index| {
+                let candidate = traversal.objects[index]
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .object
+                    .identity();
+                (
+                    candidate,
+                    resolved(candidate.0).print_objects[candidate.1].transform,
+                )
+            })
+            .find(|((source, _), candidate_trafo)| {
+                objects[*source].shares_print_toolpaths(object) && *candidate_trafo == trafo
+            })
+            .expect("a print object shares toolpaths with itself")
+            .0;
+        self.print_sharing.insert(identity, representative);
         representative
     }
 }
@@ -159,14 +195,13 @@ impl EmitState {
     /// `shared_toolpath_object`, and `layer` names the shared entity set.
     pub(in crate::project_slice::gcode_emit) fn reversal_scope(
         &mut self,
-        project: &crate::project::Project,
-        session: usize,
-        source_object_index: usize,
+        traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+        object_index: usize,
         layer: SharedLayerId,
     ) -> ReversalScope {
         ReversalScope {
-            session,
-            representative: self.shared_toolpath_object(project, source_object_index),
+            session: object_index,
+            representative: self.shared_toolpath_object(traversal, object_index),
             layer,
         }
     }

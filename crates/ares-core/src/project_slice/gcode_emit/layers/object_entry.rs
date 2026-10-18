@@ -80,16 +80,8 @@ pub(super) fn emit(
         .object
         .seam_position;
     let reversal = state.reversal_scope(
-        &traversal.project,
+        traversal,
         object_index,
-        traversal.objects[object_index]
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .object
-            .identity()
-            .0,
         motion::SharedLayerId::Object(layer_index),
     );
     let timelapse_inserted = motion::emit_layer(
