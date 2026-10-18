@@ -1,8 +1,67 @@
 # Diagnostic: crosshatch sparse-infill path ordering divergence (the "micro-island")
 
-Status: diagnosis complete, spec for the fix slice follows evidence below.
+Status: diagnosis amended after two instrumented-boundary rounds (below).
 Supersedes the M73 placement drift amendment in `50366ffa2` (rejected): the M73
 drift was a downstream symptom of this divergence, not an export-walk bug.
+
+## AMENDMENT (second probe round — corrected owner)
+
+The `chain_polylines` / `connect_infill` attribution above is RETRACTED by
+boundary evidence:
+
+1. `Fill::chain_or_connect_infill` boundary (`FillBase.cpp:1820`):
+   instrumented Native (probe build, G-code byte-identical to official) and
+   instrumented Ares agree exactly on all calls — input order AND output
+   order (39 polylines in, 14/19/4/5/5 out; sets and sequences equal;
+   Ares' second-instance calls are internally identical to the first).
+2. `GCode::extrude_infill` boundary (`GCode.cpp:6150-6173`): the first
+divergent record is `EI_PRE call=2 i=0` — the emission-stage input of the
+SECOND object instance. Native's instance-2 entity orientations are exactly
+instance-1's POST-emission orientations (verified entity-by-entity), while
+Ares' instance-2 input equals its instance-1 PRE input.
+
+Root cause: upstream `GCode::extrude_infill` calls
+`chain_and_reorder_extrusion_entities(extrusions, m_last_pos.to_point())`
+(`ShortestPath.cpp:1061-1070`) directly on the vector of POINTERS into the
+shared layer entities. The greedy chain reverses chosen entities IN PLACE
+(`entity->reverse()` on the shared objects), and later islands/instances of
+the same PrintObject observe those mutated orientations. Ares'
+`emit_infills` (`project_slice/gcode_emit/motion/layer.rs`) owns entities
+per island, so reversal decisions do not carry across instances — the
+second instance arrives with pristine orientations and the anchored greedy
+chain then produces a different order (the RED witness's corridor).
+`ExtrusionEntityCollection::chained_path_from`
+(`ExtrusionEntityCollection.cpp:87-97`) is clone-safe and NOT implicated.
+
+Upstream owner (corrected):
+
+- `GCode.cpp:6150-6173` `GCode::extrude_infill` — the direct
+  `chain_and_reorder_extrusion_entities` call over shared entities.
+- `ShortestPath.cpp:1061-1070` — endpoint filtering + greedy chain whose
+  reversals mutate shared entities.
+- `ShortestPath.cpp` `chain_extrusion_entities`/`reorder_extrusion_entities`
+  (used by the above) — pointer-vector reorder + in-place reversal.
+
+Ares destination boundary (corrected):
+
+- `crates/ares-core/src/project_slice/gcode_emit/motion/layer.rs`
+  (`emit_infills`, `chain_and_reorder_entities` call site),
+- `crates/ares-core/src/project_slice/perimeters/classic/shortest_path/entity_chain.rs`
+  (reversal application), and the island entity ownership in
+  `crates/ares-core/src/project_slice/extrusion_islands.rs` /
+  `island_print_order.rs` — the fix must model shared-entity orientation
+  carryover across instances/islands of the same object (reversal decisions
+  persist into later instances' emission inputs).
+
+GREEN requirements: literal port of the carryover semantics (no epsilon or
+constant tuning); RED `532fbc1d7` pins unchanged; regression must include
+W2's `auto-brim-material-pla` fixture (same-source divergence) combined
+with W2's branch, plus the brim suite over `polyline_chain.rs`.
+
+Probe evidence (diagnostic-only, not committed): instrumented native builds
+`/nix/store/rywgnj0hyp…-orca-slicer-chainorder-2.4.2` and
+`/nix/store/prkz5v382cjxz…-orca-slicer-chainorder-ei-2.4.2`; dumps and
+comparison scripts under `/tmp/ares-chainorder/` and `/tmp/w5-m73/*ei*.txt`.
 
 ## Reproduction
 
