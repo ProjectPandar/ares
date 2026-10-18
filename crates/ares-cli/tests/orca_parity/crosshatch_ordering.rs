@@ -143,10 +143,13 @@ fn crosshatch_ordering_target_mirror_matches_native() {
     let root = crate::artifacts::root_from_env().unwrap();
     let reference = slice_native(&runner, &root, TARGET_MIRROR, "co-mirror-");
     // Native-active pin: PrintObjectSlice.cpp:88-90 flips triangles for the
-    // left-handed slicing trafo, so the mirrored object's first inner wall
-    // keeps its winding — the loop travels to X181.63 Y104.37 and runs the
-    // bottom edge LEFTWARDS first. Ares slices the mirrored mesh with
-    // inverted winding and runs the loop the other way from X172.37.
+    // left-handed slicing trafo, and SeamPlacer.cpp:638-640/:659-660 flip
+    // the occlusion mesh (its_transform fix_left_handed), so the mirrored
+    // object's first inner wall keeps its winding — the loop travels to
+    // X181.63 Y104.37 and runs the bottom edge LEFTWARDS first.
+    // Diagnostic 2026-10-18: the divergence enters through seam-candidate
+    // visibility on the mirrored occlusion mesh; the slicing flip alone is
+    // unobservable here (post-union contours are winding-blind).
     let travel = reference
         .find("G1 X181.63 Y104.37\n")
         .expect("native travels to the right edge before the inner wall");

@@ -187,14 +187,38 @@ impl TriangleMesh {
                     Vec3::new(x, y, z)
                 })
                 .collect::<Vec<_>>();
-            triangles.extend(volume.mesh().triangles().iter().map(|indices| {
+            // `SeamPlacer.cpp:638-640` — "Mirrored transforms flip winding,
+            // keep normals outward": the volume matrix is applied with
+            // fix_left_handed=true, which swaps indices 0 and 1
+            // (`its_transform`, admesh stl.h:362-367).
+            let volume_left_handed = volume.transform().linear_determinant() < 0.0;
+            let start = triangles.len();
+            triangles.extend(volume.mesh().triangles().iter().map(|&[a, b, c]| {
                 Triangle::new(
-                    vertices[indices[0] as usize],
-                    vertices[indices[1] as usize],
-                    vertices[indices[2] as usize],
+                    vertices[a as usize],
+                    vertices[b as usize],
+                    vertices[c as usize],
                 )
             }));
+            if volume_left_handed {
+                its_transform_flip(&mut triangles[start..]);
+            }
+        }
+        // `SeamPlacer.cpp:659-660` — "Mirroring flips normals, keep them
+        // outward for visibility sampling": the whole merged set is
+        // transformed by obj_transform with fix_left_handed=true
+        // (`its_transform` swaps indices 0 and 1, admesh stl.h:362-367).
+        if object_transform.linear_determinant() < 0.0 {
+            its_transform_flip(&mut triangles);
         }
         Self { triangles }
+    }
+}
+
+/// `its_transform(..., fix_left_handed = true)` swaps indices 0 and 1 of
+/// every face after a left-handed transform (admesh stl.h:362-367).
+fn its_transform_flip(triangles: &mut [Triangle]) {
+    for triangle in triangles {
+        triangle.vertices.swap(0, 1);
     }
 }
