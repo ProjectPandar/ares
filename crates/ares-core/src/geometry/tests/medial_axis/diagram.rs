@@ -130,17 +130,19 @@ fn task22o13_finite_multisite_topology_is_fully_literal() {
             cycle
         })
         .collect::<Vec<_>>();
+    // Boost1.86 voronoi_diagram.hpp:470-475 assigns cell incidents last-wins.
+    // These values were measured externally with the same Boost header version.
     assert_eq!(
         cells,
         [
-            "cell=0 source=0 category=SegmentStart point=true segment=false incident=Some(0)",
-            "cell=1 source=3 category=Segment point=false segment=true incident=Some(1)",
-            "cell=2 source=2 category=SegmentEnd point=true segment=false incident=Some(3)",
-            "cell=3 source=0 category=Segment point=false segment=true incident=Some(5)",
-            "cell=4 source=2 category=Segment point=false segment=true incident=Some(9)",
-            "cell=5 source=0 category=SegmentEnd point=true segment=false incident=Some(15)",
-            "cell=6 source=1 category=Segment point=false segment=true incident=Some(17)",
-            "cell=7 source=1 category=SegmentEnd point=true segment=false incident=Some(23)",
+            "cell=0 source=0 category=SegmentStart point=true segment=false incident=Some(4)",
+            "cell=1 source=3 category=Segment point=false segment=true incident=Some(10)",
+            "cell=2 source=2 category=SegmentEnd point=true segment=false incident=Some(8)",
+            "cell=3 source=0 category=Segment point=false segment=true incident=Some(19)",
+            "cell=4 source=2 category=Segment point=false segment=true incident=Some(25)",
+            "cell=5 source=0 category=SegmentEnd point=true segment=false incident=Some(16)",
+            "cell=6 source=1 category=Segment point=false segment=true incident=Some(22)",
+            "cell=7 source=1 category=SegmentEnd point=true segment=false incident=Some(24)",
         ]
     );
     assert_eq!(
@@ -185,17 +187,18 @@ fn task22o13_finite_multisite_topology_is_fully_literal() {
             "edge=25 twin=24 cell=4 v0=Some(5) v1=None primary=false secondary=true finite=false next=9 rot=Some(20)",
         ]
     );
+    // Cycle starts and order were measured by the same external Boost1.86 diagnostic.
     assert_eq!(
         incident_cycles,
         vec![
-            vec![0, 4],
-            vec![1, 7, 10, 2],
-            vec![3, 8],
-            vec![5, 14, 19, 12, 6],
-            vec![9, 11, 13, 21, 25],
-            vec![15, 16],
-            vec![17, 22, 20, 18],
-            vec![23, 24],
+            vec![4, 0],
+            vec![10, 2, 1, 7],
+            vec![8, 3],
+            vec![19, 12, 6, 5, 14],
+            vec![25, 9, 11, 13, 21],
+            vec![16, 15],
+            vec![22, 20, 18, 17],
+            vec![24, 23],
         ]
     );
 }

@@ -1,0 +1,118 @@
+{
+  "base": "445648072103587a9d60d85f1c4fb4425056ae18",
+  "discovery_HEAD": "a35f1b4c1eb919c0dc715c00a2639367a5322e4a",
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "template": "tests/parity/interface-shells/two-region-prism.3mf",
+  "template_SHA": "c7bb54e7ee9d907648a96a8c71f3ec025e872878bf60f2ff635a9c8ec4c14887",
+  "all_volume_defaults_filament1": true,
+  "cases": {
+    "unpainted": {
+      "archive_sha256": "1813016b59d2fc52c87af44125a087a33c073e40f15e49ff9d11fa0abb156b69",
+      "member_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/3dmodel.model": "741adf5967de9a3c55e4c460d1032864f7ae6c5155abd123cc4434aed3ee4282",
+        "3D/_rels/3dmodel.model.rels": "850f6d20f694f4c415bd6ceef1d4808ceaeb0cc384ee0e4bddd6cf50812be03f",
+        "3D/Objects/base-box.stl_1.model": "c21fbe6f79da014ed339c2af5c36640f391529b3768d6d152b60ae4bc17737db",
+        "3D/Objects/overlay-box.stl_2.model": "91e1877caa8bff995be42ba16bbdc05f5cb1809e7a1fcf416fc9028b9fcc56af",
+        "Metadata/project_settings.config": "04f6e35919e14174a589bfce8df79c0a5be56a44e011f555b15c8497fc78d9f3",
+        "Metadata/model_settings.config": "da7b71c4a6e989d80d4b12245949de99d7ede751479949be5a394807329fbe48",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884"
+      },
+      "paint_by_mesh_original_triangle": {},
+      "settings": {
+        "enable_prime_tower": "0",
+        "interlocking_beam": "0",
+        "mmu_segmented_region_max_width": "0",
+        "mmu_segmented_region_interlocking_depth": "0"
+      },
+      "positive_model_XYE_by_tool": {
+        "0": 3735
+      },
+      "both_material_positive_layers": 0
+    },
+    "painted-leaves": {
+      "archive_sha256": "d0756da3c62f62b4f11a6356e5bb5b51522a80b2a1b849b292e79451b433410a",
+      "member_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/3dmodel.model": "741adf5967de9a3c55e4c460d1032864f7ae6c5155abd123cc4434aed3ee4282",
+        "3D/_rels/3dmodel.model.rels": "850f6d20f694f4c415bd6ceef1d4808ceaeb0cc384ee0e4bddd6cf50812be03f",
+        "3D/Objects/base-box.stl_1.model": "55802b81caa0f162fc9a8bd19718030a3eebeef9657a7a259631a37d91c41827",
+        "3D/Objects/overlay-box.stl_2.model": "abdbf90e17fb5fbe49c51fd87abf687862943de1ef5977204e7dff0565883f36",
+        "Metadata/project_settings.config": "04f6e35919e14174a589bfce8df79c0a5be56a44e011f555b15c8497fc78d9f3",
+        "Metadata/model_settings.config": "da7b71c4a6e989d80d4b12245949de99d7ede751479949be5a394807329fbe48",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884"
+      },
+      "paint_by_mesh_original_triangle": {
+        "3D/Objects/base-box.stl_1.model": {
+          "8": "4",
+          "9": "4",
+          "10": "8",
+          "11": "8"
+        },
+        "3D/Objects/overlay-box.stl_2.model": {
+          "8": "4",
+          "9": "4",
+          "10": "8",
+          "11": "8"
+        }
+      },
+      "settings": {
+        "enable_prime_tower": "0",
+        "interlocking_beam": "0",
+        "mmu_segmented_region_max_width": "0",
+        "mmu_segmented_region_interlocking_depth": "0"
+      },
+      "positive_model_XYE_by_tool": {
+        "0": 3321,
+        "1": 861
+      },
+      "both_material_positive_layers": 48
+    },
+    "painted-split": {
+      "archive_sha256": "a18492a3cb74b68012e2d8c8975dafaa81267e77731cdab28411badeb4dc31cc",
+      "member_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/3dmodel.model": "741adf5967de9a3c55e4c460d1032864f7ae6c5155abd123cc4434aed3ee4282",
+        "3D/_rels/3dmodel.model.rels": "850f6d20f694f4c415bd6ceef1d4808ceaeb0cc384ee0e4bddd6cf50812be03f",
+        "3D/Objects/base-box.stl_1.model": "da97806618732d5df303474a1f7e7447e9a40dfdacb3393c08829c3c8574fd8f",
+        "3D/Objects/overlay-box.stl_2.model": "abdbf90e17fb5fbe49c51fd87abf687862943de1ef5977204e7dff0565883f36",
+        "Metadata/project_settings.config": "04f6e35919e14174a589bfce8df79c0a5be56a44e011f555b15c8497fc78d9f3",
+        "Metadata/model_settings.config": "da7b71c4a6e989d80d4b12245949de99d7ede751479949be5a394807329fbe48",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884"
+      },
+      "paint_by_mesh_original_triangle": {
+        "3D/Objects/base-box.stl_1.model": {
+          "8": "4",
+          "9": "4",
+          "10": "481",
+          "11": "8"
+        },
+        "3D/Objects/overlay-box.stl_2.model": {
+          "8": "4",
+          "9": "4",
+          "10": "8",
+          "11": "8"
+        }
+      },
+      "settings": {
+        "enable_prime_tower": "0",
+        "interlocking_beam": "0",
+        "mmu_segmented_region_max_width": "0",
+        "mmu_segmented_region_interlocking_depth": "0"
+      },
+      "positive_model_XYE_by_tool": {
+        "0": 3674,
+        "1": 900
+      },
+      "both_material_positive_layers": 48
+    }
+  },
+  "approved_spec": "1b51550807e68f9ea252b9d846d38c4cdfaed8c1",
+  "gate_contract": "Single branch RED\u2192carrier\u2192approvedsegmentation\u2192finalstrictGREEN; nointermediatepaintadmit/discard; noREDmergewithoutGREEN"
+}

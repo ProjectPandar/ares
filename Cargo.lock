@@ -89,6 +89,7 @@ dependencies = [
  "ares-core",
  "ares-wasm",
  "assert_cmd",
+ "boostvoronoi",
  "clap",
  "jiff",
  "predicates",
