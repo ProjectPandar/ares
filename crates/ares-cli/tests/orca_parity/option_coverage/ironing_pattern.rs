@@ -53,7 +53,7 @@ struct Leg {
     native_crashes: bool,
 }
 
-const LEGS: [Leg; 19] = [
+const LEGS: [Leg; 20] = [
     Leg {
         label: "control-rectilinear",
         pattern: "rectilinear",
@@ -67,6 +67,11 @@ const LEGS: [Leg; 19] = [
     Leg {
         label: "monotonicline",
         pattern: "monotonicline",
+        native_crashes: false,
+    },
+    Leg {
+        label: "alignedrectilinear",
+        pattern: "alignedrectilinear",
         native_crashes: false,
     },
     Leg {
@@ -358,20 +363,21 @@ legs! {
     orca_parity_ironing_pattern_control_rectilinear => 0,
     orca_parity_ironing_pattern_monotonic => 1,
     orca_parity_ironing_pattern_monotonicline => 2,
-    orca_parity_ironing_pattern_line => 3,
-    orca_parity_ironing_pattern_grid => 4,
-    orca_parity_ironing_pattern_triangles => 5,
-    orca_parity_ironing_pattern_tri_hexagon => 6,
-    orca_parity_ironing_pattern_cubic => 7,
-    orca_parity_ironing_pattern_quartercubic => 8,
-    orca_parity_ironing_pattern_honeycomb => 9,
-    orca_parity_ironing_pattern_3dhoneycomb => 10,
-    orca_parity_ironing_pattern_lateral_honeycomb => 11,
-    orca_parity_ironing_pattern_crosshatch => 12,
-    orca_parity_ironing_pattern_tpmsd => 13,
-    orca_parity_ironing_pattern_tpmsfk => 14,
-    orca_parity_ironing_pattern_gyroid => 15,
-    orca_parity_ironing_pattern_adaptivecubic => 16,
-    orca_parity_ironing_pattern_supportcubic => 17,
-    orca_parity_ironing_pattern_lightning => 18,
+    orca_parity_ironing_pattern_alignedrectilinear => 3,
+    orca_parity_ironing_pattern_line => 4,
+    orca_parity_ironing_pattern_grid => 5,
+    orca_parity_ironing_pattern_triangles => 6,
+    orca_parity_ironing_pattern_tri_hexagon => 7,
+    orca_parity_ironing_pattern_cubic => 8,
+    orca_parity_ironing_pattern_quartercubic => 9,
+    orca_parity_ironing_pattern_honeycomb => 10,
+    orca_parity_ironing_pattern_3dhoneycomb => 11,
+    orca_parity_ironing_pattern_lateral_honeycomb => 12,
+    orca_parity_ironing_pattern_crosshatch => 13,
+    orca_parity_ironing_pattern_tpmsd => 14,
+    orca_parity_ironing_pattern_tpmsfk => 15,
+    orca_parity_ironing_pattern_gyroid => 16,
+    orca_parity_ironing_pattern_adaptivecubic => 17,
+    orca_parity_ironing_pattern_supportcubic => 18,
+    orca_parity_ironing_pattern_lightning => 19,
 }
