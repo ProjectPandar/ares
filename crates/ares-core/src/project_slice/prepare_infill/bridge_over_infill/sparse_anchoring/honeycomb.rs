@@ -11,11 +11,16 @@ use crate::{
 pub(super) fn append(
     fill: SurfaceFill,
     traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
     layer_index: usize,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
+    // Fill.cpp:1444-1446: use the anchoring fill's printing region.
+    let (resolved_object, _) = traversal.print_object_config(object_index);
+    let region = &resolved_object.all_regions[fill.region_id];
     let params = HoneycombFillParams {
-        dont_alternate_fill_direction: false,
+        dont_alternate_fill_direction: region.zaa_enabled.0
+            && region.zaa_dont_alternate_fill_direction.0,
         spacing: fill.params.spacing,
         density: (0.01 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,

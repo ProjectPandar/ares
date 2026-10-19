@@ -288,7 +288,7 @@ pub(super) fn dispatch(
             let _ = pattern;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
-            super::honeycomb::append(fill, traversal, layer_index, result)?;
+            super::honeycomb::append(fill, traversal, object_index, layer_index, result)?;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
             // Fill.cpp:1479,1497 / FillBase.cpp:105-117: anchoring uses the
