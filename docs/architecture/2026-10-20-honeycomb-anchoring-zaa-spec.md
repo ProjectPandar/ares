@@ -112,6 +112,14 @@ skip paths, UnsupportedProjectFeature guards, fallback, or Native outputs.
 Flow, E arithmetic/rounding, bridge-angle detection, M73/time processing,
 object/support ironing, raft/tree and 3D/LateralHoneycomb are deferred.
 
+Explicit deferred sibling: `sparse_anchoring/arms.rs:216` supplies literal
+`false` to `LineFillParams::dont_alternate_fill_direction`. `FillLine`
+inherits the same base `fill_surface` direction lifecycle
+(`FillLine.hpp:12`, `FillBase.cpp:105-118,311-313`), while Rust
+`fill/line.rs:102-115` consumes that bit. This is the same static
+regional-context propagation discrepancy, not yet a separate Native-visible
+witness. Do not change or fold Line anchoring into this Honeycomb chain.
+
 Mandatory gates: fmt, workspace all-target clippy with `-D warnings`, wasm32,
 all new and existing Honeycomb/ZAA controls in both modes, then canonical
 exact-hash FULL in both modes with fresh artifacts/cache and zero FAIL.
