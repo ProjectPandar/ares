@@ -31,6 +31,7 @@ pub(super) fn append(
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let base = MonotonicFillParams {
         dont_alternate_fill_direction: call.dont_alternate_fill_direction,
+        layer_angle_fixed: false,
         spacing: params.spacing,
         overlap: params.overlap,
         density: 0.01 * params.density,

@@ -159,6 +159,11 @@ impl VoxelUtils {
             layer_index: 0,
             thickness_layers: 1,
             fixed_angle: true,
+            // `spreadDotsArea` builds `Fill::new_from_type(ipAlignedRectilinear)`
+            // (`VoxelUtils.cpp:145`) and never sets `layer_id`, so
+            // `_infill_direction` skips the `_layer_angle` alternation on both
+            // counts (`FillRectilinear.hpp:44-46`, `FillBase.cpp:300-316`).
+            layer_angle_fixed: true,
             dont_alternate_fill_direction: true,
             bridge_angle: None,
             reference_point: BoundingBox::from_expolygon(polygon).unwrap().center(),

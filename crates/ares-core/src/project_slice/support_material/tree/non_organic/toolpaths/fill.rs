@@ -72,6 +72,7 @@ impl Filler {
                 area,
                 MonotonicFillParams {
                     dont_alternate_fill_direction: false,
+                    layer_angle_fixed: false,
                     spacing: self.spacing,
                     overlap: 0.0,
                     density,

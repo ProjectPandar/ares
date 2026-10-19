@@ -192,7 +192,13 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
             // Zag classes inherit this Polylines path (FillRectilinear.hpp:193-224).
             // Ironing is monotonic (Fill.cpp:1619-1621): FillRectilinear.cpp:2874
             // is not reached; LockedZag's extrusion override is not called.
+            // `AlignedRectilinear` shares this arm because `FillAlignedRectilinear`
+            // derives from `FillRectilinear` and therefore consumes the same
+            // `fill_params.monotonic = true` (FillRectilinear.cpp:2853-2867); its
+            // only deviation is `_layer_angle() == 0` (FillRectilinear.hpp:38-46),
+            // carried by `layer_angle_fixed`.
             ProcessInfillPattern::Rectilinear
+            | ProcessInfillPattern::AlignedRectilinear
             | ProcessInfillPattern::ZigZag
             | ProcessInfillPattern::CrossZag
             | ProcessInfillPattern::LockedZag => {
@@ -208,6 +214,12 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                         layer_index: input.layer.id,
                         thickness_layers: 1,
                         fixed_angle,
+                        // `FillAlignedRectilinear::_layer_angle()` returns 0.f
+                        // (`FillRectilinear.hpp:38-46`), so aligned ironing never
+                        // alternates by layer parity; every other ironing pattern
+                        // reaching this arm inherits the `FillBase.hpp:211` default.
+                        layer_angle_fixed: input.region.ironing_pattern
+                            == ProcessInfillPattern::AlignedRectilinear,
                         bridge_angle: None,
                         reference_point: Point::new(0, 0),
                         dont_adjust: true,

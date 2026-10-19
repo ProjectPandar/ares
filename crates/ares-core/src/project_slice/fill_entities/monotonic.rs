@@ -60,6 +60,9 @@ pub(super) fn expolygon_polylines(
     };
     let params = MonotonicFillParams {
         dont_alternate_fill_direction: call.dont_alternate_fill_direction,
+        // Non-ironing `FillAlignedRectilinear` surfaces are out of this slice's
+        // scope: the generic dispatcher keeps the base alternation it had before.
+        layer_angle_fixed: false,
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
         density,
