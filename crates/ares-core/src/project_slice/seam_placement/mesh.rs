@@ -35,7 +35,10 @@ impl Vec3 {
     }
 
     pub(super) fn normalized(self) -> Self {
-        self / self.norm()
+        // Eigen normalized() returns the vector unchanged for zero vectors
+        // (Eigen/src/Core/Dot.h:92-102): 0/0 stays zero instead of NaN.
+        let z = self.dot(self);
+        if z > 0.0 { self / z.sqrt() } else { self }
     }
 
     pub(super) fn axis(self, axis: usize) -> f32 {
