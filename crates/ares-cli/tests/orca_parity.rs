@@ -29,12 +29,16 @@ mod per_object_skirt_min_brim;
 #[path = "orca_parity/per_object_skirt_min_length.rs"]
 mod per_object_skirt_min_length;
 
+#[path = "orca_parity/auto_brim_combined.rs"]
+mod auto_brim_combined;
 #[path = "orca_parity/per_object_skirt_brim.rs"]
 mod per_object_skirt_brim;
 
 #[path = "orca_parity/config_floats_header_serialization.rs"]
 mod config_floats_header_serialization;
 
+#[path = "orca_parity/auto_brim_tables.rs"]
+mod auto_brim_tables;
 #[path = "orca_parity/config_float_header_serialization.rs"]
 mod config_float_header_serialization;
 #[path = "orca_parity/crosshatch_ordering.rs"]

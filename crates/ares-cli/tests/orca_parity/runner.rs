@@ -252,6 +252,9 @@ mod processor_migration;
 mod profile_entry;
 pub(crate) use profile_entry::placed_cube;
 #[cfg(test)]
+#[path = "runner/native_api_cli.rs"]
+pub(crate) mod native_api_cli;
+#[cfg(test)]
 #[path = "runner/profile_entry_3mf.rs"]
 mod profile_entry_3mf;
 #[cfg(test)]
@@ -310,9 +313,8 @@ mod tests;
 #[cfg(test)]
 #[path = "runner/tree_support.rs"]
 mod tree_support;
-#[cfg(test)]
 #[path = "runner/volume_fixture.rs"]
-mod volume_fixture;
+pub(super) mod volume_fixture;
 
 #[path = "runner/command.rs"]
 mod command;
