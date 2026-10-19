@@ -184,13 +184,9 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             let next = layer.positions[index_of_next];
             let to_prev = (cand_pos.0 - prev.0, cand_pos.1 - prev.1);
             let to_next = (cand_pos.0 - next.0, cand_pos.1 - next.1);
-            let norm = |v: (f32, f32)| {
-                let len = (v.0 * v.0 + v.1 * v.1).sqrt();
-                (v.0 / len, v.1 / len)
-            };
             let dir_to_middle = {
-                let (px, py) = norm(to_prev);
-                let (nx, ny) = norm(to_next);
+                let (px, py) = split::normalized(to_prev);
+                let (nx, ny) = split::normalized(to_next);
                 ((px + nx) * 0.5, (py + ny) * 0.5)
             };
             // `1.4142`/`1.4142` are double literals upstream — promote
