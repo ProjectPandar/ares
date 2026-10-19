@@ -71,14 +71,39 @@ pub(super) fn plan_route(
     Ok(route)
 }
 
-/// Total polyline length from the current position through the route
-/// (`Polyline::length` in `needs_retraction`, `GCode.cpp:7530`).
-pub(super) fn polyline_length(x: f64, y: f64, route: &[arc::Point]) -> f64 {
+/// Scaled-domain routed length (`GCode.cpp:7528-7533`): upstream sums the
+/// routed polyline's segment hypots in coord_t and compares against
+/// `scale_(retraction_minimum_travel)`. Summing in mm loses a sub-ulp unit
+/// on travels that reach the threshold exactly (e.g. a 0.6-0.8 diagonal at
+/// `min = 1.0` becomes `0.9999999999999943 < 1.0`). Detour points
+/// round-trip through mm, so they recover via `checked_scale_rounded`:
+/// the mm representation of a coord_t detour vertex errs by < 0.5 unit,
+/// so rounding restores the exact integer. The final point is the scaled
+/// destination itself.
+pub(super) fn polyline_length_scaled(
+    origin: crate::geometry::Point,
+    destination: crate::geometry::Point,
+    route: &[arc::Point],
+    scale: crate::geometry::CoordinateScale,
+    offset: (f64, f64),
+) -> f64 {
     let mut length = 0.0;
-    let mut current = (x, y);
-    for point in route {
-        length += (point.x - current.0).hypot(point.y - current.1);
-        current = (point.x, point.y);
+    let mut current = (origin.x(), origin.y());
+    for (index, point) in route.iter().enumerate() {
+        let next = if index + 1 == route.len() {
+            (destination.x(), destination.y())
+        } else {
+            (
+                scale
+                    .checked_scale_rounded(point.x - offset.0)
+                    .expect("avoid-crossing detour vertex stays in coord_t range"),
+                scale
+                    .checked_scale_rounded(point.y - offset.1)
+                    .expect("avoid-crossing detour vertex stays in coord_t range"),
+            )
+        };
+        length += ((next.0 - current.0) as f64).hypot((next.1 - current.1) as f64);
+        current = next;
     }
     length
 }

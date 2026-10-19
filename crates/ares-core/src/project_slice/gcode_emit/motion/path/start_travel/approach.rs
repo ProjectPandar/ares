@@ -6,7 +6,7 @@ mod waypoints;
 
 use super::dispatch;
 use super::retract;
-use super::route::{plan_route, polyline_length};
+use super::route::{plan_route, polyline_length_scaled};
 use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, travel,
 };
@@ -59,19 +59,13 @@ pub(super) fn emit_needs_travel(
     // scaled-int anchor (`motion::local_cursor`), so the retraction length
     // and internal-region checks measure from the pre-clip position.
     let cursor = crate::project_slice::gcode_emit::motion::local_cursor(state, geometry);
-    let travel_origin = arc::Point {
-        x: cursor.x() as f64 * geometry.scale.factor() + state.offset.0,
-        y: cursor.y() as f64 * geometry.scale.factor() + state.offset.1,
-    };
+    // `GCode.cpp:7424`: `travel_inside_internal_regions(travel)` where
+    // `travel = Polyline(m_last_pos, destination)` — coord_t endpoints, no
+    // mm roundtrip.
     let inside_internal_surface = travel::inside_internal_surfaces(
         geometry.internal_surfaces.iter().copied(),
-        travel_origin,
-        arc::Point {
-            x: first_x,
-            y: first_y,
-        },
-        geometry.scale,
-        state.offset,
+        cursor,
+        crate::geometry::Point::new(first_scaled.0, first_scaled.1),
     );
     let skip_retraction = super::super::can_skip_retraction(
         state.options.reduce_infill_retraction,
@@ -101,9 +95,21 @@ pub(super) fn emit_needs_travel(
                     state.offset,
                 )
             }));
-    let routed_length = polyline_length(travel_origin.x, travel_origin.y, &route);
+    // `GCode.cpp:7528-7533`: the routed length gate runs in coord_t —
+    // upstream `Polyline::length()` sums scaled hypots and compares
+    // against `scale_(retraction_minimum_travel)`.
+    let scaled_min = geometry
+        .scale
+        .scaled_delta(state.options.retraction_minimum_travel);
+    let routed_length = polyline_length_scaled(
+        cursor,
+        crate::geometry::Point::new(first_scaled.0, first_scaled.1),
+        &route,
+        geometry.scale,
+        state.offset,
+    );
     let lift_mode = if state.options.z_hop_type == crate::ZHopType::Auto
-        && routed_length >= state.options.retraction_minimum_travel
+        && routed_length >= scaled_min
         && !skip_retraction
         && state.auto_lift.crosses_overhang(
             state,
@@ -133,7 +139,7 @@ pub(super) fn emit_needs_travel(
     // (`Extruder.cpp:75-84`) — a template-assigned PARTIAL retract tops
     // up rather than skipping.
     let retract = state.extruder.retracted_amount < travel::effective_retraction_length(state)
-        && routed_length >= state.options.retraction_minimum_travel
+        && routed_length >= scaled_min
         && !skip_retraction;
     {
         let geometry_ref = geometry;
@@ -142,7 +148,7 @@ pub(super) fn emit_needs_travel(
             state,
             retract::RetractContext {
                 retract,
-                routed_length,
+                route_reaches_minimum: routed_length >= scaled_min,
                 skip_retraction,
                 destination_feature: feature,
             },
@@ -197,7 +203,7 @@ pub(super) fn emit_needs_travel(
         // `needs_lift` (`GCode.cpp:7678-7681`): zero retraction length
         // (no firmware retraction) never schedules a deferred hop.
         if !skip_retraction
-            && routed_length >= state.options.retraction_minimum_travel
+            && routed_length >= scaled_min
             && state.pending_lift.is_none()
             && state.options.z_hop > 0.0
             && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)

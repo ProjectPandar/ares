@@ -257,22 +257,20 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     }
 }
 
+/// `travel_inside_internal_regions`
+/// (`RetractWhenCrossingPerimeters.cpp:9-51`): the travel polyline is the
+/// [m_last_pos, destination] pair in coord_t — upstream never leaves the
+/// scaled-int domain for this check. Passing millimeters back through
+/// `checked_scale` (truncating) loses a unit to the unscale/offset
+/// roundtrip, which lands a boundary-collinear travel one unit inside
+/// the island and flips `diff_pl` empty.
 pub(super) fn inside_internal_surfaces<'a>(
     surfaces: impl IntoIterator<Item = &'a crate::project_slice::region_slices::RegionSurface>,
-    start: arc::Point,
-    end: arc::Point,
-    scale: crate::geometry::CoordinateScale,
-    offset: (f64, f64),
+    start: crate::geometry::Point,
+    end: crate::geometry::Point,
 ) -> bool {
     use crate::project_slice::region_slices::RegionSurfaceKind;
-
-    let point = |point: arc::Point| {
-        crate::geometry::Point::new(
-            scale.checked_scale(point.x - offset.0).unwrap(),
-            scale.checked_scale(point.y - offset.1).unwrap(),
-        )
-    };
-    let travel = crate::geometry::Polyline::new(vec![point(start), point(end)]);
+    let travel = crate::geometry::Polyline::new(vec![start, end]);
     surfaces.into_iter().any(|surface| {
         let (kind, region, ..) = surface.as_parts();
         matches!(

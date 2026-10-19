@@ -1,5 +1,8 @@
+use super::areas::enabled;
 use super::*;
+use crate::ProcessIroningType;
 use crate::project_slice::region_slices::RegionSurface;
+use crate::project_slice::region_slices::RegionSurfaceKind;
 use crate::{OrcaFloat, OrcaInt, geometry::Polygon};
 
 fn emit(domain: ExPolygon, spacing: f64) -> LayerFillEntities {

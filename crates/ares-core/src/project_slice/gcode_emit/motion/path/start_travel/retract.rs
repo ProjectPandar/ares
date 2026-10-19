@@ -6,11 +6,12 @@ use crate::project_slice::gcode_emit::motion::state::EmitState;
 use crate::project_slice::gcode_emit::motion::travel;
 
 /// The `_retract` call context (`GCode.cpp:7424-7443`): whether the
-/// route qualified for retraction, its routed length, the exemption
+/// route qualified for retraction, whether its coord_t routed length
+/// reaches `scale_(retraction_minimum_travel)`, the exemption
 /// flag, and the destination feature name used by Hilbert suppression.
 pub(super) struct RetractContext<'a> {
     pub(super) retract: bool,
-    pub(super) routed_length: f64,
+    pub(super) route_reaches_minimum: bool,
     pub(super) skip_retraction: bool,
     pub(super) destination_feature: &'a str,
 }
@@ -26,7 +27,7 @@ pub(super) fn decide(
 ) -> Result<(), crate::SliceError> {
     let RetractContext {
         retract,
-        routed_length,
+        route_reaches_minimum,
         skip_retraction,
         destination_feature,
     } = context;
@@ -58,8 +59,7 @@ pub(super) fn decide(
     // retracted flag — a long non-exempt travel invokes `retract()` even
     // when already retracted, and `Extruder::retract` assigns
     // `m_restart_extra` unconditionally (`Extruder.cpp:77`).
-    let upstream_would_retract =
-        routed_length >= state.options.retraction_minimum_travel && !skip_retraction;
+    let upstream_would_retract = route_reaches_minimum && !skip_retraction;
     // Lift eligibility is a separate, narrower condition
     // (`GCodeWriter.cpp:637` gates on m_lifted == 0 && m_to_lift == 0).
     let defer_lift_for_retracted_travel = upstream_would_retract

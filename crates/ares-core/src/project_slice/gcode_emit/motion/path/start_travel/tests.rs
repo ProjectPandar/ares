@@ -80,7 +80,7 @@ fn first_layer_hilbert_bottom_suppresses_writer_retract_and_extra() {
         &mut state,
         RetractContext {
             retract: true,
-            routed_length: 10.0,
+            route_reaches_minimum: true,
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
@@ -106,7 +106,7 @@ fn hilbert_suppression_still_emits_reset_e_in_absolute_mode() {
         &mut state,
         RetractContext {
             retract: true,
-            routed_length: 10.0,
+            route_reaches_minimum: true,
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
@@ -135,7 +135,7 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
         &mut state,
         RetractContext {
             retract: true,
-            routed_length: 10.0,
+            route_reaches_minimum: true,
             skip_retraction: false,
             destination_feature: "Top surface",
         },
@@ -149,7 +149,7 @@ fn hilbert_top_surface_suppresses_top_infill_destination_only() {
         &mut state,
         RetractContext {
             retract: false,
-            routed_length: 10.0,
+            route_reaches_minimum: true,
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
@@ -177,7 +177,7 @@ fn non_hilbert_already_retracted_travel_assigns_restart_extra() {
         &mut state,
         RetractContext {
             retract: false,
-            routed_length: 10.0,
+            route_reaches_minimum: true,
             skip_retraction: false,
             destination_feature: "Internal infill",
         },
