@@ -32,6 +32,10 @@ mod crosshatch_dont_connect;
 #[path = "runner/concentric_sparse_multiline.rs"]
 mod concentric_sparse_multiline;
 
+#[cfg(test)]
+#[path = "runner/honeycomb_anchoring_zaa.rs"]
+mod honeycomb_anchoring_zaa;
+
 #[path = "runner/modifier_sparse_loss.rs"]
 mod modifier_sparse_loss;
 
