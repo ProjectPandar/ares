@@ -8,6 +8,9 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/closest_lines_runtime.rs"]
+mod closest_lines_runtime;
+
 #[path = "orca_parity/per_object_draft_triple.rs"]
 mod per_object_draft_triple;
 
