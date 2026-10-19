@@ -8,14 +8,25 @@ use std::{fs, process::Command};
 #[path = "aligned_rectilinear_multiline_inputs.rs"]
 mod inputs;
 
+#[path = "aligned_rectilinear_multiline/nearest_zero_tangent.rs"]
+mod nearest_zero_tangent;
+
+#[derive(Clone, Copy)]
+enum Mesh {
+    Prism,
+    Holed,
+    RotatedSlot,
+}
+
 #[derive(Clone, Copy)]
 struct Case {
     pattern: &'static str,
     count: &'static str,
     angle: &'static str,
     density: &'static str,
-    hole: bool,
+    mesh: Mesh,
     combined: bool,
+    nearest: bool,
 }
 
 macro_rules! control {
@@ -29,8 +40,9 @@ macro_rules! control {
                     count: $count,
                     angle: $angle,
                     density: $density,
-                    hole: $hole,
+                    mesh: if $hole { Mesh::Holed } else { Mesh::Prism },
                     combined: $combined,
+                    nearest: false,
                 },
             );
         }
@@ -178,7 +190,7 @@ fn compare(label: &str, case: Case) {
     if case.density != "100%" {
         observation::require_sparse(&native);
     }
-    if case.hole {
+    if !matches!(case.mesh, Mesh::Prism) {
         observation::require_hole_clipping(&native);
     }
     if case.combined {

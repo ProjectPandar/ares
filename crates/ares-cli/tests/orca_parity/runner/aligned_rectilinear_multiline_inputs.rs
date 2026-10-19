@@ -1,5 +1,5 @@
 use super::{
-    Case, CaseInputs, OrcaRunner, ParityCase, VendorProfiles, application, json, repo_root,
+    Case, CaseInputs, Mesh, OrcaRunner, ParityCase, VendorProfiles, application, json, repo_root,
 };
 
 const FIXED: [(&str, &str); 24] = [
@@ -76,17 +76,26 @@ pub(super) fn reference(runner: &OrcaRunner, label: &str, case: Case) -> ParityC
             };
             (key, value)
         })
+        .chain(case.nearest.then_some(("seam_position", "nearest")))
         .collect::<Vec<_>>();
     for &(key, value) in &requests {
         process.insert(key.into(), json!(value));
     }
-    let mesh = if case.hole { "holed-prism" } else { "prism" };
-    let path = repo_root().join(format!("tests/parity/multiline-union/{mesh}.stl"));
-    let expected = if case.hole {
-        "6bfe629947754931ae6ddef2944a90ee0c61500c904bd65e2fdf5869d8d37301"
-    } else {
-        "1d50f639d940e2a95c324b8f7ef1a33ba9bcf7e83706ba3cf0669f67f6feae7e"
+    let (mesh, expected) = match case.mesh {
+        Mesh::Prism => (
+            "prism",
+            "1d50f639d940e2a95c324b8f7ef1a33ba9bcf7e83706ba3cf0669f67f6feae7e",
+        ),
+        Mesh::Holed => (
+            "holed-prism",
+            "6bfe629947754931ae6ddef2944a90ee0c61500c904bd65e2fdf5869d8d37301",
+        ),
+        Mesh::RotatedSlot => (
+            "rotated-slotted-prism",
+            "a5107761081b7afefe1ba1952548876ca93aead50b0c858ae5fcc5b50b74f88f",
+        ),
     };
+    let path = repo_root().join(format!("tests/parity/multiline-union/{mesh}.stl"));
     assert_eq!(
         super::runner::cache_identity::raw_digest(&std::fs::read(&path).unwrap()),
         expected
