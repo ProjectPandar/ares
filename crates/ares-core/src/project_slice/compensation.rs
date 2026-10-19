@@ -85,11 +85,23 @@ const _: ValidateTask22mConfigs = validate_task22m_configs;
 
 pub(in crate::project_slice) struct PostCompensationPrintObject {
     post_regions: PostRegionPrintObject,
+    volume_slices: Vec<RawBrimVolume>,
     lslices: Vec<Vec<ExPolygon>>,
     raw_slices: Vec<Vec<Vec<ExPolygon>>>,
 }
 
+#[derive(Clone)]
+pub(in crate::project_slice) struct RawBrimVolume {
+    pub(in crate::project_slice) source_volume_index: usize,
+    pub(in crate::project_slice) volume_type: crate::ProjectVolumeType,
+    pub(in crate::project_slice) first_layer: Vec<ExPolygon>,
+}
+
 impl PostCompensationPrintObject {
+    pub(in crate::project_slice) fn volume_slices(&self) -> &[RawBrimVolume] {
+        &self.volume_slices
+    }
+
     pub(super) fn as_parts(&self) -> (&PostRegionPrintObject, &[Vec<ExPolygon>]) {
         (&self.post_regions, &self.lslices)
     }
@@ -241,6 +253,16 @@ fn apply_object_compensation(
     scale: CoordinateScale,
     closing_epsilon: &mut Option<f32>,
 ) -> Result<PostCompensationPrintObject, SliceError> {
+    let volume_slices = object
+        .as_parts()
+        .1
+        .iter()
+        .map(|volume| RawBrimVolume {
+            source_volume_index: volume.source_volume_index(),
+            volume_type: volume.volume_type(),
+            first_layer: volume.first_layer().to_vec(),
+        })
+        .collect::<Vec<_>>();
     let backups = if object.regions.len() > 1 {
         multi_region::apply(&mut object.regions, &prepared, scale, closing_epsilon)?
     } else {
@@ -262,12 +284,14 @@ fn apply_object_compensation(
     // sees the polyhole points, matching `Layer::backup_untyped_slices`.
     let mut wrapped = PostCompensationPrintObject {
         post_regions: object,
+        volume_slices: volume_slices.clone(),
         lslices,
         raw_slices: Vec::new(),
     };
     hole_to_polyhole::transform(&mut wrapped, nozzle_diameters, scale);
     let PostCompensationPrintObject {
         post_regions: object,
+        volume_slices: _,
         lslices,
         ..
     } = wrapped;
@@ -291,6 +315,7 @@ fn apply_object_compensation(
         .collect();
     Ok(PostCompensationPrintObject {
         post_regions: object,
+        volume_slices,
         lslices,
         raw_slices,
     })

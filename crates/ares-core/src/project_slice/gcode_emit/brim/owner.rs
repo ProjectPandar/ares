@@ -29,3 +29,18 @@ pub(super) fn expand(
     }
     (owner_area, owner_forbidden, owner_islands)
 }
+
+pub(super) fn painted_points(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+) -> Vec<([f32; 2], f32)> {
+    let source_index = traversal.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object
+        .identity()
+        .0;
+    traversal.project.objects()[source_index].brim_ear_centers()
+}

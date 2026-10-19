@@ -4,42 +4,11 @@
 
 use crate::{
     ProcessBrimType, SliceError,
-    geometry::{CoordinateScale, Point},
     project_slice::perimeters::{
         classic::traversal::PreparedPostClassicTraversal, flow::build_nonbridging_flow,
     },
     project_slice::support_material::InstalledSupportLayer,
 };
-
-pub(super) struct BrimPlan {
-    area: Vec<crate::geometry::ExPolygon>,
-    pub(super) global: bool,
-    // Ordinary owner areas, occupied hulls and paths are all in plate coordinates.
-    pub(super) owner_collection: bool,
-    pub(super) paths: Vec<Vec<Point>>,
-    pub(super) covered_hull: Vec<Point>,
-    pub(super) width: f32,
-    pub(super) spacing: f32,
-    pub(super) height: f32,
-    pub(super) mm3_per_mm: f64,
-}
-
-fn painted_points(
-    traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
-) -> Vec<([f32; 2], f32)> {
-    // Brim.cpp:359-361: no painted points means no painted brim at all.
-    let source_index = traversal.objects[object_index]
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .object
-        .identity()
-        .0;
-    traversal.project.objects()[source_index].brim_ear_centers()
-}
-
 impl BrimPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
@@ -50,15 +19,20 @@ impl BrimPlan {
         let options = &resolved.object;
         if !matches!(
             options.brim_type,
-            ProcessBrimType::OuterOnly
+            ProcessBrimType::AutoBrim
+                | ProcessBrimType::OuterOnly
                 | ProcessBrimType::InnerOnly
                 | ProcessBrimType::OuterAndInner
                 | ProcessBrimType::BrimEars
                 | ProcessBrimType::Painted
-        ) || options.brim_width.0 <= 0.0
+        ) || (options.brim_type != ProcessBrimType::AutoBrim && options.brim_width.0 <= 0.0)
         {
             return Ok(None);
         }
+        // Brim.cpp:120-148 and Model.cpp:3258-3280 resolve adhesion and
+        // thermal length per volume filament.  Until the per-volume table is
+        // threaded through the grouping carrier, fail closed rather than
+        // silently selecting the first filament.
         let source = traversal
             .objects
             .get(object_index)
@@ -79,7 +53,26 @@ impl BrimPlan {
         if source.is_empty() {
             return Ok(None);
         }
-        let raw = source;
+        let raw = source.clone();
+        let volume_slices = traversal.objects[object_index]
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .object
+            .object
+            .volume_slices()
+            .to_vec();
+        let grouping_resolution = scaled_f64(
+            traversal.scale,
+            traversal.resolved.views.full.process.print.resolution.0,
+        )?;
+        let offset_value = scaled_f64(traversal.scale, 0.05)?;
+        // libslic3r.h:76-77; Brim.cpp:534,543,569,597 use fixed
+        // SCALED_RESOLUTION for brim offsets.
+        let resolution = scaled_f64(traversal.scale, 0.0125)?;
+        let volume_groups =
+            group_volume_slices(volume_slices, &raw, grouping_resolution, offset_value)?;
         // Brim.cpp:364-367/:468-472: the EFC-adjusted bottom outline is
         // computed once under the gate and shared by the base-slices swap
         // and the painted-ear snap.
@@ -131,13 +124,12 @@ impl BrimPlan {
         // value directly.
         let spacing_mm = f64::from(scaled_f32(scale, f64::from(flow.spacing))?) * scale.factor();
         let brim_width_mm = (options.brim_width.0 / spacing_mm / 2.0).floor() * spacing_mm * 2.0;
-        if brim_width_mm <= 0.0 {
+        if brim_width_mm <= 0.0 && options.brim_type != ProcessBrimType::AutoBrim {
             return Ok(None);
         }
         let gap = scaled_f32(scale, options.brim_object_gap.0)?;
         let brim_width = scaled_f32(scale, brim_width_mm)?;
         let spacing = scaled_f32(scale, spacing_mm)?;
-        let resolution = scaled_f64(scale, 0.0125)?;
         let mut object_islands = Vec::new();
         // Brim.cpp:590-634 via :576/:682-689: support contours join the
         // no-brim mask for every brim type with a ring on the first layer
@@ -181,7 +173,7 @@ impl BrimPlan {
             // Brim.cpp:456-458/:537: the painted call site replaces the
             // auto ears with per-point discs (make_brim_ears :354-412;
             // empty point set keeps the plan empty, :359-361).
-            let points = painted_points(traversal, object_index);
+            let points = owner::painted_points(traversal, object_index);
             if points.is_empty() {
                 return Ok(None);
             }
@@ -225,6 +217,36 @@ impl BrimPlan {
             )?;
             forbidden.extend(support_mask);
             (area, forbidden)
+        } else if options.brim_type == ProcessBrimType::AutoBrim {
+            // Brim.cpp:497-527 applies brim_width_mod independently to each
+            // ExPolygon before make_brim, so islands do not share a clamp.
+            let mut area = Vec::new();
+            let mut forbidden = Vec::new();
+            let volume_materials = volume_materials(
+                traversal,
+                object_index,
+                &full.filament.gcode.filament_type.0,
+            );
+            let auto_context = AutoGroupContext {
+                traversal,
+                object_index,
+                region,
+                support_speed: options.support_speed.0,
+                spacing_mm,
+                scale,
+                gap,
+                spacing,
+                resolution,
+                volume_materials: &volume_materials,
+            };
+            for group in &volume_groups {
+                let (group_area, group_forbidden, group_islands) =
+                    auto_group_area(&auto_context, group)?;
+                area.extend(group_area);
+                forbidden.extend(group_forbidden);
+                object_islands.extend(group_islands);
+            }
+            (area, forbidden)
         } else {
             let area = crate::brims::outer::area(&source, gap, brim_width, spacing, resolution)?;
             object_islands = area.object_islands;
@@ -241,7 +263,7 @@ impl BrimPlan {
                 traversal,
                 region.outer_wall_filament_id.0 as usize - 1,
                 (area, forbidden),
-                resolution,
+                grouping_resolution,
             )?
         } else {
             bed_area::clip(
@@ -249,7 +271,7 @@ impl BrimPlan {
                 object_index,
                 region.outer_wall_filament_id.0 as usize - 1,
                 (brim_area, inner),
-                resolution,
+                grouping_resolution,
             )?
         };
         let brim_area = if matches!(
@@ -258,7 +280,12 @@ impl BrimPlan {
                 | ProcessBrimType::InnerOnly
                 | ProcessBrimType::OuterAndInner
         ) {
-            crate::brims::inner::retain_contact(brim_area, &object_islands, spacing, resolution)?
+            crate::brims::inner::retain_contact(
+                brim_area,
+                &object_islands,
+                spacing,
+                grouping_resolution,
+            )?
         } else {
             brim_area
         };
@@ -301,24 +328,15 @@ impl BrimPlan {
     }
 }
 
-pub(super) fn scaled_f32(scale: CoordinateScale, value: f64) -> Result<f32, SliceError> {
-    scale
-        .checked_scale(value)
-        .map(|value| value as f32)
-        .ok_or_else(|| SliceError::InvalidInput("brim coordinate is out of range".to_owned()))
-}
+use auto::{AutoGroupContext, auto_group_area};
+pub(super) use geometry::{geometry_error as brim_geometry_error, scaled_f32, scaled_f64};
 
-pub(super) fn scaled_f64(scale: CoordinateScale, value: f64) -> Result<f64, SliceError> {
-    scale
-        .checked_scale(value)
-        .map(|value| value as f64)
-        .ok_or_else(|| SliceError::InvalidInput("brim coordinate is out of range".to_owned()))
-}
-
-pub(super) fn brim_geometry_error(_: crate::geometry::ClipperError) -> SliceError {
-    SliceError::InvalidInput("brim generation failed".to_owned())
-}
-
+mod geometry;
+mod groups;
+mod types;
+use groups::{group_volume_slices, volume_materials};
+pub(super) use types::BrimPlan;
+mod auto;
 mod bed_area;
 mod combined;
 pub(super) use combined::combine;

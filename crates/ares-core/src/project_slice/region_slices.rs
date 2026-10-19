@@ -8,16 +8,19 @@ mod convert;
 pub(super) mod interlocking;
 #[cfg(test)]
 mod tests;
-
 use super::{
     layers::PlannedPrintObject,
     volume_bounds::{BoundedPrintObject, VolumeBound, VolumeOccurrenceId},
     volume_regions::{VolumeRegion, VolumeRegionGraph, VolumeRegionRange},
 };
 
+mod volume_impl;
+
 #[derive(Clone)]
 pub(super) struct VolumeSlices {
+    pub(super) source_volume_index: usize,
     pub(super) occurrence_id: VolumeOccurrenceId,
+    pub(super) volume_type: ProjectVolumeType,
     pub(super) layers: Vec<Vec<ExPolygon>>,
 }
 
@@ -48,17 +51,6 @@ pub(super) struct PostRegion {
     pub(super) id: usize,
     pub(super) options: RegionOptions,
     pub(super) layers: Vec<RegionLayer>,
-}
-
-impl PostRegion {
-    pub(super) fn as_parts(&self) -> (usize, &RegionOptions, &[RegionLayer]) {
-        (self.id, &self.options, &self.layers)
-    }
-
-    #[cfg(test)]
-    pub(super) fn into_parts(self) -> (usize, RegionOptions, Vec<RegionLayer>) {
-        (self.id, self.options, self.layers)
-    }
 }
 
 pub(super) struct RegionLayer {
