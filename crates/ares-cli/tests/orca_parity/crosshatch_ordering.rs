@@ -290,6 +290,46 @@ const TARGET_DECIM: &[u8] =
 const TARGET_DECIM_SHA256: &str =
     "8dea1be8434c52924db7f39c3d8fb5271926b3228e8f05a0f7d5ad44bfcf9d09";
 
+const TARGET_ZERONORMAL: &[u8] =
+    include_bytes!("../../../../tests/parity/crosshatch-ordering/target-zeronormal.3mf");
+const TARGET_ZERONORMAL_SHA256: &str =
+    "6f40212d25a645330d9c4b55a66d4103003963d6974b57affcccd9b10e4c265f";
+
+#[test]
+fn crosshatch_ordering_target_zeronormal_matches_native() {
+    assert_eq!(sha256(TARGET_ZERONORMAL), TARGET_ZERONORMAL_SHA256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = crate::artifacts::root_from_env().unwrap();
+    let reference = slice_native(&runner, &root, TARGET_ZERONORMAL, "co-znorm-");
+    // Native-active pin: 21888-triangle plates (n=72 grid, w=30.03) decimate
+    // to 16000 triangles retaining exact zero-area faces (three distinct
+    // indices at coincident positions survive ShortEdgeCollapse.cpp:171-186).
+    // Eigen normalized() guards zero vectors (Eigen/src/Core/Dot.h:92-102),
+    // so their sample normals stay (0,0,0) (TriangleSetSampling.cpp:67) and
+    // native closes layer 1 at the top-left corner X155.195 Y124.79. Ares'
+    // unguarded 0/0 normalization turns those normals into NaN, the
+    // left-corner visibility scores go NaN, and the seam flips to the
+    // bottom-right corner X184.805 Y95.21.
+    assert!(
+        reference.find("G1 X155.195 Y124.79 F9000\n").is_some(),
+        "native layer-1 seam closes at the top-left corner"
+    );
+    let outcome = compare(
+        &root,
+        "co-znorm",
+        TARGET_ZERONORMAL,
+        &reference,
+        "Eigen/src/Core/Dot.h:92-102;TriangleSetSampling.cpp:67;ShortEdgeCollapse.cpp:171-186",
+    );
+    assert_eq!(
+        outcome.status, "PASS",
+        "{}; {:?}",
+        outcome.detail, outcome.artifacts
+    );
+}
+
 #[test]
 fn crosshatch_ordering_target_decim_matches_native() {
     assert_eq!(sha256(TARGET_DECIM), TARGET_DECIM_SHA256);
