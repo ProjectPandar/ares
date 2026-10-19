@@ -171,54 +171,82 @@ impl TriangleMesh {
                     -scale.unscale(center.y()),
                     0.0,
                 ));
-        let mut triangles = Vec::new();
+        let mut mesh = super::short_edge_collapse::IndexedMesh {
+            vertices: Vec::new(),
+            indices: Vec::new(),
+        };
         for volume in object
             .volumes()
             .iter()
             .filter(|volume| volume.volume_type() == ProjectVolumeType::ModelPart)
         {
-            let transform = object_transform.then(volume.transform());
-            let vertices = volume
-                .mesh()
-                .vertices()
-                .iter()
-                .map(|&vertex| {
-                    let [x, y, z] = transform.transform_point_f32(vertex);
-                    Vec3::new(x, y, z)
-                })
-                .collect::<Vec<_>>();
             // `SeamPlacer.cpp:638-640` — "Mirrored transforms flip winding,
             // keep normals outward": the volume matrix is applied with
             // fix_left_handed=true, which swaps indices 0 and 1
-            // (`its_transform`, admesh stl.h:362-367).
+            // (`its_transform`, admesh stl.h:362-367). The merged set is
+            // `its_merge` concatenation (SeamPlacer.cpp:640-647).
             let volume_left_handed = volume.transform().linear_determinant() < 0.0;
-            let start = triangles.len();
-            triangles.extend(volume.mesh().triangles().iter().map(|&[a, b, c]| {
-                Triangle::new(
-                    vertices[a as usize],
-                    vertices[b as usize],
-                    vertices[c as usize],
-                )
-            }));
-            if volume_left_handed {
-                its_transform_flip(&mut triangles[start..]);
-            }
+            let order: [u32; 3] = if volume_left_handed {
+                [1, 0, 2]
+            } else {
+                [0, 1, 2]
+            };
+            let base = mesh.vertices.len() as u32;
+            mesh.vertices
+                .extend(volume.mesh().vertices().iter().map(|&vertex| {
+                    let [x, y, z] = volume.transform().transform_point_f32(vertex);
+                    Vec3::new(x, y, z)
+                }));
+            mesh.indices
+                .extend(volume.mesh().triangles().iter().map(|&[a, b, c]| {
+                    let corners = [a, b, c];
+                    [
+                        base + corners[order[0] as usize],
+                        base + corners[order[1] as usize],
+                        base + corners[order[2] as usize],
+                    ]
+                }));
         }
+        // `SeamPlacer.cpp:650-653`: both sets are decimated to
+        // `fast_decimation_triangle_count_target` (16000) BEFORE the
+        // merge and the obj_transform flip; this slice has no negative
+        // volumes (deferred, unwitnessed).
+        super::short_edge_collapse::short_edge_collapse(
+            &mut mesh,
+            FAST_DECIMATION_TRIANGLE_COUNT_TARGET,
+        );
         // `SeamPlacer.cpp:659-660` — "Mirroring flips normals, keep them
         // outward for visibility sampling": the whole merged set is
         // transformed by obj_transform with fix_left_handed=true
         // (`its_transform` swaps indices 0 and 1, admesh stl.h:362-367).
-        if object_transform.linear_determinant() < 0.0 {
-            its_transform_flip(&mut triangles);
+        let object_left_handed = object_transform.linear_determinant() < 0.0;
+        for vertex in &mut mesh.vertices {
+            let [x, y, z] = object_transform.transform_point_f32(Point3d::new(
+                f64::from(vertex.x),
+                f64::from(vertex.y),
+                f64::from(vertex.z),
+            ));
+            *vertex = Vec3::new(x, y, z);
+        }
+        let mut triangles = mesh
+            .indices
+            .iter()
+            .map(|&[a, b, c]| {
+                Triangle::new(
+                    mesh.vertices[a as usize],
+                    mesh.vertices[b as usize],
+                    mesh.vertices[c as usize],
+                )
+            })
+            .collect::<Vec<_>>();
+        if object_left_handed {
+            for triangle in &mut triangles {
+                triangle.vertices.swap(0, 1);
+            }
         }
         Self { triangles }
     }
 }
 
-/// `its_transform(..., fix_left_handed = true)` swaps indices 0 and 1 of
-/// every face after a left-handed transform (admesh stl.h:362-367).
-fn its_transform_flip(triangles: &mut [Triangle]) {
-    for triangle in triangles {
-        triangle.vertices.swap(0, 1);
-    }
-}
+/// `SeamPlacer.hpp:115` `fast_decimation_triangle_count_target`.
+const FAST_DECIMATION_TRIANGLE_COUNT_TARGET: usize = 16000;

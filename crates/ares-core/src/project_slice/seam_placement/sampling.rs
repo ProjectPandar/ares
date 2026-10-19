@@ -37,7 +37,17 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
     let mut normals = Vec::with_capacity(sample_count);
     for [triangle_sample, u, v] in random_samples {
         let target = triangle_sample * f64::from(total_area);
-        let triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
+        let mut triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
+        // `TriangleSetSampling.cpp:26-31` accumulates into
+        // `std::map<double, size_t>` keyed on the float cumulative sum:
+        // duplicate keys (zero-area triangle runs) collapse to the LAST
+        // inserted index; `upper_bound` returns that index, not the first
+        // member of the equal run.
+        while triangle_index + 1 < cumulative.len()
+            && cumulative[triangle_index + 1] == cumulative[triangle_index]
+        {
+            triangle_index += 1;
+        }
         let triangle = mesh.triangles[triangle_index];
         let square_u = u.sqrt();
         // `TriangleSetSampling.cpp:67`: Eigen converts each double

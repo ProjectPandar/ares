@@ -5,6 +5,7 @@ mod mesh;
 mod placement;
 mod runtime;
 mod sampling;
+mod short_edge_collapse;
 mod spatial;
 mod spline;
 mod split;
