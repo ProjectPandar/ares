@@ -7,7 +7,6 @@ use crate::{
     fill::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
         gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
-        honeycomb::{HoneycombFillParams, fill_honeycomb},
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
@@ -289,28 +288,7 @@ pub(super) fn dispatch(
             let _ = pattern;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
-            let params = HoneycombFillParams {
-                dont_alternate_fill_direction: false,
-                spacing: fill.params.spacing,
-                density: (0.01 * f64::from(fill.params.density)) as f32,
-                multiline: fill.params.multiline,
-                angle: fill.params.angle,
-                layer_index,
-                thickness_layers: fill.representative.thickness_layers.max(1),
-                fixed_angle: fill.params.fixed_angle,
-                bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
-                anchor_length: fill.params.anchor_length,
-                anchor_length_max: fill.params.anchor_length_max,
-            };
-            let delta = (-0.5 * fill.params.spacing / traversal.scale.factor()) as f32;
-            for expolygon in fill.expolygons {
-                let domains = offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
-                    .map_err(super::super::transaction::geometry_error)?;
-                for domain in domains {
-                    let polylines = fill_honeycomb(&domain, params, traversal.scale);
-                    result.extend(polylines.map_err(super::super::transaction::geometry_error)?);
-                }
-            }
+            super::honeycomb::append(fill, traversal, layer_index, result)?;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
             // Fill.cpp:1479,1497 / FillBase.cpp:105-117: anchoring uses the
