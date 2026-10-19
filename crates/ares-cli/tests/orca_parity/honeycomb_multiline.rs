@@ -1,7 +1,7 @@
-//! Regular Honeycomb multiline RED; spec boundary pending intermediate-value localization.
+//! Strict Native/Ares regular Honeycomb multiline parity.
 //!
-//! The target must fail strict Native/Ares equality until the Honeycomb
-//! spacing/alignment owner is localized and ported. Controls must remain exact.
+//! Covers the sparse-anchoring contraction regression, angle/density controls,
+//! and the original cube10 multiline 2/3/4 controls.
 
 use super::*;
 use crate::presets::VendorProfiles;
@@ -146,4 +146,40 @@ fn honeycomb_multiline_controls_match_native() {
             outcome.detail
         );
     }
+}
+
+#[test]
+fn honeycomb_multiline_cube10_controls_match_native() {
+    let Some((runner, machine, mut process, filaments)) = setup() else {
+        return;
+    };
+    let mut failed = Vec::new();
+    for multiline in [2, 3, 4] {
+        let label = format!("honeycomb/multiline/{multiline}");
+        let mut overrides = smoke_overrides();
+        overrides.insert("sparse_infill_pattern".into(), Value::from("honeycomb"));
+        let requested = Value::from(multiline.to_string());
+        process.insert("fill_multiline".into(), requested.clone());
+        let exported = runner
+            .export_case(
+                &CaseInputs {
+                    label: &label,
+                    machine: &machine,
+                    process: &process,
+                    filaments: &filaments,
+                },
+                &overrides,
+                &runner::repo_root().join("tests/parity/cube10.stl"),
+            )
+            .unwrap();
+        let settings = runner::application::settings(&exported.project).unwrap();
+        assert_eq!(settings["fill_multiline"], requested);
+        assert_eq!(settings["sparse_infill_pattern"], "honeycomb");
+        let outcome = compare_exported_for(&runner, &exported, Some("fill_multiline"));
+        eprintln!("{label}: {} {}", outcome.status, outcome.detail);
+        if outcome.status != "PASS" {
+            failed.push(label);
+        }
+    }
+    assert!(failed.is_empty(), "divergent honeycomb bundles: {failed:?}");
 }
