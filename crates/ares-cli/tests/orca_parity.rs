@@ -11,6 +11,9 @@ mod native_environment;
 #[path = "orca_parity/interlocking_base.rs"]
 mod interlocking_base;
 
+#[path = "orca_parity/endpoint_contact.rs"]
+mod endpoint_contact;
+
 #[path = "orca_parity/closest_lines_runtime.rs"]
 mod closest_lines_runtime;
 
