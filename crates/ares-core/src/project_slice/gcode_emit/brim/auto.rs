@@ -39,13 +39,10 @@ pub(crate) fn width_mm(
     let height = context.mesh_bbox[2]; // Brim.cpp:262-276 merged mesh bbox height.
     let (ixx, iyy) = second_moment(source, scale);
     // Brim.cpp:267-276: the max of the two bbox-weighted moments.
-    let height_to_area = if ixx > 0.0 && iyy > 0.0 {
-        (height / ixx * depth).max(height / iyy * width) * height / 1920.0
-    } else {
-        0.0
-    };
+    let height_to_area = (height / ixx * depth).max(height / iyy * width) * height / 1920.0;
     let region = context.region;
-    // Model.cpp:3222-3255 findMaxSpeed uses the resolved role speed map.
+    // Temporary region-speed carrier; Model::findMaxSpeed's object-key
+    // lookup remains deferred as specified in the AutoBrim fidelity notes.
     let small_perimeter = match context.region.small_perimeter_speed {
         crate::options::FloatOrPercent::Float(value) => value,
         crate::options::FloatOrPercent::Percent(value) => {
@@ -63,27 +60,27 @@ pub(crate) fn width_mm(
     ]
     .into_iter()
     .fold(0.0_f64, f64::max);
-    // Brim.cpp:120-148 getadhesionCoeff and Model.cpp:3258-3280
-    // getThermalLength use the resolved material table per group.
+    // Model.cpp:3258-3280 takes the material reference per group.
+    // Brim.cpp:120-148's object-wide adhesion lookup remains deferred.
     let names = context
         .volume_materials
         .iter()
         .filter(|(index, _)| context.volume_ids.contains(index))
         .map(|(_, name)| name.clone())
         .collect::<Vec<_>>();
-    let (adhesion, thermal_length) = material_terms(&names);
+    let (adhesion, thermal_length_ref) = material_terms(&names);
     if max_speed <= 0.0 {
         max_speed = 250.0;
     }
     // Model.cpp:3258-3280 getThermalLength; Brim.cpp:298-303 compares the
     // geometry thermal term against this material reference.
-    let thermal = diagonal * 8.0 / thermal_length * (height.min(30.0) / 30.0);
+    let thermal = diagonal * 8.0 / thermal_length_ref * (height.min(30.0) / 30.0);
     let brim = adhesion
         * (height_to_area * max_speed)
             .max(thermal)
             .min(18.0)
-            .min(1.5 * thermal_length);
-    if brim < 5.0 && brim < 1.5 * thermal_length {
+            .min(1.5 * diagonal);
+    if brim < 5.0 && brim < 1.5 * diagonal {
         0.0
     } else {
         brim.clamp(0.0, 18.0)
@@ -119,6 +116,11 @@ fn material_terms(names: &[String]) -> (f64, f64) {
 
 fn second_moment(source: &[ExPolygon], scale: CoordinateScale) -> (f64, f64) {
     // Brim.cpp:174-258: Polygon/ExPolygon moments and parallel-axis merge.
+    let scale4 = scale.factor().powi(4);
+    if source.is_empty() {
+        // Brim.cpp:277-283 leaves the failed-moment sentinel unchanged.
+        return (-1.0e30 * scale4, -1.0e30 * scale4);
+    }
     let mut props = Vec::new();
     for expolygon in source {
         let mut area = 0.0;
@@ -147,14 +149,9 @@ fn second_moment(source: &[ExPolygon], scale: CoordinateScale) -> (f64, f64) {
                 smy += (x1 * x1 + x1 * x2 + x2 * x2) * cross / 12.0;
             }
         }
-        if area != 0.0 {
-            props.push((area, cx / area, cy / area, smx, smy));
-        }
+        props.push((area, cx / area, cy / area, smx, smy));
     }
     let total_area = props.iter().map(|p| p.0).sum::<f64>();
-    if total_area == 0.0 {
-        return (0.0, 0.0);
-    }
     let total_cx = props.iter().map(|p| p.1 * p.0).sum::<f64>() / total_area;
     let total_cy = props.iter().map(|p| p.2 * p.0).sum::<f64>() / total_area;
     let mut ixx = 0.0;
@@ -163,7 +160,6 @@ fn second_moment(source: &[ExPolygon], scale: CoordinateScale) -> (f64, f64) {
         ixx += smx - cy * cy * area + area * (cy - total_cy).powi(2);
         iyy += smy - cx * cx * area + area * (cx - total_cx).powi(2);
     }
-    let scale4 = scale.factor().powi(4);
     (ixx * scale4, iyy * scale4)
 }
 
