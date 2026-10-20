@@ -171,13 +171,19 @@ fn staggered_seam(
     depth = loop_.paths[point.path].width.max(depth);
     while depth > 0.0 {
         let mut next = next_loop_point(loop_, &point);
-        let a = (point.x, point.y);
-        let b = (next.x, next.y);
-        let dist = scale.unscale(a.0 - b.0).hypot(scale.unscale(a.1 - b.1)) as f32;
+        let a = (scale.unscale(point.x) as f32, scale.unscale(point.y) as f32);
+        let b = (scale.unscale(next.x) as f32, scale.unscale(next.y) as f32);
+        let dx = a.0 - b.0;
+        let dy = a.1 - b.1;
+        let dist = (dx * dx + dy * dy).sqrt();
         if dist > depth {
-            let ratio = depth / dist;
-            next.x = (a.0 as f64 + f64::from(ratio) * (b.0 - a.0) as f64) as i64;
-            next.y = (a.1 as f64 + f64::from(ratio) * (b.1 - a.1) as f64) as i64;
+            (next.x, next.y) = scale_position(
+                (
+                    a.0 + (b.0 - a.0) * depth / dist,
+                    a.1 + (b.1 - a.1) * depth / dist,
+                ),
+                scale,
+            );
         }
         depth -= dist;
         point = next;
