@@ -17,6 +17,9 @@ mod endpoint_contact;
 #[path = "orca_parity/inward_displacement.rs"]
 mod inward_displacement;
 
+#[path = "orca_parity/thin_safezone.rs"]
+mod thin_safezone;
+
 #[path = "orca_parity/closest_lines_runtime.rs"]
 mod closest_lines_runtime;
 
