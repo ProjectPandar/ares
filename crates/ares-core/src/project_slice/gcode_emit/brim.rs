@@ -230,8 +230,7 @@ impl BrimPlan {
             let auto_context = AutoGroupContext {
                 traversal,
                 object_index,
-                region,
-                support_speed: options.support_speed.0,
+                max_speed: speed::find_max_speed(traversal, object_index),
                 spacing_mm,
                 scale,
                 gap,
@@ -339,6 +338,7 @@ pub(super) use types::BrimPlan;
 mod auto;
 mod bed_area;
 mod combined;
+mod speed;
 pub(super) use combined::combine;
 mod emit;
 mod outline;

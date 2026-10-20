@@ -1,11 +1,7 @@
-use crate::{
-    geometry::{CoordinateScale, ExPolygon},
-    options::RegionOptions,
-};
+use crate::geometry::{CoordinateScale, ExPolygon};
 
 pub(crate) struct WidthContext<'a> {
-    pub(crate) region: &'a RegionOptions,
-    pub(crate) support_speed: f64,
+    pub(crate) max_speed: f64,
     pub(crate) mesh_bbox: [f64; 3],
     pub(crate) volume_materials: &'a [(usize, String)],
     pub(crate) volume_ids: &'a [usize],
@@ -40,26 +36,6 @@ pub(crate) fn width_mm(
     let (ixx, iyy) = second_moment(source, scale);
     // Brim.cpp:267-276: the max of the two bbox-weighted moments.
     let height_to_area = (height / ixx * depth).max(height / iyy * width) * height / 1920.0;
-    let region = context.region;
-    // Temporary region-speed carrier; Model::findMaxSpeed's object-key
-    // lookup remains deferred as specified in the AutoBrim fidelity notes.
-    let small_perimeter = match context.region.small_perimeter_speed {
-        crate::options::FloatOrPercent::Float(value) => value,
-        crate::options::FloatOrPercent::Percent(value) => {
-            context.region.inner_wall_speed.0 * value.0 / 100.0
-        }
-    };
-    let mut max_speed = [
-        region.outer_wall_speed.0,
-        region.inner_wall_speed.0,
-        region.sparse_infill_speed.0,
-        region.internal_solid_infill_speed.0,
-        region.top_surface_speed.0,
-        context.support_speed,
-        small_perimeter,
-    ]
-    .into_iter()
-    .fold(0.0_f64, f64::max);
     // Model.cpp:3258-3280 takes the material reference per group.
     // Brim.cpp:120-148's object-wide adhesion lookup remains deferred.
     let names = context
@@ -69,14 +45,11 @@ pub(crate) fn width_mm(
         .map(|(_, name)| name.clone())
         .collect::<Vec<_>>();
     let (adhesion, thermal_length_ref) = material_terms(&names);
-    if max_speed <= 0.0 {
-        max_speed = 250.0;
-    }
     // Model.cpp:3258-3280 getThermalLength; Brim.cpp:298-303 compares the
     // geometry thermal term against this material reference.
     let thermal = diagonal * 8.0 / thermal_length_ref * (height.min(30.0) / 30.0);
     let brim = adhesion
-        * (height_to_area * max_speed)
+        * (height_to_area * context.max_speed)
             .max(thermal)
             .min(18.0)
             .min(1.5 * diagonal);
@@ -210,8 +183,7 @@ pub(super) struct AutoGroupContext<'a> {
     pub(super) traversal:
         &'a crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     pub(super) object_index: usize,
-    pub(super) region: &'a RegionOptions,
-    pub(super) support_speed: f64,
+    pub(super) max_speed: f64,
     pub(super) spacing_mm: f64,
     pub(super) scale: CoordinateScale,
     pub(super) gap: f32,
@@ -236,8 +208,7 @@ pub(super) fn auto_group_area(
         Some(&group.volume_ids),
     );
     let width_context = WidthContext {
-        region: context.region,
-        support_speed: context.support_speed,
+        max_speed: context.max_speed,
         mesh_bbox: group_bbox,
         volume_materials: context.volume_materials,
         volume_ids: &group.volume_ids,
