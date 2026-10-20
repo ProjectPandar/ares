@@ -2,6 +2,7 @@ use crate::geometry::{CoordinateScale, ExPolygon};
 
 pub(crate) struct WidthContext<'a> {
     pub(crate) max_speed: f64,
+    pub(crate) adhesion: f64,
     pub(crate) mesh_bbox: [f64; 3],
     pub(crate) volume_materials: &'a [(usize, String)],
     pub(crate) volume_ids: &'a [usize],
@@ -36,19 +37,17 @@ pub(crate) fn width_mm(
     let (ixx, iyy) = second_moment(source, scale);
     // Brim.cpp:267-276: the max of the two bbox-weighted moments.
     let height_to_area = (height / ixx * depth).max(height / iyy * width) * height / 1920.0;
-    // Model.cpp:3258-3280 takes the material reference per group.
-    // Brim.cpp:120-148's object-wide adhesion lookup remains deferred.
+    // Model.cpp:3258-3280 takes only the thermal reference per group.
     let names = context
         .volume_materials
         .iter()
         .filter(|(index, _)| context.volume_ids.contains(index))
-        .map(|(_, name)| name.clone())
-        .collect::<Vec<_>>();
-    let (adhesion, thermal_length_ref) = material_terms(&names);
+        .map(|(_, name)| name.as_str());
+    let (_, thermal_length_ref) = material_terms(names);
     // Model.cpp:3258-3280 getThermalLength; Brim.cpp:298-303 compares the
     // geometry thermal term against this material reference.
     let thermal = diagonal * 8.0 / thermal_length_ref * (height.min(30.0) / 30.0);
-    let brim = adhesion
+    let brim = context.adhesion
         * (height_to_area * context.max_speed)
             .max(thermal)
             .min(18.0)
@@ -62,11 +61,11 @@ pub(crate) fn width_mm(
 
 // MaterialType.cpp:134-168. Unknown names use the upstream defaults rather
 // than a hand-written material fallback.
-fn material_terms(names: &[String]) -> (f64, f64) {
+pub(super) fn material_terms<'a>(names: impl IntoIterator<Item = &'a str>) -> (f64, f64) {
     let mut adhesion = 1.0;
     let mut thermal_length: f64 = 1250.0;
     for name in names {
-        let (current_adhesion, current_thermal) = match name.as_str() {
+        let (current_adhesion, current_thermal) = match name {
             "FLEX" | "TPU" => (0.5, 1000.0),
             "PET" | "PET-CF" | "PET-GF" | "PETG" => (2.0, 100.0),
             "PETG-CF" | "PETG-GF" => (1.0, 100.0),
@@ -184,6 +183,7 @@ pub(super) struct AutoGroupContext<'a> {
         &'a crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     pub(super) object_index: usize,
     pub(super) max_speed: f64,
+    pub(super) adhesion: f64,
     pub(super) spacing_mm: f64,
     pub(super) scale: CoordinateScale,
     pub(super) gap: f32,
@@ -210,6 +210,7 @@ pub(super) fn auto_group_area(
     );
     let width_context = WidthContext {
         max_speed: context.max_speed,
+        adhesion: context.adhesion,
         mesh_bbox: group_bbox,
         volume_materials: context.volume_materials,
         volume_ids: &group.volume_ids,

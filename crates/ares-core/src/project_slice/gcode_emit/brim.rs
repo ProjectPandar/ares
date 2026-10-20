@@ -13,6 +13,7 @@ impl BrimPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<InstalledSupportLayer>],
+        first_layer_regions: &[crate::project_slice::extrusion_islands::RegionToolUsage],
         object_index: usize,
     ) -> Result<Option<Self>, SliceError> {
         let (resolved, _) = traversal.print_object_config(object_index);
@@ -29,10 +30,6 @@ impl BrimPlan {
         {
             return Ok(None);
         }
-        // Brim.cpp:120-148 and Model.cpp:3258-3280 resolve adhesion and
-        // thermal length per volume filament.  Until the per-volume table is
-        // threaded through the grouping carrier, fail closed rather than
-        // silently selecting the first filament.
         let source = traversal
             .objects
             .get(object_index)
@@ -231,6 +228,12 @@ impl BrimPlan {
                 traversal,
                 object_index,
                 max_speed: speed::find_max_speed(traversal, object_index),
+                adhesion: groups::object_adhesion(
+                    traversal,
+                    object_index,
+                    first_layer_regions,
+                    &volume_materials,
+                ),
                 spacing_mm,
                 scale,
                 gap,

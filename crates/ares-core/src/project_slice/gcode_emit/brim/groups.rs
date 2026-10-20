@@ -52,6 +52,49 @@ pub(super) fn volume_materials(
         .collect()
 }
 
+pub(super) fn object_adhesion(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+    first_layer_regions: &[crate::project_slice::extrusion_islands::RegionToolUsage],
+    volume_materials: &[(usize, String)],
+) -> f64 {
+    let input = &traversal.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let regions = input.as_parts().0.as_parts().0.as_parts().2;
+    // Brim.cpp:120-148: has_extrusions gates the region, but its external
+    // perimeter extruder is selected even when only fill entities exist.
+    let extruders = first_layer_regions
+        .iter()
+        .zip(regions)
+        .filter(|(usage, _)| {
+            usage.perimeters || usage.internal_solid || usage.top || usage.bottom || usage.infill
+        })
+        .map(|(_, region)| region.options.outer_wall_filament_id.0);
+    let object = &traversal.project.objects()[input.identity().0];
+    let object_extruder = object
+        .region_overrides()
+        .extruder
+        .map_or(1, |value| value.0);
+    // volume_materials retains model order. Last matching volume wins;
+    // unused configured filaments and non-extruding regions do not vote.
+    volume_materials
+        .iter()
+        .rfind(|(index, _)| {
+            let extruder = object.volumes()[*index]
+                .region_overrides()
+                .extruder
+                .map_or(object_extruder, |value| value.0);
+            extruders.clone().any(|used| used == extruder)
+        })
+        .map_or(1.0, |(_, name)| {
+            super::auto::material_terms(std::iter::once(name.as_str())).0
+        })
+}
+
 pub(super) fn group_volume_slices(
     slices: Vec<RawBrimVolume>,
     layer_slices: &[geometry::ExPolygon],
