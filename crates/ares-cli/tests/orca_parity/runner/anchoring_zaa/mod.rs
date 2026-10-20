@@ -7,6 +7,8 @@ use std::fs;
 mod case_runner;
 #[path = "../combine_infill_region_view.rs"]
 mod combine_infill_region_view;
+#[path = "../combine_solid_clearance.rs"]
+mod combine_solid_clearance;
 mod complete;
 use complete::{Recorded, assert_complete};
 #[path = "../fill_group_flow_ratio.rs"]
