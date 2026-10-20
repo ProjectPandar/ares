@@ -202,10 +202,9 @@ fn combine_group(
     } else {
         0.5
     };
-    let clearance = (0.5 * f64::from(configs[top].flows.perimeter_flow.width)
-        + factor * f64::from(configs[top].flows.solid_infill_flow.width))
-        / scale.factor();
-    let clearance = offset_expolygons(&intersection, clearance as f32, JoinType::Miter, 3.0)
+    let clearance = 0.5_f32 * configs[top].flows.perimeter_flow.scaled_width(scale) as f32
+        + factor * configs[top].flows.solid_infill_flow.scaled_width(scale) as f32;
+    let clearance = offset_expolygons(&intersection, clearance, JoinType::Miter, 3.0)
         .map_err(geometry_error)?;
     let thickness = configs[bottom..=top]
         .iter()
