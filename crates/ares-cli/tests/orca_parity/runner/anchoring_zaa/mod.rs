@@ -4,10 +4,13 @@ use crate::runner::{ExportedCase, OrcaRunner};
 use serde_json::json;
 use std::{fs, path::PathBuf, process::Command};
 
+#[path = "../consistent_grid_object_bounds.rs"]
+mod consistent_grid_object_bounds;
 #[path = "../honeycomb_anchoring_zaa.rs"]
 mod honeycomb_anchoring_zaa;
 #[path = "../line_anchoring_zaa.rs"]
 mod line_anchoring_zaa;
+mod object_bounds;
 mod observe;
 #[path = "../plane_path_object_bounds.rs"]
 mod plane_path_object_bounds;
