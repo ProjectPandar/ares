@@ -768,6 +768,55 @@ rule I am stopping rather than declaring the boundary. The residual to close: du
 42 / island 8, each collection's `entities.first().role()` and the resulting `region.ironing`
 count, and confirm where the 30 collections are actually consumed.
 
+### Three-point probe (same run, same layer key): the `is_ironing_entity` hypothesis is REFUTED
+
+Final approved probe — one run, one layer key (`extrusion_islands.rs` layer index from `enumerate`,
+`layer.rs` `state.layer_index`), printing the assignment site, the bucketing site and every
+`emit_infills` entry (temporary; reverted; `git diff` empty). Instrumented totals: 2248 assignment
+rows, 460 bucketing rows, 90 call entries; the two layer numberings overlap (both reach ~98), so they
+are comparable.
+
+First correction to the record: **layer 42 is not the ironing layer.** There every island-8 entity
+buckets to `infills` (roles `SolidInfill`, plus `VariableWidth`); the run has only 24
+`bucket=ironing` rows in total, on layers 35/45/49/74/459. The ironing call that matters is
+
+```
+EMIT2 layer=45 island=8 region=0 n=20 islands_total=10
+```
+
+and on that layer the three points agree exactly:
+
+```
+ISL2   layer=45 island=8  cidx=29..48   (20 collections, every role = Ironing)
+BUCKET layer=45 island=8  bucket=ironing  x20   (roles all Ironing, ents 9,2,3,8,2,5,4,2,7,7,4,4,4,4,4,2,2,2,2,2)
+EMIT2  layer=45 island=8  n=20
+```
+
+So on this layer `is_ironing_entity` classifies **correctly**: 20 ironing collections in, 20 in the
+`ironing` bucket, one chain call with `n = 20`. The earlier candidate boundary from probe (ii) —
+`layer.rs:56` deciding from `collection.entities.first()` versus `GCode.cpp:6217-6219` filtering per
+entity — **is refuted as the cause here**: there is no split and no misclassification on the
+diverging layer. The `n` histogram quoted in the previous revision came from a different run without a
+layer key and is not comparable, as the coordinator noted.
+
+Also retired: "Ares hands the chain a single entity in most calls" cannot explain this layer.
+
+What survives, and what is now unaccounted for:
+
+- Ares does pool all 20 ironing collections of island 8 into ONE `chain_infill` /
+  `chained_path_from` call on this layer, which matches the Native structure the coordinator cited
+  (one `extrude_infill(ironing)` call covering the two stacks).
+- Therefore the ordering difference must be inside the chain construction's **input order** or its
+  distance rule, not in bucketing, not in island assignment, and not in call granularity.
+
+I cannot reduce that to a line from the evidence in hand: the 20 `first_point` values on this layer
+(largest y ≈ -2 404 859 … smallest ≈ -31 164 945 in model units) do not resolve to the two stack
+starts that the G-code shows at 15 mm apart (y 88.715 vs 103.715) under the offset I can justify, so
+I cannot yet state which of the 20 is emitted first and why.
+
+Per the coordinator's condition ("若证实 … 则写入 SPEC 作为 GREEN 边界后报告；否则 STOP") the
+hypothesis is **not** confirmed, so this is a STOP with no boundary declared.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
