@@ -1,6 +1,13 @@
 # SPEC: default Voronoi detection and rotation-repair prerequisite
 
-Status: docs-only request; no RED/backend/wrapper/consumer implementation yet.
+Status: SPECac538 independently approved by COORD; RED authorized on9bbc.
+Additional conditions: reuse the merged `tests/parity/voronoi-incident` environment/
+observer/driver in place; inherit `ORCA_REPLAY_CPU`, `ARES_ORCA_DEBUG_DIR` and
+`ARES_GDB_BIN`; runtime-only Native records, no duplicate harness/host defaults.
+A bounded read-only search of merged inputs must report actual MedialAxis
+repair-active reachability honestly. GREEN requires targeted consumer regressions
+AND the final coordinator-scheduled FULL before integration; current work is RED
+only. New main notifications do not relabel this branch's evidence.
 Planning base: `9bbc63c937a7383a639317e40a95e15ad2bdefd7`.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 All source paths below are relative to `src/libslic3r/`.
@@ -85,7 +92,10 @@ Expose no IO, terminal, GDB or native runtime dependency in portable core.
 
 Deferred: point-only/mixed-point constructor expansion; unrelated VoronoiUtils
 operations and unused `is_voronoi_diagram_planar_intersection:157-186` alternative;
-Arachne-wide migration, new medial-axis annotation/chaining algorithms, and
+`Arachne/SkeletalTrapezoidation.cpp:378` also invokes the default-true segment
+constructor. That real Arachne consumer and Arachne-wide migration are deferred
+in this slice, not assumed raw-builder-equivalent. New medial-axis annotation/
+chaining algorithms defer, as does
 `MedialAxis.cpp:462-472` downstream morphological-closing retry. Keep the existing
 caller error contract on unsuccessful construction; do not claim that deferred
 closing behavior or all MedialAxis parity. If active qualification needs it,

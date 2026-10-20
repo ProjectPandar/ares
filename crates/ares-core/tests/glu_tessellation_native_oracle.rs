@@ -1,4 +1,6 @@
 //! Admission proof for the test-time oracle, independent of the missing Rust operation.
+#[path = "../../../tests/support/native_environment.rs"]
+mod native_environment;
 #[path = "../../../tests/support/glu_native_oracle.rs"]
 mod native_oracle;
 use native_oracle::{NativeCase, NativeOracle};

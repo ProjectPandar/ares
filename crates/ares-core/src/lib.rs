@@ -73,6 +73,9 @@ mod mesh_slicer;
 mod model;
 mod model_shrinkage;
 mod moves;
+#[cfg(test)]
+#[path = "../../../tests/support/native_environment.rs"]
+mod native_environment;
 mod options;
 mod perimeters;
 mod pipeline;

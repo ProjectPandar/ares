@@ -11,8 +11,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-#[path = "native_environment.rs"]
-mod native_environment;
+use crate::native_environment;
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Deserialize, Serialize)]

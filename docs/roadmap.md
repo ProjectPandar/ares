@@ -21,7 +21,11 @@ filtered-planarity/point helpers. Rust target is private
 `ares-core/src/geometry/voronoi/*`, OUTSIDE vendor, with the REAL existing
 `geometry/medial_axis/diagram.rs::build` default-constructor consumer
 (`Geometry/MedialAxis.cpp:458-460`). No raw-Boost substitute or dormant facade.
-Adjacent closing retry, Arachne-wide changes and painted implementation defer.
+Adjacent closing retry and painted implementation defer. Arachne's actual
+`SkeletalTrapezoidation.cpp:378` also uses default repair; that consumer/migration
+is explicitly deferred, not qualified by raw-Boost parity. GREEN needs targeted
+MedialAxis/consumer regressions plus final coordinator-scheduled FULL to prove
+expected constructor behavior changes do not regress consumers.
 
 Order/exit: approve docs SPEC/ARD -> fresh real reachable repaired Native-first
 constructor RED -> wrapper plus real consumer -> independently qualified exact

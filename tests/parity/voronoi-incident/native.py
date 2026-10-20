@@ -1,5 +1,6 @@
 """Runtime Native-first rectangle qualification. Missing tools are failures, never skips."""
 from pathlib import Path
+import argparse
 import collections
 import datetime
 import hashlib
@@ -15,7 +16,13 @@ from raw import verify
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[2]
-OUT = Path(sys.argv[1]).resolve()
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument('out', type=Path)
+PARSER.add_argument('--case', choices=['painted-leaves', 'painted-split'], default='painted-leaves')
+PARSER.add_argument('--medial-axis-input', type=Path)
+PARSER.add_argument('--search', action='store_true')
+ARGS = PARSER.parse_args()
+OUT = ARGS.out.resolve()
 ELF = Path(os.environ['ARES_ORCA_NATIVE_BIN']).resolve()
 RESOURCES = Path(os.environ['ARES_ORCA_RESOURCES_DIR']).resolve()
 DEBUG = Path(os.environ['ARES_ORCA_DEBUG_DIR']).resolve()
@@ -38,8 +45,8 @@ def git(*args):
     return subprocess.check_output(['git', '-C', str(REPO), *args], text=True).strip()
 
 
-def activity(data):
-    tool = None
+def activity(data, initial_tool=None):
+    tool = initial_tool
     relative = True
     position = collections.defaultdict(float)
     counts = collections.Counter()
@@ -83,6 +90,8 @@ def run():
     assert len(affinity) == 1 and affinity == os.sched_getaffinity(os.getppid()), \
         'Native driver and Rust test must share one CPU'
     cpu = next(iter(affinity))
+    assert os.environ['ORCA_REPLAY_CPU'] == str(cpu), 'inherit actual singleton replay CPU'
+    assert not ARGS.search or ARGS.medial_axis_input is not None
     assert sha(ELF.read_bytes()) == NATIVE_SHA
     assert sha(DEBUG_FILE.read_bytes()) == DEBUG_SHA
     assert git('-C', str(UPSTREAM), 'rev-parse', 'HEAD') == PIN
@@ -97,6 +106,11 @@ def run():
         b = (BUILT_SOURCE / name).read_bytes()
         assert b == (UPSTREAM / 'src/libslic3r' / name).read_bytes()
         hashes[name] = sha(b)
+    consumers = {}
+    for name in ['Geometry/MedialAxis.cpp', 'Point.hpp', 'Arachne/SkeletalTrapezoidation.cpp']:
+        data = (BUILT_SOURCE / name).read_bytes()
+        assert data == (UPSTREAM / 'src/libslic3r' / name).read_bytes()
+        consumers[name] = sha(data)
     head = git('rev-parse', 'HEAD')
     save(OUT / 'provenance.json', {
         'HEAD':head, 'UTC':datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -104,24 +118,34 @@ def run():
         'matching_debug_file':str(DEBUG_FILE), 'debug_SHA256':DEBUG_SHA,
         'upstream':PIN, 'upstream_directory':str(UPSTREAM),
         'build_source_directory':str(BUILT_SOURCE), 'actual_build_source13_SHA256':hashes,
+        'actual_consumer_source_SHA256':consumers,
+        'case':ARGS.case, 'medial_axis_input':str(ARGS.medial_axis_input), 'bounded_search':ARGS.search,
         'Native_resources_directory':str(RESOURCES),
         'observer_SHA256':sha((HERE / 'observe.py').read_bytes()),
         'driver_SHA256':sha(Path(__file__).read_bytes()),
         'raw_decoder_SHA256':sha((HERE / 'raw.py').read_bytes()),
         'Rust_test_CPU_affinity':sorted(os.sched_getaffinity(os.getppid())),
         'working_tree_status':git('status', '--porcelain')})
-    fixture = REPO / 'tests/parity/paint-color'
-    case = load(fixture / 'manifest.json')['cases']['painted-leaves']
-    prep = subprocess.run([sys.executable, str(fixture / 'prepare.py'), str(OUT / 'input')],
-                          capture_output=True)
-    (OUT / 'prepare.stdout').write_bytes(prep.stdout)
-    (OUT / 'prepare.stderr').write_bytes(prep.stderr)
-    save(OUT / 'prepare-exit.json', {'exit':prep.returncode})
-    assert prep.returncode == 0
-    project = OUT / 'input/painted-leaves.3mf'
+    if ARGS.medial_axis_input is None:
+        fixture = REPO / 'tests/parity/paint-color'
+        case = load(fixture / 'manifest.json')['cases'][ARGS.case]
+        prep = subprocess.run([sys.executable, str(fixture / 'prepare.py'), str(OUT / 'input')],
+                              capture_output=True)
+        (OUT / 'prepare.stdout').write_bytes(prep.stdout)
+        (OUT / 'prepare.stderr').write_bytes(prep.stderr)
+        save(OUT / 'prepare-exit.json', {'exit':prep.returncode})
+        assert prep.returncode == 0
+        project = OUT / 'input' / (ARGS.case + '.3mf')
+    else:
+        project = ARGS.medial_axis_input.resolve()
+        assert project.parent == REPO / 'tests/parity/gated-role-flow'
+        assert project.stem in ['gap-unit', 'box-unit', 'support-unit']
+        case = load(project.parent / 'manifest.json')['cases'][project.stem]
     assert sha(project.read_bytes()) == case['archive_sha256']
     with zipfile.ZipFile(project) as archive:
         members = {n:sha(archive.read(n)) for n in archive.namelist()}
+        if ARGS.medial_axis_input:
+            assert len(json.loads(archive.read('Metadata/project_settings.config'))['filament_diameter']) == 1
     assert members == case['member_sha256']
     save(OUT / 'input-hashes.json', {'archive_SHA256':sha(project.read_bytes()),
                                    'member_SHA256':members})
@@ -132,13 +156,16 @@ def run():
     samples = []
     header = re.compile(rb'(?m)^; generated by OrcaSlicer 2\.4\.2 on \d{4}-\d{2}-\d{2} at \d{2}:\d{2}:\d{2}$')
     gdb = os.environ['ARES_GDB_BIN']
-    for number in [1, 2]:
+    for number in ([1] if ARGS.search else [1, 2]):
         folder = OUT / f'Native-{number}'
         folder.mkdir()
-        env = dict(os.environ, ORCA_REPLAY_SEED='0', ORCA_REPLAY_CPU=str(cpu),
+        env = dict(os.environ, ORCA_REPLAY_SEED='0',
                    ARES_VD_DIAG_DIR=str(folder / 'capture'),
                    ARES_VD_NATIVE_ELF=str(ELF), ARES_VD_DEBUG_DIR=str(DEBUG),
-                   ARES_VD_NATIVE_SHA=NATIVE_SHA)
+                   ARES_VD_NATIVE_SHA=NATIVE_SHA,
+                   ARES_VD_CONSTRUCTOR='lines' if ARGS.medial_axis_input else 'mmu',
+                   ARES_VD_SEARCH='1' if ARGS.search else '0',
+                   ARES_VD_CAPTURE_LIMIT='64' if ARGS.search else '100000')
         cmd = [gdb, '--batch', '-nx', '-x', str(HERE / 'observe.py'), '--args',
                str(ELF), '--slice', '0',
                '--outputdir', str(folder / 'native'), str(project)]
@@ -152,7 +179,9 @@ def run():
         assert proc.returncode == 0, 'Native observer failed; not backend RED'
         capture = folder / 'capture'
         outcome = load(capture / 'outcome.json')
-        assert outcome['entries'] == outcome['finishes'] == 50
+        assert outcome['entries'] == outcome['finishes']
+        if ARGS.medial_axis_input is None:
+            assert outcome['entries'] == 50 and not outcome['limit_reached']
         assert outcome['exit_codes'] == [0] and not outcome['errors']
         observer = load(capture / 'observer.json')
         assert observer['ELF_SHA256'] == NATIVE_SHA
@@ -160,46 +189,62 @@ def run():
         samples += observer['initial_affinity']
         group = collections.defaultdict(list)
         files = sorted(capture.glob('call-*/record.json'))
-        assert len(files) == 50
+        assert len(files) == outcome['entries']
         for path in files:
             row = load(path)
             assert row['pid'] == observer['pid'] and row['repair_enabled']
             vd = row['diagram']
             assert set(vd) == {'modified', 'state', 'issue', 'cells', 'vertices', 'edges'}
-            assert not vd['modified'] and vd['state'] == vd['issue'] == 0
-            verify(path.parent, row)
+            if ARGS.medial_axis_input is None and ARGS.case == 'painted-leaves':
+                assert not vd['modified'] and vd['state'] == vd['issue'] == 0
+            assert row['events'][0]['kind'] == 'detect_original'
+            assert all('returned_issue' in event for event in row['events'])
+            if vd['state'] == 1:
+                assert vd['modified'] and vd['issue'] == 0
+                assert row['events'][0]['returned_issue'] != 0
+                rotations = [e for e in row['events'] if e['kind'] == 'rotation']
+                assert rotations and rotations[-1]['returned_issue'] == 0
+            verify(path.parent, row, rectangle=(ARGS.medial_axis_input is None and ARGS.case == 'painted-leaves'))
             group[canonical(row['lines'])].append(canonical(vd))
             samples += row['entry_affinity'] + row['finish_affinity']
             records.append(str(path.relative_to(OUT)))
-        assert len(group) == 1, 'one frozen geometry, not wider qualification'
+        if ARGS.medial_axis_input is None:
+            assert len(group) == (1 if ARGS.case == 'painted-leaves' else 30)
         assert all(len(set(values)) == 1 for values in group.values())
         groups.append(dict(group))
         data = (folder / 'native/plate_1.gcode').read_bytes()
         assert len(header.findall(data)) == 1
         streams.append(header.sub(b'; generated by <SLICER> 2.4.2', data))
-        active = activity(data)
-        assert active['positive_model_XYE_by_tool'] == {int(k):v for k, v in case['positive_model_XYE_by_tool'].items()}
-        assert len(active['positive_model_XYE_by_layer']) == 50
-        assert all(active['positive_model_XYE_by_layer'])
-        assert active['both_material_positive_layers'] == case['both_material_positive_layers']
+        active = activity(data, initial_tool=0 if ARGS.medial_axis_input else None)
+        if ARGS.medial_axis_input is None:
+            assert active['positive_model_XYE_by_tool'] == {int(k):v for k, v in case['positive_model_XYE_by_tool'].items()}
+            assert len(active['positive_model_XYE_by_layer']) == 50
+            assert all(active['positive_model_XYE_by_layer'])
+            assert active['both_material_positive_layers'] == case['both_material_positive_layers']
+        else:
+            assert active['positive_model_XYE_by_tool'] and active['positive_model_XYE_by_layer']
         save(folder / 'activity.json', active)
-    assert len(set(pids)) == 2 and groups[0] == groups[1]
-    assert streams[0] == streams[1], 'entire Native output differs beyond generator header'
+    assert len(set(pids)) == len(pids)
+    if not ARGS.search:
+        assert len(pids) == 2 and groups[0] == groups[1]
+        assert streams[0] == streams[1], 'entire Native output differs beyond generator header'
     assert samples and all(row['mask'] == str(cpu) for row in samples)
     save(OUT / 'Native-qualified.json', {
-        'status':'COMPLETE_NATIVE_FIRST', 'HEAD':head, 'completed_processes':2,
+        'status':'BOUNDED_SEARCH_ONLY' if ARGS.search else 'COMPLETE_NATIVE_FIRST', 'HEAD':head, 'completed_processes':len(pids),
         'Native_PIDs':pids, 'qualified_diagrams':len(records), 'records':records,
-        'CPU':[cpu], 'thread_samples_single_CPU':len(samples), 'distinct_ordered_input_groups':1,
-        'complete_effective_diagrams_repeat_exact':True,
-        'complete_Gcode_repeat_generator_only_equal':True,
+        'CPU':[cpu], 'thread_samples_single_CPU':len(samples), 'distinct_ordered_input_groups':len(groups[0]),
+        'complete_effective_diagrams_repeat_exact':not ARGS.search,
+        'complete_Gcode_repeat_generator_only_equal':not ARGS.search,
         'complete_Gcode_generator_only_SHA256':sha(streams[0]),
-        'both_activity_checks_passed':True, 'independent_raw_decode_all100':True,
-        'scope':'ONE actual rectangle, default repair dispatch but no repair-active path'})
+        'both_activity_checks_passed':not ARGS.search, 'independent_raw_decode_all_records':True,
+        'repair_successful_records':sum(load(OUT / p)['diagram']['state'] == 1 for p in records),
+        'scope':'bounded existing-input MedialAxis search' if ARGS.search else ARGS.case})
 
 
-try:
-    run()
-except Exception:
-    save(OUT / 'INFRASTRUCTURE-NON-GATE.json', {'status':'NOT_BACKEND_RED',
-         'error':traceback.format_exc()})
-    raise
+if __name__ == '__main__':
+    try:
+        run()
+    except Exception:
+        save(OUT / 'INFRASTRUCTURE-NON-GATE.json', {'status':'NOT_BACKEND_RED',
+             'error':traceback.format_exc()})
+        raise

@@ -2,16 +2,22 @@
 import struct
 
 
-def verify(folder, row):
+def verify(folder, row, rectangle=True):
     vd = row["diagram"]
     cells = list(struct.iter_unpack("<QQQ", (folder / "cells.bin").read_bytes()))
     edges = list(struct.iter_unpack("<QQQQQQ", (folder / "edges.bin").read_bytes()))
     vertices = (folder / "vertices.bin").read_bytes()
     assert len(vertices) % 32 == 0
-    assert (len(cells), len(vertices) // 32, len(edges)) == (8, 5, 24)
-    cb = min(e[0] for e in edges)
-    eb = min(e[2] for e in edges)
-    zb = min(e[1] for e in edges if e[1])
+    if rectangle:
+        assert (len(cells), len(vertices) // 32, len(edges)) == (8, 5, 24)
+    assert (len(cells), len(vertices) // 32, len(edges)) == (
+        len(vd['cells']), len(vd['vertices']), len(vd['edges']))
+    import json
+    layout = json.loads((folder / 'layout.json').read_text())
+    cb, eb, zb = (layout[name]['base'] for name in ['cells', 'edges', 'vertices'])
+    if rectangle:
+        assert (cb, eb, zb) == (min(e[0] for e in edges), min(e[2] for e in edges),
+                               min(e[1] for e in edges if e[1]))
     assert sorted(e[2] for e in edges) == [eb + i * 48 for i in range(len(edges))]
 
     def index(pointer, base, size, count):
@@ -52,11 +58,17 @@ def verify(folder, row):
     for i, vertex in enumerate(decoded_vertices):
         assert decoded_edges[vertex["incident"]]["v0"] == i
     lines = []
-    for a, b, c, d, color, poly, local in struct.iter_unpack(
-            "<qqqqiii4x", (folder / "colored-lines.bin").read_bytes()):
-        lines.append({"a":[a, b], "b":[c, d], "color":color,
-                      "poly":poly, "local_line":local})
+    if row['constructor'] == 'lines':
+        for a, b, c, d in struct.iter_unpack('<qqqq', (folder / 'input-lines.bin').read_bytes()):
+            lines.append({'a':[a, b], 'b':[c, d]})
+    else:
+        for a, b, c, d, color, poly, local in struct.iter_unpack(
+                "<qqqqiii4x", (folder / "colored-lines.bin").read_bytes()):
+            lines.append({"a":[a, b], "b":[c, d], "color":color,
+                          "poly":poly, "local_line":local})
     assert lines == row["lines"]
+    if not rectangle:
+        return
     # Shape and orientation identify the approved input, NOT expected diagram anchors.
     assert len(lines) == 4
     assert all(lines[i]["b"] == lines[(i + 1) % 4]["a"] for i in range(4))
