@@ -57,6 +57,23 @@ impl ProjectSettingsRaw {
         crate::options::json_deserialize::normalize_scalar_vector_strings(&mut self.0)
     }
 
+    /// The `EnableSilent` wire substitutions alone
+    /// (`Config.cpp:654-676` under the 3MF load rule, `Model.cpp:259`) for
+    /// the EMBEDDED raw, before CLI overrides merge in: override values
+    /// reach the config through their own deserialization rule and must
+    /// not be silently substituted.
+    pub(crate) fn normalize_embedded_wire_substitutions(&mut self) {
+        crate::options::json_deserialize::normalize_unknown_wire_substitutions(&mut self.0);
+    }
+
+    /// The vector-shape normalizations without the wire substitutions,
+    /// for a raw that already carries override values on top of the
+    /// normalized embedded config.
+    pub(crate) fn normalize_wire_vector_shapes(&mut self) -> Result<(), String> {
+        crate::options::json_deserialize::normalize_empty_vector_strings(&mut self.0);
+        crate::options::json_deserialize::normalize_scalar_vector_strings(&mut self.0)
+    }
+
     /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs inside
     /// `set_deserialize` (`Config.cpp:577-579`) on each `key/value` token
     /// before the option is stored, so the loaded config — and the flat map

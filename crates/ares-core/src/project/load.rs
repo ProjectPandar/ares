@@ -120,6 +120,11 @@ pub(crate) fn load_project_with_preparation(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    // The EnableSilent 3MF load rule (Model.cpp:259) substitutes unknown
+    // enum/bool wires on the EMBEDDED config before anything else consumes
+    // it; CLI overrides below merge through their own deserialization rule
+    // and are not silently substituted.
+    project_settings_raw.normalize_embedded_wire_substitutions();
     // CLI:1704 captures the old configuration before user edits.
     let preparation = crate::options::flush_matrix::PreparationContext::capture(
         &project_settings_raw,
@@ -133,7 +138,7 @@ pub(crate) fn load_project_with_preparation(
     // `ConfigOptionStrings::deserialize`, `Config.hpp:1153-1159`) — a bare
     // scalar is a single-element vector, an empty string an empty one.
     project_settings_raw
-        .normalize_option_scalars()
+        .normalize_wire_vector_shapes()
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;

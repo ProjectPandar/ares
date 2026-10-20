@@ -31,7 +31,12 @@ pub(super) const TAIL_SUPPORT_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("support_interface_top_layers", Int, "3",),
     definition!("support_ironing", Bool, "false",),
     definition!("support_ironing_flow", Percent, "10",),
-    definition!("support_ironing_pattern", Enum, "rectilinear",),
+    definition!(
+        "support_ironing_pattern",
+        Enum,
+        "rectilinear",
+        super::INFILL_PATTERN_TYPE_KEYS,
+    ),
     definition!("support_ironing_spacing", Float, "0.1",),
     definition!("support_line_width", FloatOrPercent, "0",),
     definition!("support_material_interface_fan_speed", Ints, "-1",),

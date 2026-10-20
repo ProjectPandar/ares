@@ -198,6 +198,26 @@ pub(crate) fn normalize_unknown_wire_substitutions(values: &mut BTreeMap<String,
                     "0".to_owned()
                 });
             }
+            OptionValueKind::Enum => {
+                let RawConfigValue::Text(text) = value else {
+                    continue;
+                };
+                // Scalar coEnum substitution (`Config.cpp:657-676`): a key
+                // missing from the option's enum TYPE map
+                // (`ConfigOptionEnum::from_string`, `Config.hpp:2032-2040`)
+                // replaces the whole option with the definition default
+                // under the EnableSilent 3MF load rule. Keys valid for the
+                // type but outside the option's own `enum_values` whitelist
+                // (e.g. `monotonic` on `sparse_infill_pattern`) pass through
+                // for the `Slic3r::validate` loop to reject, like native.
+                let type_keys = definition
+                    .enum_type_keys
+                    .or_else(|| option_metadata(key).map(|metadata| metadata.enum_values));
+                if type_keys.is_none_or(|keys| keys.contains(&text.trim())) {
+                    continue;
+                }
+                *value = RawConfigValue::Text(definition.default_value.to_owned());
+            }
             OptionValueKind::Enums | OptionValueKind::EnumsNullable => {
                 let wire = match value {
                     // An empty vector is a valid vector (no substitution).
@@ -228,8 +248,8 @@ pub(crate) fn normalize_unknown_wire_substitutions(values: &mut BTreeMap<String,
                 if entries.contains(&"nil") && definition.kind != OptionValueKind::EnumsNullable {
                     continue;
                 }
-                let entries_valid =
-                    |entry: &str| metadata.enum_values.contains(&entry) || entry == "nil";
+                let type_keys = definition.enum_type_keys.unwrap_or(metadata.enum_values);
+                let entries_valid = |entry: &str| type_keys.contains(&entry) || entry == "nil";
                 if entries.iter().copied().all(entries_valid) {
                     continue;
                 }
