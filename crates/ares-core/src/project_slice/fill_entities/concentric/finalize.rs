@@ -13,7 +13,10 @@ pub(super) fn finalize_standard_polylines(polylines: &mut Vec<ThickPolyline>, lo
         if polyline.points.first() == polyline.points.last()
             && polyline.width.first() == polyline.width.last()
         {
-            polyline.start_at_index(nearest_to(&polyline.points, last));
+            polyline.start_at_index(crate::fill::concentric_sparse::nearest_point_index(
+                last,
+                &polyline.points,
+            ));
         }
         if let Some(point) = polyline.points.last() {
             last = *point;
@@ -39,14 +42,6 @@ pub(super) fn nearest_to_origin(points: &[Point]) -> usize {
             }
         })
         .0
-}
-
-fn nearest_to(points: &[Point], target: Point) -> usize {
-    points
-        .iter()
-        .enumerate()
-        .min_by_key(|(_, point)| squared_distance(**point, target))
-        .map_or(0, |(index, _)| index)
 }
 
 fn squared_distance(left: Point, right: Point) -> i128 {
