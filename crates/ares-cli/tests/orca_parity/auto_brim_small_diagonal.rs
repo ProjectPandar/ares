@@ -24,13 +24,13 @@ fn orca_parity_auto_brim_small_diagonal() {
 fn small_pillars() -> Vec<u8> {
     let mut archive = zip::ZipArchive::new(Cursor::new(BASE)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    let mesh = regex::Regex::new("(?s)<mesh>.*?</mesh>").unwrap();
     for index in 0..archive.len() {
         let mut file = archive.by_index(index).unwrap();
         let mut bytes = Vec::new();
         file.read_to_end(&mut bytes).unwrap();
         if file.name() == "3D/Objects/overhang.stl_1.model" {
-            bytes = regex::Regex::new("(?s)<mesh>.*?</mesh>")
-                .unwrap()
+            bytes = mesh
                 .replace(&String::from_utf8(bytes).unwrap(), PILLAR)
                 .into_owned()
                 .into_bytes();
