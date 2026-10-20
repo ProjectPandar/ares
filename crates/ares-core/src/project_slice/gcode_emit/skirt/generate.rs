@@ -35,7 +35,8 @@ impl SkirtPlan {
                         // admitted brim kinds retain their object's occupied footprint.
                         || !matches!(
                             object.object.brim_type,
-                            crate::ProcessBrimType::OuterOnly
+                            crate::ProcessBrimType::AutoBrim
+                                | crate::ProcessBrimType::OuterOnly
                                 | crate::ProcessBrimType::InnerOnly
                                 | crate::ProcessBrimType::Painted
                                 | crate::ProcessBrimType::BrimEars
