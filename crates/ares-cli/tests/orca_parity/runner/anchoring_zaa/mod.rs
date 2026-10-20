@@ -4,6 +4,9 @@ use crate::runner::OrcaRunner;
 use serde_json::json;
 use std::fs;
 
+mod case_runner;
+#[path = "../combine_infill_region_view.rs"]
+mod combine_infill_region_view;
 mod complete;
 use complete::{Recorded, assert_complete};
 #[path = "../fill_group_flow_ratio.rs"]

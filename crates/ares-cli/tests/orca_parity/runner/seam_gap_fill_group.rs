@@ -1,12 +1,11 @@
 //! Fill.cpp:275-305,1274-1279: clipping belongs to the grouped owner.
 
-use std::{collections::BTreeSet, fs, io::Read};
+use std::{collections::BTreeSet, fs};
 
 use ares_core::FloatOrPercent;
 use serde_json::json;
 
-use super::{complete, observe};
-use crate::runner::{OrcaRunner, repo_root};
+use super::{case_runner, observe};
 
 #[derive(Clone, Copy)]
 struct Case {
@@ -81,79 +80,60 @@ fn absolute_equal_control_preserves_complete_output() {
 }
 
 fn check(case: Case) {
-    let Some(mut runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
-    let project = fs::read(repo_root().join("tests/parity").join(case.input)).unwrap();
-    assert_eq!(observe::hash(&project), case.sha, "frozen input");
-    let loaded = ares_core::load_project(&project).unwrap();
-    assert!(matches!(loaded.settings().process.region.seam_gap,
-        FloatOrPercent::Percent(value) if value.0 == f64::from(case.global_percent)));
-    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&project)).unwrap();
-    let mut xml = String::new();
-    archive
-        .by_name("Metadata/model_settings.config")
-        .unwrap()
-        .read_to_string(&mut xml)
-        .unwrap();
-    let modifier = xml
-        .split_once("<part id=\"3\" subtype=\"modifier_part\">")
-        .unwrap()
-        .1
-        .split_once("</part>")
-        .unwrap()
-        .0;
-    match case.local_gap {
-        Some(value) => {
-            assert!(modifier.contains(&format!("<metadata key=\"seam_gap\" value=\"{value}\"/>")))
-        }
-        None => assert!(!modifier.contains("key=\"seam_gap\"")),
-    }
-    let runs = (1..=2)
-        .map(|repeat| {
-            complete::run_once(
-                &mut runner,
-                "seam-gap-fill-group-key",
-                case.name,
-                repeat,
-                &project,
+    case_runner::check(
+        "seam-gap-fill-group-key",
+        case_runner::Input {
+            name: case.name,
+            path: case.input,
+            sha: case.sha,
+        },
+        |loaded, metadata| {
+            assert!(matches!(
+                loaded.settings().process.region.seam_gap,
+                FloatOrPercent::Percent(value) if value.0 == f64::from(case.global_percent)
+            ));
+            let modifier = case_runner::modifier(metadata);
+            match case.local_gap {
+                Some(value) => {
+                    assert!(
+                        modifier
+                            .contains(&format!("<metadata key=\"seam_gap\" value=\"{value}\"/>"))
+                    )
+                }
+                None => assert!(!modifier.contains("key=\"seam_gap\"")),
+            }
+        },
+        |run| {
+            let reference = std::str::from_utf8(&run.native).unwrap();
+            for footer in [
+                "; CONFIG_BLOCK_END".to_owned(),
+                "; nozzle_diameter = 0.4".to_owned(),
+                "; bottom_surface_pattern = monotonic".to_owned(),
+                "; sparse_infill_density = 15%".to_owned(),
+                format!("; seam_gap = {}%", case.global_percent),
+            ] {
+                assert!(
+                    reference.lines().any(|line| line == footer),
+                    "Native effective footer: {footer}; {:?}",
+                    run.root
+                );
+            }
+            let native_bottom =
+                observe::positive_layers(&observe::moves(&run.native, "Bottom surface"));
+            let api_bottom =
+                observe::positive_layers(&observe::moves(&run.api_bytes, "Bottom surface"));
+            assert_eq!(native_bottom, BTreeSet::from([1]), "Native Bottom active");
+            assert_eq!(api_bottom, BTreeSet::from([1]), "API Bottom active");
+            fs::write(
+                run.root.join("seam-gap-witness.json"),
+                serde_json::to_vec_pretty(&json!({
+                    "case": case.name, "input_path": case.input,
+                    "global_percent": case.global_percent, "local_gap": case.local_gap,
+                    "native_bottom_layers": native_bottom, "api_bottom_layers": api_bottom,
+                }))
+                .unwrap(),
             )
-        })
-        .collect::<Vec<_>>();
-    complete::assert_repeated(&runs);
-    for run in &runs {
-        let reference = std::str::from_utf8(&run.native).unwrap();
-        for footer in [
-            "; CONFIG_BLOCK_END".to_owned(),
-            "; nozzle_diameter = 0.4".to_owned(),
-            "; bottom_surface_pattern = monotonic".to_owned(),
-            "; sparse_infill_density = 15%".to_owned(),
-            format!("; seam_gap = {}%", case.global_percent),
-        ] {
-            assert!(
-                reference.lines().any(|line| line == footer),
-                "Native effective footer: {footer}; {:?}",
-                run.root
-            );
-        }
-        let native_bottom =
-            observe::positive_layers(&observe::moves(&run.native, "Bottom surface"));
-        let api_bottom =
-            observe::positive_layers(&observe::moves(&run.api_bytes, "Bottom surface"));
-        assert_eq!(native_bottom, BTreeSet::from([1]), "Native Bottom active");
-        assert_eq!(api_bottom, BTreeSet::from([1]), "API Bottom active");
-        fs::write(
-            run.root.join("seam-gap-witness.json"),
-            serde_json::to_vec_pretty(&json!({
-                "case": case.name, "input_path": case.input,
-                "global_percent": case.global_percent, "local_gap": case.local_gap,
-                "native_bottom_layers": native_bottom, "api_bottom_layers": api_bottom,
-            }))
-            .unwrap(),
-        )
-        .unwrap();
-    }
-    for run in &runs {
-        complete::assert_complete(run);
-    }
+            .unwrap();
+        },
+    );
 }

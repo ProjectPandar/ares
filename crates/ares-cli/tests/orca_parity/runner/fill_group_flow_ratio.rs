@@ -1,12 +1,11 @@
 //! Fill.cpp:275-305,1012-1051: source ordered-set identity and first owner.
 
-use std::{collections::BTreeSet, fs, io::Read};
+use std::{collections::BTreeSet, fs};
 
 use ares_core::{ProcessInfillPattern, ProjectVolumeType};
 use serde_json::json;
 
-use super::{complete, observe};
-use crate::runner::{OrcaRunner, repo_root};
+use super::{case_runner, observe};
 
 #[derive(Clone, Copy)]
 struct Case {
@@ -75,106 +74,80 @@ fn local_top_speed_control_matches_native_complete_output() {
 }
 
 fn check(case: Case) {
-    let Some(mut runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
-    let project = fs::read(
-        repo_root()
-            .join("tests/parity/fill-group-flow-ratio-key")
-            .join(format!("{}.3mf", case.name)),
-    )
-    .unwrap();
-    assert_eq!(observe::hash(&project), case.sha, "frozen input");
-    let loaded = ares_core::load_project(&project).unwrap();
-    assert_eq!(loaded.objects().len(), 1);
-    let object = &loaded.objects()[0];
-    assert_eq!(object.instances().len(), 1);
-    assert_eq!(
-        object
-            .volumes()
-            .iter()
-            .map(|v| v.volume_type())
-            .collect::<Vec<_>>(),
-        [
-            ProjectVolumeType::ModelPart,
-            ProjectVolumeType::ParameterModifier
-        ]
-    );
-    let region = &loaded.settings().process.region;
-    assert_eq!(region.sparse_infill_density.0, 15.0);
-    assert_eq!(
-        region.sparse_infill_pattern,
-        ProcessInfillPattern::Rectilinear
-    );
-    assert_eq!(region.top_solid_infill_flow_ratio.0, case.global_ratio);
-    assert_eq!(region.top_surface_speed.0, 30.0);
-    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&project)).unwrap();
-    let mut settings = String::new();
-    archive
-        .by_name("Metadata/model_settings.config")
-        .unwrap()
-        .read_to_string(&mut settings)
-        .unwrap();
-    let modifier = settings
-        .split_once("<part id=\"3\" subtype=\"modifier_part\">")
-        .unwrap()
-        .1
-        .split_once("</part>")
-        .unwrap()
-        .0;
-    assert!(modifier.contains("<metadata key=\"sparse_infill_density\" value=\"15%\"/>"));
-    for key in ["top_solid_infill_flow_ratio", "top_surface_speed"] {
-        if let Some((local_key, value)) = case.local.filter(|(local_key, _)| *local_key == key) {
-            assert!(modifier.contains(&format!(
-                "<metadata key=\"{local_key}\" value=\"{value}\"/>"
-            )));
-        } else {
-            assert!(!modifier.contains(&format!("key=\"{key}\"")));
-        }
-    }
-    let runs = (1..=2)
-        .map(|repeat| {
-            complete::run_once(
-                &mut runner,
-                "fill-group-flow-ratio-key",
-                case.name,
-                repeat,
-                &project,
-            )
-        })
-        .collect::<Vec<_>>();
-    complete::assert_repeated(&runs);
-    for run in &runs {
-        let reference = std::str::from_utf8(&run.native).unwrap();
-        for footer in [
-            "; CONFIG_BLOCK_END".to_owned(),
-            "; sparse_infill_density = 15%".to_owned(),
-            "; sparse_infill_pattern = rectilinear".to_owned(),
-            "; top_surface_pattern = monotonicline".to_owned(),
-            "; top_surface_speed = 30".to_owned(),
-            format!("; top_solid_infill_flow_ratio = {}", case.global_ratio),
-        ] {
-            assert!(
-                reference.lines().any(|line| line == footer),
-                "Native effective footer: {footer}; {:?}",
-                run.root
+    let path = format!("fill-group-flow-ratio-key/{}.3mf", case.name);
+    case_runner::check(
+        "fill-group-flow-ratio-key",
+        case_runner::Input {
+            name: case.name,
+            path: &path,
+            sha: case.sha,
+        },
+        |loaded, metadata| {
+            assert_eq!(loaded.objects().len(), 1);
+            let object = &loaded.objects()[0];
+            assert_eq!(object.instances().len(), 1);
+            assert_eq!(
+                object
+                    .volumes()
+                    .iter()
+                    .map(|v| v.volume_type())
+                    .collect::<Vec<_>>(),
+                [
+                    ProjectVolumeType::ModelPart,
+                    ProjectVolumeType::ParameterModifier
+                ]
             );
-        }
-        let native_top = observe::positive_layers(&observe::moves(&run.native, "Top surface"));
-        let api_top = observe::positive_layers(&observe::moves(&run.api_bytes, "Top surface"));
-        assert_eq!(native_top, BTreeSet::from([75]), "Native top active");
-        assert_eq!(api_top, BTreeSet::from([75]), "API top active");
-        fs::write(
-            run.root.join("flow-ratio-witness.json"),
-            serde_json::to_vec_pretty(&json!({
-                "case": case.name, "global_ratio": case.global_ratio, "local_override": case.local,
-                "native_top_layers": native_top, "api_top_layers": api_top,
-            }))
-            .unwrap(),
-        )
-        .unwrap();
-    }
-    for run in &runs {
-        complete::assert_complete(run);
-    }
+            let region = &loaded.settings().process.region;
+            assert_eq!(region.sparse_infill_density.0, 15.0);
+            assert_eq!(
+                region.sparse_infill_pattern,
+                ProcessInfillPattern::Rectilinear
+            );
+            assert_eq!(region.top_solid_infill_flow_ratio.0, case.global_ratio);
+            assert_eq!(region.top_surface_speed.0, 30.0);
+            let modifier = case_runner::modifier(metadata);
+            assert!(modifier.contains("<metadata key=\"sparse_infill_density\" value=\"15%\"/>"));
+            for key in ["top_solid_infill_flow_ratio", "top_surface_speed"] {
+                if let Some((local_key, value)) =
+                    case.local.filter(|(local_key, _)| *local_key == key)
+                {
+                    assert!(modifier.contains(&format!(
+                        "<metadata key=\"{local_key}\" value=\"{value}\"/>"
+                    )));
+                } else {
+                    assert!(!modifier.contains(&format!("key=\"{key}\"")));
+                }
+            }
+        },
+        |run| {
+            let reference = std::str::from_utf8(&run.native).unwrap();
+            for footer in [
+                "; CONFIG_BLOCK_END".to_owned(),
+                "; sparse_infill_density = 15%".to_owned(),
+                "; sparse_infill_pattern = rectilinear".to_owned(),
+                "; top_surface_pattern = monotonicline".to_owned(),
+                "; top_surface_speed = 30".to_owned(),
+                format!("; top_solid_infill_flow_ratio = {}", case.global_ratio),
+            ] {
+                assert!(
+                    reference.lines().any(|line| line == footer),
+                    "Native effective footer: {footer}; {:?}",
+                    run.root
+                );
+            }
+            let native_top = observe::positive_layers(&observe::moves(&run.native, "Top surface"));
+            let api_top = observe::positive_layers(&observe::moves(&run.api_bytes, "Top surface"));
+            assert_eq!(native_top, BTreeSet::from([75]), "Native top active");
+            assert_eq!(api_top, BTreeSet::from([75]), "API top active");
+            fs::write(
+                run.root.join("flow-ratio-witness.json"),
+                serde_json::to_vec_pretty(&json!({
+                    "case": case.name, "global_ratio": case.global_ratio, "local_override": case.local,
+                    "native_top_layers": native_top, "api_top_layers": api_top,
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+        },
+    );
 }
