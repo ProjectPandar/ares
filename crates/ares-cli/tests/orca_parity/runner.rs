@@ -252,6 +252,9 @@ pub(crate) use profile_entry::placed_cube;
 #[cfg(test)]
 #[path = "runner/native_api_cli.rs"]
 pub(crate) mod native_api_cli;
+
+#[path = "runner/concentric_ironing_order.rs"]
+mod concentric_ironing_order;
 #[cfg(test)]
 #[path = "runner/profile_entry_3mf.rs"]
 mod profile_entry_3mf;
