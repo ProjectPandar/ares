@@ -1,9 +1,10 @@
 # PrintObject::combine_infill: scaled-width clearance arithmetic
 
-Status: original docs-only SPEC/RED approved; **clearance-only candidate
-`c810ef7d35e6fb1ac15fd41082d737bf2c57932a` failed its strict exit and must not
-be integrated**. The read-only residual amendment below is a separate source-
-boundary review request, not expanded GREEN authorization.
+Latest status: COORD accepted #49 and coordinated W4, authorizing a separate
+SPEC revision then caller-only GREEN3 as specified in the final amendment.
+Candidates c810ef7d3 and 81318b506 failed strict exits and are not independently
+integrable. Earlier review-only stage descriptions below remain historical;
+the final amendment records the current bounded authority, not GREEN acceptance.
 Original SPEC on `worker3/combine-solid-clearance-spec`, based on
 merged main `231bd11ccae4ac26304aa89772a1e5c4b2fd532c`.
 COORD accepted the six-case Native discovery and source boundary and authorized
@@ -246,3 +247,109 @@ unrun. Any later bounded attempt with a strict residual must again STOP/report.
 
 Residual diagnosis and exact snapshots:
 `/home/indexyz/ares-evidence/w3-combine-solid-residual-c810ef7d3-readonly/README.md`.
+
+## Approved GREEN3 amendment: configured Arachne nearest-point ties
+
+COORD accepted the #49 read-only conclusion, independently verified Point.cpp
+last-tie behavior and the existing pub(crate) helper, and coordinated W4.
+Authorization: commit this SPEC revision separately, then change only the
+standard Arachne finalize caller to reuse that helper and delete orphan
+nearest_to. Helper/tests/inputs/ironing/union remain frozen. This is not GREEN
+acceptance or a FULL/rebase/integration window.
+
+### Stage result and read-only correction
+
+Authorized GREEN2 transports physical height through the three approved adapters
+and includes exactly ten approved fixture-argument adaptations. fmt/all-target
+Clippy/browser wasm32 pass. Official selected50 is49PASS/1FAIL (138.158s): both
+monotonic/rectilinear tests close strictly; concentric remains byte11014/line487,
+Native `G1 F2154`, Ares `G1 F2160`. Seeded, post-change neighbors/core units and
+FULL were not started after that failing bounded batch. Candidate is NOT GREEN.
+
+The feedrate is a **downstream cooling witness**, not proof that paths agree.
+At physical layer5/Z1 the affected inner wall has identical captured width
+0.44999998807907104, height0.20000000298023224, geometric mm3/mm
+0.08141592890024185, print ratio1, filament ratio0.98 and max volumetric speed12.
+The resulting cap150.39929071112397mm/s exceeds the actual40mm/s role speed.
+Native writer and both pre-cooling blocks have F2400. It is neither a bridge
+role nor a different overhang/Flow/volume speed cap at that wall.
+
+Both cooling inputs enable cooling, target8s/min10mm/s, allow outer slowdown,
+and have equal initial position. The first36 parsed cooling records have equal
+numeric fields. Record36 (zero-based) is an already different subsequent
+concentric travel: Native `G1 X111.492 Y111.316 F9000`, Ares
+`G1 X111.316 Y111.492 F9000`. Subsequent rotated/cropped runs have different
+length/time values. Thus the same layer's wall is slowed to35.9012451171875 vs
+36.006507873535156mm/s, producing F2154/F2160. Do not repair cooling or feedrate
+formatting to compensate for these different route inputs.
+
+### Earliest localized differing decision and source ownership
+
+Pinned OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
+
+- `Fill/FillConcentric.cpp:73-146`: configured solid **ThickPolylines/Arachne**
+  overload of `_fill_surface_single`, not its ordinary Polylines overload.
+  At113/120/122, `last_pos` is passed to `Point::nearest_point_index` before
+  clipping130 and shortest-traverse reorder139.
+- `Point.cpp:190-196` forwards Points to the pointer scan199-220. The X/Y
+  pruning tests208/213 skip only **strictly greater** distance; assignment215
+  therefore retains the **last** equal nonzero minimum. The near-zero early
+  exit218 remains part of upstream behavior.
+- Rust `project_slice/fill_entities/concentric/finalize.rs:16` calls private
+  `nearest_to`44-50; `.min_by_key`48 retains the **first** equal minimum.
+  This adapter is a temporary compatibility shell around the cited upstream
+  start-selection operation, not an Ares-owned routing design.
+
+Read-only Native GDB returns index7 for captured reference(3194483,3194483)
+and an ordered point list also present exactly in the captured Rust generator
+input. Its indices6=(2846770,3056100) and7=(3056100,2846770) both have exact
+nonzero squared distance140054185058. Native returns7; the frozen Rust selector
+returns6. Closed points AND endpoint widths are true, excluding the extra
+closedness condition for this witness. Captured pre-cooling travels actually
+contain Native X113.056/Y112.847 versus Ares X112.847/Y113.056. The Rust index is
+identified from captured inputs plus the unchanged selector and confirmed by
+actual route text; it is not presented as a captured Rust return register.
+
+Five accepted diagnostic complete streams equal their respective canonical
+streams (Native generator/date identity only, CLI raw exact). Failed/partial
+readers are retained and excluded. No Native build, source instrumentation,
+inferior function call or seeded runtime occurred. Static seeded DWARF type
+reads do not execute a seeded inferior. No universal toolpath parity or proof
+that changing this one choice closes the entire RED is claimed.
+
+### W4 overlap and coordinated caller-only boundary
+
+W4's Step0 owns ordinary Polylines/ironing `FillConcentric.cpp:9-71`, including
+`union_pt_chained_outside_in`43 and nearest-start49. W3's measured call is the
+separate ThickPolylines overload120 after Arachne. W3 has **not** measured or
+modified W4's union/order boundary, or FillConcentricInternal in this diagnosis.
+
+There IS shared upstream semantic ownership: both call `Point::nearest_point_index`.
+Moreover existing Rust `fill/concentric_sparse.rs:23-44::nearest_point_index`
+already ports last-equal selection, used by the plain-ring path127 and ironing
+through `fill_entities/ironing.rs:136`. The configured Arachne adapter instead
+has the duplicate incompatible private selector. This semantic overlap has been coordinated with W4 by COORD. Do not alter
+the shared helper or W4's worktree; if W4 later changes the same file, handle
+any rebase conflict explicitly rather than overwriting its work.
+
+The authorized Rust destination is exclusively
+`fill_entities/concentric/finalize.rs`: reuse the existing source-ported
+`fill::concentric_sparse::nearest_point_index` at the standard Arachne call and
+remove the now-orphan private `nearest_to`, rather than introduce another helper.
+Leave that shared helper itself, the internal-origin selector, distance helper,
+ring union, Arachne/beading, closedness gate, clipping, shortest-traverse order,
+Flow/physical height, extrusion, speeds/cooling/timing/M73 unchanged. This approved source-owner boundary permits only the named caller change;
+no kernel, helper or adjacent repair is included.
+
+GREEN3 must preserve the existing six GUI cases and
+strict helpers/inputs, all prior44 controls, the ten authorized mechanical unit
+adaptations, and complete-byte assertions. Run the frozen six cases plus prior44 controls on the exact clean tip in
+fresh official+seeded selected checks, plus concentric/ironing/Arachne
+neighbors, with unchanged
+producer identities and the three required gates. Any remaining strict residual
+again means STOP/report. No tolerance, filter, golden, inverted assertion,
+allow/ignore, fallback, extra config, pipeline feature, FULL or integration is
+authorized. FULL/rebase/push remain COORD-owned window decisions.
+
+Read-only localization, producer/canonical checks and W4 boundary:
+`/home/indexyz/ares-evidence/w3-concentric-speed-residual-81318b506-readonly/README.md`.
