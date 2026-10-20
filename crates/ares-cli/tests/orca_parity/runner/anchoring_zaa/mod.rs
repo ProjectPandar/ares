@@ -1,4 +1,4 @@
-//! Shared public anchoring ZAA checks; strict acceptance includes all M73/feedrates.
+//! Shared public sparse-fill checks; strict acceptance includes all M73/feedrates.
 
 use crate::runner::{ExportedCase, OrcaRunner};
 use serde_json::json;
@@ -9,6 +9,8 @@ mod honeycomb_anchoring_zaa;
 #[path = "../line_anchoring_zaa.rs"]
 mod line_anchoring_zaa;
 mod observe;
+#[path = "../plane_path_object_bounds.rs"]
+mod plane_path_object_bounds;
 #[path = "../tpmsd_anchoring_contraction.rs"]
 mod tpmsd_anchoring_contraction;
 
@@ -36,6 +38,8 @@ struct Recorded {
     status: &'static str,
     detail: String,
     cli_difference: Option<String>,
+    native_sparse: Vec<(usize, String)>,
+    api_sparse: Vec<(usize, String)>,
 }
 
 fn frozen(expected: &Expectations, case: Case) -> Vec<u8> {
@@ -67,9 +71,31 @@ fn frozen(expected: &Expectations, case: Case) -> Vec<u8> {
 }
 
 fn verify(expected: &Expectations, case: Case) {
-    let Some(mut runner) = OrcaRunner::from_env().unwrap() else {
+    let Some(runs) = repeated(expected, case) else {
         return;
     };
+    for run in &runs {
+        let (native_sparse, api_sparse, root) = (&run.native_sparse, &run.api_sparse, &run.root);
+        assert_eq!(
+            native_sparse, api_sparse,
+            "ordinary Sparse unchanged: {root:?}"
+        );
+        assert_complete(run);
+    }
+}
+
+fn assert_complete(run: &Recorded) {
+    assert_eq!(run.status, "PASS", "{}; {:?}", run.detail, run.root);
+    assert!(
+        run.cli_difference.is_none(),
+        "CLI strict complete output: {:?}; {:?}",
+        run.cli_difference,
+        run.root
+    );
+}
+
+fn repeated(expected: &Expectations, case: Case) -> Option<Vec<Recorded>> {
+    let mut runner = OrcaRunner::from_env().unwrap()?;
     let project = frozen(expected, case);
     let runs: Vec<_> = (1..=2)
         .map(|repeat| run_once(&mut runner, expected, case, repeat, &project))
@@ -84,17 +110,8 @@ fn verify(expected: &Expectations, case: Case) {
         "public API repeat raw bytes: {:?}",
         runs[0].root
     );
-    for run in &runs {
-        assert_eq!(run.status, "PASS", "{}; {:?}", run.detail, run.root);
-        assert!(
-            run.cli_difference.is_none(),
-            "CLI strict complete output: {:?}; {:?}",
-            run.cli_difference,
-            run.root
-        );
-    }
+    Some(runs)
 }
-
 fn run_once(
     runner: &mut OrcaRunner,
     expected: &Expectations,
@@ -195,10 +212,6 @@ fn run_once(
     );
     assert_eq!(api_layers, bridge_layers, "API bridge active: {root:?}");
     assert!(!native_sparse.is_empty(), "Native Sparse active: {root:?}");
-    assert_eq!(
-        native_sparse, api_sparse,
-        "ordinary Sparse unchanged: {root:?}"
-    );
     assert!(cli.status.success(), "CLI execution: {root:?}");
     assert_eq!(api_bytes, cli_bytes, "public API/CLI raw bytes: {root:?}");
     Recorded {
@@ -208,5 +221,7 @@ fn run_once(
         status: outcome.status,
         detail: outcome.detail,
         cli_difference,
+        native_sparse,
+        api_sparse,
     }
 }
