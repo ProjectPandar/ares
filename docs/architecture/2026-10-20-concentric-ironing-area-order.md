@@ -156,6 +156,35 @@ comparator, `clipper.cpp:1492-1560` plus the `E2InsertsBeforeE1` tie-break at
 sub-order. Per instruction, no fix will be attempted until that is located in
 source; sorting the produced polygons afterwards is forbidden.
 
+### Route (b) outcome: Native does not reorder after the clipper
+
+The remaining question was whether Native's `ironing_areas` order is the clipper
+scan order, or the `polys` input order (in which case a post-clipper reorder in
+`Fill.cpp:1713-1731` or on the G-code side would be the culprit). Answered from
+measurement, without needing a stack read on the stripped binary:
+
+- Native's emitted order on the 9-area layer is **x-grouped, with y descending
+  inside each group and the y direction alternating between groups**:
+  `(x≈32.8, +0.3) (32.8, −14.9) (32.8, −29.9) (17.8, −29.9) (17.8, −14.9) (17.8, +0.3) (2.8, +0.3) (2.8, −14.9) (2.8, −29.9)`.
+- The clipper sweep is Y-descending (max-heap `m_Scanbeam`, `clipper.cpp:1109-1122`),
+  so a pure scan order for this set would be `y = +0.3, +0.3, +0.3, −14.9, …`
+  i.e. y-grouped. Native is **not** y-grouped.
+- Ares' `AREAS_IN` (proved position-for-position equal to Native's input order)
+  has exactly the x-grouped/alternating structure Native emits.
+
+So Native's `ironing_areas` follows the **input** order, not the scan order.
+Because `Fill.cpp:1713-1731` is a plain `for (ExPolygon &expoly : ironing_areas)`
+with no sort, and `eec->no_sort = true` (`Fill.cpp:1726`) forbids G-code-side
+sorting, there is **no post-clipper reorder on the Native side**. Ares, by
+contrast, *does* reorder (its `AREAS_OUT` is y-grouped).
+
+Consequence: the deviation is inside the Ares clipper union/intersection output
+ordering, not after the clipper — so route (b) resolves to route (a): compare
+Ares' `create_out_rec` call order for this layer against the order the upstream
+engine would produce. That comparison is the next step and needs the temporary
+Ares instrumentation (or an equivalent runtime probe), which is not started
+without approval.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
