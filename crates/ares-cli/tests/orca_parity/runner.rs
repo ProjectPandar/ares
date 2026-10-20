@@ -1,7 +1,8 @@
 //! Drives the OrcaSlicer CLI for the parity harness: builds a 3MF from
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
-
+#[path = "runner/native_stream_case.rs"]
+pub(crate) mod native_stream_case;
 #[path = "runner/scarf_conditional.rs"]
 mod scarf_conditional;
 #[path = "runner/seam_physical_plane.rs"]

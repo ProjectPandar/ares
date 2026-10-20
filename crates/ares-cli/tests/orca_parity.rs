@@ -14,6 +14,9 @@ mod interlocking_base;
 #[path = "orca_parity/endpoint_contact.rs"]
 mod endpoint_contact;
 
+#[path = "orca_parity/inward_displacement.rs"]
+mod inward_displacement;
+
 #[path = "orca_parity/closest_lines_runtime.rs"]
 mod closest_lines_runtime;
 

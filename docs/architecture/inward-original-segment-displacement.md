@@ -76,9 +76,13 @@ fallbacks, comparator changes or hand-authored output expectations.
 
 ## Review sequence and acceptance
 
-Independent branch `worker6/inward-displacement` starts at
-`a5eb0f0356057fe9c62ec3319834f82b40a7731a`. It does not include or modify the
-approved endpoint-contact chain `3b446a687` or the original WIP history.
+Branch `worker6/inward-displacement` is ordered after the approved
+endpoint-contact chain `3b446a687`, itself based on
+`a5eb0f0356057fe9c62ec3319834f82b40a7731a`. Its RED commit moves the endpoint
+and inward Native/API/CLI harness into a shared runner without changing
+assertions. Both suites reuse existing `interlocking-base` control inputs
+instead of storing duplicate archives. No endpoint production change or old
+WIP history is included in the inward commits.
 
 1. Commit this spec and send SPEC REVIEW-REQUEST before tests/implementation.
 2. After spec review, freeze the target and PASS controls; observe and commit
