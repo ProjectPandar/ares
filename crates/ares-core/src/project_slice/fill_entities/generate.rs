@@ -68,7 +68,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
     // `PrintObject::bounding_box` (Print.hpp:347) is symmetric around zero;
     // `Fill::_infill_direction` uses that center, not quantized slice bounds.
     let object_reference = crate::geometry::Point::new(0, 0);
-    // `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) — the
+    // `FillRectilinear::extended_object_bounding_box()` (FillRectilinear.cpp:2741) — the
     // object bbox transpose-merged + sqrt(2)-scaled so the consistent-pattern
     // vertical-line grid is anchored object-wide, independent of rotation.
     // Computed lazily: only consistent-pattern fills consume it, and a fully
@@ -78,20 +78,12 @@ pub(in crate::project_slice) fn generate_layer_with_active(
     let mut extended_object_bounds = || {
         let (extended_object_min_x, extended_object_max_x) = *extended_object_bounds_x
             .get_or_insert_with(|| {
-                // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) reads
-                // `PrintObject::bounding_box()` (`Print.hpp:347`), the centered mesh
-                // `m_size`. Empirically the ORACLE's grid anchor matches the
-                // slice-contour extent, not the raw mesh `m_size` — on the
-                // uncompensated cube the raw-mesh `m_size` (10mm) produced a
-                // narrower grid (-7.07mm) than the oracle's actual anchor
-                // (-8.14mm, = contour extent). So `bounding_box` for a fill is
-                // anchored on the compensated slice contours in practice (the
-                // perimeter/slice that was actually generated), which we reproduce
-                // here via `plane_path_object_bounding_box` centered on the
-                // origin. See the residual map for the divergence analysis.
-                super::plane_path::object_bounding_box(object_slices)
-                    .map(super::extended_object_bounding_box_x)
-                    .unwrap_or((0, 0))
+                let bounds = super::stars_bounds::object(
+                    &traversal.project.objects()[plan.source_object_index],
+                    resolved_object.print_objects[plan.transform_index].transform,
+                    traversal.scale,
+                );
+                super::extended_object_bounding_box_x(bounds)
             });
         super::types::ObjectFillGeometry {
             scale: traversal.scale,

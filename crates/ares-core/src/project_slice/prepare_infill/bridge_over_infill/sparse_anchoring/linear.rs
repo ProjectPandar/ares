@@ -40,7 +40,7 @@ pub(super) fn append(
         link_max_length: 0.0,
         consistent_pattern: pattern.has_consistent_pattern(),
         horiz_move: fill.params.horiz_move,
-        // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) —
+        // `extended_object_bounding_box` (FillRectilinear.cpp:2741-2750) —
         // same transpose-merge + sqrt(2) origin-scale as the main fill
         // path, so anchored zig-zag/locked-zag keeps the object-wide
         // grid parity.

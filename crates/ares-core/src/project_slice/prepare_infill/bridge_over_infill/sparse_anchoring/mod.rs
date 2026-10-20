@@ -1,6 +1,6 @@
 mod projected;
 
-pub(in crate::project_slice) use projected::{object_bounding_box, projected_sparse_density};
+pub(in crate::project_slice) use projected::projected_sparse_density;
 mod arms;
 mod arms_tail;
 mod honeycomb;
@@ -58,14 +58,17 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
         .predecessor
         .object;
     let (compensated, _) = prelude.as_parts();
-    let (post_regions, object_slices) = compensated.as_parts();
+    let (post_regions, _) = compensated.as_parts();
     let (plan, _, _) = post_regions.as_parts();
     let z = plan.layers[layer_index].print_z;
     // Fill.cpp:1398,1442 uses the symmetric PrintObject box (Print.hpp:347).
     let object_reference = crate::geometry::Point::new(0, 0);
-    // Keep the consistent-pattern grid anchor on its existing contour extent.
-    // The PlanePath arm obtains its raw PrintObject box separately.
-    let object_bounding_box = object_bounding_box(object_slices);
+    let (object, print_object) = traversal.print_object_config(object_index);
+    let object_bounding_box = crate::project_slice::fill_entities::print_object_bounds(
+        &traversal.project.objects()[object.source_object_index],
+        print_object.transform,
+        traversal.scale,
+    );
     let mut result = Vec::new();
     let spacing = prepared.object_spacings[object_index];
 
