@@ -281,11 +281,11 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     | ExtrusionRole::InternalInfill
             ) =>
             {
-                let Some(object_bounding_box) =
-                    super::plane_path::object_bounding_box(object_slices)
-                else {
-                    continue;
-                };
+                let object_bounding_box = super::stars_bounds::object(
+                    &traversal.project.objects()[plan.source_object_index],
+                    resolved_object.print_objects[plan.transform_index].transform,
+                    traversal.scale,
+                );
                 super::plane_path::append(
                     &mut output,
                     fill,

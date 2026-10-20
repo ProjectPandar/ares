@@ -337,6 +337,12 @@ pub(super) fn dispatch(
                 }
                 _ => unreachable!("plane-path arm only admits its three patterns"),
             };
+            let (object, print_object) = traversal.print_object_config(object_index);
+            let object_bounding_box = crate::project_slice::fill_entities::print_object_bounds(
+                &traversal.project.objects()[object.source_object_index],
+                print_object.transform,
+                traversal.scale,
+            );
             let resolution = traversal.resolved.views.full.process.print.resolution.0;
             let params = fill.params;
             let fill_params = crate::fill::plane_path::PlanePathFillParams {

@@ -63,9 +63,8 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     let z = plan.layers[layer_index].print_z;
     // Fill.cpp:1398,1442 uses the symmetric PrintObject box (Print.hpp:347).
     let object_reference = crate::geometry::Point::new(0, 0);
-    // Empirically the consistent-pattern grid anchor + plane-path `out_shift`
-    // match the slice-contour extent, not the raw mesh `m_size` (see
-    // `fill_entities/generate.rs`). Keep the contour-derived bbox.
+    // Keep the consistent-pattern grid anchor on its existing contour extent.
+    // The PlanePath arm obtains its raw PrintObject box separately.
     let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
     let spacing = prepared.object_spacings[object_index];

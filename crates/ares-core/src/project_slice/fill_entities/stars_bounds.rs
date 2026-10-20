@@ -1,10 +1,10 @@
-//! Stars-only PrintObject::bounding_box -> Fill::extended_object_bounding_box.
+//! PrintObject::bounding_box and Stars Fill::extended_object_bounding_box.
 use crate::{
     Point3d, ProjectObject, ProjectVolumeType, Transform3d,
     geometry::{BoundingBox, CoordinateScale, Point},
 };
 
-pub(in crate::project_slice) fn extended(
+pub(in crate::project_slice) fn object(
     object: &ProjectObject,
     transform: Transform3d,
     scale: CoordinateScale,
@@ -34,9 +34,18 @@ pub(in crate::project_slice) fn extended(
     // PrintObject.cpp:112 truncates m_size before Print.hpp:347 halves it.
     let half_x = ((max[0] - min[0]) / scale.factor()) as i64 / 2;
     let half_y = ((max[1] - min[1]) / scale.factor()) as i64 / 2;
+    BoundingBox::new(Point::new(-half_x, -half_y), Point::new(half_x, half_y))
+}
+
+pub(in crate::project_slice) fn extended(
+    object: &ProjectObject,
+    transform: Transform3d,
+    scale: CoordinateScale,
+) -> BoundingBox {
+    let bounds = self::object(object, transform, scale);
     // FillBase.cpp:1569-1578 transpose-merges the centered box, then scales
     // both corners about the origin. The resulting XY extent is square.
-    let half = half_x.max(half_y);
+    let half = bounds.max().x().max(bounds.max().y());
     let extent = (half as f64 * std::f64::consts::SQRT_2) as i64;
     BoundingBox::new(Point::new(-extent, -extent), Point::new(extent, extent))
 }

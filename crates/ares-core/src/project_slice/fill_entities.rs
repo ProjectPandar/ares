@@ -26,7 +26,9 @@ mod tpms_fk;
 pub(in crate::project_slice) use flow::{extended_object_bounding_box_x, materialized_flow};
 #[cfg(test)]
 pub(in crate::project_slice) use generate::generate_layer;
-pub(in crate::project_slice) use stars_bounds::extended as extended_stars_bounds;
+pub(in crate::project_slice) use stars_bounds::{
+    extended as extended_stars_bounds, object as print_object_bounds,
+};
 
 pub(in crate::project_slice) use surface::{SurfaceRequest, surface_polylines};
 
