@@ -726,6 +726,48 @@ Per instruction ("GREEN 若有严格残差则 STOP") I am stopping here rather t
 cannot evidence. Nothing is written to source, no RED, no FULL. The candidate boundary remains the
 ironing entity grouping seam, but it is **not yet pinned to a line**.
 
+### Probe (ii): island assignment is skewed, but a residual remains (STOP)
+
+Probe (ii) as approved — temporary instrumentation in
+`project_slice/extrusion_islands.rs:117-139` keyed by the layer index threaded through
+`assign_layer`, printing `(layer, island, region, cidx, first_point, ents, no_sort, slices)`
+(reverted; `git diff` empty). On the diverging layer (layer index 42, `slices=9`):
+
+```
+collections per island:  island=0 x4   island=1 x1   island=2 x4   island=3 x1
+                         island=4 x1   island=5 x1   island=6 x1   island=7 x1   island=8 x30
+```
+
+So `island=8` alone receives **30** ironing collections on that layer (`no_sort=true`), while
+all other islands get 1-4. Example rows:
+
+```
+ISL layer=42 island=8 region=0 cidx=34 first=(13088894,-12277468) ents=1 no_sort=true slices=9
+ISL layer=42 island=8 region=0 cidx=35 first=(20264576,-12582620) ents=1 no_sort=true slices=9
+ISL layer=42 island=8 region=0 cidx=28 first=(18998308,-14368050) ents=10 no_sort=true slices=9
+```
+
+Two readings follow, and they conflict:
+
+1. By the code path (`layer.rs:42-59`: `regions` is a `BTreeMap` keyed by region id, and the
+   ironing phase runs `emit_infills` once per region per island), island 8's ironing phase
+   must see `n = 30` — a single chain call over 30 entities.
+2. But the measured `n` histogram has **no 30**: `n=1 x56, 3 x12, 5 x6, 4 x5, 6 x4, 2 x3, 8 x2,
+   43 x1, 20 x1`. So the 30 collections were **not** handed to one call.
+
+A concrete candidate for the discrepancy is the **classification predicate**:
+`layer.rs:56` routes an entity into `region.ironing` or `region.infills` using
+`is_ironing_entity`, which decides from `collection.entities.first()` only, whereas upstream
+`GCode.cpp:6217-6219` filters the **same** `region.infills` list per entity with
+`(ee->role() == erIroning) == ironing`. A collection whose first entity is not `Ironing` but
+which contains ironing paths is therefore classified differently by the two sides, and the
+measured `ents` values (2, 3, 4, 6, 10) show such mixed collections exist.
+
+That is a concrete line, but it does **not** yet explain the missing `n = 30`, so per the agreed
+rule I am stopping rather than declaring the boundary. The residual to close: dump, for layer
+42 / island 8, each collection's `entities.first().role()` and the resulting `region.ironing`
+count, and confirm where the 30 collections are actually consumed.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
