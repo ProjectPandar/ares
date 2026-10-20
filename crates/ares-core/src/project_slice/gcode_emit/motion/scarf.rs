@@ -142,7 +142,10 @@ pub(super) fn build(
     // clip_dist is only effective while that distance is positive — at
     // `seam_gap = 0` upstream emits the full slope head unclipped.
     if seam_gap * 2.0 > 0.0 {
-        let front_clip = if first.role == ExtrusionRole::Perimeter {
+        let front_clip = if flats
+            .first()
+            .is_some_and(|path| path.role == ExtrusionRole::Perimeter)
+        {
             starts
                 .iter()
                 .map(|path| path_length(&path.path.polyline.points))
