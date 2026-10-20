@@ -1,8 +1,6 @@
 //! VoronoiUtilsCgal.cpp40-138: filtered signs, exact binary-float fallback.
 mod exact;
 mod interval;
-#[cfg(test)]
-mod tests;
 use exact::Exact;
 use interval::Interval;
 use std::ops::{Add, Mul, Neg, Sub};

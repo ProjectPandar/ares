@@ -48,12 +48,11 @@ replaced, not retained as a compatibility fallback. Annotation/chaining/validati
 algorithms are NOT redesigned: their diagram type and vertex access follow the
 actual effective source diagram. This is not an Ares-owned pipeline milestone.
 
-## Test-first and numeric closure
+## Native RED and numeric closure
 
-Approved RED existed before production code. Isolated exact-arithmetic tests
-were written BEFORE the exact/interval primitive implementation, with their
-failure inventory in the test header; rare carry/borrow/exponent and extreme
-binary values justify this small isolation alongside required Native parity.
+Approved Native RED existed before production code. The isolated arithmetic
+unit tests added in GREEN were rejected in review and removed. Correctness
+is qualified by the runtime Native E2E comparison, not post-hoc unit tests.
 
 The prior bounded raw-rebuild diagnostic measured52 vertex-bit differences over
 42 of102 raw rotation-stage diagrams; cells/edges matched throughout. COORD
@@ -71,6 +70,12 @@ Test serialization is adapted to a TEST-only generic snapshot view so both the
 old raw incident test and real default consumer serialize their ACTUAL vertices.
 The full cell/category/anchor/color, vertex bits/incident/color and edge topology/
 flags schema stays intact, with no geometry sorting, renumbering or field ignore.
+`DiagramSnapshot` and the default-repair test's implementation are mechanical
+compile adaptations to the private effective Diagram type. For edge v1,
+`edge_get_vertex1` and direct `twin.vertex0` are equivalent: vertex1 is defined
+as the twin's vertex0 in Boost, and the unchanged Rust backend accessor follows
+that definition. All 300 complete serialized diagrams remain strictly equal;
+the adaptation changes neither schema nor expected values.
 
 ## Qualification and integration gates (still pending)
 
