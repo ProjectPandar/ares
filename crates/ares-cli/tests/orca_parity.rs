@@ -37,6 +37,8 @@ mod per_object_skirt_brim;
 #[path = "orca_parity/config_floats_header_serialization.rs"]
 mod config_floats_header_serialization;
 
+#[path = "orca_parity/auto_brim_small_diagonal.rs"]
+mod auto_brim_small_diagonal;
 #[path = "orca_parity/auto_brim_tables.rs"]
 mod auto_brim_tables;
 #[path = "orca_parity/config_float_header_serialization.rs"]
