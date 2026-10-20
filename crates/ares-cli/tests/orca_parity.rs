@@ -33,6 +33,8 @@ mod per_object_skirt_min_length;
 mod auto_brim_combined;
 #[path = "orca_parity/per_object_skirt_brim.rs"]
 mod per_object_skirt_brim;
+#[path = "orca_parity/perobject_auto_admission.rs"]
+mod perobject_auto_admission;
 
 #[path = "orca_parity/config_floats_header_serialization.rs"]
 mod config_floats_header_serialization;
