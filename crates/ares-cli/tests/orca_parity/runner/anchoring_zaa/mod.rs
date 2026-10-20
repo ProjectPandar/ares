@@ -8,6 +8,8 @@ mod complete;
 use complete::{Recorded, assert_complete};
 #[path = "../fill_group_flow_ratio.rs"]
 mod fill_group_flow_ratio;
+#[path = "../seam_gap_fill_group.rs"]
+mod seam_gap_fill_group;
 
 #[path = "../consistent_grid_object_bounds.rs"]
 mod consistent_grid_object_bounds;
