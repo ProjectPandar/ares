@@ -106,13 +106,12 @@ fn center_shift(vertices: &[[f32; 3]]) -> Point3d {
             bounds
         },
     );
-    // Match upstream `BoundingBoxf3::center()` = `(min + max) / 2` evaluated in
-    // f32 (Vec3f), then widened to f64 for the Point3d/transform. Computing in
-    // f64 then truncating to f32 (`as f32`) can round to a different f32 than
-    // upstream's f32 add+divide, shifting every vertex by one f32 ulp.
+    // `TriangleMesh::bounding_box` widens float min/max to double before
+    // `BoundingBoxf3::center` averages them. Retain this double shift for
+    // the volume offset; only the mesh vertex subtraction narrows to f32.
     Point3d::new(
-        f64::from((bounds[0][0] + bounds[1][0]) / 2.0),
-        f64::from((bounds[0][1] + bounds[1][1]) / 2.0),
-        f64::from((bounds[0][2] + bounds[1][2]) / 2.0),
+        (f64::from(bounds[0][0]) + f64::from(bounds[1][0])) / 2.0,
+        (f64::from(bounds[0][1]) + f64::from(bounds[1][1])) / 2.0,
+        (f64::from(bounds[0][2]) + f64::from(bounds[1][2])) / 2.0,
     )
 }
