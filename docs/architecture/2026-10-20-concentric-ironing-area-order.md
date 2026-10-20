@@ -1,7 +1,13 @@
-# Concentric ironing: `ironing_areas` ExPolygon emission order — discovery SPEC
+# Concentric ironing: per-area entity assembly decides the emission order — discovery SPEC
 
 Status: discovery record + proposed slice. Docs only: no source, no fixture, no
 roadmap change.
+
+**Conclusion (final shape):** the concentric G-code order is decided by *entity
+assembly* — one `ExtrusionEntityCollection` per ironing area must reach the
+per-region chain, and Ares collapses/segments them so the greedy chain has nothing
+to reorder. The earlier clipper-ordering direction is withdrawn; see "Correction"
+below.
 
 ## Problem
 
@@ -319,6 +325,60 @@ order collapses to the area order -- exactly the y-banded order measured earlier
 Root cause: **the per-area `no_sort` collections that `make_ironing` pushes into
 `fills.entities` are collapsed (merged) before the G-code side chains them**, not a clipper
 ordering difference.
+
+### Assembly chain trace (read-only, merge point located)
+
+`fill_entities/ironing.rs` does push one `FillExtrusionCollection` per ironing area
+(matching `Fill.cpp:1714-1731`), with `no_sort: true`. The collections then pass
+through `project_slice/extrusion_islands.rs`:
+
+- `:110-115` builds the island test order: `fixed_gcc_sort_by(&mut order, bounds[*l].area() < bounds[*r].area())`
+  — ascending bounding-box area, the `slices_test_order` semantics of `GCode.cpp:4984`.
+- `:117-139` walks `(region, collection)` pairs (`layer.collection_ranges` zipped with
+  `layer.collections`) and assigns each to an island:
+  - `let island = island_index(collection.first_point(), slices, &bounds, &order);`
+  - `if collection.no_sort { islands[island].infills.push((region, source_order, FillCollection(collection))) }`
+    else the collection is flattened into individual `Fill(entity)` entries.
+- `:197-203` `island_index`: first slice in area-ascending order whose bbox contains the
+  point *and* whose contour contains it, else `slices.len()` (the "last" bucket) — the
+  same rule as `GCode.cpp:5062-5068` (`slices_test_order` + `point_inside_surface`).
+
+So Ares keeps the per-area collection (`no_sort` → `FillCollection`), exactly like
+upstream, and its island rule matches upstream. What differs is **how many of those
+collections a single island's region ends up holding**:
+
+```
+ARES_ISLAND_DBG (temporary, reverted) on the fixture, layer with slices=9:
+  161 assignments, of which 79 are no_sort (ironing),
+  spread over islands {0, 1, 2, 5, 8}
+```
+and the emitter-side count from the previous probe was `region.ironing entities=1 C1`
+for the diverging layer. I.e. the ironing areas are scattered across islands so that
+each island's ironing region holds a **single** collection; `emit_infills` then calls
+`chain_and_reorder_entities_flips` on a one-element vector (no reorder possible) and
+`chained_path_from` on a single-entity collection (no reorder possible either), so the
+emitted order equals the assembly order.
+
+Upstream, the same layer's 9 ironing eecs must end up in **one** island's
+`by_region[region].infills` for the greedy chain to produce the serpentine order, so
+the remaining question is precisely: which island bucket each ironing area's
+`first_point()` lands in, on both sides. Ares' rule is source-equivalent to upstream's
+on inspection (`island_index` == `point_inside_surface` over an area-ascending order),
+which means the discriminating input is the **collection `first_point()`** itself — the
+first point of the area's first ironing polyline — and that is where Ares and Native
+are known to differ already (pass-1/pass-2 first points differ, see the two-pass
+section). This is the read-only boundary: the fix must make the ironing collections
+land in the same island buckets as upstream, or keep them in one region list, but it
+must not reorder emitted entities afterwards.
+
+**GREEN boundary (precise, but pending one confirmation):** the change belongs in the
+ironing/assembly seam — `project_slice/extrusion_islands.rs` island assignment for
+`no_sort` fill collections (`:117-139`) and/or the region grouping consumed at
+`gcode_emit/motion/layer.rs:42-59` — not in `fill_entities/ironing.rs` (which already
+matches upstream), not in the clipper, and not in the emitter's chaining (which already
+matches upstream). Confirmation still needed: the per-collection `first_point()` values
+for the diverging layer on both sides, to prove the buckets differ for that reason
+rather than because of a differing `slices` count.
 
 ## Upstream boundary (source-cited)
 
