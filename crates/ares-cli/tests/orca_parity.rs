@@ -47,6 +47,9 @@ mod per_object_skirt_min_brim;
 #[path = "orca_parity/per_object_skirt_min_length.rs"]
 mod per_object_skirt_min_length;
 
+#[path = "orca_parity/arachne_extra_overhang_call.rs"]
+mod arachne_extra_overhang_call;
+
 #[path = "orca_parity/scarf_remaining_flat_role.rs"]
 mod scarf_remaining_flat_role;
 
