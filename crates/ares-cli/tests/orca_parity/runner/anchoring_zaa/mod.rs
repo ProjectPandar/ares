@@ -9,6 +9,8 @@ mod honeycomb_anchoring_zaa;
 #[path = "../line_anchoring_zaa.rs"]
 mod line_anchoring_zaa;
 mod observe;
+#[path = "../tpmsd_anchoring_contraction.rs"]
+mod tpmsd_anchoring_contraction;
 
 #[derive(Clone, Copy)]
 struct Case {
