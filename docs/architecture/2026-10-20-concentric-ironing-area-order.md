@@ -938,6 +938,23 @@ Residual to settle when GREEN is authorised: the exact upstream append order ins
 `FillConcentric::_fill_surface_single`/`make_ironing` (which ring is appended first and in which
 direction) versus Ares' concentric ring emission, at the level of the 182-ring collection.
 
+### GREEN precondition (agreed with the coordinator; not yet executed)
+
+The coordinator supplied the upstream basis that decides *which* generation-side boundary a GREEN must
+target. `Fill.cpp:1715-1731` loops over `ironing_areas` and calls `fill_surface` **once per expolygon**,
+pushing one `no_sort` `ExtrusionEntityCollection` per area. Therefore, before any GREEN is written, one
+unambiguous check is required:
+
+- Does Ares' single 182-ring collection at z=52 correspond to **one** upstream `ironing_areas` expolygon?
+  - **Several areas on the Native side** (grouping difference): the boundary is Ares' area grouping in
+    `project_slice/fill_entities/ironing.rs`, not the ring order inside a fill.
+  - **One area on the Native side** (same grouping): the boundary is the ring order / start point inside
+    `FillConcentric::_fill_surface_single`, i.e. the polyline append order that `make_ironing`
+    (`Fill.cpp:1650-1731`) stores into the collection.
+
+Only after that answer is fixed may the RED be written and the GREEN bounded. Discovery stops here; the
+next action is gated on the W4 worker window.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
