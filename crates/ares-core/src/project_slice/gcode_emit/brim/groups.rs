@@ -161,38 +161,45 @@ pub(super) fn group_volume_slices(
             slices: Vec::new(),
         })
         .collect::<Vec<_>>();
+    let comparison_slices = groups
+        .iter()
+        .map(|group| {
+            let mut slices = group.slices.clone();
+            for polygon in &mut slices {
+                polygon.douglas_peucker(resolution);
+            }
+            slices
+        })
+        .collect::<Vec<_>>();
     for expolygon in layer_slices.iter().cloned() {
-        assign_polygon(expolygon, &groups, &mut assigned, resolution)?;
+        assign_polygon(expolygon, &comparison_slices, &mut assigned, resolution)?;
     }
     Ok(assigned)
 }
 
 fn assign_polygon(
     expolygon: geometry::ExPolygon,
-    groups: &[BrimVolumeGroup],
+    comparison_slices: &[Vec<geometry::ExPolygon>],
     assigned: &mut [BrimVolumeGroup],
     resolution: f64,
 ) -> Result<(), SliceError> {
-    let mut best = Some((0usize, expolygon.area().abs()));
-    if expolygon.area() <= 0.0 {
-        return Ok(());
-    }
     let mut simplified = expolygon.clone();
     simplified.douglas_peucker(resolution);
-    for (index, group) in groups.iter().enumerate() {
-        let diff = geometry::difference_ex(std::slice::from_ref(&simplified), &group.slices)
-            .map_err(brim_geometry_error)?;
-        let area = diff
-            .iter()
-            .map(geometry::ExPolygon::area)
-            .sum::<f64>()
-            .abs();
-        if area <= 0.0 || best.is_some_and(|(_, current)| area >= current) {
-            continue;
-        }
-        best = Some((index, area));
+    let mut min_area = simplified.area();
+    if min_area <= 0.0 {
+        return Ok(());
     }
-    let Some((index, _)) = best else {
+    let mut best = None;
+    for (index, group_slices) in comparison_slices.iter().enumerate() {
+        let diff = geometry::difference_ex(std::slice::from_ref(&simplified), group_slices)
+            .map_err(brim_geometry_error)?;
+        let area = diff.iter().map(geometry::ExPolygon::area).sum::<f64>();
+        if area < min_area {
+            min_area = area;
+            best = Some(index);
+        }
+    }
+    let Some(index) = best else {
         return Ok(());
     };
     assigned[index].slices.push(expolygon);
