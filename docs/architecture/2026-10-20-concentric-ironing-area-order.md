@@ -955,6 +955,56 @@ unambiguous check is required:
 Only after that answer is fixed may the RED be written and the GREEN bounded. Discovery stops here; the
 next action is gated on the W4 worker window.
 
+### Window result: the boundary is now pinned (single area, ring order)
+
+Three facts closed the discovery, all measured inside the W4 window on top of
+main `d592d4145`:
+
+1. **Grouping granularity is identical.** Upstream `Fill.cpp:1714-1731` loops
+   `for (ExPolygon &expoly : ironing_areas)` and pushes one `no_sort`
+   `ExtrusionEntityCollection` per expolygon (one `fill_surface` per area). Ares
+   mirrors the shape exactly: `fill_entities/ironing.rs:118` `for area in
+   ironing_areas`, `:153` pushes one `FillExtrusionCollection` per area. So the
+   "one eec per area" contract is not the divergence.
+2. **The diverging layer has exactly one area.** An `ARES_AREA_DBG` probe
+   (temporary, reverted, `git diff` empty) printed, for the layer whose
+   collection holds the diverging rings:
+
+   ```
+   AREA areas=1 z=0.2
+   AREA concentric rings=182
+   ```
+
+   One expolygon produced 182 closed rings in one collection. Across the whole
+   fixture the area count does vary (`areas=1 x36, 3 x17, 5 x10, 8 x7, 7 x7`), so
+   multi-area layers exist — this one is single.
+3. **Same ring set, different order, same area.** On `; Z_HEIGHT: 52` both
+   oracles emit 2537 moves and the same 1474 ironing segments, and the same count
+   of ring-to-ring gaps above 0.35 mm (10); only the maximum gap differs
+   (Native 42.910 mm, Ares 34.000 mm). That is the signature of one ring set
+   chained in a different internal order.
+
+With `no_sort` making `can_reverse()` false
+(`ExtrusionEntityCollection.hpp:78-85,118-123`), `chained_path_from` returns the
+collection unchanged and `first_point`/`last_point` are `entities.front()`/
+`back()`, so emitted ring order is the stored fill order. The boundary is the
+ring order and start point produced by `FillConcentric::_fill_surface_single`
+upstream versus `crate::fill::concentric_sparse::fill_concentric_sparse` invoked at
+`fill_entities/ironing.rs:118-167` on the Ares side.
+
+The frozen RED pins that boundary:
+`crates/ares-cli/tests/orca_parity/runner/concentric_ironing_order.rs` with input
+`tests/parity/concentric-ironing-order/project.3mf`
+(sha256 `7143117d16ff40c408a30ecaba3abf504aa22aa64cd777b399834ff1d464dc6c`).
+It slices Native twice (banner-normalized equality), then compares API and the
+real CLI against Native with `compare_ordered_bytes_generator_only` — no M73 or
+marker masking. Both modes fail at byte 6016866, line 257367:
+
+```
+expected  G1 X162.816 Y88.715 F60000
+actual    G1 X162.816 Y103.715 F60000
+```
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
