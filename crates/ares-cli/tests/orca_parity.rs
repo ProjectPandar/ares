@@ -47,6 +47,9 @@ mod per_object_skirt_min_brim;
 #[path = "orca_parity/per_object_skirt_min_length.rs"]
 mod per_object_skirt_min_length;
 
+#[path = "orca_parity/staggered_seam_interpolation.rs"]
+mod staggered_seam_interpolation;
+
 #[path = "orca_parity/project_settings_substitution.rs"]
 mod project_settings_substitution;
 
