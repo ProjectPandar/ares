@@ -1,0 +1,168 @@
+{
+  "upstream": "ExtrusionEntity.hpp485; ExtrusionEntity.cpp471-505,550-554; GCode.cpp5940-5949",
+  "approved_spec": "fafec2987",
+  "cases": {
+    "control": {
+      "sha256": "f5180678b43d3f1895b02aa0b8c4ed096d1792c41fa0ce9217791d6ef0f7f454",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ec410458b0d72169a4319f680de452a07cd4265a5873174fe7d0860fcd47479",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35b62beaab5a7b361f765dd6c1053f141b0eb0b29f9abd15db9e85cef4a621e0",
+        "Metadata/project_settings.config": "731d9dd4911893a632fccac66e46abe279994f03b22ad06d3f635424217dc1c9",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-next-entire-min1/control/exported.3mf",
+      "settings": {
+        "seam_position": "aligned",
+        "seam_slope_type": "external",
+        "seam_slope_entire_loop": "0",
+        "seam_slope_inner_walls": "1",
+        "seam_slope_min_length": "20",
+        "seam_gap": "10%",
+        "wall_loops": "2",
+        "staggered_inner_seams": "0",
+        "wipe": [
+          "0"
+        ]
+      }
+    },
+    "positive": {
+      "sha256": "a99f4752e06f36102488649a944233cacb0cb2541ec42e03fa7ed431a8ac98ee",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ec410458b0d72169a4319f680de452a07cd4265a5873174fe7d0860fcd47479",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35b62beaab5a7b361f765dd6c1053f141b0eb0b29f9abd15db9e85cef4a621e0",
+        "Metadata/project_settings.config": "0ffd08289c32bb408b08d8d22c8f5543b5e56eb02f945d5ff1ebd4082b22884c",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-next-entire-min1/positive/exported.3mf",
+      "settings": {
+        "seam_position": "aligned",
+        "seam_slope_type": "external",
+        "seam_slope_entire_loop": "1",
+        "seam_slope_inner_walls": "1",
+        "seam_slope_min_length": "20",
+        "seam_gap": "10%",
+        "wall_loops": "2",
+        "staggered_inner_seams": "0",
+        "wipe": [
+          "0"
+        ]
+      }
+    },
+    "no-inner-control": {
+      "sha256": "0a8f2e4ffac21a912c663cfd3498f166e533cfe86fad7f58f0a4ea9af18156e5",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ec410458b0d72169a4319f680de452a07cd4265a5873174fe7d0860fcd47479",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35b62beaab5a7b361f765dd6c1053f141b0eb0b29f9abd15db9e85cef4a621e0",
+        "Metadata/project_settings.config": "2b8a8ee4b310b775dff846ecb73160dddf5de4537c392c6cab9c8385ad0e564a",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-next-entire-min1/no-inner-control/exported.3mf",
+      "settings": {
+        "seam_position": "aligned",
+        "seam_slope_type": "external",
+        "seam_slope_entire_loop": "1",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_min_length": "20",
+        "seam_gap": "10%",
+        "wall_loops": "2",
+        "staggered_inner_seams": "0",
+        "wipe": [
+          "0"
+        ]
+      }
+    },
+    "zero-gap-control": {
+      "sha256": "5bb0a0e28d6b3ea5102b833406b9c508c25a168e959984465c6f4c2ab191c59c",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ec410458b0d72169a4319f680de452a07cd4265a5873174fe7d0860fcd47479",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35b62beaab5a7b361f765dd6c1053f141b0eb0b29f9abd15db9e85cef4a621e0",
+        "Metadata/project_settings.config": "e1a7afad6714733a4006d042c4250b9723cb8effad044b5417f621bdcff8642e",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-next-entire-min1/zero-gap-control/exported.3mf",
+      "settings": {
+        "seam_position": "aligned",
+        "seam_slope_type": "external",
+        "seam_slope_entire_loop": "1",
+        "seam_slope_inner_walls": "1",
+        "seam_slope_min_length": "20",
+        "seam_gap": "0%",
+        "wall_loops": "2",
+        "staggered_inner_seams": "0",
+        "wipe": [
+          "0"
+        ]
+      }
+    },
+    "length100": {
+      "sha256": "0d9d223e7276a81043f2e8640e7199bb40a1a6a49f015d159c8842633fb5f141",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ec410458b0d72169a4319f680de452a07cd4265a5873174fe7d0860fcd47479",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35b62beaab5a7b361f765dd6c1053f141b0eb0b29f9abd15db9e85cef4a621e0",
+        "Metadata/project_settings.config": "5bc33412e7a78c59a87ba2a77e5331ceeaba6de5d2801dde3819bbf5b43e0bb7",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-next-entire-min1/length100/exported.3mf",
+      "settings": {
+        "seam_position": "aligned",
+        "seam_slope_type": "external",
+        "seam_slope_entire_loop": "0",
+        "seam_slope_inner_walls": "1",
+        "seam_slope_min_length": "100",
+        "seam_gap": "10%",
+        "wall_loops": "2",
+        "staggered_inner_seams": "0",
+        "wipe": [
+          "0"
+        ]
+      }
+    }
+  },
+  "sole_key_pairs": [
+    [
+      "control",
+      "positive",
+      "seam_slope_entire_loop"
+    ],
+    [
+      "positive",
+      "no-inner-control",
+      "seam_slope_inner_walls"
+    ],
+    [
+      "positive",
+      "zero-gap-control",
+      "seam_gap"
+    ],
+    [
+      "control",
+      "length100",
+      "seam_slope_min_length"
+    ]
+  ]
+}
