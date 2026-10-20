@@ -552,6 +552,51 @@ eec/entity into `islands[island_idx]`, `GCode.cpp:6211-6234` walks `by_region` i
 Still excluded: `chain_segments_greedy` internals, the `extrusion_islands.rs` assignment
 rule itself, `fill_entities/ironing.rs`, the clipper, and any post-hoc reordering.
 
+### Superseding 8f8829e4f: same ironing call, but no side is nearest-first (arithmetic corrected)
+
+`8f8829e4f`'s "island visit order" conclusion is **superseded**. Two corrections:
+
+1. **Arithmetic.** The head-relative distances were miscalculated there. Corrected
+   (head = `(132.474, 119.057)`, mm x 1e6):
+
+   ```
+   stack at Y83.269  (first)  d = 46,919,270
+   stack at Y88.715  (last)   d = 42,910,068
+   stack at Y98.269  (first)  d = 36,780,129
+   stack at Y103.715 (last)   d = 34,000,205
+   stack at Y108.269 (first)  d = 32,202,762
+   stack at Y113.269 (last)   d = 30,889,123   <- globally nearest
+   ```
+   So the nearest candidate is the `Y113.269` stack, and **neither side emits it first**
+   (Native starts at `Y88.715`, Ares at `Y103.715`). The earlier claim that
+   "neither side picks the nearest, therefore one stack per call" was built on a wrong
+   value and is withdrawn.
+
+2. **Structure (as the coordinator required, full G-code, not just ironing blocks).**
+   Lines 257,200-257,380 were classified move by move in both files: the run pattern is
+   identical on both sides (`travel` + a couple of meta lines + `extrude`, repeated),
+   with **no wall or infill segment anywhere between block #11 and block #12**, and the
+   big rings (#0-#11, single-extrude blocks) continue directly into the small stacks
+   (#12+, four-extrude blocks). Since upstream emits each island's walls/infill/ironing
+   consecutively (`GCode.cpp:5434-5468`) and both sides are byte-identical before line
+   257,365, the two stacks cannot belong to different islands. They are emitted by the
+   **same** `extrude_infill(print, by_region_specific, true)` call, i.e. the same
+   region's `region.infills` list.
+
+So the open question is no longer "which island first" but: inside one
+`extrude_infill(ironing)` call, `chain_and_reorder_extrusion_entities(extrusions,
+m_last_pos)` is expected to take the nearest candidate, yet neither implementation does,
+and the two pick *different* non-nearest candidates. That means either the chain's
+`start_near` is not `m_last_pos` at that moment in one of them, or the candidate sets
+differ in size/endpoints. This must be settled with one read-only runtime observation
+(GDB: `m_last_pos`/`start_near` and the size of `extrusions` at
+`GCode.cpp:6211-6234`; Ares: `local_cursor` and `region.ironing.len()` at
+`layer.rs:148-165`).
+
+GREEN boundary: still open — explicitly NOT the island visit order (withdrawn), NOT
+`chain_segments_greedy` internals (no tie), NOT the clipper, NOT
+`fill_entities/ironing.rs`.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
