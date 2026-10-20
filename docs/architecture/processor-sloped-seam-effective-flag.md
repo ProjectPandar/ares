@@ -36,26 +36,27 @@ not a separately deferred prerequisite: without it this witness cannot turn gree
 
 ## Exact Rust destination and single owner
 
-- Add the shared source-owned derivation under
-  `project/effective_config/scarf_joint_seam.rs`, exposed within ares-core.
-  Its inputs are the effective full settings and the original model objects'
-  typed object/volume/layer-range option sources. `ProjectObject::region_overrides`,
-  `volumes`, and `layer_config_ranges` preserve the three source paths. Reuse
-  the existing typed override/inheritance access, without resolving or cloning
-  complete per-volume configs merely to inspect this one enum.
-- The shared function is the ONLY owner of the PrintApply any_of expression,
-  including explicit incoming true. Prefer borrowed sources and lazy any_of.
-  Do not reconstruct it independently in a formatter, processor or GUI adapter.
+- The ONLY PrintApply any_of owner is the existing
+  `print_apply/apply_scarf_joint_seam_state.rs::staged_apply_scarf_joint_seam`.
+  Widen only the required module/type/function visibility to pub(crate); preserve
+  its formula and existing unit tests. The
+  `project/effective_config/scarf_joint_seam.rs` module is only a data adapter:
+  construct `StagedApplyScarfJointSeamObject` from original typed object defaults,
+  volume and layer-range option sources, call that owner and apply its set record.
+  Preserve an incoming true when no set record is returned. No second formula.
+- `ProjectObject::region_overrides`, `volumes`, and `layer_config_ranges` preserve
+  the three source paths. Reuse typed override/inheritance access, without resolving
+  or cloning complete per-volume configs merely to inspect this one enum.
 - Feed the derived flag through existing effective-config/slicing handoffs to
   `gcode_emit/processor.rs::ProcessorConfig`, then
   `processor/estimate.rs::Estimate::record`, then
   `processor/estimate/seam.rs::SeamDetector`.
-- `options/config_export/transform.rs::apply_scarf_joint_seam` MUST delegate to
-  that SAME shared derivation. Thread the required model-source context through
-  existing config export calls in `project_slice/state.rs` and
-  `gcode_emit/tool_ordering/recommend.rs` as needed. Configuration-view refreshes
-  must not lose the derived flag. Existing config-only export call sites must
-  supply an explicit source context rather than invent a default-only fallback.
+- Full settings receive the derived flag before materialization/checkpointing;
+  configuration-view refreshes and export clones retain it. Delete the obsolete
+  `options/config_export/transform.rs::apply_scarf_joint_seam` and its call:
+  passing empty objects was a no-op, not a useful delegation. Do not replace it
+  with another formula or empty wrapper. Config export simply clones the effective
+  settings; no writer/helper/test interface changes are required.
 - The current exporter-only default check and the ungated detector are temporary
   compatibility shells around the cited PrintApply/SeamsDetector concepts.
   Replace the duplicate default check, not keep it alongside the new owner.
