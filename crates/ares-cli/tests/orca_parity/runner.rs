@@ -348,12 +348,9 @@ mod cache_identity;
 #[path = "runner/native_replay_reference_migration.rs"]
 pub(super) mod native_replay_reference_migration;
 
-pub(super) struct ExportedCase {
-    pub(super) label: String,
-    pub(super) project: Vec<u8>,
-    project_path: PathBuf,
-    output_dir: PathBuf,
-}
+#[path = "runner/cases.rs"]
+mod cases;
+pub(super) use cases::{CaseInputs, ExportedCase, ParityCase};
 
 pub(super) struct OrcaRunner {
     bin: PathBuf,
@@ -362,21 +359,6 @@ pub(super) struct OrcaRunner {
     /// directory unless ARES_ORCA_CACHE_DIR shares them across runs.
     cache: PathBuf,
     producer: std::sync::OnceLock<cache_identity::Producer>,
-}
-
-pub(super) struct ParityCase {
-    /// Human-readable case label (vendor / printer / variant).
-    pub(super) label: String,
-    pub(super) project: Vec<u8>,
-    pub(super) reference: Vec<u8>,
-}
-
-/// Flattened preset inputs for one parity case.
-pub(super) struct CaseInputs<'a> {
-    pub(super) label: &'a str,
-    pub(super) machine: &'a Map<String, Value>,
-    pub(super) process: &'a Map<String, Value>,
-    pub(super) filaments: &'a [Map<String, Value>],
 }
 
 impl OrcaRunner {
