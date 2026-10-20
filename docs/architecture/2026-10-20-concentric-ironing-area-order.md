@@ -185,6 +185,81 @@ engine would produce. That comparison is the next step and needs the temporary
 Ares instrumentation (or an equivalent runtime probe), which is not started
 without approval.
 
+### Two-pass structure verified; the deviation is already in pass 1
+
+The upstream `intersection_ex(Polygons, Polygons)` is deliberately **two passes**
+(ClipperUtils.cpp):
+
+- `_clipper_ex` → `clipper_do_polytree` (`ClipperUtils.cpp:738-739` → `:642-655`):
+  ```cpp
+  if (auto output = clipper_do<ClipperLib::Paths>(clipType, subject, clip, fillType); !output.empty())
+      return clipper_union<ClipperLib::PolyTree>(output, fillType);
+  return ClipperLib::PolyTree();
+  ```
+- pass 1 `clipper_do<Paths>` (`:303-319`): `AddPaths(subject, ptSubject, true)`,
+  `AddPaths(clip, ptClip, true)`, `Execute(clipType, retval /* Paths */, fillType, fillType)`.
+  The `Paths` overload of `Execute` finalises through `BuildResult(Paths&)`
+  (`clipper.cpp:2779-2798`), which walks `m_PolyOuts` in order and only skips
+  `!outRec.Pts` and `cnt < 2` — no orientation grouping, no sort. (Note this is
+  *more permissive* than `BuildResult2(PolyTree&)` at `:2801-2855`, which also
+  drops closed rings with `cnt < 3`.)
+- pass 2 `clipper_union<PolyTree>` (`:334-346`): a fresh `Clipper`, `AddPaths(output,
+  ptSubject, true)`, `Execute(ctUnion, retval /* PolyTree */, fillType, fillType)`
+  → `BuildResult2` → `PolyTreeToExPolygons` (`:169-195`).
+
+Ares is the same two passes, same skip rules:
+
+- `boolean_ex.rs:171-185` `execute_two_pass`: `execute_paths(operation, NonZero,
+  NonZero)` then a fresh `Clipper` + `add_closed_paths(&paths, Subject)` +
+  `execute_polytree(Union, NonZero, NonZero).into_expolygons()`.
+- `output/fixup.rs:47-67` `build_paths`/`collect_out_paths` is `BuildResult(Paths&)`
+  verbatim: iterate `out_recs` in order, skip `points == None`, skip `count < 2`,
+  collect from `front.previous` backwards.
+- `polytree.rs:250-287` `build_polytree` and `:67-81` `into_expolygons` match
+  `BuildResult2` / `PolyTreeToExPolygons`.
+
+So a "single pass" mismatch is **ruled out**: both sides run Paths→union(PolyTree),
+with equivalent per-pass output rules.
+
+### Where the order actually diverges (measured, route (a))
+
+Temporary instrumentation (uncommitted, reverted; `ARES_CLIP_ORDER_DBG` in
+`output/fixup.rs` and `polytree.rs`) printed the pass-1 and pass-2 sequences for
+the target layer:
+
+```
+Ares PASS1_OUT  (BuildResult(Paths), i.e. m_PolyOuts order):
+  [0](2.80,-0.30) [1](17.80,-0.30) [2](32.80,-0.30)
+  [3](2.80,-15.30) [4](17.80,-15.30) [5](32.80,-15.30)
+  [6](2.80,-30.30) [7](17.80,-30.30) [8](32.80,-30.30)      (mm, y-band groups, x ASCENDING inside a band)
+Ares PASS2_TREE (after the union(PolyTree) pass):
+  [0](32.80,+0.30) [1](17.80,+0.30) [2](2.80,+0.30) ... same y bands, x DESCENDING
+```
+Native, on the same layer, emits x-grouped with the y direction alternating
+(`(32.8,+0.3) (32.8,-14.9) (32.8,-29.9) (17.8,-29.9) (17.8,-14.9) (17.8,+0.3) …`),
+which is exactly the `polys` input order (`record.slices`), not a y-banded order.
+
+Because Ares' **pass 1 already produces y-banded rings**, the divergence exists
+before pass 2, i.e. in the sweep that creates the output rings, not in the
+union(PolyTree) pass and not in `BuildResult`. Combined with the earlier finding
+that all four order-bearing engine sites (minima sort, minima consumption,
+scanbeam, AEL tie-break) match upstream line-for-line, the remaining candidate is
+the **within-scanband order of local minima that share the same Y**:
+
+- upstream orders them with `std::sort(m_MinimaList, lm1.Y < lm2.Y)`
+  (`clipper.cpp:970-972`) — a comparator that only looks at `Y`, so equal-Y
+  entries keep whatever order the unstable `std::sort` leaves them in, and
+  `InsertLocalMinimaIntoAEL` then consumes `m_MinimaList.back()` (`:1492-1498`);
+- Ares reproduces that with `fixed_gcc_sort_by(&mut self.minima, a.y < b.y)`
+  (`minima.rs:28`) plus `minima.last()`/`pop()` (`:54-60`).
+
+So the concrete rule to pin next is the **equal-Y tie-break produced by the
+gcc `std::sort` emulation vs the layout the reference build actually gets**, since
+that is the only remaining input to "which ring is created first inside one
+scanband". This is a runtime/排序细节 question, not a missing pass and not a
+`BuildResult` difference; it must be resolved before any fix, and reordering the
+produced polygons afterwards stays forbidden.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
