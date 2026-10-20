@@ -28,6 +28,7 @@ use generate::{generate_standard_thick_polylines, generate_thick_polylines};
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
@@ -47,9 +48,7 @@ pub(super) fn append(
             let generated = generate_thick_polylines(
                 domain,
                 spacing,
-                scale
-                    .checked_scale(f64::from(fill.params.flow.height))
-                    .unwrap(),
+                layer_height,
                 minimum_nozzle_diameter,
                 scale,
             )?;
@@ -83,6 +82,7 @@ pub(super) fn append(
 pub(super) fn append_configured(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
@@ -167,7 +167,7 @@ pub(super) fn append_configured(
             polylines.extend(generate_standard_thick_polylines(
                 domain,
                 spacing,
-                scale.checked_scale(f64::from(params.flow.height)).unwrap(),
+                layer_height,
                 minimum_nozzle_diameter,
                 scale,
             )?);

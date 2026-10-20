@@ -13,7 +13,7 @@ use super::geometry_error;
 pub(super) fn generate_thick_polylines(
     expolygon: ExPolygon,
     spacing: i64,
-    layer_height: i64,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<Vec<ThickPolyline>, SliceError> {
@@ -30,7 +30,7 @@ pub(super) fn generate_thick_polylines(
 pub(super) fn generate_standard_thick_polylines(
     expolygon: ExPolygon,
     spacing: i64,
-    layer_height: i64,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<Vec<ThickPolyline>, SliceError> {
@@ -51,7 +51,7 @@ pub(super) fn generate_standard_thick_polylines(
 fn generate_with_mode(
     expolygon: ExPolygon,
     spacing: i64,
-    layer_height: i64,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
     standard: bool,
@@ -91,7 +91,7 @@ fn generate_with_mode(
         inner_spacing: spacing,
         inset_count: loops_count,
         outer_wall_inset: 0,
-        layer_height: layer_height as f64 * scale.factor(),
+        layer_height,
         min_bead_width: scale.checked_scale(0.85 * minimum_nozzle_diameter).unwrap(),
         min_feature_size: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         transition_length: scale

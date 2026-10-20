@@ -297,6 +297,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 super::concentric::append(
                     &mut output,
                     fill,
+                    layer.height,
                     minimum_nozzle_diameter,
                     traversal.scale,
                 )?;
@@ -316,6 +317,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 super::concentric::append_configured(
                     &mut output,
                     fill,
+                    layer.height,
                     minimum_nozzle_diameter,
                     traversal.scale,
                 )?;

@@ -27,7 +27,7 @@ fn task22o200_concentric_internal_generates_positive_variable_width_loops() {
         Vec::new(),
     );
 
-    let output = generate_thick_polylines(expolygon, scaled(0.4), scaled(0.2), 0.4, scale).unwrap();
+    let output = generate_thick_polylines(expolygon, scaled(0.4), 0.2, 0.4, scale).unwrap();
 
     assert!(output.len() > 1);
     assert!(output.iter().all(|line| {
@@ -115,7 +115,7 @@ fn task22o203_concentric_arachne_matches_source_narrow_branch() {
         Vec::new(),
     );
     let mut output =
-        generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
+        generate_thick_polylines(domain, 377_079, 0.2, 0.4, CoordinateScale::Normal).unwrap();
     finalize_polylines(&mut output, 0, 40_000.0);
     assert!(output.iter().any(|line| {
         line.points.windows(3).any(|points| {
@@ -182,7 +182,7 @@ fn task22o205_concentric_arachne_matches_source_fractional_vertex() {
     );
 
     let output =
-        generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
+        generate_thick_polylines(domain, 377_079, 0.2, 0.4, CoordinateScale::Normal).unwrap();
     let target = Point::new(-3_822_737, -17_415_945);
     let (line, index) = output
         .iter()
@@ -272,14 +272,15 @@ fn task22o204_concentric_reorders_each_fill_expolygon_independently() {
     append(
         &mut actual,
         make_fill(vec![right.clone(), left.clone()]),
+        0.2,
         0.4,
         scale,
     )
     .unwrap();
 
     let mut expected = LayerFillEntities::default();
-    append(&mut expected, make_fill(vec![right]), 0.4, scale).unwrap();
-    append(&mut expected, make_fill(vec![left]), 0.4, scale).unwrap();
+    append(&mut expected, make_fill(vec![right]), 0.2, 0.4, scale).unwrap();
+    append(&mut expected, make_fill(vec![left]), 0.2, 0.4, scale).unwrap();
 
     assert_eq!(actual.collections, expected.collections);
     assert_eq!(actual.collections.len(), 2);
@@ -313,7 +314,7 @@ fn concentric_arachne_matches_source_single_bead_peak_filtering() {
         Vec::new(),
     );
     let mut output =
-        generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
+        generate_thick_polylines(domain, 377_079, 0.2, 0.4, CoordinateScale::Normal).unwrap();
     finalize_polylines(&mut output, 0, 40_000.0);
 
     let actual = output
