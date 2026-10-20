@@ -20,6 +20,10 @@ pub(super) fn placement_modes(
     prepared: &[Vec<OrderedExtrusionLayer>],
     spiral_mode: bool,
 ) -> Vec<Option<ProcessSeamPosition>> {
+    // GCode.cpp:5769-5775 bypasses perimeter SeamPlacer for configured spiral mode.
+    if spiral_mode {
+        return vec![None; objects.len()];
+    }
     objects
         .iter()
         .enumerate()
@@ -30,12 +34,11 @@ pub(super) fn placement_modes(
                     .wall_direction
                     == crate::ProcessWallDirection::Clockwise
                     && prepared_cw_rectangles_have_source_seams(&prepared[index])
-                    && (spiral_mode
-                        || !object.all_regions.iter().any(|region| {
-                            region.seam_slope_type != crate::ProcessSeamScarfType::None
-                                && region.seam_slope_conditional.0
-                                && region.scarf_overhang_threshold.0 > 0.0
-                        })) =>
+                    && !object.all_regions.iter().any(|region| {
+                        region.seam_slope_type != crate::ProcessSeamScarfType::None
+                            && region.seam_slope_conditional.0
+                            && region.scarf_overhang_threshold.0 > 0.0
+                    }) =>
             {
                 None
             }
