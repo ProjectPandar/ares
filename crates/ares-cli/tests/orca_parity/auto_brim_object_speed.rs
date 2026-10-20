@@ -17,7 +17,7 @@ fn auto_brim_object_speed_lookup_inner_override() {
         ),
         "5524e86cb65791afff41b03f9ea00a6866bbc43978367c19829fab120ed57fd2",
         true,
-        true,
+        Some((GLOBAL_AUTO, "auto-brim-speed-native-control-")),
     );
 }
 
@@ -28,7 +28,7 @@ fn auto_brim_object_speed_lookup_global_control() {
         GLOBAL_AUTO,
         "e862e3a09ab896c964f2caad70e974f880354c79e740238186cfc6ab609c27d5",
         true,
-        false,
+        None,
     );
 }
 
@@ -39,7 +39,7 @@ fn auto_brim_object_speed_lookup_no_brim_global_control() {
         include_bytes!("../../../../tests/parity/auto-brim-object-speed/no_brim-global-only.3mf"),
         "59ac1c8bac3851349e5d4ddb0645b46d8896f0778fea13cd692b4c652b2a80a5",
         false,
-        false,
+        None,
     );
 }
 
@@ -52,11 +52,17 @@ fn auto_brim_object_speed_lookup_no_brim_inner_control() {
         ),
         "219e0806e2ca7e0c04f888c3129c9940692608317b784e8d5384dfc57be86978",
         false,
-        false,
+        None,
     );
 }
 
-fn run(prefix: &str, project: &[u8], expected_sha: &str, has_brim: bool, changed_brim: bool) {
+pub(super) fn run(
+    prefix: &str,
+    project: &[u8],
+    expected_sha: &str,
+    has_brim: bool,
+    changed_brim_control: Option<(&[u8], &str)>,
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -65,13 +71,13 @@ fn run(prefix: &str, project: &[u8], expected_sha: &str, has_brim: bool, changed
     let native_moves = brim_moves(&case.native);
     assert_eq!(case.native.contains(";TYPE:Brim\n"), has_brim);
     assert_eq!(!native_moves.is_empty(), has_brim);
-    if changed_brim {
-        let control = NativeCase::slice(&runner, GLOBAL_AUTO, "auto-brim-speed-native-control-");
+    if let Some((control_project, control_prefix)) = changed_brim_control {
+        let control = NativeCase::slice(&runner, control_project, control_prefix);
         let control_moves = brim_moves(&control.native);
         assert!(!control_moves.is_empty());
         assert_ne!(
             native_moves, control_moves,
-            "object speed changes Native Brim geometry"
+            "Native control changes actual Brim geometry"
         );
     }
     let (api, cli) = case.compare(ares_core::GenerationMetadata::deterministic(

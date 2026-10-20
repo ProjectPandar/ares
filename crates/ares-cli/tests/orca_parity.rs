@@ -76,6 +76,8 @@ mod config_floats_header_serialization;
 mod auto_brim_efc_outline;
 #[path = "orca_parity/auto_brim_exact_group_assignment.rs"]
 mod auto_brim_exact_group_assignment;
+#[path = "orca_parity/auto_brim_object_adhesion.rs"]
+mod auto_brim_object_adhesion;
 #[path = "orca_parity/auto_brim_object_speed.rs"]
 mod auto_brim_object_speed;
 #[path = "orca_parity/auto_brim_small_diagonal.rs"]
