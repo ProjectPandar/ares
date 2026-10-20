@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// `use_brim_efc_outline` (Brim.cpp:56-62). The EFC base-slices swap of
-/// `:468-472` is brim-type agnostic upstream; btEar/NoBrim remain deferred.
+/// `:468-472` is brim-type agnostic upstream; NoBrim remains deferred.
 pub(super) fn efc_enabled(options: &ObjectOptions) -> bool {
     matches!(
         options.brim_type,
@@ -16,6 +16,7 @@ pub(super) fn efc_enabled(options: &ObjectOptions) -> bool {
             | ProcessBrimType::OuterOnly
             | ProcessBrimType::InnerOnly
             | ProcessBrimType::OuterAndInner
+            | ProcessBrimType::BrimEars
             | ProcessBrimType::Painted
     ) && options.brim_use_efc_outline.0
         && options.elefant_foot_compensation.0 > 0.0
