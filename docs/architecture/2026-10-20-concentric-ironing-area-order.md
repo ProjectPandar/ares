@@ -472,6 +472,41 @@ shortest_path/entity_chain.rs` and the `chain_segments_greedy` port it calls
 that picks between two equidistant small stacks. Reordering emitted entities
 afterwards remains forbidden; the island assignment must not change.
 
+### Tie-break check: NOT a tie — the two stacks are grouped differently
+
+Read-only, integer-scaled coordinates (mm x 1e6), head = end of block #11
+(`(133.474, 119.057)`, identical on both sides):
+
+```
+upper stack candidates: d(first)=46,278,871   d(last)=42,208,884   min = 42,208,884
+lower stack candidates: d(first)=40,525,867   d(last)=35,959,615   min = 35,959,615
+```
+
+The two minima differ by ~6.2e6 scaled units (~6.2 mm), so this is **not a tie**, and the
+lower stack is clearly nearer to the head. Consequences:
+
+- Ares emits the lower stack first — the plain nearest-neighbour choice.
+- Native emits the upper stack first, i.e. it does **not** take the nearest candidate here.
+
+Therefore the greedy candidate set is not the same on both sides: for Native the two
+small stacks cannot both be candidates of the same `chain_segments_greedy` call at this
+point, or the head each call starts from is different. Per the agreed decision rule, a
+non-tie sends the boundary **back to the assembly side**: what differs is the grouping of
+ironing entities into chain calls (which stacks are handed to one
+`chain_and_reorder_extrusion_entities` / `chained_path_from` invocation), not the
+tie-break inside `chain_segments_greedy`.
+
+This also supersedes the "first divergent function = chain_segments_greedy" line above:
+the chain call itself is upstream-faithful, and the input grouping is what differs.
+
+**Revised GREEN boundary:** the grouping of ironing entities into per-chain-call sets on
+the Ares side — i.e. how many ironing collections a single island/region's ironing phase
+hands to `chain_and_reorder_entities_flips` and to `chained_path_from`
+(`gcode_emit/motion/layer.rs:42-59` region split, `:148-165` chaining), against upstream
+`GCode.cpp:6211-6234` where each `region`'s `region.infills` list is chained once and each
+eec is then inner-chained. Still excluded: `chain_segments_greedy` internals, the clipper,
+`fill_entities/ironing.rs`, and any post-hoc reordering.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
