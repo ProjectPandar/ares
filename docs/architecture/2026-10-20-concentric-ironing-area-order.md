@@ -260,6 +260,66 @@ scanband". This is a runtime/排序细节 question, not a missing pass and not a
 `BuildResult` difference; it must be resolved before any fix, and reordering the
 produced polygons afterwards stays forbidden.
 
+### Correction: the order is decided on the G-code side, not by the clipper
+
+The counter-argument is decisive and the earlier clipper direction is withdrawn: a
+Native emission order that is x-grouped with the y direction alternating cannot be
+produced by any Y-descending sweep (rings in different rows would have to be y-banded
+for any equal-Y tie-break). So Native's G-code order is **not** its ironing_areas order.
+
+Upstream G-code side (`src/libslic3r/GCode.cpp`):
+
+- `:5466-5467` -- ironing is emitted **per island**, inside the island loop:
+  `gcode += this->extrude_infill(print, by_region_specific, true);`
+- `:6211-6234` -- `GCode::extrude_infill(print, by_region, ironing)`:
+  outer loop `for (const ObjectByExtruder::Island::Region &region : by_region)`; builds
+  `extrusions` = that region's `region.infills` filtered to `role() == erIroning`; then
+  `chain_and_reorder_extrusion_entities(extrusions, m_last_pos.to_point())` (greedy
+  nearest-neighbour reorder of the per-area ironing entities from the current position);
+  then for each entity `eec->chained_path_from(m_last_pos.to_point())`, i.e. the inner
+  chain runs even though the eec was built with `no_sort = true` (`Fill.cpp:1726`).
+
+`Fill.cpp:1714-1731` is what makes that possible: **one ExtrusionEntityCollection per
+ironing area** is pushed into `layerm->fills.entities`, so a region carries several eecs
+and the greedy chain has something to reorder.
+
+Ares has the same structure on the G-code side:
+
+- `gcode_emit/motion/layer.rs:36` `for island in &mut layer.islands` -- ironing is emitted
+  per island in the last per-region phase (`:105-116`), after walls, infills and
+  infill-first walls, matching `GCode.cpp:5450-5468`.
+- `layer.rs:56` splits entities into `region.ironing` via `is_ironing_entity`, mirroring
+  the `role() == erIroning` filter.
+- `layer.rs:148-151` -> `shared_reversals.rs:95-110` `chain_infill` -> `:59-93` `chain` ->
+  `chain_and_reorder_entities_flips(entities, Some(start))` (the
+  `chain_and_reorder_extrusion_entities` port).
+- `layer.rs:160-165` applies `collection.chained_path_from(local_cursor(...))` per
+  collection (the inner re-chain).
+
+### Where it actually breaks: the per-area collections are collapsed
+
+Temporary instrumentation (`ARES_IRON_EMIT_DBG` in `layer.rs`, reverted) printed
+`region.ironing` per island/region:
+
+```
+IRON_EMIT region=0 entities=1 C1
+IRON_EMIT region=0 entities=1 C1
+IRON_EMIT region=0 entities=5 C1,C1,C1,C1,C1
+IRON_EMIT region=0 entities=4 C1,C1,C1,C1
+counts: entities=1 x56, =3 x12, =5 x6, =4 x5, =6 x4, =2 x3, =8 x2, =43 x1
+```
+
+The diverging layer is one of the `entities=1` cases: Ares hands the emitter a **single**
+ironing collection holding a single entity. With one entity neither the outer
+`chain_and_reorder` nor the inner `chained_path_from` can permute anything, so the emitted
+order collapses to the area order -- exactly the y-banded order measured earlier
+(`AREAS_OUT`). Upstream has one eec per area on the same layer, so the greedy chain from
+`m_last_pos` produces the serpentine order seen in Native G-code.
+
+Root cause: **the per-area `no_sort` collections that `make_ironing` pushes into
+`fills.entities` are collapsed (merged) before the G-code side chains them**, not a clipper
+ordering difference.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
