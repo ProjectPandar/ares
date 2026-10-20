@@ -380,6 +380,45 @@ matches upstream). Confirmation still needed: the per-collection `first_point()`
 for the diverging layer on both sides, to prove the buckets differ for that reason
 rather than because of a differing `slices` count.
 
+### Confirmation run: first_point comparison (read-only, G-code only)
+
+Matched every ironing block between Native (seeded, labels=0) and Ares by bounding
+box, then compared the first extruded point of each matched area:
+
+```
+blocks native=1243 ares=1243
+bbox-common blocks: 1225   (native-only 0, ares-only 0)
+matched areas with SAME first point: 1213 ; DIFFERENT first point: 12
+example of the 12:  bbox=(162.82, 98.27, 168.26, 103.72)
+   native_first=(162.816, 98.269)   ares_first=(162.816, 103.715)   n=5/5
+```
+
+Reading:
+
+- 1,213 of 1,225 matched areas start at the **same** point, so the ironing *start
+  point* is not the differentiator (the hypothesis that the root cause sits in the
+  ironing generation path is therefore **not supported** for this layer).
+- The 12 differing areas are a pure **ring-stack direction reversal**: identical
+  bbox, identical 5 segments, first and last point swapped. That cannot change an
+  island bucket (same bbox), and it is a consequence of the inner
+  `chained_path_from` starting from a different head position.
+- Both sides are byte-identical through G-code line 257,365, i.e. every wall and
+  perimeter of that layer matches, so the layer's `slices` partition is the same on
+  both sides. Combined with the matched first points, the island buckets must also be
+  the same — which contradicts the earlier "each island holds one collection ⇒ no
+  reorder possible" reading of `entities=1`.
+
+Open contradiction (recorded, not resolved): with identical areas, identical
+`first_point` for 1,213/1,225, and identical `slices`, the assembly must produce the
+same buckets, yet the emitted order differs. So the remaining candidate is **not**
+the bucket content but the **order in which the buckets are visited / the
+`m_last_pos` the chain starts from** — i.e. the island iteration and the per-island
+starting head position, which is exactly what `chained_path_from(m_last_pos)` and the
+outer `chain_and_reorder_extrusion_entities(extrusions, m_last_pos)` depend on. The
+next read-only step must therefore compare, per island, the head position the chain
+starts from on both sides (Ares: `local_cursor(state, geometry)` at the ironing phase;
+Native: `m_last_pos` at `GCode.cpp:6211-6234`), not the island assignment.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
@@ -438,6 +477,28 @@ rather than because of a differing `slices` count.
 - Full-output strict comparison through the existing harness comparator; only
   the generator line is normalised, no extra masks.
 - `control-rectilinear` and the other ironing legs keep passing.
+
+## RED plan (ready; runs in the worker window)
+
+Scope: one new leg in `crates/ares-cli/tests/orca_parity/option_coverage/ironing_pattern.rs`,
+plus the five controls, full-output strict comparison through the existing harness
+comparator (only the generator line is normalised; no extra masks).
+
+- Fixture: `tests/parity/summary/time-cost.3mf` patched exactly like the merged
+  alignedrectilinear leg: `ironing_type=top`, `ironing_pattern=concentric`,
+  `gcode_label_objects=0` (real reachable value; removes the per-process
+  `id:`/`printing object` variance).
+- Target leg `ironing_pattern=concentric`: RED on pre-slice code with 240 differing
+  lines in **both** oracles, first diff at G-code line 257,365 (Native irons the
+  upper ring stack at `X162.816 Y88.715`, Ares the lower at `X162.816 Y103.715`).
+- Controls that must stay byte-equal in the same run: `ironing_angle=45`;
+  `ironing_angle=30` + `ironing_angle_fixed=1`; `ironing_type=solid`;
+  `ironing_spacing=0.2`; `ironing_inset=0`.
+- RED is only accepted together with the GREEN that makes all of them pass in both
+  oracles; no leg may be weakened and no mask may be added.
+- GREEN may not reorder emitted entities after the fact, and may not change
+  `extrusion_islands.rs` island assignment unless the open contradiction above is
+  resolved in favour of the assembly side.
 
 ## Acceptance
 
