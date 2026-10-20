@@ -20,6 +20,9 @@ mod inward_displacement;
 #[path = "orca_parity/thin_safezone.rs"]
 mod thin_safezone;
 
+#[path = "orca_parity/mesh_center_precision.rs"]
+mod mesh_center_precision;
+
 #[path = "orca_parity/closest_lines_runtime.rs"]
 mod closest_lines_runtime;
 
