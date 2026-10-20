@@ -7,6 +7,31 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Default Voronoi detection / rotation repair: prerequisite SPEC request
+
+Painted complete-unit SPECf894/public RED0ce6 are independently approved on5317,
+not integrated. That branch's projection/graph work is now **PAUSED** until this
+separate prerequisite merges: actual frozen painted-split Native MMU calls use
+`REPAIR_SUCCESSFUL`, modified effective local storage (49/50 in one process).
+This is not the completed incident-anchor prerequisite's no-repair rectangle.
+
+Source owner: `Geometry/Voronoi.cpp::construct_voronoi28-73`, copy90-158,
+detect166-240, ordered rotation repair248-362 and source-cited cell-range/
+filtered-planarity/point helpers. Rust target is private
+`ares-core/src/geometry/voronoi/*`, OUTSIDE vendor, with the REAL existing
+`geometry/medial_axis/diagram.rs::build` default-constructor consumer
+(`Geometry/MedialAxis.cpp:458-460`). No raw-Boost substitute or dormant facade.
+Adjacent closing retry, Arachne-wide changes and painted implementation defer.
+
+Order/exit: approve docs SPEC/ARD -> fresh real reachable repaired Native-first
+constructor RED -> wrapper plus real consumer -> independently qualified exact
+GREEN, complete ordered effective arrays/states and consumer regressions,
+fmt/strict/WASM. No tolerance, repair suppression, FFI or backend fallback.
+Durable measured evidence is hash-verified under `~/ares-evidence/worker1/`;
+old hashes are not new-base credit. No FULL/push/merge now; coordinator schedules
+broad validation. [SPEC](architecture/voronoi-default-repair-prerequisite-spec.md),
+[ARD](architecture/voronoi-default-repair-prerequisite-ard.md).
+
 ### Conditional scarf eligibility: SPEC request (2026-10-17)
 
 Approved proposala30db87 selects libslic3r `GCode.cpp::GCode::extrude_loop5777-5785`
