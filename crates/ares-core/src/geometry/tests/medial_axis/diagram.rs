@@ -3,8 +3,15 @@ use boostvoronoi::prelude::SourceCategory;
 use crate::geometry::{Line, Point, medial_axis::diagram};
 
 #[test]
-fn task22o13_single_segment_topology_is_literal_and_source_indexed() {
-    let output = diagram::build(&[Line::new(Point::new(0, 0), Point::new(10, 0))]).unwrap();
+fn task22o13_raw_backend_single_segment_topology_is_literal_and_source_indexed() {
+    use boostvoronoi::prelude::{Builder, Line as BvLine};
+
+    // Raw backend topology only; this open site is outside default consumer parity.
+    let sites = [BvLine::from([0_i64, 0, 10, 0])];
+    let output = Builder::<i64>::default()
+        .with_segments(sites)
+        .and_then(Builder::build)
+        .unwrap();
     assert_eq!(
         (
             output.num_cells(),
@@ -31,7 +38,7 @@ fn task22o13_single_segment_topology_is_literal_and_source_indexed() {
     );
     let edges = (0..output.num_edges())
         .map(|index| {
-            let edge = diagram::edge_index(&output, index);
+            let edge = output.edges()[index].id();
             let value = output.edge(edge).unwrap();
             (
                 edge.u32(),
@@ -203,15 +210,21 @@ fn task22o13_finite_multisite_topology_is_fully_literal() {
 }
 
 #[test]
-fn task22o13_disconnected_segments_pin_point_point_face_and_rotation_order() {
-    let output = diagram::build(&[
-        Line::new(Point::new(0, 0), Point::new(10, 0)),
-        Line::new(Point::new(30, 10), Point::new(40, 10)),
-    ])
-    .unwrap();
+fn task22o13_raw_backend_disconnected_segments_pin_point_point_face_and_rotation_order() {
+    use boostvoronoi::prelude::{Builder, Line as BvLine};
+
+    // Raw backend topology only; these open sites are outside default consumer parity.
+    let sites = [
+        BvLine::from([0_i64, 0, 10, 0]),
+        BvLine::from([30_i64, 10, 40, 10]),
+    ];
+    let output = Builder::<i64>::default()
+        .with_segments(sites)
+        .and_then(Builder::build)
+        .unwrap();
     let point_point_edges = (0..output.num_edges())
         .filter_map(|index| {
-            let edge = diagram::edge_index(&output, index);
+            let edge = output.edges()[index].id();
             let twin = output.edge_get_twin(edge).unwrap();
             let left = output.cell(output.edge_get_cell(edge).unwrap()).unwrap();
             let right = output.cell(output.edge_get_cell(twin).unwrap()).unwrap();
