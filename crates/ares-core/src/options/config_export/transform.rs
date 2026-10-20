@@ -10,7 +10,6 @@ pub(super) fn transformed_for_export(
 ) -> Result<ProjectSettings, SliceError> {
     let mut transformed = source.clone();
     prepare_multi_extruder_cli_defaults(&mut transformed);
-    apply_scarf_joint_seam(&mut transformed);
     apply_cli_oracle_state(&mut transformed, overrides);
     scale_flush_matrix(&mut transformed)?;
     Ok(transformed)
@@ -40,13 +39,6 @@ fn apply_cli_oracle_state(settings: &mut ProjectSettings, overrides: &ExportOver
     if map_changed && let Some(raw) = overrides.enable_prime_tower {
         settings.process.print.enable_prime_tower = raw;
     }
-}
-
-/// The full settings already carry PrintApply's model-derived flag. This
-/// export-only clone has no additional model sources; retain the effective
-/// value through the same owner rather than rechecking the global default.
-fn apply_scarf_joint_seam(settings: &mut ProjectSettings) {
-    crate::project::effective_config::scarf_joint_seam::apply(settings, &[]);
 }
 
 /// The OrcaSlicer CLI slicing path fills per-extruder defaults for

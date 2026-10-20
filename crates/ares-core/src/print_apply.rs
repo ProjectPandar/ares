@@ -257,7 +257,7 @@ mod apply_filament_map_auto_mode_gate_state;
 mod apply_filament_map_mode_guard_state;
 
 #[cfg_attr(not(test), expect(dead_code, reason = "M329 staged before wiring"))]
-mod apply_scarf_joint_seam_state;
+pub(crate) mod apply_scarf_joint_seam_state;
 
 #[cfg_attr(not(test), expect(dead_code, reason = "M328 staged before wiring"))]
 mod apply_support_used_state;
