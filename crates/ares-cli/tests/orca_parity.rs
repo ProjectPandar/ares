@@ -82,10 +82,14 @@ mod auto_brim_object_speed;
 mod auto_brim_small_diagonal;
 #[path = "orca_parity/auto_brim_tables.rs"]
 mod auto_brim_tables;
+#[path = "orca_parity/brim_ears_efc_outline.rs"]
+mod brim_ears_efc_outline;
 #[path = "orca_parity/config_float_header_serialization.rs"]
 mod config_float_header_serialization;
 #[path = "orca_parity/crosshatch_ordering.rs"]
 mod crosshatch_ordering;
+#[path = "orca_parity/efc_outline_case.rs"]
+mod efc_outline_case;
 #[path = "orca_parity/junction_deviation.rs"]
 mod junction_deviation;
 #[path = "orca_parity/per_object_skirt_brim_ears.rs"]
