@@ -26,6 +26,9 @@ mod mesh_center_precision;
 #[path = "orca_parity/processor_sloped_seam.rs"]
 mod processor_sloped_seam;
 
+#[path = "orca_parity/m400_priority.rs"]
+mod m400_priority;
+
 #[path = "orca_parity/classic_seam_overhang.rs"]
 mod classic_seam_overhang;
 
