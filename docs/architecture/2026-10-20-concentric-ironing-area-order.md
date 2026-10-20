@@ -597,6 +597,57 @@ GREEN boundary: still open — explicitly NOT the island visit order (withdrawn)
 `chain_segments_greedy` internals (no tie), NOT the clipper, NOT
 `fill_entities/ironing.rs`.
 
+### Runtime observation: Ares hands the chain one entity in 56 of 90 calls
+
+Correction accepted first: `chain_segments_greedy_constrained_reversals_`
+(`ShortestPath.cpp:92-...`) is a **global greedy** chain builder — it KD-tree indexes all
+segment end points and repeatedly links the globally closest pair; `start_near` only
+chooses which end of the finished chain is traversed first (`:99-104` for the
+`num_segments == 1` case). So "the nearest candidate was not taken first" is *not* an
+anomaly by itself, and that earlier inference is withdrawn.
+
+Ares-side probe (`ARES_IRON_SET_DBG` in `gcode_emit/motion/layer.rs:148-165`, printing
+`local_cursor`, `region.ironing.len()` and each entity's first/last point; temporary,
+reverted — `git diff` empty afterwards). Histogram of the number of ironing entities
+handed to one `emit_infills` call across the whole fixture:
+
+```
+ n=1  x56     n=3  x12     n=5  x6     n=4  x5
+ n=6  x4      n=2  x3      n=8  x2     n=43 x1   n=20 x1
+```
+
+So in the majority of ironing calls Ares passes a **single** entity: `chain_and_reorder_
+entities_flips` runs on a one-element vector and `chained_path_from` on a single-entity
+collection, so neither can change anything and the emitted order equals the assembly
+order. Example (one call, verbatim):
+
+```
+IRON_SET region=0 cursor=(-10813813,-13163656) n=3
+   C{f=(-13365032,-12514704) l=(-13365032,-12514704)}
+   C{f=(-15798452,-12514710) l=(-15798452,-12514710)}
+   C{f=(-10799656,-12514711) l=(-10799656,-12514711)}
+```
+
+Upstream, the same region's `region.infills` carries **one eec per ironing area**
+(`Fill.cpp:1714-1731`) and `extrude_infill` chains that whole list at once
+(`GCode.cpp:6211-6234`), so its greedy chain sees all areas of the region together.
+
+Remaining, and the only thing still open: the **Native** side's `n` and `start_near` for
+the same call(s). Ares' data alone cannot decide whether Native's call also carries one
+entity (in which case the difference is what the *single* entity's own endpoint choice
+does) or several (in which case the difference is the region split). The Native read needs
+GDB on `GCode::extrude_infill` — `m_last_pos` (start_near) and `extrusions.size()` — which
+on this build requires the DWARF symbols; earlier attempts on `Fill.cpp` frames had no
+argument info, so this specific frame must be checked before relying on it.
+
+GREEN boundary (unchanged in substance, now measured on one side): the ironing
+entity grouping per chain call — how many ironing collections one island/region ironing
+phase hands to `chain_and_reorder_entities_flips` / `chained_path_from`
+(`layer.rs:42-59`, `:148-165`) versus upstream's one chain per `region.infills`
+(`GCode.cpp:6211-6234`, one eec per area from `Fill.cpp:1714-1731`). Still excluded:
+`chain_segments_greedy` internals, the clipper, `fill_entities/ironing.rs`, and any
+post-hoc reordering.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
