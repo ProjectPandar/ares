@@ -1,6 +1,6 @@
 # Classic seam producer precision: raw divergence and causal distance slice
 
-Status: docs-only SPEC REVIEW-REQUEST; no production/formal-test/input change.
+Status: SPEC scope approved; Native-first RED authorized, production not begun.
 Code baseline: content-approved `15cecd8c3a4f1f6f49de3b9d7eea526fb2874b67`.
 Branch: `worker6/classic-seam-producer-spec`; approved pre-external branch stays
 at `15cecd8c3`. No rebase or FULL is authorized by this document.
@@ -184,7 +184,16 @@ Do not change comparator equality handling to hide an upstream precision
 loss. Core remains byte/API-oriented and portable to browser WASM, Windows,
 macOS and Linux; no new filesystem, terminal or viewer behavior.
 
-## Future public RED and verification contract — not authorized now
+Read-only embedding check (explicitly deferred): upstream
+`SeamPlacer.cpp:1096-1097` assigns `embedded_distance` from the double signed
+query plus the rounded `0.65f * flow_width` term, narrowing only on assignment
+to float. Rust `context.rs:99-106::populate_embedded_distance` instead first
+receives f32 from `signed_distance_to_slices`, then adds the f32 width term.
+It therefore has the same premature-rounding shape. This fixture has only one
+perimeter region, so embedding stays zero and provides no witness. Do not
+change embedding in this slice; it needs its own Native RED/control.
+
+## Future public RED and verification contract — RED now authorized
 
 Reuse the two existing input-only exports, not new setting searches:
 
@@ -200,8 +209,8 @@ Its 26 differences merely falsify the inactive extra-helper hypothesis;
 keep it external, not a duplicate committed fixture or acceptance loophole.
 Reuse existing archives if any frozen SHA already exists in the repository.
 
-After separate authorization: SPEC -> genuine Native-first public RED ->
-production-only GREEN. Use shared runners, including main e81afae89's
+After SPEC approval and current RED authorization: genuine Native-first
+public RED must precede any separately reviewed production GREEN. Use shared runners, including main e81afae89's
 `runner/native_api_cli.rs` / existing `native_stream_case.rs`, not a copied
 harness. Per input/mode: stable Native double replay before public byte API
 and real CLI; raw API/CLI equality plus complete ordered Native/API and
