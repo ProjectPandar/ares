@@ -16,6 +16,7 @@ pub(super) struct Emission<'a, 'b> {
     pub(super) segment_lengths: &'a [f64],
     pub(super) fitting: &'a [FittedMove],
     pub(super) last_scaled: (i64, i64),
+    pub(super) force_no_extrusion: bool,
     pub(super) properties: PathProperties<'b>,
     pub(super) state: &'a mut EmitState,
 }
@@ -28,6 +29,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         segment_lengths,
         fitting,
         last_scaled,
+        force_no_extrusion,
         properties,
         state,
     } = emission;
@@ -71,7 +73,11 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     for segment in segments {
         match segment {
             arc::Segment::Line { end, length } if length >= SOURCE_EPSILON_MM => {
-                extrusion::linear_segment(output, end, length, properties, state);
+                if force_no_extrusion {
+                    extrusion::force_no_extrusion_segment(output, end, state);
+                } else {
+                    extrusion::linear_segment(output, end, length, properties, state);
+                }
             }
             arc::Segment::Line { .. } => {}
             arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {

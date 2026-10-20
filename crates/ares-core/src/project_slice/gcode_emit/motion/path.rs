@@ -49,19 +49,29 @@ pub(super) fn emit_with_speed(
         emit_inner(
             output,
             points.iter().map(|p| (p.x, p.y)),
-            (properties, speed),
+            (properties, speed, false),
             geometry,
             state,
         )
     } else {
-        emit_inner(output, points, (properties, speed), geometry, state)
+        emit_inner(output, points, (properties, speed, false), geometry, state)
     }
+}
+
+pub(super) fn emit_force_no_extrusion(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    properties: PathProperties<'_>,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) -> Result<(), crate::SliceError> {
+    emit_inner(output, points, (properties, None, true), geometry, state)
 }
 
 fn emit_inner(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
-    (properties, requested_speed): (PathProperties<'_>, Option<f64>),
+    (properties, requested_speed, force_no_extrusion): (PathProperties<'_>, Option<f64>, bool),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<(), crate::SliceError> {
@@ -208,6 +218,7 @@ fn emit_inner(
         state,
         start_travel::Request {
             first_scaled,
+            force_no_extrusion,
             first_x,
             first_y,
             properties,
@@ -306,22 +317,6 @@ fn emit_inner(
     }
     extrusion::speed(output, state.extrusion_feedrate, properties);
     state.current_feedrate = state.extrusion_feedrate;
-    if let Some(target) = state.pending_wipe_before_external_target.take() {
-        output.extend_from_slice(
-            format!("G1 X{} Y{}\n", format_axis(target.x), format_axis(target.y)).as_bytes(),
-        );
-        state.x = target.x;
-        state.y = target.y;
-        state.wipe_start = Some(target);
-        // Upstream wraps the fake wipe path in its own
-        // `;_EXTRUDE_SET_SPEED..;_EXTRUDE_END` block (`GCode.cpp:5884-5893` —
-        // `extrude_path` on the force-no-extrusion polyline), then the wall
-        // loop opens a fresh block; the cooling buffer therefore attributes
-        // the wipe move's time to its own entry instead of the wall block.
-        output.extend_from_slice(b";_EXTRUDE_END\n");
-        extrusion::speed(output, state.extrusion_feedrate, properties);
-        state.current_feedrate = state.extrusion_feedrate;
-    }
     // `GCode.cpp:7115`: sloped paths run through the same processed
     // `extrude_path` loop when `estimate` produced `new_points` — the
     // `sloped` flag only changes the per-segment emission to
@@ -335,6 +330,7 @@ fn emit_inner(
             processed: &processed,
             original_speed,
             acceleration,
+            force_no_extrusion,
             properties,
             state,
         });
@@ -372,6 +368,7 @@ fn emit_inner(
         segment_lengths: &segment_lengths,
         fitting: &fitting,
         last_scaled,
+        force_no_extrusion,
         properties,
         state,
     });

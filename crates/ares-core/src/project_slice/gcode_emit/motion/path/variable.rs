@@ -9,6 +9,7 @@ pub(super) struct Emission<'a> {
     pub(super) processed: &'a [overhang::ProcessedPoint],
     pub(super) original_speed: f64,
     pub(super) acceleration: u32,
+    pub(super) force_no_extrusion: bool,
     pub(super) properties: PathProperties<'a>,
     pub(super) state: &'a mut EmitState,
 }
@@ -21,6 +22,7 @@ pub(super) fn emit(command: Emission<'_>) {
         processed,
         original_speed,
         acceleration,
+        force_no_extrusion,
         properties,
         state,
     } = command;
@@ -120,6 +122,8 @@ pub(super) fn emit(command: Emission<'_>) {
                 },
                 state,
             );
+        } else if force_no_extrusion {
+            extrusion::force_no_extrusion_segment(output, end, state);
         } else {
             extrusion::linear_segment(output, end, length, properties, state);
         }

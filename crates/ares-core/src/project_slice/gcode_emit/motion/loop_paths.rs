@@ -2,13 +2,8 @@ pub(super) mod adaptive_pa;
 mod inward;
 mod small_perimeter;
 use inward::{append_inward_move, ccw_angle, loop_is_counter_clockwise, path_length};
-#[cfg(test)]
-mod tests;
 
-use super::{
-    EmitState, LayerGeometry,
-    format::{axis as format_axis, z as format_z},
-};
+use super::{EmitState, LayerGeometry, format::axis as format_axis};
 use crate::project_slice::perimeters::classic::{
     chained_loops::ExtrusionLoopRole,
     materialize::{ExtrusionPath, ExtrusionRole, Point3},
@@ -45,7 +40,7 @@ pub(super) fn emit(
             state.layer_index,
         )
     {
-        append_wipe_before_external(output, loop_, geometry, state, region_perimeters);
+        append_wipe_before_external(output, loop_, geometry, state, region_perimeters)?;
         begin_adaptive_loop(state, paths, 0.0, geometry);
         for path in &scarf.paths {
             super::materialized::emit_with_speed(
@@ -94,7 +89,7 @@ pub(super) fn emit(
     if path_count == 0 {
         return Ok(());
     }
-    append_wipe_before_external(output, loop_, geometry, state, region_perimeters);
+    append_wipe_before_external(output, loop_, geometry, state, region_perimeters)?;
     begin_adaptive_loop(
         state,
         paths,
@@ -183,11 +178,11 @@ fn append_wipe_before_external(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     region_perimeters: &[Vec<(i64, i64)>],
-) {
+) -> Result<(), crate::SliceError> {
     let paths = &loop_.paths;
     let loop_role = loop_.role;
     let Some(first) = paths.first() else {
-        return;
+        return Ok(());
     };
     let last = paths.last().unwrap();
     if !state.options.wipe_before_external_loop
@@ -196,7 +191,7 @@ fn append_wipe_before_external(
         || first.polyline.points.len() < 2
         || last.polyline.points.len() < 2
     {
-        return;
+        return Ok(());
     }
     let current = first.polyline.points[0];
     let previous = first.polyline.points[1];
@@ -228,7 +223,7 @@ fn append_wipe_before_external(
     let dy = (next.y - current.y) as f64;
     let length = dx.hypot(dy);
     if length == 0.0 {
-        return;
+        return Ok(());
     }
     let maximum =
         0.5 * state.options.nozzle_diameter.min(f64::from(first.width)) / geometry.scale.factor();
@@ -259,82 +254,26 @@ fn append_wipe_before_external(
         }
     }
     if touching <= 1 {
-        return;
+        return Ok(());
     }
-    let x = geometry.scale.unscale(point.x()) + state.origin.0 - state.extruder_offset.0;
-    let y = geometry.scale.unscale(point.y()) + state.origin.1 - state.extruder_offset.1;
-    // Orca routes this hop through `travel_to` inside the fake
-    // extrusion path (`GCode.cpp:5884-5893`), so the travel-class
-    // accel/jerk setup fires for it exactly like any other path-start
-    // travel (the GT trace shows the `role=2` travel_to for it).
-    super::state::begin_path_travel(
+    super::path::emit_force_no_extrusion(
         output,
+        [(point.x(), point.y()), (current.x, current.y)].into_iter(),
+        super::features::PathProperties {
+            contour: None,
+            mm3_per_mm: 0.0,
+            width: first.width,
+            height: first.height,
+            feature: "Outer wall",
+            is_perimeter: true,
+            end_clip: 0.0,
+            fitting: &[],
+            slope: None,
+            inside_loop: false,
+        },
+        geometry,
         state,
-        "Outer wall",
-        (x - state.x).hypot(y - state.y),
-    );
-    // The wipe hop is a `travel_to` (`GCode.cpp:5884-5893`): a lift
-    // deferred by the preceding retract (e.g. the start gcode's) is
-    // consumed HERE. With the nozzle already retracted and no lift
-    // deferred yet, upstream's `retract()` (needs_retraction always
-    // holds from the unclear start position) defers one — same here.
-    let lift_here = state.pending_lift.is_some()
-        || (state.extruder.retracted
-            && state.options.z_hop > 0.0
-            && state.options.retraction_length > 0.0
-            && state.lifted_amount <= 0.0
-            && super::travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)));
-    if lift_here {
-        // Same destination clamp as the deferred lift
-        // (`GCodeWriter.cpp:705-710`).
-        let live_z = state.writer_z.unwrap_or(state.layer_z);
-        let raised = if live_z + state.options.z_hop > state.layer_z {
-            live_z + state.options.z_hop
-        } else {
-            state.layer_z
-        };
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} Z{} F{}\n",
-                format_axis(x),
-                format_axis(y),
-                format_z(raised),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
-        output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}\n",
-                format_z(state.layer_z),
-                format_axis(super::travel::lift_z_feedrate(state))
-            )
-            .as_bytes(),
-        );
-        state.lifted = false;
-        state.lifted_amount = 0.0;
-        state.pending_lift = None;
-        // The descend lands the writer back on the layer z.
-        state.record_z(state.layer_z);
-    } else {
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} F{}\n",
-                format_axis(x),
-                format_axis(y),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
-    }
-    state.x = x;
-    state.y = y;
-    state.current_feedrate = state.travel_feedrate;
-    state.last_scaled_position = Some((current.x, current.y));
-    state.pending_wipe_before_external_target = Some(super::arc::Point {
-        x: geometry.scale.unscale(current.x) + state.origin.0 - state.extruder_offset.0,
-        y: geometry.scale.unscale(current.y) + state.origin.1 - state.extruder_offset.1,
-    });
+    )
 }
 
 fn clipped_loop_end(

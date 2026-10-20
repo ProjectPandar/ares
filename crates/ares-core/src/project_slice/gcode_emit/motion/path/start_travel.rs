@@ -48,6 +48,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
 
 pub(super) struct Request<'a> {
     pub(super) first_scaled: (i64, i64),
+    pub(super) force_no_extrusion: bool,
     pub(super) first_x: f64,
     pub(super) first_y: f64,
     pub(super) properties: PathProperties<'a>,
@@ -61,6 +62,7 @@ pub(super) fn emit(
 ) -> Result<(), crate::SliceError> {
     let Request {
         first_scaled,
+        force_no_extrusion,
         first_x,
         first_y,
         properties,
@@ -109,7 +111,11 @@ pub(super) fn emit(
             };
             format!(
                 " ; move to first {}{bridge} point",
-                features::feature_description(properties.feature)
+                if force_no_extrusion {
+                    "move inwards before retraction/seam"
+                } else {
+                    features::feature_description(properties.feature)
+                }
             )
         } else {
             String::new()

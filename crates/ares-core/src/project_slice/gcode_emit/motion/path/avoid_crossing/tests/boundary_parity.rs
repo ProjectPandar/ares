@@ -118,6 +118,7 @@ fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_corner_then_destinati
         &mut output,
         &mut state,
         start_travel::Request {
+            force_no_extrusion: false,
             first_scaled: (4_890_000, 4_890_000),
             first_x: 4.89,
             first_y: 4.89,

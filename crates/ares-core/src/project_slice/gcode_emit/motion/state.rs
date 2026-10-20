@@ -171,8 +171,6 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) use_external_mp_once: bool,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
-    pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
-        Option<super::arc::Point>,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
     /// `has_insert_timelapse_gcode` is a `process_layer` local upstream
     /// (`GCode.cpp:4653`) — reset at every layer, set by the traditional

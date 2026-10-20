@@ -65,6 +65,29 @@ pub(super) fn extrude_to_xyz(
     state.wipe_start = Some(end);
 }
 
+pub(super) fn force_no_extrusion_segment(
+    output: &mut Vec<u8>,
+    end: arc::Point,
+    state: &mut EmitState,
+) {
+    let comment = if state.options.gcode_comments {
+        " ; move inwards before retraction/seam"
+    } else {
+        ""
+    };
+    output.extend_from_slice(
+        format!(
+            "G1 X{} Y{}{comment}\n",
+            format_axis(end.x),
+            format_axis(end.y)
+        )
+        .as_bytes(),
+    );
+    state.x = end.x;
+    state.y = end.y;
+    state.wipe_start = Some(end);
+}
+
 pub(super) fn linear_segment(
     output: &mut Vec<u8>,
     end: arc::Point,
