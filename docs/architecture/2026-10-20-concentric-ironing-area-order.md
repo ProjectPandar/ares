@@ -507,6 +507,51 @@ hands to `chain_and_reorder_entities_flips` and to `chained_path_from`
 eec is then inner-chained. Still excluded: `chain_segments_greedy` internals, the clipper,
 `fill_entities/ironing.rs`, and any post-hoc reordering.
 
+### Grouping point located: one stack per chain call; island VISIT ORDER differs
+
+Full ironing-block sequence for layer z=51.2, by travel target from G-code
+(head before the divergence is `(132.474, 119.057)` on both sides):
+
+```
+line     NATIVE target         ARES target
+257356   X132.474 Y119.057     X132.474 Y119.057     (identical)
+257367   X162.816  Y88.715     X162.816 Y103.715     <- first divergence
+...      ring stack at 88.7   ring stack at 103.7
+257442   X162.816  Y98.269     X162.816 Y113.269
+257517   X162.816 Y113.269     X153.262 Y113.269
+257592   X153.262 Y113.269     X138.262 Y113.269
+257667   X138.262 Y113.269     X138.262 Y103.715
+```
+
+Two facts settle the grouping question:
+
+1. The stacks are the same set on both sides (bbox matching showed 1225/1225 common
+   blocks), and the third stack in the sequence (`Y113.269` at x=162.8) is nearer to the
+   head than either of the first two: `d(113.269) = 15,215,952` vs
+   `d(103.715) = 34,000,205` vs `d(88.715) = 42,910,068`. Neither side picks that
+   nearest stack first, so ironing is not one chain over all stacks: each stack is
+   chained in its own call.
+2. What differs is the order in which the stacks (islands) are visited:
+   - Native: 88.7 -> 98.3 -> 113.3 -> (x=153) 113.3 -> (x=138) 113.3 -> 103.7 ...
+   - Ares: 103.7 -> 113.3 -> (x=153) 113.3 -> (x=138) 113.3 -> 103.7(x=138) ...
+
+So the per-call grouping is identical (one stack per call) and the assignment is not at
+fault; the island visit order decides. This also explains the 12 ring-stack direction
+reversals: once the visit order changes, the head at each stack differs and
+`chained_path_from` re-enters that stack from its opposite end.
+
+GREEN boundary: the island iteration order of the ironing phase.
+Ares: `gcode_emit/motion/layer.rs:36` `for island in &mut layer.islands` -- the physical
+order of the `layer.islands` vector, whose indices come from
+`project_slice/extrusion_islands.rs:107-113` (islands vector sized 0..=slices.len(), i.e.
+indexed by `layer.slices` order). Upstream: `GCode.cpp:5010-5068` assigns each fill
+eec/entity into `islands[island_idx]`, `GCode.cpp:6211-6234` walks `by_region` in
+`island_idx` order, and the idx is resolved through `slices_test_order` (area-ascending,
+`GCode.cpp:4984`) -- so emission follows the island slot order, and Ares' `layer.slices` /
+`layer.islands` ordering must line up with upstream's island slot numbering.
+Still excluded: `chain_segments_greedy` internals, the `extrusion_islands.rs` assignment
+rule itself, `fill_entities/ironing.rs`, the clipper, and any post-hoc reordering.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
