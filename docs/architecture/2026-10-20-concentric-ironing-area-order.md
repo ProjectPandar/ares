@@ -687,6 +687,45 @@ evidence plus the upstream source reading as sufficient to place GREEN on the ir
 entity grouping seam, or (b) require a debug-optimized Native build first. I am not
 choosing (a) unilaterally and I am not writing RED.
 
+### STOP: the exact split line could not be pinned (strict residual)
+
+Decision accepted: option (a), no Native rebuild. But the follow-up read-only step — locating the
+exact Ares line that splits one island/region's ironing into several consecutive calls — hit a
+**strict residual** and is stopped per the agreed rule.
+
+What was measured (`ARES_IRON_GRP_DBG` in `layer.rs`, printing `island index`, `region`, `n` and
+`islands_total`; temporary, reverted, `git diff` empty):
+
+```
+IRON_GRP island=2 region=0 n=1     (repeated across layers: 3,4,2,2,2,5 times per (island,region,n) key)
+IRON_GRP island=1 region=0 n=2
+islands_total values seen: 4 x32, 10 x15, 5 x14, 17 x9, 3 x6 ...
+```
+
+The grouping key repeats, which *suggests* one island/region is emitted several times — but that
+aggregation is **across layers**: the probe had no layer discriminator, and `state.layer_z` does not
+match the G-code Z at the ironing phase (a `z` filter on 51.2 produced zero rows), so same-layer
+repetition could not be confirmed.
+
+Against that, the code path says one call per (island, region):
+
+- `layer.rs:36-59` builds `regions: BTreeMap<usize, RegionEntities>` keyed by region id and the
+  ironing phase loops `for (&id, region) in &mut regions` — one `emit_infills` per region per island;
+- `emit_infills` (`:136-175`) runs `shared_reversals::chain_infill(scope, entities, cursor)` once over
+  the whole entity list and then emits, so it cannot itself split into several chain calls;
+- `extrusion_islands.rs:117-139` keeps each `no_sort` collection whole (`FillCollection`), so a single
+  island's ironing entities should arrive as one list.
+
+So either the repeats are cross-layer artefacts, or something upstream of `layer.rs` (the
+`infill_regions`/`perimeter_regions` bookkeeping at `layer.rs:42-45`, or the island construction in
+`extrusion_islands.rs:107-139`) duplicates an island's ironing entities across several islands.
+Distinguishing these needs a layer-scoped probe, which requires a correct per-layer key; the
+available `state.layer_z` is not usable at that point.
+
+Per instruction ("GREEN 若有严格残差则 STOP") I am stopping here rather than naming a boundary I
+cannot evidence. Nothing is written to source, no RED, no FULL. The candidate boundary remains the
+ironing entity grouping seam, but it is **not yet pinned to a line**.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
