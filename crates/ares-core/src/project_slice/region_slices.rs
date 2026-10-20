@@ -5,6 +5,7 @@ use crate::{
 
 pub(super) mod complex;
 mod convert;
+pub(super) mod interlocking;
 #[cfg(test)]
 mod tests;
 

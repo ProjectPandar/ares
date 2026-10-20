@@ -96,10 +96,17 @@ pub(super) fn prepare_post_regions(
                     &resolved.views.full.filament.region,
                     resolved.logical_filament_count,
                 );
-                region_slices::complex::compose_complex_region_slices(
+                let mut post = region_slices::complex::compose_complex_region_slices(
                     region_slices::prepare_region_slices(bounded, graph),
                     scale,
-                )
+                )?;
+                region_slices::interlocking::apply(
+                    &mut post,
+                    &resolved_object.object,
+                    &resolved.views.full.project.print.nozzle_diameter,
+                    scale,
+                )?;
+                Ok(post)
             })
             .collect::<Result<Vec<_>, _>>()?;
         assert!(
