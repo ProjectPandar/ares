@@ -419,6 +419,59 @@ next read-only step must therefore compare, per island, the head position the ch
 starts from on both sides (Ares: `local_cursor(state, geometry)` at the ironing phase;
 Native: `m_last_pos` at `GCode.cpp:6211-6234`), not the island assignment.
 
+### Head-position comparison (read-only, G-code derived) — first divergence pinned
+
+Derived from the two G-code files (no probe, no GDB): per layer, the head position
+before the first ironing block, the block sequence with bboxes, and each block's
+first point.
+
+- Layer `z=0.8`: both sides identical (same head `(100.789,150.612)`, 80 blocks,
+  block-by-block identical).
+- Layer `z=51.2` (the layer of the first G-code diff at line 257365): both sides have
+  20,602 moves, the same 191 ironing blocks, the same head `(131.566,81.371)`, and the
+  **first 12 blocks are byte-identical**. The first divergence is **block #12**:
+
+```
+#11 N bbox=(132.47,82.93,168.60,119.06) first=(132.474,82.927)   [identical]
+#12 N bbox=(162.82,83.27,168.26,88.72)   first=(162.816,83.269)
+    A bbox=(162.82,98.27,168.26,103.72)  first=(162.816,98.269)
+```
+
+Reading:
+
+- Blocks #0-#11 are the concentric rings of the layer's outer contour
+  (bbox 130-170 x 81-120) and they match exactly, so the head, the chain start and
+  the greedy order inside that stack are identical on both sides.
+- From #12 the sequence continues with two small stacks (bbox
+  `162.8-168.3 x 83.3-88.7` and `162.8-168.3 x 98.3-103.7`). Both lie inside the same
+  outer contour of that layer, i.e. they belong to the **same island**, and Ares
+  emits the lower one first while Native emits the upper one first.
+- Consequence for the chain: after the 12 identical outer rings, the next
+  nearest-neighbour choice differs. Since the head is identical up to that point,
+  the different choice is made **inside the greedy chain** over that island's
+  remaining ironing entities, i.e. in
+  `shortest_path/entity_chain.rs:38-59 chain_and_reorder_entities_flips`
+  (`chain_segments_greedy` port) versus upstream
+  `ShortestPath.cpp:1061-1069 chain_and_reorder_extrusion_entities` →
+  `chain_segments_greedy`.
+- The 12 ring-stack direction reversals reported by the earlier first-point
+  comparison are explained by this: once the two small stacks are swapped, the head
+  at the start of each of them changes, so `chained_path_from(m_last_pos)` re-enters
+  the same ring stack from its opposite end (identical bbox, identical segments,
+  first/last swapped).
+
+So the first divergent function is the greedy entity chain
+(`chain_and_reorder_entities_flips` / `chain_segments_greedy`) applied to one
+island's ironing entities — not the island assignment, not `fill_entities/ironing.rs`,
+not the clipper, and not the ironing start point.
+
+**GREEN boundary (precise):** `crates/ares-core/src/project_slice/perimeters/classic/
+shortest_path/entity_chain.rs` and the `chain_segments_greedy` port it calls
+(`shortest_path/chain.rs`), aligned to `ShortestPath.cpp:1061-1069` +
+`chain_segments_greedy` — specifically the distance tie-break / candidate selection
+that picks between two equidistant small stacks. Reordering emitted entities
+afterwards remains forbidden; the island assignment must not change.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
