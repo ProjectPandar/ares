@@ -190,6 +190,7 @@ pub(super) struct AutoGroupContext<'a> {
     pub(super) spacing: f32,
     pub(super) resolution: f64,
     pub(super) volume_materials: &'a [(usize, String)],
+    pub(super) efc_bottom: Option<&'a [ExPolygon]>,
 }
 
 type AutoGroupAreas = (
@@ -215,10 +216,20 @@ pub(super) fn auto_group_area(
     };
     let group_width = width_mm(&group.slices, context.scale, &width_context);
     let group_width = (group_width / context.spacing_mm / 2.0).floor() * context.spacing_mm * 2.0;
+    // Brim.cpp:504-510 clips only the per-polygon consumer; group width
+    // above retains the original slices for its moment/height calculation.
+    let clipped;
+    let slices = if let Some(bottom) = context.efc_bottom {
+        clipped = crate::geometry::intersection_ex(bottom, &group.slices)
+            .map_err(super::brim_geometry_error)?;
+        clipped.as_slice()
+    } else {
+        &group.slices
+    };
     let mut area = Vec::new();
     let mut forbidden = Vec::new();
     let mut islands = Vec::new();
-    for polygon in &group.slices {
+    for polygon in slices {
         let polygon_width = polygon_width_mm(
             polygon,
             group_width,

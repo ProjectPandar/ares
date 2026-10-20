@@ -237,6 +237,7 @@ impl BrimPlan {
                 spacing,
                 resolution,
                 volume_materials: &volume_materials,
+                efc_bottom: efc_bottom.as_deref(),
             };
             for group in &volume_groups {
                 let (group_area, group_forbidden, group_islands) =

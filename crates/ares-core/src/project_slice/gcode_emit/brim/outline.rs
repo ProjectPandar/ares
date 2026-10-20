@@ -8,12 +8,12 @@ use crate::{
 };
 
 /// `use_brim_efc_outline` (Brim.cpp:56-62). The EFC base-slices swap of
-/// `:468-472` is brim-type agnostic upstream, but this slice's RED only
-/// covers Painted, so btEar/AutoBrim/NoBrim stay deferred (raw slices).
+/// `:468-472` is brim-type agnostic upstream; btEar/NoBrim remain deferred.
 pub(super) fn efc_enabled(options: &ObjectOptions) -> bool {
     matches!(
         options.brim_type,
-        ProcessBrimType::OuterOnly
+        ProcessBrimType::AutoBrim
+            | ProcessBrimType::OuterOnly
             | ProcessBrimType::InnerOnly
             | ProcessBrimType::OuterAndInner
             | ProcessBrimType::Painted
