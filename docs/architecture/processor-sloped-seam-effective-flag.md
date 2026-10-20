@@ -106,7 +106,8 @@ Rejected unavailable/zero-length-read early probes are not acceptance evidence.
 
 ## Native-first public RED
 
-Freeze the two EXISTING Native-exported input-only archives, unchanged:
+Freeze four input-only archives: the two EXISTING Native-exported archives
+below, unchanged, plus the independently admitted GUI part pair below:
 
 | Role on d9 main | Input | SHA256 |
 |---|---|---|
@@ -144,9 +145,32 @@ Only admit it to the RED matrix after Native double stability and a real
 Native/current-Ares full-stream divergence are observed. If it does NOT diverge,
 record that fact here as deferred; do not fabricate a RED or add a guard.
 Any admitted target needs its declared single-variable complete-PASS neighbor.
-Current status at docs-only submission: candidate not yet evaluated or frozen.
-Object/layer-range any_of behavior is STILL required in the implementation even
-if its additional output witness is deferred: no default-only substitute.
+Admitted after read-only Native/current-Ares verification on the unchanged base:
+
+| Role | GUI setting (global none) | SHA256 |
+|---|---|---|
+| RED target | part external | `19aedecce54f64e70b9cd02752df43a254e300064abb7923b825b5ea480034ca` |
+| Sole-key PASS control | part none | `44e347dcf43536d940d203a8035eca8ff6e10313f6fe6ed2da67a080e728e797` |
+
+Only `Metadata/model_settings.config` differs, at the single part
+`seam_slope_type` attribute. Global settings, geometry and all other payloads
+match. The GUI-equivalent metadata seeds were re-exported by Native; only the
+Native-exported input-only bytes may be frozen, not the temporary seeds.
+GUI provenance: `GUI_ObjectSettings.cpp:241-249`, `Tab.cpp:2337`,
+`PrintConfig.hpp:1232`; Native loader/exporter `bbs_3mf.cpp:5116,5264,7878-7879`.
+
+Fresh official/seeded Native2 is stable for both inputs. Part external has four
+whole-stream line differences against current CLI (the three M73 displacement
+lines and Native `has_scarf_joint_seam=1` versus Ares 0); part none completely
+passes in both modes. This pair therefore enters the formal public RED matrix,
+not deferred and not admitted on a motion-only claim. Read-only evidence:
+`/home/indexyz/ares-evidence/w6-sloped-seam-volume-resume-v6hwqqx2/assessment.json`.
+Previous and interrupted-output directories were preserved; all 33 original
+files retain their SHA256. No public API qualification is claimed from discovery.
+
+The full RED matrix is four cases: two strict targets and two sole-key complete
+PASS controls. Object/layer-range any_of behavior is STILL required in the
+implementation: these witnesses do not authorize a default/volume-only subset.
 
 ## Included / deferred and architecture constraints
 
