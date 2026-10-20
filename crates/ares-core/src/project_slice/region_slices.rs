@@ -4,12 +4,13 @@ use crate::{
 };
 
 pub(super) mod complex;
+mod convert;
 #[cfg(test)]
 mod tests;
 
 use super::{
     layers::PlannedPrintObject,
-    volume_bounds::{BoundedPrintObject, PostBoundsVolume, VolumeBound, VolumeOccurrenceId},
+    volume_bounds::{BoundedPrintObject, VolumeBound, VolumeOccurrenceId},
     volume_regions::{VolumeRegion, VolumeRegionGraph, VolumeRegionRange},
 };
 
@@ -264,7 +265,7 @@ pub(super) fn prepare_region_slices(
     graph: VolumeRegionGraph,
 ) -> PendingRegionSlices {
     let (plan, volumes, bounds) = bounded.into_parts();
-    let mut working_slices = volumes.into_iter().map(convert_volume).collect::<Vec<_>>();
+    let mut working_slices = volumes.into_iter().map(convert::volume).collect::<Vec<_>>();
     working_slices.sort_by_key(|volume| volume.occurrence_id);
     let volume_slices = working_slices.clone();
     let VolumeRegionGraph {
@@ -352,17 +353,6 @@ pub(super) fn prepare_region_slices(
 pub(super) fn records_at_z(ranges: &[VolumeRegionRange], z: f64) -> &[VolumeRegion] {
     let index = ranges.partition_point(|range| range.max_z <= z);
     &ranges[index].volume_regions
-}
-
-fn convert_volume(volume: PostBoundsVolume) -> VolumeSlices {
-    let (_, occurrence_id, _, layers) = volume.into_parts();
-    VolumeSlices {
-        occurrence_id,
-        layers: layers
-            .into_iter()
-            .map(|layer| layer.into_parts().1)
-            .collect(),
-    }
 }
 
 fn move_layer(
