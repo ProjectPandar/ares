@@ -42,15 +42,11 @@ fn apply_cli_oracle_state(settings: &mut ProjectSettings, overrides: &ExportOver
     }
 }
 
-/// `PrintApply.cpp:1148-1161`: `has_scarf_joint_seam` turns true when any
-/// resolved `seam_slope_type` is not `none` (object, volume, layer-range or
-/// the inherited default); the CLI export then carries the flag in the
-/// `;CONFIG_BLOCK` comment.
+/// The full settings already carry PrintApply's model-derived flag. This
+/// export-only clone has no additional model sources; retain the effective
+/// value through the same owner rather than rechecking the global default.
 fn apply_scarf_joint_seam(settings: &mut ProjectSettings) {
-    use crate::ProcessSeamScarfType;
-    if settings.process.region.seam_slope_type != ProcessSeamScarfType::None {
-        settings.project.gcode.has_scarf_joint_seam = crate::OrcaBool(true);
-    }
+    crate::project::effective_config::scarf_joint_seam::apply(settings, &[]);
 }
 
 /// The OrcaSlicer CLI slicing path fills per-extruder defaults for

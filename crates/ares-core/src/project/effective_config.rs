@@ -4,6 +4,7 @@ pub(crate) mod grouping;
 pub(crate) mod layers;
 pub(crate) mod occupancy;
 pub(crate) mod phases;
+pub(crate) mod scarf_joint_seam;
 mod selector_validation;
 pub(crate) mod types;
 pub(crate) mod usage;

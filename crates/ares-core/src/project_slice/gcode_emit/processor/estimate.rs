@@ -68,7 +68,7 @@ impl Estimate {
         let mut block_line_ids = Vec::new();
         let mut remaining_internal = Vec::new();
         let mut cache_eligible = Vec::new();
-        let mut seams = SeamDetector::default();
+        let mut seams = SeamDetector::new(config.detect_layer_based_on_tag);
         // Per-source-line arc bookkeeping for the M73 cache lookup: the
         // geometric internal-segment count and whether the arc's first block
         // was seam-excluded (`ExportLines::update` → `internal` = 0).

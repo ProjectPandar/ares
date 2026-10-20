@@ -64,6 +64,7 @@ fn resolve_with_observer(
 ) -> Result<BoundedResolvedProjectConfig, SliceError> {
     normalize_fdm_1(&mut normalized_source);
     observer.normalize_fdm_1(&normalized_source);
+    super::scarf_joint_seam::apply(&mut normalized_source, project.objects());
 
     let mut first = normalized_source;
     call_normalize_fdm_2(&mut first, NormalizeFdm2Pass::ColdFirst, 0, 0, observer);
