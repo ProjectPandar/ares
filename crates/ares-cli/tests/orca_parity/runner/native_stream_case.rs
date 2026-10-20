@@ -1,16 +1,11 @@
-//! Native double replay and complete public API/CLI byte-stream assertions.
+//! Native double replay before the canonical main public API/CLI assertions.
 
-use crate::{OrcaRunner, golden, runner::stages};
+use crate::{
+    OrcaRunner, golden,
+    runner::native_api_cli::{NativeCase, sha},
+};
 use serde_json::json;
-use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
-
-fn sha(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
-}
+use std::fs;
 
 pub(crate) fn check(
     (namespace, upstream): (&str, &[&str]),
@@ -21,102 +16,55 @@ pub(crate) fn check(
 ) {
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     assert_eq!(sha(project), expected_sha, "frozen input SHA for {label}");
-    let root = tempfile::Builder::new()
-        .prefix(&format!("{namespace}-{label}-"))
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
-    let input = root.join("input.3mf");
-    fs::write(&input, project).unwrap();
-    let reference = native_slice(&runner, &root, label, "native", upstream);
-    let replay = native_slice(&runner, &root, label, "native-replay", upstream);
-    let first_native =
-        golden::normalize_one_generator_line(&reference, golden::GeneratorKind::Orca).unwrap();
+    let reference = NativeCase::slice(&runner, project, &format!("{namespace}-{label}-"));
+    let replay = NativeCase::slice(&runner, project, &format!("{namespace}-{label}-replay-"));
+    let first_native = golden::normalize_one_generator_line(
+        reference.native.as_bytes(),
+        golden::GeneratorKind::Orca,
+    )
+    .unwrap();
     let replay_native =
-        golden::normalize_one_generator_line(&replay, golden::GeneratorKind::Orca).unwrap();
+        golden::normalize_one_generator_line(replay.native.as_bytes(), golden::GeneratorKind::Orca)
+            .unwrap();
     let native_replay = golden::first_difference(&first_native, &replay_native)
         .map_or(Ok(()), |difference| Err(difference.to_string()));
-    native_replay
-        .as_ref()
-        .unwrap_or_else(|error| panic!("Native nondeterminism {label}: {error}; {root:?}"));
-    let native = std::str::from_utf8(&reference).unwrap();
-    if assert_two_tools {
-        assert!(
-            native.lines().any(|line| line.starts_with("T0")),
-            "Native target must use T0: {root:?}"
-        );
-        assert!(
-            native.lines().any(|line| line.starts_with("T1")),
-            "Native target must use T1: {root:?}"
-        );
-    }
-    fs::write(root.join("native.gcode"), &reference).unwrap();
-    let api = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
-            project,
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            None,
-            &ares_core::ConfigOverrides::default(),
-            ares_core::SlicerContext::new(0),
-        ))
-        .unwrap();
-    fs::write(root.join("ares.api.gcode"), &api).unwrap();
-    let output = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
-        .args(["slice", "-o"])
-        .arg(&output)
-        .arg(&input)
-        .output()
-        .unwrap();
-    fs::write(root.join("ares.cli.stdout"), &cli.stdout).unwrap();
-    fs::write(root.join("ares.cli.stderr"), &cli.stderr).unwrap();
-    assert!(cli.status.success(), "Ares CLI {label}: {root:?}");
-    let cli_bytes = fs::read(&output).unwrap();
-    assert_eq!(
-        api, cli_bytes,
-        "Ares API/CLI raw equality {label}: {root:?}"
-    );
-    let api_comparison = golden::compare_ordered_bytes_generator_only(&reference, &api);
-    let cli_comparison = golden::compare_ordered_bytes_generator_only(&reference, &cli_bytes);
     fs::write(
-        root.join("comparison.json"),
+        reference.root.join("native-replay.json"),
         serde_json::to_vec_pretty(&json!({
-            "case": label, "input_sha256": sha(project), "native_sha256": sha(&reference),
-            "native_replay_comparison": native_replay,
-            "api_comparison": api_comparison, "cli_comparison": cli_comparison,
-            "api_cli_equal": api == cli_bytes,
-            "strict_comparator": "golden::compare_ordered_bytes_generator_only"
+            "case": label, "input_sha256": expected_sha, "upstream": upstream,
+            "reference_root": reference.root, "replay_root": replay.root,
+            "native_replay_comparison": native_replay
         }))
         .unwrap(),
     )
     .unwrap();
-    api_comparison.unwrap_or_else(|error| panic!("{label}: {error}; artifacts {root:?}"));
-    cli_comparison.unwrap_or_else(|error| panic!("{label}: {error}; artifacts {root:?}"));
-}
-
-fn native_slice(
-    runner: &OrcaRunner,
-    root: &Path,
-    label: &str,
-    phase: &str,
-    upstream: &[&str],
-) -> Vec<u8> {
-    let input = root.join("input.3mf");
-    let native_dir = root.join(phase);
-    fs::create_dir(&native_dir).unwrap();
-    let args = vec![
-        "--slice".into(),
-        "0".into(),
-        "--outputdir".into(),
-        native_dir.to_string_lossy().into_owned(),
-        input.to_string_lossy().into_owned(),
-    ];
-    fs::write(root.join(format!("{phase}-launch.json")), serde_json::to_vec_pretty(&json!({
-        "case": label, "input_sha256": sha(&fs::read(input).unwrap()), "wrapper": runner.bin(), "args": args,
-        "upstream": upstream
-    })).unwrap()).unwrap();
-    stages::run(runner.bin(), args, stages::Stage::Slice, &native_dir).unwrap();
-    fs::read(native_dir.join("plate_1.gcode")).unwrap()
+    native_replay.as_ref().unwrap_or_else(|error| {
+        panic!(
+            "Native nondeterminism {label}: {error}; {:?}",
+            reference.root
+        )
+    });
+    if assert_two_tools {
+        assert!(
+            reference.native.lines().any(|line| line.starts_with("T0")),
+            "Native target must use T0: {:?}",
+            reference.root
+        );
+        assert!(
+            reference.native.lines().any(|line| line.starts_with("T1")),
+            "Native target must use T1: {:?}",
+            reference.root
+        );
+    }
+    let (api, cli) = reference.compare(ares_core::GenerationMetadata::deterministic(
+        2026, 8, 27, 0, 0, 0,
+    ));
+    let path = reference.root.join("comparison.json");
+    let mut comparison: serde_json::Value =
+        serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    comparison["case"] = json!(label);
+    comparison["native_replay_comparison"] = json!(native_replay);
+    comparison["api_cli_equal"] = json!(api == cli);
+    comparison["strict_comparator"] = json!("golden::compare_ordered_bytes_generator_only");
+    fs::write(path, serde_json::to_vec_pretty(&comparison).unwrap()).unwrap();
 }
