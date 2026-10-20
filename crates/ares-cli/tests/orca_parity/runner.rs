@@ -1,25 +1,22 @@
 //! Drives the OrcaSlicer CLI for the parity harness: builds a 3MF from
 //! flattened presets and the shared cube model, slices it for the reference
 //! G-code, and caches reference output keyed by the input digest.
+#[path = "runner/loaded_system_inherits_group.rs"]
+mod loaded_system_inherits_group;
+#[path = "runner/modifier_feature_filament.rs"]
+mod modifier_feature_filament;
 #[path = "runner/native_stream_case.rs"]
 pub(crate) mod native_stream_case;
+#[path = "runner/resource_triangle_defaults.rs"]
+mod resource_triangle_defaults;
+#[path = "runner/resource_vertex_defaults.rs"]
+mod resource_vertex_defaults;
 #[path = "runner/scarf_conditional.rs"]
 mod scarf_conditional;
 #[path = "runner/seam_physical_plane.rs"]
 mod seam_physical_plane;
 #[path = "runner/seam_rear.rs"]
 mod seam_rear;
-
-#[path = "runner/modifier_feature_filament.rs"]
-mod modifier_feature_filament;
-
-#[path = "runner/loaded_system_inherits_group.rs"]
-mod loaded_system_inherits_group;
-
-#[path = "runner/resource_triangle_defaults.rs"]
-mod resource_triangle_defaults;
-#[path = "runner/resource_vertex_defaults.rs"]
-mod resource_vertex_defaults;
 
 #[path = "runner/resource_item_ignore.rs"]
 mod resource_item_ignore;
