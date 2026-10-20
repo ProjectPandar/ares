@@ -4,7 +4,7 @@ use crate::geometry::{
 };
 use crate::project_slice::gcode_emit::motion::state::AvoidCrossingGeometry;
 
-const MITER_LIMIT: f64 = 2.0;
+const MITER_LIMIT: f64 = 3.0;
 
 /// `init_layer` safe zone (`AvoidCrossingPerimeters.cpp:1324-1327`): the
 /// layer slices inset by external_perimeter_width × coeff, trying
