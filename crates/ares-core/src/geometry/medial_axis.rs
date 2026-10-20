@@ -59,7 +59,7 @@ pub(crate) fn medial_axis(
 }
 
 pub(crate) fn edge_is_eligible(
-    vd: &boostvoronoi::prelude::Diagram,
+    vd: &crate::geometry::voronoi::Diagram,
     edge: boostvoronoi::prelude::EdgeIndex,
     annotations: &annotate::Annotations,
 ) -> Result<bool, MedialAxisError> {

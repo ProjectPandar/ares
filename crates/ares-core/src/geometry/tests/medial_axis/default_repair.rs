@@ -7,6 +7,25 @@ mod native;
 #[path = "../../../../../../tests/support/voronoi_diagram.rs"]
 mod snapshot;
 
+impl snapshot::DiagramSnapshot for crate::geometry::voronoi::Diagram {
+    fn snapshot_cells(&self) -> &[boostvoronoi::prelude::Cell] {
+        self.cells()
+    }
+    fn snapshot_edges(&self) -> &[boostvoronoi::prelude::Edge] {
+        self.edges()
+    }
+    fn snapshot_vertices(&self) -> impl Iterator<Item = (f64, f64, usize, u32)> {
+        self.vertices().map(|v| {
+            (
+                v.x(),
+                v.y(),
+                v.get_incident_edge().unwrap().usize(),
+                v.metadata.get_color(),
+            )
+        })
+    }
+}
+
 fn compare(out: &Path, qualified: &Value, repairs: usize) -> Option<Value> {
     assert_eq!(qualified["qualified_diagrams"], 100);
     assert_eq!(qualified["repair_successful_records"], repairs);

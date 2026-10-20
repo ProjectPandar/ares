@@ -1,4 +1,4 @@
-use boostvoronoi::prelude::Diagram;
+use crate::geometry::voronoi::Diagram;
 
 use super::{Annotations, CellCategory, EdgeCategory, VertexCategory};
 use crate::geometry::medial_axis::{MedialAxisError, diagram};

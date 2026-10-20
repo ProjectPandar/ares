@@ -88,7 +88,6 @@ fn task22o13_finite_multisite_topology_is_fully_literal() {
         .collect::<Vec<_>>();
     let vertices = output
         .vertices()
-        .iter()
         .enumerate()
         .map(|(id, vertex)| format!("vertex={id} x={} y={}", vertex.x(), vertex.y()))
         .collect::<Vec<_>>();

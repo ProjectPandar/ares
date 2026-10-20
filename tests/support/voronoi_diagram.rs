@@ -1,5 +1,5 @@
 //! Exact ordered test serialization; never a production metadata adapter.
-use boostvoronoi::prelude::Diagram;
+use boostvoronoi::prelude::{Cell, Diagram, Edge};
 use serde_json::{Value, json};
 
 fn bits(value: f64) -> String {
@@ -10,9 +10,45 @@ fn bits(value: f64) -> String {
         .collect()
 }
 
-pub fn serialize(vd: &Diagram) -> Value {
-    let cells: Vec<_> = vd
-        .cells()
+pub trait DiagramSnapshot {
+    fn snapshot_cells(&self) -> &[Cell];
+    fn snapshot_edges(&self) -> &[Edge];
+    fn snapshot_vertices(&self) -> impl Iterator<Item = (f64, f64, usize, u32)>;
+}
+
+impl DiagramSnapshot for Diagram {
+    fn snapshot_cells(&self) -> &[Cell] {
+        self.cells()
+    }
+    fn snapshot_edges(&self) -> &[Edge] {
+        self.edges()
+    }
+    fn snapshot_vertices(&self) -> impl Iterator<Item = (f64, f64, usize, u32)> {
+        self.vertices().iter().map(|v| {
+            (
+                v.x(),
+                v.y(),
+                v.get_incident_edge().unwrap().usize(),
+                v.get_color(),
+            )
+        })
+    }
+}
+
+pub fn serialize(vd: &impl DiagramSnapshot) -> Value {
+    serialize_parts(
+        vd.snapshot_cells(),
+        vd.snapshot_vertices(),
+        vd.snapshot_edges(),
+    )
+}
+
+fn serialize_parts(
+    cells: &[Cell],
+    vertices: impl Iterator<Item = (f64, f64, usize, u32)>,
+    edges: &[Edge],
+) -> Value {
+    let cells: Vec<_> = cells
         .iter()
         .map(|cell| {
             // The public enum collapses initial/reverse source-category bits.
@@ -29,17 +65,15 @@ pub fn serialize(vd: &Diagram) -> Value {
             "color":color >> 5,"incident":cell.get_incident_edge().map(|e| e.usize())})
         })
         .collect();
-    let vertices: Vec<_> = vd
-        .vertices()
-        .iter()
-        .map(|vertex| {
-            json!({"x_bits":bits(vertex.x()),"y_bits":bits(vertex.y()),
-            "incident":vertex.get_incident_edge().unwrap().usize(),"color":vertex.get_color()})
+    let vertices: Vec<_> = vertices
+        .map(|(x, y, incident, color)| {
+            json!({"x_bits":bits(x),"y_bits":bits(y),
+            "incident":incident,"color":color})
         })
         .collect();
-    let edges: Vec<_> = vd.edges().iter().map(|edge| {
+    let edges: Vec<_> = edges.iter().map(|edge| {
         let v0 = edge.vertex0().map(|v| v.usize());
-        let v1 = vd.edge_get_vertex1(edge.id()).unwrap().map(|v| v.usize());
+        let v1 = edges[edge.twin().unwrap().usize()].vertex0().map(|v| v.usize());
         json!({"cell":edge.cell().unwrap().usize(),"v0":v0,"v1":v1,
             "twin":edge.twin().unwrap().usize(),"next":edge.next().unwrap().usize(),
             "prev":edge.prev().unwrap().usize(),"linear":edge.is_linear(),
