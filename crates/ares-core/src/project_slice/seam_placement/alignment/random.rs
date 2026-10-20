@@ -26,14 +26,9 @@ fn select(layer: &LayerPlan, perimeter_index: usize) -> (usize, Vec3) {
     let mut picked = viable.iter().map(|edge| edge.length).sum::<f32>() * random;
     for (viable_index, edge) in viable.iter().enumerate() {
         if picked - edge.length <= 0.0 || viable_index + 1 == viable.len() {
-            let ratio = if edge.length > 0.0 {
-                picked / edge.length
-            } else {
-                0.0
-            };
             return (
                 edge.index,
-                layer.positions[edge.index] + edge.vector * ratio,
+                layer.positions[edge.index] + edge.vector.normalized() * picked,
             );
         }
         picked -= edge.length;
