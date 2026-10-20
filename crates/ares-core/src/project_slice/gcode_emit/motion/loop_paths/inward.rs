@@ -76,6 +76,7 @@ pub(super) fn inward_point(
     nozzle: f64,
 ) -> crate::geometry::Point {
     let (is_hole, counter_clockwise) = orientation;
+    let displacement_end = first;
     if is_hole == counter_clockwise {
         std::mem::swap(&mut first, &mut second);
     }
@@ -83,8 +84,8 @@ pub(super) fn inward_point(
     if is_hole == counter_clockwise {
         angle = -angle;
     }
-    let dx = (first.x - center.x) as f64;
-    let dy = (first.y - center.y) as f64;
+    let dx = (displacement_end.x - center.x) as f64;
+    let dy = (displacement_end.y - center.y) as f64;
     let length_squared = dx * dx + dy * dy;
     let factor = if nozzle * nozzle < length_squared {
         0.2 * nozzle / length_squared.sqrt()
