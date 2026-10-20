@@ -1,6 +1,10 @@
 # PrintObject::combine_infill: scaled-width clearance arithmetic
 
-Status: docs-only SPEC on `worker3/combine-solid-clearance-spec`, based on
+Status: original docs-only SPEC/RED approved; **clearance-only candidate
+`c810ef7d35e6fb1ac15fd41082d737bf2c57932a` failed its strict exit and must not
+be integrated**. The read-only residual amendment below is a separate source-
+boundary review request, not expanded GREEN authorization.
+Original SPEC on `worker3/combine-solid-clearance-spec`, based on
 merged main `231bd11ccae4ac26304aa89772a1e5c4b2fd532c`.
 COORD accepted the six-case Native discovery and source boundary and authorized
 this SPEC followed by a separate RED. GREEN requires independent RED review;
@@ -147,3 +151,98 @@ Accepted discovery and producer/localization audits:
 `/home/indexyz/ares-evidence/w3-combine-solid-readonly-231bd11cc/README.md`.
 The prior minimum-area7/7 PASS and combine-height6/6 PASS matrices remain
 bounded negative evidence; they do not authorize any adjacent change.
+
+## Read-only residual amendment: physical height is not extrusion height
+
+COORD approved RED d09e00530 and the one-expression clearance port only.
+Candidate c810ef7d3 changes process.rs3+/4−, with all tests/inputs/helpers
+frozen. fmt/all-target Clippy/browser wasm32 checks pass, but official selected
+runtime remains47PASS/3strictFAIL (185.692s), with the same first differences
+as RED. Monotonic/rectilinear raw outputs are unchanged; concentric changes
+without closing its first feedrate difference. The strict stop fired before
+seeded; no FULL or broader implementation followed. C810 is **not GREEN**.
+
+COORD then authorized one read-only diagnosis and this documentation amendment.
+Existing candidate/official binaries only; no production/test/input edit,
+Native rebuild/source instrumentation, seeded execution or FULL.
+
+### Clearance and the complete combine boundary are now excluded
+
+For both monotonic and concentric, actual candidate deltas equal Native
+899998/449999 at the original offset call. Not merely geometry-equivalent:
+all36 offset calls' input/output vertices, holes and ordering match exactly.
+All108 subsequent difference/intersection inputs/outputs also match exactly,
+including safety=No. All75 layers' pre/post-combine surfaces match in geometry,
+ordering, kind, thickness, thickness_layers, bridge_angle and extra_perimeters.
+Rust's final snapshot is before group74, whose selected-kind upper surface
+is empty: the cited intersection-empty guard makes that final group a no-op.
+For monotonic, all38 later `split_solid_surface`/Rust narrow-split inputs and
+normal/narrow outputs also match exactly. These are bounded negative findings,
+not permission to modify kernels or a universal parity claim.
+
+Every accepted diagnostic full stream equals its respective canonical output
+(Native generator/date identity only; candidate CLI raw-identical). Official
+symbol-table/ABI reads are validated by these exact snapshots. Existing DWARF
+was read statically for layout only, **without running a seeded inferior**.
+Optimized-out/inline-frame/source-line reader failures are retained and excluded
+from accepted evidence; no missing observation is presented as equivalence.
+
+### Next observed different generator input
+
+At the first sampled Arachne construction in each fixture:
+
+| Handoff | Native actual layer_height | Candidate actual layer_height |
+|---|---|---|
+|monotonic routed to ConcentricInternal|0.20000000000000007|0.39999999999999997|
+|configured concentric|0.20000000000000007|0.39999999999999997|
+
+The same sampled calls have **identical raw outline vertices/order**, outer/
+inner spacing364159, inset count (6 internal,23 configured), and wall inset0.
+Sixteen calls per path are retained, not just one scalar print. This is a
+separate downstream input mismatch, not another clearance delta, nozzle fork,
+progress/E/feedrate repair or proof that changing it alone closes the RED.
+Other unmeasured Arachne policy inputs are not declared universally equivalent.
+
+Owning upstream source, pinned8500fcd:
+
+- `Fill/Fill.cpp:1290,1485`: `FillParams::layer_height` is assigned
+  `layerm.layer()->height`, the **physical layer** height, independently of
+  the surface's combined extrusion Flow height.
+- `Fill/FillConcentricInternal.cpp:37` and `Fill/FillConcentric.cpp:100`:
+  pass `params.layer_height` to the `Arachne::WallToolPaths` constructor.
+- `Arachne/WallToolPaths.cpp:69-75`: retain that layer_height;
+  `516-517` use it when deriving extrusion width from line spacing. It is
+  an active geometry input, not just an emitted HEIGHT comment.
+
+Current Rust mismatch:
+
+- `project_slice/fill_entities/concentric.rs` internal and configured-full-
+  density entrypoints scale `fill.params.flow.height`/`params.flow.height`
+  into the generator's layer_height argument (currently48 and170).
+- `concentric/generate.rs:94` converts that integer back to millimeters for
+  `RawWallToolPathConfig.layer_height`; this passes accumulated0.4 extrusion
+  height where upstream passes physical0.2. It also unnecessarily quantizes
+  that distinct physical-height input if reused for ordinary layers.
+- `arachne/wall_toolpaths.rs:68-71` consumes the supplied height for the
+  width-from-spacing calculation, matching the cited downstream source owner.
+
+### Proposed next slice — review only, no implementation authorization
+
+Restore only the upstream **FillParams physical-layer-height handoff** through
+existing `fill_entities/generate.rs` (already owns `PlannedLayer.height`), both
+concentric entrypoints and their shared generator into RawWallToolPathConfig.
+These existing Ares adapters are compatibility shells around the cited Fill
+and WallToolPaths input boundary; do not invent a new pipeline or parameter
+family. Keep physical layer height separate from retained extrusion Flow/
+surface thickness: do not change Flow.height, combined thickness/count,
+spacing/width/volume, kernel/beading math, phase/graph or emitted HEIGHT/E/time.
+
+This is not permission to extend c810 or quietly replace its failed scope.
+COORD must independently approve the revised source boundary and RED strategy
+before any further production edit. Approved six GUI cases and shared strict
+lifecycle remain frozen; new controls or RED changes require separate approval.
+No claim of dual-mode GREEN or final acceptance is made; seeded/FULL remain
+unrun. Any later bounded attempt with a strict residual must again STOP/report.
+
+Residual diagnosis and exact snapshots:
+`/home/indexyz/ares-evidence/w3-combine-solid-residual-c810ef7d3-readonly/README.md`.
