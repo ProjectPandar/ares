@@ -121,6 +121,41 @@ GREEN work. Reordering the result after the fact to match output is explicitly
 forbidden; the fix must be in the ported traversal so the order falls out
 naturally.
 
+### Clipper1 ordering comparison (read-only, upstream `deps_src/clipper/clipper.cpp`)
+
+The Clipper1 that Orca compiles is `deps_src/clipper/clipper.cpp`, included under
+`Slic3r::ClipperLib` by `src/libslic3r/clipper.cpp`. The four order-bearing
+places were compared line by line:
+
+| role | upstream | Ares port | verdict |
+|---|---|---|---|
+| local-minima sort | `ClipperBase::Reset` `std::sort(m_MinimaList, lm1.Y < lm2.Y)` — Y ascending (`clipper.cpp:970-972`) | `minima.rs:28` `fixed_gcc_sort_by(&mut self.minima, a.y < b.y)` (Clipper1 policy `SORT_MINIMA_BY_X = false`, `round_policy.rs:32`) | same (Y ascending) |
+| minima consumption | `InsertLocalMinimaIntoAEL` takes `m_MinimaList.back()` + `pop_back()` (`clipper.cpp:1492-1498`) | `minima.rs:54-60` `minima.last()` + `pop()` | same (largest Y first) |
+| scanbeam | `std::priority_queue<cInt, cInts> m_Scanbeam` (`clipper.hpp:466-467`), default `less` = **max-heap**; `botY = m_Scanbeam.top()` then descending (`clipper.cpp:1109-1122`) | `engine.rs:200-203` `scanbeam.pop()`/`peek()` on a max-heap; same `botY`/`topY` loop (`engine.rs:170-186`) | same (max-heap, Y descending sweep) |
+| output-ring creation | `AddOutPt` creates the OutRec on first `e->OutIdx < 0` (`clipper.cpp:2002-2017`); called from `InsertLocalMinimaIntoAEL` (`:1507`,`:1514`) and `AddLocalMinPoly` (`:1398-1444`) | `output/rings.rs:77-88` `create_out_rec` on first allocation; called from `insert_local_minimum` after `is_contributing` (`minima.rs:66-100`) | same shape |
+| tree build | `BuildResult2` two passes over `m_PolyOuts`, append-only (`clipper.cpp:2801-2855`) | `polytree.rs:250-287` append by out_rec index | same |
+| tree walk | `PolyTreeToExPolygons` root → holes → grandchildren recursion (`ClipperUtils.cpp:169-195`) | `polytree.rs:67-81` same recursion | same |
+
+So the four candidate order sources are **not** where Ares differs, and the
+earlier statement that "upstream is a min-heap" was wrong: the upstream sweep is
+**Y-descending** (max-heap `top()`), exactly like Ares. The measured difference is
+a different permutation *within* the sweep, i.e. which output rings get created
+first for the same set of disjoint areas:
+
+- Native order on the 9-area layer: grouped by **x** (largest x first), y
+  descending inside each group, with the y direction alternating between groups
+  (`(x=32.8,+0.3) (32.8,-14.9) (32.8,-29.9) (17.8,-29.9) (17.8,-14.9) (17.8,+0.3) …`);
+- Ares order: grouped by **y** (`+0.09 ×3`, `-14.9 ×3`, `-29.9 ×3`).
+
+This is now the open item: the specific rule that decides, for a single sweep
+level, the order in which disjoint rings are created is still not pinned to a
+source line. Candidates still to compare are the active-edge ordering used when
+several local minima share one `botY` (`InsertEdgeIntoAEL`/`AEL` insert
+comparator, `clipper.cpp:1492-1560` plus the `E2InsertsBeforeE1` tie-break at
+`:2856-2870`) and the `ProcessIntersections`/`ProcessEdgesAtTopOfScanbeam`
+sub-order. Per instruction, no fix will be attempted until that is located in
+source; sorting the produced polygons afterwards is forbidden.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
