@@ -648,6 +648,45 @@ phase hands to `chain_and_reorder_entities_flips` / `chained_path_from`
 `chain_segments_greedy` internals, the clipper, `fill_entities/ironing.rs`, and any
 post-hoc reordering.
 
+### Native-side probe: frame not readable — stopped as instructed
+
+`GCode::extrude_infill` has a symbol (`info functions extrude_infill` ->
+`GCode.cpp:6150`), and a breakpoint on it does hit
+(`Breakpoint 1.2 at 0x...: GCode.cpp, line 6152`). But inside that frame both
+`info args` and `info locals` report **"No symbol table info available"**, the same
+obstruction as the `Fill.cpp` frames. Per instruction ("不可读则停止并报告，不重编
+Native") the Native-side read was stopped: no rebuild, no further probing, and no
+claim about Native's `n` or `start_near`.
+
+What this rules out is only the *method*: the distribution build's DWARF is enough for
+symbols, line numbers and types, but not for argument/locals of these optimized
+frames — so a runtime read of `m_last_pos`/`extrusions.size()` would require a
+debug-optimized Native build, which is out of scope here.
+
+### Ares-side counterpart, measured on the fixture (all calls)
+
+Temporary probe (`ARES_IRON_SET_DBG`, `layer.rs:148-165`; reverted, `git diff` empty)
+printed `local_cursor`, `region.ironing.len()` and each entity's first/last point for
+**every** ironing call:
+
+```
+n=0 x90 (empty region calls) | n=1 x56 | n=3 x12 | n=5 x6 | n=4 x5
+n=6 x4 | n=2 x3 | n=8 x2 | n=43 x1 | n=20 x1
+```
+
+No call with `n >= 2` has any pair of candidate first points 15 mm apart, i.e. the two
+small stacks that diverge at G-code line 257,367 are **not** candidates of one and the
+same Ares chain call: each is chained on its own (`n == 1` for those calls), so
+`chain_and_reorder_entities_flips` sees a one-element vector and `chained_path_from`
+sees a single-entity collection. The emitted order therefore equals the assembly order
+on the Ares side.
+
+Status of the comparison as a whole: the Ares half is measured; the Native half cannot be
+measured on this build. So the remaining decision is whether to (a) accept the Ares-side
+evidence plus the upstream source reading as sufficient to place GREEN on the ironing
+entity grouping seam, or (b) require a debug-optimized Native build first. I am not
+choosing (a) unilaterally and I am not writing RED.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
