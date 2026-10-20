@@ -80,17 +80,16 @@ pub(crate) fn fill_concentric_sparse(
     }
     // FillConcentric.cpp:31: contract using nominal/adjusted mm spacing,
     // not the scaled, density-dependent ring pitch. Narrow after scaling.
+    // `offset_ex` is called unconditionally there, including at delta == 0,
+    // where the clipper still re-normalises the rings (`DoOffset` NEAR_ZERO
+    // plus `Execute`'s delta <= 0 branch), so do not short-circuit.
     let contract = 0.5 * f64::from(multiline - 1) * effective_spacing / scale.factor();
-    let mut last = if contract.abs() > f64::EPSILON {
-        offset_expolygons(
-            std::slice::from_ref(expolygon),
-            -contract as f32,
-            JoinType::Miter,
-            3.0,
-        )?
-    } else {
-        vec![expolygon.clone()]
-    };
+    let mut last = offset_expolygons(
+        std::slice::from_ref(expolygon),
+        -contract as f32,
+        JoinType::Miter,
+        3.0,
+    )?;
     let mut loops: Vec<Polygon> = last
         .iter()
         .flat_map(|e| {
