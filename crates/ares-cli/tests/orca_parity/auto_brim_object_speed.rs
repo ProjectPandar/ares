@@ -84,7 +84,7 @@ fn run(prefix: &str, project: &[u8], expected_sha: &str, has_brim: bool, changed
     }
 }
 
-fn brim_moves(gcode: &str) -> Vec<&str> {
+pub(super) fn brim_moves(gcode: &str) -> Vec<&str> {
     let mut active = false;
     let mut moves = Vec::new();
     for line in gcode.lines() {
