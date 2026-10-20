@@ -1,6 +1,7 @@
 # Pre-external wipe: emit the upstream force-no-extrusion path
 
-Status: docs-only SPEC REVIEW-REQUEST. No production/test/fixture change.
+Status: SPEC approved; formal matrix narrowed by coordinator after an
+independent matched-control residual. Native-first RED precedes production.
 Parent: reviewed W6 stack tip `261c076794c07c2fd07686550dfb9ba94c5a414d`.
 Branch: `worker6/pre-external-retract-spec`. No FULL window requested.
 
@@ -70,11 +71,40 @@ Fixed replay artifacts:
 These are discovery CLI receipts, not a substitute for the authorized public
 API RED. No Native output or probe is committed. No GREEN has been attempted.
 
+## Deferred W5 order/Z diagnostic and prerequisite
+
+The real exported W5 scarf/min-50 witness is **not in this slice's formal
+matrix**. It is retained outside Git as a diagnostic: Native finishes the fake
+path at `X119.775 Y100.225` before the real scarf-head travel to `Y100.305 Z0.2`,
+whereas the temporary pending marker consumes the finish after that travel.
+After GREEN, confirm motion order/Z alignment with GDB/ordered motion records
+and report the result, explicitly not as whole-output acceptance.
+
+The coordinator-requested matched min-50 gate-off control was produced directly
+by official Native CLI `--wipe-before-external-loop=0 --export-3mf`; its only
+ZIP payload/JSON difference is the wipe switch, with min-50 preserved. However,
+both modes expose an independent complete-stream discrepancy: `M73 P29 R18`
+is inserted before rather than after the first two SparseInfill moves at
+line 5757. It remains a strict FAIL, not a PASS control or a normalization rule.
+The coordinator excluded this pair from formal RED until its GCodeProcessor /
+time-estimate insertion-point prerequisite is addressed in a separate slice.
+Do not search or change input settings to evade it.
+
+Frozen diagnostics: `/home/indexyz/ares-evidence/w6-w5-prewipe-handoff/` and
+`/home/indexyz/ares-evidence/w6-prewipe-min50-cli-control/exported.3mf`.
+Residual/pair proof:
+`/home/indexyz/ares-evidence/w6-pre-external-matched-control-blocker.json`.
+No W5 diagnostic archive is submitted by the current RED. Restore the second
+formal target only after the independent prerequisite is fixed and authorized.
+
 ## Included source behavior and non-negotiable boundaries
 
 Included: the source-owned pre-external two-point no-extrusion path uses the
 normal routing and retraction decision, wipe, deferred lift, unlift/unretract,
-return segment and writer/cursor updates exactly once. Downstream cooling and
+return segment and writer/cursor updates exactly once. The fake return must
+complete at the ordinary layer Z before any following scarf-head XYZ travel;
+no pending finish may leak into the next real path's slope/height context.
+Downstream cooling and
 progress must follow from those source motions, not from output correction.
 Preserve the fake path's source role/properties and the surrounding real loop.
 Ordinary extrusion and existing retraction thresholds remain unchanged.
@@ -90,14 +120,13 @@ or speed policies to force this slice GREEN.
 
 ## Public matrix and failure inventory
 
-After separate RED authorization, reuse `runner/native_stream_case.rs` and
-existing archives; freeze only the three unique external setting variants:
+Reuse `runner/native_stream_case.rs` and existing single/default archives.
+Freeze only the two unique external target/matched-control inputs below:
 
 | Case | Initial verdict | SHA256 |
 | --- | --- | --- |
 | single-wipe-threshold02 | target RED | `ba4ce2095ec47e5f171ab8f1fd4be9af976e36f30a41c33dfd9c52b4be1254d7` |
 | single-off-threshold02 | pre-wipe-disabled PASS | `ca9e648a6249b33973f7685923e65e3bf8222b9d115dfce5075a56c064d6b1d8` |
-| single-wipe-defaultthreshold | short-hop PASS | `cd0a227d87dfd073e29ed117a13028604d46aba9be555bd36bdd5c499aad4528` |
 | original single volume | existing PASS | `1ac6d319469fbee245bdc9b44b1600980b5777e62a0e84f34fac0f798dc85651` |
 | default two-volume beam1 | existing PASS | `04c7d2a58b7b21909b867542faad149a6b9d0b1bb976eab3fec57b7b60ff082c` |
 
@@ -117,8 +146,10 @@ seam before production; no unit tests written after the implementation.
 1. Review this docs-only source boundary/evidence before test or code changes.
 2. Separately authorize and commit genuine Native-first public RED/controls in
    both modes, reusing shared harness and existing control archives.
-3. Production-only GREEN ports the fake-path boundary above and makes every
-   complete target/control stream match. No partial-GREEN claim.
+3. Production-only GREEN ports the fake-path boundary above and makes the
+   formal target and every complete control stream match. Afterwards record
+   the deferred min-50 order/Z diagnostic separately, not as acceptance.
+   No partial-GREEN or masked-prerequisite claim.
 4. Every changed file stays below 400 lines. If a necessary extraction is
    pure movement, commit it separately before behavior with exact body and
    frozen raw-output invariance evidence. No mixed refactor/behavior commit.

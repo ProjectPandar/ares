@@ -23,6 +23,9 @@ mod thin_safezone;
 #[path = "orca_parity/mesh_center_precision.rs"]
 mod mesh_center_precision;
 
+#[path = "orca_parity/pre_external_wipe.rs"]
+mod pre_external_wipe;
+
 #[path = "orca_parity/closest_lines_runtime.rs"]
 mod closest_lines_runtime;
 
