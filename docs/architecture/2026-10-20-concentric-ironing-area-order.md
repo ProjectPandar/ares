@@ -872,6 +872,72 @@ own stored first points include a 30.9 candidate that neither side emits, so I c
 the ranking input is the stored `first_point` rather than something applied upstream. **Not confirmed
 ⇒ STOP**, no boundary declared, per the coordinator's condition.
 
+### Final round: the endpoint SETS differ -> boundary is on the generation side
+
+Approved probe, run once at `state.layer_z == 52.0` (temporary; reverted; `git diff` empty), printing at
+the `chain_infill` entry the entity count, each `FillExtrusionCollection`'s `(first_point,last_point)`,
+every contained path's `(first,last)`, and the post-chain order:
+
+```
+CHAIN2 z=52.0000000000002 n=1 ironing_call=true
+CHAIN2 in  i=0 f=(-2215000,4715000) l=(31426736,-28926735) ents=182
+CHAIN2 ent j=0 f=(-2215000,4715000) l=(-2215000,4715000)      <- every path has f == l
+CHAIN2 out order: CHAIN2 out i=0 f=(-2215000,4715000)          <- unchanged
+```
+
+Two structural corrections matter here:
+
+1. The z=52 ironing phase is **one** entity — a single `FillExtrusionCollection` holding **182 closed
+   rings** — handed to a chain call of `n = 1`. There is no list of eecs to reorder on this layer, so
+   `chain_and_reorder_entities_flips` sees a one-element vector and `chained_path_from` returns it
+   unchanged (exactly as `no_sort` implies). Emitted ring order therefore **is** storage order, and the
+   `n=20` measurement from the earlier round belonged to a different layer (layer index 45), not this one.
+2. Because `f == l` for every path, each path is one closed ring, so ring start points are the only
+   endpoints available and they are what the output order is made of.
+
+Set comparison. Both G-code files share the same bed origin, so no coordinate conversion is needed for a
+G-code-to-G-code comparison. Layer 52 was split into contiguity runs on both sides and each run was
+reduced to `(min_x, min_y, max_x, max_y, len)`:
+
+```
+runs native/ares: 1636 / 1636
+bbox multisets equal: False
+only in native: 23     only in ares: 23
+```
+
+The 23 exclusive signatures per side are not arbitrary: they pair up as the same geometry translated
+15 mm in y —
+
+```
+native-only: (162.816, 98.269, 162.966, 98.419, 2), (162.966,103.565,...), (163.116, 98.569, ...)
+ares-only  : (162.816,103.565, 162.966,103.715, 2), (162.966, 98.419,...), (163.116,103.565,...)
+```
+
+i.e. a stack that sits at y≈98 on one side sits at y≈103 on the other for that same element. So the two
+sides do **not** hold the same set of stacks modulo order: the segmentation into runs lands at
+different places. Given that concentric ironing emits one continuous spiral, a difference in ring start
+points shifts where the contiguity boundaries fall, which produces exactly this kind of paired
+15 mm offset. The first run-order difference is at run index 251 (native `88.715 -> 83.269`, ares
+`103.715 -> 98.269`), as recorded in the previous revision.
+
+Per the coordinator's decision rule — **sets differ ⇒ boundary is on the generation side** — the boundary
+is the **ironing ring storage order produced by the Fill side**:
+
+- upstream: `Fill.cpp` `FillConcentric::_fill_surface_single` + `make_ironing` (`Fill.cpp:1650-1731`)
+  appending polylines into the per-area `ExtrusionEntityCollection` with `no_sort`;
+- Ares: `project_slice/fill_entities/ironing.rs` (and its concentric surface generation) producing the
+  equivalent 182-path collection.
+
+This **reverses** the earlier exclusion of `fill_entities/ironing.rs`. Not the bucketing
+(`layer.rs:56`), not the island assignment (`extrusion_islands.rs`), not the chain rule
+(`chain_segments_greedy_constrained_reversals_`), and not call granularity: on this layer all of those
+are provably identical or inert, and the disagreement is already present in the stored ring order that
+reaches the emitter.
+
+Residual to settle when GREEN is authorised: the exact upstream append order inside
+`FillConcentric::_fill_surface_single`/`make_ironing` (which ring is appended first and in which
+direction) versus Ares' concentric ring emission, at the level of the 182-ring collection.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
