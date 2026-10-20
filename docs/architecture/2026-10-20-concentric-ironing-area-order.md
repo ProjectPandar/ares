@@ -817,6 +817,61 @@ I cannot yet state which of the 20 is emitted first and why.
 Per the coordinator's condition ("若证实 … 则写入 SPEC 作为 GREEN 边界后报告；否则 STOP") the
 hypothesis is **not** confirmed, so this is a STOP with no boundary declared.
 
+### G-code ring-order comparison: same stacks, swapped groups; nearest candidate taken by neither side
+
+Read-only comparison on the actual diverging layer, which is **`; Z_HEIGHT: 52`**, not 51.2 — the earlier
+"z=51.2 layer" was a mis-key: layer 51.2 is byte-identical on both sides (251 moves, `multiset equal:
+True`), so nothing diverges there.
+
+Layer 52 in both files: 2115 moves, 1636 contiguity stacks, **identical stack-size sequence**, and the
+first **512** moves agree exactly. Divergence starts at stack #251, from the same head
+`(133.474,119.057)`:
+
+```
+N#250 size=2 first=(132.474,119.057) last=(133.474,119.057)   [same on both sides]
+N#251 first=(162.816, 88.715)  ring: 88.715 -> 83.269 -> (168.262,83.269) -> (168.262,88.715)
+A#251 first=(162.816,103.715)  ring: 103.715 -> 98.269 -> (168.262,98.269) -> (168.262,103.715)
+```
+
+The two stacks are congruent, translated 15 mm in y. Both families exist on both sides — only their
+positions are exchanged:
+
+```
+native: y=88.715 family at stacks #251,254,255 ; y=103.715 family at #302,303,496,497,500,1540
+ares  : y=103.715 family at stacks #251,254,255 ; y=88.715 family at #496,497,500,1538,1541,1542
+```
+
+So this is **not** a missing or extra stack: it is a wholesale swap of the two groups' emission
+order. `multiset equal: False` for the layer confirms the sequences differ, not the geometry.
+
+Distance from the common head decides nothing in the observed direction:
+
+```
+head -> (162.816, 88.715) = 42.208884     (what Native emits first)
+head -> (162.816,103.715) = 33.110873     (what Ares emits first)
+```
+
+Native takes the **farther** candidate while Ares takes the nearer one — so the emitted start point
+is demonstrably not the point the chain ranks by. And the Ares side has nearer candidates still, from
+the `ISL2` capture of this layer's 20 ironing collections (storage first points, converted to G-code
+y): `cidx=29 y=113.587`, `cidx=30 y=113.277` (distance ≈ 30.9, the closest of all),
+`cidx=31 y=101.254`, `32 y=108.012`, `33 y=105.977`, `34-38 y≈88.5-89.0`, `39-48 y≈84.8-85.4`.
+**Neither side takes y≈113.3**, which matches the earlier finding that `Y113.269` is globally nearest
+and taken by neither.
+
+Combined with the coordinator's reading of `ExtrusionEntityCollection.hpp` (`no_sort` ⇒
+`can_reverse() == false`, `chained_path_from` returns as-is, `first_point`/`last_point` =
+`entities.front()`/`back()`), the surviving candidate is that the **storage order of the rings inside
+a stack differs between the sides** (consistent with the 12 earlier "first/last swapped" stacks), which
+changes the `first_point` fed to `chain_segments_greedy_constrained_reversals_` and so changes which
+stack is picked. That would place the boundary on the generation side (`Fill.cpp` `make_ironing`
+polyline append order vs `fill_entities/ironing.rs`), reversing the earlier exclusion of `ironing.rs`.
+
+But the evidence in hand cannot confirm it: the emitted starts are 42.2 / 33.1 from the head while Ares'
+own stored first points include a 30.9 candidate that neither side emits, so I cannot demonstrate that
+the ranking input is the stored `first_point` rather than something applied upstream. **Not confirmed
+⇒ STOP**, no boundary declared, per the coordinator's condition.
+
 ## Upstream boundary (source-cited)
 
 - `OrcaSlicer/src/libslic3r/Fill/Fill.cpp:1507` — `Layer::make_ironing()`.
