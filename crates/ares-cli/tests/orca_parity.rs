@@ -47,6 +47,9 @@ mod vg1_export_arc_cache;
 #[path = "orca_parity/medial_endpoint_zero.rs"]
 mod medial_endpoint_zero;
 
+#[path = "orca_parity/occlusion_volume_affine.rs"]
+mod occlusion_volume_affine;
+
 #[path = "orca_parity/m400_priority.rs"]
 mod m400_priority;
 
