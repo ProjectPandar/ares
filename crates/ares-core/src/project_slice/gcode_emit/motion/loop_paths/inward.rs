@@ -113,7 +113,7 @@ pub(super) fn loop_is_counter_clockwise(paths: &[ExtrusionPath]) -> bool {
         .zip(points.iter().cycle().skip(1))
         .map(|(left, right)| left.x as i128 * right.y as i128 - right.x as i128 * left.y as i128)
         .sum::<i128>()
-        > 0
+        >= 0
 }
 
 pub(super) fn ccw_angle(center: Point3, first: Point3, second: Point3) -> f64 {
