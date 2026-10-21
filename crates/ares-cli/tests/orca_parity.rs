@@ -74,6 +74,9 @@ mod staggered_seam_interpolation;
 #[path = "orca_parity/project_settings_substitution.rs"]
 mod project_settings_substitution;
 
+#[path = "orca_parity/ordered_brim_owner.rs"]
+mod ordered_brim_owner;
+
 #[path = "orca_parity/auto_brim_combined.rs"]
 mod auto_brim_combined;
 #[path = "orca_parity/per_object_skirt_brim.rs"]
