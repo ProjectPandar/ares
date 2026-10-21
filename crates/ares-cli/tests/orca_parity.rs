@@ -11,6 +11,12 @@ mod native_environment;
 #[path = "orca_parity/paint_color.rs"]
 mod paint_color;
 
+#[path = "orca_parity/paint_color/activity.rs"]
+mod paint_color_activity;
+
+#[path = "orca_parity/painted_side_cut.rs"]
+mod painted_side_cut;
+
 #[path = "orca_parity/interlocking_base.rs"]
 mod interlocking_base;
 

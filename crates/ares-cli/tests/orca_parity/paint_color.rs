@@ -8,8 +8,7 @@ use crate::runner::{
 use serde_json::{Value, json};
 use std::{env, fs, process::Command};
 
-#[path = "paint_color/activity.rs"]
-mod activity;
+use crate::paint_color_activity as activity;
 
 const UPSTREAM: &[&str] = &[
     "MultiMaterialSegmentation.cpp:491-956,1181-1472,1527-1870,1955-2207",
