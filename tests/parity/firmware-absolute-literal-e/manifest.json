@@ -1,0 +1,61 @@
+{
+  "purpose": "Actual official-exported INPUT3MFs only, no expected outputs",
+  "base": "89560ca66ff8418bcf175d573df299955f9a216f",
+  "upstream": [
+    "GCode/GCodeProcessor.cpp:4873-4890"
+  ],
+  "gui_option": "Use firmware retraction (use_firmware_retraction coBool)",
+  "geometry": "closed8sided cylinder radius6mm/height1.2mm/18vertices/32triangles/sixlayers",
+  "inputs": {
+    "control": {
+      "file": "control.3mf",
+      "sha256": "b5978da3842bd1734fcc36930d788c180b0ce0461605975ef9a4960c3dd79216",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "6504834545657beb86b35b6b5e2364ab50a0f2d82eea36e3142ee68ef4c832e4",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "500599edde926073885302543f1c6a16c42f00bbf27a9bcbe431a1a4fe70ab81",
+        "Metadata/project_settings.config": "44bab86768196393ecf4063771b6c370f786178ba5f03580405b93a139785c05",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-89560-firmware-absolute2/control/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-89560-firmware-absolute2/control/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-firmware-absolute-literal-e/original-export-receipts/control",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-firmware-absolute-literal-e/witness/verified.json"
+      }
+    },
+    "positive": {
+      "file": "positive.3mf",
+      "sha256": "dd75e19b01ae72b130de91421e4466ba9488e657dedd4d5fe96efba6cb712f14",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "6504834545657beb86b35b6b5e2364ab50a0f2d82eea36e3142ee68ef4c832e4",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "500599edde926073885302543f1c6a16c42f00bbf27a9bcbe431a1a4fe70ab81",
+        "Metadata/project_settings.config": "70ccc5908b7bbca4131199bca0ed92ea8edf1de64273e3b2c4b914d77e8ceb31",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-89560-firmware-absolute2/positive/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-89560-firmware-absolute2/positive/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-firmware-absolute-literal-e/original-export-receipts/positive",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-firmware-absolute-literal-e/witness/verified.json"
+      }
+    }
+  },
+  "sole_changed_payload": "Metadata/project_settings.config",
+  "sole_changed_setting": {
+    "key": "use_firmware_retraction",
+    "control": "0",
+    "positive": "1"
+  },
+  "all_other_settings_equal": true,
+  "all_other_zip_payloads_byte_identical": true
+}
