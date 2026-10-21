@@ -311,11 +311,11 @@ fn sanitize_instance_name(name: &str) -> String {
     let mut separator = false;
     for character in name.chars() {
         if SPECIAL.contains(&character) {
-            separator = true;
-        } else {
-            if separator && !output.is_empty() {
+            if !separator {
                 output.push('_');
             }
+            separator = true;
+        } else {
             separator = false;
             output.push(character);
         }
