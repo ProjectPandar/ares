@@ -80,6 +80,9 @@ mod firmware_absolute_literal_e;
 #[path = "orca_parity/lightning_initial_overhang_join.rs"]
 mod lightning_initial_overhang_join;
 
+#[path = "orca_parity/raft_contact_first_flow.rs"]
+mod raft_contact_first_flow;
+
 #[path = "orca_parity/spiral_placement_gate.rs"]
 mod spiral_placement_gate;
 
