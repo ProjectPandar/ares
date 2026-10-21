@@ -190,7 +190,7 @@ impl Generator {
                     .map(|p| ExPolygon::new(p.clone(), Vec::new()))
                     .collect::<Vec<_>>(),
                 -self.wall_supporting_radius as f32,
-                JoinType::Square,
+                JoinType::Miter,
                 3.0,
             )?);
             let overhang = to_polygons(&difference_polygons_ex(&shrunk, &infill_area_above)?);
