@@ -25,13 +25,9 @@ impl ObjectRegions {
         active: bool,
         options: &crate::ObjectOptions,
     ) -> Result<Self, SliceError> {
-        if active
-            && (options.mmu_segmented_region_max_width.0 > 0.0
-                || options.mmu_segmented_region_interlocking_depth.0 > 0.0
-                || options.interlocking_beam.0)
-        {
+        if active && options.interlocking_beam.0 {
             return Err(SliceError::UnsupportedProjectFeature(
-                "painted width/depth and beam compositions".into(),
+                "painted beam compositions".into(),
             ));
         }
         if !active {

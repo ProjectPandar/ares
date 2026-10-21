@@ -1,6 +1,7 @@
 //! Consumed rewrite of MultiMaterialSegmentation.cpp1955–2207.
 mod apply;
 mod contour_color;
+mod cut;
 mod graph;
 mod math;
 mod merge;
@@ -85,7 +86,19 @@ pub(in crate::project_slice) fn apply_project(
             scale: prepared.scale,
         };
         let layers = preprocess::prepare(object, prepared.scale).map_err(clip_error)?;
-        let side = sides(&input, &layers)?;
+        let mut side = sides(&input, &layers)?;
+        // MMS2199–2201 casts option doubles before2169–2170 scales the float millimeters.
+        let width = resolved.object.mmu_segmented_region_max_width.0 as f32;
+        let depth = resolved.object.mmu_segmented_region_interlocking_depth.0 as f32;
+        if (width > 0.0 || depth > 0.0) && !resolved.object.interlocking_beam.0 {
+            cut::cut_segmented_layers(
+                &layers,
+                &mut side,
+                prepared.scale.scaled_delta(f64::from(width)) as f32,
+                prepared.scale.scaled_delta(f64::from(depth)) as f32,
+            )
+            .map_err(clip_error)?;
+        }
         let caps = top_bottom::segment(&input, &layers, &object.regions, &heights, nozzle)?;
         let segmentation = merge::merge(side, caps, prepared.scale).map_err(clip_error)?;
         apply::apply(object, metadata, segmentation, extruders, prepared.scale)?;
