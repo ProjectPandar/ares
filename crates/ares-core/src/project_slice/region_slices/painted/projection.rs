@@ -87,8 +87,8 @@ fn triangle(
         };
         let lattice = |p: [f32; 3]| {
             Point::new(
-                input.scale.scaled_delta(f64::from(p[0])) as i64 - input.center.x(),
-                input.scale.scaled_delta(f64::from(p[1])) as i64 - input.center.y(),
+                input.scale.scaled_delta(f64::from(p[0])).round() as i64 - input.center.x(),
+                input.scale.scaled_delta(f64::from(p[1])).round() as i64 - input.center.y(),
             )
         };
         let line = Line::new(lattice(a), lattice(b));
