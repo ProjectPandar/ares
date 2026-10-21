@@ -7,13 +7,48 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### Default Voronoi detection / rotation repair: prerequisite SPEC request
+### Painted MMU complete consumed chain: SPEC request (#90)
 
-Painted complete-unit SPECf894/public RED0ce6 are independently approved on5317,
-not integrated. That branch's projection/graph work is now **PAUSED** until this
-separate prerequisite merges: actual frozen painted-split Native MMU calls use
-`REPAIR_SUCCESSFUL`, modified effective local storage (49/50 in one process).
-This is not the completed incident-anchor prerequisite's no-repair rectangle.
+Base main3e862584d; upstream8500fcdcc. COORD accepted the seeded-only discovery
+of the real PrintObjectSlice1224→apply877→MMS2207→segmentation2127/2153→
+build_graph1555 caller chain, not phase/public GREEN. Default VD repair is now
+integrated; painted projection/graph/actual apply still are not. No RED yet on
+this new SPEC hash; old f894/0ce6 runs remain historical.
+
+Priority/order: independently approve this docs-only SPEC → public NativeCase
+whole-stream RED via native_stream_case::check → independent RED approval/separate
+GREEN instruction → ONE complete consumed-chain production integration unit.
+Retain source-ordered phase discovery/design RRs as document checkpoints, not
+additional private-phase prerequisites for public RED. Projection491–588/
+2029–2120 → painted_lines/color614–956 → MMU graph59–479/1527–1822 →
+top/bottom1181–1472 → merge1825–1870 → real PrintObjectSlice apply874–1030/
+1207–1224 must reach the post-conical/pre-compensation handoff142–151 for simple
+and complex objects. Rust destination is private region_slices/painted/* with
+actual shared registry and separate MMU carrier/ordinary versus strict exporters;
+PostRegion/RegionGraph remain upstream compatibility shells, not a new pipeline.
+MUST port Point.hpp506–659 radius multimap, never overwriting PointHashMap.
+
+Exit: frozen leaves/split plus unpainted controls, Native-first with positive
+model extrusion for both painted materials, complete ordered public API/actual
+CLI parity/raw API==CLI in official+seeded. Current paint_color rejection is legal
+success-required RED, not expected-error PASS. No private-entry phase tests;
+read-only phase GDB is GREEN diagnosis only. Branch stage commits each cargo
+check; no allow/expect/cfg parking, fake consumer or dormant public entry.
+All final fmt/strict workspace-all-target Clippy/wasm32/dual-mode canonical FULL
+bind the exact complete integration tip and assigned window. W2 owns FULL now;
+this request authorizes only docs, not RED/GREEN/FULL/push/merge. Cut/width-depth,
+painted+beam/fuzzy stay deferred; preserve support/interlocking and fail-closed
+compositions. [SPEC](architecture/painted-projection-graph-spec.md),
+[ARD](architecture/ard-painted-projection-graph.md).
+
+### Default Voronoi detection / rotation repair: prerequisite integrated
+
+The approved five-commit default-repair stack is integrated in main3e862584d.
+Its historical painted complete-unit SPECf894/public RED0ce6 remain unmerged;
+#90 has resumed discovery/SPEC under the complete-chain conditions above, not
+implementation. The actual frozen painted-split Native MMU calls use
+REPAIR_SUCCESSFUL/effective local storage; this is distinct from the earlier
+incident-anchor prerequisite's no-repair rectangle.
 
 Source owner: `Geometry/Voronoi.cpp::construct_voronoi28-73`, copy90-158,
 detect166-240, ordered rotation repair248-362 and source-cited cell-range/
@@ -27,7 +62,7 @@ is explicitly deferred, not qualified by raw-Boost parity. GREEN needs targeted
 MedialAxis/consumer regressions plus final coordinator-scheduled FULL to prove
 expected constructor behavior changes do not regress consumers.
 
-Order/exit: approve docs SPEC/ARD -> fresh real reachable repaired Native-first
+Completed prerequisite order/exit: approve docs SPEC/ARD -> fresh real reachable repaired Native-first
 constructor RED -> wrapper plus real consumer -> independently qualified exact
 GREEN, complete ordered effective arrays/states and consumer regressions,
 fmt/strict/WASM. No tolerance, repair suppression, FFI or backend fallback.
