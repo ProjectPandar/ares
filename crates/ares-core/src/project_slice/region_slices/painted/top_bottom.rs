@@ -1,12 +1,12 @@
 //! MultiMaterialSegmentation.cpp1285–1472: slab cleanup, embedded shells and ordered color ownership.
 use super::super::PostRegion;
-use super::{clip_error, preprocess::Layer, projection::Input, slabs};
+use super::{clip_error, math::paths, preprocess::Layer, projection::Input, slabs};
 use crate::geometry::difference_polygons_paths;
 use crate::{
     FloatOrPercent, SliceError,
     geometry::{
-        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Polygon, difference_ex,
-        intersection_ex, offset_expolygons, offset2_ex, union_ex, union_expolygons,
+        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, difference_ex,
+        intersection_ex, offset_expolygons, opening_ex, union_ex, union_expolygons,
     },
 };
 
@@ -56,15 +56,7 @@ fn stat(
     out.spacing /= scale.factor() as f32;
     Ok(out)
 }
-fn paths(input: &[ExPolygon]) -> Vec<Polygon> {
-    input
-        .iter()
-        .flat_map(|p| std::iter::once(p.contour()).chain(p.holes()).cloned())
-        .collect()
-}
-fn opening(input: &[ExPolygon], radius: f32) -> Result<Vec<ExPolygon>, ClipperError> {
-    offset2_ex(input, -radius, radius, JoinType::Miter, 3.0)
-}
+
 type Patches = Vec<Vec<Vec<ExPolygon>>>;
 struct Embedded {
     base: Patches,
@@ -107,12 +99,14 @@ fn embed_patch<const TOP: bool>(
         };
         offset -= stat.spacing + stat.width;
         slices = intersection_ex(&slices, &input.layers[target].input)?;
-        let last = opening(
+        let last = opening_ex(
             &intersection_ex(
                 patch,
                 &offset_expolygons(&slices, offset, JoinType::Miter, 3.0)?,
             )?,
             stat.small,
+            JoinType::Miter,
+            3.0,
         )?;
         if last.is_empty() {
             break;
@@ -137,7 +131,12 @@ fn embed<const TOP: bool>(
                 continue;
             }
             let stat = &input.stats[index][color];
-            let patch = opening(&union_ex(&raw[index], FillRule::NonZero)?, stat.small)?;
+            let patch = opening_ex(
+                &union_ex(&raw[index], FillRule::NonZero)?,
+                stat.small,
+                JoinType::Miter,
+                3.0,
+            )?;
             if patch.is_empty() {
                 continue;
             }
@@ -212,14 +211,14 @@ pub(super) fn segment(
             {
                 raw.top[color][index] = difference_polygons_paths(
                     &raw.top[color][index],
-                    &paths(&layers[index + 1].input),
+                    &paths(layers[index + 1].input.iter().cloned()),
                 )
                 .map_err(clip_error)?;
             }
             if !raw.bottom[color].is_empty() && !raw.bottom[color][index].is_empty() && index > 0 {
                 raw.bottom[color][index] = difference_polygons_paths(
                     &raw.bottom[color][index],
-                    &paths(&layers[index - 1].input),
+                    &paths(layers[index - 1].input.iter().cloned()),
                 )
                 .map_err(clip_error)?;
             }

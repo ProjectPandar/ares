@@ -1,5 +1,6 @@
 //! MultiMaterialSegmentation.cpp::segmentation_by_painting1979–2027.
 
+use super::super::PostRegionPrintObject;
 use crate::geometry::{
     BoundingBox, ClipperError, CoordinateScale, EdgeGrid, ExPolygon, JoinType,
     append_simplified_expolygon, mutable_polygon::remove_duplicates, offset_expolygon,
@@ -24,16 +25,24 @@ fn merged(a: Option<BoundingBox>, b: Option<BoundingBox>) -> Option<BoundingBox>
 }
 
 pub(super) fn prepare(
-    raw: &[Vec<ExPolygon>],
+    object: &PostRegionPrintObject,
     scale: CoordinateScale,
 ) -> Result<Vec<Layer>, ClipperError> {
     let epsilon = scale.scaled_delta(1e-4);
     let area = scale.scaled_delta(f64::from(0.1_f32)).powi(2);
-    let mut layers = Vec::with_capacity(raw.len());
-    let mut bounds = Vec::with_capacity(raw.len());
-    for slices in raw {
+    let count = object.plan.layers.len();
+    let mut layers = Vec::with_capacity(count);
+    let mut bounds = Vec::with_capacity(count);
+    for index in 0..count {
         let mut expanded = Vec::new();
-        for slice in slices {
+        let mut original_bounds = None;
+        for slice in object.regions.iter().flat_map(|region| {
+            region.layers[index]
+                .surfaces
+                .iter()
+                .map(|surface| surface.as_parts().1)
+        }) {
+            original_bounds = merged(original_bounds, BoundingBox::from_expolygon(slice));
             expanded.extend(offset_expolygon(
                 slice,
                 (10.0 * epsilon) as f32,
@@ -61,7 +70,7 @@ pub(super) fn prepare(
             std::f64::consts::PI / 6.0,
         );
         bounds.push(merged(
-            BoundingBox::from_expolygons(slices),
+            original_bounds,
             BoundingBox::from_expolygons(&input),
         ));
         layers.push(Layer { input, grid: None });
@@ -75,10 +84,11 @@ pub(super) fn prepare(
         if index > 1 {
             bbox = merged(bbox, bounds[index - 1]);
         }
-        if index < raw.len() - 1 {
+        if index < count - 1 {
             bbox = merged(bbox, bounds[index + 1]);
         }
-        let bbox = bbox.unwrap().inflated((20.0 * epsilon) as i64);
+        // BoundingBox::offset(double) constructs the rounding Point(double, double).
+        let bbox = bbox.unwrap().inflated((20.0 * epsilon).round() as i64);
         layer.grid = Some(EdgeGrid::new_from_contours(
             layer
                 .input

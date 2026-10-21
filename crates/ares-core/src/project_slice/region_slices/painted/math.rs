@@ -1,6 +1,16 @@
 //! MultiMaterialSegmentation.cpp:36–57,958–975,1490–1523; Line.cpp121.
 
-use crate::geometry::{Line, Point};
+use crate::geometry::{ExPolygon, Line, Point, Polygon};
+
+pub(super) fn paths(input: impl IntoIterator<Item = ExPolygon>) -> Vec<Polygon> {
+    input
+        .into_iter()
+        .flat_map(|p| {
+            let (contour, holes) = p.into_parts();
+            std::iter::once(contour).chain(holes)
+        })
+        .collect()
+}
 pub(super) fn point(p: Point) -> [f64; 2] {
     [p.x() as f64, p.y() as f64]
 }

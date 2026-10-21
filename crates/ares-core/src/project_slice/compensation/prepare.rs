@@ -1,3 +1,5 @@
+//! PrintObjectSlice.cpp:1250–1254 suppresses painted XY compensation, not elephant foot.
+
 use super::{
     PostCompensationPrintObject, apply_object_compensation, prepare_object_compensation,
     validate_structures, validate_task22m_configs,
@@ -8,7 +10,7 @@ use crate::{
     project_slice::region_slices::PostRegionPrintObject,
 };
 
-pub(super) fn apply(
+pub(in crate::project_slice) fn apply_project_compensation(
     objects: Vec<PostRegionPrintObject>,
     resolved_objects: &[ResolvedProjectObject],
     initial_layer_width: FloatOrPercent,

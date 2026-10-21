@@ -89,7 +89,7 @@ pub(super) fn prepare_post_regions(
                     .next()
                     .expect("post-I object must have a resolved print-instance context");
                 let source = &project.objects()[resolved_object.source_object_index];
-                let mmu_painted = resolved.logical_filament_count > 1 && source.is_mm_painted();
+                let mmu_painted = source.is_mm_painted(resolved.logical_filament_count);
                 let bounded = if mmu_painted {
                     volume_bounds::build_volume_bounds_with_inflation(
                         source,
@@ -100,7 +100,7 @@ pub(super) fn prepare_post_regions(
                 } else {
                     volume_bounds::build_volume_bounds(source, resolved_object, post_i)
                 };
-                let graph = volume_regions::build_volume_region_graph(
+                let (graph, painted_regions) = volume_regions::build_volume_region_graph(
                     source,
                     resolved_object,
                     &bounded,
@@ -108,8 +108,8 @@ pub(super) fn prepare_post_regions(
                     resolved.logical_filament_count,
                 );
                 painting.push(region_slices::painted::ObjectRegions::new(
-                    source,
                     &graph,
+                    painted_regions,
                     mmu_painted,
                     &resolved_object.object,
                 )?);

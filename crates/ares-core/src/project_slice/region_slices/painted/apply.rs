@@ -1,15 +1,15 @@
 //! PrintObjectSlice.cpp874–1030: consume shared painted-region identities and replace real slices.
 use super::super::range_lookup;
 use super::super::{PostRegionPrintObject, RegionSurface};
-use super::clip_error;
+use super::{clip_error, math::paths};
 use crate::geometry::difference_polygons_paths;
-use crate::project::region_graph::{PaintedRegion, painted_configuration, painted_states};
+use crate::project::region_graph::PaintedRegion;
 use crate::project_slice::volume_regions::{VolumeRegionGraph, VolumeRegionRange};
 use crate::{
-    ProjectObject, ProjectVolumeType, SliceError,
+    SliceError,
     geometry::{
         BoundingBox, ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, closing_ex,
-        fixed_gcc_sort_by, intersection_ex, offset2_ex, union_ex,
+        intersection_ex, opening_ex, union_ex,
     },
 };
 
@@ -20,21 +20,18 @@ pub(in crate::project_slice) struct ObjectRegions {
 }
 impl ObjectRegions {
     pub(in crate::project_slice) fn new(
-        source: &ProjectObject,
         graph: &VolumeRegionGraph,
+        painted: Vec<Vec<PaintedRegion>>,
         active: bool,
         options: &crate::ObjectOptions,
     ) -> Result<Self, SliceError> {
         if active
-            && (options.mmu_segmented_region_max_width.0 != 0.0
-                || options.mmu_segmented_region_interlocking_depth.0 != 0.0
-                || options.interlocking_beam.0
-                || graph.all_regions.iter().any(|region| {
-                    region.fuzzy_skin != crate::options::ProcessFuzzySkinType::Disabled
-                }))
+            && (options.mmu_segmented_region_max_width.0 > 0.0
+                || options.mmu_segmented_region_interlocking_depth.0 > 0.0
+                || options.interlocking_beam.0)
         {
-            return Err(SliceError::InvalidInput(
-                "painted width/depth, beam and fuzzy compositions are not supported".into(),
+            return Err(SliceError::UnsupportedProjectFeature(
+                "painted width/depth and beam compositions".into(),
             ));
         }
         if !active {
@@ -44,47 +41,13 @@ impl ObjectRegions {
                 painted: Vec::new(),
             });
         }
-        let used = painted_states(source);
-        let painted = graph
-            .ranges
-            .iter()
-            .map(|range| painted_records(range, &graph.all_regions, &used))
-            .collect();
+        // PrintApply.cpp:1059–1073 retains ordinary region fuzzy options; fuzzy painting is separate.
         Ok(Self {
             active,
             ranges: graph.ranges.clone(),
             painted,
         })
     }
-}
-fn painted_records(
-    range: &VolumeRegionRange,
-    regions: &[crate::RegionOptions],
-    used: &[bool; 17],
-) -> Vec<PaintedRegion> {
-    let mut records = Vec::new();
-    for extruder in (1..used.len()).filter(|&state| used[state]) {
-        for (parent, record) in range.volume_regions.iter().enumerate().filter(|(_, r)| {
-            matches!(
-                r.kind,
-                ProjectVolumeType::ModelPart | ProjectVolumeType::ParameterModifier
-            )
-        }) {
-            let cfg = painted_configuration(&regions[record.region_id.unwrap()], extruder);
-            let region_id = regions.iter().position(|region| region == &cfg).unwrap();
-            records.push(PaintedRegion {
-                extruder,
-                parent,
-                region_id,
-            });
-        }
-    }
-    fixed_gcc_sort_by(&mut records, |a, b| {
-        let a_parent = range.volume_regions[a.parent].region_id.unwrap();
-        let b_parent = range.volume_regions[b.parent].region_id.unwrap();
-        a_parent < b_parent || (a_parent == b_parent && a.extruder < b.extruder)
-    });
-    records
 }
 
 #[derive(Clone, Default)]
@@ -112,12 +75,7 @@ fn bounds(polygons: &[ExPolygon]) -> Option<BoundingBox> {
             .flat_map(|p| p.contour().points().iter().copied()),
     )
 }
-fn paths(polygons: &[ExPolygon]) -> Vec<crate::geometry::Polygon> {
-    polygons
-        .iter()
-        .flat_map(|p| std::iter::once(p.contour()).chain(p.holes()).cloned())
-        .collect()
-}
+
 fn split_layer(
     object: &mut PostRegionPrintObject,
     layer: usize,
@@ -131,7 +89,7 @@ fn split_layer(
     }
     let mut output = vec![ByRegion::default(); object.regions.len()];
     let mut first = 0;
-    for parent in &object.regions {
+    for parent in &mut object.regions {
         if first == painted.len() || parent.layers[layer].surfaces.is_empty() {
             continue;
         }
@@ -142,10 +100,9 @@ fn split_layer(
             continue;
         };
         first += found;
-        let original = parent.layers[layer]
-            .surfaces
-            .iter()
-            .map(|s| s.as_parts().1.clone())
+        let original = std::mem::take(&mut parent.layers[layer].surfaces)
+            .into_iter()
+            .map(|s| s.into_parts().1)
             .collect::<Vec<_>>();
         let parent_box = bounds(&original).unwrap();
         let mut self_color = None;
@@ -169,21 +126,20 @@ fn split_layer(
             }
             output[target.region_id].append(intersection_ex(&original, color)?);
         }
-        let mut mine = paths(&original);
+        let mut mine = paths(original);
         for (index, (color, bbox)) in colors.iter().zip(&boxes).enumerate() {
             if self_color == Some(index) || !bbox.is_some_and(|bbox| parent_box.overlap(bbox)) {
                 continue;
             }
-            mine = difference_polygons_paths(&mine, &paths(color))?;
+            mine = difference_polygons_paths(&mine, &paths(color.iter().cloned()))?;
             if mine.is_empty() {
                 break;
             }
         }
         if !mine.is_empty() {
             let delta = scale.scaled_delta(5.0 * 1e-4) as f32;
-            mine = paths(&offset2_ex(
+            mine = paths(opening_ex(
                 &union_ex(&mine, FillRule::NonZero)?,
-                -delta,
                 delta,
                 JoinType::Miter,
                 3.0,

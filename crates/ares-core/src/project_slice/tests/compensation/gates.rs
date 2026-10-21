@@ -285,7 +285,7 @@ fn apply(
         &resolved_objects,
         FloatOrPercent::Float(0.0),
         &OrcaFloats(nozzles.iter().copied().map(OrcaFloat).collect()),
-        CoordinateScale::Normal,
+        (CoordinateScale::Normal, std::iter::repeat(false)),
     )
 }
 fn assert_apply_error(

@@ -11,6 +11,9 @@ use crate::{
     project::facets_annotation::strict_annotated_facets,
 };
 
+// Model.hpp:1781, used by MMS.cpp:1174–1175.
+const SINKING_Z_THRESHOLD: f32 = -0.001;
+
 pub(super) type Surfaces = Vec<Vec<Polygon>>;
 pub(super) struct Raw {
     pub(super) top: Vec<Surfaces>,
@@ -87,7 +90,7 @@ pub(super) fn collect(input: &Input<'_>, (top, bottom): (bool, bool)) -> Result<
                     ))
                 })
                 .collect::<Vec<_>>();
-            let sinking = vertices.iter().any(|p| p[2] < -0.001);
+            let sinking = !planes.is_empty() && vertices.iter().any(|p| p[2] < SINKING_Z_THRESHOLD);
             let zs = if sinking {
                 std::iter::once(0.0)
                     .chain(planes.iter().copied())

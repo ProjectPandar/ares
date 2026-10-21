@@ -13,7 +13,8 @@ pub(super) fn append(
     bbox: Bounds,
     epsilon: (i64, f64),
 ) -> Vec<usize> {
-    let bbox = bbox.inflated(epsilon.0);
+    // BoundingBox::offset(double) → Point.hpp:197, distinct from lookup radius casts.
+    let bbox = bbox.inflated(epsilon.1.round() as i64);
     let mut vertices = Lookup::new(epsilon.0);
     let mut contours = Lookup::new(3 * epsilon.0);
     for (contour, (&offset, &count)) in graph.offsets.iter().zip(&graph.sizes).enumerate() {

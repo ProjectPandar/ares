@@ -3,7 +3,7 @@ use std::mem;
 use crate::{
     FloatOrPercent, ObjectOptions, OrcaFloats, Project, SliceError,
     geometry::{CoordinateScale, ExPolygon, FillRule, union_ex},
-    project::effective_config::types::{BoundedResolvedProjectConfig, ResolvedProjectObject},
+    project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
 use super::{
@@ -19,6 +19,8 @@ mod multi_region;
 mod preflight;
 mod prepare;
 mod xy;
+
+pub(in crate::project_slice) use prepare::apply_project_compensation;
 
 use preflight::{
     PreparedLayerCompensation, PreparedObjectCompensation, prepare_object_compensation,
@@ -154,23 +156,13 @@ pub(super) fn prepare_post_compensation<'a>(
     } = prepare_post_painted(project.into_source())?;
     let initial_layer_width = resolved.views.full.process.print.initial_layer_line_width;
     let nozzle_diameters = &resolved.views.full.project.print.nozzle_diameter;
-    let objects = if painting.iter().any(|metadata| metadata.active) {
-        prepare::apply(
-            objects,
-            &resolved.objects,
-            initial_layer_width,
-            nozzle_diameters,
-            (scale, painting.iter().map(|metadata| metadata.active)),
-        )?
-    } else {
-        apply_project_compensation(
-            objects,
-            &resolved.objects,
-            initial_layer_width,
-            nozzle_diameters,
-            scale,
-        )?
-    };
+    let objects = apply_project_compensation(
+        objects,
+        &resolved.objects,
+        initial_layer_width,
+        nozzle_diameters,
+        (scale, painting.iter().map(|metadata| metadata.active)),
+    )?;
     Ok(PreparedPostCompensation {
         project,
         resolved,
@@ -180,21 +172,6 @@ pub(super) fn prepare_post_compensation<'a>(
     })
 }
 
-pub(in crate::project_slice) fn apply_project_compensation(
-    objects: Vec<PostRegionPrintObject>,
-    resolved_objects: &[ResolvedProjectObject],
-    initial_layer_width: FloatOrPercent,
-    nozzle_diameters: &OrcaFloats,
-    scale: CoordinateScale,
-) -> Result<Vec<PostCompensationPrintObject>, SliceError> {
-    prepare::apply(
-        objects,
-        resolved_objects,
-        initial_layer_width,
-        nozzle_diameters,
-        (scale, std::iter::repeat(false)),
-    )
-}
 fn validate_structures(objects: &[PostRegionPrintObject]) {
     for object in objects {
         let layer_count = object.plan.layers.len();
@@ -350,12 +327,3 @@ fn geometry_error() -> SliceError {
         "project elephant-foot compensation geometry is nonfinite or outside the supported Clipper range",
     )
 }
-
-type ApplyProjectCompensation = fn(
-    Vec<PostRegionPrintObject>,
-    &[ResolvedProjectObject],
-    FloatOrPercent,
-    &OrcaFloats,
-    CoordinateScale,
-) -> Result<Vec<PostCompensationPrintObject>, SliceError>;
-const _: ApplyProjectCompensation = apply_project_compensation;

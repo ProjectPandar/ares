@@ -84,21 +84,7 @@ pub(in crate::project_slice) fn apply_project(
             states,
             scale: prepared.scale,
         };
-        let raw = (0..planes.len())
-            .map(|index| {
-                object
-                    .regions
-                    .iter()
-                    .flat_map(|region| {
-                        region.layers[index]
-                            .surfaces
-                            .iter()
-                            .map(|surface| surface.as_parts().1.clone())
-                    })
-                    .collect()
-            })
-            .collect::<Vec<Vec<_>>>();
-        let layers = preprocess::prepare(&raw, prepared.scale).map_err(clip_error)?;
+        let layers = preprocess::prepare(object, prepared.scale).map_err(clip_error)?;
         let side = sides(&input, &layers)?;
         let caps = top_bottom::segment(&input, &layers, &object.regions, &heights, nozzle)?;
         let segmentation = merge::merge(side, caps, prepared.scale).map_err(clip_error)?;

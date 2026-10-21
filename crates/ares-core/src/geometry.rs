@@ -62,7 +62,7 @@ pub(crate) use convex_hull::convex_hull;
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
 pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};
-pub(crate) use line::{Line, ThickLine};
+pub(crate) use line::{Line, ThickLine, liang_barsky_interval};
 #[cfg_attr(
     not(test),
     expect(

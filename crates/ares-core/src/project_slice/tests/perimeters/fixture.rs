@@ -92,7 +92,7 @@ pub(super) fn case(
         std::slice::from_ref(&resolved),
         FloatOrPercent::Float(0.5),
         &OrcaFloats(vec![OrcaFloat(0.4), OrcaFloat(0.4)]),
-        scale,
+        (scale, std::iter::repeat(false)),
     )
     .unwrap();
     Case {

@@ -163,6 +163,7 @@ pub(super) fn build_volume_bounds(
     )
 }
 
+/// PrintApply.cpp:998–999: painted objects suppress XY bounding-box inflation.
 pub(super) fn build_volume_bounds_with_inflation(
     source: &ProjectObject,
     resolved: &ResolvedProjectObject,
