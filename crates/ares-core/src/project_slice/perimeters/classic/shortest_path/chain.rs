@@ -291,7 +291,7 @@ pub(in crate::project_slice) fn chain_segments_constrained(
     chain_segments_constrained_with_optional_start(endpoints, Some(start_near), can_reverse)
 }
 
-pub(super) fn chain_segments_constrained_with_optional_start(
+pub(in crate::project_slice) fn chain_segments_constrained_with_optional_start(
     endpoints: &[[[crate::geometry::Coord; 2]; 2]],
     start_near: Option<[crate::geometry::Coord; 2]>,
     can_reverse: &[bool],

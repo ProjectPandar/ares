@@ -17,16 +17,9 @@ pub(in crate::project_slice) fn emit(
         .predecessor
         .predecessor
         .predecessor;
-    let mut brim = (0..traversal.objects.len())
-        .map(|index| {
-            brim::BrimPlan::generate(
-                traversal,
-                &prepared.support_layers,
-                &prepared.objects[index][0].tool_regions,
-                index,
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+    let mut brim = brim::BrimPlan::generate_all(traversal, &prepared.support_layers, |index| {
+        &prepared.objects[index][0].tool_regions
+    })?;
     brim::combine(traversal, &mut brim)?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         tower.first_layer_corners(&traversal.resolved.views.full, traversal.scale)

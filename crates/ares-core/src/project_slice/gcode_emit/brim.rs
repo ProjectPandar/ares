@@ -10,11 +10,36 @@ use crate::{
     project_slice::support_material::InstalledSupportLayer,
 };
 impl BrimPlan {
+    pub(super) fn generate_all<'a>(
+        traversal: &PreparedPostClassicTraversal,
+        support: &[Vec<InstalledSupportLayer>],
+        first_layer_regions: impl Fn(
+            usize,
+        )
+            -> &'a [crate::project_slice::extrusion_islands::RegionToolUsage],
+    ) -> Result<Vec<Option<Self>>, SliceError> {
+        let mut plans = (0..traversal.objects.len())
+            .map(|_| None)
+            .collect::<Vec<_>>();
+        let mut accumulated = Vec::new();
+        for index in owner::generation_order(traversal) {
+            plans[index] = Self::generate(
+                traversal,
+                support,
+                first_layer_regions(index),
+                index,
+                &mut accumulated,
+            )?;
+        }
+        Ok(plans)
+    }
+
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<InstalledSupportLayer>],
         first_layer_regions: &[crate::project_slice::extrusion_islands::RegionToolUsage],
         object_index: usize,
+        accumulated: &mut Vec<crate::geometry::ExPolygon>,
     ) -> Result<Option<Self>, SliceError> {
         let (resolved, _) = traversal.print_object_config(object_index);
         let options = &resolved.object;
@@ -259,8 +284,12 @@ impl BrimPlan {
         };
         let owner_collection = !combined::enabled(traversal);
         let brim_area = if owner_collection {
-            let (area, forbidden, islands) =
-                owner::expand(traversal, object_index, &brim_area, &inner, &object_islands);
+            let (area, forbidden, islands) = owner::expand(
+                traversal,
+                object_index,
+                (&brim_area, &inner, &object_islands),
+                accumulated,
+            )?;
             object_islands = islands;
             bed_area::clip_plate(
                 traversal,

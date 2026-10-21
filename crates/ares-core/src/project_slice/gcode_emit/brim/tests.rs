@@ -11,7 +11,7 @@ fn explicit_outer_brim_generates_outside_in_paths() {
     );
     let traversal = perimeters::prepare_post_classic_traversal(&archive.bytes()).unwrap();
 
-    let brim = BrimPlan::generate(&traversal, &[], &[], 0)
+    let brim = BrimPlan::generate(&traversal, &[], &[], 0, &mut Vec::new())
         .unwrap()
         .unwrap();
 
