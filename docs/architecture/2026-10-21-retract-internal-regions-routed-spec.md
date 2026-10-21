@@ -148,3 +148,127 @@ Explicitly **not** in this slice:
    does not change the unrouted path).
 3. No change to any other existing parity case.
 4. The support-island branch (§5.1) untouched, so its behavior stays byte-identical.
+
+## 8. Supplement — the external boundary is missing the per-instance `translate(instance.shift)`
+
+Status: SPEC supplement, added after §7's GREEN. The 7 difflib hunks that §7 left behind in
+`default-prisms.3mf` are **not** retraction hunks: they are avoid-crossing **detour waypoints** on
+hole→neck inter-object travels. This section owns them.
+
+### 8.1 Upstream boundary (source of truth)
+
+| Upstream | Location | Role |
+| --- | --- | --- |
+| `AvoidCrossingPerimeters::get_boundary_external` | `AvoidCrossingPerimeters.cpp:1137-1193` | Builds `m_external`: every print object's `lslices` holes at this print z. |
+| per-instance translation | `AvoidCrossingPerimeters.cpp:1172-1177` | For each `PrintInstance`, append `holes_per_obj` and then `boundary[i].translate(instance.shift)`. **This is the missing step.** |
+| `travel_to` routing frame | `AvoidCrossingPerimeters.cpp:1241-1242` | `scaled_origin = use_external ? Point::new_scale(origin) : Point(0,0)`; `start = last_pos + scaled_origin`, `end = point + scaled_origin`. |
+
+The live function set is the one §2 of the earlier discovery established: `#if 0` starts at `:1340`, so
+`get_boundary_external :1665`, `travel_to :1549` and `avoid_perimeters :1521` are dead copies. Only
+`:1137-1193`, `:1233-1316` and `:691` are compiled.
+
+### 8.2 What the read-only GDB pass established
+
+Travel identified on both sides by its origin-independent displacement: `(+17708658,+25166913)` →
+`(+3038330,+756944)` coord_t, the hole→neck travel at G-code line 1331.
+
+| | Native (`m_external`, offset `0x1d0` in `this`) | Ares (`boundary.contours`) |
+| --- | --- | --- |
+| polygons | 1 | 1 |
+| vertices | 4 | 4 |
+| geometry | rect `(127207833,127792164) (120792170,127792164) (120792170,134207827) (127207833,134207827)`, 6.41572 mm square | rect `(3207832,-3207831) (-3207831,-3207831) (-3207831,3207832) (3207832,3207832)`, 6.4157 mm square |
+| position | centred at plate `(124.000, 131.000)` | centred at `(0, 0)` of the router frame |
+
+Count, size and vertex order agree. Only the **position** differs, by exactly `(9.5617, 17.0000) mm`.
+
+The fixture's instance transforms (`3D/3dmodel.model` build items) name the two frames:
+
+| object | `transform` translation |
+| --- | --- |
+| `hole.stl` (`objectid=2`) | `(124.000001, 130.999995)` |
+| `neck.stl` (`objectid=6`) | `(114.438309, 113.999995)` |
+| `wide.stl` (`objectid=4`) | `(104.000000, 131.000005)`, rotated |
+
+Native's centre `(124.000, 131.000)` **is** `hole.stl`'s placement, i.e. instance-translated. Ares' centre is
+object-local `(0, 0)`; the displacement is exactly `hole.shift - neck.shift = (9.5617, 17.0000)`, because
+`neck.stl` is the object currently being printed and only *its* shift is subtracted from the endpoints.
+
+### 8.3 Ares coordinate frames and the conversion
+
+Two frames are in play, and the router already commits to one of them.
+
+- Producer side (`layers/group.rs:35-59`) flattens `object.slices(index)` for every entry. `Layer::lslices`
+  is per-print-object **object-local** (`GCode.cpp:5380/5403/5437` applies the placement later via
+  `set_origin(unscale(instance.shift))`), so `chunk_slices` is a mixture of local frames.
+- Router side (`start_travel/route.rs:27-31`) builds `start` as `unscale(cursor) + state.offset`, i.e.
+  **plate** coordinates, and `avoid_crossing::route` immediately converts back with
+  `to_scaled = checked_scale_rounded(point - offset)` (`avoid_crossing.rs:73-84`). The router therefore
+  compares everything in the **currently printing instance's local scaled frame**.
+
+The external boundary must be expressed in that same frame. Per hole, with `s = instance.shift` of the
+object that owns the hole and `o = state.offset` of the instance being printed:
+
+```
+local_scaled = hole_local_scaled + s - o
+```
+
+This is the same relation upstream gets for free: upstream stores `m_external` in plate coordinates
+(`:1172-1177`) and routes with plate endpoints (`:1241-1242`); Ares keeps its existing single local frame and
+folds `-o` into the boundary input. Applied to the measured travel it reproduces Native exactly: the rect
+becomes `x 6.3538..12.7694, y 13.7922..20.2078`, the detour corner from `(17.708658,25.166913)` to
+`(3.038330,0.756944)` is `(12.7694, 13.7922)`, and Native's `wp1` is `(12769594,13792099)`.
+
+`offset` is constant for the lifetime of the boundary cache: `state.avoid_boundary` is cleared per entry
+(`layers/tool_entry.rs:162`, `layers/support_entry.rs:94`, `motion/state.rs:273`), and an entry is one
+instance. So the shift may be baked into the boundary input and the `-o` term applied once at build.
+
+**Multi-instance:** upstream appends one translated copy per `PrintInstance`, not one per object
+(`:1172-1177`). Ares must do the same — an object placed twice contributes its holes twice, at both
+placements. The chunk-wide slice list must therefore be expanded by `instances[object_index]`, which already
+carries the scaled `shift` (`layers/instances.rs:9`, built from `footprint::instance_shift`, the analogue of
+upstream's `instance.shift`).
+
+### 8.4 Ares destination boundary
+
+| Ares | Location | Change |
+| --- | --- | --- |
+| `group::geometry` | `layers/group.rs:35-59` | **Unchanged.** Still produces the object-local `chunk_slices` that brim/skirt/tower consume. |
+| `group::boundary_slices` (new) | `layers/group.rs` | Per entry, per instance of that object, append the layer slices translated by `instance.shift`. Plate-frame, chunk-wide, identical for every instance in the chunk. |
+| `AvoidCrossingGeometry::chunk_slices` | `motion/state.rs:242` | Receives the `boundary_slices` vector. Field name and all six unit-test constructors unchanged; the doc comment states the new contract (`:1172-1177` applied). |
+| `Boundary::build_external` | `motion/path/avoid_crossing/boundary.rs:47-52` | Takes the frame translation and applies `point + translate` while it is already walking the hole points (`:59-67`). |
+| `avoid_crossing::route` | `motion/path/avoid_crossing.rs:136-171` | Computes the translation from `offset` and passes it to `build_external`. |
+
+Nothing else moves: `plan_route`, `router::avoid_perimeters`, the internal boundary, the safe zone, the
+detour cap and the retraction decision from §3 all keep their current shape.
+
+### 8.5 Included upstream behavior
+
+1. `get_boundary_external`'s per-instance translation (`:1172-1177`), one appended copy per instance.
+2. Holes taken from every object with a layer at this print z, expanded by half the cross-object average
+   perimeter spacing, miter join (`:1187-1193`; Ares `boundary.rs:47-118`, already matching — the measured
+   rectangle sides agree to the unit).
+3. The routing frame relation of §8.3, so the detour is computed against the boundary where the object
+   actually sits.
+
+### 8.6 Deferred upstream behavior
+
+1. **`chunk_slices` consumers.** `brim_emit` (`layers/brim_emit.rs:22`) and `tower` (`layers/tower.rs:18`)
+   still receive object-local slices. Whether that is a latent defect for them, or whether they re-apply the
+   placement elsewhere, is **not investigated and not changed here** (coordinator decision on Q1). If it is
+   a defect, it is a separate slice with its own RED.
+2. **`m_external` bbox invalidation.** Upstream re-checks
+   `!(bbox.contains(start) && bbox.contains(end))` per travel (`:1266-1272`); Ares builds the external
+   boundary once per entry (`route.rs:38`) and only the internal boundary has a bbox test
+   (`avoid_crossing.rs:103-104`). Included only if a residual difference after §8 is traced to it
+   (coordinator decision on Q3).
+3. The object set stays chunk-scoped (`entries`) rather than print-wide
+   (`layer.object()->print()->objects()`). Identical on this fixture (all three objects are in one chunk);
+   not changed here.
+
+### 8.7 Exit criteria for the §8 GREEN
+
+1. `default-prisms.3mf` byte-strict including the M73 handling (the comparator is **not** touched).
+2. The `reduce_crossing_wall=0` sole-key control stays byte-strict.
+3. `arachne` suite and the avoid-crossing / `reduce_crossing_wall` / multi-object / multi-instance parity
+   cases show no regression.
+4. `cargo fmt` and `cargo clippy --all-targets` clean; CPU 17, `--test-threads 1`.
