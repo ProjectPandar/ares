@@ -39,21 +39,17 @@ pub(super) fn projected_angle(
 
 pub(in crate::project_slice) use meta::{reset_rand_state, template_rotation_angle};
 
-/// Non-meta list path (`Fill.cpp:206-210`): upstream
-/// `ConfigOptionFloats::deserialize` tokenizes on `[\s,]+` and feeds each
-/// token to `strtod`-style parsing, so unparseable tails are silently
-/// dropped (`"45!"` → 45) and unparseable tokens become `0.0` — never an
-/// error. Returns the cyclic angle for `layer_id`.
+/// Non-meta list path (`Fill.cpp:206-210`):
+/// `ConfigOptionFloats::deserialize` (`Config.hpp:868-890`) splits comma
+/// items with `getline`, trims each item, then reads its numeric prefix.
+/// Empty input yields one zero angle. Returns the cyclic angle for `layer_id`.
 pub(super) fn simple_rotation_angle(template: &str, layer_id: usize) -> f64 {
-    let angles: Vec<f64> = template
-        .split(|character: char| character == ',' || character.is_whitespace())
-        .filter(|token| !token.is_empty())
-        .map(|token| meta::strtod_prefix(token.as_bytes()).0)
-        .collect();
-    if angles.is_empty() {
-        // Upstream UB domain (`layer_id % 0`); unreachable for non-empty
-        // non-meta templates since every nonempty token contributes a slot.
+    if template.is_empty() {
         return 0.0;
     }
+    let angles: Vec<f64> = template
+        .split_terminator(',')
+        .map(|token| meta::strtod_prefix(token.trim_ascii().as_bytes()).0)
+        .collect();
     angles[layer_id % angles.len()]
 }
