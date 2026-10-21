@@ -77,14 +77,17 @@ portable Rust with no core filesystem/UI/terminal/native runtime dependency.
 
 From the eight-input sealed discovery choose three independent target3MFs:
 
-| Target | Width/depth | Purpose | Native positive model XYE tool0/tool1 |
-|---|---|---|---|
-| split-w1-d0 |1/0|width alone; comparison anchor for depth changes|3995/240|
-| split-w1-d1p5 |1/1.5|depth>width even-index selection, not tooltip ignore|3961/261|
-| split-w0-d0p5 |0/0.5|depth-only gate, not tooltip ignore|3854/519|
+| Target | Width/depth | Purpose |
+|---|---|---|
+| split-w1-d0 |1/0|width alone; comparison anchor for depth changes|
+| split-w1-d1p5 |1/1.5|depth>width even-index selection, not tooltip ignore|
+| split-w0-d0p5 |0/0.5|depth-only gate, not tooltip ignore|
 
-One control reuses `paint_color::orca_parity_paint_color_split` unchanged, with the
-existing frozen painted-split archive/preparer/manifest (3674/900, width/depth0).
+Control coverage belongs solely to existing
+`paint_color::orca_parity_paint_color_split` and its existing
+`orca_parity_paint_color_native_preflight`, with the original frozen painted-split
+archive/preparer/manifest (width/depth0). The new suite qualifies only its three
+targets; it contains no CONTROL, copied preparer or control input branch.
 No copied control3MF. Only three target3MFs are added as fixture data: no new
 preparer/manifest/G-code/Native outputs. They are byte-identical to discovery;
 only the two selected settings differ from the frozen split base. This isolates
@@ -97,11 +100,16 @@ three new tests require success/output equality; **never assert Unsupported**,
 should_panic, normalize order/coordinates, loosen tolerances or invert failure.
 Current guard is expected to cause target FAIL; reused control must PASS.
 
-Fresh two-mode Native-only preflight qualifies all four selected inputs with
-reference+replay before **any** Ares leg:16 actual Native PIDs globally. Public
-four-leg matrix per mode invokes fresh reference+replay again:16 more PIDs.
-Retain original generator-only allowance; actual settings readback and positive
-model activity are witness checks, not replacements for whole-output comparisons.
+Fresh two-mode Native-only preflight runs the existing paint_color preflight
+(its three original inputs) plus the new suite's three-target preflight, with
+reference+replay before **any** Ares leg:24 actual Native PIDs globally. Control
+is not qualified again inside the new suite. The public four-leg matrix per mode
+invokes fresh reference+replay again:16 more PIDs,40total.
+Retain original generator-only allowance. New-target activity acceptance is only
+positive_model_XYE>0 for both tools, setting-line presence and reference/replay
+activity equality: no fixed move/layer counts or Native-derived goldens. Existing
+paint_color acceptance remains unchanged. These witness checks do not replace
+strict whole-output comparisons.
 Any unexpected Native/control/infrastructure result is STOP/report, not a retry
 to PASS or production/comparator change.
 

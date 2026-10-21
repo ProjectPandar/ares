@@ -113,7 +113,29 @@ fn prepare(label: &str) -> (Vec<u8>, Value) {
 fn assert_activity(reference: &NativeCase, replay: &NativeCase, case: &Value, label: &str) {
     let mut activities = Vec::new();
     for native in [reference, replay] {
-        let activity = activity::activity(native.native.as_bytes(), case);
+        let activity = activity::activity(native.native.as_bytes());
+        let layers = activity["positive_model_XYE_by_layer"].as_array().unwrap();
+        assert_eq!(layers.len(), 50);
+        assert!(
+            layers
+                .iter()
+                .all(|layer| !layer.as_object().unwrap().is_empty())
+        );
+        assert_eq!(
+            activity["positive_model_XYE_by_tool"],
+            case["positive_model_XYE_by_tool"]
+        );
+        let both = layers
+            .iter()
+            .filter(|layer| {
+                let layer = layer.as_object().unwrap();
+                layer.contains_key("0") && layer.contains_key("1")
+            })
+            .count();
+        assert_eq!(
+            both as u64,
+            case["both_material_positive_layers"].as_u64().unwrap()
+        );
         fs::write(
             native.root.join("native-activity.json"),
             serde_json::to_vec_pretty(&activity).unwrap(),

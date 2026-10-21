@@ -1,7 +1,7 @@
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
-pub(super) fn activity(bytes: &[u8], case: &Value) -> Value {
+pub(super) fn activity(bytes: &[u8]) -> Value {
     let mut tool = None;
     let mut relative_e = true;
     let mut e_position = BTreeMap::<Option<usize>, f64>::new();
@@ -65,19 +65,5 @@ pub(super) fn activity(bytes: &[u8], case: &Value) -> Value {
             *layers.last_mut().unwrap().entry(tool).or_default() += 1;
         }
     }
-    assert_eq!(layers.len(), 50);
-    assert!(layers.iter().all(|layer| !layer.is_empty()));
-    assert_eq!(
-        serde_json::to_value(&counts).unwrap(),
-        case["positive_model_XYE_by_tool"]
-    );
-    let both = layers
-        .iter()
-        .filter(|layer| layer.contains_key(&0) && layer.contains_key(&1))
-        .count();
-    assert_eq!(
-        both as u64,
-        case["both_material_positive_layers"].as_u64().unwrap()
-    );
     json!({"positive_model_XYE_by_tool":counts,"positive_model_XYE_by_layer":layers})
 }
