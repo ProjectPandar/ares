@@ -32,6 +32,7 @@ pub(crate) fn fill_surface(
     let mut angle = params.bridge_angle.unwrap_or(params.angle);
     if params.bridge_angle.is_none()
         && !params.fixed_angle
+        && !params.layer_angle_fixed
         && !params.dont_alternate_fill_direction
         && (params.layer_index / usize::from(params.thickness_layers)) & 1 == 1
     {
