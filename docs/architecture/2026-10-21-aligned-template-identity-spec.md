@@ -127,3 +127,43 @@ CLI +12 independent API runs and four canonical diagnostic streams:
 `/home/indexyz/ares-evidence/w3-aligned-template-readonly-47821c760/README.md`.
 Failed optimized readers and the initial76-vs75 priority-event labelling mistake
 are retained/excluded there; accepted readers use actual generation layer args.
+
+## Approved sparse-anchoring class-angle amendment
+
+COORD independently accepted the read-only diagnosis at candidate
+`26c54635079492678df1ea5e31af8ed6834c0115`. That three-file attempt closed
+the official 53 selected checks but stopped on ten of 83 official neighbors;
+it was not GREEN. Its explicit authorization also included the existing
+`fill/rectilinear_multiline.rs:35` class-angle guard.
+
+Extend the source-owned boundary to
+`Fill.cpp:1394,1418,1441-1450,1497`,
+`Layer::generate_sparse_infill_polylines_for_anchoring`: its filler factory
+constructs the same `FillAlignedRectilinear`, whose class layer-angle is zero
+(`FillRectilinear.hpp:44`, `FillBase.cpp:308-312`). The Rust destination is
+`prepare_infill/bridge_over_infill/sparse_anchoring/linear.rs::append`.
+This existing compatibility adapter must set `layer_angle_fixed` from
+`pattern == ProcessInfillPattern::AlignedRectilinear`, replacing only its
+literal false. Preserve `fixed_angle: fill.params.fixed_angle` unchanged.
+The existing by-lines and multiline consumers already accept this class bit;
+no kernel, dispatcher, helper or API change is needed.
+
+All ten failed inputs actually reached this adapter as aligned count1 at
+layer15/thickness1 with template=false, class=false and dont-alternate=false;
+seven were count1 baselines before their requested multiline leg. Official
+Native actual Aligned vtable returned class angle0 at corresponding idx15.
+Normal aligned filling already supplied class=true. Thirteen observer complete
+streams matched the canonical failures. This does not guarantee later closure.
+
+This amendment supersedes the earlier two-adapter-only scope solely for the
+authorized existing multiline guard and this one sparse-anchoring assignment.
+Freeze all approved tests, inputs, SOURCE, helpers, comparator, ironing,
+concentric, other algorithms, Flow and emission. Separate docs and one-line
+production commits are required. Verify all 53 target/control checks and the
+full 83 aligned/rectilinear/infill neighbors in both official and seeded modes,
+plus fmt, locked workspace/all-target Clippy-Dwarnings and browser wasm32, on
+CPU12. No FULL. Any residual means STOP, not adjacent repair.
+
+Read-only source map, actual parameters/stacks/vtable return, canonical streams
+and independently approved amendment RR:
+`/home/indexyz/ares-evidence/w3-aligned-class-angle-readonly-26c546350/README.md`.
