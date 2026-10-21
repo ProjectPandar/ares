@@ -40,6 +40,6 @@ fn check(label: &str, project: &[u8], expected_sha: &str) {
         label,
         project,
         expected_sha,
-        false,
+        (false, |_, _| {}),
     );
 }

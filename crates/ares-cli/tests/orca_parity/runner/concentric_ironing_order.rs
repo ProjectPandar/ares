@@ -37,6 +37,6 @@ fn concentric_ironing_ring_order_matches_native_public_slicing() {
         "target",
         PROJECT,
         PROJECT_SHA256,
-        false,
+        (false, |_, _| {}),
     );
 }

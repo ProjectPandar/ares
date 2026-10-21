@@ -13,7 +13,7 @@ fn duplicate_medial_endpoint_matches_native() {
         "beam1-target",
         include_bytes!("../../../../tests/parity/medial-endpoint-zero/beam1-target.3mf"),
         "a9ee974eec98a58a499dea4b508dc186cc32708d8364faff4098e0257eec8775",
-        true,
+        (true, |_, _| {}),
     );
 }
 
@@ -30,6 +30,6 @@ fn disabled_interlocking_sole_key_control() {
         "beam0-control",
         include_bytes!("../../../../tests/parity/medial-endpoint-zero/beam0-control.3mf"),
         "42309a59caea9f564dd566e2c0aa8914d5d22bc21fa127accbe4574408b7c523",
-        true,
+        (true, |_, _| {}),
     );
 }
