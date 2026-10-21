@@ -7,6 +7,26 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Painted side-layer cutting: approved SPEC, public RED only (#99)
+
+New branch from frozen1045b1775; original painted branch/worktree remain unchanged.
+COORD authorizes docs-only SPEC/ARD/roadmap, then Native-first public RED only;
+no GREEN, production change, FULL, merge or push. Source boundary at8500fcdcc:
+`MultiMaterialSegmentation.cpp1144–1168 cut_segmented_layers`,2169–2181 gate/order,
+2197–2207 wrapper; actual consumer`PrintObjectSlice874–886/1206–1224`.
+Rust destination is private`ares-core/project_slice/region_slices/painted/cut.rs`,
+consumed before existing caps/merge/actual apply. Existing omission/guard is only
+an upstream compatibility shell. Preserve casts, object-layer parity and source
+width0/depth>width behavior, not tooltip ignore rules or unused width-depth math.
+Priority precedes painted+beam's separate generator; beam/fuzzy painting defer.
+RED exit: three discovery-exact target3MFs(width1/depth0,1/1.5,0/0.5), one unchanged
+existing painted-split control, full ordered NativeCase/API/CLI assertions and
+raw API==CLI; dual-mode CPU18 expected3target FAIL/1control PASS with fresh global
+Native-first barrier, static/target gates, retained artifacts and independent
+RED-RR. Later GREEN/integration/FULL need separate authority; #90 still waits its
+explicit W1 integration turn. [SPEC](architecture/painted-side-cut-spec.md),
+[ARD](architecture/ard-painted-side-cut.md).
+
 ### Painted MMU complete consumed chain: SPEC request (#90)
 
 Base main3e862584d; upstream8500fcdcc. COORD accepted the seeded-only discovery
