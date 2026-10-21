@@ -54,6 +54,9 @@ mod classic_seam_overhang;
 #[path = "orca_parity/pre_external_wipe.rs"]
 mod pre_external_wipe;
 
+#[path = "orca_parity/retract_internal_regions_routed.rs"]
+mod retract_internal_regions_routed;
+
 #[path = "orca_parity/closest_lines_runtime.rs"]
 mod closest_lines_runtime;
 
