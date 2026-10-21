@@ -372,7 +372,7 @@ mod auto;
 mod bed_area;
 mod combined;
 mod speed;
-pub(super) use combined::combine;
+pub(super) use combined::{GroupBrim, combine, group_brims};
 mod emit;
 mod outline;
 mod owner;

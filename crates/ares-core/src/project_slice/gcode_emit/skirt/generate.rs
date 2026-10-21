@@ -22,15 +22,35 @@ impl SkirtPlan {
             return Ok(None);
         }
         let per_object = loops_count > 0 && print.skirt_type == crate::ProcessSkirtType::PerObject;
-        // Per-object skirts stay unsupported for shared/multi-instance
-        // brim footprints (`Print.cpp:2847-2971`; ByObject shared groups
-        // throw SlicingError at `Print.cpp:2551-2556`).
+        // The contact-component slice admits only the frozen ByLayer,
+        // single-instance explicit-outer envelope; other combined scopes
+        // retain the existing rejection below.
+        let grouped_combining = print.print_sequence == crate::ProcessPrintSequence::ByLayer
+            && print.draft_shield == crate::ProcessDraftShield::Disabled
+            && tower_corners.is_empty()
+            && raft.is_none()
+            && support.iter().all(Vec::is_empty)
+            && traversal
+                .resolved
+                .views
+                .full
+                .filament
+                .gcode
+                .filament_diameter
+                .0
+                .len()
+                == 1
+            && (0..traversal.objects.len()).all(|index| {
+                let (object, group) = traversal.print_object_config(index);
+                object.object.brim_type == crate::ProcessBrimType::OuterOnly
+                    && group.instance_indices.len() == 1
+            });
         if per_object
             && traversal.resolved.objects.len() > 1
             && brim.iter().enumerate().any(|(index, plan)| {
                 let (object, _) = traversal.print_object_config(index);
                 plan.is_some()
-                    && (print.combine_brims.0
+                    && ((print.combine_brims.0 && !grouped_combining)
                         // `Print.cpp:2847-2971` / `Brim.cpp:448-460,964-977`:
                         // admitted brim kinds retain their object's occupied footprint.
                         || !matches!(
@@ -157,6 +177,7 @@ impl SkirtPlan {
             loops.extend(group_loops);
             if !group.members.is_empty() {
                 member_groups.push(SkirtGroup {
+                    brims: super::super::brim::group_brims(traversal, &group.members, brim)?,
                     members: group.members,
                     loops: start..loops.len(),
                 });

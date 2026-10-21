@@ -211,7 +211,7 @@ pub(super) fn emit(
         brim_emit::emit(
             output,
             state,
-            brim,
+            (brim, skirt),
             object_index,
             layer_index,
             entry_builder,

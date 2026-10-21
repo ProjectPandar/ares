@@ -2,7 +2,7 @@
 //! object content (`GCode.cpp` emits it ahead of the layer's object
 //! entries).
 
-use super::super::{brim, motion};
+use super::super::{brim, motion, skirt};
 use super::entry_builder::EntryBuilder;
 use crate::geometry::ExPolygon;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
@@ -14,7 +14,7 @@ use crate::project_slice::perimeters::classic::traversal::types::PreparedPostCla
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    brim: &[Option<brim::BrimPlan>],
+    (brim, skirt): (&[Option<brim::BrimPlan>], &Option<skirt::SkirtPlan>),
     object_index: usize,
     layer_index: usize,
     entry_builder: &mut EntryBuilder<'_>,
@@ -25,39 +25,57 @@ pub(super) fn emit(
     if layer_index != 0 {
         return Ok(());
     }
-    let global = brim.iter().flatten().find(|plan| plan.global);
-    let plan = if let Some(plan) = global {
-        (!state.global_brim_done).then_some(plan)
+    let grouped = skirt
+        .as_ref()
+        .and_then(|plan| plan.group_brims(object_index));
+    let (plan, owners) = if let Some(components) = grouped {
+        let Some(component) = components.iter().find(|component| {
+            component.owners().contains(&object_index)
+                && component
+                    .owners()
+                    .iter()
+                    .any(|owner| !state.emitted_brim_owners.contains(owner))
+        }) else {
+            return Ok(());
+        };
+        (component.plan(brim), component.owners())
     } else {
-        brim[object_index].as_ref().filter(|plan| {
-            !plan.owner_collection || !state.emitted_brim_owners.contains(&object_index)
-        })
+        let global = brim.iter().flatten().find(|plan| plan.global);
+        let plan = if let Some(plan) = global {
+            (!state.global_brim_done).then_some(plan)
+        } else {
+            brim[object_index].as_ref().filter(|plan| {
+                !plan.owner_collection || !state.emitted_brim_owners.contains(&object_index)
+            })
+        };
+        let Some(plan) = plan else {
+            return Ok(());
+        };
+        (plan, std::slice::from_ref(&object_index))
     };
-    if let Some(plan) = plan {
-        if plan.global {
-            state.global_brim_done = true;
-        }
-        if plan.owner_collection {
-            state.emitted_brim_owners.insert(object_index);
-        }
-        let geometry = entry_builder.geometry(
+    if plan.global {
+        state.global_brim_done = true;
+    }
+    if plan.owner_collection {
+        state.emitted_brim_owners.extend(owners.iter().copied());
+    }
+    let geometry = entry_builder.geometry(
+        object_index,
+        layer_index,
+        chunk_slices,
+        chunk_perimeter_spacing,
+    );
+    let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
+        .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
+    plan.emit(
+        output,
+        geometry.view(
+            traversal,
             object_index,
             layer_index,
-            chunk_slices,
-            chunk_perimeter_spacing,
-        );
-        let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
-            .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
-        plan.emit(
-            output,
-            geometry.view(
-                traversal,
-                object_index,
-                layer_index,
-                lower_boundary.as_ref(),
-            ),
-            state,
-        )?;
-    }
+            lower_boundary.as_ref(),
+        ),
+        state,
+    )?;
     Ok(())
 }

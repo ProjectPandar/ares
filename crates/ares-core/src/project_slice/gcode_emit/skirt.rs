@@ -31,6 +31,7 @@ use geometry::{closed_length, find_start_point};
 struct SkirtGroup {
     members: Vec<usize>,
     loops: std::ops::Range<usize>,
+    brims: Vec<super::brim::GroupBrim>,
 }
 
 pub(super) struct SkirtPlan {
@@ -60,6 +61,11 @@ impl SkirtPlan {
         self.member_groups
             .iter()
             .position(|group| group.members.contains(&object))
+    }
+
+    pub(super) fn group_brims(&self, object: usize) -> Option<&[super::brim::GroupBrim]> {
+        self.object_group(object)
+            .map(|index| self.member_groups[index].brims.as_slice())
     }
 
     pub(super) fn emit_group(
