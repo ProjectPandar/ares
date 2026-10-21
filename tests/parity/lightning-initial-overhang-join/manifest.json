@@ -1,0 +1,62 @@
+{
+  "purpose": "Actual official-exported INPUT3MFs only, no expected outputs",
+  "base": "4b3844e28711a6a1381ca847dbd390fe67f2347f",
+  "upstream": [
+    "Fill/Lightning/Generator.cpp:166",
+    "ClipperUtils.hpp:19,26,339"
+  ],
+  "gui_option": "Sparse infill pattern (PrintConfig.cpp:3017+)",
+  "geometry": "closed8point star/16alternating XYvertices per cap/34vertices/64triangles/radii10and5mm/rotation0.17rad/height1.6mm/eightlayers",
+  "inputs": {
+    "control": {
+      "file": "control.3mf",
+      "sha256": "00ed2a57ebe7bc50fe19aa2d0ff977304c25421c93876eae4c8c4aecbb20718c",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "cd0fa53f8052007f5593b4984cd87cbb754b92eae5fb817eb5c5894daefc9ad3",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "567e13bbd6b0c6a511236a65a2897005fb8353ea7d6d9ac284535a2dea0e2812",
+        "Metadata/project_settings.config": "dadc863390e341895fa30ee960d41eeac3fd17609dad268f9e5508548836ce0e",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-4b-lightning-star-short1/control/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-4b-lightning-star-short1/control/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-4b-lightning-initial-overhang/original-export-receipts/control",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-4b-lightning-initial-overhang/witness/verified.json"
+      }
+    },
+    "positive": {
+      "file": "positive.3mf",
+      "sha256": "3622362104e0fb943cf8b4fb7277d168e8f6285633a5e21d10636e2f7c1472d1",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "cd0fa53f8052007f5593b4984cd87cbb754b92eae5fb817eb5c5894daefc9ad3",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "567e13bbd6b0c6a511236a65a2897005fb8353ea7d6d9ac284535a2dea0e2812",
+        "Metadata/project_settings.config": "443c3cabc6e32701103548fd08235485c24bdf34e6fcaec87014d46803fbceab",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-4b-lightning-star-short1/positive/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-4b-lightning-star-short1/positive/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-4b-lightning-initial-overhang/original-export-receipts/positive",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-4b-lightning-initial-overhang/witness/verified.json"
+      }
+    }
+  },
+  "sole_changed_payload": "Metadata/project_settings.config",
+  "sole_changed_setting": {
+    "key": "sparse_infill_pattern",
+    "control": "grid",
+    "positive": "lightning"
+  },
+  "all_other_settings_equal": true,
+  "all_other_zip_payloads_byte_identical": true
+}
