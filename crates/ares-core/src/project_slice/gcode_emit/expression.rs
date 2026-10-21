@@ -146,7 +146,7 @@ impl Parser<'_> {
         self.index += 1;
         let right = self.parse_add()?;
         let result = if matches!(comparison, Token::RegexMatch | Token::RegexNotMatch) {
-            let matched = regex::Regex::new(&right.as_string())
+            let matched = regex::Regex::new(&format!("^(?:{})$", right.as_string()))
                 .map_err(|error| format!("invalid regex: {error}"))?
                 .is_match(&left.as_string());
             if comparison == Token::RegexMatch {
