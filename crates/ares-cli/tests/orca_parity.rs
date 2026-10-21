@@ -65,6 +65,9 @@ mod per_object_skirt_min_brim;
 #[path = "orca_parity/per_object_skirt_min_length.rs"]
 mod per_object_skirt_min_length;
 
+#[path = "orca_parity/spiral_overlap_transition.rs"]
+mod spiral_overlap_transition;
+
 #[path = "orca_parity/spiral_placement_gate.rs"]
 mod spiral_placement_gate;
 
