@@ -287,6 +287,8 @@ mod seam_visibility_eigen_distance;
 #[cfg(test)]
 #[path = "runner/seam_visibility_search_radius.rs"]
 mod seam_visibility_search_radius;
+#[path = "runner/simple_rotation_list.rs"]
+mod simple_rotation_list;
 #[cfg(test)]
 #[path = "runner/small_loop_speed.rs"]
 mod small_loop_speed;
