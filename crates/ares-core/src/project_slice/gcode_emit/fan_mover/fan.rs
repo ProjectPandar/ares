@@ -55,7 +55,7 @@ impl FanMover {
             self.remove_slow_fan(fan_speed, (self.buffer_time_size + 1.0) as f32);
             self.remove_slow_fan(255, self.kickstart);
             if !self.buffer.is_empty()
-                && (self.buffer_time_size - f64::from(self.buffer[0].time * 0.1))
+                && (self.buffer_time_size - f64::from(self.buffer[0].time) * 0.1)
                     > f64::from(self.nb_seconds_delay)
             {
                 self.print_in_middle(
@@ -73,7 +73,7 @@ impl FanMover {
         } else {
             self.remove_slow_fan(fan_speed, (self.buffer_time_size + 1.0) as f32);
             if !self.buffer.is_empty()
-                && (self.buffer_time_size - f64::from(self.buffer[0].time * 0.1))
+                && (self.buffer_time_size - f64::from(self.buffer[0].time) * 0.1)
                     > f64::from(self.nb_seconds_delay)
             {
                 self.print_in_middle(
