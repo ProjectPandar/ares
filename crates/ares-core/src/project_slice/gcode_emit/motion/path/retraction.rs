@@ -16,6 +16,55 @@ pub(in crate::project_slice::gcode_emit::motion) fn can_skip_retraction(
         && inside_internal_surface
 }
 
+/// The routed travel polyline in coord_t (`GCode.cpp:7421-7424`): the detour
+/// vertices recovered from their mm representation, ending at the scaled
+/// destination itself. Detour vertices originate as integers and round-trip
+/// through mm, so they recover via `checked_scale_rounded` the same way
+/// `polyline_length_scaled` does (`start_travel/route.rs`).
+pub(in crate::project_slice::gcode_emit::motion) fn routed_travel(
+    origin: crate::geometry::Point,
+    route: &[super::super::arc::Point],
+    destination: crate::geometry::Point,
+    scale: crate::geometry::CoordinateScale,
+    offset: (f64, f64),
+) -> crate::geometry::Polyline {
+    let mut points = Vec::with_capacity(route.len() + 1);
+    points.push(origin);
+    points.extend(route[..route.len() - 1].iter().map(|point| {
+        crate::geometry::Point::new(
+            scale
+                .checked_scale_rounded(point.x - offset.0)
+                .expect("avoid-crossing detour vertex stays in coord_t range"),
+            scale
+                .checked_scale_rounded(point.y - offset.1)
+                .expect("avoid-crossing detour vertex stays in coord_t range"),
+        )
+    }));
+    points.push(destination);
+    crate::geometry::Polyline::new(points)
+}
+
+/// `RetractWhenCrossingPerimeters::travel_inside_internal_regions`
+/// (`GCode/RetractWhenCrossingPerimeters.cpp:9-51`) over an already-built
+/// travel polyline, so the routed re-check (`GCode.cpp:7424-7425`) can test
+/// the detour rather than only the `[m_last_pos, destination]` pair.
+pub(in crate::project_slice::gcode_emit::motion) fn inside_internal_surfaces_routed<'a>(
+    surfaces: impl IntoIterator<Item = &'a crate::project_slice::region_slices::RegionSurface>,
+    travel: &crate::geometry::Polyline,
+) -> bool {
+    use crate::project_slice::region_slices::RegionSurfaceKind;
+    surfaces.into_iter().any(|surface| {
+        let (kind, region, ..) = surface.as_parts();
+        matches!(
+            kind,
+            RegionSurfaceKind::Internal
+                | RegionSurfaceKind::InternalSolid
+                | RegionSurfaceKind::InternalBridge
+                | RegionSurfaceKind::InternalVoid
+        ) && crate::geometry::open_polyline_inside_expolygon(travel, region).unwrap()
+    })
+}
+
 /// `GCode.cpp:7618-7632`: one support island or Tree base must contain the entire travel.
 pub(in crate::project_slice::gcode_emit::motion) fn inside_support_islands(
     areas: super::super::support::LayerAreas<'_>,

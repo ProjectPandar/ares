@@ -59,14 +59,36 @@ pub(super) fn emit_needs_travel(
     // scaled-int anchor (`motion::local_cursor`), so the retraction length
     // and internal-region checks measure from the pre-clip position.
     let cursor = crate::project_slice::gcode_emit::motion::local_cursor(state, geometry);
-    // `GCode.cpp:7424`: `travel_inside_internal_regions(travel)` where
-    // `travel = Polyline(m_last_pos, destination)` — coord_t endpoints, no
-    // mm roundtrip.
-    let inside_internal_surface = travel::inside_internal_surfaces(
-        geometry.internal_surfaces.iter().copied(),
-        cursor,
-        crate::geometry::Point::new(first_scaled.0, first_scaled.1),
-    );
+    let destination = crate::geometry::Point::new(first_scaled.0, first_scaled.1);
+    // Orca decides the travel retraction on the routed polyline
+    // (`GCode.cpp:7424-7425` re-checks `needs_retraction` after
+    // `avoid_crossing_perimeters.travel_to`), so route first and then
+    // decide; a wiping retract moves the head and the route is planned
+    // again from the new position (`GCode.cpp:7436-7443`).
+    let mut route = plan_route(state, &geometry, feature, first_x, first_y)?;
+    // `GCode.cpp:7424`: `travel_inside_internal_regions(travel)`. Once
+    // avoid-crossing routing has replaced `travel` with the detour, the
+    // predicate sees every detour vertex; with no detour the straight
+    // `Polyline(m_last_pos, destination)` pair stands, in coord_t either
+    // way (`RetractWhenCrossingPerimeters.cpp:9-51`).
+    let inside_internal_surface = if route.len() > 1 {
+        super::super::retraction::inside_internal_surfaces_routed(
+            geometry.internal_surfaces.iter().copied(),
+            &super::super::retraction::routed_travel(
+                cursor,
+                &route,
+                destination,
+                geometry.scale,
+                state.offset,
+            ),
+        )
+    } else {
+        travel::inside_internal_surfaces(
+            geometry.internal_surfaces.iter().copied(),
+            cursor,
+            destination,
+        )
+    };
     let skip_retraction = super::super::can_skip_retraction(
         state.options.reduce_infill_retraction,
         state.options.has_sparse_infill,
@@ -74,22 +96,13 @@ pub(super) fn emit_needs_travel(
         is_perimeter,
         inside_internal_surface,
     );
-    // Orca decides the travel retraction on the routed polyline length
-    // (`GCode.cpp:7424-7425` re-checks `needs_retraction` after
-    // `avoid_crossing_perimeters.travel_to`), so route first and then
-    // decide; a wiping retract moves the head and the route is planned
-    // again from the new position (`GCode.cpp:7436-7443`).
-    let mut route = plan_route(state, &geometry, feature, first_x, first_y)?;
     let skip_retraction = skip_retraction
         || (!matches!(state.last_feature, Some("Outer wall" | "Overhang wall"))
             && matches!(feature, "Support" | "Support transition")
             && geometry.support_islands.is_some_and(|islands| {
                 super::super::inside_support_islands(
                     islands,
-                    [
-                        cursor,
-                        crate::geometry::Point::new(first_scaled.0, first_scaled.1),
-                    ],
+                    [cursor, destination],
                     &route,
                     geometry,
                     state.offset,
