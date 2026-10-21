@@ -56,6 +56,9 @@ mod zero_area_orientation;
 #[path = "orca_parity/placeholder_double_render.rs"]
 mod placeholder_double_render;
 
+#[path = "orca_parity/instance_name_sanitize.rs"]
+mod instance_name_sanitize;
+
 #[path = "orca_parity/m400_priority.rs"]
 mod m400_priority;
 
