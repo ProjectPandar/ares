@@ -83,7 +83,6 @@ impl Value {
     pub(crate) fn as_string(&self) -> String {
         match self.scalar() {
             Self::Integer(value) => value.to_string(),
-            Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
             Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
             Self::OptionBool(value) | Self::Bool(value) => value.to_string(),
@@ -104,16 +103,31 @@ impl Value {
 }
 
 fn format_number(value: f64) -> String {
-    if value == 0.0 {
-        return "0".to_owned();
+    if !value.is_finite() {
+        return match (value.is_nan(), value.is_sign_negative()) {
+            (true, false) => "nan",
+            (true, true) => "-nan",
+            (false, false) => "inf",
+            (false, true) => "-inf",
+        }
+        .to_owned();
     }
-    let exponent = value.abs().log10().floor() as i32;
-    let decimals = (5 - exponent).max(0) as usize;
-    let formatted = format!("{value:.decimals$}");
-    formatted
-        .trim_end_matches('0')
-        .trim_end_matches('.')
-        .to_owned()
+    // Select defaultfloat's style from the six-digit rounded binary value.
+    let scientific = format!("{value:.5e}");
+    let (mantissa, exponent) = scientific.split_once('e').unwrap();
+    let exponent: i32 = exponent.parse().unwrap();
+    if !(-4..6).contains(&exponent) {
+        let mantissa = mantissa.trim_end_matches('0').trim_end_matches('.');
+        format!("{mantissa}e{exponent:+03}")
+    } else {
+        let decimals = (5 - exponent) as usize;
+        let fixed = format!("{value:.decimals$}");
+        if decimals == 0 {
+            fixed
+        } else {
+            fixed.trim_end_matches('0').trim_end_matches('.').to_owned()
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default)]
