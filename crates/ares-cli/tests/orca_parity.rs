@@ -71,6 +71,9 @@ mod spiral_overlap_transition;
 #[path = "orca_parity/spiral_smooth_fixed_xy.rs"]
 mod spiral_smooth_fixed_xy;
 
+#[path = "orca_parity/spiral_reader_float_distance.rs"]
+mod spiral_reader_float_distance;
+
 #[path = "orca_parity/spiral_placement_gate.rs"]
 mod spiral_placement_gate;
 
