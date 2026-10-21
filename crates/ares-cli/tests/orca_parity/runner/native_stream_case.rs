@@ -12,8 +12,39 @@ pub(crate) fn check(
     label: &str,
     project: &[u8],
     expected_sha: &str,
-    assert_two_tools: bool,
+    (assert_two_tools, assert_native): (bool, impl Fn(&NativeCase, &NativeCase)),
 ) {
+    let (reference, replay) = qualify(
+        (namespace, upstream),
+        label,
+        project,
+        expected_sha,
+        assert_two_tools,
+    );
+    assert_native(&reference, &replay);
+    let (api, cli) = reference.compare(ares_core::GenerationMetadata::deterministic(
+        2026, 8, 27, 0, 0, 0,
+    ));
+    let path = reference.root.join("comparison.json");
+    let mut comparison: serde_json::Value =
+        serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    let mut qualification: serde_json::Value =
+        serde_json::from_slice(&fs::read(reference.root.join("native-replay.json")).unwrap())
+            .unwrap();
+    comparison["case"] = json!(label);
+    comparison["native_replay_comparison"] = qualification["native_replay_comparison"].take();
+    comparison["api_cli_equal"] = json!(api == cli);
+    comparison["strict_comparator"] = json!("golden::compare_ordered_bytes_generator_only");
+    fs::write(path, serde_json::to_vec_pretty(&comparison).unwrap()).unwrap();
+}
+
+pub(crate) fn qualify(
+    (namespace, upstream): (&str, &[&str]),
+    label: &str,
+    project: &[u8],
+    expected_sha: &str,
+    assert_two_tools: bool,
+) -> (NativeCase, NativeCase) {
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     assert_eq!(sha(project), expected_sha, "frozen input SHA for {label}");
     let reference = NativeCase::slice(&runner, project, &format!("{namespace}-{label}-"));
@@ -56,15 +87,5 @@ pub(crate) fn check(
             reference.root
         );
     }
-    let (api, cli) = reference.compare(ares_core::GenerationMetadata::deterministic(
-        2026, 8, 27, 0, 0, 0,
-    ));
-    let path = reference.root.join("comparison.json");
-    let mut comparison: serde_json::Value =
-        serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
-    comparison["case"] = json!(label);
-    comparison["native_replay_comparison"] = json!(native_replay);
-    comparison["api_cli_equal"] = json!(api == cli);
-    comparison["strict_comparator"] = json!("golden::compare_ordered_bytes_generator_only");
-    fs::write(path, serde_json::to_vec_pretty(&comparison).unwrap()).unwrap();
+    (reference, replay)
 }

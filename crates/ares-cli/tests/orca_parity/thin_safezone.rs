@@ -57,6 +57,6 @@ fn check(label: &str, project: &[u8], sha: &str) {
         label,
         project,
         sha,
-        true,
+        (true, |_, _| {}),
     );
 }

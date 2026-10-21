@@ -8,6 +8,9 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/paint_color.rs"]
+mod paint_color;
+
 #[path = "orca_parity/interlocking_base.rs"]
 mod interlocking_base;
 
