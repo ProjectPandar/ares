@@ -207,6 +207,12 @@ fn midpoint(left: (f64, f64), right: (f64, f64)) -> (f64, f64) {
 }
 
 fn normalize(x: f64, y: f64) -> (f64, f64) {
-    let length = (x * x + y * y).sqrt();
-    (x / length, y / length)
+    let squared_norm = x * x + y * y;
+    // Eigen/Core/Dot.h::normalized preserves the input when squaredNorm is zero.
+    if squared_norm > 0.0 {
+        let length = squared_norm.sqrt();
+        (x / length, y / length)
+    } else {
+        (x, y)
+    }
 }
