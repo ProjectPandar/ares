@@ -6,7 +6,7 @@ impl SkirtPlan {
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<crate::project_slice::support_material::InstalledSupportLayer>],
         brim: &[Option<super::super::brim::BrimPlan>],
-        tower_corners: &[Point],
+        (tower_corners, extruders): (&[Point], &[usize]),
         raft: Option<&super::super::layers::RaftSchedule>,
     ) -> Result<Option<Self>, SliceError> {
         let print = &traversal.resolved.views.full.process.print;
@@ -115,14 +115,32 @@ impl SkirtPlan {
         let hull_polygon = Polygon::new(hull);
         let minimum_filament = print.min_skirt_length.0;
         let filament = &full.filament.gcode;
-        let diameter = filament
-            .filament_diameter
-            .0
-            .first()
-            .map_or(1.75, |diameter| diameter.0);
-        let flow_ratio = super::motion::first_nullable_float(&filament.filament_flow_ratio, 1.0);
-        let e_per_path_mm =
-            flow.mm3_per_mm * flow_ratio / (std::f64::consts::PI * diameter.powi(2) * 0.25);
+        // Print.cpp:2710-2719: budgets follow the sorted set of used tools,
+        // independent of the priming/emission permutation.
+        let mut extruders = extruders.to_vec();
+        extruders.sort_unstable();
+        extruders.dedup();
+        let e_per_path_mm = extruders
+            .into_iter()
+            .map(|id| {
+                let diameter = filament
+                    .filament_diameter
+                    .0
+                    .get(id)
+                    .unwrap_or(&filament.filament_diameter.0[0])
+                    .0;
+                let ratio = super::motion::first_nullable_float(
+                    std::slice::from_ref(
+                        filament
+                            .filament_flow_ratio
+                            .get(id)
+                            .unwrap_or(&filament.filament_flow_ratio[0]),
+                    ),
+                    1.0,
+                );
+                flow.mm3_per_mm * ratio / (std::f64::consts::PI * diameter.powi(2) * 0.25)
+            })
+            .collect::<Vec<_>>();
         let generation_groups = if per_object && traversal.objects.len() > 1 {
             member_groups::merge(
                 items,
@@ -169,7 +187,7 @@ impl SkirtPlan {
                     scaled_spacing,
                     arc_tolerance,
                     minimum_filament,
-                    e_per_path_mm,
+                    e_per_path_mm: &e_per_path_mm,
                     scale,
                 },
             )?;

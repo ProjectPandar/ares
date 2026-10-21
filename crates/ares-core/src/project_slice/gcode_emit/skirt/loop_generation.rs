@@ -2,19 +2,19 @@
 
 use super::*;
 
-pub(super) struct LoopParameters {
+pub(super) struct LoopParameters<'a> {
     pub(super) loops_count: usize,
     pub(super) scaled_spacing: f32,
     pub(super) arc_tolerance: f64,
     pub(super) minimum_filament: f64,
-    pub(super) e_per_path_mm: f64,
+    pub(super) e_per_path_mm: &'a [f64],
     pub(super) scale: CoordinateScale,
 }
 
 pub(super) fn make_loops(
     hull: &Polygon,
     distance: &mut f32,
-    parameters: LoopParameters,
+    parameters: LoopParameters<'_>,
 ) -> Result<Vec<Vec<Point>>, SliceError> {
     let LoopParameters {
         loops_count,
@@ -24,11 +24,11 @@ pub(super) fn make_loops(
         e_per_path_mm,
         scale,
     } = parameters;
-    let mut extruded_filament = 0.0;
+    let mut extruded_filament = vec![0.0; e_per_path_mm.len()];
+    let mut extruder = 0;
+    let mut remaining = loops_count;
     let mut group_loops = Vec::with_capacity(loops_count);
-    while loops_count > 0
-        && (group_loops.len() < loops_count || extruded_filament < minimum_filament)
-    {
+    while remaining > 0 {
         *distance += scaled_spacing;
         let offset = offset_paths(
             std::slice::from_ref(hull),
@@ -48,9 +48,16 @@ pub(super) fn make_loops(
             break;
         }
         if minimum_filament > 0.0 {
-            extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
+            extruded_filament[extruder] +=
+                closed_length(&simplified) * scale.factor() * e_per_path_mm[extruder];
+            let below_minimum = extruded_filament[extruder] < minimum_filament;
+            remaining += usize::from(below_minimum && remaining == 1);
+            if !below_minimum && extruder + 1 < e_per_path_mm.len() {
+                extruder += 1;
+            }
         }
         group_loops.push(simplified);
+        remaining -= 1;
     }
     Ok(group_loops)
 }
