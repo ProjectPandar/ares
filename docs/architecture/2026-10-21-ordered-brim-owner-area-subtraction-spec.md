@@ -148,3 +148,58 @@ All acceptance comparisons must retain M73 and every motion/metadata byte.
 All present work is docs-only, CPU13 single-core, no FULL/build/source changes.
 Coordinator owns review/merge. Combined-brim SPEC remains suspended until this
 supported uncombined control is repaired and independently reviewed.
+
+## Approved revision: reuse one source-faithful instance chain
+
+Coordinator authorized this revision after the attempted owner subtraction hit
+strict residual; attempted `020062154` is **not** an accepted GREEN. Runtime
+probe evidence is external at
+`/home/indexyz/ares-coord/evidence/worker2-brim-runtime-order-probe-20261021T112517/`.
+Native and Ares have the SAME ordered scaled reference points
+`[(80250000,110000000),(88250000,110000000)]`, but unseeded outputs are
+Native `[1,0]`, Ares `[0,1]`. Native `objPrintVec` confirms that owner priority.
+The mismatch is in the duplicated instance-chain algorithm, not slot mapping.
+
+Owning source: `ShortestPath.cpp:92-418,1007-1011,2015-2041`,
+`KDTreeIndirect.hpp:62-69,114-165,229-243`, and
+`MutablePriorityQueue.hpp:76-197`. Scaled f64 distances, KD visit/pruning and
+heap mutation order on equal priorities are observable. Millimetre conversion,
+index-based tie breaks, arbitrary reversal or a two-object special case are
+not equivalent ports.
+
+**One implementation, all callers:** replace
+`gcode_emit/layers/object_order.rs::chain_instance_order/chain_without_start`
+with delegation to the existing
+`perimeters/classic/shortest_path/chain.rs::chain_segments_constrained_with_optional_start`,
+which uses `chain_multiple_constrained`, `chain/search.rs`, `kd_tree.rs` and
+`priority_queue.rs`. Remove the private instance-chain KD/heap/union-find
+implementation from `object_order.rs`; do not retain a legacy seeded path or
+new/old policy switch. Existing source-owned perimeters implementation is reused,
+not rewritten. Visibility/re-export may be widened only to
+`pub(in crate::project_slice)` for this call.
+
+Adapter semantics: each instance center is a degenerate segment with identical
+scaled endpoints; every segment is reversible. Pass `Some(start_near)` unchanged
+for seeded callers and `None` for unseeded callers, and discard reversal flags
+only after chaining. Preserve caller-owned emission reversal in `instances.rs`;
+do not reverse in the adapter. Existing optional-start port handles0/1 segments.
+Read-only source arithmetic verified the captured unseeded result `[1,0]` and
+seeded `[15,220]` result `[0,1]`, matching Native before emission reversal.
+
+Also correct accumulation granularity: all of one owner's instances must read
+the same earlier-owner accumulator; extend it with the assigned owner area only
+AFTER the instance loop (`Brim.cpp:578-581`). Previously approved minimal batch
+orchestration call and mechanical empty-accumulator direct-test argument remain
+in scope. Batch output remains keyed by original object index.
+
+Final GREEN is one production commit covering the delegation/deletion, ordered
+owner subtraction and approved wiring; superseded attempt is retained only as
+evidence. Public RED tests, six frozen inputs and helper/signature remain frozen.
+No new tests, KD implementation, guard, fallback or result constants.
+
+Expanded directed gates in BOTH modes: the six fixed owner cases; neighboring
+brim/skirt/Auto/Ears/per-object cases; multi-object and multi-instance ordering
+cases exercising `layers/instances.rs` callers. Then fmt, workspace all-target
+clippy with `-D warnings`, wasm32. Any strict residual requires STOP before
+further edits. No FULL until another allocated W2 window. Combined components,
+progress/time fixes and all other deferred behavior remain excluded.
