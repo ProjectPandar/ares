@@ -337,7 +337,7 @@ fn push_passthrough(
 }
 
 fn format_axis(value: f64) -> String {
-    trim_fixed(value, 3, false)
+    format!("{:.3}", value as f32)
 }
 fn format_z(value: f64) -> String {
     // `GCodeLine::set` default `decimal_digits = 3` with `std::fixed`.
@@ -346,27 +346,6 @@ fn format_z(value: f64) -> String {
 fn format_e(value: f64) -> String {
     // `line.set(E, .., 5)` — fixed 5 decimals, leading zero kept.
     format!("{value:.5}")
-}
-
-fn trim_fixed(value: f64, precision: usize, omit_leading_zero: bool) -> String {
-    let scale = 10_f64.powi(precision as i32);
-    let mut value = format!("{:.precision$}", (value * scale).round() / scale);
-    while value.ends_with('0') {
-        value.pop();
-    }
-    if value.ends_with('.') {
-        value.pop();
-    }
-    if value.is_empty() || value == "-" || value == "0" || value == "-0" {
-        return "0".to_owned();
-    }
-    if omit_leading_zero {
-        if let Some(value) = value.strip_prefix("-0") {
-            return format!("-{value}");
-        }
-        return value.strip_prefix('0').unwrap_or(&value).to_owned();
-    }
-    value
 }
 
 #[cfg(test)]
