@@ -235,13 +235,15 @@ impl Movement {
     fn from(reader: &ReaderState, line: &ParsedLine, relative_e: bool) -> Self {
         let target_x = line.x.unwrap_or(reader.x);
         let target_y = line.y.unwrap_or(reader.y);
+        let dx = target_x as f32 - reader.x as f32;
+        let dy = target_y as f32 - reader.y as f32;
         let e_delta = line
             .e
             .map_or(0.0, |e| if relative_e { e } else { e - reader.e });
         Self {
             target_x,
             target_y,
-            xy_distance: (target_x - reader.x).hypot(target_y - reader.y),
+            xy_distance: f64::from((dx * dx + dy * dy).sqrt()),
             extruding: e_delta > f64::EPSILON,
             retracting: e_delta < -f64::EPSILON,
         }
