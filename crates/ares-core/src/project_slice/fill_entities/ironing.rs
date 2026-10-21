@@ -49,36 +49,38 @@ pub(super) struct SpanContext<'a> {
     pub(super) default_region: &'a ProcessRegionSourceOptions,
     pub(super) layer: &'a PlannedLayer,
     pub(super) layers: &'a [PlannedLayer],
-    pub(super) model_rotation_offset: f32,
+    pub(super) model_rotation_offset: f64,
 }
 
+#[derive(PartialEq)]
 pub(super) struct SpanSortKey {
     extruder: i32,
     spacing: f64,
     height: f64,
     speed: f64,
-    angle: f32,
+    angle: f64,
     fixed_angle: bool,
     inset: f64,
+    pattern: ProcessInfillPattern,
 }
 
 impl SpanSortKey {
     pub(super) fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.extruder
             .cmp(&other.extruder)
-            .then_with(|| self.spacing.total_cmp(&other.spacing))
-            .then_with(|| self.height.total_cmp(&other.height))
-            .then_with(|| self.speed.total_cmp(&other.speed))
-            .then_with(|| self.angle.total_cmp(&other.angle))
+            .then_with(|| self.spacing.partial_cmp(&other.spacing).unwrap())
+            .then_with(|| self.height.partial_cmp(&other.height).unwrap())
+            .then_with(|| self.speed.partial_cmp(&other.speed).unwrap())
+            .then_with(|| self.angle.partial_cmp(&other.angle).unwrap())
             .then_with(|| self.fixed_angle.cmp(&other.fixed_angle))
-            .then_with(|| self.inset.total_cmp(&other.inset))
+            .then_with(|| self.inset.partial_cmp(&other.inset).unwrap())
     }
 }
 
 pub(super) fn span_sort_key(region: &RegionOptions, context: &SpanContext<'_>) -> SpanSortKey {
     let spacing = region.filament_ironing_spacing.0;
     let height = context.object.layer_height.0 * 0.01 * region.filament_ironing_flow.0;
-    let (angle, fixed_angle) = areas::ironing_angle_for(region, context);
+    let (angle, fixed_angle) = areas::ironing_span_angle(region, context);
     SpanSortKey {
         extruder: region.top_surface_filament_id.0,
         spacing,
@@ -87,9 +89,11 @@ pub(super) fn span_sort_key(region: &RegionOptions, context: &SpanContext<'_>) -
         angle,
         fixed_angle,
         inset: region.filament_ironing_inset.0,
+        pattern: region.ironing_pattern,
     }
 }
 
+#[cfg(test)]
 pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result<(), SliceError> {
     if !areas::enabled(
         input.region.ironing_type,
@@ -99,15 +103,26 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
     ) {
         return Ok(());
     }
-    let Some(ironing_areas) = areas::ironing_areas(&input)? else {
+    let mut polygons = Vec::new();
+    let mut infills = Vec::new();
+    areas::collect(&input, &mut polygons, &mut infills);
+    let Some(ironing_areas) = areas::ironing_areas(&input, polygons, infills, false)? else {
         return Ok(());
     };
+    append_areas(output, &input, ironing_areas)
+}
+
+pub(super) fn append_areas(
+    output: &mut LayerFillEntities,
+    input: &Input<'_>,
+    ironing_areas: Vec<ExPolygon>,
+) -> Result<(), SliceError> {
     let spacing = input.region.filament_ironing_spacing.0;
     if spacing <= 0.0 {
         return Ok(());
     }
     let nozzle = areas::selected_nozzle(input.region, input.nozzles)?;
-    let (angle, fixed_angle) = areas::ironing_angle(&input);
+    let (angle, fixed_angle) = areas::ironing_angle(input);
     let extrusion_height =
         input.object.layer_height.0 * 0.01 * input.region.filament_ironing_flow.0 * spacing
             / nozzle;

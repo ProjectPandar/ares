@@ -30,7 +30,11 @@ pub(super) fn enabled(
     }
 }
 
-pub(super) fn ironing_areas(input: &Input<'_>) -> Result<Option<Vec<ExPolygon>>, SliceError> {
+pub(super) fn collect(
+    input: &Input<'_>,
+    polygons: &mut Vec<ExPolygon>,
+    infills: &mut Vec<ExPolygon>,
+) {
     let iron_everything = input.region.ironing_type == ProcessIroningType::Solid;
     let internal_infill_solid = input.region.sparse_infill_density.0 > 95.0;
     let iron_completely = iron_everything
@@ -42,42 +46,46 @@ pub(super) fn ironing_areas(input: &Input<'_>) -> Result<Option<Vec<ExPolygon>>,
                     RegionSurfaceKind::InternalBridge | RegionSurfaceKind::InternalVoid
                 )
         });
-    let mut areas = if iron_completely {
-        input
-            .record
-            .slices
-            .iter()
-            .map(|surface| surface.as_parts().1.clone())
-            .collect::<Vec<_>>()
+    if iron_completely {
+        polygons.extend(
+            input
+                .record
+                .slices
+                .iter()
+                .map(|surface| surface.as_parts().1.clone()),
+        );
     } else {
-        input
-            .record
-            .slices
-            .iter()
-            .filter_map(|surface| {
-                let (kind, expolygon, ..) = surface.as_parts();
-                let selected = kind == RegionSurfaceKind::Top
-                    && (input.region.top_shell_layers.0 > 0 || input.spiral_mode)
-                    || iron_everything
-                        && kind == RegionSurfaceKind::Bottom
-                        && input.region.bottom_shell_layers.0 > 0;
-                selected.then(|| expolygon.clone())
-            })
-            .collect::<Vec<_>>()
-    };
-    let mut added_internal_solid = false;
+        polygons.extend(input.record.slices.iter().filter_map(|surface| {
+            let (kind, expolygon, ..) = surface.as_parts();
+            let selected = kind == RegionSurfaceKind::Top
+                && (input.region.top_shell_layers.0 > 0 || input.spiral_mode)
+                || iron_everything
+                    && kind == RegionSurfaceKind::Bottom
+                    && input.region.bottom_shell_layers.0 > 0;
+            selected.then(|| expolygon.clone())
+        }));
+    }
     if iron_everything && !iron_completely {
         for surface in &input.record.fill_surfaces {
             if surface.as_parts().0 == RegionSurfaceKind::InternalSolid {
-                areas.push(surface.as_parts().1.clone());
-                added_internal_solid = true;
+                infills.push(surface.as_parts().1.clone());
             }
         }
     }
+}
+
+pub(super) fn ironing_areas(
+    input: &Input<'_>,
+    mut areas: Vec<ExPolygon>,
+    infills: Vec<ExPolygon>,
+    multiple_regions: bool,
+) -> Result<Option<Vec<ExPolygon>>, SliceError> {
+    let union = multiple_regions || !infills.is_empty();
+    areas.extend(infills);
     if areas.is_empty() {
         return Ok(None);
     }
-    if added_internal_solid {
+    if union {
         areas = union_safety_offset_expolygons(&areas).map_err(geometry_error)?;
     }
 
@@ -105,12 +113,33 @@ pub(super) fn ironing_angle(input: &Input<'_>) -> (f32, bool) {
         default_region: input.default_region,
         layer: input.layer,
         layers: input.layers,
-        model_rotation_offset: input.model_rotation_offset,
+        model_rotation_offset: f64::from(input.model_rotation_offset),
     };
     ironing_angle_for(input.region, &context)
 }
 
 pub(super) fn ironing_angle_for(region: &RegionOptions, context: &SpanContext<'_>) -> (f32, bool) {
+    let base = base_angle(region, context);
+    let angle = ((base + region.ironing_angle.0).to_radians() as f32)
+        + context.model_rotation_offset as f32;
+    (
+        angle,
+        region.ironing_angle_fixed.0 || !region.solid_infill_rotate_template.0.is_empty(),
+    )
+}
+
+pub(super) fn ironing_span_angle(region: &RegionOptions, context: &SpanContext<'_>) -> (f64, bool) {
+    let base = base_angle(region, context);
+    let angle = base * std::f64::consts::PI / 180.0
+        + region.ironing_angle.0 * std::f64::consts::PI / 180.0
+        + context.model_rotation_offset;
+    (
+        angle,
+        region.ironing_angle_fixed.0 || !region.solid_infill_rotate_template.0.is_empty(),
+    )
+}
+
+fn base_angle(region: &RegionOptions, context: &SpanContext<'_>) -> f64 {
     let template = &region.solid_infill_rotate_template.0;
     // Upstream runs `calculate_infill_rotation_angle` for ironing too
     // (`Fill.cpp:1605-1611`), including the meta path.
@@ -123,14 +152,11 @@ pub(super) fn ironing_angle_for(region: &RegionOptions, context: &SpanContext<'_
             context.layer.id,
         )
     });
-    let base = if region.ironing_angle_fixed.0 {
+    if region.ironing_angle_fixed.0 {
         0.0
     } else {
         template_angle.unwrap_or(region.solid_infill_direction.0)
-    };
-    let angle =
-        ((base + region.ironing_angle.0).to_radians() as f32) + context.model_rotation_offset;
-    (angle, region.ironing_angle_fixed.0 || !template.is_empty())
+    }
 }
 
 pub(super) fn selected_nozzle(
