@@ -44,27 +44,6 @@ pub(in crate::project_slice::gcode_emit::motion) fn routed_travel(
     crate::geometry::Polyline::new(points)
 }
 
-/// `RetractWhenCrossingPerimeters::travel_inside_internal_regions`
-/// (`GCode/RetractWhenCrossingPerimeters.cpp:9-51`) over an already-built
-/// travel polyline, so the routed re-check (`GCode.cpp:7424-7425`) can test
-/// the detour rather than only the `[m_last_pos, destination]` pair.
-pub(in crate::project_slice::gcode_emit::motion) fn inside_internal_surfaces_routed<'a>(
-    surfaces: impl IntoIterator<Item = &'a crate::project_slice::region_slices::RegionSurface>,
-    travel: &crate::geometry::Polyline,
-) -> bool {
-    use crate::project_slice::region_slices::RegionSurfaceKind;
-    surfaces.into_iter().any(|surface| {
-        let (kind, region, ..) = surface.as_parts();
-        matches!(
-            kind,
-            RegionSurfaceKind::Internal
-                | RegionSurfaceKind::InternalSolid
-                | RegionSurfaceKind::InternalBridge
-                | RegionSurfaceKind::InternalVoid
-        ) && crate::geometry::open_polyline_inside_expolygon(travel, region).unwrap()
-    })
-}
-
 /// `GCode.cpp:7618-7632`: one support island or Tree base must contain the entire travel.
 pub(in crate::project_slice::gcode_emit::motion) fn inside_support_islands(
     areas: super::super::support::LayerAreas<'_>,

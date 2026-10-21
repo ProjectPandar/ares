@@ -66,27 +66,26 @@ pub(super) fn emit_needs_travel(
     // decide; a wiping retract moves the head and the route is planned
     // again from the new position (`GCode.cpp:7436-7443`).
     let mut route = plan_route(state, &geometry, feature, first_x, first_y)?;
-    // `GCode.cpp:7424`: `travel_inside_internal_regions(travel)`. Once
-    // avoid-crossing routing has replaced `travel` with the detour, the
-    // predicate sees every detour vertex; with no detour the straight
-    // `Polyline(m_last_pos, destination)` pair stands, in coord_t either
-    // way (`RetractWhenCrossingPerimeters.cpp:9-51`).
-    let inside_internal_surface = if route.len() > 1 {
-        super::super::retraction::inside_internal_surfaces_routed(
-            geometry.internal_surfaces.iter().copied(),
-            &super::super::retraction::routed_travel(
+    let inside_internal_surface = {
+        // `GCode.cpp:7424`: `travel_inside_internal_regions(travel)`. Once
+        // avoid-crossing routing has replaced `travel` with the detour, the
+        // predicate sees every detour vertex; with no detour the straight
+        // `Polyline(m_last_pos, destination)` pair stands, in coord_t either
+        // way (`RetractWhenCrossingPerimeters.cpp:9-51`).
+        let travel_polyline = if route.len() > 1 {
+            super::super::retraction::routed_travel(
                 cursor,
                 &route,
                 destination,
                 geometry.scale,
                 state.offset,
-            ),
-        )
-    } else {
+            )
+        } else {
+            crate::geometry::Polyline::new(vec![cursor, destination])
+        };
         travel::inside_internal_surfaces(
             geometry.internal_surfaces.iter().copied(),
-            cursor,
-            destination,
+            &travel_polyline,
         )
     };
     let skip_retraction = super::super::can_skip_retraction(

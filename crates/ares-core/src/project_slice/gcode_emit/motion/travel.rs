@@ -258,19 +258,21 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
 }
 
 /// `travel_inside_internal_regions`
-/// (`RetractWhenCrossingPerimeters.cpp:9-51`): the travel polyline is the
-/// [m_last_pos, destination] pair in coord_t — upstream never leaves the
-/// scaled-int domain for this check. Passing millimeters back through
-/// `checked_scale` (truncating) loses a unit to the unscale/offset
-/// roundtrip, which lands a boundary-collinear travel one unit inside
-/// the island and flips `diff_pl` empty.
+/// (`RetractWhenCrossingPerimeters.cpp:9-51`): the travel polyline stays in the
+/// scaled-int domain — upstream never leaves coord_t for this check. Passing
+/// millimeters back through `checked_scale` (truncating) loses a unit to the
+/// unscale/offset roundtrip, which lands a boundary-collinear travel one unit
+/// inside the island and flips `diff_pl` empty.
+///
+/// The polyline is whatever `needs_retraction` is about to examine: the
+/// straight `[m_last_pos, destination]` pair on the first call
+/// (`GCode.cpp:7359`), and the avoid-crossing detour once routing has replaced
+/// `travel` (`GCode.cpp:7421-7425`).
 pub(super) fn inside_internal_surfaces<'a>(
     surfaces: impl IntoIterator<Item = &'a crate::project_slice::region_slices::RegionSurface>,
-    start: crate::geometry::Point,
-    end: crate::geometry::Point,
+    travel: &crate::geometry::Polyline,
 ) -> bool {
     use crate::project_slice::region_slices::RegionSurfaceKind;
-    let travel = crate::geometry::Polyline::new(vec![start, end]);
     surfaces.into_iter().any(|surface| {
         let (kind, region, ..) = surface.as_parts();
         matches!(
@@ -279,7 +281,7 @@ pub(super) fn inside_internal_surfaces<'a>(
                 | RegionSurfaceKind::InternalSolid
                 | RegionSurfaceKind::InternalBridge
                 | RegionSurfaceKind::InternalVoid
-        ) && crate::geometry::open_polyline_inside_expolygon(&travel, region).unwrap()
+        ) && crate::geometry::open_polyline_inside_expolygon(travel, region).unwrap()
     })
 }
 
