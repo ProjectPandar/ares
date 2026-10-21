@@ -9,7 +9,9 @@ mod safe_zone;
 #[cfg(test)]
 mod tests;
 
-use crate::{SliceError, options::FloatOrPercent, project_slice::gcode_emit::motion::arc};
+use crate::{
+    SliceError, geometry::Point, options::FloatOrPercent, project_slice::gcode_emit::motion::arc,
+};
 
 /// `init_layer`'s safe zone and lazily initialized `m_internal` boundary.
 #[derive(Clone)]
@@ -88,6 +90,17 @@ pub(super) fn route(
     };
     let scaled_start = to_scaled(start)?;
     let scaled_end = to_scaled(end)?;
+    // The plate-frame image of `start`, so the external boundary can be
+    // moved into the router's frame exactly instead of through a second
+    // rounding of the origin.
+    let plate_start = Point::new(
+        scale.checked_scale_rounded(start.x).ok_or_else(|| {
+            SliceError::InvalidInput("avoid-crossing endpoint out of range".into())
+        })?,
+        scale.checked_scale_rounded(start.y).ok_or_else(|| {
+            SliceError::InvalidInput("avoid-crossing endpoint out of range".into())
+        })?,
+    );
     // Travels fully inside the lslices safe zone never route
     // (`any_expolygon_contains(m_lslices_offset, ...)`,
     // `AvoidCrossingPerimeters.cpp:1255`).
@@ -138,11 +151,20 @@ pub(super) fn route(
         // print z; an empty hole set or a travel clear of it routes
         // straight (`travel_to` :1557-1571, Liang-Barsky bbox gate).
         if boundary.external.is_none() {
+            // The boundary input is plate-frame (`:1172-1177`); the
+            // router's frame is the endpoint frame, so shift by the same
+            // translation `to_scaled` applied — `local - plate`, i.e. the
+            // negated gcode origin.
+            let frame_shift = Point::new(
+                scaled_start.x() - plate_start.x(),
+                scaled_start.y() - plate_start.y(),
+            );
             boundary.external = match boundary::Boundary::build_external(
                 geometry.avoid_crossing.chunk_slices,
                 geometry.avoid_crossing.chunk_perimeter_spacing,
                 scale,
                 [scaled_start, scaled_end],
+                frame_shift,
             ) {
                 Err(error) => {
                     return Err(SliceError::InvalidInput(format!(

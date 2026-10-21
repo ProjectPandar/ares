@@ -82,6 +82,12 @@
         // spacing over every object with slices at this print z,
         // `AvoidCrossingPerimeters.cpp:511-529`).
         let (chunk_slices, chunk_perimeter_spacing) = group::geometry(traversal, &entries);
+        // `get_boundary_external` translates every appended hole by its
+        // print instance's shift (`AvoidCrossingPerimeters.cpp:1172-1177`),
+        // so the external boundary's input is plate-frame while the
+        // brim/skirt/tower copy above stays object-local.
+        entry_builder.boundary_slices =
+            group::boundary_slices(traversal, &entries, &instances);
         // The preamble fires on the first PHYSICAL layer chunk — raft layer
         // 0 included (`first_layer` is a sentinel there, so the check keys
         // off `first_group`, not `first_layer == 0`). Upstream emits the

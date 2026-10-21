@@ -240,7 +240,9 @@ pub(in crate::project_slice::gcode_emit) struct AvoidCrossingGeometry<'a> {
     /// Every print object's slices at this print z and the cross-object
     /// average perimeter spacing, feeding the EXTERNAL motion planner's
     /// hole boundary (`get_boundary_external`,
-    /// `AvoidCrossingPerimeters.cpp:1137-1189`).
+    /// `AvoidCrossingPerimeters.cpp:1137-1189`). Already translated once
+    /// per print instance (`:1172-1177`), i.e. plate coordinates —
+    /// `layers/group.rs` `boundary_slices`.
     pub(in crate::project_slice::gcode_emit) chunk_slices: &'a [crate::geometry::ExPolygon],
     pub(in crate::project_slice::gcode_emit) chunk_perimeter_spacing: f64,
 }

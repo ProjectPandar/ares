@@ -53,10 +53,9 @@ pub(super) fn emit(
     *count += 1;
     *last_z = physical_z;
     if let Some(object_layer) = input.layer {
-        let geometry =
-            input
-                .builder
-                .geometry(input.object, object_layer, input.slices, input.spacing);
+        let geometry = input
+            .builder
+            .geometry(input.object, object_layer, input.spacing);
         let lower = (!geometry.lower_boundary_lines.is_empty())
             .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
         plan.emit_group(

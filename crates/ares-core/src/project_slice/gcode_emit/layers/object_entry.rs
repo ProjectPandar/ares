@@ -7,7 +7,6 @@ use super::super::{
 };
 use super::entry_builder::EntryBuilder;
 use super::layer_end;
-use crate::geometry::ExPolygon;
 use crate::project_slice::island_print_order::OrderedExtrusionLayer;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
@@ -25,7 +24,6 @@ pub(super) fn emit(
     object_index: usize,
     layer_index: usize,
     starts_after_support: bool,
-    chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
     labels: Option<&ObjectLabels>,
     emit_labels: bool,
@@ -41,12 +39,7 @@ pub(super) fn emit(
 ) -> Result<(), SliceError> {
     let spiral_body_layer = spiral.is_body_layer(layer, layer_index, layer_z);
     state.spiral_vase_layer = spiral_body_layer;
-    let geometry = entry_builder.geometry(
-        object_index,
-        layer_index,
-        chunk_slices,
-        chunk_perimeter_spacing,
-    );
+    let geometry = entry_builder.geometry(object_index, layer_index, chunk_perimeter_spacing);
     let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
     let motion_geometry = geometry.view(

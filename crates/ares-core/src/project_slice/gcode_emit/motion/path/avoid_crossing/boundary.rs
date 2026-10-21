@@ -49,6 +49,7 @@ impl Boundary {
         perimeter_spacing_mm: f64,
         scale: CoordinateScale,
         endpoints: [Point; 2],
+        translate: Point,
     ) -> Result<BuildResult, ClipperError> {
         let unit = |millimetres: f64| scale.checked_scale(millimetres);
         let Some(scaled_spacing) = unit(perimeter_spacing_mm) else {
@@ -56,12 +57,18 @@ impl Boundary {
         };
         let scaled_spacing = scaled_spacing as f32;
         // CW holes reversed to CCW before the positive offset
-        // (`polygons_reverse(holes_per_obj)`).
+        // (`polygons_reverse(holes_per_obj)`). The input is plate-frame
+        // (`:1172-1177`); `translate` lands it in the printing instance's
+        // frame, which is the one the router compares against.
         let holes = chunk_slices
             .iter()
             .flat_map(|expolygon| expolygon.holes())
             .map(|hole| {
-                let mut points = hole.points().to_vec();
+                let mut points = hole
+                    .points()
+                    .iter()
+                    .map(|point| Point::new(point.x() + translate.x(), point.y() + translate.y()))
+                    .collect::<Vec<_>>();
                 points.reverse();
                 Polygon::new(points)
             })

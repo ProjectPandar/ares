@@ -57,3 +57,46 @@ pub(super) fn geometry(
     }
     (slices, f64::from(spacing))
 }
+
+/// The EXTERNAL boundary's slice input: every entry's slices at this print
+/// z, appended once per print instance and moved to that instance's
+/// placement (`get_boundary_external`, `AvoidCrossingPerimeters.cpp:1172-1177`).
+/// [`geometry`] stays object-local because brim/skirt/tower consume it;
+/// this one is in plate coordinates so the router sees every hole where the
+/// object actually sits.
+pub(super) fn boundary_slices(
+    traversal: &PreparedPostClassicTraversal,
+    entries: &[LayerToPrint],
+    instances: &[Vec<super::Instance>],
+) -> Vec<ExPolygon> {
+    let mut slices = Vec::new();
+    for entry in entries {
+        let Some(index) = entry.object_layer else {
+            continue;
+        };
+        let layer_slices = traversal.objects[entry.object_index]
+            .slices(index)
+            .expect("object layer retains slices");
+        for instance in &instances[entry.object_index] {
+            let dx = instance.shift.x();
+            let dy = instance.shift.y();
+            let translate = |polygon: crate::geometry::Polygon| {
+                crate::geometry::Polygon::new(
+                    polygon
+                        .points()
+                        .iter()
+                        .map(|point| crate::geometry::Point::new(point.x() + dx, point.y() + dy))
+                        .collect(),
+                )
+            };
+            slices.extend(layer_slices.iter().map(|expolygon| {
+                let (contour, holes) = expolygon.clone().into_parts();
+                ExPolygon::new(
+                    translate(contour),
+                    holes.into_iter().map(translate).collect(),
+                )
+            }));
+        }
+    }
+    slices
+}

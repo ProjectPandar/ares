@@ -4,7 +4,6 @@
 
 use super::super::{brim, motion, skirt};
 use super::entry_builder::EntryBuilder;
-use crate::geometry::ExPolygon;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
 #[expect(
@@ -19,7 +18,6 @@ pub(super) fn emit(
     layer_index: usize,
     entry_builder: &mut EntryBuilder<'_>,
     traversal: &PreparedPostClassicTraversal,
-    chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
 ) -> Result<(), crate::SliceError> {
     if layer_index != 0 {
@@ -59,12 +57,7 @@ pub(super) fn emit(
     if plan.owner_collection {
         state.emitted_brim_owners.extend(owners.iter().copied());
     }
-    let geometry = entry_builder.geometry(
-        object_index,
-        layer_index,
-        chunk_slices,
-        chunk_perimeter_spacing,
-    );
+    let geometry = entry_builder.geometry(object_index, layer_index, chunk_perimeter_spacing);
     let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
     plan.emit(

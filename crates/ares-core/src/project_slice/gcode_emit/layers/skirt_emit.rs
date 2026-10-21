@@ -75,7 +75,7 @@ pub(super) fn emit(
                 chunk_perimeter_spacing: 0.0,
             }
         } else if entry.object_layer.is_some() {
-            entry_builder.geometry(object, skirt_layer, chunk_slices, chunk_perimeter_spacing)
+            entry_builder.geometry(object, skirt_layer, chunk_perimeter_spacing)
         } else {
             let layer = &support[object][entry
                 .support_layer

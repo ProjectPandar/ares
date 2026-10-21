@@ -216,7 +216,6 @@ pub(super) fn emit(
             layer_index,
             entry_builder,
             traversal,
-            chunk_slices,
             chunk_perimeter_spacing,
         )?;
     }
@@ -271,7 +270,6 @@ pub(super) fn emit(
         object_index,
         layer_index,
         support_role.is_some(),
-        chunk_slices,
         chunk_perimeter_spacing,
         labels,
         emit_labels,

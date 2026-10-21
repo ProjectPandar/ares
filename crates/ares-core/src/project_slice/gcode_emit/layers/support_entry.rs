@@ -38,7 +38,7 @@ pub(super) fn emit(
     timelapse_context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
     let geometry = if let Some(index) = object_layer {
-        entry_builder.geometry(object_index, index, chunk_slices, chunk_perimeter_spacing)
+        entry_builder.geometry(object_index, index, chunk_perimeter_spacing)
     } else {
         EntryGeometry {
             top_surfaces: Vec::new(),
