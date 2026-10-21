@@ -50,6 +50,9 @@ mod medial_endpoint_zero;
 #[path = "orca_parity/occlusion_volume_affine.rs"]
 mod occlusion_volume_affine;
 
+#[path = "orca_parity/zero_area_orientation.rs"]
+mod zero_area_orientation;
+
 #[path = "orca_parity/m400_priority.rs"]
 mod m400_priority;
 
