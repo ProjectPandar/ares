@@ -17,6 +17,9 @@ mod paint_color_activity;
 #[path = "orca_parity/painted_side_cut.rs"]
 mod painted_side_cut;
 
+#[path = "orca_parity/vg1_export_arc_cache.rs"]
+mod vg1_export_arc_cache;
+
 #[path = "orca_parity/fan_mixed_timing.rs"]
 mod fan_mixed_timing;
 
