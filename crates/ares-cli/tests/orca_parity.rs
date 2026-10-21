@@ -53,6 +53,9 @@ mod occlusion_volume_affine;
 #[path = "orca_parity/zero_area_orientation.rs"]
 mod zero_area_orientation;
 
+#[path = "orca_parity/placeholder_double_render.rs"]
+mod placeholder_double_render;
+
 #[path = "orca_parity/m400_priority.rs"]
 mod m400_priority;
 
