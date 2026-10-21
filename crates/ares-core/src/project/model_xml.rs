@@ -201,6 +201,8 @@ pub(crate) struct Triangle {
     pub v3: u32,
     #[serde(rename = "@paint_supports", default)]
     pub paint_supports: super::facets_annotation::TriangleCodes,
+    #[serde(rename = "@paint_color", default)]
+    pub paint_color: super::facets_annotation::TriangleCodes,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

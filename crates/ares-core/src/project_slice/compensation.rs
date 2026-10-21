@@ -9,13 +9,15 @@ use crate::{
 use super::{
     PreparedPostRegions, ProjectBytes,
     elephant_foot::compensate_expolygons,
-    hole_to_polyhole, prepare_post_conical_overhang,
+    hole_to_polyhole,
+    load_stages::prepare_post_painted,
     region_slices::{PostRegion, PostRegionPrintObject, RegionSurface},
     slice_ordering::{make_slices, order_expolygons},
 };
 
 mod multi_region;
 mod preflight;
+mod prepare;
 mod xy;
 
 use preflight::{
@@ -148,16 +150,27 @@ pub(super) fn prepare_post_compensation<'a>(
         config_block,
         scale,
         objects,
-    } = prepare_post_conical_overhang(project.into_source())?;
+        painting,
+    } = prepare_post_painted(project.into_source())?;
     let initial_layer_width = resolved.views.full.process.print.initial_layer_line_width;
     let nozzle_diameters = &resolved.views.full.project.print.nozzle_diameter;
-    let objects = apply_project_compensation(
-        objects,
-        &resolved.objects,
-        initial_layer_width,
-        nozzle_diameters,
-        scale,
-    )?;
+    let objects = if painting.iter().any(|metadata| metadata.active) {
+        prepare::apply(
+            objects,
+            &resolved.objects,
+            initial_layer_width,
+            nozzle_diameters,
+            (scale, painting.iter().map(|metadata| metadata.active)),
+        )?
+    } else {
+        apply_project_compensation(
+            objects,
+            &resolved.objects,
+            initial_layer_width,
+            nozzle_diameters,
+            scale,
+        )?
+    };
     Ok(PreparedPostCompensation {
         project,
         resolved,
@@ -174,65 +187,14 @@ pub(in crate::project_slice) fn apply_project_compensation(
     nozzle_diameters: &OrcaFloats,
     scale: CoordinateScale,
 ) -> Result<Vec<PostCompensationPrintObject>, SliceError> {
-    let contexts = resolved_objects
-        .iter()
-        .flat_map(|resolved| {
-            resolved
-                .print_objects
-                .iter()
-                .enumerate()
-                .map(move |(transform_index, _)| (resolved, transform_index))
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(
-        objects.len(),
-        contexts.len(),
-        "Task 22M objects must match resolved print-object contexts"
-    );
-    for (object, (resolved, transform_index)) in objects.iter().zip(&contexts) {
-        assert_eq!(
-            object.plan.source_object_index,
-            resolved.source_object_index
-        );
-        assert_eq!(object.plan.transform_index, *transform_index);
-    }
-
-    let options = contexts
-        .iter()
-        .map(|(resolved, _)| &resolved.object)
-        .collect::<Vec<_>>();
-    let configs = validate_task22m_configs(&options)?;
-    validate_structures(&objects);
-    let prepared = objects
-        .iter()
-        .zip(&configs)
-        .map(|(object, config)| {
-            prepare_object_compensation(
-                object,
-                *config,
-                initial_layer_width,
-                nozzle_diameters,
-                scale,
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-
-    let mut closing_epsilon = None;
-    objects
-        .into_iter()
-        .zip(prepared)
-        .map(|(object, prepared)| {
-            apply_object_compensation(
-                object,
-                prepared,
-                nozzle_diameters,
-                scale,
-                &mut closing_epsilon,
-            )
-        })
-        .collect()
+    prepare::apply(
+        objects,
+        resolved_objects,
+        initial_layer_width,
+        nozzle_diameters,
+        (scale, std::iter::repeat(false)),
+    )
 }
-
 fn validate_structures(objects: &[PostRegionPrintObject]) {
     for object in objects {
         let layer_count = object.plan.layers.len();

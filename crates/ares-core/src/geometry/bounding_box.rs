@@ -10,6 +10,43 @@ pub(crate) struct BoundingBox {
 }
 
 impl BoundingBox {
+    pub(crate) fn from_points(mut points: impl Iterator<Item = Point>) -> Option<Self> {
+        let first = points.next()?;
+        let mut bounds = Self::new(first, first);
+        for point in points {
+            bounds.merge_point(point);
+        }
+        Some(bounds)
+    }
+
+    pub(crate) fn contains(self, point: Point) -> bool {
+        point.x() >= self.min.x()
+            && point.y() >= self.min.y()
+            && point.x() <= self.max.x()
+            && point.y() <= self.max.y()
+    }
+
+    pub(crate) fn contains_f64(self, point: [f64; 2]) -> bool {
+        point[0] >= self.min.x() as f64
+            && point[1] >= self.min.y() as f64
+            && point[0] <= self.max.x() as f64
+            && point[1] <= self.max.y() as f64
+    }
+
+    pub(crate) fn overlap(self, other: Self) -> bool {
+        !(self.max.x() < other.min.x()
+            || self.min.x() > other.max.x()
+            || self.max.y() < other.min.y()
+            || self.min.y() > other.max.y())
+    }
+
+    pub(crate) fn size(self) -> [f64; 2] {
+        [
+            (self.max.x() - self.min.x()) as f64,
+            (self.max.y() - self.min.y()) as f64,
+        ]
+    }
+
     pub(crate) const fn new(min: Point, max: Point) -> Self {
         Self { min, max }
     }

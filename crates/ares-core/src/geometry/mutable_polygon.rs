@@ -1,7 +1,10 @@
 //! `MutablePolygon.cpp/.hpp::smooth_outward`, required by Organic drawing.
 
+mod duplicates;
 mod narrow;
 mod ring;
+
+pub(crate) use duplicates::remove_duplicates;
 
 use super::{Coord, CoordinateScale, Point, Polygon};
 use ring::{Ring, Unprocessed};

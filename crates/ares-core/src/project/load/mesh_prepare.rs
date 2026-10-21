@@ -64,6 +64,14 @@ pub(super) fn prepare(
             .iter()
             .map(|triangle| &triangle.paint_supports),
     );
+    mesh.mmu_segmentation_facets =
+        crate::project::facets_annotation::FacetsAnnotation::from_triangles(
+            source
+                .triangles
+                .triangles
+                .iter()
+                .map(|triangle| &triangle.paint_color),
+        );
     PreparedMesh {
         mesh,
         transform: component_transform.translated(shift),

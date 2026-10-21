@@ -76,6 +76,7 @@ pub(super) fn prepare_post_regions(
         scale,
         objects,
     } = prepare_post_simplification(project)?;
+    let mut painting = Vec::new();
     let objects = {
         let mut contexts = resolved
             .objects
@@ -88,7 +89,17 @@ pub(super) fn prepare_post_regions(
                     .next()
                     .expect("post-I object must have a resolved print-instance context");
                 let source = &project.objects()[resolved_object.source_object_index];
-                let bounded = volume_bounds::build_volume_bounds(source, resolved_object, post_i);
+                let mmu_painted = resolved.logical_filament_count > 1 && source.is_mm_painted();
+                let bounded = if mmu_painted {
+                    volume_bounds::build_volume_bounds_with_inflation(
+                        source,
+                        resolved_object,
+                        post_i,
+                        0.0,
+                    )
+                } else {
+                    volume_bounds::build_volume_bounds(source, resolved_object, post_i)
+                };
                 let graph = volume_regions::build_volume_region_graph(
                     source,
                     resolved_object,
@@ -96,6 +107,12 @@ pub(super) fn prepare_post_regions(
                     &resolved.views.full.filament.region,
                     resolved.logical_filament_count,
                 );
+                painting.push(region_slices::painted::ObjectRegions::new(
+                    source,
+                    &graph,
+                    mmu_painted,
+                    &resolved_object.object,
+                )?);
                 let mut post = region_slices::complex::compose_complex_region_slices(
                     region_slices::prepare_region_slices(bounded, graph),
                     scale,
@@ -116,6 +133,7 @@ pub(super) fn prepare_post_regions(
         objects
     };
     Ok(PreparedPostRegions {
+        painting,
         project,
         resolved,
         config_block,
@@ -149,5 +167,13 @@ pub(super) fn prepare_post_conical_overhang(
         &prepared.resolved.objects,
         prepared.scale,
     )?;
+    Ok(prepared)
+}
+
+pub(super) fn prepare_post_painted(
+    project: ProjectSource<'_>,
+) -> Result<PreparedPostRegions, SliceError> {
+    let mut prepared = prepare_post_conical_overhang(project)?;
+    region_slices::painted::apply_project(&mut prepared)?;
     Ok(prepared)
 }

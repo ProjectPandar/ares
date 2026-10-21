@@ -11,6 +11,7 @@ pub(super) struct MeshGeometry {
 pub struct ProjectMesh {
     pub(super) geometry: Arc<MeshGeometry>,
     pub(crate) supported_facets: crate::project::facets_annotation::FacetsAnnotation,
+    pub(crate) mmu_segmentation_facets: crate::project::facets_annotation::FacetsAnnotation,
 }
 
 impl ProjectMesh {
@@ -27,6 +28,7 @@ impl ProjectMesh {
                 triangles,
             }),
             supported_facets: crate::project::facets_annotation::FacetsAnnotation::default(),
+            mmu_segmentation_facets: crate::project::facets_annotation::FacetsAnnotation::default(),
         }
     }
 

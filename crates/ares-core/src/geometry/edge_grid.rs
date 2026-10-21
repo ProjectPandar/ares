@@ -170,6 +170,10 @@ impl EdgeGrid {
         (self.rows, self.cols)
     }
 
+    pub(crate) fn contours(&self) -> &[Vec<Point>] {
+        &self.contours
+    }
+
     pub(crate) fn contour(&self, index: usize) -> &[Point] {
         &self.contours[index]
     }

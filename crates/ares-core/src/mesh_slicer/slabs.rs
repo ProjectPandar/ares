@@ -1,4 +1,4 @@
-//! TriangleMeshSlicer.cpp::slice_mesh_slabs / make_slab_loops (bottom projection).
+//! TriangleMeshSlicer.cpp::slice_mesh_slabs / make_slab_loops.
 
 use super::{
     EndpointReference, FacetEdgeType, IntersectionLine, IntersectionPoint,
@@ -33,6 +33,12 @@ struct SlabLine {
 struct SlabLines {
     at_slice: Vec<Vec<SlabLine>>,
     between: Vec<Vec<IntersectionLine>>,
+}
+
+pub(crate) struct ProjectedSlabs {
+    pub(crate) top: Vec<Vec<Polygon>>,
+    pub(crate) bottom: Vec<Vec<Polygon>>,
+    pub(crate) vertical: Vec<([f32; 3], [f32; 3])>,
 }
 
 pub(crate) struct BottomSlabs {
@@ -87,13 +93,11 @@ fn vertical_facet(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> ([f32; 3], [f32; 3])
 fn supported_neighbors(
     neighbors: [Option<usize>; 3],
     orientations: &[Orientation],
+    wanted: Orientation,
 ) -> [Option<usize>; 3] {
     neighbors.map(|neighbor| {
         neighbor.filter(|&index| {
-            matches!(
-                orientations[index],
-                Orientation::Down | Orientation::Degenerate
-            )
+            orientations[index] == wanted || orientations[index] == Orientation::Degenerate
         })
     })
 }
@@ -104,6 +108,22 @@ pub(crate) fn slice_bottom_slabs(
     zs: &[f32],
     mirrored: bool,
 ) -> Result<BottomSlabs, SliceError> {
+    let ProjectedSlabs {
+        bottom, vertical, ..
+    } = slice_mesh_slabs(vertices, triangles, zs, mirrored, (false, true, true))?;
+    Ok(BottomSlabs {
+        polygons: bottom,
+        vertical,
+    })
+}
+
+pub(crate) fn slice_mesh_slabs(
+    vertices: &[[f32; 3]],
+    triangles: &[[u32; 3]],
+    zs: &[f32],
+    mirrored: bool,
+    (top, bottom, include_vertical): (bool, bool, bool),
+) -> Result<ProjectedSlabs, SliceError> {
     let topology = index_mesh_edges(triangles)?;
     let face_neighbors = topology.build_face_neighbors();
     let edge_count = topology.edge_count() as u32;
@@ -125,61 +145,86 @@ pub(crate) fn slice_bottom_slabs(
         } else {
             Orientation::Vertical
         };
-        if orientation == Orientation::Vertical {
+        if orientation == Orientation::Vertical && include_vertical {
             vertical.push(vertical_facet(a, b, c));
         }
         orientations.push(orientation);
     }
-    let mut lines = SlabLines {
+    let new_lines = || SlabLines {
         at_slice: vec![Vec::new(); zs.len()],
         between: vec![Vec::new(); zs.len()],
     };
+    let (mut top, mut bottom) = (top.then(new_lines), bottom.then(new_lines));
     for (face, &triangle) in triangles.iter().enumerate() {
+        let make_facet = |wanted| facet::Facet {
+            vertices: triangle.map(|index| vertices[index as usize]),
+            indices: triangle,
+            neighbors: supported_neighbors(face_neighbors[face], &orientations, wanted),
+            edges: topology.face_edge_ids()[face],
+        };
+        if matches!(
+            orientations[face],
+            Orientation::Up | Orientation::Degenerate
+        ) && let Some(lines) = top.as_mut()
+        {
+            facet::slice::<true>(make_facet(Orientation::Up), edge_count, zs, lines);
+        }
         if matches!(
             orientations[face],
             Orientation::Down | Orientation::Degenerate
-        ) {
-            let neighbors = supported_neighbors(face_neighbors[face], &orientations);
-            facet::slice(
-                facet::Facet {
-                    vertices: triangle.map(|index| vertices[index as usize]),
-                    indices: triangle,
-                    neighbors,
-                    edges: topology.face_edge_ids()[face],
-                },
-                edge_count,
-                zs,
-                &mut lines,
-            );
+        ) && let Some(lines) = bottom.as_mut()
+        {
+            facet::slice::<false>(make_facet(Orientation::Down), edge_count, zs, lines);
         }
     }
-    let mut polygons = Vec::with_capacity(zs.len());
-    for slab in 0..zs.len() {
+    Ok(ProjectedSlabs {
+        top: top
+            .map(|lines| make_loops::<true>(lines, edge_count))
+            .unwrap_or_default(),
+        bottom: bottom
+            .map(|lines| make_loops::<false>(lines, edge_count))
+            .unwrap_or_default(),
+        vertical,
+    })
+}
+
+fn make_loops<const TOP: bool>(mut lines: SlabLines, edge_count: u32) -> Vec<Vec<Polygon>> {
+    let count = lines.at_slice.len();
+    let mut polygons = Vec::with_capacity(count);
+    for slab in 0..count {
         let mut input = Vec::new();
-        if slab != 0 {
+        let below = if TOP { Some(slab) } else { slab.checked_sub(1) };
+        let above = if !TOP || slab + 1 < count {
+            Some(slab + usize::from(TOP))
+        } else {
+            None
+        };
+        if let Some(index) = below {
             input.extend(
-                lines.at_slice[slab - 1]
+                lines.at_slice[index]
                     .iter()
                     .filter(|entry| entry.kind != Kind::Top)
                     .map(|entry| entry.line),
             );
         }
         input.append(&mut lines.between[slab]);
-        input.extend(
-            lines.at_slice[slab]
-                .iter()
-                .filter(|entry| entry.kind != Kind::Bottom)
-                .map(|entry| {
-                    let reversed = reverse(entry.line);
-                    line(
-                        top_reference(reversed.a(), edge_count),
-                        top_reference(reversed.b(), edge_count),
-                    )
-                }),
-        );
+        if let Some(index) = above {
+            input.extend(
+                lines.at_slice[index]
+                    .iter()
+                    .filter(|entry| entry.kind != Kind::Bottom)
+                    .map(|entry| {
+                        let reversed = reverse(entry.line);
+                        line(
+                            top_reference(reversed.a(), edge_count),
+                            top_reference(reversed.b(), edge_count),
+                        )
+                    }),
+            );
+        }
         let (loops, open) = chain_lines_by_triangle_connectivity(input).into_parts();
         debug_assert!(open.is_empty(), "slab facet connectivity must close");
         polygons.push(loops);
     }
-    Ok(BottomSlabs { polygons, vertical })
+    polygons
 }

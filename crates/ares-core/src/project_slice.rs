@@ -36,7 +36,6 @@ mod largest_contours;
 mod layers;
 mod load_stages;
 mod looped_intersections;
-use load_stages::prepare_post_conical_overhang;
 mod parameters;
 mod path_simplification;
 mod raft;
@@ -287,4 +286,5 @@ struct PreparedPostRegions {
     config_block: Option<Vec<u8>>,
     scale: CoordinateScale,
     objects: Vec<region_slices::PostRegionPrintObject>,
+    painting: Vec<region_slices::painted::ObjectRegions>,
 }

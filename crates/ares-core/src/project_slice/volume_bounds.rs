@@ -155,9 +155,22 @@ pub(super) fn build_volume_bounds(
     resolved: &ResolvedProjectObject,
     post_i: PostClosingPrintObject,
 ) -> BoundedPrintObject {
+    build_volume_bounds_with_inflation(
+        source,
+        resolved,
+        post_i,
+        (resolved.object.xy_contour_compensation.0 as f32).max(0.0),
+    )
+}
+
+pub(super) fn build_volume_bounds_with_inflation(
+    source: &ProjectObject,
+    resolved: &ResolvedProjectObject,
+    post_i: PostClosingPrintObject,
+    xy_inflate: f32,
+) -> BoundedPrintObject {
     let (plan, post_i_volumes) = post_i.into_parts();
     let object_transform = resolved.print_objects[0].transform;
-    let xy_inflate = (resolved.object.xy_contour_compensation.0 as f32).max(0.0);
     let mut volumes = Vec::with_capacity(post_i_volumes.len());
     let mut source_volume_positions = vec![None; source.volumes().len()];
     let mut bounds = Vec::with_capacity(post_i_volumes.len());

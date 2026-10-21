@@ -28,6 +28,7 @@ pub(super) fn validate_attribute_namespace(
             | b"v2"
             | b"v3"
             | b"paint_supports"
+            | b"paint_color"
             | b"printable"
             | b"auto_drop"
             | b"pid"

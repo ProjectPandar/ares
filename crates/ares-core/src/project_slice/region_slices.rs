@@ -6,6 +6,8 @@ use crate::{
 pub(super) mod complex;
 mod convert;
 pub(super) mod interlocking;
+pub(super) mod painted;
+mod range_lookup;
 #[cfg(test)]
 mod tests;
 use super::{

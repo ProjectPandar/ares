@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer, de::Error};
 
 mod selector;
 
-pub(crate) use selector::strict_facets;
+pub(crate) use selector::{ordinary_facets, strict_annotated_facets, strict_facets};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct TriangleCodes(Vec<u8>);
@@ -65,6 +65,22 @@ pub(crate) struct FacetsAnnotation {
 }
 
 impl FacetsAnnotation {
+    pub(crate) fn used_states(&self) -> [bool; 17] {
+        let mut states = [false; 17];
+        let mut codes = self.codes.iter().copied();
+        while let Some(code) = codes.next() {
+            if code & 3 != 0 {
+                continue;
+            }
+            let mut state = usize::from(code >> 2);
+            if state == 3 {
+                state += usize::from(codes.next().unwrap());
+            }
+            states[state] = true;
+        }
+        states
+    }
+
     pub(crate) fn from_triangles<'a>(triangles: impl Iterator<Item = &'a TriangleCodes>) -> Self {
         let mut annotation = Self::default();
         for (triangle, codes) in triangles.enumerate() {
