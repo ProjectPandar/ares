@@ -1,0 +1,62 @@
+{
+  "purpose": "Actual official-exported INPUT3MF pair only, no expected outputs",
+  "base": "3fbad615e334a283596d0e6acff921f1d02804c6",
+  "upstream": [
+    "FanMover.cpp:284-305",
+    "FanMover.hpp:19,46,57"
+  ],
+  "geometry": "closed32-sided cylinder diameter12mm height6mm/30layers",
+  "profile": "PLA220C/0.4nozzle/0.2layers/Classic2walls/15%crosshatch/3top3bottom/fan30-70%/kick0/commentsOFF/onlyoverhangsOFF",
+  "inputs": {
+    "control": {
+      "file": "control.3mf",
+      "sha256": "b8bc9d8ab8db4eeaa21da61e759c64f230ddf4da800997424faf10fc53cfd298",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "977884dd97ee78f6578de64b30c55fd904819aa60ffebefc35df0e52fd40acd6",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "65148b42212067957ff25c12f12d1383f72682717779f7242c4944c6ebdb6228",
+        "Metadata/project_settings.config": "6517b40d0ae8b719e579dbeec383b4f5a2213d901fed861c453536330c1fe8a9",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-3fb-mainstream-fan-speedup-partial1/control/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-3fb-mainstream-fan-speedup-partial1/control/export-launch.json",
+        "durable_original_receipts": "/home/indexyz/ares-coord/evidence/w5-3fb-fan-mixed-timing/original-export-receipts/control",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-3fb-fan-mixed-timing/witness/verified.json"
+      }
+    },
+    "target": {
+      "file": "target.3mf",
+      "sha256": "98149dd837288535426ca78195dce3451f24fc3dd0906e783e8526d9ae18e084",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "977884dd97ee78f6578de64b30c55fd904819aa60ffebefc35df0e52fd40acd6",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "65148b42212067957ff25c12f12d1383f72682717779f7242c4944c6ebdb6228",
+        "Metadata/project_settings.config": "c02f1daf7805a2bc5b0a685a3ce16829da5586477eeefedb472aefa5c2bea332",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-3fb-mainstream-fan-speedup-partial1/positive/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-3fb-mainstream-fan-speedup-partial1/positive/export-launch.json",
+        "durable_original_receipts": "/home/indexyz/ares-coord/evidence/w5-3fb-fan-mixed-timing/original-export-receipts/positive",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-3fb-fan-mixed-timing/witness/verified.json"
+      }
+    }
+  },
+  "sole_changed_payload": "Metadata/project_settings.config",
+  "sole_changed_setting": {
+    "key": "fan_speedup_time",
+    "control": "0",
+    "target": "1"
+  },
+  "all_other_settings_equal": true,
+  "all_other_zip_payloads_byte_identical": true
+}
