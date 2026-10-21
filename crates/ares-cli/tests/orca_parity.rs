@@ -59,6 +59,9 @@ mod placeholder_double_render;
 #[path = "orca_parity/instance_name_sanitize.rs"]
 mod instance_name_sanitize;
 
+#[path = "orca_parity/ironing_equivalent_span.rs"]
+mod ironing_equivalent_span;
+
 #[path = "orca_parity/m400_priority.rs"]
 mod m400_priority;
 
