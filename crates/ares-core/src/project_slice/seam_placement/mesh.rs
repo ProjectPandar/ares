@@ -197,8 +197,8 @@ impl TriangleMesh {
             let base = mesh.vertices.len() as u32;
             mesh.vertices
                 .extend(volume.mesh().vertices().iter().map(|&vertex| {
-                    let [x, y, z] = volume.transform().transform_point_f32(vertex);
-                    Vec3::new(x, y, z)
+                    let vertex = volume.transform().transform_point(vertex);
+                    Vec3::new(vertex.x as f32, vertex.y as f32, vertex.z as f32)
                 }));
             mesh.indices
                 .extend(volume.mesh().triangles().iter().map(|&[a, b, c]| {
