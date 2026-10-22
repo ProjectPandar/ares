@@ -12,6 +12,7 @@ pub(super) struct TriangleSamples {
     pub(super) total_area: f32,
     pub(super) positions: Vec<Vec3>,
     pub(super) normals: Vec<Vec3>,
+    pub(super) triangle_indices: Vec<usize>,
 }
 
 pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> TriangleSamples {
@@ -35,6 +36,7 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
         .collect::<Vec<_>>();
     let mut positions = Vec::with_capacity(sample_count);
     let mut normals = Vec::with_capacity(sample_count);
+    let mut triangle_indices = Vec::with_capacity(sample_count);
     for [triangle_sample, u, v] in random_samples {
         let target = triangle_sample * f64::from(total_area);
         let mut triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
@@ -58,11 +60,13 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
                 + weighted(triangle.vertices[2], v * square_u),
         );
         normals.push(triangle.normal());
+        triangle_indices.push(triangle_index);
     }
     TriangleSamples {
         total_area,
         positions,
         normals,
+        triangle_indices,
     }
 }
 

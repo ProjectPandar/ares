@@ -145,12 +145,16 @@ impl Triangle {
 #[derive(Debug, PartialEq)]
 pub(super) struct TriangleMesh {
     pub(super) triangles: Vec<Triangle>,
+    pub(super) negative_start: usize,
 }
 
 impl TriangleMesh {
     #[cfg(test)]
     pub(super) fn new(triangles: Vec<Triangle>) -> Self {
-        Self { triangles }
+        Self {
+            negative_start: triangles.len(),
+            triangles,
+        }
     }
 
     /// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
@@ -178,11 +182,16 @@ impl TriangleMesh {
             vertices: Vec::new(),
             indices: Vec::new(),
         };
-        for volume in object
-            .volumes()
-            .iter()
-            .filter(|volume| volume.volume_type() == ProjectVolumeType::ModelPart)
-        {
+        let mut negative = super::short_edge_collapse::IndexedMesh {
+            vertices: Vec::new(),
+            indices: Vec::new(),
+        };
+        for volume in object.volumes() {
+            let mesh = match volume.volume_type() {
+                ProjectVolumeType::ModelPart => &mut mesh,
+                ProjectVolumeType::NegativeVolume => &mut negative,
+                _ => continue,
+            };
             // `SeamPlacer.cpp:638-640` — "Mirrored transforms flip winding,
             // keep normals outward": the volume matrix is applied with
             // fix_left_handed=true, which swaps indices 0 and 1
@@ -210,13 +219,24 @@ impl TriangleMesh {
                     ]
                 }));
         }
-        // `SeamPlacer.cpp:650-653`: both sets are decimated to
-        // `fast_decimation_triangle_count_target` (16000) BEFORE the
-        // merge and the obj_transform flip; this slice has no negative
-        // volumes (deferred, unwitnessed).
+        // `SeamPlacer.cpp:650-659`: decimate separately before merging;
+        // sampled triangle IDs retain the positive/negative split.
         super::short_edge_collapse::short_edge_collapse(
             &mut mesh,
             FAST_DECIMATION_TRIANGLE_COUNT_TARGET,
+        );
+        super::short_edge_collapse::short_edge_collapse(
+            &mut negative,
+            FAST_DECIMATION_TRIANGLE_COUNT_TARGET,
+        );
+        let negative_start = mesh.indices.len();
+        let vertex_offset = mesh.vertices.len() as u32;
+        mesh.vertices.extend(negative.vertices);
+        mesh.indices.extend(
+            negative
+                .indices
+                .into_iter()
+                .map(|indices| indices.map(|index| index + vertex_offset)),
         );
         // `SeamPlacer.cpp:659-660` — "Mirroring flips normals, keep them
         // outward for visibility sampling": the whole merged set is
@@ -247,7 +267,10 @@ impl TriangleMesh {
                 triangle.vertices.swap(0, 1);
             }
         }
-        Self { triangles }
+        Self {
+            triangles,
+            negative_start,
+        }
     }
 }
 

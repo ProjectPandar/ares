@@ -139,6 +139,32 @@ impl TriangleBvh {
         };
         first_hit_recursive(&self.nodes, mesh, 0, ray, f64::INFINITY).map(|hit| hit.triangle)
     }
+
+    /// `AABBTreeIndirect.hpp:755-787`: reuse hits and traverse only intersected nodes.
+    pub(in crate::project_slice::seam_placement) fn all_hits(
+        &self,
+        mesh: &TriangleMesh,
+        origin: Vec3,
+        direction: Vec3,
+        hits: &mut Vec<Hit>,
+    ) {
+        hits.clear();
+        if mesh.triangles.is_empty() {
+            return;
+        }
+        hits.reserve(8);
+        let ray = Ray {
+            origin,
+            direction,
+            inverse_direction: [
+                f64::from(direction.x).recip(),
+                f64::from(direction.y).recip(),
+                f64::from(direction.z).recip(),
+            ],
+        };
+        all_hits_recursive(&self.nodes, mesh, 0, ray, hits);
+        hits.sort_unstable_by(|left, right| left.distance.total_cmp(&right.distance));
+    }
 }
 
 fn build_recursive(
@@ -240,8 +266,8 @@ struct Ray {
 }
 
 #[derive(Clone, Copy)]
-struct Hit {
-    triangle: usize,
+pub(in crate::project_slice::seam_placement) struct Hit {
+    pub(in crate::project_slice::seam_placement) triangle: usize,
     distance: f32,
 }
 
@@ -269,6 +295,35 @@ fn first_hit_recursive(
             let next_limit = left.map_or(limit, |hit| f64::from(hit.distance));
             let right = first_hit_recursive(nodes, mesh, node_index * 2 + 2, ray, next_limit);
             right.or(left)
+        }
+    }
+}
+
+fn all_hits_recursive(
+    nodes: &[Node],
+    mesh: &TriangleMesh,
+    node_index: usize,
+    ray: Ray,
+    hits: &mut Vec<Hit>,
+) {
+    let node = nodes[node_index];
+    if !node
+        .bounds
+        .expect("a visited BVH node is initialized")
+        .intersects_ray(ray.origin, ray.inverse_direction, f64::INFINITY)
+    {
+        return;
+    }
+    match node.kind {
+        NodeKind::Empty => unreachable!("a visited BVH node is initialized"),
+        NodeKind::Leaf(triangle) => {
+            if let Some(hit) = triangle_hit(mesh, triangle, ray.origin, ray.direction) {
+                hits.push(hit);
+            }
+        }
+        NodeKind::Branch => {
+            all_hits_recursive(nodes, mesh, node_index * 2 + 1, ray, hits);
+            all_hits_recursive(nodes, mesh, node_index * 2 + 2, ray, hits);
         }
     }
 }
