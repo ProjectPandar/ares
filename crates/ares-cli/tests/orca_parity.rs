@@ -8,20 +8,16 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
-#[path = "orca_parity/paint_color.rs"]
-mod paint_color;
-
-#[path = "orca_parity/paint_color/activity.rs"]
-mod paint_color_activity;
-
-#[path = "orca_parity/painted_side_cut.rs"]
-mod painted_side_cut;
-
-#[path = "orca_parity/vg1_export_arc_cache.rs"]
-mod vg1_export_arc_cache;
-
 #[path = "orca_parity/fan_mixed_timing.rs"]
 mod fan_mixed_timing;
+#[path = "orca_parity/paint_color.rs"]
+mod paint_color;
+#[path = "orca_parity/paint_color/activity.rs"]
+mod paint_color_activity;
+#[path = "orca_parity/painted_side_cut.rs"]
+mod painted_side_cut;
+#[path = "orca_parity/vg1_export_arc_cache.rs"]
+mod vg1_export_arc_cache;
 
 #[path = "orca_parity/interlocking_base.rs"]
 mod interlocking_base;
