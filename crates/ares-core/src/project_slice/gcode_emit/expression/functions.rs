@@ -15,6 +15,13 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
                 .ok_or("numeric function argument expected")
         })
         .collect::<Result<Vec<_>, _>>()?;
+    let integer_result = |operation: fn(f64) -> f64| {
+        Value::Integer(
+            args[0]
+                .as_integer()
+                .unwrap_or_else(|| i64::from(operation(numbers[0]) as i32)),
+        )
+    };
     match name {
         "min" => numbers
             .into_iter()
@@ -26,14 +33,10 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
             .reduce(f64::max)
             .map(Value::Number)
             .ok_or("max requires an argument".to_owned()),
-        "int" if numbers.len() == 1 => Ok(Value::Integer(
-            args[0]
-                .as_integer()
-                .unwrap_or_else(|| i64::from(numbers[0] as i32)),
-        )),
-        "round" if numbers.len() == 1 => Ok(Value::Number(numbers[0].round())),
-        "floor" if numbers.len() == 1 => Ok(Value::Number(numbers[0].floor())),
-        "ceil" if numbers.len() == 1 => Ok(Value::Number(numbers[0].ceil())),
+        "int" if numbers.len() == 1 => Ok(integer_result(f64::trunc)),
+        "round" if numbers.len() == 1 => Ok(integer_result(f64::round)),
+        "floor" if numbers.len() == 1 => Ok(integer_result(f64::floor)),
+        "ceil" if numbers.len() == 1 => Ok(integer_result(f64::ceil)),
         "digits" if matches!(numbers.len(), 2 | 3) => {
             let width = numbers[1].clamp(0.0, 64.0) as usize;
             let rendered = if let Some(decimals) = numbers.get(2) {
