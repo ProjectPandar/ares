@@ -209,7 +209,7 @@ fn emit_inner(
     )?;
     temperature::post(output, state, context);
     super::pressure_advance::append(output, state, context.traversal, filament);
-    state.last_scaled_position = None;
+    state.last_position_defined = false;
     Ok(())
 }
 

@@ -221,20 +221,7 @@ fn emit_variable_width_entity(
     }
 }
 
-pub(super) fn local_cursor(state: &EmitState, geometry: LayerGeometry<'_>) -> Point {
-    // `GCode::extrude_infill` chains from m_last_pos, not GCodeWriter::m_pos.
-    if let Some((x, y)) = state.last_scaled_position {
-        return Point::new(x, y);
-    }
-    // Before the first generated path, use the position left by start G-code.
-    Point::new(
-        geometry
-            .scale
-            .checked_scale(state.x - state.offset.0)
-            .expect("emitted X remains in the coordinate domain"),
-        geometry
-            .scale
-            .checked_scale(state.y - state.offset.1)
-            .expect("emitted Y remains in the coordinate domain"),
-    )
+pub(super) fn local_cursor(state: &EmitState, _geometry: LayerGeometry<'_>) -> Point {
+    // `GCode.hpp:224`: numeric m_last_pos exists even while undefined for travel.
+    Point::new(state.last_scaled_position.0, state.last_scaled_position.1)
 }

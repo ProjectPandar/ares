@@ -102,7 +102,8 @@ fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_corner_then_destinati
     let mut state = EmitState {
         x: 4.89,
         y: 4.89,
-        last_scaled_position: Some((4_890_000, 4_890_000)),
+        last_scaled_position: (4_890_000, 4_890_000),
+        last_position_defined: true,
         positioned: true,
         layer_z: 1.0,
         travel_feedrate: 6000.0,
@@ -151,7 +152,8 @@ fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_corner_then_destinati
         b"G1 X4.715 Y4.715 F6000\nG1 X4.89 Y4.89 Z.75 F6000\n"
     );
     assert_eq!(state.scarf_z, Some(0.75));
-    assert_eq!(state.last_scaled_position, Some((4_890_000, 4_890_000)));
+    assert_eq!(state.last_scaled_position, (4_890_000, 4_890_000));
+    assert!(state.last_position_defined);
 }
 
 fn assert_route(start: (i64, i64), end: (i64, i64), expected: &[(i64, i64)]) {

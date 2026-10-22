@@ -288,7 +288,8 @@ pub(super) fn emit_needs_travel(
     let route_comment = first_travel_comment.to_string();
     travel_set_layer_z |=
         waypoints::emit_detour_waypoints(output, state, &route, slope_start_z, &route_comment);
-    state.last_scaled_position = Some(first_scaled);
+    state.last_scaled_position = first_scaled;
+    state.last_position_defined = true;
     state.positioned = true;
     state.current_feedrate = state.travel_feedrate;
 

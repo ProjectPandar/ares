@@ -153,10 +153,11 @@ impl SkirtPlan {
         let mut seam_target = if layer.index == 0 {
             find_start_point(&loops[0], self.start_angle_deg)
         } else {
-            state.last_scaled_position.map_or_else(
-                || find_start_point(&loops[0], self.start_angle_deg),
-                |(x, y)| Point::new(x, y),
-            )
+            if state.last_position_defined {
+                Point::new(state.last_scaled_position.0, state.last_scaled_position.1)
+            } else {
+                find_start_point(&loops[0], self.start_angle_deg)
+            }
         };
         for loop_points in loops {
             let mut split = split_at_nearest(loop_points, seam_target)
@@ -179,8 +180,9 @@ impl SkirtPlan {
                 geometry,
                 state,
             )?;
-            if let Some(last) = state.last_scaled_position {
-                seam_target = Point::new(last.0, last.1);
+            if state.last_position_defined {
+                seam_target =
+                    Point::new(state.last_scaled_position.0, state.last_scaled_position.1);
             }
         }
         Ok(())

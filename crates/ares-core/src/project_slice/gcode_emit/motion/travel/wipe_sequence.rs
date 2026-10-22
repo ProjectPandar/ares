@@ -209,12 +209,13 @@ pub(super) fn retract_and_wipe_impl(
             // exact under round-to-nearest).
             // `(point - m_origin) + extruder_offset` order
             // (`GCode.cpp:8138-8144`).
-            state.last_scaled_position = Some((
+            state.last_scaled_position = (
                 ((point.x - state.origin.0 + state.extruder_offset.0) / state.scale_factor).round()
                     as i64,
                 ((point.y - state.origin.1 + state.extruder_offset.1) / state.scale_factor).round()
                     as i64,
-            ));
+            );
+            state.last_position_defined = true;
             state.wipe_start = Some(point);
         }
         let wipe_end = if state.tags.is_bbl() {

@@ -25,7 +25,8 @@ fn tower_travel_uses_native_comment_without_extrusion_z_restatement() {
     };
     let mut state = EmitState {
         positioned: true,
-        last_scaled_position: Some((0, 0)),
+        last_scaled_position: (0, 0),
+        last_position_defined: true,
         writer_z: Some(0.0),
         layer_z: 0.2,
         layer_change_travel_pending: true,
@@ -61,7 +62,8 @@ fn tower_travel_uses_native_comment_without_extrusion_z_restatement() {
     let mut output = Vec::new();
     super::tower_travel(&mut output, &mut state, (10_000_000, 20_000_000), geometry).unwrap();
     assert_eq!(output, b"G1 X10 Y20 Z.2 F1200 ; Travel to a Wipe Tower\n");
-    assert_eq!(state.last_scaled_position, Some((10_000_000, 20_000_000)));
+    assert_eq!(state.last_scaled_position, (10_000_000, 20_000_000));
+    assert!(state.last_position_defined);
     assert!(!state.layer_change_travel_pending);
 }
 

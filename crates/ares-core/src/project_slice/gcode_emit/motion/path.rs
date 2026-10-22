@@ -334,7 +334,8 @@ fn emit_inner(
             properties,
             state,
         });
-        state.last_scaled_position = Some(last_scaled);
+        state.last_scaled_position = last_scaled;
+        state.last_position_defined = true;
         if properties.contour.is_none() {
             state.scarf_z = Some(state.layer_z);
         }
@@ -343,7 +344,8 @@ fn emit_inner(
     }
     if properties.contour.is_some() {
         contour::emit(output, &points, properties, geometry, state);
-        state.last_scaled_position = Some(last_scaled);
+        state.last_scaled_position = last_scaled;
+        state.last_position_defined = true;
         return Ok(());
     }
     // Non-processed sloped path (`GCode.cpp:6992` non-`new_points`
@@ -358,7 +360,8 @@ fn emit_inner(
         super::scarf::emit_segments(output, &points, slope, properties, state);
         output.extend_from_slice(b";_EXTRUDE_END\n");
         state.wipe_path = wipe_points.into_iter().rev().collect();
-        state.last_scaled_position = Some(last_scaled);
+        state.last_scaled_position = last_scaled;
+        state.last_position_defined = true;
         return Ok(());
     }
     constant::emit(constant::Emission {

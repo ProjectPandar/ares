@@ -174,10 +174,11 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
             } else {
                 (0.0, 0.0)
             };
-            state.last_scaled_position = Some((
+            state.last_scaled_position = (
                 ((x - state.origin.0 + offset.0) / state.scale_factor) as i64,
                 ((y - state.origin.1 + offset.1) / state.scale_factor) as i64,
-            ));
+            );
+            state.last_position_defined = true;
         }
         state.writer_z = Some(z);
     }

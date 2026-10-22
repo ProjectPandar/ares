@@ -114,7 +114,8 @@ pub(in crate::project_slice::gcode_emit) fn finish(
     // The discarded writer XY move does not subtract nozzle offsets.
     state.x = f64::from(end[0]);
     state.y = f64::from(end[1]);
-    state.last_scaled_position = Some(local(end, state.origin, scale));
+    state.last_scaled_position = local(end, state.origin, scale);
+    state.last_position_defined = true;
     state.positioned = true;
     state.wipe_path = wipe
         .into_iter()

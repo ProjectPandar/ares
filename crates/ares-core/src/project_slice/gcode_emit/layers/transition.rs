@@ -96,7 +96,8 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     state.x = origin[0];
     state.y = origin[1];
     // GCode.cpp:3322/7506: travel_to ends at (0, 0) in the incoming frame.
-    state.last_scaled_position = Some((0, 0));
+    state.last_scaled_position = (0, 0);
+    state.last_position_defined = true;
     state.positioned = true;
     // The transition's hop leaves the nozzle lifted above the layer
     // domain (`GCodeWriter` lifted state): the incoming instance's

@@ -74,12 +74,12 @@ pub(super) fn emit(
     );
     // `positioned` mirrors `GCodeWriter::m_is_current_pos_clear`: cleared by
     // custom g-code (timelapse/toolchange), set by every travel. The
-    // `never_positioned` flag mirrors `GCode::m_last_pos.is_none()` — true
+    // `never_positioned` flag mirrors `!GCode::m_last_pos_defined` — true
     // only before the first generated travel — and drives the extra
     // `G1 Z{nominal_z}` re-statement that `_last_pos_undefined` triggers
     // (`GCode.cpp:6381-6386`), which a merely-uncleared position does not.
     let first_position = !state.positioned;
-    let never_positioned = state.last_scaled_position.is_none();
+    let never_positioned = !state.last_position_defined;
     let layer_change_travel = state.layer_change_travel_pending && !first_position;
     let slope_start_z = properties
         .slope
@@ -99,8 +99,10 @@ pub(super) fn emit(
         .or(contour_z)
         .or(after_contour.then_some(state.layer_z));
     let target_z = travel_z.unwrap_or(state.layer_z);
-    let needs_travel =
-        first_position || state.last_scaled_position != Some(first_scaled) || slope_needs_z_travel;
+    let needs_travel = first_position
+        || !state.last_position_defined
+        || state.last_scaled_position != first_scaled
+        || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     let (mut travel_set_layer_z, eager_lifted_travel, unclear_position_travel) = if needs_travel {
         let comment = if state.options.gcode_comments {

@@ -191,7 +191,8 @@ fn plate_loops_unscale_after_integer_translation() {
                 text.contains(&format!("G1 X118.55 Y{expected_y} E")),
                 "{feature}: {text}"
             );
-            assert_eq!(state.last_scaled_position, Some((8_550_000, -11_811_500)));
+            assert_eq!(state.last_scaled_position, (8_550_000, -11_811_500));
+            assert!(state.last_position_defined);
             assert_eq!(state.origin, (110.0, 110.0));
             assert_eq!(state.wipe_path.len(), 2);
             for (point, expected_x) in state.wipe_path.iter().zip([8.55, 8.0]) {
@@ -272,6 +273,7 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             text.contains(&format!("G1 X121.761 Y118.566 E{expected_e}\n")),
             "{source} -> {destination}: {text}"
         );
-        assert_eq!(state.last_scaled_position, Some((-8_000_000, -9_000_000)));
+        assert_eq!(state.last_scaled_position, (-8_000_000, -9_000_000));
+        assert!(state.last_position_defined);
     }
 }

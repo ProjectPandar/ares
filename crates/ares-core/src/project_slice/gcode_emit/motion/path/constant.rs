@@ -113,6 +113,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     }
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
-    state.last_scaled_position = Some(last_scaled);
+    state.last_scaled_position = last_scaled;
+    state.last_position_defined = true;
     state.scarf_z = Some(state.layer_z);
 }
