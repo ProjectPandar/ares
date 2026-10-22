@@ -221,7 +221,7 @@ pub(super) fn raft_roles(
 pub(in crate::project_slice::gcode_emit) fn print_extruders(
     traversal: &PreparedPostClassicTraversal,
 ) -> Vec<usize> {
-    let mut tools = crate::project_slice::extruders::collect_project_object_extruders(
+    let mut object_tools = crate::project_slice::extruders::collect_project_object_extruders(
         traversal.project.objects(),
         &traversal.resolved.objects,
         traversal.resolved.logical_filament_count,
@@ -229,6 +229,10 @@ pub(in crate::project_slice::gcode_emit) fn print_extruders(
     .into_iter()
     .flatten()
     .collect::<Vec<_>>();
+    object_tools.sort_unstable();
+    object_tools.dedup();
+    let mut support_tools = Vec::new();
+    let mut support_uses_current_extruder = false;
     for object in &traversal.resolved.objects {
         let options = &object.object;
         if !options.enable_support.0
@@ -240,19 +244,25 @@ pub(in crate::project_slice::gcode_emit) fn print_extruders(
         for id in [
             options.support_filament.0,
             options.support_interface_filament.0,
-        ]
-        .into_iter()
-        .filter(|&id| id > 0)
-        {
-            tools.push(if id as usize > traversal.resolved.logical_filament_count {
+        ] {
+            if id == 0 {
+                support_uses_current_extruder = true;
+                continue;
+            }
+            support_tools.push(if id as usize > traversal.resolved.logical_filament_count {
                 0
             } else {
                 id as usize - 1
             });
         }
     }
-    tools.sort_unstable();
-    tools.dedup();
+    if support_uses_current_extruder {
+        support_tools.extend_from_slice(&object_tools);
+    }
+    support_tools.sort_unstable();
+    support_tools.dedup();
+    let mut tools = object_tools;
+    tools.extend(support_tools);
     // Print.cpp:540-546,3290-3301: explicit tower filament joins the
     // candidate set based on configuration, not materialized tower paths.
     let settings = &traversal.resolved.views.full;
@@ -265,8 +275,8 @@ pub(in crate::project_slice::gcode_emit) fn print_extruders(
             || (!print.spiral_mode.0 && settings.filament.gcode.filament_diameter.0.len() > 1));
     if has_tower && print.wipe_tower_filament.0 != 0 && tools.len() > 1 {
         tools.push(print.wipe_tower_filament.0 as usize - 1);
-        tools.sort_unstable();
-        tools.dedup();
     }
+    tools.sort_unstable();
+    tools.dedup();
     tools
 }
