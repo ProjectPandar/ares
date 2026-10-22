@@ -34,7 +34,7 @@ pub(in crate::project_slice) fn emit(
         traversal,
         &prepared.support_layers,
         &brim,
-        (&tower_corners, schedule.tool_ordering.all_extruders()),
+        &tower_corners,
         schedule.raft.as_ref(),
     )?;
     let islands =

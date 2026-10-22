@@ -6,7 +6,7 @@ impl SkirtPlan {
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<crate::project_slice::support_material::InstalledSupportLayer>],
         brim: &[Option<super::super::brim::BrimPlan>],
-        (tower_corners, extruders): (&[Point], &[usize]),
+        tower_corners: &[Point],
         raft: Option<&super::super::layers::RaftSchedule>,
     ) -> Result<Option<Self>, SliceError> {
         let print = &traversal.resolved.views.full.process.print;
@@ -115,12 +115,9 @@ impl SkirtPlan {
         let hull_polygon = Polygon::new(hull);
         let minimum_filament = print.min_skirt_length.0;
         let filament = &full.filament.gcode;
-        // Print.cpp:2710-2719: budgets follow the sorted set of used tools,
-        // independent of the priming/emission permutation.
-        let mut extruders = extruders.to_vec();
-        extruders.sort_unstable();
-        extruders.dedup();
-        let e_per_path_mm = extruders
+        // Print.cpp:2710-2719 uses Print::extruders(false), including
+        // configured region tools even when they produce no extrusion.
+        let e_per_path_mm = super::super::tool_ordering::print_extruders(traversal)
             .into_iter()
             .map(|id| {
                 let diameter = filament

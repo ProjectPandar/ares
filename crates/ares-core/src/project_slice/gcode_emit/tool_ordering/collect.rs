@@ -217,8 +217,10 @@ pub(super) fn raft_roles(
         })
 }
 
-/// `Print::extruders` candidate set for choosing a nonsoluble support tool.
-pub(super) fn print_extruders(traversal: &PreparedPostClassicTraversal) -> Vec<usize> {
+/// `Print::extruders(false)` candidate set, without custom G-code tools.
+pub(in crate::project_slice::gcode_emit) fn print_extruders(
+    traversal: &PreparedPostClassicTraversal,
+) -> Vec<usize> {
     let mut tools = crate::project_slice::extruders::collect_project_object_extruders(
         traversal.project.objects(),
         &traversal.resolved.objects,
@@ -251,5 +253,20 @@ pub(super) fn print_extruders(traversal: &PreparedPostClassicTraversal) -> Vec<u
     }
     tools.sort_unstable();
     tools.dedup();
+    // Print.cpp:540-546,3290-3301: explicit tower filament joins the
+    // candidate set based on configuration, not materialized tower paths.
+    let settings = &traversal.resolved.views.full;
+    let print = &settings.process.print;
+    let tower = &settings.printer.gcode;
+    let has_tower = print.enable_prime_tower.0
+        && ((settings.process.gcode.enable_wrapping_detection.0
+            && tower.wrapping_exclude_area.0.len() > 2)
+            || print.timelapse_type == crate::ProcessTimelapseType::Smooth
+            || (!print.spiral_mode.0 && settings.filament.gcode.filament_diameter.0.len() > 1));
+    if has_tower && print.wipe_tower_filament.0 != 0 && tools.len() > 1 {
+        tools.push(print.wipe_tower_filament.0 as usize - 1);
+        tools.sort_unstable();
+        tools.dedup();
+    }
     tools
 }
