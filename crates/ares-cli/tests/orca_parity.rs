@@ -11,6 +11,9 @@ mod native_environment;
 #[path = "orca_parity/object_emission_cases.rs"]
 mod object_emission_cases;
 
+#[path = "orca_parity/negative_volume_seam_occlusion.rs"]
+mod negative_volume_seam_occlusion;
+
 #[path = "orca_parity/chamber_used_extruder.rs"]
 mod chamber_used_extruder;
 #[path = "orca_parity/endpoint_contact.rs"]
