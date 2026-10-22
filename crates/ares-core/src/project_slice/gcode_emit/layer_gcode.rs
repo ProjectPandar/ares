@@ -183,9 +183,12 @@ pub(super) fn append_layer_change(
         if let Some(value) = config
             .get("temperature_vitrification")
             .and_then(|value| value.index(0))
-            .cloned()
+            .and_then(value::Value::as_number)
         {
-            config.insert("min_vitrification_temperature", value);
+            config.insert(
+                "min_vitrification_temperature",
+                value::Value::Integer(value as i64),
+            );
         }
         config.insert(
             "max_additional_fan",

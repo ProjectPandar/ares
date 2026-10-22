@@ -277,7 +277,10 @@ fn insert_runtime_placeholders(
         .filter_map(Value::as_number)
         .reduce(f64::min)
     {
-        config.insert("min_vitrification_temperature", Value::number(minimum));
+        config.insert(
+            "min_vitrification_temperature",
+            Value::Integer(minimum as i64),
+        );
     }
     // `GCode.cpp:3009-3037`: `overall_chamber_temperature` is the maximum
     // `chamber_temperature` over the writer's extruders (the used
