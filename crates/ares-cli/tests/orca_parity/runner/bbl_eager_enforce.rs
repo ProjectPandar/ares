@@ -17,7 +17,7 @@ fn orca_parity_bbl_eager_enforce_all_surfaces_complete_output() {
         "all-surfaces",
         include_bytes!("../../../../../tests/parity/bbl-eager-enforce/all-surfaces.3mf"),
         "438bf4c61895a7a8d51e3c61a70fa8df120a9f3a607d63a4291d359984154a7c",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -28,7 +28,7 @@ fn orca_parity_bbl_eager_enforce_bottom_only_complete_output() {
         "bottom-only",
         include_bytes!("../../../../../tests/parity/bbl-eager-enforce/bottom-only.3mf"),
         "f735864a4dc6d992440a7e9d9a8b5f620775cdda7ea09d53dc09e65849664bcf",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -39,7 +39,7 @@ fn orca_parity_bbl_eager_enforce_top_only_complete_output() {
         "top-only",
         include_bytes!("../../../../../tests/parity/bbl-eager-enforce/top-only.3mf"),
         "bd42ee78a736e7916ae8b4c549c8c52f45c6522b89214d1029d2701b9039bc77",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -50,6 +50,6 @@ fn orca_parity_bbl_eager_enforce_top_and_bottom_complete_output() {
         "top-and-bottom",
         include_bytes!("../../../../../tests/parity/bbl-eager-enforce/top-and-bottom.3mf"),
         "792645d56b67be089d137bc95ce7b76827fbef882782774c235ddc3974ec63c3",
-        false,
+        (false, |_, _| {}),
     );
 }

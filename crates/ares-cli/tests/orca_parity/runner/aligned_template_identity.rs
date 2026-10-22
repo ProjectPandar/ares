@@ -18,7 +18,7 @@ fn aligned_same_angle_modifier_template_matches_native_complete_output() {
         "aligned-local45",
         include_bytes!("../../../../../tests/parity/aligned-template-identity/aligned-local45.3mf"),
         "779f7758a8ca330b2cbd2cf0688b1c7a154bbd44297f36c3af977c9f433956f9",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -31,7 +31,7 @@ fn aligned_uniform_explicit_template_control_preserves_complete_output() {
             "../../../../../tests/parity/aligned-template-identity/aligned-global45-local45.3mf"
         ),
         "14987398e25c5ba9483311f74a2c86ce39f6ae5db236583831abb15cdcba3954",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -42,6 +42,6 @@ fn aligned_different_angle_modifier_control_preserves_complete_output() {
         "aligned-local90",
         include_bytes!("../../../../../tests/parity/aligned-template-identity/aligned-local90.3mf"),
         "19ee9aa23dfe578d4542f8e785fc27f0048fbb2bd930eee783da70bd2b737630",
-        false,
+        (false, |_, _| {}),
     );
 }
