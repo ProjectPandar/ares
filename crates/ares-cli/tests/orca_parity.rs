@@ -8,43 +8,34 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/chamber_used_extruder.rs"]
+mod chamber_used_extruder;
+#[path = "orca_parity/endpoint_contact.rs"]
+mod endpoint_contact;
+#[path = "orca_parity/exhaust_used_extruder.rs"]
+mod exhaust_used_extruder;
 #[path = "orca_parity/fan_mixed_timing.rs"]
 mod fan_mixed_timing;
+#[path = "orca_parity/interlocking_base.rs"]
+mod interlocking_base;
+#[path = "orca_parity/inward_displacement.rs"]
+mod inward_displacement;
+#[path = "orca_parity/mesh_center_precision.rs"]
+mod mesh_center_precision;
 #[path = "orca_parity/paint_color.rs"]
 mod paint_color;
 #[path = "orca_parity/paint_color/activity.rs"]
 mod paint_color_activity;
 #[path = "orca_parity/painted_side_cut.rs"]
 mod painted_side_cut;
-#[path = "orca_parity/vg1_export_arc_cache.rs"]
-mod vg1_export_arc_cache;
-
-#[path = "orca_parity/chamber_used_extruder.rs"]
-mod chamber_used_extruder;
-
-#[path = "orca_parity/used_extruder_case.rs"]
-mod used_extruder_case;
-
-#[path = "orca_parity/exhaust_used_extruder.rs"]
-mod exhaust_used_extruder;
-
-#[path = "orca_parity/interlocking_base.rs"]
-mod interlocking_base;
-
-#[path = "orca_parity/endpoint_contact.rs"]
-mod endpoint_contact;
-
-#[path = "orca_parity/inward_displacement.rs"]
-mod inward_displacement;
-
-#[path = "orca_parity/thin_safezone.rs"]
-mod thin_safezone;
-
-#[path = "orca_parity/mesh_center_precision.rs"]
-mod mesh_center_precision;
-
 #[path = "orca_parity/processor_sloped_seam.rs"]
 mod processor_sloped_seam;
+#[path = "orca_parity/thin_safezone.rs"]
+mod thin_safezone;
+#[path = "orca_parity/used_extruder_case.rs"]
+mod used_extruder_case;
+#[path = "orca_parity/vg1_export_arc_cache.rs"]
+mod vg1_export_arc_cache;
 
 #[path = "orca_parity/medial_endpoint_zero.rs"]
 mod medial_endpoint_zero;
