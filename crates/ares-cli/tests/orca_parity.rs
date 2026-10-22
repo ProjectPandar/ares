@@ -19,6 +19,9 @@ mod painted_side_cut;
 #[path = "orca_parity/vg1_export_arc_cache.rs"]
 mod vg1_export_arc_cache;
 
+#[path = "orca_parity/exhaust_used_extruder.rs"]
+mod exhaust_used_extruder;
+
 #[path = "orca_parity/interlocking_base.rs"]
 mod interlocking_base;
 
