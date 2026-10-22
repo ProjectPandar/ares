@@ -36,7 +36,10 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
                 let decimals = decimals.clamp(0.0, 64.0) as usize;
                 format!("{:.decimals$}", numbers[0])
             } else {
-                format!("{:.0}", numbers[0])
+                let integer = args[0]
+                    .as_integer()
+                    .unwrap_or_else(|| i64::from(numbers[0].round() as i32));
+                integer.to_string()
             };
             Ok(Value::String(format!("{rendered:>width$}")))
         }
