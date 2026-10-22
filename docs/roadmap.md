@@ -7,6 +7,30 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Exhaust-fan writer-used extruder reduction: SPEC → public RED (#102/#103)
+
+COORD accepted readonly discovery #101 on main6f6ef10f5. New branch commits
+docs-first SPEC/ARD, then four frozen input3MF+SHA public NativeCase tests only.
+Owner upstream8500fcdcc `GCode.cpp3181–3196/3501–3516` reduces over
+`m_writer.extruders()`; Rust destination is existing private
+`gcode_emit/machine/exhaust_fan.rs` at current start/end call locations.
+The current all-config-vector scan is temporary incomplete upstream scaffold,
+not an Ares fan pipeline. Preserve writer ID provenance, gates, zero speed,
+get_at/max/PWM arithmetic, flavor, ordering and configuration serialization.
+Do not create a shadow registry or change Print/ToolOrdering behavior.
+
+Priority/exit: docs commit → T0-only/high-unusedT1 target plus equal,
+unused-disabled and machine-capability-off controls → global Native-first,
+official/seeded directed CPU18 public success-required complete ordered Native /
+API / actual CLI and raw API==CLI → RED RR. Expected target FAIL/three controls
+PASS per mode; no Native constants, movement goldens or expected-error inversion.
+No GREEN before separate approval; defer nonzero/multiple/support/custom-tool
+runtime witnesses, adjacent fans/temperature/registry work, other workers'
+skirt/z-hop/print_order/M73/seam-occlusion scopes, FULL, merge/push and platform
+runtime qualification. Prior painted stage text below remains historical.
+[SPEC](architecture/exhaust-used-extruder-spec.md),
+[ARD](architecture/ard-exhaust-used-extruder.md).
+
 ### Painted side-layer cutting: approved SPEC, public RED only (#99)
 
 New branch from frozen1045b1775; original painted branch/worktree remain unchanged.
