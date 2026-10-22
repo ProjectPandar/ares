@@ -25,7 +25,12 @@ impl GlobalVisibility {
         let tree = TriangleBvh::new(&mesh);
         let directions = hemisphere_directions();
         let contains_negative = mesh.negative_start < mesh.triangles.len();
-        let mut hits = Vec::new();
+        let mut negative_caster = NegativeRaycaster {
+            mesh: &mesh,
+            tree: &tree,
+            directions: &directions,
+            hits: Vec::new(),
+        };
         let values: Vec<f32> = samples
             .positions
             .iter()
@@ -38,21 +43,18 @@ impl GlobalVisibility {
                     0.0
                 };
                 if contains_negative {
-                    negative_sample_visibility(
-                        &mesh,
-                        &tree,
-                        (center, normal, triangle_index >= mesh.negative_start),
-                        &directions,
+                    return negative_caster.visibility(
+                        center,
+                        normal,
+                        triangle_index,
                         1.0 + front_adjustment,
-                        &mut hits,
-                    )
+                    );
+                }
+                let visibility = sample_visibility(&mesh, &tree, center, normal, &directions);
+                if front_bias {
+                    visibility + front_adjustment
                 } else {
-                    let visibility = sample_visibility(&mesh, &tree, center, normal, &directions);
-                    if front_bias {
-                        visibility + front_adjustment
-                    } else {
-                        visibility
-                    }
+                    visibility
                 }
             })
             .collect();
@@ -116,49 +118,56 @@ fn hemisphere_directions() -> [Vec3; DIRECTION_COUNT] {
 
 // `SeamPlacer.cpp:188-225`: negative-face samples cast inward; hit signs
 // distinguish subtraction surfaces without constructing a Boolean mesh.
-fn negative_sample_visibility(
-    mesh: &TriangleMesh,
-    tree: &TriangleBvh,
-    (center, normal, from_negative): (Vec3, Vec3, bool),
-    directions: &[Vec3],
-    mut visibility: f32,
-    hits: &mut Vec<Hit>,
-) -> f32 {
-    let z = normal.normalized();
-    let provisional_x = if z.x.abs() > 0.99 {
-        Vec3::new(0.0, 1.0, 0.0)
-    } else {
-        Vec3::new(1.0, 0.0, 0.0)
-    };
-    let y = z.cross(provisional_x).normalized();
-    let x = y.cross(z);
-    let origin = if from_negative {
-        center - normal * 0.01
-    } else {
-        center + normal * 0.01
-    };
-    let decrement = 1.0 / directions.len() as f32;
-    for &local in directions {
-        let direction = x * local.x + y * local.y + z * local.z;
-        let direction = if from_negative { -direction } else { direction };
-        tree.all_hits(mesh, origin, direction, hits);
-        if !hits.is_empty() {
+struct NegativeRaycaster<'a> {
+    mesh: &'a TriangleMesh,
+    tree: &'a TriangleBvh,
+    directions: &'a [Vec3],
+    hits: Vec<Hit>,
+}
+
+impl NegativeRaycaster<'_> {
+    fn visibility(
+        &mut self,
+        center: Vec3,
+        normal: Vec3,
+        triangle_index: usize,
+        mut visibility: f32,
+    ) -> f32 {
+        let mesh = self.mesh;
+        let from_negative = triangle_index >= mesh.negative_start;
+        let z = normal.normalized();
+        let provisional_x = if z.x.abs() > 0.99 {
+            Vec3::new(0.0, 1.0, 0.0)
+        } else {
+            Vec3::new(1.0, 0.0, 0.0)
+        };
+        let y = z.cross(provisional_x).normalized();
+        let x = y.cross(z);
+        let origin = if from_negative {
+            center - normal * 0.01
+        } else {
+            center + normal * 0.01
+        };
+        let decrement = 1.0 / self.directions.len() as f32;
+        for &local in self.directions {
+            let direction = x * local.x + y * local.y + z * local.z;
+            let direction = if from_negative { -direction } else { direction };
+            self.tree.all_hits(mesh, origin, direction, &mut self.hits);
+            if self.hits.is_empty() {
+                continue;
+            }
             let mut counter = 0;
-            for hit in hits.iter().rev() {
+            for hit in self.hits.iter().rev() {
                 let dot = mesh.triangles[hit.triangle].normal().dot(direction);
                 let sign = i32::from(dot > 0.0) - i32::from(dot < 0.0);
-                if hit.triangle >= mesh.negative_start {
-                    counter -= sign;
-                } else {
-                    counter += sign;
-                }
+                counter += sign * (1 - 2 * i32::from(hit.triangle >= mesh.negative_start));
             }
             if counter == 0 {
                 visibility -= decrement;
             }
         }
+        visibility
     }
-    visibility
 }
 
 fn sample_visibility(
