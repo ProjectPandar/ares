@@ -1,6 +1,7 @@
 # SPEC: `print_order = as_obj_list` object-instance ordering (ByLayer)
 
-Status: SPEC only. RED inputs are committed with this document; no GREEN code yet.
+Status: implementation `87aeb0b6c` passes the four targeted cases in both modes.
+Strict dual-mode FULL acceptance is not yet achieved; RED `dd750b6eb` remains unchanged.
 
 Source-cited rewrite slice of `libslic3r`. Upstream owner first; Ares is the port target.
 
@@ -67,11 +68,14 @@ sole assignment at `Print.cpp:881`. GDB observation of the official binary retra
   index, and the renumbering order among such ties comes from `std::sort` (`:2413`), which is not stable.
   That is the only place where a libstdc++ introsort artifact could leak into the instance order, and it
   only matters for objects with more than one instance.
-- **Therefore the SPEC still forbids inventing an ordering rule.** Ares must port the algorithm literally
-  (assign `arrange_order` from the model object index in the `init_order` pass, renumber `k+1`, sort with
-  the same comparator, collect in the same iteration order with the same `lower_bound`, re-sort) rather
-  than deriving an order from the object list directly. It may **not** substitute `sort_by_key`+stable or
-  any hand-rolled "object list order" on the grounds that it looks equivalent.
+- **Authorized bounded reduction (coordinator review).** The `init_order` pass sorts by model object
+  index and renumbers to unique `1..N` keys. Subsequent `lower_bound` collection and re-sort preserve
+  that assigned order. For a total sort range of `n <= 16`, libstdc++ uses insertion sort, preserving
+  the input iteration order among equal model-object keys. The accepted Rust reduction therefore
+  orders by model object index and preserves same-object instance iteration order in that range.
+  For `n > 16`, the upstream relative order of same-object instances has **not** been ported.
+  No parity claim or new tie-breaking contract is made for that case; stable Rust ordering outside
+  the bounded range is not evidence of upstream equivalence.
 - The RED below pins the resulting bytes, so an implementation that quietly picks a different
   permutation fails.
 
@@ -88,6 +92,13 @@ branch of `sort_print_object_instances` (`:4118-4167`), whose `original_object` 
 admits instances that belong to the other filament's object. That is the behaviour to port, and the
 single-filament variant is a cheap way to prove the port is aimed correctly during GREEN.
 
+The complete source explanation is `GCode.cpp:4960/4964/5059`, which passes `layers.size()` as
+`num_objects` to `object_by_extruder` (`:4095-4101`). Every filament's vector therefore contains
+rows for **all layer objects**, including empty rows. The `sorted` table at `:4140-4149` only
+checks `layers[layer_id].original_object`, not islands. In contrast, Default filters empty islands
+and absent/empty support at `:5116-5120` before chaining. AsObjectList looks up the global ordering
+against the complete table, so foreign-filament objects yield empty visits. Shared PrintObject
+identity is not required; the earlier inference that it was required is retracted.
 
 ## 3. Ares destination boundary
 
@@ -110,8 +121,8 @@ single-filament variant is a cheap way to prove the port is aimed correctly duri
 
 Included (this slice):
 - `print_order` read at the ByLayer instance-order selection.
-- literal port of `sort_object_instances_by_model_order` including the `init_order` branch, even though
-  the CLI ByLayer call site passes the defaulted `false`.
+- The validated ByLayer `init_order` effect described in §2; `Print.cpp:934` makes it reachable before
+  the export call with `init_order=false`.
 - literal port of the `ordering != nullptr` branch of `sort_print_object_instances`.
 - `arrange_order` carried on the Ares instance model, defaulting to 0, never persisted (matching the
   3MF facts in §2).
@@ -123,10 +134,9 @@ Deferred (named so they are not silently absorbed):
   owns elsewhere. Measured control: `byobject-perobject-multi-copy-brim/combined-brim.3mf`
   (`print_sequence = by object`) with `print_order = as_obj_list` produces **zero** divergence
   (60/60 markers, 0 diff lines), so there is nothing to pin in this slice.
-- Any `arrange_order` *assignment* policy. This slice only propagates the field; assigning non-zero
-  values belongs to the sequential-clearance port.
-- `init_order`-driven renumbering as an observable behaviour: ported but unreachable from the CLI ByLayer
-  call site, so untested by the RED.
+- Sequential-clearance assignment of `arrange_order` remains deferred. ByLayer initialization is
+  included through the bounded reduction in §2, not deferred as unreachable.
+- Upstream same-object instance tie order for total range `n > 16` remains unported.
 
 ## 5. RED design and evidence
 
