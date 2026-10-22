@@ -106,18 +106,11 @@ pub(in crate::project_slice) fn emit(
     let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
     let options = motion::MotionOptions::from_traversal(traversal, 0);
     let small_area_flow = small_area::from_traversal(traversal)?;
-    let model_offset = if schedule.tower.is_some() {
-        (0.0, 0.0)
-    } else {
-        let (origin_x, origin_y) = traversal.project.plate_origin();
-        let object_offset = footprint::print_object_origin(traversal, 0);
-        (object_offset.0 - origin_x, object_offset.1 - origin_y)
-    };
+    // `GCode.hpp:185-187`: origin starts at zero; real set_origin calls
+    // accumulate the numeric generator cursor's local-frame translations.
+    let origin = (0.0, 0.0);
     let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
-    let offset = (
-        model_offset.0 - extruder_offset.0,
-        model_offset.1 - extruder_offset.1,
-    );
+    let offset = (origin.0 - extruder_offset.0, origin.1 - extruder_offset.1);
     let extrusion_role_markers = options.extrusion_role_markers;
     let extruders = motion::ExtruderRegistry::new(
         schedule.tool_ordering.all_extruders().to_vec(),
@@ -186,7 +179,7 @@ pub(in crate::project_slice) fn emit(
         extruders,
         initial_filaments,
         offset,
-        origin: model_offset,
+        origin,
         extruder_offset,
         scale_factor: traversal.scale.factor(),
         travel_feedrate: options.first_layer_travel_feedrate,
