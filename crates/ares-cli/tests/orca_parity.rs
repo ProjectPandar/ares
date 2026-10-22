@@ -396,3 +396,6 @@ pub(crate) use case_support::vendor_inventory::vendors;
 mod support_ironing_raft_offset;
 #[path = "orca_parity/support_touching_grid.rs"]
 mod support_touching_grid;
+
+#[path = "orca_parity/print_order_as_obj_list.rs"]
+mod print_order_as_obj_list;
