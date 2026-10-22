@@ -323,7 +323,7 @@ pub(in crate::project_slice) fn emit(
         let mut layers = output.split_off(fan_layers_start);
         let tail = layers.split_off(fan_layers_end - fan_layers_start);
         if let Some(mover) = fan_mover_handle.as_mut() {
-            layers = fan_chunks::process_layer_chunks(mover, layers);
+            layers = fan_chunks::process_layer_chunks(mover, layers, state.tags.layer_change());
         }
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);
