@@ -13,10 +13,11 @@ Target versus control differs only in fan_speedup_time. No embedded G-code.
 
 | Input | fan_speedup_time | SHA256 |
 |---|---|---|
-|control.3mf|0|17896c6fdf4d5d570c604843fafd049cbc1ac6cde86a21c07dd20ebfdd8a13b2|
+|../fan-layer-tag/control.3mf (reused)|0|17896c6fdf4d5d570c604843fafd049cbc1ac6cde86a21c07dd20ebfdd8a13b2|
 |target.3mf|−3|19507db8da1597d32a348f299edaa8d24a5e16aa203b6f3150da6ca308dc049d|
 
-Exact byte copies of accepted sealed discovery active/inputs-v2 inputs.
+Exact accepted sealed discovery bytes; the zero control is reused from
+fan-layer-tag/control.3mf without a duplicate in this directory.
 Two direct unchanged native_stream_case::check calls, (false,|_,_|{}), first
 replay Native twice, then public validated API/actual CLI ordered full equality.
 Only original generator/date normalization; no fan/M73/time/E/F/footer mask,

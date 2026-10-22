@@ -15,7 +15,7 @@ fn fan_speedup_sign_zero_control_matches_native_complete_output() {
     check(
         SOURCE,
         "control",
-        include_bytes!("../../../../../tests/parity/fan-speedup-sign/control.3mf"),
+        include_bytes!("../../../../../tests/parity/fan-layer-tag/control.3mf"),
         "17896c6fdf4d5d570c604843fafd049cbc1ac6cde86a21c07dd20ebfdd8a13b2",
         (false, |_, _| {}),
     );
