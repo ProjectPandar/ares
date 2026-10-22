@@ -26,7 +26,11 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
             .reduce(f64::max)
             .map(Value::Number)
             .ok_or("max requires an argument".to_owned()),
-        "int" if numbers.len() == 1 => Ok(Value::Number(numbers[0].trunc())),
+        "int" if numbers.len() == 1 => Ok(Value::Integer(
+            args[0]
+                .as_integer()
+                .unwrap_or_else(|| i64::from(numbers[0] as i32)),
+        )),
         "round" if numbers.len() == 1 => Ok(Value::Number(numbers[0].round())),
         "floor" if numbers.len() == 1 => Ok(Value::Number(numbers[0].floor())),
         "ceil" if numbers.len() == 1 => Ok(Value::Number(numbers[0].ceil())),
