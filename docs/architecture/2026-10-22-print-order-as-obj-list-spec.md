@@ -39,41 +39,55 @@ Marker emission is already correct in Ares and is not part of this slice: `; pri
 
 Supporting state: `int arrange_order = 0;` `Model.hpp:1264`.
 
-## 2. Determinism of `arrange_order` — what the source licenses us to assume
+## 2. Determinism of `arrange_order` — measured, not assumed
 
-This is the point the SPEC must not fudge, so it is spelled out:
+An earlier revision of this SPEC claimed every key is `0` in ByLayer slicing, on the strength of the
+sole assignment at `Print.cpp:881`. GDB observation of the official binary retracted that. What is true:
 
 - **Not persisted.** `arrange_order` is mentioned only in `Print.cpp` and `GCode.cpp`. There are zero
-  references in `Format/bbs_3mf.cpp` or `Format/3mf.cpp` (both grep-verified). A project loaded from a
-  3MF therefore starts with every `arrange_order == 0` (`Model.hpp:1264` initializer).
-- **Written in CLI at exactly one place.** `Print.cpp:881`,
-  `(const_cast<ModelInstance*>(inst->model_instance))->arrange_order = k + 1;`, inside
-  `Print::sequential_print_clearance_valid` (`Print.cpp:613`). That is the sequential (by-object)
-  clearance validator, so it only runs for `print_sequence = by object`, and only over instances that
-  survive its bounding-box loop.
-- **Consequence for the ByLayer path (the subject of this slice):** every key passed to the comparator
-  at `GCode.cpp:2413` is `0`. The comparator is therefore all-equal, and the permutation produced by
-  `std::sort` is an artifact of the standard library's introsort on the given input sequence — it is
-  *deterministic for a given input and implementation*, but it is **not specified** by any upstream
-  contract, and it is not a documented "object list order" guarantee.
-- **Therefore the SPEC forbids inventing an ordering rule.** Ares must port the algorithm literally
-  (build the pairs in the same iteration order, sort with the same comparator, collect in the same
-  iteration order with the same `lower_bound`, re-sort) so the degenerate all-equal-key behaviour is
-  inherited rather than re-derived. It may **not** substitute `sort_by_key`+stable, identity order, or
-  any "natural" object-list order on the grounds that "all keys are equal anyway".
+  references in `Format/bbs_3mf.cpp` or `Format/3mf.cpp`. A project loaded from a 3MF therefore starts
+  with every `arrange_order == 0` (`Model.hpp:1264` initializer).
+- **Two writers, and the ByLayer one does fire.**
+  - `Print.cpp:881` in `Print::sequential_print_clearance_valid` (`Print.cpp:613`) — the by-object path.
+  - `GCode.cpp:2409-2410`, reached because `layered_print_cleareance_valid` (`Print.cpp:932`) calls
+    `sort_object_instances_by_model_order(print, /*init_order*/ true)` at `Print.cpp:934`. That validator
+    is the **by-layer** arm of `Print::validate` (`Print.cpp:1306`, the `else` of the sequential branch),
+    so it runs for our RED inputs. With `init_order == true` the function assigns
+    `arrange_order = find_object_index(model, print_object->model_object())` — the ModelObject's index in
+    `model.objects`, `-1` when absent — and then (`:2415-2418`) renumbers the sorted result to a unique
+    `1..N`.
+- **Measured consequence.** With the two-instantiated RED fixture, breaking on
+  `Slic3r::sort_object_instances_by_model_order` shows two CLI calls: one with `init_order=1` (from
+  `Print::validate` → `layered_print_cleareance_valid`) and one with `init_order=0` (`GCode.cpp:2796`);
+  both return **2 unique `PrintInstance*`, in the same order**, and the returned pointers are not
+  duplicated. So `print_object_instances_ordering` is not where multiplicity comes from, and the
+  comparator input is *not* all-equal — after the `init_order=true` pass the keys are a unique `1..N`
+  derived from the model object list.
+- **What is still implementation-defined.** Ties remain wherever several instances share one ModelObject
+  index, and the renumbering order among such ties comes from `std::sort` (`:2413`), which is not stable.
+  That is the only place where a libstdc++ introsort artifact could leak into the instance order, and it
+  only matters for objects with more than one instance.
+- **Therefore the SPEC still forbids inventing an ordering rule.** Ares must port the algorithm literally
+  (assign `arrange_order` from the model object index in the `init_order` pass, renumber `k+1`, sort with
+  the same comparator, collect in the same iteration order with the same `lower_bound`, re-sort) rather
+  than deriving an order from the object list directly. It may **not** substitute `sort_by_key`+stable or
+  any hand-rolled "object list order" on the grounds that it looks equivalent.
 - The RED below pins the resulting bytes, so an implementation that quietly picks a different
   permutation fails.
 
-Open question for GREEN (explicitly deferred, must be settled by instrumenting Native, not by
-reasoning): the measured effect is *multiplicity*, not reordering — see §4. Two candidate explanations
-are visible in the source and this SPEC does not choose between them:
-(a) `std::lower_bound` at `:2424` is keyed on `arrange_order`, so with all-equal keys it always returns
-`begin()`, making the collect loop at `:2422-2427` match (or fail to match) independently of the
-searched instance; and
-(b) the pair-construction loop at `:2404-2412` iterates `print.objects() × print_object->instances()`,
-which for BBS **shared print objects** (several `ModelObject`s backed by one `PrintObject`) can yield
-repeated `PrintInstance` entries.
-Either way the RED is byte-level and does not depend on which explanation holds.
+Settled by the same GDB round: **where the multiplicity comes from** (§4 measures the effect, this
+locates the cause). The two candidate explanations in the previous revision are both rejected:
+(a) is impossible because the keys are a unique `1..N`, not all-zero, so `lower_bound` at `:2424` does not
+collapse to `begin()`; and (b) is directly falsified — the returned vector holds 2 unique pointers.
+What the measurement does show is that the doubling needs **two filaments**: forcing both objects onto
+filament 1 makes `print_order=as_obj_list` produce 100 marker pairs over 50 layers, i.e. 2 per layer,
+exactly like the Default path (no divergence at all). With the shipped two-filament layout it is 4 per
+layer. So the extra visits are produced by the per-filament loop (`:5093-5140`) emitting both instances
+for *each* filament — the `ordering_for_filament = ordering` select feeding the `ordering != nullptr`
+branch of `sort_print_object_instances` (`:4118-4167`), whose `original_object` lookup (`:4137`, `:4153`)
+admits instances that belong to the other filament's object. That is the behaviour to port, and the
+single-filament variant is a cheap way to prove the port is aimed correctly during GREEN.
+
 
 ## 3. Ares destination boundary
 
