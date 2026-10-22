@@ -28,6 +28,7 @@ pub(super) fn self_start_config(
         "overall_chamber_temperature",
         value::Value::number(f64::from(temperature::overall_chamber_temperature(
             traversal,
+            state.extruders.ids(),
         ))),
     );
     let max_z = traversal

@@ -68,15 +68,19 @@ pub(super) fn append_startup(
     bed_temperature
 }
 
-pub(super) fn overall_chamber_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
-    chamber_settings(traversal).1
+pub(super) fn overall_chamber_temperature(
+    traversal: &PreparedPostClassicTraversal,
+    used_extruders: &[usize],
+) -> i32 {
+    chamber_settings(traversal, used_extruders).1
 }
 
 pub(super) fn append_chamber_shutdown(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
+    used_extruders: &[usize],
 ) {
-    let (active, temperature) = chamber_settings(traversal);
+    let (active, temperature) = chamber_settings(traversal, used_extruders);
     if active && temperature > 0 {
         output.extend_from_slice(b"M141 S0;set chamber_temperature\n");
     }
@@ -86,8 +90,9 @@ pub(super) fn append_chamber_startup(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     machine_start_gcode: &str,
+    used_extruders: &[usize],
 ) {
-    let (active, temperature) = chamber_settings(traversal);
+    let (active, temperature) = chamber_settings(traversal, used_extruders);
     if !active
         || temperature <= 0
         || sets_temperature(machine_start_gcode, &["M141", "M191"], false)
@@ -107,10 +112,14 @@ pub(super) fn append_chamber_startup(
     }
 }
 
-fn chamber_settings(traversal: &PreparedPostClassicTraversal) -> (bool, i32) {
+fn chamber_settings(
+    traversal: &PreparedPostClassicTraversal,
+    used_extruders: &[usize],
+) -> (bool, i32) {
     let filament = &traversal.resolved.views.full.filament.print;
-    used_filaments(traversal)
-        .into_iter()
+    used_extruders
+        .iter()
+        .copied()
         .fold((false, 0), |(active, maximum), index| {
             let enabled = filament
                 .activate_chamber_temp_control

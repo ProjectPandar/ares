@@ -203,7 +203,7 @@ pub(super) fn append_start(
     let bed_cache = temperature::append_startup(output, traversal, &rendered);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
     output.extend_from_slice(custom.as_bytes());
-    temperature::append_chamber_startup(output, traversal, &rendered);
+    temperature::append_chamber_startup(output, traversal, &rendered, state.extruders.ids());
     // `GCodeOutputStream::writeln` (`GCode.cpp:6266-6270`) writes nothing for
     // an empty rendered template and otherwise appends exactly one newline.
     if !rendered.is_empty() {
@@ -224,7 +224,7 @@ pub(super) fn append_completion_controls(
     traversal: &PreparedPostClassicTraversal,
     state: &motion::EmitState,
 ) {
-    temperature::append_chamber_shutdown(output, traversal);
+    temperature::append_chamber_shutdown(output, traversal, state.extruders.ids());
     exhaust_fan::append_print_end(output, traversal, state.extruders.ids());
 }
 /// `GCodeWriter::preamble` (`GCodeWriter.cpp:82-104`): absolute XYZ
