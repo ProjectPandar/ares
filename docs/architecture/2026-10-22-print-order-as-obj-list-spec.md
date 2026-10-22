@@ -166,5 +166,25 @@ which emits `; printing object` / `; stop printing object` with an empty island 
 (`GCode.cpp:5434` loop with `object_by_extruder.islands` empty). Per layer: 2 instances → 2 pairs
 (default) vs 4 pairs (`as_obj_list`); 3 instances → 3 vs 6.
 
+## 6. Explicit ordering state and sequence boundary
+
+`Instance.arrange_order` owns the initialized model-order rank (`1..N`); `position` remains
+only the existing bucket identity/nearest-neighbour scheduling key. AsObjectList emission sorts
+by `arrange_order`, not `position`.
+
+`collect` obtains `(source_index, transform_index)` from the prepared object's identity.
+The initial sort key is **source_index**, the index in `project.objects()`, not the ordinal of
+the split print object in `traversal.objects`. `effective_config/grouping.rs` groups transforms
+per source ModelObject and retains original instance membership within each transform group;
+`candidates.rs` carries `source_object_index` into the resolved object. Thus differently transformed
+PrintObjects from the same ModelObject retain equal initial keys before rank assignment.
+The stable equal-key reduction preserves the existing PrintObject/instance traversal order within
+the authorized `n <= 16` range; the limitation for larger ranges remains as specified in §2.
+
+Both rank selection and per-filament empty-visit admission require `print_sequence == ByLayer`
+and `print_order == AsObjectList`. ByObject keeps its pre-existing scheduling path even when the
+project carries `print_order=as_obj_list`; this slice does not assign sequential-clearance ranks.
+
 Exit criterion for GREEN: all four tests pass, with the two controls unchanged, and no change to
-`golden::compare_ordered_bytes_generator_only`.
+`golden::compare_ordered_bytes_generator_only`. Acceptance also requires the coordinator's strict
+dual-mode neighbour and FULL gates, with complete logs and actual process exit statuses.

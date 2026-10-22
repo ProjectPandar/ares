@@ -16,9 +16,9 @@ pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64
 /// insertion sort for `n <= 16` and therefore keeps their iteration order there.
 /// For `n > 16` the upstream relative order of same-object instances is *not*
 /// reproduced here, and no rule is invented to stand in for it.
-pub(super) fn model_order(owners: &[(usize, usize)]) -> Vec<usize> {
-    let mut order = (0..owners.len()).collect::<Vec<_>>();
-    order.sort_by_key(|&index| owners[index].0);
+pub(super) fn model_order(model_indices: &[usize]) -> Vec<usize> {
+    let mut order = (0..model_indices.len()).collect::<Vec<_>>();
+    order.sort_by_key(|&index| model_indices[index]);
     order
 }
 
