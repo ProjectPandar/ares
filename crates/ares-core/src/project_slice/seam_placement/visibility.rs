@@ -116,6 +116,19 @@ fn hemisphere_directions() -> [Vec3; DIRECTION_COUNT] {
     })
 }
 
+// `SeamPlacer.cpp:74-80` Frame::set_from_z and :160-161 decrease_step.
+fn visibility_frame(normal: Vec3, direction_count: usize) -> ([Vec3; 3], f32) {
+    let z = normal.normalized();
+    let provisional_x = if z.x.abs() > 0.99 {
+        Vec3::new(0.0, 1.0, 0.0)
+    } else {
+        Vec3::new(1.0, 0.0, 0.0)
+    };
+    let y = z.cross(provisional_x).normalized();
+    let x = y.cross(z);
+    ([x, y, z], 1.0 / direction_count as f32)
+}
+
 // `SeamPlacer.cpp:188-225`: negative-face samples cast inward; hit signs
 // distinguish subtraction surfaces without constructing a Boolean mesh.
 struct NegativeRaycaster<'a> {
@@ -135,20 +148,12 @@ impl NegativeRaycaster<'_> {
     ) -> f32 {
         let mesh = self.mesh;
         let from_negative = triangle_index >= mesh.negative_start;
-        let z = normal.normalized();
-        let provisional_x = if z.x.abs() > 0.99 {
-            Vec3::new(0.0, 1.0, 0.0)
-        } else {
-            Vec3::new(1.0, 0.0, 0.0)
-        };
-        let y = z.cross(provisional_x).normalized();
-        let x = y.cross(z);
+        let ([x, y, z], decrement) = visibility_frame(normal, self.directions.len());
         let origin = if from_negative {
             center - normal * 0.01
         } else {
             center + normal * 0.01
         };
-        let decrement = 1.0 / self.directions.len() as f32;
         for &local in self.directions {
             let direction = x * local.x + y * local.y + z * local.z;
             let direction = if from_negative { -direction } else { direction };
@@ -177,16 +182,8 @@ fn sample_visibility(
     normal: Vec3,
     directions: &[Vec3],
 ) -> f32 {
-    let z = normal.normalized();
-    let provisional_x = if z.x.abs() > 0.99 {
-        Vec3::new(0.0, 1.0, 0.0)
-    } else {
-        Vec3::new(1.0, 0.0, 0.0)
-    };
-    let y = z.cross(provisional_x).normalized();
-    let x = y.cross(z);
+    let ([x, y, z], decrement) = visibility_frame(normal, directions.len());
     let origin = center + normal * 0.01;
-    let decrement = 1.0 / directions.len() as f32;
     let mut visibility = 1.0;
     for &local in directions {
         let direction = x * local.x + y * local.y + z * local.z;
