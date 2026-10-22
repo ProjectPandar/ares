@@ -13,6 +13,8 @@ mod loaded_system_inherits_group;
 mod modifier_feature_filament;
 #[path = "runner/native_stream_case.rs"]
 pub(crate) mod native_stream_case;
+#[path = "runner/placeholder_digits_rounding.rs"]
+mod placeholder_digits_rounding;
 #[path = "runner/resource_triangle_defaults.rs"]
 mod resource_triangle_defaults;
 #[path = "runner/resource_vertex_defaults.rs"]
