@@ -107,3 +107,38 @@ No processor/time correction belongs in this source boundary.
    Any strict residual later requires STOP rather than broadening this boundary.
 
 No FULL before an allocated W2 window. Coordinator owns review and merge.
+
+## Print::extruders candidate refinement and deferred witness
+
+The budget set is `Print::extruders(false)` (`Print.cpp:453-547`,
+`Print.hpp:942`), not ToolOrdering's materialized tool set. Reuse the existing
+Rust `tool_ordering::collect::print_extruders`: independently deduplicate object
+and support sets, append all object tools to support when either support selector
+is zero, concatenate the sets without deduplicating across them, admit an explicit
+tower tool when the concatenated size exceeds one, then finally sort/deduplicate.
+The tower predicate ports `Print.cpp:3290-3301,3385-3388`. This same collector also
+supplies nonsoluble-support candidates; no second skirt-specific collector exists.
+
+Coordinator requested a GUI witness on production tip `6002cb666`: object uses
+only filament1, default support selectors0, prime tower enabled, tower filament2,
+minimum skirt length10. The single-nozzle input was rejected by the existing Ares
+selector-validation boundary, which is deferred and must not be changed here.
+The system Prusa XL 5T 0.4 nozzle preset with its complete inheritance chain was
+then tried: five nozzles/two filaments produced Native SIGSEGV in both modes;
+the final five-nozzle/five-filament attempt instead exited239 with Native
+`run found error, return -17, exit...` in both modes, before Ares comparison.
+Final input SHA256:
+`5b18a86c8299a61dbab1657df9d67e3b88053e6fa0f20edb25e6a0688aa0d816`.
+Generation, preset provenance, input and both command artifacts are retained in
+external evidence `worker2-skirt-xl5-witness-20261022T153323`; earlier evidence is
+`worker2-skirt-support-default-red-20261022T151030` and
+`worker2-skirt-multinozzle-witness-20261022T152613`.
+
+These runs are not a budget RED and establish neither output equality nor a
+budget difference. Further toolchanger witness diagnosis is deferred. Coordinator
+explicitly authorized accepting this refinement as a literal source port with
+the frozen four-case directed regressions and fresh dual-mode FULL, without a
+new RED witness. Temporary witness tests/inputs are removed from the branch;
+existing tests, fixtures and the shared helper remain frozen. No Native crash,
+selector-validation or toolchanger behavior is repaired by this slice.
+
