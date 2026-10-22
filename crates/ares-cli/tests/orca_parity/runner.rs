@@ -37,6 +37,8 @@ mod scarf_conditional;
 mod seam_physical_plane;
 #[path = "runner/seam_rear.rs"]
 mod seam_rear;
+#[path = "skirt_brim_seam_state.rs"]
+mod skirt_brim_seam_state;
 #[path = "skirt_seam_scope.rs"]
 mod skirt_seam_scope;
 
