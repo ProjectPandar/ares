@@ -5,11 +5,15 @@ use crate::{
 #[cfg(test)]
 mod tests;
 
-// GCode.cpp:3181-3196: when air filtration is supported and any extruder has
+// GCode.cpp:3181-3196: when air filtration is supported and a writer-used extruder has
 // `activate_air_filtration` + `activate_air_filtration_during_print`, upstream
 // emits the during-print exhaust fan (`set_exhaust_fan`, M106 P3) right after
 // machine_start_gcode at print start. Upstream applies no flavor guard here.
-pub(super) fn append_print_start(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
+pub(super) fn append_print_start(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    used: &[usize],
+) {
     let views = &traversal.resolved.views;
     if !views.runtime_gcode.support_air_filtration.0 {
         return;
@@ -18,12 +22,16 @@ pub(super) fn append_print_start(output: &mut Vec<u8>, traversal: &PreparedPostC
     let activate = &filament.activate_air_filtration.0;
     let during_active = &filament.activate_air_filtration_during_print.0;
     let speeds = &filament.during_print_exhaust_fan_speed.0;
-    if let Some(speed) = max_during_print_speed(activate, during_active, speeds) {
+    if let Some(speed) = max_during_print_speed(activate, during_active, speeds, used) {
         append_speed(output, speed);
     }
 }
 
-pub(super) fn append_print_end(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
+pub(super) fn append_print_end(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    used: &[usize],
+) {
     let views = &traversal.resolved.views;
     if !views.runtime_gcode.support_air_filtration.0 {
         return;
@@ -33,6 +41,7 @@ pub(super) fn append_print_end(output: &mut Vec<u8>, traversal: &PreparedPostCla
         &filament.activate_air_filtration.0,
         &filament.activate_air_filtration_on_completion.0,
         &filament.complete_print_exhaust_fan_speed.0,
+        used,
     ) {
         append_speed(output, speed);
     }
@@ -47,17 +56,19 @@ fn max_during_print_speed(
     activate: &[OrcaBool],
     during_active: &[OrcaBool],
     speeds: &[OrcaInt],
+    used: &[usize],
 ) -> Option<i32> {
-    max_active_speed(activate, during_active, speeds)
+    max_active_speed(activate, during_active, speeds, used)
 }
 
 fn max_active_speed(
     activate: &[OrcaBool],
     phase_active: &[OrcaBool],
     speeds: &[OrcaInt],
+    used: &[usize],
 ) -> Option<i32> {
-    let count = activate.len().max(phase_active.len()).max(speeds.len());
-    (0..count)
+    used.iter()
+        .copied()
         .filter(|&index| {
             activate[index.min(activate.len() - 1)].0
                 && phase_active[index.min(phase_active.len() - 1)].0

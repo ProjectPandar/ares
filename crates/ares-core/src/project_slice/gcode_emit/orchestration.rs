@@ -282,7 +282,7 @@ pub(in crate::project_slice) fn emit(
             position: end_position,
         },
     )?;
-    machine::append_completion_controls(&mut output, traversal);
+    machine::append_completion_controls(&mut output, traversal, &state);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let filament = &traversal.resolved.views.full.filament.gcode;
     // `GCodeProcessorResult::extruder_colors`: `filament_colour` padded

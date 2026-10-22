@@ -212,7 +212,7 @@ pub(super) fn append_start(
             output.push(b'\n');
         }
     }
-    exhaust_fan::append_print_start(output, traversal);
+    exhaust_fan::append_print_start(output, traversal, state.extruders.ids());
     if !super::tags::Tags::of(traversal).is_bbl() {
         append_flavor_preamble(output, traversal);
     }
@@ -222,9 +222,10 @@ pub(super) fn append_start(
 pub(super) fn append_completion_controls(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
+    state: &motion::EmitState,
 ) {
     temperature::append_chamber_shutdown(output, traversal);
-    exhaust_fan::append_print_end(output, traversal);
+    exhaust_fan::append_print_end(output, traversal, state.extruders.ids());
 }
 /// `GCodeWriter::preamble` (`GCodeWriter.cpp:82-104`): absolute XYZ
 /// coordinates, millimeters, and the extruder distance mode for the
