@@ -10,7 +10,7 @@ fn placeholder_regex_full_match_whole_control() {
         "control",
         include_bytes!("../../../../tests/parity/placeholder-regex-full-match/control.3mf"),
         "03a3282d12e670df11f7e690e1dea0b80a36958427b38e2af535bef850b7bae5",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -24,6 +24,6 @@ fn placeholder_regex_full_match_substring_positive() {
         "positive",
         include_bytes!("../../../../tests/parity/placeholder-regex-full-match/positive.3mf"),
         "a394d6dc4525cd8f7d60d7eac592ff0160843181b8a1dc6587354b569a82868e",
-        false,
+        (false, |_, _| {}),
     );
 }

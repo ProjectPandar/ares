@@ -10,7 +10,7 @@ fn firmware_absolute_literal_e_explicit_retract_control() {
         "control",
         include_bytes!("../../../../tests/parity/firmware-absolute-literal-e/control.3mf"),
         "b5978da3842bd1734fcc36930d788c180b0ce0461605975ef9a4960c3dd79216",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -24,6 +24,6 @@ fn firmware_absolute_literal_e_firmware_retract_positive() {
         "positive",
         include_bytes!("../../../../tests/parity/firmware-absolute-literal-e/positive.3mf"),
         "dd75e19b01ae72b130de91421e4466ba9488e657dedd4d5fe96efba6cb712f14",
-        false,
+        (false, |_, _| {}),
     );
 }

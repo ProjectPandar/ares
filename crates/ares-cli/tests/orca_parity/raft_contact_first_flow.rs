@@ -10,7 +10,7 @@ fn raft_contact_first_flow_no_raft_control() {
         "control",
         include_bytes!("../../../../tests/parity/raft-contact-first-flow/control.3mf"),
         "4a868581914a8b5dde68862978fe2678401eb4c784a7ca0e6ccc32632343704e",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -24,6 +24,6 @@ fn raft_contact_first_flow_single_contact_positive() {
         "positive",
         include_bytes!("../../../../tests/parity/raft-contact-first-flow/positive.3mf"),
         "e4f862f94000e30939c66a72fc94217826a4714f0fb7bf36f4280f431a91b706",
-        false,
+        (false, |_, _| {}),
     );
 }

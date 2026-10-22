@@ -10,7 +10,7 @@ fn vg1_export_arc_cache_without_virtual_control() {
         "control",
         include_bytes!("../../../../tests/parity/vg1-export-arc-cache/control.3mf"),
         "61d36dff5dfb995fb3cd1f2bcb3ece0d9e79c5476137b05ddd495d4b901368fb",
-        true,
+        (true, |_, _| {}),
     );
 }
 
@@ -24,6 +24,6 @@ fn vg1_export_arc_cache_real_macro_target() {
         "target",
         include_bytes!("../../../../tests/parity/vg1-export-arc-cache/target.3mf"),
         "f6a1b0ab02e4be9f4d3c20e6dcf09d55b0ba37f4b47e3989053de03adefac169",
-        true,
+        (true, |_, _| {}),
     );
 }
