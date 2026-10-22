@@ -116,6 +116,9 @@ mod combined_contact_components;
 #[path = "orca_parity/ordered_brim_owner.rs"]
 mod ordered_brim_owner;
 
+#[path = "orca_parity/print_global_brim_flow.rs"]
+mod print_global_brim_flow;
+
 #[path = "orca_parity/auto_brim_combined.rs"]
 mod auto_brim_combined;
 #[path = "orca_parity/per_object_skirt_brim.rs"]
