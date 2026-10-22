@@ -115,28 +115,30 @@ impl BrimPlan {
         let source = outline::select(raw.clone(), efc_bottom.as_deref())?;
         let full = &traversal.resolved.views.full;
         let print = &full.process.print;
-        let region = &resolved
-            .layer_candidates
-            .first()
-            .and_then(|layer| layer.model_parts.first())
-            .expect("brim object has a resolved model-part region")
-            .region;
+        // Print::brim_flow (Print.cpp:2007-2025) selects Print-wide
+        // defaults, independently of the object whose brim is generated.
+        let region = traversal
+            .resolved
+            .objects
+            .iter()
+            .flat_map(|object| &object.all_regions)
+            .next()
+            .expect("Print retains its first registered region");
+        let (first_object, _) = traversal.print_object_config(0);
         let width = if print.initial_layer_line_width.is_non_positive() {
             if region.inner_wall_line_width.is_non_positive() {
-                options.line_width
+                first_object.object.line_width
             } else {
                 region.inner_wall_line_width
             }
         } else {
             print.initial_layer_line_width
         };
-        let nozzle = full
-            .project
-            .print
-            .nozzle_diameter
-            .0
-            .first()
-            .map_or(0.4, |diameter| diameter.0) as f32;
+        let nozzles = &full.project.print.nozzle_diameter.0;
+        let nozzle = nozzles
+            .get(region.outer_wall_filament_id.0 as usize - 1)
+            .unwrap_or(&nozzles[0])
+            .0 as f32;
         let flow =
             build_nonbridging_flow(width, print.initial_layer_print_height.0 as f32, nozzle)?;
         let scale = traversal.scale;
