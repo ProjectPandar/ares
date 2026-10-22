@@ -160,6 +160,21 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
                 entry.body = Some(body);
             }
         }
+        if super::instances::as_object_list(input.traversal) {
+            // `GCode.cpp:4101` sizes every filament's `objects_by_extruder` to
+            // all objects of the layer, and the `ordering != nullptr` branch of
+            // `sort_print_object_instances` (:4140-4160) only requires
+            // `layers[layer_id].original_object`, never islands. An object with
+            // nothing on this filament is therefore still visited, with an empty
+            // island list, and emits only its enter/exit markers.
+            for &tool in input.tools {
+                buckets
+                    .entry(tool)
+                    .or_default()
+                    .entry(position)
+                    .or_insert_with(|| Entry::new(source, instance));
+            }
+        }
     }
     input
         .tools

@@ -60,15 +60,26 @@ pub(super) fn collect(traversal: &PreparedPostClassicTraversal) -> Vec<Vec<Insta
         instances.push(copies);
     }
     // The existing chunk adapter reverses the source chain before dispatch.
-    for (position, index) in super::object_order::chain_instance_order(&centers, seed(traversal))
-        .into_iter()
-        .rev()
-        .enumerate()
-    {
+    let order = if as_object_list(traversal) {
+        super::object_order::model_order(&owners)
+    } else {
+        super::object_order::chain_instance_order(&centers, seed(traversal))
+            .into_iter()
+            .rev()
+            .collect()
+    };
+    for (position, index) in order.into_iter().enumerate() {
         let (object, copy) = owners[index];
         instances[object][copy].position = position;
     }
     instances
+}
+
+/// `GCode.cpp:2791-2796`: `print_order == PrintOrder::AsObjectList` selects the
+/// model order instead of the nearest-neighbour chain.
+pub(super) fn as_object_list(traversal: &PreparedPostClassicTraversal) -> bool {
+    traversal.resolved.views.full.process.print.print_order
+        == crate::ProcessPrintOrder::AsObjectList
 }
 
 fn seed(traversal: &PreparedPostClassicTraversal) -> (i64, i64) {
@@ -86,6 +97,13 @@ pub(super) fn order(
     traversal: &PreparedPostClassicTraversal,
 ) -> Vec<super::tool_buckets::Entry> {
     entries.sort_by_key(|entry| (entry.source.object_index, entry.instance.copy));
+    if as_object_list(traversal) {
+        // `GCode.cpp:5129-5133`: AsObjectList feeds the global ordering into
+        // `sort_print_object_instances`, so the per-tool chain is bypassed and
+        // the bucket positions (model order) are already the emission order.
+        entries.sort_by_key(|entry| entry.instance.position);
+        return entries;
+    }
     let centers = entries
         .iter()
         .map(|entry| {
