@@ -252,7 +252,7 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     // The eager lift supersedes any lift that the deferred path scheduled
     // for the layer's first travel.
     state.pending_lift = None;
-    if state.extruder.retracted {
+    if state.extruder.retracted && lift::enforce_allows_lift(state) {
         lift::append_eager(output, state, false);
     }
 }
