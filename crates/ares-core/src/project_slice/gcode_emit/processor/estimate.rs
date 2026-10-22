@@ -69,11 +69,6 @@ impl Estimate {
         let mut remaining_internal = Vec::new();
         let mut cache_eligible = Vec::new();
         let mut seams = SeamDetector::new(config.detect_layer_based_on_tag);
-        // Per-source-line arc bookkeeping for the M73 cache lookup: the
-        // geometric internal-segment count and whether the arc's first block
-        // was seam-excluded (`ExportLines::update` → `internal` = 0).
-        let mut arc_segment_counts = vec![0usize; lines.len()];
-        let mut arc_seam_excluded = vec![false; lines.len()];
         for (index, line) in lines.iter().enumerate() {
             seams.role(line);
             used_filaments.tags(line, filaments.selection().1);
@@ -187,7 +182,6 @@ impl Estimate {
             let arc_internal = matches!(command, "G2" | "G3")
                 .then(|| arc_internal_g1_lines(code, command, &state));
             let arc_start = state.position;
-            let mut seam_excluded = false;
             let motion_blocks = state.motions_indexed(code);
             for motion in &motion_blocks {
                 used_filaments.motion(motion.block.delta, false, state.wiping, &filaments);
@@ -246,7 +240,6 @@ impl Estimate {
                     state.wiping,
                     &mut cache_eligible,
                 );
-                seam_excluded = seam_vertices[0].is_some();
             }
             let arc = matches!(command, "G2" | "G3");
             if matches!(command, "G10" | "G11") || word(code, 'F').is_some() {
@@ -293,8 +286,6 @@ impl Estimate {
                 }
                 "G2" | "G3" => {
                     let count = motion_blocks.len();
-                    arc_segment_counts[index] = arc_internal.unwrap_or(0);
-                    arc_seam_excluded[index] = seam_excluded;
                     // Every discretized internal `process_G1` consumes its own
                     // g1 line id (`GCodeProcessor.cpp:3868` `++m_g1_line_id`),
                     // including the zero-displacement segments dropped at
@@ -364,7 +355,7 @@ impl Estimate {
             })
             .collect::<Vec<_>>();
         let export_elapsed = export_cache::snapshots(lines, &cache);
-        let elapsed = elapsed_snapshots(lines, &cache, &arc_segment_counts, &arc_seam_excluded);
+        let elapsed = elapsed_snapshots(lines, &cache);
         // `prepare_time += block_time` accumulates in f32
         // (`GCodeProcessor.cpp:475-476`), so the exported trailer matches
         // upstream's float rounding at the sixth decimal.
