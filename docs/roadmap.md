@@ -7,6 +7,24 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Chamber writer-used extruder reduction: docs-first SPEC → test-only RED
+
+Coordinator accepted discovery on frozen exhaust53890b780. New branch
+`worker1/chamber-used-extruder` stacks docs then tests only on that commit.
+Upstream8500fcdcc `GCode.cpp:3008–3013,3037,3130–3133,3498–3499` and
+`GCodeWriter.cpp:192–212` own activation OR, independent maximum, placeholder,
+startup/shutdown bytes. Destination: existing private machine/temperature.rs;
+its object scan is an incomplete upstream shell. Reuse existing writer
+`ExtruderRegistry::ids()` handoff, never a new registry or object-scan fallback.
+Exit: four immutable inputs/SHA, two genuine full-stream REDs and two controls
+per official/seeded mode, global Native-first preflight, strict Native/API/CLI
+and raw API==CLI evidence on CPU18; send RED RR and stop for GREEN authorization.
+get_at deferred with discovery evidence retained, no slice. Exhaust and chamber
+rebase together only in the authorized integration window. No production edits,
+FULL, merge/push or broader runtime qualification here.
+[SPEC](architecture/chamber-used-extruder-spec.md),
+[ARD](architecture/ard-chamber-used-extruder.md).
+
 ### Exhaust-fan writer-used extruder reduction: SPEC → public RED (#102/#103)
 
 COORD accepted readonly discovery #101 on main6f6ef10f5. New branch commits
