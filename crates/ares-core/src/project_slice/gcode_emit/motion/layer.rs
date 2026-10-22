@@ -29,7 +29,11 @@ pub(in crate::project_slice::gcode_emit) fn emit_layer<F, D>(
 ) -> Result<bool, SliceError>
 where
     F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
-    D: Fn(usize, &mut MotionOptions) -> (f64, bool, super::super::small_area::Gate),
+    D: Fn(
+        usize,
+        &mut MotionOptions,
+        &mut crate::FloatOrPercent,
+    ) -> (f64, bool, super::super::small_area::Gate),
 {
     let super::shared_reversals::EmissionPhase { geometry, reversal } = phase;
     let mut interlude_emitted = false;
@@ -65,7 +69,8 @@ where
             if !region.had_perimeters {
                 continue;
             }
-            let (density, infill_first, gate) = options_for_region(id, &mut state.options);
+            let (density, infill_first, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
             if first_layer || !infill_first {
                 emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
@@ -78,7 +83,8 @@ where
             if region.infills.is_empty() {
                 continue;
             }
-            let (density, _, gate) = options_for_region(id, &mut state.options);
+            let (density, _, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
             emit_infills(
                 output,
@@ -94,7 +100,8 @@ where
             if !region.had_perimeters {
                 continue;
             }
-            let (density, _, gate) = options_for_region(id, &mut state.options);
+            let (density, _, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
             emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
         }
@@ -102,7 +109,8 @@ where
             if region.ironing.is_empty() {
                 continue;
             }
-            let (density, _, gate) = options_for_region(id, &mut state.options);
+            let (density, _, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
             emit_infills(
                 output,

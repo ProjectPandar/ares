@@ -74,8 +74,9 @@ pub(super) fn emit(
                 reversal,
             },
             first_layer,
-            |_, _| {
+            |_, _, current_seam_gap: &mut crate::FloatOrPercent| {
                 let region = &traversal.resolved.views.full.process.region;
+                *current_seam_gap = region.seam_gap;
                 (
                     region.sparse_infill_density.0,
                     region.is_infill_first.0,

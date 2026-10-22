@@ -139,6 +139,7 @@ pub(super) fn emit(
         let Some(body) = body.as_mut() else {
             return Ok(());
         };
+        state.current_seam_gap = traversal.resolved.views.full.process.region.seam_gap;
         raft_entry::emit(
             output,
             state,
@@ -219,6 +220,8 @@ pub(super) fn emit(
             chunk_perimeter_spacing,
         )?;
     }
+    // GCode.cpp:5334-5342 resets region config only AFTER skirt and brim.
+    state.current_seam_gap = traversal.resolved.views.full.process.region.seam_gap;
     if let Some(selected_role) = support_role {
         let support_index = entry.support_layer.expect("support bucket retains layer");
         // GCode.cpp:5388 runs the support extrusions with

@@ -41,7 +41,10 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
                 .collect::<Vec<_>>();
         // Same plate-frame seam-gap clip as the skirt
         // (`GCode.cpp:5804` truncates toward zero on plate ints).
-        super::clip::clip_end(&mut split, state.options.seam_gap / geometry.scale.factor());
+        super::clip::clip_end(
+            &mut split,
+            state.current_seam_gap_mm() / geometry.scale.factor(),
+        );
         path::emit(
             output,
             split
@@ -88,7 +91,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
             height: flow.height,
             feature: "Brim",
             is_perimeter: false,
-            end_clip: state.options.seam_gap,
+            end_clip: state.current_seam_gap_mm(),
             fitting: &[],
             slope: None,
             inside_loop: false,

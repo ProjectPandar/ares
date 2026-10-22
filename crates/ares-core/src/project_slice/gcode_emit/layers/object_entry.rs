@@ -86,8 +86,11 @@ pub(super) fn emit(
                 reversal,
             },
             first_layer,
-            |region: usize, motion: &mut motion::MotionOptions| {
+            |region: usize,
+             motion: &mut motion::MotionOptions,
+             current_seam_gap: &mut crate::FloatOrPercent| {
                 let options = &regions[region].options;
+                *current_seam_gap = options.seam_gap;
                 // GCode.cpp:6136/6163 `m_config.apply(region.config())`:
                 // one region apply refreshes every region-scoped
                 // `MotionOptions` field before the phase emits.

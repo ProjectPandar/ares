@@ -169,7 +169,10 @@ impl SkirtPlan {
             // `point_to_gcode` applies `m_origin`); the final endpoint
             // truncates toward zero (`Polyline.cpp:52-72` `.cast`), which
             // differs from clipping after the local-frame translate.
-            motion::clip::clip_end(&mut split, state.options.seam_gap / geometry.scale.factor());
+            motion::clip::clip_end(
+                &mut split,
+                state.current_seam_gap_mm() / geometry.scale.factor(),
+            );
             motion::emit_skirt_loop(
                 output,
                 split.into_iter(),
