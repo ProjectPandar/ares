@@ -1,5 +1,4 @@
-use super::{Token, Value};
-use crate::project_slice::gcode_emit::motion::format::ostream;
+use super::{Token, Value, to_string};
 
 // PlaceholderParser.cpp:558-600: compare_op and its inverted wrappers.
 pub(super) fn compare(left: &Value, right: &Value, token: Token) -> Result<bool, String> {
@@ -34,8 +33,8 @@ pub(super) fn compare(left: &Value, right: &Value, token: Token) -> Result<bool,
             (*left == *right, false, false)
         }
         (left @ Value::String(_), right) | (left, right @ Value::String(_)) => {
-            let left = comparison_string(left);
-            let right = comparison_string(right);
+            let left = to_string(left);
+            let right = to_string(right);
             (left == right, left < right, left > right)
         }
         _ => return Err("Cannot compare the types.".to_owned()),
@@ -52,12 +51,4 @@ enum Operation {
     Equal,
     Less,
     Greater,
-}
-
-fn comparison_string(value: &Value) -> String {
-    // PlaceholderParser.cpp:302-327: doubles use default ostream precision.
-    match value {
-        Value::Number(number) => ostream(*number),
-        value => value.as_string(),
-    }
 }

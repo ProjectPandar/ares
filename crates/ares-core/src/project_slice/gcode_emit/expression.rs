@@ -328,7 +328,23 @@ enum Arithmetic {
     Remainder,
 }
 
+fn to_string(value: &Value) -> String {
+    // PlaceholderParser.cpp:302-327: doubles use default ostream precision.
+    match value {
+        Value::Number(number) => super::motion::format::ostream(*number),
+        value => value.as_string(),
+    }
+}
+
 fn arithmetic(left: Value, right: Value, operation: Arithmetic) -> Result<Value, String> {
+    // PlaceholderParser.cpp:435-456: either string operand selects concatenation.
+    if matches!(operation, Arithmetic::Add)
+        && (matches!(left.scalar(), Value::String(_)) || matches!(right.scalar(), Value::String(_)))
+    {
+        let mut result = to_string(left.scalar());
+        result.push_str(&to_string(right.scalar()));
+        return Ok(Value::String(result));
+    }
     if let (Some(left), Some(right)) = (left.as_integer(), right.as_integer()) {
         if matches!(operation, Arithmetic::Divide | Arithmetic::Remainder) && right == 0 {
             return Err("division by zero".to_owned());
