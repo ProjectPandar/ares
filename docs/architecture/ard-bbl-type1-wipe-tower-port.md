@@ -199,6 +199,19 @@ streams differ. Existing frozen public fixtures/tests remain unchanged.
 The broader two-brim exploratory case and the rejected noncontiguous metadata
 serialization are retained separately, not used as successful qualification.
 
+## Type1 post-template travel coordinate boundary
+
+The remaining enabled-witness entry travel differs even though the parsed
+last template position is `(165,256)` in the debugger. `GCode.cpp:1013` calls
+`gcode_to_point` for this nozzle-coordinate position; `GCode.cpp:8138–8145`
+subtracts object origin, adds the active nozzle offset, then truncates via
+`scaled<coord_t>(Vec2d)`. In contrast, the tower destination and avoidance
+bbox corners use `wipe_tower_point_to_object_point` (`GCode.cpp:502–505`),
+without nozzle-offset addition and with Point(double,double) construction.
+`type1/travel.rs` must retain these distinct coordinate frames before computing
+intersections. Do not change the last-position parser, emitted coordinates,
+shared travel planner, or fixture nozzle offsets to compensate.
+
 ## Scope and qualification gates
 
 1. Approve this docs proposal, then source-cited SPEC for the consumed chain

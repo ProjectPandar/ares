@@ -105,7 +105,12 @@ pub(super) fn path(
     {
         return vec![end];
     }
-    let start = local(start);
+    // GCode.cpp:1013,8138: parsed G-code is in nozzle coordinates, unlike
+    // tower points. gcode_to_point adds the active nozzle offset and truncates.
+    let start = [
+        ((f64::from(start[0]) - state.origin.0 + state.extruder_offset.0) / scale.factor()) as i64,
+        ((f64::from(start[1]) - state.origin.1 + state.extruder_offset.1) / scale.factor()) as i64,
+    ];
     let end_local = local(end);
     let direction = if (end_local[0] - low[0]).abs() < (high[0] - low[0]) / 2 {
         -1.0
