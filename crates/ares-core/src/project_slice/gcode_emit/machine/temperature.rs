@@ -240,12 +240,9 @@ fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {
             (value, end)
         }
     };
+    let commands = [commands[0], commands[1]].map(|command| command[1..].parse::<i32>().unwrap());
     let mut position = 0;
     let mut temperature_set = false;
-    #[expect(
-        clippy::excessive_nesting,
-        reason = "retain GCode.cpp:528-589 command/parameter scanner control flow"
-    )]
     while at(position) != 0 {
         while matches!(at(position), b' ' | b'\t') {
             position += 1;
@@ -259,35 +256,15 @@ fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {
             let matched = if end != position && is_gcode {
                 number == 10
             } else {
-                commands
-                    .iter()
-                    .any(|command| command[1..].parse::<i32>().unwrap() == number)
+                commands.contains(&number)
             };
             if matched {
                 position = end;
-                if !is_gcode {
-                    temperature_set = true;
-                }
-                while !matches!(at(position), b';' | b'\r' | b'\n' | 0) {
-                    while matches!(at(position), b' ' | b'\t') {
-                        position += 1;
-                    }
-                    if at(position) == b'S' {
-                        position += 1;
-                        while matches!(at(position), b' ' | b'\t') {
-                            position += 1;
-                        }
-                        let (_, end) = integer(position);
-                        if end > position {
-                            position = end;
-                            temperature_set = true;
-                        }
-                    } else {
-                        while !matches!(at(position), b' ' | b'\t' | b';' | b'\r' | b'\n' | 0) {
-                            position += 1;
-                        }
-                    }
-                }
+                temperature_set |= !is_gcode;
+                let (end, parameter_sets_temperature) =
+                    scan_temperature_parameters(bytes, position);
+                position = end;
+                temperature_set |= parameter_sets_temperature;
             }
         }
         while !matches!(at(position), b'\r' | b'\n' | 0) {
@@ -298,4 +275,42 @@ fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {
         }
     }
     temperature_set
+}
+
+// GCode.cpp:561-583, the matched-command parameter loop.
+fn scan_temperature_parameters(bytes: &[u8], mut position: usize) -> (usize, bool) {
+    let at = |index: usize| bytes.get(index).copied().unwrap_or(0);
+    let mut temperature_set = false;
+    while !matches!(at(position), b';' | b'\r' | b'\n' | 0) {
+        while matches!(at(position), b' ' | b'\t') {
+            position += 1;
+        }
+        if at(position) == b'S' {
+            position += 1;
+            while matches!(at(position), b' ' | b'\t') {
+                position += 1;
+            }
+            // Only strtol's end pointer is consumed here, not its temperature value.
+            let mut end = position;
+            while matches!(at(end), b' ' | b'\t' | b'\n' | b'\r' | 11 | 12) {
+                end += 1;
+            }
+            if matches!(at(end), b'+' | b'-') {
+                end += 1;
+            }
+            let digits = end;
+            while at(end).is_ascii_digit() {
+                end += 1;
+            }
+            if end > digits {
+                position = end;
+                temperature_set = true;
+            }
+        } else {
+            while !matches!(at(position), b' ' | b'\t' | b';' | b'\r' | b'\n' | 0) {
+                position += 1;
+            }
+        }
+    }
+    (position, temperature_set)
 }
