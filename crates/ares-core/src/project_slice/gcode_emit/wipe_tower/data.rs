@@ -3,7 +3,7 @@ use super::super::tool_ordering::LayerTools;
 use super::{generator::Generator, planning::Planned, result::ToolChangeResult};
 use crate::{
     ProjectSettings,
-    geometry::{BoundingBox, ClipperError, CoordinateScale},
+    geometry::{BoundingBox, ClipperError, CoordinateScale, Polyline},
 };
 
 pub(in crate::project_slice::gcode_emit) struct Data {
@@ -20,6 +20,7 @@ pub(in crate::project_slice::gcode_emit) struct Data {
     pub(super) rib_length: f32,
     pub(super) depth_profile: Vec<(f32, f32)>,
     pub(super) first_layer_bounds: Option<BoundingBox>,
+    pub(super) outer_walls: Vec<(f32, Vec<Polyline>)>,
     pub(super) used_filament: Vec<f32>,
     pub(super) tool_changes: usize,
 }
@@ -77,6 +78,7 @@ impl Planned {
             rib_length: generator.rib_length,
             depth_profile,
             first_layer_bounds: generator.first_layer_bounds,
+            outer_walls: Vec::new(),
             used_filament: generator.used_filament,
             tool_changes: generator.tool_changes,
         })

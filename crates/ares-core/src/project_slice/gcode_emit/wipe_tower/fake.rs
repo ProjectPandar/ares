@@ -14,6 +14,9 @@ impl Data {
         settings: &ProjectSettings,
         scale: CoordinateScale,
     ) -> Vec<Layer> {
+        if !self.outer_walls.is_empty() {
+            return self.true_layers(settings, scale);
+        }
         let print = &settings.process.print;
         let scale_value = |value: f32| (f64::from(value) / scale.factor()) as i64;
         let width = scale_value(self.width);

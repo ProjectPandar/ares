@@ -13,6 +13,7 @@ impl BrimPlan {
     pub(super) fn generate_all<'a>(
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<InstalledSupportLayer>],
+        tower_exclusions: &[crate::geometry::ExPolygon],
         first_layer_regions: impl Fn(
             usize,
         )
@@ -26,9 +27,9 @@ impl BrimPlan {
             plans[index] = Self::generate(
                 traversal,
                 support,
+                tower_exclusions,
                 first_layer_regions(index),
-                index,
-                &mut accumulated,
+                (index, &mut accumulated),
             )?;
         }
         Ok(plans)
@@ -37,9 +38,9 @@ impl BrimPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<InstalledSupportLayer>],
+        tower_exclusions: &[crate::geometry::ExPolygon],
         first_layer_regions: &[crate::project_slice::extrusion_islands::RegionToolUsage],
-        object_index: usize,
-        accumulated: &mut Vec<crate::geometry::ExPolygon>,
+        (object_index, accumulated): (usize, &mut Vec<crate::geometry::ExPolygon>),
     ) -> Result<Option<Self>, SliceError> {
         let (resolved, _) = traversal.print_object_config(object_index);
         let options = &resolved.object;
@@ -297,6 +298,7 @@ impl BrimPlan {
                 traversal,
                 region.outer_wall_filament_id.0 as usize - 1,
                 (area, forbidden),
+                tower_exclusions,
                 grouping_resolution,
             )?
         } else {
@@ -304,7 +306,7 @@ impl BrimPlan {
                 traversal,
                 object_index,
                 region.outer_wall_filament_id.0 as usize - 1,
-                (brim_area, inner),
+                (brim_area, inner, tower_exclusions),
                 grouping_resolution,
             )?
         };

@@ -16,6 +16,7 @@ mod generate;
 mod generator;
 mod grid;
 mod nozzle_change;
+mod outer_wall;
 mod plan;
 mod planning;
 mod result;

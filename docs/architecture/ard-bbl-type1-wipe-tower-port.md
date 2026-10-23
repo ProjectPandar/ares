@@ -173,6 +173,32 @@ offset in the official Native and Ares debuggers. `Print.cpp:3048` constructs
 seam must preserve this constructor selection before convex-hull and placeholder
 consumers. Do not change the G29 template, formatter or bbox to compensate.
 
+## T4 outer-wall carrier and Brim exclusion handoff
+
+Coordinator authorizes `Print.cpp:3565–3571,5171–5224` and
+`Brim.cpp:651–659` as a separate consumed slice. Preserve every nonempty
+print-Z outer-wall row as closed polylines, not just its bounding box. The
+first map entry supplies the bbox (the source empty-map branch is a zero-point
+box) and Brim exclusions; all rows supply conflict-layer paths and source
+bottom-Z calculation. Both consumers use the source float `position +
+rib_offset`, then `Point(double,double)` translation. Do not add a rotation
+that these upstream consumers do not perform.
+
+Pass tower exclusion polygons explicitly from orchestration through
+`BrimPlan::generate_all/generate` and the existing bed-area geometry seam.
+Append them to the forbidden areas once those areas are in the plate frame,
+before the bed-border mask and area difference, never to already generated
+paths or to global state. Preserve the W2 `mm3_per_mm` expression and leave
+`motion/skirt_brim.rs` untouched. Keep `brim.rs` below400 LOC.
+
+Pre-implementation Native-first supplemental RED discovery is retained under
+`/home/indexyz/ares-coord/evidence/w5-type1-t4-single-brim-ordered-discovery`:
+stock enabled input, GUI-reachable outer-only brim20, tower(80,115), cube0
+no-brim override. Official and seeded Native/CLI exits are0; complete raw
+streams differ. Existing frozen public fixtures/tests remain unchanged.
+The broader two-brim exploratory case and the rejected noncontiguous metadata
+serialization are retained separately, not used as successful qualification.
+
 ## Scope and qualification gates
 
 1. Approve this docs proposal, then source-cited SPEC for the consumed chain

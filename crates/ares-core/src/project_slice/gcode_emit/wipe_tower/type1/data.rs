@@ -3,7 +3,7 @@ use super::super::{super::tool_ordering::LayerTools, Data};
 use super::{generator::Generator, planning::Planned, result::Result};
 use crate::{
     ProjectSettings,
-    geometry::{BoundingBox, ClipperError, CoordinateScale, Polygon},
+    geometry::{BoundingBox, ClipperError, CoordinateScale, Point, Polyline},
 };
 use std::fmt::Write;
 
@@ -51,14 +51,36 @@ impl Planned {
         final_purge.tool_change = true;
         final_purge.change_start = final_purge.common.start;
         let final_purge = final_purge.into_common();
-        let first_layer_bounds = generator.outer_walls.first().and_then(|walls| {
-            BoundingBox::from_polygon(&Polygon::new(
-                walls
-                    .iter()
-                    .flat_map(|wall| wall.points().iter().copied())
-                    .collect(),
-            ))
-        });
+        let outer_walls = generator
+            .plan
+            .layers
+            .iter()
+            .zip(generator.outer_walls)
+            .filter(|(_, walls)| !walls.is_empty())
+            .map(|(layer, walls)| {
+                (
+                    layer.z,
+                    walls
+                        .into_iter()
+                        .map(|wall| {
+                            let mut points = wall.into_points();
+                            points.push(points[0]);
+                            Polyline::new(points)
+                        })
+                        .collect::<Vec<_>>(),
+                )
+            })
+            .collect::<Vec<_>>();
+        // WipeTower::get_bbx uses the first map entry, or a zero-point box.
+        let first_layer_bounds = Some(outer_walls.first().map_or_else(
+            || BoundingBox::new(Point::new(0, 0), Point::new(0, 0)),
+            |(_, walls)| {
+                BoundingBox::from_points(
+                    walls.iter().flat_map(|wall| wall.points().iter().copied()),
+                )
+                .unwrap()
+            },
+        ));
         let mut depth_profile = vec![(0.0, generator.plan.depth)];
         for layer in &generator.plan.layers {
             if layer.depth < depth_profile.last().unwrap().1 - 1e-3 {
@@ -82,6 +104,7 @@ impl Planned {
             rib_length: generator.plan.rib_length,
             depth_profile,
             first_layer_bounds,
+            outer_walls,
             used_filament: generator.used,
             tool_changes: generator.changes,
         })
