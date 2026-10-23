@@ -12,3 +12,6 @@ mod deferred_lift_epsilon;
 
 #[path = "jerk_dedup_tolerance.rs"]
 mod jerk_dedup_tolerance;
+
+#[path = "pa_signed_zero.rs"]
+mod pa_signed_zero;
