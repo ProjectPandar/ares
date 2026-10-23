@@ -100,7 +100,7 @@ fn tower_gap_is_installed_in_the_first_objects_support_schedule() {
         layers,
         all_extruders: vec![2],
         first_extruder: Some(2),
-        type2_tower: true,
+        tower_type: Some(crate::WipeTowerType::Type2),
     };
     let mut raft = InstalledSupportLayer::for_wipe_tower(0.2, 0.2);
     raft.id = 0;
