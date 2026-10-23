@@ -69,9 +69,10 @@ fn placed_corners(
     points
         .into_iter()
         .map(|[x, y]| {
+            // Print.cpp constructs Point(double, double), which rounds in Point.hpp.
             Point::new(
-                ((cos * x - sin * y + placement.0[0]) / scale.factor()) as i64,
-                ((sin * x + cos * y + placement.0[1]) / scale.factor()) as i64,
+                ((cos * x - sin * y + placement.0[0]) / scale.factor()).round() as i64,
+                ((sin * x + cos * y + placement.0[1]) / scale.factor()).round() as i64,
             )
         })
         .collect()

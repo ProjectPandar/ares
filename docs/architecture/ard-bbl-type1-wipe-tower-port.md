@@ -165,6 +165,14 @@ This is the upstream lattice conversion, not output rounding or a G29 fix.
 The generated polygon must continue into both arc fitting and live bounds.
 No comparator or frozen fixture changes are permitted to qualify this correction.
 
+The follow-up live bounds audit found identical integer bbox and float rib
+offset in the official Native and Ares debuggers. `Print.cpp:3048` constructs
+`Point(scale_(pt.x()), scale_(pt.y()))`; the double-argument constructor in
+`Point.hpp:197` explicitly applies `std::round`, unlike `Point::new_scale` or
+`scaled<float-input>()`'s integer overload. The shared `occupancy::placed_corners`
+seam must preserve this constructor selection before convex-hull and placeholder
+consumers. Do not change the G29 template, formatter or bbox to compensate.
+
 ## Scope and qualification gates
 
 1. Approve this docs proposal, then source-cited SPEC for the consumed chain
