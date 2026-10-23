@@ -33,6 +33,8 @@ mod seam_rear;
 mod skirt_brim_seam_state;
 #[path = "skirt_seam_scope.rs"]
 mod skirt_seam_scope;
+#[path = "skirt_support_speed_state.rs"]
+mod skirt_support_speed_state;
 
 #[path = "runner/concentric_sparse_multiline.rs"]
 mod concentric_sparse_multiline;
