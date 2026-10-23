@@ -3,6 +3,8 @@
 //! G-code, and caches reference output keyed by the input digest.
 #[path = "runner/bbl_eager_enforce.rs"]
 mod bbl_eager_enforce;
+#[path = "runner/crosshatch_dont_connect.rs"]
+mod crosshatch_dont_connect;
 #[path = "runner/fan_layer_tag.rs"]
 mod fan_layer_tag;
 #[path = "runner/fan_speedup_sign.rs"]
@@ -23,6 +25,12 @@ mod placeholder_int_result;
 mod placeholder_minmax_results;
 #[path = "runner/placeholder_rounding_results.rs"]
 mod placeholder_rounding_results;
+#[path = "runner/placeholder_string_addition.rs"]
+mod placeholder_string_addition;
+#[path = "runner/resource_item_ignore.rs"]
+mod resource_item_ignore;
+#[path = "runner/resource_part_build.rs"]
+mod resource_part_build;
 #[path = "runner/resource_triangle_defaults.rs"]
 mod resource_triangle_defaults;
 #[path = "runner/resource_vertex_defaults.rs"]
@@ -33,15 +41,6 @@ mod scarf_conditional;
 mod seam_physical_plane;
 #[path = "runner/seam_rear.rs"]
 mod seam_rear;
-
-#[path = "runner/resource_item_ignore.rs"]
-mod resource_item_ignore;
-
-#[path = "runner/resource_part_build.rs"]
-mod resource_part_build;
-
-#[path = "runner/crosshatch_dont_connect.rs"]
-mod crosshatch_dont_connect;
 
 #[path = "runner/concentric_sparse_multiline.rs"]
 mod concentric_sparse_multiline;
