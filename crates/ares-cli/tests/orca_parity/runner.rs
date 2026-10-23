@@ -382,7 +382,11 @@ impl OrcaRunner {
     }
 }
 
-include!("runner/preset_helpers.rs");
+#[path = "runner/preset_helpers.rs"]
+mod preset_helpers;
+pub(super) use preset_helpers::{
+    PresetKind, apply_override, digest_slug, join_paths, repo_root, write_preset,
+};
 
 #[path = "runner/wrapping_input.rs"]
 pub(crate) mod wrapping_input;

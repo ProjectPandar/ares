@@ -1,11 +1,13 @@
+use super::{FailureKind, Map, Path, PathBuf, Stage, StageError, Value};
+
 #[derive(Clone, Copy, Eq, PartialEq)]
-enum PresetKind {
+pub(crate) enum PresetKind {
     Machine,
     Process,
     Filament,
 }
 
-fn apply_override(
+pub(crate) fn apply_override(
     base: &Map<String, Value>,
     overrides: &Map<String, Value>,
     kind: PresetKind,
@@ -35,7 +37,11 @@ fn smoke_owner(key: &str) -> Option<PresetKind> {
     }
 }
 
-fn write_preset(path: &Path, kind: &str, fields: &Map<String, Value>) -> Result<(), StageError> {
+pub(crate) fn write_preset(
+    path: &Path,
+    kind: &str,
+    fields: &Map<String, Value>,
+) -> Result<(), StageError> {
     // Keep the preset's own name: the CLI matches it against
     // compatible_printers when both machine and process are loaded.
     let mut preset = fields.clone();
@@ -47,7 +53,7 @@ fn write_preset(path: &Path, kind: &str, fields: &Map<String, Value>) -> Result<
         .map_err(|e| StageError::new(Stage::Preset, FailureKind::Io, format!("{path:?}: {e}")))
 }
 
-fn join_paths<'a>(paths: impl Iterator<Item = &'a PathBuf>) -> String {
+pub(crate) fn join_paths<'a>(paths: impl Iterator<Item = &'a PathBuf>) -> String {
     let mut joined = String::new();
     for path in paths {
         if !joined.is_empty() {
@@ -58,7 +64,7 @@ fn join_paths<'a>(paths: impl Iterator<Item = &'a PathBuf>) -> String {
     joined
 }
 
-fn digest_slug(
+pub(crate) fn digest_slug(
     label: &str,
     machine: &Map<String, Value>,
     process: &Map<String, Value>,
@@ -91,7 +97,6 @@ fn content_digest(
     format!("-{:016x}", hasher.finish())
 }
 
-pub(super) fn repo_root() -> PathBuf {
+pub(crate) fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
-
