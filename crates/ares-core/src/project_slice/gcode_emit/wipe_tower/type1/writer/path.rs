@@ -162,7 +162,9 @@ impl Writer {
     }
 
     fn arc(&mut self, end: [f32; 2], arc: &FittedArc, mut speed: f32, scale: CoordinateScale) {
-        let length = arc.length as f32;
+        // ArcSegment stores scaled length and an integer Point center;
+        // WipeTowerWriter uses unscaled<float>, not unscale(...).cast<float>().
+        let length = (arc.length / scale.factor()) as f32 * scale.factor() as f32;
         let amount = length * self.flow;
         if length < 1e-4_f32 && amount == 0.0 && (speed == 0.0 || speed == self.feedrate) {
             return;
@@ -170,7 +172,8 @@ impl Writer {
         self.used += amount;
         let start = self.rotated(self.position);
         let target = self.rotated(end);
-        let center = [arc.center.0 as f32, arc.center.1 as f32];
+        let center = [arc.center.0, arc.center.1]
+            .map(|value| (value / scale.factor()).round() as f32 * scale.factor() as f32);
         if !self.suppress_preview && amount > 0.0 && length > 0.0 {
             let width = amount * self.area / (length * self.height)
                 + self.height * (1.0 - std::f64::consts::FRAC_PI_4) as f32;
