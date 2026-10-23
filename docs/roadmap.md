@@ -65,6 +65,36 @@ skirt/z-hop/print_order/M73/seam-occlusion scopes, FULL, merge/push and platform
 runtime qualification. Prior painted stage text below remains historical.
 [SPEC](architecture/exhaust-used-extruder-spec.md),
 [ARD](architecture/ard-exhaust-used-extruder.md).
+### BBL Type1 wipe tower: W5 docs-only milestone PROPOSAL
+
+Priority: restore stock X1C AMS tower output before more literal-placeholder
+edge cases. Accepted two-object Basic/Matte discovery has Native success in
+both modes but no Ares tower; stock G29 bounds are a downstream symptom.
+Owner W5; frozen placeholder integration stack55a81063b stays unchanged.
+No code/RED/FULL/rebase authority is implied by this proposal.
+
+Source pin8500fcdcc: `Print.hpp:1086` BBL effective Type1 →
+`Print.cpp:3290-3301/3390-3571` activation/planning →
+`GCode/WipeTower.cpp::generate_new`, block planning, tool_change_new and
+finish_layer_new → `GCode.cpp::WipeTowerIntegration::append_tcr` →
+`Print.cpp:3020-3052/3154-3164` generated hull → `GCode.cpp:2926-2939` bounds.
+Four dependent slices: T1 identity/activation, T2 Type1 planning/material blocks,
+T3 consumed writer/toolchange/finish integration, T4 geometry/live consumers.
+Rust boundary is private `ares-core::project_slice::gcode_emit::wipe_tower`
+Type1 modules plus existing ordering/runtime/footprint consumers. Reuse
+[ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md) shared seams,
+not Type2 algorithms; existing shells are temporary upstream adapters.
+
+Each slice requires a GUI-reachable stock X1C Native-success/public whole-stream
+RED: baseline; prime-volume variation; smooth-timelapse/unequal heights;
+moved/rotated tower respectively. Only baseline is currently measured.
+SPEC→frozen RED→separate GREEN approval; slices are checkpoints, not independently
+shippable activation. Exit requires complete consumed-chain Native/API/CLI parity
+in official+seeded, raw API==CLI, Type2 regressions, fmt/strict Clippy/WASM and
+coordinator-scheduled exact-tip FULL. No isolated G29 fix, guards, omissions or
+Type2 fallback. Preview-only rendering/general multi-transform preparation defer;
+all activated live Type1 consumers need qualification, not assumed X1C coverage.
+[Milestone ARD](architecture/ard-bbl-type1-wipe-tower-port.md).
 
 ### Painted side-layer cutting: approved SPEC, public RED only (#99)
 
