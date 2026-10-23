@@ -75,7 +75,7 @@ fn trim_fixed(value: f64, precision: usize) -> String {
 /// (`GCodeWriter.cpp:295` `<< jerk_x`), i.e. printf `%g`: round to the
 /// precision FIRST, then pick fixed vs scientific on the rounded
 /// exponent (999999.5 → `1e+06`, not `1000000`).
-pub(super) fn ostream(value: f64) -> String {
+pub(in crate::project_slice::gcode_emit) fn ostream(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();
     }

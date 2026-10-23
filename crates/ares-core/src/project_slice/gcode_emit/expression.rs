@@ -3,6 +3,7 @@ use super::{
     value::{Config, Value},
 };
 
+mod comparison;
 mod functions;
 #[cfg(test)]
 mod tests;
@@ -154,30 +155,8 @@ impl Parser<'_> {
             } else {
                 !matched
             }
-        } else if let (Some(left), Some(right)) = (left.as_number(), right.as_number()) {
-            match comparison {
-                // Upstream compares doubles with a 1e-8 tolerance
-                // (`PlaceholderParser.cpp:5679-5681`).
-                Token::Eq => (left - right).abs() < 1e-8,
-                Token::NotEq => (left - right).abs() >= 1e-8,
-                Token::Lt => left < right,
-                Token::Le => left <= right,
-                Token::Gt => left > right,
-                Token::Ge => left >= right,
-                _ => unreachable!(),
-            }
         } else {
-            let left = left.as_string();
-            let right = right.as_string();
-            match comparison {
-                Token::Eq => left == right,
-                Token::NotEq => left != right,
-                Token::Lt => left < right,
-                Token::Le => left <= right,
-                Token::Gt => left > right,
-                Token::Ge => left >= right,
-                _ => unreachable!(),
-            }
+            comparison::compare(&left, &right, comparison)?
         };
         Ok(Value::Bool(result))
     }
