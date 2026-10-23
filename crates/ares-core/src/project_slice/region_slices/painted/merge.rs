@@ -15,7 +15,7 @@ fn merge_layer(
                 polygons = difference_ex(&polygons, &cap[layer])?;
             }
         }
-        if !caps[state][layer].is_empty() {
+        if !caps.is_empty() && !caps[state][layer].is_empty() {
             let empty = polygons.is_empty();
             polygons.extend(caps[state][layer].iter().cloned());
             if !empty {

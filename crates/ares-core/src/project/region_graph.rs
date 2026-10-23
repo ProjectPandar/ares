@@ -1,5 +1,7 @@
 pub(crate) mod bounds;
+mod fuzzy;
 mod painted;
+pub(crate) use fuzzy::{FuzzyRegion, PaintedRegions};
 pub(crate) use painted::PaintedRegion;
 
 use super::effective_config::types::{
@@ -24,6 +26,7 @@ pub(crate) struct RegionGraph {
     pub(crate) ranges: Vec<Vec<VolumeRegion>>,
     pub(crate) painted_regions: Vec<Vec<PaintedRegion>>,
     pub(crate) mmu_painted: bool,
+    pub(crate) fuzzy_regions: Vec<Vec<FuzzyRegion>>,
 }
 
 pub(crate) fn object_region_graph(
@@ -83,6 +86,7 @@ pub(crate) fn build_region_graph(
         ranges: candidates.iter().map(|_| Vec::new()).collect(),
         painted_regions: candidates.iter().map(|_| Vec::new()).collect(),
         mmu_painted: source.is_mm_painted(logical_count),
+        fuzzy_regions: candidates.iter().map(|_| Vec::new()).collect(),
     };
     for (source_volume_index, volume) in source.volumes().iter().enumerate() {
         let kind = volume.volume_type();
@@ -122,6 +126,7 @@ pub(crate) fn build_region_graph(
         }
     }
     painted::register(source, &mut graph);
+    fuzzy::register(source, &mut graph);
     graph
 }
 

@@ -70,7 +70,7 @@ pub(super) fn prepare_post_classic_traversal<'a>(
 ) -> Result<Box<classic::PreparedPostClassicTraversal>, SliceError> {
     Ok(Box::new(classic::finish_classic_traversal(
         *prepare_post_classic_hierarchy(project.into_source())?,
-    )))
+    )?))
 }
 
 #[cfg_attr(not(test), allow(dead_code))]
@@ -150,7 +150,7 @@ fn classic_infill_boundary(
     let top_split = classic::finish_classic_top_split(prelude)?;
     let onion = classic::finish_classic_onion(top_split)?;
     let hierarchy = classic::finish_classic_hierarchy(onion);
-    let traversal = classic::finish_classic_traversal(hierarchy);
+    let traversal = classic::finish_classic_traversal(hierarchy)?;
     let raw_paths = classic::finish_classic_raw_paths(Box::new(traversal), context)?;
     let chained_loops = classic::finish_classic_chained_loops(raw_paths);
     let entity_collections = classic::finish_classic_entity_collections(chained_loops);

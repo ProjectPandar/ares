@@ -7,6 +7,7 @@ use crate::{
     },
 };
 
+mod painted_fuzzy;
 mod print_volume;
 pub(crate) use print_volume::global_bed_points;
 
@@ -102,6 +103,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, &context, overrides)?,
         None => resolve_bounded_project_config(&project)?,
     };
+    painted_fuzzy::validate(&project, &resolved)?;
     if validate_print {
         crate::print::validate::validate_applied_project(
             &project,

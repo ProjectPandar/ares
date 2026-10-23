@@ -1,9 +1,11 @@
 //! PrintObjectSlice.cpp874–1030: consume shared painted-region identities and replace real slices.
+pub(super) mod fuzzy;
+
 use super::super::range_lookup;
 use super::super::{PostRegionPrintObject, RegionSurface};
 use super::{clip_error, math::paths};
 use crate::geometry::difference_polygons_paths;
-use crate::project::region_graph::PaintedRegion;
+use crate::project::region_graph::{FuzzyRegion, PaintedRegion, PaintedRegions};
 use crate::project_slice::volume_regions::{VolumeRegionGraph, VolumeRegionRange};
 use crate::{
     SliceError,
@@ -15,27 +17,25 @@ use crate::{
 
 pub(in crate::project_slice) struct ObjectRegions {
     pub(in crate::project_slice) active: bool,
-    ranges: Vec<VolumeRegionRange>,
+    pub(super) ranges: Vec<VolumeRegionRange>,
     painted: Vec<Vec<PaintedRegion>>,
+    pub(super) fuzzy: Vec<Vec<FuzzyRegion>>,
 }
 impl ObjectRegions {
     pub(in crate::project_slice) fn new(
         graph: &VolumeRegionGraph,
-        painted: Vec<Vec<PaintedRegion>>,
+        painted: PaintedRegions,
         active: bool,
     ) -> Self {
-        if !active {
-            return Self {
-                active,
-                ranges: Vec::new(),
-                painted: Vec::new(),
-            };
-        }
-        // PrintApply.cpp:1059–1073 retains ordinary region fuzzy options; fuzzy painting is separate.
         Self {
             active,
-            ranges: graph.ranges.clone(),
-            painted,
+            ranges: if active || painted.fuzzy.iter().any(|regions| !regions.is_empty()) {
+                graph.ranges.clone()
+            } else {
+                Vec::new()
+            },
+            painted: painted.mmu,
+            fuzzy: painted.fuzzy,
         }
     }
 }

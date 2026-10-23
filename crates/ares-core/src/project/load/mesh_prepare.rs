@@ -72,6 +72,13 @@ pub(super) fn prepare(
                 .iter()
                 .map(|triangle| &triangle.paint_color),
         );
+    mesh.fuzzy_skin_facets = crate::project::facets_annotation::FacetsAnnotation::from_triangles(
+        source
+            .triangles
+            .triangles
+            .iter()
+            .map(|triangle| &triangle.paint_fuzzy_skin),
+    );
     PreparedMesh {
         mesh,
         transform: component_transform.translated(shift),

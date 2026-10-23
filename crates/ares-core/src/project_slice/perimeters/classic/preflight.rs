@@ -32,6 +32,7 @@ struct RecordValidationContext<'a> {
     region: &'a RegionOptions,
     enable_arc_fitting: bool,
     scaled_resolution: f64,
+    has_fuzzy_skin: bool,
     nozzle_diameters: &'a crate::OrcaFloats,
 }
 
@@ -58,28 +59,34 @@ pub(super) fn validate_project(
                 .iter()
                 .find(|resolved| resolved.source_object_index == source_object_index)
                 .expect("Task 22N object must retain its resolved source object");
-            let records = object
-                .as_parts()
-                .1
-                .iter()
-                .map(|record| {
-                    record
-                        .as_ref()
-                        .map(|record| {
-                            validate_record(
-                                record,
-                                RecordValidationContext {
-                                    object_options: &resolved.object,
-                                    region: object.region_options(record),
-                                    enable_arc_fitting: context.enable_arc_fitting,
-                                    scaled_resolution,
-                                    nozzle_diameters: context.nozzle_diameters,
-                                },
-                            )
-                        })
-                        .transpose()
-                })
-                .collect::<Result<Vec<_>, _>>()?;
+            let records =
+                object
+                    .as_parts()
+                    .1
+                    .iter()
+                    .map(|record| {
+                        let Some(record) = record else {
+                            return Ok(None);
+                        };
+                        let has_fuzzy_skin =
+                            object.compatible_fuzzy_regions(record).any(|(options, _)| {
+                                crate::perimeters::FuzzySkinConfig::from_region(options)
+                                    .should_fuzzify(record.layer_id, 0, true)
+                            });
+                        validate_record(
+                            record,
+                            RecordValidationContext {
+                                object_options: &resolved.object,
+                                region: object.region_options(record),
+                                enable_arc_fitting: context.enable_arc_fitting,
+                                scaled_resolution,
+                                has_fuzzy_skin,
+                                nozzle_diameters: context.nozzle_diameters,
+                            },
+                        )
+                        .map(Some)
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
             Ok(ValidatedClassicObject { records })
         })
         .collect()
@@ -94,6 +101,7 @@ fn validate_record(
         region,
         enable_arc_fitting,
         scaled_resolution,
+        has_fuzzy_skin,
         nozzle_diameters,
     } = context;
     // `detect_thin_wall` is supported: `i == 0` medial-axis extraction in
@@ -113,13 +121,11 @@ fn validate_record(
         .map(|value| value.0)
         .ok_or_else(|| invalid("invalid Orca option nozzle_diameter"))?;
 
-    let fuzzy_skin = crate::perimeters::FuzzySkinConfig::from_region(region);
-    let simplify_resolution =
-        if enable_arc_fitting && !fuzzy_skin.should_fuzzify(record.layer_id, 0, true) {
-            0.2 * scaled_resolution
-        } else {
-            scaled_resolution
-        };
+    let simplify_resolution = if enable_arc_fitting && !has_fuzzy_skin {
+        0.2 * scaled_resolution
+    } else {
+        scaled_resolution
+    };
     let first_object_layer =
         i32::try_from(record.layer_id).ok() == Some(object_options.raft_layers.0);
     let mut wall_loops = region.wall_loops.0;

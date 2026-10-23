@@ -1,5 +1,7 @@
 //! Consumed rewrite of MultiMaterialSegmentation.cpp1955–2207.
 mod apply;
+mod fuzzy;
+pub(in crate::project_slice) use fuzzy::apply_project as apply_fuzzy_project;
 mod contour_color;
 mod cut;
 mod graph;
@@ -78,6 +80,7 @@ pub(in crate::project_slice) fn apply_project(
             .collect::<Vec<_>>();
         let transform = &resolved.print_objects[object.plan.transform_index];
         let input = projection::Input {
+            painting: projection::Painting::Mmu,
             source,
             transform: transform.transform.without_xy_translation(),
             center: centering::center(source, transform, prepared.scale)?,

@@ -8,8 +8,8 @@ use crate::{
     slicer_context::Mt19937,
 };
 
-pub(super) fn fuzzify_closed(
-    points: &[Point],
+pub(super) fn fuzzify(
+    (points, mut closed): (&[Point], bool),
     config: FuzzySkinConfig,
     print_z: f64,
     scale: CoordinateScale,
@@ -23,6 +23,11 @@ pub(super) fn fuzzify_closed(
     let mut previous = *points.last().unwrap();
     let mut output = Vec::with_capacity(points.len());
     for &current in points {
+        if !closed {
+            closed = true;
+            previous = current;
+            continue;
+        }
         let dx = (current.x() - previous.x()) as f64;
         let dy = (current.y() - previous.y()) as f64;
         let length = (dx * dx + dy * dy).sqrt();

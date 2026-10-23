@@ -199,6 +199,12 @@ impl ProjectObject {
                 .any(|v| !v.mesh().mmu_segmentation_facets.mapping.is_empty())
     }
 
+    pub(crate) fn is_fuzzy_skin_painted(&self) -> bool {
+        self.volumes
+            .iter()
+            .any(|volume| !volume.mesh().fuzzy_skin_facets.mapping.is_empty())
+    }
+
     pub(crate) fn object_overrides(&self) -> &ObjectOptionOverrides {
         &self.object_overrides
     }

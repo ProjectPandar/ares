@@ -109,7 +109,7 @@ pub(super) fn finish_classic_hierarchy(
 
 pub(super) fn finish_classic_traversal(
     prepared: PreparedPostClassicHierarchy,
-) -> PreparedPostClassicTraversal {
+) -> Result<PreparedPostClassicTraversal, SliceError> {
     traversal::finish(prepared)
 }
 

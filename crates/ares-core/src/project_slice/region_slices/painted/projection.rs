@@ -7,7 +7,13 @@ use crate::{
     project::facets_annotation::ordinary_facets,
 };
 
+pub(super) enum Painting {
+    Mmu,
+    Fuzzy,
+}
+
 pub(super) struct Input<'a> {
+    pub(super) painting: Painting,
     pub(super) source: &'a ProjectObject,
     pub(super) transform: Transform3d,
     pub(super) center: Point,
@@ -127,7 +133,10 @@ fn volume(
     for color in 1..input.states {
         let facets = ordinary_facets(
             volume.mesh(),
-            &volume.mesh().mmu_segmentation_facets,
+            match input.painting {
+                Painting::Mmu => &volume.mesh().mmu_segmentation_facets,
+                Painting::Fuzzy => &volume.mesh().fuzzy_skin_facets,
+            },
             color as u8,
         )?;
         if volume.volume_type() != ProjectVolumeType::ModelPart || facets.triangles.is_empty() {

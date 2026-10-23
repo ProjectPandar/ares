@@ -98,7 +98,8 @@ pub(in crate::project_slice) struct ClassicTraversalRecord {
     pub(in crate::project_slice) layer_id: usize,
     pub(in crate::project_slice) layer_height: f64,
     pub(in crate::project_slice) slice_z: f64,
-    pub(in crate::project_slice) fuzzy_skin: crate::perimeters::FuzzySkinConfig,
+    pub(in crate::project_slice) fuzzy_skin:
+        crate::project_slice::perimeters::arachne::fuzzy::Regions,
     pub(in crate::project_slice) overhang_flow: Flow,
     /// `ext_perimeter_flow` — the external-perimeter flow used by the
     /// `thin_walls` `variable_width` materialization (`detect_thin_wall`).

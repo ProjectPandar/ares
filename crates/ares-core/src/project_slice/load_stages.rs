@@ -167,6 +167,7 @@ pub(super) fn prepare_post_painted(
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_conical_overhang(project)?;
     region_slices::painted::apply_project(&mut prepared)?;
+    region_slices::painted::apply_fuzzy_project(&mut prepared)?;
     Ok(prepared)
 }
 

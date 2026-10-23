@@ -140,10 +140,10 @@ fn fuzzy_polygon(
     scale: CoordinateScale,
     context: &mut crate::SlicerContext,
 ) -> Result<Polygon, SliceError> {
-    let polygon = super::super::fuzzy_skin::apply(
+    let polygon = super::super::fuzzy_skin::apply_regions(
         &seed.polygon,
+        &record.fuzzy_skin,
         super::super::fuzzy_skin::FuzzySkinInput {
-            config: record.fuzzy_skin,
             layer_id: record.layer_id,
             slice_z: record.slice_z,
             loop_index: usize::from(seed.depth),

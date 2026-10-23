@@ -20,6 +20,7 @@ impl super::ProjectObject {
                         && left.transform == right.transform
                         && left.mesh.supported_facets == right.mesh.supported_facets
                         && left.mesh.mmu_segmentation_facets == right.mesh.mmu_segmentation_facets
+                        && left.mesh.fuzzy_skin_facets == right.mesh.fuzzy_skin_facets
                         && left.region_overrides == right.region_overrides
                 })
     }
