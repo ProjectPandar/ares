@@ -1,0 +1,101 @@
+{
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "SPEC_commit": "2dc9cdd5700e281de6504c0f01db8f4379ca197e",
+  "discovery_head": "92ce9b02c9f3e1e332347350fa199128209ba974",
+  "GUI_provenance": "source-constructible stock GUI serializer equivalent; not an interactive GUI-save session",
+  "geometry": "original 8 vertices / 12 triangles, identities and instances retained; no replacement mesh",
+  "only_U_P_member_difference": "3D/Objects/cube10.stl_1.model: triangles10/11 paint_fuzzy_skin=4",
+  "comparator": "complete ordered golden::compare_ordered_bytes_generator_only; raw API==CLI",
+  "expected_public_result": "API and CLI must both succeed on both cases; rejection is real RED, never PASS",
+  "cases": [
+    {
+      "case": "stock-fuzzy-unpainted",
+      "file": "stock-fuzzy-unpainted.3mf",
+      "SHA256": "603c3228513e194c6fccabea843ba3640b3b96aefa7b4728ea902c9f59fa8357",
+      "source_stock": "tests/parity/legacy-brim-ears/O0.3mf",
+      "source_stock_SHA256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
+      "annotation": {
+        "attribute": "paint_fuzzy_skin",
+        "whole_unsplit_leaf_state": 1,
+        "canonical_wire_code": "4",
+        "painted_triangle_indices": [],
+        "face": "local+x vertical complete face",
+        "model_member": "3D/Objects/cube10.stl_1.model"
+      },
+      "settings_delta": {
+        "fuzzy_skin": {
+          "before": "disabled_fuzzy",
+          "after": "none"
+        }
+      },
+      "settings": {
+        "wall_generator": "classic",
+        "fuzzy_skin": "none",
+        "fuzzy_skin_noise_type": "ripple",
+        "fuzzy_skin_thickness": "0.2",
+        "fuzzy_skin_point_distance": "0.3",
+        "fuzzy_skin_first_layer": "0",
+        "fuzzy_skin_mode": "displacement",
+        "fuzzy_skin_ripples_per_layer": "15",
+        "fuzzy_skin_ripple_offset": "50%",
+        "fuzzy_skin_layers_between_ripple_offset": "1",
+        "use_relative_e_distances": "1",
+        "filament_diameter": [
+          "1.75"
+        ],
+        "enable_support": "0",
+        "enable_prime_tower": "0",
+        "interlocking_beam": "0",
+        "xy_hole_compensation": "0",
+        "xy_contour_compensation": "0",
+        "elefant_foot_compensation": "0.1"
+      }
+    },
+    {
+      "case": "stock-fuzzy-painted-face",
+      "file": "stock-fuzzy-painted-face.3mf",
+      "SHA256": "3d3401362eb9904e84999b2e2ab6368137e521702f4ebb26dec779608ada0f22",
+      "source_stock": "tests/parity/legacy-brim-ears/O0.3mf",
+      "source_stock_SHA256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
+      "annotation": {
+        "attribute": "paint_fuzzy_skin",
+        "whole_unsplit_leaf_state": 1,
+        "canonical_wire_code": "4",
+        "painted_triangle_indices": [
+          10,
+          11
+        ],
+        "face": "local+x vertical complete face",
+        "model_member": "3D/Objects/cube10.stl_1.model"
+      },
+      "settings_delta": {
+        "fuzzy_skin": {
+          "before": "disabled_fuzzy",
+          "after": "none"
+        }
+      },
+      "settings": {
+        "wall_generator": "classic",
+        "fuzzy_skin": "none",
+        "fuzzy_skin_noise_type": "ripple",
+        "fuzzy_skin_thickness": "0.2",
+        "fuzzy_skin_point_distance": "0.3",
+        "fuzzy_skin_first_layer": "0",
+        "fuzzy_skin_mode": "displacement",
+        "fuzzy_skin_ripples_per_layer": "15",
+        "fuzzy_skin_ripple_offset": "50%",
+        "fuzzy_skin_layers_between_ripple_offset": "1",
+        "use_relative_e_distances": "1",
+        "filament_diameter": [
+          "1.75"
+        ],
+        "enable_support": "0",
+        "enable_prime_tower": "0",
+        "interlocking_beam": "0",
+        "xy_hole_compensation": "0",
+        "xy_contour_compensation": "0",
+        "elefant_foot_compensation": "0.1"
+      }
+    }
+  ]
+}
