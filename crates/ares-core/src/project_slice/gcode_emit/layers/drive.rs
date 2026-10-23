@@ -75,6 +75,14 @@
             cooling.empty_layer(output, cooling_layer_index, group_end == merged.len());
             continue;
         }
+        // GCode.cpp:4559-4594 selects the first object layer in source order,
+        // or the first support layer when no object layer exists, before dispatch.
+        let layer_object = entries
+            .iter()
+            .find(|entry| entry.object_layer.is_some())
+            .unwrap_or(&entries[0])
+            .object_index;
+        state.apply_object_config(&traversal.print_object_config(layer_object).0.object);
         entries.sort_by_key(|entry| print_position[entry.object_index]);
         max_layer_z = max_layer_z.max(f64::from(group_z as f32));
         // Chunk-wide inputs for the external motion planner

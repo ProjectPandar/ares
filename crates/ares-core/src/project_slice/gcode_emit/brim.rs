@@ -359,7 +359,7 @@ impl BrimPlan {
             width: flow.width,
             spacing: flow.spacing,
             height: flow.height,
-            mm3_per_mm: flow.mm3_per_mm * options.brim_flow_ratio.0,
+            mm3_per_mm: flow.mm3_per_mm,
         }))
     }
 }

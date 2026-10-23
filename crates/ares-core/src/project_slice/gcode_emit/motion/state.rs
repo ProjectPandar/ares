@@ -1,7 +1,7 @@
+mod config;
 mod layer;
 pub(in crate::project_slice::gcode_emit) use layer::{LayerBegin, begin_layer};
 mod object_labels;
-mod seam_gap;
 pub(in crate::project_slice::gcode_emit) use object_labels::*;
 
 use super::{MotionOptions, arc, extruder_state, set_accel_and_jerk};
@@ -68,6 +68,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) options: MotionOptions,
     /// Current region field in GCode::m_config; object applies do not reset it.
     pub(in crate::project_slice::gcode_emit) current_seam_gap: crate::FloatOrPercent,
+    /// Current object field in GCode::m_config, applied before each instance's body.
+    pub(in crate::project_slice::gcode_emit) current_brim_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) auto_lift: super::auto_lift::AutoLift,
     pub(in crate::project_slice::gcode_emit) active_layer_print_z: f64,
     pub(in crate::project_slice::gcode_emit) small_area_flow:

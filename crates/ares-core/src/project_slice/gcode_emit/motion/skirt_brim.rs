@@ -15,7 +15,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<(), crate::SliceError> {
-    state.adaptive_pa_flow = Some(flow.mm3_per_mm);
+    state.adaptive_pa_flow = Some(flow.mm3_per_mm * state.current_brim_flow_ratio);
     state.adaptive_pa_emitted = false;
     // `GCode::extrude_entity("brim")` dispatches to `extrude_loop`, which
     // splits every non-perimeter loop at the point nearest the last

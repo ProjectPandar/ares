@@ -133,6 +133,14 @@ pub(in crate::project_slice) fn emit(
         total_layer_count: sliced_layer_count,
         // GCode.cpp:2533-2534 initializes the region state from defaults.
         current_seam_gap: traversal.resolved.views.full.process.region.seam_gap,
+        current_brim_flow_ratio: traversal
+            .resolved
+            .views
+            .full
+            .process
+            .object
+            .brim_flow_ratio
+            .0,
         template_rng: template_rng.clone(),
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,

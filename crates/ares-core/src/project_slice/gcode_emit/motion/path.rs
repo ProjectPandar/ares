@@ -156,7 +156,7 @@ fn emit_inner(
     let capped_speed = if state.options.max_volumetric_speed > 0.0 {
         configured_speed.min(
             state.options.max_volumetric_speed
-                / extrusion::effective_flow(properties, &state.options, state.on_first_layer),
+                / extrusion::effective_flow_at_emission(properties, state),
         )
     } else {
         configured_speed

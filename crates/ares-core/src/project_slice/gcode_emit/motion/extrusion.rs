@@ -97,7 +97,7 @@ pub(super) fn linear_segment(
 ) {
     let extrusion = for_length(
         length,
-        effective_flow(properties, &state.options, state.on_first_layer),
+        effective_flow_at_emission(properties, state),
         state.options.filament_flow_ratio,
         state.options.filament_area,
     ) * small_area_multiplier(state, properties.feature, length);
@@ -164,7 +164,7 @@ pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {
 }
 
 /// `GCode.cpp:6469-6507`: one effective flow for extrusion, speed caps and PA.
-/// Earlier ungated fill/brim ratios still arrive in the geometric handoff.
+/// Earlier ungated fill ratios still arrive in the geometric handoff.
 pub(super) fn effective_flow(
     properties: PathProperties<'_>,
     options: &super::MotionOptions,
@@ -192,6 +192,16 @@ pub(super) fn effective_flow(
         }
     }
     flow
+}
+
+/// GCode.cpp:6479-6480 applies the live object ratio after print/filament flow.
+pub(super) fn effective_flow_at_emission(properties: PathProperties<'_>, state: &EmitState) -> f64 {
+    let flow = effective_flow(properties, &state.options, state.on_first_layer);
+    if properties.feature == "Brim" {
+        flow * state.current_brim_flow_ratio
+    } else {
+        flow
+    }
 }
 
 pub(super) fn for_length(
