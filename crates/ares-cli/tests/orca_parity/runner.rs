@@ -329,8 +329,6 @@ mod tests;
 #[cfg(test)]
 #[path = "runner/tree_support.rs"]
 mod tree_support;
-#[path = "runner/volume_fixture.rs"]
-pub(super) mod volume_fixture;
 
 #[path = "runner/command.rs"]
 mod command;
@@ -387,14 +385,13 @@ impl OrcaRunner {
     }
 }
 
-#[path = "runner/preset_helpers.rs"]
-mod preset_helpers;
-pub(super) use preset_helpers::{
+#[path = "runner/fixture_support.rs"]
+mod fixture_support;
+pub(super) use fixture_support::preset_helpers::{
     PresetKind, apply_override, digest_slug, join_paths, repo_root, write_preset,
 };
-
-#[path = "runner/wrapping_input.rs"]
-pub(crate) mod wrapping_input;
+pub(super) use fixture_support::volume_fixture;
+pub(crate) use fixture_support::wrapping_input;
 
 #[path = "option_coverage/safc_reference.rs"]
 pub(super) mod safc_reference;
