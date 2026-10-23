@@ -8,6 +8,9 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/bbl_layer_object_labels.rs"]
+mod bbl_layer_object_labels;
+
 #[path = "orca_parity/chamber_used_extruder.rs"]
 mod chamber_used_extruder;
 #[path = "orca_parity/endpoint_contact.rs"]
