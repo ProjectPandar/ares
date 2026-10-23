@@ -15,18 +15,8 @@ mod loaded_system_inherits_group;
 mod modifier_feature_filament;
 #[path = "runner/native_stream_case.rs"]
 pub(crate) mod native_stream_case;
-#[path = "runner/placeholder_comparison_dispatch.rs"]
-mod placeholder_comparison_dispatch;
-#[path = "runner/placeholder_digits_rounding.rs"]
-mod placeholder_digits_rounding;
-#[path = "runner/placeholder_int_result.rs"]
-mod placeholder_int_result;
-#[path = "runner/placeholder_minmax_results.rs"]
-mod placeholder_minmax_results;
-#[path = "runner/placeholder_rounding_results.rs"]
-mod placeholder_rounding_results;
-#[path = "runner/placeholder_string_addition.rs"]
-mod placeholder_string_addition;
+#[path = "runner/placeholder.rs"]
+mod placeholder;
 #[path = "runner/resource_item_ignore.rs"]
 mod resource_item_ignore;
 #[path = "runner/resource_part_build.rs"]

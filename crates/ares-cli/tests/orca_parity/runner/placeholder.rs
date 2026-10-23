@@ -1,0 +1,12 @@
+#[path = "placeholder_comparison_dispatch.rs"]
+mod placeholder_comparison_dispatch;
+#[path = "placeholder_digits_rounding.rs"]
+mod placeholder_digits_rounding;
+#[path = "placeholder_int_result.rs"]
+mod placeholder_int_result;
+#[path = "placeholder_minmax_results.rs"]
+mod placeholder_minmax_results;
+#[path = "placeholder_rounding_results.rs"]
+mod placeholder_rounding_results;
+#[path = "placeholder_string_addition.rs"]
+mod placeholder_string_addition;
