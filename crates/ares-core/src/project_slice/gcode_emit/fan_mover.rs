@@ -85,8 +85,7 @@ impl FanMover {
         fan_kickstart: f64,
         only_overhangs: bool,
         relative_e: bool,
-        flavor: GCodeFlavor,
-        gcode_comments: bool,
+        (flavor, gcode_comments): (GCodeFlavor, bool),
     ) -> Self {
         let delay = if fan_speedup_time > 0.0 {
             (fan_speedup_time as f32).max(0.01)

@@ -7,8 +7,7 @@ fn mover(delay: f64, kickstart: f64) -> FanMover {
         kickstart,
         false,
         false,
-        GCodeFlavor::MarlinLegacy,
-        false,
+        (GCodeFlavor::MarlinLegacy, false),
     )
 }
 
