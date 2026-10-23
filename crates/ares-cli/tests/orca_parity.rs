@@ -26,6 +26,8 @@ mod mesh_center_precision;
 mod paint_color;
 #[path = "orca_parity/paint_color/activity.rs"]
 mod paint_color_activity;
+#[path = "orca_parity/painted_beam.rs"]
+mod painted_beam;
 #[path = "orca_parity/painted_side_cut.rs"]
 mod painted_side_cut;
 #[path = "orca_parity/processor_sloped_seam.rs"]
