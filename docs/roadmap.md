@@ -7,6 +7,28 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### GUI painted fuzzy skin: discovery rejection, SPEC review pending (#126)
+
+Frozen beam92ce9b02c is unchanged; this separate docs slice owns upstream8500fcdcc
+`PrintObjectSlice.cpp1033–1141/1227–1241 apply_fuzzy_skin_segmentation`,
+`MultiMaterialSegmentation.cpp2211–2226 →1955–2194 segmentation_by_painting`,
+`PrintApply.cpp1081–1110` real fuzzy region IDs and classic `FuzzySkin.cpp561–684`
+masked consumer. Destination: ares-core project XML/mesh carrier, existing real
+region graph, private region_slices/load_stages and classic fuzzy materialization;
+staged marker registries/global-fuzzy helper are incomplete compatibility shells.
+Eight Native first (both modes/replays) on exact stock cube single-face Ripple
+pair: full generator-only replay stable,1/4raw pairs identical and3timestamp-only;
+then two CLI: control matches both Native, painted rejects canonical XML attribute.
+No public RED/API qualification claimed; observer initial-tool stop preserved.
+Priority/exit: independently approve SPEC → success-required Native/API/CLI RED
+→ RED RR and separate GREEN instruction → complete real consumed chain. Keep
+MMU→fuzzy→single interlocking→compensation, stock EFC; no admission-only patch,
+new registry/backend/API or comparator weakening. Combined annotations/beam,
+Arachne-painted/nonzero XY/broader runtime remain deferred. CPU18/jobs1; files≤400.
+No production/tests/FULL/rebase/merge/push here; beam integration window separate.
+[SPEC](architecture/painted-fuzzy-skin-spec.md),
+[ARD](architecture/ard-painted-fuzzy-skin.md).
+
 ### Painted MMU → beam call order: discovery complete, SPEC RR pending
 
 Legacy #70–#73 carrier/segmentation goals are superseded by the merged complete
