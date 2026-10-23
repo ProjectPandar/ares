@@ -1,0 +1,42 @@
+{
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "source": "GCode::_do_export GCode.cpp:2822-2826;GCodeWriter.cpp:1095-1155;Config.hpp:624-627",
+  "GUI": "Tab.cpp:4575,4079,4301,2671-2677",
+  "SPEC": "docs/architecture/startup-fan-initial-tool-spec.md",
+  "discovery_report_SHA256": "290bc2c8b1f1fd8f1b5714112ec210a008f23e6a1dc3390cc5bed70712f68bf1",
+  "cases": [
+    {
+      "case": "aux-on-both-open",
+      "file": "aux-on-both-open.3mf",
+      "SHA256": "75fb14cec1cdab283cc62db7cfe0141093950930a03826f64bc8881b46c7069f",
+      "model_tool": "1",
+      "auxiliary_fan": "1",
+      "close_fan_the_first_x_layers": [
+        "0",
+        "0"
+      ]
+    },
+    {
+      "case": "aux-on-initial-t1-closed",
+      "file": "aux-on-initial-t1-closed.3mf",
+      "SHA256": "8305d6fcd9f2f9f04199cc17070a4b167b419ab9b1e8d5ffef213b23d44d11d6",
+      "model_tool": "1",
+      "auxiliary_fan": "1",
+      "close_fan_the_first_x_layers": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "case": "aux-off-initial-t1-closed",
+      "file": "aux-off-initial-t1-closed.3mf",
+      "SHA256": "c8b08779a0204b8cf2809c04d34c2bab6f171fcacb0deb6ad6f7b3ac3622164f",
+      "model_tool": "1",
+      "auxiliary_fan": "0",
+      "close_fan_the_first_x_layers": [
+        "0",
+        "1"
+      ]
+    }
+  ]
+}

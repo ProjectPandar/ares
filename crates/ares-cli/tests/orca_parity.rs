@@ -37,6 +37,8 @@ mod painted_cases;
 mod painted_side_cut;
 #[path = "orca_parity/processor_sloped_seam.rs"]
 mod processor_sloped_seam;
+#[path = "orca_parity/startup_fan_initial_tool.rs"]
+mod startup_fan_initial_tool;
 #[path = "orca_parity/thin_safezone.rs"]
 mod thin_safezone;
 #[path = "orca_parity/used_extruder_case.rs"]
