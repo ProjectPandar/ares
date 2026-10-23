@@ -353,8 +353,6 @@ mod shared_mesh_centering;
 mod shared_mesh_import_contract;
 #[path = "orca_parity/smoke.rs"]
 mod smoke;
-#[path = "orca_parity/smoke_overrides.rs"]
-mod smoke_overrides;
 #[path = "orca_parity/smooth_type2_tower.rs"]
 mod smooth_type2_tower;
 #[path = "orca_parity/stock_presets.rs"]
@@ -370,12 +368,13 @@ mod golden;
 #[path = "ksr_fdmtest_v4/semantic.rs"]
 mod semantic;
 
-#[path = "orca_parity/case_helpers.rs"]
-mod case_helpers;
+#[path = "orca_parity/case_support.rs"]
+mod case_support;
 
 use std::collections::BTreeMap;
 
-pub(crate) use case_helpers::*;
+pub(crate) use case_support::case_helpers::*;
+use case_support::smoke_overrides;
 use presets::VendorProfiles;
 use runner::{CaseInputs, OrcaRunner};
 use serde_json::Value;
@@ -385,13 +384,8 @@ pub(crate) use smoke_overrides::{
 
 use crate::runner::{OrcaRunner as Runner, ParityCase};
 
-#[path = "orca_parity/outcomes.rs"]
-mod outcomes;
-pub(crate) use outcomes::{divergence, pass};
-
-#[path = "orca_parity/vendor_inventory.rs"]
-mod vendor_inventory;
-pub(crate) use vendor_inventory::vendors;
+pub(crate) use case_support::outcomes::{divergence, pass};
+pub(crate) use case_support::vendor_inventory::vendors;
 
 #[path = "orca_parity/support_ironing_raft_offset.rs"]
 mod support_ironing_raft_offset;
