@@ -149,6 +149,22 @@ RED: accepted baseline G29 difference plus GUI-moved/rotated prime tower on
 stock X1C, unchanged start template. Native must export and slice successfully;
 full Native/API/CLI equality, not a patched G29 assertion, is the exit.
 
+### T4 precision audit after consumed checkpoint
+
+The non-final consumed checkpoint is `fcf71a9cc`. Its frozen public witnesses
+remain full-stream RED. The retained raw diff shows brim arc I/J/E differences
+and G29 X `9.75224` versus `9.75223`; neither is assigned to W4.
+
+`WipeTower.cpp:3171::finish_layer_new` calls `offset(outer_wall,
+scaled(spacing))`. `Point.hpp:664–669` selects integer `coord_t` output for
+`scaled(float)`: divide in float precision, then truncate to the integer
+coordinate. Only then does the offset API convert the delta to float.
+`type1/finish_layer.rs` must preserve that conversion boundary, rather than
+send a fractional scaled float directly into the shared offset implementation.
+This is the upstream lattice conversion, not output rounding or a G29 fix.
+The generated polygon must continue into both arc fitting and live bounds.
+No comparator or frozen fixture changes are permitted to qualify this correction.
+
 ## Scope and qualification gates
 
 1. Approve this docs proposal, then source-cited SPEC for the consumed chain

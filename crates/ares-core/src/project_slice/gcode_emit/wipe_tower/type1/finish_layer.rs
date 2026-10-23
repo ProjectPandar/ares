@@ -62,10 +62,12 @@ impl Generator<'_> {
             }
         }
         if loops > 0 {
+            // `scaled(spacing)` uses float division, then truncates to coord_t.
+            let delta = (spacing / self.scale.factor() as f32) as i64;
             for _ in 0..loops {
                 polygon = raw_offset_paths(
                     std::slice::from_ref(&polygon),
-                    (f64::from(spacing) / self.scale.factor()) as f32,
+                    delta as f32,
                     JoinType::Miter,
                     3.0,
                 )?
