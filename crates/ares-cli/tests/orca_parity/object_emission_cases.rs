@@ -1,4 +1,4 @@
-//! GCode object label, print order and retract parity cases.
+//! GCode object emission and writer-motion parity cases.
 
 #[path = "bbl_layer_object_labels.rs"]
 mod bbl_layer_object_labels;
@@ -9,3 +9,6 @@ mod retract_internal_regions_routed;
 
 #[path = "deferred_lift_epsilon.rs"]
 mod deferred_lift_epsilon;
+
+#[path = "jerk_dedup_tolerance.rs"]
+mod jerk_dedup_tolerance;
