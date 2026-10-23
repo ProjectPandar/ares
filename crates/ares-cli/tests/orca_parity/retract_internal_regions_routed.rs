@@ -38,6 +38,6 @@ fn check(label: &str, project: &[u8], sha: &str, two_tools: bool) {
         label,
         project,
         sha,
-        two_tools,
+        (two_tools, |_, _| {}),
     );
 }
