@@ -193,7 +193,9 @@ pub(super) fn emit_needs_travel(
     // (`m_to_lift`); a nozzle already lifted by an earlier sequence (the
     // layer-end timelapse retract, a deferred layer-change lift) travels
     // flat in XY and the unlift descends at the destination.
-    let lifted_for_travel = state.pending_lift.is_some();
+    // The consumption gate is stricter than lazy_lift's positive scheduling
+    // gate (`GCodeWriter.cpp:637,700`; `libslic3r.h:52`).
+    let lifted_for_travel = state.pending_lift.is_some() && state.options.z_hop.abs() > 1e-4;
     let mut pending_target: Option<f64> = None;
     // The print's first travel has no known source position, so Orca
     // cannot slope/spiral from it (`GCodeWriter.cpp:travel_to_xyz`
@@ -231,7 +233,9 @@ pub(super) fn emit_needs_travel(
         {
             state.pending_lift = Some(lift_mode);
         }
-        state.pending_lift.take()
+        state
+            .pending_lift
+            .take_if(|_| state.options.z_hop.abs() > 1e-4)
     } else {
         pending_target = travel::emit_pending_lift(
             output,

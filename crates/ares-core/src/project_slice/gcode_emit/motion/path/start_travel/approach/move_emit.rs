@@ -16,8 +16,8 @@ pub(super) struct MoveContext<'a> {
     pub first_travel_comment: &'a str,
     pub first_position: bool,
     pub layer_change_travel: bool,
-    /// `state.pending_lift.is_some()` captured before consumption — the
-    //   deferred hop that applies to THIS travel.
+    /// A pending lift strictly above EPSILON, captured before consumption.
+    /// This is the deferred hop that applies to THIS travel.
     pub lifted_for_travel: bool,
     /// `emit_pending`'s raised destination (when a pending lift ran).
     pub pending_target: Option<f64>,
@@ -178,13 +178,18 @@ pub(super) fn emit_approach_move(
             first_travel_comment,
         );
         travel_set_layer_z = true;
-    } else if first_position && (first_travel_lift.is_some() || state.pending_lift.is_some()) {
-        // `m_to_lift` consumption is independent of the retracted flag
-        // (`GCodeWriter.cpp:694-710`) — a deferred hop (scheduled by a
-        // qualifying retraction, including a Hilbert-suppressed one or
-        // the retract path's own deferral) always emits on the first
-        // travel. No scheduled lift → no hop (`GCode.cpp:7530-7533`).
-        let lift = first_travel_lift.or_else(|| state.pending_lift.take());
+    } else if first_position
+        && state.options.z_hop.abs() > 1e-4
+        && (first_travel_lift.is_some() || state.pending_lift.is_some())
+    {
+        // `GCodeWriter.cpp:700-710`: only a deferred hop above EPSILON is
+        // consumed, independently of the retracted flag. A subthreshold
+        // pending lift takes the ordinary travel branch and remains set.
+        let lift = first_travel_lift.or_else(|| {
+            state
+                .pending_lift
+                .take_if(|_| state.options.z_hop.abs() > 1e-4)
+        });
         dispatch::emit_retracted_first_travel(
             output,
             state,
@@ -212,7 +217,8 @@ pub(super) fn emit_approach_move(
         // (`GCodeWriter.cpp:725-757`: slope/spiral moves come from the
         // `m_to_lift` block; with no lift the plain combined XYZ path
         // emits the destination directly).
-        let has_lift = state.lifted_amount > 0.0 || state.pending_lift.is_some();
+        let has_lift = state.lifted_amount > 0.0
+            || (state.pending_lift.is_some() && state.options.z_hop.abs() > 1e-4);
         if has_lift
             && state.options.z_hop > 0.0
             && retraction::uses_sloped_lift(state.options.z_hop_type)
