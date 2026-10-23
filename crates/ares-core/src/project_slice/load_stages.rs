@@ -111,19 +111,11 @@ pub(super) fn prepare_post_regions(
                     &graph,
                     painted_regions,
                     mmu_painted,
-                    &resolved_object.object,
-                )?);
-                let mut post = region_slices::complex::compose_complex_region_slices(
+                ));
+                region_slices::complex::compose_complex_region_slices(
                     region_slices::prepare_region_slices(bounded, graph),
                     scale,
-                )?;
-                region_slices::interlocking::apply(
-                    &mut post,
-                    &resolved_object.object,
-                    &resolved.views.full.project.print.nozzle_diameter,
-                    scale,
-                )?;
-                Ok(post)
+                )
             })
             .collect::<Result<Vec<_>, _>>()?;
         assert!(
@@ -175,5 +167,26 @@ pub(super) fn prepare_post_painted(
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_conical_overhang(project)?;
     region_slices::painted::apply_project(&mut prepared)?;
+    Ok(prepared)
+}
+
+pub(super) fn prepare_post_interlocking(
+    project: ProjectSource<'_>,
+) -> Result<PreparedPostRegions, SliceError> {
+    let mut prepared = prepare_post_painted(project)?;
+    let contexts = prepared
+        .resolved
+        .objects
+        .iter()
+        .flat_map(|resolved| resolved.print_objects.iter().map(move |_| resolved));
+    // PrintObjectSlice.cpp:1243 consumes the post-MMU region surfaces before compensation.
+    for (object, resolved) in prepared.objects.iter_mut().zip(contexts) {
+        region_slices::interlocking::apply(
+            object,
+            &resolved.object,
+            &prepared.resolved.views.full.project.print.nozzle_diameter,
+            prepared.scale,
+        )?;
+    }
     Ok(prepared)
 }

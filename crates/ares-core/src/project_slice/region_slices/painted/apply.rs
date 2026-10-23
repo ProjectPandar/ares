@@ -23,26 +23,20 @@ impl ObjectRegions {
         graph: &VolumeRegionGraph,
         painted: Vec<Vec<PaintedRegion>>,
         active: bool,
-        options: &crate::ObjectOptions,
-    ) -> Result<Self, SliceError> {
-        if active && options.interlocking_beam.0 {
-            return Err(SliceError::UnsupportedProjectFeature(
-                "painted beam compositions".into(),
-            ));
-        }
+    ) -> Self {
         if !active {
-            return Ok(Self {
+            return Self {
                 active,
                 ranges: Vec::new(),
                 painted: Vec::new(),
-            });
+            };
         }
         // PrintApply.cpp:1059–1073 retains ordinary region fuzzy options; fuzzy painting is separate.
-        Ok(Self {
+        Self {
             active,
             ranges: graph.ranges.clone(),
             painted,
-        })
+        }
     }
 }
 
