@@ -324,7 +324,7 @@ fn render_text(
         let value = value.index(vector_index).unwrap_or(&value);
         let rendered = match path {
             ParsePath::Legacy => value.as_legacy_string(),
-            ParsePath::Brace => value.as_string(),
+            ParsePath::Brace => super::expression::to_string(value),
         };
         output.push_str(&rendered);
         index = expression_start + relative_end + 1;

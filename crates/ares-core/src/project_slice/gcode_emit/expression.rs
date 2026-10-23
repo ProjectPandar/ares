@@ -328,7 +328,7 @@ enum Arithmetic {
     Remainder,
 }
 
-fn to_string(value: &Value) -> String {
+pub(super) fn to_string(value: &Value) -> String {
     // PlaceholderParser.cpp:302-327: doubles use default ostream precision.
     match value {
         Value::Number(number) => super::motion::format::ostream(*number),
