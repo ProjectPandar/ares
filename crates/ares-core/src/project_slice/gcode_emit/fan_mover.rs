@@ -76,7 +76,6 @@ pub(crate) struct FanMover {
     /// deltas), mirroring the upstream GCodeReader state.
     position: [f32; 3],
     e_position: f32,
-    relative_xyz: bool,
 }
 
 impl FanMover {
@@ -113,7 +112,6 @@ impl FanMover {
             output: String::new(),
             position: [0.0; 3],
             e_position: 0.0,
-            relative_xyz: false,
         }
     }
 
