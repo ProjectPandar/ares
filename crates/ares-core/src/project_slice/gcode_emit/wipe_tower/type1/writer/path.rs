@@ -19,8 +19,26 @@ fn append_segments(segments: &mut Vec<Segment>, path: &mut Polyline, scale: Coor
         .map(|p| (scale.unscale(p.x()), scale.unscale(p.y())))
         .collect::<Vec<_>>();
     let fitting = motion::simplify_points(&mut points, 0.1, 1.0 / scale.factor());
+    *path = Polyline::new(
+        points
+            .into_iter()
+            .map(|(x, y)| {
+                Point::new(
+                    (x / scale.factor()).round() as i64,
+                    (y / scale.factor()).round() as i64,
+                )
+            })
+            .collect(),
+    );
     for fit in fitting {
-        let convert = |i: usize| [points[i].0 as f32, points[i].1 as f32];
+        // WipeTower.cpp:1124–1128 / Point.hpp:700–705: unscaled<float>(Point).
+        let convert = |i: usize| {
+            let point = path.points()[i];
+            [
+                point.x() as f32 * scale.factor() as f32,
+                point.y() as f32 * scale.factor() as f32,
+            ]
+        };
         if let Some(arc) = fit.arc {
             segments.push(Segment {
                 start: convert(fit.start),
@@ -37,17 +55,6 @@ fn append_segments(segments: &mut Vec<Segment>, path: &mut Polyline, scale: Coor
             }
         }
     }
-    *path = Polyline::new(
-        points
-            .into_iter()
-            .map(|(x, y)| {
-                Point::new(
-                    (x / scale.factor()).round() as i64,
-                    (y / scale.factor()).round() as i64,
-                )
-            })
-            .collect(),
-    );
 }
 
 fn normalize_angle(mut angle: f64) -> f64 {
