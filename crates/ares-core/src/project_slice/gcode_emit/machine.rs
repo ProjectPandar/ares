@@ -37,7 +37,11 @@ pub(super) fn append_first_line_m73(output: &mut Vec<u8>) {
     output.extend_from_slice(b"M73 P0 R0\n");
 }
 
-pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
+pub(super) fn append_limits(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    initial_extruder_id: usize,
+) {
     let flavor = traversal.resolved.views.full.printer.gcode.gcode_flavor;
     // `print_machine_envelope` runs for Marlin-family flavors only, after the
     // machine start G-code (`GCode.cpp:3939-3944`).
@@ -58,16 +62,16 @@ pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassi
         envelope::append_machine_envelope(output, traversal);
     }
     // Disable fan for printers with an auxiliary fan
-    // (`GCode.cpp:2822-2826`: set_fan(0) + set_additional_fan(0)).
+    // (`GCode.cpp:2822-2826`, `Config.hpp:624-627`: get_at(initial_extruder_id)).
     let settings = &traversal.resolved.views.full;
-    let close_fan = settings
-        .filament
-        .print
-        .close_fan_the_first_x_layers
-        .0
-        .first()
-        .is_some_and(|value| value.0 > 0);
-    if settings.printer.gcode.auxiliary_fan.0 && close_fan {
+    let close_fan = &settings.filament.print.close_fan_the_first_x_layers.0;
+    if settings.printer.gcode.auxiliary_fan.0
+        && close_fan
+            .get(initial_extruder_id)
+            .unwrap_or(&close_fan[0])
+            .0
+            != 0
+    {
         let comments = settings.process.print.gcode_comments.0;
         let fan_comment = if comments { " ; disable fan" } else { "" };
         let aux_comment = if comments {
