@@ -1,10 +1,10 @@
-use super::{EmitState, format};
+use super::{EmitState, format, travel::EPSILON};
 
 pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
     if jerk < 0.01
         || state
             .last_jerk
-            .is_some_and(|last| (last - jerk).abs() < 1.0e-6)
+            .is_some_and(|last| (last - jerk).abs() < EPSILON)
     {
         return;
     }
