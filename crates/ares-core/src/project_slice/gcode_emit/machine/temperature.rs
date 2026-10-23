@@ -210,18 +210,92 @@ fn used_filaments(traversal: &PreparedPostClassicTraversal) -> Vec<usize> {
 }
 
 fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {
-    gcode.lines().any(|line| {
-        let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
-        let mut words = code.split_ascii_whitespace();
-        let Some(command) = words.next() else {
-            return false;
-        };
-        commands.contains(&command)
-            || (include_g10
-                && command == "G10"
-                && words.any(|word| {
-                    word.strip_prefix('S')
-                        .is_some_and(|value| value.parse::<i32>().is_ok())
-                }))
-    })
+    // GCode.cpp:528-589 scans a NUL-terminated string, not whitespace tokens.
+    let bytes = gcode.as_bytes();
+    let at = |index: usize| bytes.get(index).copied().unwrap_or(0);
+    let integer = |start: usize| {
+        let mut end = start;
+        while matches!(at(end), b' ' | b'\t' | b'\n' | b'\r' | 11 | 12) {
+            end += 1;
+        }
+        let negative = at(end) == b'-';
+        if matches!(at(end), b'+' | b'-') {
+            end += 1;
+        }
+        let digits = end;
+        let mut value = 0_i64;
+        while at(end).is_ascii_digit() {
+            let digit = i64::from(at(end) - b'0');
+            value = value.saturating_mul(10);
+            value = if negative {
+                value.saturating_sub(digit)
+            } else {
+                value.saturating_add(digit)
+            };
+            end += 1;
+        }
+        if end == digits {
+            (0, start)
+        } else {
+            (value, end)
+        }
+    };
+    let mut position = 0;
+    let mut temperature_set = false;
+    #[expect(
+        clippy::excessive_nesting,
+        reason = "retain GCode.cpp:528-589 command/parameter scanner control flow"
+    )]
+    while at(position) != 0 {
+        while matches!(at(position), b' ' | b'\t') {
+            position += 1;
+        }
+        if at(position) == b'M' || (include_g10 && at(position) == b'G') {
+            let is_gcode = at(position) == b'G';
+            position += 1;
+            let (number, end) = integer(position);
+            let number = number as i32;
+            // Preserve C++'s (conversion && is_gcode) ? G10 : M-code test.
+            let matched = if end != position && is_gcode {
+                number == 10
+            } else {
+                commands
+                    .iter()
+                    .any(|command| command[1..].parse::<i32>().unwrap() == number)
+            };
+            if matched {
+                position = end;
+                if !is_gcode {
+                    temperature_set = true;
+                }
+                while !matches!(at(position), b';' | b'\r' | b'\n' | 0) {
+                    while matches!(at(position), b' ' | b'\t') {
+                        position += 1;
+                    }
+                    if at(position) == b'S' {
+                        position += 1;
+                        while matches!(at(position), b' ' | b'\t') {
+                            position += 1;
+                        }
+                        let (_, end) = integer(position);
+                        if end > position {
+                            position = end;
+                            temperature_set = true;
+                        }
+                    } else {
+                        while !matches!(at(position), b' ' | b'\t' | b';' | b'\r' | b'\n' | 0) {
+                            position += 1;
+                        }
+                    }
+                }
+            }
+        }
+        while !matches!(at(position), b'\r' | b'\n' | 0) {
+            position += 1;
+        }
+        while matches!(at(position), b'\r' | b'\n') {
+            position += 1;
+        }
+    }
+    temperature_set
 }
