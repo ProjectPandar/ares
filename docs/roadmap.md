@@ -7,6 +7,23 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Painted MMU → beam call order: discovery complete, SPEC RR pending
+
+Legacy #70–#73 carrier/segmentation goals are superseded by the merged complete
+MMU and side-cut chains. Next bounded upstream slice: pinned8500fcdcc
+`PrintObjectSlice.cpp:1207–1243` MMU/fuzzy/interlocking order, preserving
+`MultiMaterialSegmentation.cpp:2169–2207` beam suppression of side cutting.
+Rust boundary: existing private load_stages post-painted/pre-compensation handoff
+and region_slices interlocking consumer; current early placement and painted+beam
+rejection are temporary compatibility shells, not an Ares pipeline design.
+Priority/exit: independently approved SPEC → public success-required RED with
+beam-off/active-unpainted controls → RED RR before any GREEN; final strict dual
+FULL only in a separately assigned window. Discovery has16 Native/4CLI calls,
+not public acceptance. Fuzzy painting/combined annotations remain deferred.
+CPU18/jobs1/test-threads1; no new registry/backend/API or comparator relaxation.
+[SPEC](architecture/painted-beam-call-order-spec.md),
+[ARD](architecture/ard-painted-beam-call-order.md).
+
 ### Chamber writer-used extruder reduction: docs-first SPEC → test-only RED
 
 Coordinator accepted discovery on frozen exhaust53890b780. New branch
