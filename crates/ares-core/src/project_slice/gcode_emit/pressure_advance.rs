@@ -57,7 +57,7 @@ pub(super) fn command(pa: f64, flavor: crate::GCodeFlavor, is_bbl: bool) -> Stri
 
 fn format_pa(value: f64) -> String {
     if value == 0.0 {
-        return "0".to_owned();
+        return if value.is_sign_negative() { "-0" } else { "0" }.to_owned();
     }
     if !value.is_finite() {
         return value.to_string().to_ascii_lowercase();
