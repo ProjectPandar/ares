@@ -101,22 +101,27 @@ pub(super) fn linear_segment(
         state.options.filament_flow_ratio,
         state.options.filament_area,
     ) * small_area_multiplier(state, properties.feature, length);
+    let comment = if state.options.gcode_comments {
+        let bridge = if is_bridge_feature(properties.feature) {
+            " (bridge)"
+        } else {
+            ""
+        };
+        format!(" ; {}{bridge}", feature_description(properties.feature))
+    } else {
+        Default::default()
+    };
     if extrusion.abs() <= f64::EPSILON {
         output.extend_from_slice(
-            format!("G1 X{} Y{}\n", format_axis(end.x), format_axis(end.y)).as_bytes(),
+            format!(
+                "G1 X{} Y{}{comment}\n",
+                format_axis(end.x),
+                format_axis(end.y)
+            )
+            .as_bytes(),
         );
     } else {
         let extrusion = coordinate(state, extrusion);
-        let comment = if state.options.gcode_comments {
-            let bridge = if is_bridge_feature(properties.feature) {
-                " (bridge)"
-            } else {
-                ""
-            };
-            format!(" ; {}{bridge}", feature_description(properties.feature))
-        } else {
-            Default::default()
-        };
         output.extend_from_slice(
             format!(
                 "G1 X{} Y{} E{}{comment}\n",
