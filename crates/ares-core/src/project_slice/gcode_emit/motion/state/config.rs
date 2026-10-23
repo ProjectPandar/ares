@@ -7,6 +7,7 @@ impl EmitState {
         object: &crate::ObjectOptions,
     ) {
         self.current_brim_flow_ratio = object.brim_flow_ratio.0;
+        self.current_support_speed = object.support_speed.0;
     }
 
     /// GCode.cpp:5796 resolves the retained region value at loop emission.
