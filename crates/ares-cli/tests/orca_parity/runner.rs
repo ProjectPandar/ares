@@ -17,6 +17,8 @@ pub(crate) mod native_stream_case;
 mod placeholder_digits_rounding;
 #[path = "runner/placeholder_int_result.rs"]
 mod placeholder_int_result;
+#[path = "runner/placeholder_minmax_results.rs"]
+mod placeholder_minmax_results;
 #[path = "runner/placeholder_rounding_results.rs"]
 mod placeholder_rounding_results;
 #[path = "runner/resource_triangle_defaults.rs"]
