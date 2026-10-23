@@ -19,12 +19,6 @@ pub(super) fn append_header(
     schedule: &super::layers::Schedule,
     max_z: f64,
 ) {
-    let label_id = traversal
-        .project
-        .objects()
-        .first()
-        .and_then(|object| object.instances().first())
-        .map_or(0, |instance| instance.loaded_label_id().unwrap_or(0));
     let density = format_values(
         &traversal
             .resolved
@@ -68,8 +62,16 @@ pub(super) fn append_header(
         output.extend_from_slice(b"; estimated first layer printing time (normal mode) = 0s\n");
     }
     output.extend_from_slice(format!("; total layer number: {layers}\n").as_bytes());
-    (tags.is_bbl())
-        .then(|| output.extend_from_slice(format!("; model label id: {label_id}\n").as_bytes()));
+    if tags.is_bbl() {
+        output.extend_from_slice(b"; model label id: ");
+        for (index, id) in schedule.label_inventory.ids().iter().enumerate() {
+            if index != 0 {
+                output.push(b',');
+            }
+            output.extend_from_slice(id.to_string().as_bytes());
+        }
+        output.push(b'\n');
+    }
     output.extend_from_slice(format!("; filament_density: {density}\n").as_bytes());
     output.extend_from_slice(format!("; filament_diameter: {diameter}\n").as_bytes());
     output.extend_from_slice(format!("; max_z_height: {max_z:.2}\n").as_bytes());

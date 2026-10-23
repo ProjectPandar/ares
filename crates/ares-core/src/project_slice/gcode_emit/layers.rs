@@ -128,6 +128,7 @@ pub(super) fn append(
         mut raft,
         print_position,
         instances,
+        label_inventory,
         labels,
         object_layer_counts,
         last_entry,
@@ -147,11 +148,7 @@ pub(super) fn append(
             .0
         && traversal.resolved.views.full.process.print.print_sequence
             == crate::ProcessPrintSequence::ByLayer)
-        .then(|| {
-            super::object::FilamentInstances::new(
-                instances.iter().flatten().map(|instance| instance.label_id),
-            )
-        });
+        .then_some(&label_inventory);
     // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`) —
     // consumed by the toolchange-boundary timelapse insert gate
     // (`GCode.cpp:5292-5297`).

@@ -1,6 +1,7 @@
     while phase_index < phases.len() {
         let merged: &[(f64, schedule::LayerToPrint)] = phases[phase_index].merged;
         let phase = &phases[phase_index];
+        state.layer_object_labels = None;
         let tool_ordering: &super::tool_ordering::ToolOrdering = phases[phase_index].tool_ordering;
         if group_start >= merged.len() {
             phase_index += 1;
@@ -131,6 +132,28 @@
         // `GCode.cpp:4589`: `first_layer` is per-object — the leading
         // object/support/raft layer sitting on the plate.
         let first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
+        let layer_tools = tool_ordering.for_layer(group_z);
+        let wiping = &layer_tools.wiping;
+        let mut by_tool = tool_buckets::build(tool_buckets::Input {
+            traversal,
+            entries: &entries,
+            instances: &instances,
+            copy_filter: phase.copy_filter,
+            tools: tool_ordering.tools_for_layer(group_z),
+            wiping,
+            objects,
+            support: support_layers,
+            raft: &mut raft_layers,
+        });
+        // GCode.cpp:5139-5144 unions the actual filament instance lists.
+        // Build membership before the existing tracked layer-start insertion.
+        if state.tags.is_bbl() {
+            state.layer_object_labels = label_inventory.layer(
+                by_tool
+                    .iter()
+                    .flat_map(|(_, entries)| entries.iter().map(|entry| entry.instance.label_id)),
+            );
+        }
         let boundary = boundary::append(
             output,
             state,
@@ -197,23 +220,10 @@
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
         // toolchange and every instance block (object skirt group, brim,
         // `; printing object` marker, content).
-        let layer_tools = tool_ordering.for_layer(group_z);
         let has_tower = layer_tools.has_wipe_tower && state.wipe_tower.is_some();
         if has_tower {
             state.wipe_tower.as_mut().unwrap().next_layer();
         }
-        let wiping = &layer_tools.wiping;
-        let mut by_tool = tool_buckets::build(tool_buckets::Input {
-            traversal,
-            entries: &entries,
-            instances: &instances,
-            copy_filter: phase.copy_filter,
-            tools: tool_ordering.tools_for_layer(group_z),
-            wiping,
-            objects,
-            support: support_layers,
-            raft: &mut raft_layers,
-        });
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
         let mut final_entry = entries[0];
         for (tool, tool_entries) in &mut by_tool {

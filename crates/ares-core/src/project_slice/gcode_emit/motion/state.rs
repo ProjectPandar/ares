@@ -155,6 +155,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) ironing_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) pending_object_start: Option<(u32, [u8; 12])>,
     pub(in crate::project_slice::gcode_emit) filament_instances_code: Option<[u8; 12]>,
+    pub(in crate::project_slice::gcode_emit) layer_object_labels:
+        Option<super::super::object::LayerLabels>,
     pub(in crate::project_slice::gcode_emit) last_travel_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_start: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,

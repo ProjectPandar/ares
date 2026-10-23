@@ -22,6 +22,7 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(super) print_position: Vec<usize>,
     pub(in crate::project_slice::gcode_emit) instances: Vec<Vec<super::instances::Instance>>,
     pub(in crate::project_slice::gcode_emit) tower: Option<super::super::wipe_tower::Data>,
+    pub(in crate::project_slice::gcode_emit) label_inventory: super::super::object::LabelInventory,
     pub(super) labels: Vec<Vec<Option<ObjectLabels>>>,
     pub(super) object_layer_counts: Vec<usize>,
     pub(super) last_entry: Option<(usize, usize)>,
@@ -270,10 +271,13 @@ pub(in crate::project_slice::gcode_emit) fn build(
                 .expect("print object has printable instances")
         })
         .collect();
+    let label_inventory = super::super::object::LabelInventory::new(
+        instances.iter().flatten().map(|instance| instance.label_id),
+    );
     let labels = (0..object_count)
         .map(|index| {
             (0..instances[index].len())
-                .map(|copy| ObjectLabels::from_traversal(traversal, index, copy))
+                .map(|copy| ObjectLabels::from_traversal(traversal, index, copy, &label_inventory))
                 .collect()
         })
         .collect();
@@ -319,6 +323,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         raft,
         print_position,
         instances,
+        label_inventory,
         labels,
         object_layer_counts,
         last_entry,
