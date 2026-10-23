@@ -23,16 +23,24 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
         )
     };
     match name {
-        "min" => numbers
-            .into_iter()
-            .reduce(f64::min)
-            .map(Value::Number)
-            .ok_or("min requires an argument".to_owned()),
-        "max" => numbers
-            .into_iter()
-            .reduce(f64::max)
-            .map(Value::Number)
-            .ok_or("max requires an argument".to_owned()),
+        "min" | "max" => {
+            let maximum = name == "max";
+            let result = match args
+                .iter()
+                .map(Value::as_integer)
+                .collect::<Option<Vec<_>>>()
+            {
+                Some(integers) => integers
+                    .into_iter()
+                    .reduce(if maximum { i64::max } else { i64::min })
+                    .map(Value::Integer),
+                None => numbers
+                    .into_iter()
+                    .reduce(if maximum { f64::max } else { f64::min })
+                    .map(Value::Number),
+            };
+            result.ok_or_else(|| format!("{name} requires an argument"))
+        }
         "int" if numbers.len() == 1 => Ok(integer_result(f64::trunc)),
         "round" if numbers.len() == 1 => Ok(integer_result(f64::round)),
         "floor" if numbers.len() == 1 => Ok(integer_result(f64::floor)),
