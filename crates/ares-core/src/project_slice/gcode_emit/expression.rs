@@ -331,6 +331,7 @@ enum Arithmetic {
 pub(super) fn to_string(value: &Value) -> String {
     // PlaceholderParser.cpp:302-327: doubles use default ostream precision.
     match value {
+        Value::Number(number) if *number == 0.0 && number.is_sign_negative() => "-0".to_owned(),
         Value::Number(number) => super::motion::format::ostream(*number),
         value => value.as_string(),
     }
