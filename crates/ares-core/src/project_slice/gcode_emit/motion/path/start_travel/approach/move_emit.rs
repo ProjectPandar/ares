@@ -179,17 +179,13 @@ pub(super) fn emit_approach_move(
         );
         travel_set_layer_z = true;
     } else if first_position
-        && state.options.z_hop.abs() > 1e-4
+        && state.options.z_hop.abs() > travel::EPSILON
         && (first_travel_lift.is_some() || state.pending_lift.is_some())
     {
         // `GCodeWriter.cpp:700-710`: only a deferred hop above EPSILON is
         // consumed, independently of the retracted flag. A subthreshold
         // pending lift takes the ordinary travel branch and remains set.
-        let lift = first_travel_lift.or_else(|| {
-            state
-                .pending_lift
-                .take_if(|_| state.options.z_hop.abs() > 1e-4)
-        });
+        let lift = first_travel_lift.or_else(|| state.pending_lift.take());
         dispatch::emit_retracted_first_travel(
             output,
             state,
@@ -218,7 +214,7 @@ pub(super) fn emit_approach_move(
         // `m_to_lift` block; with no lift the plain combined XYZ path
         // emits the destination directly).
         let has_lift = state.lifted_amount > 0.0
-            || (state.pending_lift.is_some() && state.options.z_hop.abs() > 1e-4);
+            || (state.pending_lift.is_some() && state.options.z_hop.abs() > travel::EPSILON);
         if has_lift
             && state.options.z_hop > 0.0
             && retraction::uses_sloped_lift(state.options.z_hop_type)
@@ -285,7 +281,7 @@ pub(super) fn emit_approach_move(
         // Upstream takes the XY-only branch when `std::abs(delta(2)) <
         // EPSILON` — STRICTLY below 1e-4 (`GCodeWriter.cpp:927`,
         // `libslic3r.h:52`).
-        if (leg_z - live_z).abs() < 1e-4 {
+        if (leg_z - live_z).abs() < travel::EPSILON {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         } else if !state.positioned {
             // Unclear position: upstream's `travel_to_xyz` splits into
@@ -386,7 +382,7 @@ fn travel_will_move_z(state: &EmitState, z: f64) -> bool {
         if z >= nominal && z <= pos {
             return false;
         }
-    } else if (pos - z).abs() < 1e-4 {
+    } else if (pos - z).abs() < travel::EPSILON {
         return false;
     }
     true

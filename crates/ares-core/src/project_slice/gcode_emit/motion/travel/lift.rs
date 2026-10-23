@@ -8,6 +8,9 @@ mod spiral;
 mod tests;
 use spiral::append as append_spiral;
 
+// `libslic3r.h:52`, shared by the writer's lift and Z-travel gates.
+pub(in crate::project_slice::gcode_emit::motion) const EPSILON: f64 = 1e-4;
+
 pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
     // `lazy_lift` reads the live `m_pos(2)` (`GCodeWriter.cpp:633-639`)
     // — template `position[2]` assignments move the eligibility origin.
@@ -154,7 +157,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     // (`libslic3r.h:52`); a smaller scheduled lift stays pending.
     let mode = state
         .pending_lift
-        .take_if(|_| state.options.z_hop.abs() > 1e-4)?;
+        .take_if(|_| state.options.z_hop.abs() > EPSILON)?;
     // `GCodeWriter.cpp:701-709`: the deferred lift raises from the LIVE
     // writer z (`dest_point(2) = m_to_lift + m_pos(2)`), not the nominal
     // layer z — but only while that raised target actually exceeds the

@@ -21,7 +21,7 @@ use wipe_sequence::{retract_and_wipe_with, retract_sequence_due, wipe_eligible};
 use super::{EmitState, arc};
 pub(in crate::project_slice::gcode_emit) use lift::schedule_retract_tail;
 pub(super) use lift::{
-    emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
+    EPSILON, emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
     mode_for as lift_mode_for, schedule_normal, z_feedrate as lift_z_feedrate,
 };
 
