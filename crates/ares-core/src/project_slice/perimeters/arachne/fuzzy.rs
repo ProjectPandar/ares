@@ -178,7 +178,7 @@ fn apply_mask(
     context: &mut SlicerContext,
 ) -> Result<(), SliceError> {
     let points: Vec<_> = extrusion.junctions.iter().map(|j| j.point).collect();
-    let split = split_line(&points, &region.mask, layer.scale).map_err(geometry_error)?;
+    let split = split_line(&points, &region.mask, false, layer.scale).map_err(geometry_error)?;
     if split.is_empty() {
         return Ok(());
     }

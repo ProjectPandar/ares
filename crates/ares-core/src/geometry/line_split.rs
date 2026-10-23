@@ -1,5 +1,5 @@
-// `Algorithm/LineSplit.cpp:64-314::do_split_line`: ordered clipped sections
-// use source indices (negative for intersections), never width interpolation.
+// `Algorithm/LineSplit.hpp::split_line` / `LineSplit.cpp:64-314::do_split_line`:
+// closed paths duplicate then remove the first point; source indices preserve order.
 use super::{
     ClipperError, CoordinateScale, ExPolygon, Line, LineDistanceTree, Point,
     clipper::{ClipOperation, Clipper, ClipperOptions, PathRole, z::KernelPoint},
@@ -31,10 +31,12 @@ fn distance_squared(a: Point, b: Point) -> i64 {
 pub(crate) fn split_line(
     points: &[Point],
     mask: &[ExPolygon],
+    closed: bool,
     scale: CoordinateScale,
 ) -> Result<Vec<SplitJunction>, ClipperError> {
     let path: Vec<_> = points
         .iter()
+        .chain(closed.then(|| &points[0]))
         .enumerate()
         .map(|(index, p)| KernelPoint::new(p.x(), p.y(), index as i64))
         .collect();
@@ -57,7 +59,10 @@ pub(crate) fn split_line(
     if segments.is_empty() {
         return Ok(Vec::new());
     }
-    let lines: Vec<_> = points.windows(2).map(|p| Line::new(p[0], p[1])).collect();
+    let lines: Vec<_> = path
+        .windows(2)
+        .map(|p| Line::new(p[0].xy, p[1].xy))
+        .collect();
     let mut tree = None;
     let mut chain = vec![Vec::new(); path.len()];
     for (segment_index, segment) in segments.iter_mut().enumerate() {
@@ -88,7 +93,11 @@ pub(crate) fn split_line(
             distance_squared(a.xy, source).cmp(&distance_squared(b.xy, source))
         });
     }
-    Ok(reconstruct(&path, &segments, &chain))
+    let mut result = reconstruct(&path, &segments, &chain);
+    if closed {
+        result.pop();
+    }
+    Ok(result)
 }
 
 fn less(a: KernelPoint, b: KernelPoint, path: &[KernelPoint]) -> bool {

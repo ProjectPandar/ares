@@ -60,11 +60,12 @@ pub(super) fn apply_regions(
     make_exclusive(&mut merged)?;
     let mut polygon = polygon.clone();
     for region in merged {
-        let mut split = split_line(polygon.points(), &region.mask, input.scale).map_err(|_| {
-            SliceError::InvalidInput(
-                "fuzzy region clipping exceeds the coordinate range".to_owned(),
-            )
-        })?;
+        let mut split =
+            split_line(polygon.points(), &region.mask, true, input.scale).map_err(|_| {
+                SliceError::InvalidInput(
+                    "fuzzy region clipping exceeds the coordinate range".to_owned(),
+                )
+            })?;
         if split.is_empty() {
             continue;
         }

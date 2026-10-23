@@ -35,6 +35,7 @@ pub(super) fn validate(
             || options.wall_generator != ProcessPerimeterGenerator::Classic
             || options.interlocking_beam.0
             || options.enable_support.0
+            || options.enforce_support_layers.0 > 0
             || options.raft_layers.0 != 0
             || options.xy_contour_compensation.0 != 0.0
             || options.xy_hole_compensation.0 != 0.0
