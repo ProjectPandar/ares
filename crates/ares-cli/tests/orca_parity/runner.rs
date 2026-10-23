@@ -3,6 +3,8 @@
 //! G-code, and caches reference output keyed by the input digest.
 #[path = "runner/bbl_eager_enforce.rs"]
 mod bbl_eager_enforce;
+#[path = "runner/bbl_type1_categories.rs"]
+mod bbl_type1_categories;
 #[path = "runner/bbl_type1_tower.rs"]
 mod bbl_type1_tower;
 #[path = "runner/crosshatch_dont_connect.rs"]
