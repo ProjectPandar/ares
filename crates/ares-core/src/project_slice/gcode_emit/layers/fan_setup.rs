@@ -17,6 +17,7 @@ pub(super) fn gate(traversal: &PreparedPostClassicTraversal) -> Option<FanMover>
             gcode.fan_speedup_overhangs.0,
             relative_e,
             flavor,
+            traversal.resolved.views.full.process.print.gcode_comments.0,
         )
     })
 }

@@ -9,7 +9,7 @@ mod motion;
 
 use crate::{ExtrusionRole, GCodeFlavor};
 
-use helpers::fan_pwm;
+use helpers::set_fan_line;
 
 use helpers::{LineMotion, parse_motion, read_fan_speed, role_from_str};
 
@@ -62,6 +62,7 @@ pub(crate) struct FanMover {
     kickstart: f32,
     relative_e: bool,
     flavor: GCodeFlavor,
+    gcode_comments: bool,
     buffer: Vec<BufferData>,
     buffer_time_size: f64,
     front_buffer_fan_speed: i16,
@@ -85,6 +86,7 @@ impl FanMover {
         only_overhangs: bool,
         relative_e: bool,
         flavor: GCodeFlavor,
+        gcode_comments: bool,
     ) -> Self {
         let delay = if fan_speedup_time > 0.0 {
             (fan_speedup_time as f32).max(0.01)
@@ -97,6 +99,7 @@ impl FanMover {
             kickstart: fan_kickstart as f32,
             relative_e,
             flavor,
+            gcode_comments,
             buffer: Vec::new(),
             buffer_time_size: 0.0,
             // FanMover.hpp:51-52: both buffer fan speeds start at 0 (the
@@ -245,7 +248,7 @@ impl FanMover {
         }
         if front.is_kickstart && front.fan_speed < self.front_buffer_fan_speed {
             self.output
-                .push_str(&format!("M106 S{}\n", fan_pwm(front.fan_speed)));
+                .push_str(&set_fan_line(front.fan_speed, self.gcode_comments));
             self.front_buffer_fan_speed = front.fan_speed;
         } else {
             self.output.push_str(&front.raw);

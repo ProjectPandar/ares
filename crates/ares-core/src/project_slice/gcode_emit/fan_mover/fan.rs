@@ -36,7 +36,7 @@ impl FanMover {
             let kickstart_duration =
                 self.kickstart * f32::from(fan_speed - self.back_buffer_fan_speed) / 100.0;
             self.push_buffer(
-                BufferData::new(set_fan_line(100), 0.0, fan_speed, true),
+                BufferData::new(set_fan_line(100, self.gcode_comments), 0.0, fan_speed, true),
                 &LineMotion::default(),
                 self.position,
                 self.e_position,
@@ -61,10 +61,11 @@ impl FanMover {
                 self.print_in_middle(
                     0,
                     (self.buffer_time_size - f64::from(self.nb_seconds_delay)) as f32,
-                    &set_fan_line(100),
+                    &set_fan_line(100, self.gcode_comments),
                 );
             } else {
-                self.output.push_str(&set_fan_line(100));
+                self.output
+                    .push_str(&set_fan_line(100, self.gcode_comments));
             }
             let kickstart_duration =
                 self.kickstart * f32::from(fan_speed - self.front_buffer_fan_speed) / 100.0;

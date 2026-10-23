@@ -2,7 +2,14 @@ use super::FanMover;
 use crate::GCodeFlavor;
 
 fn mover(delay: f64, kickstart: f64) -> FanMover {
-    FanMover::new(delay, kickstart, false, false, GCodeFlavor::MarlinLegacy)
+    FanMover::new(
+        delay,
+        kickstart,
+        false,
+        false,
+        GCodeFlavor::MarlinLegacy,
+        false,
+    )
 }
 
 #[test]
