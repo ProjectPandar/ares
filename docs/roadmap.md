@@ -65,7 +65,15 @@ skirt/z-hop/print_order/M73/seam-occlusion scopes, FULL, merge/push and platform
 runtime qualification. Prior painted stage text below remains historical.
 [SPEC](architecture/exhaust-used-extruder-spec.md),
 [ARD](architecture/ard-exhaust-used-extruder.md).
-### BBL Type1 wipe tower: W5 docs-only milestone PROPOSAL
+
+### BBL Type1 wipe tower: milestone approved, T1–T2 SPEC review
+
+Milestone docs approved/committed as `8a22fa596`. W5's
+[T1–T2 consumed-chain SPEC](architecture/bbl-type1-t1-t2-consumed-chain-spec.md)
+now inventories the accepted X1C baseline: rib wall, single-nozzle two-slot
+same-category planning, and separate Type1 activation versus Type2 priming-order
+flags. Config-derived reachability is distinguished from observed output and
+untraced dynamic branches. SPEC review is required before any public RED.
 
 Priority: restore stock X1C AMS tower output before more literal-placeholder
 edge cases. Accepted two-object Basic/Matte discovery has Native success in
