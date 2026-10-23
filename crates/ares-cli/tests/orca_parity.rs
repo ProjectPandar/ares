@@ -8,8 +8,8 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
-#[path = "orca_parity/bbl_layer_object_labels.rs"]
-mod bbl_layer_object_labels;
+#[path = "orca_parity/object_emission_cases.rs"]
+mod object_emission_cases;
 
 #[path = "orca_parity/chamber_used_extruder.rs"]
 mod chamber_used_extruder;
@@ -53,9 +53,6 @@ mod classic_seam_overhang;
 
 #[path = "orca_parity/pre_external_wipe.rs"]
 mod pre_external_wipe;
-
-#[path = "orca_parity/retract_internal_regions_routed.rs"]
-mod retract_internal_regions_routed;
 
 #[path = "orca_parity/closest_lines_runtime.rs"]
 mod closest_lines_runtime;
@@ -399,6 +396,3 @@ pub(crate) use case_support::vendor_inventory::vendors;
 mod support_ironing_raft_offset;
 #[path = "orca_parity/support_touching_grid.rs"]
 mod support_touching_grid;
-
-#[path = "orca_parity/print_order_as_obj_list.rs"]
-mod print_order_as_obj_list;
