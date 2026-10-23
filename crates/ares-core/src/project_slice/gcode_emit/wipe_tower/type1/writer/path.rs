@@ -7,7 +7,7 @@ use std::fmt::Write;
 struct Segment {
     start: [f32; 2],
     end: [f32; 2],
-    arc: Option<FittedArc>,
+    arc: Option<(FittedArc, [f32; 2])>,
 }
 fn append_segments(segments: &mut Vec<Segment>, path: &mut Polyline, scale: CoordinateScale) {
     if path.points().len() < 2 {
@@ -40,10 +40,17 @@ fn append_segments(segments: &mut Vec<Segment>, path: &mut Polyline, scale: Coor
             ]
         };
         if let Some(arc) = fit.arc {
+            // WipeTower.cpp:668–669: ArcSegment.end_point is double-unscaled
+            // then cast, independently of the Segment endpoint conversion.
+            let point = path.points()[fit.end];
+            let end = [
+                scale.unscale(point.x()) as f32,
+                scale.unscale(point.y()) as f32,
+            ];
             segments.push(Segment {
                 start: convert(fit.start),
                 end: convert(fit.end),
-                arc: Some(arc),
+                arc: Some((arc, end)),
             });
         } else {
             for i in fit.start..fit.end {
@@ -99,8 +106,8 @@ impl Writer {
                 self.travel(segment.start, 600.0);
                 self.load(retract.0, retract.1);
             }
-            if let Some(arc) = &segment.arc {
-                self.arc(segment.end, arc, speed, scale);
+            if let Some((arc, end)) = &segment.arc {
+                self.arc(*end, arc, speed, scale);
             } else {
                 self.extrude(segment.end, speed);
             }
