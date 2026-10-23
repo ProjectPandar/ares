@@ -7,6 +7,8 @@ mod bbl_eager_enforce;
 mod crosshatch_dont_connect;
 #[path = "runner/fan_layer_tag.rs"]
 mod fan_layer_tag;
+#[path = "runner/fan_reader_xyz.rs"]
+mod fan_reader_xyz;
 #[path = "runner/fan_speedup_sign.rs"]
 mod fan_speedup_sign;
 #[path = "runner/loaded_system_inherits_group.rs"]
