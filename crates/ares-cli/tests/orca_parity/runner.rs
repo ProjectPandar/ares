@@ -15,6 +15,8 @@ mod modifier_feature_filament;
 pub(crate) mod native_stream_case;
 #[path = "runner/placeholder.rs"]
 mod placeholder;
+#[path = "runner/processor_word_boundary.rs"]
+mod processor_word_boundary;
 #[path = "runner/resource_item_ignore.rs"]
 mod resource_item_ignore;
 #[path = "runner/resource_part_build.rs"]
