@@ -1,5 +1,5 @@
 //! FanMover.cpp:291-304 → GCodeReader raw XYZ deltas without G90/G91 state.
-use super::native_stream_case::check;
+use crate::runner::native_stream_case::check;
 
 const SOURCE: (&str, &[&str]) = (
     "fan-reader-xyz",
