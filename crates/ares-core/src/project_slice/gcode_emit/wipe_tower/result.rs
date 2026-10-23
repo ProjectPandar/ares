@@ -9,6 +9,7 @@ pub(super) enum Kind {
 
 #[derive(Clone)]
 pub(super) struct ToolChangeResult {
+    pub(super) type1: Option<super::type1::Metadata>,
     pub(super) priming: bool,
     pub(super) initial_tool: usize,
     pub(super) new_tool: usize,

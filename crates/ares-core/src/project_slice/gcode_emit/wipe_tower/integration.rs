@@ -22,6 +22,8 @@ pub(in crate::project_slice::gcode_emit) struct Integration {
     layer: Option<usize>,
     change: usize,
     last_z: f64,
+    first_print: bool,
+    extra_wall: bool,
 }
 
 impl Integration {
@@ -63,7 +65,6 @@ impl Integration {
     ) -> Self {
         let project = &settings.project.print;
         Self {
-            data: Rc::new(data),
             position: [
                 project.wipe_tower_x.0[0].0 as f32,
                 project.wipe_tower_y.0[0].0 as f32,
@@ -82,11 +83,12 @@ impl Integration {
                 })
                 .collect(),
             semm: settings.printer.gcode.single_extruder_multi_material.0,
-            priming: if !settings
-                .process
-                .gcode
-                .single_extruder_multi_material_priming
-                .0
+            priming: if data.type1
+                || !settings
+                    .process
+                    .gcode
+                    .single_extruder_multi_material_priming
+                    .0
             {
                 Priming::Disabled
             } else if priming_overlap {
@@ -98,13 +100,39 @@ impl Integration {
             no_sparse: settings.process.gcode.wipe_tower_no_sparse_layers.0,
             layer: None,
             change: 0,
+            first_print: true,
+            extra_wall: settings.process.print.timelapse_type
+                == crate::ProcessTimelapseType::Smooth
+                || settings.process.gcode.enable_wrapping_detection.0,
             last_z: settings.printer.remaining.z_offset.0,
+            data: Rc::new(data),
         }
     }
 
     pub(in crate::project_slice::gcode_emit) fn next_layer(&mut self) {
         self.layer = Some(self.layer.map_or(0, |layer| layer + 1));
         self.change = 0;
+        self.first_print = true;
+    }
+
+    pub(super) fn first_wall(&mut self) -> Option<(usize, Option<f64>)> {
+        let layer = self.layer.expect("tower dispatch follows next_layer");
+        let changes = self.data.changes.get(layer)?;
+        if !self.data.type1 || !self.extra_wall || !self.first_print {
+            return None;
+        }
+        let ignore = changes.len() == 1 && changes[0].initial_tool == changes[0].new_tool;
+        let z = self.no_sparse.then(|| {
+            self.last_z
+                + if ignore {
+                    0.0
+                } else {
+                    f64::from(changes[0].layer_height)
+                }
+        });
+        self.change += 1;
+        self.first_print = false;
+        Some((layer, z))
     }
 
     pub(super) fn next(
@@ -118,7 +146,7 @@ impl Integration {
             return None;
         }
         if self.no_sparse
-            && layer != 0
+            && (self.data.type1 || layer != 0)
             && changes.len() == 1
             && changes[0].initial_tool == changes[0].new_tool
         {

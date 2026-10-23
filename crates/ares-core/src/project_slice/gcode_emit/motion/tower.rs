@@ -158,6 +158,36 @@ pub(in crate::project_slice::gcode_emit) fn change_layer(
     state.record_z(z);
 }
 
+pub(in crate::project_slice::gcode_emit) fn type1_retract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    toolchange: bool,
+) {
+    travel::retract_for_type1(output, state, toolchange);
+}
+
+pub(in crate::project_slice::gcode_emit) fn type1_travel(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    point: [f32; 2],
+    geometry: LayerGeometry<'_>,
+) -> Result<(), crate::SliceError> {
+    path::tower_travel(
+        output,
+        state,
+        local(point, state.origin, geometry.scale),
+        geometry,
+    )
+}
+
+pub(in crate::project_slice::gcode_emit) fn type1_unretract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    travel::unlift(output, state);
+    travel::unretract(output, state);
+}
+
 fn local(point: [f32; 2], origin: (f64, f64), scale: CoordinateScale) -> (i64, i64) {
     (
         ((f64::from(point[0]) - origin.0) / scale.factor()).round() as i64,

@@ -7,6 +7,8 @@ use crate::{
 };
 
 pub(in crate::project_slice::gcode_emit) struct Data {
+    pub(super) type1: bool,
+    pub(super) rib_offset: [f32; 2],
     pub(super) priming: Vec<ToolChangeResult>,
     pub(super) changes: Vec<Vec<ToolChangeResult>>,
     pub(super) final_purge: ToolChangeResult,
@@ -62,6 +64,8 @@ impl Planned {
             depth_profile.push((generator.plan.height, 0.0));
         }
         Ok(Data {
+            type1: false,
+            rib_offset: [0.0; 2],
             priming,
             changes,
             final_purge,

@@ -27,12 +27,12 @@ impl Data {
         placed_corners(
             [
                 [
-                    scale.unscale(bounds.min().x()),
-                    scale.unscale(bounds.min().y()),
+                    scale.unscale(bounds.min().x()) + f64::from(self.rib_offset[0]),
+                    scale.unscale(bounds.min().y()) + f64::from(self.rib_offset[1]),
                 ],
                 [
-                    scale.unscale(bounds.max().x()),
-                    scale.unscale(bounds.max().y()),
+                    scale.unscale(bounds.max().x()) + f64::from(self.rib_offset[0]),
+                    scale.unscale(bounds.max().y()) + f64::from(self.rib_offset[1]),
                 ],
             ],
             (radius + f64::from(self.brim_width), stretch),

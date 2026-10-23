@@ -13,6 +13,21 @@ pub(in crate::project_slice::gcode_emit) fn tool_change(
     context: timelapse::Context<'_>,
     geometry: motion::LayerGeometry<'_>,
 ) -> Result<(), SliceError> {
+    if let Some((layer, z)) = state.wipe_tower.as_mut().unwrap().first_wall() {
+        let data = Rc::clone(&state.wipe_tower.as_ref().unwrap().data);
+        let result = &data.changes[layer][0];
+        super::type1::append(
+            output,
+            state,
+            Append {
+                result,
+                new_tool: Some(result.new_tool),
+                z,
+                context,
+                geometry,
+            },
+        )?;
+    }
     let needs_change = !state.extruder_selected || state.extruders.active_id() != tool.0;
     let tower = state
         .wipe_tower
@@ -23,7 +38,12 @@ pub(in crate::project_slice::gcode_emit) fn tool_change(
     };
     let data = Rc::clone(&tower.data);
     let result = &data.changes[layer][change];
-    emit::append(
+    let append = if data.type1 {
+        super::type1::append
+    } else {
+        emit::append
+    };
+    append(
         output,
         state,
         Append {
@@ -45,6 +65,9 @@ pub(in crate::project_slice::gcode_emit) fn finalize(
 ) -> Result<(), SliceError> {
     let tower = state.wipe_tower.as_ref().expect("finalizing active tower");
     let data = Rc::clone(&tower.data);
+    if data.type1 {
+        return Ok(());
+    }
     let z = f64::from(data.final_purge.print_z);
     if (state.writer_z.unwrap_or(0.0) - z).abs() > 1e-4 {
         context.layer.index += 1;

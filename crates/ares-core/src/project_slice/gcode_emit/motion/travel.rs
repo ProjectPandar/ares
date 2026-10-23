@@ -48,6 +48,20 @@ pub(in crate::project_slice::gcode_emit) fn transition_retract(
     state.extruder.retracted = true;
 }
 
+/// `append_tcr`: retract(toolchange, false, configured lift, true).
+pub(in crate::project_slice::gcode_emit) fn retract_for_type1(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    toolchange: bool,
+) {
+    let suppressed_tail = state.on_first_layer && state.options.bottom_surface_pattern_hilbert;
+    wipe_sequence::retract_and_wipe_impl(output, state, true, suppressed_tail, toolchange);
+    state.extruder.retracted = state.extruder.retracted_amount > 0.0;
+    if lift::enforce_allows_lift(state) {
+        lift::append_eager(output, state, false);
+    }
+}
+
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
     if state.spiral_vase {
