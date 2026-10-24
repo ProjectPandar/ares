@@ -3,11 +3,8 @@
 //! G-code, and caches reference output keyed by the input digest.
 #[path = "runner/bbl_eager_enforce.rs"]
 mod bbl_eager_enforce;
-#[path = "runner/crosshatch_dont_connect.rs"]
-mod crosshatch_dont_connect;
-#[path = "runner/fan_layer_tag.rs"]
-mod fan_layer_tag;
-
+#[path = "brim_flow_ratio_state.rs"]
+mod brim_flow_ratio_state;
 #[path = "runner/fan_speedup_sign.rs"]
 mod fan_speedup_sign;
 #[path = "runner/loaded_system_inherits_group.rs"]
@@ -34,6 +31,14 @@ mod scarf_conditional;
 mod seam_physical_plane;
 #[path = "runner/seam_rear.rs"]
 mod seam_rear;
+#[path = "skirt_brim_seam_state.rs"]
+mod skirt_brim_seam_state;
+#[path = "skirt_minlength_multitool.rs"]
+mod skirt_minlength_multitool;
+#[path = "skirt_seam_scope.rs"]
+mod skirt_seam_scope;
+#[path = "skirt_support_speed_state.rs"]
+mod skirt_support_speed_state;
 
 #[path = "runner/concentric_sparse_multiline.rs"]
 mod concentric_sparse_multiline;
@@ -326,8 +331,6 @@ mod tests;
 #[cfg(test)]
 #[path = "runner/tree_support.rs"]
 mod tree_support;
-#[path = "runner/volume_fixture.rs"]
-pub(super) mod volume_fixture;
 
 #[path = "runner/command.rs"]
 mod command;
@@ -384,14 +387,13 @@ impl OrcaRunner {
     }
 }
 
-#[path = "runner/preset_helpers.rs"]
-mod preset_helpers;
-pub(super) use preset_helpers::{
+#[path = "runner/fixture_support.rs"]
+mod fixture_support;
+pub(super) use fixture_support::preset_helpers::{
     PresetKind, apply_override, digest_slug, join_paths, repo_root, write_preset,
 };
-
-#[path = "runner/wrapping_input.rs"]
-pub(crate) mod wrapping_input;
+pub(super) use fixture_support::volume_fixture;
+pub(crate) use fixture_support::wrapping_input;
 
 #[path = "option_coverage/safc_reference.rs"]
 pub(super) mod safc_reference;
