@@ -7,6 +7,19 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Support-base extension priority: SPEC → RED → bounded GREEN
+
+Upstream8500fcdcc `FillBase.cpp:1834–1948`, specifically the literal conditional
+parse at1915, owns this slice. Destination: existing ares-core
+`fill/base_support/extend.rs`; replace its incompatible longest-side decision
+with valid-previous priority, not a new Ares support pipeline. Include only the
+candidate block and affected comments; defer geometry, marking, trimming, costs,
+linking and writer behavior. Exit: official+seeded Native-first K1 tree(auto)
+overhang, stock and normal(auto) controls, full-output parity and raw API==CLI
+after tests-only RED. Stack frozenccc79c314; no FULL; REVIEW-REQUEST then HOLD.
+[SPEC](architecture/support-base-extension-priority-spec.md),
+[ARD](architecture/ard-support-base-extension-priority.md).
+
 ### Spiral hole projected split: SPEC → RED → bounded GREEN
 
 Pinned upstream8500fcdcc `GCode.cpp::extrude_loop:5754–5775` keeps the hole
