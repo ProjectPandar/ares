@@ -23,3 +23,6 @@ mod custom_temperature_command_scan;
 
 #[path = "velocity_limit_comments.rs"]
 mod velocity_limit_comments;
+
+#[path = "merged_jerk_tolerance.rs"]
+mod merged_jerk_tolerance;
