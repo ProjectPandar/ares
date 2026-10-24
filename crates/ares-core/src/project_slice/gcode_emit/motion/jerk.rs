@@ -27,7 +27,7 @@ pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
             .as_bytes(),
         ),
         crate::GCodeFlavor::Repetier => {
-            output.extend_from_slice(format!("M207 X{}\n", format::axis(x)).as_bytes());
+            output.extend_from_slice(format!("M207 X{}\n", format::ostream(x)).as_bytes());
         }
         _ => {
             // `GCodeWriter::set_jerk_xy` (`GCodeWriter.cpp:295`) writes
