@@ -59,3 +59,6 @@ mod repetier_travel_cache_gate;
 
 #[path = "bbl_pressure_advance_precedence.rs"]
 mod bbl_pressure_advance_precedence;
+
+#[path = "bbl_jerk_tail_signed_zero.rs"]
+mod bbl_jerk_tail_signed_zero;
