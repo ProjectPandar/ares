@@ -7,6 +7,25 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Sequential template total: approved SPEC → formal RED → bounded GREEN
+
+Owner upstream8500fcdcc `GCode.cpp::_do_export:2484–2528` mode-dependent
+`m_layer_count` → `:2890` placeholder → `:4677–4684` layer template consumer.
+Rust boundary: existing private `gcode_emit/orchestration.rs::emit`
+`EmitState.total_layer_count` initializer; replace the wrong scalar handoff
+with existing `tail_layer_count`, not a new Ares counter/pipeline. Include only
+that handoff; defer file-start/role cache, P1S ByObject compound Y/M73 residual,
+broader skirt control, geometry, writer, processor, templates and other workers.
+Above frozen117f4ffe3 afterW5: docs commit then tests-only Native-first official+
+seeded A1 ByObject target (81 vs50) and stock A1/originalP1S ByLayer controls.
+Exit RED: one genuine count-only FAIL/two complete PASS each mode, API/CLI
+success/raw equality, immutable SHA inputs, unchanged complete comparator and
+fmt/strict Clippy. One combined docs+RED REVIEW-REQUEST/HOLD; later GREEN only
+the existing field initializer with identical tests. CPU18 serial/threads1;
+no FULL/integration/rebase/merge/push or broader runtime qualification.
+[SPEC](architecture/sequential-template-layer-count-spec.md),
+[ARD](architecture/ard-sequential-template-layer-count.md).
+
 ### Auto-lift query frame: SPEC review → genuine RED review → translation-only GREEN
 
 Upstream `GCode.cpp::needs_retraction:7604` translates the clipped overhang
