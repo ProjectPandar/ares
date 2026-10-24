@@ -39,6 +39,9 @@ pub(super) fn command(pa: f64, flavor: crate::GCodeFlavor, is_bbl: bool) -> Stri
     }
     let value = format_pa(pa);
     match flavor {
+        _ if is_bbl => {
+            format!("M900 K{value} L1000 M10 ; Override pressure advance value\n")
+        }
         crate::GCodeFlavor::Klipper => {
             format!("SET_PRESSURE_ADVANCE ADVANCE={value}; Override pressure advance value\n")
         }
@@ -47,9 +50,6 @@ pub(super) fn command(pa: f64, flavor: crate::GCodeFlavor, is_bbl: bool) -> Stri
         }
         crate::GCodeFlavor::Repetier => {
             format!("M233 X{value} Y{value} ; Override pressure advance value\n")
-        }
-        _ if is_bbl => {
-            format!("M900 K{value} L1000 M10 ; Override pressure advance value\n")
         }
         _ => format!("M900 K{value}; Override pressure advance value\n"),
     }
