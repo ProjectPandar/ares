@@ -52,6 +52,6 @@ fn check(label: &str, project: &[u8], expected_sha: &str, assert_two_tools: bool
         label,
         project,
         expected_sha,
-        assert_two_tools,
+        (assert_two_tools, |_, _| {}),
     );
 }
