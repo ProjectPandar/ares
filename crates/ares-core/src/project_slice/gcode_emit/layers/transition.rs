@@ -88,15 +88,15 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     output.extend_from_slice(
         format!(
             "G1 X{} Y{} Z{} F{}{comment}\n",
-            format_z(origin[0]),
-            format_z(origin[1]),
+            format_z(state.offset.0),
+            format_z(state.offset.1),
             format_z(hop_z),
             motion::tower::format_feedrate(feedrate)
         )
         .as_bytes(),
     );
-    state.x = origin[0];
-    state.y = origin[1];
+    state.x = state.offset.0;
+    state.y = state.offset.1;
     // GCode.cpp:3322/7506: travel_to ends at (0, 0) in the incoming frame.
     state.last_scaled_position = (0, 0);
     state.last_position_defined = true;
