@@ -24,6 +24,9 @@ mod negative_volume_seam_occlusion;
 #[path = "occlusion_volume_affine.rs"]
 mod occlusion_volume_affine;
 
+#[path = "overall_chamber_placeholder.rs"]
+mod overall_chamber_placeholder;
+
 #[path = "placeholder_double_render.rs"]
 mod placeholder_double_render;
 
