@@ -44,3 +44,6 @@ mod klipper_separate_jerk_precision;
 
 #[path = "klipper_separate_jerk_xy_clamp.rs"]
 mod klipper_separate_jerk_xy_clamp;
+
+#[path = "bbl_jerk_tail_precision.rs"]
+mod bbl_jerk_tail_precision;
