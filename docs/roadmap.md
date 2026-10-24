@@ -112,6 +112,21 @@ No production/tests/FULL/rebase/merge/push here; beam integration window separat
 [SPEC](architecture/painted-fuzzy-skin-spec.md),
 [ARD](architecture/ard-painted-fuzzy-skin.md).
 
+### W5 P1S ByLayer brim contour: docs + tests-only RED
+
+Priority: bounded RED on frozen rib3 `a96cf4d03`, before any GREEN work.
+Pinned8500fcdcc `Brim.cpp:813–856` (`tryExPolygonOffset`,
+`makeBrimInfillImpl`) → `ares-core/src/brims/ears/paths.rs::from_area`.
+Port target is upstream contour materialization, not an Ares pipeline;
+existing approximations are temporary compatibility shells.
+Exit: complete Native/API/CLI P1S target RED plus OuterOnly passing control
+in official and seeded modes, CPU11/threads1/fresh caches, raw evidence,
+REVIEW-REQUEST and inbox notification, then HOLD. Timing/M73, area creation,
+group registration and shared geometry changes are deferred, not masked.
+GREEN/FULL/integration require separate authorization.
+[ARD/SPEC](architecture/ard-p1s-bylayer-brim-contour.md).
+
+
 ### Painted MMU → beam call order: discovery complete, SPEC RR pending
 
 Legacy #70–#73 carrier/segmentation goals are superseded by the merged complete
