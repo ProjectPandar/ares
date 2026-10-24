@@ -121,8 +121,8 @@ impl AutoLift {
             );
         }
         let offset = Point::new(
-            scale.checked_scale(state.offset.0).unwrap(),
-            scale.checked_scale(state.offset.1).unwrap(),
+            scale.checked_scale(state.origin.0).unwrap(),
+            scale.checked_scale(state.origin.1).unwrap(),
         );
         let translate = |point: Point| Point::new(point.x() + offset.x(), point.y() + offset.y());
         let (start, end) = (translate(start), translate(end));
