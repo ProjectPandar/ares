@@ -7,6 +7,20 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Spiral hole projected split: SPEC → RED → bounded GREEN
+
+Pinned upstream8500fcdcc `GCode.cpp::extrude_loop:5754–5775` keeps the hole
+exclusion only on orientation, not configured-spiral projected splitting.
+Destination: existing ares-core `gcode_emit/motion/perimeter.rs` dispatch and
+unchanged nearest-projection helper; the extra role gate is an incompatible
+caller shell, not an Ares pipeline feature. Include hole loops/bottom layers;
+defer geometry, SpiralVase arithmetic, seam ranking, travel/wipe and processor.
+Exit: Native-first official/seeded MK4 spiral-hole, stock-hole and existing CW
+control full-output equality plus raw API==CLI after tests-only RED. Stack on
+frozen83e2e4f09; no FULL; review/hold for single W1 window after W5.
+[SPEC](architecture/spiral-hole-projected-split-spec.md),
+[ARD](architecture/ard-spiral-hole-projected-split.md).
+
 ### GUI painted fuzzy skin: discovery rejection, SPEC review pending (#126)
 
 Frozen beam92ce9b02c is unchanged; this separate docs slice owns upstream8500fcdcc
