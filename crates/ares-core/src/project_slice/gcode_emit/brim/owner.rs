@@ -1,11 +1,95 @@
 //! Brim.cpp:36-45,573-581: instance areas collected under one PrintObject ID.
 use super::bed_area::translate;
+use super::{BrimPlan, bed_area};
 use crate::{
     geometry::ExPolygon,
     project_slice::{
         gcode_emit::footprint, perimeters::classic::traversal::PreparedPostClassicTraversal,
     },
 };
+
+pub(super) struct Area {
+    pub(super) area: Vec<ExPolygon>,
+    pub(super) object_islands: Vec<ExPolygon>,
+    pub(super) owner_collection: bool,
+    pub(super) flow: crate::project_slice::perimeters::types::Flow,
+    pub(super) spacing: f32,
+    pub(super) resolution: f64,
+    pub(super) logical_filament: usize,
+    pub(super) retain_contact: bool,
+}
+
+impl Area {
+    pub(super) fn finish(
+        self,
+        traversal: &PreparedPostClassicTraversal,
+        object_index: usize,
+        no_brim_area: &[ExPolygon],
+        tower_exclusions: &[ExPolygon],
+    ) -> Result<Option<BrimPlan>, crate::SliceError> {
+        let brim_area = if self.owner_collection {
+            bed_area::clip_plate(
+                traversal,
+                self.logical_filament,
+                (self.area, no_brim_area.to_vec()),
+                tower_exclusions,
+                self.resolution,
+            )?
+        } else {
+            bed_area::clip(
+                traversal,
+                object_index,
+                self.logical_filament,
+                (self.area, no_brim_area.to_vec(), tower_exclusions),
+                self.resolution,
+            )?
+        };
+        let brim_area = if self.retain_contact {
+            crate::brims::inner::retain_contact(
+                brim_area,
+                &self.object_islands,
+                self.spacing,
+                self.resolution,
+            )?
+        } else {
+            brim_area
+        };
+        if brim_area.is_empty() {
+            return Ok(None);
+        }
+        let covered_hull = crate::geometry::convex_hull(
+            &brim_area
+                .iter()
+                .flat_map(|expolygon| expolygon.contour().points().iter().copied())
+                .collect::<Vec<_>>(),
+        );
+        let paths = if self.owner_collection {
+            // Brim.cpp:820 keeps the fractional lattice resolution.
+            let paths = crate::brims::ears::paths::from_area(
+                brim_area.clone(),
+                self.spacing,
+                traversal.scale.scaled_delta(0.0125),
+            )?;
+            if paths.is_empty() {
+                return Ok(None);
+            }
+            paths
+        } else {
+            Vec::new()
+        };
+        Ok(Some(BrimPlan {
+            area: brim_area,
+            global: false,
+            owner_collection: self.owner_collection,
+            paths,
+            covered_hull,
+            width: self.flow.width,
+            spacing: self.flow.spacing,
+            height: self.flow.height,
+            mm3_per_mm: self.flow.mm3_per_mm,
+        }))
+    }
+}
 
 pub(super) fn generation_order(traversal: &PreparedPostClassicTraversal) -> Vec<usize> {
     let mut owners = Vec::new();

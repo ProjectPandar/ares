@@ -19,29 +19,40 @@ impl BrimPlan {
         )
             -> &'a [crate::project_slice::extrusion_islands::RegionToolUsage],
     ) -> Result<Vec<Option<Self>>, SliceError> {
-        let mut plans = (0..traversal.objects.len())
+        let mut areas = (0..traversal.objects.len())
             .map(|_| None)
             .collect::<Vec<_>>();
         let mut accumulated = Vec::new();
+        let mut no_brim_area = Vec::new();
+        // Brim.cpp:576,662-679: collect every owner's no-brim geometry
+        // before subtracting it from any owner, independently of brim ownership.
         for index in owner::generation_order(traversal) {
-            plans[index] = Self::generate(
+            if let Some((area, forbidden)) = Self::prepare_area(
                 traversal,
                 support,
-                tower_exclusions,
                 first_layer_regions(index),
                 (index, &mut accumulated),
-            )?;
+            )? {
+                no_brim_area.extend(forbidden);
+                areas[index] = Some(area);
+            }
         }
-        Ok(plans)
+        areas
+            .into_iter()
+            .enumerate()
+            .map(|(index, area)| match area {
+                Some(area) => area.finish(traversal, index, &no_brim_area, tower_exclusions),
+                None => Ok(None),
+            })
+            .collect()
     }
 
-    pub(super) fn generate(
+    fn prepare_area(
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<InstalledSupportLayer>],
-        tower_exclusions: &[crate::geometry::ExPolygon],
         first_layer_regions: &[crate::project_slice::extrusion_islands::RegionToolUsage],
         (object_index, accumulated): (usize, &mut Vec<crate::geometry::ExPolygon>),
-    ) -> Result<Option<Self>, SliceError> {
+    ) -> Result<Option<(owner::Area, Vec<crate::geometry::ExPolygon>)>, SliceError> {
         let (resolved, _) = traversal.print_object_config(object_index);
         let options = &resolved.object;
         if !matches!(
@@ -286,7 +297,7 @@ impl BrimPlan {
             (area.area, forbidden)
         };
         let owner_collection = !combined::enabled(traversal);
-        let brim_area = if owner_collection {
+        let (area, forbidden) = if owner_collection {
             let (area, forbidden, islands) = owner::expand(
                 traversal,
                 object_index,
@@ -294,73 +305,31 @@ impl BrimPlan {
                 accumulated,
             )?;
             object_islands = islands;
-            bed_area::clip_plate(
-                traversal,
-                region.outer_wall_filament_id.0 as usize - 1,
-                (area, forbidden),
-                tower_exclusions,
-                grouping_resolution,
-            )?
+            (area, forbidden)
         } else {
-            bed_area::clip(
-                traversal,
-                object_index,
-                region.outer_wall_filament_id.0 as usize - 1,
-                (brim_area, inner, tower_exclusions),
-                grouping_resolution,
-            )?
-        };
-        let brim_area = if matches!(
-            options.brim_type,
-            ProcessBrimType::OuterOnly
-                | ProcessBrimType::InnerOnly
-                | ProcessBrimType::OuterAndInner
-        ) {
-            crate::brims::inner::retain_contact(
+            (
                 brim_area,
-                &object_islands,
-                spacing,
-                grouping_resolution,
-            )?
-        } else {
-            brim_area
+                bed_area::translate(inner, bed_area::plate_shift(traversal, object_index)),
+            )
         };
-        if brim_area.is_empty() {
-            return Ok(None);
-        }
-        let covered_hull = crate::geometry::convex_hull(
-            &brim_area
-                .iter()
-                .flat_map(|expolygon| expolygon.contour().points().iter().copied())
-                .collect::<Vec<_>>(),
-        );
-
-        let (area, paths) = if combined::enabled(traversal) {
-            (brim_area, Vec::new())
-        } else {
-            // Brim.cpp:820 uses double resolution = 0.0125 / SCALING_FACTOR,
-            // retaining the fractional lattice delta rather than truncating it.
-            let paths = crate::brims::ears::paths::from_area(
-                brim_area.clone(),
+        Ok(Some((
+            owner::Area {
+                area,
+                object_islands,
+                owner_collection,
+                flow,
                 spacing,
-                scale.scaled_delta(0.0125),
-            )?;
-            if paths.is_empty() {
-                return Ok(None);
-            }
-            (brim_area, paths)
-        };
-        Ok(Some(Self {
-            area,
-            global: false,
-            owner_collection,
-            paths,
-            covered_hull,
-            width: flow.width,
-            spacing: flow.spacing,
-            height: flow.height,
-            mm3_per_mm: flow.mm3_per_mm,
-        }))
+                resolution: grouping_resolution,
+                logical_filament: region.outer_wall_filament_id.0 as usize - 1,
+                retain_contact: matches!(
+                    options.brim_type,
+                    ProcessBrimType::OuterOnly
+                        | ProcessBrimType::InnerOnly
+                        | ProcessBrimType::OuterAndInner
+                ),
+            },
+            forbidden,
+        )))
     }
 }
 
