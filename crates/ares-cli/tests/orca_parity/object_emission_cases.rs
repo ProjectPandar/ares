@@ -15,3 +15,6 @@ mod jerk_dedup_tolerance;
 
 #[path = "pa_signed_zero.rs"]
 mod pa_signed_zero;
+
+#[path = "runner/custom_temperature_command_scan.rs"]
+mod custom_temperature_command_scan;

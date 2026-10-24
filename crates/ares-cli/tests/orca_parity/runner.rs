@@ -38,9 +38,6 @@ mod seam_physical_plane;
 #[path = "runner/seam_rear.rs"]
 mod seam_rear;
 
-#[path = "runner/custom_temperature_command_scan.rs"]
-mod custom_temperature_command_scan;
-
 #[path = "runner/concentric_sparse_multiline.rs"]
 mod concentric_sparse_multiline;
 
