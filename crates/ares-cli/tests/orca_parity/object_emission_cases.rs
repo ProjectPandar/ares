@@ -32,3 +32,6 @@ mod merged_jerk_precision;
 
 #[path = "accel_to_decel_precision.rs"]
 mod accel_to_decel_precision;
+
+#[path = "machine_jerk_rounding.rs"]
+mod machine_jerk_rounding;
