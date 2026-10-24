@@ -76,14 +76,18 @@ fn trim_fixed(value: f64, precision: usize) -> String {
 /// precision FIRST, then pick fixed vs scientific on the rounded
 /// exponent (999999.5 → `1e+06`, not `1000000`).
 pub(in crate::project_slice::gcode_emit) fn ostream(value: f64) -> String {
+    ostream_with_precision(value, 6)
+}
+
+pub(super) fn ostream_with_precision(value: f64, precision: usize) -> String {
     if value == 0.0 {
         return "0".to_owned();
     }
-    // %g: `{:.5e}` rounds to 6 significant digits in one step
-    // (round-half-even like C++ iostreams — no manual divide by
-    // 10^exp, which double-rounds: 10.03125 must print "10.0312") and
-    // renormalizes the 9.999996 → 10.00000 carry into the exponent.
-    let rendered = format!("{value:.5e}");
+    // Round to the requested significant digits in one step (half-even,
+    // like C++ iostreams), renormalizing any carry into the exponent.
+    // Dividing manually by 10^exp would double-round values like 10.03125.
+    let decimal_places = precision - 1;
+    let rendered = format!("{value:.decimal_places$e}");
     let (mantissa, exponent) = rendered.split_once('e').unwrap();
     let exponent: i32 = exponent.parse().unwrap();
     let (sign, mantissa) = mantissa
@@ -92,8 +96,8 @@ pub(in crate::project_slice::gcode_emit) fn ostream(value: f64) -> String {
     let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
     let digits = digits.trim_end_matches('0');
     let digits = if digits.is_empty() { "0" } else { digits };
-    // Scientific notation when the rounded exponent leaves [-4, 5].
-    if !(-4..6).contains(&exponent) {
+    // %g uses scientific notation outside [-4, precision).
+    if !(-4..precision as i32).contains(&exponent) {
         let (first, rest) = digits.split_at(1);
         let mantissa = if rest.is_empty() {
             first.to_owned()

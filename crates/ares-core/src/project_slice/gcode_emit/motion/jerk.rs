@@ -37,8 +37,8 @@ pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
             if state.tags.is_bbl() {
                 command.push_str(&format!(
                     " Z{} E{}",
-                    format::axis(state.options.max_jerk_z),
-                    format::axis(state.options.max_jerk_e)
+                    format::ostream_with_precision(state.options.max_jerk_z, 2),
+                    format::ostream_with_precision(state.options.max_jerk_e, 2)
                 ));
             }
             if state.options.gcode_comments {
