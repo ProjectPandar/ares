@@ -146,15 +146,17 @@ impl Config {
             let Some((key, raw)) = line.split_once(" = ") else {
                 continue;
             };
-            let is_bool =
-                crate::options::registry::option_definition(key).is_some_and(|definition| {
-                    matches!(
-                        definition.kind,
-                        crate::options::registry::OptionValueKind::Bool
-                            | crate::options::registry::OptionValueKind::Bools
-                    )
-                });
-            config.insert(key, parse_value(raw, is_bool));
+            let kind =
+                crate::options::registry::option_definition(key).map(|definition| definition.kind);
+            let is_bool = kind.is_some_and(|kind| {
+                matches!(
+                    kind,
+                    crate::options::registry::OptionValueKind::Bool
+                        | crate::options::registry::OptionValueKind::Bools
+                )
+            });
+            let is_ints = kind == Some(crate::options::registry::OptionValueKind::Ints);
+            config.insert(key, parse_value(raw, is_bool, is_ints));
         }
         config
     }
@@ -194,17 +196,17 @@ impl Config {
     }
 }
 
-fn parse_value(raw: &str, is_bool: bool) -> Value {
+fn parse_value(raw: &str, is_bool: bool, is_ints: bool) -> Value {
     let mut values = raw
         .split(';')
-        .map(|scalar| parse_scalar(scalar, is_bool))
+        .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
         .collect::<Vec<_>>();
     if values.len() == 1 {
         let value = values.remove(0);
         let comma_values = value
             .as_string()
             .split(',')
-            .map(|scalar| parse_scalar(scalar, is_bool))
+            .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
             .collect::<Vec<_>>();
         return if comma_values.len() == 1 {
             value
@@ -215,10 +217,12 @@ fn parse_value(raw: &str, is_bool: bool) -> Value {
     Value::List(values)
 }
 
-fn parse_scalar(raw: &str, is_bool: bool) -> Value {
+fn parse_scalar(raw: &str, is_bool: bool, is_ints: bool) -> Value {
     let raw = raw.trim().trim_matches('"');
     if is_bool && matches!(raw, "0" | "1" | "false" | "true") {
         Value::option_bool(matches!(raw, "1" | "true"))
+    } else if is_ints {
+        Value::Integer(raw.parse().unwrap())
     } else if let Ok(value) = raw.parse::<f64>() {
         Value::Number(value)
     } else if raw == "true" || raw == "false" {
