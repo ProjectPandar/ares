@@ -69,6 +69,8 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     // layer active takes the plain travel values (the native
     // `SET_VELOCITY_LIMIT` between `G1 Z10.36` and `G1 Z10.76`).
     motion::begin_path_travel(output, state, "", f64::INFINITY);
+    // GCode.cpp:7466-7467 consumes pending labels before travel moves.
+    motion::append_object_start(output, state);
     // `GCode.cpp:3327-3330`: the travel to the incoming instance's origin
     // with the external motion planner once; the writer lifts again for
     // the planar move (the native pair `G1 Z10.4` / `G1 Z10.8` /
