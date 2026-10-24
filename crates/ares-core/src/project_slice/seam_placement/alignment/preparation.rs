@@ -23,7 +23,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     nozzle_diameter: f32,
-    visibility: &visibility::GlobalVisibility,
+    visibility: Option<&visibility::GlobalVisibility>,
 ) -> Vec<LayerPlan> {
     let (layers, layer_zs) = layers;
     let placement = traversal
@@ -145,7 +145,7 @@ fn prepare_layer(
     z: f32,
     scale: CoordinateScale,
     nozzle_diameter: f32,
-    (visibility, placement): (&visibility::GlobalVisibility, ProcessSeamPosition),
+    (visibility, placement): (Option<&visibility::GlobalVisibility>, ProcessSeamPosition),
 ) -> LayerPlan {
     let collections = regions
         .iter()

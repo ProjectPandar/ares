@@ -71,7 +71,15 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         .iter()
         .enumerate()
         .map(|(object_index, placement)| {
-            if placement.is_none() {
+            // SeamPlacer.cpp:1440-1457 leaves rear/random visibility at zero.
+            if !matches!(
+                placement,
+                Some(
+                    ProcessSeamPosition::Aligned
+                        | ProcessSeamPosition::Nearest
+                        | ProcessSeamPosition::AlignedBack
+                )
+            ) {
                 return None;
             }
             let source_index = traversal
@@ -132,12 +140,18 @@ fn apply_objects(
     nearest_plans: &mut [Vec<NearestSeamLayer>],
 ) {
     for (object_index, layers) in objects.iter_mut().enumerate() {
-        let (Some(placement), Some(visibility)) = (
-            placements[object_index],
-            visibilities[object_index].as_ref(),
-        ) else {
+        let Some(placement) = placements[object_index] else {
             continue;
         };
+        let visibility = visibilities[object_index].as_ref();
+        if visibility.is_none()
+            && !matches!(
+                placement,
+                ProcessSeamPosition::Back | ProcessSeamPosition::Random
+            )
+        {
+            continue;
+        }
         // SeamPlacer.cpp:1024-1032 consumes each physical Layer::slice_z.
         let layer_zs = traversal.objects[object_index]
             .physical_layers()
@@ -163,7 +177,7 @@ fn apply_objects(
                 // `pick_nearest_seam_point_index` cpp:930-940). Store the
                 // penalty data for the emit-time selection; no loop splitting
                 // here.
-                nearest_plans[object_index] = nearest_seam_data(&plans, visibility);
+                nearest_plans[object_index] = nearest_seam_data(&plans, visibility.unwrap());
                 continue;
             }
         }
@@ -245,13 +259,19 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
     }
 }
 
-fn candidate_penalty(candidate: &SeamCandidate, visibility: &visibility::GlobalVisibility) -> f32 {
-    let position = mesh::Vec3::new(
-        candidate.position.x,
-        candidate.position.y,
-        candidate.position.z,
-    );
-    visibility.at(position) + ANGLE_IMPORTANCE_ALIGNED * angle_penalty(candidate.local_ccw_angle)
+fn candidate_penalty(
+    candidate: &SeamCandidate,
+    visibility: Option<&visibility::GlobalVisibility>,
+) -> f32 {
+    let visibility = visibility.map_or(0.0, |visibility| {
+        let position = mesh::Vec3::new(
+            candidate.position.x,
+            candidate.position.y,
+            candidate.position.z,
+        );
+        visibility.at(position)
+    });
+    visibility + ANGLE_IMPORTANCE_ALIGNED * angle_penalty(candidate.local_ccw_angle)
 }
 
 fn angle_penalty(angle: f32) -> f32 {
