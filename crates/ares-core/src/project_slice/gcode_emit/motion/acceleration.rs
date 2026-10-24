@@ -121,6 +121,9 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
         empty = false;
     }
     if !empty {
+        if state.options.gcode_comments {
+            line.push_str(" ; adjust VELOCITY_LIMIT(accel/jerk)");
+        }
         line.push('\n');
         output.extend_from_slice(line.as_bytes());
     }
