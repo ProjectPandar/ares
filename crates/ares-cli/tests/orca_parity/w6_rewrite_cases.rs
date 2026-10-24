@@ -1,5 +1,8 @@
 //! W6 source-cited rewrite parity cases, grouped without changing case bodies.
 
+#[path = "coints_comma_regression.rs"]
+mod coints_comma_regression;
+
 #[path = "direct_coints_placeholder.rs"]
 mod direct_coints_placeholder;
 
