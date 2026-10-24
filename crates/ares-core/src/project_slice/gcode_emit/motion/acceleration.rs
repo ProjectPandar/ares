@@ -116,7 +116,10 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
             .last_jerk
             .is_some_and(|last| (last - jerk).abs() < EPSILON)
     {
-        line.push_str(&format!(" SQUARE_CORNER_VELOCITY={}", format::axis(jerk)));
+        line.push_str(&format!(
+            " SQUARE_CORNER_VELOCITY={}",
+            format::ostream(jerk)
+        ));
         state.last_jerk = Some(jerk);
         empty = false;
     }
