@@ -7,6 +7,23 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Auto-lift query frame: SPEC review → genuine RED review → translation-only GREEN
+
+Upstream `GCode.cpp::needs_retraction:7604` translates the clipped overhang
+query by `m_origin - m_writer.get_xy_offset()` into current-plate coordinates.
+Destination: existing ares-core `gcode_emit/motion/auto_lift.rs::AutoLift::crosses_overhang`;
+correct its nozzle-offset compatibility shell, not an Ares travel pipeline.
+Include only that translation and its spiral/progress consequences; defer cache
+geometry, detection, nonzero-plate plumbing, writer, processor and W3-owned work.
+Use the original P1S two-object ByLayer Native-first public witness. Exit: real
+tests-only RED, then unchanged complete-output comparator PASS/raw API==CLI,
+Native G17/G3 Z4 spiral and removal of the extra early P28R13 through translation
+alone. No separate B timing/M73 implementation. Fresh stack above frozen
+sequential label-flush; CPU18 serial/threads1. Each phase requires
+REVIEW-REQUEST/HOLD; no FULL/integration.
+[SPEC](architecture/auto-lift-query-frame-spec.md),
+[ARD](architecture/ard-auto-lift-query-frame.md).
+
 ### Sequential origin-travel labels: SPEC → RED → bounded GREEN
 
 Upstream8500fcdcc `GCode.cpp::travel_to`7466–7467, reached by sequential
