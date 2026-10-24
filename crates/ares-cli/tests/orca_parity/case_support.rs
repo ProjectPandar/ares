@@ -17,3 +17,6 @@ mod startup_fan_initial_tool;
 
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
+
+#[path = "spiral_hole_projected_split.rs"]
+mod spiral_hole_projected_split;
