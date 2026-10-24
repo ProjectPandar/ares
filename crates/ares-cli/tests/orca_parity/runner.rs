@@ -11,10 +11,9 @@ mod fan_speedup_sign;
 mod loaded_system_inherits_group;
 #[path = "runner/modifier_feature_filament.rs"]
 mod modifier_feature_filament;
-#[path = "runner/native_stream_case.rs"]
-pub(crate) mod native_stream_case;
-#[path = "runner/native_stream_cases.rs"]
-mod native_stream_cases;
+#[path = "runner/native_stream_registry.rs"]
+mod native_stream_registry;
+pub(crate) use native_stream_registry::native_stream_case;
 #[path = "runner/placeholder.rs"]
 mod placeholder;
 #[path = "runner/resource_item_ignore.rs"]
