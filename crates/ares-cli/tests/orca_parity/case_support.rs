@@ -29,3 +29,6 @@ mod sequential_origin_label_flush;
 
 #[path = "auto_lift_query_frame.rs"]
 mod auto_lift_query_frame;
+
+#[path = "sequential_template_layer_count.rs"]
+mod sequential_template_layer_count;
