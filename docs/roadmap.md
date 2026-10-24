@@ -26,6 +26,12 @@ no FULL/integration/rebase/merge/push or broader runtime qualification.
 [SPEC](architecture/sequential-template-layer-count-spec.md),
 [ARD](architecture/ard-sequential-template-layer-count.md).
 
+### Sequential origin-hop writer frame: approved SPEC → formal RED → bounded GREEN
+
+Approved source boundary at upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`: `GCode.cpp::travel_to:7480–7506`, `point_to_gcode:8124–8128`, and `set_origin:5659–5669`, reached by sequential `_do_export:3298–3322`. Rust destination is the existing `gcode_emit/layers/transition.rs::emit` hop output and writer XY cache, reusing `state.offset`. Include only this frame conversion; defer generic writer/processor, M73 implementation, broader skirt, and W3/W4/W6 owners. Formal RED target is stock-offset P1S ByObject with unchanged complete comparator including M73; controls are same-scene zero-offset and A1 ByObject. GREEN must pass complete parity; any remaining M73 difference is STOP. Docs+RED use one REVIEW-REQUEST and append coordinator inbox. CPU18 serial/threads1; no FULL/integration/rebase/merge/push.
+[SPEC](architecture/sequential-origin-writer-frame-spec.md),
+[ARD](architecture/ard-sequential-origin-writer-frame.md).
+
 ### Auto-lift query frame: SPEC review → genuine RED review → translation-only GREEN
 
 Upstream `GCode.cpp::needs_retraction:7604` translates the clipped overhang
