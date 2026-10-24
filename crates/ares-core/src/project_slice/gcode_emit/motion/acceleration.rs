@@ -4,7 +4,7 @@
 #[cfg(test)]
 mod tests;
 
-use super::{EmitState, format, jerk};
+use super::{EmitState, format, jerk, travel::EPSILON};
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32, travel: bool) {
     let comment = if state.options.gcode_comments {
@@ -114,7 +114,7 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
     if jerk > 0.01
         && !state
             .last_jerk
-            .is_some_and(|last| (last - jerk).abs() < 1.0e-6)
+            .is_some_and(|last| (last - jerk).abs() < EPSILON)
     {
         line.push_str(&format!(" SQUARE_CORNER_VELOCITY={}", format::axis(jerk)));
         state.last_jerk = Some(jerk);
