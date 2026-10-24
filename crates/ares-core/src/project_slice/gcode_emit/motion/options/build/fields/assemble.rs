@@ -3,6 +3,7 @@
 use super::super::super::MotionOptions;
 use super::super::super::helpers::{
     absolute, acceleration, first_float, machine_acceleration_limit, rounded_acceleration,
+    use_mach_limits,
 };
 use super::super::super::nullable_float_at;
 use super::super::context::Prelude;
@@ -26,14 +27,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         default_acceleration,
         ..
     } = prelude;
-    // GCodeWriter.cpp:32-56: only these flavors cache rounded XY jerk limits.
-    let use_mach_limits = matches!(
-        full.printer.gcode.gcode_flavor,
-        crate::GCodeFlavor::MarlinLegacy
-            | crate::GCodeFlavor::MarlinFirmware
-            | crate::GCodeFlavor::Klipper
-            | crate::GCodeFlavor::RepRapFirmware
-    );
+    let use_mach_limits = use_mach_limits(full.printer.gcode.gcode_flavor);
     let mut options = MotionOptions {
         adaptive_pa: crate::project_slice::gcode_emit::adaptive_pa::Options::new(full, filament),
         // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`

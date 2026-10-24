@@ -1,16 +1,21 @@
 use crate::{FloatOrPercent, Nullable, OrcaFloat};
 
-/// `GCodeWriter::apply_print_config` caps print acceleration by the machine
-/// extruding limit; Klipper also clamps against the X/Y axis limits.
-pub(super) fn machine_acceleration_limit(full: &crate::options::ProjectSettings) -> u32 {
-    let flavor = full.printer.gcode.gcode_flavor;
-    if !matches!(
+/// `GCodeWriter.cpp:32-33`: flavors using machine limits in the writer cache.
+pub(super) fn use_mach_limits(flavor: crate::GCodeFlavor) -> bool {
+    matches!(
         flavor,
         crate::GCodeFlavor::MarlinLegacy
             | crate::GCodeFlavor::MarlinFirmware
             | crate::GCodeFlavor::Klipper
             | crate::GCodeFlavor::RepRapFirmware
-    ) {
+    )
+}
+
+/// `GCodeWriter::apply_print_config` caps print acceleration by the machine
+/// extruding limit; Klipper also clamps against the X/Y axis limits.
+pub(super) fn machine_acceleration_limit(full: &crate::options::ProjectSettings) -> u32 {
+    let flavor = full.printer.gcode.gcode_flavor;
+    if !use_mach_limits(flavor) {
         return 0;
     }
     let mut limit = rounded_acceleration(first_float(
