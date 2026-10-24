@@ -52,7 +52,7 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
             let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
             if state.options.accel_to_decel_enable {
                 let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
-                line.push_str(&format!(" ACCEL_TO_DECEL={}", format::axis(decel)));
+                line.push_str(&format!(" ACCEL_TO_DECEL={}", format::ostream(decel)));
                 if state.options.gcode_comments {
                     line.push_str(" ; adjust ACCEL_TO_DECEL");
                 }
@@ -106,7 +106,7 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
         if state.options.accel_to_decel_enable {
             // streams as a double with ostream's default 6-significant digits
             let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
-            line.push_str(&format!(" ACCEL_TO_DECEL={}", format::axis(decel)));
+            line.push_str(&format!(" ACCEL_TO_DECEL={}", format::ostream(decel)));
         }
         state.last_acceleration = Some(acceleration);
         empty = false;
