@@ -112,18 +112,25 @@ No production/tests/FULL/rebase/merge/push here; beam integration window separat
 [SPEC](architecture/painted-fuzzy-skin-spec.md),
 [ARD](architecture/ard-painted-fuzzy-skin.md).
 
-### W5 P1S ByLayer brim contour: docs + tests-only RED
+### W5 P1S ByLayer brim: area-boundary SPEC revision / HOLD
 
-Priority: bounded RED on frozen rib3 `a96cf4d03`, before any GREEN work.
-Pinned8500fcdcc `Brim.cpp:813–856` (`tryExPolygonOffset`,
-`makeBrimInfillImpl`) → `ares-core/src/brims/ears/paths.rs::from_area`.
-Port target is upstream contour materialization, not an Ares pipeline;
-existing approximations are temporary compatibility shells.
-Exit: complete Native/API/CLI P1S target RED plus OuterOnly passing control
-in official and seeded modes, CPU11/threads1/fresh caches, raw evidence,
-REVIEW-REQUEST and inbox notification, then HOLD. Timing/M73, area creation,
-group registration and shared geometry changes are deferred, not masked.
-GREEN/FULL/integration require separate authorization.
+Frozen rib3 `a96cf4d03` → docs `f4c714372` → approved RED `61b15c6a8`.
+Read-only entry traces locate the eight missing notch vertices before
+materialization (Native contour60 vs Ares52, identical hole/second area).
+Corrected upstream pin8500fcdcc `Brim.cpp::outer_inner_brim_area`:
+569–576 collects translated gap-expanded islands into print-wide no-brim
+geometry; 662–679 subtracts that complete collection from each owner's brim.
+Rust destination: `project_slice/gcode_emit/brim.rs` collection/finalization,
+`brim/owner.rs` translation and `brim/bed_area.rs::clip_plate` consumer.
+`brims/outer.rs` remains the local producer; paths.rs is not the repair target.
+Existing per-owner orchestration is a temporary upstream compatibility shell,
+not an Ares pipeline design. Priority: approve revised SPEC before GREEN.
+Unchanged-code baseline `test(brim) | test(p1s_bylayer_brim_)`: 150 selected,
+149 PASS + target FAIL per official/seeded mode, CPU11/threads1/fresh caches.
+Exit after approval: same complete-stream target/control/neighbors dual run;
+any residual including M73 → STOP, no mask or scope expansion. Defer new area
+heuristics, shared geometry, registration/emission and timing changes.
+Docs-only revision → REVIEW-REQUEST/HOLD; no GREEN/FULL/integration yet.
 [ARD/SPEC](architecture/ard-p1s-bylayer-brim-contour.md).
 
 
