@@ -229,12 +229,13 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         use_relative_e_distances: gcode.use_relative_e_distances.0,
         single_extruder_multi_material: gcode.single_extruder_multi_material.0,
         max_acceleration: machine_acceleration_limit(full),
-        max_travel_acceleration: if matches!(
-            full.printer.gcode.gcode_flavor,
-            crate::GCodeFlavor::Repetier
-                | crate::GCodeFlavor::MarlinFirmware
-                | crate::GCodeFlavor::RepRapFirmware
-        ) {
+        max_travel_acceleration: if use_mach_limits
+            && matches!(
+                full.printer.gcode.gcode_flavor,
+                crate::GCodeFlavor::Repetier
+                    | crate::GCodeFlavor::MarlinFirmware
+                    | crate::GCodeFlavor::RepRapFirmware
+            ) {
             rounded_acceleration(first_float(
                 &full.printer.machine.machine_max_acceleration_travel,
             ))
