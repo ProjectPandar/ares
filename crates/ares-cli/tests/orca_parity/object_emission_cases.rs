@@ -26,3 +26,6 @@ mod velocity_limit_comments;
 
 #[path = "merged_jerk_tolerance.rs"]
 mod merged_jerk_tolerance;
+
+#[path = "merged_jerk_precision.rs"]
+mod merged_jerk_precision;
