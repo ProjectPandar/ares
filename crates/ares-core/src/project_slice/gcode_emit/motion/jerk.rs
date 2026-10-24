@@ -22,7 +22,7 @@ pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
         crate::GCodeFlavor::Klipper => output.extend_from_slice(
             format!(
                 "SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY={}\n",
-                format::ostream(x)
+                format::ostream(clamp_xy(state, jerk))
             )
             .as_bytes(),
         ),
