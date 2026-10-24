@@ -1,5 +1,8 @@
 //! FillRectilinear.cpp:3048-3162,3344-3384,3422-3446; Fill.cpp:1489-1497.
 //! Authored STL inputs; Native streams/exported projects remain runtime artifacts.
+#[path = "grid_surface_collections.rs"]
+mod surface_collections;
+
 use std::{fs, process::Command};
 
 use serde_json::json;
