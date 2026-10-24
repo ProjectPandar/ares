@@ -26,6 +26,14 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         default_acceleration,
         ..
     } = prelude;
+    // GCodeWriter.cpp:32-56: only these flavors cache rounded XY jerk limits.
+    let use_mach_limits = matches!(
+        full.printer.gcode.gcode_flavor,
+        crate::GCodeFlavor::MarlinLegacy
+            | crate::GCodeFlavor::MarlinFirmware
+            | crate::GCodeFlavor::Klipper
+            | crate::GCodeFlavor::RepRapFirmware
+    );
     let mut options = MotionOptions {
         adaptive_pa: crate::project_slice::gcode_emit::adaptive_pa::Options::new(full, filament),
         // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
@@ -209,8 +217,16 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         travel_jerk: object.map_or(full.process.object.travel_jerk.0, |value| {
             value.object.travel_jerk.0
         }),
-        max_jerk_x: first_float(&full.printer.machine.machine_max_jerk_x),
-        max_jerk_y: first_float(&full.printer.machine.machine_max_jerk_y),
+        max_jerk_x: if use_mach_limits {
+            first_float(&full.printer.machine.machine_max_jerk_x).round_ties_even()
+        } else {
+            0.0
+        },
+        max_jerk_y: if use_mach_limits {
+            first_float(&full.printer.machine.machine_max_jerk_y).round_ties_even()
+        } else {
+            0.0
+        },
         max_jerk_z: first_float(&full.printer.machine.machine_max_jerk_z),
         max_jerk_e: first_float(&full.printer.machine.machine_max_jerk_e),
         gcode_flavor: full.printer.gcode.gcode_flavor,
