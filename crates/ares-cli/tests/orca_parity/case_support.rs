@@ -20,3 +20,6 @@ mod absolute_e_reset_comment;
 
 #[path = "spiral_hole_projected_split.rs"]
 mod spiral_hole_projected_split;
+
+#[path = "support_base_extension_priority.rs"]
+mod support_base_extension_priority;
