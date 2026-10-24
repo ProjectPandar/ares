@@ -6,8 +6,7 @@ mod multi_path;
 
 use super::{local_cursor, loop_paths, state::EmitState, state::LayerGeometry};
 use crate::project_slice::{
-    island_print_order::IslandPrintEntity,
-    perimeters::classic::{chained_loops::ExtrusionLoopRole, entity_collections::ExtrusionEntity},
+    island_print_order::IslandPrintEntity, perimeters::classic::entity_collections::ExtrusionEntity,
 };
 
 pub(super) fn emit_perimeter(
@@ -84,7 +83,7 @@ pub(super) fn emit_perimeter(
                 .curl
                 .collect_entity(state.layer_index, &loop_.extrusion_loop.paths, &geometry);
         }
-        if state.spiral_vase && loop_.extrusion_loop.role != ExtrusionLoopRole::Hole {
+        if state.spiral_vase {
             crate::project_slice::seam_placement::place_nearest_projection(
                 &mut loop_.extrusion_loop,
                 crate::project_slice::perimeters::classic::materialize::Point3 {
