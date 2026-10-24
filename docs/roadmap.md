@@ -90,6 +90,24 @@ frozen83e2e4f09; no FULL; review/hold for single W1 window after W5.
 [SPEC](architecture/spiral-hole-projected-split-spec.md),
 [ARD](architecture/ard-spiral-hole-projected-split.md).
 
+### Grid per-surface collections: SPEC → tests-only RED
+
+Priority: preserve upstream `Layer::make_fills` (`Fill.cpp:1326-1357`) →
+`Fill::fill_surface_extrusion` (`FillBase.cpp:161-182`) per-expolygon collection
+identity on pinned8500fcdcc. Rust destination: existing private
+`fill_entities/grid.rs:46-65/120`; replace the grouped-polylines-to-one-collection
+compatibility shell, not Grid geometry or GCode island assignment. Live traces
+prove identical ordered surfaces/full vertices but Native collections[1,1]
+versus Rust[2]. Keep flat geometry consumers and path semantics unchanged.
+Exit for this assignment: docs SPEC then shared `native_stream_case` tests-only
+K1 bridge strict RED + MK4 bridge passing control, frozen input SHA, Native
+double replay before API/actual CLI, raw API==CLI, complete generator-only
+ordered comparison, official/seeded CPU13 serial threads1, then REVIEW/HOLD.
+GREEN/FULL require separate approval. Defer grouping, other infill patterns,
+multiline algorithm changes, support/raft, travel, seam/rear, brim, scan,
+cooling and processor/M73 behavior. No golden output or comparator weakening.
+[ARD / SPEC](architecture/ard-grid-surface-collections.md).
+
 ### GUI painted fuzzy skin: discovery rejection, SPEC review pending (#126)
 
 Frozen beam92ce9b02c is unchanged; this separate docs slice owns upstream8500fcdcc
