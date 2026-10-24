@@ -197,6 +197,17 @@ impl Config {
 }
 
 fn parse_value(raw: &str, is_bool: bool, is_ints: bool) -> Value {
+    if is_ints {
+        let mut values = raw
+            .split([';', ','])
+            .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
+            .collect::<Vec<_>>();
+        return if values.len() == 1 {
+            values.remove(0)
+        } else {
+            Value::List(values)
+        };
+    }
     let mut values = raw
         .split(';')
         .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
