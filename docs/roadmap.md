@@ -7,6 +7,20 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Sequential origin-travel labels: SPEC → RED → bounded GREEN
+
+Upstream8500fcdcc `GCode.cpp::travel_to`7466–7467, reached by sequential
+`_do_export`3321–3327, owns this literal pending-label consumption. Destination:
+ares-core `gcode_emit/layers/transition.rs::emit`, reuse existing motion label
+writer between travel setup and origin hop. Existing transition is a temporary
+upstream compatibility shell, not an Ares pipeline. Include only the missing
+consumption/citation; defer generic travel, formatting, geometry, queue/IDs,
+priming and tower. Exit: tests-only RED then official+seeded Native-first K1
+ByObject2object target and by-layer2object control, complete-output parity and
+rawAPI==CLI, unchanged control streams. Base frozen4eeda42be afterW5; no FULL.
+[SPEC](architecture/sequential-origin-label-flush-spec.md),
+[ARD](architecture/ard-sequential-origin-label-flush.md). RR then HOLD.
+
 ### Support-base extension priority: SPEC → RED → bounded GREEN
 
 Upstream8500fcdcc `FillBase.cpp:1834–1948`, specifically the literal conditional
