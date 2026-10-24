@@ -26,3 +26,6 @@ mod support_base_extension_priority;
 
 #[path = "sequential_origin_label_flush.rs"]
 mod sequential_origin_label_flush;
+
+#[path = "auto_lift_query_frame.rs"]
+mod auto_lift_query_frame;
