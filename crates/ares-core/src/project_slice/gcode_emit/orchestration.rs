@@ -130,7 +130,7 @@ pub(in crate::project_slice) fn emit(
         crate::slicer_context::Mt19937::new(context.seed()),
     ));
     let mut state = motion::EmitState {
-        total_layer_count: sliced_layer_count,
+        total_layer_count: tail_layer_count,
         // GCode.cpp:2533-2534 initializes the region state from defaults.
         current_seam_gap: traversal.resolved.views.full.process.region.seam_gap,
         current_support_speed: traversal.resolved.views.full.process.object.support_speed.0,
