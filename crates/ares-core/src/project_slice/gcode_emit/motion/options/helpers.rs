@@ -18,16 +18,15 @@ pub(super) fn machine_acceleration_limit(full: &crate::options::ProjectSettings)
     if !use_mach_limits(flavor) {
         return 0;
     }
-    let mut limit = rounded_acceleration(first_float(
-        &full.printer.machine.machine_max_acceleration_extruding,
-    ));
+    let mut limit = first_float(&full.printer.machine.machine_max_acceleration_extruding)
+        .round_ties_even() as u32;
     if flavor == crate::GCodeFlavor::Klipper {
         let axis_limit = [
             &full.printer.machine.machine_max_acceleration_x,
             &full.printer.machine.machine_max_acceleration_y,
         ]
         .into_iter()
-        .map(|axis| rounded_acceleration(first_float(axis)))
+        .map(|axis| first_float(axis).round_ties_even() as u32)
         .filter(|limit| *limit > 0)
         .min()
         .unwrap_or(u32::MAX);
