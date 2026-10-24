@@ -38,3 +38,6 @@ mod machine_jerk_rounding;
 
 #[path = "repetier_jerk_precision.rs"]
 mod repetier_jerk_precision;
+
+#[path = "klipper_separate_jerk_precision.rs"]
+mod klipper_separate_jerk_precision;
