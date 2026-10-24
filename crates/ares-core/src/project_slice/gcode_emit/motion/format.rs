@@ -81,7 +81,7 @@ pub(in crate::project_slice::gcode_emit) fn ostream(value: f64) -> String {
 
 pub(super) fn ostream_with_precision(value: f64, precision: usize) -> String {
     if value == 0.0 {
-        return "0".to_owned();
+        return if value.is_sign_negative() { "-0" } else { "0" }.to_owned();
     }
     // Round to the requested significant digits in one step (half-even,
     // like C++ iostreams), renormalizing any carry into the exponent.
