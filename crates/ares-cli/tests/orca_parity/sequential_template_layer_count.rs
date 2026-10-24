@@ -64,6 +64,67 @@ fn orca_parity_sequential_template_layer_count_a1_bylayer_control() {
 }
 
 #[test]
+fn orca_parity_sequential_origin_writer_frame_p1s_byobject_target() {
+    native_stream_case::check(
+        (
+            DIR,
+            &[
+                "GCode.cpp::travel_to:7480-7506",
+                "GCode.cpp::point_to_gcode:8124-8128",
+                "GCode.cpp::set_origin:5659-5669",
+            ],
+        ),
+        "p1s-byobject-target",
+        include_bytes!("../../../../tests/parity/sequential-origin-writer-frame/p1s-byobject.3mf"),
+        "ee453de3eb3734ae1db55c83e87180574ee232157f5549d5b3594349de40c933",
+        (false, |reference, replay| {
+            for case in [reference, replay] {
+                assert_native(&case.native, "Bambu Lab P1S", "by object", 81, "0x2");
+            }
+        }),
+    );
+}
+
+#[test]
+fn orca_parity_sequential_origin_writer_frame_p1s_zero_offset_control() {
+    native_stream_case::check(
+        (
+            DIR,
+            &[
+                "GCode.cpp::travel_to:7480-7506",
+                "GCode.cpp::point_to_gcode:8124-8128",
+                "GCode.cpp::set_origin:5659-5669",
+            ],
+        ),
+        "p1s-zero-offset-control",
+        include_bytes!(
+            "../../../../tests/parity/sequential-origin-writer-frame/p1s-byobject-zero-offset.3mf"
+        ),
+        "890ed27ecac34cdf643e72a83f47bf3f9077ab970cdf9cc18d8d4d7ea0d831b3",
+        (false, |reference, replay| {
+            for case in [reference, replay] {
+                assert_native(&case.native, "Bambu Lab P1S", "by object", 81, "0x0");
+            }
+        }),
+    );
+}
+
+#[test]
+fn orca_parity_sequential_origin_writer_frame_a1_byobject_control() {
+    native_stream_case::check(
+        (DIR, &["GCode.cpp::travel_to:7480-7506"]),
+        "a1-byobject-control",
+        include_bytes!("../../../../tests/parity/sequential-template-layer-count/a1-byobject.3mf"),
+        "b436ba663498652206663fb1f276c7d972f09b5b6fccad15e1d998aeeb53e138",
+        (false, |reference, replay| {
+            for case in [reference, replay] {
+                assert_native(&case.native, "Bambu Lab A1", "by object", 81, "0x0");
+            }
+        }),
+    );
+}
+
+#[test]
 fn orca_parity_sequential_template_layer_count_p1s_bylayer_control() {
     native_stream_case::check(
         (DIR, UPSTREAM),
