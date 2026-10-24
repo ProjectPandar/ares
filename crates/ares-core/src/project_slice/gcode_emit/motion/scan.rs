@@ -123,9 +123,14 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
             // the absolute counter.
             super::travel::reset_e(output, state);
         } else {
+            let comment = if state.options.gcode_comments {
+                " ;  ; unretract"
+            } else {
+                ""
+            };
             output.extend_from_slice(
                 format!(
-                    "G1 E{} F{}\n",
+                    "G1 E{} F{}{comment}\n",
                     format::extrusion(unretract),
                     format::axis(state.options.deretraction_feedrate)
                 )
