@@ -50,3 +50,6 @@ mod bbl_jerk_tail_precision;
 
 #[path = "machine_acceleration_cache_rounding.rs"]
 mod machine_acceleration_cache_rounding;
+
+#[path = "bbl_separate_jerk_tail_gate.rs"]
+mod bbl_separate_jerk_tail_gate;
