@@ -15,8 +15,6 @@ mod fan_layer_tag;
 mod fan_reader_xyz;
 #[path = "runner/fan_speedup_sign.rs"]
 mod fan_speedup_sign;
-#[path = "front_edge_numeric_cursor.rs"]
-mod front_edge_numeric_cursor;
 #[path = "runner/loaded_system_inherits_group.rs"]
 mod loaded_system_inherits_group;
 #[path = "runner/modifier_feature_filament.rs"]

@@ -8,11 +8,11 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "orca_parity/w6_rewrite_cases.rs"]
+mod w6_rewrite_cases;
+
 #[path = "orca_parity/object_emission_cases.rs"]
 mod object_emission_cases;
-
-#[path = "orca_parity/negative_volume_seam_occlusion.rs"]
-mod negative_volume_seam_occlusion;
 
 #[path = "orca_parity/chamber_used_extruder.rs"]
 mod chamber_used_extruder;
@@ -26,8 +26,6 @@ mod fan_mixed_timing;
 mod interlocking_base;
 #[path = "orca_parity/inward_displacement.rs"]
 mod inward_displacement;
-#[path = "orca_parity/mesh_center_precision.rs"]
-mod mesh_center_precision;
 #[path = "orca_parity/paint_color.rs"]
 mod paint_color;
 #[path = "orca_parity/paint_color/activity.rs"]
@@ -46,24 +44,6 @@ mod thin_safezone;
 mod used_extruder_case;
 #[path = "orca_parity/vg1_export_arc_cache.rs"]
 mod vg1_export_arc_cache;
-
-#[path = "orca_parity/medial_endpoint_zero.rs"]
-mod medial_endpoint_zero;
-
-#[path = "orca_parity/occlusion_volume_affine.rs"]
-mod occlusion_volume_affine;
-
-#[path = "orca_parity/zero_area_orientation.rs"]
-mod zero_area_orientation;
-
-#[path = "orca_parity/placeholder_double_render.rs"]
-mod placeholder_double_render;
-
-#[path = "orca_parity/instance_name_sanitize.rs"]
-mod instance_name_sanitize;
-
-#[path = "orca_parity/ironing_equivalent_span.rs"]
-mod ironing_equivalent_span;
 
 #[path = "orca_parity/m400_priority.rs"]
 mod m400_priority;
