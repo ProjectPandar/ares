@@ -114,9 +114,6 @@ mod staggered_seam_interpolation;
 #[path = "orca_parity/project_settings_substitution.rs"]
 mod project_settings_substitution;
 
-#[path = "orca_parity/skirt_minlength_multitool.rs"]
-mod skirt_minlength_multitool;
-
 #[path = "orca_parity/combined_contact_components.rs"]
 mod combined_contact_components;
 

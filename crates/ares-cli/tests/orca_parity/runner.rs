@@ -3,10 +3,10 @@
 //! G-code, and caches reference output keyed by the input digest.
 #[path = "runner/bbl_eager_enforce.rs"]
 mod bbl_eager_enforce;
-#[path = "runner/fan_speedup_sign.rs"]
-mod fan_speedup_sign;
 #[path = "brim_flow_ratio_state.rs"]
 mod brim_flow_ratio_state;
+#[path = "runner/fan_speedup_sign.rs"]
+mod fan_speedup_sign;
 #[path = "runner/loaded_system_inherits_group.rs"]
 mod loaded_system_inherits_group;
 #[path = "runner/modifier_feature_filament.rs"]
@@ -31,6 +31,8 @@ mod seam_physical_plane;
 mod seam_rear;
 #[path = "skirt_brim_seam_state.rs"]
 mod skirt_brim_seam_state;
+#[path = "skirt_minlength_multitool.rs"]
+mod skirt_minlength_multitool;
 #[path = "skirt_seam_scope.rs"]
 mod skirt_seam_scope;
 #[path = "skirt_support_speed_state.rs"]
